@@ -11,6 +11,10 @@ class PluginNoDependsB(Plugin):
 class PluginOneDepends(Plugin):
     """Plugin with a single dependency"""
     depends = (PluginNoDepends)
+    
+class PluginOneDependsB(Plugin):
+    """Plugin with a single dependency"""
+    depends = (PluginNoDepends)
 
 class PluginTwoDepends(Plugin):
     """Plugin with two dependencies"""

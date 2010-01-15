@@ -50,7 +50,8 @@ class PluginManager(object):
         should be disabled.
         
         @param plugin - name of plugin to register
-        @returns - True if enabled, False otherwise
+        @returns - Instance of plugin that was created/running, or None if it
+        failed to load
         """
         try:
             class_ = self.plugins[name]
@@ -59,7 +60,7 @@ class PluginManager(object):
 
         # already enabled
         if name in self.enabled:
-            return True
+            return self.enabled[name]
 
         # as long as get_depends() returns the list in order from eldest to
         # youngest, we can just iterate the list making sure each one is enabled
@@ -72,15 +73,15 @@ class PluginManager(object):
                 depend_plugin = self.__enable_plugin(depend)
                 enabled.append(depend.__name__)
                 
-            self.__enable_plugin(class_)
+            plugin = self.__enable_plugin(class_)
         except Exception, e:
             #exception occured, rollback any enabled plugins in reverse order
             if enabled:
                 enabled.reverse()
                 for plugin in enabled:
                     self.disable_plugin(plugin)
-            return False
-        return True
+            return None
+        return plugin
 
     def __enable_plugin(self, class_):
         """
@@ -167,8 +168,9 @@ def get_depended(plugin):
         # add all of the depends after class_, we don't want to disable anything
         # that class_ depends on.
         if class_ in depends:
-            for depend in depends[depends.index(class_):]:
-                add(plugin.manager.enabled(depend.__name__), depended)
+            for depend in depends[depends.index(class_)+1:]:
+                add(plugin.manager.enabled[depend.__name__], depended)
+            add(enabled, depended)
     depended.reverse()
     return depended
 

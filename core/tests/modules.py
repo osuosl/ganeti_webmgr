@@ -1,7 +1,6 @@
 import unittest
 
-from maintain.core.modules import Plugin, PluginManager, get_depends, \
-CyclicDependencyException
+from maintain.core.modules import *
 from test_plugins import *
 
 class PluginManager_Test(unittest.TestCase):
@@ -189,7 +188,6 @@ class Plugin_Test(unittest.TestCase):
         """
         self.assertRaises(CyclicDependencyException, get_depends, PluginCycleA)
         self.assertRaises(CyclicDependencyException, get_depends, PluginCycleB)
-        
     
     def test_get_depends_indirect_cycle(self):
         """
@@ -200,6 +198,65 @@ class Plugin_Test(unittest.TestCase):
         self.assertRaises(CyclicDependencyException, get_depends, PluginIndirectCycleA)
         self.assertRaises(CyclicDependencyException, get_depends, PluginIndirectCycleB)
         self.assertRaises(CyclicDependencyException, get_depends, PluginIndirectCycleC)
+    
+    def test_get_depended_no_dependeds(self):
+        """
+        Tests getting the list of modules a module depends on.  for a module
+        with nothing depending on it
+        """
+        manager = PluginManager()
+        manager.register_plugin(PluginNoDepends)
+        plugin = manager.enable_plugin('PluginNoDepends')
+        dependeds = get_depended(plugin)
+        self.assertTrue(len(dependeds)==0, 'Plugin has nothing depending on it')
+
+    def test_get_depended_one_dependeds(self):
+        """
+        Tests getting the list of modules a module depends on.  for a module
+        with only one other module depending on it
+        """
+        manager = PluginManager()
+        manager.register_plugin(PluginNoDepends)
+        manager.register_plugin(PluginOneDepends)
+        plugin = manager.enable_plugin('PluginNoDepends')
+        depended = manager.enable_plugin('PluginOneDepends')
+        dependeds = get_depended(plugin)
+        self.assertTrue(len(dependeds)==1, len(dependeds))
+        self.assertTrue(depended in dependeds, dependeds)
+
+    def test_get_depended_two_dependeds(self):
+        """
+        Tests getting the list of modules a module depends on.  for a module
+        with two other modules depending on it
+        """
+        manager = PluginManager()
+        manager.register_plugin(PluginNoDepends)
+        manager.register_plugin(PluginOneDepends)
+        manager.register_plugin(PluginOneDependsB)
+        plugin = manager.enable_plugin('PluginNoDepends')
+        dependedA = manager.enable_plugin('PluginOneDepends')
+        dependedB = manager.enable_plugin('PluginOneDependsB')
+        dependeds = get_depended(plugin)
+        self.assertTrue(len(dependeds)==2, len(dependeds))
+        self.assertTrue(dependedA in dependeds)
+        self.assertTrue(dependedB in dependeds)
+    
+    def test_get_depended_recursive_dependeds(self):
+        """
+        Tests getting the list of modules a module depends on.  for a module
+        with two modules depending on it, one with a recursive depend
+        """
+        manager = PluginManager()
+        manager.register_plugin(PluginNoDepends)
+        manager.register_plugin(PluginOneDepends)
+        manager.register_plugin(PluginRecursiveDepends)
+        plugin = manager.enable_plugin('PluginNoDepends')
+        dependedA = manager.enable_plugin('PluginOneDepends')
+        dependedB = manager.enable_plugin('PluginRecursiveDepends')
+        dependeds = get_depended(plugin)
+        self.assertTrue(len(dependeds)==2, len(dependeds))
+        self.assertTrue(dependedA in dependeds)
+        self.assertTrue(dependedB in dependeds)
     
 def suite():
     return unittest.TestSuite([
