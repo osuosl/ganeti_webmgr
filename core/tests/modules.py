@@ -117,6 +117,45 @@ class PluginManager_Test(unittest.TestCase):
         self.assertFalse('PluginFailsWhenEnabled' in manager.enabled, 'enabled should not contain PluginFailsWhenEnabled')
         self.assertFalse('PluginNoDependsB' in manager.enabled, 'enabled should not contain PluginNoDependsB')
     
+    def test_disable(self):
+        """
+        tests disabling a plugin with nothing depending on it
+        """
+        manager = PluginManager()
+        manager.register_plugin(PluginNoDepends)
+        manager.enable_plugin('PluginNoDepends')
+        manager.disable_plugin('PluginNoDepends')
+        self.assertTrue(len(manager.enabled)==0, len(manager.enabled))
+
+    def test_disable_with_dependeds(self):
+        """
+        tests disabling a plugin with other plugins depending on it
+        """
+        manager = PluginManager()
+        manager.register_plugin(PluginNoDepends)
+        manager.register_plugin(PluginOneDepends)
+        manager.enable_plugin('PluginOneDepends')
+        self.assertTrue(len(manager.enabled)==2, len(manager.enabled))
+        manager.disable_plugin('PluginNoDepends')
+        self.assertTrue(len(manager.enabled)==0, len(manager.enabled))
+        
+    def test_disable_with_dependeds_and_depend(self):
+        """
+        Tests disabling a plugin that has both dependeds and depends.  The
+        depended plugins will generate a list of depends including the plugin
+        that the disablee depends on.  this tests that that plugin is NOT
+        disabled
+        """
+        manager = PluginManager()
+        manager.register_plugin(PluginNoDepends)
+        manager.register_plugin(PluginOneDepends)
+        manager.register_plugin(PluginRecursiveDepends)
+        manager.enable_plugin('PluginRecursiveDepends')
+        self.assertTrue(len(manager.enabled)==3, len(manager.enabled))
+        manager.disable_plugin('PluginOneDepends')
+        self.assertTrue(len(manager.enabled)==1, len(manager.enabled))
+        self.assertTrue('PluginNoDepends' in manager.enabled, manager.enabled)
+
 
 class Plugin_Test(unittest.TestCase):
 
