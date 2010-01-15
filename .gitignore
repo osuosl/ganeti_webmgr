@@ -1,0 +1,14 @@
+*~
+*.pyc
+*.log
+*.key
+*.pid
+settings.py
+*.swp
+*.pem
+*.rej
+*.orig
+*.patch
+*.diff
+*.bak
+*.old
