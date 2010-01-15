@@ -1,18 +1,98 @@
 
 
-
-
-
 class PluginManager(object):
     """
     Manages the lifecycle of plugins.  Plugins may be registered making the
-    manager aware of the plugin.  The plugins may then be enabled or disabled.
+    manager awar of the plugin.  The plugins may then be enabled or disabled.
     """
     
-    def __init__(self, plugins):
+    def __init__(self):
         self.plugins = {}
         self.enabled = {}
     
+    def autodiscover(self, root):
+        """
+        scans directories for plugins.  all plugins are registered with this
+        manager.
+        """
+        self.register_plugins(self.scan_directories())
+
+    def disable_plugin(self, name):
+        """
+        Disables a plugin, and any plugins that depend on it.
+        
+        @param name - name of plugin
+        """
+        if name not in self.enabled:
+            return
+        plugin = self.enabled[name]
+        for depended_plugin in get_depended(plugin):
+            self.__disable_plugin(depended_plugin)
+        self.__disable_plugin(plugin)
+
+    def __disable_plugin(self, plugin):
+        """
+        Private function for disabling a plugin.  disable_plugin() handles
+        iteration to disable plugins thats depend on this one.  This function
+        handles the actual steps to disable a plugin
+        
+        @param plugin - plugin instance to disable
+        """
+        del self.enabled[plugin.name]
+
+    def enable_plugin(self, name):
+        """
+        Enables a plugin allowing it to register its objects and or plugins
+        for existing objects.  This also enables all dependencies returned by
+        get_depends(plugin).
+        
+        If the plugin or any depends fail to load then any enabled depends
+        should be disabled.
+        
+        @param plugin - name of plugin to register
+        @returns - True if enabled, False otherwise
+        """
+        try:
+            class_ = self.plugins[name]
+        except KeyError:
+            UnknownPluginException(name)
+
+        # already enabled
+        if name in self.enabled:
+            return True
+
+        # as long as get_depends() returns the list in order from eldest to
+        # youngest, we can just iterate the list making sure each one is enabled
+        # if they all succeed then the plugin can also be enabled.
+        enabled = []
+        try:
+            for depend in get_depends(class_):
+                if depend.__name__ in self.enabled:
+                    continue
+                depend_plugin = self.__enable_plugin(depend)
+                enabled.append(depend.__name__)
+                
+            self.__enable_plugin(class_)
+        except Exception, e:
+            #exception occured, rollback any enabled plugins in reverse order
+            if enabled:
+                enabled.reverse()
+                for plugin in enabled:
+                    self.disable_plugin(plugin)
+            return False
+        return True
+
+    def __enable_plugin(self, class_):
+        """
+        Private function for enabling plugins.  enable_plugin handles iteration
+        of dependencies.  This function handles the actual steps for enabling
+        an individual plugin
+        
+        @param class_
+        """
+        plugin = class_(self)
+        self.enabled[class_.__name__] = plugin
+        return plugin
     
     def register_plugin(self, plugin):
         """
@@ -25,46 +105,12 @@ class PluginManager(object):
         """
         self.plugins[plugin.__name__] = plugin
 
-
     def register_plugins(self, plugins):
         """
         Registers a collection of plugins
         """
         for plugin in plugins:
             self.register(plugin)
-
-
-    def enable_plugin(plugin):
-        """
-        Enables a plugin allowing it to register its objects and or plugins
-        for existing objects.  This also enables all dependencies returned by
-        get_depends(plugin).
-        
-        If the plugin or any depends are 
-        
-        @param plugin - name of plugin to register
-        """
-        class_ = self.plugins[plugin]
-
-        # as long as get_depends() returns the list in order from eldest to
-        # youngest, we can just iterate the list making sure each one is enabled
-        # if they all succeed then the plugin can also be enabled.
-        for depend in get_depends(plugin):
-            
-            if depend.__name__ in self.enabled:
-                continue
-            
-        
-        instance = class_()
-        
-    
-    
-    def autodiscover(self, root):
-        """
-        scans directories for plugins.  all plugins are registered with this
-        manager.
-        """
-        self.register_plugins(self.scan_directories())
 
 
 class Plugin(object):
@@ -75,7 +121,7 @@ class Plugin(object):
     
     Dependencies are created by 
     """
-    
+    manager = None
     depends = None
     
     def __init__(self, manager):
@@ -83,21 +129,59 @@ class Plugin(object):
         Creates the plugin.  Does *NOT* initialize the plugin.  This should only
         set configuration.
         """
-        pass
-    
-    def initialize(self):
-        pass
+        self.manager = manager
+        self.name = self.__class__.__name__
 
+
+def get_depended(plugin):
+    """
+    Gets a list of enabled plugins that depend on this plugin.  This looks up
+    the depends of all active plugins searching for this plugin.  It also does
+    a recursive search of any depended that is found.
     
+    This differs from get_depends() in that it works with instances of the
+    plugin rather than the class.  We're only concerned about depended plugins
+    when they are enabled.
+    
+    the list returns sorted in order that removes all depended classes before
+    their dependencies
+    
+    @param plugin - an enabled Plugin
+    @returns list of Plugins
+    """
+    def add(value, set):
+        """Helper Function for set-like lists"""
+        if value not in set:
+            set.append(value)
+            
+    #initial checks
+    if not plugin.manager:
+        return None
+    
+    #build depended list
+    class_ = plugin.__class__
+    depended = []
+    for name, enabled in plugin.manager.enabled.items():
+        depends = get_depends(enabled.__class__)
+        # if the class_ is found in the list of depends, then this is a depended
+        # add all of the depends after class_, we don't want to disable anything
+        # that class_ depends on.
+        if class_ in depends:
+            for depend in depends[depends.index(class_):]:
+                add(plugin.manager.enabled(depend.__name__), depended)
+    depended.reverse()
+    return depended
+
+
 def get_depends(class_, descendents=set()):
     """
-    Gets a list of dependencies for this plugin, including recursive
+    Gets a list of dependencies for this plugin class, including recursive
     dependencies.  Dependencies will be sorted in order in which they need to
     be loaded
     
     @param class_ - class to get depends for
-    @param child - child class that is requesting depends for a parent.  Used
-    to check for cyclic dependency errors.
+    @param descendents - child classes that are requesting depends for a parent.
+    Used to check for cyclic dependency errors.
     @returns list of dependencies if any, else empty list
     """
     def add(value, set):
@@ -140,6 +224,13 @@ class CyclicDependencyException(Exception):
     """
     pass
 
+
+class UnknownPluginException(Exception):
+    """
+    Exception thrown when attempting to access a plugin that has not been
+    registered.
+    """
+    pass
 
 class Example(Plugin):
     def initialize():        
