@@ -4,5 +4,9 @@ from views import *
 
 urlpatterns = patterns('',
     #default
-    (r'^$', plugins)
+    (r'^$', plugins),
+    (r'^plugin/depends$', depends),
+    (r'^plugin/dependeds$', dependeds),
+    (r'^plugin/enable$', enable),
+    (r'^plugin/disable$', disable)
 )

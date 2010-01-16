@@ -117,6 +117,9 @@ class RootPluginManager(PluginManager):
         @param plugin - plugin instance to disable
         """
         del self.enabled[plugin.name]
+        config = PluginConfig.objects.get(name=plugin.name)
+        config.enabled = False
+        config.save()
 
     def enable(self, name):
         """
@@ -167,10 +170,13 @@ class RootPluginManager(PluginManager):
         of dependencies.  This function handles the actual steps for enabling
         an individual plugin
         
-        @param class_
+        @param class_ - plugin class to enable
         """
+        config = PluginConfig.objects.get(name=class_.__name__)
         plugin = class_(self)
         self.enabled[class_.__name__] = plugin
+        config.enabled = True
+        config.save()
         return plugin
 
     def register(self, class_):
@@ -188,6 +194,7 @@ class RootPluginManager(PluginManager):
             config.save()
         return config
 
+
 class Plugin(object):
     """
     A Plugin is something that provides new functionality to PROJECT_NAME.  A
@@ -198,6 +205,7 @@ class Plugin(object):
     """
     manager = None
     depends = None
+    description = 'I am a plugin who has not been described'
     
     def __init__(self, manager):
         """
