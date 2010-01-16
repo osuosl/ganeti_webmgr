@@ -1,4 +1,4 @@
-
+from models import PluginConfig
 
 class PluginManager(object):
     """
@@ -17,6 +17,7 @@ class PluginManager(object):
         
         @param class_ - plugin class to register
         """
+        print '[Info] Registering: ', class_.__name__
         self.plugins[class_.__name__] = class_
 
     def registers(self, classes):
@@ -34,17 +35,65 @@ class RootPluginManager(PluginManager):
     of all plugins, whether they be registered directly with this plugin or
     are a sub-plugin.
     """
-    
     def __init__(self):
         super(RootPluginManager, self).__init__()
         self.enabled = {}
     
-    def autodiscover(self, root):
+    def autodiscover(self):
         """
-        scans directories for plugins.  all plugins are registered with this
-        manager.
+        Auto-discover INSTALLED_APPS plugins.py modules and fail silently when
+        not present. This forces an import on them to register any tasks they
+        may want.
         """
-        self.register_plugins(self.scan_directories())
+        import imp
+        import inspect
+        from django.conf import settings
+        
+        # the path someone imports is important.  import all the different
+        # possibilities so we can check them all
+        from maintain.core.plugins import Plugin as PluginA
+        from core.plugins import Plugin as PluginB
+        subclasses = (PluginA, PluginB)
+        
+        print '[info] RootPluginManager - Autodiscovering Plugins'
+
+        for app in filter(lambda x: x!='core', settings.INSTALLED_APPS):
+            print '[info] checking app: %s' % app
+            # For each app, we need to look for an plugin.py inside that app's
+            # package. We can't use os.path here -- recall that modules may be
+            # imported different ways (think zip files) -- so we need to get
+            # the app's __path__ and look for plugin.py on that path.
+
+            # Step 1: find out the app's __path__ Import errors here will (and
+            # should) bubble up, but a missing __path__ (which is legal, but
+            # weird) fails silently -- apps that do weird things with __path__
+            # might need to roll their own plugin registration.
+            try:
+                app_path = __import__(app, {},{}, [app.split('.')[-1]]).__path__
+            except AttributeError:
+                continue
+
+            # Step 2: use imp.find_module to find the app's plugin.py. For some
+            # reason imp.find_module raises ImportError if the app can't be found
+            # but doesn't actually try to import the module. So skip this app if
+            # its tasks.py doesn't exist
+            try:
+                imp.find_module('plugins', app_path)
+            except ImportError:
+                continue
+
+            # Step 3: load all the plugins in the plugin file
+            module = __import__("%s.plugins" % app, {}, {}, ['Plugin'])
+            configs = []
+            for key, plugin in module.__dict__.items():
+                if type(plugin)==type and not plugin in subclasses:
+                    if issubclass(plugin, subclasses):
+                        configs.append(self.register(plugin))
+                        
+            # Step 4: enable any plugins that were marked as enabled
+            for config in configs:
+                if config.enabled:
+                    self.enable(config.name)
 
     def disable(self, name):
         """
@@ -124,6 +173,20 @@ class RootPluginManager(PluginManager):
         self.enabled[class_.__name__] = plugin
         return plugin
 
+    def register(self, class_):
+        """
+        Overridden to setup configuration
+        
+        @param class_ - Plugin class to register
+        """
+        super(RootPluginManager, self).register(class_)
+        try:
+            config = PluginConfig.objects.get(name=class_.__name__)
+        except PluginConfig.DoesNotExist:
+            config = PluginConfig()
+            config.name = class_.__name__
+            config.save()
+        return config
 
 class Plugin(object):
     """
