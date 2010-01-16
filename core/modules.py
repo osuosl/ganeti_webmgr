@@ -5,9 +5,38 @@ class PluginManager(object):
     Manages the lifecycle of plugins.  Plugins may be registered making the
     manager awar of the plugin.  The plugins may then be enabled or disabled.
     """
-    
     def __init__(self):
         self.plugins = {}
+
+    def register(self, class_):
+        """
+        Registers a plugin with this manager.  Plugins are stored by __name__
+        so that they may be looked up later.  Registration just makes them
+        available to use on this installation, they don't add any functionality
+        or check dependencies until they are enabled with enable_plugin()
+        
+        @param class_ - plugin class to register
+        """
+        self.plugins[class_.__name__] = class_
+
+    def registers(self, classes):
+        """
+        Registers a collection of plugins
+        @param classes - iterable of plugin Classes
+        """
+        for class_ in classes:
+            self.register(plugin)
+
+    
+class RootPluginManager(PluginManager):
+    """
+    Specialized plugin manager that handles configuration and enabling/disabling
+    of all plugins, whether they be registered directly with this plugin or
+    are a sub-plugin.
+    """
+    
+    def __init__(self):
+        super(RootPluginManager, self).__init__()
         self.enabled = {}
     
     def autodiscover(self, root):
@@ -17,7 +46,7 @@ class PluginManager(object):
         """
         self.register_plugins(self.scan_directories())
 
-    def disable_plugin(self, name):
+    def disable(self, name):
         """
         Disables a plugin, and any plugins that depend on it.
         
@@ -27,12 +56,12 @@ class PluginManager(object):
             return
         plugin = self.enabled[name]
         for depended_plugin in get_depended(plugin):
-            self.__disable_plugin(depended_plugin)
-        self.__disable_plugin(plugin)
+            self.__disable(depended_plugin)
+        self.__disable(plugin)
 
-    def __disable_plugin(self, plugin):
+    def __disable(self, plugin):
         """
-        Private function for disabling a plugin.  disable_plugin() handles
+        Private function for disabling a plugin.  disable() handles
         iteration to disable plugins thats depend on this one.  This function
         handles the actual steps to disable a plugin
         
@@ -40,7 +69,7 @@ class PluginManager(object):
         """
         del self.enabled[plugin.name]
 
-    def enable_plugin(self, name):
+    def enable(self, name):
         """
         Enables a plugin allowing it to register its objects and or plugins
         for existing objects.  This also enables all dependencies returned by
@@ -70,20 +99,20 @@ class PluginManager(object):
             for depend in get_depends(class_):
                 if depend.__name__ in self.enabled:
                     continue
-                depend_plugin = self.__enable_plugin(depend)
+                depend_plugin = self.__enable(depend)
                 enabled.append(depend.__name__)
                 
-            plugin = self.__enable_plugin(class_)
+            plugin = self.__enable(class_)
         except Exception, e:
             #exception occured, rollback any enabled plugins in reverse order
             if enabled:
                 enabled.reverse()
                 for plugin in enabled:
-                    self.disable_plugin(plugin)
+                    self.disable(plugin)
             return None
         return plugin
 
-    def __enable_plugin(self, class_):
+    def __enable(self, class_):
         """
         Private function for enabling plugins.  enable_plugin handles iteration
         of dependencies.  This function handles the actual steps for enabling
@@ -94,24 +123,6 @@ class PluginManager(object):
         plugin = class_(self)
         self.enabled[class_.__name__] = plugin
         return plugin
-    
-    def register_plugin(self, plugin):
-        """
-        Registers a plugin with this manager.  Plugins are stored by __name__
-        so that they may be looked up later.  Registration just makes them
-        available to use on this installation, they don't add any functionality
-        or check dependencies until they are enabled with enable_plugin()
-        
-        @param plugin - plugin class to register
-        """
-        self.plugins[plugin.__name__] = plugin
-
-    def register_plugins(self, plugins):
-        """
-        Registers a collection of plugins
-        """
-        for plugin in plugins:
-            self.register(plugin)
 
 
 class Plugin(object):
@@ -233,10 +244,3 @@ class UnknownPluginException(Exception):
     registered.
     """
     pass
-
-class Example(Plugin):
-    def initialize():        
-        register(Client, Server)
-        register(Client, VirtualMachine)
-        register((Server,VirtualMachine), IPAddress)
-        
