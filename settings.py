@@ -1,5 +1,7 @@
 # Django settings for maintain project.
 
+VERSION = '0.0001'
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
@@ -23,6 +25,7 @@ DATABASE_PORT = ''             # Set to empty string for default. Not used with 
 # system time zone.
 TIME_ZONE = 'America/Chicago'
 
+
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = 'en-us'
@@ -33,14 +36,23 @@ SITE_ID = 1
 # to load the internationalization machinery.
 USE_I18N = True
 
+
+# absolute path to the docroot of this site.  Detect automatically.
+DOC_ROOT = __file__[__file__.rfind('/')]
+
+
+# prefix used for the site.  ie. http://myhost.com/<SITE_ROOT>/
+# for the django standalone server this should be ""
+ROOT_URL = ''
+
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
-MEDIA_ROOT = ''
+MEDIA_ROOT = '%s/static' % DOC_ROOT
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
-MEDIA_URL = ''
+MEDIA_URL = '%s/static' % ROOT_URL
 
 # URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
 # trailing slash.

@@ -1,7 +1,14 @@
-{% extends "base.html" %}
+{% extends "config.html" %}
 
-{% block content %}
-    
+{% block tabs %}
+    {% for form in forms %}
+        <div id="tab_{{form.name}}" class="tab">{{form.name}}</div>
+    {% endfor %}
+{% endblock %}
 
 
+{% block tab_content %}
+    {% for form in forms %}
+        {% include "config_form.html" %}
+    {% endfor %}
 {% endblock %}

@@ -35,6 +35,10 @@
         #plugins input, #plugins li a {
             float:right;
         }
+
+        #plugins input {
+            margin-left:5px;
+        }
     
         .form {
             background-color:rgba(100, 100, 100, 0.4);
@@ -184,7 +188,10 @@
     </script>    
 {% endblock %}
 
-{% block content %}    
+{% block content %}
+
+    <h1>Plugins</h1>
+
     <ul id="plugins">
     {% for plugin in plugins %}
     {% with plugin|config as config %}
@@ -192,7 +199,7 @@
             {{config.name}}
             <input type="checkbox" {%if config.enabled%}checked{%endif%}/>
             {% ifnotequal None plugin.config_form %}
-                <a href="{{ROOT}}/plugin/{{config.name}}/">config</a>
+                <a class="button_config button" href="{{ROOT}}/plugin/{{config.name}}/"></a>
             {% endifnotequal %}
         </li>
     {% endwith %}

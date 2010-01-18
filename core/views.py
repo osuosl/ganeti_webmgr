@@ -5,22 +5,37 @@ from django.contrib.auth.decorators import user_passes_test
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
+from django.template import RequestContext
+from django.utils.text import capfirst
 
 from plugins import RootPluginManager, get_depends, get_depended
 from models import PluginConfig
+import settings
 
 # create a global manager that all views will use
 manager = RootPluginManager()
 manager.autodiscover()
 
 
+def settings_processor(request):
+    """
+    settings_processor adds settings required by most pages
+    """
+    return {
+        'VERSION':settings.VERSION,
+        'MEDIA':settings.MEDIA_URL,
+        'ROOT':settings.ROOT_URL
+    }
+
 def plugins(request):
     """
     Renders configuration page for plugins
     """
     global manager
+    c = RequestContext(request, processors=[settings_processor])
     return render_to_response('plugins.html',
-            {'plugins': manager.plugins.values(), 'None':None})
+            {'plugins': manager.plugins.values(), 'None':None}, \
+            context_instance=c)
 
 
 def depends(request):
@@ -98,34 +113,49 @@ def config(request, name):
     form_class = manager.plugins[name].config_form
     plugin_config = PluginConfig.objects.get(name=name)
     if isinstance(form_class, (list, tuple)):
-        forms = [form(plugin_config.config) for form in form_class]
-        return render_to_response('tabbed_config.html', {'forms':forms})
+        forms = []
+        for class_ in form_class:
+            form = class_(plugin_config.config)
+            if not 'name' in class_.__dict__:
+                form.name = class_.__name__
+            form.class_ = class_.__name__
+            forms.append(form)
+        return render_to_response('config_tabbed.html', \
+                                  {'name':name, 'forms':forms})
     else:
-        print form_class
         form = form_class(plugin_config.config)
-        return render_to_response('config.html', {'form':form})
+        return render_to_response('config.html', {'name':name, 'form':form})
 
 
 def config_save(request, name):
     """
     Generic handler for saving configuration.  This handler deals with plugins
     that have a single form, or multiple forms
+    
+    @request HttpRequest - request object sent by django
+    @param name - name of plugin to configure
     """
     global manager
     form_class = manager.plugins[name].config_form
     plugin_config = PluginConfig.objects.get(name=name)
     if isinstance(form_class, (list, tuple)):
-        tab = int(request.POST['index'])
-        form_class = form_class[index]
+        tab = request.POST['tab']
+        for class_ in form_class:
+            if class_.__name__ == tab:
+                form_class = class_
+                break
     form = form_class(request.POST)
-    if form.is_valid():    
-        plugin_config.config = form.data
+    if form.is_valid():
+        for k, v in form.cleaned_data.items():
+            if k == 'tab':
+                continue
+            plugin_config.config[k] = v
         plugin_config.save()
         return HttpResponse(1)
     errors = []
     for k, v in form.errors.items():
         for error in v:
-            errors.append([k, error._proxy____args[0]])
+            errors.append([capfirst(k), error._proxy____args[0]])
     return HttpResponse(simplejson.dumps(errors))
 
     

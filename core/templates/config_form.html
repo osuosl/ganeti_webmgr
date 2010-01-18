@@ -1,0 +1,13 @@
+<table id="form_{{form.name}}">
+    
+    {% for field in form %}
+        <tr>
+            <td>{{ field.label_tag }}</td>
+            <td class="field" title="{{field.help_text}}">{{field}}</td>
+        </tr>
+    {% endfor %}
+    <tr><td colspan="100%">
+    <input type="hidden" name="tab" value="{{form.class_}}"/>
+    <input type="button" name="save" id="save" value="save" class="save"/>
+    </td></tr>
+</table>

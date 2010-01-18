@@ -191,6 +191,7 @@ class RootPluginManager(PluginManager):
         except PluginConfig.DoesNotExist:
             config = PluginConfig()
             config.name = class_.__name__
+            config.set_defaults(class_.config_form)
             config.save()
         return config
     

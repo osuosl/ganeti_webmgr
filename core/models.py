@@ -33,6 +33,24 @@ class PluginConfig(models.Model):
         super(PluginConfig, self).save()
         self._config = None
     
+    def set_defaults(self, form_class):
+        """
+        function for setting default values based on the default values within
+        a form class
+        
+        @param form_class - a Form, or list/tuple of Form classes
+        """
+        if not form_class:
+            self.config = None
+        
+        if not isinstance(form_class, (list, tuple)):
+            form_class = (form_class,)
+        
+        config = {}
+        for class_ in form_class:
+            for name, field in class_.base_fields.items():
+                config[name] = field.initial
+        self.config = config
     
 class PluginManagerSession(models.Model):
     """
