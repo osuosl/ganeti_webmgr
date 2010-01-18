@@ -1,4 +1,7 @@
+import cPickle
+
 from django.db import models
+
 
 class PluginConfig(models.Model):
     """
@@ -9,7 +12,26 @@ class PluginConfig(models.Model):
     """
     name = models.CharField(max_length=128, unique=True)
     enabled = models.BooleanField(default=False)
-    config = models.TextField(max_length=1024, null=True)
+    _config = models.TextField(max_length=1024, default='N.', null=True)
+
+    def __init__(self, *args, **kwargs):
+        """
+        Overridden to unpickle configuration dictionary.  After initialization
+        the pickled data is discarded as it is not used anymore.
+        """
+        super(PluginConfig, self).__init__(*args, **kwargs)
+        self.config = cPickle.loads(self._config.__str__())
+        self._config = None
+    
+    def save(self):
+        """
+        Overridden to pickle configuration dictionary and store in internal
+        dictionary.  After saving _config is cleared as calling this function
+        again will repeat the pickling.
+        """
+        self._config = cPickle.dumps(self.config)
+        super(PluginConfig, self).save()
+        self._config = None
     
     
 class PluginManagerSession(models.Model):

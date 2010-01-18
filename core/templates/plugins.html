@@ -1,14 +1,11 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
-    "http://www.w3.org/TR/html4/strict.dtd"
-    >
-<html lang="en">
-<head>
-    <title></title>
+{% extends "base.html" %}
+
+{% load maintain_extras %}
+
+{% block head %}
+    {{ block.super }}
     
     <style>
-        * { font-family: Helvetica, Arial, Tahoma; font-size: 12px;  padding: 0; margin: 0;}
-        body {padding:20px;}
-        
         #plugins {
             width:200px;
             margin:0;
@@ -20,19 +17,24 @@
             padding:6px;
             list-style:none;
         }
+        
+        #plugins li, #plugins li a {
+            
+            line-height:14px;
+        }
     
         #plugins li.enabled {
-            background-color:#c2e192;
+            background-color:#E4EFD2;
+            border-color:#222222;
         }
         
         #plugins li.disabled {
             color:#666666;
         }
 
-        #plugins input {
+        #plugins input, #plugins li a {
             float:right;
         }
-    
     
         .form {
             background-color:rgba(100, 100, 100, 0.4);
@@ -77,25 +79,23 @@
             right:7px;
         }
         .messages ul {margin-left:25px; margin-top:10px; text-align:left;}
-        #enable.form h2 .label, #enable .messages li { color:green; }
+        #enable.form h2 .label, #enable .messages li { color:green;}
         #disable.form h2 .label, #disable .messages li { color:#c83737; }
-
-    
     </style>
     
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
-                $('#plugins li.disabled').live('click', function(){
-                        $(this).children('input').attr('checked',false);
-                        $('#enable h2 .plugin').html(this.id);
-                        $.getJSON('{{ROOT}}/plugin/depends', {'name':this.id}, process_depends);
+                $('#plugins li.disabled input').live('click', function(){
+                        $(this).attr('checked',false);
+                        $('#enable h2 .plugin').html(this.parentNode.id);
+                        $.getJSON('{{ROOT}}/plugin/depends', {'name':this.parentNode.id}, process_depends);
                     });
                 
-                $('#plugins li.enabled').live('click', function(){
-                        $(this).children('input').attr('checked',true);
-                        $('#disable h2 .plugin').html(this.id);
-                        $.getJSON('{{ROOT}}/plugin/dependeds', {'name':this.id}, process_dependeds);
+                $('#plugins li.enabled input').live('click', function(){
+                        $(this).attr('checked',true);
+                        $('#disable h2 .plugin').html(this.parentNode.id);
+                        $.getJSON('{{ROOT}}/plugin/dependeds', {'name':this.parentNode.id}, process_dependeds);
                     });
                 
                 $('#enable button').click(function(){
@@ -182,20 +182,22 @@
             }
         }
     </script>    
-    
-    
-</head>
-<body>
-    
-    {% for plugin in plugins %}
+{% endblock %}
+
+{% block content %}    
     <ul id="plugins">
-        <li id="{{plugin.name}}" class="{%if plugin.enabled%}enabled{%else%}disabled{%endif%}">
-            {{plugin.name}}
-            <input type="checkbox" {%if plugin.enabled%}checked{%endif%}/>
+    {% for plugin in plugins %}
+    {% with plugin|config as config %}
+        <li id="{{config.name}}" class="{%if config.enabled%}enabled{%else%}disabled{%endif%}">
+            {{config.name}}
+            <input type="checkbox" {%if config.enabled%}checked{%endif%}/>
+            {% ifnotequal None plugin.config_form %}
+                <a href="{{ROOT}}/plugin/{{config.name}}/">config</a>
+            {% endifnotequal %}
         </li>
-    </ul>
+    {% endwith %}
     {% endfor %}
-    
+    </ul>
     
     <div id="enable" class="form">
         <div class="inner">
@@ -210,7 +212,6 @@
         </div>
     </div>
     
-    
     <div id="disable" class="form">
         <div class="inner">
             <div class="button_close button"></div>
@@ -223,6 +224,4 @@
             <button class="button_disable">Disable</button>
         </div>
     </div>
-    
-</body>
-</html>
+{% endblock %}

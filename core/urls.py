@@ -8,5 +8,7 @@ urlpatterns = patterns('',
     (r'^plugin/depends$', depends),
     (r'^plugin/dependeds$', dependeds),
     (r'^plugin/enable$', enable),
-    (r'^plugin/disable$', disable)
+    (r'^plugin/disable$', disable),
+    (r'^plugin/(\w+)/$', config),
+    (r'^plugin/(\w+)/save$', config_save)
 )

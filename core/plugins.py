@@ -161,19 +161,19 @@ class RootPluginManager(PluginManager):
                 enabled.reverse()
                 for plugin in enabled:
                     self.disable(plugin)
-            return None
+            raise e
         return plugin
 
     def __enable(self, class_):
         """
-        Private function for enabling plugins.  enable_plugin handles iteration
+        Private function for enabling plugins.  Enable_plugin handles iteration
         of dependencies.  This function handles the actual steps for enabling
         an individual plugin
         
         @param class_ - plugin class to enable
         """
         config = PluginConfig.objects.get(name=class_.__name__)
-        plugin = class_(self)
+        plugin = class_(self, config)
         self.enabled[class_.__name__] = plugin
         config.enabled = True
         config.save()
@@ -193,6 +193,19 @@ class RootPluginManager(PluginManager):
             config.name = class_.__name__
             config.save()
         return config
+    
+    def update_config(self, name, config):
+        """
+        Updates the config for a plugin.  Changes are commited to the database
+        and if the plugin is enabled, it is reloaded with the new config
+        
+        @param name - name of plugin to update
+        @param config - PluginConfig to reload it with
+        """
+        config.save()
+        if plugin in self.enabled:
+            plugin = self.enabled[name]
+            plugin.update_config(config)
 
 
 class Plugin(object):
@@ -207,13 +220,33 @@ class Plugin(object):
     depends = None
     description = 'I am a plugin who has not been described'
     
-    def __init__(self, manager):
+    def __init__(self, manager, plugin_config):
         """
         Creates the plugin.  Does *NOT* initialize the plugin.  This should only
         set configuration.
+
+        @param manager - PluginManager that this plugin is enabled with
+        @param plugin_config - PluginConfig corresponding with this class
         """
         self.manager = manager
         self.name = self.__class__.__name__
+        self.update_config(plugin_config)
+
+    def update_config(self, plugin_config):
+        """
+        Updates configuration.  By default this unpacks PluginConfig.config to
+        self.__dict__
+        
+        @param plugin_config - PluginConfig corresponding with this class
+        """
+        reserved_names = ('manager','description','depends','enabled')
+        self.enabled = plugin_config.enabled
+        if plugin_config.config:
+            for key, value in plugin_config.config.items():
+                if key in reserved_names:
+                    raise Exception('Attempted to set reserved property (%s)' +\
+                                    'via config') % (key)
+                self.__dict__[key] = value
 
 
 def get_depended(plugin):

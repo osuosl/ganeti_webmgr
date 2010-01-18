@@ -19,9 +19,8 @@ def plugins(request):
     Renders configuration page for plugins
     """
     global manager
-    
     return render_to_response('plugins.html',
-            {'plugins': PluginConfig.objects.all()})
+            {'plugins': manager.plugins.values(), 'None':None})
 
 
 def depends(request):
@@ -84,3 +83,50 @@ def disable(request):
     
     manager.disable(name)
     return HttpResponse(simplejson.dumps(disabled))
+    
+    
+def config(request, name):
+    """
+    Config edit page for plugins.  This is a generic handler that deals with
+    the django form class stored in plugin.config_form.  This includes both
+    plugins with a single config form, and plugins with multiple forms
+    
+    @request HttpRequest - request object sent by django
+    @param name - name of plugin to configure
+    """
+    global manager
+    form_class = manager.plugins[name].config_form
+    plugin_config = PluginConfig.objects.get(name=name)
+    if isinstance(form_class, (list, tuple)):
+        forms = [form(plugin_config.config) for form in form_class]
+        return render_to_response('tabbed_config.html', {'forms':forms})
+    else:
+        print form_class
+        form = form_class(plugin_config.config)
+        return render_to_response('config.html', {'form':form})
+
+
+def config_save(request, name):
+    """
+    Generic handler for saving configuration.  This handler deals with plugins
+    that have a single form, or multiple forms
+    """
+    global manager
+    form_class = manager.plugins[name].config_form
+    plugin_config = PluginConfig.objects.get(name=name)
+    if isinstance(form_class, (list, tuple)):
+        tab = int(request.POST['index'])
+        form_class = form_class[index]
+    form = form_class(request.POST)
+    if form.is_valid():    
+        plugin_config.config = form.data
+        plugin_config.save()
+        return HttpResponse(1)
+    errors = []
+    for k, v in form.errors.items():
+        for error in v:
+            errors.append([k, error._proxy____args[0]])
+    return HttpResponse(simplejson.dumps(errors))
+
+    
+    

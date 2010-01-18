@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block head %}
+    {{ block.super }}
+    
+    <style>
+        select {padding-right:5px;}
+    
+        #save {
+            margin-top:10px;
+        }
+    
+        #success {
+            background-color:#c2e192;
+            border: 1px solid #124612;
+            color:#124612;
+            font-weight:bold;
+            text-align:center;
+        }
+    
+    </style>
+    
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
+    <script type="text/javascript">
+    
+        var $errors = undefined;
+        $(document).ready(function() {
+            $errors = $('#errors');
+            $('.save').click(function(){
+                    $form = $(this.parentNode.parentNode.parentNode);
+                    $inputs = $form.find('input,select');
+                    args = {};
+                    for (i=0; i<$inputs.length; i++) {
+                        input = $inputs.get(i);
+                        args[input.id.slice(3)]= $(input).val();
+                    }
+
+                    //clear errors
+                    $errors.hide().empty();
+
+                    $.post('save', args, process_save, 'json');
+                });
+    
+            function process_save(data) {
+                if (data == 1){
+                    $('#success').show().fadeOut(3000);
+                }else{
+                    for (i in data) {
+                        error = data[i];
+                        $errors.append('<li>'+ error[0] +' - '+ error[1] +'</li>');
+                    }
+                    $errors.show();
+                }
+            }
+        });
+    
+    </script>
+{% endblock %}
+
+{% block content %}
+
+    <div id="success">Saved</div>
+
+    <ul id="errors">
+    </ul>
+
+    {% block form %}
+    <table id="form">
+        {% for field in form %}
+            <tr>
+                <td>{{ field.label_tag }}</td>
+                <td class="field" title="{{field.help_text}}">{{field}}</td>
+            </tr>
+        {% endfor %}
+        <tr><td colspan="100%">
+        <input type="button" name="save" id="save" value="save" class="save"/>
+        </td></tr>
+    </table>
+    {% endblock %}    
+{% endblock %}
