@@ -1,5 +1,7 @@
 import cPickle
 
+from datetime import datetime, timedelta
+
 from django.db import models
 
 
@@ -73,3 +75,58 @@ class PluginConfigChange(models.Model):
     """
     time = models.DateTimeField()
     change = models.CharField(max_length=256)
+    
+    
+class SQLLock(models.Model):
+    """
+    This class stores its lock information in a persistent place that all the
+    threads can access.  It allows synchronations across processes.
+    
+    These locks include an ownership timer in which only one process can acquire
+    the lock.  While the lock is owned, no other thread can acquire the lock.
+    This is used for locking sections of the interface while a user is editing
+    it.
+    
+    This is a non-blocking lock.  acquire() returns True of False to indicate
+    lock ownership
+    """
+    name = models.CharField(max_length=64)
+    created = models.DateTimeField(auto_now=True)
+    release = models.DateTimeField(null=True)
+    
+
+    def acquire(self, name, timeout=1000):
+        """
+        Acquire lock.  
+        
+        @param timeout [None] - lock times out after this amount of time in
+                            milliseconds.  After which
+        @param returns True if lock acquired, false otherwise
+        """
+        self.name = name
+        
+        # if this instance has timed out, delete it
+        if self.id and self.release and self.release < datetime.now():
+            self.delete()
+            self.id = None
+            self.created = None
+            self.release = None
+            
+        
+        # put this instance in contention for the lock if it does not already
+        # have an id.
+        if timeout:
+            self.release = datetime.now() + timedelta(0, 0, 0, timeout)
+        self.save()
+        
+        # find the owner, determined by the order in which contenders were
+        # created
+        contenders = SQLLock.objects.filter(name=self.name).order_by('id')
+        owner = contenders[0]
+        for owner in contenders:
+            if owner.release and self.created > owner.release:
+                # old owner has timed out
+                owner.delete()
+            else:
+                break
+        return owner.id == self.id

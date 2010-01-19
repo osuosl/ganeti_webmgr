@@ -1,9 +1,11 @@
 import unittest
 
 from plugins import suite as plugins_suite
+from sql_lock import suite as sqllock_suite
 
 def suite():
     return unittest.TestSuite([
-            plugins_suite()
+            plugins_suite(),
+            sqllock_suite()
         ])
 
