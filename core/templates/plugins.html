@@ -69,11 +69,16 @@
         .form h2 .plugin{ font-weight:normal}
 
         .form td { border:0px; }
-        .form .description { 
+        .form .description {
             border-bottom: 1px solid #666666;
+            border-top: 1px solid #666666;
             color:#444444;
-            font-size:95%;
+            font-size:11px;
+            line-height:14px;
             margin-bottom:15px;
+            margin-top:15px;
+            padding-top:5px;
+            padding-bottom:5px;
             text-align:justify;
         }
         .form label { color:#444444; font-size:90%; font-weight:bold }
@@ -94,12 +99,14 @@
                         $(this).attr('checked',false);
                         $errors.empty().hide();
                         $('#enable h2 .plugin').html(this.parentNode.id);
+                        $('#enable .description').html(this.parentNode.title);
                         $.getJSON('{{ROOT}}/plugin/depends', {'name':this.parentNode.id}, process_depends);
                     });
                 
                 $('#plugins li.enabled input').live('click', function(){
                         $(this).attr('checked',true);
                         $('#disable h2 .plugin').html(this.parentNode.id);
+                        $('#disable .description').html(this.parentNode.title);
                         $errors.empty().hide();
                         $.getJSON('{{ROOT}}/plugin/dependeds', {'name':this.parentNode.id}, process_dependeds);
                     });
@@ -214,7 +221,7 @@
     <ul id="plugins">
     {% for plugin in plugins %}
     {% with plugin|config as config %}
-        <li id="{{config.name}}" class="{%if config.enabled%}enabled{%else%}disabled{%endif%}">
+        <li id="{{config.name}}" title="{{plugin.description}}" class="{%if config.enabled%}enabled{%else%}disabled{%endif%}">
             {{config.name}}
             <input type="checkbox" {%if config.enabled%}checked{%endif%}/>
             {% ifnotequal None plugin.config_form %}

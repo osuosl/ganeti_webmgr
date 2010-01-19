@@ -37,8 +37,10 @@ def plugins(request):
     """
     global manager
     c = RequestContext(request, processors=[settings_processor])
+    
+    plugins = [manager.plugins[k] for k in sorted(manager.plugins.keys())]
     return render_to_response('plugins.html',
-            {'plugins': manager.plugins.values(), 'None':None}, \
+            {'plugins': plugins, 'None':None}, \
             context_instance=c)
 
 
