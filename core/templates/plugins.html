@@ -124,12 +124,13 @@
                 processes a list of depends for a plugin prior to displaying
                 a enable form.
             */
-            
-            if (data.length == 0) {
-                $('#enable .messages').hide();
-            } else if (data.length == 2 && data[0] == -1) {
+            if (data.length == 2 && data[0] == -1) {
                 // errors
                 $errors.append(data[1]).show();
+                return;
+            }
+            if (data.length == 0) {
+                $('#enable .messages').hide();
             } else {
                 $('#enable .messages').show();
                 $list = $('#enable .messages ul')
@@ -138,8 +139,8 @@
                     plugin = data[i];
                     $list.append('<li>'+plugin['name']+'</li>')
                 }
-                $('#enable').show();
             }
+            $('#enable').show();
         }
 
         function process_enabled(data){

@@ -143,7 +143,6 @@ class RootPluginManager(PluginManager):
         if name in self.enabled:
             return self.enabled[name]
 
-
         # as long as get_depends() returns the list in order from eldest to
         # youngest, we can just iterate the list making sure each one is enabled
         # if they all succeed then the plugin can also be enabled.

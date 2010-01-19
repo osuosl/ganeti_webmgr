@@ -78,7 +78,7 @@ def enable(request):
     """
     global manager
     name = request.GET['name']
-    
+
     # create list of newly enabled plugins. Must do this before they are enabled
     # else there is no way to determine which ones weren't active beforehand
     expression = lambda x: not x.__name__ in manager.enabled
@@ -90,7 +90,7 @@ def enable(request):
         if manager.enable(name):
             return HttpResponse(simplejson.dumps(enabled))
     except Exception, e:
-        error = ['Exception enabling plugin or one of its dependencies:']
+        error = ['Exception enabling plugin or one of its dependencies']
         return HttpResponse(simplejson.dumps([-1, error]))
 
 
