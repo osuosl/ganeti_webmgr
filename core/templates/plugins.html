@@ -116,6 +116,12 @@
                         $('#disable').hide();
                     });
 
+                $('html').keypress(function(e){
+                        if (e.which == 0) {
+                            $('#enable, #disable').hide();
+                        }
+                    });
+
                 $errors = $('#errors');
             });
         
@@ -140,7 +146,7 @@
                     $list.append('<li>'+plugin['name']+'</li>')
                 }
             }
-            $('#enable').show();
+            $('#enable').show().find('button').focus();
         }
 
         function process_enabled(data){
@@ -182,7 +188,7 @@
                     $list.append('<li>'+plugin['name']+'</li>')
                 }
             }
-            $('#disable').show()
+            $('#disable').show().find('button').focus();
         }
         
         function process_disabled(data){
