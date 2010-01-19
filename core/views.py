@@ -8,7 +8,8 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils.text import capfirst
 
-from plugins import RootPluginManager, get_depends, get_depended
+from plugins import RootPluginManager, get_depends, get_depended, \
+                    CyclicDependencyException
 from models import PluginConfig
 import settings
 
@@ -46,9 +47,13 @@ def depends(request):
     name = request.GET['name']
     expression = lambda x: not x.__name__ in manager.enabled
     plugin = manager.plugins[name]
-    plugins = [{'name':p.__name__, 'description':p.description} \
+    try:
+        plugins = [{'name':p.__name__, 'description':p.description} \
                     for p in filter(expression, get_depends(plugin))]
-    return HttpResponse(simplejson.dumps(plugins))
+        return HttpResponse(simplejson.dumps(plugins))
+    except CyclicDependencyException, e:
+        error = 'Plugin has a dependency cycle with: %s' % e
+        return HttpResponse(simplejson.dumps([-1, error]))
 
 
 def dependeds(request):
@@ -78,9 +83,12 @@ def enable(request):
     enabled = [p.__name__ for p in filter(expression, get_depends(plugin))]
     enabled.append(name)
 
-    if manager.enable(name):
-        return HttpResponse(simplejson.dumps(enabled))
-    return HttpResponse(-1)
+    try:
+        if manager.enable(name):
+            return HttpResponse(simplejson.dumps(enabled))
+    except Exception, e:
+        error = 'Exception enabling plugin:'
+        return HttpResponse([-1, error])
 
 
 def disable(request):

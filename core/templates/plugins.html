@@ -88,9 +88,11 @@
         #disable.form h2 .label, #disable .messages li { color:#c83737; }
     </style>
     <script type="text/javascript">
+        var $errors = undefined;
         $(document).ready(function() {
                 $('#plugins li.disabled input').live('click', function(){
                         $(this).attr('checked',false);
+                        $errors.empty().hide();
                         $('#enable h2 .plugin').html(this.parentNode.id);
                         $.getJSON('{{ROOT}}/plugin/depends', {'name':this.parentNode.id}, process_depends);
                     });
@@ -98,6 +100,7 @@
                 $('#plugins li.enabled input').live('click', function(){
                         $(this).attr('checked',true);
                         $('#disable h2 .plugin').html(this.parentNode.id);
+                        $errors.empty().hide();
                         $.getJSON('{{ROOT}}/plugin/dependeds', {'name':this.parentNode.id}, process_dependeds);
                     });
                 
@@ -112,6 +115,8 @@
                         $.getJSON('{{ROOT}}/plugin/disable', {'name':name}, process_disabled);
                         $('#disable').hide();
                     });
+
+                $errors = $('#errors');
             });
         
         function process_depends(data){
@@ -122,6 +127,9 @@
             
             if (data.length == 0) {
                 $('#enable .messages').hide();
+            } else if (data.length == 2 && data[0] == -1) {
+                // errors
+                $errors.append(data[1]).show();
             } else {
                 $('#enable .messages').show();
                 $list = $('#enable .messages ul')
@@ -130,10 +138,10 @@
                     plugin = data[i];
                     $list.append('<li>'+plugin['name']+'</li>')
                 }
+                $('#enable').show();
             }
-            $('#enable').show();
         }
-        
+
         function process_enabled(data){
             /*
                 processes a response from attempting to enable a plugin.  This
@@ -188,9 +196,8 @@
 {% endblock %}
 
 {% block content %}
-
+    <ul id="errors"></ul>
     <h1>Plugins</h1>
-
     <ul id="plugins">
     {% for plugin in plugins %}
     {% with plugin|config as config %}
