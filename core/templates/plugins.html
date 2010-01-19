@@ -88,7 +88,9 @@
             top:12px;
             right:7px;
         }
-        .messages ul {margin-left:25px; margin-top:10px; text-align:left;}
+        .messages {text-align:left;}
+        .messages ul {margin-left:30px; margin-top:0px;}
+        .messages li {line-height:20px;}
         #enable.form h2 .label, #enable .messages li { color:green;}
         #disable.form h2 .label, #disable .messages li { color:#c83737; }
     </style>
@@ -121,6 +123,10 @@
                         name = $('#disable h2 .plugin').html();
                         $.getJSON('{{ROOT}}/plugin/disable', {'name':name}, process_disabled);
                         $('#disable').hide();
+                    });
+
+                $('#disable .button_close, #enable .button_close').click(function(){
+                        $('#enable, #disable').hide();
                     });
 
                 $('html').keypress(function(e){
