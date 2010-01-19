@@ -279,13 +279,7 @@ def get_depended(plugin):
     class_ = plugin.__class__
     depended = []
     for name, enabled in plugin.manager.enabled.items():
-        depends = get_depends(enabled.__class__)
-        # if the class_ is found in the list of depends, then this is a depended
-        # add all of the depends after class_, we don't want to disable anything
-        # that class_ depends on.
-        if class_ in depends:
-            for depend in depends[depends.index(class_)+1:]:
-                add(plugin.manager.enabled[depend.__name__], depended)
+        if class_ in get_depends(enabled.__class__):
             add(enabled, depended)
     depended.reverse()
     return depended

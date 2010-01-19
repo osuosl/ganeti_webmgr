@@ -267,19 +267,54 @@ class Plugin_Test(unittest.TestCase):
         """
         Tests getting the list of modules a module depends on.  for a module
         with two other modules depending on it
+        
+        given B->A and C->A
+        Dependeds(A) = (A, C)
+        Dependeds(B) = ()
+        Dependeds(C) = ()
         """
         manager = RootPluginManager()
         manager.register(PluginNoDepends)
         manager.register(PluginOneDepends)
         manager.register(PluginOneDependsB)
-        plugin = manager.enable('PluginNoDepends')
-        dependedA = manager.enable('PluginOneDepends')
-        dependedB = manager.enable('PluginOneDependsB')
-        dependeds = get_depended(plugin)
-        self.assert_(len(dependeds)==2, len(dependeds))
-        self.assert_(dependedA in dependeds)
-        self.assert_(dependedB in dependeds)
-    
+        pluginA = manager.enable('PluginNoDepends')
+        pluginB = manager.enable('PluginOneDepends')
+        pluginC = manager.enable('PluginOneDependsB')
+        dependedsA = get_depended(pluginA)
+        self.assert_(len(dependedsA)==2, len(dependedsA))
+        self.assert_(pluginB in dependedsA)
+        self.assert_(pluginC in dependedsA)
+        dependedsB = get_depended(pluginB)
+        self.assert_(len(dependedsB)==0, len(dependedsB))
+        dependedsC = get_depended(pluginC)
+        self.assert_(len(dependedsC)==0, len(dependedsC))
+
+    def test_get_depended_two_depends(self):
+        """
+        Tests getting the list of modules a module depends on.  for a module
+        with a depended that also depends on another plugin.
+        
+        ie. given C->A and C->B.
+            Dependeds(A) = (C)
+            Dependeds(B) = (C)
+            Dependeds(C) = ()
+        """
+        manager = RootPluginManager()
+        manager.register(PluginNoDepends)
+        manager.register(PluginNoDependsB)
+        manager.register(PluginTwoDepends)
+        pluginA = manager.enable('PluginNoDepends')
+        pluginB = manager.enable('PluginNoDependsB')
+        pluginC = manager.enable('PluginTwoDepends')
+        dependedsA = get_depended(pluginA)
+        self.assert_(len(dependedsA)==1, len(dependedsA))
+        self.assert_(pluginC in dependedsA)
+        dependedsB = get_depended(pluginB)
+        self.assert_(len(dependedsB)==1, len(dependedsB))
+        self.assert_(pluginC in dependedsB)
+        dependedsC = get_depended(pluginC)
+        self.assert_(len(dependedsC)==0, len(dependedsC))
+
     def test_get_depended_recursive_dependeds(self):
         """
         Tests getting the list of modules a module depends on.  for a module
