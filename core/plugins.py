@@ -1,3 +1,5 @@
+from threading import RLock
+
 from models import PluginConfig
 
 class PluginManager(object):
@@ -38,6 +40,7 @@ class RootPluginManager(PluginManager):
     def __init__(self):
         super(RootPluginManager, self).__init__()
         self.enabled = {}
+        self.lock = RLock()
     
     def autodiscover(self):
         """
@@ -91,9 +94,10 @@ class RootPluginManager(PluginManager):
                         configs.append(self.register(plugin))
 
             # Step 4: enable any plugins that were marked as enabled
-            for config in configs:
-                if config.enabled:
-                    self.enable(config.name)
+            with self.lock:
+                for config in configs:
+                    if config.enabled:
+                        self.enable(config.name)
 
     def disable(self, name):
         """
@@ -101,12 +105,13 @@ class RootPluginManager(PluginManager):
         
         @param name - name of plugin
         """
-        if name not in self.enabled:
-            return
-        plugin = self.enabled[name]
-        for depended_plugin in get_depended(plugin):
-            self.__disable(depended_plugin)
-        self.__disable(plugin)
+        with self.lock:
+            if name not in self.enabled:
+                return
+            plugin = self.enabled[name]
+            for depended_plugin in get_depended(plugin):
+                self.__disable(depended_plugin)
+            self.__disable(plugin)
 
     def __disable(self, plugin):
         """
@@ -134,34 +139,35 @@ class RootPluginManager(PluginManager):
         @returns - Instance of plugin that was created/running, or None if it
         failed to load
         """
-        try:
-            class_ = self.plugins[name]
-        except KeyError:
-            raise UnknownPluginException(name)
-
-        # already enabled
-        if name in self.enabled:
-            return self.enabled[name]
-
-        # as long as get_depends() returns the list in order from eldest to
-        # youngest, we can just iterate the list making sure each one is enabled
-        # if they all succeed then the plugin can also be enabled.
-        enabled = []
-        try:
-            for depend in get_depends(class_):
-                if depend.__name__ in self.enabled:
-                    continue
-                depend_plugin = self.__enable(depend)
-                enabled.append(depend.__name__)
-            plugin = self.__enable(class_)
-        except Exception, e:
-            #exception occured, rollback any enabled plugins in reverse order
-            if enabled:
-                enabled.reverse()
-                for plugin in enabled:
-                    self.disable(plugin)
-            raise e
-        return plugin
+        with self.lock:
+            try:
+                class_ = self.plugins[name]
+            except KeyError:
+                raise UnknownPluginException(name)
+    
+            # already enabled
+            if name in self.enabled:
+                return self.enabled[name]
+    
+            # as long as get_depends() returns the list in order from eldest to
+            # youngest, we can just iterate the list making sure each one is enabled
+            # if they all succeed then the plugin can also be enabled.
+            enabled = []
+            try:
+                for depend in get_depends(class_):
+                    if depend.__name__ in self.enabled:
+                        continue
+                    depend_plugin = self.__enable(depend)
+                    enabled.append(depend.__name__)
+                plugin = self.__enable(class_)
+            except Exception, e:
+                #exception occured, rollback any enabled plugins in reverse order
+                if enabled:
+                    enabled.reverse()
+                    for plugin in enabled:
+                        self.disable(plugin)
+                raise e
+            return plugin
 
     def __enable(self, class_):
         """
@@ -184,15 +190,16 @@ class RootPluginManager(PluginManager):
         
         @param class_ - Plugin class to register
         """
-        super(RootPluginManager, self).register(class_)
-        try:
-            config = PluginConfig.objects.get(name=class_.__name__)
-        except PluginConfig.DoesNotExist:
-            config = PluginConfig()
-            config.name = class_.__name__
-            config.set_defaults(class_.config_form)
-            config.save()
-        return config
+        with self.lock:
+            super(RootPluginManager, self).register(class_)
+            try:
+                config = PluginConfig.objects.get(name=class_.__name__)
+            except PluginConfig.DoesNotExist:
+                config = PluginConfig()
+                config.name = class_.__name__
+                config.set_defaults(class_.config_form)
+                config.save()
+            return config
     
     def update_config(self, name, config):
         """
@@ -203,9 +210,10 @@ class RootPluginManager(PluginManager):
         @param config - PluginConfig to reload it with
         """
         config.save()
-        if plugin in self.enabled:
-            plugin = self.enabled[name]
-            plugin.update_config(config)
+        with self.lock:
+            if plugin in self.enabled:
+                plugin = self.enabled[name]
+                plugin.update_config(config)
 
 
 class Plugin(object):
