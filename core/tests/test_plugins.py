@@ -1,4 +1,4 @@
-from maintain.core.modules import Plugin
+from maintain.core.plugins import Plugin
 
 class PluginNoDepends(Plugin):
     """plugin with no dependencies"""
@@ -60,7 +60,7 @@ PluginIndirectCycleA.depends = (PluginIndirectCycleC)
 class PluginFailsWhenEnabled(Plugin):
     """I fail when you try to create an instance of me.  Used for testing
     enable/disabling of tasks"""
-    def __init__(self):
+    def __init__(self, manager, plugin_config):
         0/0+FAKE
 
 class PluginFailingDepends(Plugin):

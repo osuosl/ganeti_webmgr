@@ -1,6 +1,6 @@
 import unittest
 
-from maintain.core.modules import *
+from maintain.core.plugins import *
 from test_plugins import *
 
 class RootPluginManager_Test(unittest.TestCase):
@@ -9,10 +9,10 @@ class RootPluginManager_Test(unittest.TestCase):
         Tests registering plugins with no dependencies
         """
         manager = RootPluginManager()
-        self.assertTrue(len(manager.plugins)==0, 'plugins should be empty')
+        self.assert_(len(manager.plugins)==0, 'plugins should be empty')
         manager.register(PluginNoDepends)
-        self.assertTrue(len(manager.plugins)==1, 'plugins should only have 1 plugin')
-        self.assertTrue('PluginNoDepends' in manager.plugins.keys(), 'plugins should contain PluginNoDepends')
+        self.assert_(len(manager.plugins)==1, 'plugins should only have 1 plugin')
+        self.assert_('PluginNoDepends' in manager.plugins.keys(), 'plugins should contain PluginNoDepends')
 
     def test_enable(self):
         """
@@ -20,30 +20,30 @@ class RootPluginManager_Test(unittest.TestCase):
         """
         manager = RootPluginManager()
         manager.register(PluginNoDepends)
-        self.assertTrue(len(manager.enabled)==0, 'enabled should be empty')
-        self.assertTrue(manager.enable('PluginNoDepends'), 'enable returned False')
-        self.assertTrue(len(manager.enabled)==1, 'enabled should only have 1 plugin')
-        self.assertTrue('PluginNoDepends' in manager.enabled, 'enabled should contain PluginNoDepends')
+        self.assert_(len(manager.enabled)==0, 'enabled should be empty')
+        self.assert_(manager.enable('PluginNoDepends'), 'enable returned False')
+        self.assert_(len(manager.enabled)==1, 'enabled should only have 1 plugin')
+        self.assert_('PluginNoDepends' in manager.enabled, 'enabled should contain PluginNoDepends')
 
     def test_enable_redundant(self):
         manager = RootPluginManager()
         manager.register(PluginNoDepends)
-        self.assertTrue(len(manager.enabled)==0, 'enabled should be empty')
-        self.assertTrue(manager.enable('PluginNoDepends'), 'enable returned False')
-        self.assertTrue(len(manager.enabled)==1, 'enabled should only have 1 plugin')
-        self.assertTrue('PluginNoDepends' in manager.enabled, 'enabled should contain PluginNoDepends')
-        self.assertTrue(manager.enable('PluginNoDepends'), 'enable returned False')
-        self.assertTrue(len(manager.enabled)==1, 'enabled should only have 1 plugin')
-        self.assertTrue('PluginNoDepends' in manager.enabled, 'enabled should contain PluginNoDepends')
+        self.assert_(len(manager.enabled)==0, 'enabled should be empty')
+        self.assert_(manager.enable('PluginNoDepends'), 'enable returned False')
+        self.assert_(len(manager.enabled)==1, 'enabled should only have 1 plugin')
+        self.assert_('PluginNoDepends' in manager.enabled, 'enabled should contain PluginNoDepends')
+        self.assert_(manager.enable('PluginNoDepends'), 'enable returned False')
+        self.assert_(len(manager.enabled)==1, 'enabled should only have 1 plugin')
+        self.assert_('PluginNoDepends' in manager.enabled, 'enabled should contain PluginNoDepends')
 
     def test_enable_before_register(self):
         """
         Tests enable plugins with no dependencies
         """
         manager = RootPluginManager()
-        self.assertTrue(len(manager.enabled)==0, 'enabled should be empty')
-        self.assertFalse(manager.enable('PluginNoDepends'), 'enable returned True')
-        self.assertTrue(len(manager.enabled)==0, 'enabled should be empty')
+        self.assert_(len(manager.enabled)==0, 'enabled should be empty')
+        self.assertRaises(UnknownPluginException, manager.enable, 'PluginNoDepends')
+        self.assert_(len(manager.enabled)==0, 'enabled should be empty')
         self.assertFalse('PluginNoDepends' in manager.enabled, 'enabled should not contain PluginNoDepends')
     
     def test_enable_depends(self):
@@ -53,11 +53,11 @@ class RootPluginManager_Test(unittest.TestCase):
         manager = RootPluginManager()
         manager.register(PluginNoDepends)
         manager.register(PluginOneDepends)
-        self.assertTrue(len(manager.enabled)==0, 'enabled should be empty')
-        self.assertTrue(manager.enable('PluginOneDepends'), 'enable returned False')
-        self.assertTrue(len(manager.enabled)==2, 'enabled should have 2 plugins')
-        self.assertTrue('PluginNoDepends' in manager.enabled, 'enabled should contain PluginNoDepends')
-        self.assertTrue('PluginOneDepends' in manager.enabled, 'enabled should contain PluginOneDepends')
+        self.assert_(len(manager.enabled)==0, 'enabled should be empty')
+        self.assert_(manager.enable('PluginOneDepends'), 'enable returned False')
+        self.assert_(len(manager.enabled)==2, 'enabled should have 2 plugins')
+        self.assert_('PluginNoDepends' in manager.enabled, 'enabled should contain PluginNoDepends')
+        self.assert_('PluginOneDepends' in manager.enabled, 'enabled should contain PluginOneDepends')
     
     def test_enable_exception(self):
         """
@@ -65,9 +65,9 @@ class RootPluginManager_Test(unittest.TestCase):
         """
         manager = RootPluginManager()
         manager.register(PluginFailsWhenEnabled)
-        self.assertTrue(len(manager.enabled)==0, 'enabled should be empty')
-        self.assertFalse(manager.enable('PluginFailsWhenEnabled'), 'enable returned True')
-        self.assertTrue(len(manager.enabled)==0, 'enabled should be empty')
+        self.assert_(len(manager.enabled)==0, 'enabled should be empty')
+        self.assertRaises(Exception, manager.enable, 'PluginFailsWhenEnabled')
+        self.assert_(len(manager.enabled)==0, 'enabled should be empty')
         self.assertFalse('PluginFailsWhenEnabled' in manager.enabled, 'enabled should not contain PluginFailsWhenEnabled')
 
     def test_enable_depends_exception(self):
@@ -76,9 +76,9 @@ class RootPluginManager_Test(unittest.TestCase):
         """
         manager = RootPluginManager()
         manager.register(PluginFailingDepends)
-        self.assertTrue(len(manager.enabled)==0, 'enabled should be empty')
-        self.assertFalse(manager.enable('PluginFailingDepends'), 'enable returned True')
-        self.assertTrue(len(manager.enabled)==0, 'enabled should be empty')
+        self.assert_(len(manager.enabled)==0, 'enabled should be empty')
+        self.assertRaises(Exception, manager.enable, 'PluginFailingDepends')
+        self.assert_(len(manager.enabled)==0, 'enabled should be empty')
         self.assertFalse('PluginFailsWhenEnabled' in manager.enabled, 'enabled should not contain PluginFailsWhenEnabled')
         self.assertFalse('PluginFailingDepends' in manager.enabled, 'enabled should not contain PluginFailingDepends')
     
@@ -89,9 +89,9 @@ class RootPluginManager_Test(unittest.TestCase):
         """
         manager = RootPluginManager()
         manager.register(PluginFailsWithDepends)
-        self.assertTrue(len(manager.enabled)==0, 'enabled should be empty')
-        self.assertFalse(manager.enable('PluginFailsWithDepends'), 'enable returned True')
-        self.assertTrue(len(manager.enabled)==0, 'enabled should be empty')
+        self.assert_(len(manager.enabled)==0, 'enabled should be empty')
+        self.assertRaises(Exception, manager.enable, 'PluginFailsWithDepends')
+        self.assert_(len(manager.enabled)==0, 'enabled should be empty')
         self.assertFalse('PluginFailsWithDepends' in manager.enabled, 'enabled should not contain PluginFailsWithDepends')
         self.assertFalse('PluginNoDepends' in manager.enabled, 'enabled should not contain PluginNoDepends')
 
@@ -106,13 +106,13 @@ class RootPluginManager_Test(unittest.TestCase):
         manager.register(PluginNoDependsB)
         manager.register(PluginFailsWhenEnabled)
         manager.register(PluginDependsFailsRequiresRollback)
-        self.assertTrue(len(manager.enabled)==0, 'enabled should be empty')
-        self.assertTrue(manager.enable('PluginNoDepends'), 'enable returned False')
-        self.assertTrue(len(manager.enabled)==1, 'enabled should only have 1 plugin')
-        self.assertTrue('PluginNoDepends' in manager.enabled, 'enabled should contain PluginNoDepends')
-        self.assertFalse(manager.enable('PluginDependsFailsRequiresRollback'), 'enable returned True')
-        self.assertTrue(len(manager.enabled)==1, 'enabled should have only 1 plugin')
-        self.assertTrue('PluginNoDepends' in manager.enabled, 'enabled should contain PluginNoDepends')
+        self.assert_(len(manager.enabled)==0, 'enabled should be empty')
+        self.assert_(manager.enable('PluginNoDepends'), 'enable returned False')
+        self.assert_(len(manager.enabled)==1, 'enabled should only have 1 plugin')
+        self.assert_('PluginNoDepends' in manager.enabled, 'enabled should contain PluginNoDepends')
+        self.assertRaises(Exception, manager.enable, 'PluginDependsFailsRequiresRollback')
+        self.assert_(len(manager.enabled)==1, 'enabled should have only 1 plugin')
+        self.assert_('PluginNoDepends' in manager.enabled, 'enabled should contain PluginNoDepends')
         self.assertFalse('PluginDependsFailsRequiresRollback' in manager.enabled, 'enabled should not contain PluginDependsFailsRequiresRollback')
         self.assertFalse('PluginFailsWhenEnabled' in manager.enabled, 'enabled should not contain PluginFailsWhenEnabled')
         self.assertFalse('PluginNoDependsB' in manager.enabled, 'enabled should not contain PluginNoDependsB')
@@ -125,7 +125,7 @@ class RootPluginManager_Test(unittest.TestCase):
         manager.register(PluginNoDepends)
         manager.enable('PluginNoDepends')
         manager.disable('PluginNoDepends')
-        self.assertTrue(len(manager.enabled)==0, len(manager.enabled))
+        self.assert_(len(manager.enabled)==0, len(manager.enabled))
 
     def test_disable_with_dependeds(self):
         """
@@ -135,9 +135,9 @@ class RootPluginManager_Test(unittest.TestCase):
         manager.register(PluginNoDepends)
         manager.register(PluginOneDepends)
         manager.enable('PluginOneDepends')
-        self.assertTrue(len(manager.enabled)==2, len(manager.enabled))
+        self.assert_(len(manager.enabled)==2, len(manager.enabled))
         manager.disable('PluginNoDepends')
-        self.assertTrue(len(manager.enabled)==0, len(manager.enabled))
+        self.assert_(len(manager.enabled)==0, len(manager.enabled))
         
     def test_disable_with_dependeds_and_depend(self):
         """
@@ -151,10 +151,10 @@ class RootPluginManager_Test(unittest.TestCase):
         manager.register(PluginOneDepends)
         manager.register(PluginRecursiveDepends)
         manager.enable('PluginRecursiveDepends')
-        self.assertTrue(len(manager.enabled)==3, len(manager.enabled))
+        self.assert_(len(manager.enabled)==3, len(manager.enabled))
         manager.disable('PluginOneDepends')
-        self.assertTrue(len(manager.enabled)==1, len(manager.enabled))
-        self.assertTrue('PluginNoDepends' in manager.enabled, manager.enabled)
+        self.assert_(len(manager.enabled)==1, len(manager.enabled))
+        self.assert_('PluginNoDepends' in manager.enabled, manager.enabled)
 
 
 class Plugin_Test(unittest.TestCase):
@@ -170,24 +170,24 @@ class Plugin_Test(unittest.TestCase):
         Tests getting depends when plugin depends on nothing
         """
         depends = get_depends(PluginNoDepends)
-        self.assertTrue(len(depends)==0,'Depends should be 0')
+        self.assert_(len(depends)==0,'Depends should be 0')
 
     def test_get_depends_depends_one(self):
         """
         Tests getting depends when plugin depends on only one plugin
         """
         depends = get_depends(PluginOneDepends)
-        self.assertTrue(len(depends)==1,'Depends should be 1')
-        self.assertTrue(PluginNoDepends in depends, 'Depends does not contain PluginNoDepends')
+        self.assert_(len(depends)==1,'Depends should be 1')
+        self.assert_(PluginNoDepends in depends, 'Depends does not contain PluginNoDepends')
     
     def test_get_depends_depends_two(self):
         """
         Tests getting depends when plugin depends on more than one plugin
         """
         depends = get_depends(PluginTwoDepends)
-        self.assertTrue(len(depends)==2,'Depends should be 2')
-        self.assertTrue(PluginNoDepends in depends, 'Depends does not contain PluginNoDepends')
-        self.assertTrue(PluginNoDependsB in depends, 'Depends does not contain PluginNoDependsB')
+        self.assert_(len(depends)==2,'Depends should be 2')
+        self.assert_(PluginNoDepends in depends, 'Depends does not contain PluginNoDepends')
+        self.assert_(PluginNoDependsB in depends, 'Depends does not contain PluginNoDependsB')
     
     def test_get_depends_recursive(self):
         """
@@ -195,11 +195,11 @@ class Plugin_Test(unittest.TestCase):
         depends
         """
         depends = get_depends(PluginRecursiveDepends)
-        self.assertTrue(len(depends)==2,'Depends should be 2')
-        self.assertTrue(PluginNoDepends in depends, 'Depends does not contain PluginNoDepends')
-        self.assertTrue(PluginOneDepends in depends, 'Depends does not contain PluginRecursiveDepends')
-        self.assertTrue(depends[0]==PluginNoDepends, 'Depends out of order')
-        self.assertTrue(depends[1]==PluginOneDepends, 'Depends out of order')
+        self.assert_(len(depends)==2,'Depends should be 2')
+        self.assert_(PluginNoDepends in depends, 'Depends does not contain PluginNoDepends')
+        self.assert_(PluginOneDepends in depends, 'Depends does not contain PluginRecursiveDepends')
+        self.assert_(depends[0]==PluginNoDepends, 'Depends out of order')
+        self.assert_(depends[1]==PluginOneDepends, 'Depends out of order')
     
     def test_get_depends_recursive_redundant(self):
         """
@@ -207,19 +207,19 @@ class Plugin_Test(unittest.TestCase):
         depends but that dependencies was already added
         """
         depends = get_depends(PluginRedundantRecursiveDepends)
-        self.assertTrue(len(depends)==2,'Depends should be 2')
-        self.assertTrue(PluginNoDepends in depends, 'Depends does not contain PluginNoDepends')
-        self.assertTrue(PluginOneDepends in depends, 'Depends does not contain PluginRecursiveDepends')
-        self.assertTrue(depends[0]==PluginNoDepends, 'Depends out of order')
-        self.assertTrue(depends[1]==PluginOneDepends, 'Depends out of order')
+        self.assert_(len(depends)==2,'Depends should be 2')
+        self.assert_(PluginNoDepends in depends, 'Depends does not contain PluginNoDepends')
+        self.assert_(PluginOneDepends in depends, 'Depends does not contain PluginRecursiveDepends')
+        self.assert_(depends[0]==PluginNoDepends, 'Depends out of order')
+        self.assert_(depends[1]==PluginOneDepends, 'Depends out of order')
     
     def test_get_depends_redundant(self):
         """
         Tests getting depends when plugin depends on the same plugin twice
         """
         depends = get_depends(PluginRedundentDepends)
-        self.assertTrue(len(depends)==1,'Depends should be 1')
-        self.assertTrue(PluginNoDepends in depends, 'Depends does not contain PluginNoDepends')
+        self.assert_(len(depends)==1,'Depends should be 1')
+        self.assert_(PluginNoDepends in depends, 'Depends does not contain PluginNoDepends')
     
     def test_get_depends_cycle(self):
         """
@@ -247,7 +247,7 @@ class Plugin_Test(unittest.TestCase):
         manager.register(PluginNoDepends)
         plugin = manager.enable('PluginNoDepends')
         dependeds = get_depended(plugin)
-        self.assertTrue(len(dependeds)==0, 'Plugin has nothing depending on it')
+        self.assert_(len(dependeds)==0, 'Plugin has nothing depending on it')
 
     def test_get_depended_one_dependeds(self):
         """
@@ -260,8 +260,8 @@ class Plugin_Test(unittest.TestCase):
         plugin = manager.enable('PluginNoDepends')
         depended = manager.enable('PluginOneDepends')
         dependeds = get_depended(plugin)
-        self.assertTrue(len(dependeds)==1, len(dependeds))
-        self.assertTrue(depended in dependeds, dependeds)
+        self.assert_(len(dependeds)==1, len(dependeds))
+        self.assert_(depended in dependeds, dependeds)
 
     def test_get_depended_two_dependeds(self):
         """
@@ -276,9 +276,9 @@ class Plugin_Test(unittest.TestCase):
         dependedA = manager.enable('PluginOneDepends')
         dependedB = manager.enable('PluginOneDependsB')
         dependeds = get_depended(plugin)
-        self.assertTrue(len(dependeds)==2, len(dependeds))
-        self.assertTrue(dependedA in dependeds)
-        self.assertTrue(dependedB in dependeds)
+        self.assert_(len(dependeds)==2, len(dependeds))
+        self.assert_(dependedA in dependeds)
+        self.assert_(dependedB in dependeds)
     
     def test_get_depended_recursive_dependeds(self):
         """
@@ -293,9 +293,9 @@ class Plugin_Test(unittest.TestCase):
         dependedA = manager.enable('PluginOneDepends')
         dependedB = manager.enable('PluginRecursiveDepends')
         dependeds = get_depended(plugin)
-        self.assertTrue(len(dependeds)==2, len(dependeds))
-        self.assertTrue(dependedA in dependeds)
-        self.assertTrue(dependedB in dependeds)
+        self.assert_(len(dependeds)==2, len(dependeds))
+        self.assert_(dependedA in dependeds)
+        self.assert_(dependedB in dependeds)
 
 
 def suite():

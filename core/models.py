@@ -42,6 +42,7 @@ class PluginConfig(models.Model):
         """
         if not form_class:
             self.config = None
+            return
         
         if not isinstance(form_class, (list, tuple)):
             form_class = (form_class,)

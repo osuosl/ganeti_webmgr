@@ -89,7 +89,7 @@ class RootPluginManager(PluginManager):
                 if type(plugin)==type and not plugin in subclasses:
                     if issubclass(plugin, subclasses):
                         configs.append(self.register(plugin))
-                        
+
             # Step 4: enable any plugins that were marked as enabled
             for config in configs:
                 if config.enabled:
@@ -137,11 +137,12 @@ class RootPluginManager(PluginManager):
         try:
             class_ = self.plugins[name]
         except KeyError:
-            UnknownPluginException(name)
+            raise UnknownPluginException(name)
 
         # already enabled
         if name in self.enabled:
             return self.enabled[name]
+
 
         # as long as get_depends() returns the list in order from eldest to
         # youngest, we can just iterate the list making sure each one is enabled
@@ -153,7 +154,6 @@ class RootPluginManager(PluginManager):
                     continue
                 depend_plugin = self.__enable(depend)
                 enabled.append(depend.__name__)
-                
             plugin = self.__enable(class_)
         except Exception, e:
             #exception occured, rollback any enabled plugins in reverse order
@@ -220,6 +220,7 @@ class Plugin(object):
     manager = None
     depends = None
     description = 'I am a plugin who has not been described'
+    config_form = None
     
     def __init__(self, manager, plugin_config):
         """
