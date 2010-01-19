@@ -148,7 +148,13 @@
                 will either update the interface on a success or display a list
                 of errors
             */
-            if (data != -1){
+            if (data.length == 2 && data[0] == -1){
+                errors = data[1];
+                for (i in errors) {
+                    $errors.append("<li>"+errors[i]+"</li>");
+                }
+                $errors.show();
+            } else {
                 for (i in data){
                     plugin = data[i];
                     $('#'+plugin)

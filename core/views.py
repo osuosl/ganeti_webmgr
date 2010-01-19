@@ -1,4 +1,6 @@
 import simplejson
+import sys
+import traceback
 
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import user_passes_test
@@ -11,6 +13,7 @@ from django.utils.text import capfirst
 from plugins import RootPluginManager, get_depends, get_depended, \
                     CyclicDependencyException
 from models import PluginConfig
+from util.list_file import ListFile
 import settings
 
 # create a global manager that all views will use
@@ -65,8 +68,8 @@ def dependeds(request):
     dependeds = get_depended(manager.enabled[name])
     plugins = [{'name':p.name, 'description':p.description} for p in dependeds]
     return HttpResponse(simplejson.dumps(plugins))
-    
-    
+
+
 def enable(request):
     """
     Enables a plugin and any of its dependencies
@@ -87,8 +90,8 @@ def enable(request):
         if manager.enable(name):
             return HttpResponse(simplejson.dumps(enabled))
     except Exception, e:
-        error = 'Exception enabling plugin:'
-        return HttpResponse([-1, error])
+        error = ['Exception enabling plugin or one of its dependencies:']
+        return HttpResponse(simplejson.dumps([-1, error]))
 
 
 def disable(request):
