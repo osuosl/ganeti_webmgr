@@ -92,8 +92,8 @@ class SQLLock(models.Model):
     """
     name = models.CharField(max_length=64)
     created = models.DateTimeField(auto_now=True)
-    release = models.DateTimeField(null=True)
-    
+    release_time = models.DateTimeField(null=True)
+    acquired = False
 
     def acquire(self, name, timeout=1000):
         """
@@ -106,17 +106,14 @@ class SQLLock(models.Model):
         self.name = name
         
         # if this instance has timed out, delete it
-        if self.id and self.release and self.release < datetime.now():
-            self.delete()
-            self.id = None
-            self.created = None
-            self.release = None
-            
+        if self.id and self.release_time and self.release_time < datetime.now():
+            print 'RELEASING!'
+            self.release()
         
         # put this instance in contention for the lock if it does not already
         # have an id.
         if timeout:
-            self.release = datetime.now() + timedelta(0, 0, 0, timeout)
+            self.release_time = datetime.now() + timedelta(0, 0, 0, timeout)
         self.save()
         
         # find the owner, determined by the order in which contenders were
@@ -124,9 +121,19 @@ class SQLLock(models.Model):
         contenders = SQLLock.objects.filter(name=self.name).order_by('id')
         owner = contenders[0]
         for owner in contenders:
-            if owner.release and self.created > owner.release:
+            if owner.release_time and self.created > owner.release_time:
                 # old owner has timed out
+                print 'DELETING OLD OWNER'
                 owner.delete()
             else:
                 break
-        return owner.id == self.id
+        self.acquired = owner.id == self.id
+        return self.acquired
+    
+    def release(self):
+        self.delete()
+        self.id = None
+        self.created = None
+        self.release_time = None
+        self.acquired = False
+    

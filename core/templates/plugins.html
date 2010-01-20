@@ -99,6 +99,7 @@
         $(document).ready(function() {
                 $('#plugins li.disabled input').live('click', function(){
                         $(this).attr('checked',false);
+                        if(!lock){return;}
                         $errors.empty().hide();
                         $('#enable h2 .plugin').html(this.parentNode.id);
                         $('#enable .description').html(this.parentNode.title);
@@ -107,6 +108,7 @@
                 
                 $('#plugins li.enabled input').live('click', function(){
                         $(this).attr('checked',true);
+                        if(!lock){return;}
                         $('#disable h2 .plugin').html(this.parentNode.id);
                         $('#disable .description').html(this.parentNode.title);
                         $errors.empty().hide();
@@ -114,14 +116,18 @@
                     });
                 
                 $('#enable button').click(function(){
-                        name = $('#enable h2 .plugin').html();
-                        $.getJSON('{{ROOT}}/plugin/enable', {'name':name}, process_enabled);
+                        if(lock){
+                            name = $('#enable h2 .plugin').html();
+                            $.getJSON('{{ROOT}}/plugin/enable', {'name':name}, process_enabled);
+                        }
                         $('#enable').hide();
                     });
                 
                 $('#disable button').click(function(){
-                        name = $('#disable h2 .plugin').html();
-                        $.getJSON('{{ROOT}}/plugin/disable', {'name':name}, process_disabled);
+                        if (lock){
+                            name = $('#disable h2 .plugin').html();
+                            $.getJSON('{{ROOT}}/plugin/disable', {'name':name}, process_disabled);
+                        }
                         $('#disable').hide();
                     });
 
@@ -136,6 +142,7 @@
                     });
 
                 $errors = $('#errors');
+                acquire_lock();
             });
         
         function process_depends(data){
@@ -218,6 +225,10 @@
                 }
             }
         }
+        
+        
+        {% include "config_lock.js" %}
+        
     </script>    
 {% endblock %}
 

@@ -44,6 +44,7 @@
             });
             
             $('input.save').live('click', function(){
+                if (!lock) {return;}
                 $form = $(this.parentNode.parentNode.parentNode);
                 $inputs = $form.find('input,select');
                 args = {};
@@ -67,6 +68,8 @@
             $('#tabs .tab').click(function() {
                 switch_tab(this.id.slice(4));
             });
+            
+            acquire_lock();
         });
 
         function switch_tab(name){
@@ -96,6 +99,7 @@
             }
         }
     
+        {% include "config_lock.js" %}
     </script>
 {% endblock %}
 

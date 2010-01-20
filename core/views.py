@@ -1,3 +1,4 @@
+from datetime import datetime
 import simplejson
 import sys
 import traceback
@@ -12,7 +13,7 @@ from django.utils.text import capfirst
 
 from plugins import RootPluginManager, get_depends, get_depended, \
                     CyclicDependencyException
-from models import PluginConfig
+from models import PluginConfig, SQLLock
 from util.list_file import ListFile
 import settings
 
@@ -31,6 +32,33 @@ def settings_processor(request):
         'ROOT':settings.ROOT_URL
     }
 
+def requires_config_lock(fn):
+    """
+    decorator for adding config lock to handlers
+    """
+    def new(request, *args, **kwargs):
+        print 'requires ======================='
+        try:
+            active_lock = request.session['CONFIG_ACTIVE_LOCK']
+            timeout_lock = request.session['CONFIG_TIMEOUT_LOCK']
+            print active_lock, timeout_lock
+        except KeyError:
+            print 'NEW LOCKS'
+            active_lock = SQLLock()
+            timeout_lock = SQLLock()
+        request.session['CONFIG_ACTIVE_LOCK'] = active_lock
+        request.session['CONFIG_TIMEOUT_LOCK'] = timeout_lock
+        if active_lock.acquire('CONFIG_ACTIVE_LOCK', 15000):
+            print 'acquired active lock', active_lock.id
+            timeout_lock.acquire('CONFIG_TIMEOUT_LOCK',60000)
+            print 'timeout lock', timeout_lock.id
+        print '----------------------------------'
+        return fn(request, *args, **kwargs)
+
+    return new
+
+
+@requires_config_lock
 def plugins(request):
     """
     Renders configuration page for plugins
@@ -44,6 +72,7 @@ def plugins(request):
             context_instance=c)
 
 
+@requires_config_lock
 def depends(request):
     """
     returns a list of depends for a plugin
@@ -61,6 +90,7 @@ def depends(request):
         return HttpResponse(simplejson.dumps([-1, error]))
 
 
+@requires_config_lock
 def dependeds(request):
     """
     returns a list of dependeds for a plugin
@@ -72,6 +102,7 @@ def dependeds(request):
     return HttpResponse(simplejson.dumps(plugins))
 
 
+@requires_config_lock
 def enable(request):
     """
     Enables a plugin and any of its dependencies
@@ -96,6 +127,7 @@ def enable(request):
         return HttpResponse(simplejson.dumps([-1, error]))
 
 
+@requires_config_lock
 def disable(request):
     """
     Disables a plugin and any that depend on it
@@ -111,8 +143,9 @@ def disable(request):
     
     manager.disable(name)
     return HttpResponse(simplejson.dumps(disabled))
-    
-    
+
+
+@requires_config_lock
 def config(request, name):
     """
     Config edit page for plugins.  This is a generic handler that deals with
@@ -139,7 +172,7 @@ def config(request, name):
         form = form_class(plugin_config.config)
         return render_to_response('config.html', {'name':name, 'form':form})
 
-
+@requires_config_lock
 def config_save(request, name):
     """
     Generic handler for saving configuration.  This handler deals with plugins
@@ -171,5 +204,41 @@ def config_save(request, name):
             errors.append([capfirst(k), error._proxy____args[0]])
     return HttpResponse(simplejson.dumps(errors))
 
+
+def refresh_active_lock(request):
+    """
+    Part of a composite locking system.  ACTIVE_LOCK is used to determine if
+    the user is currently on the page.  If the user leaves the page the
+    ACTIVE_LOCK will expire in 15 seconds.
     
+    The ACTIVE_LOCK should be refreshed before it expires to ensure that no 
+    other contender ever obtains the lock while the user is still on the page.
+    Obtaining the short lock overrides the TIMEOUT_LOCK.
     
+    The TIMEOUT_LOCK times the user out if there are no edits after 5 minutes.
+    If the TIMEOUT_LOCK expires then the ACTIVE_LOCK is removed.  This allows
+    users who leave the browser window open to time out.
+    """
+    active_lock = request.session['CONFIG_ACTIVE_LOCK']
+    timeout_lock = request.session['CONFIG_TIMEOUT_LOCK']
+    request.session['CONFIG_ACTIVE_LOCK'] = active_lock
+    request.session['CONFIG_TIMEOUT_LOCK'] = timeout_lock
+    
+    print 'starting lock', active_lock.id, timeout_lock.id, timeout_lock.release_time
+    
+    if active_lock.acquired and datetime.now() > timeout_lock.release_time:
+        # CONFIG_TIMEOUT_LOCK expired, send signal to stop ACTIVE_LOCK
+        # contention.  This allows the lock to be acquired by someone else
+        active_lock.release()
+        timeout_lock.release()
+        return HttpResponse(-2)
+    
+    acquired = active_lock.acquire('CONFIG_ACTIVE_LOCK', 15000)
+    print 'refresh active lock', active_lock.id, acquired
+    if acquired:
+        if not timeout_lock.acquired:
+            # only acquire CONFIG_TIMEOUT_LOCK if it is not already held.  This
+            # allows another user to acquire the lock from a timeout
+            timeout_lock.acquire('CONFIG_TIMEOUT_LOCK',180000)
+        return HttpResponse(1)
+    return HttpResponse(-1)
