@@ -48,7 +48,6 @@ def requires_config_lock(fn):
     return new
 
 
-@requires_config_lock
 def plugins(request):
     """
     Renders configuration page for plugins
@@ -133,7 +132,6 @@ def disable(request):
     return HttpResponse(simplejson.dumps(disabled))
 
 
-@requires_config_lock
 def config(request, name):
     """
     Config edit page for plugins.  This is a generic handler that deals with

@@ -46,7 +46,7 @@ function reacquire_lock() {
         $('body')
             .unbind('mousemove',reacquire_lock)
             .unbind('keypress',reacquire_lock);
-        acquire_lock();
+        refresh_lock();
     }
 }
 
