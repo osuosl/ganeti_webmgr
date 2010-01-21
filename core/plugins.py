@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from threading import RLock
 
 from models import PluginConfig
@@ -37,10 +38,68 @@ class RootPluginManager(PluginManager):
     of all plugins, whether they be registered directly with this plugin or
     are a sub-plugin.
     """
-    def __init__(self):
+    def __init__(self, multi_process=False):
         super(RootPluginManager, self).__init__()
         self.enabled = {}
-        self.lock = RLock()
+        self.__init_process_synchronization(multi_process)
+
+    def __init_process_synchronization(self, multi_process):
+        """
+        Initializes synchronization between multiple instances of this app.
+        
+        When deployed in a production environment, apache will often create
+        one instance of the app per apache thread.  The different threads must
+        synchronize configuration changes in a sane way.  RootPluginManager
+        uses multiprocessing to synchronizes
+        """
+        self.owner = None
+        self.owner_timeout = None
+        
+        if not multi_process:
+            # fall back to standard threading api
+            self.lock = RLock()
+            try:
+                self.config = PluginConfig.objects.get(name='ROOT_MANAGER')
+            except PluginConfig.DoesNotExist:
+                self.config = PluginConfig()
+                self.config.name = 'ROOT_MANAGER'
+                self.config.save()
+            return
+
+        while not self.config:
+            try:
+                self.config = PluginConfig.objects.get(name='ROOT_MANAGER')
+            except PluginConfig.DoesNotExist:
+                time.sleep(1)
+
+        #self.sync_manager = Manager()
+
+
+    def acquire(self, contender, timeout=15000):
+        """
+        acquires ownership of the manager, allowing configuration changes.
+        
+        @param contender - a string identifying the contender trying to acquire
+        @param timeout - how long the owner will hold the lock
+        """
+        with self.lock:
+            if not self.owner:
+                self.owner = contender
+            elif self.owner != contender:
+                return False
+            self.owner_timeout=datetime.now() + timedelta(0,0,0,0,timeout)
+            return True
+    
+    def release(self, contender):
+        """
+        Releases lock.  only the current owner may do this unless the lock has
+        timed out
+        """
+        with self.lock:
+            if self.owner == contender or self.owner_timeout < datetime.now():
+                self.owner = None
+                self.owner_timeout = None
+
     
     def autodiscover(self):
         """

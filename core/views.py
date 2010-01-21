@@ -5,11 +5,13 @@ import traceback
 
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import user_passes_test
+from django.core.cache import cache
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils.text import capfirst
+
 
 from plugins import RootPluginManager, get_depends, get_depended, \
                     CyclicDependencyException
@@ -37,23 +39,11 @@ def requires_config_lock(fn):
     decorator for adding config lock to handlers
     """
     def new(request, *args, **kwargs):
-        print 'requires ======================='
-        try:
-            active_lock = request.session['CONFIG_ACTIVE_LOCK']
-            timeout_lock = request.session['CONFIG_TIMEOUT_LOCK']
-            print active_lock, timeout_lock
-        except KeyError:
-            print 'NEW LOCKS'
-            active_lock = SQLLock()
-            timeout_lock = SQLLock()
-        request.session['CONFIG_ACTIVE_LOCK'] = active_lock
-        request.session['CONFIG_TIMEOUT_LOCK'] = timeout_lock
-        if active_lock.acquire('CONFIG_ACTIVE_LOCK', 15000):
-            print 'acquired active lock', active_lock.id
-            timeout_lock.acquire('CONFIG_TIMEOUT_LOCK',60000)
-            print 'timeout lock', timeout_lock.id
-        print '----------------------------------'
-        return fn(request, *args, **kwargs)
+        global manager
+        if manager.acquire(request.session._session_key):
+            return fn(request, *args, **kwargs)
+        else:
+            return HttpResponse(simplejson.dumps([-1,'No Lock']))
 
     return new
 
@@ -72,7 +62,6 @@ def plugins(request):
             context_instance=c)
 
 
-@requires_config_lock
 def depends(request):
     """
     returns a list of depends for a plugin
@@ -90,7 +79,6 @@ def depends(request):
         return HttpResponse(simplejson.dumps([-1, error]))
 
 
-@requires_config_lock
 def dependeds(request):
     """
     returns a list of dependeds for a plugin
@@ -205,40 +193,65 @@ def config_save(request, name):
     return HttpResponse(simplejson.dumps(errors))
 
 
-def refresh_active_lock(request):
+
+
+def acquire_lock(request):
     """
-    Part of a composite locking system.  ACTIVE_LOCK is used to determine if
-    the user is currently on the page.  If the user leaves the page the
-    ACTIVE_LOCK will expire in 15 seconds.
+    Acquires a lock.  should be called by clients that wish to obtain the lock
+    This method is different from refresh_lock() in that it is safe to cache.
+    The cache will only be released after 15 seconds.  Prior to this all users
+    will receive the same message.
     
-    The ACTIVE_LOCK should be refreshed before it expires to ensure that no 
-    other contender ever obtains the lock while the user is still on the page.
-    Obtaining the short lock overrides the TIMEOUT_LOCK.
+    When the lock is open, this function cannot be cached otherwise multiple
+    users would think they received the lock, when they just received a response
+    indicating they received it.
     
-    The TIMEOUT_LOCK times the user out if there are no edits after 5 minutes.
-    If the TIMEOUT_LOCK expires then the ACTIVE_LOCK is removed.  This allows
-    users who leave the browser window open to time out.
+    If multiprocess is being used for synchronization, caching here is
+    especially important.  Acquiring the lock involves communicating through
+    an external interface, possibly across the network.  allowing many requests
+    to fight over the lock just to check the timeout status is a major
+    bottleneck.
     """
-    active_lock = request.session['CONFIG_ACTIVE_LOCK']
-    timeout_lock = request.session['CONFIG_TIMEOUT_LOCK']
-    request.session['CONFIG_ACTIVE_LOCK'] = active_lock
-    request.session['CONFIG_TIMEOUT_LOCK'] = timeout_lock
+    cached = cache.get('REFRESH_LOCK')
+    if cached:
+        return cached
     
-    print 'starting lock', active_lock.id, timeout_lock.id, timeout_lock.release_time
+    # create and cache the fail response.  Only one person will get the lock so
+    # if one user has gotten past the cache, then the next user is already too
+    # late to get the lock anyways
+    fail_response = HttpResponse(-1)
+    cache.set('REFRESH_LOCK', fail_response, 14)
     
-    if active_lock.acquired and datetime.now() > timeout_lock.release_time:
-        # CONFIG_TIMEOUT_LOCK expired, send signal to stop ACTIVE_LOCK
-        # contention.  This allows the lock to be acquired by someone else
-        active_lock.release()
-        timeout_lock.release()
-        return HttpResponse(-2)
+    if manager.acquire(request.session._session_key):
+        return HttpResponse(1)
+    return fail_response
+
+
+def refresh_lock(request):
+    """
+    used by the holder of the lock to refresh the timeout proving they are still
+    active.
     
-    acquired = active_lock.acquire('CONFIG_ACTIVE_LOCK', 15000)
-    print 'refresh active lock', active_lock.id, acquired
-    if acquired:
-        if not timeout_lock.acquired:
-            # only acquire CONFIG_TIMEOUT_LOCK if it is not already held.  This
-            # allows another user to acquire the lock from a timeout
-            timeout_lock.acquire('CONFIG_TIMEOUT_LOCK',180000)
+    This method must never be cached.  while the result should almost
+    always be the same, manager.acquire() must be hit to ensure the timeout is
+    bumped.  Caching here isn't needed because very few users should be hitting
+    this at any given time.
+    
+    This method should be called more frequently than the lock timeout.  IE.  if
+    the lock times out in 15 seconds, this method should be called <14 seconds.
+    Take into account latency times of the network, this affects both the HTTP
+    request, and the time for acquiring the lock that must be held to modify the
+    timestamp.
+    """
+    if manager.acquire(request.session._session_key):
         return HttpResponse(1)
     return HttpResponse(-1)
+    
+  
+def release_lock(request):
+    """
+    Used by the holder of the lock to release it.  This can be used to
+    explicitly release a lock.  In most cases this isn't needed because a lock
+    will timeout automatically due to inactivity.
+    """
+    manager.release(request.session._session_key)
