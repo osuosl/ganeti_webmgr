@@ -53,7 +53,7 @@ class RootPluginManager(PluginManager):
         uses multiprocessing to synchronizes
         """
         self.owner = None
-        self.owner_timeout = None
+        self.owner_timeout = datetime.now()
         
         if not multi_process:
             # fall back to standard threading api
@@ -83,11 +83,10 @@ class RootPluginManager(PluginManager):
         @param timeout - how long the owner will hold the lock
         """
         with self.lock:
-            if not self.owner:
-                self.owner = contender
-            elif self.owner != contender:
+            if self.owner != contender and datetime.now() < self.owner_timeout:
                 return False
-            self.owner_timeout=datetime.now() + timedelta(0,0,0,0,timeout)
+            self.owner = contender
+            self.owner_timeout=datetime.now() + timedelta(0,0,0,timeout)
             return True
     
     def release(self, contender):
