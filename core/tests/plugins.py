@@ -170,14 +170,14 @@ class Plugin_Test(unittest.TestCase):
         """
         Tests getting depends when plugin depends on nothing
         """
-        depends = get_depends(PluginNoDepends)
+        depends = PluginNoDepends.get_depends()
         self.assert_(len(depends)==0,'Depends should be 0')
 
     def test_get_depends_depends_one(self):
         """
         Tests getting depends when plugin depends on only one plugin
         """
-        depends = get_depends(PluginOneDepends)
+        depends = PluginOneDepends.get_depends()
         self.assert_(len(depends)==1,'Depends should be 1')
         self.assert_(PluginNoDepends in depends, 'Depends does not contain PluginNoDepends')
     
@@ -185,7 +185,7 @@ class Plugin_Test(unittest.TestCase):
         """
         Tests getting depends when plugin depends on more than one plugin
         """
-        depends = get_depends(PluginTwoDepends)
+        depends = PluginTwoDepends.get_depends()
         self.assert_(len(depends)==2,'Depends should be 2')
         self.assert_(PluginNoDepends in depends, 'Depends does not contain PluginNoDepends')
         self.assert_(PluginNoDependsB in depends, 'Depends does not contain PluginNoDependsB')
@@ -195,7 +195,7 @@ class Plugin_Test(unittest.TestCase):
         Tests getting depends when plugin depends on a plugin with its own
         depends
         """
-        depends = get_depends(PluginRecursiveDepends)
+        depends = PluginRecursiveDepends.get_depends()
         self.assert_(len(depends)==2,'Depends should be 2')
         self.assert_(PluginNoDepends in depends, 'Depends does not contain PluginNoDepends')
         self.assert_(PluginOneDepends in depends, 'Depends does not contain PluginRecursiveDepends')
@@ -207,7 +207,7 @@ class Plugin_Test(unittest.TestCase):
         Tests getting depends when plugin depends on a plugin with its own
         depends but that dependencies was already added
         """
-        depends = get_depends(PluginRedundantRecursiveDepends)
+        depends = PluginRedundantRecursiveDepends.get_depends()
         self.assert_(len(depends)==2,'Depends should be 2')
         self.assert_(PluginNoDepends in depends, 'Depends does not contain PluginNoDepends')
         self.assert_(PluginOneDepends in depends, 'Depends does not contain PluginRecursiveDepends')
@@ -218,7 +218,7 @@ class Plugin_Test(unittest.TestCase):
         """
         Tests getting depends when plugin depends on the same plugin twice
         """
-        depends = get_depends(PluginRedundentDepends)
+        depends = PluginRedundentDepends.get_depends()
         self.assert_(len(depends)==1,'Depends should be 1')
         self.assert_(PluginNoDepends in depends, 'Depends does not contain PluginNoDepends')
     
@@ -226,8 +226,8 @@ class Plugin_Test(unittest.TestCase):
         """
         Tests getting depends from a plugin that has a dependency cycle
         """
-        self.assertRaises(CyclicDependencyException, get_depends, PluginCycleA)
-        self.assertRaises(CyclicDependencyException, get_depends, PluginCycleB)
+        self.assertRaises(CyclicDependencyException, PluginCycleA.get_depends)
+        self.assertRaises(CyclicDependencyException, PluginCycleB.get_depends)
     
     def test_get_depends_indirect_cycle(self):
         """
@@ -235,9 +235,9 @@ class Plugin_Test(unittest.TestCase):
         another depend
         """
         return
-        self.assertRaises(CyclicDependencyException, get_depends, PluginIndirectCycleA)
-        self.assertRaises(CyclicDependencyException, get_depends, PluginIndirectCycleB)
-        self.assertRaises(CyclicDependencyException, get_depends, PluginIndirectCycleC)
+        self.assertRaises(CyclicDependencyException, PluginIndirectCycleA.get_depends)
+        self.assertRaises(CyclicDependencyException, PluginIndirectCycleB.get_depends)
+        self.assertRaises(CyclicDependencyException, PluginIndirectCycleC.get_depends)
     
     def test_get_depended_no_dependeds(self):
         """
@@ -247,7 +247,7 @@ class Plugin_Test(unittest.TestCase):
         manager = RootPluginManager()
         manager.register(PluginNoDepends)
         plugin = manager.enable('PluginNoDepends')
-        dependeds = get_depended(plugin)
+        dependeds = plugin.get_depended()
         self.assert_(len(dependeds)==0, 'Plugin has nothing depending on it')
 
     def test_get_depended_one_dependeds(self):
@@ -260,7 +260,7 @@ class Plugin_Test(unittest.TestCase):
         manager.register(PluginOneDepends)
         plugin = manager.enable('PluginNoDepends')
         depended = manager.enable('PluginOneDepends')
-        dependeds = get_depended(plugin)
+        dependeds = plugin.get_depended()
         self.assert_(len(dependeds)==1, len(dependeds))
         self.assert_(depended in dependeds, dependeds)
 
@@ -281,13 +281,13 @@ class Plugin_Test(unittest.TestCase):
         pluginA = manager.enable('PluginNoDepends')
         pluginB = manager.enable('PluginOneDepends')
         pluginC = manager.enable('PluginOneDependsB')
-        dependedsA = get_depended(pluginA)
+        dependedsA = pluginA.get_depended()
         self.assert_(len(dependedsA)==2, len(dependedsA))
         self.assert_(pluginB in dependedsA)
         self.assert_(pluginC in dependedsA)
-        dependedsB = get_depended(pluginB)
+        dependedsB = pluginB.get_depended()
         self.assert_(len(dependedsB)==0, len(dependedsB))
-        dependedsC = get_depended(pluginC)
+        dependedsC = pluginC.get_depended()
         self.assert_(len(dependedsC)==0, len(dependedsC))
 
     def test_get_depended_two_depends(self):
@@ -307,13 +307,13 @@ class Plugin_Test(unittest.TestCase):
         pluginA = manager.enable('PluginNoDepends')
         pluginB = manager.enable('PluginNoDependsB')
         pluginC = manager.enable('PluginTwoDepends')
-        dependedsA = get_depended(pluginA)
+        dependedsA = pluginA.get_depended()
         self.assert_(len(dependedsA)==1, len(dependedsA))
         self.assert_(pluginC in dependedsA)
-        dependedsB = get_depended(pluginB)
+        dependedsB = pluginB.get_depended()
         self.assert_(len(dependedsB)==1, len(dependedsB))
         self.assert_(pluginC in dependedsB)
-        dependedsC = get_depended(pluginC)
+        dependedsC = pluginC.get_depended()
         self.assert_(len(dependedsC)==0, len(dependedsC))
 
     def test_get_depended_recursive_dependeds(self):
@@ -328,7 +328,7 @@ class Plugin_Test(unittest.TestCase):
         plugin = manager.enable('PluginNoDepends')
         dependedA = manager.enable('PluginOneDepends')
         dependedB = manager.enable('PluginRecursiveDepends')
-        dependeds = get_depended(plugin)
+        dependeds = plugin.get_depended()
         self.assert_(len(dependeds)==2, len(dependeds))
         self.assert_(dependedA in dependeds)
         self.assert_(dependedB in dependeds)

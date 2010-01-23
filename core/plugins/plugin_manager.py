@@ -3,7 +3,7 @@ from threading import RLock
 from multiprocessing.managers import SyncManager
 
 from core.models import PluginConfig
-from plugin import get_depended, get_depends, Plugin
+from plugin import Plugin
 from core.plugins import CyclicDependencyException, UnknownPluginException
 
 class PluginManager(object):
@@ -187,7 +187,7 @@ class RootPluginManager(PluginManager):
             if name not in self.enabled:
                 return
             plugin = self.enabled[name]
-            for depended_plugin in get_depended(plugin):
+            for depended_plugin in plugin.get_depended():
                 self.__disable(depended_plugin)
             self.__disable(plugin)
 
@@ -233,7 +233,7 @@ class RootPluginManager(PluginManager):
             # if they all succeed then the plugin can also be enabled.
             enabled = []
             try:
-                for depend in get_depends(class_):
+                for depend in class_.get_depends():
                     if depend.__name__ in self.enabled:
                         continue
                     depend_plugin = self.__enable(depend)
