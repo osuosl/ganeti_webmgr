@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% load maintain_extras %}
+
+{% block content %}
+
+    <h1>{{wrapper.name}}</h1>
+    {% include "view/model_fields.html" %}
+    
+    {% for field, wrapper in wrapper.one_to_one.items %}
+        <h2 class="section">{{model.name}}</h2>        
+        {% with instance|index:field as instance %}
+            {% include "view/model_fields.html" %}
+        {% endwith %}
+    {% endfor %}
+    
+    {% for field, wrapper in wrapper.one_to_many.items %}
+        <h2 class="section">{{model.name}}</h2>
+        {% with instance|index:field as instance %}
+            {% include "view/list_fields.html" %}
+        {% endwith %}
+    {% endfor %}
+
+{% endblock %}

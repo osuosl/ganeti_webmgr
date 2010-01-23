@@ -1,6 +1,7 @@
 import unittest
 
-from maintain.core.plugins import *
+from maintain.core.plugins.plugin import *
+from maintain.core.plugins.plugin_manager import *
 from test_plugins import *
 
 class RootPluginManager_Test(unittest.TestCase):

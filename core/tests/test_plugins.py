@@ -1,5 +1,5 @@
 from django import forms
-from maintain.core.plugins import Plugin
+from maintain.core.plugins.plugin import Plugin
 
 class PluginNoDepends(Plugin):
     """plugin with no dependencies"""

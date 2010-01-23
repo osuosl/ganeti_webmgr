@@ -1,0 +1,5 @@
+{% load maintain_extras %}
+
+{% for field in wrapper.fields %}
+    <div><label>{{field|capfirst}}:</label>{{instance|get:field}}</div>
+{% endfor %}
