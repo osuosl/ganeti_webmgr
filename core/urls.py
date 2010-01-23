@@ -12,7 +12,9 @@ urlpatterns = patterns('',
     (r'^plugin/lock/acquire$', acquire_lock),
     (r'^plugin/lock/refresh$', refresh_lock),
     (r'^plugin/(\w+)/$', config),
-    (r'^plugin/(\w+)/save$', config_save)
+    (r'^plugin/(\w+)/save$', config_save),
+    
+    (r'^view$', generic_model_view),
 )
 
 

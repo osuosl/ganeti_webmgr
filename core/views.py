@@ -253,3 +253,20 @@ def release_lock(request):
     will timeout automatically due to inactivity.
     """
     manager.release(request.session._session_key)
+    
+    
+
+from servers.models import *
+from core.plugins.DjangoModelPlugin import DjangoModelWrapper
+
+def generic_model_view(request):
+    c = RequestContext(request, processors=[settings_processor])
+    
+    instance = Device.objects.all()[0]
+    
+    wrapper = DjangoModelWrapper(Device)
+    return render_to_response('view/generic_model_view.html',
+            {'wrapper': wrapper, 'instance':instance}, context_instance=c)
+    
+    
+    

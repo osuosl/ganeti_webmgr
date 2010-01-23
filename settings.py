@@ -91,5 +91,6 @@ INSTALLED_APPS = (
     #'django.contrib.sessions',
     #'django.contrib.sites',
     'core',
-    'foo'
+    #'foo',
+    'servers'
 )

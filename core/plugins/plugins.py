@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta
 from threading import RLock
+from multiprocessing.managers import SyncManager
 
-from models import PluginConfig
+from core.models import PluginConfig
 
 class PluginManager(object):
     """
@@ -38,6 +39,7 @@ class RootPluginManager(PluginManager):
     of all plugins, whether they be registered directly with this plugin or
     are a sub-plugin.
     """
+    config = None
     def __init__(self, multi_process=False):
         super(RootPluginManager, self).__init__()
         self.enabled = {}
@@ -70,9 +72,15 @@ class RootPluginManager(PluginManager):
             try:
                 self.config = PluginConfig.objects.get(name='ROOT_MANAGER')
             except PluginConfig.DoesNotExist:
+                # config doesn't exist, it's up to the sync manager to create
+                # it.  Sleep until it has been created.
                 time.sleep(1)
-
-        #self.sync_manager = Manager()
+        SyncManager.register('get_enabled')
+        SyncManager.register('get_lock')
+        self.sync_manager = SyncManager(address=('', 61000), authkey='goaway123984')
+        self.sync_manager.connect()
+        self.enabled = self.sync_manager.get_enabled()
+        self.lock = self.sync_manager.get_lock()
 
 
     def acquire(self, contender, timeout=15000):
@@ -82,22 +90,29 @@ class RootPluginManager(PluginManager):
         @param contender - a string identifying the contender trying to acquire
         @param timeout - how long the owner will hold the lock
         """
-        with self.lock:
+        try:
+            self.lock.acquire()
             if self.owner != contender and datetime.now() < self.owner_timeout:
                 return False
             self.owner = contender
             self.owner_timeout=datetime.now() + timedelta(0,0,0,timeout)
             return True
-    
+        finally:
+            self.lock.release()
+
+
     def release(self, contender):
         """
         Releases lock.  only the current owner may do this unless the lock has
         timed out
         """
-        with self.lock:
+        try:
+            self.lock.acquire()
             if self.owner == contender or self.owner_timeout < datetime.now():
                 self.owner = None
                 self.owner_timeout = None
+        finally:
+            self.lock.release()
 
     
     def autodiscover(self):
@@ -152,10 +167,13 @@ class RootPluginManager(PluginManager):
                         configs.append(self.register(plugin))
 
             # Step 4: enable any plugins that were marked as enabled
-            with self.lock:
+            try:
+                self.lock.acquire()
                 for config in configs:
                     if config.enabled:
                         self.enable(config.name)
+            finally:
+                self.lock.release()
 
     def disable(self, name):
         """
@@ -197,14 +215,15 @@ class RootPluginManager(PluginManager):
         @returns - Instance of plugin that was created/running, or None if it
         failed to load
         """
-        with self.lock:
+        try:
+            self.lock.acquire()
             try:
                 class_ = self.plugins[name]
             except KeyError:
                 raise UnknownPluginException(name)
     
             # already enabled
-            if name in self.enabled:
+            if name in self.enabled.items():
                 return self.enabled[name]
     
             # as long as get_depends() returns the list in order from eldest to
@@ -226,6 +245,9 @@ class RootPluginManager(PluginManager):
                         self.disable(plugin)
                 raise e
             return plugin
+        finally:
+            self.lock.release()
+
 
     def __enable(self, class_):
         """
@@ -248,7 +270,8 @@ class RootPluginManager(PluginManager):
         
         @param class_ - Plugin class to register
         """
-        with self.lock:
+        try:
+            self.lock.acquire()
             super(RootPluginManager, self).register(class_)
             try:
                 config = PluginConfig.objects.get(name=class_.__name__)
@@ -258,6 +281,8 @@ class RootPluginManager(PluginManager):
                 config.set_defaults(class_.config_form)
                 config.save()
             return config
+        finally:
+            self.lock.release()
     
     def update_config(self, name, config):
         """
