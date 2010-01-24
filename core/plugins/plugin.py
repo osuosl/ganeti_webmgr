@@ -16,6 +16,7 @@ class Plugin(Registerable):
     description = 'I am a plugin who has not been described'
     config_form = None
     objects = ()
+    core = False
     
     def __init__(self, manager, plugin_config):
         """

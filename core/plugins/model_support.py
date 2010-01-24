@@ -2,10 +2,16 @@ from django.db.models.fields import AutoField
 from django.db.models.fields.related import ForeignRelatedObjectsDescriptor, \
                                             SingleRelatedObjectDescriptor
 
+from core.plugins.plugin import Plugin
 from core.plugins.plugin_manager import PluginManager
+from core.plugins.registerable import Registerable
+from core.plugins.view import View
 
 
-class DjangoModelManager(PluginManager):
+class ModelManager(Plugin, PluginManager):
+    """
+    Manager for tracking enabled models
+    """
     pass
 
 
@@ -16,7 +22,8 @@ class DjangoModelWrapper(Registerable):
     class provides more convenient and stable api to access it.  This shields
     users of this framework from changes within the django internals.
     """
-    self.manager = 'DjangoModelManager'
+    target = 'DjangoModelManager'
+    _target = ('DjangoModelManager')
     
     def __init__(self, class_):
         """
@@ -93,5 +100,5 @@ class DjangoModelWrapper(Registerable):
         dict_[name] = wrapper
 
 
-class DjangoModelView(View):
+class ModelView(View):
     pass

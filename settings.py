@@ -94,3 +94,11 @@ INSTALLED_APPS = (
     #'foo',
     'servers'
 )
+
+
+# core plugins - these are plugins that are loaded before all other plugins
+# because they provide some core functionality.  They can only be disabled by
+# changing this setting.
+CORE_PLUGINS = (
+    'core.plugins.model_support.ModelManager'
+)

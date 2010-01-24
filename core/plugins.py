@@ -1,1 +1,0 @@
-from core.plugins.django import DjangoModelManager

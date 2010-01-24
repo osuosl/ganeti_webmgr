@@ -42,10 +42,3 @@ class Registerable(object):
             elif isinstance(value, (str,)):
                 self._target = value.split('.')    
         super(Registerable, self).__setattr__(key, value)
-
-
-class View(Registerable):
-    """
-    Base class for building user interface
-    """
-    pass

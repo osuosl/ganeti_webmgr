@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from threading import RLock
 from multiprocessing.managers import SyncManager
 
+import settings
 from core.models import PluginConfig
 from plugin import Plugin
 from core.plugins import CyclicDependencyException, UnknownPluginException
@@ -79,6 +80,28 @@ class RootPluginManager(PluginManager):
         super(RootPluginManager, self).__init__()
         self.enabled = {}
         self.__init_process_synchronization(multi_process)
+        self.__init_must_enable()
+    
+    def __init_must_enable(self):
+        """
+        Registers and enables plugins configured as core plugins.  core plugins
+        provide functionality required for the application to run
+        """
+        #package in tuple for compatibility
+        enable = settings.CORE_PLUGINS
+        if not isinstance(settings.CORE_PLUGINS, (list, tuple)):
+            enable = (enable,)
+        #register & enable
+        for class_ in enable:
+            if isinstance(class_, (str,)):
+                # convert string into class
+                last_dot = class_.rfind('.')
+                from_ = class_[:last_dot]
+                name = class_[last_dot+1:]
+                class_ = __import__(from_, {}, {}, [name]).__dict__[name]
+            class_.core = True
+            self.register(class_)
+        map(self.enable, self.plugins.keys())
 
     def __init_process_synchronization(self, multi_process):
         """
@@ -161,13 +184,13 @@ class RootPluginManager(PluginManager):
         
         # the path someone imports is important.  import all the different
         # possibilities so we can check them all
-        from maintain.core.plugins import Plugin as PluginA
-        from core.plugins import Plugin as PluginB
+        from maintain.core.plugins.plugin import Plugin as PluginA
+        from core.plugins.plugin import Plugin as PluginB
         subclasses = (PluginA, PluginB)
         
         print '[info] RootPluginManager - Autodiscovering Plugins'
 
-        for app in filter(lambda x: x!='cores', settings.INSTALLED_APPS):
+        for app in filter(lambda x: x!='core', settings.INSTALLED_APPS):
             print '[info] checking app: %s' % app
             # For each app, we need to look for an plugin.py inside that app's
             # package. We can't use os.path here -- recall that modules may be
@@ -186,7 +209,7 @@ class RootPluginManager(PluginManager):
             # Step 2: use imp.find_module to find the app's plugin.py. For some
             # reason imp.find_module raises ImportError if the app can't be found
             # but doesn't actually try to import the module. So skip this app if
-            # its tasks.py doesn't exist
+            # its plugin.py doesn't exist
             try:
                 imp.find_module('plugins', app_path)
             except ImportError:

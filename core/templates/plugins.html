@@ -240,7 +240,10 @@
     {% with plugin|config as config %}
         <li id="{{config.name}}" title="{{plugin.description}}" class="{%if config.enabled%}enabled{%else%}disabled{%endif%}">
             {{config.name}}
-            <input type="checkbox" {%if config.enabled%}checked{%endif%}/>
+            <input type="checkbox"
+                {%if config.enabled%}checked{%endif%}
+                {%if plugin.core %}disabled{%endif%}
+                />
             {% ifnotequal None plugin.config_form %}
                 <a class="button_config button" href="{{ROOT}}/plugin/{{config.name}}/"></a>
             {% endifnotequal %}

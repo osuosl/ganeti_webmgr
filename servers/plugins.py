@@ -1,5 +1,5 @@
-from core.plugins.plugins import Plugin
-from core.plugins.view import GenericView
+from core.plugins.plugin import Plugin
+from core.plugins.model_support import ModelView
 
 from models import Closet, Device, Location, NetworkCard, Rack
 
@@ -9,7 +9,7 @@ class Devices(Plugin):
     objects = (
         Device,
         NetworkCard,
-        GenericView(Device)
+        ModelView(Device)
     )
 
 
@@ -19,6 +19,6 @@ class Inventory(Plugin):
     objects = (
         Location,
         Rack,
-        GenericView(Rack),
+        ModelView(Rack),
         Closet
     )
