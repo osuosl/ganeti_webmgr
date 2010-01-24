@@ -9,7 +9,7 @@ class Devices(Plugin):
     objects = (
         Device,
         NetworkCard,
-        ModelView(Device)
+        #ModelView(Device)
     )
 
 
@@ -19,6 +19,6 @@ class Inventory(Plugin):
     objects = (
         Location,
         Rack,
-        ModelView(Rack),
+        #ModelView(Rack),
         Closet
     )

@@ -12,18 +12,22 @@ class ModelManager(Plugin, PluginManager):
     """
     Manager for tracking enabled models
     """
-    pass
+    description = 'Manages enabled models'
+    
+    def __init__(self, *args, **kwargs):
+        Plugin.__init__(self, *args, **kwargs)
+        PluginManager.__init__(self)
 
 
-class DjangoModelWrapper(Registerable):
+class ModelWrapper(Registerable):
     """
     Wrapper around a django model that stores information used to display it.
     Much of this information is already stored internally to the the model. This
     class provides more convenient and stable api to access it.  This shields
     users of this framework from changes within the django internals.
     """
-    target = 'DjangoModelManager'
-    _target = ('DjangoModelManager')
+    target = 'ModelManager'
+    _target = ('ModelManager')
     
     def __init__(self, class_):
         """
@@ -31,7 +35,6 @@ class DjangoModelWrapper(Registerable):
         @param manager - Root manager enabling this wrapper.
         """
         self.model = class_
-        self.name = class_.__name__
         self.fields = []
         self.one_to_many = {}
         self.one_to_one = {}
@@ -53,6 +56,8 @@ class DjangoModelWrapper(Registerable):
         """
         del dict_[name]
 
+    def name(self):
+        return self.model.__name__
 
     def _register(self, manager):
         """

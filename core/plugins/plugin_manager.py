@@ -2,10 +2,14 @@ from datetime import datetime, timedelta
 from threading import RLock
 from multiprocessing.managers import SyncManager
 
+from django.db.models.base import ModelBase
 import settings
+
+
 from core.models import PluginConfig
-from plugin import Plugin
 from core.plugins import CyclicDependencyException, UnknownPluginException
+from core.plugins.plugin import Plugin
+from core.plugins.registerable import Registerable
 
 class PluginManager(object):
     """
@@ -289,13 +293,17 @@ class RootPluginManager(PluginManager):
             enabled = []
             try:
                 for depend in class_.get_depends():
-                    if depend.__name__ in self.enabled:
+                    if depend.name() in self.enabled:
                         continue
                     depend_plugin = self.__enable(depend)
                     enabled.append(depend.name())
                 plugin = self.__enable(class_)
             except Exception, e:
                 #exception occured, rollback any enabled plugins in reverse order
+                import traceback, sys
+                print e
+                type, value, traceback_ = sys.exc_info()
+                traceback.print_tb(traceback_, limit=10, file=sys.stdout)
                 if enabled:
                     enabled.reverse()
                     map(self.disable, enabled)
@@ -337,10 +345,11 @@ class RootPluginManager(PluginManager):
         
         known types: models.Model
         """
-        if isinstance(obj, (models.Model,)):
-            obj = DjangoModelWrapper(obj)
+        if isinstance(obj, (ModelBase,)):
+            from core.plugins.model_support import ModelWrapper
+            obj = ModelWrapper(obj)
         if not isinstance(obj, Registerable):
-            raise Exception('Class is not registerable: %s' % obj.__name__ )
+            raise Exception('Class is not registerable: %s' % obj.name() )
         manager = self[obj._target]
         manager.register(obj)
 
@@ -354,10 +363,10 @@ class RootPluginManager(PluginManager):
             self.lock.acquire()
             super(RootPluginManager, self).register(class_)
             try:
-                config = PluginConfig.objects.get(name=class_.__name__)
+                config = PluginConfig.objects.get(name=class_.name())
             except PluginConfig.DoesNotExist:
                 config = PluginConfig()
-                config.name = class_.__name__
+                config.name = class_.name()
                 config.set_defaults(class_.config_form)
                 config.save()
             return config
