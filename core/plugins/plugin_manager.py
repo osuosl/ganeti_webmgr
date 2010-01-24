@@ -9,29 +9,62 @@ from core.plugins import CyclicDependencyException, UnknownPluginException
 class PluginManager(object):
     """
     Manages the lifecycle of plugins.  Plugins may be registered making the
-    manager awar of the plugin.  The plugins may then be enabled or disabled.
+    manager aware of the plugin.  The plugins may then be enabled or disabled.
     """
     def __init__(self):
         self.plugins = {}
+        self.enabled = self.plugins
 
-    def register(self, class_):
+    def deregister(self, key):
         """
-        Registers a plugin with this manager.  Plugins are stored by __name__
-        so that they may be looked up later.  Registration just makes them
-        available to use on this installation, they don't add any functionality
-        or check dependencies until they are enabled with enable_plugin()
+        deregisters a plugin
+        """
+        print '[Info] Deregistering: ', key
+        plugin = self.plugins[key]
+        del self.plugins[key]
+        plugin._deregister(self)
+
+    def __getitem__(self, key):
+        """
+        returns an enabled item or this manager if None
         
-        @param class_ - plugin class to register
+        @param key - None, a class name, or an iterable of class names
         """
-        print '[Info] Registering: ', class_.__name__
-        self.plugins[class_.__name__] = class_
+        if key == None:
+            return self
+        if isinstance(key, (list, tuple)):
+            self = obj
+            for i in key:
+                obj = obj[i]
+            return obj
+        return self.enabled[key]
+
+    def register(self, plugin):
+        """
+        Registers a plugin with this manager.  Plugins are stored by name
+        so that they may be looked up later.
+        
+        This base is dumb, reserving the following for smarter subclasses:
+          * all registered plugins are also enabled.  self.enabled is a
+            reference to self.plugins.
+          * this class performs no dependency checking.
+        
+        It will however call plugin.register() to allow it to configure itself
+        if needed.  Some plugins, such as Classes, may do nothing when this
+        method is called.
+        
+        @param plugin - plugin object to register
+        """
+        print '[Info] Registering: ', plugin.name()
+        self.plugins[plugin.name()] = plugin
+        plugin._register(self)
 
     def registers(self, classes):
         """
         Registers a collection of plugins
-        @param classes - iterable of plugin Classes
+        @param plugins - iterable of plugins
         """
-        for class_ in classes:
+        for plugin in plugins:
             self.register(plugin)
 
     
@@ -115,8 +148,7 @@ class RootPluginManager(PluginManager):
                 self.owner_timeout = None
         finally:
             self.lock.release()
-
-    
+ 
     def autodiscover(self):
         """
         Auto-discover INSTALLED_APPS plugins.py modules and fail silently when
@@ -135,7 +167,7 @@ class RootPluginManager(PluginManager):
         
         print '[info] RootPluginManager - Autodiscovering Plugins'
 
-        for app in filter(lambda x: x!='core', settings.INSTALLED_APPS):
+        for app in filter(lambda x: x!='cores', settings.INSTALLED_APPS):
             print '[info] checking app: %s' % app
             # For each app, we need to look for an plugin.py inside that app's
             # package. We can't use os.path here -- recall that modules may be
@@ -199,8 +231,8 @@ class RootPluginManager(PluginManager):
         
         @param plugin - plugin instance to disable
         """
-        del self.enabled[plugin.name]
-        config = PluginConfig.objects.get(name=plugin.name)
+        del self.enabled[plugin.name()]
+        config = PluginConfig.objects.get(name=plugin.name())
         config.enabled = False
         config.save()
 
@@ -237,19 +269,17 @@ class RootPluginManager(PluginManager):
                     if depend.__name__ in self.enabled:
                         continue
                     depend_plugin = self.__enable(depend)
-                    enabled.append(depend.__name__)
+                    enabled.append(depend.name())
                 plugin = self.__enable(class_)
             except Exception, e:
                 #exception occured, rollback any enabled plugins in reverse order
                 if enabled:
                     enabled.reverse()
-                    for plugin in enabled:
-                        self.disable(plugin)
+                    map(self.disable, enabled)
                 raise e
             return plugin
         finally:
             self.lock.release()
-
 
     def __enable(self, class_):
         """
@@ -259,12 +289,37 @@ class RootPluginManager(PluginManager):
         
         @param class_ - plugin class to enable
         """
-        config = PluginConfig.objects.get(name=class_.__name__)
+        config = PluginConfig.objects.get(name=class_.name())
         plugin = class_(self, config)
-        self.enabled[class_.__name__] = plugin
+        
+        # register objects
+        if class_.objects:
+            map(self.__register_object, class_.objects)
+        
+        self.enabled[class_.name()] = plugin
         config.enabled = True
         config.save()
         return plugin
+    
+    def __register_object(self, obj):
+        """
+        Registers an object with a manager.  Registered objects are then
+        accessible for use, or to register other objects with.
+        
+        an example of this is registering a PluginManager that manages Models
+        or registering a Model with the ModelManager.
+        
+        @param obj - instance of Registerable or a known type that has been
+        given a shortcut for easier registration.
+        
+        known types: models.Model
+        """
+        if isinstance(obj, (models.Model,)):
+            obj = DjangoModelWrapper(obj)
+        if not isinstance(obj, Registerable):
+            raise Exception('Class is not registerable: %s' % obj.__name__ )
+        manager = self[obj._target]
+        manager.register(obj)
 
     def register(self, class_):
         """

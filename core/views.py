@@ -13,8 +13,8 @@ from django.template import RequestContext
 from django.utils.text import capfirst
 
 
-from plugins import RootPluginManager, get_depends, get_depended, \
-                    CyclicDependencyException
+from plugins import CyclicDependencyException
+from plugins.plugin_manager import RootPluginManager
 from models import PluginConfig, SQLLock
 from util.list_file import ListFile
 import settings
@@ -71,7 +71,7 @@ def depends(request):
     plugin = manager.plugins[name]
     try:
         plugins = [{'name':p.__name__, 'description':p.description} \
-                    for p in filter(expression, get_depends(plugin))]
+                    for p in filter(expression, plugin.get_depends())]
         return HttpResponse(simplejson.dumps(plugins))
     except CyclicDependencyException, e:
         error = 'Plugin has a dependency cycle with: %s' % e
@@ -84,7 +84,7 @@ def dependeds(request):
     """
     global manager
     name = request.GET['name']
-    dependeds = get_depended(manager.enabled[name])
+    dependeds = manager.enabled[name].get_depended()
     plugins = [{'name':p.name, 'description':p.description} for p in dependeds]
     return HttpResponse(simplejson.dumps(plugins))
 
@@ -103,7 +103,7 @@ def enable(request):
     # else there is no way to determine which ones weren't active beforehand
     expression = lambda x: not x.__name__ in manager.enabled
     plugin = manager.plugins[name]
-    enabled = [p.__name__ for p in filter(expression, get_depends(plugin))]
+    enabled = [p.__name__ for p in filter(expression, plugin.get_depends())]
     enabled.append(name)
 
     try:
@@ -125,7 +125,7 @@ def disable(request):
     # get list of newly diabled plugins. Must do this before they are disabled
     # else there is no way to determine which ones weren't active beforehand
     plugin = manager.enable(name)
-    disabled = [p.name for p in get_depended(plugin)]
+    disabled = [p.name for p in plugin.get_depended()]
     disabled.append(name)
     
     manager.disable(name)
@@ -189,8 +189,6 @@ def config_save(request, name):
         for error in v:
             errors.append([capfirst(k), error._proxy____args[0]])
     return HttpResponse(simplejson.dumps(errors))
-
-
 
 
 def acquire_lock(request):

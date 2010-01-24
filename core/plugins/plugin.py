@@ -1,17 +1,21 @@
 from core.plugins import CyclicDependencyException
+from core.plugins.registerable import Registerable
 
-class Plugin(object):
+class Plugin(Registerable):
     """
     A Plugin is something that provides new functionality to PROJECT_NAME.  A
     plugin may register various objects such as Models, Views, and Processes
-    or register plugins to existing objects
+    or register plugins to existing objects.
     
-    Dependencies are created by 
+    A Plugin is used when the ability to enable and disable plugins is needed.
+    Plugins contains other Registerable objects that are registered with other
+    Managers.
     """
     manager = None
     depends = None
     description = 'I am a plugin who has not been described'
     config_form = None
+    objects = ()
     
     def __init__(self, manager, plugin_config):
         """
@@ -22,8 +26,21 @@ class Plugin(object):
         @param plugin_config - PluginConfig corresponding with this class
         """
         self.manager = manager
-        self.name = self.__class__.__name__
         self.update_config(plugin_config)
+
+    @classmethod
+    def _deregister(self, manager):
+        """
+        overloaded to move to a classmethod.
+        """
+        pass
+
+    @classmethod
+    def _register(self, manager):
+        """
+        overloaded to move to a classmethod.
+        """
+        pass
 
     def update_config(self, plugin_config):
         """

@@ -2,15 +2,23 @@ from django.db.models.fields import AutoField
 from django.db.models.fields.related import ForeignRelatedObjectsDescriptor, \
                                             SingleRelatedObjectDescriptor
 
+from core.plugins.plugin_manager import PluginManager
 
-class DjangoModelWrapper(object):
+
+class DjangoModelManager(PluginManager):
+    pass
+
+
+class DjangoModelWrapper(Registerable):
     """
     Wrapper around a django model that stores information used to display it.
     Much of this information is already stored internally to the the model. This
     class provides more convenient and stable api to access it.  This shields
     users of this framework from changes within the django internals.
     """
-    def __init__(self, class_, manager):
+    self.manager = 'DjangoModelManager'
+    
+    def __init__(self, class_):
         """
         @param class_ - model class this is wrapping.
         @param manager - Root manager enabling this wrapper.
@@ -21,10 +29,25 @@ class DjangoModelWrapper(object):
         self.one_to_many = {}
         self.one_to_one = {}
         self.children = {}
-        self.build_composite_model()
-        print self.name
 
-    def build_composite_model(self):
+    def _deregister(self, manager):
+        """
+        Remove relations from all related objects
+        """
+        for wrapper in self.one_to_one.values():
+            wrapper.deregister_related(self.name)
+        for key in self.one_to_many.values():
+            wrapper.deregister_related(self.name)
+
+    def deregister_related(self, name):
+        """
+        deregister a related object.  used by other wrappers to update this
+        side of the relationship when they are disabled
+        """
+        del dict_[name]
+
+
+    def _register(self, manager):
         """
         introspects into the model class finding local and related fields.  This
         information is used to build a composite view of a model and its direct
@@ -55,7 +78,7 @@ class DjangoModelWrapper(object):
             # register related field, only if it has already been registered.
             related = field.related.model.__name__
             if False and related in manager.model_manager:
-                related_wrapper = manager['ModelManager'][related]
+                related_wrapper = manager[related]
                 list_[key] = related_wrapper
                 related_wrapper.register_related(self)
 
@@ -68,20 +91,6 @@ class DjangoModelWrapper(object):
         @param name
         """
         dict_[name] = wrapper
- 
-    def deregister_related(self, name):
-        """
-        deregister a related object.  used by other wrappers to update this
-        side of the relationship when they are disabled
-        """
-        del dict_[name]
-
-
-class View(object):
-    """
-    Base class for building user interface
-    """
-    pass
 
 
 class DjangoModelView(View):
