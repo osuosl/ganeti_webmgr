@@ -100,5 +100,6 @@ INSTALLED_APPS = (
 # because they provide some core functionality.  They can only be disabled by
 # changing this setting.
 CORE_PLUGINS = (
+    'core.plugins.managers.type_manager.TypeManager',
     'core.plugins.model_support.ModelManager'
 )

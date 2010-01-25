@@ -1,22 +1,13 @@
+from django.db.models.base import ModelBase
 from django.db.models.fields import AutoField
 from django.db.models.fields.related import ForeignRelatedObjectsDescriptor, \
                                             SingleRelatedObjectDescriptor
 
+from core.plugins.managers.type_manager import ObjectType, TypeManager
 from core.plugins.plugin import Plugin
 from core.plugins.plugin_manager import PluginManager
 from core.plugins.registerable import Registerable
 from core.plugins.view import View
-
-
-class ModelManager(Plugin, PluginManager):
-    """
-    Manager for tracking enabled models
-    """
-    description = 'Manages enabled models'
-    
-    def __init__(self, *args, **kwargs):
-        Plugin.__init__(self, *args, **kwargs)
-        PluginManager.__init__(self)
 
 
 class ModelWrapper(Registerable):
@@ -103,6 +94,19 @@ class ModelWrapper(Registerable):
         @param name
         """
         dict_[name] = wrapper
+
+
+class ModelManager(Plugin, PluginManager):
+    """
+    Manager for tracking enabled models
+    """
+    depends = TypeManager
+    description = 'Manages enabled models'
+    objects = (ObjectType(ModelBase, ModelWrapper))
+    
+    def __init__(self, *args, **kwargs):
+        Plugin.__init__(self, *args, **kwargs)
+        PluginManager.__init__(self)
 
 
 class ModelView(View):

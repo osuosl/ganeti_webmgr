@@ -2,9 +2,7 @@ from datetime import datetime, timedelta
 from threading import RLock
 from multiprocessing.managers import SyncManager
 
-from django.db.models.base import ModelBase
 import settings
-
 
 from core.models import PluginConfig
 from core.plugins import CyclicDependencyException, UnknownPluginException
@@ -38,7 +36,7 @@ class PluginManager(object):
         if key == None:
             return self
         if isinstance(key, (list, tuple)):
-            self = obj
+            obj = key
             for i in key:
                 obj = obj[i]
             return obj
@@ -284,7 +282,7 @@ class RootPluginManager(PluginManager):
                 raise UnknownPluginException(name)
     
             # already enabled
-            if name in self.enabled.items():
+            if name in self.enabled.keys():
                 return self.enabled[name]
     
             # as long as get_depends() returns the list in order from eldest to
@@ -311,6 +309,7 @@ class RootPluginManager(PluginManager):
             return plugin
         finally:
             self.lock.release()
+        print '[info] enabled: %s' % name
 
     def __enable(self, class_):
         """
@@ -320,12 +319,15 @@ class RootPluginManager(PluginManager):
         
         @param class_ - plugin class to enable
         """
+        print '[info] enabling: %s' % class_
         config = PluginConfig.objects.get(name=class_.name())
         plugin = class_(self, config)
         
         # register objects
-        if class_.objects:
+        if isinstance(class_.objects, (list, tuple)):
             map(self.__register_object, class_.objects)
+        else:
+            self.__register_object(class_.objects)
         
         self.enabled[class_.name()] = plugin
         config.enabled = True
@@ -345,11 +347,18 @@ class RootPluginManager(PluginManager):
         
         known types: models.Model
         """
-        if isinstance(obj, (ModelBase,)):
-            from core.plugins.model_support import ModelWrapper
-            obj = ModelWrapper(obj)
         if not isinstance(obj, Registerable):
-            raise Exception('Class is not registerable: %s' % obj.name() )
+            try:
+                found = False
+                for name, object_type in self['TypeManager'].plugins.items():
+                    if object_type.class_ == obj.__class__:
+                        obj = object_type.wrapper(obj)
+                        found = True
+                        break
+                if not found:
+                    raise Exception('Class is not registerable: %s' % obj.__name__)
+            except KeyError:
+                raise Exception('Class is not registerable: %s' % obj.__name__)
         manager = self[obj._target]
         manager.register(obj)
 
