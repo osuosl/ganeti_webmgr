@@ -95,6 +95,8 @@ INSTALLED_APPS = (
     'servers'
 )
 
+AUTH_PROFILE_MODULE = 'core.UserProfile'
+
 
 # core plugins - these are plugins that are loaded before all other plugins
 # because they provide some core functionality.  They can only be disabled by

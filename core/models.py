@@ -136,4 +136,142 @@ class SQLLock(models.Model):
         self.created = None
         self.release_time = None
         self.acquired = False
+
+
+class Permissable(models.Model):
+    """
+    Any object that may be granted permissions.  Base class meant to be extended
+    """
+    name = models.CharField(max_length=128)
+    _permissions = None
     
+    def get_permissions(self):
+        """
+        returns cached list of compiled permissions
+        """
+        if not self._permissions:
+            self._permissions = self.load_permissions()
+        return self._permissions
+
+    def load_permissions(self):
+        """
+        Permissions are granted to a user directly, and through groups and
+        permission groups.  This function aggregates them into a single list
+        
+        Permissions granted directly override permissions from a perm_group
+        
+        Permissions are stored for fast lookup in a dictionary with stucture:
+            {TARGET:{PATH:LEVEL}}
+        """        
+        perms = {}
+        for group in self.permission_groups.all():
+            group_perms = group.get_permissions()
+            for key in group_perms:
+                # only update list if key is not in list or is greater
+                # perms than what is already in the list
+                if key in perms:
+                    for path in group_perms[key]:
+                        if path in perms[key] and \
+                            perms[key][path] <= group_perms[key][path]:                            
+                                continue
+                        perms[key][path] = group_perms[key][path]
+                else:
+                    perms[key] = group_perms[key]
+            
+        for perm in self.permissions.all().values_list('path','level'):
+            target, path = Permission.path_list(perm[0])
+            try:
+                perms[target][path] = perm[1]
+            except KeyError:
+                perms[target] = {path:perm[1]}
+        return perms
+
+
+class Group(Permissable):
+    """
+    A group of users.  This may be a client, project or however you decide to
+    group your users.  Groups are allowed to create their own subgroups.
+    subgroups do not inherit permissions of the parent.
+    """
+    parent = models.ForeignKey('self', null=True, related_name='groups')
+
+
+class UserProfile(Permissable):
+    """
+    Permissions associated directly to a user.  This class does not provide
+    authentication, it is intended to be used as the profile object assocated
+    with a User in the django authentication system.  This allows us to use
+    the other functions of the authentication system, and registration module
+    with this custom permissions system.
+    """
+    # No properties yet, but we will be adding some eventually
+    pass
+
+
+PERMISSIONS = (
+    ('None', 0),
+    ('Read', 1),
+    ('Write / Execute', 2)
+)
+
+
+class Permission(models.Model):
+    """
+    An individual permission.  Permissions grant access to any registered
+    object.  Permissions may grant access to an entire collection of objects
+    (list of model instances) or to object owned by a group or user.
+    
+    path - a machine interpretable path from the object the permission grant
+    access on to a group or user that owns an object.  If a path contains only
+    the target object, then no ownership is required.
+    
+    level - permission level.  higher level grants more permissions
+    granted_to - Permissable object the permission was granted to
+    """    
+    path = models.CharField(max_length=256)
+    level = models.IntegerField(choices=PERMISSIONS, default=0)       
+    granted_to = models.ForeignKey(Permissable, related_name='permissions')
+   
+    def __gt__(self, y):
+        """ x.__gt__(y) <==> x.level>y.level """
+        return self.level > y.level
+    
+    def __ge__(self, y):
+        """ x.__ge__(y) <==> x.level>=y.level """
+        return self.level >= y.level
+    
+    def __lt__(self, y):
+        """ x.__lt__(y) <==> x.level<y.level """
+        return self.level < y.level
+
+    def __le__(self, y):
+        """ x.__le__(y) <==> x.level<=y.level """ 
+        return self.level <= y.level
+
+    def __str__(self):
+        return 'Permission(%s, %s)' % (self.path, self.level)
+    
+    def __setattr__(self, key, value):
+        if key == 'path':
+            self._path = Permission.path_list(value) if value else None
+            self.__dict__['path'] = value
+        else:
+            super(Permission, self).__setattr__(key, value)
+    
+    @staticmethod 
+    def path_list(path):
+        """
+        Converts a path to a list of objects
+        """
+        l = path.split('.')
+        if len(l) == 1:
+            return path, None
+        return l[0], tuple(l[1:])
+        
+        
+class PermissionGroup(Permissable):
+    """
+    A group of permissions.  Used for creating classes of permissions so that
+    they may be granted/remove easier.
+    """
+    users = models.ManyToManyField(Permissable, related_name='permission_groups')
