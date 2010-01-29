@@ -204,14 +204,14 @@ class UserProfile(Permissable):
     the other functions of the authentication system, and registration module
     with this custom permissions system.
     """
-    # No properties yet, but we will be adding some eventually
     pass
-
+    #no properties yet
 
 PERMISSIONS = (
     ('None', 0),
     ('Read', 1),
     ('Write / Execute', 2)
+    ('Create / Delete', 3)
 )
 
 

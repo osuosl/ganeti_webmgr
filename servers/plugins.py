@@ -9,7 +9,7 @@ class Devices(Plugin):
     objects = (
         Device,
         NetworkCard,
-        #ModelView(Device)
+        ModelView(Device)
     )
 
 
