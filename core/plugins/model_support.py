@@ -16,6 +16,12 @@ class ModelWrapper(Registerable):
     Much of this information is already stored internally to the the model. This
     class provides more convenient and stable api to access it.  This shields
     users of this framework from changes within the django internals.
+    
+    Fields are cached based on their relationship to the wrapped model:
+      * fields - model fields
+      * one_to_many - wrappers for 1:M and M:N relationships
+      * one_to_one - wrappers for 1:1 relationships
+      * children - wrappers for models that extend this model   
     """
     target = 'ModelManager'
     _target = ('ModelManager')
@@ -45,6 +51,11 @@ class ModelWrapper(Registerable):
         deregister a related object.  used by other wrappers to update this
         side of the relationship when they are disabled
         """
+        field = self.model.__dict__[name]
+        if isinstance(field, (ForeignRelatedObjectsDescriptor, )):
+            dict_ = self.one_to_many
+        elif isinstance(field, (SingleRelatedObjectDescriptor,)):
+            dict_ = self.one_to_one
         del dict_[name]
 
     def name(self):
@@ -70,11 +81,12 @@ class ModelWrapper(Registerable):
         # find related fields
         for key, field in self.model.__dict__.items():
             if isinstance(field, (ForeignRelatedObjectsDescriptor, )):
-                key_ = self.one_to_many
+                dict_ = self.one_to_many
             elif isinstance(field, (SingleRelatedObjectDescriptor,)):
                 if issubclass(field.related.model, self.model.__class__):
-                    self._children.append(field.related.model.__name__)
-                list_ = self.one_to_one
+                    dict_ = self.children
+                else:
+                    dict_ = self.one_to_one
             else:
                 #not a related field
                 continue
@@ -82,7 +94,7 @@ class ModelWrapper(Registerable):
             related = field.related.model.__name__
             if False and related in manager.model_manager:
                 related_wrapper = manager[related]
-                list_[key] = related_wrapper
+                dict_[key] = related_wrapper
                 related_wrapper.register_related(self)
 
     def register_related(self, wrapper, name):
@@ -93,6 +105,10 @@ class ModelWrapper(Registerable):
         @param wrapper
         @param name
         """
+        if isinstance(field, (ForeignRelatedObjectsDescriptor, )):
+            dict_ = self.one_to_many
+        elif isinstance(field, (SingleRelatedObjectDescriptor,)):
+            dict_ = self.one_to_one
         dict_[name] = wrapper
 
 
