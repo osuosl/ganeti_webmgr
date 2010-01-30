@@ -1,5 +1,5 @@
-PERMS_ALL   = 0b1111
-PERMS_NONE  = 0b0000
+PERM_ALL    = 0b1111
+PERM_NONE   = 0b0000
 PERM_READ   = 0b0001
 PERM_WRITE  = 0b0010
 PERM_CREATE = 0b0100
@@ -11,7 +11,7 @@ class Registerable(object):
     """
     target = None
     _target = None
-    permissions = PERMS_NONE
+    permissions = PERM_NONE
 
     def __init__(self, target=None):
         """
@@ -51,7 +51,7 @@ class Registerable(object):
                 self._target = value.split('.')    
         super(Registerable, self).__setattr__(key, value)
         
-    def has_perms(self, user, mask=None, possess=PERMS_NONE, **kwargs):
+    def has_perms(self, user, mask=None, possess=PERM_NONE, **kwargs):
         """
         Checks to see if a user has the permissions mask requested.  Checks
         both users and groups
@@ -76,7 +76,7 @@ class Registerable(object):
                 pass
         return perms
         
-    def _has_perms(self, permissable, mask=PERMS_NONE, possess=PERMS_NONE):
+    def _has_perms(self, permissable, mask=PERM_NONE, possess=PERM_NONE):
         """
         Authorize a permissable (usually a user or group) to use this object.
         

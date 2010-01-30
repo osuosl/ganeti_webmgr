@@ -26,7 +26,7 @@ class ModelWrapper(Registerable):
     """
     target = 'ModelManager'
     _target = ('ModelManager')
-    permissions = PERMS_ALL
+    permissions = PERM_ALL
     
     def __init__(self, class_):
         """
@@ -61,7 +61,7 @@ class ModelWrapper(Registerable):
         del dict_[name]
 
 
-    def _has_perms(self, owner, mask=None, possess=PERMS_NONE, id=None):
+    def _has_perms(self, owner, mask=None, possess=PERM_NONE, id=None):
         """
         Perform a search for permissions.  An owner may have permissions from 
         

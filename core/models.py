@@ -158,7 +158,8 @@ class Permissable(models.Model):
         Permissions are granted to a user directly, and through groups and
         permission groups.  This function aggregates them into a single list
         
-        Permissions granted directly override permissions from a perm_group
+        Permissions granted directly are culmulative with permissions granted
+        via a PermissionsGroup
         
         Permissions are stored for fast lookup in a dictionary with stucture:
             {TARGET:{PATH:LEVEL}}
@@ -171,18 +172,19 @@ class Permissable(models.Model):
                 # perms than what is already in the list
                 if key in perms:
                     for path in group_perms[key]:
-                        if path in perms[key] and \
-                            perms[key][path] <= group_perms[key][path]:                            
-                                continue
-                        perms[key][path] = group_perms[key][path]
+                        perms[key][path] = perms[key][path] | \
+                                                    group_perms[key][path]
                 else:
                     perms[key] = group_perms[key]
             
-        for perm in self.permissions.all().values_list('path','level'):
+        for perm in self.permissions.all().values_list('path','mask'):
             target, path = Permission.path_list(perm[0])
-            try:
-                perms[target][path] = perm[1]
-            except KeyError:
+            if target in perms:
+                if path in perms[target]:
+                    perms[target][path] = perm[1] | perms[target][path]
+                else:
+                    perms[target][path] = perm[1] 
+            else:
                 perms[target] = {path:perm[1]}
         return perms
 
@@ -207,13 +209,6 @@ class UserProfile(Permissable):
     pass
     #no properties yet
 
-PERMISSIONS = (
-    ('None', 0),
-    ('Read', 1),
-    ('Write / Execute', 2)
-    ('Create / Delete', 3)
-)
-
 
 class Permission(models.Model):
     """
@@ -229,27 +224,11 @@ class Permission(models.Model):
     granted_to - Permissable object the permission was granted to
     """    
     path = models.CharField(max_length=256)
-    level = models.IntegerField(choices=PERMISSIONS, default=0)       
+    mask = models.IntegerField(default=0)       
     granted_to = models.ForeignKey(Permissable, related_name='permissions')
-   
-    def __gt__(self, y):
-        """ x.__gt__(y) <==> x.level>y.level """
-        return self.level > y.level
-    
-    def __ge__(self, y):
-        """ x.__ge__(y) <==> x.level>=y.level """
-        return self.level >= y.level
-    
-    def __lt__(self, y):
-        """ x.__lt__(y) <==> x.level<y.level """
-        return self.level < y.level
-
-    def __le__(self, y):
-        """ x.__le__(y) <==> x.level<=y.level """ 
-        return self.level <= y.level
 
     def __str__(self):
-        return 'Permission(%s, %s)' % (self.path, self.level)
+        return 'Permission(%s, %s)' % (self.path, self.mask)
     
     def __setattr__(self, key, value):
         if key == 'path':
