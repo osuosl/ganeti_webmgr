@@ -16,3 +16,13 @@ class View(Registerable):
         """
         self.url = url
         self.handler = handler
+        
+    def __call__(self, request):
+        """
+        Views themselves are callable, though they generally will delegate work
+        to the handler function after it has authorized the user.
+        
+        @param request - HttpRequest
+        """
+        if self.is_authorized(request.user.getProfile()):
+            return self.handler(request)

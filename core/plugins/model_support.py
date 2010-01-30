@@ -6,8 +6,9 @@ from django.db.models.fields.related import ForeignRelatedObjectsDescriptor, \
 from core.plugins.managers.type_manager import ObjectType, TypeManager
 from core.plugins.plugin import Plugin
 from core.plugins.plugin_manager import PluginManager
-from core.plugins.registerable import Registerable
+from core.plugins.registerable import *
 from core.plugins.view import View
+
 
 
 class ModelWrapper(Registerable):
@@ -25,6 +26,7 @@ class ModelWrapper(Registerable):
     """
     target = 'ModelManager'
     _target = ('ModelManager')
+    permissions = PERMS_ALL
     
     def __init__(self, class_):
         """
@@ -57,6 +59,41 @@ class ModelWrapper(Registerable):
         elif isinstance(field, (SingleRelatedObjectDescriptor,)):
             dict_ = self.one_to_one
         del dict_[name]
+
+
+    def _has_perms(self, owner, mask=None, possess=PERMS_NONE, id=None):
+        """
+        Perform a search for permissions.  An owner may have permissions from 
+        
+        Permissions are stored as a set of binary
+        values with each bit representing a permission.  This function performs
+        binary operations to compare the set of possible permissions and granted
+        permissions for an object.
+        
+        @param owner - Permissable to check permissions on
+        @param model - model to get permissions on
+        @param possess - permissions already possessed by the owner
+        @param mask - permissions mask to check for.  If None search for all
+                    perms
+        """
+        perms = owner.get_object_permissions(model).items()
+        keys = perms.keys()
+        possible = mask if mask else wrapper.permissions
+        # iterate while there are keys !possessed and permissions left to check
+        while not possible & possess and perms:
+            path, perm = perms.pop()
+            if not possess ^ perm:
+                # permission in perm that is not in possess, check it
+                if perm[-1] in ('User','Group'):
+                    clause = {'__'.join(perm[0]):None}
+                elif len(perm) == 1:
+                    possess = possess | perm
+                    continue
+                else:
+                    clause = {'%s__in' % '__'.join(perm[0]):owner}
+                if model.objects.filter(**clause).filter(id=id).count() == 1:
+                    possess = possess | perm
+        return possess
 
     def name(self):
         return self.model.__name__
@@ -126,15 +163,6 @@ class ModelManager(Plugin, PluginManager):
 
 
 
-
-#path client.device.rack
-
-#path ([rack],READ) = no filter
-
-PERM_READ = 1
-PERM_WRITE = 2
-
-
 def generic_model_list_view(request, model, owner=None):
     # get permissions on this class of object
     profile = request.user.getProfile()
@@ -171,112 +199,29 @@ class ModelListView(View):
         self.model = model
 
 
-def generic_model_view(request, wrapper, id):
-    """
-    Handler for displaying an instance of a model
-    @param request - HttpRequest object
-    @param wrapper - wrapped model to display
-    @param id - id of instance to display
-    """
-    model = wrapper.model
-    profile = request.user.getProfile()
-    checked_paths = {}
-    rw_perm = 0
-    
-    # rw_perm is the level associated on the model itself.  Only the highest
-    # perm needs to be found so it should be checked from highest to lowest
-    # 
-    # checked paths should also be cached so that queries do not need
-    # to be repeated later for other permissions.
-    perms = profile.get_object_permissions(model).items()
-    if perms:
-        object_perms = filter(perms, lambda x: not x[1])
-        if object_perms:
-            rw_perm = object_perms[1]
-        else:
-            perms.sort(lambda x,y: x-y)
-            for perm in filter(perms, lambda x: x[1]):
-                model.objects.filter(**{'__'.join(perm[0]):user}).get(id=id)
-            
-    # check group perms for higher rw_perm if not already at max
-    if rw_perm < 3:
-        groups = list(user.groups.objects.all())
-        while rw_perm < 3 and groups:
-            group = groups.pop()
-            perms = group.get_object_permissions(model).items()
-            object_perms = filter(perms, lambda x: not x[1])
-            if object_perms and rw_perm < object_perms[1]:
-                rw_perm = object_perms[1] 
-            else:
-                perms.sort(lambda x,y: x-y)
-                for perm in filter(perms, lambda x: x[1]):
-                    model.objects.filter(**{'__'.join(perm[0]):user}).get(id=id)
-                    
-                    
-    # we need to identify what permissions the user has on this object.
-    # they can have as many permissions as there are processes defined on the
-    # object.  Once permission has been found from any path it is no longer
-    # checked.  
-    #
-    possible_perms = model.processes.keys()
-    for possible in possible_perms:
-        pass
-    
-    
-    #instance = Device.objects.all()[0]
-    
-    #wrapper = DjangoModelWrapper(Device)
-    c = RequestContext(request, processors=[settings_processor])
-    return render_to_response('view/generic_model_view.html',
-            {'wrapper': wrapper, 'instance':instance}, context_instance=c)
-
-
-def check_binary_perms_test(owner, model, possess=0):
-    """
-    This is a test implementation assuming all perms are encoded in a single
-    binary string.  This might not be the case.
-    
-    Perform a search for permissions.  An owner may have permissions from 
-    
-    Permissions are stored as a set of binary
-    values with each bit representing a permission.  This function performs
-    binary operations to compare the set of possible permissions and granted
-    permissions for an object.
-    
-    @param owner - 
-    @param model - model to get permissions on
-    @param possess - permissions already possessed by the owner
-    """
-    perms = owner.get_object_permissions(model).items()
-    keys = perms.keys()
-    possible = wrapper.permissions
-    # iterate while there are keys not possessed and permissions left to check
-    while not possible & possess and perms:
-        path, perm = perms.pop()
-        if not possess ^ perm:
-            # permission in perm that is not in possess, check it
-            try:
-                if perm[-1] in ('User','Group'):
-                    clause = {'__'.join(perm[0]):None}
-                elif len(perm) == 1:
-                    possess = possess | perm
-                    continue
-                else:
-                    clause = {'%s__in' % '__'.join(perm[0]):owner}
-                model.objects.filter(**clause).get(id=id)
-                possess = possess | perm
-            except model.DoesNotExist:
-                # query didn't return a record
-                pass
-
-
 class ModelView(View):
     """
-    Generic view generated for a model.  For this view to function the model
-    must also be registered.
+    Generic view for displaying instances of a model
     """
     
-    handler = generic_model_view
-    
     def __init__(self, model):
+        """
+        @param model - ModelWrapper
+        """
         self.model = model
+    
+    def __call__(self, request, id):
+        """
+        Overridden to process the requests directly rather delegating to another
+        function
+        """
+        user = request.user.getProfile()
+        perms = self.model.has_perms(user, id)
+        
+        if perms & PERM_READ != PERM_READ:
+            return render_to_response('no_perms.html')
+        
+        instance = self.model.get(id=id)
+        c = RequestContext(request, processors=[settings_processor])
+        return render_to_response('view/generic_model_view.html',
+            {'wrapper': self.model, 'instance':instance}, context_instance=c)
