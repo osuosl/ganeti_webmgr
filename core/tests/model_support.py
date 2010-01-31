@@ -178,4 +178,9 @@ class ModelView_Test(unittest.TestCase):
         """
         Test registering a model with a recursive relationship
         """
-        pass
+        recursive = ModelWrapper(Recursive)
+        self.manager.register(recursive)
+        self.assert_(len(recursive.many_to_one)==1, recursive.many_to_one)
+        self.assert_(len(recursive.one_to_many)==1, recursive.one_to_many)
+        self.assert_('Recursive' in recursive.many_to_one, recursive.many_to_one)
+        self.assert_('Recursive' in recursive.one_to_many, recursive.one_to_many)
