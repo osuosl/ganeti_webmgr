@@ -137,7 +137,7 @@ class ModelWrapper(Registerable):
                 remote = 'many_to_one'
                 related = field.related.model.__name__
             elif isinstance(field, (SingleRelatedObjectDescriptor,)):
-                if issubclass(field.related.model, self.model.__class__):
+                if issubclass(field.related.model, (self.model,)):
                     dict_ = self.children
                     remote = 'parent' 
                 else:
@@ -153,8 +153,13 @@ class ModelWrapper(Registerable):
                 # field points to 1:M or 1:1
                 related = field.field.rel.to.__name__
                 if isinstance(field.field, (OneToOneField, )):
-                    dict_ = self.one_to_one
-                    remote = 'one_to_one'
+                    to = field.field.rel.to
+                    if issubclass(self.model, (to,)):
+                        dict_ = self.parent
+                        remote = 'children'
+                    else:
+                        dict_ = self.one_to_one
+                        remote = 'one_to_one'
                 elif isinstance(field.field, (ForeignKey)):
                     dict_ = self.many_to_one
                     remote = 'one_to_many'

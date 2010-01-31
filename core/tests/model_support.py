@@ -142,7 +142,7 @@ class ModelView_Test(unittest.TestCase):
         """
         pass
     
-    def test_register_extended(self):
+    def test_register_extended_parent_first(self):
         """
         Test registering an object that is extended
         """
@@ -150,7 +150,21 @@ class ModelView_Test(unittest.TestCase):
         self.manager.register(extended)
         child = ModelWrapper(ChildA)
         self.manager.register(child)
-        self.assert_(len(extended.one_to_many)==1, extended.one_to_many)
+        self.assert_(len(extended.children)==1, extended.children)
+        self.assert_(len(child.parent)==1, child.parent)
+        self.assert_('ChildA' in extended.children, extended.children)
+        self.assert_('Extended' in child.parent, child.parent)
+    
+    def test_register_extended_parent_second(self):
+        """
+        Test registering an object that is extended
+        """
+        child = ModelWrapper(ChildA)
+        self.manager.register(child)
+        extended = ModelWrapper(Extended)
+        self.manager.register(extended)
+        self.assert_(len(extended.children)==1, extended.children)
+        self.assert_(len(child.parent)==1, child.parent)
         self.assert_('ChildA' in extended.children, extended.children)
         self.assert_('Extended' in child.parent, child.parent)
     
