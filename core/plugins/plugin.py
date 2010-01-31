@@ -51,7 +51,7 @@ class Plugin(Registerable):
         @param plugin_config - PluginConfig corresponding with this class
         """
         reserved_names = ('manager','description','depends','enabled')
-        self.enabled = plugin_config.enabled
+        self.is_enabled = plugin_config.enabled
         if plugin_config.config:
             for key, value in plugin_config.config.items():
                 if key in reserved_names:

@@ -1,8 +1,9 @@
 from django.db.models.base import ModelBase
 from django.db.models.fields import AutoField
 from django.db.models.fields.related import ForeignRelatedObjectsDescriptor, \
-                                            SingleRelatedObjectDescriptor
-
+                                        SingleRelatedObjectDescriptor, \
+                                        ForeignKey, OneToOneField, \
+                                        ReverseSingleRelatedObjectDescriptor
 from core.plugins.managers.type_manager import ObjectType, TypeManager
 from core.plugins.plugin import Plugin
 from core.plugins.plugin_manager import PluginManager
@@ -36,8 +37,10 @@ class ModelWrapper(Registerable):
         self.model = class_
         self.fields = []
         self.one_to_many = {}
+        self.many_to_one = {}
         self.one_to_one = {}
         self.children = {}
+        self.parent = {}
 
     def _deregister(self, manager):
         """
@@ -111,7 +114,22 @@ class ModelWrapper(Registerable):
         """
         # local fields
         for field in self.model._meta.local_fields:
+
             if isinstance(field, (AutoField,)):
+                continue
+            elif isinstance(field, (ForeignKey,)):
+                related = field.name
+                if related in manager:
+                    related_wrapper = manager[related]
+                    self.many_to_one[field.name] = related_wrapper
+                    related_wrapper.register_related('one_to_many', self)
+                continue
+            elif isinstance(field, (OneToOneField,)):
+                related = field.name
+                if related in manager:
+                    related_wrapper = manager[related]
+                    self.one_to_one[field.name] = related_wrapper
+                    related_wrapper.register_related('one_to_one', self)
                 continue
             self.fields.append(field.name)
 
@@ -119,34 +137,45 @@ class ModelWrapper(Registerable):
         for key, field in self.model.__dict__.items():
             if isinstance(field, (ForeignRelatedObjectsDescriptor, )):
                 dict_ = self.one_to_many
-            elif isinstance(field, (SingleRelatedObjectDescriptor,)):
+                remote = 'many_to_one'
+            elif isinstance(field, (SingleRelatedObjectDescriptor)):
                 if issubclass(field.related.model, self.model.__class__):
                     dict_ = self.children
+                    remote = 'parent' 
                 else:
                     dict_ = self.one_to_one
+                    remote = 'one_to_one'
+                related = field.related.model.__name__
+            elif isinstance(field, (ReverseSingleRelatedObjectDescriptor)):
+                # field points to 1:M or 1:1
+                field = field.field
+                if isinstance(field, (ForeignKey, )):
+                    dict_ = self.many_to_one
+                    remote = 'one_to_many'
+                else:
+                    dict_ = self.one_to_one
+                    remote = 'one_to_one'
             else:
                 #not a related field
                 continue
+            
             # register related field, only if it has already been registered.
             related = field.related.model.__name__
-            if False and related in manager.model_manager:
+            if related in manager:
                 related_wrapper = manager[related]
-                dict_[key] = related_wrapper
-                related_wrapper.register_related(self)
+                dict_[related_wrapper.name()] = related_wrapper
+                related_wrapper.register_related(remote, self)
 
-    def register_related(self, wrapper, name):
+    
+    def register_related(self, dict_, wrapper):
         """
         register a related object.  used by other wrappers to update the other
         side of a relationship.
         
         @param wrapper
         @param name
-        """
-        if isinstance(field, (ForeignRelatedObjectsDescriptor, )):
-            dict_ = self.one_to_many
-        elif isinstance(field, (SingleRelatedObjectDescriptor,)):
-            dict_ = self.one_to_one
-        dict_[name] = wrapper
+        """        
+        self.__dict__[dict_][wrapper.name()] = wrapper
 
 
 class ModelManager(Plugin, PluginManager):

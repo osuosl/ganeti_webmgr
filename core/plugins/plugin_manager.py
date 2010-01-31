@@ -18,6 +18,9 @@ class PluginManager(object):
         self.plugins = {}
         self.enabled = self.plugins
 
+    def __contains__(self, key):
+        return key in self.enabled
+
     def deregister(self, key):
         """
         deregisters a plugin

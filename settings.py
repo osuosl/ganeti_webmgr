@@ -91,8 +91,8 @@ INSTALLED_APPS = (
     #'django.contrib.sessions',
     #'django.contrib.sites',
     'core',
-    #'foo',
-    'servers'
+    'tests',
+    #'servers'
 )
 
 AUTH_PROFILE_MODULE = 'core.UserProfile'
