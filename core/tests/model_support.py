@@ -71,7 +71,7 @@ class ModelView_Test(unittest.TestCase):
         self.assert_('OneToOne' in complex.one_to_one, complex.one_to_one)
         self.assert_('Complex' in one_to_one.one_to_one, one_to_one.one_to_one)
     
-    def test_register_1_M(self):
+    def test_register_1_M_parent_first(self):
         """
         Test registering a 1:M related object
         """
@@ -83,8 +83,21 @@ class ModelView_Test(unittest.TestCase):
         self.assert_(len(one_to_many.many_to_one)==1, one_to_many.many_to_one)
         self.assert_('OneToMany' in complex.one_to_many, complex.one_to_many)
         self.assert_('Complex' in one_to_many.many_to_one, one_to_many.many_to_one)
+        
+    def test_register_1_M_parent_second(self):
+        """
+        Test registering a 1:M related object
+        """
+        one_to_many = ModelWrapper(OneToMany)
+        self.manager.register(one_to_many)
+        complex = ModelWrapper(Complex)
+        self.manager.register(complex)
+        self.assert_(len(complex.one_to_many)==1, complex.one_to_many)
+        self.assert_(len(one_to_many.many_to_one)==1, one_to_many.many_to_one)
+        self.assert_('OneToMany' in complex.one_to_many, complex.one_to_many)
+        self.assert_('Complex' in one_to_many.many_to_one, one_to_many.many_to_one)
     
-    def test_register_N_M(self):
+    def test_register_N_M_parent_first(self):
         """
         Test registering a N:M related object
         """
@@ -93,7 +106,19 @@ class ModelView_Test(unittest.TestCase):
         many_to_many = ModelWrapper(ManyToMany)
         self.manager.register(many_to_many)
         self.assert_(len(complex.one_to_many)==1, complex.one_to_many)
-        self.assert_('OneToMany' in complex.one_to_many, complex.one_to_many)
+        self.assert_('ManyToMany' in complex.one_to_many, complex.one_to_many)
+        self.assert_('Complex' in many_to_many.one_to_many, many_to_many.one_to_many)
+
+    def test_register_N_M_parent_second(self):
+        """
+        Test registering a N:M related object
+        """
+        many_to_many = ModelWrapper(ManyToMany)
+        self.manager.register(many_to_many)
+        complex = ModelWrapper(Complex)
+        self.manager.register(complex)
+        self.assert_(len(complex.one_to_many)==1, complex.one_to_many)
+        self.assert_('ManyToMany' in complex.one_to_many, complex.one_to_many)
         self.assert_('Complex' in many_to_many.one_to_many, many_to_many.one_to_many)
     
     def test_register_1_1_not_null(self):

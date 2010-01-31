@@ -1,9 +1,6 @@
 from django.db.models.base import ModelBase
 from django.db.models.fields import AutoField
-from django.db.models.fields.related import ForeignRelatedObjectsDescriptor, \
-                                        SingleRelatedObjectDescriptor, \
-                                        ForeignKey, OneToOneField, \
-                                        ReverseSingleRelatedObjectDescriptor
+from django.db.models.fields.related import *
 from core.plugins.managers.type_manager import ObjectType, TypeManager
 from core.plugins.plugin import Plugin
 from core.plugins.plugin_manager import PluginManager
@@ -132,13 +129,14 @@ class ModelWrapper(Registerable):
                     related_wrapper.register_related('one_to_one', self)
                 continue
             self.fields.append(field.name)
-
+        
         # find related fields
         for key, field in self.model.__dict__.items():
-            if isinstance(field, (ForeignRelatedObjectsDescriptor, )):
+            if isinstance(field, (ForeignRelatedObjectsDescriptor,)):
                 dict_ = self.one_to_many
                 remote = 'many_to_one'
-            elif isinstance(field, (SingleRelatedObjectDescriptor)):
+                related = field.related.model.__name__
+            elif isinstance(field, (SingleRelatedObjectDescriptor,)):
                 if issubclass(field.related.model, self.model.__class__):
                     dict_ = self.children
                     remote = 'parent' 
@@ -146,21 +144,28 @@ class ModelWrapper(Registerable):
                     dict_ = self.one_to_one
                     remote = 'one_to_one'
                 related = field.related.model.__name__
-            elif isinstance(field, (ReverseSingleRelatedObjectDescriptor)):
+            elif isinstance(field, (ManyRelatedObjectsDescriptor,)):
+                dict_ = self.one_to_many
+                remote = 'one_to_many'
+                related = field.related.model.__name__
+            elif isinstance(field, (ReverseSingleRelatedObjectDescriptor,
+                                    ReverseManyRelatedObjectsDescriptor)):
                 # field points to 1:M or 1:1
-                field = field.field
-                if isinstance(field, (ForeignKey, )):
-                    dict_ = self.many_to_one
-                    remote = 'one_to_many'
-                else:
+                related = field.field.rel.to.__name__
+                if isinstance(field.field, (OneToOneField, )):
                     dict_ = self.one_to_one
                     remote = 'one_to_one'
+                elif isinstance(field.field, (ForeignKey)):
+                    dict_ = self.many_to_one
+                    remote = 'one_to_many'
+                elif isinstance(field.field, (ManyToManyField,)):
+                    dict_ = self.one_to_many
+                    remote = 'one_to_many'
             else:
                 #not a related field
                 continue
-            
+                
             # register related field, only if it has already been registered.
-            related = field.related.model.__name__
             if related in manager:
                 related_wrapper = manager[related]
                 dict_[related_wrapper.name()] = related_wrapper
