@@ -55,8 +55,8 @@ class ModelView_Test(unittest.TestCase):
         self.manager.register(one_to_one)
         self.assert_(len(complex.one_to_one)==1, complex.one_to_one)
         self.assert_(len(one_to_one.one_to_one)==1, one_to_one.one_to_one)
-        self.assert_('OneToOne' in complex.one_to_one, complex.one_to_one)
-        self.assert_('Complex' in one_to_one.one_to_one, one_to_one.one_to_one)
+        self.assert_('onetoone' in complex.one_to_one, complex.one_to_one)
+        self.assert_('complex' in one_to_one.one_to_one, one_to_one.one_to_one)
         
     def test_register_1_1_parent_second(self):
         """
@@ -68,8 +68,8 @@ class ModelView_Test(unittest.TestCase):
         self.manager.register(complex)
         self.assert_(len(complex.one_to_one)==1, complex.__dict__)
         self.assert_(len(one_to_one.one_to_one)==1, one_to_one.one_to_one)
-        self.assert_('OneToOne' in complex.one_to_one, complex.one_to_one)
-        self.assert_('Complex' in one_to_one.one_to_one, one_to_one.one_to_one)
+        self.assert_('onetoone' in complex.one_to_one, complex.one_to_one)
+        self.assert_('complex' in one_to_one.one_to_one, one_to_one.one_to_one)
     
     def test_register_1_M_parent_first(self):
         """
@@ -81,8 +81,8 @@ class ModelView_Test(unittest.TestCase):
         self.manager.register(one_to_many)
         self.assert_(len(complex.one_to_many)==1, complex.one_to_many)
         self.assert_(len(one_to_many.many_to_one)==1, one_to_many.many_to_one)
-        self.assert_('OneToMany' in complex.one_to_many, complex.one_to_many)
-        self.assert_('Complex' in one_to_many.many_to_one, one_to_many.many_to_one)
+        self.assert_('one_to_manys' in complex.one_to_many, complex.one_to_many)
+        self.assert_('complex' in one_to_many.many_to_one, one_to_many.many_to_one)
         
     def test_register_1_M_parent_second(self):
         """
@@ -94,8 +94,8 @@ class ModelView_Test(unittest.TestCase):
         self.manager.register(complex)
         self.assert_(len(complex.one_to_many)==1, complex.one_to_many)
         self.assert_(len(one_to_many.many_to_one)==1, one_to_many.many_to_one)
-        self.assert_('OneToMany' in complex.one_to_many, complex.one_to_many)
-        self.assert_('Complex' in one_to_many.many_to_one, one_to_many.many_to_one)
+        self.assert_('one_to_manys' in complex.one_to_many, complex.one_to_many)
+        self.assert_('complex' in one_to_many.many_to_one, one_to_many.many_to_one)
     
     def test_register_N_M_parent_first(self):
         """
@@ -106,8 +106,8 @@ class ModelView_Test(unittest.TestCase):
         many_to_many = ModelWrapper(ManyToMany)
         self.manager.register(many_to_many)
         self.assert_(len(complex.one_to_many)==1, complex.one_to_many)
-        self.assert_('ManyToMany' in complex.one_to_many, complex.one_to_many)
-        self.assert_('Complex' in many_to_many.one_to_many, many_to_many.one_to_many)
+        self.assert_('many_to_manys' in complex.one_to_many, complex.one_to_many)
+        self.assert_('complex' in many_to_many.one_to_many, many_to_many.one_to_many)
 
     def test_register_N_M_parent_second(self):
         """
@@ -118,8 +118,8 @@ class ModelView_Test(unittest.TestCase):
         complex = ModelWrapper(Complex)
         self.manager.register(complex)
         self.assert_(len(complex.one_to_many)==1, complex.one_to_many)
-        self.assert_('ManyToMany' in complex.one_to_many, complex.one_to_many)
-        self.assert_('Complex' in many_to_many.one_to_many, many_to_many.one_to_many)
+        self.assert_('many_to_manys' in complex.one_to_many, complex.one_to_many)
+        self.assert_('complex' in many_to_many.one_to_many, many_to_many.one_to_many)
     
     def test_register_1_1_not_null(self):
         """
@@ -152,8 +152,8 @@ class ModelView_Test(unittest.TestCase):
         self.manager.register(child)
         self.assert_(len(extended.children)==1, extended.children)
         self.assert_(len(child.parent)==1, child.parent)
-        self.assert_('ChildA' in extended.children, extended.children)
-        self.assert_('Extended' in child.parent, child.parent)
+        self.assert_('childa' in extended.children, extended.children)
+        self.assert_('extended_ptr' in child.parent, child.parent)
     
     def test_register_extended_parent_second(self):
         """
@@ -165,8 +165,8 @@ class ModelView_Test(unittest.TestCase):
         self.manager.register(extended)
         self.assert_(len(extended.children)==1, extended.children)
         self.assert_(len(child.parent)==1, child.parent)
-        self.assert_('ChildA' in extended.children, extended.children)
-        self.assert_('Extended' in child.parent, child.parent)
+        self.assert_('childa' in extended.children, extended.children)
+        self.assert_('extended_ptr' in child.parent, child.parent)
     
     def test_register_child_parent_not_registered(self):
         """
@@ -182,5 +182,5 @@ class ModelView_Test(unittest.TestCase):
         self.manager.register(recursive)
         self.assert_(len(recursive.many_to_one)==1, recursive.many_to_one)
         self.assert_(len(recursive.one_to_many)==1, recursive.one_to_many)
-        self.assert_('Recursive' in recursive.many_to_one, recursive.many_to_one)
-        self.assert_('Recursive' in recursive.one_to_many, recursive.one_to_many)
+        self.assert_('parent' in recursive.many_to_one, recursive.many_to_one)
+        self.assert_('children' in recursive.one_to_many, recursive.one_to_many)

@@ -134,19 +134,19 @@ class ModelWrapper(Registerable):
         for key, field in self.model.__dict__.items():
             if isinstance(field, (ForeignRelatedObjectsDescriptor,)):
                 dict_ = self.one_to_many
-                remote = 'many_to_one'
+                remote = ('many_to_one', field.related.field.name, self)
                 related = field.related.model.__name__
             elif isinstance(field, (SingleRelatedObjectDescriptor,)):
                 if issubclass(field.related.model, (self.model,)):
                     dict_ = self.children
-                    remote = 'parent' 
+                    remote = ('parent', field.related.field.name, self)
                 else:
                     dict_ = self.one_to_one
-                    remote = 'one_to_one'
+                    remote = ('one_to_one', field.related.field.name, self)
                 related = field.related.model.__name__
             elif isinstance(field, (ManyRelatedObjectsDescriptor,)):
                 dict_ = self.one_to_many
-                remote = 'one_to_many'
+                remote = ('one_to_many', field.related.field.name, self)
                 related = field.related.model.__name__
             elif isinstance(field, (ReverseSingleRelatedObjectDescriptor,
                                     ReverseManyRelatedObjectsDescriptor)):
@@ -156,16 +156,16 @@ class ModelWrapper(Registerable):
                     to = field.field.rel.to
                     if issubclass(self.model, (to,)):
                         dict_ = self.parent
-                        remote = 'children'
+                        remote=('children',field.field.related_query_name(),self)
                     else:
                         dict_ = self.one_to_one
-                        remote = 'one_to_one'
+                        remote =('one_to_one',field.field.related_query_name(),self)
                 elif isinstance(field.field, (ForeignKey)):
                     dict_ = self.many_to_one
-                    remote = 'one_to_many'
+                    remote = ('one_to_many', field.field.related_query_name(), self)
                 elif isinstance(field.field, (ManyToManyField,)):
                     dict_ = self.one_to_many
-                    remote = 'one_to_many'
+                    remote = ('one_to_many', field.field.related_query_name(), self)
             else:
                 #not a related field
                 continue
@@ -173,19 +173,19 @@ class ModelWrapper(Registerable):
             # register related field, only if it has already been registered.
             if related in manager:
                 related_wrapper = manager[related]
-                dict_[related_wrapper.name()] = related_wrapper
-                related_wrapper.register_related(remote, self)
+                dict_[key] = related_wrapper
+                related_wrapper.register_related(*remote)
 
     
-    def register_related(self, dict_, wrapper):
+    def register_related(self, dict_, key, wrapper):
         """
         register a related object.  used by other wrappers to update the other
         side of a relationship.
-        
-        @param wrapper
-        @param name
+        @param dict_ - dictionary to add the wrapper to
+        @param key - field name on this model
+        @param wrapper - wrapper that is being added
         """        
-        self.__dict__[dict_][wrapper.name()] = wrapper
+        self.__dict__[dict_][key] = wrapper
 
 
 class ModelManager(Plugin, PluginManager):

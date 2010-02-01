@@ -62,4 +62,4 @@ class Recursive(models.Model):
     """
     Class that references itself
     """
-    other = models.ForeignKey('self', related_name='parent')
+    parent = models.ForeignKey('self', related_name='children')
