@@ -241,21 +241,26 @@ class ModelListView(View):
 
 class ModelView(View):
     """
-    Generic view for displaying instances of a model
+    Generic view for displaying instances of a model.
     """
+    regex = '^(\w+)+/(\d+)$'
     
     def __init__(self, model):
         """
-        @param model - ModelWrapper
+        @param model - Model or ModelWrapper
         """
         self.model = model
+    
+    def _register(self, manager):
+        if self.model.__class__ != ModelWrapper:
+            self.model = manager[self.model.__name__]
     
     def __call__(self, request, id):
         """
         Overridden to process the requests directly rather delegating to another
         function
         """
-        user = request.user.getProfile()
+        user = request.user.get_profile()
         perms = self.model.has_perms(user, id)
         
         if perms & PERM_READ != PERM_READ:
@@ -265,3 +270,8 @@ class ModelView(View):
         c = RequestContext(request, processors=[settings_processor])
         return render_to_response('view/generic_model_view.html',
             {'wrapper': self.model, 'instance':instance}, context_instance=c)
+        
+    def name(self):
+        if self.model.__class__ == ModelWrapper:
+            return self.model.name()
+        return self.model.__name__

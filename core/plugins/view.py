@@ -6,8 +6,8 @@ class View(Registerable):
     """
     url = None
     handler = None
-    target = 'ViewHandler'
-    _target = 'ViewHandler'
+    target = 'ViewManager'
+    _target = 'ViewManager'
     
     def __init__(self, url, handler):
         """

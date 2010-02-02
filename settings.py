@@ -91,8 +91,8 @@ INSTALLED_APPS = (
     #'django.contrib.sessions',
     #'django.contrib.sites',
     'core',
-    'tests',
-    #'servers'
+    #'tests',
+    'servers'
 )
 
 AUTH_PROFILE_MODULE = 'core.UserProfile'
@@ -103,5 +103,6 @@ AUTH_PROFILE_MODULE = 'core.UserProfile'
 # changing this setting.
 CORE_PLUGINS = (
     'core.plugins.managers.type_manager.TypeManager',
-    'core.plugins.model_support.ModelManager'
+    'core.plugins.managers.view_manager.ViewManager',
+    'core.plugins.model_support.ModelManager',
 )

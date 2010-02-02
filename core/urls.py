@@ -4,7 +4,7 @@ from views import *
 
 urlpatterns = patterns('',
     #default
-    (r'^$', plugins),
+    (r'^plugins$', plugins),
     (r'^plugin/depends$', depends),
     (r'^plugin/dependeds$', dependeds),
     (r'^plugin/enable$', enable),
@@ -13,10 +13,14 @@ urlpatterns = patterns('',
     (r'^plugin/lock/refresh$', refresh_lock),
     (r'^plugin/(\w+)/$', config),
     (r'^plugin/(\w+)/save$', config_save),
-    
-    (r'^view$', generic_model_view),
 )
 
+# add view managers special view handler only if it is enabled.  By default it
+# is a core plugin, but a user could disable it.
+if 'ViewManager' in manager:
+    urlpatterns += patterns('',
+        (r'^(?P<path>.*)$', manager['ViewManager'].process),
+    )
 
 # The following is used to serve up local media files like images, css, js
 # Use __file__ to find the absolute path to this file.  This can be used to
