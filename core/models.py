@@ -145,12 +145,18 @@ class Permissable(models.Model):
     name = models.CharField(max_length=128)
     _permissions = None
     
-    def get_permissions(self):
+    def get_permissions(self, target=None):
         """
         returns cached list of compiled permissions
         """
         if not self._permissions:
             self._permissions = self.load_permissions()
+        print 'has permissions, ', self, self._permissions
+        if target:
+            try:
+                return self._permissions[target]
+            except KeyError:
+                return {}
         return self._permissions
 
     def load_permissions(self):
@@ -189,15 +195,6 @@ class Permissable(models.Model):
         return perms
 
 
-class Group(Permissable):
-    """
-    A group of users.  This may be a client, project or however you decide to
-    group your users.  Groups are allowed to create their own subgroups.
-    subgroups do not inherit permissions of the parent.
-    """
-    parent = models.ForeignKey('self', null=True, related_name='groups')
-
-
 class UserProfile(Permissable):
     """
     Permissions associated directly to a user.  This class does not provide
@@ -208,6 +205,16 @@ class UserProfile(Permissable):
     """
     pass
     #no properties yet
+
+
+class Group(Permissable):
+    """
+    A group of users.  This may be a client, project or however you decide to
+    group your users.  Groups are allowed to create their own subgroups.
+    subgroups do not inherit permissions of the parent.
+    """
+    parent = models.ForeignKey('self', null=True, related_name='groups')
+    members = models.ManyToManyField(UserProfile, related_name='groups')
 
 
 class Permission(models.Model):

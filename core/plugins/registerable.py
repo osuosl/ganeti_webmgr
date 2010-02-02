@@ -51,7 +51,7 @@ class Registerable(object):
                 self._target = value.split('.')    
         super(Registerable, self).__setattr__(key, value)
         
-    def has_perms(self, user, mask=None, possess=PERM_NONE, **kwargs):
+    def has_perms(self, user, mask=None, possess=PERM_NONE, *args, **kwargs):
         """
         Checks to see if a user has the permissions mask requested.  Checks
         both users and groups
@@ -66,12 +66,14 @@ class Registerable(object):
         will return a mask containing all permissions
         """
         mask = mask if mask else self.permissions
-        perms = self._has_perms(user, id, mask, possess, **kwargs)
-        if not (perms & mask == mask):
-            groups = iter(user.groups)
+        possess = possess if possess else PERM_NONE
+        perms = self._has_perms(user, mask, possess, *args, **kwargs)
+        if perms & mask != mask:
+            groups = iter(user.groups.all())
             try:
-                while not (perms & mask == mask): 
-                    perms = self._has_perms(groups.next())
+                while perms & mask != mask:
+                    perms = self._has_perms(groups.next(), mask, perms, *args, \
+                                            **kwargs)
             except StopIteration:
                 pass
         return perms

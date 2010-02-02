@@ -8,7 +8,6 @@ from core.plugins.registerable import *
 from core.plugins.view import View
 
 
-
 class ModelWrapper(Registerable):
     """
     Wrapper around a django model that stores information used to display it.
@@ -76,22 +75,24 @@ class ModelWrapper(Registerable):
         @param mask - permissions mask to check for.  If None search for all
                     perms
         """
-        perms = owner.get_object_permissions(model).items()
-        keys = perms.keys()
+        perms = owner.get_permissions(self.name()).items()
         possible = mask if mask else wrapper.permissions
         # iterate while there are keys !possessed and permissions left to check
-        while not possible & possess and perms:
+        while possible & possess != possible and perms:
             path, perm = perms.pop()
-            if not possess ^ perm:
-                # permission in perm that is not in possess, check it
-                if perm[-1] in ('User','Group'):
-                    clause = {'__'.join(perm[0]):None}
-                elif len(perm) == 1:
+            if possess ^ perm:
+                # permission in perm that is not already possessed, check it
+                if path == None:
+                    # perm directly on model, nothing to check
                     possess = possess | perm
                     continue
+                elif path[-1] == '1':
+                    # path originates with an owner
+                    clause = {str('%s__in' % '__'.join(path[:-1])):(owner,)}
                 else:
-                    clause = {'%s__in' % '__'.join(perm[0]):owner}
-                if model.objects.filter(**clause).filter(id=id).count() == 1:
+                    # path originates with a model, not an owner
+                    clause = {str('%s__isnull' % '__'.join(path)):False}
+                if self.model.objects.filter(**clause).filter(id=id).count():
                     possess = possess | perm
         return possess
 

@@ -7,9 +7,9 @@ from model_support import suite as model_support_suite
 
 def suite():
     return unittest.TestSuite([
-            #plugins_suite(),
+            plugins_suite(),
             #sqllock_suite(),
-            #permissions_suite(),
+            permissions_suite(),
             model_support_suite()
         ])
 

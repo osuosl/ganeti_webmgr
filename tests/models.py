@@ -6,7 +6,7 @@ class Simple(models.Model):
     """
     A simple model with no relationships
     """
-    owner = models.ForeignKey(Permissable)
+    owner = models.ForeignKey(Permissable, null=True)
     value = models.CharField(max_length='32')
 
 class Extended(models.Model):
@@ -34,14 +34,14 @@ class Complex(models.Model):
     """
     Model for testing relationships
     """
-    owner = models.ForeignKey(Permissable)
+    owner = models.ForeignKey(Permissable, null=True)
 
 
 class OneToOne(models.Model):
     """
     A one to one extension of a class
     """
-    complex = models.OneToOneField(Complex)
+    complex = models.OneToOneField(Complex, null=True)
 
 
 class OneToMany(models.Model):
@@ -63,3 +63,46 @@ class Recursive(models.Model):
     Class that references itself
     """
     parent = models.ForeignKey('self', related_name='children')
+    
+    
+class MultipleParentsParentA(models.Model):
+    """
+    Class for testing parent child paths
+    """
+    pass
+    
+
+class MultipleParentsParentB(models.Model):
+    """
+    Class for testing parent child paths
+    """
+    pass
+
+
+class MultipleParentsChild(models.Model):
+    """
+    a class with multiple parents for testing different relationship paths
+    """
+    parent_a = models.ForeignKey(MultipleParentsParentA, null=True, related_name='children')
+    parent_b = models.ForeignKey(MultipleParentsParentB, null=True, related_name='children')
+
+
+class DepthTestRoot(models.Model):
+    """
+    model for testing indirect ownership
+    """
+    owner = models.ForeignKey(Permissable, null=True, related_name='depth_tests')
+
+
+class DepthTestLevel1(models.Model):
+    """
+    model for testing indirect ownership
+    """
+    parent = models.ForeignKey(DepthTestRoot, null=True, related_name='child')
+
+
+class DepthTestLevel2(models.Model):
+    """
+    model for testing indirect ownership
+    """
+    parent = models.ForeignKey(DepthTestLevel1, null=True, related_name='child')
