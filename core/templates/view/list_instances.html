@@ -1,0 +1,18 @@
+{% load maintain_extras %}
+<table>
+    <tr>
+        {% for field, wrapper in wrapper.parent.items %}
+            {% for field, wrapper in wrapper.one_to_one.items %}
+                {% for field in wrapper.fields%}
+                    <th>{{ field|capfirst }}</th>
+                {% endfor %}
+            {% endfor %}
+        {% endfor %}
+        {% for field in wrapper.fields%}
+            <th>{{field|capfirst}}</th>
+        {% endfor %}
+    </tr>
+    {% for instance in instances %}
+        {% include "view/list_fields.html" %}
+    {% endfor %}
+</table>

@@ -1,5 +1,5 @@
 from core.plugins.plugin import Plugin
-from core.plugins.model_support import ModelView
+from core.plugins.model_support import ModelView, ModelListView
 
 from models import *
 
@@ -9,7 +9,8 @@ class Devices(Plugin):
     objects = (
         Device,
         NetworkCard,
-        ModelView(Device)
+        ModelView(Device),
+        ModelListView(Device)
     )
 
 

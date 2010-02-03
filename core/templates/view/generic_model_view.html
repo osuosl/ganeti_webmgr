@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-
 {% load maintain_extras %}
 
 {% block content %}
@@ -16,25 +15,9 @@
         
     {% for field, wrapper in wrapper.one_to_many.items %}
         <h2 class="section list">{{wrapper.name}}</h2>
-        <table>
-        <tr>
-            {% for field, wrapper in wrapper.parent.items %}
-                {% with instance|get:field as instance %}
-                    {% for field, wrapper in wrapper.one_to_one.items %}
-                        {% for field in wrapper.fields%}
-                            <th>{{ field|capfirst }}</th>
-                        {% endfor %}
-                    {% endfor %}
-                {% endwith %}
-            {% endfor %}
-            {% for field in wrapper.fields%}
-                <th>{{field|capfirst}}</th>
-            {% endfor %}
-        </tr>
-        {% for instance in instance|get:field|f:'all' %}
-            {% include "view/list_fields.html" %}
-        {% endfor %}
-        </table>
+        {% with instance|get:field|f:'all' as instances %}
+            {% include "view/list_instances.html" %}
+        {% endwith %}
     {% endfor %}
 
 {% endblock %}
