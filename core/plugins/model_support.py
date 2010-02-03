@@ -217,19 +217,22 @@ class ModelListView(View):
     
     def __init__(self, model):
         self.model = model
-        self.regex = regex = '^%s$' % self.name()
+        if self.model.__class__ == ModelWrapper:
+            self.regex = '^%s$' % self.model.name()
+        else:
+            self.regex = '^%s$' % self.model.__name__
     
     def __call__(self, request):
         c = RequestContext(request, processors=[settings_processor])
         
         # get permissions on this class of object
         user = request.user.get_profile()
-        perms = user.get_permissions(self.name())
+        perms = user.get_permissions(self.model.name())
         if not perms:
             groups = iter(user.groups.all())
             try:
                 while not perms:
-                    perms = groups.next().get_permissions(self.name())
+                    perms = groups.next().get_permissions(self.model.name())
             except StopIteration:
                 pass
             
@@ -242,17 +245,25 @@ class ModelListView(View):
             if perms & PERM_READ:
                 instances.append(i)
         
+        link_view = 'DetailView:%s' % self.model.name()
+        if link_view in self.manager:
+            link = self.manager[link_view]
+        else:
+            link = None
+        
         return render_to_response('view/generic_model_list.html', \
-            {'instances':instances, 'wrapper':self.model}, context_instance=c)
+            {'instances':instances, 'wrapper':self.model, 'link':link}
+            , context_instance=c)
     
     def _register(self, manager):
         if self.model.__class__ != ModelWrapper:
             self.model = manager.manager['ModelManager'][self.model.__name__]
+        self.manager = manager
     
     def name(self):
         if self.model.__class__ == ModelWrapper:
-            return self.model.name()
-        return self.model.__name__
+            return 'ListView:%s' % self.model.name()
+        return 'ListView:%s' % self.model.__name__
 
 
 class ModelView(View):
@@ -265,7 +276,11 @@ class ModelView(View):
         @param model - Model or ModelWrapper
         """
         self.model = model
-        self.regex = regex = '^%s/(\d+)$' % self.name()
+        
+        if self.model.__class__ == ModelWrapper:
+            self.regex = '^%s/(\d+)$' % self.model.name()
+        else:
+            self.regex = '^%s/(\d+)$' % self.model.__name__
     
     def _register(self, manager):
         if self.model.__class__ != ModelWrapper:
@@ -290,8 +305,8 @@ class ModelView(View):
         c = RequestContext(request, processors=[settings_processor])
         return render_to_response('view/generic_model_view.html',
             {'wrapper': self.model, 'instance':instance}, context_instance=c)
-        
+    
     def name(self):
         if self.model.__class__ == ModelWrapper:
-            return self.model.name()
-        return self.model.__name__
+            return 'DetailView:%s' % self.model.name()
+        return 'DetailView:%s' % self.model.__name__

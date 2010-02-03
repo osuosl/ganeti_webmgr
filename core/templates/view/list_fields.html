@@ -13,13 +13,25 @@
     {% endfor %}
     
     {% for field in wrapper.fields %}
-        <td>{{ instance|get:field }}</td>
+        <td>
+                    {% if link and instance|perms:user|has_perm:1  %}
+                        <a href="{{ROOT}}/o/{{wrapper.name}}/{{instance.id}}" class="model">{{instance|get:field}}</a>
+                    {% else %}
+                        {{instance|get:field}}
+                    {% endif %}
+                </td>
     {% endfor %}
 
     {% for field, wrapper in wrapper.one_to_one.items %}
         {% with instance|get:field as instance %}
             {% for field in wrapper.fields%}
-                <td>{{ instance|get:field }}</td>
+                <td>
+                    {% if link and instance|perms:user|has_perm:1  %}
+                        <a href="{{ROOT}}/o/{{wrapper.name}}/instance.id" class="model">{{instance|get:field}}</a>
+                    {% else %}
+                        {{instance|get:field}}
+                    {% endif %}
+                </td>
             {% endfor %}
         {% endwith %}
     {% endfor %}
