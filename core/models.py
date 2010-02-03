@@ -151,7 +151,6 @@ class Permissable(models.Model):
         """
         if not self._permissions:
             self._permissions = self.load_permissions()
-        print 'has permissions, ', self, self._permissions
         if target:
             try:
                 return self._permissions[target]
