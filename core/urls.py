@@ -1,9 +1,11 @@
 from django.conf.urls.defaults import *
+from django.contrib.auth.views import login, logout
 
 from views import *
 
+
 urlpatterns = patterns('',
-    #default
+    #plugins
     (r'^plugins$', plugins),
     (r'^plugin/depends$', depends),
     (r'^plugin/dependeds$', dependeds),

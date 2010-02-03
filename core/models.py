@@ -1,9 +1,9 @@
 import cPickle
-
 from datetime import datetime, timedelta
 
 from django.db import models
-
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
 
 class PluginConfig(models.Model):
     """
@@ -203,8 +203,19 @@ class UserProfile(Permissable):
     the other functions of the authentication system, and registration module
     with this custom permissions system.
     """
-    pass
-    #no properties yet
+    user = models.ForeignKey(User, null=True, unique=True)
+    admin = models.BooleanField(default=False)
+
+
+def create_user_profile(**kwargs):
+    """
+    Signal handler that creates a UserProfile object when a User account is
+    created
+    """
+    if kwargs['created']:
+        profile = UserProfile(user=kwargs['instance'])
+        profile.save()
+post_save.connect(create_user_profile, sender=User)
 
 
 class Group(Permissable):
