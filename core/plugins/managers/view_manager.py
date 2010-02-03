@@ -30,7 +30,7 @@ class ViewManager(Plugin, PluginManager):
         for regex, plugin in self.urls.items():
             match = regex.match(path)
             if match:
-                return plugin(request, match.groups())
+                return plugin(request, *match.groups())
         
         return HttpResponse('redirect to 404')
 

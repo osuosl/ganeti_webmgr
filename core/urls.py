@@ -5,6 +5,10 @@ from views import *
 
 
 urlpatterns = patterns('',
+    
+    #default
+    (r'^$', plugins),
+    
     #plugins
     (r'^plugins$', plugins),
     (r'^plugin/depends$', depends),
@@ -21,7 +25,7 @@ urlpatterns = patterns('',
 # is a core plugin, but a user could disable it.
 if 'ViewManager' in manager:
     urlpatterns += patterns('',
-        (r'^(?P<path>.*)$', manager['ViewManager'].process),
+        (r'^o/(?P<path>.+)$', manager['ViewManager'].process),
     )
 
 # The following is used to serve up local media files like images, css, js

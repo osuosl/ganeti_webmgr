@@ -4,11 +4,13 @@ from django.db.models.fields.related import *
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
+from core import settings_processor
 from core.plugins.managers.type_manager import ObjectType, TypeManager
 from core.plugins.plugin import Plugin
 from core.plugins.plugin_manager import PluginManager
 from core.plugins.registerable import *
 from core.plugins.view import View
+from core.views import settings_processor
 
 
 class ModelWrapper(Registerable):
@@ -95,7 +97,7 @@ class ModelWrapper(Registerable):
                 else:
                     # path originates with a model, not an owner
                     clause = {str('%s__isnull' % '__'.join(path)):False}
-                if self.model.objects.filter(**clause).filter(id=id).count():
+                if self.model.objects.filter(id=id).filter(**clause).count():
                     possess = possess | perm
         return possess
 
@@ -191,6 +193,8 @@ class ModelWrapper(Registerable):
         """        
         self.__dict__[dict_][key] = wrapper
 
+    def __str__(self):
+        return '<ModelWrapper @ %s : %s>' % (hex(id(self)), self.name())
 
 class ModelManager(Plugin, PluginManager):
     """
@@ -246,13 +250,13 @@ class ModelView(View):
     """
     Generic view for displaying instances of a model.
     """
-    regex = '^(\w+)+/(\d+)$'
     
     def __init__(self, model):
         """
         @param model - Model or ModelWrapper
         """
         self.model = model
+        self.regex = regex = '^%s/(\d+)$' % self.name()
     
     def _register(self, manager):
         if self.model.__class__ != ModelWrapper:
@@ -266,10 +270,14 @@ class ModelView(View):
         user = request.user.get_profile()
         perms = self.model.has_perms(user, id=id)
         
+        try:
+            instance = self.model.model.objects.get(id=id)
+        except self.model.model.DoesNotExist:
+            return render_to_response('errors/404.html')
+            
         if perms & PERM_READ != PERM_READ:
-            return render_to_response('access_denied.html')
-        
-        instance = self.model.get(id=id)
+            return render_to_response('errors/403.html')
+            
         c = RequestContext(request, processors=[settings_processor])
         return render_to_response('view/generic_model_view.html',
             {'wrapper': self.model, 'instance':instance}, context_instance=c)

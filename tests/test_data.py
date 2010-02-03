@@ -2,7 +2,17 @@
 
 from core.models import *
 from servers.models import *
+from core.plugins.registerable import PERM_READ, PERM_WRITE
 
+# delete old data
+Group.objects.all().delete()
+Device.objects.all().delete()
+ClosetLocation.objects.all().delete()
+RackU.objects.all().delete()
+Rack.objects.all().delete()
+Closet.objects.all().delete()
+NetworkCard.objects.all().delete()
+Permission.objects.all().delete()
 
 # get user profiles
 up1 = UserProfile.objects.get(id=1)
@@ -15,6 +25,26 @@ g2 = Group(name='Group 2')
 g2.save()
 up1.groups.add(g1)
 up2.groups.add(g2)
+
+# permissions - group 1
+p = Permission(path='Device.owner.1', mask=PERM_READ|PERM_WRITE, granted_to=g1)
+p.save()
+p = Permission(path='Rack', mask=PERM_READ, granted_to=g1)
+p.save()
+p = Permission(path='NetworkCard.device.owner.1', mask=PERM_READ|PERM_WRITE, granted_to=g1)
+p.save()
+p = Permission(path='Location.device.owner.1', mask=PERM_READ|PERM_WRITE, granted_to=g1)
+p.save()
+
+# permissions - group 2
+p = Permission(path='Device.owner.1', mask=PERM_READ|PERM_WRITE, granted_to=g2)
+p.save()
+p = Permission(path='Rack', mask=PERM_READ, granted_to=g2)
+p.save()
+p = Permission(path='NetworkCard.device.owner.1', mask=PERM_READ, granted_to=g2)
+p.save()
+p = Permission(path='Location.device.owner.1', mask=PERM_READ|PERM_WRITE, granted_to=g2)
+p.save()
 
 # racks
 r = Rack(row=1, column=2)

@@ -1,7 +1,7 @@
 from core.plugins.plugin import Plugin
 from core.plugins.model_support import ModelView
 
-from models import Closet, Device, Location, NetworkCard, Rack
+from models import *
 
 
 class Devices(Plugin):
@@ -19,6 +19,8 @@ class Inventory(Plugin):
     objects = (
         Location,
         Rack,
-        #ModelView(Rack),
-        Closet
+        RackU,
+        ModelView(Rack),
+        Closet,
+        ClosetLocation
     )

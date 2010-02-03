@@ -189,7 +189,7 @@ class RootPluginManager(PluginManager):
         
         # the path someone imports is important.  import all the different
         # possibilities so we can check them all
-        from maintain.core.plugins.plugin import Plugin as PluginA
+        from muddle.core.plugins.plugin import Plugin as PluginA
         from core.plugins.plugin import Plugin as PluginB
         subclasses = (PluginA, PluginB)
         

@@ -24,4 +24,17 @@ def get(object_, key):
     """
     returns the property of the object
     """
-    return object_.__getattribute__(key)
+    try:
+        return object_.__getattribute__(key)
+    except:
+        return None
+
+
+@register.filter(name='f')
+def f(object_, key):
+    """
+    returns the property of the object
+    """
+    r = object_.__getattribute__(key)()
+    print 'r:', r
+    return r

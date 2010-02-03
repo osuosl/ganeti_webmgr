@@ -12,6 +12,7 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils.text import capfirst
 
+from core import settings_processor
 from plugins import CyclicDependencyException
 from plugins.plugin_manager import RootPluginManager
 from models import PluginConfig, SQLLock
@@ -22,16 +23,6 @@ import settings
 manager = RootPluginManager()
 manager.autodiscover()
 
-
-def settings_processor(request):
-    """
-    settings_processor adds settings required by most pages
-    """
-    return {
-        'VERSION':settings.VERSION,
-        'MEDIA':settings.MEDIA_URL,
-        'ROOT':settings.ROOT_URL
-    }
 
 def requires_config_lock(fn):
     """

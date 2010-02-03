@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block head %}
+    {{block.super}}
+    <style>
+        #errors {
+            display:block;
+            margin-top:50px;
+            padding-bottom:30px;
+            padding-top:30px;
+        }
+    </style>
+{% endblock %}
+
+{% block errors %}
+You do not have permission to view this page.
+{% endblock %}

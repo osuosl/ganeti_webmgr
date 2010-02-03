@@ -49,6 +49,15 @@
                 font-size:inherit;
             }
             
+            h2 {
+                border-bottom:1px solid #888888;
+                color:#161650;
+                font-size:12px;
+                margin-bottom:10px;
+                margin-top:30px;
+            }
+
+            h2.list { border:0; }
 
             div#headerContainer {
                 padding:0px;
@@ -104,6 +113,20 @@
             a.mainmenuitem:visited           { text-decoration:none; }
             a.mainmenuitem:hover             { text-decoration:underline; }
             a.mainmenuitem:active            { text-decoration:none;}
+
+            table {
+                border-collapse:collapse;
+            }
+            
+            th {
+                border:1px solid black;
+                padding: 5px 10px 5px 10px;
+            }
+
+            td {
+                border:1px solid #888888;
+                padding: 5px 10px 5px 10px;
+            }
 
             #content {
                 padding-top:10px;                
@@ -215,6 +238,10 @@
             </div>
 
             <div id="mainmenu">
+                
+                <span class="mainmenuitem"><a class="mainmenuitem" href="{{SITE_ROOT}}/o/Rack/3">Rack</a></span>
+                <span class="mainmenuitem"><a class="mainmenuitem" href="{{SITE_ROOT}}/plugins">Plugins</a></span>
+                
                 {% if user.is_authenticated %}
                     <span class="mainmenuitem lastmenuitem"><a class="mainmenuitem" href="{{SITE_ROOT}}/accounts/logout">Logout</a></span>
                 {% else %}

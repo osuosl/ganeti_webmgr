@@ -8,17 +8,33 @@
     {% include "view/model_fields.html" %}
     
     {% for field, wrapper in wrapper.one_to_one.items %}
-        <h2 class="section">{{model.name}}</h2>        
-        {% with instance|index:field as instance %}
+        <h2 class="section">{{wrapper.name}}</h2>
+        {% with instance|get:field as instance %}
             {% include "view/model_fields.html" %}
         {% endwith %}
     {% endfor %}
-    
+        
     {% for field, wrapper in wrapper.one_to_many.items %}
-        <h2 class="section">{{model.name}}</h2>
-        {% with instance|index:field as instance %}
+        <h2 class="section list">{{wrapper.name}}</h2>
+        <table>
+        <tr>
+            {% for field, wrapper in wrapper.parent.items %}
+                {% with instance|get:field as instance %}
+                    {% for field, wrapper in wrapper.one_to_one.items %}
+                        {% for field in wrapper.fields%}
+                            <th>{{ field|capfirst }}</th>
+                        {% endfor %}
+                    {% endfor %}
+                {% endwith %}
+            {% endfor %}
+            {% for field in wrapper.fields%}
+                <th>{{field|capfirst}}</th>
+            {% endfor %}
+        </tr>
+        {% for instance in instance|get:field|f:'all' %}
             {% include "view/list_fields.html" %}
-        {% endwith %}
+        {% endfor %}
+        </table>
     {% endfor %}
 
 {% endblock %}

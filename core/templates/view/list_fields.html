@@ -1,0 +1,26 @@
+{% load maintain_extras %}
+<tr>
+    {% for field, wrapper in wrapper.parent.items %}
+        {% with instance|get:field as instance %}
+            {% for field, wrapper in wrapper.one_to_one.items %}
+                 {% with instance|get:field as instance %}
+                     {% for field in wrapper.fields%}
+                         <td>{{ instance|get:field }}</td>
+                     {% endfor %}
+                 {% endwith %}
+             {% endfor %}
+        {% endwith %}
+    {% endfor %}
+    
+    {% for field in wrapper.fields %}
+        <td>{{ instance|get:field }}</td>
+    {% endfor %}
+
+    {% for field, wrapper in wrapper.one_to_one.items %}
+        {% with instance|get:field as instance %}
+            {% for field in wrapper.fields%}
+                <td>{{ instance|get:field }}</td>
+            {% endfor %}
+        {% endwith %}
+    {% endfor %}
+</tr>

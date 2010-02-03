@@ -1,5 +1,17 @@
 {% load maintain_extras %}
 
-{% for field in wrapper.fields %}
-    <div><label>{{field|capfirst}}:</label>{{instance|get:field}}</div>
-{% endfor %}
+{% if wrapper.children %}
+    {% for field, wrapper in wrapper.children.items %}
+        {% if instance|get:field %}
+            {% with instance|get:field as instance %}
+                {% for field in wrapper.fields %}
+                    <div><label>{{field|capfirst}}:</label>{{instance|get:field}}</div>
+                {% endfor %}
+            {% endwith %}
+        {% endif %}
+    {% endfor %}
+{% else %}
+    {% for field in wrapper.fields %}
+        <div><label>{{field|capfirst}}:</label>{{instance|get:field}}</div>
+    {% endfor %}
+{% endif %}

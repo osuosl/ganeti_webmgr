@@ -7,11 +7,11 @@ admin.autodiscover()
 urlpatterns = patterns('',
     #authentication
     (r'^accounts/login/$', login),
-    (r'^accounts/logout/$', logout, {'next':'/plugins'}),
+    (r'^accounts/logout/$', logout, {'next_page':'/plugins'}),
 
     # Uncomment the next line to enable the admin:
     (r'^admin/', include(admin.site.urls)),
     
-    (r'^', include('maintain.core.urls')),
+    (r'^', include('core.urls')),
 )
 
