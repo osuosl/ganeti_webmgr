@@ -1,6 +1,9 @@
 from django.db.models.base import ModelBase
 from django.db.models.fields import AutoField
 from django.db.models.fields.related import *
+from django.shortcuts import render_to_response
+from django.template import RequestContext
+
 from core.plugins.managers.type_manager import ObjectType, TypeManager
 from core.plugins.plugin import Plugin
 from core.plugins.plugin_manager import PluginManager
@@ -209,7 +212,7 @@ def generic_model_list_view(request, model, owner=None):
     perms = profile.get_object_permissions(model)
     
     if not perms:
-        return render_to_response('no_perms.html')
+        return render_to_response('access_denied.html')
     
     query = model.objects.all()
     # check for permissions on the model directly.  This supercedes all other
@@ -253,7 +256,7 @@ class ModelView(View):
     
     def _register(self, manager):
         if self.model.__class__ != ModelWrapper:
-            self.model = manager[self.model.__name__]
+            self.model = manager.manager['ModelManager'][self.model.__name__]
     
     def __call__(self, request, id):
         """
@@ -261,10 +264,10 @@ class ModelView(View):
         function
         """
         user = request.user.get_profile()
-        perms = self.model.has_perms(user, id)
+        perms = self.model.has_perms(user, id=id)
         
         if perms & PERM_READ != PERM_READ:
-            return render_to_response('no_perms.html')
+            return render_to_response('access_denied.html')
         
         instance = self.model.get(id=id)
         c = RequestContext(request, processors=[settings_processor])

@@ -93,7 +93,7 @@ class Registerable(object):
         # this object need to be checked.  The path still matters in case of
         # conflicting object names.  a hash should be used instead to identify
         # the object internally without following a path.
-        return PERMS_ALL
+        return PERM_ALL
     
     
     
