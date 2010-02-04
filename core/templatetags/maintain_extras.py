@@ -46,7 +46,7 @@ def perms(instance, user):
     Returns permissions for the instance/user combination
     """
     wrapper = manager['ModelManager'][instance.__class__.__name__]
-    return wrapper.has_perms(user.get_profile(), instance.id)
+    return wrapper.has_perms(user.get_profile(), id=instance.id)
     
     
 @register.filter(name='has_perm')
@@ -55,3 +55,17 @@ def has_perm(perms, mask):
     returns whether or not the perms contain the mask requested
     """
     return perms & mask
+
+
+@register.filter(name='link')
+def link(wrapper):
+    global manager
+    if 'DetailView:%s' % wrapper.name() in manager['ViewManager']:
+        return wrapper.name()
+    return None
+
+
+@register.filter(name='echo')
+def echo(x):
+    print 'echo: %s' % x
+    return True
