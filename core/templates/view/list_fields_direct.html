@@ -4,9 +4,19 @@
     {% with instance|get:field as instance %}
         {% for field, wrapper in wrapper.one_to_one.items %}
              {% with instance|get:field as instance %}
-                 {% for field in wrapper.fields%}
-                     <td>{{ instance|get:field }}</td>
-                 {% endfor %}
+                 <td>
+                        {% if wrapper|link %}
+                            <a href="{{ROOT}}/o/{{wrapper.name}}/{{instance.id}}" class="model">
+                                {% for field in wrapper.fields %}
+                                    {{ instance|get:field }}
+                                {% endfor %}
+                            </a>
+                        {% else %}
+                            {% for field in wrapper.fields %}
+                                {{ instance|get:field }}
+                            {% endfor %}
+                        {% endif %}
+                    </td>
              {% endwith %}
          {% endfor %}
     {% endwith %}
