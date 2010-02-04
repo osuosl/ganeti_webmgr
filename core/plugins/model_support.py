@@ -10,7 +10,7 @@ from core.plugins.plugin import Plugin
 from core.plugins.plugin_manager import PluginManager
 from core.plugins.registerable import *
 from core.plugins.view import View
-from core.views import settings_processor
+from core import settings_processor, perms_processor
 
 
 class ModelWrapper(Registerable):
@@ -223,7 +223,8 @@ class ModelListView(View):
             self.regex = '^%s$' % self.model.__name__
     
     def __call__(self, request):
-        c = RequestContext(request, processors=[settings_processor])
+        c = RequestContext(request, processors=[settings_processor, \
+                                                perms_processor])
         
         # get permissions on this class of object
         user = request.user.get_profile()
@@ -239,9 +240,11 @@ class ModelListView(View):
         if not perms:
             return render_to_response('errors/403.html', context_instance=c)
         
+        flattened = reduce(lambda x,y: x|y, perms.values())
         instances = []
         for i in self.model.model.objects.all():
             perms = self.model.has_perms(user, id=i.id)
+            flattened = flattened | perms
             if perms & PERM_READ:
                 instances.append(i)
         
@@ -252,7 +255,8 @@ class ModelListView(View):
             link = None
         
         return render_to_response('view/generic_model_list.html', \
-            {'instances':instances, 'wrapper':self.model, 'link':link}
+            {'instances':instances, 'wrapper':self.model, 'link':link, \
+             'perms':perms}
             , context_instance=c)
     
     def _register(self, manager):
@@ -293,7 +297,6 @@ class ModelView(View):
         """
         user = request.user.get_profile()
         perms = self.model.has_perms(user, id=id)
-        
         try:
             instance = self.model.model.objects.get(id=id)
         except self.model.model.DoesNotExist:
@@ -302,9 +305,11 @@ class ModelView(View):
         if perms & PERM_READ != PERM_READ:
             return render_to_response('errors/403.html')
         
-        c = RequestContext(request, processors=[settings_processor])
+        c = RequestContext(request, processors=[settings_processor, \
+                                                perms_processor])
         return render_to_response('view/generic_model_view.html',
-            {'wrapper': self.model, 'instance':instance}, context_instance=c)
+            {'wrapper': self.model, 'instance':instance, 'perms':perms}
+            , context_instance=c)
     
     def name(self):
         if self.model.__class__ == ModelWrapper:

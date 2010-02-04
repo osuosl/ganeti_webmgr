@@ -3,7 +3,10 @@
 
 {% block content %}
 
-    <h1>{{wrapper.name}}</h1>
+    <h1>{{wrapper.name}}
+        {% if perms|has_perm:PERM_WRITE %}<div class="button button_edit" title="edit"></div>{% endif %}
+        {% if perms|has_perm:PERM_DELETE %}<div class="button button_delete" title="delete"></div>{% endif %}
+    </h1>
     {% include "view/model_fields.html" %}
     
     {% for field, wrapper in wrapper.one_to_one.items %}

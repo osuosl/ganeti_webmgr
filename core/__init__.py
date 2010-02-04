@@ -1,5 +1,6 @@
 import settings
-
+from core.plugins.registerable import PERM_ALL, PERM_NONE, PERM_READ, \
+                                    PERM_WRITE, PERM_CREATE, PERM_DELETE
 
 def settings_processor(request):
     """
@@ -9,4 +10,18 @@ def settings_processor(request):
         'VERSION':settings.VERSION,
         'MEDIA':settings.MEDIA_URL,
         'ROOT':settings.ROOT_URL
+    }
+
+
+def perms_processor(request):
+    """
+    settings_processor adds default permission masks
+    """
+    return {
+        'PERM_ALL':PERM_ALL,
+        'PERM_NONE':PERM_NONE,
+        'PERM_READ':PERM_READ,
+        'PERM_WRITE':PERM_WRITE,
+        'PERM_CREATE':PERM_CREATE,
+        'PERM_DELETE':PERM_DELETE
     }
