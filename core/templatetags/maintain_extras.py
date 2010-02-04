@@ -2,6 +2,8 @@ from django import template
 register = template.Library()
 
 from core.models import PluginConfig
+from core.plugins.registerable import PERM_NONE
+from core.views import manager
 
 @register.filter(name='config')
 def config(class_):
@@ -35,6 +37,21 @@ def f(object_, key):
     """
     returns the property of the object
     """
-    r = object_.__getattribute__(key)()
-    print 'r:', r
-    return r
+    return object_.__getattribute__(key)()
+
+
+@register.filter(name='perms')
+def perms(instance, user):
+    """
+    Returns permissions for the instance/user combination
+    """
+    wrapper = manager['ModelManager'][instance.__class__.__name__]
+    return wrapper.has_perms(user.get_profile(), instance.id)
+    
+    
+@register.filter(name='has_perm')
+def has_perm(perms, mask):
+    """
+    returns whether or not the perms contain the mask requested
+    """
+    return perms & mask

@@ -209,41 +209,61 @@ class ModelManager(Plugin, PluginManager):
         PluginManager.__init__(self)
 
 
-
-def generic_model_list_view(request, model, owner=None):
-    # get permissions on this class of object
-    profile = request.user.getProfile()
-    perms = profile.get_object_permissions(model)
-    
-    if not perms:
-        return render_to_response('access_denied.html')
-    
-    query = model.objects.all()
-    # check for permissions on the model directly.  This supercedes all other
-    # permissions. If there are permissions on the model, then no other joins
-    # are needed for filtering records
-    if not filter(perms, lambda x:len(x[0])==1):
-        # no direct perms found. Convert all perms to Q clauses.  These clauses
-        # must walk the relations backwards to the owner.
-        #
-        # TODOs: There may be multiple paths that result in different records
-        # 1) need to figure out how to reduce the number of paths if possible
-        # 2) need to figure out if multiple paths can conflict
-        for perm in perms:
-            owner_path = '__'.join(perm)
-            Q(**{owner_path:user})
-
-    return render_to_response('model_list_view.html', {'records':query})
-
-
 class ModelListView(View):
     """
     Generic view generated for a model.  For this view to function the model
     must also be registered.
     """
-    handler = generic_model_list_view
+    
     def __init__(self, model):
         self.model = model
+        if self.model.__class__ == ModelWrapper:
+            self.regex = '^%s$' % self.model.name()
+        else:
+            self.regex = '^%s$' % self.model.__name__
+    
+    def __call__(self, request):
+        c = RequestContext(request, processors=[settings_processor])
+        
+        # get permissions on this class of object
+        user = request.user.get_profile()
+        perms = user.get_permissions(self.model.name())
+        if not perms:
+            groups = iter(user.groups.all())
+            try:
+                while not perms:
+                    perms = groups.next().get_permissions(self.model.name())
+            except StopIteration:
+                pass
+            
+        if not perms:
+            return render_to_response('errors/403.html', context_instance=c)
+        
+        instances = []
+        for i in self.model.model.objects.all():
+            perms = self.model.has_perms(user, id=i.id)
+            if perms & PERM_READ:
+                instances.append(i)
+        
+        link_view = 'DetailView:%s' % self.model.name()
+        if link_view in self.manager:
+            link = self.manager[link_view]
+        else:
+            link = None
+        
+        return render_to_response('view/generic_model_list.html', \
+            {'instances':instances, 'wrapper':self.model, 'link':link}
+            , context_instance=c)
+    
+    def _register(self, manager):
+        if self.model.__class__ != ModelWrapper:
+            self.model = manager.manager['ModelManager'][self.model.__name__]
+        self.manager = manager
+    
+    def name(self):
+        if self.model.__class__ == ModelWrapper:
+            return 'ListView:%s' % self.model.name()
+        return 'ListView:%s' % self.model.__name__
 
 
 class ModelView(View):
@@ -256,7 +276,11 @@ class ModelView(View):
         @param model - Model or ModelWrapper
         """
         self.model = model
-        self.regex = regex = '^%s/(\d+)$' % self.name()
+        
+        if self.model.__class__ == ModelWrapper:
+            self.regex = '^%s/(\d+)$' % self.model.name()
+        else:
+            self.regex = '^%s/(\d+)$' % self.model.__name__
     
     def _register(self, manager):
         if self.model.__class__ != ModelWrapper:
@@ -274,15 +298,15 @@ class ModelView(View):
             instance = self.model.model.objects.get(id=id)
         except self.model.model.DoesNotExist:
             return render_to_response('errors/404.html')
-            
+        
         if perms & PERM_READ != PERM_READ:
             return render_to_response('errors/403.html')
-            
+        
         c = RequestContext(request, processors=[settings_processor])
         return render_to_response('view/generic_model_view.html',
             {'wrapper': self.model, 'instance':instance}, context_instance=c)
-        
+    
     def name(self):
         if self.model.__class__ == ModelWrapper:
-            return self.model.name()
-        return self.model.__name__
+            return 'DetailView:%s' % self.model.name()
+        return 'DetailView:%s' % self.model.__name__
