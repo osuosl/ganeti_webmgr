@@ -15,8 +15,8 @@ NetworkCard.objects.all().delete()
 Permission.objects.all().delete()
 
 # get user profiles
-up1 = UserProfile.objects.get(id=1)
-up2 = UserProfile.objects.get(id=2)
+up1 = UserProfile.objects.get(id=2)
+up2 = UserProfile.objects.get(id=3)
 
 # groups
 g1 = Group(name='Group 1')
