@@ -9,6 +9,19 @@
     </h1>
     {% include "view/model_fields.html" %}
     
+    {% if wrapper.parent %}
+        {% for field, wrapper in wrapper.parent.items %}
+            {% for field, wrapper in wrapper.one_to_many.items %}
+                <h2 class="section list">{{wrapper.name}}</h2>
+                {% if instance|get:field %}
+                    {% with instance|get:field|f:'all' as instances %}
+                        {% include "view/list_instances.html" %}
+                    {% endwith %}
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+    {% endif %}
+    
     {% for field, wrapper in wrapper.one_to_one.items %}
         <h2 class="section">{{wrapper.name}}</h2>
         {% with instance|get:field as instance %}
@@ -18,9 +31,12 @@
         
     {% for field, wrapper in wrapper.one_to_many.items %}
         <h2 class="section list">{{wrapper.name}}</h2>
-        {% with instance|get:field|f:'all' as instances %}
-            {% include "view/list_instances.html" %}
-        {% endwith %}
+        {% if instance|get:field %}
+            {% with instance|get:field|f:'all' as instances %}
+                {% include "view/list_instances.html" %}
+            {% endwith %}
+        {% endif %}
     {% endfor %}
+
 
 {% endblock %}

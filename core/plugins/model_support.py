@@ -225,7 +225,7 @@ class ModelListView(View):
     def __call__(self, request):
         c = RequestContext(request, processors=[settings_processor, \
                                                 perms_processor])
-        
+
         # get permissions on this class of object
         user = request.user.get_profile()
         perms = user.get_permissions(self.model.name())

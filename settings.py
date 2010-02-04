@@ -92,7 +92,7 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.admin',
     'core',
-    #'tests',
+    'tests',
     'servers'
 )
 
@@ -109,4 +109,5 @@ CORE_PLUGINS = (
     'core.plugins.managers.type_manager.TypeManager',
     'core.plugins.managers.view_manager.ViewManager',
     'core.plugins.model_support.ModelManager',
+    'core.plugins.permissions.PermissionsPlugin'
 )

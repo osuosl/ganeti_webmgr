@@ -2,6 +2,11 @@
 <table>
     <tr>
         {% for field, wrapper in wrapper.parent.items %}
+            {% for field in wrapper.fields %}
+                {% for field in wrapper.fields%}
+                    <th>{{ field|capfirst }}</th>
+                {% endfor %}
+            {% endfor %}
             {% for field, wrapper in wrapper.one_to_one.items %}
                 {% for field in wrapper.fields%}
                     <th>{{ field|capfirst }}</th>

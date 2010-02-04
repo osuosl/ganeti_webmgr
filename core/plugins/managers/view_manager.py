@@ -1,7 +1,9 @@
 import re
 
-from django.http import HttpResponse
+from django.shortcuts import render_to_response
+from django.template import RequestContext
 
+from core import settings_processor
 from core.plugins.plugin_manager import PluginManager
 from core.plugins.plugin import Plugin
 
@@ -31,8 +33,9 @@ class ViewManager(Plugin, PluginManager):
             match = regex.match(path)
             if match:
                 return plugin(request, *match.groups())
-        
-        return HttpResponse('redirect to 404')
+            
+        c = RequestContext(request, processors=[settings_processor])
+        return render_to_response('errors/404.html', context_instance=c)
 
     def register(self, plugin):
         """

@@ -1,7 +1,18 @@
 {% load maintain_extras %}
 
+{% with wrapper as child_wrapper %}
 {% for field, wrapper in wrapper.parent.items %}
+    
     {% with instance|get:field as instance %}
+        {% for field in wrapper.fields %}
+       <td>
+           {% if child_wrapper|link %}
+               <a href="{{ROOT}}/o/{{child_wrapper.name}}/{{instance.id}}" class="model">{{instance|get:field}}</a>
+           {% else %}
+               {{instance|get:field}}
+           {% endif %}
+       </td>
+        {% endfor %}
         {% for field, wrapper in wrapper.one_to_one.items %}
              {% with instance|get:field as instance %}
                  <td>
@@ -21,6 +32,7 @@
          {% endfor %}
     {% endwith %}
 {% endfor %}
+{% endwith %}
 
 {% for field, wrapper in wrapper.children.items %}
     {% with instance|get:field as instance %}
