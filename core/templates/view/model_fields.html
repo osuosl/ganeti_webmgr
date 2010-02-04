@@ -4,6 +4,25 @@
     {% for field, wrapper in wrapper.children.items %}
         {% if instance|get:field %}
             {% with instance|get:field as instance %}
+            
+                {% for field, wrapper in wrapper.many_to_one.items %}
+                    {% with instance|get:field as instance %}
+                        <div><label>{{wrapper.name}}:</label>
+                            {% if wrapper|link %}
+                                <a href="{{ROOT}}/o/{{wrapper.name}}/{{instance.id}}" class="model">
+                                    {% for field in wrapper.fields %}
+                                        <b>{{field}}:</b> {{ instance|get:field }}
+                                    {% endfor %}
+                                </a>
+                            {% else %}
+                                {% for field in wrapper.fields %}
+                                    <b>{{field}}:</b> {{ instance|get:field }}
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    {% endwith %}
+                {% endfor %}
+            
                 {% for field in wrapper.fields %}
                     <div><label>{{field|capfirst}}:</label>{{instance|get:field}}</div>
                 {% endfor %}
