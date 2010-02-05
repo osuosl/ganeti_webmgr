@@ -48,6 +48,9 @@ class PluginManager(object):
             return obj
         return self.enabled[key]
 
+    def __len__(self):
+        return len(self.enabled)
+
     def register(self, plugin):
         """
         Registers a plugin with this manager.  Plugins are stored by name
@@ -68,7 +71,7 @@ class PluginManager(object):
         self.plugins[plugin.name()] = plugin
         plugin._register(self)
 
-    def registers(self, classes):
+    def registers(self, plugins):
         """
         Registers a collection of plugins
         @param plugins - iterable of plugins
