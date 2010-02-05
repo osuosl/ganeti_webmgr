@@ -21,10 +21,13 @@ class PluginManager(object):
     def __contains__(self, key):
         return key in self.enabled
 
-    def deregister(self, key):
+    def deregister(self, plugin):
         """
         deregisters a plugin
+        
+        @param plugin - name of plugin or plugin itself
         """
+        key = plugin if type(plugin) == str else plugin.name()
         print '[Info] Deregistering: ', key
         plugin = self.plugins[key]
         del self.plugins[key]

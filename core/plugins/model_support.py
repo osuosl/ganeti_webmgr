@@ -46,11 +46,13 @@ class ModelWrapper(Registerable):
     def _deregister(self, manager):
         """
         Remove relations from all related objects
+        @param manager - manager this plugin is registered to
         """
         for wrapper in self.one_to_one.values():
             wrapper.deregister_related('one_to_one', self)
         for wrapper in self.one_to_many.values():
             wrapper.deregister_related('many_to_one', self)
+            wrapper.deregister_related('one_to_many', self)
         for wrapper in self.many_to_one.values():
             wrapper.deregister_related('one_to_many', self)
         for wrapper in self.children.values():
@@ -64,7 +66,7 @@ class ModelWrapper(Registerable):
         side of a relationship.
         @param dict_ - dictionary to add the wrapper to
         @param wrapper - wrapper to be removed 
-        """        
+        """
         dict_ = self.__dict__[dict_]
         for key, value in dict_.items():
             if value == wrapper:

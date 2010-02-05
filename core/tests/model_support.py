@@ -12,7 +12,7 @@ import settings
 def suite():
     return unittest.TestSuite([
             unittest.TestLoader().loadTestsFromTestCase(ModelWrapper_Test),
-            unittest.TestLoader().loadTestsFromTestCase(ModelWrapper_Permissions_Test)
+            #unittest.TestLoader().loadTestsFromTestCase(ModelWrapper_Permissions_Test)
         ])
 
 class ModelWrapper_Test(unittest.TestCase):
@@ -135,6 +135,30 @@ class ModelWrapper_Test(unittest.TestCase):
         self.assert_('one_to_manys' in complex.one_to_many, complex.one_to_many)
         self.assert_('complex' in one_to_many.many_to_one, one_to_many.many_to_one)
     
+    def test_deregister_1_M_parent_first(self):
+        """
+        Test registering a 1:M related object
+        """
+        complex = ModelWrapper(Complex)
+        self.manager.register(complex)
+        one_to_many = ModelWrapper(OneToMany)
+        self.manager.register(one_to_many)
+        self.manager.deregister(complex)
+        self.assert_(len(one_to_many.many_to_one)==0, one_to_many.many_to_one)
+        self.assertFalse('complex' in one_to_many.many_to_one, one_to_many.many_to_one)
+        
+    def test_deregister_1_M_parent_second(self):
+        """
+        Test registering a 1:M related object
+        """
+        complex = ModelWrapper(Complex)
+        self.manager.register(complex)
+        one_to_many = ModelWrapper(OneToMany)
+        self.manager.register(one_to_many)
+        self.manager.deregister(one_to_many)
+        self.assert_(len(complex.one_to_many)==0, complex.one_to_many)
+        self.assertFalse('one_to_manys' in complex.one_to_many, complex.one_to_many)
+    
     def test_register_N_M_parent_first(self):
         """
         Test registering a N:M related object
@@ -144,6 +168,7 @@ class ModelWrapper_Test(unittest.TestCase):
         many_to_many = ModelWrapper(ManyToMany)
         self.manager.register(many_to_many)
         self.assert_(len(complex.one_to_many)==1, complex.one_to_many)
+        self.assert_(len(many_to_many.one_to_many)==1, many_to_many.one_to_many)
         self.assert_('many_to_manys' in complex.one_to_many, complex.one_to_many)
         self.assert_('complex' in many_to_many.one_to_many, many_to_many.one_to_many)
 
@@ -156,8 +181,33 @@ class ModelWrapper_Test(unittest.TestCase):
         complex = ModelWrapper(Complex)
         self.manager.register(complex)
         self.assert_(len(complex.one_to_many)==1, complex.one_to_many)
+        self.assert_(len(many_to_many.one_to_many)==1, many_to_many.one_to_many)
         self.assert_('many_to_manys' in complex.one_to_many, complex.one_to_many)
         self.assert_('complex' in many_to_many.one_to_many, many_to_many.one_to_many)
+    
+    def test_deregister_N_M_parent_first(self):
+        """
+        Test registering a N:M related object
+        """
+        complex = ModelWrapper(Complex)
+        self.manager.register(complex)
+        many_to_many = ModelWrapper(ManyToMany)
+        self.manager.register(many_to_many)
+        self.manager.deregister(complex)
+        self.assert_(len(many_to_many.one_to_many)==0, many_to_many.one_to_many)
+        self.assertFalse('complex' in many_to_many.one_to_many, many_to_many.one_to_many)
+    
+    def test_deregister_N_M_parents_second(self):
+        """
+        Test registering a N:M related object
+        """
+        complex = ModelWrapper(Complex)
+        self.manager.register(complex)
+        many_to_many = ModelWrapper(ManyToMany)
+        self.manager.register(many_to_many)
+        self.manager.deregister(many_to_many)
+        self.assert_(len(complex.one_to_many)==0, complex.one_to_many)
+        self.assertFalse('many_to_manys' in complex.one_to_many, complex.one_to_many)
     
     def test_register_1_1_not_null(self):
         """
@@ -206,6 +256,29 @@ class ModelWrapper_Test(unittest.TestCase):
         self.assert_('childa' in extended.children, extended.children)
         self.assert_('extended_ptr' in child.parent, child.parent)
     
+    def test_deregister_extended_parent_first(self):
+        """
+        Test registering an object that is extended
+        """
+        extended = ModelWrapper(Extended)
+        self.manager.register(extended)
+        child = ModelWrapper(ChildA)
+        self.manager.register(child)
+        self.manager.deregister(child)
+        self.assert_(len(extended.children)==0, extended.children)
+        self.assertFalse('childa' in extended.children, extended.children)
+    
+    def test_deregister_extended_parent_second(self):
+        """
+        Test registering an object that is extended
+        """
+        extended = ModelWrapper(Extended)
+        self.manager.register(extended)
+        child = ModelWrapper(ChildA)
+        self.manager.deregister(extended)
+        self.assert_(len(child.parent)==0, child.parent)
+        self.assertFalse('extended_ptr' in child.parent, child.parent)
+    
     def test_register_child_parent_not_registered(self):
         """
         Test registering a child when the parent is not registered
@@ -223,6 +296,17 @@ class ModelWrapper_Test(unittest.TestCase):
         self.assert_('parent' in recursive.many_to_one, recursive.many_to_one)
         self.assert_('children' in recursive.one_to_many, recursive.one_to_many)
 
+    def test_deregister_recursive(self):
+        """
+        Test registering a model with a recursive relationship
+        """
+        recursive = ModelWrapper(Recursive)
+        self.manager.register(recursive)
+        self.manager.deregister(recursive)
+        self.assert_(len(recursive.many_to_one)==0, recursive.many_to_one)
+        self.assert_(len(recursive.one_to_many)==0, recursive.one_to_many)
+        self.assertFalse('parent' in recursive.many_to_one, recursive.many_to_one)
+        self.assertFalse('children' in recursive.one_to_many, recursive.one_to_many)
 
 class ModelWrapper_Permissions_Test(unittest.TestCase):
     """
