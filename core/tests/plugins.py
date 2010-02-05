@@ -1,7 +1,7 @@
 import unittest
 
-from maintain.core.plugins.plugin import *
-from maintain.core.plugins.plugin_manager import *
+from muddle.core.plugins.plugin import *
+from muddle.core.plugins.plugin_manager import *
 from test_plugins import *
 
 import settings

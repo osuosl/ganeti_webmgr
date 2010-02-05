@@ -48,23 +48,29 @@ class ModelWrapper(Registerable):
         Remove relations from all related objects
         """
         for wrapper in self.one_to_one.values():
-            wrapper.deregister_related(self.name)
-        for key in self.one_to_many.values():
-            wrapper.deregister_related(self.name)
+            wrapper.deregister_related('one_to_one', self)
+        for wrapper in self.one_to_many.values():
+            wrapper.deregister_related('many_to_one', self)
+        for wrapper in self.many_to_one.values():
+            wrapper.deregister_related('one_to_many', self)
+        for wrapper in self.children.values():
+            wrapper.deregister_related('parent', self)
+        for wrapper in self.parent.values():
+            wrapper.deregister_related('children', self)
 
-    def deregister_related(self, name):
+    def deregister_related(self, dict_, wrapper):
         """
-        deregister a related object.  used by other wrappers to update this
-        side of the relationship when they are disabled
-        """
-        field = self.model.__dict__[name]
-        if isinstance(field, (ForeignRelatedObjectsDescriptor, )):
-            dict_ = self.one_to_many
-        elif isinstance(field, (SingleRelatedObjectDescriptor,)):
-            dict_ = self.one_to_one
-        del dict_[name]
-
-
+        deregister a related object.  used by other wrappers to update the other
+        side of a relationship.
+        @param dict_ - dictionary to add the wrapper to
+        @param wrapper - wrapper to be removed 
+        """        
+        dict_ = self.__dict__[dict_]
+        for key, value in dict_.items():
+            if value == wrapper:
+                del dict_[key]
+                break
+    
     def _has_perms(self, owner, mask=None, possess=PERM_NONE, id=None):
         """
         Perform a search for permissions.  An owner may have permissions from 

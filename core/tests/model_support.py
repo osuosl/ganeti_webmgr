@@ -31,6 +31,12 @@ class ModelWrapper_Test(unittest.TestCase):
         self.assert_('value' in simple.fields, simple.fields)
         self.assert_(len(simple.fields)==1, simple.fields)
     
+    def test_deregister_simple(self):
+        simple= ModelWrapper(Simple)
+        self.manager.register(simple)
+        self.manager.deregister('Simple')
+        self.assertFalse('Simple' in self.manager, self.manager.enabled)
+    
     def test_register_complex_no_related_registered(self):
         """
         Tests registering an object with relations when none of the
@@ -42,6 +48,16 @@ class ModelWrapper_Test(unittest.TestCase):
         self.assert_(len(complex.fields)==0, complex.fields)
         self.assert_(len(complex.one_to_many)==0, complex.one_to_many)
         self.assert_(len(complex.one_to_one)==0, complex.one_to_one)
+    
+    def test_deregister_complex_no_related_registered(self):
+        """
+        Tests deregistering an object with relations when none of the
+        relations are registered
+        """
+        complex = ModelWrapper(Complex)
+        self.manager.register(complex)
+        self.manager.deregister(complex)
+        self.assertFalse('Complex' in self.manager, self.manager.enabled)
     
     def test_register_1_1_parent_first(self):
         """
@@ -68,6 +84,30 @@ class ModelWrapper_Test(unittest.TestCase):
         self.assert_(len(one_to_one.one_to_one)==1, one_to_one.one_to_one)
         self.assert_('onetoone' in complex.one_to_one, complex.one_to_one)
         self.assert_('complex' in one_to_one.one_to_one, one_to_one.one_to_one)
+    
+    def test_deregister_1_1_parent_first(self):
+        """
+        Test deregistering a 1:1 related object
+        """
+        complex = ModelWrapper(Complex)
+        self.manager.register(complex)
+        one_to_one = ModelWrapper(OneToOne)
+        self.manager.register(one_to_one)
+        self.manager.deregister(complex)
+        self.assert_(len(one_to_one.one_to_one)==0, one_to_one.one_to_one)
+        self.assertFalse('complex' in one_to_one.one_to_one, one_to_one.one_to_one)
+    
+    def test_deregister_1_1_parent_second(self):
+        """
+        Test deregistering a 1:1 related object
+        """
+        complex = ModelWrapper(Complex)
+        self.manager.register(complex)
+        one_to_one = ModelWrapper(OneToOne)
+        self.manager.register(one_to_one)
+        self.manager.deregister(one_to_one)
+        self.assert_(len(complex.one_to_one)==0, complex.one_to_one)        
+        self.assertFalse('onetoone' in complex.one_to_one, complex.one_to_one)
     
     def test_register_1_M_parent_first(self):
         """
