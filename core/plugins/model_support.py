@@ -36,7 +36,7 @@ class ModelWrapper(Registerable):
         @param manager - Root manager enabling this wrapper.
         """
         self.model = class_
-        self.fields = []
+        self.fields = {}
         self.one_to_many = {}
         self.many_to_one = {}
         self.one_to_one = {}
@@ -142,7 +142,7 @@ class ModelWrapper(Registerable):
                     self.one_to_one[field.name] = related_wrapper
                     related_wrapper.register_related('one_to_one', self)
                 continue
-            self.fields.append(field.name)
+            self.fields[field.name] = field
         
         # find related fields
         for key, field in self.model.__dict__.items():

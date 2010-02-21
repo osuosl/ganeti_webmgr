@@ -8,19 +8,27 @@ class Simple(models.Model):
     """
     owner = models.ForeignKey(Permissable, null=True)
     value = models.CharField(max_length='32')
+    
+    integer = models.IntegerField()
+    char = models.CharField(max_length='2')
+    text = models.TextField()
+    datetime = models.DateTimeField()
+    date = models.DateField()
+    time = models.TimeField()
 
 class Extended(models.Model):
     """
     Class that has been extended
     """
     owner = models.ForeignKey(Permissable)
+    a = models.IntegerField()
 
 
 class ChildA(Extended):
     """
     Class that extends another class
     """
-    pass
+    b = models.IntegerField()
 
 
 class ChildA(Extended):
