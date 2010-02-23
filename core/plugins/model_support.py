@@ -43,6 +43,7 @@ class ModelWrapper(Registerable):
         self.children = {}
         self.parent = {}
         self.pk = None
+        self.fk = {}
 
     def _deregister(self, manager):
         """
@@ -178,6 +179,7 @@ class ModelWrapper(Registerable):
                         remote =('one_to_one',field.field.related_query_name(),self)
                 elif isinstance(field.field, (ForeignKey)):
                     dict_ = self.many_to_one
+                    self.fk[key] = field.field
                     remote = ('one_to_many', field.field.related_query_name(), self)
                 elif isinstance(field.field, (ManyToManyField,)):
                     dict_ = self.one_to_many
