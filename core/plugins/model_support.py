@@ -42,6 +42,7 @@ class ModelWrapper(Registerable):
         self.one_to_one = {}
         self.children = {}
         self.parent = {}
+        self.pk = None
 
     def _deregister(self, manager):
         """
@@ -127,6 +128,7 @@ class ModelWrapper(Registerable):
         for field in self.model._meta.local_fields:
 
             if isinstance(field, (AutoField,)):
+                self.pk = field
                 continue
             elif isinstance(field, (ForeignKey,)):
                 related = field.name
@@ -190,7 +192,6 @@ class ModelWrapper(Registerable):
                 dict_[key] = related_wrapper
                 related_wrapper.register_related(*remote)
 
-    
     def register_related(self, dict_, key, wrapper):
         """
         register a related object.  used by other wrappers to update the other
