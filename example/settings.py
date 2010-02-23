@@ -98,7 +98,7 @@ INSTALLED_APPS = (
 
 LOGIN_REDIRECT_URL = '/plugins'
 
-AUTH_PROFILE_MODULE = 'core.UserProfile'
+AUTH_PROFILE_MODULE = 'muddle.UserProfile'
 
 
 
