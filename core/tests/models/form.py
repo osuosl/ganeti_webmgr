@@ -13,12 +13,12 @@ from muddle.tests.models import *
 def suite():
     return unittest.TestSuite([
             unittest.TestLoader().loadTestsFromTestCase(Form_Simple_Test),
-            #unittest.TestLoader().loadTestsFromTestCase(Form_Child_Test),
-            #unittest.TestLoader().loadTestsFromTestCase(Form_Parent_Test),
-            #unittest.TestLoader().loadTestsFromTestCase(Form_One_To_One_Test),
-            #unittest.TestLoader().loadTestsFromTestCase(Form_One_To_Many_Test),
+            unittest.TestLoader().loadTestsFromTestCase(Form_Child_Test),
+            unittest.TestLoader().loadTestsFromTestCase(Form_Parent_Test),
+            unittest.TestLoader().loadTestsFromTestCase(Form_One_To_One_Test),
+            unittest.TestLoader().loadTestsFromTestCase(Form_One_To_Many_Test),
             unittest.TestLoader().loadTestsFromTestCase(Form_Many_To_One_Test),
-            #unittest.TestLoader().loadTestsFromTestCase(Form_Many_To_Many_Test),
+            unittest.TestLoader().loadTestsFromTestCase(Form_Many_To_Many_Test),
         ])
 
 
@@ -28,14 +28,14 @@ class Form_Simple_Test(unittest.TestCase):
         root = RootPluginManager()
         config = PluginConfig()
         manager = ModelManager(root, config)
-        simple= ModelWrapper(Simple)
+        simple= ModelWrapper(FieldTest)
         manager.register(simple)
         view = ModelEditView(simple)
         self.attrs = view._get_form()
         self.klass = view.get_form()
 
     def tearDown(self):
-        Simple.objects.all().delete()
+        FieldTest.objects.all().delete()
 
     def test_form_structure(self):
         """
@@ -61,7 +61,7 @@ class Form_Simple_Test(unittest.TestCase):
         #self.assert_(issubclass(dict['time'].__class__,(forms.TimeField,)), dict)
     
     def test_create(self):
-        self.assert_(len(Simple.objects.all())==0, len(Simple.objects.all()))
+        self.assert_(len(FieldTest.objects.all())==0, len(FieldTest.objects.all()))
         form = self.klass()
         now = datetime.now()
         data = {
@@ -71,7 +71,7 @@ class Form_Simple_Test(unittest.TestCase):
         }
         form = self.klass(data)
         form.save()
-        query = Simple.objects.all()
+        query = FieldTest.objects.all()
         self.assert_(len(query)==1, len(query))
         simple = query[0]
         for k,v in data.items():
@@ -79,7 +79,7 @@ class Form_Simple_Test(unittest.TestCase):
         
     
     def test_update(self):
-        self.assert_(len(Simple.objects.all())==0, len(Simple.objects.all()))
+        self.assert_(len(FieldTest.objects.all())==0, len(FieldTest.objects.all()))
         now = datetime.now()
         data = {
             'id':1,
@@ -87,7 +87,7 @@ class Form_Simple_Test(unittest.TestCase):
             'text':'abc',
             'char':'def'
         }
-        simple = Simple()
+        simple = FieldTest()
         simple.__dict__.update(data)
         simple.save()
         data = {
@@ -98,7 +98,7 @@ class Form_Simple_Test(unittest.TestCase):
         }
         form = self.klass(data)
         form.save()
-        query = Simple.objects.all()
+        query = FieldTest.objects.all()
         self.assert_(len(query)==1, len(query))
         simple = query[0]
         for k,v in data.items():

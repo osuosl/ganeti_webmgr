@@ -45,7 +45,7 @@ class ModelWrapper_Test(unittest.TestCase):
         complex = ModelWrapper(Complex)
         self.manager.register(complex)
         self.assert_('Complex' in self.manager, self.manager.enabled)
-        self.assert_(len(complex.fields)==0, complex.fields)
+        self.assert_(len(complex.fields)==1, complex.fields)
         self.assert_(len(complex.one_to_many)==0, complex.one_to_many)
         self.assert_(len(complex.one_to_one)==0, complex.one_to_one)
     

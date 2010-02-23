@@ -7,14 +7,18 @@ class Simple(models.Model):
     A simple model with no relationships
     """
     owner = models.ForeignKey(Permissable, null=True)
-    #value = models.CharField(max_length='32', null=True)
-    
+    value = models.CharField(max_length='32', null=True)
+
+
+class FieldTest(models.Model):
+    """ Model with different types of fields """
     integer = models.IntegerField()
     char = models.CharField(max_length='10')
     text = models.TextField()
     #datetime = models.DateTimeField()
     #date = models.DateField()
     #time = models.TimeField()
+
 
 class Extended(models.Model):
     """
