@@ -15,7 +15,7 @@ def suite():
             unittest.TestLoader().loadTestsFromTestCase(Form_Simple_Test),
             #unittest.TestLoader().loadTestsFromTestCase(Form_Child_Test),
             #unittest.TestLoader().loadTestsFromTestCase(Form_Parent_Test),
-            unittest.TestLoader().loadTestsFromTestCase(Form_One_To_One_Test),
+            #unittest.TestLoader().loadTestsFromTestCase(Form_One_To_One_Test),
             #unittest.TestLoader().loadTestsFromTestCase(Form_One_To_Many_Test),
             unittest.TestLoader().loadTestsFromTestCase(Form_Many_To_One_Test),
             #unittest.TestLoader().loadTestsFromTestCase(Form_Many_To_Many_Test),
@@ -272,17 +272,25 @@ class Form_Many_To_One_Test(unittest.TestCase):
     def test_form_structure(self):
         dict = self.attrs
         # field contents
-        self.assert_('complex' in dict, dict)
-        self.assert_(issubclass(dict['complex'].__class__, (forms.ModelChoiceField,)), dict)
+        self.assert_('complex_id' in dict, dict)
+        self.assert_(issubclass(dict['complex_id'].__class__, (forms.ModelChoiceField,)), dict)
 
-    def test_create(self):
-        pass
-    
     def test_save(self):
-        pass
-    
-    def test_load(self):
-        pass
+        self.assert_(len(Complex.objects.all())==0, len(Complex.objects.all()))
+        self.assert_(len(OneToMany.objects.all())==0, len(OneToMany.objects.all()))
+        parent = Complex()
+        parent.id = 1
+        parent.save()
+        data = {
+            'id':1,
+            'complex_id':1
+        }
+        form = self.klass(data)
+        form.save()
+        parent = Complex.objects.get(id=1)
+        self.assert_(len(parent.one_to_manys.all())==1, parent.one_to_manys.all())
+        child = parent.one_to_manys.all()[0]
+        self.assert_(child.id==1, child.id)
     
     def test_permissions(self):
         pass

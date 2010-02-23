@@ -159,8 +159,11 @@ class ModelEditView(object):
             attrs[k] = self.get_form_field(wrapper.fields[k], path)
         
         for k in wrapper.many_to_one:
-            attrs[k] = self.get_fk_field(wrapper.many_to_one[k].model, path)
-        
+            field = wrapper.fk[k]
+            attrs[field.attname] = self.get_fk_field(
+                                            wrapper.many_to_one[k].model,
+                                            k, field, path)
+
         if recurse < 1 and wrapper.children:
             # we're parsing the an object starting with the parent.  Get the
             # childs fields too.
@@ -179,14 +182,16 @@ class ModelEditView(object):
         
         return klass(**options)
 
-    def get_fk_field(self, model, path=None):
+    def get_fk_field(self, model, label, field, path=None):
         """
         Gets a choice field for a ForeignKey relationship.
         
         @param model - related model
         """
         defaults = {
-            'queryset':model.objects.all()
+            'label':label,
+            'queryset':model.objects.all(),
+            'required':field.null
         }
 
         #TODO lookup options using path
