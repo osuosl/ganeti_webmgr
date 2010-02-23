@@ -1,7 +1,7 @@
 import unittest
 import time
 
-from core.models import SQLLock
+from muddle.models import SQLLock
 
 def suite():
     return unittest.TestSuite([

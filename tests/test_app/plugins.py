@@ -1,6 +1,6 @@
-from core.tests.test_plugins import *
+from test_plugins import *
 
-from core.plugins.plugin import Plugin
+from muddle.plugins.plugin import Plugin
 
 
 

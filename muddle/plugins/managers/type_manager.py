@@ -1,6 +1,6 @@
-from core.plugins.plugin_manager import PluginManager
-from core.plugins.plugin import Plugin
-from core.plugins.registerable import Registerable
+from muddle.plugins.plugin_manager import PluginManager
+from muddle.plugins.plugin import Plugin
+from muddle.plugins.registerable import Registerable
 
 class ObjectType(Registerable):
     """

@@ -1,18 +1,18 @@
 import unittest
 
-from core.models import *
-from core.plugins.registerable import PERM_READ, PERM_WRITE, PERM_CREATE, \
+from muddle.models import *
+from muddle.plugins.registerable import PERM_READ, PERM_WRITE, PERM_CREATE, \
     PERM_DELETE, PERM_ALL, PERM_NONE
-from core.plugins.plugin_manager import *
-from core.plugins.model_support import *
-from tests.models import *
+from muddle.plugins.plugin_manager import *
+from muddle.plugins.model_support import *
+from models import *
 
 import settings
 
 def suite():
     return unittest.TestSuite([
             unittest.TestLoader().loadTestsFromTestCase(ModelWrapper_Test),
-            #unittest.TestLoader().loadTestsFromTestCase(ModelWrapper_Permissions_Test)
+            unittest.TestLoader().loadTestsFromTestCase(ModelWrapper_Permissions_Test)
         ])
 
 class ModelWrapper_Test(unittest.TestCase):

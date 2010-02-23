@@ -3,12 +3,11 @@ from datetime import datetime
 
 from django import forms
 
-
-from muddle.core.models import PluginConfig
-from muddle.core.plugins.plugin_manager import RootPluginManager
-from muddle.core.plugins.models.form import *
-from muddle.core.plugins.model_support import ModelManager, ModelWrapper
-from muddle.tests.models import *
+from muddle.models import PluginConfig
+from muddle.plugins.plugin_manager import RootPluginManager
+from muddle.plugins.models.form import *
+from muddle.plugins.model_support import ModelManager, ModelWrapper
+from models import *
 
 def suite():
     return unittest.TestSuite([

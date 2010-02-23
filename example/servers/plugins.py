@@ -1,5 +1,5 @@
-from core.plugins.plugin import Plugin
-from core.plugins.model_support import ModelView, ModelListView
+from muddle.plugins.plugin import Plugin
+from muddle.plugins.model_support import ModelView, ModelListView
 
 from models import *
 

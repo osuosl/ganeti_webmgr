@@ -1,5 +1,5 @@
 from django import forms
-from muddle.core.plugins.plugin import Plugin
+from muddle.plugins.plugin import Plugin
 
 class PluginNoDepends(Plugin):
     """plugin with no dependencies"""

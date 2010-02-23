@@ -1,7 +1,7 @@
 import unittest
 
-from core.plugins.plugin_manager import PluginManager
-from core.plugins.registerable import Registerable
+from muddle.plugins.plugin_manager import PluginManager
+from muddle.plugins.registerable import Registerable
 
 def suite():
     return unittest.TestSuite([

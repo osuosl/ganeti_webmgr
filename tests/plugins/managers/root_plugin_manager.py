@@ -1,7 +1,7 @@
 import unittest
 
-from core.tests.test_plugins import *
-from core.plugins.plugin_manager import *
+from muddle.tests.test_plugins import *
+from muddle.plugins.plugin_manager import *
 
 import settings
 core = len(settings.CORE_PLUGINS)

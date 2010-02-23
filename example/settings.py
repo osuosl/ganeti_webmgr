@@ -106,8 +106,8 @@ AUTH_PROFILE_MODULE = 'muddle.UserProfile'
 # because they provide some core functionality.  They can only be disabled by
 # changing this setting.
 CORE_PLUGINS = (
-    'core.plugins.managers.type_manager.TypeManager',
-    'core.plugins.managers.view_manager.ViewManager',
-    'core.plugins.model_support.ModelManager',
-    'core.plugins.permissions.PermissionsPlugin'
+    'muddle.plugins.managers.type_manager.TypeManager',
+    'muddle.plugins.managers.view_manager.ViewManager',
+    'muddle.plugins.model_support.ModelManager',
+    'muddle.plugins.permissions.PermissionsPlugin'
 )

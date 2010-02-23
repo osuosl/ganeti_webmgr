@@ -4,10 +4,10 @@ from multiprocessing.managers import SyncManager
 
 import settings
 
-from core.models import PluginConfig
-from core.plugins import CyclicDependencyException, UnknownPluginException
-from core.plugins.plugin import Plugin
-from core.plugins.registerable import Registerable
+from muddle.models import PluginConfig
+from muddle.plugins import CyclicDependencyException, UnknownPluginException
+from muddle.plugins.plugin import Plugin
+from muddle.plugins.registerable import Registerable
 
 class PluginManager(object):
     """
@@ -195,9 +195,9 @@ class RootPluginManager(PluginManager):
         
         # the path someone imports is important.  import all the different
         # possibilities so we can check them all
-        from muddle.core.plugins.plugin import Plugin as PluginA
-        from core.plugins.plugin import Plugin as PluginB
-        subclasses = (PluginA, PluginB)
+        from muddle.plugins.plugin import Plugin as PluginA
+        #from core.plugins.plugin import Plugin as PluginB
+        subclasses = (PluginA,)
         
         print '[info] RootPluginManager - Autodiscovering Plugins'
 

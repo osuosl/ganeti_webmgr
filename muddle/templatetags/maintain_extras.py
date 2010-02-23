@@ -1,9 +1,9 @@
 from django import template
 register = template.Library()
 
-from core.models import PluginConfig
-from core.plugins.registerable import PERM_NONE
-from core.views import manager
+from muddle.models import PluginConfig
+from muddle.plugins.registerable import PERM_NONE
+from muddle.views import manager
 
 @register.filter(name='config')
 def config(class_):

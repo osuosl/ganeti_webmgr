@@ -1,5 +1,5 @@
-from core.plugins import CyclicDependencyException
-from core.plugins.registerable import Registerable
+from muddle.plugins import CyclicDependencyException
+from muddle.plugins.registerable import Registerable
 
 class Plugin(Registerable):
     """

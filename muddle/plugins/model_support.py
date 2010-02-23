@@ -4,13 +4,13 @@ from django.db.models.fields.related import *
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
-from core import settings_processor
-from core.plugins.managers.type_manager import ObjectType, TypeManager
-from core.plugins.plugin import Plugin
-from core.plugins.plugin_manager import PluginManager
-from core.plugins.registerable import *
-from core.plugins.view import View
-from core import settings_processor, perms_processor
+from muddle import settings_processor
+from muddle.plugins.managers.type_manager import ObjectType, TypeManager
+from muddle.plugins.plugin import Plugin
+from muddle.plugins.plugin_manager import PluginManager
+from muddle.plugins.registerable import *
+from muddle.plugins.view import View
+from muddle import settings_processor, perms_processor
 
 
 class ModelWrapper(Registerable):

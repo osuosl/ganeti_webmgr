@@ -1,9 +1,9 @@
 from django.contrib.auth.models import User
 
-from core.models import Permission, PermissionGroup, Permissable, Group, \
+from muddle.models import Permission, PermissionGroup, Permissable, Group, \
                     UserProfile
-from core.plugins.plugin import Plugin
-from core.plugins.model_support import ModelView, ModelListView
+from muddle.plugins.plugin import Plugin
+from muddle.plugins.model_support import ModelView, ModelListView
 
 
 class PermissionsPlugin(Plugin):

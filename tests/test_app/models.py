@@ -1,6 +1,6 @@
 from django.db import models
 
-from core.models import Permissable
+from muddle.models import Permissable
 
 class Simple(models.Model):
     """

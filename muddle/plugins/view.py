@@ -1,4 +1,4 @@
-from core.plugins.registerable import Registerable
+from muddle.plugins.registerable import Registerable
 
 class View(Registerable):
     """

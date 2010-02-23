@@ -1,7 +1,7 @@
 import unittest
 
-from core.models import Permissable, Permission, Group, PermissionGroup
-from core.plugins.registerable import PERM_READ, PERM_WRITE, PERM_CREATE, \
+from muddle.models import Permissable, Permission, Group, PermissionGroup
+from muddle.plugins.registerable import PERM_READ, PERM_WRITE, PERM_CREATE, \
     PERM_DELETE, PERM_ALL, PERM_NONE
 
 def suite():

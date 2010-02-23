@@ -1,8 +1,8 @@
 # generates some test data
 
-from core.models import *
+from muddle.models import *
 from servers.models import *
-from core.plugins.registerable import PERM_READ, PERM_WRITE
+from muddle.plugins.registerable import PERM_READ, PERM_WRITE
 
 # delete old data
 Group.objects.all().delete()

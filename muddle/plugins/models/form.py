@@ -1,7 +1,7 @@
 from django import forms
 from django.db.models import fields
 
-from core.util import dict_key
+from muddle.util import dict_key
 
 FORMFIELD_FOR_DBFIELD_DEFAULTS = {
     fields.DateTimeField: {
