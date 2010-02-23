@@ -1,6 +1,8 @@
 from django import forms
 from django.db.models import fields
 
+from core.util import dict_key
+
 FORMFIELD_FOR_DBFIELD_DEFAULTS = {
     fields.DateTimeField: {
         'form_class': forms.SplitDateTimeField,
@@ -23,17 +25,25 @@ class CompositeFormBase(forms.Form):
     ModelWrapper and User Permissions.
     """    
 
-    def __init__(self, *args, **kwargs):
-        pass
-
+    def __init__(self, initial=None):
+        super(CompositeFormBase, self).__init__(initial)
+            
+        self.one_to_one_instances = {}
+        for k in self.one_to_one.keys():
+            self.one_to_one_instances[k] = self.one_to_one[k](initial)
+            
+        self.one_to_many_instances = {}
+        for k in self.one_to_many.keys():
+            self.one_to_many_instances[k] = self.one_to_many[k](initial)
+            
     def is_valid(self):
         """
         Validate form and all formsets
         """
         if not super(CompositeFormBase, self).is_valid():
             return False
-        for form in self.one_to_one_instances:
-            if not form.is_valid():
+        for k in self.one_to_one_instances.keys():
+            if not self.one_to_one_instances[k].is_valid():
                 return False
         for form in self.one_to_many_instances:
             if not form.is_valid():
@@ -44,7 +54,36 @@ class CompositeFormBase(forms.Form):
         """
         Save model and all related models
         """
-        pass
+        if not self.is_valid():
+            raise Exception(self.errors)
+            
+        data = self.cleaned_data
+        if self.pk in self.data:
+            instance = self.model.objects.get(pk=data[self.pk])
+        else:
+            instance = self.model()
+        instance.__dict__.update(self.data)
+        instance.save()
+        
+        for form in self.one_to_one_instances.values():
+            form.save(instance)
+
+        for form in self.one_to_many_instances.values():
+            form.save(instance)
+
+
+class Related1To1Base(forms.Form):
+    """
+    Base class for sub-forms generated for 1:1 relationships
+    """
+    def save(self, related):
+        try:
+            instance = self.model.objects.get(**{self.fk:related})
+        except self.model.DoesNotExist:
+            instance = self.model()
+            instance.__setattr__(self.fk, related)
+        instance.__dict__.update(self.cleaned_data)
+        instance.save()
 
 
 class ModelEditView(object):
@@ -59,10 +98,8 @@ class ModelEditView(object):
         """
         Creates a FormClass from modelwrapper information and user permissions
         """
+        # get form from cache if available, else rebuild the form
         attrs = self._get_form()
-        
-        #for k in filter(exclude, w.one_to_many.keys()):
-        #    self.render_list(formsets, w.one_to_many[k])
         
         # filter out permissions that the user doesn't have
         # this is done here so that attrs may be cached
@@ -79,17 +116,28 @@ class ModelEditView(object):
         """
         w = self.wrapper
         exclude = lambda x: x not in self.exclude
-        formsets = []
-        attrs = {'formsets':formsets}
+        attrs = {
+            'pk':w.pk,
+            'model':w.model
+            }
         
         self.get_fields(attrs, w)
 
         one_to_one = {}
         for k in filter(exclude, w.one_to_one.keys()):
-            inner_attrs = {'label':k}
+            inner_attrs = {
+                    'label':k,
+                    'fk':dict_key(w.one_to_one[k].one_to_one, w),
+                    'model':w.one_to_one[k].model
+                    }
             self.get_fields(inner_attrs, w.one_to_one[k])
-            one_to_one[k] = type('FormClass', (forms.Form,), inner_attrs)
+            one_to_one[k] = type('FormClass', (Related1To1Base,), inner_attrs)
         attrs['one_to_one'] = one_to_one
+
+        one_to_many = {}
+        for k in w.one_to_many.keys():
+            one_to_many[k] = self.get_formset(w.one_to_many[k])
+        attrs['one_to_many'] = one_to_many
 
         return attrs
 
@@ -111,7 +159,7 @@ class ModelEditView(object):
             attrs[k] = self.get_form_field(wrapper.fields[k], path)
         
         for k in wrapper.many_to_one:
-            attrs[k] = self.get_form_field(k, path)
+            attrs[k] = self.get_fk_field(wrapper.many_to_one[k].model, path)
         
         if recurse < 1 and wrapper.children:
             # we're parsing the an object starting with the parent.  Get the
@@ -131,33 +179,41 @@ class ModelEditView(object):
         
         return klass(**options)
 
-    def get_formset(self, request, obj=None, **kwargs):
+    def get_fk_field(self, model, path=None):
+        """
+        Gets a choice field for a ForeignKey relationship.
+        
+        @param model - related model
+        """
+        defaults = {
+            'queryset':model.objects.all()
+        }
+
+        #TODO lookup options using path
+        options = {}
+        defaults.update(options)
+        
+        klass = forms.ModelChoiceField
+        return klass(**defaults)
+
+    def get_formset(self, wrapper, path=None):
         """
         Returns a BaseInlineFormSet class for use in admin add/change views.
-        
-        Copied from django.contrib.admin
         """
-        if self.declared_fieldsets:
-            fields = flatten_fieldsets(self.declared_fieldsets)
-        else:
-            fields = None
-        if self.exclude is None:
-            exclude = []
-        else:
-            exclude = list(self.exclude)
-        # if exclude is an empty list we use None, since that's the actual
-        # default
+        fields = None
+        exclude = []
+        
         defaults = {
             "form": self.form,
             "formset": self.formset,
             "fk_name": self.fk_name,
             "fields": fields,
             "exclude": (exclude + kwargs.get("exclude", [])) or None,
-            "formfield_callback": curry(self.formfield_for_dbfield, request=request),
+            "formfield_callback": curry(self.get_form_field, path=path),
             "extra": self.extra,
             "max_num": self.max_num,
         }
-        defaults.update(kwargs)
+        #defaults.update(path)
         return inlineformset_factory(self.parent_model, self.model, **defaults)
 
     def __call__(self, request, id=None):

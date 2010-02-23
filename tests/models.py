@@ -7,14 +7,14 @@ class Simple(models.Model):
     A simple model with no relationships
     """
     owner = models.ForeignKey(Permissable, null=True)
-    value = models.CharField(max_length='32')
+    #value = models.CharField(max_length='32', null=True)
     
     integer = models.IntegerField()
-    char = models.CharField(max_length='2')
+    char = models.CharField(max_length='10')
     text = models.TextField()
-    datetime = models.DateTimeField()
-    date = models.DateField()
-    time = models.TimeField()
+    #datetime = models.DateTimeField()
+    #date = models.DateField()
+    #time = models.TimeField()
 
 class Extended(models.Model):
     """
@@ -43,14 +43,14 @@ class Complex(models.Model):
     Model for testing relationships
     """
     owner = models.ForeignKey(Permissable, null=True)
-
+    a = models.IntegerField(null=True)
 
 class OneToOne(models.Model):
     """
     A one to one extension of a class
     """
     complex = models.OneToOneField(Complex, null=True)
-
+    b = models.IntegerField(null=True)
 
 class OneToMany(models.Model):
     """
