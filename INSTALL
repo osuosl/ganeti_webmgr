@@ -1,0 +1,5 @@
+=== Muddle Installation ====
+run:  ./setup.py
+
+=== Running Unittests ===
+run: ./test.py
