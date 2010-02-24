@@ -340,7 +340,10 @@ class ModelWrapper_Permissions_Test(unittest.TestCase):
         self.manager = manager
     
     def tearDown(self):
-        pass
+        UserProfile.objects.all().delete()
+        for wrapper in self.manager.plugins.values():
+            wrapper.model.objects.all().delete()
+        
     
     def test_permission_on_model(self):
         """
