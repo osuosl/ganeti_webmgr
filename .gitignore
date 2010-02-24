@@ -3,7 +3,6 @@
 *.log
 *.key
 *.pid
-settings.py
 *.swp
 *.pem
 *.rej
