@@ -1,9 +1,9 @@
 import unittest
 
-from muddle.tests.test_plugins import *
+from test_plugins import *
 from muddle.plugins.plugin_manager import *
 
-import settings
+from django.conf import settings
 core = len(settings.CORE_PLUGINS)
 
 def suite():

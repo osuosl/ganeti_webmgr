@@ -1,4 +1,5 @@
-import settings
+from django.conf import settings
+
 from muddle.plugins.registerable import PERM_ALL, PERM_NONE, PERM_READ, \
                                     PERM_WRITE, PERM_CREATE, PERM_DELETE
 

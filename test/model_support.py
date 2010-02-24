@@ -5,9 +5,9 @@ from muddle.plugins.registerable import PERM_READ, PERM_WRITE, PERM_CREATE, \
     PERM_DELETE, PERM_ALL, PERM_NONE
 from muddle.plugins.plugin_manager import *
 from muddle.plugins.model_support import *
-from models import *
+from test_app.models import *
 
-import settings
+from django.conf import settings
 
 def suite():
     return unittest.TestSuite([
@@ -17,7 +17,7 @@ def suite():
 
 class ModelWrapper_Test(unittest.TestCase):
     def setUp(self):
-        if not 'tests' in settings.INSTALLED_APPS:
+        if not 'test_app' in settings.INSTALLED_APPS:
             raise Exception('Test models are not installed tests cannot run')
         
         root = RootPluginManager()

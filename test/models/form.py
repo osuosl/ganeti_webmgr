@@ -7,7 +7,7 @@ from muddle.models import PluginConfig
 from muddle.plugins.plugin_manager import RootPluginManager
 from muddle.plugins.models.form import *
 from muddle.plugins.model_support import ModelManager, ModelWrapper
-from models import *
+from test_app.models import *
 
 def suite():
     return unittest.TestSuite([

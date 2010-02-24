@@ -1,8 +1,9 @@
 import unittest
 
-from muddle.tests.test_plugins import *
 from muddle.plugins.plugin import *
 from muddle.plugins.plugin_manager import *
+
+from test_plugins import *
 
 def suite():
     return unittest.TestSuite([

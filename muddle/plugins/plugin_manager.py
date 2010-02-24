@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from threading import RLock
 from multiprocessing.managers import SyncManager
 
-import settings
+from django.conf import settings
 
 from muddle.models import PluginConfig
 from muddle.plugins import CyclicDependencyException, UnknownPluginException
