@@ -12,7 +12,7 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils.text import capfirst
 
-from core import settings_processor
+from muddle import settings_processor
 from plugins import CyclicDependencyException
 from plugins.plugin_manager import RootPluginManager
 from models import PluginConfig, SQLLock
