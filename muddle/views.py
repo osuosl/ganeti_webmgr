@@ -47,7 +47,7 @@ def plugins(request):
     
     plugins = [manager.plugins[k] for k in sorted(manager.plugins.keys())]
     return render_to_response('plugins.html',
-            {'plugins': plugins, 'None':None}, \
+            {'plugins': plugins}, \
             context_instance=c)
 
 

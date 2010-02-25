@@ -244,9 +244,9 @@
                 {%if config.enabled%}checked{%endif%}
                 {%if plugin.core %}disabled{%endif%}
                 />
-            {% ifnotequal None plugin.config_form %}
+            {% if plugin.config_form %}
                 <a class="button_config button" href="{{ROOT}}/plugin/{{config.name}}/"></a>
-            {% endifnotequal %}
+            {% endif %}
         </li>
     {% endwith %}
     {% endfor %}
