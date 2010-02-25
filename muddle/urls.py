@@ -33,7 +33,7 @@ if 'ViewManager' in manager:
 # determine the path to the static directory which contains all the files
 # we are trying to expose
 media_root = '%s/static' % __file__[:__file__.rfind('/')]
-baseurlregex = r'^static/(?P<path>.*)$'
+baseurlregex = r'^muddle_static/(?P<path>.*)$'
 urlpatterns += patterns('',
     (baseurlregex, 'django.views.static.serve', {'document_root': media_root})
 )
