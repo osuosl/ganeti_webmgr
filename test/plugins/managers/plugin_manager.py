@@ -1,6 +1,6 @@
 import unittest
 
-from muddle.plugins.plugin_manager import PluginManager
+from muddle.plugins.managers.plugin_manager import PluginManager
 from muddle.plugins.registerable import Registerable
 
 def suite():

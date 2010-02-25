@@ -14,7 +14,7 @@ from django.utils.text import capfirst
 
 from muddle import settings_processor
 from plugins import CyclicDependencyException
-from plugins.plugin_manager import RootPluginManager
+from plugins.managers.root_plugin_manager import RootPluginManager
 from models import PluginConfig, SQLLock
 from util.list_file import ListFile
 import settings

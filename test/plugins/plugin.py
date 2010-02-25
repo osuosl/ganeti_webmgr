@@ -1,7 +1,8 @@
 import unittest
 
 from muddle.plugins.plugin import *
-from muddle.plugins.plugin_manager import *
+from muddle.plugins.managers.plugin_manager import PluginManager
+from muddle.plugins.managers.root_plugin_manager import RootPluginManager
 
 from test_plugins import *
 

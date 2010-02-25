@@ -1,7 +1,9 @@
 import unittest
 
 from test_plugins import *
-from muddle.plugins.plugin_manager import *
+from muddle.plugins import CyclicDependencyException, UnknownPluginException
+from muddle.plugins.managers.plugin_manager import PluginManager
+from muddle.plugins.managers.root_plugin_manager import RootPluginManager
 
 from django.conf import settings
 core = len(settings.CORE_PLUGINS)

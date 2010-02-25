@@ -4,8 +4,8 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 
 from muddle import settings_processor
-from muddle.plugins.plugin_manager import PluginManager
 from muddle.plugins.plugin import Plugin
+from muddle.plugins.managers.plugin_manager import PluginManager
 
 
 class ViewManager(Plugin, PluginManager):

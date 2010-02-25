@@ -4,7 +4,8 @@ from muddle.models import *
 from muddle.plugins.registerable import PERM_READ, PERM_WRITE, PERM_CREATE, \
     PERM_DELETE, PERM_ALL, PERM_NONE
 from muddle.plugins.managers.model_manager import ModelManager
-from muddle.plugins.plugin_manager import *
+from muddle.plugins.managers.plugin_manager import PluginManager
+from muddle.plugins.managers.root_plugin_manager import RootPluginManager
 from muddle.plugins.models.wrapper import ModelWrapper
 from test_app.models import *
 
