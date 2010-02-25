@@ -3,8 +3,9 @@ import unittest
 from muddle.models import *
 from muddle.plugins.registerable import PERM_READ, PERM_WRITE, PERM_CREATE, \
     PERM_DELETE, PERM_ALL, PERM_NONE
+from muddle.plugins.managers.model_manager import ModelManager
 from muddle.plugins.plugin_manager import *
-from muddle.plugins.model_support import *
+from muddle.plugins.models.wrapper import ModelWrapper
 from test_app.models import *
 
 from django.conf import settings
