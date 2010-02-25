@@ -246,19 +246,19 @@
         {% block header %}
 
             <div id="title_bar">
-                <a href="#">Maintain {{VERSION}}</a>
+                <a href="#">Muddle {{VERSION}}</a>
             </div>
 
             <div id="mainmenu">
                 
-                <span class="mainmenuitem"><a class="mainmenuitem" href="{{SITE_ROOT}}/o/Device">Devices</a></span>
-                <span class="mainmenuitem"><a class="mainmenuitem" href="{{SITE_ROOT}}/o/Group">Groups</a></span>
-                <span class="mainmenuitem"><a class="mainmenuitem" href="{{SITE_ROOT}}/plugins">Plugins</a></span>
+                <span class="mainmenuitem"><a class="mainmenuitem" href="{{ROOT}}/o/Device">Devices</a></span>
+                <span class="mainmenuitem"><a class="mainmenuitem" href="{{ROOT}}/o/Group">Groups</a></span>
+                <span class="mainmenuitem"><a class="mainmenuitem" href="{{ROOT}}/plugins">Plugins</a></span>
                 
                 {% if user.is_authenticated %}
-                    <span class="mainmenuitem lastmenuitem"><a class="mainmenuitem" href="{{SITE_ROOT}}/accounts/logout">Logout</a></span>
+                    <span class="mainmenuitem lastmenuitem"><a class="mainmenuitem" href="{{ROOT}}/accounts/logout">Logout</a></span>
                 {% else %}
-                    <span class="mainmenuitem lastmenuitem"><a class="mainmenuitem" href="{{SITE_ROOT}}/accounts/login">Login</a></span>
+                    <span class="mainmenuitem lastmenuitem"><a class="mainmenuitem" href="{{ROOT}}/accounts/login">Login</a></span>
                 {% endif %}
             </div>
             <div id="submenu">
