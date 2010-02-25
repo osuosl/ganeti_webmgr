@@ -337,6 +337,7 @@ class RootPluginManager(PluginManager):
             map(self.__register_object, class_.objects)
         else:
             self.__register_object(class_.objects)
+        self.__register_object(plugin)
         
         self.enabled[class_.name()] = plugin
         config.enabled = True
