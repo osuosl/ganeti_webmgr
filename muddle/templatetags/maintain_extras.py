@@ -10,7 +10,7 @@ def config(class_):
     """
     Fetches config for a plugin class
     """
-    return PluginConfig.objects.get(name=class_.__name__)
+    return PluginConfig.objects.get(name=class_.name())
 
 
 @register.filter(name='index')
