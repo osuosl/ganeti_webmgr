@@ -193,6 +193,8 @@ class Permissable(models.Model):
                 perms[target] = {path:perm[1]}
         return perms
 
+    def __str__(self):
+        return 'Permissable: %s' % self.name
 
 class UserProfile(Permissable):
     """
@@ -204,6 +206,9 @@ class UserProfile(Permissable):
     """
     user = models.ForeignKey(User, null=True, unique=True)
     admin = models.BooleanField(default=False)
+
+    def __str__(self):
+        return 'User: %s' % self.user.name
 
 
 def create_user_profile(**kwargs):
@@ -226,6 +231,8 @@ class Group(Permissable):
     parent = models.ForeignKey('self', null=True, related_name='groups')
     members = models.ManyToManyField(UserProfile, related_name='groups')
 
+    def __str__(self):
+        return 'Group: %s' % self.name
 
 class Permission(models.Model):
     """
