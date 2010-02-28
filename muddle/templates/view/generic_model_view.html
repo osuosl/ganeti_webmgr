@@ -4,7 +4,7 @@
 {% block content %}
 
     <h1>{{wrapper.name}}
-        {% if perms|has_perm:PERM_WRITE %}<div class="button button_edit" title="edit"></div>{% endif %}
+        {% if perms|has_perm:PERM_WRITE %}<a href="{{instance.id}}/Edit"><div class="button button_edit" title="edit"></div></a>{% endif %}
         {% if perms|has_perm:PERM_DELETE %}<div class="button button_delete" title="delete"></div>{% endif %}
     </h1>
     {% include "view/model_fields.html" %}

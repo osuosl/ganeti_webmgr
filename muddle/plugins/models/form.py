@@ -1,6 +1,11 @@
 from django import forms
 from django.db.models import fields
+from django.shortcuts import render_to_response
+from django.template import RequestContext
 
+from muddle import settings_processor
+from muddle.plugins.models.wrapper import ModelWrapper
+from muddle.plugins.view import View
 from muddle.util import dict_key
 
 FORMFIELD_FOR_DBFIELD_DEFAULTS = {
@@ -86,13 +91,68 @@ class Related1To1Base(forms.Form):
         instance.save()
 
 
-class ModelEditView(object):
+class ParentBase(forms.Form):
+    """
+    Base class for a form encapsulating a parent class and its descendents. Each
+    child class will have a sub-form.  One of the subforms will be selected
+    """
+    def __init__(self, *args, **kwargs):
+        super(ParentBase, self).__init__(*args, **kwargs)
+        # TODO select the correct child
+    
+    def save(self):
+        """
+        Save only the selected child form
+        """
+        #TODO
+    
+    def is_valid(self):
+        """
+        validate only the selected child form
+        """
+        #TODO
+
+
+class ModelEditView(View):
     """
     Class that dynamically creates a form and formsets based on ModelWrapper
     """
     def __init__(self, wrapper):
+        """
+        @param model - Model or ModelWrapper
+        """
         self.wrapper = wrapper
         self.exclude = []
+        
+        if self.wrapper.__class__ == ModelWrapper:
+            self.regex = '^%s/(\d+)/Edit$' % self.wrapper.name()
+        else:
+            self.regex = '^%s/(\d+)/Edit$' % self.wrapper.__name__
+    
+    def __call__(self, request, id=None):
+        klass = self.get_form(request.user.get_profile())
+        
+        if request.POST:
+            #process form
+            form = klass(request.POST)
+            if form.is_valid():
+                form.save()
+                return HttpResponseRedirect()
+            
+            
+        elif id:
+            # fill form values from model instance
+            instance = self.wrapper.model.objects.get(pk=id)
+            form = klass(instance.__dict__)
+            
+        else:
+            # unbound form
+            form = klass()
+            
+        c = RequestContext(request, processors=[settings_processor])
+        return render_to_response('edit/generic_model_edit.html', \
+            {'wrapper':self.wrapper, 'form':form}
+            , context_instance=c)
 
     def get_form(self, user=None):
         """
@@ -135,8 +195,8 @@ class ModelEditView(object):
         attrs['one_to_one'] = one_to_one
 
         one_to_many = {}
-        for k in w.one_to_many.keys():
-            one_to_many[k] = self.get_formset(w.one_to_many[k])
+        #for k in w.one_to_many.keys():
+        #    one_to_many[k] = self.get_formset(w.one_to_many[k])
         attrs['one_to_many'] = one_to_many
 
         return attrs
@@ -220,18 +280,12 @@ class ModelEditView(object):
         }
         #defaults.update(path)
         return inlineformset_factory(self.parent_model, self.model, **defaults)
-
-    def __call__(self, request, id=None):
-        klass = self.get_form(request.user.get_profile())
-        if request.POST:
-            #process form
-            form = klass(request.POST)
-            if form.is_valid():
-                self.process_form(form)
-            
-        elif id:
-            # fill form values from model instance
-            form = klass()
-        else:
-            # unbound form
-            form = klass()
+    
+    def name(self):
+        if self.wrapper.__class__ == ModelWrapper:
+            return 'EditView:%s' % self.wrapper.name()
+        return 'EditView:%s' % self.wrapper.__name__
+    
+    def _register(self, manager):
+        if self.wrapper.__class__ != ModelWrapper:
+            self.wrapper = manager.manager['ModelManager'][self.wrapper.__name__]
