@@ -46,6 +46,7 @@ DOC_ROOT = __file__[__file__.rfind('/')]
 # prefix used for the site.  ie. http://myhost.com/<SITE_ROOT>/
 # for the django standalone server this should be ""
 ROOT_URL = ''
+SITE_ROOT=ROOT_URL
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
@@ -107,6 +108,6 @@ AUTH_PROFILE_MODULE = 'muddle.UserProfile'
 CORE_PLUGINS = (
     'muddle.plugins.managers.type_manager.TypeManager',
     'muddle.plugins.managers.view_manager.ViewManager',
-    'muddle.plugins.model_support.ModelManager',
+    'muddle.plugins.managers.model_manager.ModelManager',
     'muddle.plugins.permissions.PermissionsPlugin'
 )
