@@ -94,23 +94,29 @@ class Related1To1Base(forms.Form):
 class ParentBase(forms.Form):
     """
     Base class for a form encapsulating a parent class and its descendents. Each
-    child class will have a sub-form.  One of the subforms will be selected
+    child class will have a sub-form.  One of the subforms will be selected.
+    
+    If there are several levels of children (ie. C->B->A) the tree is flattened.
+    A grandchild is still a child, even if indirect.
     """
     def __init__(self, *args, **kwargs):
         super(ParentBase, self).__init__(*args, **kwargs)
         # TODO select the correct child
+        pass
     
     def save(self):
         """
         Save only the selected child form
         """
         #TODO
+        pass
     
     def is_valid(self):
         """
         validate only the selected child form
         """
         #TODO
+        pass
 
 
 class ModelEditView(View):
@@ -181,7 +187,7 @@ class ModelEditView(View):
             'model':w.model
             }
         
-        self.get_fields(attrs, w)
+        self.form_factory(w)
 
         one_to_one = {}
         for k in filter(exclude, w.one_to_one.keys()):
@@ -201,19 +207,50 @@ class ModelEditView(View):
 
         return attrs
 
-    def get_fields(self, attrs, wrapper, path=[], recurse=0):
+    def form_factory(self, wrapper):
+        """
+        Build a basic Form if possible, else it returns a parent form
+        """
+        if wrapper.children:
+            return self.get_parent_form(wrapper)
+        return self.get_vanilla_form(wrapper)
+
+    def get_vanilla_form(self, wrapper, path=[]):
+        attrs = {}
+        self.get_fields(attrs, wrapper)
+        return type('DynamicModelClass', (forms.Form,), attrs)
+
+    def get_parent_form(self, wrapper, path=[]):
+        """
+        Build a form for a model that has child classes
+        """
+        children = {}
+        recurse = {}
+        for k in wrapper.children.keys():
+            child = wrapper.children[k]
+            if child.parent != wrapper:
+                recurse[k] = wrapper.name()
+            children[k] = self.get_vanilla_form(child, path)
+        
+        attrs = {
+            'children':children,
+            'recurse':recurse,
+            'active':forms.ChoiceField(choices=children.keys())
+            }
+        return type('DynamicModelClass', (ParentBase,), attrs)
+
+    def get_fields(self, attrs, wrapper, path=[]):
         """
         Gets all fields for the given wrapper
            * adds direct fields
            * recurses into parents adding their fields
-           * recurses into children adding their fields
            * adds M:1 (foreign key) relations
         """
-        if recurse > -1 and wrapper.parent:
+        if  wrapper.parent:
             # we're parsing an object starting with the child.  Get the parent
             # fields too
             for k in wrapper.parent.keys():
-                self.get_fields(attrs, wrapper.parent[k], path, recurse=1)
+                self.get_fields(attrs, wrapper.parent[k], path)
         
         for k in wrapper.fields.keys():
             attrs[k] = self.get_form_field(wrapper.fields[k], path)
@@ -223,12 +260,6 @@ class ModelEditView(View):
             attrs[field.attname] = self.get_fk_field(
                                             wrapper.many_to_one[k].model,
                                             k, field, path)
-
-        if recurse < 1 and wrapper.children:
-            # we're parsing the an object starting with the parent.  Get the
-            # childs fields too.
-            for k in wrapper.children.keys():
-                self.get_fields(attrs, wrapper.children[k], path, recurse=-1)
 
     def get_form_field(self, field, path):
         """
