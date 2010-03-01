@@ -189,7 +189,7 @@ class Form_Parent_Test(unittest.TestCase):
         # field contents
         self.assert_(issubclass(form,(ParentBase,)), form)
         self.assert_(len(form.children)==1,form.children)
-        self.assert_('childa' in form.children, form.children)
+        self.assert_('ChildA' in form.children, form.children)
         self.assert_(len(form.recurse)==0, form.recurse)
         self.assert_('a' in dict, dict)
 
@@ -231,8 +231,8 @@ class Form_Parent_Depth_Test(unittest.TestCase):
         # field contents
         self.assert_(issubclass(form,(ParentBase,)), form)
         self.assert_(len(form.children)==2,form.children)
-        self.assert_('childlevel1' in form.children, form.children)
-        self.assert_('childlevel2' in form.children, form.children)
+        self.assert_('ChildLevel1' in form.children, form.children)
+        self.assert_('ChildLevel2' in form.children, form.children)
         self.assert_(len(form.recurse)==1, form.recurse)
         self.assert_('a' in dict, dict)
 

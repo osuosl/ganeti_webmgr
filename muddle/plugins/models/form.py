@@ -216,9 +216,9 @@ class ModelEditView(View):
             return self.get_parent_form(wrapper)
         return self.get_vanilla_form(wrapper)
 
-    def get_vanilla_form(self, wrapper, path=[], parent=True):
+    def get_vanilla_form(self, wrapper, path=[]):
         return type( 'ModelForm', (forms.Form,), \
-            self.get_fields(wrapper, path=path, parent=parent))
+            self.get_fields(wrapper, path=path))
 
     def get_parent_form(self, wrapper, path=[]):
         """
@@ -228,7 +228,7 @@ class ModelEditView(View):
         recurse = {}
         for k in wrapper.children.keys():
             child = wrapper.children[k]
-            children[k] = self.get_vanilla_form(child)
+            self.get_child_form(wrapper, child, children, recurse)
         
         attrs = {
             'children':children,
@@ -236,6 +236,18 @@ class ModelEditView(View):
             'active':forms.ChoiceField(choices=children.keys())
             }
         return type('ParentModelForm', (ParentBase,), attrs)
+
+    def get_child_form(self, root, wrapper, children, recurse, path=[]):
+        children[wrapper.name()] = type( 'ModelForm', (forms.Form,), \
+            self.get_fields(wrapper, path=path, parent=False))
+        
+        for parent in wrapper.parent.values():
+            if parent != root and issubclass(parent.model, (root.model,)):
+                recurse[wrapper.name()] = parent.name()
+        
+        for k in wrapper.children.keys():
+            child = wrapper.children[k]
+            self.get_child_form(root, child, children, recurse)
 
     def get_fields(self, wrapper, attrs=None, path=[], parent=True):
         """
