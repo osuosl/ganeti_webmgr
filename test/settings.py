@@ -107,6 +107,6 @@ AUTH_PROFILE_MODULE = 'muddle.UserProfile'
 CORE_PLUGINS = (
     'muddle.plugins.managers.type_manager.TypeManager',
     'muddle.plugins.managers.view_manager.ViewManager',
-    'muddle.plugins.model_support.ModelManager',
+    'muddle.plugins.managers.model_manager.ModelManager',
     'muddle.plugins.permissions.PermissionsPlugin'
 )

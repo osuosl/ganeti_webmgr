@@ -4,9 +4,10 @@ from datetime import datetime
 from django import forms
 
 from muddle.models import PluginConfig
+from muddle.plugins.managers.model_manager import ModelManager
 from muddle.plugins.managers.root_plugin_manager import RootPluginManager
 from muddle.plugins.models.form import *
-from muddle.plugins.model_support import ModelManager, ModelWrapper
+from muddle.plugins.models.wrapper import  ModelWrapper
 from test_app.models import *
 
 def suite():
