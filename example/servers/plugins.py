@@ -1,5 +1,6 @@
 from muddle.plugins.plugin import Plugin
 from muddle.plugins.models.view import ModelView, ModelListView
+from muddle.plugins.models.form import ModelEditView
 
 from models import *
 
@@ -10,7 +11,8 @@ class Devices(Plugin):
         Device,
         NetworkCard,
         ModelView(Device),
-        ModelListView(Device)
+        ModelListView(Device),
+        ModelEditView(Device)
     )
 
 
