@@ -15,6 +15,7 @@ def suite():
             unittest.TestLoader().loadTestsFromTestCase(Form_Simple_Test),
             unittest.TestLoader().loadTestsFromTestCase(Form_Child_Test),
             unittest.TestLoader().loadTestsFromTestCase(Form_Parent_Test),
+            unittest.TestLoader().loadTestsFromTestCase(Form_Parent_Depth_Test),
             unittest.TestLoader().loadTestsFromTestCase(Form_One_To_One_Test),
             unittest.TestLoader().loadTestsFromTestCase(Form_One_To_Many_Test),
             unittest.TestLoader().loadTestsFromTestCase(Form_Many_To_One_Test),
@@ -31,7 +32,7 @@ class Form_Simple_Test(unittest.TestCase):
         simple= ModelWrapper(FieldTest)
         manager.register(simple)
         view = ModelEditView(simple)
-        self.attrs = view._get_form()
+        self.attrs = view.get_fields(simple)
         self.klass = view.get_form()
 
     def tearDown(self):
@@ -167,7 +168,9 @@ class Form_One_To_One_Test(unittest.TestCase):
     
     
 class Form_Parent_Test(unittest.TestCase):
-
+    """
+    Tests for models that have children
+    """
     def setUp(self):
         root = RootPluginManager()
         config = PluginConfig()
@@ -177,14 +180,18 @@ class Form_Parent_Test(unittest.TestCase):
         child = ModelWrapper(ChildA)
         manager.register(child)
         view = ModelEditView(parent)
-        self.attrs = view._get_form()
         self.klass = view.get_form()
+        self.attrs = view.get_fields(parent)
 
     def test_form_structure(self):
         dict = self.attrs
+        form = self.klass.form
         # field contents
+        self.assert_(issubclass(form,(ParentBase,)), form)
+        self.assert_(len(form.children)==1,form.children)
+        self.assert_('childa' in form.children, form.children)
+        self.assert_(len(form.recurse)==0, form.recurse)
         self.assert_('a' in dict, dict)
-        self.assert_('b' in dict, dict)
 
     def test_create(self):
         pass
@@ -198,7 +205,49 @@ class Form_Parent_Test(unittest.TestCase):
     def test_permissions(self):
         pass
     
+
+class Form_Parent_Depth_Test(unittest.TestCase):
+    """
+    Tests for a parent class that has children who also have children
+    """
+
+    def setUp(self):
+        root = RootPluginManager()
+        config = PluginConfig()
+        manager = ModelManager(root, config)
+        parent = ModelWrapper(ExtendedDepthTest)
+        child1 = ModelWrapper(ChildLevel1)
+        child2 = ModelWrapper(ChildLevel2)
+        manager.register(parent)
+        manager.register(child1)
+        manager.register(child2)
+        view = ModelEditView(parent)
+        self.klass = view.get_form()
+        self.attrs = view.get_fields(parent)
+
+    def test_form_structure(self):
+        dict = self.attrs
+        form = self.klass.form
+        # field contents
+        self.assert_(issubclass(form,(ParentBase,)), form)
+        self.assert_(len(form.children)==2,form.children)
+        self.assert_('childlevel1' in form.children, form.children)
+        self.assert_('childlevel2' in form.children, form.children)
+        self.assert_(len(form.recurse)==1, form.recurse)
+        self.assert_('a' in dict, dict)
+
+    def test_create(self):
+        pass
     
+    def test_save(self):
+        pass
+    
+    def test_load(self):
+        pass
+    
+    def test_permissions(self):
+        pass
+
 class Form_Child_Test(unittest.TestCase):
 
     def setUp(self):
@@ -210,7 +259,7 @@ class Form_Child_Test(unittest.TestCase):
         child = ModelWrapper(ChildA)
         manager.register(child)
         view = ModelEditView(child)
-        self.attrs = view._get_form()
+        self.attrs = view.get_fields(child)
         self.klass = view.get_form()
 
     def test_form_structure(self):
@@ -262,7 +311,7 @@ class Form_Many_To_One_Test(unittest.TestCase):
         child= ModelWrapper(OneToMany)
         manager.register(child)
         view = ModelEditView(child)
-        self.attrs = view._get_form()
+        self.attrs = view.get_fields(child)
         self.klass = view.get_form()
 
     def tearDown(self):

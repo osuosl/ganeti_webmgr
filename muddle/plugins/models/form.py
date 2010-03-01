@@ -32,7 +32,8 @@ class CompositeFormBase(forms.Form):
 
     def __init__(self, initial=None):
         super(CompositeFormBase, self).__init__(initial)
-            
+        
+        self.form_instance = self.form(initial)
         self.one_to_one_instances = {}
         for k in self.one_to_one.keys():
             self.one_to_one_instances[k] = self.one_to_one[k](initial)
@@ -45,15 +46,16 @@ class CompositeFormBase(forms.Form):
         """
         Validate form and all formsets
         """
-        if not super(CompositeFormBase, self).is_valid():
-            return False
+        valid = True
+        if not self.form_instance.is_valid():
+            valid = False
         for k in self.one_to_one_instances.keys():
             if not self.one_to_one_instances[k].is_valid():
-                return False
+                valid = False
         for form in self.one_to_many_instances:
             if not form.is_valid():
-                return False
-        return True
+                valid = False
+        return valid
 
     def save(self):
         """
@@ -62,7 +64,7 @@ class CompositeFormBase(forms.Form):
         if not self.is_valid():
             raise Exception(self.errors)
             
-        data = self.cleaned_data
+        data = self.form_instance.cleaned_data
         if self.pk in self.data:
             instance = self.model.objects.get(pk=data[self.pk])
         else:
@@ -170,7 +172,7 @@ class ModelEditView(View):
         # filter out permissions that the user doesn't have
         # this is done here so that attrs may be cached
         
-        klass = type('DynamicModelClass', (CompositeFormBase,), attrs)
+        klass = type('CompositeModelForm', (CompositeFormBase,), attrs)
         return klass
 
     def _get_form(self):
@@ -182,12 +184,7 @@ class ModelEditView(View):
         """
         w = self.wrapper
         exclude = lambda x: x not in self.exclude
-        attrs = {
-            'pk':w.pk,
-            'model':w.model
-            }
-        
-        self.form_factory(w)
+        form = self.form_factory(w)
 
         one_to_one = {}
         for k in filter(exclude, w.one_to_one.keys()):
@@ -196,16 +193,20 @@ class ModelEditView(View):
                     'fk':dict_key(w.one_to_one[k].one_to_one, w),
                     'model':w.one_to_one[k].model
                     }
-            self.get_fields(inner_attrs, w.one_to_one[k])
+            self.get_fields(w.one_to_one[k], inner_attrs)
             one_to_one[k] = type('FormClass', (Related1To1Base,), inner_attrs)
-        attrs['one_to_one'] = one_to_one
 
         one_to_many = {}
         #for k in w.one_to_many.keys():
         #    one_to_many[k] = self.get_formset(w.one_to_many[k])
-        attrs['one_to_many'] = one_to_many
 
-        return attrs
+        return {
+            'pk':w.pk,
+            'model':w.model,
+            'form':form,
+            'one_to_one':one_to_one,
+            'one_to_many':one_to_many
+            }
 
     def form_factory(self, wrapper):
         """
@@ -215,10 +216,9 @@ class ModelEditView(View):
             return self.get_parent_form(wrapper)
         return self.get_vanilla_form(wrapper)
 
-    def get_vanilla_form(self, wrapper, path=[]):
-        attrs = {}
-        self.get_fields(attrs, wrapper)
-        return type('DynamicModelClass', (forms.Form,), attrs)
+    def get_vanilla_form(self, wrapper, path=[], parent=True):
+        return type( 'ModelForm', (forms.Form,), \
+            self.get_fields(wrapper, path=path, parent=parent))
 
     def get_parent_form(self, wrapper, path=[]):
         """
@@ -228,29 +228,28 @@ class ModelEditView(View):
         recurse = {}
         for k in wrapper.children.keys():
             child = wrapper.children[k]
-            if child.parent != wrapper:
-                recurse[k] = wrapper.name()
-            children[k] = self.get_vanilla_form(child, path)
+            children[k] = self.get_vanilla_form(child)
         
         attrs = {
             'children':children,
             'recurse':recurse,
             'active':forms.ChoiceField(choices=children.keys())
             }
-        return type('DynamicModelClass', (ParentBase,), attrs)
+        return type('ParentModelForm', (ParentBase,), attrs)
 
-    def get_fields(self, attrs, wrapper, path=[]):
+    def get_fields(self, wrapper, attrs=None, path=[], parent=True):
         """
         Gets all fields for the given wrapper
            * adds direct fields
            * recurses into parents adding their fields
            * adds M:1 (foreign key) relations
         """
-        if  wrapper.parent:
+        attrs = {} if attrs == None else attrs
+        if parent and wrapper.parent:
             # we're parsing an object starting with the child.  Get the parent
             # fields too
             for k in wrapper.parent.keys():
-                self.get_fields(attrs, wrapper.parent[k], path)
+                self.get_fields(wrapper.parent[k], attrs, path)
         
         for k in wrapper.fields.keys():
             attrs[k] = self.get_form_field(wrapper.fields[k], path)
@@ -260,6 +259,7 @@ class ModelEditView(View):
             attrs[field.attname] = self.get_fk_field(
                                             wrapper.many_to_one[k].model,
                                             k, field, path)
+        return attrs
 
     def get_form_field(self, field, path):
         """

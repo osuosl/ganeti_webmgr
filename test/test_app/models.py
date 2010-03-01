@@ -42,6 +42,29 @@ class ChildA(Extended):
     pass
 
 
+class ExtendedDepthTest(models.Model):
+    """
+    Class that has been extended by a child
+    that is also extended
+    """
+    owner = models.ForeignKey(Permissable)
+    a = models.IntegerField()
+
+
+class ChildLevel1(ExtendedDepthTest):
+    """
+    Class that extends another class
+    """
+    b = models.IntegerField()
+
+
+class ChildLevel2(ChildLevel1):
+    """
+    Class that extends another class
+    """
+    c = models.IntegerField()
+
+
 class Complex(models.Model):
     """
     Model for testing relationships
