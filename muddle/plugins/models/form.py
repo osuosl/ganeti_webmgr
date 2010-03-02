@@ -83,13 +83,21 @@ class Related1To1Base(forms.Form):
     """
     Base class for sub-forms generated for 1:1 relationships
     """
+    def __init__(self, initial=None):
+        super(Related1To1Base, self).__init__(initial)
+        self.form_instance = self.form(initial)
+    
+    def is_valid(self):
+        _super = super(Related1To1Base, self).is_valid()
+        return self.form_instance.is_valid() and _super
+    
     def save(self, related):
         try:
             instance = self.model.objects.get(**{self.fk:related})
         except self.model.DoesNotExist:
             instance = self.model()
             instance.__setattr__(self.fk, related)
-        instance.__dict__.update(self.cleaned_data)
+        instance.__dict__.update(self.form_instance.cleaned_data)
         instance.save()
 
 
@@ -101,10 +109,15 @@ class ParentBase(forms.Form):
     If there are several levels of children (ie. C->B->A) the tree is flattened.
     A grandchild is still a child, even if indirect.
     """
-    def __init__(self, *args, **kwargs):
-        super(ParentBase, self).__init__(*args, **kwargs)
-        # TODO select the correct child
-        pass
+    def __init__(self, initial=None):
+        """
+        Initializes self, and all children
+        """
+        super(ParentBase, self).__init__(initial)
+        instances = {}
+        for k in self.children:
+            instances[k] = self.children[k](initial)
+        self.instances = instances
     
     def save(self):
         """
@@ -147,16 +160,31 @@ class ModelEditView(View):
                 form.save()
                 return HttpResponseRedirect()
             
-            
         elif id:
             # fill form values from model instance
             instance = self.wrapper.model.objects.get(pk=id)
-            form = klass(instance.__dict__)
+            data = {}
+            data.update(instance.__dict__)
+            for field, fw in self.wrapper.one_to_one.items():
+                related = instance.__getattribute__(field)
+                if fw.children:
+                    for k,v in fw.children.items():
+                        try:
+                            child = related.__getattribute__(k)
+                            for n,v in child.__dict__.items():
+                                data['%s_%s' % (k, n)] = v
+                            break
+                        except v.model.DoesNotExist:
+                            pass
+                else:
+                    for k,v in related.__dict__.items():
+                        data['%s_%s' % (field, k)] = v
+            form = klass(data)
             
         else:
             # unbound form
             form = klass()
-            
+        
         c = RequestContext(request, processors=[settings_processor])
         return render_to_response('edit/generic_model_edit.html', \
             {'wrapper':self.wrapper, 'form':form}
@@ -191,9 +219,9 @@ class ModelEditView(View):
             inner_attrs = {
                     'label':k,
                     'fk':dict_key(w.one_to_one[k].one_to_one, w),
-                    'model':w.one_to_one[k].model
+                    'model':w.one_to_one[k].model,
+                    'form':self.form_factory(w.one_to_one[k], k)
                     }
-            self.get_fields(w.one_to_one[k], inner_attrs)
             one_to_one[k] = type('FormClass', (Related1To1Base,), inner_attrs)
 
         one_to_many = {}
@@ -208,19 +236,19 @@ class ModelEditView(View):
             'one_to_many':one_to_many
             }
 
-    def form_factory(self, wrapper):
+    def form_factory(self, wrapper, prefix=''):
         """
         Build a basic Form if possible, else it returns a parent form
         """
         if wrapper.children:
-            return self.get_parent_form(wrapper)
-        return self.get_vanilla_form(wrapper)
+            return self.get_parent_form(wrapper, prefix=prefix)
+        return self.get_vanilla_form(wrapper, prefix=prefix)
 
-    def get_vanilla_form(self, wrapper, path=[]):
+    def get_vanilla_form(self, wrapper, path=[], prefix=''):
         return type( 'ModelForm', (forms.Form,), \
-            self.get_fields(wrapper, path=path))
+            self.get_fields(wrapper, path=path, prefix=prefix))
 
-    def get_parent_form(self, wrapper, path=[]):
+    def get_parent_form(self, wrapper, path=[], prefix=''):
         """
         Build a form for a model that has child classes
         """
@@ -228,18 +256,19 @@ class ModelEditView(View):
         recurse = {}
         for k in wrapper.children.keys():
             child = wrapper.children[k]
-            self.get_child_form(wrapper, child, children, recurse)
+            self.get_child_form(wrapper, k, child, children, recurse)
         
         attrs = {
             'children':children,
             'recurse':recurse,
             'active':forms.ChoiceField(choices=children.keys())
             }
+        
         return type('ParentModelForm', (ParentBase,), attrs)
 
-    def get_child_form(self, root, wrapper, children, recurse, path=[]):
+    def get_child_form(self, root, prefix, wrapper, children, recurse, path=[]):
         children[wrapper.name()] = type( 'ModelForm', (forms.Form,), \
-            self.get_fields(wrapper, path=path, parent=False))
+            self.get_fields(wrapper, path=path, parent=False, prefix=prefix))
         
         for parent in wrapper.parent.values():
             if parent != root and issubclass(parent.model, (root.model,)):
@@ -247,9 +276,9 @@ class ModelEditView(View):
         
         for k in wrapper.children.keys():
             child = wrapper.children[k]
-            self.get_child_form(root, child, children, recurse)
+            self.get_child_form(root, k, child, children, recurse)
 
-    def get_fields(self, wrapper, attrs=None, path=[], parent=True):
+    def get_fields(self, wrapper, attrs=None, path=[], parent=True, prefix=''):
         """
         Gets all fields for the given wrapper
            * adds direct fields
@@ -257,18 +286,20 @@ class ModelEditView(View):
            * adds M:1 (foreign key) relations
         """
         attrs = {} if attrs == None else attrs
+        prefix = '%s_' % prefix if prefix and prefix[-1]!='_' else prefix
+        
         if parent and wrapper.parent:
             # we're parsing an object starting with the child.  Get the parent
             # fields too
             for k in wrapper.parent.keys():
-                self.get_fields(wrapper.parent[k], attrs, path)
-        
+                self.get_fields(wrapper.parent[k], attrs, path, prefix=prefix)
+         
         for k in wrapper.fields.keys():
-            attrs[k] = self.get_form_field(wrapper.fields[k], path)
+            attrs['%s%s' % (prefix, k)] = self.get_form_field(wrapper.fields[k], path)
         
         for k in wrapper.many_to_one:
             field = wrapper.fk[k]
-            attrs[field.attname] = self.get_fk_field(
+            attrs['%s%s' % (prefix, field.attname)] = self.get_fk_field(
                                             wrapper.many_to_one[k].model,
                                             k, field, path)
         return attrs
