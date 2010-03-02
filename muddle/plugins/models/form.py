@@ -323,7 +323,7 @@ class ModelEditView(View):
                 self.get_fields(wrapper.parent[k], attrs, path, prefix=prefix)
          
         for k in wrapper.fields.keys():
-            attrs['%s%s' % (prefix, k)] = self.get_form_field(wrapper.fields[k], path)
+            attrs['%s%s' % (prefix, k)] = self.get_form_field(wrapper.fields[k], path, label=k)
         
         for k in wrapper.many_to_one:
             field = wrapper.fk[k]
@@ -332,12 +332,13 @@ class ModelEditView(View):
                                             k, field, path)
         return attrs
 
-    def get_form_field(self, field, path):
+    def get_form_field(self, field, path, **kwargs):
         """
         Gets a FormField given the ModelField and options
         """
         options = {}
         options.update(FORMFIELD_FOR_DBFIELD_DEFAULTS[field.__class__])
+        options.update(kwargs)
         #options = {} #TODO lookup options using path
         klass = options['form_class']
         del options['form_class']
