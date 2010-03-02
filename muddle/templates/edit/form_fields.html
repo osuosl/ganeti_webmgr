@@ -1,14 +1,15 @@
 {% if form.children %}
 
-    <div>
+    <h2 class="selector">{{name|capfirst}}</h2>
+    <ul class="child_selecter">
         {% for name in form.children %}
-            <span>{{name}}</span>
+            <li class="{{name}}">{{name}}</li>
         {% endfor %}
-    </div>
+    </ul>
+    {{form}}
 
     {% for name, form in form.instances.items %}
-        <h2>{{name}}</h2>
-        <table>
+        <table id="{{name}}" class="child">
         {% for field in form %}
             <tr>
                 <td class="label">{{ field.label_tag }}</td>
@@ -19,6 +20,7 @@
 
     {% endfor %}
 {% else %}
+    <h2>{{name|capfirst}}</h2>
     <table>
     {% for field in form %}
         <tr>
@@ -28,5 +30,3 @@
     {% endfor %}
     </table>
 {% endif %}
-
-{{form.children}}

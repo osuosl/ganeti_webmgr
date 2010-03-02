@@ -1,5 +1,68 @@
 {% extends "base.html" %}
 
+
+{% block head %}
+    {{block.super}}
+    
+    <style>
+        td {border:0;}
+        
+        h2.selector {
+            border:0;
+            font-size:14px;
+            margin-bottom:0px;
+        }
+        
+        ul.child_selecter {
+            border:1px solid #161650;
+            height:25px;
+            list-style:none;
+            margin-bottom:10px;
+            margin-top:0;
+        }
+        
+        ul.child_selecter li {
+            border-right:1px solid #161650;
+            color:#999999;
+            cursor:pointer;
+            float:left;
+            padding-left:5px;
+            padding-right:5px;
+        }
+        
+        ul.child_selecter li.selected {
+            background-color:#5F8DD3;
+            color:white;
+        }
+        
+        table.child {
+            display:none;
+        }
+        
+        
+    </style>
+    
+   <script type="text/javascript">
+        $(document).ready(function() {
+            $('input.selecter').each(function(){
+                $this = $(this);
+                $('#'+$this.val()).show();
+                $this.prev().children('.'+$this.val()).addClass('selected');
+                
+                $this.prev().find('li').click(function(){
+                    $this = $(this);
+                    val = $this.html();
+                    $this.addClass('selected')
+                    $this.siblings().removeClass('selected')
+                    $this.parent().next().val(val);
+                    $this.parent().siblings('.child').hide();
+                    $('#'+val).show();
+                });
+            });
+        });
+    </script>
+{% endblock %}
+
 {% block content %}
 
     <form id="edit" method="post" action="#">
@@ -9,9 +72,8 @@
             {% include "edit/form_fields.html" %}
         {% endwith %}
         
-        {% for name, form in form.one_to_one_instances.items %}
-            <h2>{{name}}</h2>
-            {%with form.form as form %}
+        {% for name, one_to_one in form.one_to_one_instances.items %}
+            {%with one_to_one.form_instance as form %}
                 {% include "edit/form_fields.html" %}
             {% endwith %}
         {% endfor %}

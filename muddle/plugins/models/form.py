@@ -1,4 +1,5 @@
 from django import forms
+from django.forms.extras import widgets
 from django.db.models import fields
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -131,7 +132,7 @@ class ParentBase(forms.Form):
         validate only the selected child form
         """
         #TODO
-        pass
+        return True
 
 
 class ModelEditView(View):
@@ -171,8 +172,9 @@ class ModelEditView(View):
                     for k,v in fw.children.items():
                         try:
                             child = related.__getattribute__(k)
-                            for n,v in child.__dict__.items():
-                                data['%s_%s' % (k, n)] = v
+                            for n,cv in child.__dict__.items():
+                                data['%s_%s' % (k, n)] = cv
+                            data['%s_selected_child' % field] = v.name()
                             break
                         except v.model.DoesNotExist:
                             pass
@@ -257,13 +259,11 @@ class ModelEditView(View):
         for k in wrapper.children.keys():
             child = wrapper.children[k]
             self.get_child_form(wrapper, k, child, children, recurse)
-        
         attrs = {
             'children':children,
             'recurse':recurse,
-            'active':forms.ChoiceField(choices=children.keys())
+            '%s_selected_child' % prefix:forms.CharField(max_length=64, widget=forms.HiddenInput(attrs={'class':'selecter'}))
             }
-        
         return type('ParentModelForm', (ParentBase,), attrs)
 
     def get_child_form(self, root, prefix, wrapper, children, recurse, path=[]):
