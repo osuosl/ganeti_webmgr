@@ -82,7 +82,8 @@ class CompositeFormBase(forms.Form):
 
 class Related1To1Base(forms.Form):
     """
-    Base class for sub-forms generated for 1:1 relationships
+    Base class for sub-forms generated for 1:1 relationships.  This subclass
+    has a single form object and instance.
     """
     def __init__(self, initial=None):
         super(Related1To1Base, self).__init__(initial)
@@ -100,6 +101,24 @@ class Related1To1Base(forms.Form):
             instance.__setattr__(self.fk, related)
         instance.__dict__.update(self.form_instance.cleaned_data)
         instance.save()
+
+
+class Related1ToMBase(forms.Form):
+    """
+    Base class for sub-forms generated for 1:M relationships.  This form can
+    have multiple instances of the contained form.
+    """
+    def __init__(self, initial):
+        super(Related1ToMBase, self).__init__(initial)
+        count = initial[self.count]
+        count = count+self.extra if count+self.extra < self.max_num else self.max_num
+        self.instances = [self.get_instance(i, initial) for i in range(count)]
+    
+    def get_instance(self, index, initial):
+        attrs = {}
+        for k, v in self.attrs.items():
+            attrs['%s_%d' % (k,index)] = v
+        return type('Related1ToMSubForm', (forms.Form,), attrs)(initial)
 
 
 class ParentBase(forms.Form):
@@ -181,8 +200,17 @@ class ModelEditView(View):
                 else:
                     for k,v in related.__dict__.items():
                         data['%s_%s' % (field, k)] = v
+                        
+            for field, fw in self.wrapper.one_to_many.items():
+                related = instance.__getattribute__(field).all()
+                count = 0
+                for one_to_many in related:
+                    for k,v in one_to_many.__dict__.items():
+                        data['%s_%s_%d' % (field, k, count)] = v
+                        count += 1
+                data['%s_count' % field] = len(related)
+                
             form = klass(data)
-            
         else:
             # unbound form
             form = klass()
@@ -227,8 +255,8 @@ class ModelEditView(View):
             one_to_one[k] = type('FormClass', (Related1To1Base,), inner_attrs)
 
         one_to_many = {}
-        #for k in w.one_to_many.keys():
-        #    one_to_many[k] = self.get_formset(w.one_to_many[k])
+        for k in w.one_to_many.keys():
+            one_to_many[k] = self.get_formset(w.one_to_many[k], k)
 
         return {
             'pk':w.pk,
@@ -335,25 +363,22 @@ class ModelEditView(View):
         klass = forms.ModelChoiceField
         return klass(**defaults)
 
-    def get_formset(self, wrapper, path=None):
+    def get_formset(self, wrapper, prefix, path=None):
         """
-        Returns a BaseInlineFormSet class for use in admin add/change views.
+        Returns a Related1ToMBase class for use displaying 1:M forms
         """
         fields = None
         exclude = []
         
-        defaults = {
-            "form": self.form,
-            "formset": self.formset,
-            "fk_name": self.fk_name,
-            "fields": fields,
-            "exclude": (exclude + kwargs.get("exclude", [])) or None,
-            "formfield_callback": curry(self.get_form_field, path=path),
-            "extra": self.extra,
-            "max_num": self.max_num,
+        attrs = {
+            #"fk_name": self.fk_name,
+            "count":'%s_count' % prefix,
+            "extra": 1,
+            "max_num": 10,
+            "attrs":self.get_fields(wrapper, prefix=prefix)
         }
-        #defaults.update(path)
-        return inlineformset_factory(self.parent_model, self.model, **defaults)
+        
+        return type('Related1ToMForm', (Related1ToMBase,), attrs)
     
     def name(self):
         if self.wrapper.__class__ == ModelWrapper:

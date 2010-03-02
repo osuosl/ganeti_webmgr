@@ -78,6 +78,10 @@
             {% endwith %}
         {% endfor %}
         
+        {% for name, form in form.one_to_many_instances.items %}
+            {% include "edit/form_fields_list.html" %}
+        {% endfor %}
+        
         <br/>
         <input type="submit" value="submit"/>
     </form>

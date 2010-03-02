@@ -1,0 +1,16 @@
+    <h2 class="selector">{{name|capfirst}}</h2>    
+    <table>
+        <tr>
+            {% for field in form.instances.0 %}
+                <th>{{ field.label_tag }}</th>
+            {% endfor %}
+        </tr>
+        
+        {% for instance in form.instances %}
+            <tr>
+            {% for field in instance %}
+                <td class="field" title="{{field.help_text}}">{{field}}</td>
+            {% endfor %}
+            </tr>
+        {% endfor %}
+    </table>

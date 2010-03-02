@@ -282,24 +282,69 @@ class Form_Child_Test(unittest.TestCase):
 
 class Form_One_To_Many_Test(unittest.TestCase):
 
-    def setup(self):
+    def setUp(self):
         root = RootPluginManager()
         config = PluginConfig()
         self.manager = ModelManager(root, config)
+        parent = ModelWrapper(Complex)
+        child = ModelWrapper(OneToMany)
+        self.manager.register(parent)
+        self.manager.register(child)
+        view = ModelEditView(parent)
+        self.attrs = view._get_form()
+        self.klass = view.get_form()
 
+    def tearDown(self):
+        Complex.objects.all().delete()
+        OneToMany.objects.all().delete()
+
+    def test_form_structure(self):
+        """
+        Tests:
+            * OneToMany is added as a BaseField
+            * OneToMany Form has the correct fields in its attrs
+        """
+        dict = self.attrs
+        self.assert_('one_to_manys' in dict['one_to_many'], dict['one_to_many'])
+        self.assert_(len(dict['one_to_many']), dict['one_to_many'])
+        subklass = dict['one_to_many'].values()[0]
+        self.assert_(issubclass(subklass, Related1ToMBase), subklass)
+        attrs = subklass.attrs
+        self.assert_(len(attrs)==2, attrs)
+        self.assert_('one_to_manys_b' in attrs, attrs)
+        self.assert_('one_to_manys_complex_id' in attrs, attrs)
+
+    def test_load(self):
+        """
+        Tests creating instances of the form with initial data
+        """
+        data = {
+            'id':1,
+            'one_to_manys_count':1,
+            'one_to_manys_complex_id_1':1,
+            'one_to_many_b_1':2
+        }
+        i = self.klass(data)
+        self.assert_(len(i.one_to_many_instances)==1, i.one_to_many_instances)
+        i = i.one_to_many_instances.values()[0]
+        self.assert_(len(i.instances)==2, i.instances)
+    
+    def test_instantiate(self):
+        """
+        Tests creating an unbound copy of the form
+        """
+        pass
+    
     def test_create(self):
         pass
     
     def test_save(self):
         pass
     
-    def test_load(self):
-        pass
-    
     def test_permissions(self):
         pass
-    
-    
+
+
 class Form_Many_To_One_Test(unittest.TestCase):
 
     def setUp(self):
@@ -347,7 +392,7 @@ class Form_Many_To_One_Test(unittest.TestCase):
     
 class Form_Many_To_Many_Test(unittest.TestCase):
 
-    def setup(self):
+    def setUp(self):
         root = RootPluginManager()
         config = PluginConfig()
         self.manager = ModelManager(root, config)
