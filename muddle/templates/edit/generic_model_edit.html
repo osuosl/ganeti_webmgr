@@ -5,14 +5,18 @@
     <form id="edit" method="post" action="#">
         
         <h1>{{wrapper.name}}</h1>
-        {% include "edit/form_fields.html" %}
+        {% with form.form_instance as form %}
+            {% include "edit/form_fields.html" %}
+        {% endwith %}
         
         {% for name, form in form.one_to_one_instances.items %}
             <h2>{{name}}</h2>
-            [{{form}}]
-            
+            {%with form.form as form %}
+                {% include "edit/form_fields.html" %}
+            {% endwith %}
         {% endfor %}
         
+        <br/>
         <input type="submit" value="submit"/>
     </form>
 {% endblock %}

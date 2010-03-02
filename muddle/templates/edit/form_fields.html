@@ -1,8 +1,32 @@
-<table>
-{% for field in form %}
-    <tr>
-        <td class="label">{{ field.label_tag }}</td>
-        <td class="field" title="{{field.help_text}}">{{field}}</td>
-    </tr>
-{% endfor %}
-</table>
+{% if form.children %}
+
+    <div>
+        {% for name in form.children %}
+            <span>{{name}}</span>
+        {% endfor %}
+    </div>
+
+    {% for name, form in form.instances.items %}
+        <h2>{{name}}</h2>
+        <table>
+        {% for field in form %}
+            <tr>
+                <td class="label">{{ field.label_tag }}</td>
+                <td class="field" title="{{field.help_text}}">{{field}}</td>
+            </tr>
+        {% endfor %}
+        </table>
+
+    {% endfor %}
+{% else %}
+    <table>
+    {% for field in form %}
+        <tr>
+            <td class="label">{{ field.label_tag }}</td>
+            <td class="field" title="{{field.help_text}}">{{field}}</td>
+        </tr>
+    {% endfor %}
+    </table>
+{% endif %}
+
+{{form.children}}
