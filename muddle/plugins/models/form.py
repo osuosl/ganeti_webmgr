@@ -168,21 +168,33 @@ class ParentBase(forms.Form):
     
     def save(self):
         """
-        Save only the selected child form.  Django handles saving the parent
+        Save the selected child form, else save the parent.  When saving a child
+        model parent values are copied into the child.  Django handles saving
+        the parent internally
         """
-        form = self.instances[self.data['%s_selected_child' % self.prefix_]]
+        key = self.data['%s_selected_child' % self.prefix_]
+        if key:
+            form = self.instances[key]
+        else:
+            form = self
         
-        data = form.cleaned_data
         if form.pk in self.data:
             instance = form.model.objects.get(pk=data[form.pk])
         else:
             instance = form.model()
-        i = len(form.prefix_)
+        
+        # add parent data
+        data = self.cleaned_data
+        i = len(self.prefix_)
         for k in data:
             instance.__setattr__(k[i:], data[k])
-        data = self.cleaned_data
-        for k in data:
-            instance.__setattr__(k, data[k])
+
+        if key:
+            data = form.cleaned_data
+            i = len(form.prefix_)
+            for k in data:
+                instance.__setattr__(k[i:], data[k])
+        
         instance.save()
         return instance
     
@@ -190,12 +202,15 @@ class ParentBase(forms.Form):
         """
         validate only the selected child form
         """
-        super(ParentBase, self).is_valid()
-        child = self.instances[self.data['%s_selected_child' % self.prefix_]]
-        if child.is_valid():
-            return True
-        self.errors = child.errors
-        return False
+        valid = super(ParentBase, self).is_valid()
+        errors = {} if valid else {'parent':self.errors}
+        key = self.data['%s_selected_child' % self.prefix_]
+        if key:
+            child = self.instances[key]
+            if not child.is_valid():
+                valid = False
+                self.errors['child'] = child.errors
+        return valid
 
 
 class ModelEditView(View):
@@ -336,7 +351,9 @@ class ModelEditView(View):
             'children':children,
             'recurse':recurse,
             'prefix_':prefix,
-            '%s_selected_child' % prefix:forms.CharField(max_length=64, widget=forms.HiddenInput(attrs={'class':'selecter'}))
+            'pk':wrapper.pk,
+            'model':wrapper.model,
+            '%s_selected_child' % prefix:forms.CharField(max_length=64, required=False, widget=forms.HiddenInput(attrs={'class':'selecter'}))
             }
         self.get_fields(wrapper, attrs, path, prefix=prefix)
         return type('ParentModelForm', (ParentBase,), attrs)

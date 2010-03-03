@@ -202,7 +202,7 @@ class Form_Parent_Test(unittest.TestCase):
         self.assert_(len(Extended.objects.all())==0, len(Extended.objects.all()))
         self.assert_(len(ChildA.objects.all())==0, len(ChildA.objects.all()))
         self.assert_(len(ChildB.objects.all())==0, len(ChildB.objects.all()))
-        form = self.klass({'a':5})
+        form = self.klass({'_selected_child':'', 'a':5})
         form.save()
         self.assert_(len(Extended.objects.all())==1, len(Extended.objects.all()))
         self.assert_(len(ChildA.objects.all())==0, len(ChildA.objects.all()))
