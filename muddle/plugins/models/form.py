@@ -42,20 +42,26 @@ class CompositeFormBase(forms.Form):
         self.one_to_many_instances = {}
         for k in self.one_to_many.keys():
             self.one_to_many_instances[k] = self.one_to_many[k](initial)
-            
+    
     def is_valid(self):
         """
-        Validate form and all formsets
+        Validate form and all formsets.  This also sets self.errors to a dict
+        of errors from all children
         """
         valid = True
+        errors = {'form':None, 'one_to_one':{}, 'one_to_many':{}}
         if not self.form_instance.is_valid():
             valid = False
-        for k in self.one_to_one_instances.keys():
+            errors['form'] = self.form_instance.errors
+        for k in self.one_to_one_instances:
             if not self.one_to_one_instances[k].is_valid():
                 valid = False
-        for form in self.one_to_many_instances:
-            if not form.is_valid():
+                errors['one_to_one'][k] = self.one_to_one_instances[k].errors
+        for k in self.one_to_many_instances:
+            if not self.one_to_many_instances[k].is_valid():
                 valid = False
+                errors['one_to_many'][k] = self.one_to_many_instances[k].errors
+        self.errors = None if valid else errors
         return valid
 
     def save(self):
