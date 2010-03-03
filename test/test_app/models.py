@@ -84,7 +84,7 @@ class OneToMany(models.Model):
     A one to many extension of a class
     """
     complex = models.ForeignKey(Complex, related_name='one_to_manys')
-
+    b = models.IntegerField(null=True)
 
 class ManyToMany(models.Model):
     """
