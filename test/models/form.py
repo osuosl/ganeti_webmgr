@@ -135,7 +135,7 @@ class Form_One_To_One_Test(unittest.TestCase):
     def test_create(self):
         self.assert_(len(Complex.objects.all())==0, len(Complex.objects.all()))
         self.assert_(len(OneToOne.objects.all())==0, len(OneToOne.objects.all()))
-        form = self.klass({'a':1,'b':2})
+        form = self.klass({'a':1,'onetoone_b':2})
         form.save()
         self.assert_(len(Complex.objects.all())==1, len(Complex.objects.all()))
         self.assert_(len(OneToOne.objects.all())==1, len(OneToOne.objects.all()))
@@ -155,7 +155,7 @@ class Form_One_To_One_Test(unittest.TestCase):
         child.b=4
         child.complex = parent
         child.save()
-        form = self.klass({'id':1, 'a':5, 'b':6})
+        form = self.klass({'id':1, 'a':5, 'onetoone_b':6})
         form.save()
         parent = Complex.objects.get(id=1)
         child = parent.onetoone
@@ -377,6 +377,7 @@ class Form_Many_To_One_Test(unittest.TestCase):
         parent.save()
         data = {
             'id':1,
+            'b':3,
             'complex_id':1
         }
         form = self.klass(data)

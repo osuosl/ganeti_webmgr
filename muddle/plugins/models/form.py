@@ -94,12 +94,20 @@ class Related1To1Base(forms.Form):
         return self.form_instance.is_valid() and _super
     
     def save(self, related):
+        """
+        Updates an existing object if there is already a related object.  Else
+        it creates a new instance. Field prefixes are stripped off the values
+        as they are unpacked
+        """
         try:
             instance = self.model.objects.get(**{self.fk:related})
         except self.model.DoesNotExist:
             instance = self.model()
             instance.__setattr__(self.fk, related)
-        instance.__dict__.update(self.form_instance.cleaned_data)
+        data = self.form_instance.cleaned_data
+        i = len(self.prefix_)
+        for k in data:
+            instance.__setattr__(k[i:], data[k])
         instance.save()
 
 
@@ -141,7 +149,7 @@ class ParentBase(forms.Form):
     
     def save(self):
         """
-        Save only the selected child form
+        Save only the selected child form.  Django handles saving the parent
         """
         #TODO
         pass
@@ -249,10 +257,11 @@ class ModelEditView(View):
             inner_attrs = {
                     'label':k,
                     'fk':dict_key(w.one_to_one[k].one_to_one, w),
+                    'prefix_':'%s_' % k,
                     'model':w.one_to_one[k].model,
                     'form':self.form_factory(w.one_to_one[k], k)
                     }
-            one_to_one[k] = type('FormClass', (Related1To1Base,), inner_attrs)
+            one_to_one[k] = type('Related1To1Form', (Related1To1Base,), inner_attrs)
 
         one_to_many = {}
         for k in w.one_to_many.keys():
