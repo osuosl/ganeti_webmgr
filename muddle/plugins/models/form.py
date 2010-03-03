@@ -61,7 +61,9 @@ class CompositeFormBase(forms.Form):
             if not self.one_to_many_instances[k].is_valid():
                 valid = False
                 errors['one_to_many'][k] = self.one_to_many_instances[k].errors
-        self.errors = None if valid else errors
+        
+        # set using dict as form does something wierd to prevent setting it
+        self.__dict__['errors'] = None if valid else errors
         return valid
 
     def save(self):
@@ -70,20 +72,31 @@ class CompositeFormBase(forms.Form):
         """
         if not self.is_valid():
             raise Exception(self.errors)
-            
-        data = self.form_instance.cleaned_data
+        
+        instance = self.form_instance.save()
+        for form in self.one_to_one_instances.values():
+            form.save(instance)
+        for form in self.one_to_many_instances.values():
+            form.save(instance)
+
+
+class ModelFormBase(forms.Form):
+    """
+    Base Form class for basic models.  This form is capable of creating and
+    updating instances of the associated model.
+    """
+    def save(self):
+        """
+        Creates or saves an instance of this forms model using the form data
+        """
+        data = self.cleaned_data
         if self.pk in self.data:
             instance = self.model.objects.get(pk=data[self.pk])
         else:
             instance = self.model()
         instance.__dict__.update(self.data)
         instance.save()
-        
-        for form in self.one_to_one_instances.values():
-            form.save(instance)
-
-        for form in self.one_to_many_instances.values():
-            form.save(instance)
+        return instance
 
 
 class Related1To1Base(forms.Form):
@@ -157,15 +170,32 @@ class ParentBase(forms.Form):
         """
         Save only the selected child form.  Django handles saving the parent
         """
-        #TODO
-        pass
+        form = self.instances[self.data['%s_selected_child' % self.prefix_]]
+        
+        data = form.cleaned_data
+        if form.pk in self.data:
+            instance = form.model.objects.get(pk=data[form.pk])
+        else:
+            instance = form.model()
+        i = len(form.prefix_)
+        for k in data:
+            instance.__setattr__(k[i:], data[k])
+        data = self.cleaned_data
+        for k in data:
+            instance.__setattr__(k, data[k])
+        instance.save()
+        return instance
     
     def is_valid(self):
         """
         validate only the selected child form
         """
-        #TODO
-        return True
+        super(ParentBase, self).is_valid()
+        child = self.instances[self.data['%s_selected_child' % self.prefix_]]
+        if child.is_valid():
+            return True
+        self.errors = child.errors
+        return False
 
 
 class ModelEditView(View):
@@ -185,8 +215,8 @@ class ModelEditView(View):
             self.regex = '^%s/(\d+)/Edit$' % self.wrapper.__name__
     
     def __call__(self, request, id=None):
-        klass = self.get_form(request.user.get_profile())
-        
+        #klass = self.get_form(request.user.get_profile())
+        klass = self.get_form(None)
         if request.POST:
             #process form
             form = klass(request.POST)
@@ -274,7 +304,6 @@ class ModelEditView(View):
             one_to_many[k] = self.get_formset(w.one_to_many[k], k)
 
         return {
-            'pk':w.pk,
             'model':w.model,
             'form':form,
             'one_to_one':one_to_one,
@@ -290,8 +319,9 @@ class ModelEditView(View):
         return self.get_vanilla_form(wrapper, prefix=prefix)
 
     def get_vanilla_form(self, wrapper, path=[], prefix=''):
-        return type( 'ModelForm', (forms.Form,), \
-            self.get_fields(wrapper, path=path, prefix=prefix))
+        attrs = {'model':wrapper.model, 'pk':wrapper.pk}
+        return type( 'ModelForm', (ModelFormBase,), \
+            self.get_fields(wrapper, attrs, path, prefix=prefix))
 
     def get_parent_form(self, wrapper, path=[], prefix=''):
         """
@@ -305,13 +335,16 @@ class ModelEditView(View):
         attrs = {
             'children':children,
             'recurse':recurse,
+            'prefix_':prefix,
             '%s_selected_child' % prefix:forms.CharField(max_length=64, widget=forms.HiddenInput(attrs={'class':'selecter'}))
             }
+        self.get_fields(wrapper, attrs, path, prefix=prefix)
         return type('ParentModelForm', (ParentBase,), attrs)
 
     def get_child_form(self, root, prefix, wrapper, children, recurse, path=[]):
-        children[wrapper.name()] = type( 'ModelForm', (forms.Form,), \
-            self.get_fields(wrapper, path=path, parent=False, prefix=prefix))
+        attrs = {'model':wrapper.model, 'pk':wrapper.pk, 'prefix_':'%s_'%prefix}
+        children[wrapper.name()] = type( 'ModelForm', (ModelFormBase,), \
+            self.get_fields(wrapper, attrs, path, False, prefix))
         
         for parent in wrapper.parent.values():
             if parent != root and issubclass(parent.model, (root.model,)):

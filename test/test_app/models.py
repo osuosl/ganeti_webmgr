@@ -24,8 +24,8 @@ class Extended(models.Model):
     """
     Class that has been extended
     """
-    owner = models.ForeignKey(Permissable)
-    a = models.IntegerField()
+    owner = models.ForeignKey(Permissable, null=True)
+    a = models.IntegerField(null=True)
 
 
 class ChildA(Extended):
@@ -35,11 +35,11 @@ class ChildA(Extended):
     b = models.IntegerField()
 
 
-class ChildA(Extended):
+class ChildB(Extended):
     """
     Class that extends another class
     """
-    pass
+    c = models.IntegerField()
 
 
 class ExtendedDepthTest(models.Model):

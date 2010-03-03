@@ -183,6 +183,11 @@ class Form_Parent_Test(unittest.TestCase):
         self.klass = view.get_form()
         self.attrs = view.get_fields(parent)
 
+    def tearDown(self):
+        Extended.objects.all().delete()
+        ChildA.objects.all().delete()
+        ChildB.objects.all().delete()
+
     def test_form_structure(self):
         dict = self.attrs
         form = self.klass.form
@@ -193,8 +198,32 @@ class Form_Parent_Test(unittest.TestCase):
         self.assert_(len(form.recurse)==0, form.recurse)
         self.assert_('a' in dict, dict)
 
-    def test_create(self):
-        pass
+    def test_create_parent(self):
+        self.assert_(len(Extended.objects.all())==0, len(Extended.objects.all()))
+        self.assert_(len(ChildA.objects.all())==0, len(ChildA.objects.all()))
+        self.assert_(len(ChildB.objects.all())==0, len(ChildB.objects.all()))
+        form = self.klass({'a':5})
+        form.save()
+        self.assert_(len(Extended.objects.all())==1, len(Extended.objects.all()))
+        self.assert_(len(ChildA.objects.all())==0, len(ChildA.objects.all()))
+        self.assert_(len(ChildB.objects.all())==0, len(ChildB.objects.all()))
+        parent = Extended.objects.all()[0]
+        self.assert_(parent.a==5, parent.a)
+
+    def test_create_child(self):
+        self.assert_(len(Extended.objects.all())==0, len(Extended.objects.all()))
+        self.assert_(len(ChildA.objects.all())==0, len(ChildA.objects.all()))
+        self.assert_(len(ChildB.objects.all())==0, len(ChildB.objects.all()))
+        form = self.klass({'_selected_child':'ChildA', 'a':5, 'childa_b':6})
+        form.save()
+        self.assert_(len(Extended.objects.all())==1, len(Extended.objects.all()))
+        self.assert_(len(ChildA.objects.all())==1, len(ChildA.objects.all()))
+        self.assert_(len(ChildB.objects.all())==0, len(ChildB.objects.all()))
+        parent = Extended.objects.all()[0]
+        child = ChildA.objects.all()[0]
+        self.assert_(parent.a==5, parent.a)
+        self.assert_(child.a==5, child.a)
+        self.assert_(child.b==6, child.b)
     
     def test_save(self):
         pass
