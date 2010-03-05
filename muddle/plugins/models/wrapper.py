@@ -117,11 +117,13 @@ class ModelWrapper(Registerable):
         This allows the models to be registered in any order without having
         dependency errors.
         """
+        #primary key
+        self.pk = self.model._meta.pk
+        
         # local fields
         for field in self.model._meta.local_fields:
 
             if isinstance(field, (AutoField,)):
-                self.pk = field
                 continue
             elif isinstance(field, (ForeignKey,)):
                 related = field.name

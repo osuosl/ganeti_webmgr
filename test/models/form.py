@@ -44,11 +44,13 @@ class Form_Simple_Test(unittest.TestCase):
             * all model properties are added to form
             * form fields have default type
         """
-        dict = self.attrs
+        dict = self.klass.form.base_fields
+        
         # field contents
         self.assert_('integer' in dict, dict)
         self.assert_('text' in dict, dict)
         self.assert_('char' in dict, dict)
+        self.assert_('pk' in dict, dict)
         #self.assert_('datetime' in dict, dict)
         #self.assert_('date' in dict, dict)
         #self.assert_('time' in dict, dict)
@@ -57,6 +59,7 @@ class Form_Simple_Test(unittest.TestCase):
         self.assert_(issubclass(dict['integer'].__class__,(forms.IntegerField,)), dict)
         self.assert_(issubclass(dict['text'].__class__,(forms.CharField,)), dict)
         self.assert_(issubclass(dict['char'].__class__,(forms.CharField,)), dict)
+        self.assert_(issubclass(dict['pk'].__class__,(forms.IntegerField,)), dict)
         #self.assert_(issubclass(dict['datetime'].__class__,(forms.SplitDateTimeField,)), dict)
         #self.assert_(issubclass(dict['date'].__class__,(forms.DateField,)), dict)
         #self.assert_(issubclass(dict['time'].__class__,(forms.TimeField,)), dict)
@@ -83,16 +86,17 @@ class Form_Simple_Test(unittest.TestCase):
         self.assert_(len(FieldTest.objects.all())==0, len(FieldTest.objects.all()))
         now = datetime.now()
         data = {
-            'id':1,
+            'pk':1,
             'integer':123,
             'text':'abc',
             'char':'def'
         }
         simple = FieldTest()
         simple.__dict__.update(data)
+        simple.id = 1
         simple.save()
         data = {
-            'id':1,
+            'pk':1,
             'integer':456,
             'text':'ghi',
             'char':'jkl',
@@ -103,7 +107,8 @@ class Form_Simple_Test(unittest.TestCase):
         self.assert_(len(query)==1, len(query))
         simple = query[0]
         for k,v in data.items():
-            self.assert_(simple.__dict__[k]==v, (simple.__dict__[k], v))
+            k = 'id' if k == 'pk' else k
+            self.assert_(simple.__getattribute__(k)==v, (simple.__dict__[k], v))
     
     def test_permissions(self):
         pass
@@ -155,7 +160,7 @@ class Form_One_To_One_Test(unittest.TestCase):
         child.b=4
         child.complex = parent
         child.save()
-        form = self.klass({'id':1, 'a':5, 'onetoone_b':6})
+        form = self.klass({'pk':1, 'a':5, 'onetoone_b':6})
         form.save()
         parent = Complex.objects.get(id=1)
         child = parent.onetoone
@@ -224,12 +229,42 @@ class Form_Parent_Test(unittest.TestCase):
         self.assert_(parent.a==5, parent.a)
         self.assert_(child.a==5, child.a)
         self.assert_(child.b==6, child.b)
-    
-    def test_save(self):
-        pass
-    
-    def test_load(self):
-        pass
+
+    def test_update_child(self):
+        self.assert_(len(Extended.objects.all())==0, len(Extended.objects.all()))
+        self.assert_(len(ChildA.objects.all())==0, len(ChildA.objects.all()))
+        self.assert_(len(ChildB.objects.all())==0, len(ChildB.objects.all()))
+        child = ChildA()
+        child.id = 1
+        child.a = 5
+        child.b = 6
+        child.save()
+        form = self.klass({'_selected_child':'ChildA', 'extended_ptr_id':1, 'childa_id':1, 'a':7, 'childa_b':8})
+        form.save()
+        self.assert_(len(Extended.objects.all())==1, len(Extended.objects.all()))
+        self.assert_(len(ChildA.objects.all())==1, len(ChildA.objects.all()))
+        self.assert_(len(ChildB.objects.all())==0, len(ChildB.objects.all()))
+        parent = Extended.objects.all()[0]
+        child = ChildA.objects.all()[0]
+        self.assert_(parent.a==7, parent.a)
+        self.assert_(child.a==7, child.a)
+        self.assert_(child.b==8, child.b)
+
+    def test_update_parent(self):
+        self.assert_(len(Extended.objects.all())==0, len(Extended.objects.all()))
+        self.assert_(len(ChildA.objects.all())==0, len(ChildA.objects.all()))
+        self.assert_(len(ChildB.objects.all())==0, len(ChildB.objects.all()))
+        parent = Extended()
+        parent.id = 1
+        parent.a = 4
+        parent.save()
+        form = self.klass({'_selected_child':'', 'id':1, 'a':5})
+        form.save()
+        self.assert_(len(Extended.objects.all())==1, len(Extended.objects.all()))
+        self.assert_(len(ChildA.objects.all())==0, len(ChildA.objects.all()))
+        self.assert_(len(ChildB.objects.all())==0, len(ChildB.objects.all()))
+        parent = Extended.objects.all()[0]
+        self.assert_(parent.a==5, parent.a)
     
     def test_permissions(self):
         pass
@@ -341,7 +376,7 @@ class Form_One_To_Many_Test(unittest.TestCase):
         attrs = subklass.attrs
         self.assert_(len(attrs)==2, attrs)
         self.assert_('one_to_manys_b' in attrs, attrs)
-        self.assert_('one_to_manys_complex_id' in attrs, attrs)
+        self.assert_('one_to_manys_complex' in attrs, attrs)
 
     def test_load(self):
         """
@@ -350,7 +385,7 @@ class Form_One_To_Many_Test(unittest.TestCase):
         data = {
             'id':1,
             'one_to_manys_count':1,
-            'one_to_manys_complex_id_1':1,
+            'one_to_manys_complex_1':1,
             'one_to_many_b_1':2
         }
         i = self.klass(data)
@@ -395,8 +430,8 @@ class Form_Many_To_One_Test(unittest.TestCase):
     def test_form_structure(self):
         dict = self.attrs
         # field contents
-        self.assert_('complex_id' in dict, dict)
-        self.assert_(issubclass(dict['complex_id'].__class__, (forms.ModelChoiceField,)), dict)
+        self.assert_('complex' in dict, dict)
+        self.assert_(issubclass(dict['complex'].__class__, (forms.ModelChoiceField,)), dict)
 
     def test_save(self):
         self.assert_(len(Complex.objects.all())==0, len(Complex.objects.all()))
@@ -405,16 +440,15 @@ class Form_Many_To_One_Test(unittest.TestCase):
         parent.id = 1
         parent.save()
         data = {
-            'id':1,
             'b':3,
-            'complex_id':1
+            'complex':1
         }
         form = self.klass(data)
         form.save()
-        parent = Complex.objects.get(id=1)
+        parent = Complex.objects.all()[0]
         self.assert_(len(parent.one_to_manys.all())==1, parent.one_to_manys.all())
         child = parent.one_to_manys.all()[0]
-        self.assert_(child.id==1, child.id)
+        self.assert_(child.b==3, child.b)
     
     def test_permissions(self):
         pass

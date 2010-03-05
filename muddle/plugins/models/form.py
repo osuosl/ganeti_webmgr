@@ -13,6 +13,8 @@ FORMFIELD_FOR_DBFIELD_DEFAULTS = {
     fields.DateTimeField: {
         'form_class': forms.SplitDateTimeField,
     },
+    fields.AutoField:    {'form_class': forms.IntegerField},
+    fields.related.OneToOneField: {'form_class': forms.IntegerField},
     fields.DateField:    {'form_class': forms.DateField},
     fields.TimeField:    {'form_class': forms.TimeField},
     fields.TextField:    {'form_class': forms.CharField},
@@ -88,13 +90,16 @@ class ModelFormBase(forms.Form):
     def save(self):
         """
         Creates or saves an instance of this forms model using the form data
+        
+        @returns - model instance that was created or saved
         """
         data = self.cleaned_data
-        if self.pk in self.data:
-            instance = self.model.objects.get(pk=data[self.pk])
+        if data['pk']:
+            instance = self.model.objects.get(pk=data['pk'])
         else:
             instance = self.model()
-        instance.__dict__.update(self.data)
+        for k in data:
+            instance.__setattr__(k, data[k])
         instance.save()
         return instance
 
@@ -178,13 +183,13 @@ class ParentBase(forms.Form):
         else:
             form = self
         
-        if form.pk in self.data:
-            instance = form.model.objects.get(pk=data[form.pk])
+        data = self.cleaned_data
+        if form.pk.attname in data:
+            instance = form.model.objects.get(pk=data[form.pk.attname])
         else:
             instance = form.model()
         
         # add parent data
-        data = self.cleaned_data
         i = len(self.prefix_)
         for k in data:
             instance.__setattr__(k[i:], data[k])
@@ -334,7 +339,10 @@ class ModelEditView(View):
         return self.get_vanilla_form(wrapper, prefix=prefix)
 
     def get_vanilla_form(self, wrapper, path=[], prefix=''):
-        attrs = {'model':wrapper.model, 'pk':wrapper.pk}
+        attrs = {
+            'model':wrapper.model,
+            'pk':self.get_form_field(wrapper.pk, path, required=False, widget=forms.HiddenInput()),
+            }
         return type( 'ModelForm', (ModelFormBase,), \
             self.get_fields(wrapper, attrs, path, prefix=prefix))
 
@@ -392,7 +400,7 @@ class ModelEditView(View):
         
         for k in wrapper.many_to_one:
             field = wrapper.fk[k]
-            attrs['%s%s' % (prefix, field.attname)] = self.get_fk_field(
+            attrs['%s%s' % (prefix, k)] = self.get_fk_field(
                                             wrapper.many_to_one[k].model,
                                             k, field, path)
         return attrs
