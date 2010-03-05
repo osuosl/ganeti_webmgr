@@ -184,8 +184,8 @@ class ParentBase(forms.Form):
             form = self
         
         data = self.cleaned_data
-        if form.pk.attname in data:
-            instance = form.model.objects.get(pk=data[form.pk.attname])
+        if data['pk']:
+            instance = form.model.objects.get(pk=data['pk'])
         else:
             instance = form.model()
         
@@ -359,7 +359,7 @@ class ModelEditView(View):
             'children':children,
             'recurse':recurse,
             'prefix_':prefix,
-            'pk':wrapper.pk,
+            'pk':self.get_form_field(wrapper.pk, path, required=False, widget=forms.HiddenInput()),
             'model':wrapper.model,
             '%s_selected_child' % prefix:forms.CharField(max_length=64, required=False, widget=forms.HiddenInput(attrs={'class':'selecter'}))
             }

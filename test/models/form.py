@@ -239,7 +239,7 @@ class Form_Parent_Test(unittest.TestCase):
         child.a = 5
         child.b = 6
         child.save()
-        form = self.klass({'_selected_child':'ChildA', 'extended_ptr_id':1, 'childa_id':1, 'a':7, 'childa_b':8})
+        form = self.klass({'_selected_child':'ChildA', 'pk':1, 'childa_id':1, 'a':7, 'childa_b':8})
         form.save()
         self.assert_(len(Extended.objects.all())==1, len(Extended.objects.all()))
         self.assert_(len(ChildA.objects.all())==1, len(ChildA.objects.all()))
@@ -258,7 +258,7 @@ class Form_Parent_Test(unittest.TestCase):
         parent.id = 1
         parent.a = 4
         parent.save()
-        form = self.klass({'_selected_child':'', 'id':1, 'a':5})
+        form = self.klass({'_selected_child':'', 'pk':1, 'a':5})
         form.save()
         self.assert_(len(Extended.objects.all())==1, len(Extended.objects.all()))
         self.assert_(len(ChildA.objects.all())==0, len(ChildA.objects.all()))
