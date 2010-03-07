@@ -142,15 +142,52 @@ class Related1ToMBase(forms.Form):
     """
     def __init__(self, initial):
         super(Related1ToMBase, self).__init__(initial)
-        count = initial[self.count]
+        count = initial[self.count] if self.count in initial else 0
         count = count+self.extra if count+self.extra < self.max_num else self.max_num
         self.instances = [self.get_instance(i, initial) for i in range(count)]
     
     def get_instance(self, index, initial):
-        attrs = {}
+        attrs = {'fk':self.fk, 'index':index}
         for k, v in self.attrs.items():
             attrs['%s_%d' % (k,index)] = v
-        return type('Related1ToMSubForm', (forms.Form,), attrs)(initial)
+        return type('Related1ToMChildForm', (Related1ToMChildBase,), attrs)(initial)
+
+    def is_valid(self):
+        valid = True
+        errors = {'children':{}} if super_ else {'form':self.errors,children:{}}
+        for form in self.instances:
+            if not form.is_valid():
+                valid = False
+                errors['children'][form.index] = form.errors
+        self.errors = errors
+        return valid
+
+    def save(self, related):
+        for form in self.instances:
+            form.save(related)
+
+
+class Related1ToMChildBase(forms.Form):
+    """
+    Base class for the child in a one to many relationship.
+    """
+    def save(self, related):
+        """
+        Updates an existing object if there is already a related object.  Else
+        it creates a new instance. Field prefixes are stripped off the values
+        as they are unpacked
+        """
+        try:
+            instance = self.model.objects.get(**{self.fk:related})
+        except self.model.DoesNotExist:
+            instance = self.model()
+            instance.__setattr__(self.fk, related)
+        data = self.form_instance.cleaned_data
+        s = len(self.prefix_)
+        e = len('_%d'%self.index)
+        for k in data:
+            instance.__setattr__(k[i:-e], data[k])
+        instance.save()
 
 
 class ParentBase(forms.Form):

@@ -378,12 +378,12 @@ class Form_One_To_Many_Test(unittest.TestCase):
         self.assert_('one_to_manys_b' in attrs, attrs)
         self.assert_('one_to_manys_complex' in attrs, attrs)
 
-    def test_load(self):
+    def test_bound_structure(self):
         """
         Tests creating instances of the form with initial data
         """
         data = {
-            'id':1,
+            'pk':1,
             'one_to_manys_count':1,
             'one_to_manys_complex_1':1,
             'one_to_many_b_1':2
@@ -393,17 +393,103 @@ class Form_One_To_Many_Test(unittest.TestCase):
         i = i.one_to_many_instances.values()[0]
         self.assert_(len(i.instances)==2, i.instances)
     
-    def test_instantiate(self):
+    def test_unbound_structure(self):
         """
         Tests creating an unbound copy of the form
         """
+        i = self.klass()
+        self.assert_(len(i.one_to_many_instances)==1, i.one_to_many_instances)
+        i = i.one_to_many_instances.values()[0]
+        self.assert_(len(i.instances)==2, i.instances)
+    
+    def test_create_none(self):
+        """
+        Tests creating an object with a 1:M, but no related objects are created
+        """
+        self.assert_(len(Complex.objects.all())==0, len(Complex.objects.all()))
+        self.assert_(len(OneToMany.objects.all())==0, len(OneToMany.objects.all()))
+        data = {
+            'a':3,
+        }
+        form = self.klass(data)
+        form.save()
+        query = Complex.objects.all()
+        self.assert_(len(query)==1, len(query))
+        parent = query[0]
+        self.assert_(parent.a==3, parent.a)
+    
+    def test_create_one(self):
+        """
+        Tests creating an object with a 1:M, one related object is created
+        """
+        self.assert_(len(Complex.objects.all())==0, len(Complex.objects.all()))
+        self.assert_(len(OneToMany.objects.all())==0, len(OneToMany.objects.all()))
+        data = {
+            'pk':1,
+            'a':3,
+            'one_to_manys_count':1,
+            'one_to_manys_complex_1':1,
+            'one_to_many_b_1':4
+        }
+        form = self.klass(data)
+        form.save()
+        query = Complex.objects.all()
+        self.assert_(len(query)==1, len(query))
+        parent = query[0]
+        self.assert_(parent.a==3, parent.a)
+        children = parent.one_to_manys.all()
+        self.assert_(len(children)==1, len(children))
+        self.assert_(children[0].b==4, children[0].b)
+    
+    def test_create_two(self):
+        """
+        Tests creating an object with a 1:M, two related objects are created
+        """
+        self.assert_(len(Complex.objects.all())==0, len(Complex.objects.all()))
+        self.assert_(len(OneToMany.objects.all())==0, len(OneToMany.objects.all()))
+        data = {
+            'pk':1,
+            'a':3,
+            'one_to_manys_count':2,
+            'one_to_manys_complex_1':1,
+            'one_to_many_b_1':4,
+            'one_to_manys_complex_2':1,
+            'one_to_many_b_1':5
+        }
+        form = self.klass(data)
+        form.save()
+        query = Complex.objects.all()
+        self.assert_(len(query)==1, len(query))
+        parent = query[0]
+        self.assert_(parent.a==3, parent.a)
+        children = parent.one_to_manys.all()
+        self.assert_(len(children)==2, len(children))
+        self.assert_(children[0].b==4, children[0].b)
+        self.assert_(children[1].b==5, children[1].b)
+    
+    def test_save_with_empty_values(self):
+        """
+        Tests saving but the related fields are all empty string ""
+            * related objects with no values should be ignored
+        """
         pass
     
-    def test_create(self):
+    def test_update(self):
+        """
+        Updates but only edits existing fields
+        """
         pass
     
-    def test_save(self):
+    def test_update_with_empty_values(self):
+        """
+        Tests saving but the related fields are all empty string ""
+            * related objects with no values should be ignored
+        """
         pass
+    
+    def test_update_with_new_related(self):
+        pass
+    
     
     def test_permissions(self):
         pass
