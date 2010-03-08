@@ -87,6 +87,16 @@ class ModelFormBase(forms.Form):
     Base Form class for basic models.  This form is capable of creating and
     updating instances of the associated model.
     """
+    
+    def __init__(self, initial, *args, **kwargs):
+        for k in self.fk_map:
+            try:
+                initial['%s%s' % (self.prefix_, self.fk_map[k])] = initial[k]
+            except KeyError:
+                continue
+
+        super(ModelFormBase, self).__init__(initial, *args, **kwargs)
+    
     def save(self):
         """
         Creates or saves an instance of this forms model using the form data
@@ -402,6 +412,7 @@ class ModelEditView(View):
 
     def get_vanilla_form(self, wrapper, path=[], prefix=''):
         attrs = {
+            'prefix_': prefix,
             'model':wrapper.model,
             '%spk' % prefix:self.get_form_field(wrapper.pk, path, required=False)#, widget=forms.HiddenInput()),
             }
@@ -464,11 +475,14 @@ class ModelEditView(View):
         for k in wrapper.fields.keys():
             attrs['%s%s' % (prefix, k)] = self.get_form_field(wrapper.fields[k], path, label=k)
         
+        fk_map = {}
         for k in filter(exclude_l, wrapper.many_to_one):
             field = wrapper.fk[k]
             attrs['%s%s' % (prefix, k)] = self.get_fk_field(
                                             wrapper.many_to_one[k].model,
                                             k, field, path)
+            fk_map['%s%s' % (prefix, field.attname)] = k
+        attrs['fk_map'] = fk_map
         return attrs
 
     def get_form_field(self, field, path, **kwargs):

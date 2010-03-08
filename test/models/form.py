@@ -374,9 +374,10 @@ class Form_One_To_Many_Test(unittest.TestCase):
         subklass = dict['one_to_many'].values()[0]
         self.assert_(issubclass(subklass, Related1ToMBase), subklass)
         attrs = subklass.attrs
-        self.assert_(len(attrs)==2, attrs)
+        self.assert_(len(attrs)==3, attrs)
         self.assert_('one_to_manys_b' in attrs, attrs)
         self.assert_('one_to_manys_pk' in attrs, attrs)
+        self.assert_('fk_map' in attrs, attrs)
 
     def test_bound_structure(self):
         """
