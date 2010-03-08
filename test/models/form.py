@@ -428,7 +428,6 @@ class Form_One_To_Many_Test(unittest.TestCase):
         data = {
             'a':3,
             'one_to_manys_count':1,
-            'one_to_manys_complex_0':1,
             'one_to_manys_b_0':4
         }
         form = self.klass(data)
@@ -450,9 +449,7 @@ class Form_One_To_Many_Test(unittest.TestCase):
         data = {
             'a':3,
             'one_to_manys_count':2,
-            'one_to_manys_complex_0':1,
             'one_to_manys_b_0':4,
-            'one_to_manys_complex_1':1,
             'one_to_manys_b_1':5
         }
         form = self.klass(data)
@@ -471,24 +468,120 @@ class Form_One_To_Many_Test(unittest.TestCase):
         Tests saving but the related fields are all empty string ""
             * related objects with no values should be ignored
         """
-        pass
+        self.assert_(len(Complex.objects.all())==0, len(Complex.objects.all()))
+        self.assert_(len(OneToMany.objects.all())==0, len(OneToMany.objects.all()))
+        data = {
+            'a':3,
+            'one_to_manys_count':1,
+            'one_to_manys_pk_0':'',
+            'one_to_manys_b_0':''
+        }
+        form = self.klass(data)
+        form.save()
+        query = Complex.objects.all()
+        self.assert_(len(query)==1, len(query))
+        parent = query[0]
+        self.assert_(parent.a==3, parent.a)
+        self.assert_(len(OneToMany.objects.all())==0, len(OneToMany.objects.all()))
     
     def test_update(self):
         """
         Updates but only edits existing fields
         """
-        pass
+        self.assert_(len(Complex.objects.all())==0, len(Complex.objects.all()))
+        self.assert_(len(OneToMany.objects.all())==0, len(OneToMany.objects.all()))
+        parent = Complex()
+        parent.id = 1
+        parent.a = 2
+        parent.save()
+        child = OneToMany()
+        child.id = 1
+        child.b = 3
+        child.complex = parent
+        child.save()
+        data = {
+            'pk':1,
+            'a':4,
+            'one_to_manys_count':1,
+            'one_to_manys_pk_0':1,
+            'one_to_manys_b_0':5
+        }
+        form = self.klass(data)
+        form.save()
+        query = Complex.objects.all()
+        self.assert_(len(query)==1, len(query))
+        parent = query[0]
+        self.assert_(parent.a==4, parent.a)
+        children = parent.one_to_manys.all()
+        self.assert_(len(children)==1, len(children))
+        self.assert_(children[0].b==5, children[0].__dict__)
     
     def test_update_with_empty_values(self):
         """
         Tests saving but the related fields are all empty string ""
             * related objects with no values should be ignored
         """
-        pass
+        self.assert_(len(Complex.objects.all())==0, len(Complex.objects.all()))
+        self.assert_(len(OneToMany.objects.all())==0, len(OneToMany.objects.all()))
+        parent = Complex()
+        parent.id = 1
+        parent.a = 2
+        parent.save()
+        child = OneToMany()
+        child.id = 1
+        child.b = 3
+        child.complex = parent
+        child.save()
+        data = {
+            'pk':1,
+            'a':4,
+            'one_to_manys_count':2,
+            'one_to_manys_pk_0':1,
+            'one_to_manys_b_0':5,
+            'one_to_manys_pk_1':'',
+            'one_to_manys_b_1':''
+        }
+        form = self.klass(data)
+        form.save()
+        query = Complex.objects.all()
+        self.assert_(len(query)==1, len(query))
+        parent = query[0]
+        self.assert_(parent.a==4, parent.a)
+        children = parent.one_to_manys.all()
+        self.assert_(len(children)==1, len(children))
+        self.assert_(children[0].b==5, children[0].__dict__)
     
     def test_update_with_new_related(self):
-        pass
-    
+        self.assert_(len(Complex.objects.all())==0, len(Complex.objects.all()))
+        self.assert_(len(OneToMany.objects.all())==0, len(OneToMany.objects.all()))
+        parent = Complex()
+        parent.id = 1
+        parent.a = 2
+        parent.save()
+        child = OneToMany()
+        child.id = 1
+        child.b = 3
+        child.complex = parent
+        child.save()
+        data = {
+            'pk':1,
+            'a':4,
+            'one_to_manys_count':2,
+            'one_to_manys_pk_0':1,
+            'one_to_manys_b_0':5,
+            'one_to_manys_pk_1':'',
+            'one_to_manys_b_1':6
+        }
+        form = self.klass(data)
+        form.save()
+        query = Complex.objects.all()
+        self.assert_(len(query)==1, len(query))
+        parent = query[0]
+        self.assert_(parent.a==4, parent.a)
+        children = parent.one_to_manys.all()
+        self.assert_(len(children)==2, len(children))
+        self.assert_(children[0].b==5, children[0].__dict__)
+        self.assert_(children[1].b==6, children[1].__dict__)
     
     def test_permissions(self):
         pass
