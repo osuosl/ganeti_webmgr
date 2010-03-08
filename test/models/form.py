@@ -153,8 +153,8 @@ class Form_One_To_One_Test(unittest.TestCase):
         self.assert_(len(Complex.objects.all())==0, len(Complex.objects.all()))
         self.assert_(len(OneToOne.objects.all())==0, len(OneToOne.objects.all()))
         parent = Complex()
-        parent.a=3
         parent.id=1
+        parent.a=3
         parent.save()
         child = OneToOne()
         child.b=4

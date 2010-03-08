@@ -87,14 +87,15 @@ class ModelFormBase(forms.Form):
     Base Form class for basic models.  This form is capable of creating and
     updating instances of the associated model.
     """
+    fk_map = None
     
     def __init__(self, initial, *args, **kwargs):
-        for k in self.fk_map:
-            try:
-                initial['%s%s' % (self.prefix_, self.fk_map[k])] = initial[k]
-            except KeyError:
-                continue
-
+        if self.fk_map:
+            for k in self.fk_map:
+                try:
+                    initial['%s%s' % (self.prefix_, self.fk_map[k])] = initial[k]
+                except KeyError:
+                    continue
         super(ModelFormBase, self).__init__(initial, *args, **kwargs)
     
     def save(self):
@@ -104,17 +105,51 @@ class ModelFormBase(forms.Form):
         @returns - model instance that was created or saved
         """
         data = self.cleaned_data
-        if data['pk']:
-            instance = self.model.objects.get(pk=data['pk'])
+        instance = self.get_instance(data)
+        self.populate_instance(instance, data)
+        instance.save()
+        return instance
+    
+    def get_instance(self, data):
+        """
+        Gets an instance of a model.  Either an existing model is retrieved or
+        a new instance is created
+        """
+        if data['%spk' % self.prefix_]:
+            return self.model.objects.get(pk=data['%spk' % self.prefix_])
+        else:
+            return self.model()
+    
+    def populate_instance(self, instance, data):
+        """
+        Populate the instance
+        """
+        i = len(self.prefix_)
+        for k in data:
+            instance.__setattr__(k[i:], data[k])
+    
+    def save__(self):
+        """
+        Creates or saves an instance of this forms model using the form data
+        
+        @returns - model instance that was created or saved
+        """
+        data = self.cleaned_data
+        if data['%spk' % self.prefix_]:
+            instance = self.model.objects.get(pk=data['%spk' % self.prefix_])
+            print 'exist', instance, instance.__dict__
+            print 'data', data
         else:
             instance = self.model()
+        i = len(self.prefix_)
         for k in data:
-            instance.__setattr__(k, data[k])
+            instance.__setattr__(k[i:], data[k])
         instance.save()
+        print 'saved=>', instance.__dict__
         return instance
 
 
-class Related1To1Base(forms.Form):
+class Related1To1Base(ModelFormBase):
     """
     Base class for sub-forms generated for 1:1 relationships.  This subclass
     has a single form object and instance.
@@ -129,20 +164,18 @@ class Related1To1Base(forms.Form):
     
     def save(self, related):
         """
-        Updates an existing object if there is already a related object.  Else
-        it creates a new instance. Field prefixes are stripped off the values
-        as they are unpacked
+        update or create the object using the contained form's methods.  Set
+        the ForeignKey (fk) prior to saving
         """
-        try:
-            instance = self.model.objects.get(**{self.fk:related})
-        except self.model.DoesNotExist:
-            instance = self.model()
-            instance.__setattr__(self.fk, related)
         data = self.form_instance.cleaned_data
-        i = len(self.prefix_)
-        for k in data:
-            instance.__setattr__(k[i:], data[k])
+        instance = self.form_instance.get_instance(data)
+        self.form_instance.populate_instance(instance, data)
+        instance.__setattr__(self.fk, related)
         instance.save()
+
+    def populate_instance(self, instance, data, related):
+        super(ModelFormBase, self).populate_instance(instance, data)
+        instance.__setattr__(self.fk, related)
 
 
 class Related1ToMBase(forms.Form):
@@ -182,7 +215,7 @@ class Related1ToMBase(forms.Form):
     def save(self, related):
         for form in self.instances:
             if form.values:
-               form.save(related)
+                form.save(related)
 
 
 class Related1ToMChildBase(forms.Form):
