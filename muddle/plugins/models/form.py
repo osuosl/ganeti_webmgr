@@ -142,7 +142,7 @@ class Related1ToMBase(forms.Form):
     """
     def __init__(self, initial):
         super(Related1ToMBase, self).__init__(initial)
-        count = initial[self.count] if self.count in initial else 0
+        count = initial[self.count] if initial and self.count in initial else self.extra
         count = count+self.extra if count+self.extra < self.max_num else self.max_num
         self.instances = [self.get_instance(i, initial) for i in range(count)]
     
@@ -154,17 +154,19 @@ class Related1ToMBase(forms.Form):
 
     def is_valid(self):
         valid = True
-        errors = {'children':{}} if super_ else {'form':self.errors,children:{}}
+        errors = {'children':{}}
+        data = self.data
         for form in self.instances:
             if not form.is_valid():
                 valid = False
                 errors['children'][form.index] = form.errors
-        self.errors = errors
+        self.__dict__['errors'] = errors
         return valid
 
     def save(self, related):
         for form in self.instances:
-            form.save(related)
+            if form.values:
+               form.save(related)
 
 
 class Related1ToMChildBase(forms.Form):
@@ -188,6 +190,19 @@ class Related1ToMChildBase(forms.Form):
         for k in data:
             instance.__setattr__(k[i:-e], data[k])
         instance.save()
+    
+    def is_valid(self):
+        empty = True
+        data = self.data
+        for key in self.fields.keys():
+            if key in data and data[key]:
+                empty = False
+                break
+        if empty:
+            self.values = False
+            return True
+        self.values = True
+        return super(Related1ToMChildBase, self).is_valid()
 
 
 class ParentBase(forms.Form):
@@ -358,7 +373,7 @@ class ModelEditView(View):
 
         one_to_many = {}
         for k in w.one_to_many.keys():
-            one_to_many[k] = self.get_formset(w.one_to_many[k], k)
+            one_to_many[k] = self.get_formset(w, w.one_to_many[k], k)
 
         return {
             'model':w.model,
@@ -474,7 +489,7 @@ class ModelEditView(View):
         klass = forms.ModelChoiceField
         return klass(**defaults)
 
-    def get_formset(self, wrapper, prefix, path=None):
+    def get_formset(self, root, wrapper, prefix, path=None):
         """
         Returns a Related1ToMBase class for use displaying 1:M forms
         """
@@ -482,7 +497,7 @@ class ModelEditView(View):
         exclude = []
         
         attrs = {
-            #"fk_name": self.fk_name,
+            "fk": dict_key(wrapper.many_to_one, root),
             "count":'%s_count' % prefix,
             "extra": 1,
             "max_num": 10,

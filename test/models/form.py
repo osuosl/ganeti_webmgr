@@ -385,8 +385,8 @@ class Form_One_To_Many_Test(unittest.TestCase):
         data = {
             'pk':1,
             'one_to_manys_count':1,
-            'one_to_manys_complex_1':1,
-            'one_to_many_b_1':2
+            'one_to_manys_complex_0':1,
+            'one_to_manys_b_0':2
         }
         i = self.klass(data)
         self.assert_(len(i.one_to_many_instances)==1, i.one_to_many_instances)
@@ -417,6 +417,7 @@ class Form_One_To_Many_Test(unittest.TestCase):
         self.assert_(len(query)==1, len(query))
         parent = query[0]
         self.assert_(parent.a==3, parent.a)
+        self.assert_(len(OneToMany.objects.all())==0, len(OneToMany.objects.all()))
     
     def test_create_one(self):
         """
@@ -428,8 +429,8 @@ class Form_One_To_Many_Test(unittest.TestCase):
             'pk':1,
             'a':3,
             'one_to_manys_count':1,
-            'one_to_manys_complex_1':1,
-            'one_to_many_b_1':4
+            'one_to_manys_complex_0':1,
+            'one_to_manys_b_0':4
         }
         form = self.klass(data)
         form.save()
@@ -451,10 +452,10 @@ class Form_One_To_Many_Test(unittest.TestCase):
             'pk':1,
             'a':3,
             'one_to_manys_count':2,
+            'one_to_manys_complex_0':1,
+            'one_to_manys_b_0':4,
             'one_to_manys_complex_1':1,
-            'one_to_many_b_1':4,
-            'one_to_manys_complex_2':1,
-            'one_to_many_b_1':5
+            'one_to_manys_b_1':5
         }
         form = self.klass(data)
         form.save()
