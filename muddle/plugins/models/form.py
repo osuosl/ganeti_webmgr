@@ -147,7 +147,13 @@ class Related1ToMBase(forms.Form):
         self.instances = [self.get_instance(i, initial) for i in range(count)]
     
     def get_instance(self, index, initial):
-        attrs = {'fk':self.fk, 'index':index, 'model':self.model, 'prefix_':self.prefix_}
+        attrs = {
+                'pk':'%s_pk_%s ' % (self.prefix_, index),
+                'fk':self.fk,
+                'index':index,
+                'model':self.model,
+                'prefix_':self.prefix_
+                }
         for k, v in self.attrs.items():
             attrs['%s_%d' % (k,index)] = v
         return type('Related1ToMChildForm', (Related1ToMChildBase,), attrs)(initial)
@@ -179,14 +185,14 @@ class Related1ToMChildBase(forms.Form):
         it creates a new instance. Field prefixes are stripped off the values
         as they are unpacked
         """
+        data = self.cleaned_data
+        s = len(self.prefix_)+1
+        e = len('_%d'%self.index)
         try:
-            instance = self.model.objects.get(**{self.fk:related})
-        except self.model.DoesNotExist:
+            instance = self.model.objects.get(pk=data[self.pk])
+        except (self.model.DoesNotExist, KeyError):
             instance = self.model()
             instance.__setattr__(self.fk, related)
-        data = self.cleaned_data
-        s = len(self.prefix_)
-        e = len('_%d'%self.index)
         for k in data:
             instance.__setattr__(k[s:-e], data[k])
         instance.save()
@@ -455,7 +461,6 @@ class ModelEditView(View):
             attrs['%s%s' % (prefix, k)] = self.get_form_field(wrapper.fields[k], path, label=k)
         
         for k in filter(exclude_l, wrapper.many_to_one):
-            print k, path, exclude
             field = wrapper.fk[k]
             attrs['%s%s' % (prefix, k)] = self.get_fk_field(
                                             wrapper.many_to_one[k].model,
@@ -501,14 +506,16 @@ class ModelEditView(View):
         fields = None
         fk = dict_key(wrapper.many_to_one, root)
         options = {'exclude':[fk]}
+        fields = self.get_fields(wrapper, path=options, prefix=prefix)
+        fields['%s_pk' % prefix] = self.get_form_field(wrapper.pk, path, required=False, widget=forms.HiddenInput())
         attrs = {
-            "model":wrapper.model, 
+            "model":wrapper.model,
             "fk": fk,
             "count":'%s_count' % prefix,
             "extra": 1,
             "max_num": 10,
             "prefix_":prefix,
-            "attrs":self.get_fields(wrapper, path=options, prefix=prefix)
+            "attrs":fields
         }
         
         return type('Related1ToMForm', (Related1ToMBase,), attrs)

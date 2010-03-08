@@ -12,14 +12,14 @@ from test_app.models import *
 
 def suite():
     return unittest.TestSuite([
-            #unittest.TestLoader().loadTestsFromTestCase(Form_Simple_Test),
-            #unittest.TestLoader().loadTestsFromTestCase(Form_Child_Test),
-            #unittest.TestLoader().loadTestsFromTestCase(Form_Parent_Test),
-            #unittest.TestLoader().loadTestsFromTestCase(Form_Parent_Depth_Test),
-            #unittest.TestLoader().loadTestsFromTestCase(Form_One_To_One_Test),
+            unittest.TestLoader().loadTestsFromTestCase(Form_Simple_Test),
+            unittest.TestLoader().loadTestsFromTestCase(Form_Child_Test),
+            unittest.TestLoader().loadTestsFromTestCase(Form_Parent_Test),
+            unittest.TestLoader().loadTestsFromTestCase(Form_Parent_Depth_Test),
+            unittest.TestLoader().loadTestsFromTestCase(Form_One_To_One_Test),
             unittest.TestLoader().loadTestsFromTestCase(Form_One_To_Many_Test),
-            #unittest.TestLoader().loadTestsFromTestCase(Form_Many_To_One_Test),
-            #unittest.TestLoader().loadTestsFromTestCase(Form_Many_To_Many_Test),
+            unittest.TestLoader().loadTestsFromTestCase(Form_Many_To_One_Test),
+            unittest.TestLoader().loadTestsFromTestCase(Form_Many_To_Many_Test),
         ])
 
 
@@ -374,8 +374,9 @@ class Form_One_To_Many_Test(unittest.TestCase):
         subklass = dict['one_to_many'].values()[0]
         self.assert_(issubclass(subklass, Related1ToMBase), subklass)
         attrs = subklass.attrs
-        self.assert_(len(attrs)==1, attrs)
+        self.assert_(len(attrs)==2, attrs)
         self.assert_('one_to_manys_b' in attrs, attrs)
+        self.assert_('one_to_manys_pk' in attrs, attrs)
 
     def test_bound_structure(self):
         """
