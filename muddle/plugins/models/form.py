@@ -106,7 +106,6 @@ class ModelFormBase(forms.Form):
         """
         data = self.cleaned_data
         instance = self.get_instance(data)
-        self.populate_instance(instance, data)
         instance.save()
         return instance
     
@@ -116,36 +115,13 @@ class ModelFormBase(forms.Form):
         a new instance is created
         """
         if data['%spk' % self.prefix_]:
-            return self.model.objects.get(pk=data['%spk' % self.prefix_])
-        else:
-            return self.model()
-    
-    def populate_instance(self, instance, data):
-        """
-        Populate the instance
-        """
-        i = len(self.prefix_)
-        for k in data:
-            instance.__setattr__(k[i:], data[k])
-    
-    def save__(self):
-        """
-        Creates or saves an instance of this forms model using the form data
-        
-        @returns - model instance that was created or saved
-        """
-        data = self.cleaned_data
-        if data['%spk' % self.prefix_]:
             instance = self.model.objects.get(pk=data['%spk' % self.prefix_])
-            print 'exist', instance, instance.__dict__
-            print 'data', data
         else:
             instance = self.model()
         i = len(self.prefix_)
         for k in data:
             instance.__setattr__(k[i:], data[k])
-        instance.save()
-        print 'saved=>', instance.__dict__
+            
         return instance
 
 
@@ -169,7 +145,6 @@ class Related1To1Base(ModelFormBase):
         """
         data = self.form_instance.cleaned_data
         instance = self.form_instance.get_instance(data)
-        self.form_instance.populate_instance(instance, data)
         instance.__setattr__(self.fk, related)
         instance.save()
 
@@ -254,7 +229,7 @@ class Related1ToMChildBase(forms.Form):
         return super(Related1ToMChildBase, self).is_valid()
 
 
-class ParentBase(forms.Form):
+class ParentBase(ModelFormBase):
     """
     Base class for a form encapsulating a parent class and its descendents. Each
     child class will have a sub-form.  One of the subforms will be selected.
@@ -272,12 +247,9 @@ class ParentBase(forms.Form):
             instances[k] = self.children[k](initial)
         self.instances = instances
     
-    def save(self):
-        """
-        Save the selected child form, else save the parent.  When saving a child
-        model parent values are copied into the child.  Django handles saving
-        the parent internally
-        """
+    
+    
+    def get_instance(self, data):
         key = self.data['%sselected_child' % self.prefix_]
         if key:
             form = self.instances[key]
@@ -294,14 +266,12 @@ class ParentBase(forms.Form):
         i = len(self.prefix_)
         for k in data:
             instance.__setattr__(k[i:], data[k])
-
         if key:
             data = form.cleaned_data
             i = len(form.prefix_)
             for k in data:
                 instance.__setattr__(k[i:], data[k])
         
-        instance.save()
         return instance
     
     def is_valid(self):
