@@ -1,6 +1,7 @@
 from django import forms
 from django.forms.extras import widgets
 from django.db.models import fields
+from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
@@ -74,13 +75,12 @@ class CompositeFormBase(forms.Form):
         """
         if not self.is_valid():
             raise Exception(self.errors)
-        
         instance = self.form_instance.save()
         for form in self.one_to_one_instances.values():
             form.save(instance)
         for form in self.one_to_many_instances.values():
             form.save(instance)
-
+        return instance
 
 class ModelFormBase(forms.Form):
     """
@@ -235,7 +235,7 @@ class ParentBase(forms.Form):
         model parent values are copied into the child.  Django handles saving
         the parent internally
         """
-        key = self.data['%s_selected_child' % self.prefix_]
+        key = self.data['%sselected_child' % self.prefix_]
         if key:
             form = self.instances[key]
         else:
@@ -267,7 +267,7 @@ class ParentBase(forms.Form):
         """
         valid = super(ParentBase, self).is_valid()
         errors = {} if valid else {'parent':self.errors}
-        key = self.data['%s_selected_child' % self.prefix_]
+        key = self.data['%sselected_child' % self.prefix_]
         if key:
             child = self.instances[key]
             if not child.is_valid():
@@ -299,14 +299,16 @@ class ModelEditView(View):
             #process form
             form = klass(request.POST)
             if form.is_valid():
-                form.save()
-                return HttpResponseRedirect()
-            
+                instance = form.save()
+                return HttpResponseRedirect('/o/%s/%s' % (self.wrapper.name(), instance.id))
+
         elif id:
             # fill form values from model instance
             instance = self.wrapper.model.objects.get(pk=id)
             data = {}
             data.update(instance.__dict__)
+            data['pk'] = instance.__dict__[self.wrapper.pk.attname]
+            
             for field, fw in self.wrapper.one_to_one.items():
                 related = instance.__getattribute__(field)
                 if fw.children:
@@ -322,16 +324,18 @@ class ModelEditView(View):
                 else:
                     for k,v in related.__dict__.items():
                         data['%s_%s' % (field, k)] = v
-                        
+                data['%s_pk' % field] = related.__dict__[fw.pk.attname]
             for field, fw in self.wrapper.one_to_many.items():
                 related = instance.__getattribute__(field).all()
                 count = 0
                 for one_to_many in related:
                     for k,v in one_to_many.__dict__.items():
                         data['%s_%s_%d' % (field, k, count)] = v
-                        count += 1
-                data['%s_count' % field] = len(related)
+                        data['%s_pk_%d' % (field,count)] = one_to_many.__dict__[fw.pk.attname]
+                    count += 1
                 
+                data['%s_count' % field] = len(related)
+            
             form = klass(data)
         else:
             # unbound form
@@ -373,7 +377,7 @@ class ModelEditView(View):
                     'fk':dict_key(w.one_to_one[k].one_to_one, w),
                     'prefix_':'%s_' % k,
                     'model':w.one_to_one[k].model,
-                    'form':self.form_factory(w.one_to_one[k], k)
+                    'form':self.form_factory(w.one_to_one[k], prefix='%s_'%k)
                     }
             one_to_one[k] = type('Related1To1Form', (Related1To1Base,), inner_attrs)
 
@@ -399,7 +403,7 @@ class ModelEditView(View):
     def get_vanilla_form(self, wrapper, path=[], prefix=''):
         attrs = {
             'model':wrapper.model,
-            'pk':self.get_form_field(wrapper.pk, path, required=False, widget=forms.HiddenInput()),
+            '%spk' % prefix:self.get_form_field(wrapper.pk, path, required=False)#, widget=forms.HiddenInput()),
             }
         return type( 'ModelForm', (ModelFormBase,), \
             self.get_fields(wrapper, attrs, path, prefix=prefix))
@@ -417,9 +421,9 @@ class ModelEditView(View):
             'children':children,
             'recurse':recurse,
             'prefix_':prefix,
-            'pk':self.get_form_field(wrapper.pk, path, required=False, widget=forms.HiddenInput()),
+            '%spk'%prefix:self.get_form_field(wrapper.pk, path, required=False), #widget=forms.HiddenInput()),
             'model':wrapper.model,
-            '%s_selected_child' % prefix:forms.CharField(max_length=64, required=False, widget=forms.HiddenInput(attrs={'class':'selecter'}))
+            '%sselected_child' % prefix:forms.CharField(max_length=64, required=False, widget=forms.HiddenInput(attrs={'class':'selecter'}))
             }
         self.get_fields(wrapper, attrs, path, prefix=prefix)
         return type('ParentModelForm', (ParentBase,), attrs)
@@ -507,7 +511,7 @@ class ModelEditView(View):
         fk = dict_key(wrapper.many_to_one, root)
         options = {'exclude':[fk]}
         fields = self.get_fields(wrapper, path=options, prefix=prefix)
-        fields['%s_pk' % prefix] = self.get_form_field(wrapper.pk, path, required=False, widget=forms.HiddenInput())
+        fields['%s_pk' % prefix] = self.get_form_field(wrapper.pk, path, required=False)#, widget=forms.HiddenInput())
         attrs = {
             "model":wrapper.model,
             "fk": fk,

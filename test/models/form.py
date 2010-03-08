@@ -160,7 +160,7 @@ class Form_One_To_One_Test(unittest.TestCase):
         child.b=4
         child.complex = parent
         child.save()
-        form = self.klass({'pk':1, 'a':5, 'onetoone_b':6})
+        form = self.klass({'pk':1, 'a':5, 'onetoone_pk':child.id, 'onetoone_b':6})
         form.save()
         parent = Complex.objects.get(id=1)
         child = parent.onetoone
@@ -207,7 +207,7 @@ class Form_Parent_Test(unittest.TestCase):
         self.assert_(len(Extended.objects.all())==0, len(Extended.objects.all()))
         self.assert_(len(ChildA.objects.all())==0, len(ChildA.objects.all()))
         self.assert_(len(ChildB.objects.all())==0, len(ChildB.objects.all()))
-        form = self.klass({'_selected_child':'', 'a':5})
+        form = self.klass({'selected_child':'', 'a':5})
         form.save()
         self.assert_(len(Extended.objects.all())==1, len(Extended.objects.all()))
         self.assert_(len(ChildA.objects.all())==0, len(ChildA.objects.all()))
@@ -219,7 +219,7 @@ class Form_Parent_Test(unittest.TestCase):
         self.assert_(len(Extended.objects.all())==0, len(Extended.objects.all()))
         self.assert_(len(ChildA.objects.all())==0, len(ChildA.objects.all()))
         self.assert_(len(ChildB.objects.all())==0, len(ChildB.objects.all()))
-        form = self.klass({'_selected_child':'ChildA', 'a':5, 'childa_b':6})
+        form = self.klass({'selected_child':'ChildA', 'a':5, 'childa_b':6})
         form.save()
         self.assert_(len(Extended.objects.all())==1, len(Extended.objects.all()))
         self.assert_(len(ChildA.objects.all())==1, len(ChildA.objects.all()))
@@ -239,7 +239,7 @@ class Form_Parent_Test(unittest.TestCase):
         child.a = 5
         child.b = 6
         child.save()
-        form = self.klass({'_selected_child':'ChildA', 'pk':1, 'childa_id':1, 'a':7, 'childa_b':8})
+        form = self.klass({'selected_child':'ChildA', 'pk':1, 'childa_id':1, 'a':7, 'childa_b':8})
         form.save()
         self.assert_(len(Extended.objects.all())==1, len(Extended.objects.all()))
         self.assert_(len(ChildA.objects.all())==1, len(ChildA.objects.all()))
@@ -258,7 +258,7 @@ class Form_Parent_Test(unittest.TestCase):
         parent.id = 1
         parent.a = 4
         parent.save()
-        form = self.klass({'_selected_child':'', 'pk':1, 'a':5})
+        form = self.klass({'selected_child':'', 'pk':1, 'a':5})
         form.save()
         self.assert_(len(Extended.objects.all())==1, len(Extended.objects.all()))
         self.assert_(len(ChildA.objects.all())==0, len(ChildA.objects.all()))
