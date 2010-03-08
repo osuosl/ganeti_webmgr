@@ -12,14 +12,14 @@ from test_app.models import *
 
 def suite():
     return unittest.TestSuite([
-            unittest.TestLoader().loadTestsFromTestCase(Form_Simple_Test),
-            unittest.TestLoader().loadTestsFromTestCase(Form_Child_Test),
-            unittest.TestLoader().loadTestsFromTestCase(Form_Parent_Test),
-            unittest.TestLoader().loadTestsFromTestCase(Form_Parent_Depth_Test),
-            unittest.TestLoader().loadTestsFromTestCase(Form_One_To_One_Test),
+            #unittest.TestLoader().loadTestsFromTestCase(Form_Simple_Test),
+            #unittest.TestLoader().loadTestsFromTestCase(Form_Child_Test),
+            #unittest.TestLoader().loadTestsFromTestCase(Form_Parent_Test),
+            #unittest.TestLoader().loadTestsFromTestCase(Form_Parent_Depth_Test),
+            #unittest.TestLoader().loadTestsFromTestCase(Form_One_To_One_Test),
             unittest.TestLoader().loadTestsFromTestCase(Form_One_To_Many_Test),
-            unittest.TestLoader().loadTestsFromTestCase(Form_Many_To_One_Test),
-            unittest.TestLoader().loadTestsFromTestCase(Form_Many_To_Many_Test),
+            #unittest.TestLoader().loadTestsFromTestCase(Form_Many_To_One_Test),
+            #unittest.TestLoader().loadTestsFromTestCase(Form_Many_To_Many_Test),
         ])
 
 
@@ -374,9 +374,8 @@ class Form_One_To_Many_Test(unittest.TestCase):
         subklass = dict['one_to_many'].values()[0]
         self.assert_(issubclass(subklass, Related1ToMBase), subklass)
         attrs = subklass.attrs
-        self.assert_(len(attrs)==2, attrs)
+        self.assert_(len(attrs)==1, attrs)
         self.assert_('one_to_manys_b' in attrs, attrs)
-        self.assert_('one_to_manys_complex' in attrs, attrs)
 
     def test_bound_structure(self):
         """
@@ -426,7 +425,6 @@ class Form_One_To_Many_Test(unittest.TestCase):
         self.assert_(len(Complex.objects.all())==0, len(Complex.objects.all()))
         self.assert_(len(OneToMany.objects.all())==0, len(OneToMany.objects.all()))
         data = {
-            'pk':1,
             'a':3,
             'one_to_manys_count':1,
             'one_to_manys_complex_0':1,
@@ -440,7 +438,7 @@ class Form_One_To_Many_Test(unittest.TestCase):
         self.assert_(parent.a==3, parent.a)
         children = parent.one_to_manys.all()
         self.assert_(len(children)==1, len(children))
-        self.assert_(children[0].b==4, children[0].b)
+        self.assert_(children[0].b==4, children[0].__dict__)
     
     def test_create_two(self):
         """
@@ -449,7 +447,6 @@ class Form_One_To_Many_Test(unittest.TestCase):
         self.assert_(len(Complex.objects.all())==0, len(Complex.objects.all()))
         self.assert_(len(OneToMany.objects.all())==0, len(OneToMany.objects.all()))
         data = {
-            'pk':1,
             'a':3,
             'one_to_manys_count':2,
             'one_to_manys_complex_0':1,

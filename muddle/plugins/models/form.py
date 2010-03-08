@@ -147,7 +147,7 @@ class Related1ToMBase(forms.Form):
         self.instances = [self.get_instance(i, initial) for i in range(count)]
     
     def get_instance(self, index, initial):
-        attrs = {'fk':self.fk, 'index':index}
+        attrs = {'fk':self.fk, 'index':index, 'model':self.model, 'prefix_':self.prefix_}
         for k, v in self.attrs.items():
             attrs['%s_%d' % (k,index)] = v
         return type('Related1ToMChildForm', (Related1ToMChildBase,), attrs)(initial)
@@ -184,11 +184,11 @@ class Related1ToMChildBase(forms.Form):
         except self.model.DoesNotExist:
             instance = self.model()
             instance.__setattr__(self.fk, related)
-        data = self.form_instance.cleaned_data
+        data = self.cleaned_data
         s = len(self.prefix_)
         e = len('_%d'%self.index)
         for k in data:
-            instance.__setattr__(k[i:-e], data[k])
+            instance.__setattr__(k[s:-e], data[k])
         instance.save()
     
     def is_valid(self):
@@ -441,6 +441,10 @@ class ModelEditView(View):
         attrs = {} if attrs == None else attrs
         prefix = '%s_' % prefix if prefix and prefix[-1]!='_' else prefix
         
+        # create exclude lambda, if no excludes the lambda always returns true
+        exclude = path['exclude'] if path and 'exclude' in path else []
+        exclude_l = lambda x: x not in exclude if exclude else lambda x: 1
+        
         if parent and wrapper.parent:
             # we're parsing an object starting with the child.  Get the parent
             # fields too
@@ -450,7 +454,8 @@ class ModelEditView(View):
         for k in wrapper.fields.keys():
             attrs['%s%s' % (prefix, k)] = self.get_form_field(wrapper.fields[k], path, label=k)
         
-        for k in wrapper.many_to_one:
+        for k in filter(exclude_l, wrapper.many_to_one):
+            print k, path, exclude
             field = wrapper.fk[k]
             attrs['%s%s' % (prefix, k)] = self.get_fk_field(
                                             wrapper.many_to_one[k].model,
@@ -494,14 +499,16 @@ class ModelEditView(View):
         Returns a Related1ToMBase class for use displaying 1:M forms
         """
         fields = None
-        exclude = []
-        
+        fk = dict_key(wrapper.many_to_one, root)
+        options = {'exclude':[fk]}
         attrs = {
-            "fk": dict_key(wrapper.many_to_one, root),
+            "model":wrapper.model, 
+            "fk": fk,
             "count":'%s_count' % prefix,
             "extra": 1,
             "max_num": 10,
-            "attrs":self.get_fields(wrapper, prefix=prefix)
+            "prefix_":prefix,
+            "attrs":self.get_fields(wrapper, path=options, prefix=prefix)
         }
         
         return type('Related1ToMForm', (Related1ToMBase,), attrs)
