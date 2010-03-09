@@ -257,8 +257,8 @@ class ParentBase(ModelFormBase):
             form = self
         
         data = self.cleaned_data
-        if data['pk']:
-            instance = form.model.objects.get(pk=data['pk'])
+        if data['%spk' % self.prefix_]:
+            instance = form.model.objects.get(pk=data['%spk' % self.prefix_])
         else:
             instance = form.model()
         
