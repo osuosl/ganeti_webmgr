@@ -48,10 +48,10 @@
         $(document).ready(function() {
             $('input.selecter').each(function(){
                 $this = $(this);
-                $('#'+$this.val()).show();
-                $this.prev().children('.'+$this.val()).addClass('selected');
                 
-                $this.prev().find('li').click(function(){
+                $('#'+$this.val()).show();
+                $this.prevAll('ul.child_selecter').children('.'+$this.val()).addClass('selected'); 
+                $this.prevAll('ul.child_selecter').find('li').click(function(){
                     $this = $(this);
                     val = $this.html();
                     $this.addClass('selected')
@@ -67,7 +67,7 @@
 
 {% block content %}
 
-    <form id="edit" method="post" action="#">
+    <form id="edit" method="post" >
         
         <h1>{{wrapper.name}}</h1>
         {% with form.form_instance as form %}
