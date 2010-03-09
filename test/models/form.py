@@ -20,6 +20,7 @@ def suite():
             unittest.TestLoader().loadTestsFromTestCase(Form_One_To_Many_Test),
             unittest.TestLoader().loadTestsFromTestCase(Form_Many_To_One_Test),
             unittest.TestLoader().loadTestsFromTestCase(Form_Many_To_Many_Test),
+            unittest.TestLoader().loadTestsFromTestCase(Form_One_To_One_Parent_Test),
         ])
 
 
@@ -648,6 +649,73 @@ class Form_Many_To_Many_Test(unittest.TestCase):
     
     def test_load(self):
         pass
+    
+    def test_permissions(self):
+        pass
+    
+
+class Form_One_To_One_Parent_Test(unittest.TestCase):
+    """
+    Tests for a model that has a 1:1 relationship to a model that is extended
+    """
+
+    def setUp(self):
+        root = RootPluginManager()
+        config = PluginConfig()
+        manager = ModelManager(root, config)
+        complex = ModelWrapper(Complex)
+        parent = ModelWrapper(OneToOneExtended)
+        childa = ModelWrapper(OneToOneChildA)
+        childb = ModelWrapper(OneToOneChildB)
+        manager.register(complex)
+        manager.register(parent)
+        manager.register(childa)
+        manager.register(childb)
+        view = ModelEditView(parent)
+        self.attrs = view._get_form()
+        self.klass = view.get_form()
+
+    def tearDown(self):
+        OneToOne.objects.all().delete()
+        Complex.objects.all().delete()
+
+    def test_form_structure(self):
+        dict = self.attrs
+        # field contents
+        self.assert_('onetooneparent' in dict['one_to_one'], dict)
+
+    def test_create(self):
+        self.assert_(len(Complex.objects.all())==0, len(Complex.objects.all()))
+        self.assert_(len(OneToOneExtended.objects.all())==0, len(OneToOneExtended.objects.all()))
+        self.assert_(len(OneToOneChildA.objects.all())==0, len(OneToOneChildA.objects.all()))
+        form = self.klass({'a':1,'onetoone_b':2})
+        form.save()
+        self.assert_(len(Complex.objects.all())==1, len(Complex.objects.all()))
+        self.assert_(len(OneToOneExtended.objects.all())==1, len(OneToOneExtended.objects.all()))
+        parent = Complex.objects.all()[0]
+        child = OneToOne.objects.all()[0]
+        self.assert_(parent.onetoone.id==child.id, (parent.onetoone.id,child.id))
+        self.assert_(child.complex.id==parent.id, (child.complex.id, parent.id))
+    
+    def test_update(self):
+        self.assert_(len(Complex.objects.all())==0, len(Complex.objects.all()))
+        self.assert_(len(OneToOneExtended.objects.all())==0, len(OneToOneExtended.objects.all()))
+        self.assert_(len(OneToOneChildA.objects.all())==0, len(OneToOneChildA.objects.all()))
+        parent = Complex()
+        parent.id=1
+        parent.a=3
+        parent.save()
+        child = OneToOne()
+        child.b=4
+        child.complex = parent
+        child.save()
+        form = self.klass({'pk':1, 'a':5, 'onetoone_pk':child.id, 'onetoone_b':6})
+        form.save()
+        parent = Complex.objects.get(id=1)
+        child = parent.onetoone
+        self.assert_(parent.a==5, parent.a)
+        self.assert_(child.b==6, child.b)
+        
     
     def test_permissions(self):
         pass
