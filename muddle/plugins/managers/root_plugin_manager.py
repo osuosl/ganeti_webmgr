@@ -42,7 +42,7 @@ class RootPluginManager(PluginManager):
                 class_ = __import__(from_, {}, {}, [name]).__dict__[name]
             class_.core = True
             self.register(class_)
-        map(self.enable, self.plugins.keys())
+            self.enable(name)
 
     def __init_process_synchronization(self, multi_process):
         """
