@@ -186,6 +186,7 @@ class RootPluginManager(PluginManager):
             for depended_plugin in plugin.get_depended():
                 self.__disable(depended_plugin)
             self.__disable(plugin)
+        print '[info] disabled: %s' % name
 
     def __disable(self, plugin):
         """
@@ -197,8 +198,45 @@ class RootPluginManager(PluginManager):
         """
         del self.enabled[plugin.name()]
         config = PluginConfig.objects.get(name=plugin.name())
+        
+        # register objects
+        class_ = plugin.__class__
+        if isinstance(class_.objects, (list, tuple)):
+            map(self.__deregister_object, class_.objects)
+        else:
+            self.__deregister_object(class_.objects)
+        self.__deregister_object(plugin)
+        
         config.enabled = False
         config.save()
+
+    def __deregister_object(self, obj):
+        """
+        Deregisters an object with a manager.  This removes a object from a
+        manager.
+        
+        an example of this is registering a PluginManager that manages Models
+        or registering a Model with the ModelManager.
+        
+        @param obj - instance of Registerable or a known type that has been
+        given a shortcut for easier registration.
+        
+        known types: models.Model
+        """
+        if not isinstance(obj, Registerable):
+            try:
+                found = False
+                for name, object_type in self['TypeManager'].plugins.items():
+                    if object_type.class_ == obj.__class__:
+                        obj = object_type.wrapper(obj)
+                        found = True
+                        break
+                if not found:
+                    raise Exception('Class is not registerable: %s' % obj.__name__)
+            except KeyError:
+                raise Exception('Class is not registerable: %s' % obj.__name__)
+        manager = self[obj._target]
+        manager.deregister(obj)
 
     def enable(self, name):
         """
