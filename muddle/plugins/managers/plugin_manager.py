@@ -1,3 +1,5 @@
+from muddle.plugins.plugin import Plugin
+
 class PluginManager(object):
     """
     Manages the lifecycle of plugins.  Plugins may be registered making the
@@ -68,4 +70,11 @@ class PluginManager(object):
         for plugin in plugins:
             self.register(plugin)
 
-    
+
+class PlugableManager(Plugin, PluginManager):
+    """
+    Manager that is also a plugin
+    """
+    def __init__(self, *args, **kwargs):
+        Plugin.__init__(self, *args, **kwargs)
+        PluginManager.__init__(self)
