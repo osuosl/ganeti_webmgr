@@ -37,7 +37,7 @@ def requires_config_lock(fn):
 
     return new
 
-
+@user_passes_test(lambda u: u.has_perm('muddle.change_pluginconfig'))
 def plugins(request):
     """
     Renders configuration page for plugins
@@ -79,6 +79,7 @@ def dependeds(request):
     return HttpResponse(simplejson.dumps(plugins))
 
 
+@user_passes_test(lambda u: u.has_perm('muddle.change_pluginconfig'))
 @requires_config_lock
 def enable(request):
     """
@@ -104,6 +105,7 @@ def enable(request):
         return HttpResponse(simplejson.dumps([-1, error]))
 
 
+@user_passes_test(lambda u: u.has_perm('muddle.change_pluginconfig'))
 @requires_config_lock
 def disable(request):
     """
@@ -122,6 +124,7 @@ def disable(request):
     return HttpResponse(simplejson.dumps(disabled))
 
 
+@user_passes_test(lambda u: u.has_perm('muddle.change_pluginconfig'))
 def config(request, name):
     """
     Config edit page for plugins.  This is a generic handler that deals with
@@ -148,6 +151,8 @@ def config(request, name):
         form = form_class(plugin_config.config)
         return render_to_response('config.html', {'name':name, 'form':form})
 
+
+@user_passes_test(lambda u: u.has_perm('muddle.plugins_config'))
 @requires_config_lock
 def config_save(request, name):
     """
