@@ -671,51 +671,122 @@ class Form_One_To_One_Parent_Test(unittest.TestCase):
         manager.register(parent)
         manager.register(childa)
         manager.register(childb)
-        view = ModelEditView(parent)
+        view = ModelEditView(complex)
         self.attrs = view._get_form()
         self.klass = view.get_form()
 
     def tearDown(self):
-        OneToOne.objects.all().delete()
+        OneToOneExtended.objects.all().delete()
+        OneToOneChildA.objects.all().delete()
+        OneToOneChildB.objects.all().delete()
         Complex.objects.all().delete()
 
     def test_form_structure(self):
         dict = self.attrs
         # field contents
-        self.assert_('onetooneparent' in dict['one_to_one'], dict)
+        self.assert_('onetooneextended' in dict['one_to_one'], dict)
 
-    def test_create(self):
+    def test_create_parent(self):
+        """
+        Test creating an 1:1 related object with an extended object, the parent
+        class is selected as the type to create
+        """
         self.assert_(len(Complex.objects.all())==0, len(Complex.objects.all()))
         self.assert_(len(OneToOneExtended.objects.all())==0, len(OneToOneExtended.objects.all()))
         self.assert_(len(OneToOneChildA.objects.all())==0, len(OneToOneChildA.objects.all()))
-        form = self.klass({'a':1,'onetoone_b':2})
+        self.assert_(len(OneToOneChildB.objects.all())==0, len(OneToOneChildB.objects.all()))
+        form = self.klass({'a':1, 'onetooneextended_selected_child':'', 'onetooneextended_b':2})
         form.save()
         self.assert_(len(Complex.objects.all())==1, len(Complex.objects.all()))
         self.assert_(len(OneToOneExtended.objects.all())==1, len(OneToOneExtended.objects.all()))
+        self.assert_(len(OneToOneChildA.objects.all())==0, len(OneToOneChildA.objects.all()))
+        self.assert_(len(OneToOneChildB.objects.all())==0, len(OneToOneChildB.objects.all()))
         parent = Complex.objects.all()[0]
-        child = OneToOne.objects.all()[0]
-        self.assert_(parent.onetoone.id==child.id, (parent.onetoone.id,child.id))
+        child = OneToOneExtended.objects.all()[0]
+        self.assert_(parent.onetooneextended.id==child.id, (parent.onetooneextended.id,child.id))
         self.assert_(child.complex.id==parent.id, (child.complex.id, parent.id))
-    
-    def test_update(self):
+        self.assert_(child.b==2, child.b)
+
+    def test_create_child(self):
+        """
+        Test creating a 1:1 related object with an extended object, a child class
+        is selected as the type to create
+        """
         self.assert_(len(Complex.objects.all())==0, len(Complex.objects.all()))
         self.assert_(len(OneToOneExtended.objects.all())==0, len(OneToOneExtended.objects.all()))
         self.assert_(len(OneToOneChildA.objects.all())==0, len(OneToOneChildA.objects.all()))
+        self.assert_(len(OneToOneChildB.objects.all())==0, len(OneToOneChildB.objects.all()))
+        form = self.klass({'a':1, 'onetooneextended_selected_child':'OneToOneChildA', 'onetooneextended_b':2, 'onetoonechilda_c':3})
+        form.save()
+        self.assert_(len(Complex.objects.all())==1, len(Complex.objects.all()))
+        self.assert_(len(OneToOneExtended.objects.all())==1, len(OneToOneExtended.objects.all()))
+        self.assert_(len(OneToOneChildA.objects.all())==1, len(OneToOneChildA.objects.all()))
+        self.assert_(len(OneToOneChildB.objects.all())==0, len(OneToOneChildB.objects.all()))
+        parent = Complex.objects.all()[0]
+        child = OneToOneChildA.objects.all()[0]
+        self.assert_(parent.onetooneextended.id==child.id, (parent.onetooneextended.id,child.id))
+        self.assert_(child.complex.id==parent.id, (child.complex.id, parent.id))
+        self.assert_(child.b==2, child.b)
+        self.assert_(child.c==3, child.c)
+    
+    def test_update(self):
+        """
+        Tests updating the existing fields only
+        """
+        self.assert_(len(Complex.objects.all())==0, len(Complex.objects.all()))
+        self.assert_(len(OneToOneExtended.objects.all())==0, len(OneToOneExtended.objects.all()))
+        self.assert_(len(OneToOneChildA.objects.all())==0, len(OneToOneChildA.objects.all()))
+        self.assert_(len(OneToOneChildB.objects.all())==0, len(OneToOneChildB.objects.all()))
         parent = Complex()
         parent.id=1
         parent.a=3
         parent.save()
-        child = OneToOne()
+        child = OneToOneChildA()
         child.b=4
+        child.c=5
         child.complex = parent
         child.save()
-        form = self.klass({'pk':1, 'a':5, 'onetoone_pk':child.id, 'onetoone_b':6})
+        form = self.klass({'pk':1, 'a':6, 'onetooneextended_selected_child':'OneToOneChildA', 'onetooneextended_pk':1, 'onetooneextended_b':7, 'onetoonechilda_c':8})
         form.save()
+        self.assert_(len(Complex.objects.all())==1, len(Complex.objects.all()))
+        self.assert_(len(OneToOneExtended.objects.all())==1, len(OneToOneExtended.objects.all()))
+        self.assert_(len(OneToOneChildA.objects.all())==1, len(OneToOneChildA.objects.all()))
+        self.assert_(len(OneToOneChildB.objects.all())==0, len(OneToOneChildB.objects.all()))
         parent = Complex.objects.get(id=1)
-        child = parent.onetoone
-        self.assert_(parent.a==5, parent.a)
-        self.assert_(child.b==6, child.b)
-        
+        child = OneToOneChildA.objects.all()[0]
+        self.assert_(parent.a==6, parent.a)
+        self.assert_(child.b==7, child.b)
+        self.assert_(child.c==8, child.b)
+    
+    def test_update_change_subclass(self):
+        """
+        Tests updating to a new subclass type
+        """
+        self.assert_(len(Complex.objects.all())==0, len(Complex.objects.all()))
+        self.assert_(len(OneToOneExtended.objects.all())==0, len(OneToOneExtended.objects.all()))
+        self.assert_(len(OneToOneChildA.objects.all())==0, len(OneToOneChildA.objects.all()))
+        self.assert_(len(OneToOneChildB.objects.all())==0, len(OneToOneChildB.objects.all()))
+        parent = Complex()
+        parent.id=1
+        parent.a=3
+        parent.save()
+        child = OneToOneChildA()
+        child.b=4
+        child.c=5
+        child.complex = parent
+        child.save()
+        form = self.klass({'pk':1, 'a':6, 'onetooneextended_selected_child':'OneToOneChildB', 'onetooneextended_b':7, 'onetoonechildb_d':9})
+        print '*********************************'
+        form.save()
+        self.assert_(len(Complex.objects.all())==1, len(Complex.objects.all()))
+        self.assert_(len(OneToOneExtended.objects.all())==1, len(OneToOneExtended.objects.all()))
+        self.assert_(len(OneToOneChildA.objects.all())==0, len(OneToOneChildA.objects.all()))
+        self.assert_(len(OneToOneChildB.objects.all())==1, len(OneToOneChildB.objects.all()))
+        parent = Complex.objects.get(id=1)
+        child = OneToOneChildB.objects.all()[0]
+        self.assert_(parent.a==6, parent.a)
+        self.assert_(child.b==7, child.b)
+        self.assert_(child.d==9, child.b)
     
     def test_permissions(self):
         pass

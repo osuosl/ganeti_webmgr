@@ -141,3 +141,25 @@ class DepthTestLevel2(models.Model):
     model for testing indirect ownership
     """
     parent = models.ForeignKey(DepthTestLevel1, null=True, related_name='child')
+
+
+class OneToOneExtended(models.Model):
+    """
+    Class that has been extended
+    """
+    complex = models.OneToOneField(Complex)
+    b = models.IntegerField(null=True)
+
+
+class OneToOneChildA(OneToOneExtended):
+    """
+    Class that extends another class
+    """
+    c = models.IntegerField()
+
+
+class OneToOneChildB(OneToOneExtended):
+    """
+    Class that extends another class
+    """
+    d = models.IntegerField()
