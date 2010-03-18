@@ -178,6 +178,8 @@ def config_save(request, name):
                 continue
             plugin_config.config[k] = v
         plugin_config.save()
+        if name in manager:
+            manager[name].update_config(plugin_config)
         return HttpResponse(1)
     errors = []
     for k, v in form.errors.items():
