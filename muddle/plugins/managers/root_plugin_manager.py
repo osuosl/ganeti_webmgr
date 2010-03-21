@@ -9,6 +9,8 @@ from muddle.plugins import CyclicDependencyException, UnknownPluginException
 from muddle.plugins.managers.plugin_manager import PluginManager
 from muddle.plugins.plugin import Plugin
 from muddle.plugins.registerable import Registerable
+from muddle.util import path_to_class
+
 
 class RootPluginManager(PluginManager):
     """
@@ -35,14 +37,10 @@ class RootPluginManager(PluginManager):
         #register & enable
         for class_ in enable:
             if isinstance(class_, (str,)):
-                # convert string into class
-                last_dot = class_.rfind('.')
-                from_ = class_[:last_dot]
-                name = class_[last_dot+1:]
-                class_ = __import__(from_, {}, {}, [name]).__dict__[name]
+                class_ = path_to_class(class_)
             class_.core = True
             self.register(class_)
-            self.enable(name)
+            self.enable(class_.name())
 
     def __init_process_synchronization(self, multi_process):
         """
@@ -126,8 +124,20 @@ class RootPluginManager(PluginManager):
         # the path someone imports is important.  import all the different
         # possibilities so we can check them all
         from muddle.plugins.plugin import Plugin as PluginA
-        #from core.plugins.plugin import Plugin as PluginB
-        subclasses = (PluginA,)
+        subclasses = [PluginA]
+        
+        # add any abstract plugin classes to the exclusion list.  Abstract
+        # classes must be defined in this way since children would inherit any
+        # property put on the class itself
+        if 'ABSTRACT_PLUGINS' in settings._wrapped.__dict__:
+            abstracts = settings.ABSTRACT_PLUGINS
+            if not isinstance(abstracts, (list, tuple)):
+                abstracts = (abstracts,)
+            for class_ in abstracts:
+                if isinstance(class_, (str,)):
+                    class_ = path_to_class(class_)
+                subclasses.append(class_)
+        subclasses = tuple(subclasses)
         
         print '[info] RootPluginManager - Autodiscovering Plugins'
 
