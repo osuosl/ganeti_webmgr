@@ -1,9 +1,13 @@
-PERM_ALL    = 0b1111
-PERM_NONE   = 0b0000
-PERM_READ   = 0b0001
-PERM_WRITE  = 0b0010
-PERM_CREATE = 0b0100
-PERM_DELETE = 0b1000
+
+
+
+# define permission masks.  use 2.5 syntax for backwards compatibility
+PERM_ALL    = int('1111',2)
+PERM_NONE   = int('0000',2)
+PERM_READ   = int('0001',2)
+PERM_WRITE  = int('0010',2)
+PERM_CREATE = int('0100',2)
+PERM_DELETE = int('1000',2)
 
 class Registerable(object):
     """
