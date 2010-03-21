@@ -1,3 +1,5 @@
+from __future__ import with_statement
+
 from datetime import datetime, timedelta
 from threading import RLock
 from multiprocessing.managers import SyncManager
