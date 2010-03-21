@@ -2,7 +2,9 @@ from __future__ import with_statement
 
 from datetime import datetime, timedelta
 from threading import RLock
-from multiprocessing.managers import SyncManager
+
+# XXX disabling for now.  breaks 2.5 support and doesn't work anyways
+#from multiprocessing.managers import SyncManager
 
 from django.conf import settings
 
