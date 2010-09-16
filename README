@@ -1,0 +1,7 @@
+import client
+
+HOSTNAME = 'ganeti-test.osuosl.bak'
+
+curl_config = client.GenericCurlConfig()
+rapi_client = client.GanetiRapiClient(HOSTNAME, curl_config_fn=curl_config)
+print rapi_client.GetVersion();
