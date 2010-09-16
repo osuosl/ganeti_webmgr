@@ -68,9 +68,7 @@ ROOT_URLCONF = 'ganeti_webmgr.urls'
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
-    ##
-    # Set to template directory.
-    #TODO Use python to get current dir and append 'templates'
+    'templates/'
 )
 
 INSTALLED_APPS = (
