@@ -7,7 +7,7 @@ from django import forms
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response
-from ganetimgr.util.portforwarder import forward_port
+from ganeti_webmgr.util.portforwarder import forward_port
 
 
 def check_instance_auth(request, cluster, instance):

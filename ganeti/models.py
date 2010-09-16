@@ -7,7 +7,7 @@ from django.db import models
 from django.contrib.auth.models import User, Group
 from simplejson import JSONEncoder, JSONDecoder
 from time import sleep
-from ganetimgr.util.portforwarder import forward_port
+from ganeti_webmgr.util.portforwarder import forward_port
 from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 from datetime import datetime
 
