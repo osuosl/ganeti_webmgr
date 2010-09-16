@@ -3,73 +3,73 @@
 {% block content %}
 <style type="text/css">
 * {
-	font-family: arial, tahoma, sans-serif;
+    font-family: arial, tahoma, sans-serif;
 }
 
 .ticketitem {
-	padding-bottom: 0.5em;
-	margin-bottom: 2em;
-	border-top: 1px solid #aeaeae;
+    padding-bottom: 0.5em;
+    margin-bottom: 2em;
+    border-top: 1px solid #aeaeae;
 }
 
 .ticketitem a {
-	font-weight: bold;
-	color: #559BD7;
-	text-decoration: none;
+    font-weight: bold;
+    color: #559BD7;
+    text-decoration: none;
 }
 
 
 #ticketlist {
-	margin-left: 200px;
+    margin-left: 200px;
 }
 
 .queuestats {
-	color: gray;
-	font-size: 0.9em;
+    color: gray;
+    font-size: 0.9em;
 }
 
 .queuestats abbr {
-	font-style: italic;
+    font-style: italic;
 }
 
 #pagelist {
-	text-align: center;
-	font-weight: bold;
-	position: fixed;
-	bottom: 0px;
-	right: 0px;
-	background: white;
-	padding-left: 200px;
-	width: 100%;
-	padding-top: 0.5em;
-	border-top: 1px solid #333;
+    text-align: center;
+    font-weight: bold;
+    position: fixed;
+    bottom: 0px;
+    right: 0px;
+    background: white;
+    padding-left: 200px;
+    width: 100%;
+    padding-top: 0.5em;
+    border-top: 1px solid #333;
 }
 
 #pagelist a {
-	text-decoration: none;
-	color: gray;
+    text-decoration: none;
+    color: gray;
 }
 
 
 h2, h3 {
-	text-align: center;
+    text-align: center;
 }
 
 h3 {
-	font-size: 1.1em;
+    font-size: 1.1em;
 }
 
 h3 a, a:visited {
-	text-decoration: none;
-	color: #559BD7;
+    text-decoration: none;
+    color: #559BD7;
 }
 
 td {
-	text-align: center;
+    text-align: center;
 }
 
 tr.even {
-	background: #eaeaea;
+    background: #eaeaea;
 }
 
 
@@ -94,7 +94,7 @@ tr.even {
 {{ nodes|length }} node{{ nodes|pluralize }}
 <ul>
 {% for node in nodes %}
-<li>{{ node.id }}</li>
+<li>{{ node }}</li>
 {% endfor %}
 </ul>
 {% endwith %}

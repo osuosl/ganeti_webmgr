@@ -7,12 +7,15 @@ from django.db import models
 from django.contrib.auth.models import User, Group
 from simplejson import JSONEncoder, JSONDecoder
 from time import sleep
+from ganeti_webmgr.util import client
 from ganeti_webmgr.util.portforwarder import forward_port
 from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 from datetime import datetime
 
 dec = JSONDecoder()
 
+#HOSTNAME = 'ganeti-test.osuosl.org.bak'
+curl = client.GenericCurlConfig()
 
 class MethodRequest(urllib2.Request):
     def __init__(self, method, *args, **kwargs):
@@ -135,14 +138,17 @@ class Cluster(models.Model):
 
     def __init__(self, *args, **kwargs):
         models.Model.__init__(self, *args, **kwargs)
+        self.rapi = client.GanetiRapiClient(self.hostname, 
+                                              curl_config_fn=curl)
         if self.id:
             self._update()
 
     def __unicode__(self):
         return self.hostname
 
+    # Update the database records after querying the rapi
     def _update(self):
-        self._info = self.get_cluster_info()
+        self._info = self.rapi.GetInfo()
         for attr in self._info:
             self.__dict__[attr] = self._info[attr]
 
@@ -194,7 +200,7 @@ class Cluster(models.Model):
         return [ Instance(self, info['name'], info) for info in self.get_cluster_instances_detail() ]
 
     def get_cluster_info(self):
-        info = self._get_resource('/2/info')
+        info = self.rapi.GetInfo()
         print info['ctime']
         if 'ctime' in info and info['ctime']:
             info['ctime'] = datetime.fromtimestamp(info['ctime'])
@@ -203,19 +209,19 @@ class Cluster(models.Model):
         return info
 
     def get_cluster_nodes(self):
-        return self._get_resource('/2/nodes')
+        return self.rapi.GetNodes()
 
     def get_cluster_instances(self):
-        return self._get_resource('/2/instances')
+        return self.rapi.GetInstances(False)
 
     def get_cluster_instances_detail(self):
-        return self._get_resource('/2/instances?bulk=1')
+        return self.rapi.GetInstances(True)
 
     def get_node_info(self, node):
-        return self._get_resource('/2/nodes/%s' % node.strip())
+        return self.rapi.GetNode(node)
 
     def get_instance_info(self, instance):
-        return self._get_resource('/2/instances/%s' % instance.strip())
+        return self.rapi.GetInstanceInfo(instance.strip())
 
     def set_random_vnc_password(self, instance):
         jobid = self._get_resource('/2/instances/%s/randomvncpass' %
@@ -247,13 +253,10 @@ class Cluster(models.Model):
         return (port, password)
 
     def shutdown_instance(self, instance):
-        return self._get_resource('/2/instances/%s/shutdown' % instance.strip(),
-                                  method='PUT')
+        return self.rapi.ShutdownInstance(instance.strip())
 
     def startup_instance(self, instance):
-        return self._get_resource('/2/instances/%s/startup' % instance.strip(),
-                                  method='PUT')
+        return self.rapi.StartupInstance(instance.strip())
 
     def reboot_instance(self, instance):
-        return self._get_resource('/2/instances/%s/reboot' % instance.strip(),
-                                  method='POST')
+        return self.rapi.RebootInstance(instance.strip())
