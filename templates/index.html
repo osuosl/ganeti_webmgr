@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style type="text/css">
+* {
+	font-family: arial, tahoma, sans-serif;
+}
+
+.ticketitem {
+	padding-bottom: 0.5em;
+	margin-bottom: 2em;
+	border-top: 1px solid #aeaeae;
+}
+
+.ticketitem a {
+	font-weight: bold;
+	color: #559BD7;
+	text-decoration: none;
+}
+
+
+#ticketlist {
+	margin-left: 200px;
+}
+
+.queuestats {
+	color: gray;
+	font-size: 0.9em;
+}
+
+.queuestats abbr {
+	font-style: italic;
+}
+
+#pagelist {
+	text-align: center;
+	font-weight: bold;
+	position: fixed;
+	bottom: 0px;
+	right: 0px;
+	background: white;
+	padding-left: 200px;
+	width: 100%;
+	padding-top: 0.5em;
+	border-top: 1px solid #333;
+}
+
+#pagelist a {
+	text-decoration: none;
+	color: gray;
+}
+
+
+h2, h3 {
+	text-align: center;
+}
+
+h3 {
+	font-size: 1.1em;
+}
+
+h3 a, a:visited {
+	text-decoration: none;
+	color: #559BD7;
+}
+
+td {
+	text-align: center;
+}
+
+tr.even {
+	background: #eaeaea;
+}
+
+
+</style>
+<h2>Overview</h2>
+
+<div id="clusterlist">
+{% for cluster in object_list %}
+<div class="clusterinfo">
+<h2><a href="{% url cluster_detail cluster.slug %}">{{ cluster.hostname }}</a> -- {{ cluster.description }}</h2>
+{% with cluster.get_cluster_info as info %}
+<ul>
+<li>Hypervisors: {{ info.enabled_hypervisors|join:", " }}</li>
+<li>Default hypervisor: {{ info.default_hypervisor }}</li>
+<li>Master node: {{ info.master }}</li>
+<li>Ganeti version: {{ info.software_version }}</li>
+</ul>
+{% endwith %}
+
+<h3>Nodes</h3>
+{% with cluster.get_cluster_nodes as nodes %}
+{{ nodes|length }} node{{ nodes|pluralize }}
+<ul>
+{% for node in nodes %}
+<li>{{ node.id }}</li>
+{% endfor %}
+</ul>
+{% endwith %}
+
+</div>
+{% endfor %}
+</div>
+
+<div id="pagelist">
+{% if is_paginated %}
+{% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">&lt;</a>{% else %}&nbsp;{% endif %}
+{% for page in paginator.page_range %}
+{% ifequal page page_obj.number %}{{ page }} {% else %}<a href="?page={{ page }}">{{ page }}</a> {% endifequal %}
+{% endfor %}
+{% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">&gt;</a>{% else %}&nbsp;{% endif %}
+{% endif %}
+</div>
+
+{% endblock %}

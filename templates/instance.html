@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}{{ instance.name }} on {{ cluster.description }}{% endblock %}
+{% block content %}
+
+<div class="ticket" id="ticket_{{ object.id }}">
+<h2><a href="">{{ instance.name }}</a></h2>
+<h2>Information</h2>
+<ul>
+<li>Status: {{ instance.oper_state|yesno:"Running,Stopped" }}</li>
+<li>Autostart: {{ instance.admin_state }}</li>
+<li>UUID: {{ instance.uuid }}</li>
+<li>Primary node: {{ instance.pnode }}</li>
+<li>Failover node: {{ instance.snodes|join:", " }}</li>
+<li>Created on: {{ instance.ctime|date }}</li>
+<li>Last modified: {{ instance.mtime|date }}</li>
+<li>NIC type: {{ instance.hvparams.nic_type }}</li>
+<li>Disk type: {{ instance.hvparams.disk_type }}</li>
+</ul>
+
+<h2>Actions</h2>
+<ul>
+{% if instance.oper_state %}<li><a href="{% url instance-shutdown cluster.slug instance.name %}">Shutdown</a></li>
+<li><a href="{% url instance-reboot cluster.slug instance.name %}">Reboot</a></li>
+<li><a href="{% url instance-vnc cluster.slug instance.name %}">Remote console (VNC)</a></li>
+{% else %}
+<li><a href="{% url instance-startup cluster.slug instance.name %}">Start</a></li>
+{% endif %}
+</ul>
+</div>
+
+<style type="text/css">
+#configuration {
+	text-align: center;
+}
+
+#configuration form  {
+	margin-left: auto;
+	margin-right: auto;
+	max-width: 800px;
+}
+
+#configuration th {
+	text-align: right;
+}
+
+#configuration td {
+	text-align: left;
+}
+
+#configuration input[type="text"] {
+	width: 30em;
+}
+</style>
+
+<div id="configuration">
+<h2>Configuration</h2>
+<form method="post" align="center">
+<table>
+{{ configform.as_table }}
+</table>
+<input type="Submit" value="Update" />
+</form>
+</div>
+
+{% endblock %}

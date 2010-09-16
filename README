@@ -1,3 +1,7 @@
+## Example of how to use the rapi client
+#  This is just a placeholder for now.
+# TODO Write real README file explaining project and list resources for more
+#  information
 import client
 
 HOSTNAME = 'ganeti-test.osuosl.bak'

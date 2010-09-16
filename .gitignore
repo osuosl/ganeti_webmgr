@@ -1,0 +1,12 @@
+##
+# The following lists what should be ignored in this git directory
+##
+
+# All compiled python code
+*.pyc
+
+# Settings should be setup per install
+settings.py
+
+# Any sqlite database files created by the project
+*.db
