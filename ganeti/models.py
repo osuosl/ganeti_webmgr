@@ -271,14 +271,22 @@ class ClusterUser(models.Model):
 
 class Profile(User, ClusterUser):
     name = models.CharField(max_length=128)
-
+    
+    def __unicode__(self):
+        return self.name
 
 class Permission(models.Model):
     name = models.CharField(max_length=128)
+    
+    def __unicode__(self):
+        return self.name
 
 
 class Organization(ClusterUser):
     name = models.CharField(max_length=128)
+    
+    def __unicode__(self):
+        return self.name
 
 
 class Quota(models.Model):
@@ -286,4 +294,7 @@ class Quota(models.Model):
     ram = models.IntegerField(default=0, null=True)
     disk_space = models.IntegerField(default=0, null=True)
     virtual_cpus = models.IntegerField(default=0, null=True)
+    
+    def __unicode__(self):
+        return self.name
 
