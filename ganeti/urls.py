@@ -30,6 +30,11 @@ urlpatterns = patterns('',
     url(r'^cluster/(?P<cluster_slug>\w+)/(?P<instance>[^/]+)/?',
         'ganeti_webmgr.ganeti.views.instance', name="instance-detail"),
     
+    url(r'^orphans/', 'ganeti_webmgr.ganeti.views.orphans',
+        name='instance-orphans'),
+    
     url(r'^user/login/?', 'ganeti_webmgr.ganeti.views.login_view', name="login"),
     url(r'^user/logout/?', 'ganeti_webmgr.ganeti.views.logout_view', name="logout"),
+    
+    
 )

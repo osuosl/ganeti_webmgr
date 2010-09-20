@@ -59,12 +59,12 @@ class InstanceManager(object):
 
         for arg, val in kwargs.items():
             if arg == 'owner':
-                if not isinstance(val, User):
+                if isinstance(val, User):
                     try:
                         val = User.objects.get(username__iexact=val)
                     except:
                         return []
-                results = [ result for result in results if val in result.users ]
+                results = [ result for result in results if val == result.owner ]
             elif arg == 'name':
                 results = [ result for result in results if result.name == val ]
             else:
