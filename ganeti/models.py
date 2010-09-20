@@ -24,7 +24,16 @@ class MethodRequest(urllib2.Request):
 
 
 class InstanceManager(object):
+    """
+    Manager for retrieving VirtualMachine objects.  This class emulates the
+    manager/queryset interface provided by django models, providing a limited
+    set of methods.
+    """
+    
     def all(self):
+        """
+        Return all VirtualMachines
+        """
         results = []
         for cluster in Cluster.objects.all():
             results.extend([ Instance(cluster, info['name'], info)
@@ -32,6 +41,9 @@ class InstanceManager(object):
         return results
 
     def filter(self, **kwargs):
+        """
+        Return VirtualMachines that match the supplied criteria
+        """
         if 'cluster' in kwargs:
             if isinstance(kwargs['cluster'], Cluster):
                 cluster = kwargs['cluster']
@@ -46,21 +58,13 @@ class InstanceManager(object):
             results = self.all()
 
         for arg, val in kwargs.items():
-            if arg == 'user':
+            if arg == 'owner':
                 if not isinstance(val, User):
                     try:
                         val = User.objects.get(username__iexact=val)
                     except:
                         return []
                 results = [ result for result in results if val in result.users ]
-            elif arg == 'group':
-                if not isinstance(val, Group):
-                    try:
-                        val = Group.objects.get(name__iexact=val)
-                    except:
-                        return []
-                results = [ result for result in results
-                            if val in result.groups ]
             elif arg == 'name':
                 results = [ result for result in results if result.name == val ]
             else:
@@ -70,6 +74,9 @@ class InstanceManager(object):
         return results
 
     def get(self, **kwargs):
+        """
+        Retrieve a single VirtualMachine
+        """
         results = self.filter(**kwargs)
         if len(results) == 1:
             return results[0]
@@ -85,8 +92,7 @@ class Instance(object):
     def __init__(self, cluster, name, info=None):
         self._cluster = cluster
         self.name = name
-        self.users = []
-        self.groups = []
+        self.owner = None
         self._update(info)
 
     def _update(self, info=None):
@@ -97,14 +103,9 @@ class Instance(object):
             self.__dict__[attr] = info[attr]
 
         for tag in self.tags:
-            if tag.startswith('group:'):
+            if tag.startswith('owner:'):
                 try:
-                    self.groups.append(Group.objects.get(name__iexact=tag.replace('group:','')))
-                except:
-                    pass
-            elif tag.startswith('user:'):
-                try:
-                    self.users.append(User.objects.get(username__iexact=tag.replace('user:','')))
+                    self.owner = Owner.objects.get(name__iexact=tag.replace('owner:',''))
                 except:
                     pass
 
