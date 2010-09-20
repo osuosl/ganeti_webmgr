@@ -13,8 +13,6 @@ from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 from datetime import datetime
 
 dec = JSONDecoder()
-
-#HOSTNAME = 'ganeti-test.osuosl.org.bak'
 curl = client.GenericCurlConfig()
 
 class MethodRequest(urllib2.Request):
@@ -69,7 +67,6 @@ class InstanceManager(object):
             else:
                 results = [ result for result in results
                             if '%s:%s' % (arg, val) in result.tags ]
-
         return results
 
     def get(self, **kwargs):
@@ -135,6 +132,9 @@ class Cluster(models.Model):
     description = models.CharField(max_length=128, blank=True, null=True)
     username = models.CharField(max_length=128, blank=True, null=True)
     password = models.CharField(max_length=128, blank=True, null=True)
+    disk_space = models.IntegerField()
+    virtual_cpus = models.IntegerField()
+    ram = models.IntegerField()
 
     def __init__(self, *args, **kwargs):
         models.Model.__init__(self, *args, **kwargs)
@@ -260,3 +260,30 @@ class Cluster(models.Model):
 
     def reboot_instance(self, instance):
         return self.rapi.RebootInstance(instance.strip())
+
+
+class ClusterUser(models.Model):
+    quota = models.ForeignKey('Quota', null=True)
+    permission = models.ForeignKey('Permission', null=False)
+    
+    class Meta:
+        abstract = True
+
+class Profile(User, ClusterUser):
+    name = models.CharField(max_length=128)
+
+
+class Permission(models.Model):
+    name = models.CharField(max_length=128)
+
+
+class Organization(ClusterUser):
+    name = models.CharField(max_length=128)
+
+
+class Quota(models.Model):
+    name = models.SlugField()
+    ram = models.IntegerField(default=0, null=True)
+    disk_space = models.IntegerField(default=0, null=True)
+    virtual_cpus = models.IntegerField(default=0, null=True)
+
