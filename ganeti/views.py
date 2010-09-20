@@ -166,3 +166,11 @@ def instance(request, cluster_slug, instance):
                                'instance': instance,
                                'configform': configform,
                                'user': request.user })
+
+def orphans(request):
+    """
+    displays list of orphaned VirtualMachines, i.e. VirtualMachines without
+    an owner.
+    """
+    vms = Instance.filter(owner=None)
+    return render_to_response("orphans.html", {'vms': vms})
