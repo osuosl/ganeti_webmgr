@@ -24,63 +24,9 @@ class MethodRequest(urllib2.Request):
         return self._method
 
 
-class InstanceManager(object):
-    def all(self):
-        results = []
-        for cluster in Cluster.objects.all():
-            results.extend([ Instance(cluster, info['name'], info)
-                             for info in cluster.get_cluster_instances_detail() ])
-        return results
-
-    def filter(self, **kwargs):
-        if 'cluster' in kwargs:
-            if isinstance(kwargs['cluster'], Cluster):
-                cluster = kwargs['cluster']
-            else:
-                try:
-                    cluster = Cluster.object.get(slug=kwargs['cluster'])
-                except:
-                    return []
-            results = cluster.get_instances()
-            del kwargs['cluster']
-        else:
-            results = self.all()
-
-        for arg, val in kwargs.items():
-            if arg == 'user':
-                if not isinstance(val, User):
-                    try:
-                        val = User.objects.get(username__iexact=val)
-                    except:
-                        return []
-                results = [ result for result in results if val in result.users ]
-            elif arg == 'group':
-                if not isinstance(val, Group):
-                    try:
-                        val = Group.objects.get(name__iexact=val)
-                    except:
-                        return []
-                results = [ result for result in results
-                            if val in result.groups ]
-            elif arg == 'name':
-                results = [ result for result in results if result.name == val ]
-            else:
-                results = [ result for result in results
-                            if '%s:%s' % (arg, val) in result.tags ]
-        return results
-
-    def get(self, **kwargs):
-        results = self.filter(**kwargs)
-        if len(results) == 1:
-            return results[0]
-        elif len(results) > 1:
-            raise MultipleObjectsReturned("Multiple instances found")
-        else:
-            raise ObjectDoesNotExist("Could not find an instance")
-
-
-class Instance(object):
-    objects = InstanceManager()
+class VirtualMachine(models.Model):
+    hostname = models.CharField(max_length=128)
+    owner = models.ForeignKey(ClusterUser, null=True)
 
     def __init__(self, cluster, name, info=None):
         self._cluster = cluster
@@ -201,7 +147,7 @@ class Cluster(models.Model):
 
     def get_cluster_info(self):
         info = self.rapi.GetInfo()
-        print info['ctime']
+        #print info['ctime']
         if 'ctime' in info and info['ctime']:
             info['ctime'] = datetime.fromtimestamp(info['ctime'])
         if 'mtime' in info and info['mtime']:
