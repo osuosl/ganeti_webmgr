@@ -26,43 +26,32 @@ class MethodRequest(urllib2.Request):
 
 class VirtualMachine(models.Model):
     hostname = models.CharField(max_length=128)
-    owner = models.ForeignKey(ClusterUser, null=True)
+    #owner = models.ForeignKey('ClusterUser', null=True)
+    info = models.TextField(null=False)
 
     def __init__(self, cluster, name, info=None):
+        self.hostname = name
         self._cluster = cluster
-        self.name = name
-        self.users = []
-        self.groups = []
         self._update(info)
 
     def _update(self, info=None):
         if not info:
-            info = self._cluster.get_instance_info(self.name)
+            self.info = self._cluster.get_instance_info(self.hostname)
 
         for attr in info:
             self.__dict__[attr] = info[attr]
-
+"""
         for tag in self.tags:
-            if tag.startswith('group:'):
+            if tag.startswith('owner:'):
                 try:
-                    self.groups.append(Group.objects.get(name__iexact=tag.replace('group:','')))
+                    self.owner = ClusterUser.objects.get(name__iexact=tag.replace('owner:','')).id
                 except:
                     pass
-            elif tag.startswith('user:'):
-                try:
-                    self.users.append(User.objects.get(username__iexact=tag.replace('user:','')))
-                except:
-                    pass
-
+"""
         if getattr(self, 'ctime', None):
             self.ctime = datetime.fromtimestamp(self.ctime)
         if getattr(self, 'mtime', None):
             self.mtime = datetime.fromtimestamp(self.mtime)
-
-    def set_params(self, **kwargs):
-        params = urllib.urlencode(kwargs)
-        self._cluster._get_resource('/2/instances/' + self.name + '/modify?' +
-                                    params, method='PUT')
 
     def __repr__(self):
         return "<Instance: '%s'>" % self.name
@@ -88,6 +77,13 @@ class Cluster(models.Model):
                                               curl_config_fn=curl)
         if self.id:
             self._update()
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            for name in self.rapi.get_instances():
+                vm = VirtualMachine(self, self.hostname, name)
+                vm.save()
+        super(Cluster, self).save(self, *args, **kwargs)
 
     def __unicode__(self):
         return self.hostname
