@@ -269,20 +269,22 @@ class ClusterUser(models.Model):
     class Meta:
         abstract = True
 
-class Profile(User, ClusterUser):
+class Profile(ClusterUser):
     name = models.CharField(max_length=128)
-    
-    def __unicode__(self):
-        return self.name
-
-class Permission(models.Model):
-    name = models.CharField(max_length=128)
+    user = models.OneToOneField(User)
     
     def __unicode__(self):
         return self.name
 
 
 class Organization(ClusterUser):
+    name = models.CharField(max_length=128)
+    
+    def __unicode__(self):
+        return self.name
+
+
+class Permission(models.Model):
     name = models.CharField(max_length=128)
     
     def __unicode__(self):
@@ -297,4 +299,5 @@ class Quota(models.Model):
     
     def __unicode__(self):
         return self.name
+
 
