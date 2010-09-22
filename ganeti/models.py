@@ -91,7 +91,7 @@ class VirtualMachine(models.Model):
         if getattr(self, 'mtime', None):
             self.mtime = datetime.fromtimestamp(self.info.mtime)
         self.ram = self.info['beparams']['memory']
-        self.virtual_cps = self.info['beparams']['vcpus']
+        self.virtual_cpus = self.info['beparams']['vcpus']
         # Sum up the size of each disk used by the VM
         disk_size = 0
         for disk in self.info['disk.sizes']:
@@ -152,7 +152,7 @@ class Cluster(models.Model):
         
         #XXX hostname wont be set for new instances
         if self.hostname:
-            self._info = self.get_cluster_info()
+            self._info = self.info()
             self.__dict__.update(self._info)
     
     @property
@@ -176,7 +176,7 @@ class Cluster(models.Model):
             * VMs no longer in ganeti are deleted
             * VMs missing from the database are added
         """
-        ganeti = self.get_cluster_instances()
+        ganeti = self.instances()
         db = self.virtual_machines.all().values_list('hostname', flat=True)
         
         # add VMs missing from the database
