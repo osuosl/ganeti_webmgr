@@ -1,26 +1,28 @@
 {% extends "base.html" %}
 
-{% block title %}{{ instance.name }} on {{ cluster.description }}{% endblock %}
+{% block title %}{{ instance.hostname }} on {{ cluster.description }}{% endblock %}
 {% block content %}
 
 <div class="ticket" id="ticket_{{ object.id }}">
-<h2><a href="">{{ instance.name }}</a></h2>
+<h2><a href="">{{ instance.hostname }}</a></h2>
 <h2>Information</h2>
 <ul>
-<li>Status: {{ instance.oper_state|yesno:"Running,Stopped" }}</li>
-<li>Autostart: {{ instance.admin_state }}</li>
-<li>UUID: {{ instance.uuid }}</li>
-<li>Primary node: {{ instance.pnode }}</li>
-<li>Failover node: {{ instance.snodes|join:", " }}</li>
-<li>Created on: {{ instance.ctime|date }}</li>
-<li>Last modified: {{ instance.mtime|date }}</li>
-<li>NIC type: {{ instance.hvparams.nic_type }}</li>
-<li>Disk type: {{ instance.hvparams.disk_type }}</li>
+{% with instance as info %}
+<li>Status: {{ info.oper_state|yesno:"Running,Stopped" }}</li>
+<li>Autostart: {{ info.admin_state }}</li>
+<li>UUID: {{ info.uuid }}</li>
+<li>Primary node: {{ info.pnode }}</li>
+<li>Failover node: {{ info.snodes|join:", " }}</li>
+<li>Created on: {{ info.ctime|date }}</li>
+<li>Last modified: {{ info.mtime|date }}</li>
+<li>NIC type: {{ info.hvparams.nic_type }}</li>
+<li>Disk type: {{ info.hvparams.disk_type }}</li>
+{% endwith %}
 </ul>
 
 <h2>Actions</h2>
 <ul>
-{% if instance.oper_state %}<li><a href="{% url instance-shutdown cluster.slug instance.name %}">Shutdown</a></li>
+{% if instance.info.oper_state %}<li><a href="{% url instance-shutdown cluster.slug instance.name %}">Shutdown</a></li>
 <li><a href="{% url instance-reboot cluster.slug instance.name %}">Reboot</a></li>
 <li><a href="{% url instance-vnc cluster.slug instance.name %}">Remote console (VNC)</a></li>
 {% else %}
@@ -31,25 +33,25 @@
 
 <style type="text/css">
 #configuration {
-	text-align: center;
+    text-align: center;
 }
 
 #configuration form  {
-	margin-left: auto;
-	margin-right: auto;
-	max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 800px;
 }
 
 #configuration th {
-	text-align: right;
+    text-align: right;
 }
 
 #configuration td {
-	text-align: left;
+    text-align: left;
 }
 
 #configuration input[type="text"] {
-	width: 30em;
+    width: 30em;
 }
 </style>
 
