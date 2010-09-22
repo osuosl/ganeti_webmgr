@@ -134,6 +134,9 @@ class VirtualMachine(models.Model):
 
 
 class Cluster(models.Model):
+    """
+    A Ganeti cluster that is being tracked by this manager tool
+    """
     hostname = models.CharField(max_length=128, unique=True)
     slug = models.SlugField(max_length=50)
     port = models.PositiveIntegerField(default=5080)
@@ -220,13 +223,20 @@ class Cluster(models.Model):
 
 
 class ClusterUser(models.Model):
+    """
+    Base class for objects that may interact with a Cluster or VirtualMachine.
+    """
     quota = models.ForeignKey('Quota', null=True)
     permission = models.ForeignKey('Permission', null=False)
     
     class Meta:
         abstract = False
 
+
 class Profile(ClusterUser):
+    """
+    Profile associated with a django.contrib.auth.User object.
+    """
     name = models.CharField(max_length=128)
     user = models.OneToOneField(User)
     
@@ -235,6 +245,10 @@ class Profile(ClusterUser):
 
 
 class Organization(ClusterUser):
+    """
+    An organization is used for grouping Users.  Organizations are intended for
+    use when a Cluster or VirtualMachine is owned or managed by multiple people.
+    """
     name = models.CharField(max_length=128)
     
     def __unicode__(self):
@@ -249,6 +263,11 @@ class Permission(models.Model):
 
 
 class Quota(models.Model):
+    """
+    A resource limit imposed on a ClusterUser for a given Cluster.  The
+    attributes of this model represent maximum values the ClusterUser can
+    consume.  The absence of a Quota indicates unlimited usage.
+    """
     name = models.SlugField()
     ram = models.IntegerField(default=0, null=True)
     disk_space = models.IntegerField(default=0, null=True)
