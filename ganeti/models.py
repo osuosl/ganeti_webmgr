@@ -16,6 +16,7 @@ from datetime import datetime
 dec = JSONDecoder()
 curl = client.GenericCurlConfig()
 
+
 class MethodRequest(urllib2.Request):
     def __init__(self, method, *args, **kwargs):
         self._method = method
@@ -78,13 +79,17 @@ class VirtualMachine(models.Model):
         self.serialized_info = cPickle.dumps(self.__info)
         self._parse_info(self.__info)
 
+    @property
+    def rapi(self):
+        return self.cluster.rapi
+
     def refresh(self):
         """
         Refreshes info from the ganeti cluster.  Calling this method will also
         trigger self._parse_info() to update persistent and non-persistent
         properties stored on the model instance.
         """
-        self.__info = self.cluster.rapi.GetInstance(self.hostname)
+        self.__info = self.rapi.GetInstance(self.hostname)
         self._parse_info()
         self.save()
 
@@ -130,14 +135,23 @@ class Cluster(models.Model):
     description = models.CharField(max_length=128, blank=True, null=True)
     username = models.CharField(max_length=128, blank=True, null=True)
     password = models.CharField(max_length=128, blank=True, null=True)
+    __rapi = None
+    __rapi_config = None
 
     def __unicode__(self):
         return self.hostname
     
-    def __init__(self, *args, **kwargs):
-        super(Cluster, self).__init__(*args, **kwargs)
-        self.rapi = client.GanetiRapiClient(self.hostname, 
-                                              curl_config_fn=curl)
+    @property
+    def rapi(self):
+        """
+        retrieves the rapi client for this cluster.  The
+        
+        """
+        if self.__rapi is None or self.__rapi_config != (self.hostname,):
+            self.__rapi_config = (self.hostname,)
+            self.__rapi = client.GanetiRapiClient(self.hostname,
+                                                          curl_config_fn=curl)
+        return self.__rapi
     
     # Update the database records after querying the rapi
     def save(self, *args, **kwargs):
