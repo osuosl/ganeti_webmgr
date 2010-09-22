@@ -26,7 +26,7 @@ class MethodRequest(urllib2.Request):
 
 class VirtualMachine(models.Model):
     cluster = models.ForeignKey('Cluster', null=False, editable=False)
-    hostname = models.CharField(max_length=128, editable=False)
+    hostname = models.CharField(max_length=128, editable=False, unique=True)
     info = models.TextField(null=False, editable=False)
 
     def save(self):
@@ -58,7 +58,7 @@ class VirtualMachine(models.Model):
 
 
 class Cluster(models.Model):
-    hostname = models.CharField(max_length=128)
+    hostname = models.CharField(max_length=128, unique=True)
     slug = models.SlugField(max_length=50)
     port = models.PositiveIntegerField(default=5080)
     description = models.CharField(max_length=128, blank=True, null=True)
