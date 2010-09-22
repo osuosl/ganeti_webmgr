@@ -78,9 +78,12 @@ class VirtualMachine(models.Model):
         trigger self._parse_info() to update persistent and non-persistent
         properties stored on the model instance.
         """
-        self.info = self.rapi.GetInstance(self.hostname)
-        self._parse_info()
-        self.save()
+        try:
+            self.info = self.rapi.GetInstance(self.hostname)
+            self._parse_info()
+            self.save()
+        except client.GanetiApiError:
+            pass
 
     def _load_info(self):
         """
