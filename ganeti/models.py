@@ -145,38 +145,28 @@ class Cluster(models.Model):
     description = models.CharField(max_length=128, blank=True, null=True)
     username = models.CharField(max_length=128, blank=True, null=True)
     password = models.CharField(max_length=128, blank=True, null=True)
+
     __rapi = None
     __rapi_config = None
-
-    def __unicode__(self):
-        return self.hostname
+    
+    def __init__(self, *args, **kwargs):
+        super(Cluster, self).__init__(*args, **kwargs)
+        
+        #XXX hostname wont be set for new instances
+        if self.hostname:
+            self._info = self.get_cluster_info()
+            self.__dict__.update(self._info)
     
     @property
     def rapi(self):
         """
         retrieves the rapi client for this cluster.  The
-        
         """
         if self.__rapi is None or self.__rapi_config != (self.hostname,):
             self.__rapi_config = (self.hostname,)
             self.__rapi = client.GanetiRapiClient(self.hostname,
                                                           curl_config_fn=curl)
         return self.__rapi
-    
-    # Update the database records after querying the rapi
-    def save(self, *args, **kwargs):
-        
-        self._info = self.get_cluster_info()
-        for attr in self._info:
-            self.__dict__[attr] = self._info[attr]
-
-        # TODO Create update method for getting all VMs attached to
-        #      to the cluster
-        if not self.id:
-            vms = self.instances()
-            for vm_name in vms:
-                    vm = VirtualMachine(cluster=self, hostname=vm_name)
-                    vm.save()
 
     def __unicode__(self):
         return self.hostname
