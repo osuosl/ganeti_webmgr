@@ -140,25 +140,25 @@ class Cluster(models.Model):
     description = models.CharField(max_length=128, blank=True, null=True)
     username = models.CharField(max_length=128, blank=True, null=True)
     password = models.CharField(max_length=128, blank=True, null=True)
-
-    def __unicode__(self):
-        return self.hostname
     
     def __init__(self, *args, **kwargs):
         super(Cluster, self).__init__(*args, **kwargs)
-        self.rapi = client.GanetiRapiClient(self.hostname, 
+        self.rapi = client.GanetiRapiClient(self.hostname, \
                                               curl_config_fn=curl)
         self._info = self.get_cluster_info()
-            for attr in self._info:
-                self.__dict__[attr] = self._info[attr]
+        for attr in self._info:
+            self.__dict__[attr] = self._info[attr]
 
-            # TODO Create update method for getting all VMs attached to
-            #      to the cluster
-            if not self.id:
-                vms = self.get_cluster_instances()
-                for vm_name in vms:
-                        vm = VirtualMachine(cluster=self, hostname=vm_name)
-                        vm.save()
+        # TODO Create update method for getting all VMs attached to
+        #      to the cluster
+        if not self.id:
+            vms = self.instances()
+            for vm_name in vms:
+                    vm = VirtualMachine(cluster=self, hostname=vm_name)
+                    vm.save()
+
+    def __unicode__(self):
+        return self.hostname
 
     def _get_resource(self, resource, method='GET', data=None):
         # Strip trailing slashes, as ganeti-rapi doesn't like them
@@ -218,6 +218,9 @@ class Cluster(models.Model):
 
     def get_cluster_nodes(self):
         return self.rapi.GetNodes()
+
+    def instances(self):
+        return self.rapi.GetInstances()
 
     def get_cluster_instances(self):
         return self.rapi.GetInstances(bulk=False)
