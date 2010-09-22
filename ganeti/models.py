@@ -39,7 +39,8 @@ class VirtualMachine(models.Model):
         limit can be determined.
     
     """
-    cluster = models.ForeignKey('Cluster', editable=False)
+    cluster = models.ForeignKey('Cluster', editable=False,
+                                related_name='virtual_machines')
     hostname = models.CharField(max_length=128, editable=False)
     owner = models.ForeignKey('ClusterUser', null=True)
     serialized_info = models.TextField(editable=False)
@@ -80,7 +81,7 @@ class VirtualMachine(models.Model):
         """
         self.__info = value
         self.serialized_info = cPickle.dumps(self.__info)
-        self._parse_info(self.__info)
+        self._parse_info()
 
     @property
     def rapi(self):
@@ -112,13 +113,15 @@ class VirtualMachine(models.Model):
         """
         self._load_info()
         info_ = self.info
-        
-        for tag in self.tags:
+        '''
+        XXX no tags yet.  not sure what the property name is called.
+        for tag in info_['tags']:
             if tag.startswith('owner:'):
                 try:
                     self.owner = ClusterUser.objects.get(name__iexact=tag.replace('owner:',''))
                 except:
                     pass
+        '''
         
         # TODO: load resource information    
 
@@ -218,6 +221,29 @@ class Cluster(models.Model):
     def get_instances(self):
         return [ Instance(self, info['name'], info) for info in self.get_cluster_instances_detail() ]
     """
+    
+    def sync_virtual_machines(self):
+        """
+        Synchronizes the VirtualMachines in the database with the information
+        this ganeti cluster has:
+            * VMs no longer in ganeti are deleted
+            * VMs missing from the database are added
+        """
+        ganeti = self.get_cluster_instances()
+        db = self.virtual_machines.all().values_list('hostname', flat=True)
+        
+        print ganeti
+        print db
+        
+        # add VMs missing from the database
+        for hostname in filter(lambda x: unicode(x) not in db, ganeti):
+            print 'creating: ', hostname
+            VirtualMachine(cluster=self, hostname=hostname).save()
+        
+        # deletes VMs that are no longer in ganeti
+        missing_ganeti = filter(lambda x: str(x) not in ganeti, db)
+        self.virtual_machines.filter(hostname__in=missing_ganeti).delete()
+    
     def get_cluster_info(self):
         info = self.rapi.GetInfo()
         #print info['ctime']
@@ -244,6 +270,7 @@ class Cluster(models.Model):
 
     def get_instance_info(self, instance):
         return self.rapi.GetInstance(instance.strip())
+        
     """
     def set_random_vnc_password(self, instance):
         jobid = self._get_resource('/2/instances/%s/randomvncpass' %

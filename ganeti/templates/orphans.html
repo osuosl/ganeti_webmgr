@@ -5,7 +5,7 @@
 {% block content %}
     <ul id="orphans">
         {% for vm in vms %}
-            <li>{{vm.name}}</li>
+            <li>{{vm.hostname}}</li>
         {% endfor %}
     </ul>
 {% endblock %}
