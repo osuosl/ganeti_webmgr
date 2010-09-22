@@ -162,15 +162,31 @@ class Cluster(models.Model):
         return info
 
     def nodes(self):
+        """Gets all Cluster Nodes
+        
+        Calls the rapi client for the nodes of the cluster.
+        """        
         return self.rapi.GetNodes()
 
     def node(self, node):
+        """Get a single Node
+        
+        Calls the rapi client for a specific cluster node.
+        """
         return self.rapi.GetNode(node)
 
     def instances(self):
+        """Gets all VMs which reside under the Cluster
+        
+        Calls the rapi client for all instances.
+        """
         return self.rapi.GetInstances()
 
     def instance(self, instance):
+        """Get a single Instance
+        
+        Calls the rapi client for a specific instance.
+        """
         return self.rapi.GetInstance(instance)
 
 
