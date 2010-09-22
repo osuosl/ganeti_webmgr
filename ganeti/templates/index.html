@@ -80,7 +80,7 @@ tr.even {
 {% for cluster in object_list %}
 <div class="clusterinfo">
 <h2><a href="{% url cluster_detail cluster.slug %}">{{ cluster.hostname }}</a> -- {{ cluster.description }}</h2>
-{% with cluster.get_cluster_info as info %}
+{% with cluster.info as info %}
 <ul>
 <li>Hypervisors: {{ info.enabled_hypervisors|join:", " }}</li>
 <li>Default hypervisor: {{ info.default_hypervisor }}</li>
@@ -90,7 +90,7 @@ tr.even {
 {% endwith %}
 
 <h3>Nodes</h3>
-{% with cluster.get_cluster_nodes as nodes %}
+{% with cluster.nodes as nodes %}
 {{ nodes|length }} node{{ nodes|pluralize }}
 <ul>
 {% for node in nodes %}
