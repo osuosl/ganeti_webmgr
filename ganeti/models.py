@@ -24,6 +24,10 @@ class VirtualMachine(models.Model):
     hostname = models.CharField(max_length=128, editable=False)
     owner = models.ForeignKey('ClusterUser', null=True)
     serialized_info = models.TextField(editable=False)
+    virtual_cpus = models.IntegerField()
+    disk_size = models.IntegerField()
+    ram = models.IntegerField()
+    
     ctime = None
     mtime = None
     __info = None
@@ -85,6 +89,13 @@ class VirtualMachine(models.Model):
             self.ctime = datetime.fromtimestamp(self.info.ctime)
         if getattr(self, 'mtime', None):
             self.mtime = datetime.fromtimestamp(self.info.mtime)
+        self.ram = self.info['beparams']['memory']
+        self.virtual_cps = self.info['beparams']['vcpus']
+        # Sum up the size of each disk used by the VM
+        disk_size = 0
+        for disk in self.info['disk.sizes']:
+            disk_size += disk
+        self.disk_size = disk_size
 
     def _parse_info(self):
         """
