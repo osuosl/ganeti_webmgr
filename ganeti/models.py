@@ -232,12 +232,8 @@ class Cluster(models.Model):
         ganeti = self.get_cluster_instances()
         db = self.virtual_machines.all().values_list('hostname', flat=True)
         
-        print ganeti
-        print db
-        
         # add VMs missing from the database
         for hostname in filter(lambda x: unicode(x) not in db, ganeti):
-            print 'creating: ', hostname
             VirtualMachine(cluster=self, hostname=hostname).save()
         
         # deletes VMs that are no longer in ganeti
