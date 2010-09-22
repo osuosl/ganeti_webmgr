@@ -25,9 +25,9 @@ class MethodRequest(urllib2.Request):
 
 
 class VirtualMachine(models.Model):
-    cluster = models.ForeignKey('Cluster', null=False, editable=False)
+    cluster = models.ForeignKey('Cluster', editable=False)
     hostname = models.CharField(max_length=128, editable=False, unique=True)
-    info = models.TextField(null=False, editable=False)
+    info = models.TextField(editable=False)
     owner = models.ForeignKey('ClusterUser', null=True)
 
     def save(self):
