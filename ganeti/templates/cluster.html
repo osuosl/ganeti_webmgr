@@ -5,144 +5,144 @@
 <style type="text/css">
 
 #content {
-	width: 900px;
+    width: 900px;
 }
 
 .ticketitem {
-	padding-bottom: 0.5em;
-	margin-bottom: 2em;
-	border-top: 1px solid #333;
+    padding-bottom: 0.5em;
+    margin-bottom: 2em;
+    border-top: 1px solid #333;
 }
 
 #queuelist {
-	float: left;
-	width: 200px;
+    float: left;
+    width: 200px;
 }
 
 #queuelist ul {
-	list-style-type: none;
-	padding: 0;
-	margin: 0;
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
 }
 #queuelist ul li {
-	padding: 0;
-	padding-top: 0.5em;
-	margin: 0;
+    padding: 0;
+    padding-top: 0.5em;
+    margin: 0;
 }
 
 #ticketlist {
-	margin-left: 200px;
+    margin-left: 200px;
 }
 
 .queuestats {
-	color: gray;
-	font-size: 0.8em;
+    color: gray;
+    font-size: 0.8em;
 }
 
 .queuestats abbr {
-	font-style: italic;
+    font-style: italic;
 }
 
 #pagelist {
-	text-align: center;
-	font-size: 0.9em;
+    text-align: center;
+    font-size: 0.9em;
 }
 
 h2, h3 {
-	text-align: center;
+    text-align: center;
 }
 
 h3 {
-	background: #f0f0f0;
-	font-size: 1.1em;
-	padding-top: 0.15em;
-	margin-bottom: 0.5em;
-	color: #559bd7;
+    background: #f0f0f0;
+    font-size: 1.1em;
+    padding-top: 0.15em;
+    margin-bottom: 0.5em;
+    color: #559bd7;
 }
 
 td {
-	text-align: center;
+    text-align: center;
 }
 
 tr.even {
-	background: #eaeaea;
+    background: #eaeaea;
 }
 
 .action {
-	margin-top: 2em;
-	margin-bottom: 1em;
+    margin-top: 2em;
+    margin-bottom: 1em;
 }
 
 .actioninfo {
-	margin-bottom: 0.5em;
-	text-align: center;
+    margin-bottom: 0.5em;
+    text-align: center;
 }
 
 .update {
-	border: 1px solid gray;
-	background: #fafafa;
-	padding: 0.5em;
-	margin-bottom: 0.5em;
-	margin-left: 2em;
-	-moz-background-clip:border;
-	-moz-background-inline-policy:continuous;
-	-moz-background-origin:padding;
-	-moz-border-radius-bottomleft:5px;
-	-moz-border-radius-bottomright:5px;
-	-moz-border-radius-topleft:5px;
-	-moz-border-radius-topright:5px;
+    border: 1px solid gray;
+    background: #fafafa;
+    padding: 0.5em;
+    margin-bottom: 0.5em;
+    margin-left: 2em;
+    -moz-background-clip:border;
+    -moz-background-inline-policy:continuous;
+    -moz-background-origin:padding;
+    -moz-border-radius-bottomleft:5px;
+    -moz-border-radius-bottomright:5px;
+    -moz-border-radius-topleft:5px;
+    -moz-border-radius-topright:5px;
 }
 
 /*
 .first {
-	border: 3px solid green;
+    border: 3px solid green;
 }
 */
 
 .updateicon {
-	float: right;
-	position: relative;
-	top: -22px;
-	margin: 0;
-	padding: 0;
+    float: right;
+    position: relative;
+    top: -22px;
+    margin: 0;
+    padding: 0;
 }
 
 .update hr {
-	border: none;
-	border-bottom: 1px dotted #333;
+    border: none;
+    border-bottom: 1px dotted #333;
 }
 
 .timestamp {
-	border-bottom: 1px dotted #333;
-	padding-bottom: 0.2em;
-	margin-bottom: 0.2em;
-	padding-right: 22px;
-	text-align: right;
+    border-bottom: 1px dotted #333;
+    padding-bottom: 0.2em;
+    margin-bottom: 0.2em;
+    padding-right: 22px;
+    text-align: right;
 }
 
 .actioninfo th {
-	text-align: right;
+    text-align: right;
 }
 
 .actioninfo td {
-	text-align: left;
+    text-align: left;
 }
 
 .history {
-	min-height: 8em;
+    min-height: 8em;
 }
 
 .historylabel {
-	margin-bottom: 0.5em;
-	float: left;
-	width: 1.5em;
-	text-align: center;
-	font-weight: bold;
-	color: silver;
+    margin-bottom: 0.5em;
+    float: left;
+    width: 1.5em;
+    text-align: center;
+    font-weight: bold;
+    color: silver;
 }
 
 .closed {
-	color: #999;
+    color: #999;
 }
 
 </style>
@@ -150,30 +150,46 @@ tr.even {
 <div class="ticket" id="ticket_{{ object.id }}">
 <h1>Cluster {{ object.hostname }}</h1>
 <h2>Information</h2>
-{% with object.get_cluster_info as info %}
+{% with object.info as info %}
 <ul>
 <li>Architecture: {{ info.architecture.0 }}</li>
 <li>Default hypervisor: {{ info.default_hypervisor }}</li>
 <li>Available hypervisors: {{ info.enabled_hypervisors|join:", " }}</li>
 <li>Master node: {{ info.master }}</li>
-<li>Created: {% if info.ctime %}{{ info.ctime|date }}{% else %}<em>unknown</em>{% endif %}
+<li>Created: 
+  {% if info.ctime %}
+    {{ info.ctime|date }}
+  {% else %}
+    <em>unknown</em>
+  {% endif %}
 <li>Last modified: {{ info.mtime|date }}</li>
 {% endwith %}
 
 <h2>Instances</h2>
 <table>
-<tr><th>Name</th><th>Primary node</th><th>Backup node</th><th>Memory</th><th>Current memory</th><th>Status</th></tr>
-{% for instance in object.get_cluster_instances_detail %}
-<tr><td><a href="{% url instance-detail object.slug instance.name %}">{{ instance.name }}</a></td><td>{{ instance.pnode }}</td><td>{{ instance.snodes.0 }}</td><td>{{ instance.beparams.memory }}</td><td>{{ instance.oper_ram }}</td>
-<td>{% ifequal instance.admin_state instance.oper_state %}
-{{ instance.admin_state|yesno:"Running,Stopped" }}
-{% else %}
-{{ instance.oper_state|yesno:"Running,Stopped" }}, should be {{ instance.admin_state|yesno:"running,stopped" }}
-{% endifequal %}
-</td>
+<tr>
+  <th>Name</th>
+  <th>Node</th>
+  <th>Ram</th>
+  <th>Disk Space</th>
+  <th>VCPUs</th>
+  <th>Status</th>
+</tr>
+{% for vm in object.virtual_machines.all %}
+<tr>
+  <td><a href="{% url instance-detail object.slug vm.hostname %}">{{ vm.hostname }}</a></td>
+  <td>{{ vm.info.pnode }}</td>
+  <td>{{ vm.ram }}</td>
+  <td>{{ vm.disk_size }}</td>
+  <td>{{ vm.virtual_cpus }}</td>
+  <td>
+  {% ifequal vm.info.admin_state vm.info.oper_state %}
+    {{ vm.admin_state|yesno:"Running,Stopped" }}
+  {% else %}
+    {{ vm.info.oper_state|yesno:"Running,Stopped" }}, should be {{ vm.info.admin_state|yesno:"running,stopped" }}
+  {% endifequal %}
+  </td>
 {% endfor %}
 </table>
 </div>
-
-
 {% endblock %}
