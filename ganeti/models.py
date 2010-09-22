@@ -28,12 +28,11 @@ class VirtualMachine(models.Model):
     cluster = models.ForeignKey('Cluster', null=False, editable=False)
     hostname = models.CharField(max_length=128, editable=False, unique=True)
     info = models.TextField(null=False, editable=False)
+    owner = models.ForeignKey('ClusterUser', null=True)
 
     def save(self):
-        #self._info = Cluster.objects.get(pk=self.cluster).get_instance_info(self.hostname)
         for attr in self.info:
             self.__dict__[attr] = self.info[attr]
-        #self.info = self._info
         super(VirtualMachine, self).save()
 
     def _update(self, info=None):
