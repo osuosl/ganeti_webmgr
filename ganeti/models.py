@@ -35,7 +35,7 @@ class VirtualMachine(models.Model):
     Attributes that need to be searchable should be stored.
     
     XXX Serialized_info can possibly be changed to a CharField if an upper
-        limit can be determined.
+        limit can be determined. (Later Date, if it will optimize db)
     
     """
     cluster = models.ForeignKey('Cluster', editable=False)
