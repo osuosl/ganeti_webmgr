@@ -1,3 +1,4 @@
+import cPickle
 import os
 import sys
 import urllib
@@ -25,30 +26,101 @@ class MethodRequest(urllib2.Request):
 
 
 class VirtualMachine(models.Model):
+    """
+    The VirtualMachine (VM) model represents VMs within a Ganeti cluster.  The
+    majority of properties are a cache for data stored in the cluster.  All data
+    retrieved via the RAPI is stored in VirtualMachine.info, and serialized
+    automatically into VirtualMachine.serialized_info.
+    
+    Attributes that need to be searchable should be stored.
+    
+    """
     cluster = models.ForeignKey('Cluster', editable=False)
     hostname = models.CharField(max_length=128, editable=False, unique=True)
-    info = models.TextField(editable=False)
     owner = models.ForeignKey('ClusterUser', null=True)
+    serialized_info = models.TextField(editable=False)
+    __info = None
 
-    def save(self):
+    def __init__(self, *args, **kwargs):
+        super(VirtualMachine, self).__init__(*args, **kwargs)
+        
+        #XXX for now always update on init, this will be replaced with cache
+        #    timeout later on.
+        if True:
+            self.refresh()
+        else:
+            self._load_info()
+
+    @property
+    def info(self):
+        """
+        Getter for self.info, a dictionary of data about a VirtualMachine.  This
+        is a proxy to self.serialized_info that handles deserialization.
+        """
+        if not self.__info:
+            if self.serialized_info:
+                self.__info = cPickle.loads(str(self.serialized_info))
+            else:
+                self.refresh()
+        return self.__info
+
+    @property.setter
+    def info(self, value):
+        """
+        Setter for self.info, proxy to self.serialized_info that handles
+        serialization.  When info is set, it will be parsed will trigger
+        self._parse_info() to update persistent and non-persistent properties
+        stored on the model instance.
+        """
+        self.__info = value
+        self.serialized_info = cPickle.dumps(self.__info)
+        self._parse_info(self.__info)
+
+    def refresh(self):
+        """
+        Refreshes info from the ganeti cluster.  Calling this method will also
+        trigger self._parse_info() to update persistent and non-persistent
+        properties stored on the model instance.
+        """
+        # XXX need the correct ID here for getinstance
+        self.__info = self.cluster.rapi.GetInstance(self.hostname)
+        self._parse_info()
+        self.save()
+
+    def _load_info(self):
+        """
+        Loads non-persistent properties from cached info
+        """
+        info = self.__info
+        
+        # load all info properties into the VM instance
+        # XXX this is a naive update of the instance, there is a possibility
+        #     that keys in __info could conflict with attributes of the class
+        #     i think we can filter using VirtualMachine.__dict__.keys()
         for attr in self.info:
             self.__dict__[attr] = self.info[attr]
+        
+        if getattr(self, 'ctime', None):
+            self.ctime = datetime.fromtimestamp(self.ctime)
+        if getattr(self, 'mtime', None):
+            self.mtime = datetime.fromtimestamp(self.mtime)
+
+    def _parse_info(self):
+        """
+        Loads all values from cached info, included values that are stored in
+        the database
+        """
+        self._load_info()
+        info = self.__info
+        
         for tag in self.tags:
             if tag.startswith('owner:'):
                 try:
                     self.owner = ClusterUser.objects.get(name__iexact=tag.replace('owner:',''))
                 except:
                     pass
-        super(VirtualMachine, self).save()
-
-    def _update(self, info=None):
-        """
         
-        """
-        if getattr(self, 'ctime', None):
-            self.ctime = datetime.fromtimestamp(self.ctime)
-        if getattr(self, 'mtime', None):
-            self.mtime = datetime.fromtimestamp(self.mtime)
+        # TODO: load resource information    
 
     def __repr__(self):
         return "<VirtualMachine: '%s'>" % self.hostname
