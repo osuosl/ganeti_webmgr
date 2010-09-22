@@ -172,5 +172,5 @@ def orphans(request):
     displays list of orphaned VirtualMachines, i.e. VirtualMachines without
     an owner.
     """
-    vms = Instance.objects.filter(owner=None)
+    vms = VirtualMachine.objects.filter(owner=None)
     return render_to_response("orphans.html", {'vms': vms})
