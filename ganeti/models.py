@@ -34,11 +34,16 @@ class VirtualMachine(models.Model):
     
     Attributes that need to be searchable should be stored.
     
+    XXX Serialized_info can possibly be changed to a CharField if an upper
+        limit can be determined.
+    
     """
     cluster = models.ForeignKey('Cluster', editable=False)
     hostname = models.CharField(max_length=128, editable=False, unique=True)
     owner = models.ForeignKey('ClusterUser', null=True)
     serialized_info = models.TextField(editable=False)
+    ctime = None
+    mtime = None
     __info = None
 
     def __init__(self, *args, **kwargs):
@@ -59,11 +64,9 @@ class VirtualMachine(models.Model):
         Getter for self.info, a dictionary of data about a VirtualMachine.  This
         is a proxy to self.serialized_info that handles deserialization.
         """
-        if not self.__info:
-            if self.serialized_info:
+        if self.__info is None:
+            if self.serialized_info is not None:
                 self.__info = cPickle.loads(str(self.serialized_info))
-            else:
-                self.refresh()
         return self.__info
 
     @info.setter
@@ -84,7 +87,7 @@ class VirtualMachine(models.Model):
         trigger self._parse_info() to update persistent and non-persistent
         properties stored on the model instance.
         """
-        self.__info = self.cluster.rapi.GetInstance(self.hostname)
+        self.info = self.cluster.rapi.GetInstance(self.hostname)
         self._parse_info()
         self.save()
 
@@ -92,12 +95,10 @@ class VirtualMachine(models.Model):
         """
         Loads non-persistent properties from cached info
         """
-        info = self.info
-        
         if getattr(self, 'ctime', None):
-            self.ctime = datetime.fromtimestamp(self.ctime)
+            self.ctime = datetime.fromtimestamp(self.info.ctime)
         if getattr(self, 'mtime', None):
-            self.mtime = datetime.fromtimestamp(self.mtime)
+            self.mtime = datetime.fromtimestamp(self.info.mtime)
 
     def _parse_info(self):
         """
@@ -105,7 +106,7 @@ class VirtualMachine(models.Model):
         the database
         """
         self._load_info()
-        info = self.info
+        info_ = self.info
         
         for tag in self.tags:
             if tag.startswith('owner:'):
@@ -115,6 +116,15 @@ class VirtualMachine(models.Model):
                     pass
         
         # TODO: load resource information    
+
+    def shutdown(self):
+        return self.clusterrapi.ShutdownInstance(self.hostname)
+
+    def startup(self):
+        return self.cluster.rapi.StartupInstance(self.hostname)
+
+    def reboot(self):
+        return self.cluster.rapi.RebootInstance(self.hostname)
 
     def __repr__(self):
         return "<VirtualMachine: '%s'>" % self.hostname
@@ -146,12 +156,17 @@ class Cluster(models.Model):
         for attr in self._info:
             self.__dict__[attr] = self._info[attr]
 
+        is_new = self.id is None
+
         super(Cluster, self).save()
 
-        vms = self.get_cluster_instances()
-        for vm_name in vms:
-                vm = VirtualMachine(cluster=self, hostname=vm_name)
-                vm.save()
+        # TODO Create update method for getting all VMs attached to
+        #      to the cluster
+        if is_new:
+            vms = self.get_cluster_instances()
+            for vm_name in vms:
+                    vm = VirtualMachine(cluster=self, hostname=vm_name)
+                    vm.save()
 
     def _get_resource(self, resource, method='GET', data=None):
         # Strip trailing slashes, as ganeti-rapi doesn't like them
@@ -253,14 +268,6 @@ class Cluster(models.Model):
         os.system("portforwarder.py %d %s:%d" % (port, node, port))
         return (port, password)
     """
-    def shutdown_instance(self, instance):
-        return self.rapi.ShutdownInstance(instance.strip())
-
-    def startup_instance(self, instance):
-        return self.rapi.StartupInstance(instance.strip())
-
-    def reboot_instance(self, instance):
-        return self.rapi.RebootInstance(instance.strip())
 
 
 class ClusterUser(models.Model):
