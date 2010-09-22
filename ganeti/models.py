@@ -1,30 +1,11 @@
 import cPickle
-import os
-import sys
-import urllib
-import urllib2
 
 from django.db import models
 from django.contrib.auth.models import User, Group
-from simplejson import JSONEncoder, JSONDecoder
-from time import sleep
 from ganeti_webmgr.util import client
-from ganeti_webmgr.util.portforwarder import forward_port
-from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 from datetime import datetime
 
-dec = JSONDecoder()
 curl = client.GenericCurlConfig()
-
-
-class MethodRequest(urllib2.Request):
-    def __init__(self, method, *args, **kwargs):
-        self._method = method
-        urllib2.Request.__init__(self, *args, **kwargs)
-
-    def get_method(self):
-        return self._method
-
 
 class VirtualMachine(models.Model):
     """
@@ -36,7 +17,7 @@ class VirtualMachine(models.Model):
     Attributes that need to be searchable should be stored.
     
     XXX Serialized_info can possibly be changed to a CharField if an upper
-        limit can be determined.
+        limit can be determined. (Later Date, if it will optimize db)
     
     """
     cluster = models.ForeignKey('Cluster', editable=False,
@@ -44,6 +25,10 @@ class VirtualMachine(models.Model):
     hostname = models.CharField(max_length=128, editable=False)
     owner = models.ForeignKey('ClusterUser', null=True)
     serialized_info = models.TextField(editable=False)
+    virtual_cpus = models.IntegerField()
+    disk_size = models.IntegerField()
+    ram = models.IntegerField()
+    
     ctime = None
     mtime = None
     __info = None
@@ -105,6 +90,13 @@ class VirtualMachine(models.Model):
             self.ctime = datetime.fromtimestamp(self.info.ctime)
         if getattr(self, 'mtime', None):
             self.mtime = datetime.fromtimestamp(self.info.mtime)
+        self.ram = self.info['beparams']['memory']
+        self.virtual_cps = self.info['beparams']['vcpus']
+        # Sum up the size of each disk used by the VM
+        disk_size = 0
+        for disk in self.info['disk.sizes']:
+            disk_size += disk
+        self.disk_size = disk_size
 
     def _parse_info(self):
         """
@@ -174,54 +166,6 @@ class Cluster(models.Model):
     def __unicode__(self):
         return self.hostname
 
-    def _get_resource(self, resource, method='GET', data=None):
-        # Strip trailing slashes, as ganeti-rapi doesn't like them
-        resource = resource.rstrip('/')
-
-        # create a password manager
-        password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
-
-        # Add the username and password.
-        # If we knew the realm, we could use it instead of ``None``.
-        top_level_url = 'https://%s:%d/2/' % (self.hostname, self.port)
-        password_mgr.add_password(None, top_level_url,
-                                  self.username, self.password)
-
-        handler = urllib2.HTTPBasicAuthHandler(password_mgr)
-
-        # create "opener" (OpenerDirector instance)
-        opener = urllib2.build_opener(handler)
-
-        # Install the opener.
-        # Now all calls to urllib2.urlopen use our opener.
-        urllib2.install_opener(opener)
-
-        req = MethodRequest(method, 'https://%s:%d%s' %
-                            (self.hostname, self.port, resource),
-                            data=data)
-        response = urllib2.urlopen(req)
-        if response.code != 200:
-            raise ValueError("'%s' is not a valid resource" % resource)
-        try:
-            contenttype = response.info()['Content-Type']
-        except:
-            contenttype = None
-
-        if contenttype != 'application/json':
-            raise ValueError("Invalid response type '%s'" % contenttype)
-
-        return dec.decode(response.read())
-    """
-    def get_instance(self, name):
-        for inst in self.get_instances():
-            if inst.name == name:
-                return inst
-        return None
-
-    def get_instances(self):
-        return [ Instance(self, info['name'], info) for info in self.get_cluster_instances_detail() ]
-    """
-    
     def sync_virtual_machines(self):
         """
         Synchronizes the VirtualMachines in the database with the information
@@ -239,8 +183,8 @@ class Cluster(models.Model):
         # deletes VMs that are no longer in ganeti
         missing_ganeti = filter(lambda x: str(x) not in ganeti, db)
         self.virtual_machines.filter(hostname__in=missing_ganeti).delete()
-    
-    def get_cluster_info(self):
+
+    def info(self):
         info = self.rapi.GetInfo()
         #print info['ctime']
         if 'ctime' in info and info['ctime']:
@@ -249,54 +193,30 @@ class Cluster(models.Model):
             info['mtime'] = datetime.fromtimestamp(info['mtime'])
         return info
 
-    def get_cluster_nodes(self):
+    def nodes(self):
+        """Gets all Cluster Nodes
+        
+        Calls the rapi client for the nodes of the cluster.
+        """        
         return self.rapi.GetNodes()
 
-    def instances(self):
-        return self.rapi.GetInstances()
-
-    def get_cluster_instances(self):
-        return self.rapi.GetInstances(bulk=False)
-
-    def get_cluster_instances_detail(self):
-        return self.rapi.GetInstances(bulk=True)
-
-    def get_node_info(self, node):
+    def node(self, node):
+        """Get a single Node
+        Calls the rapi client for a specific cluster node.
+        """
         return self.rapi.GetNode(node)
 
-    def get_instance_info(self, instance):
-        return self.rapi.GetInstance(instance.strip())
-        
-    """
-    def set_random_vnc_password(self, instance):
-        jobid = self._get_resource('/2/instances/%s/randomvncpass' %
-                                   instance.strip(),
-                                   method="POST")
-        tries = 0
-        jobinfo = {}
-        while tries < 10:
-            jobinfo = self._get_resource('/2/jobs/%s' % jobid)
-            if jobinfo['status'] == "error":
-                return None
-            elif jobinfo['status'] == "success":
-                break
-            tries += 1
-            sleep(0.5)
-        if jobinfo:
-            return jobinfo['opresult'][0]
-        else:
-            return None
+    def instances(self):
+        """Gets all VMs which reside under the Cluster
+        Calls the rapi client for all instances.
+        """
+        return self.rapi.GetInstances()
 
-    def setup_vnc_forwarding(self, instance):
-        password = self.set_random_vnc_password(instance)
-        info = self.get_instance_info(instance)
-
-        port = info['network_port']
-        node = info['pnode']
-
-        os.system("portforwarder.py %d %s:%d" % (port, node, port))
-        return (port, password)
-    """
+    def instance(self, instance):
+        """Get a single Instance
+        Calls the rapi client for a specific instance.
+        """
+        return self.rapi.GetInstance(instance)
 
 
 class ClusterUser(models.Model):
@@ -336,5 +256,3 @@ class Quota(models.Model):
     
     def __unicode__(self):
         return self.name
-
-
