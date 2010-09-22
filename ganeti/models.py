@@ -25,39 +25,36 @@ class MethodRequest(urllib2.Request):
 
 
 class VirtualMachine(models.Model):
-    hostname = models.CharField(max_length=128)
-    #owner = models.ForeignKey('ClusterUser', null=True)
-    info = models.TextField(null=False)
+    cluster = models.ForeignKey('Cluster', null=False, editable=False)
+    hostname = models.CharField(max_length=128, editable=False)
+    info = models.TextField(null=False, editable=False)
 
-    def __init__(self, cluster, name, info=None):
-        self.hostname = name
-        self._cluster = cluster
-        self._update(info)
+    def save(self):
+        #self._info = Cluster.objects.get(pk=self.cluster).get_instance_info(self.hostname)
+        for attr in self.info:
+            self.__dict__[attr] = self.info[attr]
+        #self.info = self._info
+        super(VirtualMachine, self).save()
 
     def _update(self, info=None):
-        if not info:
-            self.info = self._cluster.get_instance_info(self.hostname)
-
-        for attr in info:
-            self.__dict__[attr] = info[attr]
-"""
+        """
         for tag in self.tags:
             if tag.startswith('owner:'):
                 try:
                     self.owner = ClusterUser.objects.get(name__iexact=tag.replace('owner:','')).id
                 except:
                     pass
-"""
+        """
         if getattr(self, 'ctime', None):
             self.ctime = datetime.fromtimestamp(self.ctime)
         if getattr(self, 'mtime', None):
             self.mtime = datetime.fromtimestamp(self.mtime)
 
     def __repr__(self):
-        return "<Instance: '%s'>" % self.name
+        return "<VirtualMachine: '%s'>" % self.hostname
 
     def __unicode__(self):
-        return self.name
+        return self.hostname
 
 
 class Cluster(models.Model):
@@ -67,32 +64,25 @@ class Cluster(models.Model):
     description = models.CharField(max_length=128, blank=True, null=True)
     username = models.CharField(max_length=128, blank=True, null=True)
     password = models.CharField(max_length=128, blank=True, null=True)
-    disk_space = models.IntegerField()
-    virtual_cpus = models.IntegerField()
-    ram = models.IntegerField()
-
-    def __init__(self, *args, **kwargs):
-        models.Model.__init__(self, *args, **kwargs)
-        self.rapi = client.GanetiRapiClient(self.hostname, 
-                                              curl_config_fn=curl)
-        if self.id:
-            self._update()
-
-    def save(self, *args, **kwargs):
-        if not self.id:
-            for name in self.rapi.get_instances():
-                vm = VirtualMachine(self, self.hostname, name)
-                vm.save()
-        super(Cluster, self).save(self, *args, **kwargs)
 
     def __unicode__(self):
         return self.hostname
 
     # Update the database records after querying the rapi
-    def _update(self):
-        self._info = self.rapi.GetInfo()
+    def save(self, *args, **kwargs):
+        self.rapi = client.GanetiRapiClient(self.hostname, 
+                                              curl_config_fn=curl)
+        self._info = self.get_cluster_info()
         for attr in self._info:
             self.__dict__[attr] = self._info[attr]
+
+        super(Cluster, self).save()
+
+        vms = self.get_cluster_instances()
+        for vm_name in vms:
+                vm = VirtualMachine(cluster=self, hostname=vm_name, \
+                            info=self.get_instance_info(vm_name))
+                vm.save()
 
     def _get_resource(self, resource, method='GET', data=None):
         # Strip trailing slashes, as ganeti-rapi doesn't like them
@@ -131,7 +121,7 @@ class Cluster(models.Model):
             raise ValueError("Invalid response type '%s'" % contenttype)
 
         return dec.decode(response.read())
-
+    """
     def get_instance(self, name):
         for inst in self.get_instances():
             if inst.name == name:
@@ -140,7 +130,7 @@ class Cluster(models.Model):
 
     def get_instances(self):
         return [ Instance(self, info['name'], info) for info in self.get_cluster_instances_detail() ]
-
+    """
     def get_cluster_info(self):
         info = self.rapi.GetInfo()
         #print info['ctime']
@@ -154,17 +144,17 @@ class Cluster(models.Model):
         return self.rapi.GetNodes()
 
     def get_cluster_instances(self):
-        return self.rapi.GetInstances(False)
+        return self.rapi.GetInstances(bulk=False)
 
     def get_cluster_instances_detail(self):
-        return self.rapi.GetInstances(True)
+        return self.rapi.GetInstances(bulk=True)
 
     def get_node_info(self, node):
         return self.rapi.GetNode(node)
 
     def get_instance_info(self, instance):
-        return self.rapi.GetInstanceInfo(instance.strip())
-
+        return self.rapi.GetInstance(instance.strip())
+    """
     def set_random_vnc_password(self, instance):
         jobid = self._get_resource('/2/instances/%s/randomvncpass' %
                                    instance.strip(),
@@ -193,7 +183,7 @@ class Cluster(models.Model):
 
         os.system("portforwarder.py %d %s:%d" % (port, node, port))
         return (port, password)
-
+    """
     def shutdown_instance(self, instance):
         return self.rapi.ShutdownInstance(instance.strip())
 
@@ -209,7 +199,7 @@ class ClusterUser(models.Model):
     permission = models.ForeignKey('Permission', null=False)
     
     class Meta:
-        abstract = True
+        abstract = False
 
 class Profile(ClusterUser):
     name = models.CharField(max_length=128)
