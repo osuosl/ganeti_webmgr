@@ -44,8 +44,10 @@ class VirtualMachine(models.Model):
     def __init__(self, *args, **kwargs):
         super(VirtualMachine, self).__init__(*args, **kwargs)
         
-        #XXX for now always update on init, this will be replaced with cache
+        #TODO for now always update on init, this will be replaced with cache
         #    timeout later on.
+        assert(self.cluster)
+        
         if True:
             self.refresh()
         else:
@@ -64,7 +66,7 @@ class VirtualMachine(models.Model):
                 self.refresh()
         return self.__info
 
-    @property.setter
+    @info.setter
     def info(self, value):
         """
         Setter for self.info, proxy to self.serialized_info that handles
@@ -82,7 +84,6 @@ class VirtualMachine(models.Model):
         trigger self._parse_info() to update persistent and non-persistent
         properties stored on the model instance.
         """
-        # XXX need the correct ID here for getinstance
         self.__info = self.cluster.rapi.GetInstance(self.hostname)
         self._parse_info()
         self.save()
@@ -91,14 +92,7 @@ class VirtualMachine(models.Model):
         """
         Loads non-persistent properties from cached info
         """
-        info = self.__info
-        
-        # load all info properties into the VM instance
-        # XXX this is a naive update of the instance, there is a possibility
-        #     that keys in __info could conflict with attributes of the class
-        #     i think we can filter using VirtualMachine.__dict__.keys()
-        for attr in self.info:
-            self.__dict__[attr] = self.info[attr]
+        info = self.info
         
         if getattr(self, 'ctime', None):
             self.ctime = datetime.fromtimestamp(self.ctime)
@@ -111,7 +105,7 @@ class VirtualMachine(models.Model):
         the database
         """
         self._load_info()
-        info = self.__info
+        info = self.info
         
         for tag in self.tags:
             if tag.startswith('owner:'):
@@ -139,11 +133,15 @@ class Cluster(models.Model):
 
     def __unicode__(self):
         return self.hostname
-
-    # Update the database records after querying the rapi
-    def save(self, *args, **kwargs):
+    
+    def __init__(self, *args, **kwargs):
+        super(Cluster, self).__init__(*args, **kwargs)
         self.rapi = client.GanetiRapiClient(self.hostname, 
                                               curl_config_fn=curl)
+    
+    # Update the database records after querying the rapi
+    def save(self, *args, **kwargs):
+        
         self._info = self.get_cluster_info()
         for attr in self._info:
             self.__dict__[attr] = self._info[attr]
@@ -152,8 +150,7 @@ class Cluster(models.Model):
 
         vms = self.get_cluster_instances()
         for vm_name in vms:
-                vm = VirtualMachine(cluster=self, hostname=vm_name, \
-                            info=self.get_instance_info(vm_name))
+                vm = VirtualMachine(cluster=self, hostname=vm_name)
                 vm.save()
 
     def _get_resource(self, resource, method='GET', data=None):
