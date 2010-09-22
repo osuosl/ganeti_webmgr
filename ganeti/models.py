@@ -33,16 +33,17 @@ class VirtualMachine(models.Model):
     def save(self):
         for attr in self.info:
             self.__dict__[attr] = self.info[attr]
+        for tag in self.tags:
+            if tag.startswith('owner:'):
+                try:
+                    self.owner = ClusterUser.objects.get(name__iexact=tag.replace('owner:',''))
+                except:
+                    pass
         super(VirtualMachine, self).save()
 
     def _update(self, info=None):
         """
-        for tag in self.tags:
-            if tag.startswith('owner:'):
-                try:
-                    self.owner = ClusterUser.objects.get(name__iexact=tag.replace('owner:','')).id
-                except:
-                    pass
+        
         """
         if getattr(self, 'ctime', None):
             self.ctime = datetime.fromtimestamp(self.ctime)
