@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}{{ instance.name }} on {{ cluster.description }}{% endblock %}
+
+{% block content %}
+    <ul id="orphans">
+        {% for vm in vms %}
+            <li>{{vm.name}}</li>
+        {% endfor %}
+    </ul>
+{% endblock %}
