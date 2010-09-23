@@ -234,16 +234,19 @@ class ClusterUser(models.Model):
     class Meta:
         abstract = False
 
+    def __unicode__(self):
+        return self.name
+
 
 class Profile(ClusterUser):
     """
     Profile associated with a django.contrib.auth.User object.
     """
-    name = models.CharField(max_length=128)
     user = models.OneToOneField(User)
     
-    def __unicode__(self):
-        return self.name
+    @property
+    def name(self):
+        return self.user.username
 
 
 class Organization(ClusterUser):
@@ -252,9 +255,6 @@ class Organization(ClusterUser):
     use when a Cluster or VirtualMachine is owned or managed by multiple people.
     """
     name = models.CharField(max_length=128)
-    
-    def __unicode__(self):
-        return self.name
 
 
 class Quota(models.Model):
