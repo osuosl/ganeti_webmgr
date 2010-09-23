@@ -3,9 +3,18 @@
 {% block title %}{{ instance.name }} on {{ cluster.description }}{% endblock %}
 
 {% block content %}
+    <form action="." method="post">
+    
+    {{form.errors}}
+    
+    {{form.owner.label}} {{form.owner}}
+    <input type="submit" value="Update Selected">
+    
+    
     <ul id="orphans">
         {% for vm in vms %}
-            <li>{{vm.hostname}}</li>
+            <li><input type="checkbox" name="virtual_machines" value="{{vm.0}}">{{vm.1}}</li>
         {% endfor %}
     </ul>
-{% endblock %}
+    </form>
+{% endblock %}ok 

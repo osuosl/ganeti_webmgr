@@ -170,10 +170,15 @@ def instance(request, cluster_slug, instance):
 
 class OrphanForm(forms.Form):
     """
-    Form used for
+    Form used for assigning owners to VirtualMachines that do not yet have an
+    owner (orphans).
     """
-    users = forms.ModelChoiceField(queryset=ClusterUser.objects.all())
+    owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all())
     virtual_machines = forms.MultipleChoiceField()
+
+    def __init__(self, choices, *args, **kwargs):
+        super(OrphanForm, self).__init__(*args, **kwargs)
+        self.fields['virtual_machines'].choices = choices
 
 
 def orphans(request):
@@ -181,9 +186,26 @@ def orphans(request):
     displays list of orphaned VirtualMachines, i.e. VirtualMachines without
     an owner.
     """
+    vms = VirtualMachine.objects.filter(owner=None).values_list('id','hostname')
+    vms = list(vms)
+    
+    if request.method == 'POST':
+        # process updates if this was a form submission
+        form = OrphanForm(vms, request.POST)
+        if form.is_valid():
+            # update all selected VirtualMachines
+            data = form.cleaned_data
+            owner = data['owner']
+            vm_ids = data['virtual_machines']
+            VirtualMachine.objects.filter(id__in=vm_ids).update(owner=owner)
+            
+            # remove updated vms from the list
+            vms = filter(lambda x: unicode(x[0]) not in vm_ids, vms)
+        
+    else:
+        form = OrphanForm(vms)
+    
     for cluster in Cluster.objects.all():
         cluster.sync_virtual_machines()
     
-    vms = VirtualMachine.objects.filter(owner=None).values('id','hostname')
-    
-    return render_to_response("orphans.html", {'vms': vms})
+    return render_to_response("orphans.html", {'vms': vms, 'form':form})
