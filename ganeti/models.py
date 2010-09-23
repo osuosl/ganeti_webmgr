@@ -230,7 +230,6 @@ class ClusterUser(models.Model):
     Base class for objects that may interact with a Cluster or VirtualMachine.
     """
     quota = models.ForeignKey('Quota', null=True)
-    permission = models.ForeignKey('Permission', null=False)
     
     class Meta:
         abstract = False
@@ -264,7 +263,6 @@ class Quota(models.Model):
     attributes of this model represent maximum values the ClusterUser can
     consume.  The absence of a Quota indicates unlimited usage.
     """
-    name = models.SlugField()
     ram = models.IntegerField(default=0, null=True)
     disk_space = models.IntegerField(default=0, null=True)
     virtual_cpus = models.IntegerField(default=0, null=True)
