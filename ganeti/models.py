@@ -258,13 +258,6 @@ class Organization(ClusterUser):
         return self.name
 
 
-class Permission(models.Model):
-    name = models.CharField(max_length=128)
-    
-    def __unicode__(self):
-        return self.name
-
-
 class Quota(models.Model):
     """
     A resource limit imposed on a ClusterUser for a given Cluster.  The
