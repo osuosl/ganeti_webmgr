@@ -229,7 +229,9 @@ class ClusterUser(models.Model):
     """
     Base class for objects that may interact with a Cluster or VirtualMachine.
     """
-    quota = models.ForeignKey('Quota', null=True)
+    clusters = models.ManyToManyField(Cluster, through='Quota',
+                                      related_name='users')
+    name = models.CharField(max_length=128)
     
     class Meta:
         abstract = False
@@ -243,10 +245,6 @@ class Profile(ClusterUser):
     Profile associated with a django.contrib.auth.User object.
     """
     user = models.OneToOneField(User)
-    
-    @property
-    def name(self):
-        return self.user.username
 
 
 class Organization(ClusterUser):
@@ -254,7 +252,8 @@ class Organization(ClusterUser):
     An organization is used for grouping Users.  Organizations are intended for
     use when a Cluster or VirtualMachine is owned or managed by multiple people.
     """
-    name = models.CharField(max_length=128)
+    users = models.ManyToManyField(Profile, related_name="organizations",
+                                   null=True, blank=True)
 
 
 class Quota(models.Model):
@@ -263,9 +262,12 @@ class Quota(models.Model):
     attributes of this model represent maximum values the ClusterUser can
     consume.  The absence of a Quota indicates unlimited usage.
     """
+    user = models.ForeignKey(ClusterUser, related_name='quotas')
+    cluster = models.ForeignKey(Cluster, related_name='quotas')
+    
     ram = models.IntegerField(default=0, null=True)
     disk_space = models.IntegerField(default=0, null=True)
     virtual_cpus = models.IntegerField(default=0, null=True)
     
     def __unicode__(self):
-        return self.name
+        return ''
