@@ -167,6 +167,15 @@ def instance(request, cluster_slug, instance):
                                'configform': configform,
                                'user': request.user })
 
+
+class OrphanForm(forms.Form):
+    """
+    Form used for
+    """
+    users = forms.ModelChoiceField(queryset=ClusterUser.objects.all())
+    virtual_machines = forms.MultipleChoiceField()
+
+
 def orphans(request):
     """
     displays list of orphaned VirtualMachines, i.e. VirtualMachines without
@@ -175,5 +184,6 @@ def orphans(request):
     for cluster in Cluster.objects.all():
         cluster.sync_virtual_machines()
     
-    vms = VirtualMachine.objects.filter(owner=None)
+    vms = VirtualMachine.objects.filter(owner=None).values('id','hostname')
+    
     return render_to_response("orphans.html", {'vms': vms})
