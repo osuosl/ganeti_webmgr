@@ -12,7 +12,7 @@ from ganeti_webmgr.util.portforwarder import forward_port
 
 def check_instance_auth(request, cluster, instance):
     cluster = get_object_or_404(Cluster, slug=cluster)
-    instance = cluster.get_instance(instance)
+    instance = cluster.instance(instance)
     if request.user.is_superuser or request.user in instance.users or \
             set.intersection(set(request.user.groups.all()), set(instance.groups)):
         return True
@@ -138,7 +138,7 @@ def instance(request, cluster_slug, instance):
                                              " sufficient privileges")
 
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    instance = cluster.get_instance(instance)
+    instance = cluster.instance(instance)
     if request.method == 'POST':
         configform = InstanceConfigForm(request.POST)
         if configform.is_valid():
@@ -155,11 +155,11 @@ def instance(request, cluster_slug, instance):
             return HttpResponseRedirect(request.path) 
             
     else: 
-        if instance.hvparams['cdrom_image_path']:
-            instance.hvparams['cdrom_type'] = 'iso'
+        if instance['hvparams']['cdrom_image_path']:
+            instance['hvparams']['cdrom_type'] = 'iso'
         else:
-            instance.hvparams['cdrom_type'] = 'none'
-        configform = InstanceConfigForm(instance.hvparams)
+            instance['hvparams']['cdrom_type'] = 'none'
+        configform = InstanceConfigForm(instance['hvparams'])
 
     return render_to_response("instance.html",
                               {'cluster': cluster,
