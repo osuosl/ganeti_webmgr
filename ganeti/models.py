@@ -1,9 +1,11 @@
 import cPickle
 
 from django.db import models
+from django.db.models.signals import post_save
 from django.contrib.auth.models import User, Group
 from ganeti_webmgr.util import client
 from datetime import datetime
+
 
 curl = client.GenericCurlConfig()
 
@@ -268,6 +270,15 @@ class Quota(models.Model):
     ram = models.IntegerField(default=0, null=True)
     disk_space = models.IntegerField(default=0, null=True)
     virtual_cpus = models.IntegerField(default=0, null=True)
-    
-    def __unicode__(self):
-        return ''
+
+
+def create_profile(sender, instance, **kwargs):
+    """
+    Create a profile object whenever a new user is created, also keeps the
+    profile name synchronized with the username
+    """
+    profile, new = Profile.objects.get_or_create(user=instance)
+    if profile.name != instance.username:
+        profile.name = instance.username
+        profile.save()
+models.signals.post_save.connect(create_profile, sender=User)

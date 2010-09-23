@@ -103,5 +103,7 @@ INSTALLED_APPS = (
     'ganeti_webmgr.ganeti',
 )
 
+AUTH_PROFILE_MODULE = 'ganeti.Profile'
+
 DATE_FORMAT = "d/m/Y H:i"
 DATETIME_FORMAT = "d/m/Y H:i"
