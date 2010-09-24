@@ -1,7 +1,7 @@
+from django.conf import settings
 from django.conf.urls.defaults import *
 from django.views.generic.list_detail import object_list, object_detail
 from ganeti_webmgr.ganeti.models import *
-
 
 urlpatterns = patterns('',
     # Example:
@@ -35,6 +35,9 @@ urlpatterns = patterns('',
     
     url(r'^user/login/?', 'ganeti_webmgr.ganeti.views.login_view', name="login"),
     url(r'^user/logout/?', 'ganeti_webmgr.ganeti.views.logout_view', name="logout"),
-    
-    
 )
+
+if settings.DEBUG:
+    urlpatterns += patterns('',
+        (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT}),
+    )

@@ -1,292 +1,64 @@
 <html>
-<head>
-<title>{% block title %}{% endblock %} Ganeti Web Manager</title>
-<script type="text/javascript" src="/static/jquery.js"></script>
-<script type="text/javascript" src="/static/jquery.color.js"></script>
-<script type="text/javascript">
-function highlight(elemId){
-    var elem = $(elemId);
-    elem.css("background-color", "#ffffbb");
-    setTimeout(function() { $(elemId).animate({ backgroundColor: "white" }, 2000)}, 1500);
-}
-
-   
-$(document).ready( function(){
-    if (document.location.hash) {
-        highlight(document.location.hash);
+    <head>
+    <title>{% block title %}{% endblock %} Ganeti Web Manager</title>
+    <link rel="stylesheet" type="text/css" href="/static/css/base.css"/>
+    <link rel="stylesheet" type="text/css" href="/media/css/base.css"/>
+    <script type="text/javascript" src="/static/jquery.js"></script>
+    <script type="text/javascript" src="/static/jquery.color.js"></script>
+    <script type="text/javascript">
+    function highlight(elemId){
+        var elem = $(elemId);
+        elem.css("background-color", "#ffffbb");
+        setTimeout(function() { $(elemId).animate({ backgroundColor: "white" }, 2000)}, 1500);
     }
-    $('a[href*=#]').click(function(){
-        var elemId = '#' + $(this).attr('href').split('#')[1];
-        highlight(elemId);
-    });
 
-})
-</script>
+       
+    $(document).ready( function(){
+        if (document.location.hash) {
+            highlight(document.location.hash);
+        }
+        $('a[href*=#]').click(function(){
+            var elemId = '#' + $(this).attr('href').split('#')[1];
+            highlight(elemId);
+        });
 
+    })
+    </script>
+    </head>
+    <body>
+    <div id="header">
+    <div id="title">
+    <a href="/">Ganeti Web Manager</a>
+    </div>
+    <div id="menu">
+    <ul>
+    <li><a>Greek</a></li>
+    {% if user.is_staff %}
+    <li><a>More Greek</a></li>
+    {% endif %}
+    <li><a href="http://www.noc.grnet.gr">External Link</a>
+    </ul>
+    </div>
+    {% if not user.is_authenticated %}
+    <form id="searchbar" method="post" action="{% url login %}">
+    <label for="username">Username: </label><input name="username" type="text"></input> 
+    <label for="password">Password: </label><input name="password" type="password"></input>
+    <input type="submit" value="Login" />
+    </form>
+    {% else %}
+    <div id="searchbar">
+    <a href="{% url logout %}">Logout</a>
+    </div>
+    {% endif %}
+    </div>
 
-</head>
+    <div id="content">
+    {% block content %}
+    {% endblock %}
+    <div id="footer">
+    <a href="http://www.djangoproject.com/"><img src="/static/django.gif" alt="A Django site" title="A Django site" border=0 /></a>
+    </div>
+    </div>
 
-<style type="text/css">
-* {
-    font-family: arial, tahoma, sans-serif;
-    font-size: 10pt;
-}
-
-html {
-    width: 100%;
-}
-
-#header {
-    background: url('/static/header.png');
-    height: 152px;
-    width: 990px;
-    margin-left: auto;
-    margin-right: auto;
-    border: 5px solid white;
-    -moz-background-clip:border;
-    -moz-background-inline-policy:continuous;
-    -moz-background-origin:padding;
-    -moz-border-radius-bottomleft:5px;
-    -moz-border-radius-bottomright:5px;
-    -moz-border-radius-topleft:5px;
-    -moz-border-radius-topright:5px;
-}
-
-body {
-    padding-bottom: 2em;
-    background: #eaeaea;
-}
-
-#content {
-    width: 990px;
-    margin-left: auto;
-    margin-right: auto;
-    clear: both;
-    background: #fafafa;
-    border: 5px solid white;
-    -moz-background-clip:border;
-    -moz-background-inline-policy:continuous;
-    -moz-background-origin:padding;
-    -moz-border-radius-bottomleft:5px;
-    -moz-border-radius-bottomright:5px;
-    -moz-border-radius-topleft:5px;
-    -moz-border-radius-topright:5px;
-}
-
-#title, #title a {
-    font-size: 21px;
-    font-weight: bold;
-    text-align: center;
-    color: white;   
-    height: 124px;
-}
-
-#menu {
-    height: 28px;
-    padding-top: 5px;
-}
-
-#menu ul {
-    padding: 0;
-    margin: 0;
-    list-style-type: none;
-    display: inline;
-}
-
-#menu ul li {
-    padding-left: 20px;
-    display: inline;
-}
-
-#menu ul li a {
-    color: white;
-    text-decoration: none;
-}
-
-#menu ul li a:hover {
-    font-weight: bold;
-}
-
-#footer {
-    clear: both;
-    padding-top: 1em;
-    text-align: center;
-}
-
-#searchbar {
-    position: relative;
-    float: right;
-    padding: 0;
-    padding-right: 4px;
-    top: -28px;
-    color: white;
-    margin: 0;
-}
-
-#searchbar a {
-    color: white;
-}
-
-#searchbar input {
-    border: none;
-    font-size: 1em;
-    width: 10em;
-}
-
-.ticketitem {
-    padding-bottom: 0.5em;
-    margin-bottom: 2em;
-    border-top: 1px solid #aeaeae;
-}
-
-.ticketitem a {
-    font-weight: bold;
-    color: #559BD7;
-    text-decoration: none;
-}
-
-#queuelist {
-    float: left;
-    width: 180px;
-    padding-left: 1em;
-}
-
-#queuelist ul {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-}
-#queuelist ul li {
-    padding: 0;
-    padding-top: 0.7em;
-    margin: 0;
-}
-
-#queuelist a, a:visited {
-    font-weight: bold;
-    text-decoration: none;
-    color: #559BD7;
-}
-
-#ticketlist {
-    margin-left: 180px;
-    border-left: 1px solid #aeaeae;
-    padding-left: 1em;
-    padding-right: 1em;
-}
-
-.queuestats {
-    color: gray;
-    font-size: 0.9em;
-}
-
-.queuestats abbr {
-    font-style: italic;
-}
-
-#pagelist {
-    text-align: center;
-    font-weight: bold;
-    position: fixed;
-    bottom: 0px;
-    right: 0px;
-    background: white;
-    padding-left: 200px;
-    width: 100%;
-    padding-top: 0.5em;
-    border-top: 1px solid #333;
-}
-
-#pagelist a {
-    text-decoration: none;
-    color: gray;
-}
-
-
-h2, h3 {
-    text-align: center;
-}
-
-h3 {
-    font-size: 1.1em;
-}
-
-h3 a, a:visited {
-    text-decoration: none;
-    color: #559BD7;
-}
-
-td {
-    text-align: center;
-}
-
-tr.even {
-    background: #eaeaea;
-}
-
-span.highlighted {
-    font-weight: bold;
-    color: red;
-}
-
-form.update {
-    text-align: center;
-    display: none;
-}
-form.update textarea {
-    width: 100%;
-}
-
-.hidden {
-    display: none;
-}
-
-.center_text {
-    text-align: center;
-}
-
-#searchform {
-    width: 300px;
-    margin-left: auto;
-    margin-right: auto;
-    text-align: center;
-}
-</style>
-
-<body>
-<div id="header">
-<div id="title">
-<a href="/">Ganeti Web Manager</a>
-</div>
-<div id="menu">
-<ul>
-<li><a>Greek</a></li>
-{% if user.is_staff %}
-<li><a>More Greek</a></li>
-{% endif %}
-<li><a href="http://www.noc.grnet.gr">External Link</a>
-</ul>
-</div>
-{% if not user.is_authenticated %}
-<form id="searchbar" method="post" action="{% url login %}">
-<label for="username">Username: </label><input name="username" type="text"></input> 
-<label for="password">Password: </label><input name="password" type="password"></input>
-<input type="submit" value="Login" />
-</form>
-{% else %}
-<div id="searchbar">
-<a href="{% url logout %}">Logout</a>
-</div>
-{% endif %}
-</div>
-
-<div id="content">
-{% block content %}
-{% endblock %}
-<div id="footer">
-<a href="http://www.djangoproject.com/"><img src="/static/django.gif" alt="A Django site" title="A Django site" border=0 /></a>
-</div>
-</div>
-
-</body>
+    </body>
 </html>
