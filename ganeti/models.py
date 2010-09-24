@@ -4,10 +4,14 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.contrib.auth.models import User, Group
 from ganeti_webmgr.util import client
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 curl = client.GenericCurlConfig()
+
+
+LAZY_CACHE_REFRESH = 10000
+
 
 class VirtualMachine(models.Model):
     """
@@ -16,7 +20,17 @@ class VirtualMachine(models.Model):
     retrieved via the RAPI is stored in VirtualMachine.info, and serialized
     automatically into VirtualMachine.serialized_info.
     
-    Attributes that need to be searchable should be stored.
+    Attributes that need to be searchable should be stored as model fields.  All
+    other attributes will be stored within VirtualMachine.info.
+    
+    This object uses a lazy update mechanism on instantiation.  If the cached
+    info from the Ganeti cluster has expired, it will trigger an update.  This
+    allows the cache to function in the absence of a periodic update mechanism
+    such as Cron, Celery, or Threads.
+    
+    The lazy update and periodic update should use separate refresh timeouts
+    where LAZY_CACHE_REFRESH > PERIODIC_CACHE_REFRESH.  This ensures that lazy
+    cache will only be used if the periodic cache is not updating.
     
     XXX Serialized_info can possibly be changed to a CharField if an upper
         limit can be determined. (Later Date, if it will optimize db)
@@ -30,22 +44,32 @@ class VirtualMachine(models.Model):
     virtual_cpus = models.IntegerField()
     disk_size = models.IntegerField()
     ram = models.IntegerField()
+    cached = models.DateTimeField(null=True, editable=False)
     
     ctime = None
     mtime = None
     __info = None
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialize an instance of VirtualMachine.  This method requires cluster
+        passed in as a keyword argument so that this object may be refreshed
+        via the Ganeti RAPI.
+        """
         super(VirtualMachine, self).__init__(*args, **kwargs)
         
-        #TODO for now always update on init, this will be replaced with cache
-        #    timeout later on.
+        # VirtualMachine must always have cluster set.  otherwise it cannot
+        # access the RAPI to refresh itself.
         assert(self.cluster)
         
-        if True:
-            self.refresh()
+        # Load cached info retrieved from the ganeti cluster.  This is the lazy
+        # cache refresh.
+        now = datetime.now()
+        update = self.cached+timedelta(0, 0, 0, LAZY_CACHE_REFRESH)
+        if self.cached is None or now > update:
+                self.refresh()
         else:
-            self._load_info()
+                self._load_info()
 
     @property
     def info(self):
@@ -83,6 +107,7 @@ class VirtualMachine(models.Model):
         try:
             self.info = self.rapi.GetInstance(self.hostname)
             self._parse_info()
+            self.cached = datetime.now()
             self.save()
         except client.GanetiApiError:
             pass
@@ -105,8 +130,8 @@ class VirtualMachine(models.Model):
 
     def _parse_info(self):
         """
-        Loads all values from cached info, included values that are stored in
-        the database
+        Loads all values from cached info, included persistent properties that
+        are stored in the database
         """
         self._load_info()
         info_ = self.info
