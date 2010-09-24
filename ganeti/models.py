@@ -1,6 +1,8 @@
 import cPickle
 from datetime import datetime, timedelta
 from hashlib import sha1
+from threading import Thread
+import time
 
 from django.db import models
 from django.db.models.signals import post_save
@@ -8,10 +10,11 @@ from django.contrib.auth.models import User, Group
 from ganeti_webmgr.util import client
 
 
-CURL = client.GenericCurlConfig()
 LAZY_CACHE_REFRESH = 60000
-PERIODIC_CACHE_REFRESH = 15000
+PERIODIC_CACHE_REFRESH = 15
 
+
+CURL = client.GenericCurlConfig()
 RAPI_CACHE = {}
 RAPI_CACHE_HASHES = {}
 def get_rapi(hash, cluster):
@@ -127,13 +130,13 @@ class VirtualMachine(models.Model):
     def rapi(self):
         return get_rapi(self.cluster_hash, self.cluster_id)
 
-    def save(self):
+    def save(self, *args, **kwargs):
         """
         sets the cluster_hash for newly saved instances
         """
         if self.id is None:
             self.cluster_hash = self.cluster.hash
-        super(VirtualMachine, self).save()
+        super(VirtualMachine, self).save(*args, **kwargs)
 
     def refresh(self):
         """
@@ -285,11 +288,11 @@ class Cluster(models.Model):
         """
         return self.rapi.GetNode(node)
 
-    def instances(self):
+    def instances(self, bulk=False):
         """Gets all VMs which reside under the Cluster
         Calls the rapi client for all instances.
         """
-        return self.rapi.GetInstances()
+        return self.rapi.GetInstances(bulk=bulk)
 
     def instance(self, instance):
         """Get a single Instance
@@ -364,3 +367,26 @@ def update_cluster_hash(sender, instance, **kwargs):
 
 models.signals.post_save.connect(create_profile, sender=User)
 models.signals.post_save.connect(update_cluster_hash, sender=Cluster)
+
+
+def update_cache():
+    print '------[cache update]-------------------------------'
+    
+    for cluster in Cluster.objects.all():
+        infos = cluster.instances(bulk=True)
+        
+        for info in infos:
+            print '    Virtual Machine: %s' % info['name']
+            vm, new = VirtualMachine.objects.get_or_create(cluster=cluster, hostname=info['name'])
+            vm.info = info
+            vm.save()
+
+
+class CacheUpdateThread(Thread):
+    def run(self):
+        while True:
+            update_cache()
+            time.sleep(PERIODIC_CACHE_REFRESH)
+
+
+update_cache()
