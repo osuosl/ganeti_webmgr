@@ -1,16 +1,46 @@
 import cPickle
+from datetime import datetime, timedelta
+from hashlib import sha1
 
 from django.db import models
 from django.db.models.signals import post_save
 from django.contrib.auth.models import User, Group
 from ganeti_webmgr.util import client
-from datetime import datetime, timedelta
 
 
-curl = client.GenericCurlConfig()
+CURL = client.GenericCurlConfig()
+LAZY_CACHE_REFRESH = 30000
+PERIODIC_CACHE_REFRESH = 15000
 
-
-LAZY_CACHE_REFRESH = 10000
+RAPI_CACHE = {}
+def get_rapi(hash, cluster=None):
+    """
+    Retrieves the cached Ganeti RAPI client for a given hash.  The Hash is
+    derived from the connection credentials required for a cluster.  If the
+    client is not yet cached, it will be created and added.
+    
+    If a hash does not correspond to any cluster then Cluster.DoesNotExist will
+    be raised.
+    
+    XXX There is a memory leak when the hash is updated, the old version is not
+    removed.  Solution: when adding a new client to the cache, we should check
+    to see if there are any outdated copies.  This can be best achieved by
+    also storing a mapping between the cluster_id and hash.
+    
+    XXX there is a race condition where a VirtualMachine instance may have been
+    fetched just before the Cluster's hash is updated.  This would incorrectly
+    result in the cluster not being found.
+    """
+    if hash in RAPI_CACHE:
+        return RAPI_CACHE[hash]
+        
+    if not cluster:
+        # look up cluster object if not given
+        cluster = Cluster.objects.get(hash=hash)
+        
+    rapi = client.GanetiRapiClient(cluster.hostname, curl_config_fn=CURL)
+    RAPI_CACHE[hash] = rapi
+    return rapi
 
 
 class VirtualMachine(models.Model):
@@ -45,6 +75,7 @@ class VirtualMachine(models.Model):
     disk_size = models.IntegerField()
     ram = models.IntegerField()
     cached = models.DateTimeField(null=True, editable=False)
+    cluster_hash = models.CharField(max_length=40, editable=False)
     
     ctime = None
     mtime = None
@@ -58,15 +89,10 @@ class VirtualMachine(models.Model):
         """
         super(VirtualMachine, self).__init__(*args, **kwargs)
         
-        # VirtualMachine must always have cluster set.  otherwise it cannot
-        # access the RAPI to refresh itself.
-        assert(self.cluster)
-        
         # Load cached info retrieved from the ganeti cluster.  This is the lazy
         # cache refresh.
-        now = datetime.now()
-        update = self.cached+timedelta(0, 0, 0, LAZY_CACHE_REFRESH)
-        if self.cached is None or now > update:
+        if self.cached is None \
+            or datetime.now() > self.cached+timedelta(0, 0, 0, LAZY_CACHE_REFRESH):
                 self.refresh()
         else:
                 self._load_info()
@@ -96,7 +122,15 @@ class VirtualMachine(models.Model):
 
     @property
     def rapi(self):
-        return self.cluster.rapi
+        return get_rapi(self.cluster_hash)
+
+    def save(self):
+        """
+        sets the cluster_hash for newly saved instances
+        """
+        if self.id is None:
+            self.cluster_hash = self.cluster.hash
+        super(VirtualMachine, self).save()
 
     def refresh(self):
         """
@@ -173,9 +207,7 @@ class Cluster(models.Model):
     description = models.CharField(max_length=128, blank=True, null=True)
     username = models.CharField(max_length=128, blank=True, null=True)
     password = models.CharField(max_length=128, blank=True, null=True)
-
-    __rapi = None
-    __rapi_config = None
+    hash = models.CharField(max_length=40, editable=False)
     
     def __init__(self, *args, **kwargs):
         super(Cluster, self).__init__(*args, **kwargs)
@@ -185,19 +217,31 @@ class Cluster(models.Model):
             self._info = self.info()
             self.__dict__.update(self._info)
     
+    def __unicode__(self):
+        return self.hostname
+    
+    #def save(self):
+    #    self.hash = self.create_hash()
+    #    super(Cluster, self).save()
+    
     @property
     def rapi(self):
         """
-        retrieves the rapi client for this cluster.  The
+        retrieves the rapi client for this cluster.
         """
-        if self.__rapi is None or self.__rapi_config != (self.hostname,):
-            self.__rapi_config = (self.hostname,)
-            self.__rapi = client.GanetiRapiClient(self.hostname,
-                                                          curl_config_fn=curl)
-        return self.__rapi
+        # XXX always pass self in.  not only does it avoid querying this object
+        # from the DB a second time, it also prevents a recursion loop caused
+        # by __init__ fetching info from the Cluster
+        return get_rapi(self.hash, self)
 
-    def __unicode__(self):
-        return self.hostname
+    def create_hash(self):
+        """
+        Creates a hash for this cluster based on credentials required for
+        connecting to the server
+        """
+        return sha1('%s%s%s%s' % \
+                    (self.username, self.password, self.hostname, self.port)) \
+                .hexdigest()
 
     def sync_virtual_machines(self):
         """
@@ -219,7 +263,6 @@ class Cluster(models.Model):
 
     def info(self):
         info = self.rapi.GetInfo()
-        #print info['ctime']
         if 'ctime' in info and info['ctime']:
             info['ctime'] = datetime.fromtimestamp(info['ctime'])
         if 'mtime' in info and info['mtime']:
@@ -306,4 +349,15 @@ def create_profile(sender, instance, **kwargs):
     if profile.name != instance.username:
         profile.name = instance.username
         profile.save()
+
+
+def update_cluster_hash(sender, instance, **kwargs):
+    """
+    Updates the Cluster hash for all of it's VirtualMachines
+    """
+    #instance.virtual_machines.all().update(cluster_hash=instance.hash)
+    pass
+
+
 models.signals.post_save.connect(create_profile, sender=User)
+models.signals.post_save.connect(update_cluster_hash, sender=Cluster)
