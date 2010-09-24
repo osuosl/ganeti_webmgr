@@ -14,7 +14,7 @@ PERIODIC_CACHE_REFRESH = 15000
 
 RAPI_CACHE = {}
 RAPI_CACHE_HASHES = {}
-def get_rapi(hash, cluster=None):
+def get_rapi(hash, cluster):
     """
     Retrieves the cached Ganeti RAPI client for a given hash.  The Hash is
     derived from the connection credentials required for a cluster.  If the
@@ -23,16 +23,18 @@ def get_rapi(hash, cluster=None):
     If a hash does not correspond to any cluster then Cluster.DoesNotExist will
     be raised.
     
-    XXX there is a race condition where a VirtualMachine instance may have been
-    fetched just before the Cluster's hash is updated.  This would incorrectly
-    result in the cluster not being found.
+    @param cluster - either a cluster object, or ID of object.  This is used for
+        resolving the cluster if the client is not already found.  The id is
+        used rather than the hash, because the hash is mutable.
+        
+    @return a Ganeti RAPI client.
     """
     if hash in RAPI_CACHE:
         return RAPI_CACHE[hash]
         
-    if not cluster:
+    if not isinstance(cluster, (Cluster,)):
         # look up cluster object if not given
-        cluster = Cluster.objects.get(hash=hash)
+        cluster = Cluster.objects.get(id=cluster_id)
     
     # delete any old version of the client that was cached.
     if cluster.id in RAPI_CACHE_HASHES:
@@ -123,7 +125,7 @@ class VirtualMachine(models.Model):
 
     @property
     def rapi(self):
-        return get_rapi(self.cluster_hash)
+        return get_rapi(self.cluster_hash, self.cluster_id)
 
     def save(self):
         """
