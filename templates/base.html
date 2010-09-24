@@ -41,26 +41,29 @@
         </div>
         {% if not user.is_authenticated %}
         <form id="searchbar" method="post" action="{% url login %}">
-            <label for="username">Username: </label><input name="username" type="text"></input> 
-            <label for="password">Password: </label><input name="password" type="password"></input>
-            <input type="submit" value="Login" />
+            <label for="username">Username: </label>
+              <input name="username" type="text"></input> 
+            <label for="password">Password: </label>
+              <input name="password" type="password"></input>
+              <input type="submit" value="Login" />
         </form>
         {% else %}
         <div id="searchbar">
             <a href="{% url logout %}">Logout</a>
         </div>
         {% endif %}
-        </div>
+    </div>
 
-        <div id="content">
+    <div id="content">
         {% block content %}
         {% endblock %}
-        <div id="footer">
+    </div>
+    
+    <div id="footer">
         <a href="http://www.djangoproject.com/">
             <img src="/static/django.gif" alt="A Django site" title="A Django site" border=0 />
         </a>
-        </div>
     </div>
-
+    
     </body>
 </html>
