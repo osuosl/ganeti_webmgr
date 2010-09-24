@@ -9,7 +9,7 @@ from ganeti_webmgr.util import client
 
 
 CURL = client.GenericCurlConfig()
-LAZY_CACHE_REFRESH = 30000
+LAZY_CACHE_REFRESH = 60000
 PERIODIC_CACHE_REFRESH = 15000
 
 RAPI_CACHE = {}
