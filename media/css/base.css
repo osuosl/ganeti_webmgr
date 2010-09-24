@@ -30,13 +30,14 @@ body {
     margin-left: auto;
     margin-right: auto;
     border: 5px solid #abada4;
+    border-top-width: 0px;
     -moz-background-clip:border;
     -moz-background-inline-policy:continuous;
     -moz-background-origin:padding;
     -moz-border-radius-bottomleft:5px;
     -moz-border-radius-bottomright:5px;
-    -moz-border-radius-topleft:5px;
-    -moz-border-radius-topright:5px;
+    -moz-border-radius-topleft:0px;
+    -moz-border-radius-topright:0px;
 }
 
 #header a:link, #header a:visited {
