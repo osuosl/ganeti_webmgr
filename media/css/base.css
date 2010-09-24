@@ -1,0 +1,244 @@
+/* Oregon State Colors:
+ *  Brand Orange - #d85a1a
+ *  Brown - #9d601e
+ *  411 (Baige) - #615042
+ *  Warm Gray - #c6c0b7
+ *  7539 (Gray) - #abada4
+ *  5415 (Blue) - #6b859e
+ *  5503 (Light Blue) - #a7c4c9
+ *
+ *  BG - OSU Homepage (09/24/10) - #eeece8
+ * */
+* {
+    font-family: arial, tahoma, sans-serif;
+    font-size: 10pt;
+}
+
+html {
+    width: 100%;
+}
+
+body {
+    padding-bottom: 2em;
+    background: #eeece8;
+}
+
+#header {
+    background: url('/static/header.png') #6b859e;
+    height: 152px;
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+    border: 5px solid #abada4;
+    border-top-width: 0px;
+    -moz-background-clip:border;
+    -moz-background-inline-policy:continuous;
+    -moz-background-origin:padding;
+    -moz-border-radius-bottomleft:5px;
+    -moz-border-radius-bottomright:5px;
+    -moz-border-radius-topleft:0px;
+    -moz-border-radius-topright:0px;
+}
+
+#header a:link, #header a:visited {
+    color: black;
+}
+
+#title, #title a {
+    font-size: 21px;
+    font-weight: bold;
+    text-align: center;
+    color: black;   
+    height: 124px;
+}
+
+#title a:link, #title a:visited {
+    color: black;
+}
+
+#menu {
+    height: 28px;
+    padding-top: 5px;
+}
+
+#menu ul {
+    padding: 0;
+    margin: 0;
+    list-style-type: none;
+    display: inline;
+}
+
+#menu ul li {
+    padding-left: 20px;
+    display: inline;
+}
+
+#menu ul li a {
+    color: black;
+    text-decoration: none;
+}
+
+#menu ul li a:hover {
+    font-weight: bold;
+}
+
+#searchbar {
+    position: relative;
+    float: right;
+    padding: 0;
+    padding-right: 4px;
+    top: -28px;
+    color: black;
+    margin: 0;
+}
+
+#searchbar a {
+    color: black;
+}
+
+#searchbar input {
+    border: none;
+    font-size: 1em;
+    width: 10em;
+}
+
+#content {
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+    clear: both;
+    background: white;
+    border: 5px solid #abada4;
+    -moz-background-clip:border;
+    -moz-background-inline-policy:continuous;
+    -moz-background-origin:padding;
+    -moz-border-radius-bottomleft:5px;
+    -moz-border-radius-bottomright:5px;
+    -moz-border-radius-topleft:5px;
+    -moz-border-radius-topright:5px;
+}
+
+#footer {
+    clear: both;
+    padding-top: 1em;
+    text-align: center;
+}
+
+.ticketitem {
+    padding-bottom: 0.5em;
+    margin-bottom: 2em;
+    border-top: 1px solid #615042;
+}
+
+.ticketitem a {
+    font-weight: bold;
+    color: #559BD7;
+    text-decoration: none;
+}
+
+#queuelist {
+    float: left;
+    width: 180px;
+    padding-left: 1em;
+}
+
+#queuelist ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+#queuelist ul li {
+    padding: 0;
+    padding-top: 0.7em;
+    margin: 0;
+}
+
+#queuelist a, a:visited {
+    font-weight: bold;
+    text-decoration: none;
+    color: #559BD7;
+}
+
+#ticketlist {
+    margin-left: 180px;
+    border-left: 1px solid #615042;
+    padding-left: 1em;
+    padding-right: 1em;
+}
+
+.queuestats {
+    color: gray;
+    font-size: 0.9em;
+}
+
+.queuestats abbr {
+    font-style: italic;
+}
+
+#pagelist {
+    text-align: center;
+    font-weight: bold;
+    position: fixed;
+    bottom: 0px;
+    right: 0px;
+    background: white;
+    padding-left: 200px;
+    width: 100%;
+    padding-top: 0.5em;
+    border-top: 1px solid #333;
+}
+
+#pagelist a {
+    text-decoration: none;
+    color: gray;
+}
+
+
+h2, h3 {
+    text-align: center;
+}
+
+h3 {
+    font-size: 1.1em;
+}
+
+h3 a, a:visited {
+    text-decoration: none;
+    color: #559BD7;
+}
+
+td {
+    text-align: center;
+}
+
+tr.even {
+    background: #fafafa;
+}
+
+span.highlighted {
+    font-weight: bold;
+    color: red;
+}
+
+form.update {
+    text-align: center;
+    display: none;
+}
+form.update textarea {
+    width: 100%;
+}
+
+.hidden {
+    display: none;
+}
+
+.center_text {
+    text-align: center;
+}
+
+#searchform {
+    width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
