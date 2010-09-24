@@ -1,34 +1,34 @@
 {% extends "base.html" %}
 
-{% block title %}{{ instance.name }} on {{ cluster.description }}{% endblock %}
+{% block title %} Virtual Machine {{ instance.hostname }}{% endblock %}
 {% block content %}
 
 <div class="ticket" id="ticket_{{ object.id }}">
-<h2><a href="">{{ instance.hostname }}</a></h2>
-<h2>Information</h2>
-<ul>
-{% with instance.info as info %}
-<li>Status: {{ info.oper_state|yesno:"Running,Stopped" }}</li>
-<li>Autostart: {{ info.admin_state }}</li>
-<li>UUID: {{ info.uuid }}</li>
-<li>Primary node: {{ info.pnode }}</li>
-<li>Failover node: {{ info.snodes|join:", " }}</li>
-<li>Created on: {{ ctime|date }}</li>
-<li>Last modified: {{ info.mtime|date }}</li>
-<li>NIC type: {{ info.hvparams.nic_type }}</li>
-<li>Disk type: {{ info.hvparams.disk_type }}</li>
-{% endwith %}
-</ul>
+    <h2>{{ instance.hostname }}</h2>
+    <h2>Information</h2>
+    <ul>
+        {% with instance.info as info %}
+        <li>Status: {{ info.oper_state|yesno:"Running,Stopped" }}</li>
+        <li>Autostart: {{ info.admin_state }}</li>
+        <li>UUID: {{ info.uuid }}</li>
+        <li>Primary node: {{ info.pnode }}</li>
+        <li>Failover node: {{ info.snodes|join:", " }}</li>
+        <li>Created on: {{ ctime|date }}</li>
+        <li>Last modified: {{ info.mtime|date }}</li>
+        <li>NIC type: {{ info.hvparams.nic_type }}</li>
+        <li>Disk type: {{ info.hvparams.disk_type }}</li>
+        {% endwith %}
+    </ul>
 
-<h2>Actions</h2>
-<ul>
-{% if instance.info.oper_state %}<li><a href="{% url instance-shutdown cluster.slug instance.hostname %}">Shutdown</a></li>
-<li><a href="{% url instance-reboot cluster.slug instance.hostname %}">Reboot</a></li>
-<li><a href="{% url instance-vnc cluster.slug instance.hostname %}">Remote console (VNC)</a></li>
-{% else %}
-<li><a href="{% url instance-startup cluster.slug instance.hostname %}">Start</a></li>
-{% endif %}
-</ul>
+    <h2>Actions</h2>
+    <ul>
+        {% if instance.info.oper_state %}<li><a href="{% url instance-shutdown cluster.slug instance.hostname %}">Shutdown</a></li>
+        <li><a href="{% url instance-reboot cluster.slug instance.hostname %}">Reboot</a></li>
+        <li><a href="{% url instance-vnc cluster.slug instance.hostname %}">Remote console (VNC)</a></li>
+        {% else %}
+        <li><a href="{% url instance-startup cluster.slug instance.hostname %}">Start</a></li>
+        {% endif %}
+    </ul>
 </div>
 
 <div id="configuration">
