@@ -186,6 +186,10 @@ def orphans(request):
     displays list of orphaned VirtualMachines, i.e. VirtualMachines without
     an owner.
     """
+    # synchronize all cluster objects
+    for cluster in Cluster.objects.all():
+        cluster.sync_virtual_machines()
+    
     vms = VirtualMachine.objects.filter(owner=None).values_list('id','hostname')
     vms = list(vms)
     
@@ -204,8 +208,5 @@ def orphans(request):
         
     else:
         form = OrphanForm(vms)
-    
-    for cluster in Cluster.objects.all():
-        cluster.sync_virtual_machines()
     
     return render_to_response("orphans.html", {'vms': vms, 'form':form})
