@@ -6,6 +6,8 @@
  *  7539 (Gray) - #abada4
  *  5415 (Blue) - #6b859e
  *  5503 (Light Blue) - #a7c4c9
+ *
+ *  BG - OSU Homepage (09/24/10) - #eeece8
  * */
 * {
     font-family: arial, tahoma, sans-serif;
@@ -42,7 +44,7 @@ html {
 
 body {
     padding-bottom: 2em;
-    background: white;
+    background: #eeece8;
 }
 
 #content {
