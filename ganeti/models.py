@@ -60,13 +60,12 @@ class VirtualMachine(models.Model):
         
         # VirtualMachine must always have cluster set.  otherwise it cannot
         # access the RAPI to refresh itself.
-        assert(self.cluster)
+        
         
         # Load cached info retrieved from the ganeti cluster.  This is the lazy
         # cache refresh.
-        now = datetime.now()
-        update = self.cached+timedelta(0, 0, 0, LAZY_CACHE_REFRESH)
-        if self.cached is None or now > update:
+        if self.cached is None \
+            or datetime.now() > self.cached+timedelta(0, 0, 0, LAZY_CACHE_REFRESH):
                 self.refresh()
         else:
                 self._load_info()
