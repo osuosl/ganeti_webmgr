@@ -18,6 +18,11 @@ html {
     width: 100%;
 }
 
+body {
+    padding-bottom: 2em;
+    background: #eeece8;
+}
+
 #header {
     background: url('/static/header.png') #6b859e;
     height: 152px;
@@ -38,37 +43,16 @@ html {
     color: black;
 }
 
-#title a:link, #title a:visited {
-    color: black;
-}
-
-body {
-    padding-bottom: 2em;
-    background: #eeece8;
-}
-
-#content {
-    width: 90%;
-    margin-left: auto;
-    margin-right: auto;
-    clear: both;
-    background: white;
-    border: 5px solid #abada4;
-    -moz-background-clip:border;
-    -moz-background-inline-policy:continuous;
-    -moz-background-origin:padding;
-    -moz-border-radius-bottomleft:5px;
-    -moz-border-radius-bottomright:5px;
-    -moz-border-radius-topleft:5px;
-    -moz-border-radius-topright:5px;
-}
-
 #title, #title a {
     font-size: 21px;
     font-weight: bold;
     text-align: center;
     color: black;   
     height: 124px;
+}
+
+#title a:link, #title a:visited {
+    color: black;
 }
 
 #menu {
@@ -97,12 +81,6 @@ body {
     font-weight: bold;
 }
 
-#footer {
-    clear: both;
-    padding-top: 1em;
-    text-align: center;
-}
-
 #searchbar {
     position: relative;
     float: right;
@@ -121,6 +99,28 @@ body {
     border: none;
     font-size: 1em;
     width: 10em;
+}
+
+#content {
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+    clear: both;
+    background: white;
+    border: 5px solid #abada4;
+    -moz-background-clip:border;
+    -moz-background-inline-policy:continuous;
+    -moz-background-origin:padding;
+    -moz-border-radius-bottomleft:5px;
+    -moz-border-radius-bottomright:5px;
+    -moz-border-radius-topleft:5px;
+    -moz-border-radius-topright:5px;
+}
+
+#footer {
+    clear: both;
+    padding-top: 1em;
+    text-align: center;
 }
 
 .ticketitem {
