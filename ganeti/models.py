@@ -120,13 +120,6 @@ class VirtualMachine(models.Model):
             self.ctime = datetime.fromtimestamp(self.info.ctime)
         if getattr(self, 'mtime', None):
             self.mtime = datetime.fromtimestamp(self.info.mtime)
-        self.ram = self.info['beparams']['memory']
-        self.virtual_cpus = self.info['beparams']['vcpus']
-        # Sum up the size of each disk used by the VM
-        disk_size = 0
-        for disk in self.info['disk.sizes']:
-            disk_size += disk
-        self.disk_size = disk_size
 
     def _parse_info(self):
         """
@@ -145,7 +138,14 @@ class VirtualMachine(models.Model):
                     pass
         '''
         
-        # TODO: load resource information    
+        # Parse resource properties
+        self.ram = self.info['beparams']['memory']
+        self.virtual_cpus = self.info['beparams']['vcpus']
+        # Sum up the size of each disk used by the VM
+        disk_size = 0
+        for disk in self.info['disk.sizes']:
+            disk_size += disk
+        self.disk_size = disk_size 
 
     def shutdown(self):
         return self.clusterrapi.ShutdownInstance(self.hostname)
