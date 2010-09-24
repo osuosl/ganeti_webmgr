@@ -1,8 +1,8 @@
 <html>
     <head>
     <title>{% block title %}{% endblock %} Ganeti Web Manager</title>
-    <link rel="stylesheet" type="text/css" href="/static/css/base.css"/>
     <link rel="stylesheet" type="text/css" href="/media/css/base.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/css/base.css"/>
     <script type="text/javascript" src="/static/jquery.js"></script>
     <script type="text/javascript" src="/static/jquery.color.js"></script>
     <script type="text/javascript">
@@ -27,37 +27,39 @@
     </head>
     <body>
     <div id="header">
-    <div id="title">
-    <a href="/">Ganeti Web Manager</a>
-    </div>
-    <div id="menu">
-    <ul>
-    <li><a>Greek</a></li>
-    {% if user.is_staff %}
-    <li><a>More Greek</a></li>
-    {% endif %}
-    <li><a href="http://www.noc.grnet.gr">External Link</a>
-    </ul>
-    </div>
-    {% if not user.is_authenticated %}
-    <form id="searchbar" method="post" action="{% url login %}">
-    <label for="username">Username: </label><input name="username" type="text"></input> 
-    <label for="password">Password: </label><input name="password" type="password"></input>
-    <input type="submit" value="Login" />
-    </form>
-    {% else %}
-    <div id="searchbar">
-    <a href="{% url logout %}">Logout</a>
-    </div>
-    {% endif %}
-    </div>
+        <div id="title">
+            <a href="/">Ganeti Web Manager</a>
+        </div>
+        <div id="menu">
+            <ul>
+                <li><a>Greek</a></li>
+                {% if user.is_staff %}
+                <li><a>More Greek</a></li>
+                {% endif %}
+                <li><a href="http://www.noc.grnet.gr">External Link</a>
+            </ul>
+        </div>
+        {% if not user.is_authenticated %}
+        <form id="searchbar" method="post" action="{% url login %}">
+            <label for="username">Username: </label><input name="username" type="text"></input> 
+            <label for="password">Password: </label><input name="password" type="password"></input>
+            <input type="submit" value="Login" />
+        </form>
+        {% else %}
+        <div id="searchbar">
+            <a href="{% url logout %}">Logout</a>
+        </div>
+        {% endif %}
+        </div>
 
-    <div id="content">
-    {% block content %}
-    {% endblock %}
-    <div id="footer">
-    <a href="http://www.djangoproject.com/"><img src="/static/django.gif" alt="A Django site" title="A Django site" border=0 /></a>
-    </div>
+        <div id="content">
+        {% block content %}
+        {% endblock %}
+        <div id="footer">
+        <a href="http://www.djangoproject.com/">
+            <img src="/static/django.gif" alt="A Django site" title="A Django site" border=0 />
+        </a>
+        </div>
     </div>
 
     </body>

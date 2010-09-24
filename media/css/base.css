@@ -1,3 +1,12 @@
+/* Oregon State Colors:
+ *  Brand Orange - #d85a1a
+ *  Brown - #9d601e
+ *  411 (Baige) - #615042
+ *  Warm Gray - #c6c0b7
+ *  7539 (Gray) - #abada4
+ *  5415 (Blue) - #6b859e
+ *  5503 (Light Blue) - #a7c4c9
+ * */
 * {
     font-family: arial, tahoma, sans-serif;
     font-size: 10pt;
@@ -8,13 +17,12 @@ html {
 }
 
 #header {
-    background: url('/static/header.png');
+    background: url('/static/header.png') #6b859e;
     height: 152px;
-    width: 990px;
+    width: 90%;
     margin-left: auto;
     margin-right: auto;
-    border-top-color: ;
-    border: #bbb 5px solid;
+    border: 5px solid #abada4;
     -moz-background-clip:border;
     -moz-background-inline-policy:continuous;
     -moz-background-origin:padding;
@@ -24,18 +32,26 @@ html {
     -moz-border-radius-topright:5px;
 }
 
+#header a:link, #header a:visited {
+    color: black;
+}
+
+#title a:link, #title a:visited {
+    color: black;
+}
+
 body {
     padding-bottom: 2em;
     background: white;
 }
 
 #content {
-    width: 990px;
+    width: 90%;
     margin-left: auto;
     margin-right: auto;
     clear: both;
     background: white;
-    border: 5px solid #bbb;
+    border: 5px solid #abada4;
     -moz-background-clip:border;
     -moz-background-inline-policy:continuous;
     -moz-background-origin:padding;
@@ -108,7 +124,7 @@ body {
 .ticketitem {
     padding-bottom: 0.5em;
     margin-bottom: 2em;
-    border-top: 1px solid #fafafa;
+    border-top: 1px solid #615042;
 }
 
 .ticketitem a {
@@ -142,7 +158,7 @@ body {
 
 #ticketlist {
     margin-left: 180px;
-    border-left: 1px solid #fafafa;
+    border-left: 1px solid #615042;
     padding-left: 1em;
     padding-right: 1em;
 }
