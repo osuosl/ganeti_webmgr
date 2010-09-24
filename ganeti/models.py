@@ -13,6 +13,7 @@ LAZY_CACHE_REFRESH = 30000
 PERIODIC_CACHE_REFRESH = 15000
 
 RAPI_CACHE = {}
+RAPI_CACHE_HASHES = {}
 def get_rapi(hash, cluster=None):
     """
     Retrieves the cached Ganeti RAPI client for a given hash.  The Hash is
@@ -21,11 +22,6 @@ def get_rapi(hash, cluster=None):
     
     If a hash does not correspond to any cluster then Cluster.DoesNotExist will
     be raised.
-    
-    XXX There is a memory leak when the hash is updated, the old version is not
-    removed.  Solution: when adding a new client to the cache, we should check
-    to see if there are any outdated copies.  This can be best achieved by
-    also storing a mapping between the cluster_id and hash.
     
     XXX there is a race condition where a VirtualMachine instance may have been
     fetched just before the Cluster's hash is updated.  This would incorrectly
@@ -37,9 +33,14 @@ def get_rapi(hash, cluster=None):
     if not cluster:
         # look up cluster object if not given
         cluster = Cluster.objects.get(hash=hash)
-        
+    
+    # delete any old version of the client that was cached.
+    if cluster.id in RAPI_CACHE_HASHES:
+        del RAPI_CACHE[RAPI_CACHE_HASHES[cluster.id]]
+    
     rapi = client.GanetiRapiClient(cluster.hostname, curl_config_fn=CURL)
     RAPI_CACHE[hash] = rapi
+    RAPI_CACHE_HASHES[cluster.id] = hash
     return rapi
 
 
