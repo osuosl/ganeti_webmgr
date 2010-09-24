@@ -30,14 +30,14 @@
 {% endfor %}
 </div>
 
-<div id="pagelist">
 {% if is_paginated %}
+<div id="pagelist">
 {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">&lt;</a>{% else %}&nbsp;{% endif %}
 {% for page in paginator.page_range %}
 {% ifequal page page_obj.number %}{{ page }} {% else %}<a href="?page={{ page }}">{{ page }}</a> {% endifequal %}
 {% endfor %}
 {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">&gt;</a>{% else %}&nbsp;{% endif %}
-{% endif %}
 </div>
+{% endif %}
 
 {% endblock %}
