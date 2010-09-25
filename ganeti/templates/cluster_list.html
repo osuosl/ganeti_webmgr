@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Cluster List{% endblock %}
+
+{% block content %}
+<h1>Cluster List</h1>
+<p>Cluster: {{ cluster_list|length }}</p>
+{% comment %}
+<!--{% for c in cluster_list %}
+{% if forloop.first %}
+<div id="clusterlist">
+    <table>
+{% endif %}
+        <tr>
+        {% for key, value in c %}
+            <th>{{ key }}</th>
+        {% endfor %}
+        </tr>
+        <tr>
+        {% for item in c %}
+            <td>{{ item }}</td>
+        {% endfor %}
+        </tr>
+{% if forloop.first %}
+
+    </table>
+</div>-->
+{% endif %}
+{% endfor %}
+{% endcomment %}
+{% endblock %}
