@@ -4,28 +4,34 @@
 
 {% block content %}
 <h1>Cluster List</h1>
-<p>Cluster: {{ cluster_list|length }}</p>
-{% comment %}
-<!--{% for c in cluster_list %}
-{% if forloop.first %}
+
 <div id="clusterlist">
     <table>
-{% endif %}
+    {% for cluster in cluster_list %}
+    {% with cluster.info as info %}
+    {% with cluster.nodes as nodes %}
+    {% with cluster.instances as vms %}
         <tr>
-        {% for key, value in c %}
-            <th>{{ key }}</th>
-        {% endfor %}
+            <th>Hostname</th>
+            <th>Slug</th>
+            <th>Node{{ nodes|pluralize }}</th>
+            {% comment %}
+            <!-- This should be changed to instance-list at a later date -->
+            {% endcomment %}
+            <th><a href="{% url cluster_detail cluster.slug %}">VM{{ vms|pluralize }}</a></th>
+            <th>Tags</th>
         </tr>
         <tr>
-        {% for item in c %}
-            <td>{{ item }}</td>
-        {% endfor %}
+            <td><a href="{% url cluster_detail cluster.slug %}">{{ cluster.hostname }}</a></td>
+            <td>{{ cluster.slug }}</td>
+            <td>{{ nodes|length }}</td>
+            <td>{{ vms|length }}</td>
+            <td>{{ info.tags|join:", "}}</td>
         </tr>
-{% if forloop.first %}
-
+    {% endwith %}
+    {% endwith %}
+    {% endwith %}
+    {% endfor %}
     </table>
-</div>-->
-{% endif %}
-{% endfor %}
-{% endcomment %}
+</div>
 {% endblock %}
