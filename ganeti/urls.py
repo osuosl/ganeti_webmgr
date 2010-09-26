@@ -29,6 +29,9 @@ urlpatterns = patterns('',
         'ganeti_webmgr.ganeti.views.reboot', name="instance-reboot"),
     url(r'^cluster/(?P<cluster_slug>\w+)/(?P<instance>[^/]+)/?',
         'ganeti_webmgr.ganeti.views.instance', name="instance-detail"),
+
+    url(r'^clusters/', 'ganeti_webmgr.ganeti.views.cluster_list',
+        name="cluster-list"),
     
     url(r'^orphans/', 'ganeti_webmgr.ganeti.views.orphans',
         name='instance-orphans'),

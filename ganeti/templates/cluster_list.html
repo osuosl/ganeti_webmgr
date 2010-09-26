@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Cluster List{% endblock %}
+
+{% block content %}
+<h1>Cluster List</h1>
+
+<div id="clusterlist">
+    <table>
+    {% for cluster in cluster_list %}
+    {% with cluster.info as info %}
+    {% with cluster.nodes as nodes %}
+    {% with cluster.instances as vms %}
+        <tr>
+            <th>Hostname</th>
+            <th>Slug</th>
+            <th>Node{{ nodes|pluralize }}</th>
+            {% comment %}
+            <!-- This should be changed to instance-list at a later date -->
+            {% endcomment %}
+            <th><a href="{% url cluster_detail cluster.slug %}">VM{{ vms|pluralize }}</a></th>
+            <th>Tags</th>
+        </tr>
+        <tr>
+            <td><a href="{% url cluster_detail cluster.slug %}">{{ cluster.hostname }}</a></td>
+            <td>{{ cluster.slug }}</td>
+            <td>{{ nodes|length }}</td>
+            <td>{{ vms|length }}</td>
+            <td>{{ info.tags|join:", "}}</td>
+        </tr>
+    {% endwith %}
+    {% endwith %}
+    {% endwith %}
+    {% endfor %}
+    </table>
+</div>
+{% endblock %}

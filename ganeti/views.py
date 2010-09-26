@@ -5,6 +5,7 @@ import socket
 from models import *
 from django import forms
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response
 from ganeti_webmgr.util.portforwarder import forward_port
@@ -180,7 +181,10 @@ class OrphanForm(forms.Form):
         super(OrphanForm, self).__init__(*args, **kwargs)
         self.fields['virtual_machines'].choices = choices
 
-
+def cluster_list(request):        
+    cluster_list = Cluster.objects.all()
+    return render_to_response("cluster_list.html", {'cluster_list': cluster_list })
+    
 def orphans(request):
     """
     displays list of orphaned VirtualMachines, i.e. VirtualMachines without

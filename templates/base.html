@@ -3,27 +3,9 @@
     <title>{% block title %}Ganeti Web Manager{% endblock %}</title>
     <link rel="stylesheet" type="text/css" href="/media/css/base.css"/>
     <link rel="stylesheet" type="text/css" href="/static/css/base.css"/>
-    <script type="text/javascript" src="/static/jquery.js"></script>
-    <script type="text/javascript" src="/static/jquery.color.js"></script>
-    <script type="text/javascript">
-    function highlight(elemId){
-        var elem = $(elemId);
-        elem.css("background-color", "#ffffbb");
-        setTimeout(function() { $(elemId).animate({ backgroundColor: "white" }, 2000)}, 1500);
-    }
-
-       
-    $(document).ready( function(){
-        if (document.location.hash) {
-            highlight(document.location.hash);
-        }
-        $('a[href*=#]').click(function(){
-            var elemId = '#' + $(this).attr('href').split('#')[1];
-            highlight(elemId);
-        });
-
-    })
-    </script>
+    <script type="text/javascript" src="/static/js/jquery.js"></script>
+    <script type="text/javascript" src="/static/js/color.js"></script>
+    <script type="text/javascript" src="/static/js/highlight.js"></script>
     </head>
     <body>
     <div id="header">
@@ -31,13 +13,15 @@
             <a href="/">Ganeti Web Manager</a>
         </div>
         <div id="menu">
+            {% block navigation %}
             <ul>
-                <li><a>Greek</a></li>
                 {% if user.is_staff %}
+                <li><a href="{% url cluster-list %}">Clusters</a></li>
                 <li><a>More Greek</a></li>
                 {% endif %}
                 <li><a href="http://www.noc.grnet.gr">External Link</a>
             </ul>
+            {% endblock %}
         </div>
         {% if not user.is_authenticated %}
         <form id="searchbar" method="post" action="{% url login %}">
