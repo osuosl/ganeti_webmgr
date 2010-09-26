@@ -94,7 +94,6 @@ class VirtualMachine(models.Model):
         via the Ganeti RAPI.
         """
         super(VirtualMachine, self).__init__(*args, **kwargs)
-        
         # Load cached info retrieved from the ganeti cluster.  This is the lazy
         # cache refresh.
         if self.cached is None \
@@ -156,10 +155,8 @@ class VirtualMachine(models.Model):
         """
         Loads non-persistent properties from cached info
         """
-        if getattr(self, 'ctime', None):
-            self.ctime = datetime.fromtimestamp(self.info.ctime)
-        if getattr(self, 'mtime', None):
-            self.mtime = datetime.fromtimestamp(self.info.mtime)
+        self.ctime = datetime.fromtimestamp(self.info['ctime'])
+        self.mtime = datetime.fromtimestamp(self.info['mtime'])
 
     def _parse_info(self):
         """
