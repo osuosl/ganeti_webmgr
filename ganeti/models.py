@@ -367,16 +367,33 @@ models.signals.post_save.connect(update_cluster_hash, sender=Cluster)
 
 
 def update_cache():
-    print '------[cache update]-------------------------------'
+    """
+    Updates the cache for all all VirtualMachines in all clusters.  This method
+    processes the data in bulk, where possible, to reduce runtime.  Generally
+    this should be faster than refreshing individual VirtualMachines.
+    """
     
+    print '------[cache update]-------------------------------'
     for cluster in Cluster.objects.all():
         infos = cluster.instances(bulk=True)
+        base = VirtualMachine.objects.all()
+        no_updates = []
         
         for info in infos:
-            print '    Virtual Machine: %s' % info['name']
-            vm, new = VirtualMachine.objects.get_or_create(cluster=cluster, hostname=info['name'])
-            vm.info = info
-            vm.save()
+            vm, new = base.get_or_create(cluster=cluster, hostname=info['name'])
+            if new or vm.mtime < datetime.fromtimestamp(info['mtime']):
+                print '    Virtual Machine (updated) : %s' % info['name']
+                # only update the whole object if it is new or modified
+                vm.info = info
+                vm.save()
+            else:
+                # no changes to this VirtualMachine
+                print '    Virtual Machine : %s' % info['name']
+                no_updates.append(vm.id)
+            
+        # batch update the cache update time  for VMs that weren't modified
+        if no_updates:
+            base.filter(id__in=no_updates).update(cached=datetime.now())
 
 
 class CacheUpdateThread(Thread):
@@ -384,6 +401,3 @@ class CacheUpdateThread(Thread):
         while True:
             update_cache()
             time.sleep(PERIODIC_CACHE_REFRESH)
-
-
-update_cache()
