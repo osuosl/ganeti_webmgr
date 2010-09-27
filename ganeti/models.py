@@ -43,9 +43,9 @@ def get_rapi(hash, cluster):
     if cluster.id in RAPI_CACHE_HASHES:
         del RAPI_CACHE[RAPI_CACHE_HASHES[cluster.id]]
     
-    rapi = client.GanetiRapiClient(cluster.hostname, curl_config_fn=CURL)
-    RAPI_CACHE[hash] = rapi
-    RAPI_CACHE_HASHES[cluster.id] = hash
+    rapi = client.GanetiRapiClient(cluster.hostname)
+    RAPI_CACHE[cluster.hash] = rapi
+    RAPI_CACHE_HASHES[cluster.id] = cluster.hash
     return rapi
 
 
