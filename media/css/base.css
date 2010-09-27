@@ -50,8 +50,9 @@ body {
     font-size: 21px;
     font-weight: bold;
     text-align: center;
+    padding-top: .5em;
     color: black;   
-    height: 124px;
+    height: 5.3em;
 }
 
 #title a:link, #title a:visited {
@@ -71,6 +72,7 @@ body {
 }
 
 #menu ul li {
+    margin: 0px;
     padding-left: 20px;
     display: inline;
 }
@@ -88,7 +90,7 @@ body {
     position: relative;
     float: right;
     padding: 0;
-    padding-right: 4px;
+    padding-right: 1em;
     top: -28px;
     color: black;
     margin: 0;
@@ -253,7 +255,6 @@ h3 a, a:visited {
 
 ul {
     margin-top: 0px;
-    padding-left: 3em;
 }
 
 li {
