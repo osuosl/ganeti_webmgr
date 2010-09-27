@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div id="contentwrapper">
     <h1>Overview</h1>
 
     <div id="clusterlist">
@@ -41,5 +40,4 @@
         {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">&gt;</a>{% else %}&nbsp;{% endif %}
     </div>
     {% endif %}
-</div>
 {% endblock %}
