@@ -223,9 +223,9 @@ class Cluster(models.Model):
     def __unicode__(self):
         return self.hostname
     
-    #def save(self):
-    #    self.hash = self.create_hash()
-    #    super(Cluster, self).save()
+    def save(self):
+        self.hash = self.create_hash()
+        super(Cluster, self).save()
     
     @property
     def rapi(self):
@@ -358,8 +358,7 @@ def update_cluster_hash(sender, instance, **kwargs):
     """
     Updates the Cluster hash for all of it's VirtualMachines
     """
-    #instance.virtual_machines.all().update(cluster_hash=instance.hash)
-    pass
+    instance.virtual_machines.all().update(cluster_hash=instance.hash)
 
 
 models.signals.post_save.connect(create_profile, sender=User)
