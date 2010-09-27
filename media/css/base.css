@@ -21,7 +21,8 @@ html {
 body {
     /*padding-bottom: 2em;*/
     background: #eeece8;
-    height:auto;
+    height: auto;
+    margin: 0em 0em 1em 0em;
 }
 
 #header {
