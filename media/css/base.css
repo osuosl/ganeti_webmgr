@@ -119,7 +119,7 @@ body {
 }
 
 #contentwrapper {
-    padding-left: 1em;
+    padding: 0em 1em;
 }
 
 #configuration {
@@ -278,6 +278,10 @@ form.update {
 }
 form.update textarea {
     width: 100%;
+}
+
+.bordersouth {
+    border-bottom: 2px grey solid;
 }
 
 .hidden {
