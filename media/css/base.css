@@ -241,11 +241,22 @@ h2 {
 
 h3 {
     font-size: 1.1em;
+    margin-bottom: .5ex;
 }
 
 h3 a, a:visited {
     text-decoration: none;
     color: #559BD7;
+    font-size: 1em;
+}
+
+ul {
+    margin-top: 0px;
+    padding-left: 3em;
+}
+
+li {
+    margin-left: 2em;
 }
 
 td {
