@@ -37,7 +37,7 @@ def get_rapi(hash, cluster):
         
     if not isinstance(cluster, (Cluster,)):
         # look up cluster object if not given
-        cluster = Cluster.objects.get(id=cluster_id)
+        cluster = Cluster.objects.get(id=cluster)
     
     # delete any old version of the client that was cached.
     if cluster.id in RAPI_CACHE_HASHES:
