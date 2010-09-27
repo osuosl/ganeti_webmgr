@@ -256,6 +256,7 @@ h3 a, a:visited {
 
 ul {
     margin-top: 0px;
+    list-style-type: square;
 }
 
 li {
@@ -297,6 +298,10 @@ form.update textarea {
 
 .indent {
     padding-left: 1em;
+}
+
+.paragraph {
+    font-weight: normal;
 }
 
 #searchform {

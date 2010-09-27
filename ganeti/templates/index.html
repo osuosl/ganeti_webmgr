@@ -7,7 +7,8 @@
     {% for cluster in object_list %}
         <div id="clusterinfo">
             <h2>
-                Cluster: <a href="{% url cluster_detail cluster.slug %}">{{ cluster.hostname }}</a> -- {{ cluster.description }}
+                Cluster: <a href="{% url cluster_detail cluster.slug %}">{{ cluster.hostname }}</a>
+                {% if cluster.description %} <span class="paragraph">-- {{ cluster.description }}</span>{% endif %}
             </h2>
             {% with cluster.info as info %}
             <ul>
