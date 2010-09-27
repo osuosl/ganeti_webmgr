@@ -8,7 +8,7 @@
     {% for cluster in object_list %}
         <div id="clusterinfo">
             <h2>
-                <a href="{% url cluster_detail cluster.slug %}">{{ cluster.hostname }}</a> -- {{ cluster.description }}
+                Cluster: <a href="{% url cluster_detail cluster.slug %}">{{ cluster.hostname }}</a> -- {{ cluster.description }}
             </h2>
             {% with cluster.info as info %}
             <ul>
@@ -19,10 +19,9 @@
             </ul>
             {% endwith %}
 
-            <h3>Nodes</h3>
+            <h3 class="indent">Nodes</h3>
             {% with cluster.nodes as nodes %}
-            <p>{{ nodes|length }} node{{ nodes|pluralize }}</p>
-            <ul>
+            <ul>{{ nodes|length }} node{{ nodes|pluralize }}
                 {% for node in nodes %}
                 <li>{{ node }}</li>
                 {% endfor %}

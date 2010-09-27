@@ -118,6 +118,10 @@ body {
     -moz-border-radius-topright:5px;
 }
 
+#contentwrapper {
+    padding-left: 1em;
+}
+
 #configuration {
     text-align: center;
 }
@@ -227,9 +231,12 @@ body {
     color: gray;
 }
 
+h1 {
+    font-size: 1.5em;
+}
 
-h2, h3 {
-    text-align: center;
+h2 {
+    font-size: 1.4em;
 }
 
 h3 {
@@ -268,6 +275,10 @@ form.update textarea {
 
 .center_text {
     text-align: center;
+}
+
+.indent {
+    padding-left: 1em;
 }
 
 #searchform {
