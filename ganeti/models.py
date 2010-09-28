@@ -185,7 +185,7 @@ class VirtualMachine(models.Model):
         self.disk_size = disk_size 
 
     def shutdown(self):
-        return self.clusterrapi.ShutdownInstance(self.hostname)
+        return self.cluster.rapi.ShutdownInstance(self.hostname)
 
     def startup(self):
         return self.cluster.rapi.StartupInstance(self.hostname)
