@@ -62,6 +62,19 @@ def get_rapi(hash, cluster):
     return rapi
 
 
+class HybridQuerySet():
+    def __init__(self, query):
+        self.query = query
+
+    def __iter__(self):
+        for object in self.query:
+            object.load_info()
+            yield object
+
+    def filter(self, **kwargs):
+        return HybridModel(self.query.filter(**kwargs))
+
+
 class VirtualMachine(models.Model):
     """
     The VirtualMachine (VM) model represents VMs within a Ganeti cluster.  The
