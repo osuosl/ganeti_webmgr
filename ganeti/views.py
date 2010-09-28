@@ -62,6 +62,7 @@ def vnc(request, cluster_slug, instance):
                                'password': password,
                                'user': request.user})
 
+
 def shutdown(request, cluster_slug, instance):
     if not check_instance_auth(request, cluster_slug, instance):
         return HttpResponseForbidden(content='You do not have sufficient privileges')
@@ -199,7 +200,7 @@ def orphans(request):
     # synchronize all cluster objects
     for cluster in Cluster.objects.all():
         cluster.sync_virtual_machines()
-    
+        
     vms = VirtualMachine.objects.filter(owner=None).values_list('id','hostname')
     vms = list(vms)
     
