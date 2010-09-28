@@ -35,17 +35,30 @@ def get_rapi(hash, cluster):
     if hash in RAPI_CACHE:
         return RAPI_CACHE[hash]
         
-    if not isinstance(cluster, (Cluster,)):
-        # look up cluster object if not given
-        cluster = Cluster.objects.get(id=cluster)
+    # always look up the instance, even if we were given a Cluster instance
+    # it ensures we are retrieving the latest credentials.  This helps avoid
+    # stale credentials.  Retrieve only the values because we don't actually
+    # need another Cluster instance here.
+    if isinstance(cluster, (Cluster,)):
+        cluster = cluster.id
+    (credentials,) = Cluster.objects.filter(id=cluster) \
+        .values_list('hash','hostname','port','username','password')
+    hash, host, port, user, password = credentials
+    user = user if user else None
+    password = password if password else None
+
+    # now that we know hash is fresh, check cache again. The original hash could
+    # have been stale.  This avoids constructing a new RAPI that already exists.
+    if hash in RAPI_CACHE:
+        return RAPI_CACHE[hash]
     
     # delete any old version of the client that was cached.
-    if cluster.id in RAPI_CACHE_HASHES:
-        del RAPI_CACHE[RAPI_CACHE_HASHES[cluster.id]]
+    if cluster in RAPI_CACHE_HASHES:
+        del RAPI_CACHE[RAPI_CACHE_HASHES[cluster]]
     
-    rapi = client.GanetiRapiClient(cluster.hostname)
-    RAPI_CACHE[cluster.hash] = rapi
-    RAPI_CACHE_HASHES[cluster.id] = cluster.hash
+    rapi = client.GanetiRapiClient(host, port, user, password)
+    RAPI_CACHE[hash] = rapi
+    RAPI_CACHE_HASHES[cluster] = hash
     return rapi
 
 
