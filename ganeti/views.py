@@ -67,17 +67,17 @@ def shutdown(request, cluster_slug, instance):
     if not check_instance_auth(request, cluster_slug, instance):
         return HttpResponseForbidden(content='You do not have sufficient privileges')
 
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    cluster.shutdown_instance(instance)
+    vm = VirtualMachine.objects.get(hostname=instance)
+    vm.shutdown()
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
 def startup(request, cluster_slug, instance):
     if not check_instance_auth(request, cluster_slug, instance):
         return HttpResponseForbidden(content='You do not have sufficient privileges')
-
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    cluster.startup_instance(instance)
+        
+    vm = VirtualMachine.objects.get(hostname=instance)
+    vm.startup()
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
@@ -85,8 +85,8 @@ def reboot(request, cluster_slug, instance):
     if not check_instance_auth(request, cluster_slug, instance):
         return HttpResponseForbidden(content='You do not have sufficient privileges')
 
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    cluster.reboot_instance(instance)
+    vm = VirtualMachine.objects.get(hostname=instance)
+    vm.reboot()
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 

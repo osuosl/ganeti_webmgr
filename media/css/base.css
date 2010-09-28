@@ -21,7 +21,8 @@ html {
 body {
     /*padding-bottom: 2em;*/
     background: #eeece8;
-    height:auto;
+    height: auto;
+    margin: 0em 0em 1em 0em;
 }
 
 #header {
@@ -49,8 +50,9 @@ body {
     font-size: 21px;
     font-weight: bold;
     text-align: center;
+    padding-top: .5em;
     color: black;   
-    height: 124px;
+    height: 5.3em;
 }
 
 #title a:link, #title a:visited {
@@ -70,6 +72,7 @@ body {
 }
 
 #menu ul li {
+    margin: 0px;
     padding-left: 20px;
     display: inline;
 }
@@ -87,7 +90,7 @@ body {
     position: relative;
     float: right;
     padding: 0;
-    padding-right: 4px;
+    padding-right: 1em;
     top: -28px;
     color: black;
     margin: 0;
@@ -116,6 +119,10 @@ body {
     -moz-border-radius-bottomright:5px;
     -moz-border-radius-topleft:5px;
     -moz-border-radius-topright:5px;
+}
+
+#contentwrapper {
+    padding: 1em 1em;
 }
 
 #configuration {
@@ -227,18 +234,33 @@ body {
     color: gray;
 }
 
+h1 {
+    font-size: 1.5em;
+    margin-top: 0px;
+}
 
-h2, h3 {
-    text-align: center;
+h2 {
+    font-size: 1.4em;
 }
 
 h3 {
     font-size: 1.1em;
+    margin-bottom: .5ex;
 }
 
 h3 a, a:visited {
     text-decoration: none;
     color: #559BD7;
+    font-size: 1em;
+}
+
+ul {
+    margin-top: 0px;
+    list-style-type: square;
+}
+
+li {
+    margin-left: 2em;
 }
 
 td {
@@ -262,12 +284,24 @@ form.update textarea {
     width: 100%;
 }
 
+.bordersouth {
+    border-bottom: 2px grey solid;
+}
+
 .hidden {
     display: none;
 }
 
 .center_text {
     text-align: center;
+}
+
+.indent {
+    padding-left: 1em;
+}
+
+.paragraph {
+    font-weight: normal;
 }
 
 #searchform {

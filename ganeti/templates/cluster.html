@@ -4,7 +4,7 @@
 {% block content %}
 
 <div class="ticket" id="ticket_{{ object.id }}">
-<h1>Cluster {{ object.hostname }}</h1>
+<h1>Cluster: {{ object.hostname }}</h1>
 <h2>Information</h2>
 {% with object.info as info %}
 <ul>
@@ -39,10 +39,10 @@
   <td>{{ vm.disk_size }}</td>
   <td>{{ vm.virtual_cpus }}</td>
   <td>
-  {% ifequal vm.info.admin_state vm.info.oper_state %}
-    {{ vm.admin_state|yesno:"Running,Stopped" }}
+  {% ifequal vm.info.status "running" %}
+    Running
   {% else %}
-    {{ vm.info.oper_state|yesno:"Running,Stopped" }}, should be {{ vm.info.admin_state|yesno:"running,stopped" }}
+    Stopped
   {% endifequal %}
   </td>
 {% endfor %}

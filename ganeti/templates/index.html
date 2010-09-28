@@ -1,43 +1,47 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Overview</h2>
+    <h1>Overview</h1>
+    {% if user.is_authenticated %}
+    <div id="clusterlist">
+    {% for cluster in object_list %}
+        <div id="clusterinfo">
+            <h2>
+                Cluster: <a href="{% url cluster_detail cluster.slug %}">{{ cluster.hostname }}</a>
+                {% if cluster.description %} <span class="paragraph">-- {{ cluster.description }}</span>{% endif %}
+            </h2>
+            {% with cluster.info as info %}
+            <ul>
+                <li>Hypervisors: {{ info.enabled_hypervisors|join:", " }}</li>
+                <li>Default hypervisor: {{ info.default_hypervisor }}</li>
+                <li>Master node: {{ info.master }}</li>
+                <li>Ganeti version: {{ info.software_version }}</li>
+            </ul>
+            {% endwith %}
 
-<div id="clusterlist">
-{% for cluster in object_list %}
-<div class="clusterinfo">
-<h2><a href="{% url cluster_detail cluster.slug %}">{{ cluster.hostname }}</a> -- {{ cluster.description }}</h2>
-{% with cluster.info as info %}
-<ul>
-<li>Hypervisors: {{ info.enabled_hypervisors|join:", " }}</li>
-<li>Default hypervisor: {{ info.default_hypervisor }}</li>
-<li>Master node: {{ info.master }}</li>
-<li>Ganeti version: {{ info.software_version }}</li>
-</ul>
-{% endwith %}
+            <h3 class="indent">Nodes</h3>
+            {% with cluster.nodes as nodes %}
+            <ul>{{ nodes|length }} node{{ nodes|pluralize }}
+                {% for node in nodes %}
+                <li>{{ node }}</li>
+                {% endfor %}
+            </ul>
+            {% endwith %}
 
-<h3>Nodes</h3>
-{% with cluster.nodes as nodes %}
-{{ nodes|length }} node{{ nodes|pluralize }}
-<ul>
-{% for node in nodes %}
-<li>{{ node }}</li>
-{% endfor %}
-</ul>
-{% endwith %}
-
-</div>
-{% endfor %}
-</div>
-
-{% if is_paginated %}
-<div id="pagelist">
-{% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">&lt;</a>{% else %}&nbsp;{% endif %}
-{% for page in paginator.page_range %}
-{% ifequal page page_obj.number %}{{ page }} {% else %}<a href="?page={{ page }}">{{ page }}</a> {% endifequal %}
-{% endfor %}
-{% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">&gt;</a>{% else %}&nbsp;{% endif %}
-</div>
-{% endif %}
-
+        </div>
+    {% endfor %}
+    </div>
+    {% else %}
+    <h2>Sorry</h2>
+    <p>You do not have the correct authorization to view this page. Please login.</p>
+    {% endif %}
+    {% if is_paginated %}
+    <div id="pagelist">
+        {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">&lt;</a>{% else %}&nbsp;{% endif %}
+        {% for page in paginator.page_range %}
+        {% ifequal page page_obj.number %}{{ page }} {% else %}<a href="?page={{ page }}">{{ page }}</a> {% endifequal %}
+        {% endfor %}
+        {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">&gt;</a>{% else %}&nbsp;{% endif %}
+    </div>
+    {% endif %}
 {% endblock %}
