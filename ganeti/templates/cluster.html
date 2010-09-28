@@ -4,7 +4,7 @@
 {% block content %}
 
 <div class="ticket" id="ticket_{{ object.id }}">
-<h1>Cluster {{ object.hostname }}</h1>
+<h1>Cluster: {{ object.hostname }}</h1>
 <h2>Information</h2>
 {% with object.info as info %}
 <ul>
