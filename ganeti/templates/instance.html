@@ -14,20 +14,20 @@
         <li>Primary node: {{ info.pnode }}</li>
         <li>Failover node: {{ info.snodes|join:", " }}</li>
         <li>Created on: {{ ctime|date }}</li>
-        <li>Last modified: {{ info.mtime|date }}</li>
+        <li>Last modified: {{ instance.mtime|date }}</li>
         <li>NIC type: {{ info.hvparams.nic_type }}</li>
         <li>Disk type: {{ info.hvparams.disk_type }}</li>
         {% endwith %}
     </ul>
 
     <h2>Actions</h2>
-    <ul>
-        {% if instance.info.status == "running" %}<li><a href="{% url instance-shutdown cluster.slug instance.hostname %}">Shutdown</a></li>
+    <ul>{{instance.info.status}}
+        {% ifequal instance.info.status "running" %}<li><a href="{% url instance-shutdown cluster.slug instance.hostname %}">Shutdown</a></li>
         <li><a href="{% url instance-reboot cluster.slug instance.hostname %}">Reboot</a></li>
         <li><a href="{% url instance-vnc cluster.slug instance.hostname %}">Remote console (VNC)</a></li>
         {% else %}
         <li><a href="{% url instance-startup cluster.slug instance.hostname %}">Start</a></li>
-        {% endif %}
+        {% endifequal %}
     </ul>
 </div>
 
