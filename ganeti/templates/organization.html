@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %} Organization: {{ org.name }}{% endblock %}
+
+{% block content %}
+
+<h2>{{org.name}}</h2>
+<h2>Users<h2>
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Permissions</th>
+    </tr>
+    {% for user in org.users.all %}
+        <tr>
+            <td>{{user.name}}</td>
+            <td>PERMS!</td>
+        </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}
