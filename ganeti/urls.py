@@ -19,6 +19,8 @@ urlpatterns = patterns('',
         'template_name': 'cluster.html',
         }, 'cluster_detail'),
 
+    url(r'^cluster/(?P<cluster_slug>\w+)/create/?$',
+        'ganeti_webmgr.ganeti.views.create', name="instance-create"),
     url(r'^cluster/(?P<cluster_slug>\w+)/(?P<instance>[^/]+)/vnc/?$',
         'ganeti_webmgr.ganeti.views.vnc', name="instance-vnc"),
     url(r'^cluster/(?P<cluster_slug>\w+)/(?P<instance>[^/]+)/shutdown/?$',

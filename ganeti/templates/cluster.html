@@ -6,6 +6,7 @@
 
 <div class="ticket" id="ticket_{{ object.id }}">
 <h1>Cluster: {{ object.hostname }}</h1>
+<p><a href="{% url instance-create object.slug %}">Add Virtual Machine</a></p>
 <h2>Information</h2>
 {% with object.info as info %}
 <ul>
