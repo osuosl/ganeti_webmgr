@@ -94,6 +94,7 @@ class VirtualMachine(models.Model):
         via the Ganeti RAPI.
         """
         super(VirtualMachine, self).__init__(*args, **kwargs)
+        
         # Load cached info retrieved from the ganeti cluster.  This is the lazy
         # cache refresh.
         if self.cached is None \
@@ -262,7 +263,8 @@ class Cluster(models.Model):
         
         # deletes VMs that are no longer in ganeti
         missing_ganeti = filter(lambda x: str(x) not in ganeti, db)
-        self.virtual_machines.filter(hostname__in=missing_ganeti).delete()
+        if missing_ganeti:
+            self.virtual_machines.filter(hostname__in=missing_ganeti).delete()
 
     def info(self):
         info = self.rapi.GetInfo()
