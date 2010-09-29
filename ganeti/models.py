@@ -100,7 +100,7 @@ class VirtualMachine(models.Model):
     """
     cluster = models.ForeignKey('Cluster', editable=False,
                                 related_name='virtual_machines')
-    hostname = models.CharField(max_length=128, editable=False)
+    hostname = models.CharField(max_length=128)
     owner = models.ForeignKey('ClusterUser', null=True)
     serialized_info = models.TextField(editable=False)
     virtual_cpus = models.IntegerField()
