@@ -19,6 +19,7 @@ urlpatterns = patterns('',
         'template_name': 'cluster.html',
         }, 'cluster_detail'),
 
+    # Cluster Views
     url(r'^cluster/(?P<cluster_slug>\w+)/create/?$',
         'ganeti_webmgr.ganeti.views.create', name="instance-create"),
     url(r'^cluster/(?P<cluster_slug>\w+)/(?P<instance>[^/]+)/vnc/?$',
@@ -31,13 +32,24 @@ urlpatterns = patterns('',
         'ganeti_webmgr.ganeti.views.reboot', name="instance-reboot"),
     url(r'^cluster/(?P<cluster_slug>\w+)/(?P<instance>[^/]+)/?',
         'ganeti_webmgr.ganeti.views.instance', name="instance-detail"),
-
     url(r'^clusters/', 'ganeti_webmgr.ganeti.views.cluster_list',
         name="cluster-list"),
     
+    # Organizations
+    url(r'^organization/(?P<id>\d+)/?$',
+        'ganeti_webmgr.ganeti.organizations.detail', name="organization-detail"),
+    url(r'^organization/(?P<id>\d+)/user/add/?$',
+        'ganeti_webmgr.ganeti.organizations.add_user', name="organization-add-user"),
+    url(r'^organization/(?P<id>\d+)/user/remove/?$',
+        'ganeti_webmgr.ganeti.organizations.remove_user', name="organization-remove-user"),
+    url(r'^organization/(?P<id>\d+)/user/update/?$',
+        'ganeti_webmgr.ganeti.organizations.update_user', name="organization-update-user"),
+    
+    # Admin
     url(r'^orphans/', 'ganeti_webmgr.ganeti.views.orphans',
         name='instance-orphans'),
     
+    # Authentication
     url(r'^user/login/?', 'ganeti_webmgr.ganeti.views.login_view', name="login"),
     url(r'^user/logout/?', 'ganeti_webmgr.ganeti.views.logout_view', name="logout"),
 )
