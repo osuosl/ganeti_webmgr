@@ -90,6 +90,9 @@ def reboot(request, cluster_slug, instance):
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
+def create(request, cluster_slug):
+    return render_to_response("instance_create.html")
+
 class InstanceConfigForm(forms.Form):
     nic_type = forms.ChoiceField(label="Network adapter model",
                                  choices=(('paravirtual', 'Paravirtualized'),
