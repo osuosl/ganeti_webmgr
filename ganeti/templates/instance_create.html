@@ -4,5 +4,11 @@
 
 {% block content %}
 <h1>Create VM</h1>
-
+<form method="post">
+    {% for field in form %}
+        {{ field.errors }}
+        <p>{{ field.label_tag }}: {{ field }}</p>
+    {% endfor %}
+    <input type="submit" value="Create">
+</form>
 {% endblock %}

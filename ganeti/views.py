@@ -91,7 +91,23 @@ def reboot(request, cluster_slug, instance):
 
 
 def create(request, cluster_slug):
-    return render_to_response("instance_create.html")
+    if request.method == 'POST':
+        form = InstanceCreateForm(request.POST)
+        if form.is_valid():
+            print "valid"
+            return HttpResponseRedirect('/thanks/') # Redirect after POST
+    else:
+        hostname = get_object_or_404(Cluster, slug=cluster_slug)
+        new_vm = VirtualMachine(cluster=hostname)
+        form = InstanceCreateForm(instance=new_vm)
+
+    return render_to_response('instance_create.html', {
+        'form': form,
+    })
+
+class InstanceCreateForm(forms.ModelForm):
+    class Meta:
+        model = VirtualMachine
 
 class InstanceConfigForm(forms.Form):
     nic_type = forms.ChoiceField(label="Network adapter model",
