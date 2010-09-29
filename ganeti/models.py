@@ -7,6 +7,9 @@ import time
 from django.db import models
 from django.db.models.signals import post_save
 from django.contrib.auth.models import User, Group
+
+
+import object_permissions
 from ganeti_webmgr.util import client
 
 
@@ -391,6 +394,11 @@ def update_cluster_hash(sender, instance, **kwargs):
 
 models.signals.post_save.connect(create_profile, sender=User)
 models.signals.post_save.connect(update_cluster_hash, sender=Cluster)
+
+
+# Register permissions available for instances of classes
+object_permissions.register('admin', Organization)
+print object_permissions.get_model_perms(Organization)
 
 
 def update_cache():
