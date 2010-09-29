@@ -97,7 +97,7 @@ def create(request, cluster_slug):
     if request.POST:
         form = InstanceCreateForm(request.POST, instance=new_vm)
         if form.is_valid():
-            print "valid"
+            form.save()
             return HttpResponseRedirect('/thanks/') # Redirect after POST
     else:
         form = InstanceCreateForm(instance=new_vm)
