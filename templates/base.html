@@ -17,9 +17,7 @@
                 {% if user.is_staff %}
                 <li><a href="{% url cluster-list %}">Clusters</a></li>
                 <li><a href="{% url instance-orphans %}">Orphan VMs</a></li>
-                <li><a>More Greek</a></li>
                 {% endif %}
-                <li><a href="http://www.noc.grnet.gr">External Link</a>
             </ul>
             {% endblock %}
         </div>
