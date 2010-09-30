@@ -21,19 +21,6 @@ def index(request):
         'user' : request.user,
         })
 
-def check_instance_auth(request, cluster, instance):
-    cluster = get_object_or_404(Cluster, slug=cluster)
-    instance = cluster.instance(instance)
-    if request.user.is_superuser or request.user in instance.users or \
-            set.intersection(set(request.user.groups.all()), set(instance.groups)):
-        return True
-    return False
-
-
-class LoginForm(forms.Form):
-    username = forms.CharField(max_length=255)
-    password = forms.CharField(max_length=255, widget=forms.widgets.PasswordInput)
-
 
 def logout_view(request):
     logout(request)
@@ -56,18 +43,6 @@ def login_view(request):
     return render_to_response('login.html', {
         'form': form,
     })
-
-class OrphanForm(forms.Form):
-    """
-    Form used for assigning owners to VirtualMachines that do not yet have an
-    owner (orphans).
-    """
-    owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all())
-    virtual_machines = forms.MultipleChoiceField()
-
-    def __init__(self, choices, *args, **kwargs):
-        super(OrphanForm, self).__init__(*args, **kwargs)
-        self.fields['virtual_machines'].choices = choices
 
 
 @user_passes_test(lambda u: u.is_superuser)
@@ -100,3 +75,21 @@ def orphans(request):
         form = OrphanForm(vms)
     
     return render_to_response("orphans.html", {'vms': vms, 'form':form})
+
+
+class LoginForm(forms.Form):
+    username = forms.CharField(max_length=255)
+    password = forms.CharField(max_length=255, widget=forms.widgets.PasswordInput)
+
+
+class OrphanForm(forms.Form):
+    """
+    Form used for assigning owners to VirtualMachines that do not yet have an
+    owner (orphans).
+    """
+    owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all())
+    virtual_machines = forms.MultipleChoiceField()
+
+    def __init__(self, choices, *args, **kwargs):
+        super(OrphanForm, self).__init__(*args, **kwargs)
+        self.fields['virtual_machines'].choices = choices
