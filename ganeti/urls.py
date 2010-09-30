@@ -1,7 +1,5 @@
 from django.conf import settings
 from django.conf.urls.defaults import *
-from django.views.generic.list_detail import object_list, object_detail
-from ganeti_webmgr.ganeti.models import *
 
 urlpatterns = patterns('ganeti_webmgr.ganeti.views',
     # Example:
