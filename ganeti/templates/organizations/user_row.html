@@ -1,0 +1,10 @@
+{% load object_permission_tags %}
+<tr>
+<td>{{user.name}}</td>
+<td>
+    {% for permission in user|permissions:org %}
+        {{Permission}}
+        {%if not forloop.last%},{%endif%}
+    {% endfor %}
+</td>
+</tr>

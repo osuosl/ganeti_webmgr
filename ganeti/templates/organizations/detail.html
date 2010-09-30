@@ -1,6 +1,4 @@
 {% extends "base.html" %}
-{% load object_permission_tags %}
-
 {% block title %} Organization: {{ org.name }}{% endblock %}
 
 {% block content %}
@@ -13,15 +11,7 @@
         <th>Permissions</th>
     </tr>
     {% for user in org.users.all %}
-        <tr>
-            <td>{{user.name}}</td>
-            <td>
-                {% for permission in user|permissions:org %}
-                    {{Permission}}
-                    {%if not forloop.last%},{%endif%}
-                {% endfor %}
-            </td>
-        </tr>
+        {% include "organizations/user_row.html" %}
     {% endfor %}
 </table>
 
