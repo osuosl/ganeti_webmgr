@@ -1,6 +1,9 @@
 from django.conf import settings
 from django.conf.urls.defaults import *
 
+cluster = 'cluster/(?P<cluster_slug>\w+)'
+instance = '/(?P<instance>[^/]+)'
+
 urlpatterns = patterns('ganeti_webmgr.ganeti.views',
     # Example:
     # (r'^ganeti_webmgr/', include('ganeti_webmgr.foo.urls')),
@@ -12,24 +15,24 @@ urlpatterns = patterns('ganeti_webmgr.ganeti.views',
     url(r'^clusters/',
         'cluster_list', name="cluster-list"),
     #   Detail
-    url(r'^cluster/(?P<cluster_slug>\w+)/?$',
+    url(r'^' + cluster + '$',
         'cluster_detail', name="cluster-detail"),
     # Instance
     #  List
     #  Detail
-    url(r'^cluster/(?P<cluster_slug>\w+)/(?P<instance>[^/]+)/?',
+    url(r'^' + cluster + instance,
         'instance', name="instance-detail"),
     #  Create
-    url(r'^cluster/(?P<cluster_slug>\w+)/create/?$',
+    url(r'^' + cluster + '/create/?$',
         'create', name="instance-create"),
     #  Start, Stop, Reboot
-    url(r'^cluster/(?P<cluster_slug>\w+)/(?P<instance>[^/]+)/vnc/?$',
+    url(r'^' + cluster + instance + '/vnc/?$',
         'vnc', name="instance-vnc"),
-    url(r'^cluster/(?P<cluster_slug>\w+)/(?P<instance>[^/]+)/shutdown/?$',
+    url(r'^' + cluster + instance + '/shutdown/?$',
         'shutdown', name="instance-shutdown"),
-    url(r'^cluster/(?P<cluster_slug>\w+)/(?P<instance>[^/]+)/startup/?$',
+    url(r'^' + cluster + instance + '/startup/?$',
         'startup', name="instance-startup"),
-    url(r'^cluster/(?P<cluster_slug>\w+)/(?P<instance>[^/]+)/reboot/?$',
+    url(r'^' + cluster + instance + '/reboot/?$',
         'reboot', name="instance-reboot"),
     #   Orphans
     url(r'^orphans/',
