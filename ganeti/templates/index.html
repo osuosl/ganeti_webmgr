@@ -4,10 +4,10 @@
     <h1>Overview</h1>
     {% if user.is_authenticated %}
     <div id="clusterlist">
-    {% for cluster in object_list %}
+    {% for cluster in clusterlist %}
         <div id="clusterinfo">
             <h2>
-                Cluster: <a href="{% url cluster_detail cluster.slug %}">{{ cluster.hostname }}</a>
+                Cluster: <a href="{% url cluster-detail cluster.slug %}">{{ cluster.hostname }}</a>
                 {% if cluster.description %} <span class="paragraph">-- {{ cluster.description }}</span>{% endif %}
             </h2>
             {% with cluster.info as info %}

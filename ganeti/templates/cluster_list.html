@@ -18,11 +18,11 @@
             {% comment %}
             <!-- This should be changed to instance-list at a later date -->
             {% endcomment %}
-            <th><a href="{% url cluster_detail cluster.slug %}">VM{{ vms|pluralize }}</a></th>
+            <th><a href="{% url cluster-detail cluster.slug %}">VM{{ vms|pluralize }}</a></th>
             <th>Tags</th>
         </tr>
         <tr>
-            <td><a href="{% url cluster_detail cluster.slug %}">{{ cluster.hostname }}</a></td>
+            <td><a href="{% url cluster-detail cluster.slug %}">{{ cluster.hostname }}</a></td>
             <td>{{ cluster.slug }}</td>
             <td>{{ nodes|length }}</td>
             <td>{{ vms|length }}</td>

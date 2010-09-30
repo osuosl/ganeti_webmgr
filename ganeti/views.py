@@ -14,6 +14,19 @@ from models import *
 from ganeti_webmgr.util.portforwarder import forward_port
 
 
+def index(request):
+    clusterlist = Cluster.objects.all()
+    return render_to_response("index.html", {
+        'clusterlist': clusterlist,
+        'user' : request.user,
+        })
+
+def cluster_detail(request, cluster_slug):
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    return render_to_response("cluster.html", {
+        'cluster': cluster
+    })
+
 def check_instance_auth(request, cluster, instance):
     cluster = get_object_or_404(Cluster, slug=cluster)
     instance = cluster.instance(instance)

@@ -6,20 +6,11 @@ from ganeti_webmgr.ganeti.models import *
 urlpatterns = patterns('',
     # Example:
     # (r'^ganeti_webmgr/', include('ganeti_webmgr.foo.urls')),
-    
-    (r'^/?$', object_list, {
-        'queryset': Cluster.objects.all(),
-        'paginate_by': 15, 
-        'template_name': 'index.html', },
-        'cluster_overview',
-    ),
-
-    (r'^cluster/(?P<slug>\w+)/?$', object_detail, {
-        'queryset': Cluster.objects.all(),
-        'template_name': 'cluster.html',
-        }, 'cluster_detail'),
-
+    url(r'^/?$',
+        'ganeti_webmgr.ganeti.views.index', name="cluster-overview"),
     # Cluster Views
+    url(r'^cluster/(?P<cluster_slug>\w+)/?$',
+        'ganeti_webmgr.ganeti.views.cluster_detail', name="cluster-detail"),
     url(r'^cluster/(?P<cluster_slug>\w+)/create/?$',
         'ganeti_webmgr.ganeti.views.create', name="instance-create"),
     url(r'^cluster/(?P<cluster_slug>\w+)/(?P<instance>[^/]+)/vnc/?$',
