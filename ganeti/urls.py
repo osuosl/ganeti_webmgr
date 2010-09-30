@@ -4,45 +4,49 @@ from django.conf.urls.defaults import *
 cluster = 'cluster/(?P<cluster_slug>\w+)'
 instance = '/(?P<instance>[^/]+)'
 
-urlpatterns = patterns('ganeti_webmgr.ganeti.views',
+urlpatterns = patterns('ganeti_webmgr.ganeti.views.general',
     # Example:
     # (r'^ganeti_webmgr/', include('ganeti_webmgr.foo.urls')),
     url(r'^/?$',
-        'general.index', name="cluster-overview"),
-        
-    # Cluster
+        'index', name="cluster-overview"),
+    #   Orphans
+    url(r'^orphans/',
+        'orphans', name='instance-orphans'),
+    # Authentication
+    url(r'^user/login/?',
+        'login_view', name="login"),
+    url(r'^user/logout/?',
+        'logout_view', name="logout"),
+)
+
+# Clusters
+urlpatterns += patterns('ganeti_webmgr.ganeti.views.cluster',
     #   List
     url(r'^clusters/',
-        'cluster.list', name="cluster-list"),
+        'list', name="cluster-list"),
     #   Detail
     url(r'^' + cluster + '$',
-        'cluster.detail', name="cluster-detail"),
-    # Instance
+        'detail', name="cluster-detail"),
+)
+
+# Instances
+urlpatterns += patterns('ganeti_webmgr.ganeti.views.instances',
     #  List
     #  Detail
     url(r'^' + cluster + instance,
-        'instances.detail', name="instance-detail"),
+        'detail', name="instance-detail"),
     #  Create
     url(r'^' + cluster + '/create/?$',
-        'instances.create', name="instance-create"),
+        'create', name="instance-create"),
     #  Start, Stop, Reboot
     url(r'^' + cluster + instance + '/vnc/?$',
-        'instances.vnc', name="instance-vnc"),
+        'vnc', name="instance-vnc"),
     url(r'^' + cluster + instance + '/shutdown/?$',
-        'instances.shutdown', name="instance-shutdown"),
+        'shutdown', name="instance-shutdown"),
     url(r'^' + cluster + instance + '/startup/?$',
-        'instances.startup', name="instance-startup"),
+        'startup', name="instance-startup"),
     url(r'^' + cluster + instance + '/reboot/?$',
-        'instances.reboot', name="instance-reboot"),
-    #   Orphans
-    url(r'^orphans/',
-        'general.orphans', name='instance-orphans'),
-    
-    # Authentication
-    url(r'^user/login/?',
-        'general.login_view', name="login"),
-    url(r'^user/logout/?',
-        'general.logout_view', name="logout"),
+        'reboot', name="instance-reboot"),
 )
 
 urlpatterns += patterns('ganeti_webmgr.ganeti.organizations',
