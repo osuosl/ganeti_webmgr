@@ -29,9 +29,11 @@ def revoke(user, perm, object):
     """
     Revokes a permission from a user
     """
-    ct = ContentType.objects.get_for_model(model)
+    ct = ContentType.objects.get_for_model(object)
     ObjectPermission.objects \
-        .filter(user=user, permission__content_type=ct, name=perm).delete()
+        .filter(user=user, object_id=object.id,  \
+                permission__content_type=ct, permission__name=perm) \
+        .delete()
 
 
 def get_user_perms(user, object):

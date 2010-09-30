@@ -124,19 +124,67 @@ class TestModelPermissions(TestCase):
     def test_revoke_user_permissions(self):
         """
         Test revoking permissions from users
+        
+        Verifies:
+            * revoked properties are removed
+            * revoked properties are only removed from the correct user/obj combinations
+            * revoking property user does not have does not give an error
+            * revoking unknown permission raises error
         """
         user0 = self.user0
         user1 = self.user1
         object0 = self.object0
         object1 = self.object1
+        perms = self.perms
         
-        for perm in self.perms:
+        for perm in perms:
             register(perm, Group)
             grant(user0, perm, object0)
             grant(user0, perm, object1)
             grant(user1, perm, object0)
             grant(user1, perm, object1)
-
+        
+        # revoke single perm
+        revoke(user0, 'Perm1', object0)
+        self.assertEqual([u'Perm2', u'Perm3', u'Perm4'], get_user_perms(user0, object0))
+        self.assertEqual(perms, get_user_perms(user0, object1))
+        self.assertEqual(perms, get_user_perms(user1, object0))
+        self.assertEqual(perms, get_user_perms(user1, object1))
+        
+        # revoke a second perm
+        revoke(user0, 'Perm3', object0)
+        self.assertEqual([u'Perm2', u'Perm4'], get_user_perms(user0, object0))
+        self.assertEqual(perms, get_user_perms(user0, object1))
+        self.assertEqual(perms, get_user_perms(user1, object0))
+        self.assertEqual(perms, get_user_perms(user1, object1))
+        
+        # revoke from another object
+        revoke(user0, 'Perm3', object1)
+        self.assertEqual([u'Perm2', u'Perm4'], get_user_perms(user0, object0))
+        self.assertEqual([u'Perm1', u'Perm2', u'Perm4'], get_user_perms(user0, object1))
+        self.assertEqual(perms, get_user_perms(user1, object0))
+        self.assertEqual(perms, get_user_perms(user1, object1))
+        
+        # revoke from another user
+        revoke(user1, 'Perm4', object0)
+        self.assertEqual([u'Perm2', u'Perm4'], get_user_perms(user0, object0))
+        self.assertEqual([u'Perm1', u'Perm2', u'Perm4'], get_user_perms(user0, object1))
+        self.assertEqual([u'Perm1', u'Perm2', u'Perm3'], get_user_perms(user1, object0))
+        self.assertEqual(perms, get_user_perms(user1, object1))
+        
+        # revoke perm user does not have
+        revoke(user0, 'Perm1', object0)
+        self.assertEqual([u'Perm2', u'Perm4'], get_user_perms(user0, object0))
+        self.assertEqual([u'Perm1', u'Perm2', u'Perm4'], get_user_perms(user0, object1))
+        self.assertEqual([u'Perm1', u'Perm2', u'Perm3'], get_user_perms(user1, object0))
+        self.assertEqual(perms, get_user_perms(user1, object1))
+        
+        # revoke perm that does not exist
+        revoke(user0, 'DoesNotExist', object0)
+        self.assertEqual([u'Perm2', u'Perm4'], get_user_perms(user0, object0))
+        self.assertEqual([u'Perm1', u'Perm2', u'Perm4'], get_user_perms(user0, object1))
+        self.assertEqual([u'Perm1', u'Perm2', u'Perm3'], get_user_perms(user1, object0))
+        self.assertEqual(perms, get_user_perms(user1, object1))
     
     def test_get_user_permissions(self):
         user0 = self.user0
