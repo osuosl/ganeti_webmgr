@@ -50,10 +50,10 @@ SITE_ROOT = ''
 # Example: "/home/media/media.lawrence.com/"
 MEDIA_ROOT = '%s/media' % DOC_ROOT
 
-# URL that handles the media served from MEDIA_ROOT. Make sure to use a
-# trailing slash if there is a path component (optional in other cases).
-# Examples: "http://media.lawrence.com", "http://example.com/media/"
-MEDIA_URL = '%s/static' % SITE_ROOT
+# URL that handles the media served from MEDIA_ROOT.
+# XXX contrary to django docs, do not use a trailling slash.  It makes urls
+# using this url easier to read.  ie.  {{MEDIA_URL}}/images/foo.png
+MEDIA_URL = '%s/media' % SITE_ROOT
 
 # URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
 # trailing slash.
@@ -62,6 +62,11 @@ ADMIN_MEDIA_PREFIX = '/media/'
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = '!c&bm88vo=gby*vxf2gydv8hc!+f+eo+yu&!g&!)#n5quwsr82'
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'object_permissions.backend.ObjectPermBackend',
+)
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
