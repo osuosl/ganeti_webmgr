@@ -21,7 +21,7 @@ def index(request):
         'user' : request.user,
         })
 
-
+@login_required
 def logout_view(request):
     logout(request)
     return HttpResponseRedirect('/')
@@ -37,7 +37,7 @@ def login_view(request):
                     login(request, user)
                 else:
                     return HttpResponseForbidden(content='Your account is disabled')
-        return HttpResponseRedirect('/')
+        return HttpResponseRedirect(request.GET['next'])
     else:
         form = LoginForm()
     return render_to_response('login.html', {
