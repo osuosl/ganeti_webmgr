@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response
 
-from models import *
+from ganeti_webmgr.ganeti.models import *
 from ganeti_webmgr.util.portforwarder import forward_port
 
 
@@ -56,7 +56,7 @@ def create(request, cluster_slug):
         'hostname': hostname,
     })
 
-def instance(request, cluster_slug, instance):
+def detail(request, cluster_slug, instance):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     instance = VirtualMachine.objects.get(hostname=instance)
     if request.method == 'POST':

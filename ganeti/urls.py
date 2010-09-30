@@ -8,41 +8,41 @@ urlpatterns = patterns('ganeti_webmgr.ganeti.views',
     # Example:
     # (r'^ganeti_webmgr/', include('ganeti_webmgr.foo.urls')),
     url(r'^/?$',
-        'index', name="cluster-overview"),
+        'general.index', name="cluster-overview"),
         
     # Cluster
     #   List
     url(r'^clusters/',
-        'cluster_list', name="cluster-list"),
+        'cluster.list', name="cluster-list"),
     #   Detail
     url(r'^' + cluster + '$',
-        'cluster_detail', name="cluster-detail"),
+        'cluster.detail', name="cluster-detail"),
     # Instance
     #  List
     #  Detail
     url(r'^' + cluster + instance,
-        'instance', name="instance-detail"),
+        'instances.detail', name="instance-detail"),
     #  Create
     url(r'^' + cluster + '/create/?$',
-        'create', name="instance-create"),
+        'instances.create', name="instance-create"),
     #  Start, Stop, Reboot
     url(r'^' + cluster + instance + '/vnc/?$',
-        'vnc', name="instance-vnc"),
+        'instances.vnc', name="instance-vnc"),
     url(r'^' + cluster + instance + '/shutdown/?$',
-        'shutdown', name="instance-shutdown"),
+        'instances.shutdown', name="instance-shutdown"),
     url(r'^' + cluster + instance + '/startup/?$',
-        'startup', name="instance-startup"),
+        'instances.startup', name="instance-startup"),
     url(r'^' + cluster + instance + '/reboot/?$',
-        'reboot', name="instance-reboot"),
+        'instances.reboot', name="instance-reboot"),
     #   Orphans
     url(r'^orphans/',
-        'orphans', name='instance-orphans'),
+        'general.orphans', name='instance-orphans'),
     
     # Authentication
     url(r'^user/login/?',
-        'login_view', name="login"),
+        'general.login_view', name="login"),
     url(r'^user/logout/?',
-        'logout_view', name="logout"),
+        'general.logout_view', name="logout"),
 )
 
 urlpatterns += patterns('ganeti_webmgr.ganeti.organizations',
