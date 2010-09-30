@@ -13,6 +13,7 @@ from django.shortcuts import get_object_or_404, render_to_response
 from ganeti_webmgr.ganeti.models import *
 from ganeti_webmgr.util.portforwarder import forward_port
 
+@login_required
 def index(request):
     clusterlist = Cluster.objects.all()
     return render_to_response("index.html", {

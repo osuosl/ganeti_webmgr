@@ -56,6 +56,7 @@ def create(request, cluster_slug):
         'hostname': hostname,
     })
 
+@login_required
 def detail(request, cluster_slug, instance):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     instance = VirtualMachine.objects.get(hostname=instance)

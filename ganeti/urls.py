@@ -13,9 +13,9 @@ urlpatterns = patterns('ganeti_webmgr.ganeti.views.general',
     url(r'^orphans/',
         'orphans', name='instance-orphans'),
     # Authentication
-    url(r'^user/login/?',
+    url(r'^accounts/login/?',
         'login_view', name="login"),
-    url(r'^user/logout/?',
+    url(r'^accounts/logout/?',
         'logout_view', name="logout"),
 )
 

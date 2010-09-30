@@ -2,7 +2,6 @@
 
 {% block content %}
     <h1>Overview</h1>
-    {% if user.is_authenticated %}
     <div id="clusterlist">
     {% for cluster in clusterlist %}
         <div id="clusterinfo">
@@ -31,10 +30,6 @@
         </div>
     {% endfor %}
     </div>
-    {% else %}
-    <h2>Sorry</h2>
-    <p>You do not have the correct authorization to view this page. Please login.</p>
-    {% endif %}
     {% if is_paginated %}
     <div id="pagelist">
         {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">&lt;</a>{% else %}&nbsp;{% endif %}
