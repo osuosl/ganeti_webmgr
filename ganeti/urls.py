@@ -7,34 +7,27 @@ instance = '/(?P<instance>[^/]+)'
 urlpatterns = patterns('ganeti_webmgr.ganeti.views.general',
     # Example:
     # (r'^ganeti_webmgr/', include('ganeti_webmgr.foo.urls')),
-    url(r'^/?$',
-        'index', name="cluster-overview"),
+    url(r'^$', 'index', name="cluster-overview"),
     #   Orphans
-    url(r'^orphans/',
-        'orphans', name='instance-orphans'),
+    url(r'^orphans/','orphans', name='instance-orphans'),
     # Authentication
-    url(r'^accounts/login/?',
-        'login_view', name="login"),
-    url(r'^accounts/logout/?',
-        'logout_view', name="logout"),
+    url(r'^accounts/login/?', 'login_view', name="login"),
+    url(r'^accounts/logout/?', 'logout_view', name="logout"),
 )
 
 # Clusters
 urlpatterns += patterns('ganeti_webmgr.ganeti.views.cluster',
     #   List
-    url(r'^clusters/',
-        'list', name="cluster-list"),
+    url(r'^clusters/', 'list', name="cluster-list"),
     #   Detail
-    url(r'^' + cluster + '$',
-        'detail', name="cluster-detail"),
+    url(r'^' + cluster + '$', 'detail', name="cluster-detail"),
 )
 
 # Instances
 urlpatterns += patterns('ganeti_webmgr.ganeti.views.instances',
     #  List
     #  Detail
-    url(r'^' + cluster + instance,
-        'detail', name="instance-detail"),
+    url(r'^' + cluster + instance, 'detail', name="instance-detail"),
     #  Create
     url(r'^' + cluster + '/create/?$',
         'create', name="instance-create"),
@@ -60,8 +53,3 @@ urlpatterns += patterns('ganeti_webmgr.ganeti.organizations',
     url(r'^organization/(?P<id>\d+)/user/update/?$',
         'update_user', name="organization-update-user"),
 )
-
-if settings.DEBUG:
-    urlpatterns += patterns('',
-        (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT}),
-    )
