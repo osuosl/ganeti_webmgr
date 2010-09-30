@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404, render_to_response
 from ganeti_webmgr.ganeti.models import *
 from ganeti_webmgr.util.portforwarder import forward_port
 
-
+@login_required
 def vnc(request, cluster_slug, instance):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     port, password = cluster.setup_vnc_forwarding(instance)
@@ -20,24 +20,27 @@ def vnc(request, cluster_slug, instance):
                                'password': password,
                                'user': request.user})
 
+@login_required
 def shutdown(request, cluster_slug, instance):
     vm = VirtualMachine.objects.get(hostname=instance)
     vm.shutdown()
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
-
+@login_required
 def startup(request, cluster_slug, instance):
     vm = VirtualMachine.objects.get(hostname=instance)
     vm.startup()
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
+@login_required
 def reboot(request, cluster_slug, instance):
     vm = VirtualMachine.objects.get(hostname=instance)
     vm.reboot()
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
+@login_required
 def create(request, cluster_slug):
     hostname = get_object_or_404(Cluster, slug=cluster_slug)
     new_vm = VirtualMachine(cluster=hostname)
@@ -54,6 +57,7 @@ def create(request, cluster_slug):
         'form': form,
         'oslist': oslist,
         'hostname': hostname,
+        'user': request.user,
     })
 
 @login_required

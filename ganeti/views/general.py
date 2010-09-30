@@ -74,7 +74,11 @@ def orphans(request):
     else:
         form = OrphanForm(vms)
     
-    return render_to_response("orphans.html", {'vms': vms, 'form':form})
+    return render_to_response("orphans.html", {
+        'vms': vms,
+        'form':form,
+        'user': request.user,
+        })
 
 
 class LoginForm(forms.Form):

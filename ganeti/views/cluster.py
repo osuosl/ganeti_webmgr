@@ -13,12 +13,18 @@ from django.shortcuts import get_object_or_404, render_to_response
 from ganeti_webmgr.ganeti.models import *
 from ganeti_webmgr.util.portforwarder import forward_port
 
+@login_required
 def detail(request, cluster_slug):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     return render_to_response("cluster.html", {
-        'cluster': cluster
+        'cluster': cluster,
+        'user': request.user,
     })
 
+@login_required
 def list(request):        
     cluster_list = Cluster.objects.all()
-    return render_to_response("cluster_list.html", {'cluster_list': cluster_list })
+    return render_to_response("cluster_list.html", {
+        'cluster_list': cluster_list,
+        'user': request.user,
+        })
