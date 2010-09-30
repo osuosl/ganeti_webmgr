@@ -1,10 +1,14 @@
 <html>
     <head>
     <title>{% block title %}Ganeti Web Manager{% endblock %}</title>
-    <link rel="stylesheet" type="text/css" href="/static/css/base.css"/>
-    <script type="text/javascript" src="/static/js/jquery.js"></script>
-    <script type="text/javascript" src="/static/js/color.js"></script>
-    <script type="text/javascript" src="/static/js/highlight.js"></script>
+    <link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}/css/base.css"/>
+    
+    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.js"></script>
+    <script type="text/javascript" src="{{MEDIA_URL}}/js/color.js"></script>
+    <script type="text/javascript" src="{{MEDIA_URL}}/js/highlight.js"></script>
+    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip.js"></script>
+    {% block head %}{% endblock %}
+    
     </head>
     <body>
     <div id="header">
