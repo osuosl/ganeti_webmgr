@@ -50,7 +50,12 @@ def login_view(request):
                     login(request, user)
                 else:
                     return HttpResponseForbidden(content='Your account is disabled')
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+        return HttpResponseRedirect('/')
+    else:
+        form = LoginForm()
+    return render_to_response('login.html', {
+        'form': form,
+    })
 
 class OrphanForm(forms.Form):
     """
