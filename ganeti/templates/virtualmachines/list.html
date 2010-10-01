@@ -1,4 +1,4 @@
-{% extends base.html %}
+{% extends "base.html" %}
 
 {% block title %}Virtual Machines{% endblock %}
 
@@ -7,4 +7,4 @@
 {% for vm in vmlist %}
     <p>{{vm.hostname}}</p>
 {% endfor %}
-{% endcontent %}
+{% endblock %}

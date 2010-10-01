@@ -26,6 +26,7 @@ urlpatterns += patterns('ganeti_webmgr.ganeti.views.cluster',
 # Instances
 urlpatterns += patterns('ganeti_webmgr.ganeti.views.instances',
     #  List
+    url(r'^vms/$', 'list', name="virtualmachine-list"),
     #  Detail
     url(r'^' + cluster + instance, 'detail', name="instance-detail"),
     #  Create
