@@ -20,7 +20,8 @@ def index(request):
     return render_to_response("index.html", {
         'clusterlist': clusterlist,
         'user' : request.user,
-            }, context_instance=RequestContext(request)
+            },
+            context_instance=RequestContext(request),
         )
 
 @login_required
@@ -44,7 +45,9 @@ def login_view(request):
         form = LoginForm()
     return render_to_response('login.html', {
         'form': form,
-    })
+        },
+        context_instance=RequestContext(request),
+    )
 
 
 @user_passes_test(lambda u: u.is_superuser)
@@ -80,7 +83,9 @@ def orphans(request):
         'vms': vms,
         'form':form,
         'user': request.user,
-        })
+        },
+        context_instance=RequestContext(request),
+    )
 
 
 class LoginForm(forms.Form):
