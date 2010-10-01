@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %} Organization: {{ org.name }}{% endblock %}
+{% block title %} User Group: {{ org.name }}{% endblock %}
 
 {% block head %}
 <style>
@@ -43,7 +43,7 @@
         // Add user button
         $('#add_user').qtip({
             content: {
-               url: '{{SITE_ROOT}}/organization/{{org.id}}/user/add/',
+               url: '{{SITE_ROOT}}/user_group/{{org.id}}/user/add/',
                title: {text:'Add User', button:'close'},
             },
             position: {  corner:{target:'center', tooltip:'center'}},
@@ -63,7 +63,7 @@
         // Delete user button
         $('#users .delete').live("click", function() {
             id = this.parentNode.parentNode.id.substring(5);
-            $.post('/organization/{{org.id}}/user/remove/', {'user':id},
+            $.post('/user_group/{{org.id}}/user/remove/', {'user':id},
                 function(code){
                     if(code==1) {
                         console.log($(this.parentNode.parentNode));
@@ -83,7 +83,7 @@
             
             $this.qtip({
                 content: {
-                   url: "{{SITE_ROOT}}/organization/{{org.id}}/user/" + id,
+                   url: "{{SITE_ROOT}}/user_group/{{org.id}}/user/" + id,
                    title: {text:'Permissions: '+id, button:'close'},
                 },
                 position: {corner:{ target:"topMiddle", tooltip:"bottomMiddle"}},
@@ -152,7 +152,7 @@
         <th>Permissions</th>
     </tr>
     {% for user in org.users.all %}
-        {% include "organizations/user_row.html" %}
+        {% include "user_groups/user_row.html" %}
     {% endfor %}
 </table>
 

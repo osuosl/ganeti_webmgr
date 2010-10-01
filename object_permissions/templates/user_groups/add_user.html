@@ -1,6 +1,6 @@
 {% comment  %} Form for adding users {% endcomment %}
 
-<form id="add_user_form" method="post" action="{{SITE_ROOT}}/organization/{{org.id}}/user/add/">
+<form id="add_user_form" method="post" action="{{SITE_ROOT}}/user_group/{{org.id}}/user/add/">
     <ul id="errors"></ul>
     {{form.user}}
     <input type="button" id="add_user_submit" type="submit" value="Add"/>
