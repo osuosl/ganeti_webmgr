@@ -6,30 +6,34 @@ from django.contrib.auth.models import User
 from django.http import HttpResponse, HttpResponseRedirect, \
     HttpResponseForbidden, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, render_to_response
+from django.template import RequestContext
 
 from ganeti.models import Organization
-from object_permissions import get_model_perms, grant
+from object_permissions import get_model_perms, grant, revoke
 
 def detail(request, id):
     """
     Display organization details
     """
     #TODO permission check
-    
     org = get_object_or_404(Organization, id=id)
-    return render_to_response("organizations/detail.html", {'org':org})
+    return render_to_response("organizations/detail.html", {'org':org}, \
+                              context_instance=RequestContext(request))
 
 
-class UserForm(forms.Form):
-    """
-    Base form for dealing with users
-    """
-    user = forms.ModelChoiceField(queryset=User.objects.all())
+class OrganizationForm(forms.Form):
     organization = None
 
     def __init__(self, organization=None, *args, **kwargs):
         self.organization=organization
-        super(UserForm, self).__init__(*args, **kwargs)
+        super(OrganizationForm, self).__init__(*args, **kwargs)
+
+
+class UserForm(OrganizationForm):
+    """
+    Base form for dealing with users
+    """
+    user = forms.ModelChoiceField(queryset=User.objects.all())
 
 
 class AddUserForm(UserForm):
@@ -50,15 +54,27 @@ class RemoveUserForm(UserForm):
         return user
 
 
-class UserPermissionForm(UserForm):
+class UserPermissionForm(OrganizationForm):
     """
     Form used for editing permissions
     """
-    permissions = forms.MultipleChoiceField()
+    permissions = forms.MultipleChoiceField(required=False, \
+                                            widget=forms.CheckboxSelectMultiple)
+    user_id = None
 
-    def __init__(self, choices=[], *args, **kwargs):
+    def __init__(self, user_id, choices=[], *args, **kwargs):
         super(UserPermissionForm, self).__init__(*args, **kwargs)
+        self.user_id = user_id
         self.fields['permissions'].choices = choices
+    
+    def clean(self):
+        try:
+            user = User.objects.get(id=self.user_id)
+            self.cleaned_data['user'] = user
+            return self.cleaned_data
+        except User.DoesNotExist:
+            raise forms.ValidationError("Invalid User")
+
 
 def add_user(request, id):
     """
@@ -77,14 +93,17 @@ def add_user(request, id):
             organization.users.add(user.get_profile())
             
             # return html for new user row
-            return render_to_response("organizations/user_row.html", {'user':user})
+            return render_to_response("organizations/user_row.html", \
+                                      {'user':user, 'org':organization})
         
         # error in form return ajax response
         content = json.dumps(form.errors)
         return HttpResponse(content, mimetype='application/json')
 
     form = AddUserForm()
-    return render_to_response("organizations/add_user.html", {'form':form})
+    return render_to_response("organizations/add_user.html",\
+                              {'form':form, 'org':organization}, \
+                              context_instance=RequestContext(request))
 
 
 def remove_user(request, id):
@@ -113,25 +132,29 @@ def remove_user(request, id):
     return HttpResponse(content, mimetype='application/json')
 
 
-def update_user(request, id):
+def user_permissions(request, id, user_id):
     """
     Ajax call to update a user's permissions
     """
     user = request.user
     organization = get_object_or_404(Organization, id=id)
-    perms = get_model_perms(organization)
-    choices = zip(perms, perms)
+    model_perms = get_model_perms(organization)
+    choices = zip(model_perms, model_perms)
     
     if not (user.is_superuser or user.has_perm('admin', organization)):
         return HttpResponseForbidden('You do not have sufficient privileges')
     
     if request.method == 'POST':
-        form = UserPermissionForm(choices, organization, request.POST)
+        form = UserPermissionForm(user_id, choices, organization, request.POST)
         if form.is_valid():
-            user = form.cleaned_data['user']
             perms = form.cleaned_data['permissions']
+            user = form.cleaned_data['user']
+            # update perms - grant all perms selected in the form.  Revoke all
+            # other available perms that were not selected.
             for perm in perms:
                 grant(user, perm, organization)
+            for perm in [p for p in model_perms if p not in perms]:
+                revoke(user, perm, organization)
             
             # return html to replace existing user row
             return render_to_response("organizations/user_row.html", {'user':user})
@@ -140,5 +163,7 @@ def update_user(request, id):
         content = json.dumps(form.errors)
         return HttpResponse(content, mimetype='application/json')
 
-    form = UserPermissionForm(choices)
-    return render_to_response("organizations/permissions.html", {'form':form})
+    form = UserPermissionForm(user_id, choices)
+    return render_to_response("organizations/permissions.html", \
+                              {'form':form, 'org':organization}, \
+                              context_instance=RequestContext(request))

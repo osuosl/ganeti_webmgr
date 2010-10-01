@@ -50,6 +50,6 @@ urlpatterns += patterns('ganeti_webmgr.ganeti.organizations',
         'add_user', name="organization-add-user"),
     url(r'^organization/(?P<id>\d+)/user/remove/?$',
         'remove_user', name="organization-remove-user"),
-    url(r'^organization/(?P<id>\d+)/user/update/?$',
-        'update_user', name="organization-update-user"),
+    url(r'^organization/(?P<id>\d+)/user/(?P<user_id>\d+)/?$',
+        'user_permissions', name="organization-user-permissions"),
 )

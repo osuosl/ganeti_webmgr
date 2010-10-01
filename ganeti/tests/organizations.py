@@ -213,15 +213,15 @@ class TestOrganizations(TestCase):
         c = Client()
         
         # unauthorized
-        response = c.get('/organization/%d/user/update/' % org.id)
+        response = c.get('/organization/%d/user/%s/' % (org.id, 0))
         self.assertEqual(403, response.status_code)
-        response = c.post('/organization/%d/user/update/' % org.id)
+        response = c.post('/organization/%d/user/%s/' % (org.id, 0))
         self.assertEqual(403, response.status_code)
         
         # authorized post (perm granted)
         grant(user, 'admin', org)
         self.assert_(c.login(username=user.username, password='secret'))
-        response = c.get('/organization/%d/user/update/' % org.id)
+        response = c.get('/organization/%d/user/%s/' % (org.id, user.id))
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertEqual('organizations/permissions.html', response.template.name)
@@ -230,30 +230,25 @@ class TestOrganizations(TestCase):
         revoke(user, 'admin', org)
         user.is_superuser = True
         user.save()
-        response = c.get('/organization/%d/user/update/' % org.id)
+        response = c.get('/organization/%d/user/%s/' % (org.id, user.id))
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertEqual('organizations/permissions.html', response.template.name)
         
-        # missing user id
-        response = c.post('/organization/%d/user/update/' % org.id)
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('application/json', response['content-type'])
-        
         # invalid user
-        response = c.post('/organization/%d/user/update/' % org.id, {'user':0})
+        response = c.post('/organization/%d/user/%s/' % (org.id, 0))
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         
         # invalid permission
         data = {'user':user.id, 'permissions':['DoesNotExist']}
-        response = c.post('/organization/%d/user/update/' % org.id, data)
+        response = c.post('/organization/%d/user/%s/' % (org.id, user.id), data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         
         # valid post
         data = {'user':user.id, 'permissions':['Perm1','Perm2']}
-        response = c.post('/organization/%d/user/update/' % org.id, data)
+        response = c.post('/organization/%d/user/%s/' % (org.id, user.id), data)
         self.assertEqual(200, response.status_code)
         
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
