@@ -16,7 +16,7 @@
     <tr>
       <td><a href="{% url instance-detail vm.cluster.slug vm.hostname %}">{{ vm.hostname }}</a></td>
       {% if not cluster %}
-      <td>{{ vm.cluster.hostname }}</td>
+      <td>{{ vm.cluster }}</td>
       {% endif %}
       <td>{{ info.pnode }}</td>
       <td>{{ vm.ram }}</td>
