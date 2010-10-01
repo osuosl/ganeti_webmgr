@@ -230,6 +230,7 @@ class TestOrganizations(TestCase):
         revoke(user, 'admin', org)
         user.is_superuser = True
         user.save()
+        
         response = c.get('/organization/%d/user/%s/' % (org.id, user.id))
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
@@ -241,13 +242,13 @@ class TestOrganizations(TestCase):
         self.assertEquals('application/json', response['content-type'])
         
         # invalid permission
-        data = {'user':user.id, 'permissions':['DoesNotExist']}
+        data = {'permissions':['DoesNotExist']}
         response = c.post('/organization/%d/user/%s/' % (org.id, user.id), data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         
         # valid post
-        data = {'user':user.id, 'permissions':['Perm1','Perm2']}
+        data = {'permissions':['Perm1','Perm2']}
         response = c.post('/organization/%d/user/%s/' % (org.id, user.id), data)
         self.assertEqual(200, response.status_code)
         
@@ -255,3 +256,4 @@ class TestOrganizations(TestCase):
         self.assertEqual('organizations/user_row.html', response.template.name)
         self.assert_(user.has_perm('Perm1', org))
         self.assert_(user.has_perm('Perm2', org))
+        self.assertEqual(['Perm1','Perm2'], get_user_perms(user, org))
