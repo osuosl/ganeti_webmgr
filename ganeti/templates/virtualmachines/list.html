@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block title %}Virtual Machines{% endblock %}
+
+{% block content %}
+<h1>VM List </h1>
+{% for vm in vmlist %}
+    <p>{{vm.hostname}}</p>
+{% endfor %}
+{% endblock %}
