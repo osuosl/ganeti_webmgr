@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response
+from django.template import RequestContext
 
 from ganeti_webmgr.ganeti.models import *
 from ganeti_webmgr.util.portforwarder import forward_port
@@ -18,7 +19,9 @@ def vnc(request, cluster_slug, instance):
                                'host': request.META['HTTP_HOST'],
                                'port': port,
                                'password': password,
-                               'user': request.user})
+                               'user': request.user},
+        context_instance=RequestContext(request),
+    )
 
 @login_required
 def shutdown(request, cluster_slug, instance):
@@ -58,7 +61,9 @@ def create(request, cluster_slug):
         'oslist': oslist,
         'hostname': hostname,
         'user': request.user,
-    })
+        },
+        context_instance=RequestContext(request),
+    )
 
 @login_required
 def detail(request, cluster_slug, instance):
@@ -91,7 +96,9 @@ def detail(request, cluster_slug, instance):
         'instance': instance,
         'configform': configform,
         'user': request.user,
-        })
+        },
+        context_instance=RequestContext(request),
+    )
 
 class InstanceCreateForm(forms.ModelForm):
     class Meta:

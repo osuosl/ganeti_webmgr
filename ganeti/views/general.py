@@ -8,6 +8,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response
+from django.template import RequestContext
 
 
 from ganeti_webmgr.ganeti.models import *
@@ -19,7 +20,9 @@ def index(request):
     return render_to_response("index.html", {
         'clusterlist': clusterlist,
         'user' : request.user,
-        })
+            },
+            context_instance=RequestContext(request),
+        )
 
 @login_required
 def logout_view(request):
@@ -42,7 +45,9 @@ def login_view(request):
         form = LoginForm()
     return render_to_response('login.html', {
         'form': form,
-    })
+        },
+        context_instance=RequestContext(request),
+    )
 
 
 @user_passes_test(lambda u: u.is_superuser)
@@ -78,7 +83,9 @@ def orphans(request):
         'vms': vms,
         'form':form,
         'user': request.user,
-        })
+        },
+        context_instance=RequestContext(request),
+    )
 
 
 class LoginForm(forms.Form):
