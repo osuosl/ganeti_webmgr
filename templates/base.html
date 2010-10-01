@@ -20,6 +20,7 @@
             <ul>
                 {% if user.is_staff %}
                 <li><a href="{% url cluster-list %}">Clusters</a></li>
+                <li><a href="{% url virtualmachine-list %}">VMs</a></li>
                 <li><a href="{% url instance-orphans %}">Orphan VMs</a></li>
                 {% endif %}
             </ul>
