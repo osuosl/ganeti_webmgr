@@ -4,6 +4,7 @@
 
 {% block content %}
     <h1>Orphaned VMs</h1>
+    {% if vms %}
     <form action="." method="post">
     
     {{form.errors}}
@@ -18,4 +19,7 @@
         {% endfor %}
     </ul>
     </form>
+    {% else %}
+    <p>Hurray! All virtual machines currently have owners!</p>
+    {% endif %}
 {% endblock %}
