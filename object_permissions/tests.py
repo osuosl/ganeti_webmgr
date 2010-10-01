@@ -186,6 +186,26 @@ class TestModelPermissions(TestCase):
         self.assertEqual([u'Perm1', u'Perm2', u'Perm3'], get_user_perms(user1, object0))
         self.assertEqual(perms, get_user_perms(user1, object1))
     
+    def test_has_perm(self):
+        """
+        Additional tests for has_perms
+        
+        Verifies:
+            * None object always returns false
+            * Nonexistent perm returns false
+            * Perm user does not possess returns false
+        """
+        user = self.user0
+        object = self.object0
+        
+        for perm in self.perms:
+            register(perm, Group)
+        grant(user, 'Perm1', object)
+        
+        self.assertFalse(user.has_perm('Perm1', None))
+        self.assertFalse(user.has_perm('DoesNotExist'), object)
+        self.assertFalse(user.has_perm('Perm2', object))
+    
     def test_get_user_permissions(self):
         user0 = self.user0
         user1 = self.user1
