@@ -8,6 +8,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response
+from django.template import RequestContext
 
 
 from ganeti_webmgr.ganeti.models import *
@@ -19,7 +20,9 @@ def detail(request, cluster_slug):
     return render_to_response("cluster.html", {
         'cluster': cluster,
         'user': request.user,
-    })
+        },
+        context_instance=RequestContext(request),
+    )
 
 @login_required
 def list(request):        
@@ -27,4 +30,6 @@ def list(request):
     return render_to_response("cluster_list.html", {
         'cluster_list': cluster_list,
         'user': request.user,
-        })
+        },
+        context_instance=RequestContext(request),
+    )
