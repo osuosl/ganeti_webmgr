@@ -5,7 +5,7 @@ from django.contrib.contenttypes.models import ContentType
 
 from object_permissions import register, grant, revoke, get_user_perms, \
     get_model_perms
-from models import ObjectPermission, ObjectPermissionType
+from object_permissions.models import ObjectPermission, ObjectPermissionType
 
 
 class TestModelPermissions(TestCase):

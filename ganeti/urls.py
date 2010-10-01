@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.conf.urls.defaults import *
 
 cluster = 'cluster/(?P<cluster_slug>\w+)'
@@ -41,16 +40,4 @@ urlpatterns += patterns('ganeti_webmgr.ganeti.views.instances',
         'startup', name="instance-startup"),
     url(r'^' + cluster + instance + '/reboot/?$',
         'reboot', name="instance-reboot"),
-)
-
-urlpatterns += patterns('ganeti_webmgr.ganeti.organizations',
-    # Organizations
-    url(r'^organization/(?P<id>\d+)/?$',
-        'detail', name="organization-detail"),
-    url(r'^organization/(?P<id>\d+)/user/add/?$',
-        'add_user', name="organization-add-user"),
-    url(r'^organization/(?P<id>\d+)/user/remove/?$',
-        'remove_user', name="organization-remove-user"),
-    url(r'^organization/(?P<id>\d+)/user/(?P<user_id>\d+)/?$',
-        'user_permissions', name="organization-user-permissions"),
 )

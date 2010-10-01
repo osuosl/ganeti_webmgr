@@ -8,6 +8,7 @@ admin.autodiscover()
 urlpatterns = patterns('',
     # Example:
     (r'^', include('ganeti.urls')),
+    (r'^', include('object_permissions.urls')),
     
     # Uncomment the admin/doc line below and add 'django.contrib.admindocs' 
     # to INSTALLED_APPS to enable admin documentation:
