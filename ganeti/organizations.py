@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
 from ganeti.models import Organization
-from object_permissions import get_model_perms, grant, revoke
+from object_permissions import get_model_perms, grant, revoke, get_user_perms
 
 def detail(request, id):
     """
@@ -138,11 +138,12 @@ def user_permissions(request, id, user_id):
     """
     user = request.user
     organization = get_object_or_404(Organization, id=id)
-    model_perms = get_model_perms(organization)
-    choices = zip(model_perms, model_perms)
     
     if not (user.is_superuser or user.has_perm('admin', organization)):
         return HttpResponseForbidden('You do not have sufficient privileges')
+    
+    model_perms = get_model_perms(organization)
+    choices = zip(model_perms, model_perms)
     
     if request.method == 'POST':
         form = UserPermissionForm(user_id, choices, organization, request.POST)
@@ -163,7 +164,9 @@ def user_permissions(request, id, user_id):
         content = json.dumps(form.errors)
         return HttpResponse(content, mimetype='application/json')
 
-    form = UserPermissionForm(user_id, choices)
+    form_user = get_object_or_404(User, id=user_id)
+    data = {'permissions':get_user_perms(form_user, organization)}
+    form = UserPermissionForm(user_id, choices, data)
     return render_to_response("organizations/permissions.html", \
                               {'form':form, 'org':organization}, \
                               context_instance=RequestContext(request))
