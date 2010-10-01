@@ -8,28 +8,29 @@ from django.http import HttpResponse, HttpResponseRedirect, \
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
-from ganeti.models import Organization
+
 from object_permissions import get_model_perms, grant, revoke, get_user_perms
+from object_permissions.models import UserGroup
 
 def detail(request, id):
     """
     Display organization details
     """
     #TODO permission check
-    org = get_object_or_404(Organization, id=id)
+    org = get_object_or_404(UserGroup, id=id)
     return render_to_response("organizations/detail.html", {'org':org}, \
                               context_instance=RequestContext(request))
 
 
-class OrganizationForm(forms.Form):
+class UserGroupForm(forms.Form):
     organization = None
 
     def __init__(self, organization=None, *args, **kwargs):
         self.organization=organization
-        super(OrganizationForm, self).__init__(*args, **kwargs)
+        super(UserGroupForm, self).__init__(*args, **kwargs)
 
 
-class UserForm(OrganizationForm):
+class UserForm(UserGroupForm):
     """
     Base form for dealing with users
     """
@@ -40,7 +41,7 @@ class AddUserForm(UserForm):
     def clean_user(self):
         """ Validate that user is not in organization already """
         user = self.cleaned_data['user']
-        if self.organization.users.filter(user=user).exists():
+        if self.organization.users.filter(id=user.id).exists():
             raise forms.ValidationError("User is already a member of this group")
         return user
 
@@ -49,12 +50,12 @@ class RemoveUserForm(UserForm):
     def clean_user(self):
         """ Validate that user is in organization """
         user = self.cleaned_data['user']
-        if not self.organization.users.filter(user=user).exists():
+        if not self.organization.users.filter(id=user.id).exists():
             raise forms.ValidationError("User is not a member of this group")
         return user
 
 
-class UserPermissionForm(OrganizationForm):
+class UserPermissionForm(UserGroupForm):
     """
     Form used for editing permissions
     """
@@ -81,7 +82,7 @@ def add_user(request, id):
     ajax call to add a user to an organization.
     """
     user = request.user
-    organization = get_object_or_404(Organization, id=id)
+    organization = get_object_or_404(UserGroup, id=id)
     
     if not (user.is_superuser or user.has_perm('admin', organization)):
         return HttpResponseForbidden('You do not have sufficient privileges')
@@ -90,7 +91,7 @@ def add_user(request, id):
         form = AddUserForm(organization, request.POST)
         if form.is_valid():
             user = form.cleaned_data['user']
-            organization.users.add(user.get_profile())
+            organization.users.add(user)
             
             # return html for new user row
             return render_to_response("organizations/user_row.html", \
@@ -111,7 +112,7 @@ def remove_user(request, id):
     Ajax call to remove a user from an organization
     """
     user = request.user
-    organization = get_object_or_404(Organization, id=id)
+    organization = get_object_or_404(UserGroup, id=id)
     
     if not (user.is_superuser or user.has_perm('admin', organization)):
         return HttpResponseForbidden('You do not have sufficient privileges')
@@ -122,7 +123,7 @@ def remove_user(request, id):
     form = RemoveUserForm(organization, request.POST)
     if form.is_valid():
         user = form.cleaned_data['user']
-        organization.users.remove(user.get_profile())
+        organization.users.remove(user)
         
         # return success
         return HttpResponse('1', mimetype='application/json')
@@ -137,7 +138,7 @@ def user_permissions(request, id, user_id):
     Ajax call to update a user's permissions
     """
     user = request.user
-    organization = get_object_or_404(Organization, id=id)
+    organization = get_object_or_404(UserGroup, id=id)
     
     if not (user.is_superuser or user.has_perm('admin', organization)):
         return HttpResponseForbidden('You do not have sufficient privileges')

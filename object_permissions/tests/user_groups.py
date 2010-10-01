@@ -5,15 +5,13 @@ from django.test.client import Client
 
 from object_permissions import register, grant, revoke, get_user_perms, \
     get_model_perms
-from object_permissions.models import ObjectPermission
-
-from ganeti.models import Organization
+from object_permissions.models import ObjectPermission, UserGroup, GroupObjectPermission
 
 
-__all__ = ('TestOrganizations',)
+__all__ = ('TestUserGroups',)
 
 
-class TestOrganizations(TestCase):
+class TestUserGroups(TestCase):
     
     def setUp(self):
         self.tearDown()
@@ -26,26 +24,26 @@ class TestOrganizations(TestCase):
         self.user.save()
         
         # XXX specify permission manually, it is not auto registering for some reason
-        register('admin', Organization)
+        register('admin', UserGroup)
     
     def tearDown(self):
         User.objects.all().delete()
-        Organization.objects.all().delete()
+        UserGroup.objects.all().delete()
         ObjectPermission.objects.all().delete()
         
     def test_trivial(self):
-        """ Test instantiating an Organization """
-        org = Organization()
+        """ Test instantiating an UserGroup """
+        org = UserGroup()
     
     def test_save(self, name='test'):
-        """ Test saving an Organization """
-        org = Organization(name=name)
+        """ Test saving an UserGroup """
+        org = UserGroup(name=name)
         org.save()
         return org
     
     def test_permissions(self):
         """ Verify all model perms are created """
-        self.assertEqual(['admin'], get_model_perms(Organization))
+        self.assertEqual(['admin'], get_model_perms(UserGroup))
     
     def test_view_detail(self):
         """
@@ -120,13 +118,13 @@ class TestOrganizations(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertEqual('organizations/user_row.html', response.template.name)
-        self.assert_(org.users.filter(user=user).exists())
+        self.assert_(org.users.filter(id=user.id).exists())
         
         # same user again
         response = c.post('/organization/%d/user/add/' % org.id, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
-        self.assertEquals(org.users.filter(user=user).count(), 1)
+        self.assertEquals(org.users.filter(id=user.id).count(), 1)
     
     def test_view_remove_user(self):
         """
@@ -143,7 +141,7 @@ class TestOrganizations(TestCase):
         user = self.user
         org = self.test_save()
         c = Client()
-        org.users.add(user.get_profile())
+        org.users.add(user)
         
         # invalid permissions
         response = c.get('/organization/%d/user/add/' % org.id)
@@ -165,24 +163,24 @@ class TestOrganizations(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertEqual('1', response.content)
-        self.assertFalse(org.users.filter(user=user).exists())
+        self.assertFalse(org.users.filter(id=user.id).exists())
         
         # valid request (superuser)
         revoke(user, 'admin', org)
         user.is_superuser = True
         user.save()
-        org.users.add(user.get_profile())
+        org.users.add(user)
         response = c.post('/organization/%d/user/remove/' % org.id, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertEqual('1', response.content)
-        self.assertFalse(org.users.filter(user=user).exists())
+        self.assertFalse(org.users.filter(id=user.id).exists())
         
         # remove user again
         response = c.post('/organization/%d/user/remove/' % org.id, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
-        self.assertFalse(org.users.filter(user=user).exists())
+        self.assertFalse(org.users.filter(id=user.id).exists())
         self.assertNotEqual('1', response.content)
         
         # remove invalid user
@@ -205,10 +203,10 @@ class TestOrganizations(TestCase):
         """
         user = self.user
         org = self.test_save()
-        org.users.add(user.get_profile())
+        org.users.add(user)
         
-        register('Perm1', Organization)
-        register('Perm2', Organization)
+        register('Perm1', UserGroup)
+        register('Perm2', UserGroup)
         
         c = Client()
         
