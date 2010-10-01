@@ -68,7 +68,7 @@ def create(request, cluster_slug):
 @login_required
 def list(request):
     vmlist = VirtualMachine.objects.all()
-    return render_to_response('virtualmachine_list.html', {
+    return render_to_response('virtualmachines/list.html', {
         'vmlist' : vmlist
         },
         context_instance=RequestContext(request),
