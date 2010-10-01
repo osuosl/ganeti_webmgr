@@ -33,13 +33,13 @@ class TestUserGroups(TestCase):
         
     def test_trivial(self):
         """ Test instantiating an UserGroup """
-        org = UserGroup()
+        group = UserGroup()
     
     def test_save(self, name='test'):
         """ Test saving an UserGroup """
-        org = UserGroup(name=name)
-        org.save()
-        return org
+        group = UserGroup(name=name)
+        group.save()
+        return group
     
     def test_permissions(self):
         """ Verify all model perms are created """
@@ -54,10 +54,10 @@ class TestUserGroups(TestCase):
             * 404 returned for invalid user_group
         """
         user = self.user
-        org = self.test_save()
+        group = self.test_save()
         c = Client()
         
-        response = c.get('/user_group/%d' % org.id )
+        response = c.get('/user_group/%d' % group.id )
         self.assertEqual(200, response.status_code)
         
         response = c.get('/user_group/0')
@@ -76,55 +76,55 @@ class TestUserGroups(TestCase):
             * adding user a second time returns error as json
         """
         user = self.user
-        org = self.test_save()
+        group = self.test_save()
         c = Client()
         
         # unauthorized
-        response = c.get('/user_group/%d/user/add/' % org.id)
+        response = c.get('/user_group/%d/user/add/' % group.id)
         self.assertEqual(403, response.status_code)
-        response = c.post('/user_group/%d/user/add/' % org.id)
+        response = c.post('/user_group/%d/user/add/' % group.id)
         self.assertEqual(403, response.status_code)
         
         # authorized post (perm granted)
-        grant(user, 'admin', org)
+        grant(user, 'admin', group)
         self.assert_(c.login(username=user.username, password='secret'))
-        response = c.get('/user_group/%d/user/add/' % org.id)
+        response = c.get('/user_group/%d/user/add/' % group.id)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertEqual('user_groups/add_user.html', response.template.name)
         
         # authorized post (superuser)
-        revoke(user, 'admin', org)
+        revoke(user, 'admin', group)
         user.is_superuser = True
         user.save()
-        response = c.get('/user_group/%d/user/add/' % org.id)
+        response = c.get('/user_group/%d/user/add/' % group.id)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertEqual('user_groups/add_user.html', response.template.name)
         
         # missing user id
-        response = c.post('/user_group/%d/user/add/' % org.id)
+        response = c.post('/user_group/%d/user/add/' % group.id)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         
         # invalid user
-        response = c.post('/user_group/%d/user/add/' % org.id, {'user':0})
+        response = c.post('/user_group/%d/user/add/' % group.id, {'user':0})
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         
         # valid post
         data = {'user':user.id}
-        response = c.post('/user_group/%d/user/add/' % org.id, data)
+        response = c.post('/user_group/%d/user/add/' % group.id, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertEqual('user_groups/user_row.html', response.template.name)
-        self.assert_(org.users.filter(id=user.id).exists())
+        self.assert_(group.users.filter(id=user.id).exists())
         
         # same user again
-        response = c.post('/user_group/%d/user/add/' % org.id, data)
+        response = c.post('/user_group/%d/user/add/' % group.id, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
-        self.assertEquals(org.users.filter(id=user.id).count(), 1)
+        self.assertEquals(group.users.filter(id=user.id).count(), 1)
     
     def test_view_remove_user(self):
         """
@@ -139,52 +139,52 @@ class TestUserGroups(TestCase):
             * removing user that does not exist returns error as json
         """
         user = self.user
-        org = self.test_save()
+        group = self.test_save()
         c = Client()
-        org.users.add(user)
+        group.users.add(user)
         
         # invalid permissions
-        response = c.get('/user_group/%d/user/add/' % org.id)
+        response = c.get('/user_group/%d/user/add/' % group.id)
         self.assertEqual(403, response.status_code)
-        response = c.post('/user_group/%d/user/add/' % org.id)
+        response = c.post('/user_group/%d/user/add/' % group.id)
         self.assertEqual(403, response.status_code)
         
         # authorize and login
         self.assert_(c.login(username=user.username, password='secret'))
-        grant(user, 'admin', org)
+        grant(user, 'admin', group)
         
         # invalid method
-        response = c.get('/user_group/%d/user/remove/' % org.id)
+        response = c.get('/user_group/%d/user/remove/' % group.id)
         self.assertEqual(405, response.status_code)
         
         # valid request (perm)
         data = {'user':user.id}
-        response = c.post('/user_group/%d/user/remove/' % org.id, data)
+        response = c.post('/user_group/%d/user/remove/' % group.id, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertEqual('1', response.content)
-        self.assertFalse(org.users.filter(id=user.id).exists())
+        self.assertFalse(group.users.filter(id=user.id).exists())
         
         # valid request (superuser)
-        revoke(user, 'admin', org)
+        revoke(user, 'admin', group)
         user.is_superuser = True
         user.save()
-        org.users.add(user)
-        response = c.post('/user_group/%d/user/remove/' % org.id, data)
+        group.users.add(user)
+        response = c.post('/user_group/%d/user/remove/' % group.id, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertEqual('1', response.content)
-        self.assertFalse(org.users.filter(id=user.id).exists())
+        self.assertFalse(group.users.filter(id=user.id).exists())
         
         # remove user again
-        response = c.post('/user_group/%d/user/remove/' % org.id, data)
+        response = c.post('/user_group/%d/user/remove/' % group.id, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
-        self.assertFalse(org.users.filter(id=user.id).exists())
+        self.assertFalse(group.users.filter(id=user.id).exists())
         self.assertNotEqual('1', response.content)
         
         # remove invalid user
-        response = c.post('/user_group/%d/user/remove/' % org.id, {'user':0})
+        response = c.post('/user_group/%d/user/remove/' % group.id, {'user':0})
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertNotEqual('1', response.content)
@@ -202,8 +202,8 @@ class TestUserGroups(TestCase):
             * adding user a second time returns error as json
         """
         user = self.user
-        org = self.test_save()
-        org.users.add(user)
+        group = self.test_save()
+        group.users.add(user)
         
         register('Perm1', UserGroup)
         register('Perm2', UserGroup)
@@ -211,47 +211,47 @@ class TestUserGroups(TestCase):
         c = Client()
         
         # unauthorized
-        response = c.get('/user_group/%d/user/%s/' % (org.id, 0))
+        response = c.get('/user_group/%d/user/%s/' % (group.id, 0))
         self.assertEqual(403, response.status_code)
-        response = c.post('/user_group/%d/user/%s/' % (org.id, 0))
+        response = c.post('/user_group/%d/user/%s/' % (group.id, 0))
         self.assertEqual(403, response.status_code)
         
         # authorized post (perm granted)
-        grant(user, 'admin', org)
+        grant(user, 'admin', group)
         self.assert_(c.login(username=user.username, password='secret'))
-        response = c.get('/user_group/%d/user/%s/' % (org.id, user.id))
+        response = c.get('/user_group/%d/user/%s/' % (group.id, user.id))
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertEqual('user_groups/permissions.html', response.template.name)
         
         # authorized post (superuser)
-        revoke(user, 'admin', org)
+        revoke(user, 'admin', group)
         user.is_superuser = True
         user.save()
         
-        response = c.get('/user_group/%d/user/%s/' % (org.id, user.id))
+        response = c.get('/user_group/%d/user/%s/' % (group.id, user.id))
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertEqual('user_groups/permissions.html', response.template.name)
         
         # invalid user
-        response = c.post('/user_group/%d/user/%s/' % (org.id, 0))
+        response = c.post('/user_group/%d/user/%s/' % (group.id, 0))
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         
         # invalid permission
         data = {'permissions':['DoesNotExist']}
-        response = c.post('/user_group/%d/user/%s/' % (org.id, user.id), data)
+        response = c.post('/user_group/%d/user/%s/' % (group.id, user.id), data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         
         # valid post
         data = {'permissions':['Perm1','Perm2']}
-        response = c.post('/user_group/%d/user/%s/' % (org.id, user.id), data)
+        response = c.post('/user_group/%d/user/%s/' % (group.id, user.id), data)
         self.assertEqual(200, response.status_code)
         
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertEqual('user_groups/user_row.html', response.template.name)
-        self.assert_(user.has_perm('Perm1', org))
-        self.assert_(user.has_perm('Perm2', org))
-        self.assertEqual(['Perm1','Perm2'], get_user_perms(user, org))
+        self.assert_(user.has_perm('Perm1', group))
+        self.assert_(user.has_perm('Perm2', group))
+        self.assertEqual(['Perm1','Perm2'], get_user_perms(user, group))

@@ -2,7 +2,7 @@
 <tr id="user_{{user.id}}">
 <td>{{user.name}}</td>
 <td class="permissions">
-    {% for permission in user|permissions:org %}
+    {% for permission in user|permissions:group %}
         {{permission}}{%if not forloop.last%}, {%endif%}
     {% empty %}
     <i>None</i>

@@ -1,6 +1,6 @@
 {% comment  %} Form for setting user permissions within a UserGroup {% endcomment %}
 
-<form id="permissions_form" method="post" action="{{SITE_ROOT}}/user_group/{{org.id}}/user/{{form.user_id}}/">
+<form id="permissions_form" method="post" action="{{SITE_ROOT}}/user_group/{{group.id}}/user/{{form.user_id}}/">
     <ul id="errors"></ul>
     {{form.permissions}}
     <input type="button" id="permissions_submit" type="submit" value="Update"/>

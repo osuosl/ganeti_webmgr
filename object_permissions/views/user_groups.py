@@ -17,8 +17,8 @@ def detail(request, id):
     Display user_group details
     """
     #TODO permission check
-    org = get_object_or_404(UserGroup, id=id)
-    return render_to_response("user_groups/detail.html", {'org':org}, \
+    group = get_object_or_404(UserGroup, id=id)
+    return render_to_response("user_groups/detail.html", {'group':group}, \
                               context_instance=RequestContext(request))
 
 
@@ -95,7 +95,7 @@ def add_user(request, id):
             
             # return html for new user row
             return render_to_response("user_groups/user_row.html", \
-                                      {'user':user, 'org':user_group})
+                                      {'user':user, 'group':user_group})
         
         # error in form return ajax response
         content = json.dumps(form.errors)
@@ -103,7 +103,7 @@ def add_user(request, id):
 
     form = AddUserForm()
     return render_to_response("user_groups/add_user.html",\
-                              {'form':form, 'org':user_group}, \
+                              {'form':form, 'group':user_group}, \
                               context_instance=RequestContext(request))
 
 
@@ -169,5 +169,5 @@ def user_permissions(request, id, user_id):
     data = {'permissions':get_user_perms(form_user, user_group)}
     form = UserPermissionForm(user_id, choices, data)
     return render_to_response("user_groups/permissions.html", \
-                              {'form':form, 'org':user_group}, \
+                              {'form':form, 'group':user_group}, \
                               context_instance=RequestContext(request))
