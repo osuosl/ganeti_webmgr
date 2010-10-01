@@ -1,5 +1,9 @@
-from models import ObjectPermission, ObjectPermissionType 
+from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
+
+from models import ObjectPermission, ObjectPermissionType, UserGroup, \
+    GroupObjectPermission
+
 
 
 def register(perm, model):
@@ -16,7 +20,7 @@ def register(perm, model):
 
 def grant(user, perm, object):
     """
-    Grants a permission to a user
+    Grants a permission to a User
     """
     ct = ContentType.objects.get_for_model(object)
     pt = ObjectPermissionType.objects.get(name=perm, content_type=ct)
@@ -25,9 +29,20 @@ def grant(user, perm, object):
         ObjectPermission(**properties).save()
 
 
+def grant_group(group, perm, object):
+    """
+    Grants a permission to a UserGroup
+    """
+    ct = ContentType.objects.get_for_model(object)
+    pt = ObjectPermissionType.objects.get(name=perm, content_type=ct)
+    properties = dict(group=group, permission=pt, object_id=object.id)
+    if not GroupObjectPermission.objects.filter(**properties).exists():
+        GroupObjectPermission(**properties).save()
+
+
 def revoke(user, perm, object):
     """
-    Revokes a permission from a user
+    Revokes a permission from a User
     """
     ct = ContentType.objects.get_for_model(object)
     ObjectPermission.objects \
@@ -36,13 +51,35 @@ def revoke(user, perm, object):
         .delete()
 
 
+def revoke_group(group, perm, object):
+    """
+    Revokes a permission from a UserGroup
+    """
+    ct = ContentType.objects.get_for_model(object)
+    GroupObjectPermission.objects \
+        .filter(group=group, object_id=object.id,  \
+                permission__content_type=ct, permission__name=perm) \
+        .delete()
+
+
 def get_user_perms(user, object):
     """
-    Return a list of perms that a user has.
+    Return a list of perms that a User has.
     """
     ct = ContentType.objects.get_for_model(object)
     query = ObjectPermission.objects \
         .filter(user=user, object_id=object.id, permission__content_type=ct) \
+        .values_list('permission__name', flat=True)
+    return list(query)
+
+
+def get_group_perms(group, object):
+    """
+    Return a list of perms that a UserGroup has.
+    """
+    ct = ContentType.objects.get_for_model(object)
+    query = GroupObjectPermission.objects \
+        .filter(group=group, object_id=object.id, permission__content_type=ct) \
         .values_list('permission__name', flat=True)
     return list(query)
 
@@ -55,3 +92,13 @@ def get_model_perms(model):
     query = ObjectPermissionType.objects.filter(content_type=ct) \
             .values_list('name', flat=True)
     return list(query)
+    
+    
+# make some methods available as bound methods
+setattr(User, 'grant', grant)
+setattr(User, 'revoke', revoke)
+setattr(User, 'get_perms', get_user_perms)
+
+setattr(UserGroup, 'grant', grant_group)
+setattr(UserGroup, 'revoke', revoke_group)
+setattr(UserGroup, 'get_perms', get_group_perms)

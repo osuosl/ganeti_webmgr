@@ -1,7 +1,7 @@
-from django.test import TestCase
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
-
+from django.db import IntegrityError
+from django.test import TestCase
 
 from object_permissions import register, grant, revoke, get_user_perms, \
     get_model_perms
@@ -28,6 +28,36 @@ class TestModelPermissions(TestCase):
         User.objects.all().delete()
         ObjectPermission.objects.all().delete()
         ObjectPermissionType.objects.all().delete()
+
+    def test_trivial(self):
+        ObjectPermissionType()
+        ObjectPermission()
+
+    def test_models(self):
+        """
+        test model constraints:
+            * PermissionType must be unique
+            * Granted Permissions must be unique to user/object combinations
+        """
+        user = self.user0
+        object = self.object0
+        ct = ContentType.objects.get_for_model(object)
+        
+        pt = ObjectPermissionType(name='Perm1', content_type=ct)
+        pt.save()
+        ObjectPermission(user=user, object_id=object.id, permission=pt).save()
+        
+        try:
+            ObjectPermissionType(name='Perm1', content_type=ct).save()
+            self.fail('Integrity Error not raised for duplicate ObjectPermissionType')
+        except IntegrityError:
+            pass
+        
+        try:
+            ObjectPermission(user=user, object_id=object.id, permission=pt).save()
+            self.fail('Integrity Error not raised for duplicate ObjectPermission')
+        except IntegrityError:
+            pass
 
     def test_register(self):
         """
@@ -202,6 +232,7 @@ class TestModelPermissions(TestCase):
             register(perm, Group)
         grant(user, 'Perm1', object)
         
+        self.assertTrue(user.has_perm('Perm1', object))
         self.assertFalse(user.has_perm('Perm1', None))
         self.assertFalse(user.has_perm('DoesNotExist'), object)
         self.assertFalse(user.has_perm('Perm2', object))

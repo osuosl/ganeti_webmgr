@@ -8,28 +8,29 @@ from django.http import HttpResponse, HttpResponseRedirect, \
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
-from ganeti.models import Organization
 from object_permissions import get_model_perms, grant, revoke, get_user_perms
+from object_permissions.models import UserGroup
+
 
 def detail(request, id):
     """
-    Display organization details
+    Display user_group details
     """
     #TODO permission check
-    org = get_object_or_404(Organization, id=id)
-    return render_to_response("organizations/detail.html", {'org':org}, \
+    group = get_object_or_404(UserGroup, id=id)
+    return render_to_response("user_groups/detail.html", {'group':group}, \
                               context_instance=RequestContext(request))
 
 
-class OrganizationForm(forms.Form):
-    organization = None
+class UserGroupForm(forms.Form):
+    user_group = None
 
-    def __init__(self, organization=None, *args, **kwargs):
-        self.organization=organization
-        super(OrganizationForm, self).__init__(*args, **kwargs)
+    def __init__(self, user_group=None, *args, **kwargs):
+        self.user_group=user_group
+        super(UserGroupForm, self).__init__(*args, **kwargs)
 
 
-class UserForm(OrganizationForm):
+class UserForm(UserGroupForm):
     """
     Base form for dealing with users
     """
@@ -38,23 +39,23 @@ class UserForm(OrganizationForm):
 
 class AddUserForm(UserForm):
     def clean_user(self):
-        """ Validate that user is not in organization already """
+        """ Validate that user is not in user_group already """
         user = self.cleaned_data['user']
-        if self.organization.users.filter(user=user).exists():
+        if self.user_group.users.filter(id=user.id).exists():
             raise forms.ValidationError("User is already a member of this group")
         return user
 
 
 class RemoveUserForm(UserForm):
     def clean_user(self):
-        """ Validate that user is in organization """
+        """ Validate that user is in user_group """
         user = self.cleaned_data['user']
-        if not self.organization.users.filter(user=user).exists():
+        if not self.user_group.users.filter(id=user.id).exists():
             raise forms.ValidationError("User is not a member of this group")
         return user
 
 
-class UserPermissionForm(OrganizationForm):
+class UserPermissionForm(UserGroupForm):
     """
     Form used for editing permissions
     """
@@ -78,51 +79,51 @@ class UserPermissionForm(OrganizationForm):
 
 def add_user(request, id):
     """
-    ajax call to add a user to an organization.
+    ajax call to add a user to an user_group.
     """
     user = request.user
-    organization = get_object_or_404(Organization, id=id)
+    user_group = get_object_or_404(UserGroup, id=id)
     
-    if not (user.is_superuser or user.has_perm('admin', organization)):
+    if not (user.is_superuser or user.has_perm('admin', user_group)):
         return HttpResponseForbidden('You do not have sufficient privileges')
     
     if request.method == 'POST':
-        form = AddUserForm(organization, request.POST)
+        form = AddUserForm(user_group, request.POST)
         if form.is_valid():
             user = form.cleaned_data['user']
-            organization.users.add(user.get_profile())
+            user_group.users.add(user)
             
             # return html for new user row
-            return render_to_response("organizations/user_row.html", \
-                                      {'user':user, 'org':organization})
+            return render_to_response("user_groups/user_row.html", \
+                                      {'user':user, 'group':user_group})
         
         # error in form return ajax response
         content = json.dumps(form.errors)
         return HttpResponse(content, mimetype='application/json')
 
     form = AddUserForm()
-    return render_to_response("organizations/add_user.html",\
-                              {'form':form, 'org':organization}, \
+    return render_to_response("user_groups/add_user.html",\
+                              {'form':form, 'group':user_group}, \
                               context_instance=RequestContext(request))
 
 
 def remove_user(request, id):
     """
-    Ajax call to remove a user from an organization
+    Ajax call to remove a user from an user_group
     """
     user = request.user
-    organization = get_object_or_404(Organization, id=id)
+    user_group = get_object_or_404(UserGroup, id=id)
     
-    if not (user.is_superuser or user.has_perm('admin', organization)):
+    if not (user.is_superuser or user.has_perm('admin', user_group)):
         return HttpResponseForbidden('You do not have sufficient privileges')
     
     if request.method != 'POST':
         return HttpResponseNotAllowed('GET')
 
-    form = RemoveUserForm(organization, request.POST)
+    form = RemoveUserForm(user_group, request.POST)
     if form.is_valid():
         user = form.cleaned_data['user']
-        organization.users.remove(user.get_profile())
+        user_group.users.remove(user)
         
         # return success
         return HttpResponse('1', mimetype='application/json')
@@ -137,36 +138,36 @@ def user_permissions(request, id, user_id):
     Ajax call to update a user's permissions
     """
     user = request.user
-    organization = get_object_or_404(Organization, id=id)
+    user_group = get_object_or_404(UserGroup, id=id)
     
-    if not (user.is_superuser or user.has_perm('admin', organization)):
+    if not (user.is_superuser or user.has_perm('admin', user_group)):
         return HttpResponseForbidden('You do not have sufficient privileges')
     
-    model_perms = get_model_perms(organization)
+    model_perms = get_model_perms(user_group)
     choices = zip(model_perms, model_perms)
     
     if request.method == 'POST':
-        form = UserPermissionForm(user_id, choices, organization, request.POST)
+        form = UserPermissionForm(user_id, choices, user_group, request.POST)
         if form.is_valid():
             perms = form.cleaned_data['permissions']
             user = form.cleaned_data['user']
             # update perms - grant all perms selected in the form.  Revoke all
             # other available perms that were not selected.
             for perm in perms:
-                grant(user, perm, organization)
+                grant(user, perm, user_group)
             for perm in [p for p in model_perms if p not in perms]:
-                revoke(user, perm, organization)
+                revoke(user, perm, user_group)
             
             # return html to replace existing user row
-            return render_to_response("organizations/user_row.html", {'user':user})
+            return render_to_response("user_groups/user_row.html", {'user':user})
         
         # error in form return ajax response
         content = json.dumps(form.errors)
         return HttpResponse(content, mimetype='application/json')
 
     form_user = get_object_or_404(User, id=user_id)
-    data = {'permissions':get_user_perms(form_user, organization)}
+    data = {'permissions':get_user_perms(form_user, user_group)}
     form = UserPermissionForm(user_id, choices, data)
-    return render_to_response("organizations/permissions.html", \
-                              {'form':form, 'org':organization}, \
+    return render_to_response("user_groups/permissions.html", \
+                              {'form':form, 'group':user_group}, \
                               context_instance=RequestContext(request))
