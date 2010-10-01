@@ -26,7 +26,7 @@ class UserGroup(models.Model):
     permissions on an object.  This is useful when an organization has many
     users and you want to control access via membership in the organization.
     """
-    name = models.CharField(max_length=64)
+    name = models.CharField(max_length=64, unique=True)
     users = models.ManyToManyField(User, related_name="user_groups",
                                    null=True, blank=True)
 

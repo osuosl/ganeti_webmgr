@@ -1,11 +1,14 @@
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
+from django.contrib.contenttypes.models import ContentType
+from django.db import IntegrityError
 from django.test import TestCase
 from django.test.client import Client
 
 from object_permissions import register, grant, revoke, get_user_perms, \
     get_model_perms
-from object_permissions.models import ObjectPermission, UserGroup, GroupObjectPermission
+from object_permissions.models import ObjectPermissionType, ObjectPermission, \
+    UserGroup, GroupObjectPermission
 
 
 __all__ = ('TestUserGroups',)
@@ -23,17 +26,59 @@ class TestUserGroups(TestCase):
         self.user.set_password('secret')
         self.user.save()
         
+        self.object0 = Group.objects.create(name='test0')
+        self.object0.save()
+        self.object1 = Group.objects.create(name='test1')
+        self.object1.save()
+        
         # XXX specify permission manually, it is not auto registering for some reason
         register('admin', UserGroup)
     
     def tearDown(self):
         User.objects.all().delete()
+        Group.objects.all().delete()
         UserGroup.objects.all().delete()
         ObjectPermission.objects.all().delete()
+        GroupObjectPermission.objects.all().delete()
+        ObjectPermissionType.objects.all().delete()
         
     def test_trivial(self):
-        """ Test instantiating an UserGroup """
+        """ Test instantiating a UserGroup """
         group = UserGroup()
+        perm = GroupObjectPermission()
+    
+    def test_model(self):
+        """
+        Test model constraints
+        
+        Verifies:
+            * group name is unique
+            * Granted Permissions must be unique to UserGroup/object combinations
+        """
+        user = self.user
+        object = self.object0
+        ct = ContentType.objects.get_for_model(object)
+        
+        pt = ObjectPermissionType(name='Perm1', content_type=ct)
+        pt.save()
+        
+        group = UserGroup(name='TestGroup')
+        group.save()
+        
+        GroupObjectPermission(group=group, object_id=object.id, permission=pt).save()
+        
+        try:
+            UserGroup(name='TestGroup').save()
+            self.fail('Integrity Error not raised for duplicate UserGroup')
+        except IntegrityError:
+            pass
+        
+        try:
+            GroupObjectPermission(group=group, object_id=object.id, permission=pt).save()
+            self.fail('Integrity Error not raised for duplicate GroupObjectPermission')
+        except IntegrityError:
+            pass
+
     
     def test_save(self, name='test'):
         """ Test saving an UserGroup """

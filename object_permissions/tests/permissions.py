@@ -1,7 +1,7 @@
-from django.test import TestCase
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.db import IntegrityError
+from django.test import TestCase
 
 from object_permissions import register, grant, revoke, get_user_perms, \
     get_model_perms
@@ -55,6 +55,7 @@ class TestModelPermissions(TestCase):
         
         try:
             ObjectPermission(user=user, object_id=object.id, permission=pt).save()
+            self.fail('Integrity Error not raised for duplicate ObjectPermission')
         except IntegrityError:
             pass
 
