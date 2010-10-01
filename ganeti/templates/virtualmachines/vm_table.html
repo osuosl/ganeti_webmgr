@@ -1,3 +1,35 @@
-{% for vm in vmlist %}
-    <p>{{vm.hostname}}</p>
-{% endfor %}
+{% load webmgr_tags %}
+<table>
+    <tr>
+      <th>Name</th>
+      <th>Node</th>
+      <th>Ram</th>
+      <th>Disk Space</th>
+      <th>VCPUs</th>
+      <th>Status</th>
+    </tr>
+    {% for vm in vmlist %}
+    {% with vm.info as info %}
+    <tr>
+      <td><a href="{% url instance-detail vm.cluster.slug vm.hostname %}">{{ vm.hostname }}</a></td>
+      <td>{{ info.pnode }}</td>
+      <td>{{ vm.ram }}</td>
+      <td>{{ vm.disk_size }}</td>
+      <td>{{ vm.virtual_cpus }}</td>
+        {% if info.admin_state %}
+            {% if info.oper_state %}
+            <td class="status-running">
+            {% else %}
+            <td class="status-error">
+            {% endif %}
+        {% else %}
+            {% if info.oper_state %}
+            <td class="status-error">
+            {% else %}
+            <td class="status-down">
+            {% endif %}
+        {% endif %}
+        {{ info.status|render_instance_status }}</td>
+    {% endwith %}
+    {% endfor %}
+</table>
