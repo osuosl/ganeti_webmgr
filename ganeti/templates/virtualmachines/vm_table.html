@@ -2,6 +2,9 @@
 <table>
     <tr>
       <th>Name</th>
+      {% if not cluster %}
+      <th>Cluster</th>
+      {% endif %}
       <th>Node</th>
       <th>Ram</th>
       <th>Disk Space</th>
@@ -12,6 +15,9 @@
     {% with vm.info as info %}
     <tr>
       <td><a href="{% url instance-detail vm.cluster.slug vm.hostname %}">{{ vm.hostname }}</a></td>
+      {% if not cluster %}
+      <td>{{ vm.cluster.hostname }}</td>
+      {% endif %}
       <td>{{ info.pnode }}</td>
       <td>{{ vm.ram }}</td>
       <td>{{ vm.disk_size }}</td>
