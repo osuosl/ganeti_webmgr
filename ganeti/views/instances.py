@@ -64,7 +64,7 @@ def create(request, cluster_slug):
         },
         context_instance=RequestContext(request),
     )
-    
+
 @login_required
 def list(request):
     vmlist = VirtualMachine.objects.all()
