@@ -232,6 +232,7 @@ class TestModelPermissions(TestCase):
             register(perm, Group)
         grant(user, 'Perm1', object)
         
+        self.assertTrue(user.has_perm('Perm1', object))
         self.assertFalse(user.has_perm('Perm1', None))
         self.assertFalse(user.has_perm('DoesNotExist'), object)
         self.assertFalse(user.has_perm('Perm2', object))

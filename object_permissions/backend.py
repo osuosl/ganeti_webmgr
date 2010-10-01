@@ -2,7 +2,8 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import User
 
-from object_permissions.models import ObjectPermission, ObjectPermissionType
+from object_permissions.models import ObjectPermission, ObjectPermissionType, \
+    GroupObjectPermission
 
 
 class ObjectPermBackend(object):
@@ -21,7 +22,13 @@ class ObjectPermBackend(object):
             return False
         
         ct = ContentType.objects.get_for_model(obj)        
-        p = ObjectPermission.objects.filter(permission__content_type=ct,
+        user_perm = ObjectPermission.objects.filter(permission__content_type=ct,
                                             object_id=obj.id,
                                             user=user_obj)
-        return p.filter(permission__name=perm).exists()
+        if user_perm.filter(permission__name=perm).exists():
+            return True
+        
+        group_perm = GroupObjectPermission.objects \
+                        .filter(permission__content_type=ct, object_id=obj.id, \
+                                group__users__id=user_obj.id)
+        return group_perm.filter(permission__name=perm).exists()
