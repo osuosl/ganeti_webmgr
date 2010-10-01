@@ -17,9 +17,11 @@ from ganeti_webmgr.util.portforwarder import forward_port
 @login_required
 def detail(request, cluster_slug):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    vmlist = VirtualMachine.objects.filter(cluster__exact=cluster)
     return render_to_response("cluster.html", {
         'cluster': cluster,
         'user': request.user,
+        'vmlist' : vmlist,
         },
         context_instance=RequestContext(request),
     )
