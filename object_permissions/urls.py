@@ -1,6 +1,6 @@
 from django.conf.urls.defaults import *
 
-urlpatterns = patterns('ganeti_webmgr.object_permissions.organizations',
+urlpatterns = patterns('ganeti_webmgr.object_permissions.views.user_groups',
     # Organizations
     url(r'^organization/(?P<id>\d+)/?$',
         'detail', name="organization-detail"),

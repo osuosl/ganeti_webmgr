@@ -1,2 +1,2 @@
-from organizations import *
 from permissions import *
+from user_groups import *
