@@ -3,9 +3,11 @@
 {% block title %}Create a new Virtual Machine{% endblock %}
 
 {% block content %}
-<h1>Create VM <span class="paragraph">on {{ hostname }}</span></h1>
-<form method="post">
-    {{ form.as_p }}
-    <input type="submit" value="Create">
-</form>
+<fieldset>
+    <legend> New Virtual Machine </legend>
+    <form method="post">
+        {{ form.as_p }}
+        <input type="submit" value="Create">
+    </form>
+</fieldset>
 {% endblock %}
