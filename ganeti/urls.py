@@ -17,7 +17,7 @@ urlpatterns = patterns('ganeti_webmgr.ganeti.views.general',
 # Clusters
 urlpatterns += patterns('ganeti_webmgr.ganeti.views.cluster',
     #   List
-    url(r'^clusters/', 'list', name="cluster-list"),
+    url(r'^clusters/$', 'list', name="cluster-list"),
     #   Detail
     url(r'^' + cluster + '$', 'detail', name="cluster-detail"),
 )
@@ -29,7 +29,7 @@ urlpatterns += patterns('ganeti_webmgr.ganeti.views.instances',
     #  Detail
     url(r'^' + cluster + instance, 'detail', name="instance-detail"),
     #  Create
-    url(r'^' + cluster + '/create/?$',
+    url(r'^create/$',
         'create', name="instance-create"),
     #  Start, Stop, Reboot
     url(r'^' + cluster + instance + '/vnc/?$',

@@ -126,11 +126,12 @@ class VirtualMachine(models.Model):
         
         # Load cached info retrieved from the ganeti cluster.  This is the lazy
         # cache refresh.
-        if self.cached is None \
-            or datetime.now() > self.cached+timedelta(0, 0, 0, LAZY_CACHE_REFRESH):
-                self.refresh()
-        else:
-                self._load_info()
+        if self.id:
+            if self.cached is None \
+                or datetime.now() > self.cached+timedelta(0, 0, 0, LAZY_CACHE_REFRESH):
+                    self.refresh()
+            else:
+                    self._load_info()
 
     @property
     def info(self):

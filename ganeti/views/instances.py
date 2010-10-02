@@ -44,22 +44,24 @@ def reboot(request, cluster_slug, instance):
 
 
 @login_required
-def create(request, cluster_slug):
+def create(request, cluster_slug=None):
+    """
     hostname = get_object_or_404(Cluster, slug=cluster_slug)
     new_vm = VirtualMachine(cluster=hostname)
     oslist = new_vm.rapi.GetOperatingSystems()
+    """
     if request.POST:
-        form = InstanceCreateForm(request.POST, instance=new_vm)
+        form = NewVirtualMachineForm(cluster_slug, request.POST)
         if form.is_valid():
             form.save()
             return HttpResponseRedirect(request.META['HTTP_REFERER']) # Redirect after POST
     else:
-        form = InstanceCreateForm(instance=new_vm)
+        form = NewVirtualMachineForm()
         
     return render_to_response('instance_create.html', {
         'form': form,
-        'oslist': oslist,
-        'hostname': hostname,
+        #'oslist': oslist,
+        #'hostname': hostname,
         'user': request.user,
         },
         context_instance=RequestContext(request),
@@ -109,10 +111,53 @@ def detail(request, cluster_slug, instance):
         context_instance=RequestContext(request),
     )
 
-class InstanceCreateForm(forms.ModelForm):
-    class Meta:
-        model = VirtualMachine
+FQDN_RE = r'^[\w]+(\.[\w]+)*$'
 
+def os_choices(cluster_slug):
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    oslist = cluster.rapi.GetOperatingSystems()
+    return list((os, os) for os in oslist)
+
+def node_choices(cluster_slug):
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    nodelist = cluster.rapi.GetNodes()
+    return list((node['id'], node['id']) for node in nodelist)
+
+class NewVirtualMachineForm(forms.Form):
+    cluster = forms.ChoiceField(label='Cluster', choices=[])
+    name = forms.RegexField(label='Instance Name', regex=FQDN_RE,
+                            error_messages={
+                                'invalid': 'Instance name must be resolvable',
+                            })
+    os   = forms.ChoiceField(label='Operating System', choices=[])
+    mem  = forms.IntegerField(label='Memory (MB)', min_value=100)
+    disk = forms.IntegerField(label='Disk Space (MB)', min_value=100)
+    """
+    def __init__(self, cluster_slug=None, *args, **kwargs):
+        super(NewInstanceForm, self).__init__(*args, **kwargs)
+        
+        if cluster_slug is None:
+            # Populate the Node lists
+            nodes = node_choices(cluster_slug)
+            self.fields['pnode'].choices = nodes
+            self.fields['snode'].choices = nodes
+            # Populate the OS List
+            oss = os_choices(cluster_slug)
+            self.fields['os'].choices = oss
+            # Set cluster field
+            self.fields['cluster'] = cluster_slug
+        else:
+            clusterlist = Cluster.objects.all()
+            self.fields['cluster'] = clusterlist
+    
+    #pnode = forms.ChoiceField(label='Primary Node', choices=[])
+    #snode = forms.ChoiceField(label='Secondary Node', choices=[])
+
+    #def clean_snode(self):
+    #    if self.cleaned_data['snode'] == self.cleaned_data['pnode']:
+    #        raise forms.ValidationError("Secondary Node must not match"
+    #                                    + " Primary")
+    """
 
 class InstanceConfigForm(forms.Form):
     nic_type = forms.ChoiceField(label="Network adapter model",
