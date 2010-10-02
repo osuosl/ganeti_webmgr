@@ -20,7 +20,12 @@ urlpatterns += patterns('ganeti_webmgr.ganeti.views.cluster',
     url(r'^clusters/$', 'list', name="cluster-list"),
     #   Detail
     url(r'^' + cluster + '$', 'detail', name="cluster-detail"),
+    url(r'^%s/users/?$' % cluster,
+        'cluster_users', name="cluster-users"),
+    url(r'^%s/permissions/?$' % cluster,
+        'permissions', name="cluster-permissions"),
 )
+
 
 # Instances
 urlpatterns += patterns('ganeti_webmgr.ganeti.views.instances',
