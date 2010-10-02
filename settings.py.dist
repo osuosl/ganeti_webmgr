@@ -102,3 +102,13 @@ AUTH_PROFILE_MODULE = 'ganeti.Profile'
 
 DATE_FORMAT = "d/m/Y H:i"
 DATETIME_FORMAT = "d/m/Y H:i"
+
+# Ganeti Cached Cluster Objects Timeouts
+#    lazy cache is the fallback cache timer that is checked when the object is
+#    instantiated.
+#
+#    periodic cache timer is for use by an outside process such as Celery or
+#    or cron which updates the cache on a set interval to ensure that data is
+#    always up to date.
+LAZY_CACHE_REFRESH = 60000
+PERIODIC_CACHE_REFRESH = 15

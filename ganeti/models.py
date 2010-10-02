@@ -4,16 +4,12 @@ from hashlib import sha1
 from threading import Thread
 import time
 
-from django.db import models
+from django.conf import settings
 from django.contrib.auth.models import User, Group
-
+from django.db import models
 
 import object_permissions
 from util import client
-
-
-LAZY_CACHE_REFRESH = 60000
-PERIODIC_CACHE_REFRESH = 15
 
 
 CURL = client.GenericCurlConfig()
@@ -111,7 +107,7 @@ class CachedClusterObject(models.Model):
         """
         if self.id:
             if self.cached is None \
-                or datetime.now() > self.cached+timedelta(0, 0, 0, LAZY_CACHE_REFRESH):
+                or datetime.now() > self.cached+timedelta(0, 0, 0, settings.LAZY_CACHE_REFRESH):
                     self.refresh()
             else:
                 if self.info:
