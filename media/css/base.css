@@ -267,6 +267,18 @@ td {
     text-align: center;
 }
 
+legend {
+    font-size: 1.4em;
+}
+
+p label {
+    width: 10em;
+    float: left;
+    text-align: right;
+    margin-right: 0.5em;
+    display: block
+}
+
 tr.even {
     background: #fafafa;
 }
@@ -303,6 +315,10 @@ form.update textarea {
 .paragraph {
     font-weight: normal;
 }
+
+input.submit {
+    margin-left: 10.5em;
+} 
 
 #searchform {
     width: 300px;
