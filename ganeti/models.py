@@ -9,7 +9,7 @@ from django.contrib.auth.models import User, Group
 
 
 import object_permissions
-from ganeti_webmgr.util import client
+from util import client
 
 
 LAZY_CACHE_REFRESH = 60000
@@ -64,20 +64,115 @@ def get_rapi(hash, cluster):
     return rapi
 
 
-class HybridQuerySet():
-    def __init__(self, query):
-        self.query = query
+class CachedClusterObject(models.Model):
+    """
+    mixin class for objects that reside on the cluster but some portion is
+    cached in the database.  This class contains logic and other structures for
+    handling cache loading transparently
+    """
+    serialized_info = models.TextField(null=True, default=None, editable=False)
+    cached = models.DateTimeField(null=True, editable=False)
+    __info = None
+    error = None
+    
+    def __init__(self, *args, **kwargs):
+        super(CachedClusterObject, self).__init__(*args, **kwargs)
+        self.load_info()
+    
+    @property
+    def info(self):
+        """
+        Getter for self.info, a dictionary of data about a VirtualMachine.  This
+        is a proxy to self.serialized_info that handles deserialization.
+        """
+        if self.__info is None:
+            if self.serialized_info is not None:
+                self.__info = cPickle.loads(str(self.serialized_info))
+        return self.__info
 
-    def __iter__(self):
-        for object in self.query:
-            object.load_info()
-            yield object
+    @info.setter
+    def info(self, value):
+        """
+        Setter for self.info, proxy to self.serialized_info that handles
+        serialization.  When info is set, it will be parsed will trigger
+        self._parse_info() to update persistent and non-persistent properties
+        stored on the model instance.
+        """
+        self.__info = value
+        self.serialized_info = cPickle.dumps(self.__info)
+        self.parse_info()
 
-    def filter(self, **kwargs):
-        return HybridModel(self.query.filter(**kwargs))
+    def load_info(self):
+        """
+        Load cached info retrieved from the ganeti cluster.  This function
+        includes a lazy cache mechanism that uses a timer to decide whether or
+        not to refresh the cached information with new information from the
+        ganeti cluster.
+        """
+        if self.id:
+            if self.cached is None \
+                or datetime.now() > self.cached+timedelta(0, 0, 0, LAZY_CACHE_REFRESH):
+                    self.refresh()
+            else:
+                if self.info:
+                    self.parse_transient_info()
+                else:
+                    self.error = 'No Cached Info'
+
+    def parse_info(self):
+        """ Parse all values from the cached info """
+        self.parse_transient_info()
+        self.parse_persistent_info()
+
+    def refresh(self):
+        """
+        Retrieve and parse info from the ganeti cluster.  If successfully
+        retrieved and parsed, this method will also call save().
+        
+        Failure while loading the remote class will result in an incomplete
+        object.  The error will be stored to self.error
+        """
+        try:
+            self.info = self._refresh()
+            self.parse_info()
+            self.cached = datetime.now()
+            self.save()
+            self.error = None
+        except client.GanetiApiError, e:
+            self.error = str(e)
+
+    def _refresh(self):
+        """
+        Fetch raw data from the ganeti cluster.  This is specific to the object
+        and must be implemented by it.
+        """
+        raise NotImplementedError
+
+    def parse_transient_info(self):
+        """
+        Parse properties from cached info that is stored on the class but not in
+        the database.  These properties will be loaded every time the object is
+        instantiated.  Properties stored on the class cannot be search
+        efficiently via the django query api.  
+        
+        This method is specific to the child object.
+        """
+        pass
+
+    def parse_persistent_info(self):
+        """
+        Parse properties from cached info that are stored in the database. These
+        properties will be searchable by the django query api.
+        
+        This method is specific to the child object.
+        """
+        pass
+
+    class Meta:
+        abstract = True
 
 
-class VirtualMachine(models.Model):
+class VirtualMachine(CachedClusterObject):
     """
     The VirtualMachine (VM) model represents VMs within a Ganeti cluster.  The
     majority of properties are a cache for data stored in the cluster.  All data
@@ -104,56 +199,13 @@ class VirtualMachine(models.Model):
                                 related_name='virtual_machines')
     hostname = models.CharField(max_length=128)
     owner = models.ForeignKey('ClusterUser', null=True)
-    serialized_info = models.TextField(editable=False)
-    virtual_cpus = models.IntegerField()
-    disk_size = models.IntegerField()
-    ram = models.IntegerField()
-    cached = models.DateTimeField(null=True, editable=False)
+    virtual_cpus = models.IntegerField(default=-1)
+    disk_size = models.IntegerField(default=-1)
+    ram = models.IntegerField(default=-1)
     cluster_hash = models.CharField(max_length=40, editable=False)
     
     ctime = None
     mtime = None
-    __info = None
-
-    def __init__(self, *args, **kwargs):
-        """
-        Initialize an instance of VirtualMachine.  This method requires cluster
-        passed in as a keyword argument so that this object may be refreshed
-        via the Ganeti RAPI.
-        """
-        super(VirtualMachine, self).__init__(*args, **kwargs)
-        
-        # Load cached info retrieved from the ganeti cluster.  This is the lazy
-        # cache refresh.
-        if self.id:
-            if self.cached is None \
-                or datetime.now() > self.cached+timedelta(0, 0, 0, LAZY_CACHE_REFRESH):
-                    self.refresh()
-            else:
-                    self._load_info()
-
-    @property
-    def info(self):
-        """
-        Getter for self.info, a dictionary of data about a VirtualMachine.  This
-        is a proxy to self.serialized_info that handles deserialization.
-        """
-        if self.__info is None:
-            if self.serialized_info is not None:
-                self.__info = cPickle.loads(str(self.serialized_info))
-        return self.__info
-
-    @info.setter
-    def info(self, value):
-        """
-        Setter for self.info, proxy to self.serialized_info that handles
-        serialization.  When info is set, it will be parsed will trigger
-        self._parse_info() to update persistent and non-persistent properties
-        stored on the model instance.
-        """
-        self.__info = value
-        self.serialized_info = cPickle.dumps(self.__info)
-        self._parse_info()
 
     @property
     def rapi(self):
@@ -167,33 +219,19 @@ class VirtualMachine(models.Model):
             self.cluster_hash = self.cluster.hash
         super(VirtualMachine, self).save(*args, **kwargs)
 
-    def refresh(self):
-        """
-        Refreshes info from the ganeti cluster.  Calling this method will also
-        trigger self._parse_info() to update persistent and non-persistent
-        properties stored on the model instance.
-        """
-        try:
-            self.info = self.rapi.GetInstance(self.hostname)
-            self._parse_info()
-            self.cached = datetime.now()
-            self.save()
-        except client.GanetiApiError:
-            pass
-
-    def _load_info(self):
+    
+    def parse_transient_info(self):
         """
         Loads non-persistent properties from cached info
         """
         self.ctime = datetime.fromtimestamp(self.info['ctime'])
         self.mtime = datetime.fromtimestamp(self.info['mtime'])
 
-    def _parse_info(self):
+    def parse_persistent_info(self):
         """
         Loads all values from cached info, included persistent properties that
         are stored in the database
         """
-        self._load_info()
         info_ = self.info
         '''
         XXX no tags yet.  not sure what the property name is called.
@@ -213,6 +251,9 @@ class VirtualMachine(models.Model):
         for disk in self.info['disk.sizes']:
             disk_size += disk
         self.disk_size = disk_size 
+
+    def _refresh(self):
+        return self.rapi.GetInstance(self.hostname)
 
     def shutdown(self):
         return self.cluster.rapi.ShutdownInstance(self.hostname)
