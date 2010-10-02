@@ -29,7 +29,8 @@ urlpatterns += patterns('ganeti_webmgr.ganeti.views.instances',
     #  Detail
     url(r'^' + cluster + instance, 'detail', name="instance-detail"),
     #  Create
-    url(r'^create/$',
+    url(r'^create/$', 'create', name="instance-create"),
+    url(r'^create/(?P<cluster_slug>\w+)$', 
         'create', name="instance-create"),
     #  Start, Stop, Reboot
     url(r'^' + cluster + instance + '/vnc/?$',

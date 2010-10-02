@@ -45,19 +45,19 @@ def reboot(request, cluster_slug, instance):
 
 @login_required
 def create(request, cluster_slug=None):
-    """
-    hostname = get_object_or_404(Cluster, slug=cluster_slug)
-    new_vm = VirtualMachine(cluster=hostname)
-    oslist = new_vm.rapi.GetOperatingSystems()
-    """
+    if cluster_slug is not None:
+        cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    else:
+        cluster = None
+
     if request.POST:
-        form = NewVirtualMachineForm(cluster_slug, request.POST)
+        form = NewVirtualMachineForm(request.POST)
         if form.is_valid():
             form.save()
             return HttpResponseRedirect(request.META['HTTP_REFERER']) # Redirect after POST
     else:
-        form = NewVirtualMachineForm()
-        
+        form = NewVirtualMachineForm(initial={'cluster':cluster})
+
     return render_to_response('instance_create.html', {
         'form': form,
         #'oslist': oslist,
@@ -124,7 +124,8 @@ def node_choices(cluster_slug):
     return list((node['id'], node['id']) for node in nodelist)
 
 class NewVirtualMachineForm(forms.Form):
-    cluster = forms.ChoiceField(label='Cluster', choices=[])
+    cluster = forms.ModelChoiceField(queryset=Cluster.objects.all(), label='Cluster')
+    owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label='Owner')
     name = forms.RegexField(label='Instance Name', regex=FQDN_RE,
                             error_messages={
                                 'invalid': 'Instance name must be resolvable',
@@ -133,8 +134,8 @@ class NewVirtualMachineForm(forms.Form):
     mem  = forms.IntegerField(label='Memory (MB)', min_value=100)
     disk = forms.IntegerField(label='Disk Space (MB)', min_value=100)
     """
-    def __init__(self, cluster_slug=None, *args, **kwargs):
-        super(NewInstanceForm, self).__init__(*args, **kwargs)
+    def __init__(self, cluster_hostname=None, *args, **kwargs):
+        super(NewVirtualMachineForm, self).__init__(*args, **kwargs)
         
         if cluster_slug is None:
             # Populate the Node lists
