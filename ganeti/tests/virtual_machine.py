@@ -70,7 +70,6 @@ class TestVirtualMachineModel(TestCase):
         cluster.save()
         vm0 = VirtualMachine.objects.get(pk=vm0.id)
         vm1 = VirtualMachine.objects.get(pk=vm1.id)
-        
         self.assertEqual(vm0.cluster_hash, cluster.hash, 'VirtualMachine does not have updated cache')
         self.assertEqual(vm1.cluster_hash, cluster.hash, 'VirtualMachine does not have updated cache')
     

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.test import TestCase
@@ -8,9 +10,10 @@ from object_permissions.models import ObjectPermissionType, ObjectPermission, \
     UserGroup, GroupObjectPermission
 
 
-from ganeti.tests.rapi_proxy import RapiProxy
+from ganeti.tests.rapi_proxy import RapiProxy, INFO
 from ganeti import models
 Cluster = models.Cluster
+VirtualMachine = models.VirtualMachine
 
 __all__ = ('TestClusterViews', 'TestClusterModel')
 
@@ -46,19 +49,42 @@ class TestClusterModel(TestCase):
         cluster.save()
         self.assert_(cluster.hash)
     
-    def test_load_info(self):
+    def test_parse_info(self):
         """
-        Test loading remote info from ganeti cluster
+        Test parsing values from cached info
+        
+        Verifies:
+            * mtime and ctime are parsed
+            * ram, virtual_cpus, and disksize are parsed
         """
-        pass
+        cluster = Cluster(hostname='foo.fake.hostname')
+        cluster.save()
+        cluster.info = INFO
+        
+        self.assertEqual(cluster.ctime, datetime.fromtimestamp(1270685309.818239))
+        self.assertEqual(cluster.mtime, datetime.fromtimestamp(1283552454.2998919))
     
-    def test_load_info_failed(self):
+    def test_sync_virtual_machines(self):
         """
-        Test creating a cluster that cannot connect to the cluster to retrieve
-        remote info
+        Tests synchronizing cached virtuals machines (stored in db) with info
+        the ganeti cluster is storing
+        
+        Verifies:
+            * VMs no longer in ganeti are deleted
+            * VMs missing from the database are added
         """
-        pass
-
+        cluster = Cluster(hostname='ganeti.osuosl.test')
+        cluster.save()
+        vm_missing = 'gimager.osuosl.bak'
+        vm_current = VirtualMachine(cluster=cluster, hostname='gimager2.osuosl.bak')
+        vm_removed = VirtualMachine(cluster=cluster, hostname='does.not.exist.org')
+        vm_current.save()
+        vm_removed.save()
+        
+        cluster.sync_virtual_machines()
+        self.assert_(VirtualMachine.objects.get(cluster=cluster, hostname=vm_missing), 'missing vm was not created')
+        self.assert_(VirtualMachine.objects.get(cluster=cluster, hostname=vm_current.hostname), 'previously existing vm was not created')
+        self.assertFalse(VirtualMachine.objects.filter(cluster=cluster, hostname=vm_removed.hostname), 'vm not present in ganeti was not removed from db')
 
 class TestClusterViews(TestCase):
     
@@ -85,9 +111,6 @@ class TestClusterViews(TestCase):
         Cluster.objects.all().delete()
         User.objects.all().delete()
         ObjectPermission.objects.all().delete()
-
-    def test_trivial(self):
-        pass
 
     def test_view_users(self):
         """

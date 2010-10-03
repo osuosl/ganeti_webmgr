@@ -409,7 +409,6 @@ def update_cluster_hash(sender, instance, **kwargs):
     """
     instance.virtual_machines.all().update(cluster_hash=instance.hash)
 
-
 models.signals.post_save.connect(create_profile, sender=User)
 models.signals.post_save.connect(update_cluster_hash, sender=Cluster)
 #object_permissions.register('admin', Organization)
