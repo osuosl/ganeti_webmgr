@@ -1,4 +1,6 @@
-from ganeti_webmgr.util import client
+
+from ganeti.tests.call_proxy import CallProxy
+from util import client
 
 
 class MethodProxy(object):
@@ -147,13 +149,17 @@ class RapiProxy(client.GanetiRapiClient):
     Proxy class for testing RAPI interface without a cluster present. This class
     has methods replaced that will return dummy info
     """
-    def __init__(self, *args, **kwargs):
-        self.error = None
-        self.GetInstances = MethodProxy(INSTANCES)
-        self.GetInstance = MethodProxy(INSTANCE)
-        self.GetNodes = MethodProxy(NODES)
-        self.GetNode = MethodProxy(NODE)
-        self.GetInfo = MethodProxy(INFO)
+    error = None
+    
+    def __new__(klass, *args, **kwargs):
+        instance = object.__new__(klass)
+        instance.__init__(*args, **kwargs)
+        CallProxy.patch(instance, 'GetInstances', False, INSTANCES)
+        CallProxy.patch(instance, 'GetInstance', False, INSTANCE)
+        CallProxy.patch(instance, 'GetNodes', False, NODES)
+        CallProxy.patch(instance, 'GetNode', False, NODE)
+        CallProxy.patch(instance, 'GetInfo', False, INFO)
+        return instance
     
     def fail(self, *args, **kwargs):
         raise self.error
