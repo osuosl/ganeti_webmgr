@@ -7,15 +7,18 @@ from object_permissions import *
 from object_permissions.models import ObjectPermissionType, ObjectPermission, \
     UserGroup, GroupObjectPermission
 
-from ganeti.models import Cluster
 
+from ganeti.tests.rapi_proxy import RapiProxy
+from ganeti import models
+Cluster = models.Cluster
 
-__all__ = ('TestClusters',)
+__all__ = ('TestClusterViews', 'TestClusterModel')
 
 
 class TestClusterModel(TestCase):
     
     def setUp(self):
+        models.client.GanetiRapiClient = RapiProxy
         self.tearDown()
     
     def tearDown(self):
@@ -34,10 +37,14 @@ class TestClusterModel(TestCase):
         Verifies:
             * object is saved and queryable
             * hash is updated
-            * all VirtualMachines receive hash
         """
         cluster = Cluster()
         cluster.save()
+        self.assert_(cluster.hash)
+        
+        cluster = Cluster(hostname='foo.fake.hostname')
+        cluster.save()
+        self.assert_(cluster.hash)
     
     def test_load_info(self):
         """
@@ -104,7 +111,7 @@ class TestClusterViews(TestCase):
         response = c.get("/cluster/%s/users/" % cluster.slug)
         self.assertEqual(200, response.status_code)
 
-    def view_user_permissions(self):
+    def test_view_user_permissions(self):
         pass
     
     

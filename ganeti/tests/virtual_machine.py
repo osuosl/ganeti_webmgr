@@ -16,8 +16,8 @@ __all__ = ('TestVirtualMachineModel',)
 class TestVirtualMachineModel(TestCase):
     
     def setUp(self):
-        models.client.GanetiRapiClient = RapiProxy
         self.tearDown()
+        models.client.GanetiRapiClient = RapiProxy
     
     def tearDown(self):
         VirtualMachine.objects.all().delete()
@@ -49,26 +49,4 @@ class TestVirtualMachineModel(TestCase):
         
         vm = VirtualMachine.objects.get(id=vm.id)
         self.assert_(vm.info)
-        self.assertFalse(vm.error)
-    
-    def test_load_info_failed(self):
-        """
-        Test creating a cluster that cannot connect to the cluster to retrieve
-        remote info
-        
-        Verifies:
-            * error message is recorded
-            * error is cleared on successful refresh
-        """
-        vm = self.create_virtual_machine()
-        msg = "TEST ERROR"
-        
-        # force an error to test its capture
-        vm.rapi.error = client.GanetiApiError(msg)
-        vm.refresh()
-        self.assertEqual(msg, vm.error)
-        
-        # clear the error
-        vm.rapi.error = None
-        vm.refresh()
         self.assertFalse(vm.error)

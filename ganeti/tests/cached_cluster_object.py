@@ -39,7 +39,11 @@ class TestModel(CachedClusterObject):
         self.id = 1
 
 
-class TestCachedClusterObject(TestCase):
+class CachedClusterObjectBase(TestCase):
+    """
+    Base class for building testcases for CachedClusterObjects.
+    """
+    
     __GanetiRapiClient = None
     
     def setUp(self):
@@ -55,7 +59,7 @@ class TestCachedClusterObject(TestCase):
         """
         trivial test to instantiate class
         """
-        TestModel()
+        self.Model()
 
     def test_cached_object_init(self):
         """
@@ -66,7 +70,7 @@ class TestCachedClusterObject(TestCase):
             * info is loaded either by refresh or cached info for existing
               model
         """
-        object = TestModel()
+        object = self.Model()
         self.assertFalse(object.refreshed or object.parsed_transient)
         
         # simulate loading existing instance by passing in id
@@ -83,7 +87,7 @@ class TestCachedClusterObject(TestCase):
             * Setting info serializes info automatically
             * Setting info triggers info to be parsed
         """
-        object = TestModel()
+        object = self.Model()
         data = TestModel.data
         serialized_info = cPickle.dumps(data)
         
@@ -110,7 +114,7 @@ class TestCachedClusterObject(TestCase):
             * transient info is parsed
             * persistent info is parsed
         """
-        object = TestModel()
+        object = self.Model()
         object.parse_info()
         self.assert_(object.parsed_transient)
         self.assert_(object.parsed_persistent)
@@ -125,7 +129,7 @@ class TestCachedClusterObject(TestCase):
             * Object is saved
             * Cache time is updated
         """
-        object = object if object else TestModel()
+        object = object if object else self.Model()
         now = datetime.now()
         object.refresh()
         
@@ -144,7 +148,7 @@ class TestCachedClusterObject(TestCase):
             * error will be saved in object.error
             * successful refresh after will clear error
         """
-        object = TestModel()
+        object = self.Model()
         msg = "SIMULATING AN ERROR"
         
         # force an error to test its capture
@@ -167,7 +171,7 @@ class TestCachedClusterObject(TestCase):
             * otherwise parse cached transient info only
         """
         settings.LAZY_CACHE_REFRESH = 50
-        object = TestModel()
+        object = self.Model()
         object.save()
         
         # no cache time
@@ -184,3 +188,6 @@ class TestCachedClusterObject(TestCase):
         time.sleep(.1)
         object.load_info()
         self.assert_(object.refreshed)
+
+class TestCachedClusterObject(CachedClusterObjectBase):
+    Model = TestModel
