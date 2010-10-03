@@ -30,10 +30,10 @@ class TestVirtualMachineModel(TestCase):
         """
         VirtualMachine()
     
-    def create_virtual_machine(self):
-        cluster = Cluster()
+    def create_virtual_machine(self, cluster=None, hostname='test.osuosl.bak'):
+        cluster = cluster if cluster else Cluster()
         cluster.save()
-        vm = VirtualMachine(cluster=cluster, hostname='test.osuosl.bak')
+        vm = VirtualMachine(cluster=cluster, hostname=hostname)
         vm.save()
         return vm, cluster
     
@@ -54,6 +54,25 @@ class TestVirtualMachineModel(TestCase):
         vm = VirtualMachine.objects.get(id=vm.id)
         self.assert_(vm.info)
         self.assertFalse(vm.error)
+    
+    def test_hash_update(self):
+        """
+        When cluster is saved hash for its VirtualMachines should be updated
+        """
+        vm0, cluster = self.create_virtual_machine()
+        vm1, cluster = self.create_virtual_machine(cluster, 'test2.osuosl.bak')
+        
+        self.assertEqual(vm0.cluster_hash, cluster.hash)
+        self.assertEqual(vm1.cluster_hash, cluster.hash)
+        
+        # change cluster's hash
+        cluster.hostname = 'SomethingDifferent'        
+        cluster.save()
+        vm0 = VirtualMachine.objects.get(pk=vm0.id)
+        vm1 = VirtualMachine.objects.get(pk=vm1.id)
+        
+        self.assertEqual(vm0.cluster_hash, cluster.hash, 'VirtualMachine does not have updated cache')
+        self.assertEqual(vm1.cluster_hash, cluster.hash, 'VirtualMachine does not have updated cache')
     
     def test_parse_info(self):
         """
