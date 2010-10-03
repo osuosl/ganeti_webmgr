@@ -7,6 +7,7 @@ from django.test import TestCase
 
 from util import client
 from ganeti.tests.rapi_proxy import RapiProxy
+from ganeti.tests.call_proxy import CallProxy
 from ganeti import models
 CachedClusterObject = models.CachedClusterObject
 
@@ -18,21 +19,11 @@ class TestModel(CachedClusterObject):
     """ simple implementation of a cached model that has been instrumented """
     
     data = {'a':1, 'b':'c', 'd':[1,2,3]}
-    parsed_persistent = False
-    parsed_transient = False
-    refreshed = False
     throw_error = None
-    
-    def parse_persistent_info(self):
-        self.parsed_persistent = True
-    
-    def parse_transient_info(self):
-        self.parsed_transient = True
     
     def _refresh(self):
         if self.throw_error:
             raise self.throw_error
-        self.refreshed = True
         return {}
 
     def save(self, *args, **kwargs):
@@ -41,7 +32,10 @@ class TestModel(CachedClusterObject):
 
 class CachedClusterObjectBase(TestCase):
     """
-    Base class for building testcases for CachedClusterObjects.
+    Base class for building testcases for CachedClusterObjects.  By extending
+    this class and setting Model equal to the class to be tested this TestCase
+    adds a series of tests to verify the caching mechanisms are working as
+    intended for that model.
     """
     
     __GanetiRapiClient = None
@@ -50,6 +44,20 @@ class CachedClusterObjectBase(TestCase):
         self.tearDown()
         self.__GanetiRapiClient = models.client.GanetiRapiClient
         models.client.GanetiRapiClient = RapiProxy
+        
+    def create_model(self, *args):
+        """
+        create an instance of the model being tested, this will instrument
+        some methods of the model to check if they have been called
+        """
+        object = self.Model(*args)
+        
+        # patch model class
+        CallProxy.patch(object, 'parse_transient_info')
+        CallProxy.patch(object, 'parse_persistent_info')
+        CallProxy.patch(object, '_refresh')
+        CallProxy.patch(object, 'load_info')
+        return object
     
     def tearDown(self):
         if self.__GanetiRapiClient is not None:
@@ -59,7 +67,7 @@ class CachedClusterObjectBase(TestCase):
         """
         trivial test to instantiate class
         """
-        self.Model()
+        self.create_model()
 
     def test_cached_object_init(self):
         """
@@ -70,12 +78,14 @@ class CachedClusterObjectBase(TestCase):
             * info is loaded either by refresh or cached info for existing
               model
         """
-        object = self.Model()
-        self.assertFalse(object.refreshed or object.parsed_transient)
+        object = self.create_model()
+        object.load_info.assertNotCalled(self)
         
-        # simulate loading existing instance by passing in id
-        object = TestModel(id=1)
-        self.assert_(object.refreshed or object.parsed_transient)
+        # XXX simulate loading existing instance by calling __init__ again and
+        # passing a value for id
+        object = self.create_model(1)
+        object.__init__(1)
+        object.load_info.assertCalled(self)
     
     def test_info(self):
         """
@@ -87,7 +97,7 @@ class CachedClusterObjectBase(TestCase):
             * Setting info serializes info automatically
             * Setting info triggers info to be parsed
         """
-        object = self.Model()
+        object = self.create_model()
         data = TestModel.data
         serialized_info = cPickle.dumps(data)
         
@@ -98,8 +108,8 @@ class CachedClusterObjectBase(TestCase):
         # set info
         object.info = data
         self.assertEqual(object.serialized_info, serialized_info)
-        self.assert_(object.parsed_transient)
-        self.assert_(object.parsed_persistent)
+        object.parse_transient_info.assertCalled(self)
+        object.parse_persistent_info.assertCalled(self)
         
         # serialized data, check twice for caching mechanism
         object.serialized_info = serialized_info
@@ -114,10 +124,10 @@ class CachedClusterObjectBase(TestCase):
             * transient info is parsed
             * persistent info is parsed
         """
-        object = self.Model()
+        object = self.create_model()
         object.parse_info()
-        self.assert_(object.parsed_transient)
-        self.assert_(object.parsed_persistent)
+        object.parse_transient_info.assertCalled(self)
+        object.parse_persistent_info.assertCalled(self)
     
     def test_refresh(self, object=None):
         """
@@ -129,13 +139,13 @@ class CachedClusterObjectBase(TestCase):
             * Object is saved
             * Cache time is updated
         """
-        object = object if object else self.Model()
+        object = object if object else self.create_model()
         now = datetime.now()
         object.refresh()
         
-        self.assert_(object.refreshed)
-        self.assert_(object.parsed_transient)
-        self.assert_(object.parsed_persistent)
+        object._refresh.assertCalled(self)
+        object.parse_transient_info.assertCalled(self)
+        object.parse_persistent_info.assertCalled(self)
         self.assert_(object.id)
         self.assertNotEqual(None, object.cached)
         self.assert_(now < object.cached, "Cache time should be newer")
@@ -148,7 +158,7 @@ class CachedClusterObjectBase(TestCase):
             * error will be saved in object.error
             * successful refresh after will clear error
         """
-        object = self.Model()
+        object = self.create_model()
         msg = "SIMULATING AN ERROR"
         
         # force an error to test its capture
@@ -171,23 +181,23 @@ class CachedClusterObjectBase(TestCase):
             * otherwise parse cached transient info only
         """
         settings.LAZY_CACHE_REFRESH = 50
-        object = self.Model()
+        object = self.create_model()
         object.save()
         
         # no cache time
         object.load_info()
-        self.assert_(object.refreshed)
+        object._refresh.assertCalled(self)
         
         # cached, but not expired
         object.refreshed = False
         object.load_info()
         self.assertFalse(object.refreshed)
-        self.assert_(object.parsed_transient)
+        object.parse_transient_info.assertCalled(self)
         
         # sleep to let cache expire
         time.sleep(.1)
         object.load_info()
-        self.assert_(object.refreshed)
+        object._refresh.assertCalled(self)
 
 class TestCachedClusterObject(CachedClusterObjectBase):
     Model = TestModel
