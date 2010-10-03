@@ -70,6 +70,8 @@ class CachedClusterObject(models.Model):
     cached = models.DateTimeField(null=True, editable=False)
     __info = None
     error = None
+    mtime = None
+    ctime = None
     
     def __init__(self, *args, **kwargs):
         super(CachedClusterObject, self).__init__(*args, **kwargs)
@@ -153,7 +155,9 @@ class CachedClusterObject(models.Model):
         
         This method is specific to the child object.
         """
-        pass
+        info_ = self.info
+        self.ctime = datetime.fromtimestamp(info_['ctime'])
+        self.mtime = datetime.fromtimestamp(info_['mtime'])
 
     def parse_persistent_info(self):
         """
@@ -200,9 +204,6 @@ class VirtualMachine(CachedClusterObject):
     ram = models.IntegerField(default=-1)
     cluster_hash = models.CharField(max_length=40, editable=False)
     
-    ctime = None
-    mtime = None
-
     @property
     def rapi(self):
         return get_rapi(self.cluster_hash, self.cluster_id)
@@ -215,13 +216,6 @@ class VirtualMachine(CachedClusterObject):
             self.cluster_hash = self.cluster.hash
         super(VirtualMachine, self).save(*args, **kwargs)
 
-    
-    def parse_transient_info(self):
-        """
-        Loads non-persistent properties from cached info
-        """
-        self.ctime = datetime.fromtimestamp(self.info['ctime'])
-        self.mtime = datetime.fromtimestamp(self.info['mtime'])
 
     def parse_persistent_info(self):
         """
@@ -267,7 +261,7 @@ class VirtualMachine(CachedClusterObject):
         return self.hostname
 
 
-class Cluster(models.Model):
+class Cluster(CachedClusterObject):
     """
     A Ganeti cluster that is being tracked by this manager tool
     """
@@ -278,14 +272,6 @@ class Cluster(models.Model):
     username = models.CharField(max_length=128, blank=True, null=True)
     password = models.CharField(max_length=128, blank=True, null=True)
     hash = models.CharField(max_length=40, editable=False)
-    
-    def __init__(self, *args, **kwargs):
-        super(Cluster, self).__init__(*args, **kwargs)
-        
-        #XXX hostname wont be set for new instances
-        if self.hostname:
-            self._info = self.info()
-            self.__dict__.update(self._info)
     
     def __unicode__(self):
         return self.hostname
@@ -332,14 +318,9 @@ class Cluster(models.Model):
         if missing_ganeti:
             self.virtual_machines.filter(hostname__in=missing_ganeti).delete()
 
-    def info(self):
-        info = self.rapi.GetInfo()
-        if 'ctime' in info and info['ctime']:
-            info['ctime'] = datetime.fromtimestamp(info['ctime'])
-        if 'mtime' in info and info['mtime']:
-            info['mtime'] = datetime.fromtimestamp(info['mtime'])
-        return info
-
+    def _refresh(self):
+        return self.rapi.GetInfo()
+    
     def nodes(self):
         """Gets all Cluster Nodes
         

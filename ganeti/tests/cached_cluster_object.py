@@ -18,13 +18,13 @@ __all__ = ('TestCachedClusterObject',)
 class TestModel(CachedClusterObject):
     """ simple implementation of a cached model that has been instrumented """
     
-    data = {'a':1, 'b':'c', 'd':[1,2,3]}
+    data = {'mtime': 1285883187.8692031, 'ctime': 1285799513.4741089}
     throw_error = None
     
     def _refresh(self):
         if self.throw_error:
             raise self.throw_error
-        return {}
+        return self.data
 
     def save(self, *args, **kwargs):
         self.id = 1
@@ -124,10 +124,13 @@ class CachedClusterObjectBase(TestCase):
             * transient info is parsed
             * persistent info is parsed
         """
-        object = self.create_model()
+        object = self.create_model(1)
         object.parse_info()
         object.parse_transient_info.assertCalled(self)
         object.parse_persistent_info.assertCalled(self)
+        
+        self.assertEqual(object.ctime, datetime.fromtimestamp(1285799513.4741089))
+        self.assertEqual(object.mtime, datetime.fromtimestamp(1285883187.8692031))
     
     def test_refresh(self, object=None):
         """

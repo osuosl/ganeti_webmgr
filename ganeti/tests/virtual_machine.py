@@ -65,6 +65,7 @@ class TestVirtualMachineModel(TestCase):
         """
         vm, cluster = self.create_virtual_machine()
         vm.info = INSTANCE
+        
         self.assertEqual(vm.ctime, datetime.fromtimestamp(1285799513.4741089))
         self.assertEqual(vm.mtime, datetime.fromtimestamp(1285883187.8692031))
         self.assertEqual(vm.ram, 512)
