@@ -18,7 +18,7 @@
         <div id="menu">
             {% block navigation %}
             <ul>
-                {% if user.is_authenticated %}
+            {% if user.is_authenticated %}
                 {% comment %}TODO change to has_perm check once object
                 permissions are enabled!{% endcomment %}
                 {% if user.is_staff %}
@@ -26,16 +26,20 @@
                 {% endif %}
                 <li><a href="{% url virtualmachine-list %}">VMs</a></li>
                 <li><a href="{% url instance-create %}">Create VM </a></li>
+                {% if user.is_staff %}
                 <li><a href="{% url instance-orphans %}">Orphan VMs</a></li>
                 {% endif %}
+                {% if user.is_authenticated %}
+                <li>
+                    <span id="searchbar">
+                        <a href="{% url logout %}">Logout</a>
+                    </span>
+                </li>
+                {% endif %}
+            {% endif %}
             </ul>
             {% endblock %}
         </div>
-        {% if user.is_authenticated %}
-        <div id="searchbar">
-            <a href="{% url logout %}">Logout</a>
-        </div>
-        {% endif %}
     </div>
 
     <div id="content">
