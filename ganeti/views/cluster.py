@@ -10,7 +10,8 @@ from django.http import HttpResponse, HttpResponseRedirect, \
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
-from object_permissions import get_model_perms, get_user_perms, grant, revoke
+from object_permissions import get_model_perms, get_user_perms, grant, revoke, \
+    get_users
 from object_permissions.views.permissions import ObjectPermissionForm
 from ganeti.models import *
 from util.portforwarder import forward_port
@@ -41,7 +42,10 @@ def cluster_users(request, cluster_slug):
     if not (user.is_superuser or user.has_perm('admin', cluster)):
         return HttpResponseForbidden("You do not have sufficient privileges")
     
-    return render_to_response("cluster/users.html", {'cluster': cluster},
+    users = get_users(cluster)
+    
+    return render_to_response("cluster/users.html",
+                              {'cluster': cluster, 'users':users},
         context_instance=RequestContext(request),
     )
 
@@ -60,7 +64,7 @@ def list(request):
     )
 
 
-def permissions(request, cluster_slug, user_id):
+def permissions(request, cluster_slug):
     """
     Update a users permissions.
     """
@@ -68,37 +72,31 @@ def permissions(request, cluster_slug, user_id):
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
         return HttpResponseForbidden("You do not have sufficient privileges")
-
-    model_perms = get_model_perms(Cluster)
-    choices = zip(model_perms, model_perms)
     
     if request.method == 'POST':
-        form = ObjectPermissionForm(user_id, choices, request.POST)
+        form = ObjectPermissionForm(cluster, request.POST)
         if form.is_valid():
-            perms = form.cleaned_data['permissions']
             user = form.cleaned_data['user']
-            # update perms - grant all perms selected in the form.  Revoke all
-            # other available perms that were not selected.
-            for perm in perms:
-                grant(user, perm, cluster)
-            for perm in [p for p in model_perms if p not in perms]:
-                revoke(user, perm, cluster)
-            
-            if perms:
+            if form.update_perms():
                 # return html to replace existing user row
                 return render_to_response("cluster/user_row.html",
                                           {'cluster':cluster, 'user':user})
             else:
-                # no perms, send ajax response to remove user
+                # no permissions, send ajax response to remove user
                 return HttpResponse('0', mimetype='application/json')
         
         # error in form return ajax response
         content = json.dumps(form.errors)
         return HttpResponse(content, mimetype='application/json')
 
-    form_user = get_object_or_404(User, id=user_id)
-    data = {'permissions':get_user_perms(form_user, cluster)}
-    form = ObjectPermissionForm(user_id, choices, data)
+    user_id = request.GET.get('user', None)
+    if user_id:
+        form_user = get_object_or_404(User, id=user_id)
+        data = {'permissions':get_user_perms(form_user, cluster), \
+                'user':user_id}
+    else:
+        data = {'permissions':[]}
+    form = ObjectPermissionForm(cluster, data)
     return render_to_response("cluster/permissions.html", \
-                              {'form':form, 'cluster':cluster}, \
-                              context_instance=RequestContext(request))
+                        {'form':form, 'cluster':cluster, 'user_id':user_id}, \
+                        context_instance=RequestContext(request))

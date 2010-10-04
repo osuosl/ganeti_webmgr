@@ -183,21 +183,21 @@ class TestClusterViews(TestCase):
         user = self.user
         user1 = self.user1
         cluster = self.cluster
-        args = (cluster.slug, user1.id)
+        args = cluster.slug
         c = Client()
         
         # unauthorized user
         self.assert_(c.login(username=user.username, password='secret'))
-        response = c.get("/cluster/%s/user/%s/" % args)
+        response = c.get("/cluster/%s/user/" % args)
         self.assertEqual(403, response.status_code)
         
         # nonexisent cluster
-        response = c.get("/cluster/%s/user/%s/" % ("DOES_NOT_EXIST", user1.id))
+        response = c.get("/cluster/%s/user/?user=%s" % ("DOES_NOT_EXIST", user1.id))
         self.assertEqual(404, response.status_code)
         
         # valid GET authorized user (perm)
         grant(user, 'admin', cluster)
-        response = c.get("/cluster/%s/user/%s/" % args)
+        response = c.get("/cluster/%s/user/" % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'cluster/permissions.html')
@@ -206,26 +206,26 @@ class TestClusterViews(TestCase):
         user.revoke('admin', cluster)
         user.is_superuser = True
         user.save()
-        response = c.get("/cluster/%s/user/%s/" % args)
+        response = c.get("/cluster/%s/user/" % args)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'cluster/permissions.html')
         
         # invalid user
-        response = c.get("/cluster/%s/user/%s/" % (cluster.slug, 0))
+        response = c.get("/cluster/%s/user/?user=%s" % (cluster.slug, 0))
         self.assertEqual(404, response.status_code)
         
         # valid POST user has permissions
         user1.grant('create', cluster)
-        data = {'permissions':['admin']}
-        response = c.post("/cluster/%s/user/%s/" % args, data)
+        data = {'permissions':['admin'], 'user':user1.id}
+        response = c.post("/cluster/%s/user/" % args, data)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'cluster/user_row.html')
         self.assert_(user1.has_perm('admin', cluster))
         self.assertFalse(user1.has_perm('create', cluster))
         
         # valid POST user has no permissions
-        data = {'permissions':[]}
-        response = c.post("/cluster/%s/user/%s/" % args, data)
+        data = {'permissions':[], 'user':user1.id}
+        response = c.post("/cluster/%s/user/" % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertEqual([], get_user_perms(user, cluster))

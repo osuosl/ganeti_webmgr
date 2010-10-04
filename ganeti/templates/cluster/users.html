@@ -2,10 +2,137 @@
 
 {% block title %}Cluster {{ cluster.id }}: {{ cluster.hostname|safe }}{% endblock %}
 
+{% block head %}
+    <style>
+        li {
+            margin-left:0;
+            list-style:none;
+        }
+        
+        #add_user, .permissions, .delete {
+            cursor:pointer;
+        }
+        
+        .delete {
+            color:red;
+        }
+        
+        ul.errors {
+            color:#AD2E2E;
+        }
+        
+        ul.errors {
+            list-style:square;
+        }
+    </style>
+
+    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.form.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            // Add user button
+            $('#add_user').qtip({
+                content: {
+                   url: '{{SITE_ROOT}}/cluster/{{cluster.slug}}/user/',
+                   title: {text:'Add User', button:'close'},
+                },
+                position: {  corner:{target:'center', tooltip:'center'}},
+                style: {name: 'blue', border:{radius:5}},
+                show: {when:{event:"click"}},
+                hide: {fixed: true, when:false}
+            });
+            
+            // Add user submit button
+            $("#add_user_submit").live("click", function(){
+                $("#add_user_form .errors").empty();
+                data = $("#add_user_form").ajaxSubmit({
+                        success: update_user
+                    });
+            });
+            
+            // Delete user button
+            $('#users .delete').live("click", function() {
+                id = this.parentNode.parentNode.id.substring(5);
+                data = {user:id, permissions:[]};
+                $.post('{{SITE_ROOT}}/cluster/{{cluster.slug}}/user/', data,
+                    update_user, "json");
+            });
+            
+            // Update Permission Button
+            $(".permissions").live("click", function() {
+                id = this.parentNode.id.substring(5);
+                $this = $(this);
+                
+                // destroy old qtip before showing new one
+                $(".permissions").each(function(){
+                    if($(this).data("qtip") != undefined) {$(this).qtip("destroy");}
+                });
+                
+                $this.qtip({
+                    content: {
+                       url: "{{SITE_ROOT}}/cluster/{{cluster.slug}}/user/?user=" + id,
+                       title: {text:'Permissions: ', button:'close'},
+                    },
+                    position: {corner:{ target:"topMiddle", tooltip:"bottomMiddle"}},
+                    style: {name: 'blue',
+                            border:{radius:5},
+                            width:200,
+                            tip: 'bottomMiddle'
+                            },
+                    show: {when:false, ready:true},
+                    hide: {fixed: true, when:false}
+                });
+            });
+            
+            // Update Permission Submit
+            $("#permissions_submit").live("click", function(){
+                $("#errors").empty();
+                data = $("#permissions_form").ajaxSubmit({
+                        success: update_user
+                    });
+            });
+        });
+        
+        function update_user(responseText, statusText, xhr, $form) {
+            $('.qtip').qtip('destroy');
+            if (xhr.getResponseHeader('Content-Type') == 'application/json') {
+                if (responseText == 0) {
+                    // Zero code means success but no more permissions
+                    $("#users #" + html.attr('id')).remove();
+                } else {
+                    // parse errors
+                    errors = responseText
+                    for (key in errors) {
+                        $("#errors").append("<li>"+ errors[key] +"</li>")
+                    }
+                }
+            } else {
+                // successful permissions change.  replace the user row with the
+                // newly rendered html
+                html = $(responseText);
+                id = html.attr('id')
+                $row = $('#users #' + id);
+                if ($row.length == 1) {
+                    $row.replaceWith(html)
+                } else {
+                    $("#users").append(html);
+                }
+            }
+        }
+    </script>
+{% endblock %}
+
 {% block content %}
 
-<table>
-    {% for user in cluster.users.all %}
+<div id="add_user">Add User</div>
+
+<h2>Users</h2>
+<table id="users">
+    <tr>
+        <th>Name</th>
+        <th>Permissions</th>
+        <th></th>
+    </tr>
+    {% for user in users %}
         {% include "cluster/user_row.html" %}
     {% endfor %}
 </table>

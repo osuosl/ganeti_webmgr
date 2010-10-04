@@ -1,7 +1,12 @@
 {% comment  %} Form for setting user permissions within a Cluster {% endcomment %}
 
-<form id="permissions_form" method="post" action="{{SITE_ROOT}}/cluster/{{cluster.slug}}/user/{{form.user_id}}/">
+<form id="permissions_form" method="post" action="{{SITE_ROOT}}/cluster/{{cluster.slug}}/user/">
     <ul id="errors"></ul>
+    {% if user_id %}
+        <input type="hidden" name="user" value="{{user_id}}"/>
+    {% else %}
+        {{form.user.label}} {{form.user}}
+    {% endif %}
     {{form.permissions}}
     <input type="button" id="permissions_submit" type="submit" value="Update"/>
 </form>

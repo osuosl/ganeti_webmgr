@@ -6,12 +6,20 @@
 <tr id="user_{{user.id}}">
     <td>{{user.username}}</td>
     <td class="permissions">
-    {% for permission in user|permissions:cluster %}
-        {{permission}}{%if not forloop.last%}, {%endif%}
-    {% empty %}
-    <i>None</i>
-    {% endfor %}
+        {% for permission in user|permissions:cluster %}
+            {{permission}}{%if not forloop.last%}, {%endif%}
+        {% empty %}
+            <i>None</i>
+        {% endfor %}
     </td>
-    <td class="quota">{{user|quota:cluster}}</td>
+    <td class="quota">
+        {% with user|quota:cluster as quota %}
+        {% if quota %}
+            {{quota}}
+        {% else %}
+            <i>None</i>
+        {% endif %}
+        {%endwith%}
+    </td>
     <td><div class="delete">Delete</div></td>
 </tr>
