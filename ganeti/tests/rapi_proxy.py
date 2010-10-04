@@ -13,7 +13,7 @@ class MethodProxy(object):
     def __call__(self, *args, **kwargs):
         return self.data
 
-INSTANCES = ['gimager.osuosl.bak', 'gimager2.osuosl.bak', 'gimager3.osuosl.bak']
+INSTANCES = ['gimager.osuosl.bak', 'gimager2.osuosl.bak']
 INSTANCE = {'admin_state': False,
     'beparams': {'auto_balance': True, 'memory': 512, 'vcpus': 2},
     'ctime': 1285799513.4741089,

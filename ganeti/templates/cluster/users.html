@@ -5,8 +5,8 @@
 {% block content %}
 
 <table>
-    {% for user in cluster.users %}
-        {% include "user_row.html" %}
+    {% for user in cluster.users.all %}
+        {% include "cluster/user_row.html" %}
     {% endfor %}
 </table>
 

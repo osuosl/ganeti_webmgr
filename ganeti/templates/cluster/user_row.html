@@ -1,5 +1,8 @@
 {% comment %} user row for cluster {% endcomment %}
 
+{% load object_permission_tags %}
+{% load webmgr_tags %}
+
 <tr id="user_{{user.id}}">
     <td>{{user.username}}</td>
     <td class="permissions">

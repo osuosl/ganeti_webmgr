@@ -3,6 +3,9 @@ from django.template import Library, Node, TemplateSyntaxError
 from django.template.defaultfilters import stringfilter
 import re
 
+from ganeti.models import Quota
+
+
 register = Library()
 
 """
@@ -32,6 +35,16 @@ def render_storage(value):
         return "%.2f G" % (amount/1024)
     else:
         return "%d M" % int(amount)
+
+@register.filter
+def quota(cluster_user, cluster):
+    """
+    Returns the quota for user/cluster combination.
+    """
+    try:
+        return Quota.objects.get(user=cluster_user, cluster=cluster)
+    except Quota.DoesNotExist:
+        return None
 
 @register.simple_tag
 def node_memory(node):
