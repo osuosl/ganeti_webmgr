@@ -60,6 +60,14 @@ def get_rapi(hash, cluster):
     return rapi
 
 
+def clear_rapi_cache():
+    """
+    clears the rapi cache
+    """
+    RAPI_CACHE = {}
+    RAPI_CACHE_HASHES = {}
+
+
 class CachedClusterObject(models.Model):
     """
     mixin class for objects that reside on the cluster but some portion is
