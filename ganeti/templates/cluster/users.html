@@ -17,11 +17,11 @@
             color:red;
         }
         
-        ul.errors {
+        ul#errors li {
             color:#AD2E2E;
         }
         
-        ul.errors {
+        ul#errors li{
             list-style:square;
         }
     </style>
@@ -88,7 +88,6 @@
         });
         
         function update_user(responseText, statusText, xhr, $form) {
-            $('.qtip').qtip('destroy');
             if (xhr.getResponseHeader('Content-Type') == 'application/json') {
                 if (responseText == 0) {
                     // Zero code means success but no more permissions
