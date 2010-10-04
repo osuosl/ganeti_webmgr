@@ -103,6 +103,7 @@ def remove_user(request, id):
     if form.is_valid():
         user = form.cleaned_data['user']
         user_group.users.remove(user)
+        user.revoke_all(user_group)
         
         # return success
         return HttpResponse('1', mimetype='application/json')
