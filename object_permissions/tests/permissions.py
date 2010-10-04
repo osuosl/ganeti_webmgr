@@ -302,6 +302,7 @@ class TestModelPermissions(TestCase):
         self.assertFalse(user1 in get_users(object0))
         self.assert_(user0 in get_users(object1))
         self.assert_(user1 in get_users(object1))
+        self.assert_(len(get_users(object1))==2)
     
     def test_get_user_permissions(self):
         user0 = self.user0

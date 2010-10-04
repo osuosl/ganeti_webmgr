@@ -111,7 +111,7 @@ def get_users(object):
     ct = ContentType.objects.get_for_model(object)
     return User.objects.filter(
             object_permissions__permission__content_type=ct, \
-            object_permissions__object_id=object.id)
+            object_permissions__object_id=object.id).distinct()
 
 
 # make some methods available as bound methods
