@@ -21,7 +21,7 @@
         cursor:pointer;
     }
     
-    ul.errors {
+    ul#errors {
         color:#AD2E2E;
     }
     
@@ -36,23 +36,24 @@
 <script type="text/javascript">
     $(document).ready(function() {
         // Add user button
-        $('#add_user').qtip({
-            content: {
-               url: '{{SITE_ROOT}}/user_group/{{group.id}}/user/add/',
-               title: {text:'Add User', button:'close'},
-            },
-            position: {  corner:{target:'center', tooltip:'center'}},
-            style: {name: 'blue', border:{radius:5}},
-            show: {when:{event:"click"}},
-            hide: {fixed: true, when:false}
+        $('#add_user').click(function(){
+            $('.qtip').qtip('destroy');
+            $(this).qtip({
+                content: {
+                   url: '{{SITE_ROOT}}/user_group/{{group.id}}/user/add/',
+                   title: {text:'Add User', button:'close'},
+                },
+                position: {  corner:{target:'center', tooltip:'center'}},
+                style: {name: 'blue', border:{radius:5}},
+                show: {when:false, ready:true},
+                hide: {fixed: true, when:false}
+            });
         });
         
-        // Add user submit button
-        $("#add_user_submit").live("click", function(){
-            $("#add_user_form .errors").empty();
-            data = $("#add_user_form").ajaxSubmit({
-                    success: update_user
-                });
+        // submit button
+        $("#add_user_submit, #permissions_submit").live("click", function(){
+            $("#errors").empty();
+            $("#add_user_form, permissions_form").ajaxSubmit({success: update_user});
         });
         
         // Delete user button
@@ -60,58 +61,37 @@
             id = this.parentNode.parentNode.id.substring(5);
             $.post('/user_group/{{group.id}}/user/remove/', {'user':id},
                 function(code){
-                    if(code==1) {
-                        $('#user_'+id).remove();
-                    }
+                    if(code==1) {$('#user_'+id).remove();}
                 }, "json");
         });
         
         // Update Permission Button
         $(".permissions").live("click", function() {
             id = this.parentNode.id.substring(5);
-            $this = $(this);
-            
-            // destroy old qtip before showing new one
-            $(".permissions").each(function(){
-                if($(this).data("qtip") != undefined) {$(this).qtip("destroy");}
-            });
-            
-            $this.qtip({
+            $('.qtip').qtip('destroy');
+            $(this).qtip({
                 content: {
                    url: "{{SITE_ROOT}}/user_group/{{group.id}}/user/?user="+id,
                    title: {text:'Permissions: '+id, button:'close'},
                 },
                 position: {corner:{ target:"topMiddle", tooltip:"bottomMiddle"}},
-                style: {name: 'blue',
-                        border:{radius:5},
-                        width:200,
-                        tip: 'bottomMiddle'
-                        },
+                style: {name: 'blue', border:{radius:5}, tip: 'bottomMiddle'},
                 show: {when:false, ready:true},
                 hide: {fixed: true, when:false}
             });
         });
-        
-        // Update Permission Submit
-        $("#permissions_submit").live("click", function(){
-            $("#errors").empty();
-            data = $("#permissions_form").ajaxSubmit({
-                    success: update_user
-                });
-        });
     });
     
     function update_user(responseText, statusText, xhr, $form) {
-        $('.qtip').qtip('destroy');
-        mimetype = xhr.getResponseHeader('Content-Type');
-        if (mimetype == 'application/json') {
+        if (xhr.getResponseHeader('Content-Type') == 'application/json') {
             // parse errors
             for (key in responseText) {
-                $("#errors").append("<li>"+ errors[key] +"</li>")
+                $("#errors").append("<li>"+ responseText[key] +"</li>")
             }
         } else {
             // successful permissions change.  replace the user row with the
             // newly rendered html
+            $('.qtip').qtip('hide');
             html = $(responseText);
             id = html.attr('id')
             $row = $('#users #' + id);
