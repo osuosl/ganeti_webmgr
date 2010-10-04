@@ -51,7 +51,7 @@
         $("#add_user_submit").live("click", function(){
             $("#add_user_form .errors").empty();
             data = $("#add_user_form").ajaxSubmit({
-                    success: add_user_response
+                    success: update_user
                 });
         });
         
@@ -61,7 +61,7 @@
             $.post('/user_group/{{group.id}}/user/remove/', {'user':id},
                 function(code){
                     if(code==1) {
-                        console.log($(this.parentNode.parentNode));
+                        $('#user_'+id).remove();
                     }
                 }, "json");
         });
@@ -96,39 +96,30 @@
         $("#permissions_submit").live("click", function(){
             $("#errors").empty();
             data = $("#permissions_form").ajaxSubmit({
-                    success: update_permissions_response
+                    success: update_user
                 });
         });
     });
     
-    function add_user_response(responseText, statusText, xhr, $form) {
+    function update_user(responseText, statusText, xhr, $form) {
+        $('.qtip').qtip('destroy');
         mimetype = xhr.getResponseHeader('Content-Type');
         if (mimetype == 'application/json') {
             // parse errors
-            errors = responseText
-            for (key in errors) {
-                $("#errors").append("<li>"+ errors[key] +"</li>")
-            }
-        } else {
-            // successful user, add the new html to the row and fire any
-            // javascript required to make it functional
-            $("#users").append(responseText);
-        }
-    }
-    
-    function update_permissions_response(responseText, statusText, xhr, $form) {
-        mimetype = xhr.getResponseHeader('Content-Type');
-        if (mimetype == 'application/json') {
-            // parse errors
-            errors = responseText
-            for (key in errors) {
+            for (key in responseText) {
                 $("#errors").append("<li>"+ errors[key] +"</li>")
             }
         } else {
             // successful permissions change.  replace the user row with the
             // newly rendered html
             html = $(responseText);
-            $("#users " + html.attr('id')).replaceWith(html);
+            id = html.attr('id')
+            $row = $('#users #' + id);
+            if ($row.length == 1) {
+                $row.replaceWith(html)
+            } else {
+                $("#users").append(html);
+            }
         }
     }
 </script>

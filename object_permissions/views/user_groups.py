@@ -127,9 +127,11 @@ def user_permissions(request, id):
         form = ObjectPermissionForm(user_group, request.POST)
         if form.is_valid():
             form.update_perms()
+            user = form.cleaned_data['user']
             
             # return html to replace existing user row
-            return render_to_response("user_groups/user_row.html", {'user':user})
+            return render_to_response("user_groups/user_row.html", \
+                                      {'group':user_group, 'user':user})
         
         # error in form return ajax response
         content = json.dumps(form.errors)
