@@ -4,7 +4,7 @@ from django.db import IntegrityError
 from django.test import TestCase
 
 from object_permissions import register, grant, revoke, get_user_perms, \
-    get_model_perms
+    get_model_perms, revoke_all
 from object_permissions.models import ObjectPermission, ObjectPermissionType
 
 
@@ -215,6 +215,52 @@ class TestModelPermissions(TestCase):
         self.assertEqual([u'Perm1', u'Perm2', u'Perm4'], get_user_perms(user0, object1))
         self.assertEqual([u'Perm1', u'Perm2', u'Perm3'], get_user_perms(user1, object0))
         self.assertEqual(perms, get_user_perms(user1, object1))
+    
+    def test_revoke_all(self):
+        """
+        Test revoking permissions from users
+        
+        Verifies
+            * revoked properties are only removed from the correct user/obj combinations
+            * revoking property user does not have does not give an error
+            * revoking unknown permission raises error
+        """
+        user0 = self.user0
+        user1 = self.user1
+        object0 = self.object0
+        object1 = self.object1
+        perms = self.perms
+        
+        for perm in perms:
+            register(perm, Group)
+            grant(user0, perm, object0)
+            grant(user0, perm, object1)
+            grant(user1, perm, object0)
+            grant(user1, perm, object1)
+        
+        revoke_all(user0, object0)
+        self.assertEqual([], get_user_perms(user0, object0))
+        self.assertEqual(perms, get_user_perms(user0, object1))
+        self.assertEqual(perms, get_user_perms(user1, object0))
+        self.assertEqual(perms, get_user_perms(user1, object1))
+        
+        revoke_all(user0, object1)
+        self.assertEqual([], get_user_perms(user0, object0))
+        self.assertEqual([], get_user_perms(user0, object1))
+        self.assertEqual(perms, get_user_perms(user1, object0))
+        self.assertEqual(perms, get_user_perms(user1, object1))
+        
+        revoke_all(user1, object0)
+        self.assertEqual([], get_user_perms(user0, object0))
+        self.assertEqual([], get_user_perms(user0, object1))
+        self.assertEqual([], get_user_perms(user1, object0))
+        self.assertEqual(perms, get_user_perms(user1, object1))
+        
+        revoke_all(user1, object1)
+        self.assertEqual([], get_user_perms(user0, object0))
+        self.assertEqual([], get_user_perms(user0, object1))
+        self.assertEqual([], get_user_perms(user1, object0))
+        self.assertEqual([], get_user_perms(user1, object1))
     
     def test_has_perm(self):
         """

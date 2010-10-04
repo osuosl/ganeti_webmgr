@@ -51,6 +51,16 @@ def revoke(user, perm, object):
         .delete()
 
 
+def revoke_all(user, object):
+    """
+    Revokes all permissions from a User
+    """
+    ct = ContentType.objects.get_for_model(object)
+    ObjectPermission.objects \
+        .filter(user=user, object_id=object.id, permission__content_type=ct) \
+        .delete()
+
+
 def revoke_group(group, perm, object):
     """
     Revokes a permission from a UserGroup
@@ -97,6 +107,7 @@ def get_model_perms(model):
 # make some methods available as bound methods
 setattr(User, 'grant', grant)
 setattr(User, 'revoke', revoke)
+setattr(User, 'revoke_all', revoke_all)
 setattr(User, 'get_perms', get_user_perms)
 
 setattr(UserGroup, 'grant', grant_group)

@@ -362,11 +362,13 @@ class TestUserGroups(TestCase):
             * users lacking perms receive 403
             * removing user not in group returns error as json
             * removing user that does not exist returns error as json
+            * user loses all permissions when removed from group
         """
         user = self.user
         group = self.test_save()
         c = Client()
         group.users.add(user)
+        register('Perm1', UserGroup)
         
         # invalid permissions
         response = c.get('/user_group/%d/user/add/' % group.id)
@@ -377,6 +379,7 @@ class TestUserGroups(TestCase):
         # authorize and login
         self.assert_(c.login(username=user.username, password='secret'))
         grant(user, 'admin', group)
+        grant(user, 'Perm1', group)
         
         # invalid method
         response = c.get('/user_group/%d/user/remove/' % group.id)
@@ -389,6 +392,7 @@ class TestUserGroups(TestCase):
         self.assertEquals('application/json', response['content-type'])
         self.assertEqual('1', response.content)
         self.assertFalse(group.users.filter(id=user.id).exists())
+        self.assertEqual([], user.get_perms(group))
         
         # valid request (superuser)
         revoke(user, 'admin', group)
