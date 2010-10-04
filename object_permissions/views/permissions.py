@@ -52,8 +52,6 @@ class ObjectPermissionFormNewUsers(ObjectPermissionForm):
     """
     
     def clean(self):
-        print 'a'
-        
         data = self.cleaned_data
         if 'user' in data:
             user = data['user']

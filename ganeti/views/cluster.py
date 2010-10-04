@@ -75,11 +75,8 @@ def permissions(request, cluster_slug):
         return HttpResponseForbidden("You do not have sufficient privileges")
     
     if request.method == 'POST':
-        print 1
         form = ObjectPermissionFormNewUsers(cluster, request.POST)
-        print 2
         if form.is_valid():
-            print 3
             form_user = form.cleaned_data['user']
             if form.update_perms():
                 # return html to replace existing user row
@@ -88,7 +85,7 @@ def permissions(request, cluster_slug):
             else:
                 # no permissions, send ajax response to remove user
                 return HttpResponse('0', mimetype='application/json')
-        print 4
+        
         # error in form return ajax response
         content = json.dumps(form.errors)
         return HttpResponse(content, mimetype='application/json')
