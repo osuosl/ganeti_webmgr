@@ -479,3 +479,9 @@ class TestUserGroups(TestCase):
         self.assert_(user.has_perm('Perm1', group))
         self.assert_(user.has_perm('Perm2', group))
         self.assertEqual(['Perm1','Perm2'], get_user_perms(user, group))
+        
+        # valid post no permissions
+        data = {'permissions':[]}
+        response = c.post('/user_group/%d/user/%s/' % (group.id, user.id), data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual([], get_user_perms(user, group))
