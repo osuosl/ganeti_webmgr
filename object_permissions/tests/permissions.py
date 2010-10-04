@@ -4,7 +4,7 @@ from django.db import IntegrityError
 from django.test import TestCase
 
 from object_permissions import register, grant, revoke, get_user_perms, \
-    get_model_perms, revoke_all
+    get_model_perms, revoke_all, get_users
 from object_permissions.models import ObjectPermission, ObjectPermissionType
 
 
@@ -282,6 +282,26 @@ class TestModelPermissions(TestCase):
         self.assertFalse(user.has_perm('Perm1', None))
         self.assertFalse(user.has_perm('DoesNotExist'), object)
         self.assertFalse(user.has_perm('Perm2', object))
+    
+    def test_get_users(self):
+        """
+        Tests retrieving list of users with perms on an object
+        """
+        user0 = self.user0
+        user1 = self.user1
+        object0 = self.object0
+        object1 = self.object1
+        
+        for perm in self.perms:
+            register(perm, Group)
+        grant(user0, 'Perm1', object0)
+        grant(user0, 'Perm3', object1)
+        grant(user1, 'Perm2', object1)
+        
+        self.assert_(user0 in get_users(object0))
+        self.assertFalse(user1 in get_users(object0))
+        self.assert_(user0 in get_users(object1))
+        self.assert_(user1 in get_users(object1))
     
     def test_get_user_permissions(self):
         user0 = self.user0

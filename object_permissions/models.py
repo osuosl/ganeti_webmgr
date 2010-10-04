@@ -12,7 +12,7 @@ class ObjectPermissionType(models.Model):
 
 
 class ObjectPermission(models.Model):
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, related_name='object_permissions')
     permission = models.ForeignKey(ObjectPermissionType)
     object_id = models.PositiveIntegerField()
     

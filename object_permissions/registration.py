@@ -102,8 +102,18 @@ def get_model_perms(model):
     query = ObjectPermissionType.objects.filter(content_type=ct) \
             .values_list('name', flat=True)
     return list(query)
-    
-    
+
+
+def get_users(object):
+    """
+    Return a list of users with permissions on a given object
+    """
+    ct = ContentType.objects.get_for_model(object)
+    return User.objects.filter(
+            object_permissions__permission__content_type=ct, \
+            object_permissions__object_id=object.id)
+
+
 # make some methods available as bound methods
 setattr(User, 'grant', grant)
 setattr(User, 'revoke', revoke)
