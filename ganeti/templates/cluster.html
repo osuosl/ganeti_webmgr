@@ -14,12 +14,12 @@
 <li>Available hypervisors: {{ info.enabled_hypervisors|join:", " }}</li>
 <li>Master node: {{ info.master }}</li>
 <li>Created: 
-  {% if info.ctime %}
-    {{ info.ctime|date }}
+  {% if cluster.ctime %}
+    {{ cluster.ctime|date }}
   {% else %}
     <em>unknown</em>
   {% endif %}
-<li>Last modified: {{ info.mtime|date }}</li>
+<li>Last modified: {{ cluster.mtime|date }}</li>
 {% endwith %}
 
 <h2>Instances</h2>

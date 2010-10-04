@@ -13,7 +13,7 @@
         <li>UUID: {{ info.uuid }}</li>
         <li>Primary node: {{ info.pnode }}</li>
         <li>Failover node: {{ info.snodes|join:", " }}</li>
-        <li>Created on: {{ ctime|date }}</li>
+        <li>Created on: {{ instance.ctime|date }}</li>
         <li>Last modified: {{ instance.mtime|date }}</li>
         <li>NIC type: {{ info.hvparams.nic_type }}</li>
         <li>Disk type: {{ info.hvparams.disk_type }}</li>
