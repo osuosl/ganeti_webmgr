@@ -49,3 +49,5 @@ class PermissionTypeGroup(models.Model):
     difference between PermissionGroup and UserGroup
     """
     pass
+
+

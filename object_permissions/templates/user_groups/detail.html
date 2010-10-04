@@ -34,12 +34,7 @@
 
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.form.js"></script>
 <script type="text/javascript">
-    
-    
-    var add_user_options = 
-    
     $(document).ready(function() {
-        
         // Add user button
         $('#add_user').qtip({
             content: {
@@ -83,7 +78,7 @@
             
             $this.qtip({
                 content: {
-                   url: "{{SITE_ROOT}}/user_group/{{group.id}}/user/" + id,
+                   url: "{{SITE_ROOT}}/user_group/{{group.id}}/user/?user="+id,
                    title: {text:'Permissions: '+id, button:'close'},
                 },
                 position: {corner:{ target:"topMiddle", tooltip:"bottomMiddle"}},
@@ -136,8 +131,6 @@
             $("#users " + html.attr('id')).replaceWith(html);
         }
     }
-    
-    
 </script>
 {% endblock %}
 

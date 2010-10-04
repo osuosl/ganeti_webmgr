@@ -8,6 +8,6 @@ urlpatterns = patterns('ganeti_webmgr.object_permissions.views.user_groups',
         'add_user', name="user_group-add-user"),
     url(r'^user_group/(?P<id>\d+)/user/remove/?$',
         'remove_user', name="user_group-remove-user"),
-    url(r'^user_group/(?P<id>\d+)/user/(?P<user_id>\d+)/?$',
+    url(r'^user_group/(?P<id>\d+)/user/$',
         'user_permissions', name="user_group-user-permissions"),
 )

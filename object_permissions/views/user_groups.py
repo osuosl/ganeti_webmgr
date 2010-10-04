@@ -3,7 +3,7 @@ import json
 from django import forms
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
-from django.http import HttpResponse, HttpResponseRedirect, \
+from django.http import HttpResponse, HttpResponseNotFound, \
     HttpResponseForbidden, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
@@ -112,7 +112,7 @@ def remove_user(request, id):
     return HttpResponse(content, mimetype='application/json')
 
 
-def user_permissions(request, id, user_id):
+def user_permissions(request, id):
     """
     Ajax call to update a user's permissions
     """
@@ -122,20 +122,10 @@ def user_permissions(request, id, user_id):
     if not (user.is_superuser or user.has_perm('admin', user_group)):
         return HttpResponseForbidden('You do not have sufficient privileges')
     
-    model_perms = get_model_perms(user_group)
-    choices = zip(model_perms, model_perms)
-    
     if request.method == 'POST':
-        form = ObjectPermissionForm(user_id, choices, request.POST)
+        form = ObjectPermissionForm(user_group, request.POST)
         if form.is_valid():
-            perms = form.cleaned_data['permissions']
-            user = form.cleaned_data['user']
-            # update perms - grant all perms selected in the form.  Revoke all
-            # other available perms that were not selected.
-            for perm in perms:
-                grant(user, perm, user_group)
-            for perm in [p for p in model_perms if p not in perms]:
-                revoke(user, perm, user_group)
+            form.update_perms()
             
             # return html to replace existing user row
             return render_to_response("user_groups/user_row.html", {'user':user})
@@ -143,10 +133,15 @@ def user_permissions(request, id, user_id):
         # error in form return ajax response
         content = json.dumps(form.errors)
         return HttpResponse(content, mimetype='application/json')
-
+    
+    if 'user' not in request.GET:
+        return HttpResponseNotFound()
+    
+    # render a form for an existing user only
+    user_id = request.GET['user']
     form_user = get_object_or_404(User, id=user_id)
-    data = {'permissions':get_user_perms(form_user, user_group)}
-    form = ObjectPermissionForm(user_id, choices, data)
+    data = {'permissions':get_user_perms(form_user, user_group), 'user':user_id}
+    form = ObjectPermissionForm(user_group, data)
     return render_to_response("user_groups/permissions.html", \
-                              {'form':form, 'group':user_group}, \
-                              context_instance=RequestContext(request))
+                        {'form':form, 'group':user_group, 'user_id':user_id}, \
+                        context_instance=RequestContext(request))

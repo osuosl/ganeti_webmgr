@@ -315,7 +315,7 @@ class TestUserGroups(TestCase):
         response = c.get('/user_group/%d/user/add/' % group.id)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertEqual('user_groups/add_user.html', response.template.name)
+        self.assertTemplateUsed(response, 'user_groups/add_user.html')
         
         # authorized post (superuser)
         revoke(user, 'admin', group)
@@ -324,7 +324,8 @@ class TestUserGroups(TestCase):
         response = c.get('/user_group/%d/user/add/' % group.id)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertEqual('user_groups/add_user.html', response.template.name)
+        self.assertTemplateUsed(response, 'user_groups/add_user.html')
+        
         
         # missing user id
         response = c.post('/user_group/%d/user/add/' % group.id)
@@ -435,53 +436,67 @@ class TestUserGroups(TestCase):
         c = Client()
         
         # unauthorized
-        response = c.get('/user_group/%d/user/%s/' % (group.id, 0))
+        response = c.get('/user_group/%d/user/' % group.id)
         self.assertEqual(403, response.status_code)
-        response = c.post('/user_group/%d/user/%s/' % (group.id, 0))
+        response = c.post('/user_group/%d/user/' % group.id)
         self.assertEqual(403, response.status_code)
         
         # authorized post (perm granted)
         grant(user, 'admin', group)
         self.assert_(c.login(username=user.username, password='secret'))
-        response = c.get('/user_group/%d/user/%s/' % (group.id, user.id))
+        response = c.get('/user_group/%d/user/' % group.id, {'user':user.id})
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertEqual('user_groups/permissions.html', response.template.name)
+        self.assertTemplateUsed(response, 'user_groups/permissions.html')
         
         # authorized post (superuser)
         revoke(user, 'admin', group)
         user.is_superuser = True
         user.save()
-        
-        response = c.get('/user_group/%d/user/%s/' % (group.id, user.id))
+        response = c.get('/user_group/%d/user/' % group.id, {'user':user.id})
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertEqual('user_groups/permissions.html', response.template.name)
+        self.assertTemplateUsed(response, 'user_groups/permissions.html')
+    
+        # invalid user (GET)
+        response = c.get('/user_group/%d/user/' % group.id, {'user':-1})
+        self.assertEqual(404, response.status_code)
         
-        # invalid user
-        response = c.post('/user_group/%d/user/%s/' % (group.id, 0))
+        # invalid user (POST)
+        data = {'permissions':['Perm1'], 'user':-1}
+        response = c.post('/user_group/%d/user/' % group.id, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        
+        # no user (GET)
+        data = {'permissions':['Perm1'], 'user':-1}
+        response = c.get('/user_group/%d/user/' % group.id, data)
+        self.assertEqual(404, response.status_code)
+        
+        # no user (POST)
+        data = {'permissions':['Perm1'], 'user':-1}
+        response = c.post('/user_group/%d/user/' % group.id, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         
         # invalid permission
-        data = {'permissions':['DoesNotExist']}
-        response = c.post('/user_group/%d/user/%s/' % (group.id, user.id), data)
+        data = {'permissions':['DoesNotExist'], 'user':user.id}
+        response = c.post('/user_group/%d/user/' % group.id, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         
         # valid post
-        data = {'permissions':['Perm1','Perm2']}
-        response = c.post('/user_group/%d/user/%s/' % (group.id, user.id), data)
+        data = {'permissions':['Perm1','Perm2'], 'user':user.id}
+        response = c.post('/user_group/%d/user/' % group.id, data)
         self.assertEqual(200, response.status_code)
-        
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertEqual('user_groups/user_row.html', response.template.name)
+        self.assertTemplateUsed(response, 'user_groups/user_row.html')
         self.assert_(user.has_perm('Perm1', group))
         self.assert_(user.has_perm('Perm2', group))
         self.assertEqual(['Perm1','Perm2'], get_user_perms(user, group))
         
         # valid post no permissions
-        data = {'permissions':[]}
-        response = c.post('/user_group/%d/user/%s/' % (group.id, user.id), data)
+        data = {'permissions':[], 'user':user.id}
+        response = c.post('/user_group/%d/user/' % group.id, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual([], get_user_perms(user, group))
