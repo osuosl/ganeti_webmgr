@@ -8,8 +8,10 @@ from django.http import HttpResponse, HttpResponseRedirect, \
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
+
 from object_permissions import get_model_perms, grant, revoke, get_user_perms
 from object_permissions.models import UserGroup
+from object_permissions.views.permissions import ObjectPermissionForm
 
 
 def detail(request, id):
@@ -53,28 +55,6 @@ class RemoveUserForm(UserForm):
         if not self.user_group.users.filter(id=user.id).exists():
             raise forms.ValidationError("User is not a member of this group")
         return user
-
-
-class UserPermissionForm(UserGroupForm):
-    """
-    Form used for editing permissions
-    """
-    permissions = forms.MultipleChoiceField(required=False, \
-                                            widget=forms.CheckboxSelectMultiple)
-    user_id = None
-
-    def __init__(self, user_id, choices=[], *args, **kwargs):
-        super(UserPermissionForm, self).__init__(*args, **kwargs)
-        self.user_id = user_id
-        self.fields['permissions'].choices = choices
-    
-    def clean(self):
-        try:
-            user = User.objects.get(id=self.user_id)
-            self.cleaned_data['user'] = user
-            return self.cleaned_data
-        except User.DoesNotExist:
-            raise forms.ValidationError("Invalid User")
 
 
 def add_user(request, id):
@@ -147,7 +127,7 @@ def user_permissions(request, id, user_id):
     choices = zip(model_perms, model_perms)
     
     if request.method == 'POST':
-        form = UserPermissionForm(user_id, choices, user_group, request.POST)
+        form = ObjectPermissionForm(user_id, choices, request.POST)
         if form.is_valid():
             perms = form.cleaned_data['permissions']
             user = form.cleaned_data['user']
@@ -167,7 +147,7 @@ def user_permissions(request, id, user_id):
 
     form_user = get_object_or_404(User, id=user_id)
     data = {'permissions':get_user_perms(form_user, user_group)}
-    form = UserPermissionForm(user_id, choices, data)
+    form = ObjectPermissionForm(user_id, choices, data)
     return render_to_response("user_groups/permissions.html", \
                               {'form':form, 'group':user_group}, \
                               context_instance=RequestContext(request))
