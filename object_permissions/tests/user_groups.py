@@ -326,7 +326,6 @@ class TestUserGroups(TestCase):
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'user_groups/add_user.html')
         
-        
         # missing user id
         response = c.post('/user_group/%d/user/add/' % group.id)
         self.assertEqual(200, response.status_code)

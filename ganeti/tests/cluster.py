@@ -223,10 +223,17 @@ class TestClusterViews(TestCase):
         self.assert_(user1.has_perm('admin', cluster))
         self.assertFalse(user1.has_perm('create', cluster))
         
-        # valid POST user has no permissions
+        # valid POST user has no permissions left
         data = {'permissions':[], 'user':user1.id}
         response = c.post("/cluster/%s/user/" % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertEqual([], get_user_perms(user, cluster))
         self.assertEqual('0', response.content)
+        
+        # valid POST user is new, but no permissions specified
+        data = {'permissions':[], 'user':user1.id}
+        response = c.post("/cluster/%s/user/" % args, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        self.assertNotEqual('0', response.content)

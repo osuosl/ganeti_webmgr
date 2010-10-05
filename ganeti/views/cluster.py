@@ -1,6 +1,7 @@
-import urllib2
+import json
 import os
 import socket
+import urllib2
 
 from django import forms
 from django.contrib.auth import authenticate, login, logout
@@ -12,7 +13,7 @@ from django.template import RequestContext
 
 from object_permissions import get_model_perms, get_user_perms, grant, revoke, \
     get_users
-from object_permissions.views.permissions import ObjectPermissionForm
+from object_permissions.views.permissions import ObjectPermissionFormNewUsers
 from ganeti.models import *
 from util.portforwarder import forward_port
 
@@ -74,13 +75,13 @@ def permissions(request, cluster_slug):
         return HttpResponseForbidden("You do not have sufficient privileges")
     
     if request.method == 'POST':
-        form = ObjectPermissionForm(cluster, request.POST)
+        form = ObjectPermissionFormNewUsers(cluster, request.POST)
         if form.is_valid():
-            user = form.cleaned_data['user']
+            form_user = form.cleaned_data['user']
             if form.update_perms():
                 # return html to replace existing user row
                 return render_to_response("cluster/user_row.html",
-                                          {'cluster':cluster, 'user':user})
+                                          {'cluster':cluster, 'user':form_user})
             else:
                 # no permissions, send ajax response to remove user
                 return HttpResponse('0', mimetype='application/json')
@@ -96,7 +97,7 @@ def permissions(request, cluster_slug):
                 'user':user_id}
     else:
         data = {'permissions':[]}
-    form = ObjectPermissionForm(cluster, data)
+    form = ObjectPermissionFormNewUsers(cluster, data)
     return render_to_response("cluster/permissions.html", \
                         {'form':form, 'cluster':cluster, 'user_id':user_id}, \
                         context_instance=RequestContext(request))

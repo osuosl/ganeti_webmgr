@@ -1,6 +1,6 @@
 {% comment  %} Form for setting user permissions within a Cluster {% endcomment %}
 
-<form id="permissions_form" method="post" action="{{SITE_ROOT}}/cluster/{{cluster.slug}}/user/">
+<form class="ajax_form" method="post" action="{{SITE_ROOT}}/cluster/{{cluster.slug}}/user/">
     <ul id="errors"></ul>
     {% if user_id %}
         <input type="hidden" name="user" value="{{user_id}}"/>
@@ -8,5 +8,5 @@
         {{form.user.label}} {{form.user}}
     {% endif %}
     {{form.permissions}}
-    <input type="button" id="permissions_submit" type="submit" value="Update"/>
+    <input type="button" class="submit" value="Update"/>
 </form>
