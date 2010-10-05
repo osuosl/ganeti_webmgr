@@ -20,12 +20,14 @@ def render_node_status(status):
     else:
         return "Online"
 
+
 @register.filter
 @stringfilter
 def render_instance_status(status):
     return status.replace('ADMIN_', '', 1)\
                  .replace('ERROR_', '', 1)\
                  .capitalize()
+
 
 @register.filter
 @stringfilter
@@ -36,15 +38,14 @@ def render_storage(value):
     else:
         return "%d M" % int(amount)
 
+
 @register.filter
 def quota(cluster_user, cluster):
     """
     Returns the quota for user/cluster combination.
     """
-    try:
-        return Quota.objects.get(user=cluster_user, cluster=cluster)
-    except Quota.DoesNotExist:
-        return None
+    return cluster.get_quota(cluster_user)
+
 
 @register.simple_tag
 def node_memory(node):
@@ -52,11 +53,13 @@ def node_memory(node):
     free = float(node['mfree'])/1024
     return "%.1f / %.1f" % (free, total)
 
+
 @register.simple_tag
 def node_disk(node):
     total = node['dtotal']/1024
     free = node['dfree']/1024
     return "%d/%d" % (free, total)
+
 
 @register.tag
 def get_nics(parser, token):
@@ -70,6 +73,7 @@ def get_nics(parser, token):
     instance_name, res_name = m.groups()
     return NicsNode(instance_name, res_name)
 
+
 class NicsNode(Node):
     def __init__(self, instance_name, res_name):
         self.instance_name = instance_name
@@ -80,6 +84,7 @@ class NicsNode(Node):
         context[self.res_name] = zip(instance['nic.bridges'], instance['nic.ips'], instance['nic.links'],
                                      instance['nic.macs'], instance['nic.modes'])
         return '' 
+
 
 @register.tag
 def get_by_name(parser, token):
@@ -92,6 +97,7 @@ def get_by_name(parser, token):
         raise TemplateSyntaxError, "%r tag had invalid arguments" % tag_name
     item_name, attr_name, res_name = m.groups()
     return GetterNode(item_name, attr_name, res_name)
+
 
 class GetterNode(Node):
     def __init__(self, item_name, attr_name, res_name):

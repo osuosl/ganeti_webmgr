@@ -107,11 +107,16 @@ class QuotaForm(forms.Form):
     """
     Form for editing user quota on a cluster
     """
+    input = forms.TextInput(attrs={'size':5})
+    
     user = forms.ModelChoiceField(queryset=User.objects.all())
-    ram = forms.IntegerField(label='Memory (MB)', required=False, min_value=0)
-    virtual_cpus = forms.IntegerField(label='Virtual CPUs', required=False, min_value=0)
-    disk = forms.IntegerField(label='Disk Space (MB)', required=False, min_value=0)
-    delete = forms.BooleanField(required=False, widget=forms.HiddenInput())
+    ram = forms.IntegerField(label='Memory (MB)', required=False, min_value=0, \
+                             widget=input)
+    virtual_cpus = forms.IntegerField(label='Virtual CPUs', required=False, \
+                                    min_value=0, widget=input)
+    disk = forms.IntegerField(label='Disk Space (MB)', required=False, \
+                              min_value=0, widget=input)
+    delete = forms.BooleanField(required=False, widget=forms.HiddenInput)
 
 
 def quota(request, cluster_slug):
@@ -128,14 +133,10 @@ def quota(request, cluster_slug):
         if form.is_valid():
             data = form.cleaned_data
             form_user = data['user']
-            delete = data['delete']
-            if delete:
-                # quota is deleted
-                cluster.set_quota(form_user.get_profile(), None)
-                return HttpResponse('1', mimetype='application/json')
-            
-            # quota is updated
+            data = None if data['delete'] else data
             cluster.set_quota(form_user.get_profile(), data)
+            
+            # return updated html
             return render_to_response("cluster/user_row.html",
                                   {'cluster':cluster, 'user':form_user})
         

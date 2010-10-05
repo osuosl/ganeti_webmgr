@@ -1,6 +1,6 @@
 {% comment  %} Form for setting user quota within a Cluster {% endcomment %}
 
-<form class="ajax_form" method="post" action="{{SITE_ROOT}}/cluster/{{cluster.slug}}/user/quota/">
+<form id="quota_form" class="ajax_form" method="post" action="{{SITE_ROOT}}/cluster/{{cluster.slug}}/user/quota/">
     <ul id="errors"></ul>
     <input type="hidden" name="user" value="{{user_id}}"/>
     <table>
@@ -9,4 +9,5 @@
         <tr><td>{{form.virtual_cpus.label}}</td><td>{{form.virtual_cpus}}</td></tr>
     </table>
     <input type="button" class="submit" value="Update"/>
+    <input type="button" class="delete" value="Delete"/>
 </form>

@@ -400,6 +400,6 @@ class TestClusterViews(TestCase):
         data = {'user':profile.id, 'delete':True}
         response = c.post("/cluster/%s/user/quota/" % cluster.slug, data)
         self.assertEqual(200, response.status_code)
-        self.assertEquals('application/json', response['content-type'])
+        self.assertTemplateUsed(response, 'cluster/user_row.html')
         self.assertEqual(default_quota, cluster.get_quota())
         self.assertFalse(query.exists())

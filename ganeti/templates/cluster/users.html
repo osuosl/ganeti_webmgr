@@ -4,26 +4,11 @@
 
 {% block head %}
     <style>
-        li {
-            margin-left:0;
-            list-style:none;
-        }
-        
-        #add_user, .permissions, .delete {
-            cursor:pointer;
-        }
-        
-        .delete {
-            color:red;
-        }
-        
-        ul#errors li {
-            color:#AD2E2E;
-        }
-        
-        ul#errors li{
-            list-style:square;
-        }
+        li { margin-left:0; list-style:none;}
+        #add_user, .permissions, .delete, .quota { cursor:pointer; }
+        .quota.default {color:#C1C1C1; font-style:italic}
+        .delete {color:red;}
+        ul#errors li {color:#AD2E2E; list-style:square;}
     </style>
 
     <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.form.js"></script>
@@ -85,6 +70,37 @@
                     hide: {fixed: true, when:false}
                 });
             });
+            
+            // Update Quota Button
+            $(".quota").live("click", function() {
+                id = this.parentNode.id.substring(5);
+                $this = $(this);
+                
+                // destroy old qtip before showing new one
+                $('.qtip').qtip('destroy');
+                
+                $this.qtip({
+                    content: {
+                       url: "{{SITE_ROOT}}/cluster/{{cluster.slug}}/user/quota/?user=" + id,
+                       title: {text:'Quota: ', button:'close'},
+                    },
+                    position: {corner:{ target:"topMiddle", tooltip:"bottomMiddle"}},
+                    style: {name: 'blue',
+                            border:{radius:5},
+                            width:300,
+                            tip: 'bottomMiddle'
+                            },
+                    show: {when:false, ready:true},
+                    hide: {fixed: true, when:false}
+                });
+            });
+            
+            // Delete user button
+            $('#quota_form .delete').live("click", function() {
+                id = $('#quota_form input[name=user]').val()
+                $.post('{{SITE_ROOT}}/cluster/{{cluster.slug}}/user/quota/',
+                       {user:id, 'delete':true}, update_user);
+            });
         });
         
         function update_user(responseText, statusText, xhr, $form) {
@@ -125,6 +141,7 @@
     <tr>
         <th>Name</th>
         <th>Permissions</th>
+        <th>Quota</th>
         <th></th>
     </tr>
     {% for user in users %}
