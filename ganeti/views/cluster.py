@@ -25,7 +25,7 @@ def detail(request, cluster_slug):
     """
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     vmlist = VirtualMachine.objects.filter(cluster__exact=cluster)
-    return render_to_response("cluster.html", {
+    return render_to_response("cluster/detail.html", {
         'cluster': cluster,
         'user': request.user,
         'vmlist' : vmlist,
@@ -57,7 +57,7 @@ def list(request):
     List all clusters
     """
     cluster_list = Cluster.objects.all()
-    return render_to_response("cluster_list.html", {
+    return render_to_response("cluster/list.html", {
         'cluster_list': cluster_list,
         'user': request.user,
         },

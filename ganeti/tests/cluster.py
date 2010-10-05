@@ -190,13 +190,68 @@ class TestClusterViews(TestCase):
         """
         Tests displaying the list of clusters
         """
-        raise NotImplementedError
+        user = self.user
+        url = '/clusters/'
+        c = Client()
+        
+        # anonymous user
+        response = c.get(url, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'login.html')
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        # XXX no permission check is currently enabled
+        # response = c.get(url)
+        # self.assertEqual(403, response.status_code)
+        
+        # authorized (superuser)
+        user.is_superuser = True
+        user.save()
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'cluster/list.html')
     
     def test_view_detail(self):
         """
         Tests displaying detailed view for a Cluster
         """
-        raise NotImplementedError
+        user = self.user
+        cluster = self.cluster
+        url = '/cluster/%s/'
+        c = Client()
+        
+        # anonymous user
+        response = c.get(url % cluster.slug, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'login.html')
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        # XXX no permission check implemented for cluster detail
+        # response = c.get(url % cluster.slug)
+        # self.assertEqual(403, response.status_code)
+        
+        # invalid cluster
+        response = c.get(url % "DoesNotExist")
+        self.assertEqual(404, response.status_code)
+        
+        # authorized (permission)
+        grant(user, 'admin', cluster)
+        response = c.get(url % cluster.slug)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'cluster/detail.html')
+        
+        # authorized (superuser)
+        user.revoke('admin', cluster)
+        user.is_superuser = True
+        user.save()
+        response = c.get(url % cluster.slug)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'cluster/detail.html')
 
     def test_view_users(self):
         """
