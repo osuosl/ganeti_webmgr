@@ -281,6 +281,11 @@ class Cluster(CachedClusterObject):
     password = models.CharField(max_length=128, blank=True, null=True)
     hash = models.CharField(max_length=40, editable=False)
     
+    # quota properties
+    virtual_cpus = models.IntegerField(null=True)
+    disk = models.IntegerField(null=True)
+    ram = models.IntegerField(null=True)
+    
     def __unicode__(self):
         return self.hostname
     
@@ -307,6 +312,39 @@ class Cluster(CachedClusterObject):
                     (self.username, self.password, self.hostname, self.port)) \
                 .hexdigest()
 
+    def get_quota(self, user=None):
+        """
+        Get the quota for a ClusterUser
+        
+        @return user's quota, default quota, or none
+        """
+        if user is None:
+            return {'default':1, 'ram':self.ram, 'disk':self.disk, \
+                    'virtual_cpus':self.virtual_cpus}
+        
+        query = Quota.objects.filter(cluster=self, user=user)
+        if query.exists():
+            (quota,) = query.values('ram', 'disk', 'virtual_cpus')
+            quota['default'] = 0
+            return quota
+        
+        return {'default':1, 'ram':self.ram, 'disk':self.disk, \
+                    'virtual_cpus':self.virtual_cpus, }
+    
+    def set_quota(self, user, values=None):
+        """
+        set the quota for a ClusterUser
+        
+        @param values: dictionary of values, or None to delete the quota
+        """
+        kwargs = {'cluster':self, 'user':user}
+        if values is None:
+            Quota.objects.filter(**kwargs).delete()
+        else:
+            quota, new = Quota.objects.get_or_create(**kwargs)
+            quota.__dict__.update(values)
+            quota.save()
+    
     def sync_virtual_machines(self):
         """
         Synchronizes the VirtualMachines in the database with the information
@@ -396,7 +434,7 @@ class Quota(models.Model):
     cluster = models.ForeignKey(Cluster, related_name='quotas')
     
     ram = models.IntegerField(default=0, null=True)
-    disk_space = models.IntegerField(default=0, null=True)
+    disk = models.IntegerField(default=0, null=True)
     virtual_cpus = models.IntegerField(default=0, null=True)
 
 

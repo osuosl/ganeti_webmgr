@@ -14,6 +14,8 @@ from ganeti.tests.rapi_proxy import RapiProxy, INFO
 from ganeti import models
 Cluster = models.Cluster
 VirtualMachine = models.VirtualMachine
+Quota = models.Quota
+
 
 __all__ = ('TestClusterViews', 'TestClusterModel')
 
@@ -26,6 +28,8 @@ class TestClusterModel(TestCase):
     
     def tearDown(self):
         Cluster.objects.all().delete()
+        User.objects.all().delete()
+        Quota.objects.all().delete()
 
     def test_trivial(self):
         """
@@ -63,6 +67,74 @@ class TestClusterModel(TestCase):
         
         self.assertEqual(cluster.ctime, datetime.fromtimestamp(1270685309.818239))
         self.assertEqual(cluster.mtime, datetime.fromtimestamp(1283552454.2998919))
+    
+    def test_get_quota(self):
+        """
+        Tests cluster.get_quota() method
+        
+        Verifies:
+            * if no user is passed, return default quota values
+            * if user has quota, return values from Quota
+            * if user doesn't have quota, return default cluster values
+        """
+        default_quota = {'default':1, 'ram':1, 'virtual_cpus':None, 'disk':3}
+        user_quota = {'default':0, 'ram':4, 'virtual_cpus':5, 'disk':None}
+        
+        cluster = Cluster(hostname='foo.fake.hostname')
+        cluster.__dict__.update(default_quota)
+        cluster.save()
+        user = User(username='tester')
+        user.save()
+
+        # default quota
+        self.assertEqual(default_quota, cluster.get_quota())
+        
+        # user without quota, defaults to default
+        self.assertEqual(default_quota, cluster.get_quota(user.get_profile()))
+        
+        # user with custom quota
+        quota = Quota(cluster=cluster, user=user.get_profile())
+        quota.__dict__.update(user_quota)
+        quota.save()
+        self.assertEqual(user_quota, cluster.get_quota(user.get_profile()))
+    
+    def test_set_quota(self):
+        """
+        Tests cluster.set_quota()
+        
+        Verifies:
+            * passing values with no quota, creates a new quota object
+            * passing values with an existing quota, updates it.
+            * passing a None with an existing quota deletes it
+            * passing a None with no quota, does nothing
+        """
+        default_quota = {'default':1,'ram':1, 'virtual_cpus':None, 'disk':3}
+        user_quota = {'default':0, 'ram':4, 'virtual_cpus':5, 'disk':None}
+        user_quota2 = {'default':0, 'ram':7, 'virtual_cpus':8, 'disk':9}
+        
+        cluster = Cluster(hostname='foo.fake.hostname')
+        cluster.__dict__.update(default_quota)
+        cluster.save()
+        user = User(username='tester')
+        user.save()
+        
+        # create new quota
+        cluster.set_quota(user.get_profile(), user_quota)
+        query = Quota.objects.filter(cluster=cluster, user=user.get_profile())
+        self.assert_(query.exists())
+        self.assertEqual(user_quota, cluster.get_quota(user))
+        
+        # update quota with new values
+        cluster.set_quota(user.get_profile(), user_quota2)
+        query = Quota.objects.filter(cluster=cluster, user=user.get_profile())
+        self.assertEqual(1, query.count())
+        self.assertEqual(user_quota2, cluster.get_quota(user))
+        
+        # delete quota
+        cluster.set_quota(user.get_profile(), None)
+        query = Quota.objects.filter(cluster=cluster, user=user.get_profile())
+        self.assertFalse(query.exists())
+        self.assertEqual(default_quota, cluster.get_quota(user))
     
     def test_sync_virtual_machines(self):
         """
