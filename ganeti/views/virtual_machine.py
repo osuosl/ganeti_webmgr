@@ -59,7 +59,7 @@ def create(request, cluster_slug=None):
     else:
         form = NewVirtualMachineForm(initial={'cluster':cluster})
 
-    return render_to_response('instance_create.html', {
+    return render_to_response('virtual_machine/create.html', {
         'form': form,
         #'oslist': oslist,
         #'hostname': hostname,
