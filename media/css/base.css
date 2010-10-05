@@ -121,10 +121,10 @@ a:hover, a:active {
 }
 
 #content {
-    width: 100%;
+    width: auto;
     margin: 1em auto;
-    clear: both;
     background: white;
+    padding: 0em 1em 1em 1em;
     /*
     border: 5px solid #D3DDFF;
     -moz-background-clip:border;
@@ -137,7 +137,8 @@ a:hover, a:active {
 }
 
 #contentwrapper {
-    padding: 0em 0em 1em 1em;
+    width: auto;
+    margin: 0em auto;
 }
 
 #configuration {
@@ -245,6 +246,26 @@ a:hover, a:active {
     border-top: 1px solid #333;
 }
 
+#login {
+    width: 30%;
+    margin: 0em auto;
+}
+
+#login fieldset {
+}
+
+#login label {
+    width: 7em;
+    float: left;
+    text-align: right;
+    margin-right: 0.5em;
+    display: block;
+}
+
+#login input.submit {
+    margin-left: 7.5em;
+}
+
 #pagelist a {
     text-decoration: none;
     color: gray;
@@ -292,7 +313,7 @@ p label {
     float: left;
     text-align: right;
     margin-right: 0.5em;
-    display: block
+    display: block;
 }
 
 tr.even {

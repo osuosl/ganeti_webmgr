@@ -3,10 +3,14 @@
 {% block title %}Login{% endblock %}
 
 {% block content %}
-<h1>Login</h1>
-<form method="post">
-    {{ form.as_p }}
-    <input type="hidden" name="next" value="{{ next }}" />
-    <input type="submit" value="Login">
-</form>
+<div id="login">
+    <fieldset>
+        <legend>Login</legend>
+        <form method="post">
+            {{ form.as_p }}
+            <input type="hidden" name="next" value="{{ next }}" />
+            <input class="submit"type="submit" value="Login">
+        </form>
+    </fieldset>
+</div>
 {% endblock %}
