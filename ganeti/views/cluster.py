@@ -6,8 +6,8 @@ import urllib2
 from django import forms
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.http import HttpResponse, HttpResponseRedirect, \
-    HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseNotFound, \
+    HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
@@ -108,9 +108,10 @@ class QuotaForm(forms.Form):
     Form for editing user quota on a cluster
     """
     user = forms.ModelChoiceField(queryset=User.objects.all())
-    ram = forms.IntegerField(required=False)
-    virtual_cpus = forms.IntegerField(required=False)
-    disk = forms.IntegerField(required=False)
+    ram = forms.IntegerField(label='Memory (MB)', required=False, min_value=0)
+    virtual_cpus = forms.IntegerField(label='Virtual CPUs', required=False, min_value=0)
+    disk = forms.IntegerField(label='Disk Space (MB)', required=False, min_value=0)
+    delete = forms.BooleanField(required=False, widget=forms.HiddenInput())
 
 
 def quota(request, cluster_slug):
@@ -123,18 +124,20 @@ def quota(request, cluster_slug):
         return HttpResponseForbidden("You do not have sufficient privileges")
     
     if request.method == 'POST':
-        form = QuotaForm(cluster, request.POST)
+        form = QuotaForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
             form_user = data['user']
-            cpus = data['virtual_cpus']
-            ram = data['ram']
-            disk = data['disk']
-            cluster.set_quota(user, cpus, ram, disk)
+            delete = data['delete']
+            if delete:
+                # quota is deleted
+                cluster.set_quota(form_user.get_profile(), None)
+                return HttpResponse('1', mimetype='application/json')
             
-            # return html to replace existing user row
+            # quota is updated
+            cluster.set_quota(form_user.get_profile(), data)
             return render_to_response("cluster/user_row.html",
-                                      {'cluster':cluster, 'user':form_user})
+                                  {'cluster':cluster, 'user':form_user})
         
         # error in form return ajax response
         content = json.dumps(form.errors)
@@ -143,16 +146,14 @@ def quota(request, cluster_slug):
     user_id = request.GET.get('user', None)
     if user_id:
         form_user = get_object_or_404(User, id=user_id)
-        quota = cluster.get_quota(user)
+        quota = cluster.get_quota(form_user.get_profile())
+        data = {'user':user_id}
         if quota:
-            data = {'user':user_id, 'ram':quota.ram, \
-                    'virtual_cpus':quota.virtual_cpus, 'disk':quota.disk}
-        else:
-            data = {'user':user_id}
+            data.update(quota)
     else:
-        return HttpResponseNotFound()
+        return HttpResponseNotFound('User was not found')
         
-    form = QuotaForm(cluster, data)
+    form = QuotaForm(data)
     return render_to_response("cluster/quota.html", \
                         {'form':form, 'cluster':cluster, 'user_id':user_id}, \
                         context_instance=RequestContext(request))

@@ -181,9 +181,10 @@ class TestClusterViews(TestCase):
         register('create', Cluster)
 
     def tearDown(self):
+        Quota.objects.all().delete()
+        ObjectPermission.objects.all().delete()
         Cluster.objects.all().delete()
         User.objects.all().delete()
-        ObjectPermission.objects.all().delete()
 
     def test_view_clusters(self):
         """
@@ -309,3 +310,96 @@ class TestClusterViews(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
+        
+    def test_view_user_quota(self):
+        """
+        Tests updating users quota
+        
+        Verifies:
+            * anonymous user returns 403
+            * lack of permissions returns 403
+            * nonexistent cluster returns 404
+            * invalid user returns 404
+            * missing user returns error as json
+            * GET returns html for form
+            * successful POST returns html for user row
+            * successful DELETE removes user quota
+        """
+        default_quota = {'default':1, 'ram':1, 'virtual_cpus':None, 'disk':3}
+        user_quota = {'default':0, 'ram':4, 'virtual_cpus':5, 'disk':None}
+        user_unlimited = {'default':0, 'ram':None, 'virtual_cpus':None, 'disk':None}
+        user = self.user
+        user1 = self.user1
+        profile = user1.get_profile()
+        cluster = self.cluster
+        cluster.__dict__.update(default_quota)
+        cluster.save()
+        args = (cluster.slug, user1.id)
+        c = Client()
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.get("/cluster/%s/user/quota/?user=%s" % args)
+        self.assertEqual(403, response.status_code)
+        
+        # nonexisent cluster
+        response = c.get("/cluster/%s/user/quota/?user=%s" % ("DOES_NOT_EXIST", user1.id))
+        self.assertEqual(404, response.status_code)
+        
+        # valid GET authorized user (perm)
+        grant(user, 'admin', cluster)
+        response = c.get("/cluster/%s/user/quota/?user=%s" % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'cluster/quota.html')
+        
+        # valid GET authorized user (superuser)
+        user.revoke('admin', cluster)
+        user.is_superuser = True
+        user.save()
+        response = c.get("/cluster/%s/user/quota/?user=%s" % args)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'cluster/quota.html')
+        
+        # invalid user
+        response = c.get("/cluster/%s/user/quota/?user=%s" % (cluster.slug, 0))
+        self.assertEqual(404, response.status_code)
+        
+        # no user
+        response = c.get("/cluster/%s/user/quota/" % cluster.slug)
+        self.assertEqual(404, response.status_code)
+        
+        # valid POST - setting unlimited values (nones)
+        data = {'user':profile.id, 'ram':'', 'virtual_cpus':'', 'disk':''}
+        response = c.post("/cluster/%s/user/quota/" % cluster.slug, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'cluster/user_row.html')
+        self.assertEqual(user_unlimited, cluster.get_quota(user1))
+        query = Quota.objects.filter(cluster=cluster, user=user1.get_profile())
+        self.assert_(query.exists())
+        
+        # valid POST - setting values
+        data = {'user':profile.id, 'ram':4, 'virtual_cpus':5, 'disk':''}
+        response = c.post("/cluster/%s/user/quota/" % cluster.slug, data)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'cluster/user_row.html')
+        self.assertEqual(user_quota, cluster.get_quota(user1))
+        self.assert_(query.exists())
+        
+        # valid POST - setting implicit unlimited (values are excluded)
+        data = {'user':profile.id}
+        response = c.post("/cluster/%s/user/quota/" % cluster.slug, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'cluster/user_row.html')
+        self.assertEqual(user_unlimited, cluster.get_quota(user1))
+        self.assert_(query.exists())
+        
+        # valid DELETE - returns to default values
+        data = {'user':profile.id, 'delete':True}
+        response = c.post("/cluster/%s/user/quota/" % cluster.slug, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        self.assertEqual(default_quota, cluster.get_quota())
+        self.assertFalse(query.exists())
