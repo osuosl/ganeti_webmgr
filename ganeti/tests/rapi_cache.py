@@ -78,7 +78,7 @@ class TestRapiCache(TestCase):
         self.assert_(rapi)
         self.assert_(isinstance(rapi, (client.GanetiRapiClient,)))
         self.assertNotEqual(rapi, new_rapi)
-        self.assert_(old_hash in RAPI_CACHE, "old rapi client was not removed")
+        self.assertFalse(old_hash in RAPI_CACHE, "old rapi client was not removed")
     
     def test_stale_hash(self):
         """
@@ -91,6 +91,7 @@ class TestRapiCache(TestCase):
         stale_cluster = Cluster.objects.get(id=cluster.id)
         cluster.hostname = 'a.different.hostname'
         cluster.save()
+        clear_rapi_cache()
         stale_rapi = get_rapi(stale_cluster.hash, stale_cluster)
         self.assert_(stale_rapi)
         self.assert_(isinstance(stale_rapi, (client.GanetiRapiClient,)))
@@ -110,6 +111,7 @@ class TestRapiCache(TestCase):
         stale_cluster = Cluster.objects.get(id=cluster.id)
         cluster.hostname = 'a.different.hostname'
         cluster.save()
+        clear_rapi_cache()
         fresh_rapi = get_rapi(cluster.hash, cluster)
         stale_rapi = get_rapi(stale_cluster.hash, stale_cluster)
         self.assert_(stale_rapi)
