@@ -80,7 +80,7 @@ def list(request):
 @login_required
 def detail(request, cluster_slug, instance):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    instance = VirtualMachine.objects.get(hostname=instance)
+    instance = get_object_or_404(VirtualMachine, hostname=instance)
     if request.method == 'POST':
         configform = InstanceConfigForm(request.POST)
         if configform.is_valid():

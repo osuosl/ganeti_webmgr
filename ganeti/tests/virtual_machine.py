@@ -180,6 +180,10 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         response = c.get(url % ("DoesNotExist", vm.hostname))
         self.assertEqual(404, response.status_code)
         
+        # invalid vm
+        response = c.get(url % (cluster.slug, "DoesNotExist"))
+        self.assertEqual(404, response.status_code)
+        
         # authorized (permission)
         grant(user, 'admin', vm)
         response = c.get(url % (cluster.slug, vm.hostname))
