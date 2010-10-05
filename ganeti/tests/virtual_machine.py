@@ -5,24 +5,36 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.test.client import Client
 
-from util import client
+from object_permissions import grant, revoke, register
+from object_permissions.models import ObjectPermission
 
+from util import client
 from ganeti.tests.rapi_proxy import RapiProxy, INSTANCE
 from ganeti import models
 VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
 
-__all__ = ('TestVirtualMachineModel',)
+__all__ = ('TestVirtualMachineModel', 'TestVirtualMachineViews')
+
+class VirtualMachineTestCaseMixin():
+    def create_virtual_machine(self, cluster=None, hostname='vm1.osuosl.bak'):
+        cluster = cluster if cluster else Cluster(hostname='test.osuosl.bak', slug='OSL_TEST')
+        cluster.save()
+        vm = VirtualMachine(cluster=cluster, hostname=hostname)
+        vm.save()
+        return vm, cluster
 
 
-class TestVirtualMachineModel(TestCase):
-    
+class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
+
     def setUp(self):
         self.tearDown()
         models.client.GanetiRapiClient = RapiProxy
     
     def tearDown(self):
         VirtualMachine.objects.all().delete()
+        Cluster.objects.all().delete()
+        User.objects.all().delete()
     
     def test_trivial(self):
         """
@@ -30,12 +42,7 @@ class TestVirtualMachineModel(TestCase):
         """
         VirtualMachine()
     
-    def create_virtual_machine(self, cluster=None, hostname='test.osuosl.bak'):
-        cluster = cluster if cluster else Cluster()
-        cluster.save()
-        vm = VirtualMachine(cluster=cluster, hostname=hostname)
-        vm.save()
-        return vm, cluster
+    
     
     def test_save(self):
         """
@@ -89,3 +96,126 @@ class TestVirtualMachineModel(TestCase):
         self.assertEqual(vm.ram, 512)
         self.assertEqual(vm.virtual_cpus, 2)
         self.assertEqual(vm.disk_size, 5120)
+
+
+class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
+    """
+    Tests for views showing virtual machines
+    """
+    
+    def setUp(self):
+        self.tearDown()
+        models.client.GanetiRapiClient = RapiProxy
+        self.vm, self.cluster = self.create_virtual_machine()
+        
+        self.user = User(id=2, username='tester0')
+        self.user.set_password('secret')
+        self.user.save()
+        self.user1 = User(id=3, username='tester1')
+        self.user1.set_password('secret')
+        self.user1.save()
+        
+        # XXX specify permission manually, it is not auto registering for some reason
+        register('admin', Cluster)
+        register('admin', VirtualMachine)
+    
+    def tearDown(self):
+        ObjectPermission.objects.all().delete()
+        User.objects.all().delete()
+        VirtualMachine.objects.all().delete()
+        Cluster.objects.all().delete()
+    
+    def test_view_list(self):
+        """
+        Test listing all virtual machines
+        """
+        user = self.user
+        cluster = self.cluster
+        vm = self.vm
+        url = '/vms/'
+        c = Client()
+        
+        # anonymous user
+        response = c.get(url, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'login.html')
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        # XXX no permission check implemented for cluster detail
+        # response = c.get(url % (cluster.slug, vm.hostname))
+        # self.assertEqual(403, response.status_code)
+        
+        # authorized (superuser)
+        user.revoke('admin', vm)
+        user.is_superuser = True
+        user.save()
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/list.html')
+    
+    def test_view_detail(self):
+        """
+        Test showing virtual machine details
+        """
+        user = self.user
+        cluster = self.cluster
+        vm = self.vm
+        url = '/cluster/%s/%s/'
+        c = Client()
+        
+        # anonymous user
+        response = c.get(url % (cluster.slug, vm.hostname), follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'login.html')
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        # XXX no permission check implemented for cluster detail
+        # response = c.get(url % (cluster.slug, vm.hostname))
+        # self.assertEqual(403, response.status_code)
+        
+        # invalid cluster
+        response = c.get(url % ("DoesNotExist", vm.hostname))
+        self.assertEqual(404, response.status_code)
+        
+        # authorized (permission)
+        grant(user, 'admin', vm)
+        response = c.get(url % (cluster.slug, vm.hostname))
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
+        
+        # authorized (superuser)
+        user.revoke('admin', vm)
+        user.is_superuser = True
+        user.save()
+        response = c.get(url % (cluster.slug, vm.hostname))
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
+    
+    def test_view_startup(self):
+        """
+        Test starting a virtual machine
+        """
+        raise NotImplementedError
+    
+    def test_view_shutdown(self):
+        """
+        Test shutting down a virtual machine
+        """
+        raise NotImplementedError
+    
+    def test_view_reboot(self):
+        """
+        Test rebooting a virtual machine
+        """
+        raise NotImplementedError
+    
+    def test_view_create(self):
+        """
+        Test creating a virtual machine
+        """
+        raise NotImplementedError

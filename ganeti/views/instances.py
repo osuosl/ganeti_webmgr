@@ -29,6 +29,7 @@ def shutdown(request, cluster_slug, instance):
     vm.shutdown()
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+
 @login_required
 def startup(request, cluster_slug, instance):
     vm = VirtualMachine.objects.get(hostname=instance)
@@ -70,7 +71,7 @@ def create(request, cluster_slug=None):
 @login_required
 def list(request):
     vmlist = VirtualMachine.objects.all()
-    return render_to_response('virtualmachines/list.html', {
+    return render_to_response('virtual_machine/list.html', {
         'vmlist' : vmlist
         },
         context_instance=RequestContext(request),
@@ -102,7 +103,7 @@ def detail(request, cluster_slug, instance):
             instance.info['hvparams']['cdrom_type'] = 'none'
         configform = InstanceConfigForm(instance.info['hvparams'])
 
-    return render_to_response("instance.html", {
+    return render_to_response("virtual_machine/detail.html", {
         'cluster': cluster,
         'instance': instance,
         'configform': configform,
