@@ -282,9 +282,9 @@ class Cluster(CachedClusterObject):
     hash = models.CharField(max_length=40, editable=False)
     
     # quota properties
-    virtual_cpus = models.IntegerField(null=True)
-    disk = models.IntegerField(null=True)
-    ram = models.IntegerField(null=True)
+    virtual_cpus = models.IntegerField(null=True, blank=True)
+    disk = models.IntegerField(null=True, blank=True)
+    ram = models.IntegerField(null=True, blank=True)
     
     def __unicode__(self):
         return self.hostname
