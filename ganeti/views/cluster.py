@@ -29,6 +29,7 @@ def detail(request, cluster_slug):
         'cluster': cluster,
         'user': request.user,
         'vmlist' : vmlist,
+        'users':get_users(cluster),
         },
         context_instance=RequestContext(request),
     )

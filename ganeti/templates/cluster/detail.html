@@ -1,28 +1,118 @@
 {% extends "base.html" %}
 
 {% block title %}Cluster {{ cluster.id }}: {{ cluster.hostname|safe }}{% endblock %}
+
+{% block head %}
+    <style>
+        ul.tabs {
+            margin: 0;
+            padding: 0;
+            float: left;
+            list-style: none;
+            height: 32px; 
+            border-bottom: 1px solid #999;
+            border-left: 1px solid #999;
+            width: 100%;
+        }
+        ul.tabs li {
+                float: left;
+                margin: 0;
+                padding: 0;
+                height: 31px;
+                line-height: 31px;
+                border: 1px solid #999;
+                border-left: none;
+                margin-bottom: -1px;
+                overflow: hidden;
+                position: relative;
+                background: #e0e0e0;
+        }
+        ul.tabs li a {
+                text-decoration: none;
+                color: #000;
+                display: block;
+                font-size: 1.2em;
+                padding: 0 20px;
+                border: 1px solid #fff;
+                outline: none;
+        }
+        ul.tabs li a:hover {
+                background: #ccc;
+        }
+        html ul.tabs li.active, html ul.tabs li.active a:hover  { 
+                background: #fff;
+                border-bottom: 1px solid #fff;
+        }
+        
+        .tab_container {
+            border: 1px solid #999;
+            border-top: none;
+            overflow: hidden;
+            clear: both;
+            float: left; width: 100%;
+            background: #fff;
+        }
+        .tab_content {
+                padding: 20px;
+                font-size: 1.2em;
+                background-color:#red;
+        }
+    </style>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $(".tab_content").hide();
+            $("ul.tabs li:first").addClass("active").show();
+            $(".tab_content:first").show();
+            
+            //On Click Event
+            $("ul.tabs li").click(function() {
+                    $("ul.tabs li").removeClass("active");
+                    $(this).addClass("active");
+                    $(".tab_content").hide();
+                    
+                    var activeTab = $(this).find("a").attr("href");
+                    $(activeTab).show(); 
+                    return false;
+            });
+        });
+    </script>
+{% endblock %}
+
 {% block content %}
-
-<div class="ticket" id="ticket_{{ cluster.id }}">
 <h1>Cluster: {{ cluster.hostname }}</h1>
-<p><a href="{% url instance-create cluster.slug %}">Add Virtual Machine</a></p>
-<h2>Information</h2>
-{% with cluster.info as info %}
-<ul>
-<li>Architecture: {{ info.architecture.0 }}</li>
-<li>Default hypervisor: {{ info.default_hypervisor }}</li>
-<li>Available hypervisors: {{ info.enabled_hypervisors|join:", " }}</li>
-<li>Master node: {{ info.master }}</li>
-<li>Created: 
-  {% if cluster.ctime %}
-    {{ cluster.ctime|date }}
-  {% else %}
-    <em>unknown</em>
-  {% endif %}
-<li>Last modified: {{ cluster.mtime|date }}</li>
-{% endwith %}
+<ul class="tabs">
+    <li><a href="#tab1">Details</a></li>
+    <li><a href="#tab2">Users</a></li>
+</ul>
 
-<h2>Instances</h2>
-{% include "virtual_machine/vm_table.html" %}
+<div class="tab_container">
+    <div id="tab1" class="tab_content">
+        <div class="ticket" id="ticket_{{ cluster.id }}">
+        
+        <p><a href="{% url instance-create cluster.slug %}">Add Virtual Machine</a></p>
+        <h2>Information</h2>
+        {% with cluster.info as info %}
+        <ul>
+        <li>Architecture: {{ info.architecture.0 }}</li>
+        <li>Default hypervisor: {{ info.default_hypervisor }}</li>
+        <li>Available hypervisors: {{ info.enabled_hypervisors|join:", " }}</li>
+        <li>Master node: {{ info.master }}</li>
+        <li>Created: 
+          {% if cluster.ctime %}
+            {{ cluster.ctime|date }}
+          {% else %}
+            <em>unknown</em>
+          {% endif %}
+        <li>Last modified: {{ cluster.mtime|date }}</li>
+        {% endwith %}
+        
+        <h2>Virtual Machines</h2>
+        {% include "virtual_machine/vm_table.html" %}
+        </div>
+    </div>
+    <div id="tab2" class="tab_content">
+        {% include "cluster/users.html" %}
+    </div>
 </div>
 {% endblock %}
