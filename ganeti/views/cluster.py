@@ -101,3 +101,58 @@ def permissions(request, cluster_slug):
     return render_to_response("cluster/permissions.html", \
                         {'form':form, 'cluster':cluster, 'user_id':user_id}, \
                         context_instance=RequestContext(request))
+
+
+class QuotaForm(forms.Form):
+    """
+    Form for editing user quota on a cluster
+    """
+    user = forms.ModelChoiceField(queryset=User.objects.all())
+    ram = forms.IntegerField(required=False)
+    virtual_cpus = forms.IntegerField(required=False)
+    disk = forms.IntegerField(required=False)
+
+
+def quota(request, cluster_slug):
+    """
+    Updates quota for a user
+    """
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    user = request.user
+    if not (user.is_superuser or user.has_perm('admin', cluster)):
+        return HttpResponseForbidden("You do not have sufficient privileges")
+    
+    if request.method == 'POST':
+        form = QuotaForm(cluster, request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            form_user = data['user']
+            cpus = data['virtual_cpus']
+            ram = data['ram']
+            disk = data['disk']
+            cluster.set_quota(user, cpus, ram, disk)
+            
+            # return html to replace existing user row
+            return render_to_response("cluster/user_row.html",
+                                      {'cluster':cluster, 'user':form_user})
+        
+        # error in form return ajax response
+        content = json.dumps(form.errors)
+        return HttpResponse(content, mimetype='application/json')
+
+    user_id = request.GET.get('user', None)
+    if user_id:
+        form_user = get_object_or_404(User, id=user_id)
+        quota = cluster.get_quota(user)
+        if quota:
+            data = {'user':user_id, 'ram':quota.ram, \
+                    'virtual_cpus':quota.virtual_cpus, 'disk':quota.disk}
+        else:
+            data = {'user':user_id}
+    else:
+        return HttpResponseNotFound()
+        
+    form = QuotaForm(cluster, data)
+    return render_to_response("cluster/quota.html", \
+                        {'form':form, 'cluster':cluster, 'user_id':user_id}, \
+                        context_instance=RequestContext(request))
