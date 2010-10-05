@@ -27,7 +27,7 @@ urlpatterns += patterns('ganeti_webmgr.ganeti.views.cluster',
 
 # Instances
 prefix = '%s%s' %  (cluster, instance)
-urlpatterns += patterns('ganeti_webmgr.ganeti.views.virtual_machines',
+urlpatterns += patterns('ganeti_webmgr.ganeti.views.virtual_machine',
     #  List
     url(r'^vms/$', 'list', name="virtualmachine-list"),
     #  Detail
