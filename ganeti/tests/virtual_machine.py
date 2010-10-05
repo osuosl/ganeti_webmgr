@@ -204,19 +204,136 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         """
         Test starting a virtual machine
         """
-        raise NotImplementedError
+        user = self.user
+        cluster = self.cluster
+        vm = self.vm
+        url = '/cluster/%s/%s/startup'
+        c = Client()
+        
+        # anonymous user
+        response = c.get(url % (cluster.slug, vm.hostname), follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'login.html')
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        # XXX no permission check implemented for cluster detail
+        # response = c.get(url % (cluster.slug, vm.hostname))
+        # self.assertEqual(403, response.status_code)
+        
+        # invalid cluster
+        response = c.get(url % ("DoesNotExist", vm.hostname))
+        self.assertEqual(404, response.status_code)
+        
+        # invalid vm
+        response = c.get(url % (cluster.slug, "DoesNotExist"))
+        self.assertEqual(404, response.status_code)
+        
+        # authorized (permission)
+        grant(user, 'admin', vm)
+        response = c.get(url % (cluster.slug, vm.hostname))
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
+        
+        # authorized (superuser)
+        user.revoke('admin', vm)
+        user.is_superuser = True
+        user.save()
+        response = c.get(url % (cluster.slug, vm.hostname))
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
     
     def test_view_shutdown(self):
         """
         Test shutting down a virtual machine
         """
-        raise NotImplementedError
+        user = self.user
+        cluster = self.cluster
+        vm = self.vm
+        url = '/cluster/%s/%s/shutdown'
+        c = Client()
+        
+        # anonymous user
+        response = c.get(url % (cluster.slug, vm.hostname), follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'login.html')
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        # XXX no permission check implemented for cluster detail
+        # response = c.get(url % (cluster.slug, vm.hostname))
+        # self.assertEqual(403, response.status_code)
+        
+        # invalid cluster
+        response = c.get(url % ("DoesNotExist", vm.hostname))
+        self.assertEqual(404, response.status_code)
+        
+        # invalid vm
+        response = c.get(url % (cluster.slug, "DoesNotExist"))
+        self.assertEqual(404, response.status_code)
+        
+        # authorized (permission)
+        grant(user, 'admin', vm)
+        response = c.get(url % (cluster.slug, vm.hostname))
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
+        
+        # authorized (superuser)
+        user.revoke('admin', vm)
+        user.is_superuser = True
+        user.save()
+        response = c.get(url % (cluster.slug, vm.hostname))
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
     
     def test_view_reboot(self):
         """
         Test rebooting a virtual machine
         """
-        raise NotImplementedError
+        user = self.user
+        cluster = self.cluster
+        vm = self.vm
+        url = '/cluster/%s/%s/reboot'
+        c = Client()
+        
+        # anonymous user
+        response = c.get(url % (cluster.slug, vm.hostname), follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'login.html')
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        # XXX no permission check implemented for cluster detail
+        # response = c.get(url % (cluster.slug, vm.hostname))
+        # self.assertEqual(403, response.status_code)
+        
+        # invalid cluster
+        response = c.get(url % ("DoesNotExist", vm.hostname))
+        self.assertEqual(404, response.status_code)
+        
+        # invalid vm
+        response = c.get(url % (cluster.slug, "DoesNotExist"))
+        self.assertEqual(404, response.status_code)
+        
+        # authorized (permission)
+        grant(user, 'admin', vm)
+        response = c.get(url % (cluster.slug, vm.hostname))
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
+        
+        # authorized (superuser)
+        user.revoke('admin', vm)
+        user.is_superuser = True
+        user.save()
+        response = c.get(url % (cluster.slug, vm.hostname))
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
     
     def test_view_create(self):
         """
