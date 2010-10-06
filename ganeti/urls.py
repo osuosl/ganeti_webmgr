@@ -35,11 +35,11 @@ prefix = '%s%s' %  (cluster, instance)
 urlpatterns += patterns('ganeti_webmgr.ganeti.views.virtual_machine',
     #  List
     url(r'^vms/$', 'list', name="virtualmachine-list"),
+    #  Create
+    url(r'^vm/add/$', 'create', name="instance-create"),
+    url(r'^vm/add/(?P<cluster_slug>\w+)$', 'create', name="instance-create"),
     #  Detail
     url(r'^%s' % prefix, 'detail', name="instance-detail"),
-    #  Create
-    url(r'^create/$', 'create', name="instance-create"),
-    url(r'^create/(?P<cluster_slug>\w+)$', 'create', name="instance-create"),
     #  Start, Stop, Reboot
     url(r'^%s/vnc/?$' % prefix, 'vnc', name="instance-vnc"),
     url(r'^%s/shutdown/?$' % prefix, 'shutdown', name="instance-shutdown"),
