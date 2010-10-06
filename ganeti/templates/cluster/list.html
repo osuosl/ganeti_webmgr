@@ -16,6 +16,7 @@
             {% endcomment %}
             <th>VMs</th>
             <th>Tags</th>
+            <th></th>
         </tr>
     {% for cluster in cluster_list %}
     {% with cluster.info as info %}
@@ -27,6 +28,7 @@
             <td>{{ nodes|length }}</td>
             <td>{{ vms|length }}</td>
             <td>{{ info.tags|join:", "}}</td>
+            <td><a href="{% url cluster-edit cluster.slug %}">Edit</a></td>
         </tr>
     {% endwith %}
     {% endwith %}

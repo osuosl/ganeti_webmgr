@@ -98,6 +98,18 @@ def list(request):
         context_instance=RequestContext(request),
     )
 
+@login_required
+def edit(request, cluster_slug):
+    """
+    Edit a cluster
+    """
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    return render_to_response("cluster/edit.html", {
+        'cluster': cluster,
+        'user': request.user,
+        },
+        context_instance=RequestContext(request),
+    )
 
 def permissions(request, cluster_slug):
     """

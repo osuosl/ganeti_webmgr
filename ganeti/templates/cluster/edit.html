@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ cluster.slug }} {% endblock %}
+
+{% block content %}
+<fieldset>
+    <legend>{{ cluster.hostname }}</legend>
+    <form method="post">
+        {{ form.as_p }}
+    </form>
+</fieldset>
+{% endblock %}
