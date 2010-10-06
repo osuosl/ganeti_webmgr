@@ -18,10 +18,12 @@ urlpatterns = patterns('ganeti_webmgr.ganeti.views.general',
 urlpatterns += patterns('ganeti_webmgr.ganeti.views.cluster',
     #   List
     url(r'^clusters/$', 'list', name="cluster-list"),
+    #   Add
+    url(r'^cluster/add/?$', 'add', name="cluster-create"),
+    #   Edit
+    #url(r'^cluster/edit/?$', 'edit', name="cluster-edit"),
     #   Detail
     url(r'^%s/?$' % cluster, 'detail', name="cluster-detail"),
-    #   Add
-    url(r'^addcluster/$', 'add', name="cluster-create"),
     #   User
     url(r'^%s/users/?$' % cluster, 'cluster_users', name="cluster-users"),
     url(r'^%s/user/?$' % cluster, 'permissions', name="cluster-permissions"),
