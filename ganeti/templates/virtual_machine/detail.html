@@ -21,7 +21,7 @@
     </ul>
 
     <h2>Actions</h2>
-    <ul>{{instance.info.status}}
+    <ul>
         {% ifequal instance.info.status "running" %}<li><a href="{% url instance-shutdown cluster.slug instance.hostname %}">Shutdown</a></li>
         <li><a href="{% url instance-reboot cluster.slug instance.hostname %}">Reboot</a></li>
         <li><a href="{% url instance-vnc cluster.slug instance.hostname %}">Remote console (VNC)</a></li>
