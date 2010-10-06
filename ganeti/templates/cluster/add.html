@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}Add An Existing Cluster{% endblock %}
+
+{% block content %}
+<fieldset>
+    <legend> Cluster </legend>
+    <form method="post">
+        {{ form.as_p }}
+        <input class="submit" type="submit" value="Add">
+    </form>
+</fieldset>
+{% endblock %}

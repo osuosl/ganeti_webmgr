@@ -17,6 +17,8 @@ from object_permissions.views.permissions import ObjectPermissionFormNewUsers
 from ganeti.models import *
 from util.portforwarder import forward_port
 
+# Regex for a resolvable hostname
+FQDN_RE = r'^[\w]+(\.[\w]+)*$'
 
 @login_required
 def detail(request, cluster_slug):
@@ -48,6 +50,37 @@ def cluster_users(request, cluster_slug):
     
     return render_to_response("cluster/users.html",
                               {'cluster': cluster, 'users':users},
+        context_instance=RequestContext(request),
+    )
+
+@login_required
+def add(request):
+    """
+    Add a new cluster
+    """
+    if request.method == 'POST':
+        form = AddClusterForm(request.POST)
+        if form.is_valid():
+            hostname = form.cleaned_data['hostname']
+            slug = form.cleaned_data['slug']
+            port = form.cleaned_data['port']
+            try:
+                cluster = Cluster(hostname=hostname, slug=slug, port=port)
+                cluster.save()
+            except:
+                print "Cluster not saved."
+            
+            return render_to_response("index.html", {
+                'user': request.user,
+                },
+                context_instance=RequestContext(request),
+            )
+    else:
+        form = AddClusterForm()
+    return render_to_response("cluster/add.html", {
+        'form': form,
+        'user': request.user,
+        },
         context_instance=RequestContext(request),
     )
 
@@ -159,3 +192,8 @@ def quota(request, cluster_slug):
     return render_to_response("cluster/quota.html", \
                         {'form':form, 'cluster':cluster, 'user_id':user_id}, \
                         context_instance=RequestContext(request))
+
+class AddClusterForm(forms.Form):
+        hostname = forms.CharField(label='Hostname', max_length='256')
+        slug = forms.CharField(label='Slug', max_length=150)
+        port = forms.IntegerField(label='Port', initial='5080')
