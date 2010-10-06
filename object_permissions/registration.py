@@ -146,6 +146,10 @@ def get_users(object):
             object_permissions__object_id=object.id).distinct()
 
 
+# register internal perms
+register('admin', UserGroup)
+
+
 # make some methods available as bound methods
 setattr(User, 'grant', grant)
 setattr(User, 'revoke', revoke)
