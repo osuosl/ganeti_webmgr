@@ -339,4 +339,16 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         """
         Test creating a virtual machine
         """
+        cluster = self.cluster
+        url = '/vm/add/%s'
+        c = Client()
+        
+        # GET
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        
+        response = c.get(url % (cluster.slug))
+        self.assertEqual(200, response.status_code)
+        
+        # POST
         raise NotImplementedError
