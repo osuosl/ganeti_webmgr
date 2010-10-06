@@ -26,9 +26,9 @@
         });
         
         // submit button
-        $("#add_user_submit, #permissions_submit").live("click", function(){
+        $(".ajax_form .submit").live("click", function(){
             $("#errors").empty();
-            $("#add_user_form, permissions_form").ajaxSubmit({success: update_user});
+            $(this).parent('.ajax_form').ajaxSubmit({success: update});
         });
         
         // Delete user button
@@ -57,7 +57,7 @@
         });
     });
     
-    function update_user(responseText, statusText, xhr, $form) {
+    function update(responseText, statusText, xhr, $form) {
         if (xhr.getResponseHeader('Content-Type') == 'application/json') {
             // parse errors
             for (key in responseText) {

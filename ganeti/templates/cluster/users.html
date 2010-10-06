@@ -28,7 +28,7 @@
             // Add user submit button
             $(".ajax_form .submit").live("click", function(){
                 $("#errors").empty();
-                $(".ajax_form").ajaxSubmit({success: update_user});
+                $(this).parent(".ajax_form").ajaxSubmit({success: update});
             });
             
             // Delete user button
@@ -94,11 +94,11 @@
             $('#quota_form .delete').live("click", function() {
                 id = $('#quota_form input[name=user]').val()
                 $.post('{{SITE_ROOT}}/cluster/{{cluster.slug}}/user/quota/',
-                       {user:id, 'delete':true}, update_user);
+                       {user:id, 'delete':true}, update);
             });
         });
         
-        function update_user(responseText, statusText, xhr, $form) {
+        function update(responseText, statusText, xhr, $form) {
             if (xhr.getResponseHeader('Content-Type') == 'application/json') {
                 if (responseText == 0) {
                     // Zero code means success but no more permissions
