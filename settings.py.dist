@@ -95,6 +95,7 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
+    'ganeti_webmgr.object_permissions',
     'ganeti_webmgr.ganeti',
 )
 
