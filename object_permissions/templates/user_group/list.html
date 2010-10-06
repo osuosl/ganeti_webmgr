@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block head %}
+    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
+    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.form.js"></script>
+    <script type="text/javascript">
+    
+        var edit_options =
+    
+        $(document).ready(function() {
+            // Add user button
+            $('#add_group').click(function(){
+                $('.qtip').qtip('destroy');
+                $(this).qtip( {
+                    content: {
+                       url: '{{SITE_ROOT}}/user_group/',
+                       title: {text:'Add User', button:'close'},
+                       method: "post",
+                    },
+                    position: {  corner:{target:'center', tooltip:'center'}},
+                    style: {name: 'blue', border:{radius:5}, width:280},
+                    show: {when:false, ready:true},
+                    hide: {fixed: true, when:false}
+                });
+            });
+            
+            $('#groups .edit').click(function(){
+                $('.qtip').qtip('destroy');
+                id = this.parentNode.id.substring(6);
+                $(this).qtip( {
+                    content: {
+                       url: '{{SITE_ROOT}}/user_group/' + id,
+                       title: {text:'Add User', button:'close'},
+                       method: "post",
+                    },
+                    position: {  corner:{target:'center', tooltip:'center'}},
+                    style: {name: 'blue', border:{radius:5}, width:280},
+                    show: {when:false, ready:true},
+                    hide: {fixed: true, when:false}
+                });
+            });
+            
+            // submit button
+            $(".ajax_form .submit").live("click", function(){
+                $("#errors").empty();
+                $(this).parent('.ajax_form').ajaxSubmit({success: update});
+            });
+            
+            // Delete user button
+            $('#groups .delete').live("click", function() {
+                id = this.parentNode.id.substring(6);
+                $.delete('/user_group/'+id,
+                    function(code){
+                        if(code==1) {$('#group_'+id).remove();}
+                    }, "json");
+            });
+            
+            function update(responseText, statusText, xhr, $form) {
+                if (xhr.getResponseHeader('Content-Type') == 'application/json') {
+                    // parse errors
+                    for (key in responseText) {
+                        $("#errors").append("<li>"+ responseText[key] +"</li>")
+                    }
+                } else {
+                    // successful permissions change.  replace the user row with the
+                    // newly rendered html
+                    $('.qtip').qtip('hide');
+                    html = $(responseText);
+                    id = html.attr('id')
+                    $row = $('#groups #' + id);
+                    if ($row.length == 1) {
+                        $row.replaceWith(html)
+                    } else {
+                        $("#groups").append(html);
+                    }
+                }
+            }
+        });
+    </script>
+{% endblock %}
+
+{% block content %}
+    <div id="add_group">Add Group</div>
+    <table id="groups">
+        <tr><th>Name</th></tr>
+        {% for group in groups %}
+            {% include "user_group/group_row.html" %}
+        {% endfor %}
+    </table>
+{% endblock %}

@@ -2,12 +2,9 @@
     <head>
     <title>{% block title %}Ganeti Web Manager{% endblock %}</title>
     <link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}/css/base.css"/>
-    
     <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.js"></script>
-    <script type="text/javascript" src="{{MEDIA_URL}}/js/color.js"></script>
     <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip.js"></script>
     {% block head %}{% endblock %}
-    
     </head>
     <body>
     <div id="header">
@@ -27,6 +24,7 @@
                 <li><a href="{% url instance-create %}">Create VM </a></li>
                 {% if user.is_staff %}
                 <li><a href="{% url instance-orphans %}">Orphan VMs</a></li>
+                <li><a href="{% url user_group-list %}">User Groups</a></li>
                 {% endif %}
                 {% if user.is_authenticated %}
                 <li>

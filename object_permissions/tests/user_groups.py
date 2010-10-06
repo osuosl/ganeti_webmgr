@@ -269,9 +269,44 @@ class TestUserGroups(TestCase):
         self.assertFalse(user.has_perm('DoesNotExist'), object)
         self.assertFalse(user.has_perm('Perm2', object))
     
+    def test_view_list(self):
+        """
+        Test viewing list of UserGroups
+        """
+        user = self.user
+        group = self.test_save()
+        c = Client()
+        url = '/user_groups/'
+        
+        # anonymous user
+        response = c.get(url, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'login.html')
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.get(url)
+        self.assertEqual(403, response.status_code)
+        
+        # authorized (permission)
+        # XXX need to implement permissions system for subset of UserGroups
+        # grant(user, '')
+        # response = c.get(url % (cluster.slug, vm.hostname))
+        # self.assertEqual(200, response.status_code)
+        # self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        # self.assertTemplateUsed(response, 'virtual_machine/detail.html')
+        
+        # authorized (superuser)
+        user.is_superuser = True
+        user.save()
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'user_group/list.html')
+    
     def test_view_detail(self):
         """
-        Test Viewing the detail for an user_group
+        Test Viewing the detail for a UserGroup
         
         Verifies:
             * 200 returned for valid user_group
@@ -280,12 +315,190 @@ class TestUserGroups(TestCase):
         user = self.user
         group = self.test_save()
         c = Client()
+        url = '/user_group/%s/'
         
-        response = c.get('/user_group/%d' % group.id )
+        # anonymous user
+        response = c.get(url % group.id, follow=True)
         self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'login.html')
         
-        response = c.get('/user_group/0')
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        # XXX no permission check implemented for cluster detail
+        # response = c.get(url % (cluster.slug, vm.hostname))
+        # self.assertEqual(403, response.status_code)
+        
+        # invalid usergroup
+        response = c.get(url % "DoesNotExist")
         self.assertEqual(404, response.status_code)
+        
+        # authorized (permission)
+        grant(user, 'admin', group)
+        response = c.get(url % group.id)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'user_group/detail.html')
+        
+        # authorized (superuser)
+        response = c.get(url % group.id)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'user_group/detail.html')
+
+    def test_view_edit(self):
+        user = self.user
+        group = self.test_save()
+        c = Client()
+        url = '/user_group/%s/'
+        
+        # anonymous user
+        response = c.post(url % group.id, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'login.html')
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.post(url % group.id)
+        self.assertEqual(403, response.status_code)
+        
+        # invalid usergroup
+        response = c.post(url % "DoesNotExist")
+        self.assertEqual(404, response.status_code)
+        
+        # get form - authorized (permission)
+        # XXX need to implement Class wide permission for creating editing groups
+        #grant(user, 'admin', group)
+        #response = c.post(url % group.id)
+        #self.assertEqual(200, response.status_code)
+        #self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        #self.assertTemplateUsed(response, 'user_group/edit.html')
+        
+        # get form - authorized (permission)
+        grant(user, 'admin', group)
+        response = c.post(url % group.id)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'user_group/edit.html')
+        
+        # get form - authorized (superuser)
+        user.revoke('admin', group)
+        user.is_superuser = True
+        user.save()
+        response = c.post(url % group.id)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'user_group/edit.html')
+        
+        # missing name
+        data = {'id':group.id}
+        response = c.post(url % group.id, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        
+        # successful edit
+        data = {'id':group.id, 'name':'EDITED_NAME'}
+        response = c.post(url % group.id, data, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'user_group/group_row.html')
+        group = UserGroup.objects.get(id=group.id)
+        self.assertEqual('EDITED_NAME', group.name)
+    
+    def test_view_create(self):
+        """
+        Test creating a new UserGroup
+        """
+        user = self.user
+        group = self.test_save()
+        c = Client()
+        url = '/user_group/'
+        
+        # anonymous user
+        response = c.post(url, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'login.html')
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.post(url)
+        self.assertEqual(403, response.status_code)
+        
+        # get form - authorized (permission)
+        # XXX need to implement Class level permissions
+        #grant(user, 'admin', group)
+        #response = c.post(url % group.id)
+        #self.assertEqual(200, response.status_code)
+        #self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        #self.assertTemplateUsed(response, 'user_group/edit.html')
+        
+        # get form - authorized (superuser)
+        user.revoke('admin', group)
+        user.is_superuser = True
+        user.save()
+        response = c.post(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'user_group/edit.html')
+        
+        # missing name
+        data = {'id':group.id}
+        response = c.post(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'user_group/edit.html')
+        
+        # successful edit
+        data = {'name':'ADD_NEW_GROUP'}
+        response = c.post(url, data, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'user_group/group_row.html')
+        self.assert_(UserGroup.objects.filter(name='ADD_NEW_GROUP').exists())
+    
+    def test_view_delete(self):
+        """
+        Test deleting a usergroup
+        
+        Verifies:
+            * group is deleted
+            * all associated permissions are deleted
+        """
+        user = self.user
+        group0 = self.test_save()
+        group1 = self.test_save(name='test2')
+        c = Client()
+        url = '/user_group/%s/'
+        
+        # anonymous user
+        response = c.delete(url % group0.id, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'login.html')
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.delete(url % group0.id)
+        self.assertEqual(403, response.status_code)
+        
+        # invalid usergroup
+        response = c.delete(url % "DoesNotExist")
+        self.assertEqual(404, response.status_code)
+        
+        # get form - authorized (permission)
+        grant(user, 'admin', group0)
+        response = c.delete(url % group0.id)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        self.assertFalse(UserGroup.objects.filter(id=group0.id).exists())
+        self.assertEqual('1', response.content)
+        
+        # get form - authorized (superuser)
+        user.is_superuser = True
+        user.save()
+        response = c.delete(url % group1.id)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        self.assertFalse(UserGroup.objects.filter(id=group1.id).exists())
+        self.assertEqual('1', response.content)
     
     def test_view_add_user(self):
         """
@@ -315,7 +528,7 @@ class TestUserGroups(TestCase):
         response = c.get('/user_group/%d/user/add/' % group.id)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'user_groups/add_user.html')
+        self.assertTemplateUsed(response, 'user_group/add_user.html')
         
         # authorized post (superuser)
         revoke(user, 'admin', group)
@@ -324,7 +537,7 @@ class TestUserGroups(TestCase):
         response = c.get('/user_group/%d/user/add/' % group.id)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'user_groups/add_user.html')
+        self.assertTemplateUsed(response, 'user_group/add_user.html')
         
         # missing user id
         response = c.post('/user_group/%d/user/add/' % group.id)
@@ -341,7 +554,7 @@ class TestUserGroups(TestCase):
         response = c.post('/user_group/%d/user/add/' % group.id, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertEqual('user_groups/user_row.html', response.template.name)
+        self.assertEqual('user_group/user_row.html', response.template.name)
         self.assert_(group.users.filter(id=user.id).exists())
         
         # same user again
@@ -450,7 +663,7 @@ class TestUserGroups(TestCase):
         response = c.get('/user_group/%d/user/' % group.id, {'user':user.id})
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'user_groups/permissions.html')
+        self.assertTemplateUsed(response, 'user_group/permissions.html')
         
         # authorized post (superuser)
         revoke(user, 'admin', group)
@@ -459,7 +672,7 @@ class TestUserGroups(TestCase):
         response = c.get('/user_group/%d/user/' % group.id, {'user':user.id})
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'user_groups/permissions.html')
+        self.assertTemplateUsed(response, 'user_group/permissions.html')
     
         # invalid user (GET)
         response = c.get('/user_group/%d/user/' % group.id, {'user':-1})
@@ -493,7 +706,7 @@ class TestUserGroups(TestCase):
         response = c.post('/user_group/%d/user/' % group.id, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'user_groups/user_row.html')
+        self.assertTemplateUsed(response, 'user_group/user_row.html')
         self.assert_(user.has_perm('Perm1', group))
         self.assert_(user.has_perm('Perm2', group))
         self.assertEqual(['Perm1','Perm2'], get_user_perms(user, group))

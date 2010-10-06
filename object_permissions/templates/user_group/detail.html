@@ -3,33 +3,8 @@
 
 {% block head %}
 <style>
-    li {
-        margin-left:0;
-        list-style:none;
-    }
-    
-    #users {
-        width:100%;
-    }
-
-    #users .permissions, #add_user {
-        cursor:pointer;
-    }
-
-    #users .delete {
-        color:red;
-        cursor:pointer;
-    }
-    
-    ul#errors {
-        color:#AD2E2E;
-    }
-    
-    ul.errors {
-        list-style:square;
-    }
-    
-    
+    #users {width:100%;}
+    #users .permissions, #add_user {cursor:pointer;}
 </style>
 
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.form.js"></script>
@@ -116,7 +91,7 @@
         <th>Permissions</th>
     </tr>
     {% for user in group.users.all %}
-        {% include "user_groups/user_row.html" %}
+        {% include "user_group/user_row.html" %}
     {% endfor %}
 </table>
 

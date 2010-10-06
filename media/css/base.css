@@ -363,3 +363,8 @@ input.submit {
     margin-right: auto;
     text-align: center;
 }
+
+li {margin-left:0; list-style:none;}
+ul#errors {color:#AD2E2E;}
+ul.errors {list-style:square;}
+.delete {color:red; cursor:pointer;}

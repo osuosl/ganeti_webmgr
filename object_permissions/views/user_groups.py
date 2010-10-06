@@ -3,6 +3,7 @@ import json
 from django import forms
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseNotFound, \
     HttpResponseForbidden, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, render_to_response
@@ -13,29 +14,24 @@ from object_permissions.models import UserGroup
 from object_permissions.views.permissions import ObjectPermissionForm
 
 
-def detail(request, id):
+class UserGroupForm(forms.ModelForm):
     """
-    Display user_group details
+    Form for editing UserGroups
     """
-    #TODO permission check
-    group = get_object_or_404(UserGroup, id=id)
-    return render_to_response("user_groups/detail.html", {'group':group}, \
-                              context_instance=RequestContext(request))
+    class Meta:
+        model = UserGroup
 
 
-class UserGroupForm(forms.Form):
-    user_group = None
-
-    def __init__(self, user_group=None, *args, **kwargs):
-        self.user_group=user_group
-        super(UserGroupForm, self).__init__(*args, **kwargs)
-
-
-class UserForm(UserGroupForm):
+class UserForm(forms.Form):
     """
     Base form for dealing with users
     """
+    user_group = None
     user = forms.ModelChoiceField(queryset=User.objects.all())
+    
+    def __init__(self, user_group=None, *args, **kwargs):
+        self.user_group=user_group
+        super(UserForm, self).__init__(*args, **kwargs)
 
 
 class AddUserForm(UserForm):
@@ -56,9 +52,70 @@ class RemoveUserForm(UserForm):
         return user
 
 
+@login_required
+def list(request):
+    """
+    List all user groups.
+    """
+    if not request.user.is_superuser:
+        return HttpResponseForbidden()
+
+    groups = UserGroup.objects.all()
+    return render_to_response("user_group/list.html", \
+                              {'groups':groups}, \
+                              context_instance=RequestContext(request)) 
+
+
+@login_required
+def detail(request, id=None):
+    """
+    Display user_group details
+    
+    @param id: id of UserGroup
+    """
+    group = get_object_or_404(UserGroup, id=id) if id else None
+    user = request.user
+    
+    if not (user.is_superuser or user.has_perm('admin', group)):
+        return HttpResponseForbidden()
+    
+    method = request.method
+    if method == 'GET':
+        return render_to_response("user_group/detail.html", {'group':group}, \
+                              context_instance=RequestContext(request))
+    
+    elif method == 'POST':
+        if request.POST:
+            # form data, this was a submission
+            form = UserGroupForm(request.POST, instance=group)
+            if form.is_valid():
+                group = form.save()
+                return render_to_response("user_group/group_row.html", \
+                        {'group':group}, \
+                        context_instance=RequestContext(request))
+            
+            content = json.dumps(form.errors)
+            return HttpResponse(content, mimetype='application/json')
+        
+        else:
+            form = UserGroupForm(instance=group)
+        
+        return render_to_response("user_group/edit.html", \
+                        {'group':group, 'form':form}, \
+                        context_instance=RequestContext(request))
+    
+    elif method == 'DELETE':
+        group.delete()
+        return HttpResponse('1', mimetype='application/json')
+
+    return HttpResponseNotAllowed(['PUT', 'HEADER'])
+
+
 def add_user(request, id):
     """
-    ajax call to add a user to an user_group.
+    ajax call to add a user to a UserGroup
+    
+    @param id: id of UserGroup
     """
     user = request.user
     user_group = get_object_or_404(UserGroup, id=id)
@@ -73,7 +130,7 @@ def add_user(request, id):
             user_group.users.add(user)
             
             # return html for new user row
-            return render_to_response("user_groups/user_row.html", \
+            return render_to_response("user_group/user_row.html", \
                                       {'user':user, 'group':user_group})
         
         # error in form return ajax response
@@ -81,14 +138,16 @@ def add_user(request, id):
         return HttpResponse(content, mimetype='application/json')
 
     form = AddUserForm()
-    return render_to_response("user_groups/add_user.html",\
+    return render_to_response("user_group/add_user.html",\
                               {'form':form, 'group':user_group}, \
                               context_instance=RequestContext(request))
 
 
 def remove_user(request, id):
     """
-    Ajax call to remove a user from an user_group
+    Ajax call to remove a user from an UserGroup
+    
+    @param id: id of UserGroup
     """
     user = request.user
     user_group = get_object_or_404(UserGroup, id=id)
@@ -116,6 +175,8 @@ def remove_user(request, id):
 def user_permissions(request, id):
     """
     Ajax call to update a user's permissions
+    
+    @param id: id of UserGroup
     """
     user = request.user
     user_group = get_object_or_404(UserGroup, id=id)
@@ -130,7 +191,7 @@ def user_permissions(request, id):
             user = form.cleaned_data['user']
             
             # return html to replace existing user row
-            return render_to_response("user_groups/user_row.html", \
+            return render_to_response("user_group/user_row.html", \
                                       {'group':user_group, 'user':user})
         
         # error in form return ajax response
@@ -145,6 +206,6 @@ def user_permissions(request, id):
     form_user = get_object_or_404(User, id=user_id)
     data = {'permissions':get_user_perms(form_user, user_group), 'user':user_id}
     form = ObjectPermissionForm(user_group, data)
-    return render_to_response("user_groups/permissions.html", \
+    return render_to_response("user_group/permissions.html", \
                         {'form':form, 'group':user_group, 'user_id':user_id}, \
                         context_instance=RequestContext(request))
