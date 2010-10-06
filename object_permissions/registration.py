@@ -1,15 +1,32 @@
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
+from django import db
+from django.db import models
 
 from models import ObjectPermission, ObjectPermissionType, UserGroup, \
     GroupObjectPermission
+import object_permissions
 
 
+_DELAYED = []
 
 def register(perm, model):
     """
     Register a permission for a Model.  This will insert a row into the
     permission table if one does not already exist.
+    """
+    try:
+        _register(perm, model)
+    except db.utils.DatabaseError:
+        # there was an error, likely due to a missing table.  Delay this
+        # registration.
+        _DELAYED.append((perm, model))
+
+
+def _register(perm, model):
+    """
+    Real method for registering permissions.  This inner function is used
+    because it must also be called back from _register_delayed
     """
     ct = ContentType.objects.get_for_model(model)
     obj, new = ObjectPermissionType.objects \
@@ -17,6 +34,21 @@ def register(perm, model):
     if new:
         obj.save()
 
+
+def _register_delayed(**kwargs):
+    """
+    Register all permissions that were delayed waiting for database tables
+    to be created
+    """
+    try:
+        for args in _DELAYED:
+            _register(*args)
+        models.signals.post_syncdb.disconnect(_register_delayed)
+    except db.utils.DatabaseError:
+        # still waiting for models in other apps to be created
+        pass
+
+models.signals.post_syncdb.connect(_register_delayed)
 
 def grant(user, perm, object):
     """
