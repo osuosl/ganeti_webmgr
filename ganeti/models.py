@@ -440,7 +440,7 @@ class Organization(ClusterUser):
     UserGroups have a 1:1 relation with a ClusterUser on which quotas and
     permissions can be assigned.
     """
-    user_group = models.ForeignKey(UserGroup, related_name='organization')
+    user_group = models.OneToOneField(UserGroup, related_name='organization')
     
     def grant(self, perm, object):
         self.user_group.grant(perm, object)

@@ -15,7 +15,7 @@
                 $('.qtip').qtip('destroy');
                 $(this).qtip({
                     content: {
-                       url: '{{SITE_ROOT}}/cluster/{{cluster.slug}}/user/',
+                       url: '{% url cluster-permissions cluster.slug %}',
                        title: {text:'Add User', button:'close'},
                     },
                     position: {  corner:{target:'center', tooltip:'center'}},
@@ -35,7 +35,7 @@
             $('#users .delete').live("click", function() {
                 id = this.parentNode.parentNode.id.substring(5);
                 data = {user:id, permissions:[]};
-                $.post('{{SITE_ROOT}}/cluster/{{cluster.slug}}/user/', data,
+                $.post('{% url cluster-permissions cluster.slug %}', data,
                     function(){
                         $("#user_" + id).remove();
                     },
@@ -52,7 +52,7 @@
                 
                 $this.qtip({
                     content: {
-                       url: "{{SITE_ROOT}}/cluster/{{cluster.slug}}/user/?user=" + id,
+                       url: this.href,
                        title: {text:'Permissions: ', button:'close'},
                     },
                     position: {corner:{ target:"topMiddle", tooltip:"bottomMiddle"}},
@@ -64,6 +64,7 @@
                     show: {when:false, ready:true},
                     hide: {fixed: true, when:false}
                 });
+                return false;
             });
             
             // Update Quota Button
@@ -102,6 +103,7 @@
             if (xhr.getResponseHeader('Content-Type') == 'application/json') {
                 if (responseText == 0) {
                     // Zero code means success but no more permissions
+                    $('.qtip').qtip('hide');
                     $("#users #" + html.attr('id')).remove();
                 } else {
                     // parse errors
@@ -136,6 +138,9 @@
     </tr>
     {% for user in users %}
         {% include "cluster/user_row.html" %}
+    {% endfor %}
+    {% for group in groups %}
+        {% include "cluster/group_row.html" %}
     {% endfor %}
 </table>
 

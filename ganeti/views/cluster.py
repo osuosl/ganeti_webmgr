@@ -12,7 +12,7 @@ from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
 from object_permissions import get_model_perms, get_user_perms, grant, revoke, \
-    get_users
+    get_users, get_groups, get_group_perms
 from object_permissions.views.permissions import ObjectPermissionFormNewUsers
 from ganeti.models import *
 from util.portforwarder import forward_port
@@ -30,8 +30,7 @@ def detail(request, cluster_slug):
     return render_to_response("cluster/detail.html", {
         'cluster': cluster,
         'user': request.user,
-        'vmlist' : vmlist,
-        'users':get_users(cluster),
+        'vmlist' : vmlist
         },
         context_instance=RequestContext(request),
     )
@@ -47,11 +46,12 @@ def cluster_users(request, cluster_slug):
         return HttpResponseForbidden("You do not have sufficient privileges")
     
     users = get_users(cluster)
-    
-    return render_to_response("cluster/users.html",
-                              {'cluster': cluster, 'users':users},
+    groups = get_groups(cluster)
+    return render_to_response("cluster/users.html", \
+                        {'cluster': cluster, 'users':users, 'groups':groups}, \
         context_instance=RequestContext(request),
     )
+
 
 @login_required
 def add(request):
@@ -98,6 +98,7 @@ def list(request):
         context_instance=RequestContext(request),
     )
 
+
 @login_required
 def edit(request, cluster_slug):
     """
@@ -111,7 +112,8 @@ def edit(request, cluster_slug):
         context_instance=RequestContext(request),
     )
 
-def permissions(request, cluster_slug):
+
+def permissions(request, cluster_slug, user_id=None, group_id=None):
     """
     Update a users permissions.
     """
@@ -123,11 +125,18 @@ def permissions(request, cluster_slug):
     if request.method == 'POST':
         form = ObjectPermissionFormNewUsers(cluster, request.POST)
         if form.is_valid():
-            form_user = form.cleaned_data['user']
+            data = form.cleaned_data
             if form.update_perms():
                 # return html to replace existing user row
-                return render_to_response("cluster/user_row.html",
-                                          {'cluster':cluster, 'user':form_user})
+                form_user = form.cleaned_data['user']
+                group = form.cleaned_data['group']
+                if form_user:
+                    return render_to_response("cluster/user_row.html", \
+                                        {'cluster':cluster, 'user':form_user})
+                else:
+                    return render_to_response("cluster/group_row.html", \
+                                        {'cluster':cluster, 'group':group})
+                
             else:
                 # no permissions, send ajax response to remove user
                 return HttpResponse('0', mimetype='application/json')
@@ -136,17 +145,21 @@ def permissions(request, cluster_slug):
         content = json.dumps(form.errors)
         return HttpResponse(content, mimetype='application/json')
 
-    user_id = request.GET.get('user', None)
     if user_id:
         form_user = get_object_or_404(User, id=user_id)
         data = {'permissions':get_user_perms(form_user, cluster), \
                 'user':user_id}
+    elif group_id:
+        group = get_object_or_404(UserGroup, id=group_id)
+        data = {'permissions':get_group_perms(group, cluster), \
+                'group':group_id}
     else:
-        data = {'permissions':[]}
+        data = {}
     form = ObjectPermissionFormNewUsers(cluster, data)
     return render_to_response("cluster/permissions.html", \
-                        {'form':form, 'cluster':cluster, 'user_id':user_id}, \
-                        context_instance=RequestContext(request))
+                {'form':form, 'cluster':cluster, 'user_id':user_id, \
+                'group_id':group_id}, \
+               context_instance=RequestContext(request))
 
 
 class QuotaForm(forms.Form):
@@ -204,6 +217,7 @@ def quota(request, cluster_slug):
     return render_to_response("cluster/quota.html", \
                         {'form':form, 'cluster':cluster, 'user_id':user_id}, \
                         context_instance=RequestContext(request))
+
 
 class AddClusterForm(forms.Form):
         hostname = forms.CharField(label='Hostname', max_length='256')

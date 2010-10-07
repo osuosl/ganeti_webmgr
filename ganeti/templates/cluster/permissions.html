@@ -4,8 +4,8 @@
     <ul id="errors"></ul>
     <table>
     {% if user_id or group_id %}
-        <input type="hidden" name="user" value="{{user_id}}"/>
-        <input type="hidden" name="group" value="{{group_id}}"/>
+        <input type="hidden" name="user" value="{{user_id|default:''}}"/>
+        <input type="hidden" name="group" value="{{group_id|default:''}}"/>
     {% else %}
         <tr><td>{{form.user.label}}</td><td>{{form.user}}</td></tr>
         <tr><td>{{form.group.label}}</td><td>{{form.group}}</td></tr>

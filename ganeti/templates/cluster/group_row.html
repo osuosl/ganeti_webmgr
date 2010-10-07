@@ -3,17 +3,17 @@
 {% load object_permission_tags %}
 {% load webmgr_tags %}
 
-<tr id="user_{{user.id}}" class="user">
-    <td class="name">{{user.username}}</td>
+<tr id="group_{{group.id}}" class="group">
+    <td class="name">{{group.name}}</td>
     <td>
-        <a href="{{SITE_ROOT}}/cluster/{{cluster.slug}}/permissions/user/{{user.id}}" class="permissions">
-        {% for permission in user|permissions:cluster %}
+        <a href="{{SITE_ROOT}}/cluster/{{cluster.slug}}/permissions/group/{{group.id}}" class="permissions">
+        {% for permission in group|permissions:cluster %}
             {{permission}}{%if not forloop.last%}, {%endif%}
         {% empty %}
             <i>None</i>
         {% endfor %}
     </td>
-    {% with user|quota:cluster as quota %}
+    {% with group.organization|quota:cluster as quota %}
     <td class="quota {%if quota.default%}default{%endif%}">
         {%if quota.virtual_cpus%}CPUs:{{quota.virtual_cpus}} {%endif%}
         {%if quota.ram%}Memory:{{quota.ram}} {%endif%}

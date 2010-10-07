@@ -173,6 +173,9 @@ class TestClusterViews(TestCase):
         self.user1.set_password('secret')
         self.user1.save()
         
+        self.group = UserGroup(name='testing_group')
+        self.group.save()
+        
         self.cluster = Cluster(hostname='test.osuosl.test', slug='OSL_TEST')
         self.cluster.save()
         
@@ -180,10 +183,21 @@ class TestClusterViews(TestCase):
         register('admin', Cluster)
         register('create', Cluster)
 
+    def populate_globals(self):
+        """ helper for added commonly used properties to locals """
+        dict_ = globals()
+        dict_['user'] = self.user
+        dict_['user1'] = self.user1
+        dict_['group'] = self.group
+        dict_['cluster'] = self.cluster
+        dict_['c'] = Client()
+
     def tearDown(self):
         Quota.objects.all().delete()
         ObjectPermission.objects.all().delete()
+        GroupObjectPermission.objects.all().delete()
         Cluster.objects.all().delete()
+        UserGroup.objects.all().delete()
         User.objects.all().delete()
 
     def test_view_clusters(self):
@@ -294,6 +308,82 @@ class TestClusterViews(TestCase):
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'cluster/users.html')
 
+    def test_view_add_permissions(self):
+        """
+        Test adding permissions to a new User or UserGroup
+        """
+        self.populate_globals()
+        url = '/cluster/%s/permissions/'
+        args = cluster.slug
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.get(url % args)
+        self.assertEqual(403, response.status_code)
+        
+        # nonexisent cluster
+        response = c.get(url % "DOES_NOT_EXIST")
+        self.assertEqual(404, response.status_code)
+        
+        # valid GET authorized user (perm)
+        grant(user, 'admin', cluster)
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'cluster/permissions.html')
+        
+        # valid GET authorized user (superuser)
+        user.revoke('admin', cluster)
+        user.is_superuser = True
+        user.save()
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'cluster/permissions.html')
+        
+        # no user or group
+        data = {'permissions':['admin']}
+        response = c.post(url % args, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        self.assertNotEqual('0', response.content)
+        
+        # both user and group
+        data = {'permissions':['admin'], 'group':group.id, 'user':user1.id}
+        response = c.post(url % args, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        self.assertNotEqual('0', response.content)
+        
+        # no permissions specified - user
+        data = {'permissions':[], 'user':user1.id}
+        response = c.post(url % args, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        self.assertNotEqual('0', response.content)
+        
+        # no permissions specified - group
+        data = {'permissions':[], 'group':group.id}
+        response = c.post(url % args, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        
+        # valid POST user has permissions
+        user1.grant('create', cluster)
+        data = {'permissions':['admin'], 'user':user1.id}
+        response = c.post(url % args, data)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'cluster/user_row.html')
+        self.assert_(user1.has_perm('admin', cluster))
+        self.assertFalse(user1.has_perm('create', cluster))
+        
+        # valid POST group has permissions
+        group.grant('create', cluster)
+        data = {'permissions':['admin'], 'group':group.id}
+        response = c.post(url % args, data)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'cluster/group_row.html')
+        self.assertEqual(['admin'], group.get_perms(cluster))
+
     def test_view_user_permissions(self):
         """
         Tests updating users permissions
@@ -303,29 +393,30 @@ class TestClusterViews(TestCase):
             * lack of permissions returns 403
             * nonexistent cluster returns 404
             * invalid user returns 404
-            * missing user returns error as json
+            * invalid group returns 404
+            * missing user and group returns error as json
             * GET returns html for form
-            * If user has permissions no html is returned
-            * If user has no permissions a json response of -1 is returned
+            * If user/group has permissions no html is returned
+            * If user/group has no permissions a json response of -1 is returned
         """
-        user = self.user
-        user1 = self.user1
-        cluster = self.cluster
-        args = cluster.slug
-        c = Client()
+        self.populate_globals()
+        args = (cluster.slug, user1.id)
+        args_post = cluster.slug
+        url = "/cluster/%s/permissions/user/%s"
+        url_post = "/cluster/%s/permissions/"
         
         # unauthorized user
         self.assert_(c.login(username=user.username, password='secret'))
-        response = c.get("/cluster/%s/user/" % args)
+        response = c.get(url % args)
         self.assertEqual(403, response.status_code)
         
         # nonexisent cluster
-        response = c.get("/cluster/%s/user/?user=%s" % ("DOES_NOT_EXIST", user1.id))
+        response = c.get(url % ("DOES_NOT_EXIST", user1.id))
         self.assertEqual(404, response.status_code)
         
         # valid GET authorized user (perm)
         grant(user, 'admin', cluster)
-        response = c.get("/cluster/%s/user/" % args)
+        response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'cluster/permissions.html')
@@ -334,18 +425,32 @@ class TestClusterViews(TestCase):
         user.revoke('admin', cluster)
         user.is_superuser = True
         user.save()
-        response = c.get("/cluster/%s/user/" % args)
+        response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'cluster/permissions.html')
         
         # invalid user
-        response = c.get("/cluster/%s/user/?user=%s" % (cluster.slug, 0))
+        response = c.get(url % (cluster.slug, -1))
         self.assertEqual(404, response.status_code)
+        
+        # invalid user (POST)
+        user1.grant('create', cluster)
+        data = {'permissions':['admin'], 'user':-1}
+        response = c.post(url_post % args_post, data)
+        self.assertEquals('application/json', response['content-type'])
+        self.assertNotEqual('0', response.content)
+        
+        # no user (POST)
+        user1.grant('create', cluster)
+        data = {'permissions':['admin']}
+        response = c.post(url_post % args_post, data)
+        self.assertEquals('application/json', response['content-type'])
+        self.assertNotEqual('0', response.content)
         
         # valid POST user has permissions
         user1.grant('create', cluster)
         data = {'permissions':['admin'], 'user':user1.id}
-        response = c.post("/cluster/%s/user/" % args, data)
+        response = c.post(url_post % args_post, data)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'cluster/user_row.html')
         self.assert_(user1.has_perm('admin', cluster))
@@ -353,18 +458,77 @@ class TestClusterViews(TestCase):
         
         # valid POST user has no permissions left
         data = {'permissions':[], 'user':user1.id}
-        response = c.post("/cluster/%s/user/" % args, data)
+        response = c.post(url_post % args_post, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertEqual([], get_user_perms(user, cluster))
         self.assertEqual('0', response.content)
+
+    def test_view_group_permissions(self):
+        """
+        Test editing UserGroup permissions on a Cluster
+        """
+        self.populate_globals()
+        args = (cluster.slug, group.id)
+        args_post = cluster.slug
+        url = "/cluster/%s/permissions/group/%s"
+        url_post = "/cluster/%s/permissions/"
         
-        # valid POST user is new, but no permissions specified
-        data = {'permissions':[], 'user':user1.id}
-        response = c.post("/cluster/%s/user/" % args, data)
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.get(url % args)
+        self.assertEqual(403, response.status_code)
+        
+        # nonexisent cluster
+        response = c.get(url % ("DOES_NOT_EXIST", user1.id))
+        self.assertEqual(404, response.status_code)
+        
+        # valid GET authorized user (perm)
+        grant(user, 'admin', cluster)
+        response = c.get(url % args)
         self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'cluster/permissions.html')
+        
+        # valid GET authorized user (superuser)
+        user.revoke('admin', cluster)
+        user.is_superuser = True
+        user.save()
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'cluster/permissions.html')        
+        
+        # invalid group
+        response = c.get(url % (cluster.slug, 0))
+        self.assertEqual(404, response.status_code)
+        
+        # invalid group (POST)
+        data = {'permissions':['admin'], 'group':-1}
+        response = c.post(url_post % args_post, data)
         self.assertEquals('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
+        
+        # no group (POST)
+        data = {'permissions':['admin']}
+        response = c.post(url_post % args_post, data)
+        self.assertEquals('application/json', response['content-type'])
+        self.assertNotEqual('0', response.content)
+        
+        # valid POST group has permissions
+        group.grant('create', cluster)
+        data = {'permissions':['admin'], 'group':group.id}
+        response = c.post(url_post % args_post, data)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'cluster/group_row.html')
+        self.assertEqual(['admin'], group.get_perms(cluster))
+        
+        # valid POST group has no permissions left
+        data = {'permissions':[], 'group':group.id}
+        response = c.post(url_post % args_post, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        self.assertEqual([], group.get_perms(cluster))
+        self.assertEqual('0', response.content)
         
     def test_view_user_quota(self):
         """
