@@ -9,4 +9,6 @@ def permissions(user, object):
     """
     Returns the list of permissions a user has on an object
     """
-    return get_user_perms(user, object)
+    if user:
+        return user.get_perms(object)
+    return []
