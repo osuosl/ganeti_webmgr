@@ -205,3 +205,4 @@ ul.errors {list-style:square;}
     background:url(/media/images/icons/add.png);
     background-repeat:no-repeat;
 }
+.ajax_form .submit {margin:0 auto 0 auto; width:6em;}
