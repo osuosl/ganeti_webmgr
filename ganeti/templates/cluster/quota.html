@@ -1,8 +1,8 @@
 {% comment  %} Form for setting user quota within a Cluster {% endcomment %}
 
-<form id="quota_form" class="ajax_form" method="post" action="{{SITE_ROOT}}/cluster/{{cluster.slug}}/user/quota/">
+<form id="quota_form" class="ajax_form" method="post" action="{%url cluster-quota cluster.slug%}">
     <ul id="errors"></ul>
-    <input type="hidden" name="user" value="{{user_id}}"/>
+    {{form.user}}
     <table>
         <tr><td>{{form.disk.label}}</td><td>{{form.disk}}</td></tr>
         <tr><td>{{form.ram.label}}</td><td>{{form.ram}}</td></tr>

@@ -135,12 +135,10 @@ p label {
     width: 100%;
 }
 
-
-
 ul#errors {color:#AD2E2E;}
 ul.errors {list-style:square;}
 .add, .delete {cursor:pointer;}
-.delete {
+div.delete {
     background:url(/media/images/icons/delete.png);
     background-repeat:no-repeat;
     width:16px;

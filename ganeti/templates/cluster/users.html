@@ -33,6 +33,7 @@
             
             // Delete user button
             $('.user .delete').live("click", function() {
+                $('.qtip').qtip('destroy');
                 id = this.parentNode.parentNode.id.substring(5);
                 data = {user:id, permissions:[]};
                 $.post('{% url cluster-permissions cluster.slug %}', data,
@@ -44,6 +45,7 @@
             
             // Delete user button
             $('.group .delete').live("click", function() {
+                $('.qtip').qtip('destroy');
                 id = this.parentNode.parentNode.id.substring(6);
                 data = {group:id, permissions:[]};
                 $.post('{% url cluster-permissions cluster.slug %}', data,
@@ -55,13 +57,9 @@
             
             // Update Permission Button
             $(".permissions").live("click", function() {
-                id = this.parentNode.id.substring(5);
-                $this = $(this);
-                
                 // destroy old qtip before showing new one
                 $('.qtip').qtip('destroy');
-                
-                $this.qtip({
+                $(this).qtip({
                     content: {
                        url: this.href,
                        title: {text:'Permissions: ', button:'close'},
@@ -80,15 +78,11 @@
             
             // Update Quota Button
             $(".quota").live("click", function() {
-                id = this.parentNode.id.substring(5);
-                $this = $(this);
-                
                 // destroy old qtip before showing new one
                 $('.qtip').qtip('destroy');
-                
-                $this.qtip({
+                $(this).qtip({
                     content: {
-                       url: "{{SITE_ROOT}}/cluster/{{cluster.slug}}/user/quota/?user=" + id,
+                       url: this.href,
                        title: {text:'Quota: ', button:'close'},
                     },
                     position: {corner:{ target:"topMiddle", tooltip:"bottomMiddle"}},
@@ -100,12 +94,13 @@
                     show: {when:false, ready:true},
                     hide: {fixed: true, when:false}
                 });
+                return false;
             });
             
-            // Delete user button
+            // Delete quota button
             $('#quota_form .delete').live("click", function() {
                 id = $('#quota_form input[name=user]').val()
-                $.post('{{SITE_ROOT}}/cluster/{{cluster.slug}}/user/quota/',
+                $.post('{% url cluster-quota cluster.slug %}'+id,
                        {user:id, 'delete':true}, update);
             });
         });
@@ -114,7 +109,7 @@
             if (xhr.getResponseHeader('Content-Type') == 'application/json') {
                 if (responseText == 0) {
                     // Zero code means success but no more permissions
-                    $('.qtip').qtip('destroy');
+                    $('.qtip').qtip('hide');
                     $("#users #" + html.attr('id')).remove();
                 } else {
                     // parse errors
@@ -126,7 +121,7 @@
             } else {
                 // successful permissions change.  replace the user row with the
                 // newly rendered html
-                $('.qtip').qtip('destroy');
+                $('.qtip').qtip('hide');
                 html = $(responseText);
                 id = html.attr('id')
                 $row = $('#users #' + id);

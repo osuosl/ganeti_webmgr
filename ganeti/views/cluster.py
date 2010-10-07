@@ -168,7 +168,8 @@ class QuotaForm(forms.Form):
     """
     input = forms.TextInput(attrs={'size':5})
     
-    user = forms.ModelChoiceField(queryset=User.objects.all())
+    user = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), \
+                                  widget=forms.HiddenInput)
     ram = forms.IntegerField(label='Memory (MB)', required=False, min_value=0, \
                              widget=input)
     virtual_cpus = forms.IntegerField(label='Virtual CPUs', required=False, \
@@ -178,7 +179,7 @@ class QuotaForm(forms.Form):
     delete = forms.BooleanField(required=False, widget=forms.HiddenInput)
 
 
-def quota(request, cluster_slug):
+def quota(request, cluster_slug, user_id):
     """
     Updates quota for a user
     """
@@ -191,28 +192,32 @@ def quota(request, cluster_slug):
         form = QuotaForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            form_user = data['user']
+            cluster_user = data['user']
             data = None if data['delete'] else data
-            cluster.set_quota(form_user.get_profile(), data)
+            cluster.set_quota(cluster_user, data)
             
             # return updated html
-            return render_to_response("cluster/user_row.html",
-                                  {'cluster':cluster, 'user':form_user})
+            cluster_user = cluster_user.cast()
+            if isinstance(cluster_user, (Profile,)):
+                return render_to_response("cluster/user_row.html",
+                        {'cluster':cluster, 'user':cluster_user.user})
+            else:
+                return render_to_response("cluster/group_row.html",
+                        {'cluster':cluster, 'group':cluster_user.user_group})
         
         # error in form return ajax response
         content = json.dumps(form.errors)
         return HttpResponse(content, mimetype='application/json')
-
-    user_id = request.GET.get('user', None)
+    
     if user_id:
-        form_user = get_object_or_404(User, id=user_id)
-        quota = cluster.get_quota(form_user.get_profile())
+        cluster_user = get_object_or_404(ClusterUser, id=user_id)
+        quota = cluster.get_quota(cluster_user)
         data = {'user':user_id}
         if quota:
             data.update(quota)
     else:
         return HttpResponseNotFound('User was not found')
-        
+    
     form = QuotaForm(data)
     return render_to_response("cluster/quota.html", \
                         {'form':form, 'cluster':cluster, 'user_id':user_id}, \
