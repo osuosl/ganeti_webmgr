@@ -37,25 +37,28 @@ h2 {font-size: 1.4em;}
 h3 {font-size: 1.1em; margin-bottom: .5ex;}
 h3 a, h3 a:visited {color: #559BD7; font-size: 1em; text-decoration: none;}
 
-a:link, a:visited{color: #4992CF; text-decoration: none; font-weight: bold;}
+a:link, a:visited{color: #5B80B2; text-decoration: none;}
 a:hover, a:active {color: #7AB0DC;}
 
 table {border-collapse:collapse;}
 tr.even {background: #fafafa;}
-td, th {
+td, th, td a {
     border-bottom:1px solid #EEEEEE;
     font-family:"Lucida Grande",Verdana,Arial,sans-serif;
-    font-size:11px;
-    line-height:13px;
+    font-size:12px;
+    line-height:14px;
     padding:5px;
     text-align: center;
     vertical-align:top;
 }
 
-
-
 ul {margin-top: 0px; list-style-type: square;}
-li {margin-left:0px; list-style:none;}
+li {
+    font-size:12px;
+    line-height:16px;
+    list-style:none;
+    margin-left:0px; 
+}
 
 p label {
     width: 10em;
@@ -93,7 +96,7 @@ p label {
     padding: 0px;
 }
 #menu ul li { display: inline; margin: 0px; padding-left: 20px;}
-#menu ul li a {color: black; text-decoration: none;}
+#menu ul li a {color: black !important; text-decoration: none;}
 #menu ul li a:hover {font-weight: bold;}
 
 
