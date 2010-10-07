@@ -29,15 +29,9 @@ class ObjectPermissionForm(forms.Form):
             
         @return list of perms the user now possesses
         """
-        object = self.object
-        model_perms = get_model_perms(object)
         perms = self.cleaned_data['permissions']
         user = self.cleaned_data['user']
-        for perm in perms:
-            grant(user, perm, object)
-        for perm in [p for p in model_perms if p not in perms]:
-            revoke(user, perm, object)
-        return perms
+        user.set_perms(perms, self.object)
 
 
 class ObjectPermissionFormNewUsers(ObjectPermissionForm):
