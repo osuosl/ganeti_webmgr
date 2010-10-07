@@ -108,6 +108,17 @@ p label {
 }
 #contentwrapper {margin: 0em auto; width: auto; }
 
+#login {width: 30%; margin: 0em auto;}
+#login fieldset {}
+#login label {
+    width: 7em;
+    float: left;
+    text-align: right;
+    margin-right: 0.5em;
+    display: block;
+}
+#login input.submit {margin-left: 7.5em;}
+
 #configuration {text-align: center;}
 #configuration form {margin: 0 auto 0 auto; max-width: 800px;}
 #configuration th {text-align: right;}
@@ -124,71 +135,6 @@ p label {
     width: 100%;
 }
 
-.ticketitem {border-top: 1px solid #615042; margin-bottom: 2em; padding-bottom: 0.5em;}
-.ticketitem a {color: #559BD7; font-weight: bold; text-decoration: none;}
-
-#queuelist {float: left; padding-left: 1em; width: 180px;}
-#queuelist ul {list-style-type: none; margin: 0; padding: 0;}
-#queuelist ul li {padding: 0.7em 0 0 0; margin: 0;}
-#queuelist a, #queuelist a:visited {
-    color: #a7c4c9;
-    font-weight: bold;
-    text-decoration: none;
-}
-
-#ticketlist {
-    border-left: 1px solid #615042;
-    margin-left: 180px;
-    padding-left: 1em;
-    padding-right: 1em;
-}
-
-.queuestats {color: gray; font-size: 0.9em;}
-.queuestats abbr {font-style: italic;}
-
-#pagelist {
-    text-align: center;
-    font-weight: bold;
-    position: fixed;
-    bottom: 0px;
-    right: 0px;
-    background: white;
-    padding-left: 200px;
-    width: 100%;
-    padding-top: 0.5em;
-    border-top: 1px solid #333;
-}
-
-#login {width: 30%; margin: 0em auto;}
-#login fieldset {}
-#login label {
-    width: 7em;
-    float: left;
-    text-align: right;
-    margin-right: 0.5em;
-    display: block;
-}
-#login input.submit {margin-left: 7.5em;}
-
-#pagelist a {text-decoration: none; color: gray;}
-
-legend {font-size: 1.4em;}
-span.highlighted {color: red; font-weight: bold;}
-form.update {display: none; text-align: center;}
-form.update textarea {width: 100%;}
-.bordersouth {border-bottom: 2px grey solid;}
-.hidden {display: none;}
-.center_text {text-align: center;}
-.indent {padding-left: 1em;}
-.paragraph {font-weight: normal;}
-input.submit {margin-left: 10.5em;} 
-
-#searchform {
-    width: 300px;
-    margin-left: auto;
-    margin-right: auto;
-    text-align: center;
-}
 
 
 ul#errors {color:#AD2E2E;}
@@ -201,8 +147,12 @@ ul.errors {list-style:square;}
     height:16px;
 }
 .add {
-    padding-left:18px;
+    padding-left:22px;
     background:url(/media/images/icons/add.png);
     background-repeat:no-repeat;
 }
 .ajax_form .submit {margin:0 auto 0 auto; width:6em;}
+.name {text-align:left;}
+tr.user td.name, tr.group td.name { padding-left:22px;}
+tr.user td.name {background:url(/media/images/icons/user.png) no-repeat 0 4px;}
+tr.group td.name {background:url(/media/images/icons/group.png) no-repeat 0 4px;}
