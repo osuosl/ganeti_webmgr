@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.models import User
 
 from object_permissions import get_user_perms, get_model_perms, grant, revoke
+from object_permissions.models import UserGroup
 
 
 class ObjectPermissionForm(forms.Form):
@@ -10,8 +11,10 @@ class ObjectPermissionForm(forms.Form):
     """
     permissions = forms.MultipleChoiceField(required=False, \
                                             widget=forms.CheckboxSelectMultiple)
-    user = forms.ModelChoiceField(queryset=User.objects.all())
-
+    user = forms.ModelChoiceField(queryset=User.objects.all(), required=False)
+    group = forms.ModelChoiceField(queryset=UserGroup.objects.all(), \
+                                   required=False)
+    
     def __init__(self, object, *args, **kwargs):
         """
         @param object - the object being granted permissions
@@ -20,6 +23,22 @@ class ObjectPermissionForm(forms.Form):
         self.object = object
         model_perms = get_model_perms(object)
         self.fields['permissions'].choices = zip(model_perms, model_perms)
+
+    def clean(self):
+        """
+        validates:
+            * mutual exclusivity of user and group
+            * a user or group is always selected and set to 'grantee'
+        """
+        data = self.cleaned_data
+        user = data.get('user')
+        group = data.get('group')
+        if not (user or group) or (user and group):
+            raise forms.ValidationError('Choose a group or user')
+        
+        # add whichever object was selected
+        data['grantee'] = user if user else group
+        return data
     
     def update_perms(self):
         """
@@ -30,9 +49,9 @@ class ObjectPermissionForm(forms.Form):
         @return list of perms the user now possesses
         """
         perms = self.cleaned_data['permissions']
-        user = self.cleaned_data['user']
-        user.set_perms(perms, self.object)
-
+        grantee = self.cleaned_data['grantee']
+        grantee.set_perms(perms, self.object)
+    
 
 class ObjectPermissionFormNewUsers(ObjectPermissionForm):
     """
@@ -46,18 +65,17 @@ class ObjectPermissionFormNewUsers(ObjectPermissionForm):
     """
     
     def clean(self):
-        data = self.cleaned_data
-        if 'user' in data:
-            user = data['user']
+        data = super(ObjectPermissionFormNewUsers, self).clean()
+        
+        if 'grantee' in data:
+            grantee = data['grantee']
             perms = data['permissions']
             
-            # if user does not have permissions, then this is a new user:
+            # if grantee does not have permissions, then this is a new user:
             #    - permissions must be selected
-            if not user.get_perms(self.object) and not perms:
-                msg = "You must grant at least 1 permission for new users"
+            if not grantee.get_perms(self.object) and not perms:
+                msg = "You must grant at least 1 permission for new users and "
+                "groups"
                 self._errors["permissions"] = self.error_class([msg])
-        else:
-            msg = "User is required"
-            self._errors["user"] = self.error_class([msg])
         
         return data
