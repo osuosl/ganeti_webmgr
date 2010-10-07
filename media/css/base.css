@@ -367,4 +367,15 @@ input.submit {
 li {margin-left:0; list-style:none;}
 ul#errors {color:#AD2E2E;}
 ul.errors {list-style:square;}
-.delete {color:red; cursor:pointer;}
+.add, .delete {cursor:pointer;}
+.delete {
+    background:url(/media/images/icons/delete.png);
+    background-repeat:no-repeat;
+    width:16px;
+    height:16px;
+}
+.add {
+    padding-left:18px;
+    background:url(/media/images/icons/add.png);
+    background-repeat:no-repeat;
+}

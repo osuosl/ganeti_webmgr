@@ -27,7 +27,7 @@
     <div id="tab1" class="tab_content">
         <div class="ticket" id="ticket_{{ cluster.id }}">
         
-        <p><a href="{% url instance-create cluster.slug %}">Add Virtual Machine</a></p>
+        <div class="add"><a href="{% url instance-create cluster.slug %}">Add Virtual Machine</a></div>
         <h2>Information</h2>
         {% with cluster.info as info %}
         <ul>
