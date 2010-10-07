@@ -32,12 +32,23 @@
             });
             
             // Delete user button
-            $('#users .delete').live("click", function() {
+            $('.user .delete').live("click", function() {
                 id = this.parentNode.parentNode.id.substring(5);
                 data = {user:id, permissions:[]};
                 $.post('{% url cluster-permissions cluster.slug %}', data,
                     function(){
                         $("#user_" + id).remove();
+                    },
+                    "json");
+            });
+            
+            // Delete user button
+            $('.group .delete').live("click", function() {
+                id = this.parentNode.parentNode.id.substring(6);
+                data = {group:id, permissions:[]};
+                $.post('{% url cluster-permissions cluster.slug %}', data,
+                    function(){
+                        $("#group_" + id).remove();
                     },
                     "json");
             });
@@ -103,7 +114,7 @@
             if (xhr.getResponseHeader('Content-Type') == 'application/json') {
                 if (responseText == 0) {
                     // Zero code means success but no more permissions
-                    $('.qtip').qtip('hide');
+                    $('.qtip').qtip('destroy');
                     $("#users #" + html.attr('id')).remove();
                 } else {
                     // parse errors
@@ -115,7 +126,7 @@
             } else {
                 // successful permissions change.  replace the user row with the
                 // newly rendered html
-                $('.qtip').qtip('hide');
+                $('.qtip').qtip('destroy');
                 html = $(responseText);
                 id = html.attr('id')
                 $row = $('#users #' + id);
