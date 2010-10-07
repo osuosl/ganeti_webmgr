@@ -11,7 +11,7 @@ import object_permissions
 __all__ = ('register', 'grant', 'revoke', 'grant_group', 'revoke_group', \
                'get_user_perms', 'get_group_perms', 'get_model_perms', \
                'revoke_all', 'revoke_all_group', 'get_users', 'set_user_perms', \
-               'set_group_perms')
+               'set_group_perms', 'get_groups')
 
 
 _DELAYED = []
@@ -184,10 +184,21 @@ def get_model_perms(model):
 
 def get_users(object):
     """
-    Return a list of users with permissions on a given object
+    Return a list of Users with permissions directly on a given object.  This
+    will not include users that have permissions via a UserGroup
     """
     ct = ContentType.objects.get_for_model(object)
     return User.objects.filter(
+            object_permissions__permission__content_type=ct, \
+            object_permissions__object_id=object.id).distinct()
+
+
+def get_groups(object):
+    """
+    Return a list of UserGroups with permissions on a given object
+    """
+    ct = ContentType.objects.get_for_model(object)
+    return UserGroup.objects.filter(
             object_permissions__permission__content_type=ct, \
             object_permissions__object_id=object.id).distinct()
 

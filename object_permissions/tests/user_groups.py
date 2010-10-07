@@ -360,7 +360,29 @@ class TestUserGroups(TestCase):
         self.assertFalse(user.has_perm('Perm1', None))
         self.assertFalse(user.has_perm('DoesNotExist'), object)
         self.assertFalse(user.has_perm('Perm2', object))
-
+    
+    def test_get_groups(self):
+        """
+        Tests retrieving list of UserGroups with perms on an object
+        """
+        group0 = UserGroup(name='TestGroup0')
+        group0.save()
+        group1 = UserGroup(name='TestGroup1')
+        group1.save()
+        object0 = self.object0
+        object1 = self.object1
+        
+        for perm in self.perms:
+            register(perm, Group)
+        group0.grant('Perm1', object0)
+        group0.grant('Perm3', object1)
+        group1.grant('Perm2', object1)
+        
+        self.assert_(group0 in get_groups(object0))
+        self.assertFalse(group1 in get_groups(object0))
+        self.assert_(group0 in get_groups(object1))
+        self.assert_(group1 in get_groups(object1))
+        self.assert_(len(get_groups(object1))==2)
     
 class TestUserGroupViews(TestCase):
     perms = [u'Perm1', u'Perm2', u'Perm3', u'Perm4']

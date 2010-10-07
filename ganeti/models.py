@@ -6,9 +6,12 @@ import time
 
 from django.conf import settings
 from django.contrib.auth.models import User, Group
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
-import object_permissions
+
+from object_permissions.registration import register
+from object_permissions.models import UserGroup
 from util import client
 
 
@@ -400,10 +403,19 @@ class ClusterUser(models.Model):
     clusters = models.ManyToManyField(Cluster, through='Quota',
                                       related_name='users')
     name = models.CharField(max_length=128)
+    real_type = models.ForeignKey(ContentType, editable=False, null=True)
     
-    class Meta:
-        abstract = False
-
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.real_type = self._get_real_type()
+        super(ClusterUser, self).save(*args, **kwargs)
+    
+    def _get_real_type(self):
+        return ContentType.objects.get_for_model(type(self))
+    
+    def cast(self):
+        return self.real_type.get_object_for_this_type(pk=self.pk)
+    
     def __unicode__(self):
         return self.name
 
@@ -413,15 +425,28 @@ class Profile(ClusterUser):
     Profile associated with a django.contrib.auth.User object.
     """
     user = models.OneToOneField(User)
+    
+    def grant(self, perm, object):
+        self.user.grant(perm, object)
+    
+    def set_perms(self, perms, object):
+        self.user.set_perms(perms, object)
 
 
 class Organization(ClusterUser):
     """
-    An organization is used for grouping Users.  Organizations are intended for
-    use when a Cluster or VirtualMachine is owned or managed by multiple people.
+    An organization is used for grouping Users.  Organizations are matched with
+    an instance of object_permission.UserGroup.  This model exists so that
+    UserGroups have a 1:1 relation with a ClusterUser on which quotas and
+    permissions can be assigned.
     """
-    users = models.ManyToManyField(Profile, related_name="organizations",
-                                   null=True, blank=True)
+    user_group = models.ForeignKey(UserGroup, related_name='organization')
+    
+    def grant(self, perm, object):
+        self.user_group.grant(perm, object)
+
+    def set_perms(self, perms, object):
+        self.user_group.set_perms(perms, object)
 
 
 class Quota(models.Model):
@@ -455,9 +480,21 @@ def update_cluster_hash(sender, instance, **kwargs):
     """
     instance.virtual_machines.all().update(cluster_hash=instance.hash)
 
+
+def update_organization(sender, instance, **kwargs):
+    """
+    Creates a Organizations whenever a object_permissions.UserGroup is created
+    """
+    org, new = Organization.objects.get_or_create(user_group=instance)
+    org.name = instance.name
+    org.save()
+
+
 models.signals.post_save.connect(create_profile, sender=User)
 models.signals.post_save.connect(update_cluster_hash, sender=Cluster)
-#object_permissions.register('admin', Organization)
+models.signals.post_save.connect(update_organization, sender=UserGroup)
+register('admin', Cluster)
+register('create_vm', Cluster)
 
 
 def update_cache():

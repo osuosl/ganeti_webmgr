@@ -8,7 +8,7 @@ class ObjectPermissionType(models.Model):
     content_type = models.ForeignKey(ContentType)
     
     class Meta:
-        unique_together = ("name", "content_type")
+        unique_together = ('name', 'content_type')
 
 
 class ObjectPermission(models.Model):
@@ -17,7 +17,7 @@ class ObjectPermission(models.Model):
     object_id = models.PositiveIntegerField()
     
     class Meta:
-        unique_together = ("user", "permission", "object_id")
+        unique_together = ('user', 'permission', 'object_id')
 
 
 class UserGroup(models.Model):
@@ -27,17 +27,20 @@ class UserGroup(models.Model):
     users and you want to control access via membership in the organization.
     """
     name = models.CharField(max_length=64, unique=True)
-    users = models.ManyToManyField(User, related_name="user_groups",
+    users = models.ManyToManyField(User, related_name='user_groups',
                                    null=True, blank=True)
+
+    def __unicode__(self):
+        return self.name
 
 
 class GroupObjectPermission(models.Model):
-    group = models.ForeignKey(UserGroup, related_name='user_groups')
+    group = models.ForeignKey(UserGroup, related_name='object_permissions')
     permission = models.ForeignKey(ObjectPermissionType)
     object_id = models.PositiveIntegerField()
     
     class Meta:
-        unique_together = ("group", "permission", "object_id")
+        unique_together = ('group', 'permission', 'object_id')
 
 
 class PermissionTypeGroup(models.Model):
@@ -49,5 +52,3 @@ class PermissionTypeGroup(models.Model):
     difference between PermissionGroup and UserGroup
     """
     pass
-
-

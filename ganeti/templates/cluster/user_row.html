@@ -5,7 +5,8 @@
 
 <tr id="user_{{user.id}}">
     <td>{{user.username}}</td>
-    <td class="permissions">
+    <td>
+        <a href="{{SITE_ROOT}}/cluster/{{cluster.slug}}/permissions/user/{{user.id}}" class="permissions">
         {% for permission in user|permissions:cluster %}
             {{permission}}{%if not forloop.last%}, {%endif%}
         {% empty %}

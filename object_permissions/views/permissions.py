@@ -51,6 +51,7 @@ class ObjectPermissionForm(forms.Form):
         perms = self.cleaned_data['permissions']
         grantee = self.cleaned_data['grantee']
         grantee.set_perms(perms, self.object)
+        return perms
     
 
 class ObjectPermissionFormNewUsers(ObjectPermissionForm):
@@ -74,8 +75,7 @@ class ObjectPermissionFormNewUsers(ObjectPermissionForm):
             # if grantee does not have permissions, then this is a new user:
             #    - permissions must be selected
             if not grantee.get_perms(self.object) and not perms:
-                msg = "You must grant at least 1 permission for new users and "
-                "groups"
+                msg = """You must grant at least 1 permission for new users and groups"""
                 self._errors["permissions"] = self.error_class([msg])
         
         return data

@@ -1,12 +1,16 @@
 {% comment  %} Form for setting user permissions within a Cluster {% endcomment %}
 
-<form class="ajax_form" method="post" action="{{SITE_ROOT}}/cluster/{{cluster.slug}}/user/">
+<form class="ajax_form" method="post" action="{% url cluster-permissions cluster.slug %}">
     <ul id="errors"></ul>
-    {% if user_id %}
+    <table>
+    {% if user_id or group_id %}
         <input type="hidden" name="user" value="{{user_id}}"/>
+        <input type="hidden" name="group" value="{{group_id}}"/>
     {% else %}
-        {{form.user.label}} {{form.user}}
+        <tr><td>{{form.user.label}}</td><td>{{form.user}}</td></tr>
+        <tr><td>{{form.group.label}}</td><td>{{form.group}}</td></tr>
     {% endif %}
     {{form.permissions}}
+    </table>
     <input type="button" class="submit" value="Update"/>
 </form>
