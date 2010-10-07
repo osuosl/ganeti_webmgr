@@ -10,7 +10,7 @@ from object_permissions.models import ObjectPermissionType, ObjectPermission, \
     UserGroup, GroupObjectPermission
 
 
-__all__ = ('TestUserGroups',)
+__all__ = ('TestUserGroups','TestUserGroupViews')
 
 
 class TestUserGroups(TestCase):
@@ -83,7 +83,6 @@ class TestUserGroups(TestCase):
         except IntegrityError:
             pass
 
-    
     def test_save(self, name='test'):
         """ Test saving an UserGroup """
         group = UserGroup(name=name)
@@ -187,12 +186,10 @@ class TestUserGroups(TestCase):
         object0 = self.object0
         object1 = self.object1
         
-        group0 = UserGroup(name='TestGroup0')
-        group0.save()
+        group0 = self.test_save(name='TestGroup0')
         group0.users.add(user0)
         
-        group1 = UserGroup(name='TestGroup1')
-        group1.save()
+        group1 = self.test_save(name='TestGroup1')
         group1.users.add(user1)
         perms = self.perms
         
@@ -245,6 +242,101 @@ class TestUserGroups(TestCase):
         self.assertEqual([u'Perm1', u'Perm2', u'Perm3'], group1.get_perms(object0))
         self.assertEqual(perms, group1.get_perms(object1))
     
+    def test_revoke_all_group(self):
+        """
+        Test revoking all permissions from a group
+        
+        Verifies
+            * revoked properties are only removed from the correct user/obj combinations
+            * revoking property user does not have does not give an error
+            * revoking unknown permission raises error
+        """
+        user0 = self.user
+        user1 = self.user1
+        group0 = self.test_save(name='TestGroup0')
+        group1 = self.test_save(name='TestGroup1')
+        object0 = self.object0
+        object1 = self.object1
+        perms = self.perms
+        
+        for perm in perms:
+            register(perm, Group)
+            grant_group(group0, perm, object0)
+            grant_group(group0, perm, object1)
+            grant_group(group1, perm, object0)
+            grant_group(group1, perm, object1)
+        
+        revoke_all_group(group0, object0)
+        self.assertEqual([], get_group_perms(group0, object0))
+        self.assertEqual(perms, get_group_perms(group0, object1))
+        self.assertEqual(perms, get_group_perms(group1, object0))
+        self.assertEqual(perms, get_group_perms(group1, object1))
+        
+        revoke_all_group(group0, object1)
+        self.assertEqual([], get_group_perms(group0, object0))
+        self.assertEqual([], get_group_perms(group0, object1))
+        self.assertEqual(perms, get_group_perms(group1, object0))
+        self.assertEqual(perms, get_group_perms(group1, object1))
+        
+        revoke_all_group(group1, object0)
+        self.assertEqual([], get_group_perms(group0, object0))
+        self.assertEqual([], get_group_perms(group0, object1))
+        self.assertEqual([], get_group_perms(group1, object0))
+        self.assertEqual(perms, get_group_perms(group1, object1))
+        
+        revoke_all_group(group1, object1)
+        self.assertEqual([], get_group_perms(group0, object0))
+        self.assertEqual([], get_group_perms(group0, object1))
+        self.assertEqual([], get_group_perms(group1, object0))
+        self.assertEqual([], get_group_perms(group1, object1))
+    
+    def test_set_perms(self):
+        """
+        Test setting perms to an exact set
+        """
+        group0 = self.test_save(name='TestGroup0')
+        group1 = self.test_save(name='TestGroup1')
+        object0 = self.object0
+        object1 = self.object1
+        
+        perms1 = self.perms
+        perms2 = ['Perm1', 'Perm2']
+        perms3 = ['Perm2', 'Perm3']
+        perms4 = []
+        
+        for perm in self.perms:
+            register(perm, Group)
+        # grant single property
+        set_group_perms(group0, perms1, object0)
+        self.assertEqual(perms1, get_group_perms(group0, object0))
+        self.assertEqual([], get_group_perms(group0, object1))
+        self.assertEqual([], get_group_perms(group1, object0))
+        
+        set_group_perms(group0, perms2, object0)
+        self.assertEqual(perms2, get_group_perms(group0, object0))
+        self.assertEqual([], get_group_perms(group0, object1))
+        self.assertEqual([], get_group_perms(group1, object0))
+        
+        set_group_perms(group0, perms3, object0)
+        self.assertEqual(perms3, get_group_perms(group0, object0))
+        self.assertEqual([], get_group_perms(group0, object1))
+        self.assertEqual([], get_group_perms(group1, object0))
+        
+        set_group_perms(group0, perms4, object0)
+        self.assertEqual(perms4, get_group_perms(group0, object0))
+        self.assertEqual([], get_group_perms(group0, object1))
+        self.assertEqual([], get_group_perms(group1, object0))
+        
+        set_group_perms(group0, perms2, object1)
+        self.assertEqual(perms4, get_group_perms(group0, object0))
+        self.assertEqual(perms2, get_group_perms(group0, object1))
+        self.assertEqual([], get_group_perms(group1, object0))
+        
+        set_group_perms(group1, perms1, object0)
+        self.assertEqual(perms4, get_group_perms(group0, object0))
+        self.assertEqual(perms2, get_group_perms(group0, object1))
+        self.assertEqual(perms1, get_group_perms(group1, object0))
+    
     def test_has_perm(self):
         """
         Additional tests for has_perms
@@ -268,6 +360,46 @@ class TestUserGroups(TestCase):
         self.assertFalse(user.has_perm('Perm1', None))
         self.assertFalse(user.has_perm('DoesNotExist'), object)
         self.assertFalse(user.has_perm('Perm2', object))
+
+    
+class TestUserGroupViews(TestCase):
+    perms = [u'Perm1', u'Perm2', u'Perm3', u'Perm4']
+    
+    def setUp(self):
+        self.tearDown()
+        
+        User(id=1, username='anonymous').save()
+        settings.ANONYMOUS_USER_ID=1
+        
+        self.user = User(id=2, username='tester0')
+        self.user.set_password('secret')
+        self.user.save()
+        self.user1 = User(id=3, username='tester1')
+        self.user1.set_password('secret')
+        self.user1.save()
+        
+        
+        self.object0 = Group.objects.create(name='test0')
+        self.object0.save()
+        self.object1 = Group.objects.create(name='test1')
+        self.object1.save()
+        
+        # XXX specify permission manually, it is not auto registering for some reason
+        register('admin', UserGroup)
+    
+    def tearDown(self):
+        User.objects.all().delete()
+        Group.objects.all().delete()
+        UserGroup.objects.all().delete()
+        ObjectPermission.objects.all().delete()
+        GroupObjectPermission.objects.all().delete()
+        ObjectPermissionType.objects.all().delete()
+    
+    def test_save(self, name='test'):
+        """ Test saving an UserGroup """
+        group = UserGroup(name=name)
+        group.save()
+        return group
     
     def test_view_list(self):
         """

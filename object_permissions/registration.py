@@ -8,8 +8,13 @@ from models import ObjectPermission, ObjectPermissionType, UserGroup, \
 import object_permissions
 
 
-_DELAYED = []
+__all__ = ('register', 'grant', 'revoke', 'grant_group', 'revoke_group', \
+               'get_user_perms', 'get_group_perms', 'get_model_perms', \
+               'revoke_all', 'revoke_all_group', 'get_users', 'set_user_perms', \
+               'set_group_perms')
 
+
+_DELAYED = []
 def register(perm, model):
     """
     Register a permission for a Model.  This will insert a row into the
@@ -47,8 +52,8 @@ def _register_delayed(**kwargs):
     except db.utils.DatabaseError:
         # still waiting for models in other apps to be created
         pass
-
 models.signals.post_syncdb.connect(_register_delayed)
+
 
 def grant(user, perm, object):
     """
@@ -72,6 +77,37 @@ def grant_group(group, perm, object):
         GroupObjectPermission(**properties).save()
 
 
+def set_user_perms(user, perms, object):
+    """
+    Set perms to the list specified
+    """
+    if perms:
+        for perm in perms:
+            grant(user, perm, object)
+        model_perms = get_model_perms(object)
+        for perm in [p for p in model_perms if p not in perms]:
+            revoke(user, perm, object)
+    else:
+        revoke_all(user, object)
+    return perms
+
+
+def set_group_perms(group, perms, object):
+    """
+    Set User's perms to the list specified
+    """
+    if perms:
+        for perm in perms:
+            grant_group(group, perm, object)
+        model_perms = get_model_perms(object)
+        for perm in [p for p in model_perms if p not in perms]:
+            revoke_group(group, perm, object)
+    else:
+        revoke_all_group(group, object)
+    
+    return perms
+
+
 def revoke(user, perm, object):
     """
     Revokes a permission from a User
@@ -90,6 +126,16 @@ def revoke_all(user, object):
     ct = ContentType.objects.get_for_model(object)
     ObjectPermission.objects \
         .filter(user=user, object_id=object.id, permission__content_type=ct) \
+        .delete()
+
+
+def revoke_all_group(group, object):
+    """
+    Revokes all permissions from a User
+    """
+    ct = ContentType.objects.get_for_model(object)
+    GroupObjectPermission.objects \
+        .filter(group=group, object_id=object.id, permission__content_type=ct) \
         .delete()
 
 
@@ -155,7 +201,9 @@ setattr(User, 'grant', grant)
 setattr(User, 'revoke', revoke)
 setattr(User, 'revoke_all', revoke_all)
 setattr(User, 'get_perms', get_user_perms)
+setattr(User, 'set_perms', set_user_perms)
 
 setattr(UserGroup, 'grant', grant_group)
 setattr(UserGroup, 'revoke', revoke_group)
 setattr(UserGroup, 'get_perms', get_group_perms)
+setattr(UserGroup, 'set_perms', set_group_perms)

@@ -4,7 +4,7 @@ from django.db import IntegrityError
 from django.test import TestCase
 
 from object_permissions import register, grant, revoke, get_user_perms, \
-    get_model_perms, revoke_all, get_users
+    get_model_perms, revoke_all, get_users, set_user_perms
 from object_permissions.models import ObjectPermission, ObjectPermissionType
 
 
@@ -150,7 +150,6 @@ class TestModelPermissions(TestCase):
             grant(user1, 'UnknownPerm', object0)
         self.assertRaises(ObjectPermissionType.DoesNotExist, grant_unknown)
     
-    
     def test_revoke_user_permissions(self):
         """
         Test revoking permissions from users
@@ -218,7 +217,7 @@ class TestModelPermissions(TestCase):
     
     def test_revoke_all(self):
         """
-        Test revoking permissions from users
+        Test revoking all permissions from a user
         
         Verifies
             * revoked properties are only removed from the correct user/obj combinations
@@ -261,6 +260,54 @@ class TestModelPermissions(TestCase):
         self.assertEqual([], get_user_perms(user0, object1))
         self.assertEqual([], get_user_perms(user1, object0))
         self.assertEqual([], get_user_perms(user1, object1))
+    
+    def test_set_perms(self):
+        """
+        Test setting perms to an exact set
+        """
+        user0 = self.user0
+        user1 = self.user1
+        object0 = self.object0
+        object1 = self.object1
+        
+        perms1 = self.perms
+        perms2 = ['Perm1', 'Perm2']
+        perms3 = ['Perm2', 'Perm3']
+        perms4 = []
+        
+        for perm in self.perms:
+            register(perm, Group)
+        
+        # grant single property
+        set_user_perms(user0, perms1, object0)
+        self.assertEqual(perms1, get_user_perms(user0, object0))
+        self.assertEqual([], get_user_perms(user0, object1))
+        self.assertEqual([], get_user_perms(user1, object0))
+        
+        set_user_perms(user0, perms2, object0)
+        self.assertEqual(perms2, get_user_perms(user0, object0))
+        self.assertEqual([], get_user_perms(user0, object1))
+        self.assertEqual([], get_user_perms(user1, object0))
+        
+        set_user_perms(user0, perms3, object0)
+        self.assertEqual(perms3, get_user_perms(user0, object0))
+        self.assertEqual([], get_user_perms(user0, object1))
+        self.assertEqual([], get_user_perms(user1, object0))
+        
+        set_user_perms(user0, perms4, object0)
+        self.assertEqual(perms4, get_user_perms(user0, object0))
+        self.assertEqual([], get_user_perms(user0, object1))
+        self.assertEqual([], get_user_perms(user1, object0))
+        
+        set_user_perms(user0, perms2, object1)
+        self.assertEqual(perms4, get_user_perms(user0, object0))
+        self.assertEqual(perms2, get_user_perms(user0, object1))
+        self.assertEqual([], get_user_perms(user1, object0))
+        
+        set_user_perms(user1, perms1, object0)
+        self.assertEqual(perms4, get_user_perms(user0, object0))
+        self.assertEqual(perms2, get_user_perms(user0, object1))
+        self.assertEqual(perms1, get_user_perms(user1, object0))
     
     def test_has_perm(self):
         """
