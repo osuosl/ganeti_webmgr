@@ -19,7 +19,11 @@
         {% endfor %}
     </ul>
     </form>
-    {% else %}
+    {% endif %}
+    {% if not vms and vmcount > 0 %}
     <p>Hurray! All virtual machines currently have owners!</p>
+    {% endif %}
+    {% if vmcount == 0 %}
+    <p>There are currently no VMs.</p>
     {% endif %}
 {% endblock %}
