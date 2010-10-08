@@ -41,7 +41,7 @@ urlpatterns += patterns('ganeti_webmgr.ganeti.views.virtual_machine',
     url(r'^vm/add/$', 'create', name="instance-create"),
     url(r'^vm/add/(?P<cluster_slug>\w+)$', 'create', name="instance-create"),
     #  Detail
-    url(r'^%s' % prefix, 'detail', name="instance-detail"),
+    url(r'^%s/?$' % prefix, 'detail', name="instance-detail"),
     #  Start, Stop, Reboot
     url(r'^%s/vnc/?$' % prefix, 'vnc', name="instance-vnc"),
     url(r'^%s/shutdown/?$' % prefix, 'shutdown', name="instance-shutdown"),
