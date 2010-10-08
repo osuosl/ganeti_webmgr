@@ -58,7 +58,7 @@ def create(request, cluster_slug=None):
             #form.save()
             return HttpResponseRedirect(request.META['HTTP_REFERER']) # Redirect after POST
     else:
-        form = NewVirtualMachineForm(initial={'cluster':cluster,'os':oslist})
+        form = NewVirtualMachineForm(initial={'cluster':cluster,},oslist=oslist)
 
     return render_to_response('virtual_machine/create.html', {
         'form': form,
@@ -139,9 +139,8 @@ class NewVirtualMachineForm(forms.Form):
     
     
     def __init__(self, *args, **kwargs):
+        oslist = kwargs.pop('oslist', None)
         super(NewVirtualMachineForm, self).__init__(*args, **kwargs)
-        initial = kwargs.get('initial', None)
-        oslist = initial.get('os', None)
         
         #if hostname is not None:
             # Populate the Node lists
