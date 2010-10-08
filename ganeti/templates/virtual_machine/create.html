@@ -2,6 +2,19 @@
 
 {% block title %}Create a new Virtual Machine{% endblock %}
 
+{% block head %}
+    <script src="{{MEDIA_URL}}/js/jquery.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("#id_disk_template").change(function() {
+                if( $("#id_disk_template").val() == 'drdb') {
+                    alert($("#id_disk_template").val());
+                }
+            })
+        });
+    </script>
+{% endblock %}
+
 {% block content %}
 <fieldset>
     <legend> New Virtual Machine </legend>
