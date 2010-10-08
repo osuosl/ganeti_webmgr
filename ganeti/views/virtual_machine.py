@@ -7,9 +7,9 @@ from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
 from util.client import GanetiApiError
-from ganeti_webmgr.ganeti.models import *
-from ganeti_webmgr.util.portforwarder import forward_port
-from ganeti_webmgr.util.client import GanetiApiError
+from ganeti.models import *
+from util.portforwarder import forward_port
+from util.client import GanetiApiError
 
 
 FQDN_RE = r'^[\w]+(\.[\w]+)*$'
@@ -66,6 +66,7 @@ def startup(request, cluster_slug, instance):
             return HttpResponse(str(e), mimetype='application/json')
     return HttpResponseNotAllowed(['GET', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', \
                                   'TRACE'])
+
 
 @login_required
 def reboot(request, cluster_slug, instance):
