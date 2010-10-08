@@ -62,6 +62,7 @@ def orphans(request):
         
     vms = VirtualMachine.objects.filter(owner=None).values_list('id','hostname')
     vms = list(vms)
+    vmcount = VirtualMachine.objects.count()
     
     if request.method == 'POST':
         # process updates if this was a form submission
@@ -81,6 +82,7 @@ def orphans(request):
     
     return render_to_response("orphans.html", {
         'vms': vms,
+        'vmcount': vmcount,
         'form':form,
         'user': request.user,
         },

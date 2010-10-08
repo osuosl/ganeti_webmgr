@@ -73,6 +73,7 @@ def add(request):
             try:
                 cluster = Cluster(hostname=hostname, slug=slug, port=port)
                 cluster.save()
+                cluster.sync_virtual_machines()
             except:
                 print "Cluster not saved."
             
