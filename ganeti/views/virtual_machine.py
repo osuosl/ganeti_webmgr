@@ -158,14 +158,16 @@ def create(request, cluster_slug=None):
             cluster = data['cluster']
             hostname = data['hostname']
             owner = data['owner']
-            #virtual_cpus = data['vcpus']
+            vcpus = data['vcpus']
             disk_size = data['disk_size']
             ram = data['ram']
             disk_template = data['disk_template']
             os = data['os']
+            pnode = data['pnode']
+            snode = data['snode']
             vm = VirtualMachine(cluster=cluster, owner=owner, hostname=hostname, \
-                                disk_size=disk_size, ram=ram, virtual_cpus=2, \
-                                node='gtest1.osuosl.bak')
+                                disk_size=disk_size, ram=ram, virtual_cpus=vcpus, \
+                                node=pnode)
             vm.save()
             c = get_object_or_404(Cluster, hostname=cluster)
             jobid = 0
@@ -173,7 +175,7 @@ def create(request, cluster_slug=None):
                 jobid = c.rapi.CreateInstance('create', hostname, disk_template, \
                                   [{"size": disk_size, }],[{"link": "br42", }], \
                                   memory=ram, os=os, vcpus=2, \
-                                  pnode='gtest1.osuosl.bak') #\
+                                  pnode=pnode, snode=snode) #\
                                   #hvparams={}, beparams={})
             except GanetiApiError as e:
                 print jobid
@@ -212,9 +214,12 @@ class NewVirtualMachineForm(forms.Form):
                             })
     disk_template = forms.ChoiceField(label='Disk Template', choices=[('plain', 'plain'),('drdb', 'drdb'),\
             ('file','file'), ('diskless', 'diskless')])
-    os   = forms.ChoiceField(label='Operating System', choices=[])
-    ram  = forms.IntegerField(label='Memory (MB)', min_value=100)
+    pnode = forms.ChoiceField(label='Primary Node', choices=[])
+    snode = forms.ChoiceField(label='Secondary Node', choices=[])
+    os = forms.ChoiceField(label='Operating System', choices=[])
+    ram = forms.IntegerField(label='Memory (MB)', min_value=100)
     disk_size = forms.IntegerField(label='Disk Space (MB)', min_value=100)
+    vcpus = forms.IntegerField(label='Virtual CPUs', min_value=1)
     
     def __init__(self, *args, **kwargs):
         oslist = kwargs.pop('oslist', None)
