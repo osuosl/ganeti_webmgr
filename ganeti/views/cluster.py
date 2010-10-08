@@ -67,11 +67,15 @@ def add(request):
     if request.method == 'POST':
         form = AddClusterForm(request.POST)
         if form.is_valid():
-            hostname = form.cleaned_data['hostname']
-            slug = form.cleaned_data['slug']
-            port = form.cleaned_data['port']
+            data = form.cleaned_data
+            hostname = data['hostname']
+            slug = data['slug']
+            port = data['port']
+            username = data['username']
+            password = data['password']
             try:
-                cluster = Cluster(hostname=hostname, slug=slug, port=port)
+                cluster = Cluster(hostname=hostname, slug=slug, port=port, \
+                                  username=username, password=password)
                 cluster.save()
                 cluster.sync_virtual_machines()
             except:
@@ -237,3 +241,5 @@ class AddClusterForm(forms.Form):
         hostname = forms.CharField(label='Hostname', max_length='256')
         slug = forms.CharField(label='Slug', max_length=150)
         port = forms.IntegerField(label='Port', initial='5080')
+        username = forms.CharField(label='Username', required=False)
+        password = forms.CharField(label='Password', required=False)
