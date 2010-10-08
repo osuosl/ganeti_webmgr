@@ -111,6 +111,7 @@ def detail(request, id=None):
     return HttpResponseNotAllowed(['PUT', 'HEADER'])
 
 
+@login_required
 def add_user(request, id):
     """
     ajax call to add a user to a UserGroup
@@ -143,6 +144,7 @@ def add_user(request, id):
                               context_instance=RequestContext(request))
 
 
+@login_required
 def remove_user(request, id):
     """
     Ajax call to remove a user from an UserGroup
@@ -172,6 +174,7 @@ def remove_user(request, id):
     return HttpResponse(content, mimetype='application/json')
 
 
+@login_required
 def user_permissions(request, id):
     """
     Ajax call to update a user's permissions
