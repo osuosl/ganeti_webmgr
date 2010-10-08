@@ -7,6 +7,7 @@ from django.template import RequestContext
 
 from ganeti_webmgr.ganeti.models import *
 from ganeti_webmgr.util.portforwarder import forward_port
+from ganeti_webmgr.util.client import GanetiApiError
 
 @login_required
 def vnc(request, cluster_slug, instance):
@@ -45,6 +46,11 @@ def reboot(request, cluster_slug, instance):
 
 @login_required
 def create(request, cluster_slug=None):
+    """
+    Create a new instance
+        Store in DB and
+        Create on given cluster
+    """
     if cluster_slug is not None:
         cluster = get_object_or_404(Cluster, slug=cluster_slug)
         oslist = os_choices(cluster_slug)
@@ -53,9 +59,32 @@ def create(request, cluster_slug=None):
         oslist = None
 
     if request.method == 'POST':
-        form = NewVirtualMachineForm(request.POST)
+        form = NewVirtualMachineForm(request.POST, oslist=oslist)
         if form.is_valid():
-            #form.save()
+            cluster = form.cleaned_data['cluster']
+            hostname = form.cleaned_data['hostname']
+            owner = form.cleaned_data['owner']
+            #virtual_cpus = form.cleaned_data['vcpus']
+            disk_size = form.cleaned_data['disk_size']
+            ram = form.cleaned_data['ram']
+            disk_template = form.cleaned_data['disk_template']
+            os = form.cleaned_data['os']
+            vm = VirtualMachine(cluster=cluster, owner=owner, hostname=hostname, \
+                                disk_size=disk_size, ram=ram, virtual_cpus=2, \
+                                node='gtest1.osuosl.bak')
+            vm.save()
+            c = get_object_or_404(Cluster, hostname=cluster)
+            jobid = 0
+            try:
+                jobid = c.rapi.CreateInstance('create', hostname, disk_template, \
+                                  [{"size": disk_size, }],[{"link": "br42", }], \
+                                  memory=ram, os=os, vcpus=2, \
+                                  pnode='gtest1.osuosl.bak') #\
+                                  #hvparams={}, beparams={})
+            except GanetiApiError as e:
+                print jobid
+                print e
+            #print jobid
             return HttpResponseRedirect(request.META['HTTP_REFERER']) # Redirect after POST
     else:
         form = NewVirtualMachineForm(initial={'cluster':cluster,},oslist=oslist)
@@ -129,14 +158,15 @@ def node_choices(cluster_slug):
 class NewVirtualMachineForm(forms.Form):
     cluster = forms.ModelChoiceField(queryset=Cluster.objects.all(), label='Cluster')
     owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label='Owner')
-    name = forms.RegexField(label='Instance Name', regex=FQDN_RE,
+    hostname = forms.RegexField(label='Instance Name', regex=FQDN_RE,
                             error_messages={
                                 'invalid': 'Instance name must be resolvable',
                             })
+    disk_template = forms.ChoiceField(label='Disk Template', choices=[('plain', 'plain'),('drdb', 'drdb'),\
+            ('file','file'), ('diskless', 'diskless')])
     os   = forms.ChoiceField(label='Operating System', choices=[])
-    mem  = forms.IntegerField(label='Memory (MB)', min_value=100)
-    disk = forms.IntegerField(label='Disk Space (MB)', min_value=100)
-    
+    ram  = forms.IntegerField(label='Memory (MB)', min_value=100)
+    disk_size = forms.IntegerField(label='Disk Space (MB)', min_value=100)
     
     def __init__(self, *args, **kwargs):
         oslist = kwargs.pop('oslist', None)
