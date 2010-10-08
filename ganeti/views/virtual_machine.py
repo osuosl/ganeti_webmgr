@@ -43,26 +43,25 @@ def reboot(request, cluster_slug, instance):
     vm.reboot()
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
-
 @login_required
 def create(request, cluster_slug=None):
     if cluster_slug is not None:
         cluster = get_object_or_404(Cluster, slug=cluster_slug)
+        oslist = os_choices(cluster_slug)
     else:
         cluster = None
+        oslist = None
 
-    if request.POST:
+    if request.method == 'POST':
         form = NewVirtualMachineForm(request.POST)
         if form.is_valid():
-            form.save()
+            #form.save()
             return HttpResponseRedirect(request.META['HTTP_REFERER']) # Redirect after POST
     else:
-        form = NewVirtualMachineForm(initial={'cluster':cluster})
+        form = NewVirtualMachineForm(initial={'cluster':cluster,'os':oslist})
 
     return render_to_response('virtual_machine/create.html', {
         'form': form,
-        #'oslist': oslist,
-        #'hostname': hostname,
         'user': request.user,
         },
         context_instance=RequestContext(request),
@@ -116,11 +115,14 @@ FQDN_RE = r'^[\w]+(\.[\w]+)*$'
 
 def os_choices(cluster_slug):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    oslist = cluster.rapi.GetOperatingSystems()
-    return list((os, os) for os in oslist)
+    oslister = cluster.rapi.GetOperatingSystems()
+    oslist = []
+    for os in oslister:
+        oslist.append((os,os))
+    return oslist #list((os, os) for os in oslist) #[('stuff', 'stuff')]
 
 def node_choices(cluster_slug):
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    cluster = get_object_or_404(Cluster, hostname=cluster_slug)
     nodelist = cluster.rapi.GetNodes()
     return list((node['id'], node['id']) for node in nodelist)
 
@@ -134,24 +136,29 @@ class NewVirtualMachineForm(forms.Form):
     os   = forms.ChoiceField(label='Operating System', choices=[])
     mem  = forms.IntegerField(label='Memory (MB)', min_value=100)
     disk = forms.IntegerField(label='Disk Space (MB)', min_value=100)
-    """
-    def __init__(self, cluster_hostname=None, *args, **kwargs):
-        super(NewVirtualMachineForm, self).__init__(*args, **kwargs)
-        
-        if cluster_slug is None:
-            # Populate the Node lists
-            nodes = node_choices(cluster_slug)
-            self.fields['pnode'].choices = nodes
-            self.fields['snode'].choices = nodes
-            # Populate the OS List
-            oss = os_choices(cluster_slug)
-            self.fields['os'].choices = oss
-            # Set cluster field
-            self.fields['cluster'] = cluster_slug
-        else:
-            clusterlist = Cluster.objects.all()
-            self.fields['cluster'] = clusterlist
     
+    
+    def __init__(self, *args, **kwargs):
+        super(NewVirtualMachineForm, self).__init__(*args, **kwargs)
+        initial = kwargs.get('initial', None)
+        oslist = initial.get('os', None)
+        
+        #if hostname is not None:
+            # Populate the Node lists
+            #nodes = node_choices(cluster_slug)
+            #self.fields['pnode'].choices = nodes
+            #self.fields['snode'].choices = nodes
+        if oslist is not None:
+            # Populate the OS List
+            self.fields['os'].choices = oslist
+        else:
+            #clusters = list(Cluster.objects.all()[:1])
+            #cluster_slug = clusters[0].slug
+            #oss = os_choices(cluster_slug)
+            #self.fields['os'].choices = oss
+            pass
+        
+    """
     #pnode = forms.ChoiceField(label='Primary Node', choices=[])
     #snode = forms.ChoiceField(label='Secondary Node', choices=[])
 
