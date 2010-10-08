@@ -215,9 +215,8 @@ class TestClusterViews(TestCase):
         
         # unauthorized user
         self.assert_(c.login(username=user.username, password='secret'))
-        # XXX no permission check is currently enabled
-        # response = c.get(url)
-        # self.assertEqual(403, response.status_code)
+        response = c.get(url)
+        self.assertEqual(403, response.status_code)
         
         # authorized (superuser)
         user.is_superuser = True
@@ -243,9 +242,8 @@ class TestClusterViews(TestCase):
         
         # unauthorized user
         self.assert_(c.login(username=user.username, password='secret'))
-        # XXX no permission check implemented for cluster detail
-        # response = c.get(url % cluster.slug)
-        # self.assertEqual(403, response.status_code)
+        response = c.get(url % cluster.slug)
+        self.assertEqual(403, response.status_code)
         
         # invalid cluster
         response = c.get(url % "DoesNotExist")
@@ -278,23 +276,26 @@ class TestClusterViews(TestCase):
         user = self.user
         cluster = self.cluster
         c = Client()
+        url = "/cluster/%s/users/"
+        args = cluster.slug
         
         # anonymous user
-        response = c.get("/cluster/%s/users/" % cluster.slug)
-        self.assertEqual(403, response.status_code)
+        response = c.get(url % args, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'login.html')
         
         # unauthorized user
         self.assert_(c.login(username=user.username, password='secret'))
-        response = c.get("/cluster/%s/users/" % cluster.slug)
+        response = c.get(url % args)
         self.assertEqual(403, response.status_code)
         
         # nonexisent cluster
-        response = c.get("/cluster/%s/users/" % "DOES_NOT_EXIST")
+        response = c.get(url % "DOES_NOT_EXIST")
         self.assertEqual(404, response.status_code)
         
         # authorized user (perm)
         grant(user, 'admin', cluster)
-        response = c.get("/cluster/%s/users/" % cluster.slug)
+        response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'cluster/users.html')
@@ -303,7 +304,7 @@ class TestClusterViews(TestCase):
         user.revoke('admin', cluster)
         user.is_superuser = True
         user.save()
-        response = c.get("/cluster/%s/users/" % cluster.slug)
+        response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'cluster/users.html')
@@ -315,6 +316,11 @@ class TestClusterViews(TestCase):
         self.populate_globals()
         url = '/cluster/%s/permissions/'
         args = cluster.slug
+        
+        # anonymous user
+        response = c.get(url % cluster.slug, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'login.html')
         
         # unauthorized user
         self.assert_(c.login(username=user.username, password='secret'))
@@ -405,6 +411,12 @@ class TestClusterViews(TestCase):
         url = "/cluster/%s/permissions/user/%s"
         url_post = "/cluster/%s/permissions/"
         
+        
+        # anonymous user
+        response = c.get(url % args, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'login.html')
+        
         # unauthorized user
         self.assert_(c.login(username=user.username, password='secret'))
         response = c.get(url % args)
@@ -473,6 +485,11 @@ class TestClusterViews(TestCase):
         args_post = cluster.slug
         url = "/cluster/%s/permissions/group/%s"
         url_post = "/cluster/%s/permissions/"
+        
+        # anonymous user
+        response = c.get(url % args, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'login.html')
         
         # unauthorized user
         self.assert_(c.login(username=user.username, password='secret'))
@@ -554,6 +571,11 @@ class TestClusterViews(TestCase):
         args_post = cluster.slug
         url = '/cluster/%s/quota/%s'
         url_post = '/cluster/%s/quota/'
+        
+        # anonymous user
+        response = c.get(url % args, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'login.html')
         
         # unauthorized user
         self.assert_(c.login(username=user.username, password='secret'))
@@ -652,6 +674,11 @@ class TestClusterViews(TestCase):
         args_post = cluster.slug
         url = '/cluster/%s/quota/%s'
         url_post = '/cluster/%s/quota/'
+        
+        # anonymous user
+        response = c.get(url % args, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'login.html')
         
         # unauthorized user
         self.assert_(c.login(username=user.username, password='secret'))

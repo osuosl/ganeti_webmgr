@@ -159,13 +159,20 @@ class RapiProxy(client.GanetiRapiClient):
         CallProxy.patch(instance, 'GetNodes', False, NODES)
         CallProxy.patch(instance, 'GetNode', False, NODE)
         CallProxy.patch(instance, 'GetInfo', False, INFO)
+        
+        CallProxy.patch(instance, 'StartupInstance', False)
+        CallProxy.patch(instance, 'ShutdownInstance', False)
+        CallProxy.patch(instance, 'RebootInstance', False)
+        
         return instance
     
     def fail(self, *args, **kwargs):
         raise self.error
     
     def __getattribute__(self, key):
-        if key in ['GetInstances','GetInstance','GetNodes','GetNode','GetInfo'] and self.error:
+        if key in ['GetInstances','GetInstance','GetNodes','GetNode', \
+                   'GetInfo', 'StartupInstance', 'ShutdownInstance', \
+                   'RebootInstance'] and self.error:
             return self.fail
         return super(RapiProxy, self).__getattribute__(key)
     

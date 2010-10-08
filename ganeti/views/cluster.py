@@ -20,12 +20,17 @@ from util.portforwarder import forward_port
 # Regex for a resolvable hostname
 FQDN_RE = r'^[\w]+(\.[\w]+)*$'
 
+
 @login_required
 def detail(request, cluster_slug):
     """
     Display details of a cluster
     """
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    user = request.user
+    if not (user.is_superuser or user.has_perm('admin', cluster)):
+        return HttpResponseForbidden("You do not have sufficient privileges")
+    
     vmlist = VirtualMachine.objects.filter(cluster__exact=cluster)
     return render_to_response("cluster/detail.html", {
         'cluster': cluster,
@@ -36,6 +41,7 @@ def detail(request, cluster_slug):
     )
 
 
+@login_required
 def cluster_users(request, cluster_slug):
     """
     Display all of the users of a cluster
@@ -113,6 +119,7 @@ def edit(request, cluster_slug):
     )
 
 
+@login_required
 def permissions(request, cluster_slug, user_id=None, group_id=None):
     """
     Update a users permissions.
@@ -179,6 +186,7 @@ class QuotaForm(forms.Form):
     delete = forms.BooleanField(required=False, widget=forms.HiddenInput)
 
 
+@login_required
 def quota(request, cluster_slug, user_id):
     """
     Updates quota for a user

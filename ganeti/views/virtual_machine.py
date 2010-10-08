@@ -1,10 +1,12 @@
 from django import forms
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.http import HttpResponseRedirect, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseRedirect, \
+    HttpResponseForbidden, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
+from util.client import GanetiApiError
 from ganeti_webmgr.ganeti.models import *
 from ganeti_webmgr.util.portforwarder import forward_port
 
@@ -23,25 +25,59 @@ def vnc(request, cluster_slug, instance):
         context_instance=RequestContext(request),
     )
 
+
 @login_required
 def shutdown(request, cluster_slug, instance):
-    vm = VirtualMachine.objects.get(hostname=instance)
-    vm.shutdown()
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    vm = get_object_or_404(VirtualMachine, hostname=instance, \
+                           cluster__slug=cluster_slug)
+    user = request.user
+    
+    if not (user.is_superuser or user.has_perm('admin', vm)):
+        return HttpResponseForbidden()
+    
+    if request.method == 'POST':
+        try:
+            vm.shutdown()
+            return HttpResponse('1', mimetype='application/json')
+        except GanetiApiError, e:
+            return HttpResponse(str(e), mimetype='application/json')
+    return HttpResponseNotAllowed(['GET', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', \
+                                  'TRACE'])
 
 
 @login_required
 def startup(request, cluster_slug, instance):
-    vm = VirtualMachine.objects.get(hostname=instance)
-    vm.startup()
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
+    vm = get_object_or_404(VirtualMachine, hostname=instance, \
+                           cluster__slug=cluster_slug)
+    user = request.user
+    if not (user.is_superuser or user.has_perm('admin', vm)):
+        return HttpResponseForbidden()
+    
+    if request.method == 'POST':
+        try:
+            vm.startup()
+            return HttpResponse('1', mimetype='application/json')
+        except GanetiApiError, e:
+            return HttpResponse(str(e), mimetype='application/json')
+    return HttpResponseNotAllowed(['GET', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', \
+                                  'TRACE'])
 
 @login_required
 def reboot(request, cluster_slug, instance):
-    vm = VirtualMachine.objects.get(hostname=instance)
-    vm.reboot()
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    vm = get_object_or_404(VirtualMachine, hostname=instance, \
+                           cluster__slug=cluster_slug)
+    user = request.user
+    if not (user.is_superuser or user.has_perm('admin', vm)):
+        return HttpResponseForbidden()
+    
+    if request.method == 'POST':
+        try:
+            vm.reboot()
+            return HttpResponse('1', mimetype='application/json')
+        except GanetiApiError, e:
+            return HttpResponse(str(e), mimetype='application/json')
+    return HttpResponseNotAllowed(['GET', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', \
+                                  'TRACE'])
 
 
 @login_required
@@ -68,6 +104,7 @@ def create(request, cluster_slug=None):
         context_instance=RequestContext(request),
     )
 
+
 @login_required
 def list(request):
     vmlist = VirtualMachine.objects.all()
@@ -77,52 +114,63 @@ def list(request):
         context_instance=RequestContext(request),
     )
 
+
 @login_required
 def detail(request, cluster_slug, instance):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    instance = get_object_or_404(VirtualMachine, hostname=instance)
+    vm = get_object_or_404(VirtualMachine, hostname=instance)
+    
+    user = request.user
+    if not (user.is_superuser or user.has_perm('admin', vm)):
+        return HttpResponseForbidden()
+    
     if request.method == 'POST':
-        configform = InstanceConfigForm(request.POST)
-        if configform.is_valid():
-            if configform.cleaned_data['cdrom_type'] == 'none':
-                configform.cleaned_data['cdrom_image_path'] = 'none'
-            elif configform.cleaned_data['cdrom_image_path'] != instance.hvparams['cdrom_image_path']:
+        form = InstanceConfigForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            if data['cdrom_type'] == 'none':
+                data['cdrom_image_path'] = 'none'
+            elif data['cdrom_image_path'] != vm.hvparams['cdrom_image_path']:
                 # This should be an http URL
-                if not (configform.cleaned_data['cdrom_image_path'].startswith('http://') or 
-                        configform.cleaned_data['cdrom_image_path'] == 'none'):
+                if not (data['cdrom_image_path'].startswith('http://') or 
+                        data['cdrom_image_path'] == 'none'):
                     # Remove this, we don't want them to be able to read local files
-                    del configform.cleaned_data['cdrom_image_path']
-            instance.set_params(**configform.cleaned_data)
+                    del data['cdrom_image_path']
+            vm.set_params(**data)
             sleep(1)
             return HttpResponseRedirect(request.path) 
             
     else: 
-        if instance.info['hvparams']['cdrom_image_path']:
-            instance.info['hvparams']['cdrom_type'] = 'iso'
+        if vm.info['hvparams']['cdrom_image_path']:
+            vm.info['hvparams']['cdrom_type'] = 'iso'
         else:
-            instance.info['hvparams']['cdrom_type'] = 'none'
-        configform = InstanceConfigForm(instance.info['hvparams'])
+            vm.info['hvparams']['cdrom_type'] = 'none'
+        form = InstanceConfigForm(vm.info['hvparams'])
 
     return render_to_response("virtual_machine/detail.html", {
         'cluster': cluster,
-        'instance': instance,
-        'configform': configform,
+        'instance': vm,
+        'configform': form,
         'user': request.user,
         },
         context_instance=RequestContext(request),
     )
 
+
 FQDN_RE = r'^[\w]+(\.[\w]+)*$'
+
 
 def os_choices(cluster_slug):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     oslist = cluster.rapi.GetOperatingSystems()
     return list((os, os) for os in oslist)
 
+
 def node_choices(cluster_slug):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     nodelist = cluster.rapi.GetNodes()
     return list((node['id'], node['id']) for node in nodelist)
+
 
 class NewVirtualMachineForm(forms.Form):
     cluster = forms.ModelChoiceField(queryset=Cluster.objects.all(), label='Cluster')
@@ -160,6 +208,7 @@ class NewVirtualMachineForm(forms.Form):
     #        raise forms.ValidationError("Secondary Node must not match"
     #                                    + " Primary")
     """
+
 
 class InstanceConfigForm(forms.Form):
     nic_type = forms.ChoiceField(label="Network adapter model",

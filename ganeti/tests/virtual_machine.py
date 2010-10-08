@@ -42,8 +42,6 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         """
         VirtualMachine()
     
-    
-    
     def test_save(self):
         """
         Test saving a VirtualMachine
@@ -142,7 +140,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         
         # unauthorized user
         self.assert_(c.login(username=user.username, password='secret'))
-        # XXX no permission check implemented for cluster detail
+        # XXX no permission check implemented for vm list
         # response = c.get(url % (cluster.slug, vm.hostname))
         # self.assertEqual(403, response.status_code)
         
@@ -172,9 +170,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         
         # unauthorized user
         self.assert_(c.login(username=user.username, password='secret'))
-        # XXX no permission check implemented for cluster detail
-        # response = c.get(url % (cluster.slug, vm.hostname))
-        # self.assertEqual(403, response.status_code)
+        response = c.get(url % (cluster.slug, vm.hostname))
+        self.assertEqual(403, response.status_code)
         
         # invalid cluster
         response = c.get(url % ("DoesNotExist", vm.hostname))
@@ -199,141 +196,81 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'virtual_machine/detail.html')
+    
+    def validate_post_only_url(self, url, args=None):
+        """
+        generic function for testing urls that post with no data
+        """
+        user = self.user
+        cluster = self.cluster
+        vm = self.vm
+        c = Client()
+        args = args if args else (cluster.slug, vm.hostname)
+        
+        # anonymous user
+        response = c.post(url % args, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'login.html')
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.post(url % args)
+        self.assertEqual(403, response.status_code)
+        
+        # invalid cluster
+        response = c.post(url % ("DoesNotExist", vm.hostname))
+        self.assertEqual(404, response.status_code)
+        
+        # invalid vm
+        response = c.post(url % (cluster.slug, "DoesNotExist"))
+        self.assertEqual(404, response.status_code)
+        
+        # authorized (permission)
+        grant(user, 'admin', vm)
+        response = c.post(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        self.assertEquals('1', response.content)
+        
+        # authorized (superuser)
+        user.revoke('admin', vm)
+        user.is_superuser = True
+        user.save()
+        response = c.post(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        self.assertEquals('1', response.content)
+        
+        # error while issuing reboot command
+        msg = "SIMULATING_AN_ERROR"
+        vm.rapi.error = client.GanetiApiError(msg)
+        response = c.post(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        self.assertEquals(msg, response.content)
+        vm.rapi.error = None
+        
+        # invalid method
+        response = c.get(url % args)
+        self.assertEqual(405, response.status_code)
     
     def test_view_startup(self):
         """
         Test starting a virtual machine
         """
-        user = self.user
-        cluster = self.cluster
-        vm = self.vm
-        url = '/cluster/%s/%s/startup'
-        c = Client()
-        
-        # anonymous user
-        response = c.get(url % (cluster.slug, vm.hostname), follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'login.html')
-        
-        # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
-        # XXX no permission check implemented for cluster detail
-        # response = c.get(url % (cluster.slug, vm.hostname))
-        # self.assertEqual(403, response.status_code)
-        
-        # invalid cluster
-        response = c.get(url % ("DoesNotExist", vm.hostname))
-        self.assertEqual(404, response.status_code)
-        
-        # invalid vm
-        response = c.get(url % (cluster.slug, "DoesNotExist"))
-        self.assertEqual(404, response.status_code)
-        
-        # authorized (permission)
-        grant(user, 'admin', vm)
-        response = c.get(url % (cluster.slug, vm.hostname))
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
-        
-        # authorized (superuser)
-        user.revoke('admin', vm)
-        user.is_superuser = True
-        user.save()
-        response = c.get(url % (cluster.slug, vm.hostname))
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
+        self.validate_post_only_url('/cluster/%s/%s/startup')
     
     def test_view_shutdown(self):
         """
         Test shutting down a virtual machine
         """
-        user = self.user
-        cluster = self.cluster
-        vm = self.vm
-        url = '/cluster/%s/%s/shutdown'
-        c = Client()
-        
-        # anonymous user
-        response = c.get(url % (cluster.slug, vm.hostname), follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'login.html')
-        
-        # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
-        # XXX no permission check implemented for cluster detail
-        # response = c.get(url % (cluster.slug, vm.hostname))
-        # self.assertEqual(403, response.status_code)
-        
-        # invalid cluster
-        response = c.get(url % ("DoesNotExist", vm.hostname))
-        self.assertEqual(404, response.status_code)
-        
-        # invalid vm
-        response = c.get(url % (cluster.slug, "DoesNotExist"))
-        self.assertEqual(404, response.status_code)
-        
-        # authorized (permission)
-        grant(user, 'admin', vm)
-        response = c.get(url % (cluster.slug, vm.hostname))
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
-        
-        # authorized (superuser)
-        user.revoke('admin', vm)
-        user.is_superuser = True
-        user.save()
-        response = c.get(url % (cluster.slug, vm.hostname))
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
+        self.validate_post_only_url('/cluster/%s/%s/shutdown')
     
     def test_view_reboot(self):
         """
         Test rebooting a virtual machine
         """
-        user = self.user
-        cluster = self.cluster
-        vm = self.vm
-        url = '/cluster/%s/%s/reboot'
-        c = Client()
-        
-        # anonymous user
-        response = c.get(url % (cluster.slug, vm.hostname), follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'login.html')
-        
-        # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
-        # XXX no permission check implemented for cluster detail
-        # response = c.get(url % (cluster.slug, vm.hostname))
-        # self.assertEqual(403, response.status_code)
-        
-        # invalid cluster
-        response = c.get(url % ("DoesNotExist", vm.hostname))
-        self.assertEqual(404, response.status_code)
-        
-        # invalid vm
-        response = c.get(url % (cluster.slug, "DoesNotExist"))
-        self.assertEqual(404, response.status_code)
-        
-        # authorized (permission)
-        grant(user, 'admin', vm)
-        response = c.get(url % (cluster.slug, vm.hostname))
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
-        
-        # authorized (superuser)
-        user.revoke('admin', vm)
-        user.is_superuser = True
-        user.save()
-        response = c.get(url % (cluster.slug, vm.hostname))
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
+        self.validate_post_only_url('/cluster/%s/%s/reboot')
     
     def test_view_create(self):
         """
