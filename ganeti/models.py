@@ -257,13 +257,13 @@ class VirtualMachine(CachedClusterObject):
         return self.rapi.GetInstance(self.hostname)
 
     def shutdown(self):
-        return self.cluster.rapi.ShutdownInstance(self.hostname)
+        return self.rapi.ShutdownInstance(self.hostname)
 
     def startup(self):
-        return self.cluster.rapi.StartupInstance(self.hostname)
+        return self.rapi.StartupInstance(self.hostname)
 
     def reboot(self):
-        return self.cluster.rapi.RebootInstance(self.hostname)
+        return self.rapi.RebootInstance(self.hostname)
 
     def __repr__(self):
         return "<VirtualMachine: '%s'>" % self.hostname
