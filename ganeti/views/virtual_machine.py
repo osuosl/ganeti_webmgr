@@ -11,6 +11,10 @@ from ganeti_webmgr.ganeti.models import *
 from ganeti_webmgr.util.portforwarder import forward_port
 from ganeti_webmgr.util.client import GanetiApiError
 
+
+FQDN_RE = r'^[\w]+(\.[\w]+)*$'
+
+
 @login_required
 def vnc(request, cluster_slug, instance):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
@@ -80,58 +84,6 @@ def reboot(request, cluster_slug, instance):
     return HttpResponseNotAllowed(['GET', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', \
                                   'TRACE'])
 
-@login_required
-def create(request, cluster_slug=None):
-    """
-    Create a new instance
-        Store in DB and
-        Create on given cluster
-    """
-    if cluster_slug is not None:
-        cluster = get_object_or_404(Cluster, slug=cluster_slug)
-        oslist = os_choices(cluster_slug)
-    else:
-        cluster = None
-        oslist = None
-
-    if request.method == 'POST':
-        form = NewVirtualMachineForm(request.POST, oslist=oslist)
-        if form.is_valid():
-            cluster = form.cleaned_data['cluster']
-            hostname = form.cleaned_data['hostname']
-            owner = form.cleaned_data['owner']
-            #virtual_cpus = form.cleaned_data['vcpus']
-            disk_size = form.cleaned_data['disk_size']
-            ram = form.cleaned_data['ram']
-            disk_template = form.cleaned_data['disk_template']
-            os = form.cleaned_data['os']
-            vm = VirtualMachine(cluster=cluster, owner=owner, hostname=hostname, \
-                                disk_size=disk_size, ram=ram, virtual_cpus=2, \
-                                node='gtest1.osuosl.bak')
-            vm.save()
-            c = get_object_or_404(Cluster, hostname=cluster)
-            jobid = 0
-            try:
-                jobid = c.rapi.CreateInstance('create', hostname, disk_template, \
-                                  [{"size": disk_size, }],[{"link": "br42", }], \
-                                  memory=ram, os=os, vcpus=2, \
-                                  pnode='gtest1.osuosl.bak') #\
-                                  #hvparams={}, beparams={})
-            except GanetiApiError as e:
-                print jobid
-                print e
-            #print jobid
-            return HttpResponseRedirect(request.META['HTTP_REFERER']) # Redirect after POST
-    else:
-        form = NewVirtualMachineForm(initial={'cluster':cluster,},oslist=oslist)
-
-    return render_to_response('virtual_machine/create.html', {
-        'form': form,
-        'user': request.user,
-        },
-        context_instance=RequestContext(request),
-    )
-
 
 @login_required
 def list(request):
@@ -185,22 +137,70 @@ def detail(request, cluster_slug, instance):
     )
 
 
-FQDN_RE = r'^[\w]+(\.[\w]+)*$'
+@login_required
+def create(request, cluster_slug=None):
+    """
+    Create a new instance
+        Store in DB and
+        Create on given cluster
+    """
+    if cluster_slug is not None:
+        cluster = get_object_or_404(Cluster, slug=cluster_slug)
+        oslist = os_choices(cluster)
+    else:
+        cluster = None
+        oslist = None
+
+    if request.method == 'POST':
+        form = NewVirtualMachineForm(request.POST, oslist=oslist)
+        if form.is_valid():
+            data = form.cleaned_data
+            cluster = data['cluster']
+            hostname = data['hostname']
+            owner = data['owner']
+            #virtual_cpus = data['vcpus']
+            disk_size = data['disk_size']
+            ram = data['ram']
+            disk_template = data['disk_template']
+            os = data['os']
+            vm = VirtualMachine(cluster=cluster, owner=owner, hostname=hostname, \
+                                disk_size=disk_size, ram=ram, virtual_cpus=2, \
+                                node='gtest1.osuosl.bak')
+            vm.save()
+            c = get_object_or_404(Cluster, hostname=cluster)
+            jobid = 0
+            try:
+                jobid = c.rapi.CreateInstance('create', hostname, disk_template, \
+                                  [{"size": disk_size, }],[{"link": "br42", }], \
+                                  memory=ram, os=os, vcpus=2, \
+                                  pnode='gtest1.osuosl.bak') #\
+                                  #hvparams={}, beparams={})
+            except GanetiApiError as e:
+                print jobid
+                print e
+            #print jobid
+            return HttpResponseRedirect(request.META['HTTP_REFERER']) # Redirect after POST
+    else:
+        form = NewVirtualMachineForm(initial={'cluster':cluster,},oslist=oslist)
+
+    return render_to_response('virtual_machine/create.html', {
+        'form': form,
+        'user': request.user,
+        },
+        context_instance=RequestContext(request),
+    )
 
 
-def os_choices(cluster_slug):
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    oslister = cluster.rapi.GetOperatingSystems()
-    oslist = []
-    for os in oslister:
-        oslist.append((os,os))
-    return oslist #list((os, os) for os in oslist) #[('stuff', 'stuff')]
+def os_choices(cluster_hostname):
+    cluster = Cluster.objects.get(hostname__exact=cluster_hostname)
+    oslist = cluster.rapi.GetOperatingSystems()
+    return [ (os, os) for os in oslist ]
 
 
 def node_choices(cluster_slug):
     cluster = get_object_or_404(Cluster, hostname=cluster_slug)
     nodelist = cluster.rapi.GetNodes()
-    return list((node['id'], node['id']) for node in nodelist)
+    return [(node['id'], node['id']) for node in nodelist]
 
 
 class NewVirtualMachineForm(forms.Form):
