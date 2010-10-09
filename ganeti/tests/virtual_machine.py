@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -230,7 +231,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         response = c.post(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
-        self.assertEquals('1', response.content)
+        content = json.loads(response.content)
+        self.assertEquals(1, content[0])
         
         # authorized (superuser)
         user.revoke('admin', vm)
@@ -239,7 +241,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         response = c.post(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
-        self.assertEquals('1', response.content)
+        self.assertEquals(1, content[0])
         
         # error while issuing reboot command
         msg = "SIMULATING_AN_ERROR"
@@ -247,7 +249,9 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         response = c.post(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
-        self.assertEquals(msg, response.content)
+        code, text = json.loads(response.content)
+        self.assertEquals(msg, text)
+        self.assertEquals(0, code)
         vm.rapi.error = None
         
         # invalid method

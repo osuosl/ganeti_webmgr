@@ -1,3 +1,5 @@
+import json
+
 from django import forms
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -43,9 +45,10 @@ def shutdown(request, cluster_slug, instance):
     if request.method == 'POST':
         try:
             vm.shutdown()
-            return HttpResponse('1', mimetype='application/json')
+            msg = [1, 'Virtual machine stopping.']
         except GanetiApiError, e:
-            return HttpResponse(str(e), mimetype='application/json')
+            msg = [0, str(e)]
+        return HttpResponse(json.dumps(msg), mimetype='application/json')
     return HttpResponseNotAllowed(['GET', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', \
                                   'TRACE'])
 
@@ -61,9 +64,10 @@ def startup(request, cluster_slug, instance):
     if request.method == 'POST':
         try:
             vm.startup()
-            return HttpResponse('1', mimetype='application/json')
+            msg = [1, 'Virtual machine starting.']
         except GanetiApiError, e:
-            return HttpResponse(str(e), mimetype='application/json')
+            msg = [0, str(e)]
+        return HttpResponse(json.dumps(msg), mimetype='application/json')
     return HttpResponseNotAllowed(['GET', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', \
                                   'TRACE'])
 
@@ -79,9 +83,10 @@ def reboot(request, cluster_slug, instance):
     if request.method == 'POST':
         try:
             vm.reboot()
-            return HttpResponse('1', mimetype='application/json')
+            msg = [1, 'Virtual machine rebooting.']
         except GanetiApiError, e:
-            return HttpResponse(str(e), mimetype='application/json')
+            msg = [0, str(e)]
+        return HttpResponse(json.dumps(msg), mimetype='application/json')
     return HttpResponseNotAllowed(['GET', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', \
                                   'TRACE'])
 

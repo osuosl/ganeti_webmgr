@@ -1,7 +1,51 @@
 {% extends "base.html" %}
 
 {% block title %} Virtual Machine {{ instance.hostname }}{% endblock %}
+{% block head %}
+<style>
+    #messages li {
+        background-color:#c2e192;
+        border: 2px solid #124612;
+        color:#124612;
+        font-weight:bold;
+        font-size:110%;
+        margin:20px auto 20px auto;
+        padding: 10px 0 10px 0;
+        text-align:center;
+        width:700px;
+    }
+    
+    #messages li.error {
+        background-color:#ee9c98;
+        border-color: 2px solid #c83737;
+        color:#550000;
+    }
+</style>
+<script type="text/javascript">
+    $(document).ready(function() {
+        $("#actions a").click(function(){
+            $.post(this.href, action_response);
+            return false;
+        });
+    });
+    
+    function action_response(result) {
+        html = $("<li>"+result[1]+"</li>");
+        if (result[0] == 0) {
+            html.addClass('error');
+        }
+        $("#messages").append(html);
+        // set timer to fadeout and remove the message
+        setTimeout(function(){
+            html.fadeOut(1000,
+                function(){html.remove()});
+            }, 2000);
+    }
+</script>
+{% endblock %}
+
 {% block content %}
+<ul id="messages"></ul>
 
 <div class="ticket" id="ticket_{{ object.id }}">
     <h2>{{ instance.hostname }}</h2>
@@ -21,8 +65,9 @@
     </ul>
 
     <h2>Actions</h2>
-    <ul>
-        {% ifequal instance.info.status "running" %}<li><a href="{% url instance-shutdown cluster.slug instance.hostname %}">Shutdown</a></li>
+    <ul id="actions">
+        {% ifequal instance.info.status "running" %}
+        <li><a href="{% url instance-shutdown cluster.slug instance.hostname %}">Shutdown</a></li>
         <li><a href="{% url instance-reboot cluster.slug instance.hostname %}">Reboot</a></li>
         <li><a href="{% url instance-vnc cluster.slug instance.hostname %}">Remote console (VNC)</a></li>
         {% else %}
