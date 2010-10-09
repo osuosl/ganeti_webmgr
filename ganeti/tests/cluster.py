@@ -166,31 +166,29 @@ class TestClusterViews(TestCase):
         User(id=1, username='anonymous').save()
         settings.ANONYMOUS_USER_ID=1
         
-        self.user = User(id=2, username='tester0')
-        self.user.set_password('secret')
-        self.user.save()
-        self.user1 = User(id=3, username='tester1')
-        self.user1.set_password('secret')
-        self.user1.save()
+        user = User(id=2, username='tester0')
+        user.set_password('secret')
+        user.save()
+        user1 = User(id=3, username='tester1')
+        user1.set_password('secret')
+        user1.save()
         
-        self.group = UserGroup(name='testing_group')
-        self.group.save()
+        group = UserGroup(name='testing_group')
+        group.save()
         
-        self.cluster = Cluster(hostname='test.osuosl.test', slug='OSL_TEST')
-        self.cluster.save()
+        cluster = Cluster(hostname='test.osuosl.test', slug='OSL_TEST')
+        cluster.save()
+        
+        dict_ = globals()
+        dict_['user'] = user
+        dict_['user1'] = user1
+        dict_['group'] = group
+        dict_['cluster'] = cluster
+        dict_['c'] = Client()
         
         # XXX specify permission manually, it is not auto registering for some reason
         register('admin', Cluster)
         register('create', Cluster)
-
-    def populate_globals(self):
-        """ helper for added commonly used properties to locals """
-        dict_ = globals()
-        dict_['user'] = self.user
-        dict_['user1'] = self.user1
-        dict_['group'] = self.group
-        dict_['cluster'] = self.cluster
-        dict_['c'] = Client()
 
     def tearDown(self):
         Quota.objects.all().delete()
@@ -204,9 +202,7 @@ class TestClusterViews(TestCase):
         """
         Tests displaying the list of clusters
         """
-        user = self.user
         url = '/clusters/'
-        c = Client()
         
         # anonymous user
         response = c.get(url, follow=True)
@@ -230,19 +226,17 @@ class TestClusterViews(TestCase):
         """
         Tests displaying detailed view for a Cluster
         """
-        user = self.user
-        cluster = self.cluster
         url = '/cluster/%s/'
-        c = Client()
+        args = cluster.slug
         
         # anonymous user
-        response = c.get(url % cluster.slug, follow=True)
+        response = c.get(url % args, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'login.html')
         
         # unauthorized user
         self.assert_(c.login(username=user.username, password='secret'))
-        response = c.get(url % cluster.slug)
+        response = c.get(url % args)
         self.assertEqual(403, response.status_code)
         
         # invalid cluster
@@ -251,7 +245,7 @@ class TestClusterViews(TestCase):
         
         # authorized (permission)
         grant(user, 'admin', cluster)
-        response = c.get(url % cluster.slug)
+        response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'cluster/detail.html')
@@ -260,7 +254,7 @@ class TestClusterViews(TestCase):
         user.revoke('admin', cluster)
         user.is_superuser = True
         user.save()
-        response = c.get(url % cluster.slug)
+        response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'cluster/detail.html')
@@ -273,9 +267,6 @@ class TestClusterViews(TestCase):
             * lack of permissions returns 403
             * nonexistent cluster returns 404
         """
-        user = self.user
-        cluster = self.cluster
-        c = Client()
         url = "/cluster/%s/users/"
         args = cluster.slug
         
@@ -313,12 +304,11 @@ class TestClusterViews(TestCase):
         """
         Test adding permissions to a new User or UserGroup
         """
-        self.populate_globals()
         url = '/cluster/%s/permissions/'
         args = cluster.slug
         
         # anonymous user
-        response = c.get(url % cluster.slug, follow=True)
+        response = c.get(url % args, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'login.html')
         
@@ -405,12 +395,10 @@ class TestClusterViews(TestCase):
             * If user/group has permissions no html is returned
             * If user/group has no permissions a json response of -1 is returned
         """
-        self.populate_globals()
         args = (cluster.slug, user1.id)
         args_post = cluster.slug
         url = "/cluster/%s/permissions/user/%s"
         url_post = "/cluster/%s/permissions/"
-        
         
         # anonymous user
         response = c.get(url % args, follow=True)
@@ -480,7 +468,6 @@ class TestClusterViews(TestCase):
         """
         Test editing UserGroup permissions on a Cluster
         """
-        self.populate_globals()
         args = (cluster.slug, group.id)
         args_post = cluster.slug
         url = "/cluster/%s/permissions/group/%s"
@@ -560,7 +547,6 @@ class TestClusterViews(TestCase):
             * successful POST returns html for user row
             * successful DELETE removes user quota
         """
-        self.populate_globals()
         default_quota = {'default':1, 'ram':1, 'virtual_cpus':None, 'disk':3}
         user_quota = {'default':0, 'ram':4, 'virtual_cpus':5, 'disk':None}
         user_unlimited = {'default':0, 'ram':None, 'virtual_cpus':None, 'disk':None}
@@ -663,7 +649,6 @@ class TestClusterViews(TestCase):
             * successful POST returns html for user row
             * successful DELETE removes user quota
         """
-        self.populate_globals()
         default_quota = {'default':1, 'ram':1, 'virtual_cpus':None, 'disk':3}
         user_quota = {'default':0, 'ram':4, 'virtual_cpus':5, 'disk':None}
         user_unlimited = {'default':0, 'ram':None, 'virtual_cpus':None, 'disk':None}
