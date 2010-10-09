@@ -105,14 +105,21 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
     def setUp(self):
         self.tearDown()
         models.client.GanetiRapiClient = RapiProxy
-        self.vm, self.cluster = self.create_virtual_machine()
+        vm, cluster = self.create_virtual_machine()
         
-        self.user = User(id=2, username='tester0')
-        self.user.set_password('secret')
-        self.user.save()
-        self.user1 = User(id=3, username='tester1')
-        self.user1.set_password('secret')
-        self.user1.save()
+        user = User(id=2, username='tester0')
+        user.set_password('secret')
+        user.save()
+        user1 = User(id=3, username='tester1')
+        user1.set_password('secret')
+        user1.save()
+        
+        g = globals()
+        g['vm'] = vm
+        g['cluster'] = cluster
+        g['user'] = user
+        g['user1'] = user
+        g['c'] = Client()
         
         # XXX specify permission manually, it is not auto registering for some reason
         register('admin', Cluster)
@@ -128,11 +135,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         """
         Test listing all virtual machines
         """
-        user = self.user
-        cluster = self.cluster
-        vm = self.vm
         url = '/vms/'
-        c = Client()
         
         # anonymous user
         response = c.get(url, follow=True)
@@ -158,20 +161,17 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         """
         Test showing virtual machine details
         """
-        user = self.user
-        cluster = self.cluster
-        vm = self.vm
         url = '/cluster/%s/%s/'
-        c = Client()
+        args = (cluster.slug, vm.hostname)
         
         # anonymous user
-        response = c.get(url % (cluster.slug, vm.hostname), follow=True)
+        response = c.get(url % args, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'login.html')
         
         # unauthorized user
         self.assert_(c.login(username=user.username, password='secret'))
-        response = c.get(url % (cluster.slug, vm.hostname))
+        response = c.get(url % args)
         self.assertEqual(403, response.status_code)
         
         # invalid cluster
@@ -184,7 +184,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         
         # authorized (permission)
         grant(user, 'admin', vm)
-        response = c.get(url % (cluster.slug, vm.hostname))
+        response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'virtual_machine/detail.html')
@@ -193,7 +193,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         user.revoke('admin', vm)
         user.is_superuser = True
         user.save()
-        response = c.get(url % (cluster.slug, vm.hostname))
+        response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'virtual_machine/detail.html')
@@ -202,10 +202,6 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         """
         generic function for testing urls that post with no data
         """
-        user = self.user
-        cluster = self.cluster
-        vm = self.vm
-        c = Client()
         args = args if args else (cluster.slug, vm.hostname)
         
         # anonymous user
@@ -280,9 +276,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         """
         Test creating a virtual machine
         """
-        cluster = self.cluster
         url = '/vm/add/%s'
-        c = Client()
         
         # GET
         response = c.get(url)
