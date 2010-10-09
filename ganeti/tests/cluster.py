@@ -189,6 +189,7 @@ class TestClusterViews(TestCase):
         # XXX specify permission manually, it is not auto registering for some reason
         register('admin', Cluster)
         register('create', Cluster)
+        register('create_vm', Cluster)
 
     def tearDown(self):
         Quota.objects.all().delete()
@@ -198,11 +199,26 @@ class TestClusterViews(TestCase):
         UserGroup.objects.all().delete()
         User.objects.all().delete()
 
-    def test_view_clusters(self):
+    def test_view_list(self):
         """
         Tests displaying the list of clusters
         """
         url = '/clusters/'
+        
+        # create extra user and tests
+        user2 = User(id=4, username='tester2', is_superuser=True)
+        user2.set_password('secret')
+        user2.save()
+        cluster1 = Cluster(hostname='cluster1', slug='cluster1')
+        cluster2 = Cluster(hostname='cluster2', slug='cluster2')
+        cluster3 = Cluster(hostname='cluster3', slug='cluster3')
+        cluster1.save()
+        cluster2.save()
+        cluster3.save()
+        
+        # grant some perms
+        user1.grant('admin', cluster)
+        user1.grant('create_vm', cluster1)
         
         # anonymous user
         response = c.get(url, follow=True)
@@ -212,15 +228,35 @@ class TestClusterViews(TestCase):
         # unauthorized user
         self.assert_(c.login(username=user.username, password='secret'))
         response = c.get(url)
-        self.assertEqual(403, response.status_code)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'cluster/list.html')
+        clusters = response.context['cluster_list']
+        self.assertFalse(clusters)
         
-        # authorized (superuser)
-        user.is_superuser = True
-        user.save()
+        # authorized permissions
+        self.assert_(c.login(username=user1.username, password='secret'))
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'cluster/list.html')
+        clusters = response.context['cluster_list']
+        self.assert_(cluster in clusters)
+        self.assert_(cluster1 in clusters)
+        self.assertEqual(2, len(clusters))
+        
+        # authorized (superuser)
+        self.assert_(c.login(username=user2.username, password='secret'))
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'cluster/list.html')
+        clusters = response.context['cluster_list']
+        self.assert_(cluster in clusters)
+        self.assert_(cluster1 in clusters)
+        self.assert_(cluster2 in clusters)
+        self.assert_(cluster3 in clusters)
+        self.assertEqual(4, len(clusters))
     
     def test_view_detail(self):
         """
