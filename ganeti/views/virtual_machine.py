@@ -93,7 +93,12 @@ def reboot(request, cluster_slug, instance):
 
 @login_required
 def list(request):
-    vmlist = VirtualMachine.objects.all()
+    user = request.user
+    if user.is_superuser:
+        vmlist = VirtualMachine.objects.all()
+    else:
+        vmlist = user.filter_on_perms(VirtualMachine, ['admin'])
+    
     return render_to_response('virtual_machine/list.html', {
         'vmlist' : vmlist
         },

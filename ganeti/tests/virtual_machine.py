@@ -118,7 +118,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         g['vm'] = vm
         g['cluster'] = cluster
         g['user'] = user
-        g['user1'] = user
+        g['user1'] = user1
         g['c'] = Client()
         
         # XXX specify permission manually, it is not auto registering for some reason
@@ -137,25 +137,58 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         """
         url = '/vms/'
         
+        user2 = User(id=3, username='tester1', is_superuser=True)
+        user2.set_password('secret')
+        user2.save()
+        
+        # setup vms and perms
+        vm1, cluster1 = self.create_virtual_machine(cluster, 'test1')
+        vm2, cluster1 = self.create_virtual_machine(cluster, 'test2')
+        vm3, cluster1 = self.create_virtual_machine(cluster, 'test3')
+        user1.grant('admin', vm)
+        user1.grant('admin', vm1)
+        
         # anonymous user
         response = c.get(url, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'login.html')
         
-        # unauthorized user
+        # user with perms on no virtual machines
         self.assert_(c.login(username=user.username, password='secret'))
-        # XXX no permission check implemented for vm list
-        # response = c.get(url % (cluster.slug, vm.hostname))
-        # self.assertEqual(403, response.status_code)
-        
-        # authorized (superuser)
-        user.revoke('admin', vm)
-        user.is_superuser = True
-        user.save()
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'virtual_machine/list.html')
+        vms = response.context['vmlist']
+        self.assertFalse(vms)
+        
+        # user with some perms
+        user1.is_superuser = False
+        user1.save()
+        self.assert_(c.login(username=user1.username, password='secret'))
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/list.html')
+        vms = response.context['vmlist']
+        self.assert_(vm in vms)
+        self.assert_(vm1 in vms)
+        self.assertEqual(2, len(vms))
+        
+        # authorized (superuser)
+        user2.is_superuser=True
+        user2.save()
+        self.assert_(c.login(username=user2.username, password='secret'))
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/list.html')
+        vms = response.context['vmlist']
+        self.assert_(vm in vms)
+        self.assert_(vm1 in vms)
+        self.assert_(vm2 in vms)
+        self.assert_(vm3 in vms)
+        self.assertEqual(len(vms), 4)
     
     def test_view_detail(self):
         """
