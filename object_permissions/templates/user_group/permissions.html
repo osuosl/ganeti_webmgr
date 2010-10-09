@@ -1,8 +1,0 @@
-{% comment  %} Form for setting user permissions within a UserGroup {% endcomment %}
-
-<form class="ajax_form" method="post" action="{{SITE_ROOT}}/user_group/{{group.id}}/user/">
-    <ul id="errors"></ul>
-    <input type="hidden" name="user" value="{{user_id}}"/>
-    {{form.permissions}}
-    <input type="button" class="submit" value="Update"/>
-</form>
