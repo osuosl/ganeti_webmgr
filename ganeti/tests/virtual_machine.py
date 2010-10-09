@@ -184,7 +184,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assert_(vm1 in vms)
         self.assert_(vm2 in vms)
         self.assert_(vm3 in vms)
-        self.assertEqual(len(vms), 4)
+        self.assertEqual(4, len(vms))
     
     def test_view_detail(self):
         """
