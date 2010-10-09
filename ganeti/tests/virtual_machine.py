@@ -137,7 +137,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         """
         url = '/vms/'
         
-        user2 = User(id=3, username='tester1', is_superuser=True)
+        user2 = User(id=4, username='tester2', is_superuser=True)
         user2.set_password('secret')
         user2.save()
         
@@ -163,8 +163,6 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertFalse(vms)
         
         # user with some perms
-        user1.is_superuser = False
-        user1.save()
         self.assert_(c.login(username=user1.username, password='secret'))
         response = c.get(url)
         self.assertEqual(200, response.status_code)
@@ -176,8 +174,6 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(2, len(vms))
         
         # authorized (superuser)
-        user2.is_superuser=True
-        user2.save()
         self.assert_(c.login(username=user2.username, password='secret'))
         response = c.get(url)
         self.assertEqual(200, response.status_code)
