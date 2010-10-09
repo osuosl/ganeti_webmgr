@@ -67,11 +67,15 @@ def add(request):
     if request.method == 'POST':
         form = AddClusterForm(request.POST)
         if form.is_valid():
-            hostname = form.cleaned_data['hostname']
-            slug = form.cleaned_data['slug']
-            port = form.cleaned_data['port']
+            data = form.cleaned_data
+            hostname = data['hostname']
+            slug = data['slug']
+            port = data['port']
+            username = data['username']
+            password = data['password']
             try:
-                cluster = Cluster(hostname=hostname, slug=slug, port=port)
+                cluster = Cluster(hostname=hostname, slug=slug, port=port, \
+                                  username=username, password=password)
                 cluster.save()
                 cluster.sync_virtual_machines()
             except:
@@ -112,7 +116,23 @@ def edit(request, cluster_slug):
     Edit a cluster
     """
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    if request.method == 'POST':
+        form = EditClusterForm(request.POST, instance=cluster)
+        if form.is_valid():
+            vmlist = VirtualMachine.objects.filter(cluster__exact=cluster)
+            form.save()
+            return render_to_response("cluster/detail.html", {
+                'cluster': cluster,
+                'user': request.user,
+                'vmlist': vmlist,
+                },
+                context_instance=RequestContext(request),
+            )
+    else:
+        form = EditClusterForm(instance=cluster)
+    
     return render_to_response("cluster/edit.html", {
+        'form' : form,
         'cluster': cluster,
         'user': request.user,
         },
@@ -237,3 +257,11 @@ class AddClusterForm(forms.Form):
         hostname = forms.CharField(label='Hostname', max_length='256')
         slug = forms.CharField(label='Slug', max_length=150)
         port = forms.IntegerField(label='Port', initial='5080')
+        username = forms.CharField(label='Username', required=False)
+        password = forms.CharField(label='Password', required=False)
+
+
+class EditClusterForm(forms.ModelForm):
+    class Meta:
+        model = Cluster
+        exclude = ('virtual_cpus', 'ram', 'disk',) 

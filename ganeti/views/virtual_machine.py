@@ -148,14 +148,19 @@ def create(request, cluster_slug=None):
     if cluster_slug is not None:
         cluster = get_object_or_404(Cluster, slug=cluster_slug)
         oslist = os_choices(cluster)
+        nodes = node_choices(cluster)
     else:
         cluster = None
         oslist = None
+        nodes = None
 
     if request.method == 'POST':
-        form = NewVirtualMachineForm(request.POST, oslist=oslist)
+        form = NewVirtualMachineForm(request.POST, oslist=oslist, nodes=nodes)
         if form.is_valid():
             data = form.cleaned_data
+            if data['snode'] == data['pnode']:
+                raise forms.ValidationError("Secondary Node must not match%s" \
+                                             % " Primary")
             cluster = data['cluster']
             hostname = data['hostname']
             owner = data['owner']
@@ -184,7 +189,8 @@ def create(request, cluster_slug=None):
             #print jobid
             return HttpResponseRedirect(request.META['HTTP_REFERER']) # Redirect after POST
     else:
-        form = NewVirtualMachineForm(initial={'cluster':cluster,},oslist=oslist)
+        form = NewVirtualMachineForm(initial={'cluster':cluster,}, \
+                                     oslist=oslist, nodes=nodes)
 
     return render_to_response('virtual_machine/create.html', {
         'form': form,
@@ -200,10 +206,10 @@ def os_choices(cluster_hostname):
     return [ (os, os) for os in oslist ]
 
 
-def node_choices(cluster_slug):
-    cluster = get_object_or_404(Cluster, hostname=cluster_slug)
+def node_choices(cluster_hostname):
+    cluster = Cluster.objects.get(hostname__exact=cluster_hostname)
     nodelist = cluster.rapi.GetNodes()
-    return [(node['id'], node['id']) for node in nodelist]
+    return [ (node, node) for node in nodelist ]
 
 
 class NewVirtualMachineForm(forms.Form):
@@ -213,8 +219,13 @@ class NewVirtualMachineForm(forms.Form):
                             error_messages={
                                 'invalid': 'Instance name must be resolvable',
                             })
-    disk_template = forms.ChoiceField(label='Disk Template', choices=[('plain', 'plain'),('drdb', 'drdb'),\
-            ('file','file'), ('diskless', 'diskless')])
+    disk_template = forms.ChoiceField(label='Disk Template', \
+                                      choices=[
+                                            ('plain', 'plain'), \
+                                            ('drdb', 'drdb'), \
+                                            ('file','file'), \
+                                            ('diskless', 'diskless')
+                                      ])
     pnode = forms.ChoiceField(label='Primary Node', choices=[])
     snode = forms.ChoiceField(label='Secondary Node', choices=[])
     os = forms.ChoiceField(label='Operating System', choices=[])
@@ -224,13 +235,14 @@ class NewVirtualMachineForm(forms.Form):
     
     def __init__(self, *args, **kwargs):
         oslist = kwargs.pop('oslist', None)
+        nodes = kwargs.pop('nodes', None)
         super(NewVirtualMachineForm, self).__init__(*args, **kwargs)
         
-        #if hostname is not None:
+        if nodes is not None:
             # Populate the Node lists
             #nodes = node_choices(cluster_slug)
-            #self.fields['pnode'].choices = nodes
-            #self.fields['snode'].choices = nodes
+            self.fields['pnode'].choices = nodes
+            self.fields['snode'].choices = nodes
         if oslist is not None:
             # Populate the OS List
             self.fields['os'].choices = oslist
@@ -240,16 +252,26 @@ class NewVirtualMachineForm(forms.Form):
             #oss = os_choices(cluster_slug)
             #self.fields['os'].choices = oss
             pass
-        
-    """
-    #pnode = forms.ChoiceField(label='Primary Node', choices=[])
-    #snode = forms.ChoiceField(label='Secondary Node', choices=[])
+    
+    def clean(self):
+        cleaned_data = self.cleaned_data
+        pnode = cleaned_data.get("pnode")
+        snode = cleaned_data.get("snode")
 
-    #def clean_snode(self):
-    #    if self.cleaned_data['snode'] == self.cleaned_data['pnode']:
-    #        raise forms.ValidationError("Secondary Node must not match"
-    #                                    + " Primary")
-    """
+        # Need to have pnode != snode
+        if pnode == snode:
+            # We know these are not in self._errors now 
+            msg = u"Primary and Secondary Nodes must not match."
+            self._errors["pnode"] = self.error_class([msg])
+
+            # These fields are no longer valid. Remove them from the
+            # cleaned data.
+            del cleaned_data["pnode"]
+            del cleaned_data["snode"]
+
+        # Always return the full collection of cleaned data.
+        return cleaned_data
+
 
 
 class InstanceConfigForm(forms.Form):
