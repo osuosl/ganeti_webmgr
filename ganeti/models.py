@@ -13,6 +13,7 @@ from django.db import models
 from object_permissions.registration import register
 from object_permissions.models import UserGroup
 from util import client
+from util.client import GanetiApiError
 
 
 CURL = client.GenericCurlConfig()
@@ -147,7 +148,7 @@ class CachedClusterObject(models.Model):
             self.cached = datetime.now()
             self.save()
             self.error = None
-        except client.GanetiApiError, e:
+        except GanetiApiError, e:
             self.error = str(e)
 
     def _refresh(self):
@@ -374,26 +375,38 @@ class Cluster(CachedClusterObject):
         """Gets all Cluster Nodes
         
         Calls the rapi client for the nodes of the cluster.
-        """        
-        return self.rapi.GetNodes()
+        """
+        try:
+            return self.rapi.GetNodes()
+        except GanetiApiError:
+            return []
 
     def node(self, node):
         """Get a single Node
         Calls the rapi client for a specific cluster node.
         """
-        return self.rapi.GetNode(node)
+        try:
+            return self.rapi.GetNode(node)
+        except GanetiApiError:
+            return None
 
     def instances(self, bulk=False):
         """Gets all VMs which reside under the Cluster
         Calls the rapi client for all instances.
         """
-        return self.rapi.GetInstances(bulk=bulk)
+        try:
+            return self.rapi.GetInstances(bulk=bulk)
+        except GanetiApiError:
+            return []
 
     def instance(self, instance):
         """Get a single Instance
         Calls the rapi client for a specific instance.
         """
-        return self.rapi.GetInstance(instance)
+        try:
+            return self.rapi.GetInstance(instance)
+        except GanetiApiError:
+            return None
 
 
 class ClusterUser(models.Model):
