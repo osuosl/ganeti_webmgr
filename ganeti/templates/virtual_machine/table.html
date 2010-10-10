@@ -14,7 +14,11 @@
     {% for vm in vms %}
     {% with vm.info as info %}
     <tr>
-      <td><a href="{% url instance-detail vm.cluster.slug vm.hostname %}">{{ vm.hostname }}</a></td>
+      <td>
+        {% if vm.error %}
+        <div class="icon_error" title="Ganeti API Error: {{vm.error}}"></div>
+        {% endif %}
+        <a href="{% url instance-detail vm.cluster.slug vm.hostname %}">{{ vm.hostname }}</a></td>
       {% if not cluster %}
       <td>{{ vm.cluster }}</td>
       {% endif %}

@@ -2,25 +2,6 @@
 
 {% block title %} Virtual Machine {{ instance.hostname }}{% endblock %}
 {% block head %}
-<style>
-    #messages li {
-        background-color:#c2e192;
-        border: 2px solid #124612;
-        color:#124612;
-        font-weight:bold;
-        font-size:110%;
-        margin:20px auto 20px auto;
-        padding: 10px 0 10px 0;
-        text-align:center;
-        width:700px;
-    }
-    
-    #messages li.error {
-        background-color:#ee9c98;
-        border-color: 2px solid #c83737;
-        color:#550000;
-    }
-</style>
 <script type="text/javascript">
     $(document).ready(function() {
         $("#actions a").click(function(){
@@ -45,7 +26,9 @@
 {% endblock %}
 
 {% block content %}
-<ul id="messages"></ul>
+<ul id="messages">
+    {%if instance.error%}<li class="error">Error in Ganeti API:<p>{{instance.error}}</p></li>{%endif%}
+</ul>
 
 <div class="ticket" id="ticket_{{ object.id }}">
     <h2>{{ instance.hostname }}</h2>

@@ -139,15 +139,16 @@ p label {
 
 ul#errors {color:#AD2E2E;}
 ul.errors {list-style:square;}
-.add, .delete {cursor:pointer;}
-div.delete {
-    background:url(/media/images/icons/delete.png);
+
+.add, .delete, .reboot, .shutdown, .startup {cursor:pointer;}
+div.delete{background:url(/media/images/icons/delete.png);}
+div.icon_error {background:url(/media/images/icons/exclamation.png);}
+div.delete, div.icon_error {
     background-repeat:no-repeat;
     width:16px;
     height:16px;
+    float:left;
 }
-
-
 .add {background:url(/media/images/icons/add.png);}
 .reboot {background:url(/media/images/icons/arrow_refresh.png);}
 .shutdown {background:url(/media/images/icons/stop.png);}
@@ -157,6 +158,19 @@ div.delete {
     padding-left:22px;
 }
 
+#messages li {
+    background-color:#c2e192;
+    border: 2px solid #124612;
+    color:#124612;
+    font-weight:bold;
+    font-size:110%;
+    margin:20px auto 20px auto;
+    padding: 10px 0 10px 0;
+    text-align:center;
+    width:700px;
+}
+#messages li.error {background-color:#ee9c98; border-color: #c83737; color:#550000;}
+#messages li p {font-size:12px; font-weight:normal;}
 
 .ajax_form .submit {margin:0 auto 0 auto; width:6em;}
 .name {text-align:left;}
