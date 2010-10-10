@@ -146,11 +146,18 @@ div.delete {
     width:16px;
     height:16px;
 }
-.add {
-    padding-left:22px;
-    background:url(/media/images/icons/add.png);
+
+
+.add {background:url(/media/images/icons/add.png);}
+.reboot {background:url(/media/images/icons/arrow_refresh.png);}
+.shutdown {background:url(/media/images/icons/stop.png);}
+.startup {background:url(/media/images/icons/add.png);}
+.add, .reboot, .shutdown, .startup {
     background-repeat:no-repeat;
+    padding-left:22px;
 }
+
+
 .ajax_form .submit {margin:0 auto 0 auto; width:6em;}
 .name {text-align:left;}
 tr.user td.name, tr.group td.name { padding-left:22px;}
