@@ -17,14 +17,10 @@
                 <li>Ganeti version: {{ info.software_version }}</li>
             </ul>
             {% endwith %}
-
+            
             <h3 class="indent">Nodes</h3>
             {% with cluster.nodes as nodes %}
-            <ul>{{ nodes|length }} node{{ nodes|pluralize }}
-                {% for node in nodes %}
-                <li>{{ node }}</li>
-                {% endfor %}
-            </ul>
+            {% include "node/table.html" %}
             {% endwith %}
 
         </div>

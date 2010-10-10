@@ -1,0 +1,8 @@
+
+
+<table id="nodes">
+    <tr><th>{{ nodes|length }} node{{ nodes|pluralize }}</th></tr>
+    {% for node in nodes %}
+        <tr id="node_{{node.id}}"><td>{{ node }}</td></tr>
+    {% endfor %}
+</table>
