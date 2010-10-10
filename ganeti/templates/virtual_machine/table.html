@@ -11,7 +11,7 @@
       <th>VCPUs</th>
       <th>Status</th>
     </tr>
-    {% for vm in vmlist %}
+    {% for vm in vms %}
     {% with vm.info as info %}
     <tr>
       <td><a href="{% url instance-detail vm.cluster.slug vm.hostname %}">{{ vm.hostname }}</a></td>

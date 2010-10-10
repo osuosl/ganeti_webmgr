@@ -5,7 +5,5 @@
 {% block content %}
 <h1>VM List </h1>
 <div class="add"><a href="{% url instance-create %}">Add Virtual Machine</a></div>
-{% if vmlist %}
-{% include "virtual_machine/vm_table.html" %}
-{% endif %}
+{% include "virtual_machine/table.html" %}
 {% endblock %}
