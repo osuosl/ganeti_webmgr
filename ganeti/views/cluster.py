@@ -28,14 +28,14 @@ def detail(request, cluster_slug):
     """
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     user = request.user
-    if not (user.is_superuser or user.has_perm('admin', cluster)):
+    admin = True if user.is_superuser else user.has_perm('admin', cluster)
+    if not admin:
         return HttpResponseForbidden("You do not have sufficient privileges")
     
-    vmlist = VirtualMachine.objects.filter(cluster__exact=cluster)
     return render_to_response("cluster/detail.html", {
         'cluster': cluster,
         'user': request.user,
-        'vmlist' : vmlist
+        'admin' : admin
         },
         context_instance=RequestContext(request),
     )
@@ -57,6 +57,46 @@ def cluster_users(request, cluster_slug):
                         {'cluster': cluster, 'users':users, 'groups':groups}, \
         context_instance=RequestContext(request),
     )
+
+
+@login_required
+def nodes(request, cluster_slug):
+    """
+    Display all nodes in a cluster
+    """
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    user = request.user
+    if not (user.is_superuser or user.has_perm('admin', cluster)):
+        return HttpResponseForbidden("You do not have sufficient privileges")
+    
+    users = get_users(cluster)
+    groups = get_groups(cluster)
+    return render_to_response("node/table.html", \
+                        {'cluster': cluster, 'nodes':cluster.nodes()}, \
+        context_instance=RequestContext(request),
+    )
+
+
+@login_required
+def virtual_machines(request, cluster_slug):
+    """
+    Display all virtual machines in a cluster.  Filtered by access the user
+    has permissions for
+    """
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    user = request.user
+    admin = True if user.is_superuser else user.has_perm('admin', cluster)
+    if not admin:
+        return HttpResponseForbidden("You do not have sufficient privileges")
+    
+    if admin:
+        vms = cluster.virtual_machines.all()
+    else:
+        vms = user.filter_on_perms(['admin'], VirtualMachine, cluster=cluster)
+    
+    return render_to_response("virtual_machine/table.html", \
+                {'cluster': cluster, 'vms':vms}, \
+                context_instance=RequestContext(request))
 
 
 @login_required

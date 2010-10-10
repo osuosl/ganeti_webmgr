@@ -199,6 +199,37 @@ class TestClusterViews(TestCase):
         UserGroup.objects.all().delete()
         User.objects.all().delete()
 
+    def validate_get(self, url, args, template):
+        # anonymous user
+        response = c.get(url % args, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'login.html')
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.get(url % args)
+        self.assertEqual(403, response.status_code)
+        
+        # nonexisent cluster
+        response = c.get(url % "DOES_NOT_EXIST")
+        self.assertEqual(404, response.status_code)
+        
+        # authorized user (perm)
+        grant(user, 'admin', cluster)
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, template)
+        
+        # authorized user (superuser)
+        user.revoke('admin', cluster)
+        user.is_superuser = True
+        user.save()
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, template)
+
     def test_view_list(self):
         """
         Tests displaying the list of clusters
@@ -305,36 +336,31 @@ class TestClusterViews(TestCase):
         """
         url = "/cluster/%s/users/"
         args = cluster.slug
+        self.validate_get(url, args, 'cluster/users.html')
+
+    def test_view_virtual_machines(self):
+        """
+        Tests view for cluster users:
         
-        # anonymous user
-        response = c.get(url % args, follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'login.html')
+        Verifies:
+            * lack of permissions returns 403
+            * nonexistent cluster returns 404
+        """
+        url = "/cluster/%s/virtual_machines/"
+        args = cluster.slug
+        self.validate_get(url, args, 'virtual_machine/table.html')
+
+    def test_view_nodes(self):
+        """
+        Tests view for cluster users:
         
-        # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
-        response = c.get(url % args)
-        self.assertEqual(403, response.status_code)
-        
-        # nonexisent cluster
-        response = c.get(url % "DOES_NOT_EXIST")
-        self.assertEqual(404, response.status_code)
-        
-        # authorized user (perm)
-        grant(user, 'admin', cluster)
-        response = c.get(url % args)
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/users.html')
-        
-        # authorized user (superuser)
-        user.revoke('admin', cluster)
-        user.is_superuser = True
-        user.save()
-        response = c.get(url % args)
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/users.html')
+        Verifies:
+            * lack of permissions returns 403
+            * nonexistent cluster returns 404
+        """
+        url = "/cluster/%s/nodes/"
+        args = cluster.slug
+        self.validate_get(url, args, 'node/table.html')
 
     def test_view_add_permissions(self):
         """

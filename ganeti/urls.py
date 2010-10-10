@@ -26,6 +26,8 @@ urlpatterns += patterns('ganeti_webmgr.ganeti.views.cluster',
     url(r'^%s/edit/?$' % cluster, 'edit', name="cluster-edit"),
     #   User
     url(r'^%s/users/?$' % cluster, 'cluster_users', name="cluster-users"),
+    url(r'^%s/virtual_machines/?$' % cluster, 'virtual_machines', name="cluster-vms"),
+    url(r'^%s/nodes/?$' % cluster, 'nodes', name="cluster-nodes"),
     url(r'^%s/quota/(?P<user_id>\d+)?/?$'% cluster, 'quota', name="cluster-quota"),
     url(r'^%s/permissions/?$' % cluster, 'permissions', name="cluster-permissions"),
     url(r'^%s/permissions/user/(?P<user_id>\d+)/?$' % cluster, 'permissions', name="foo"),
