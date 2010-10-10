@@ -9,7 +9,21 @@
     .ui-widget-content {border:0;}
     </style>
     <script src="{{MEDIA_URL}}/js/jquery-ui.min.js"></script>
+    <script src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
     <script type="text/javascript">
+        var PBAR_CONF = {
+            steps: 0,
+            showText: true,
+            textFormat: 'fraction',
+            boxImage: '/media/images/progressbar/progressbar.gif',
+            barImage: {
+                0: '/media/images/progressbar/progressbg_green.gif',
+                80: '/media/images/progressbar/progressbg_yellow.gif',
+                90: '/media/images/progressbar/progressbg_orange.gif',
+                95:  '/media/images/progressbar/progressbg_red.gif',
+            }
+        };
+        
         $(document).ready(function() {
             $('#tabs').tabs({ spinner: false});
         });

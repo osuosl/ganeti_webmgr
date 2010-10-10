@@ -371,13 +371,13 @@ class Cluster(CachedClusterObject):
     def _refresh(self):
         return self.rapi.GetInfo()
     
-    def nodes(self):
+    def nodes(self, bulk=False):
         """Gets all Cluster Nodes
         
         Calls the rapi client for the nodes of the cluster.
         """
         try:
-            return self.rapi.GetNodes()
+            return self.rapi.GetNodes(bulk=bulk)
         except GanetiApiError:
             return []
 

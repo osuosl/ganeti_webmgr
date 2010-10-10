@@ -69,10 +69,8 @@ def nodes(request, cluster_slug):
     if not (user.is_superuser or user.has_perm('admin', cluster)):
         return HttpResponseForbidden("You do not have sufficient privileges")
     
-    users = get_users(cluster)
-    groups = get_groups(cluster)
     return render_to_response("node/table.html", \
-                        {'cluster': cluster, 'nodes':cluster.nodes()}, \
+                        {'cluster': cluster, 'nodes':cluster.nodes(True)}, \
         context_instance=RequestContext(request),
     )
 

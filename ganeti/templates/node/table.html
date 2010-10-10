@@ -1,8 +1,28 @@
-
+{% load webmgr_tags %}
 
 <table id="nodes">
-    <tr><th>{{ nodes|length }} node{{ nodes|pluralize }}</th></tr>
+    <tr>
+        <th>Name</th>
+        <th>Free Memory (GB)</th>
+        <th>Free Disk (GB)</th>
+        <th>Instances (P/S)</th>
+        <th>Status</th>
+    </tr>
     {% for node in nodes %}
-        <tr id="node_{{node.id}}"><td>{{ node }}</td></tr>
+        <tr>
+            <td>{{ node.name }}</td>
+            <td class="ram">{% node_memory node %}</td>
+            <td class="disk">{% node_disk node %}</td>
+            <td>{{ node.pinst_cnt }} / {{ node.sinst_cnt }}</td>
+            {% if node.offline %}
+                <td class="status-down">{{ node.status|render_node_status }}</td>
+            {% else %}
+                <td class="status-running">{{ node.status|render_node_status }}</td>
+            {% endif %}
+        </tr>
     {% endfor %}
 </table>
+
+<script type="text/javascript">
+    $("#nodes .ram, #nodes .disk").progressBar(PBAR_CONF);
+</script>
