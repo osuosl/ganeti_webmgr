@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form method="post" action=".">
+  {{ form.as_p }}
+  <input type="submit" value="Log in" />
+  <input type="hidden" name="next" value="{{ next }}" />
+</form>
+
+<a href="{% url auth_password_reset %}">Forgot password?</a></p>
+<p><a href="{% url registration_register %}">Not member?</a></p>
+{% endblock %}

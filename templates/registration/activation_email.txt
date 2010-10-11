@@ -1,0 +1,4 @@
+You have successfully registered for an account with the {{ site.name }}:
+
+You can reach this site here:
+http://{{ site.domain }}

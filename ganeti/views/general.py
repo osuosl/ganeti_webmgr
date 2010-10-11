@@ -2,7 +2,6 @@ import urllib2
 import os
 import socket
 
-
 from django import forms
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -10,9 +9,9 @@ from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
-
 from ganeti_webmgr.ganeti.models import *
 from ganeti_webmgr.util.portforwarder import forward_port
+
 
 @login_required
 def index(request):
@@ -24,10 +23,12 @@ def index(request):
             context_instance=RequestContext(request),
         )
 
+
 @login_required
 def logout_view(request):
     logout(request)
     return HttpResponseRedirect('/')
+
 
 def login_view(request):
     if request.method == 'POST':
@@ -48,6 +49,83 @@ def login_view(request):
         },
         context_instance=RequestContext(request),
     )
+
+
+class UserProfileForm(forms.Form):
+    """
+    Form for editing a User's Profile
+    """
+    email = forms.EmailField()
+    old_password = forms.CharField(required=False, widget=forms.PasswordInput)
+    new_password = forms.CharField(required=False, widget=forms.PasswordInput)
+    confirm_password = forms.CharField(required=False, widget=forms.PasswordInput)
+
+    # needed to verify the user's password
+    user = None
+
+    def clean(self):
+        """
+        Overridden to add password change verification
+        """
+        data = self.cleaned_data
+        old = data.get('old_password', None)
+        new = data.get('new_password', None)
+        confirm = data.get('confirm_password', None)
+        
+        if new or confirm:
+            if not check_password(old, self.user.password):
+                del data['old_password']
+                msg = 'Old Password is incorrect'
+                self._errors['old_password'] = ErrorList([msg])
+            
+            if not new:
+                if 'new_password' in data: del data['new_password']
+                msg = 'Enter a new password'
+                self._errors['new_password'] = ErrorList([msg])
+            
+            if not confirm:
+                if 'confirm_password' in data: del data['confirm_password']
+                msg = 'Confirm new password'
+                self._errors['confirm_password'] = ErrorList([msg])
+            
+            if new and confirm and new != confirm:
+                del data['new_password']
+                del data['confirm_password']
+                msg = 'New passwords do not match'
+                self._errors['new_password'] = ErrorList([msg])
+        
+        return data
+
+
+@login_required
+def user_profile(request):
+    """
+    Form for editing a User's Profile
+    """
+    form = None
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST)
+        user = request.user
+        form.user = user
+        if form.is_valid():
+            data = form.cleaned_data
+            user.email = data['email']
+            if 'new_password' in data:
+                user.set_password(data['new_password'])
+            user.save()
+            user.get_profile().save()
+            form = None
+    
+    if not form:
+        user = request.user
+        form = UserProfileForm(initial={'email':request.user.email,
+                                        'old_password':'',
+                                        })
+    
+    return render_to_response('user_profile.html',
+     {"user":request.user, 'form':form},
+     context_instance=RequestContext(request, processors=[media_url_processor]))
+
 
 
 @user_passes_test(lambda u: u.is_superuser)

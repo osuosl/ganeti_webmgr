@@ -10,13 +10,27 @@ urlpatterns = patterns('',
     (r'^', include('ganeti.urls')),
     (r'^', include('object_permissions.urls')),
     
-    # Uncomment the admin/doc line below and add 'django.contrib.admindocs' 
-    # to INSTALLED_APPS to enable admin documentation:
-    (r'^admin/doc/', include('django.contrib.admindocs.urls')),
+
+    # user management
+    # account/activate/<key>/ - Activate a user
+    # account/activate/complete/ - Ater-activation page
+    # account/register/ - User registration form
+    # account/register/complete/ - After-registration page
+    # account/register/closed/ - No registration allowed page
+    # ---
+    # account/login - login page
+    # account/logout - logout page
+    # account/password/reset/ - send password reset email
+    # account/password/change/ - change current user password
+    
+    # Authentication
+    (r'^accounts/', include('registration.urls')),
 
     # Uncomment the next line to enable the admin:
     (r'^admin/', include(admin.site.urls)),
 )
+
+
 
 #The following is used to serve up local media files like images
 #if settings.LOCAL_DEV:

@@ -12,6 +12,7 @@ urlpatterns = patterns('ganeti_webmgr.ganeti.views.general',
     # Authentication
     url(r'^accounts/login/?', 'login_view', name="login"),
     url(r'^accounts/logout/?', 'logout_view', name="logout"),
+    url(r'^accounts/profile/?', 'user_profile', name="profile"),
 )
 
 # Clusters
