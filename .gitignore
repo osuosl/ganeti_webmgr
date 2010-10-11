@@ -10,3 +10,5 @@ settings.py
 
 # Any sqlite database files created by the project
 *.db
+# Object permissions
+object_permissions
