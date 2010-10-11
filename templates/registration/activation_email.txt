@@ -1,4 +1,5 @@
-You have successfully registered for an account with the {{ site.name }}:
+You registered an account with {{ site.name }}:
 
-You can reach this site here:
-http://{{ site.domain }}
+Before you may login you must confirm your account.  Click on this link or copy any paste it to your browser's address bar:
+
+http://{{ site.domain }}/accounts/activate/{{ activation_key }}/

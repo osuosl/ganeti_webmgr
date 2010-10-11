@@ -1,9 +1,5 @@
 {% extends "base.html" %}
 
-{% block head %}
-    <link rel="stylesheet" href="{{MEDIA_URL}}/css/registration_form.css" />
-{% endblock %}
-
 {% block javascript_ready %}
     $("label[for='id_password2']").parent().css("vertical-align", "top");
     $("label[for='id_zip']").parent().css("vertical-align", "top");
