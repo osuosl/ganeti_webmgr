@@ -140,6 +140,7 @@ class TestAccountViews(TestCase):
         Tests updating a user profile
         """
         url = '/accounts/profile/'
+        user = globals()['user']
         
         # anonymous user
         response = c.get(url, follow=True)
@@ -155,49 +156,49 @@ class TestAccountViews(TestCase):
         
         # bad method (CSRF check)
         data = {'email':'new@test.com', 'old_password':'secret','new_password':'foo', 'confirm_password':'foo'}
-        response = c.get(url, follow=True)
+        response = c.get(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'user_profile.html')
         user = User.objects.get(id=user.id)
         self.assertEqual('test@test.com', user.email)
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assert_(user.check_password('secret'), 'Password should not have been changed')
         
         # bad old password
         data = {'email':'new@test.com', 'old_password':'incorrect','new_password':'foo', 'confirm_password':'foo'}
-        response = c.get(url, follow=True)
+        response = c.get(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'user_profile.html')
         user = User.objects.get(id=user.id)
         self.assertEqual('test@test.com', user.email)
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assert_(user.check_password('secret'), 'Password should not have been changed')
         
         # not confirmed
         data = {'email':'new@test.com', 'old_password':'secret','new_password':'foo', 'confirm_password':'incorrect'}
-        response = c.get(url, follow=True)
+        response = c.get(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'user_profile.html')
         user = User.objects.get(id=user.id)
         self.assertEqual('test@test.com', user.email)
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assert_(user.check_password('secret'), 'Password should not have been changed')
         
         # change email
-        data = {'email':'new@test.com'}
-        response = c.post(url, follow=True)
+        response = c.post(url, {'email':'new@test.com'})
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'user_profile.html')
         user = User.objects.get(id=user.id)
         self.assertEqual('new@test.com', user.email)
+        self.assert_(user.check_password('secret'), 'Password should not have been changed')
         
         # change password
-        data = {'email':'new@test.com', 'old_password':'secret','new_password':'foo', 'confirm_password':'foo'}
-        response = c.post(url, follow=True)
+        data = {'email':'new2@test.com', 'old_password':'secret','new_password':'foo', 'confirm_password':'foo'}
+        response = c.post(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'user_profile.html')
         user = User.objects.get(id=user.id)
-        self.assertEqual('new@test.com', user.email)
-        self.assert_(c.login(username=user.username, password='foo'))
+        self.assertEqual('new2@test.com', user.email)
+        self.assert_(user.check_password('foo'), 'Password was not been changed')

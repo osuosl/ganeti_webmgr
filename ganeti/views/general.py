@@ -73,26 +73,26 @@ class UserProfileForm(forms.Form):
         confirm = data.get('confirm_password', None)
         
         if new or confirm:
-            if not check_password(old, self.user.password):
+            if not self.user.check_password(old):
                 del data['old_password']
                 msg = 'Old Password is incorrect'
-                self._errors['old_password'] = ErrorList([msg])
+                self._errors['old_password'] = self.error_class([msg])
             
             if not new:
                 if 'new_password' in data: del data['new_password']
                 msg = 'Enter a new password'
-                self._errors['new_password'] = ErrorList([msg])
+                self._errors['new_password'] = self.error_class([msg])
             
             if not confirm:
                 if 'confirm_password' in data: del data['confirm_password']
                 msg = 'Confirm new password'
-                self._errors['confirm_password'] = ErrorList([msg])
+                self._errors['confirm_password'] = self.error_class([msg])
             
             if new and confirm and new != confirm:
                 del data['new_password']
                 del data['confirm_password']
                 msg = 'New passwords do not match'
-                self._errors['new_password'] = ErrorList([msg])
+                self._errors['new_password'] = self.error_class([msg])
         
         return data
 
@@ -103,28 +103,28 @@ def user_profile(request):
     Form for editing a User's Profile
     """
     form = None
+    user = request.user
     if request.method == 'POST':
         form = UserProfileForm(request.POST)
-        user = request.user
         form.user = user
         if form.is_valid():
             data = form.cleaned_data
             user.email = data['email']
-            if 'new_password' in data:
+            if data['new_password']:
                 user.set_password(data['new_password'])
             user.save()
             user.get_profile().save()
             form = None
     
     if not form:
-        user = request.user
-        form = UserProfileForm(initial={'email':request.user.email,
+        
+        form = UserProfileForm(initial={'email':user.email,
                                         'old_password':'',
                                         })
     
     return render_to_response('user_profile.html',
      {"user":request.user, 'form':form},
-     context_instance=RequestContext(request, processors=[media_url_processor]))
+     context_instance=RequestContext(request))
 
 
 
