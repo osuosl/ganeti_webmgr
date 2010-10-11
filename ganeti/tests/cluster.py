@@ -10,7 +10,7 @@ from object_permissions.models import ObjectPermissionType, ObjectPermission, \
     UserGroup, GroupObjectPermission
 
 
-from ganeti.tests.rapi_proxy import RapiProxy, INFO
+from ganeti.tests.rapi_proxy import RapiProxy, INFO, NODES, NODES_BULK
 from ganeti import models
 Cluster = models.Cluster
 VirtualMachine = models.VirtualMachine
@@ -360,7 +360,9 @@ class TestClusterViews(TestCase):
         """
         url = "/cluster/%s/nodes/"
         args = cluster.slug
+        cluster.rapi.GetNodes.response = NODES_BULK
         self.validate_get(url, args, 'node/table.html')
+        cluster.rapi.GetNodes.response = NODES
 
     def test_view_add_permissions(self):
         """
