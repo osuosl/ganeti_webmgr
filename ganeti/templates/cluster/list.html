@@ -21,7 +21,7 @@
         <th>Tags</th>
         <th></th>
     </tr>
-{% for cluster in cluster_lisasdft %}
+{% for cluster in cluster_list %}
     {% with cluster.info as info %}
     {% with cluster.nodes as nodes %}
     {% with cluster.instances as vms %}
