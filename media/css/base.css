@@ -21,14 +21,18 @@
 * {
     font-family:"Lucida Grande","DejaVu Sans","Bitstream Vera Sans",Verdana,Arial,sans-serif;
     font-size:12px;
+    margin: 0px;
+    padding: 0px;
 }
 
 html {width: 100%;}
 
 body {
+    background-color:#333333;
     color:#333333;
     height: auto;
     margin: 0em;
+    min-width:974px;
 }
 
 
@@ -71,8 +75,7 @@ p label {
 }
 
 #header {
-    background: url('/static/header.png') #7AB0DC; /*#7BC3FF;*/
-    height: 8em;
+    background: #7AB0DC; /*#7BC3FF;*/
     width: 100%;
     margin-left: auto;
     margin-right: auto;
@@ -90,25 +93,48 @@ p label {
 }
 #title a:link, #title a:visited {color: white;}
 
-#menu {margin-top: 3.5em;}
-#menu ul {
-    display: inline;
+.menu {
+    float:left;
+    color:#555555;
+    padding:30px 10px 0 0;
+    width:130px;
+}
+
+.menu ul {
+    float:left;
     list-style-type: none;
-    margin: 0px;
-    padding: 0px;
+    padding-left: 20px;
 }
-#menu ul li { display: inline; margin: 0px; padding-left: 20px;}
-#menu ul li a {color: black !important; text-decoration: none;}
-#menu ul li a:hover {font-weight: bold;}
+.menu ul li { height:18px; margin: 0px; }
+.menu ul li a {color: #666666 !important; text-decoration: none;}
+.menu ul li a:hover {color: black !important;}
+.menu ul li:hover {list-style: disc;}
+.menu h3 {
+    float:left;
+    border-bottom:1px solid #BBBBBB;
+    margin: 15px 0 5px 0;
+    width:100%;
+}
 
-
+#content_wrapper {
+    background:#EEEEEE;
+    width:100%;
+    border-bottom: 5px solid #666666;
+}
+#content_column {
+    margin: 0 auto;
+    min-height:500px;
+    width:974px;
+}
 #content {
-    width: auto;
-    margin: 1em auto;
-    background: white;
-    padding: 0em 1em 1em 1em;
+    background:white;
+    border-left: 1px solid #DDDDDD;
+    border-right: 1px solid #DDDDDD;
+    float:left;    
+    min-height:500px;
+    padding:0 10px 0 10px;
+    width: 812px;
 }
-#contentwrapper {margin: 0em auto; width: auto; }
 
 #login {width: 30%; margin: 0em auto;}
 #login fieldset {}
@@ -158,6 +184,10 @@ div.delete, div.icon_error {
     padding-left:22px;
 }
 
+#content table {width:100%;}
+#content table td.name {text-align:left; padding-left:0;}
+#content table td.error {padding-right:0 !important; width:16px;}
+
 #messages li {
     background-color:#c2e192;
     border: 2px solid #124612;
@@ -174,6 +204,6 @@ div.delete, div.icon_error {
 
 .ajax_form .submit {margin:0 auto 0 auto; width:6em;}
 .name {text-align:left;}
-tr.user td.name, tr.group td.name { padding-left:22px;}
+tr.user td.name, tr.group td.name { padding-left:22px !important;}
 tr.user td.name {background:url(/media/images/icons/user.png) no-repeat 0 4px;}
 tr.group td.name {background:url(/media/images/icons/group.png) no-repeat 0 4px;}

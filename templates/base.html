@@ -11,8 +11,13 @@
         <div id="title">
             <a href="/">Ganeti Web Manager</a>
         </div>
-        <div id="menu">
-            {% block navigation %}
+    </div>
+
+    <div id="content_wrapper">
+    <div id="content_column">
+        {% block navigation %}
+            <div id="mainmenu" class="menu">
+            <h3></h3>
             <ul>
             {% if user.is_authenticated %}
                 {% comment %}TODO change to has_perm check once object
@@ -20,11 +25,11 @@
                 {% if user.is_staff %}
                 <li><a href="{% url cluster-list %}">Clusters</a></li>
                 {% endif %}
-                <li><a href="{% url virtualmachine-list %}">VMs</a></li>
+                <li><a href="{% url virtualmachine-list %}">Virtual Machines</a></li>
                 <li><a href="{% url instance-create %}">Create VM </a></li>
                 {% if user.is_staff %}
-                <li><a href="{% url instance-orphans %}">Orphan VMs</a></li>
-                <li><a href="{% url user_group-list %}">User Groups</a></li>
+                
+                
                 {% endif %}
                 {% if user.is_authenticated %}
                 <li>
@@ -35,23 +40,27 @@
                 {% endif %}
             {% endif %}
             </ul>
-            {% endblock %}
-        </div>
-    </div>
-
-    <div id="content">
-        <div id="contentwrapper">
+            
+            <h3>Admin</h3>
+            <ul>
+                <li><a href="{% url instance-orphans %}">Orphan VMs</a></li>
+                <li><a href="{% url user_group-list %}">User Groups</a></li>
+            </ul>
+            
+            </div>
+        {% endblock %}
+        <div id="content">
             {% block content %}
             {% endblock %}
         </div>
     </div>
+    </div>
     
     <div id="footer">
         <p>
-        A <a href="http://www.djangoproject.com/">
+        <a href="http://www.djangoproject.com/">
              <img src="{{ MEDIA_URL }}/django.gif" alt="A Django site" title="A Django site" border=0 />
-             
-        </a> powered site.
+        </a>
         </p>
     </div>
     
