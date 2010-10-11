@@ -101,6 +101,7 @@ INSTALLED_APPS = (
 )
 
 AUTH_PROFILE_MODULE = 'ganeti.Profile'
+LOGIN_REDIRECT_URL = '/'
 
 DATE_FORMAT = "d/m/Y H:i"
 DATETIME_FORMAT = "d/m/Y H:i"

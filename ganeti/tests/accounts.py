@@ -66,49 +66,49 @@ class TestAccountViews(TestCase):
         # anonymous user
         response = c.get(url, follow=True)
         self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'login.html')
+        self.assertTemplateUsed(response, 'registration/login.html')
         
         # no username
         data = {'password':'secret'}
         response = c.post(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'login.html')
+        self.assertTemplateUsed(response, 'registration/login.html')
         
         # no password
         data = {'username':'tester'}
         response = c.post(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'login.html')
+        self.assertTemplateUsed(response, 'registration/login.html')
         
         # bad username
         data = {'username':'invalid', 'password':'secret'}
         response = c.post(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'login.html')
+        self.assertTemplateUsed(response, 'registration/login.html')
         
         # bad password
         data = {'username':'tester', 'password':'incorrect'}
         response = c.post(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'login.html')
+        self.assertTemplateUsed(response, 'registration/login.html')
         
         # user with perms on no virtual machines
         self.assert_(c.login(username=user.username, password='secret'))
         response = c.post(url, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'login.html')
+        self.assertTemplateUsed(response, 'registration/login.html')
         
         # invalid method
         data = {'username':'tester', 'password':'secret'}
         response = c.get(url, data, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'index.html')
+        self.assertTemplateUsed(response, 'registration/login.html')
         
         # success
         data = {'username':'tester', 'password':'secret'}
@@ -126,14 +126,14 @@ class TestAccountViews(TestCase):
         # anonymous user
         response = c.get(url, follow=True)
         self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'login.html')
+        self.assertTemplateUsed(response, 'registration/login.html')
         
         # successful logout
         self.assert_(c.login(username=user.username, password='secret'))
         response = c.get(url, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'login.html')
+        self.assertTemplateUsed(response, 'registration/login.html')
     
     def test_view_profile(self):
         """
@@ -145,7 +145,7 @@ class TestAccountViews(TestCase):
         # anonymous user
         response = c.get(url, follow=True)
         self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'login.html')
+        self.assertTemplateUsed(response, 'registration/login.html')
         
         # get form
         self.assert_(c.login(username=user.username, password='secret'))

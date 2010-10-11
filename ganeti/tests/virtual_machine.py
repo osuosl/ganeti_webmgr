@@ -151,7 +151,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         # anonymous user
         response = c.get(url, follow=True)
         self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'login.html')
+        self.assertTemplateUsed(response, 'registration/login.html')
         
         # user with perms on no virtual machines
         self.assert_(c.login(username=user.username, password='secret'))
@@ -196,7 +196,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         # anonymous user
         response = c.get(url % args, follow=True)
         self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'login.html')
+        self.assertTemplateUsed(response, 'registration/login.html')
         
         # unauthorized user
         self.assert_(c.login(username=user.username, password='secret'))
@@ -236,7 +236,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         # anonymous user
         response = c.post(url % args, follow=True)
         self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'login.html')
+        self.assertTemplateUsed(response, 'registration/login.html')
         
         # unauthorized user
         self.assert_(c.login(username=user.username, password='secret'))

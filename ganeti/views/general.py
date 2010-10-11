@@ -24,33 +24,6 @@ def index(request):
         )
 
 
-@login_required
-def logout_view(request):
-    logout(request)
-    return HttpResponseRedirect('/')
-
-
-def login_view(request):
-    if request.method == 'POST':
-        form = LoginForm(request.POST)
-        if form.is_valid():
-            user = authenticate(username=form.cleaned_data['username'],
-                                password=form.cleaned_data['password'])
-            if user is not None:
-                if user.is_active:
-                    login(request, user)
-                else:
-                    return HttpResponseForbidden(content='Your account is disabled')
-        return HttpResponseRedirect(request.GET['next'])
-    else:
-        form = LoginForm()
-    return render_to_response('login.html', {
-        'form': form,
-        },
-        context_instance=RequestContext(request),
-    )
-
-
 class UserProfileForm(forms.Form):
     """
     Form for editing a User's Profile
@@ -166,11 +139,6 @@ def orphans(request):
         },
         context_instance=RequestContext(request),
     )
-
-
-class LoginForm(forms.Form):
-    username = forms.CharField(max_length=255)
-    password = forms.CharField(max_length=255, widget=forms.widgets.PasswordInput)
 
 
 class OrphanForm(forms.Form):
