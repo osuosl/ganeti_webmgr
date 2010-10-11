@@ -47,6 +47,14 @@ def quota(cluster_user, cluster):
     return cluster.get_quota(cluster_user)
 
 
+@register.filter
+def cluster_nodes(cluster, bulk=False):
+    """
+    Helper tag for passing parameter to cluster.nodes()
+    """
+    return cluster.nodes(bulk)
+
+
 @register.simple_tag
 def node_memory(node):
     total = float(node['mtotal'])/1024

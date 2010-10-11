@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load webmgr_tags %}
 
 {% block content %}
     <h1>Overview</h1>
@@ -19,7 +20,7 @@
             {% endwith %}
             
             <h3 class="indent">Nodes</h3>
-            {% with cluster.nodes as nodes %}
+            {% with cluster|cluster_nodes:1 as nodes %}
             {% include "node/table.html" %}
             {% endwith %}
 
