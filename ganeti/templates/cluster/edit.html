@@ -4,10 +4,18 @@
 
 {% block content %}
 <fieldset>
+    {% if cluster %}
     <legend>{{ cluster.hostname }}</legend>
+    {% else %}
+    <legend> Cluster </legend>
+    {% endif %}
     <form method="post">
         {{ form.as_p }}
+        {% if cluster %}
         <input type="submit" value="Save">
+        {% else %}
+        <input class="submit" type="submit" value="Add">
+        {% endif %}
     </form>
 </fieldset>
 {% endblock %}
