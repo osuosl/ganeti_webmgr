@@ -508,6 +508,7 @@ models.signals.post_save.connect(update_cluster_hash, sender=Cluster)
 models.signals.post_save.connect(update_organization, sender=UserGroup)
 register('admin', Cluster)
 register('create_vm', Cluster)
+register('admin', VirtualMachine)
 
 
 def update_cache():
