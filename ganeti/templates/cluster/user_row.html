@@ -1,20 +1,9 @@
-{% comment %} user row for cluster {% endcomment %}
+{# customized user row for cluster #}
 
-{% load object_permission_tags %}
-{% load webmgr_tags %}
+{% extends "permissions/user_row.html" %}
 
-<tr id="user_{{user.id}}" class="user">
-    <td class="name">{{user.username}}</td>
-    <td>
-        <a href="{{SITE_ROOT}}/cluster/{{cluster.slug}}/permissions/user/{{user.id}}" class="permissions">
-        {% for permission in user|permissions:cluster %}
-            {{permission}}{%if not forloop.last%}, {%endif%}
-        {% empty %}
-            <i>None</i>
-        {% endfor %}
-    </td>
+{%block table_cells%}
     {% with user.profile as cluster_user %}
         {% include "cluster/user_quota.html" %}
     {% endwith %}
-    <td><div class="delete"></div></td>
-</tr>
+{%endblock%}

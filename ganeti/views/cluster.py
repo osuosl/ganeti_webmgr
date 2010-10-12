@@ -6,6 +6,7 @@ import urllib2
 from django import forms
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseNotFound, \
     HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response
@@ -13,7 +14,7 @@ from django.template import RequestContext
 
 from object_permissions import get_model_perms, get_user_perms, grant, revoke, \
     get_users, get_groups, get_group_perms
-from object_permissions.views.permissions import ObjectPermissionFormNewUsers
+from object_permissions.views.permissions import view_users, view_permissions
 from ganeti.models import *
 from util.portforwarder import forward_port
 
@@ -37,24 +38,6 @@ def detail(request, cluster_slug):
         'user': request.user,
         'admin' : admin
         },
-        context_instance=RequestContext(request),
-    )
-
-
-@login_required
-def cluster_users(request, cluster_slug):
-    """
-    Display all of the users of a cluster
-    """
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    user = request.user
-    if not (user.is_superuser or user.has_perm('admin', cluster)):
-        return HttpResponseForbidden("You do not have sufficient privileges")
-    
-    users = get_users(cluster)
-    groups = get_groups(cluster)
-    return render_to_response("cluster/users.html", \
-                        {'cluster': cluster, 'users':users, 'groups':groups}, \
         context_instance=RequestContext(request),
     )
 
@@ -149,6 +132,21 @@ def list(request):
 
 
 @login_required
+def users(request, cluster_slug):
+    """
+    Display all of the Users of a Cluster
+    """
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    
+    user = request.user
+    if not (user.is_superuser or user.has_perm('admin', cluster)):
+        return HttpResponseForbidden("You do not have sufficient privileges")
+    
+    url = reverse('cluster-permissions', args=[cluster.slug])
+    return view_users(request, cluster, url, template='cluster/users.html')
+
+
+@login_required
 def permissions(request, cluster_slug, user_id=None, group_id=None):
     """
     Update a users permissions.
@@ -157,45 +155,11 @@ def permissions(request, cluster_slug, user_id=None, group_id=None):
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
         return HttpResponseForbidden("You do not have sufficient privileges")
-    
-    if request.method == 'POST':
-        form = ObjectPermissionFormNewUsers(cluster, request.POST)
-        if form.is_valid():
-            data = form.cleaned_data
-            if form.update_perms():
-                # return html to replace existing user row
-                form_user = form.cleaned_data['user']
-                group = form.cleaned_data['group']
-                if form_user:
-                    return render_to_response("cluster/user_row.html", \
-                                        {'cluster':cluster, 'user':form_user})
-                else:
-                    return render_to_response("cluster/group_row.html", \
-                                        {'cluster':cluster, 'group':group})
-                
-            else:
-                # no permissions, send ajax response to remove user
-                return HttpResponse('0', mimetype='application/json')
-        
-        # error in form return ajax response
-        content = json.dumps(form.errors)
-        return HttpResponse(content, mimetype='application/json')
 
-    if user_id:
-        form_user = get_object_or_404(User, id=user_id)
-        data = {'permissions':get_user_perms(form_user, cluster), \
-                'user':user_id}
-    elif group_id:
-        group = get_object_or_404(UserGroup, id=group_id)
-        data = {'permissions':get_group_perms(group, cluster), \
-                'group':group_id}
-    else:
-        data = {}
-    form = ObjectPermissionFormNewUsers(cluster, data)
-    return render_to_response("cluster/permissions.html", \
-                {'form':form, 'cluster':cluster, 'user_id':user_id, \
-                'group_id':group_id}, \
-               context_instance=RequestContext(request))
+    url = reverse('cluster-permissions', args=[cluster.slug])
+    return view_permissions(request, cluster, url, user_id, group_id,
+                            user_template='cluster/user_row.html',
+                            group_template='cluster/group_row.html')
 
 
 class QuotaForm(forms.Form):
@@ -237,10 +201,10 @@ def quota(request, cluster_slug, user_id):
             cluster_user = cluster_user.cast()
             if isinstance(cluster_user, (Profile,)):
                 return render_to_response("cluster/user_row.html",
-                        {'cluster':cluster, 'user':cluster_user.user})
+                        {'object':cluster, 'user':cluster_user.user})
             else:
                 return render_to_response("cluster/group_row.html",
-                        {'cluster':cluster, 'group':cluster_user.user_group})
+                        {'object':cluster, 'group':cluster_user.user_group})
         
         # error in form return ajax response
         content = json.dumps(form.errors)

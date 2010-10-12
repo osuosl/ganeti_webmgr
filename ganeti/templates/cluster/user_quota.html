@@ -1,9 +1,9 @@
-{% comment %}  snippet for rendering quota of a User or UserGroup {% endcomment %}
+{#  snippet for rendering quota of a User or UserGroup #}
 {% load webmgr_tags %}
 
-{% with cluster_user|quota:cluster as quota %}
+{% with cluster_user|quota:object as quota %}
     <td>
-        <a href="{% url cluster-quota cluster.slug cluster_user.id %}"
+        <a href="{% url cluster-quota object.slug cluster_user.id %}"
            class="quota {%if quota.default%}default{%endif%}">
         {%if quota.virtual_cpus or quota.ram or quota.disk %}
             {%if quota.virtual_cpus%}CPUs:{{quota.virtual_cpus}} {%endif%}

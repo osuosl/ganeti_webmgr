@@ -390,7 +390,7 @@ class TestClusterViews(TestCase):
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/permissions.html')
+        self.assertTemplateUsed(response, 'permissions/form.html')
         
         # valid GET authorized user (superuser)
         user.revoke('admin', cluster)
@@ -398,7 +398,7 @@ class TestClusterViews(TestCase):
         user.save()
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'cluster/permissions.html')
+        self.assertTemplateUsed(response, 'permissions/form.html')
         
         # no user or group
         data = {'permissions':['admin']}
@@ -483,7 +483,7 @@ class TestClusterViews(TestCase):
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/permissions.html')
+        self.assertTemplateUsed(response, 'permissions/form.html')
         
         # valid GET authorized user (superuser)
         user.revoke('admin', cluster)
@@ -491,7 +491,7 @@ class TestClusterViews(TestCase):
         user.save()
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'cluster/permissions.html')
+        self.assertTemplateUsed(response, 'permissions/form.html')
         
         # invalid user
         response = c.get(url % (cluster.slug, -1))
@@ -556,7 +556,7 @@ class TestClusterViews(TestCase):
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/permissions.html')
+        self.assertTemplateUsed(response, 'permissions/form.html')
         
         # valid GET authorized user (superuser)
         user.revoke('admin', cluster)
@@ -564,7 +564,7 @@ class TestClusterViews(TestCase):
         user.save()
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'cluster/permissions.html')        
+        self.assertTemplateUsed(response, 'permissions/form.html')
         
         # invalid group
         response = c.get(url % (cluster.slug, 0))

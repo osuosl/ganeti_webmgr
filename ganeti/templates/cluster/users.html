@@ -1,153 +1,40 @@
+{% extends "permissions/users.html" %}
 
-    <style>
-        li { margin-left:0; list-style:none;}
-        #add_user, .permissions, .delete, .quota { cursor:pointer; }
-        .quota.default {color:#C1C1C1; font-style:italic}
-        .delete {color:red;}
-        ul#errors li {color:#AD2E2E; list-style:square;}
-    </style>
-
-    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.form.js"></script>
-    <script type="text/javascript">
-        $(document).ready(function() {
-            // Add user button
-            $('#add_user').click(function(){
-                $('.qtip').qtip('destroy');
-                $(this).qtip({
-                    content: {
-                       url: '{% url cluster-permissions cluster.slug %}',
-                       title: {text:'Add User', button:'close'},
-                    },
-                    position: {  corner:{target:'center', tooltip:'center'}},
-                    style: {name: 'blue', border:{radius:5}},
-                    show: {when:false, ready:true},
-                    hide: {fixed: true, when:false}
-                });
+{% block head %}
+<script type="text/javascript">
+    $(document).ready(function() {
+        // Update Quota Button
+        $(".quota").live("click", function() {
+            // destroy old qtip before showing new one
+            $('.qtip').qtip('destroy');
+            $(this).qtip({
+                content: {
+                   url: this.href,
+                   title: {text:'Quota: ', button:'close'},
+                },
+                position: {corner:{ target:"topMiddle", tooltip:"bottomMiddle"}},
+                style: {name: 'blue',
+                        border:{radius:5},
+                        width:300,
+                        tip: 'bottomMiddle'
+                        },
+                show: {when:false, ready:true},
+                hide: {fixed: true, when:false}
             });
-            
-            // Add user submit button
-            $(".ajax_form .submit").live("click", function(){
-                $("#errors").empty();
-                $(this).parent(".ajax_form").ajaxSubmit({success: update});
-            });
-            
-            // Delete user button
-            $('.user .delete').live("click", function() {
-                $('.qtip').qtip('destroy');
-                id = this.parentNode.parentNode.id.substring(5);
-                data = {user:id, permissions:[]};
-                $.post('{% url cluster-permissions cluster.slug %}', data,
-                    function(){
-                        $("#user_" + id).remove();
-                    },
-                    "json");
-            });
-            
-            // Delete user button
-            $('.group .delete').live("click", function() {
-                $('.qtip').qtip('destroy');
-                id = this.parentNode.parentNode.id.substring(6);
-                data = {group:id, permissions:[]};
-                $.post('{% url cluster-permissions cluster.slug %}', data,
-                    function(){
-                        $("#group_" + id).remove();
-                    },
-                    "json");
-            });
-            
-            // Update Permission Button
-            $(".permissions").live("click", function() {
-                // destroy old qtip before showing new one
-                $('.qtip').qtip('destroy');
-                $(this).qtip({
-                    content: {
-                       url: this.href,
-                       title: {text:'Permissions: ', button:'close'},
-                    },
-                    position: {corner:{ target:"topMiddle", tooltip:"bottomMiddle"}},
-                    style: {name: 'blue',
-                            border:{radius:5},
-                            width:200,
-                            tip: 'bottomMiddle'
-                            },
-                    show: {when:false, ready:true},
-                    hide: {fixed: true, when:false}
-                });
-                return false;
-            });
-            
-            // Update Quota Button
-            $(".quota").live("click", function() {
-                // destroy old qtip before showing new one
-                $('.qtip').qtip('destroy');
-                $(this).qtip({
-                    content: {
-                       url: this.href,
-                       title: {text:'Quota: ', button:'close'},
-                    },
-                    position: {corner:{ target:"topMiddle", tooltip:"bottomMiddle"}},
-                    style: {name: 'blue',
-                            border:{radius:5},
-                            width:300,
-                            tip: 'bottomMiddle'
-                            },
-                    show: {when:false, ready:true},
-                    hide: {fixed: true, when:false}
-                });
-                return false;
-            });
-            
-            // Delete quota button
-            $('#quota_form .delete').live("click", function() {
-                id = $('#quota_form input[name=user]').val()
-                $.post('{% url cluster-quota cluster.slug %}'+id,
-                       {user:id, 'delete':true}, update);
-            });
+            return false;
         });
         
-        function update(responseText, statusText, xhr, $form) {
-            if (xhr.getResponseHeader('Content-Type') == 'application/json') {
-                if (responseText == 0) {
-                    // Zero code means success but no more permissions
-                    $('.qtip').qtip('hide');
-                    $("#users #" + html.attr('id')).remove();
-                } else {
-                    // parse errors
-                    errors = responseText
-                    for (key in errors) {
-                        $("#errors").append("<li>"+ errors[key] +"</li>")
-                    }
-                }
-            } else {
-                // successful permissions change.  replace the user row with the
-                // newly rendered html
-                $('.qtip').qtip('hide');
-                html = $(responseText);
-                id = html.attr('id')
-                $row = $('#users #' + id);
-                if ($row.length == 1) {
-                    $row.replaceWith(html)
-                } else {
-                    $("#users").append(html);
-                }
-            }
-        }
-    </script>
+        // Delete quota button
+        $('#quota_form .delete').live("click", function() {
+            id = $('#quota_form input[name=user]').val()
+            $.post('{% url cluster-quota object.slug %}'+id,
+                   {user:id, 'delete':true}, update);
+        });
+    });
+</script>
+{%endblock%}
 
-<div id="add_user" class="add">Add User</div>
-<table id="users">
-    <tr>
-        <th>Name</th>
-        <th>Permissions</th>
-        <th>Quota</th>
-        <th></th>
-    </tr>
-    {% for user in users %}
-        {% include "cluster/user_row.html" %}
-    {% endfor %}
-    {% for group in groups %}
-        {% include "cluster/group_row.html" %}
-    {% endfor %}
-</table>
-
+{%block table_headers%}<th>Quota</th>{%endblock%}
+{%block user_row%}{% include "cluster/user_row.html" %}{%endblock%}
+{%block group_row%}{% include "cluster/group_row.html" %}{%endblock%}
 
