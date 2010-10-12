@@ -68,10 +68,11 @@ p label {
 
 #header {
     background: #7AB0DC; /*#7BC3FF;*/
+    border-bottom:1px solid #888888;
+    margin:0 auto;
     width: 100%;
-    margin-left: auto;
-    margin-right: auto;
 }
+
 
 #header a:active, #header a:link,
 #header a:visited, #header a:hover {color: white; font-weight: bold;}
