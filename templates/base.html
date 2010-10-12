@@ -1,3 +1,5 @@
+{% load object_permission_tags %}
+
 <html>
     <head>
     <title>{% block title %}Ganeti Web Manager{% endblock %}</title>
@@ -31,13 +33,19 @@
                     </span>
                 </li>
             </ul>
-            {% if user.is_superuser %}
+            {% with user|group_admin as group_admin %}
+            {% if user.is_superuser or group_admin %}
             <h3>Admin</h3>
             <ul>
-                <li><a href="{% url instance-orphans %}">Orphan VMs</a></li>
-                <li><a href="{% url user_group-list %}">User Groups</a></li>
+                {% if user.is_superuser %}
+                    <li><a href="{% url instance-orphans %}">Orphan VMs</a></li>
+                {% endif %}
+                {% if group_admin %}
+                    <li><a href="{% url user_group-list %}">User Groups</a></li>
+                {% endif %}
             </ul>
             {% endif %}
+            {% endwith %}
             </div>
             {% endif %}
         {% endblock %}
