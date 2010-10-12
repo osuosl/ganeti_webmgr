@@ -107,6 +107,8 @@ p label {
     margin: 15px 0 5px 0;
     width:100%;
 }
+.menu .user, .menu .user a {font-size:11px;}
+.menu .user a {display:block;}
 
 #content_wrapper {
     background:#EEEEEE;
