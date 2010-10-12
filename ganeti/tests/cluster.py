@@ -548,7 +548,7 @@ class TestClusterViews(TestCase):
         self.assertEqual(403, response.status_code)
         
         # nonexisent cluster
-        response = c.get(url % ("DOES_NOT_EXIST", user1.id))
+        response = c.get(url % ("DOES_NOT_EXIST", group.id))
         self.assertEqual(404, response.status_code)
         
         # valid GET authorized user (perm)

@@ -68,10 +68,11 @@ p label {
 
 #header {
     background: #7AB0DC; /*#7BC3FF;*/
+    border-bottom:1px solid #888888;
+    margin:0 auto;
     width: 100%;
-    margin-left: auto;
-    margin-right: auto;
 }
+
 
 #header a:active, #header a:link,
 #header a:visited, #header a:hover {color: white; font-weight: bold;}
@@ -170,27 +171,29 @@ div.delete, div.icon_error {
     float:left;
 }
 
-.add, .reboot, .shutdown, .startup {float:right; clear:both;}
-.add {
-    background:url(/media/images/icons/add.png) 4px 4px #eeeeee;
+.add a, .reboot a, .shutdown a, .startup a,
+.add a:visited, .reboot a:visited, .shutdown a:visited, .startup a:visited,
+.add a, .reboot a, .shutdown a, .startup a:link{color:inherit !important;}
+
+.add, .reboot, .shutdown, .startup {
+    background-color: #eeeeee !important;
     border: 1px solid #cccccc;
+    clear:both;
     color:black;
-    padding: 4px;
+    float:right; 
+    padding:4px 4px 4px 22px;
+    margin:2px;
     width:140px;
     -moz-border-radius:5px;
     -webkit-border-radius:5px;
 }
-.add a {color:inherit;}
 
+.add {background:url(/media/images/icons/add.png) no-repeat 4px 4px;}
+.reboot {background:url(/media/images/icons/arrow_refresh.png) no-repeat 4px 4px;}
+.shutdown {background:url(/media/images/icons/stop.png) no-repeat 4px 4px;}
+.startup {background:url(/media/images/icons/add.png) no-repeat 4px 4px;}
+.add:hover, .reboot:hover, .shutdown:hover, .startup:hover {background-color: #dadada !important; color:black;} 
 
-
-.reboot {background:url(/media/images/icons/arrow_refresh.png);}
-.shutdown {background:url(/media/images/icons/stop.png);}
-.startup {background:url(/media/images/icons/add.png);}
-.add, .reboot, .shutdown, .startup {
-    background-repeat:no-repeat;
-    padding-left:22px;
-}
 
 #content table {margin-top:15px;  width:100%; border: 1px solid #dddddd;}
 #content th {background:#eeeeee; border-bottom:1px solid #dddddd !important;}

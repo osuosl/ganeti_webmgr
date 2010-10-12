@@ -1,4 +1,10 @@
 {% load webmgr_tags %}
+
+{% if cluster %}
+    <div class="add"><a href="{% url instance-create cluster.slug %}">Add Virtual Machine</a></div>
+{% else %}
+    <div class="add"><a href="{% url instance-create %}">Add Virtual Machine</a></div>
+{% endif %}
 <table>
     <tr>
       <th></th>

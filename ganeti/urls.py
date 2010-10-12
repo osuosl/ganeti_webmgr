@@ -29,23 +29,30 @@ urlpatterns += patterns('ganeti_webmgr.ganeti.views.cluster',
     url(r'^%s/nodes/?$' % cluster, 'nodes', name="cluster-nodes"),
     url(r'^%s/quota/(?P<user_id>\d+)?/?$'% cluster, 'quota', name="cluster-quota"),
     url(r'^%s/permissions/?$' % cluster, 'permissions', name="cluster-permissions"),
-    url(r'^%s/permissions/user/(?P<user_id>\d+)/?$' % cluster, 'permissions', name="foo"),
+    url(r'^%s/permissions/user/(?P<user_id>\d+)/?$' % cluster, 'permissions', name="cluster-permissions-user"),
     url(r'^%s/permissions/group/(?P<group_id>\d+)/?$' % cluster, 'permissions', name="cluster-permissions-group"),
 )
 
-# Instances
-prefix = '%s%s' %  (cluster, instance)
+
+# VirtualMachines
+vm_prefix = '%s%s' %  (cluster, instance)
 urlpatterns += patterns('ganeti_webmgr.ganeti.views.virtual_machine',
     #  List
     url(r'^vms/$', 'list', name="virtualmachine-list"),
     #  Create
     url(r'^vm/add/$', 'create', name="instance-create"),
     url(r'^vm/add/(?P<cluster_slug>\w+)$', 'create', name="instance-create"),
+    
     #  Detail
-    url(r'^%s/?$' % prefix, 'detail', name="instance-detail"),
+    url(r'^%s/?$' % vm_prefix, 'detail', name="instance-detail"),
+    url(r'^%s/users/?$' % vm_prefix, 'users', name="vm-users"),
+    url(r'^%s/permissions/?$' % vm_prefix, 'permissions', name="vm-permissions"),
+    url(r'^%s/permissions/user/(?P<user_id>\d+)/?$' % vm_prefix, 'permissions', name="vm-permissions-user"),
+    url(r'^%s/permissions/group/(?P<group_id>\d+)/?$' % vm_prefix, 'permissions', name="vm-permissions-user"),
+    
     #  Start, Stop, Reboot
-    url(r'^%s/vnc/?$' % prefix, 'vnc', name="instance-vnc"),
-    url(r'^%s/shutdown/?$' % prefix, 'shutdown', name="instance-shutdown"),
-    url(r'^%s/startup/?$' % prefix, 'startup', name="instance-startup"),
-    url(r'^%s/reboot/?$' % prefix, 'reboot', name="instance-reboot"),
+    url(r'^%s/vnc/?$' % vm_prefix, 'vnc', name="instance-vnc"),
+    url(r'^%s/shutdown/?$' % vm_prefix, 'shutdown', name="instance-shutdown"),
+    url(r'^%s/startup/?$' % vm_prefix, 'startup', name="instance-startup"),
+    url(r'^%s/reboot/?$' % vm_prefix, 'reboot', name="instance-reboot"),
 )

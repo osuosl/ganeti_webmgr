@@ -3,15 +3,20 @@ import json
 from django import forms
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, \
     HttpResponseForbidden, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
+from object_permissions import get_users, get_groups
+from object_permissions.views.permissions import view_users, view_permissions
+
 from util.client import GanetiApiError
 from ganeti.models import *
 from util.portforwarder import forward_port
 from util.client import GanetiApiError
+
 
 
 FQDN_RE = r'^[\w]+(\.[\w]+)*$'
@@ -112,7 +117,8 @@ def detail(request, cluster_slug, instance):
     vm = get_object_or_404(VirtualMachine, hostname=instance)
     
     user = request.user
-    if not (user.is_superuser or user.has_perm('admin', vm)):
+    admin = True if user.is_superuser else user.has_perm('admin', vm)
+    if not admin:
         return HttpResponseForbidden()
     
     if request.method == 'POST':
@@ -138,14 +144,48 @@ def detail(request, cluster_slug, instance):
             vm.info['hvparams']['cdrom_type'] = 'none'
         form = InstanceConfigForm(vm.info['hvparams'])
 
+    
+
     return render_to_response("virtual_machine/detail.html", {
         'cluster': cluster,
         'instance': vm,
         'configform': form,
-        'user': request.user,
+        'admin':admin
         },
         context_instance=RequestContext(request),
     )
+
+
+@login_required
+def users(request, cluster_slug, instance):
+    """
+    Display all of the Users of a VirtualMachine
+    """
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    vm = get_object_or_404(VirtualMachine, hostname=instance)
+    
+    user = request.user
+    if not (user.is_superuser or user.has_perm('admin', vm)):
+        return HttpResponseForbidden("You do not have sufficient privileges")
+    
+    url = reverse('vm-permissions', args=[cluster.slug, vm.hostname])
+    return view_users(request, vm, url)
+
+
+@login_required
+def permissions(request, cluster_slug, instance, user_id=None, group_id=None):
+    """
+    Update a users permissions.
+    """
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    vm = get_object_or_404(VirtualMachine, hostname=instance)
+    
+    user = request.user
+    if not (user.is_superuser or user.has_perm('admin', vm)):
+        return HttpResponseForbidden("You do not have sufficient privileges")
+
+    url = reverse('vm-permissions', args=[cluster.slug, vm.hostname])
+    return view_permissions(request, vm, url, user_id, group_id)
 
 
 @login_required
