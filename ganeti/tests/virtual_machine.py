@@ -6,8 +6,9 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.test.client import Client
 
-from object_permissions import grant, revoke, register
-from object_permissions.models import ObjectPermission
+from object_permissions import grant, revoke, register, get_user_perms
+from object_permissions.models import ObjectPermission, GroupObjectPermission, \
+    UserGroup
 
 from util import client
 from ganeti.tests.rapi_proxy import RapiProxy, INSTANCE
@@ -113,6 +114,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         user1 = User(id=3, username='tester1')
         user1.set_password('secret')
         user1.save()
+        group = UserGroup(name='testing_group')
+        group.save()
         
         g = globals()
         g['vm'] = vm
@@ -120,16 +123,55 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         g['user'] = user
         g['user1'] = user1
         g['c'] = Client()
+        g['group'] = group
         
         # XXX specify permission manually, it is not auto registering for some reason
         register('admin', Cluster)
         register('admin', VirtualMachine)
+        register('start', VirtualMachine)
     
     def tearDown(self):
         ObjectPermission.objects.all().delete()
+        GroupObjectPermission.objects.all().delete()
+        UserGroup.objects.all().delete()
         User.objects.all().delete()
         VirtualMachine.objects.all().delete()
         Cluster.objects.all().delete()
+    
+    def validate_get(self, url, args, template):
+        # anonymous user
+        response = c.get(url % args, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'registration/login.html')
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.get(url % args)
+        self.assertEqual(403, response.status_code)
+        
+        # nonexisent cluster
+        response = c.get(url % ("DOES_NOT_EXIST", vm.id))
+        self.assertEqual(404, response.status_code)
+        
+        # nonexisent vm
+        response = c.get(url % (cluster.slug, vm.id))
+        self.assertEqual(404, response.status_code)
+        
+        # authorized user (perm)
+        grant(user, 'admin', vm)
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, template)
+        
+        # authorized user (superuser)
+        user.revoke('admin', vm)
+        user.is_superuser = True
+        user.save()
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, template)
     
     def test_view_list(self):
         """
@@ -316,3 +358,262 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         
         # POST
         raise NotImplementedError
+    
+    def test_view_users(self):
+        """
+        Tests view for cluster users:
+        
+        Verifies:
+            * lack of permissions returns 403
+            * nonexistent Cluster returns 404
+            * nonexistent VirtualMachine returns 404
+        """
+        url = "/cluster/%s/%s/users/"
+        args = (cluster.slug, vm.hostname)
+        self.validate_get(url, args, 'permissions/users.html')
+
+    def test_view_add_permissions(self):
+        """
+        Test adding permissions to a new User or UserGroup
+        """
+        url = '/cluster/%s/%s/permissions/'
+        args = (cluster.slug, vm.hostname)
+        
+        # anonymous user
+        response = c.get(url % args, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'registration/login.html')
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.get(url % args)
+        self.assertEqual(403, response.status_code)
+        
+        # nonexisent cluster
+        response = c.get(url % ("DOES_NOT_EXIST", vm.hostname))
+        self.assertEqual(404, response.status_code)
+        
+        # nonexisent vm
+        response = c.get(url % (cluster.slug, "DOES_NOT_EXIST"))
+        self.assertEqual(404, response.status_code)
+        
+        # valid GET authorized user (perm)
+        grant(user, 'admin', vm)
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'permissions/form.html')
+        
+        # valid GET authorized user (superuser)
+        user.revoke('admin', vm)
+        user.is_superuser = True
+        user.save()
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'permissions/form.html')
+        
+        # no user or group
+        data = {'permissions':['admin']}
+        response = c.post(url % args, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        self.assertNotEqual('0', response.content)
+        
+        # both user and group
+        data = {'permissions':['admin'], 'group':group.id, 'user':user1.id}
+        response = c.post(url % args, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        self.assertNotEqual('0', response.content)
+        
+        # no permissions specified - user
+        data = {'permissions':[], 'user':user1.id}
+        response = c.post(url % args, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        self.assertNotEqual('0', response.content)
+        
+        # no permissions specified - group
+        data = {'permissions':[], 'group':group.id}
+        response = c.post(url % args, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        
+        # valid POST user has permissions
+        user1.grant('start', vm)
+        data = {'permissions':['admin'], 'user':user1.id}
+        response = c.post(url % args, data)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'permissions/user_row.html')
+        self.assert_(user1.has_perm('admin', vm))
+        self.assertFalse(user1.has_perm('start', vm))
+        
+        # valid POST group has permissions
+        group.grant('start', vm)
+        data = {'permissions':['admin'], 'group':group.id}
+        response = c.post(url % args, data)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'permissions/group_row.html')
+        self.assertEqual(['admin'], group.get_perms(vm))
+
+    def test_view_user_permissions(self):
+        """
+        Tests updating User's permissions
+        
+        Verifies:
+            * anonymous user returns 403
+            * lack of permissions returns 403
+            * nonexistent cluster returns 404
+            * invalid user returns 404
+            * invalid group returns 404
+            * missing user and group returns error as json
+            * GET returns html for form
+            * If user/group has permissions no html is returned
+            * If user/group has no permissions a json response of -1 is returned
+        """
+        args = (cluster.slug, vm.hostname, user1.id)
+        args_post = (cluster.slug, vm.hostname)
+        url = "/cluster/%s/%s/permissions/user/%s"
+        url_post = "/cluster/%s/%s/permissions/"
+        
+        # anonymous user
+        response = c.get(url % args, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'registration/login.html')
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.get(url % args)
+        self.assertEqual(403, response.status_code)
+        
+        # nonexisent cluster
+        response = c.get(url % ("DOES_NOT_EXIST", vm.hostname, user1.id))
+        self.assertEqual(404, response.status_code)
+        
+        # nonexisent vm
+        response = c.get(url % (cluster.slug, "DOES_NOT_EXIST", user1.id))
+        self.assertEqual(404, response.status_code)
+        
+        # valid GET authorized user (perm)
+        grant(user, 'admin', vm)
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'permissions/form.html')
+        
+        # valid GET authorized user (superuser)
+        user.revoke('admin', vm)
+        user.is_superuser = True
+        user.save()
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'permissions/form.html')
+        
+        # invalid user
+        response = c.get(url % (cluster.slug, vm.hostname, -1))
+        self.assertEqual(404, response.status_code)
+        
+        # invalid user (POST)
+        user1.grant('start', vm)
+        data = {'permissions':['admin'], 'user':-1}
+        response = c.post(url_post % args_post, data)
+        self.assertEquals('application/json', response['content-type'])
+        self.assertNotEqual('0', response.content)
+        
+        # no user (POST)
+        user1.grant('start', vm)
+        data = {'permissions':['admin']}
+        response = c.post(url_post % args_post, data)
+        self.assertEquals('application/json', response['content-type'])
+        self.assertNotEqual('0', response.content)
+        
+        # valid POST user has permissions
+        user1.grant('start', vm)
+        data = {'permissions':['admin'], 'user':user1.id}
+        response = c.post(url_post % args_post, data)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'permissions/user_row.html')
+        self.assert_(user1.has_perm('admin', vm))
+        self.assertFalse(user1.has_perm('start', vm))
+        
+        # valid POST user has no permissions left
+        data = {'permissions':[], 'user':user1.id}
+        response = c.post(url_post % args_post, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        self.assertEqual([], get_user_perms(user, vm))
+        self.assertEqual('0', response.content)
+
+    def test_view_group_permissions(self):
+        """
+        Test editing UserGroup permissions on a Cluster
+        """
+        args = (cluster.slug, vm.hostname, group.id)
+        args_post = (cluster.slug, vm.hostname)
+        url = "/cluster/%s/%s/permissions/group/%s"
+        url_post = "/cluster/%s/%s/permissions/"
+        
+        # anonymous user
+        response = c.get(url % args, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'registration/login.html')
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.get(url % args)
+        self.assertEqual(403, response.status_code)
+        
+        # nonexisent cluster
+        response = c.get(url % ("DOES_NOT_EXIST", vm.hostname, group.id))
+        self.assertEqual(404, response.status_code)
+        
+        # nonexisent vm
+        response = c.get(url % (cluster.slug, "DOES_NOT_EXIST", user1.id))
+        self.assertEqual(404, response.status_code)
+        
+        # valid GET authorized user (perm)
+        grant(user, 'admin', vm)
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'permissions/form.html')
+        
+        # valid GET authorized user (superuser)
+        user.revoke('admin', vm)
+        user.is_superuser = True
+        user.save()
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'permissions/form.html')
+        
+        # invalid group
+        response = c.get(url % (cluster.slug, vm.hostname, 0))
+        self.assertEqual(404, response.status_code)
+        
+        # invalid group (POST)
+        data = {'permissions':['admin'], 'group':-1}
+        response = c.post(url_post % args_post, data)
+        self.assertEquals('application/json', response['content-type'])
+        self.assertNotEqual('0', response.content)
+        
+        # no group (POST)
+        data = {'permissions':['admin']}
+        response = c.post(url_post % args_post, data)
+        self.assertEquals('application/json', response['content-type'])
+        self.assertNotEqual('0', response.content)
+        
+        # valid POST group has permissions
+        group.grant('start', vm)
+        data = {'permissions':['admin'], 'group':group.id}
+        response = c.post(url_post % args_post, data)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'permissions/group_row.html')
+        self.assertEqual(['admin'], group.get_perms(vm))
+        
+        # valid POST group has no permissions left
+        data = {'permissions':[], 'group':group.id}
+        response = c.post(url_post % args_post, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        self.assertEqual([], group.get_perms(vm))
+        self.assertEqual('0', response.content)

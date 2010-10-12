@@ -42,7 +42,7 @@
     <ul id="tabs">
         <li><a href="#tab1"><span>Overview</span></a></li>
         <li><a href="#configuration"><span>Configuration</span></a></li>
-        {% if admin %}<li><a href="{% url vm-users cluster.slug instance.id %}"><span>Users</span></a></li>{%endif%}
+        {% if admin %}<li><a href="{% url vm-users cluster.slug instance.hostname %}"><span>Users</span></a></li>{%endif%}
     </ul>
     <div id="tab1" class="tab_content">
         <ul id="actions">
