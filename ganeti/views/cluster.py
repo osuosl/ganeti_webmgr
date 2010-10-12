@@ -95,13 +95,7 @@ def edit(request, cluster_slug=None):
         if form.is_valid():
             newcluster = form.save()
             newcluster.sync_virtual_machines()
-            return render_to_response("cluster/detail.html", {
-                'cluster': cluster,
-                'user': request.user,
-                'vmlist': vmlist,
-                },
-                context_instance=RequestContext(request),
-            )
+            return HttpResponseRedirect(reverse('cluster-detail', args=[newcluster.slug]))
     else:
         form = EditClusterForm(instance=cluster)
     
