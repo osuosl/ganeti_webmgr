@@ -33,6 +33,7 @@
             <td>{{ nodes|length }}</td>
             <td>{{ vms|length }}</td>
             <td>{{ info.tags|join:", "}}</td>
+            <td><a href="{% url cluster-delete cluster.slug %}">Delete</a></td>
             <td><a href="{% url cluster-edit cluster.slug %}">Edit</a></td>
         </tr>
     {% endwith %}

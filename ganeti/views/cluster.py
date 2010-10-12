@@ -81,6 +81,21 @@ def virtual_machines(request, cluster_slug):
 
 
 @login_required
+def delete(request, cluster_slug):
+    """
+    Delete a cluster
+    """
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    user = request.user
+    admin = True if user.is_superuser else user.has_perm('admin', cluster)
+    if not admin:
+        return HttpResponseForbidden("You do not have sufficient privileges")
+    
+    cluster.delete()
+    return HttpResponseRedirect(reverse('cluster-list'))
+
+
+@login_required
 def edit(request, cluster_slug=None):
     """
     Edit a cluster
@@ -106,6 +121,7 @@ def edit(request, cluster_slug=None):
         },
         context_instance=RequestContext(request),
     )
+
 
 @login_required
 def list(request):
