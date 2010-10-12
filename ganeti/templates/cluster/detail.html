@@ -39,14 +39,13 @@
 
 <div id="tabs">
     <ul id="tabs">
-        <li><a href="#tab1"><span>Details</span></a></li>
+        <li><a href="#tab1"><span>Overview</span></a></li>
         <li><a href="{% url cluster-vms cluster.slug %}"><span>Virtual Machines</span></a></li>
         <li><a href="{% url cluster-nodes cluster.slug %}"><span>Nodes</span></a></li>
         {% if admin %}<li><a href="{% url cluster-users cluster.slug %}"><span>Users</span></a></li>{%endif%}
     </ul>
     <div id="tab1" class="tab_content">
         <div class="ticket" id="ticket_{{ cluster.id }}">
-            <h2>Information</h2>
             {% with cluster.info as info %}
             <ul>
             <li>Architecture: {{ info.architecture.0 }}</li>

@@ -16,38 +16,28 @@
     <div id="content_wrapper">
     <div id="content_column">
         {% block navigation %}
+            {% if user.is_authenticated %}
             <div id="mainmenu" class="menu">
             <h3></h3>
             <ul>
-            {% if user.is_authenticated %}
-                {% comment %}TODO change to has_perm check once object
-                permissions are enabled!{% endcomment %}
-                {% if user.is_staff %}
                 <li><a href="{% url cluster-list %}">Clusters</a></li>
-                {% endif %}
                 <li><a href="{% url virtualmachine-list %}">Virtual Machines</a></li>
                 <li><a href="{% url instance-create %}">Create VM </a></li>
-                {% if user.is_staff %}
-                
-                
-                {% endif %}
-                {% if user.is_authenticated %}
                 <li>
                     <span id="searchbar">
                         <a href="{% url logout %}">Logout</a>
                     </span>
                 </li>
-                {% endif %}
-            {% endif %}
             </ul>
-            
+            {% if user.is_superuser %}
             <h3>Admin</h3>
             <ul>
                 <li><a href="{% url instance-orphans %}">Orphan VMs</a></li>
                 <li><a href="{% url user_group-list %}">User Groups</a></li>
             </ul>
-            
+            {% endif %}
             </div>
+            {% endif %}
         {% endblock %}
         <div id="content">
             {% block content %}

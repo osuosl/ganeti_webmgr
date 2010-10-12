@@ -179,6 +179,7 @@ div.delete, div.icon_error {
     color:black;
     float:right; 
     padding:4px 4px 4px 22px;
+    margin:2px;
     width:140px;
     -moz-border-radius:5px;
     -webkit-border-radius:5px;
