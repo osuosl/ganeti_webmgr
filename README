@@ -1,11 +1,105 @@
-## Example of how to use the rapi client
-#  This is just a placeholder for now.
-# TODO Write real README file explaining project and list resources for more
-#  information
-import client
+====================================================
+ Ganeti Web Manager
+====================================================
 
-HOSTNAME = 'ganeti-test.osuosl.bak'
+Ganeti Web Manager is a Django based web application that allows administrators
+and clients access to their ganeti clusters.  
 
-curl_config = client.GenericCurlConfig()
-rapi_client = client.GanetiRapiClient(HOSTNAME, curl_config_fn=curl_config)
-print rapi_client.GetVersion();
+
+====================================================
+ Installation
+====================================================
+
+1.  Install Dependencies
+    * Django
+    * django-registration
+    * object_permissions (packaged with releases)
+
+2. Deploy this code somewhere.
+3. Copy settings.py.dist to settings.py
+4. Create a database and configure your settings:
+
+ DATABASE_ENGINE = ''   <-- Change This to 'mysql', 'postgresql', 'postgresql_psycopg2' or 'oracle'
+ DATABASE_NAME = ''     <-- Change This
+ DATABASE_USER = ''     <-- Change This
+ DATABASE_PASSWORD = '' <-- Change This
+ DATABASE_HOST = ''     <-- Change this (not needed if database is localhost)
+ DATABASE_PORT = ''     <-- Change this (not needed if database is localhost)
+
+5. Initialize the databse
+
+    ./manage.py syncdb
+
+6. run the server
+
+    Development: ./manage.py runserver
+    Production:  follow the guides on django-project.com for configuring Apache
+    
+    http://docs.djangoproject.com/en/1.2/howto/deployment/
+    
+
+====================================================
+ Creating a Cluster
+====================================================
+
+1. Use the admin user created during syncdb to log in.
+2. Create a cluster:  Clusters -> Add Cluster
+3. When the cluster is created it will automatically synchronize the list of
+Virtual Machines with information from the ganeti cluster.
+
+
+====================================================
+ Users, Groups, and Permissions
+====================================================
+
+Permissions may be granted on clusters and virtual machines.  This allows access
+for any part of the cluster to be controlled
+
+Clusters:
+  1. Clusters -> Cluster -> User
+  2. Click permissions for existing user, or add for a new user
+  3. edit and save.
+
+Virtual Machines:
+  1. Virtual Machines -> Virtual Machine -> User
+  2. Click permissions for existing user, or add for a new user
+  3. edit and save
+  
+
+Users may belong to any number of user groups.  User groups can be assigned
+permissions and quotas just like users.  Users inherit permissions from groups
+and may act on their behalf to create virtual machines.
+
+
+====================================================
+ Assigning Quotas
+====================================================
+
+NOTE: quotas can be edited but they are not restricting usage, yet.
+
+Cluster quotas will restrict how much resources a User or Group can consume.  A
+default quota can be assigned to a cluster, which will affect all users and
+groups.  This can be overridden by:
+
+   1. Clusters -> Cluster -> Users
+   2. click on the quota
+   3. edit values
+
+entering no values for the quota grants unlimited amount of that resource.
+
+====================================================
+ Orphaned VirtualMachines
+====================================================
+
+You can find VirtualMachines with no permissions via Admin -> Orphaned VMs.
+This will force a synchronization of all clusters and display VirtualMachines
+that do not have any permissions assigned.
+
+You only need to grant permissions directly on virtual machines if you are
+granting access to non-admin users.
+
+
+
+
+
+
