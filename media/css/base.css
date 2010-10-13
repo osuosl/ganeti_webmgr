@@ -139,6 +139,7 @@ form ul.errorlist {color:red;padding:1ex 1ex;}
 form p {padding:0.5ex 0ex;}
 fieldset {border:0px; padding-top:1em;}
 legend {font-size:1.5em; font-weight:bold;}
+
 /*   Login   */
 #login {margin: 3em auto 0em auto; width: 30%;}
 #login fieldset {border:1px black solid;}
@@ -154,6 +155,11 @@ legend {font-size:1.5em; font-weight:bold;}
 /*   Virtual Machines   */
 #virtualmachineform p label {width: 12em;}
 #virtualmachineform input.submit {margin-left:12.5em;}
+
+/*  Orphans */
+#orphans {margin:1em 0em 0em 1em;}
+#orphans li input {margin:0ex 1ex 0ex 0ex;}
+
 
 #configuration {text-align: center;}
 #configuration form {margin: 0 auto 0 auto; max-width: 800px;}
