@@ -131,16 +131,27 @@ p label {
     width: 812px;
 }
 
-#login {width: 30%; margin: 0em auto;}
-#login fieldset {}
+/**
+ * Forms and Form Elements
+ **/
+/*   Login   */
+#login {margin: 3em auto 0em auto; width: 30%;}
+#login ul.errorlist {padding-bottom:1em;}
+#login fieldset {padding:1em;}
+#login fieldset p {padding-bottom:1.5ex;}
+#login legend {font-size:1.4em; font-weight:bold;}
 #login label {
-    width: 7em;
-    float: left;
-    text-align: right;
-    margin-right: 0.5em;
     display: block;
+    float: left;
+    margin-right: 0.5em;
+    margin-top: 0.2ex;
+    text-align: right;
+    width: 5.5em;
 }
-#login input.submit {margin-left: 7.5em;}
+#login input.submit {margin-left: 6em;}
+
+/*   Clusters   */
+/*   Virtual Machines   */
 
 #configuration {text-align: center;}
 #configuration form {margin: 0 auto 0 auto; max-width: 800px;}
