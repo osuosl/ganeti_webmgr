@@ -58,14 +58,6 @@ li {
     margin-left:0px; 
 }
 
-p label {
-    width: 10em;
-    float: left;
-    text-align: right;
-    margin-right: 0.5em;
-    display: block;
-}
-
 #header {
     background: #7AB0DC; /*#7BC3FF;*/
     border-bottom:1px solid #888888;
@@ -134,39 +126,34 @@ p label {
 /**
  * Forms and Form Elements
  **/
+/*  Default Settings */
+form input.submit {color:black; width:6em;}
+form p label {
+    float: left;
+    text-align: right;
+    margin-top: 0.3ex;
+    margin-right: 0.5em;
+    display: block;
+}
+form ul.errorlist {color:red;padding:1ex 1ex;}
+form p {padding:0.5ex 0ex;}
+fieldset {border:0px; padding-top:1em;}
+legend {font-size:1.5em; font-weight:bold;}
 /*   Login   */
 #login {margin: 3em auto 0em auto; width: 30%;}
-#login ul.errorlist {padding-bottom:1em;}
+#login fieldset {border:1px black solid;}
 #login fieldset {padding:1em;}
 #login fieldset p {padding-bottom:1.5ex;}
-#login legend {font-size:1.4em; font-weight:bold;}
-#login label {
-    display: block;
-    float: left;
-    margin-right: 0.5em;
-    margin-top: 0.2ex;
-    text-align: right;
-    width: 5.5em;
-}
+#login p label {width: 5.5em;}
 #login input.submit {margin-left: 6em;}
 
 /*   Clusters   */
-#clusterform {}
-#clusterform ul.errorlist {color:red;padding:1ex 1ex;}
-#clusterform fieldset {border:0px; padding-top:1em;}
-#clusterform legend {font-size:1.5em; font-weight:bold;}
-#clusterform p {padding:0.5ex 0ex;}
-#clusterform p label {
-    width: 10em;
-    float: left;
-    text-align: right;
-    margin-right: 0.5em;
-    display: block;
-}
-#clusterform input.submit {color:black; margin-left:10.5em; width:6em;}
+#clusterform p label {width:10em;}
+#clusterform input.submit {margin-left:10.5em;}
 
 /*   Virtual Machines   */
-#virtualmachineform {}
+#virtualmachineform p label {width: 12em;}
+#virtualmachineform input.submit {margin-left:12.5em;}
 
 #configuration {text-align: center;}
 #configuration form {margin: 0 auto 0 auto; max-width: 800px;}
