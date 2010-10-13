@@ -152,6 +152,18 @@ p label {
 
 /*   Clusters   */
 #clusterform {}
+#clusterform ul.errorlist {color:red;padding:1ex 1ex;}
+#clusterform fieldset {border:0px; padding-top:1em;}
+#clusterform legend {font-size:1.5em; font-weight:bold;}
+#clusterform p {padding:0.5ex 0ex;}
+#clusterform p label {
+    width: 10em;
+    float: left;
+    text-align: right;
+    margin-right: 0.5em;
+    display: block;
+}
+#clusterform input.submit {color:black; margin-left:10.5em; width:6em;}
 
 /*   Virtual Machines   */
 #virtualmachineform {}
