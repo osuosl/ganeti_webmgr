@@ -51,5 +51,7 @@
         {% endif %}
         {{ info.status|render_instance_status }}</td>
     {% endwith %}
+    {% empty %}
+        <tr class="none"><td colspan="100%">No Virtual Machines</td></tr>
     {% endfor %}
 </table>
