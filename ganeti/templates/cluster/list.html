@@ -20,6 +20,7 @@
         <th>VMs</th>
         <th>Tags</th>
         <th></th>
+        <th></th>
     </tr>
 {% for cluster in cluster_list %}
     {% with cluster.info as info %}
@@ -33,8 +34,8 @@
             <td>{{ nodes|length }}</td>
             <td>{{ vms|length }}</td>
             <td>{{ info.tags|join:", "}}</td>
-            <td><a href="{% url cluster-delete cluster.slug %}">Delete</a></td>
-            <td><a href="{% url cluster-edit cluster.slug %}">Edit</a></td>
+            <td><a href="{% url cluster-edit cluster.slug %}"><div class="edit"></div></a></td>
+            <td><a href="{% url cluster-delete cluster.slug %}"><div class="delete"></div></a></td>
         </tr>
     {% endwith %}
     {% endwith %}

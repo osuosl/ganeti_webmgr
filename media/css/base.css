@@ -174,10 +174,11 @@ legend {font-size:1.5em; font-weight:bold;}
 ul#errors {color:#AD2E2E;}
 ul.errors {list-style:square;}
 
-.add, .delete, .reboot, .shutdown, .startup {cursor:pointer;}
+.add, .delete, .edit, .reboot, .shutdown, .startup {cursor:pointer;}
+div.edit{background:url(/media/images/icons/edit.png);}
 div.delete{background:url(/media/images/icons/delete.png);}
 div.icon_error {background:url(/media/images/icons/exclamation.png);}
-div.delete, div.icon_error {
+div.delete, div.edit, div.icon_error {
     background-repeat:no-repeat;
     width:16px;
     height:16px;
