@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.test import TestCase
@@ -801,3 +802,15 @@ class TestClusterViews(TestCase):
         self.assertTemplateUsed(response, 'cluster/group_row.html')
         self.assertEqual(default_quota, cluster.get_quota())
         self.assertFalse(query.exists())
+
+    def test_view_delete(self):
+        """
+        Test the deletion of a cluster
+            through use of the cluster delete
+            view.
+        """
+        cluster_d = Cluster(hostname='test.cluster.bak', slug='cluster1')
+        url='/cluster/%s/delete/' % cluster_d.slug
+        response = c.post(url, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertRaises(ObjectDoesNotExist, Cluster.objects.get, hostname='test.cluster.bak')
