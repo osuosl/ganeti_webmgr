@@ -151,7 +151,10 @@ p label {
 #login input.submit {margin-left: 6em;}
 
 /*   Clusters   */
+#clusterform {}
+
 /*   Virtual Machines   */
+#virtualmachineform {}
 
 #configuration {text-align: center;}
 #configuration form {margin: 0 auto 0 auto; max-width: 800px;}
