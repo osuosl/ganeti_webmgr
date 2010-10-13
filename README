@@ -1,14 +1,14 @@
-====================================================
+================================================================================
  Ganeti Web Manager
-====================================================
+================================================================================
 
 Ganeti Web Manager is a Django based web application that allows administrators
 and clients access to their ganeti clusters.  
 
 
-====================================================
+================================================================================
  Installation
-====================================================
+================================================================================
 
 1.  Install Dependencies
     * Django
@@ -38,9 +38,9 @@ and clients access to their ganeti clusters.
     http://docs.djangoproject.com/en/1.2/howto/deployment/
     
 
-====================================================
+================================================================================
  Creating a Cluster
-====================================================
+================================================================================
 
 1. Use the admin user created during syncdb to log in.
 2. Create a cluster:  Clusters -> Add Cluster
@@ -48,9 +48,9 @@ and clients access to their ganeti clusters.
 Virtual Machines with information from the ganeti cluster.
 
 
-====================================================
+================================================================================
  Users, Groups, and Permissions
-====================================================
+================================================================================
 
 Permissions may be granted on clusters and virtual machines.  This allows access
 for any part of the cluster to be controlled
@@ -71,9 +71,9 @@ permissions and quotas just like users.  Users inherit permissions from groups
 and may act on their behalf to create virtual machines.
 
 
-====================================================
+================================================================================
  Assigning Quotas
-====================================================
+================================================================================
 
 NOTE: quotas can be edited but they are not restricting usage, yet.
 
@@ -87,9 +87,10 @@ groups.  This can be overridden by:
 
 entering no values for the quota grants unlimited amount of that resource.
 
-====================================================
+
+================================================================================
  Orphaned VirtualMachines
-====================================================
+================================================================================
 
 You can find VirtualMachines with no permissions via Admin -> Orphaned VMs.
 This will force a synchronization of all clusters and display VirtualMachines
