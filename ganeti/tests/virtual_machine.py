@@ -542,7 +542,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertEqual([], get_user_perms(user, vm))
-        self.assertEqual('0', response.content)
+        self.assertEqual('1', response.content)
 
     def test_view_group_permissions(self):
         """
@@ -616,4 +616,4 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertEqual([], group.get_perms(vm))
-        self.assertEqual('0', response.content)
+        self.assertEqual('1', response.content)
