@@ -182,7 +182,7 @@ legend {font-size:1.5em; font-weight:bold;}
 ul#errors {color:#AD2E2E;}
 ul.errors {list-style:square;}
 
-.add, .delete, .edit, .reboot, .shutdown, .startup {cursor:pointer;}
+.add, .delete, .edit, .reboot, .shutdown, .startup {cursor:pointer; margin-right:3px;}
 div.edit{background:url(/media/images/icons/edit.png);}
 div.delete{background:url(/media/images/icons/delete.png);}
 div.icon_error {background:url(/media/images/icons/exclamation.png);}
