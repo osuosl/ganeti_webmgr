@@ -44,7 +44,8 @@ def shutdown(request, cluster_slug, instance):
                            cluster__slug=cluster_slug)
     user = request.user
     
-    if not (user.is_superuser or user.has_perm('admin', vm)):
+    if not (user.is_superuser or user.has_perm('admin', vm) or \
+        user.has_perm('admin', vm.cluster)):
         return HttpResponseForbidden()
     
     if request.method == 'POST':
@@ -63,8 +64,9 @@ def startup(request, cluster_slug, instance):
     vm = get_object_or_404(VirtualMachine, hostname=instance, \
                            cluster__slug=cluster_slug)
     user = request.user
-    if not (user.is_superuser or user.has_perm('admin', vm)):
-        return HttpResponseForbidden()
+    if not (user.is_superuser or user.has_perm('admin', vm) or \
+        user.has_perm('admin', vm.cluster)):
+            return HttpResponseForbidden()
     
     if request.method == 'POST':
         try:
@@ -82,8 +84,9 @@ def reboot(request, cluster_slug, instance):
     vm = get_object_or_404(VirtualMachine, hostname=instance, \
                            cluster__slug=cluster_slug)
     user = request.user
-    if not (user.is_superuser or user.has_perm('admin', vm)):
-        return HttpResponseForbidden()
+    if not (user.is_superuser or user.has_perm('admin', vm) or \
+        user.has_perm('admin', vm.cluster)):
+            return HttpResponseForbidden()
     
     if request.method == 'POST':
         try:
@@ -117,7 +120,8 @@ def detail(request, cluster_slug, instance):
     vm = get_object_or_404(VirtualMachine, hostname=instance)
     
     user = request.user
-    admin = True if user.is_superuser else user.has_perm('admin', vm)
+    admin = user.is_superuser or user.has_perm('admin', vm) \
+        or user.has_perm('admin', cluster)
     if not admin:
         return HttpResponseForbidden()
     
@@ -165,7 +169,8 @@ def users(request, cluster_slug, instance):
     vm = get_object_or_404(VirtualMachine, hostname=instance)
     
     user = request.user
-    if not (user.is_superuser or user.has_perm('admin', vm)):
+    if not (user.is_superuser or user.has_perm('admin', vm) or \
+        user.has_perm('admin', cluster)):
         return HttpResponseForbidden("You do not have sufficient privileges")
     
     url = reverse('vm-permissions', args=[cluster.slug, vm.hostname])
@@ -181,7 +186,8 @@ def permissions(request, cluster_slug, instance, user_id=None, group_id=None):
     vm = get_object_or_404(VirtualMachine, hostname=instance)
     
     user = request.user
-    if not (user.is_superuser or user.has_perm('admin', vm)):
+    if not (user.is_superuser or user.has_perm('admin', vm) or \
+        user.has_perm('admin', cluster)):
         return HttpResponseForbidden("You do not have sufficient privileges")
 
     url = reverse('vm-permissions', args=[cluster.slug, vm.hostname])

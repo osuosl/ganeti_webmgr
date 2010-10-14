@@ -259,9 +259,17 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'virtual_machine/detail.html')
+        user.revoke('admin', vm)
+        
+        # authorized (cluster admin)
+        grant(user, 'admin', cluster)
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
+        user.revoke('admin', cluster)
         
         # authorized (superuser)
-        user.revoke('admin', vm)
         user.is_superuser = True
         user.save()
         response = c.get(url % args)
@@ -300,9 +308,18 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEquals('application/json', response['content-type'])
         content = json.loads(response.content)
         self.assertEquals(1, content[0])
+        user.revoke('admin', vm)
+        
+        # authorized (cluster admin)
+        grant(user, 'admin', cluster)
+        response = c.post(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        content = json.loads(response.content)
+        self.assertEquals(1, content[0])
+        user.revoke('admin', cluster)
         
         # authorized (superuser)
-        user.revoke('admin', vm)
         user.is_superuser = True
         user.save()
         response = c.post(url % args)
@@ -403,9 +420,17 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'permissions/form.html')
+        user.revoke('admin', vm)
+        
+        # valid GET authorized user (cluster admin)
+        grant(user, 'admin', cluster)
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'permissions/form.html')
+        user.revoke('admin', cluster)
         
         # valid GET authorized user (superuser)
-        user.revoke('admin', vm)
         user.is_superuser = True
         user.save()
         response = c.get(url % args)
@@ -500,9 +525,17 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'permissions/form.html')
+        user.revoke('admin', vm)
+        
+        # valid GET authorized user (cluster admin)
+        grant(user, 'admin', cluster)
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'permissions/form.html')
+        user.revoke('admin', cluster)
         
         # valid GET authorized user (superuser)
-        user.revoke('admin', vm)
         user.is_superuser = True
         user.save()
         response = c.get(url % args)
@@ -577,9 +610,17 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'permissions/form.html')
+        user.revoke('admin', vm)
+        
+        # valid GET authorized user (cluster admin)
+        grant(user, 'admin', cluster)
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'permissions/form.html')
+        user.revoke('admin', cluster)
         
         # valid GET authorized user (superuser)
-        user.revoke('admin', vm)
         user.is_superuser = True
         user.save()
         response = c.get(url % args)
