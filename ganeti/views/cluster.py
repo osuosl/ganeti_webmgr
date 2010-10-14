@@ -238,3 +238,12 @@ def quota(request, cluster_slug, user_id):
 class EditClusterForm(forms.ModelForm):
     class Meta:
         model = Cluster
+    
+    def __init__(self, *args, **kwargs):
+        super(EditClusterForm, self).__init__(*args, **kwargs)
+        instance = getattr(self, 'instance', None)
+        if instance:
+            self.fields['hostname'].widget.attrs['disabled'] = True
+            self.fields['hostname'].widget.attrs['class'] = 'disabled'
+            self.fields['port'].widget.attrs['disabled'] = True
+            self.fields['port'].widget.attrs['class'] = 'disabled'
