@@ -248,7 +248,12 @@ div.delete, div.edit, div.icon_error {
 #messages li.error {background-color:#ee9c98; border-color: #c83737; color:#550000;}
 #messages li p {font-size:12px; font-weight:normal;}
 
-.ajax_form .submit {margin:0 auto 0 auto; width:6em;}
+.ajax_form .submit {margin:10px auto 0 auto; width:6em;}
+.ajax_form ul#errors li {
+    color:#AD2E2E;
+    list-style:square;
+    margin: 0 0 10px 20px;}
+
 .name {text-align:left;}
 tr.user td.name, tr.group td.name { padding-left:22px !important;}
 tr.user td.name {background:url(/media/images/icons/user.png) no-repeat 0 4px;}
