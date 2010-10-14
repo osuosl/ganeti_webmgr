@@ -177,6 +177,8 @@ legend {font-size:1.5em; font-weight:bold;}
     width: 100%;
 }
 
+.disabled{ color:grey; background:white; border:white 2px solid; }
+
 ul#errors {color:#AD2E2E;}
 ul.errors {list-style:square;}
 
