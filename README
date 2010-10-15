@@ -5,6 +5,8 @@
 Ganeti Web Manager is a Django based web application that allows administrators
 and clients access to their ganeti clusters.  
 
+http://code.osuosl.org/projects/ganeti-webmgr
+
 
 ================================================================================
  Installation
