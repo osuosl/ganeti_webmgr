@@ -32,11 +32,17 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
     def setUp(self):
         self.tearDown()
         models.client.GanetiRapiClient = RapiProxy
+        
+        # XXX grant permissions to ensure they exist
+        # XXX specify permission manually, it is not auto registering for some reason
+        register('admin', VirtualMachine)
+        register('start', VirtualMachine)
     
     def tearDown(self):
         VirtualMachine.objects.all().delete()
         Cluster.objects.all().delete()
         User.objects.all().delete()
+        UserGroup.objects.all().delete()
     
     def test_trivial(self):
         """
@@ -97,6 +103,80 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(vm.virtual_cpus, 2)
         self.assertEqual(vm.disk_size, 5120)
 
+    def test_parse_permissions(self):
+        """
+        Test parsing permissions from tags:
+        
+        Verifies:
+            * new tags are added to user/group
+            * existing tags remain granted
+            * removed tags are revoked
+        """
+        vm, cluster = self.create_virtual_machine()
+        
+        user0 = User(id=1, username='user0')
+        user1 = User(id=2, username='user1')
+        user2 = User(id=3, username='user2')
+        user0.save()
+        user1.save()
+        user2.save()
+        group0 = UserGroup(id=4, name='group0')
+        group1 = UserGroup(id=5, name='group1')
+        group2 = UserGroup(id=6, name='group2')
+        group0.save()
+        group1.save()
+        group2.save()
+        
+        user1.grant('admin', vm)
+        user2.grant('admin', vm)
+        user2.grant('start', vm)
+        group1.grant('admin', vm)
+        group2.grant('admin', vm)
+        group2.grant('start', vm)
+        
+        # force info to be parsed
+        #
+        # user that does not exist - error should be caught
+        # group that does not exist - error should be caught
+        # permission that does not exist - error should be caught
+        data = {}
+        data.update(INSTANCE)
+        data['tags'] = ['GANETI_WEB_MANAGER:start:U:1',
+                        'GANETI_WEB_MANAGER:admin:U:1',
+                        'GANETI_WEB_MANAGER:start:U:2',
+                        'GANETI_WEB_MANAGER:admin:G:4',
+                        'GANETI_WEB_MANAGER:start:G:4',
+                        'GANETI_WEB_MANAGER:start:G:5',
+                        'GANETI_WEB_MANAGER:bad_perm:U:1',
+                        'GANETI_WEB_MANAGER:bad_perm:G:4']
+        vm.info = data
+        
+        # user with new permissions
+        self.assertEqual(['admin','start'], user0.get_perms(vm))
+        
+        # user with a granted and revoked permission
+        self.assertEqual(['start'], user1.get_perms(vm))
+        
+        # group with new permissions
+        self.assertEqual(['admin','start'], group0.get_perms(vm))
+        
+        # group with a granted and revoked permission
+        self.assertEqual(['start'], group1.get_perms(vm))
+        
+        # user with all permissions revoked
+        self.assertEqual([], user2.get_perms(vm))
+        
+        # group with all permissions revoked
+        self.assertEqual([], group2.get_perms(vm))
+
+    def test_granting_permissions(self):
+        """
+        Test granting permissions:
+        
+        Verifies:
+            * granted permission is added to tags and pushed to ganeti
+        """
+        raise NotImplementedError
 
 class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
     """

@@ -10,8 +10,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
 
-from object_permissions.registration import register
-from object_permissions.models import UserGroup
+from object_permissions.registration import register, get_users, get_groups
+from object_permissions.models import UserGroup, ObjectPermissionType
 from util import client
 from util.client import GanetiApiError
 
@@ -228,22 +228,50 @@ class VirtualMachine(CachedClusterObject):
             self.cluster_hash = self.cluster.hash
         super(VirtualMachine, self).save(*args, **kwargs)
 
-
     def parse_persistent_info(self):
         """
         Loads all values from cached info, included persistent properties that
         are stored in the database
         """
         info_ = self.info
-        '''
-        XXX no tags yet.  not sure what the property name is called.
+        
+        # Group permission tags by [group|user] & id.  Once they have been
+        # parsed process the lists to set or delete all perms.  This ensures
+        # that only a single query per user will be executed, plus 2 extra
+        # queries to check for users and groups to remove all permissions from.
+        tagged_users = {}
+        tagged_groups = {}
         for tag in info_['tags']:
-            if tag.startswith('owner:'):
-                try:
-                    self.owner = ClusterUser.objects.get(name__iexact=tag.replace('owner:',''))
-                except:
-                    pass
-        '''
+            if tag.startswith('GANETI_WEB_MANAGER:'):
+                perm, group, id = tag[19:].split(':')
+                group = True if group == 'G' else False
+                if group:
+                    perms = tagged_groups.get(id, [])
+                    tagged_groups[id] = perms
+                else:
+                    perms = tagged_users.get(id, [])
+                    tagged_users[id] = perms
+                perms.append(perm)
+        
+        # set permissions for all uses with permissions
+        for id in tagged_users:
+            try:
+                user = User.objects.get(id=id)
+                user.set_perms(tagged_users[id], self)
+            except (User.DoesNotExist, ObjectPermissionType.DoesNotExist):
+                pass
+        for id in tagged_groups:
+            try:
+                group = UserGroup.objects.get(id=id)
+                group.set_perms(tagged_groups[id], self)
+            except (UserGroup.DoesNotExist, ObjectPermissionType.DoesNotExist):
+                pass
+        
+        # revoke all permissions for any user who had all permissions removed
+        for user in get_users(self).exclude(id__in=tagged_users.keys()):
+            user.revoke_all(self)
+        for group in get_groups(self).exclude(id__in=tagged_groups.keys()):
+            group.revoke_all(self)
         
         # Parse resource properties
         self.ram = self.info['beparams']['memory']
