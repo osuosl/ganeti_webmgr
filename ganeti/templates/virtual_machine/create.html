@@ -6,9 +6,23 @@
     <script src="{{MEDIA_URL}}/js/jquery.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
-            $("#id_disk_template").change(function() {
-                if( $("#id_disk_template").val() == 'drdb') {
-                    alert($("#id_disk_template").val());
+            snode = $("#id_snode");
+            disk_template = $("#id_disk_template");
+            curSelection = $("#id_snode option:selected").index();
+            if( disk_template.val() != 'drdb') {
+                snode.parent().hide();
+            }
+            disk_template.change(function() {
+                if( disk_template.val() == 'drdb') {
+                    snode.parent().show();
+                } else {
+                    snode.parent().hide();
+                }
+            })
+            snode.change(function() {
+                if( snode.attr('readonly') ) {
+                    $("#id_snode option:selected").removeAttr('selected');
+                    $("#id_snode option").index(curSelection).attr('selected');
                 }
             })
         });
