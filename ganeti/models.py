@@ -11,6 +11,7 @@ from django.db import models
 
 
 from object_permissions.registration import register, get_users, get_groups
+from object_permissions.signals import granted, revoked
 from object_permissions.models import UserGroup, ObjectPermissionType
 from util import client
 from util.client import GanetiApiError
@@ -282,6 +283,23 @@ class VirtualMachine(CachedClusterObject):
             disk_size += disk
         self.disk_size = disk_size 
 
+    def add_permission_tag(self, grantee, perm):
+        """
+        Adds a permission tag to this VirtualMachine
+        """
+        group = 'G' if isinstance(grantee, (UserGroup,)) else 'U'
+        tag = 'GANETI_WEB_MANAGER:%s:%s:%s' % (perm, group, grantee.id)
+        # TODO - implement pushing the tag to ganeti
+    
+    def remove_permission_tag(self, grantee, perm):
+        """
+        Removes a permission tag from this VirtualMachine
+        """
+        group = 'G' if isinstance(grantee, (UserGroup,)) else 'U'
+        tag = 'GANETI_WEB_MANAGER:%s:%s:%s' % (perm, group, grantee.id)
+        print 'Removing: ', tag
+        # TODO - implement pushing the tag to ganeti
+    
     def _refresh(self):
         return self.rapi.GetInstance(self.hostname)
 
@@ -531,9 +549,29 @@ def update_organization(sender, instance, **kwargs):
     org.save()
 
 
+def add_virtual_machine_tag(sender, perm, object, **kwargs):
+    """
+    Pass through to virtual machine to add permission tag
+    """
+    if isinstance(object, (VirtualMachine,)):
+        object.add_permission_tag(sender, perm)
+
+
+def remove_virtual_machine_tag(sender, perm, object, **kwargs):
+    """
+    Pass through to virtual machine to remove permission tag
+    """
+    # XXX this does not appear to be called
+    if isinstance(object, (VirtualMachine,)):
+        object.remove_permission_tag(sender, perm)
+
+
 models.signals.post_save.connect(create_profile, sender=User)
 models.signals.post_save.connect(update_cluster_hash, sender=Cluster)
 models.signals.post_save.connect(update_organization, sender=UserGroup)
 register('admin', Cluster)
 register('create_vm', Cluster)
 register('admin', VirtualMachine)
+
+granted.connect(add_virtual_machine_tag)
+revoked.connect(add_virtual_machine_tag)
