@@ -17,11 +17,6 @@ from ganeti.models import *
 from util.portforwarder import forward_port
 from util.client import GanetiApiError
 
-
-
-FQDN_RE = r'^[\w]+(\.[\w]+)*$'
-
-
 @login_required
 def vnc(request, cluster_slug, instance):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
@@ -214,9 +209,6 @@ def create(request, cluster_slug=None):
         form = NewVirtualMachineForm(request.POST, oslist=oslist, nodes=nodes)
         if form.is_valid():
             data = form.cleaned_data
-            if data['snode'] == data['pnode']:
-                raise forms.ValidationError("Secondary Node must not match%s" \
-                                             % " Primary")
             cluster = data['cluster']
             hostname = data['hostname']
             owner = data['owner']
@@ -227,9 +219,11 @@ def create(request, cluster_slug=None):
             os = data['os']
             pnode = data['pnode']
             snode = data['snode']
+            if pnode == 'drdb':
+                snode = None
             vm = VirtualMachine(cluster=cluster, owner=owner, hostname=hostname, \
                                 disk_size=disk_size, ram=ram, virtual_cpus=vcpus, \
-                                node=pnode)
+                                pnode=pnode, snode=snode)
             vm.save()
             c = get_object_or_404(Cluster, hostname=cluster)
             jobid = 0
@@ -244,7 +238,7 @@ def create(request, cluster_slug=None):
                 print e
             #print jobid
             return HttpResponseRedirect(request.META['HTTP_REFERER']) # Redirect after POST
-    else:
+    elif request.method == 'GET':
         form = NewVirtualMachineForm(initial={'cluster':cluster,}, \
                                      oslist=oslist, nodes=nodes)
 
@@ -269,6 +263,10 @@ def node_choices(cluster_hostname):
 
 
 class NewVirtualMachineForm(forms.Form):
+    """
+    Virtual Machine Creation / Edit form
+    """
+    FQDN_RE = r'^[\w]+(\.[\w]+)*$'
     cluster = forms.ModelChoiceField(queryset=Cluster.objects.all(), label='Cluster')
     owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label='Owner')
     hostname = forms.RegexField(label='Instance Name', regex=FQDN_RE,
@@ -313,9 +311,10 @@ class NewVirtualMachineForm(forms.Form):
         cleaned_data = self.cleaned_data
         pnode = cleaned_data.get("pnode")
         snode = cleaned_data.get("snode")
+        disk_template = cleaned_data.get("disk_template")
 
         # Need to have pnode != snode
-        if pnode == snode:
+        if disk_template == "drdb" and pnode == snode:
             # We know these are not in self._errors now 
             msg = u"Primary and Secondary Nodes must not match."
             self._errors["pnode"] = self.error_class([msg])
