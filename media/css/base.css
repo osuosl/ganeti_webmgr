@@ -110,8 +110,9 @@ li {
 }
 #content_column {
     margin: 0 auto;
-    min-height:500px;
+    
     width:974px;
+    
 }
 #content {
     background:white;
@@ -119,7 +120,7 @@ li {
     border-right: 1px solid #DDDDDD;
     float:left;    
     min-height:490px;
-    padding:10px 10px 0 10px;
+    padding:10px 10px 20px 10px;
     width: 812px;
 }
 
@@ -261,3 +262,5 @@ tr.group td.name {background:url(/media/images/icons/group.png) no-repeat 0 4px;
 
 .permissions a {color:#333333;}
 .permissions .none, .quota.default {color:#C1C1C1; font-style:italic;}
+
+.floatfix {clear:both;}
