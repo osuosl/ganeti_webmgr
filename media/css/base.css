@@ -103,17 +103,8 @@ li {
 .menu .user, .menu .user a {font-size:11px;}
 .menu .user a {display:block;}
 
-#content_wrapper {
-    background:#EEEEEE;
-    width:100%;
-    border-bottom: 5px solid #666666;
-}
-#content_column {
-    margin: 0 auto;
-    
-    width:974px;
-    
-}
+#content_wrapper {background:#EEEEEE; border-bottom: 5px solid #666666; width:100%;}
+#content_column {margin: 0 auto; width:974px;}
 #content {
     background:white;
     border-left: 1px solid #DDDDDD;
