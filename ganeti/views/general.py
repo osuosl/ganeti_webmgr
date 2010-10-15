@@ -9,8 +9,8 @@ from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
-from ganeti_webmgr.ganeti.models import *
-from ganeti_webmgr.util.portforwarder import forward_port
+from ganeti.models import *
+from util.portforwarder import forward_port
 
 
 @login_required

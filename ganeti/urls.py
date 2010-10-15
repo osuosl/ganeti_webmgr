@@ -3,9 +3,7 @@ from django.conf.urls.defaults import *
 cluster = 'cluster/(?P<cluster_slug>\w+)'
 instance = '/(?P<instance>[^/]+)'
 
-urlpatterns = patterns('ganeti_webmgr.ganeti.views.general',
-    # Example:
-    # (r'^ganeti_webmgr/', include('ganeti_webmgr.foo.urls')),
+urlpatterns = patterns('ganeti.views.general',
     url(r'^$', 'index', name="cluster-overview"),
     #   Orphans
     url(r'^orphans/','orphans', name='instance-orphans'),
@@ -14,7 +12,7 @@ urlpatterns = patterns('ganeti_webmgr.ganeti.views.general',
 )
 
 # Clusters
-urlpatterns += patterns('ganeti_webmgr.ganeti.views.cluster',
+urlpatterns += patterns('ganeti.views.cluster',
     #   List
     url(r'^clusters/$', 'list', name="cluster-list"),
     #   Add
@@ -38,7 +36,7 @@ urlpatterns += patterns('ganeti_webmgr.ganeti.views.cluster',
 
 # VirtualMachines
 vm_prefix = '%s%s' %  (cluster, instance)
-urlpatterns += patterns('ganeti_webmgr.ganeti.views.virtual_machine',
+urlpatterns += patterns('ganeti.views.virtual_machine',
     #  List
     url(r'^vms/$', 'list', name="virtualmachine-list"),
     #  Create

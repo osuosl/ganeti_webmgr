@@ -83,7 +83,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfResponseMiddleware'
 )
 
-ROOT_URLCONF = 'ganeti_webmgr.urls'
+ROOT_URLCONF = 'urls'
 
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
@@ -98,8 +98,8 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.sites',
     'registration',
-    'ganeti_webmgr.object_permissions',
-    'ganeti_webmgr.ganeti'
+    'object_permissions',
+    'ganeti'
 )
 
 AUTH_PROFILE_MODULE = 'ganeti.Profile'
