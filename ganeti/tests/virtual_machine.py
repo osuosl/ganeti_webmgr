@@ -169,14 +169,47 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         # group with all permissions revoked
         self.assertEqual([], group2.get_perms(vm))
 
-    def test_granting_permissions(self):
+    def test_changing_permissions(self):
         """
-        Test granting permissions:
+        Test granting and revoking permissions:
         
         Verifies:
             * granted permission is added to tags and pushed to ganeti
+            * revoked permission is removed from tags and pushed to ganeti
         """
-        raise NotImplementedError
+        vm, cluster = self.create_virtual_machine()
+        user = User(id=1, username='user0')
+        user.save()
+        group = UserGroup(id=1, name='group0')
+        group.save()
+        rapi = vm.rapi
+        
+        user.grant('admin', vm)
+        rapi.AddInstanceTags.assertCalled(self)
+        rapi.AddInstanceTags.reset()
+        
+        group.grant('admin', vm)
+        rapi.AddInstanceTags.assertCalled(self)
+        rapi.AddInstanceTags.reset()
+        
+        user.revoke('admin', vm)
+        rapi.DeleteInstanceTags.assertCalled(self)
+        rapi.DeleteInstanceTags.reset()
+        
+        group.revoke('admin', vm)
+        rapi.DeleteInstanceTags.assertCalled(self)
+        rapi.DeleteInstanceTags.reset()
+        
+        rapi.error = client.GanetiApiError('testing error')
+        try:
+            user.grant('admin', vm)
+            user.revoke('admin', vm)
+            self.fail('errors were not raised')
+        except client.GanetiApiError:
+            # XXX for now errors are bubbled up.  not sure yet how to handle
+            # the exception
+            pass
+
 
 class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
     """

@@ -289,7 +289,7 @@ class VirtualMachine(CachedClusterObject):
         """
         group = 'G' if isinstance(grantee, (UserGroup,)) else 'U'
         tag = 'GANETI_WEB_MANAGER:%s:%s:%s' % (perm, group, grantee.id)
-        # TODO - implement pushing the tag to ganeti
+        self.rapi.AddInstanceTags(self.hostname, (tag,))
     
     def remove_permission_tag(self, grantee, perm):
         """
@@ -297,8 +297,7 @@ class VirtualMachine(CachedClusterObject):
         """
         group = 'G' if isinstance(grantee, (UserGroup,)) else 'U'
         tag = 'GANETI_WEB_MANAGER:%s:%s:%s' % (perm, group, grantee.id)
-        print 'Removing: ', tag
-        # TODO - implement pushing the tag to ganeti
+        self.rapi.DeleteInstanceTags(self.hostname, (tag,))
     
     def _refresh(self):
         return self.rapi.GetInstance(self.hostname)
@@ -561,7 +560,6 @@ def remove_virtual_machine_tag(sender, perm, object, **kwargs):
     """
     Pass through to virtual machine to remove permission tag
     """
-    # XXX this does not appear to be called
     if isinstance(object, (VirtualMachine,)):
         object.remove_permission_tag(sender, perm)
 
@@ -574,4 +572,4 @@ register('create_vm', Cluster)
 register('admin', VirtualMachine)
 
 granted.connect(add_virtual_machine_tag)
-revoked.connect(add_virtual_machine_tag)
+revoked.connect(remove_virtual_machine_tag)
