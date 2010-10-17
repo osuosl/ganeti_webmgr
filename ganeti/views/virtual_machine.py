@@ -237,7 +237,8 @@ def create(request, cluster_slug=None):
                 print jobid
                 print e
             #print jobid
-            return HttpResponseRedirect(request.META['HTTP_REFERER']) # Redirect after POST
+            return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    
     elif request.method == 'GET':
         form = NewVirtualMachineForm(initial={'cluster':cluster,}, \
                                      oslist=oslist, nodes=nodes)
@@ -251,15 +252,17 @@ def create(request, cluster_slug=None):
 
 
 def os_choices(cluster_hostname):
+    """ helper function for building choice list of operating systems """
     cluster = Cluster.objects.get(hostname__exact=cluster_hostname)
     oslist = cluster.rapi.GetOperatingSystems()
-    return [ (os, os) for os in oslist ]
+    return zip(oslist, oslist)
 
 
 def node_choices(cluster_hostname):
+    """ helper function for building a choices list of nodes """
     cluster = Cluster.objects.get(hostname__exact=cluster_hostname)
-    nodelist = cluster.rapi.GetNodes()
-    return [ (node, node) for node in nodelist ]
+    nodelist = cluster.nodes()
+    return zip(nodelist, nodelist)
 
 
 class NewVirtualMachineForm(forms.Form):
