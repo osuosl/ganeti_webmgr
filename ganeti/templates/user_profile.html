@@ -2,10 +2,9 @@
 {% block title %}User Profile{% endblock %}
 
 {% block content %}
-        <form action="." method="post">
+        <form action="{% url profile %}" method="post">
         <h2>Profile information for {{user.username}}</h2>
         <table>
-        
         {% for field in form %}
             {% if field.errors %}<tr><td></td><td>{{field.errors}}</td></tr>{%endif%}
             <tr class="{{field.name}}"><td>{{field.label_tag}}</td><td>{{field}}</td></tr>
