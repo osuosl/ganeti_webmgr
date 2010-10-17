@@ -114,6 +114,22 @@ li {
     padding:10px 10px 20px 10px;
     width: 812px;
 }
+#content table {margin-top:15px;  width:100%; border: 1px solid #dddddd;}
+#content th {background:#eeeeee; border-bottom:1px solid #dddddd !important;}
+#content td.name {text-align:left; padding-left:0;}
+#content tr.none td {border-bottom: 1px solid white; font-style:italic;}
+#content td.error {padding-right:0 !important; width:16px;}
+#content td {border-left:1px solid white; border-right: 1px solid white;}
+#content td, #content th, #content td a {
+    border-bottom:1px solid #EEEEEE;
+    font-family:"Lucida Grande",Verdana,Arial,sans-serif;
+    font-size:12px;
+    line-height:14px;
+    padding:5px;
+    text-align: center;
+    vertical-align:top;
+}
+#content td a {border:0;}
 
 /**
  * Forms and Form Elements
@@ -131,6 +147,7 @@ form ul.errorlist {color:red;padding:1ex 1ex;}
 form p {padding:0.5ex 0ex;}
 fieldset {border:0px; padding-top:1em;}
 legend {font-size:1.5em; font-weight:bold;}
+form table, form table td, form table td {border:0 !important;}
 
 /*   Login   */
 #login {margin: 3em auto 0em auto; width: 30%;}
@@ -207,24 +224,6 @@ div.delete, div.edit, div.icon_error {
 .shutdown {background:url(/media/images/icons/stop.png) no-repeat 4px 4px;}
 .startup {background:url(/media/images/icons/add.png) no-repeat 4px 4px;}
 .add:hover, .reboot:hover, .shutdown:hover, .startup:hover {background-color: #dadada !important; color:black;} 
-
-
-#content table {margin-top:15px;  width:100%; border: 1px solid #dddddd;}
-#content th {background:#eeeeee; border-bottom:1px solid #dddddd !important;}
-#content td.name {text-align:left; padding-left:0;}
-#content tr.none td {border-bottom: 1px solid white; font-style:italic;}
-#content td.error {padding-right:0 !important; width:16px;}
-#content td {border-left:1px solid white; border-right: 1px solid white;}
-#content td, #content th, #content td a {
-    border-bottom:1px solid #EEEEEE;
-    font-family:"Lucida Grande",Verdana,Arial,sans-serif;
-    font-size:12px;
-    line-height:14px;
-    padding:5px;
-    text-align: center;
-    vertical-align:top;
-}
-#content td a {border:0;}
 
 #messages li {
     background-color:#c2e192;
