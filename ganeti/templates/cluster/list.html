@@ -2,6 +2,21 @@
 
 {% block title %}Clusters{% endblock %}
 
+{% block head %}
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
+<script type="text/javascript">
+    $(document).ready(function() {
+        $("a.delete").live("click", function(){
+            parent = this.parentNode.parentNode;
+            $.delete(this.href, function(){
+                $(parent).remove();
+            });
+            return false;
+        });
+    });
+</script>
+{% endblock %}
+
 {% block content %}
 <h1>Clusters</h1>
 
@@ -18,7 +33,6 @@
         <!-- This should be changed to instance-list at a later date -->
         {% endcomment %}
         <th>VMs</th>
-        <th>Tags</th>
         <th></th>
         <th></th>
     </tr>
@@ -26,16 +40,15 @@
     {% with cluster.info as info %}
     {% with cluster.nodes as nodes %}
     {% with cluster.instances as vms %}
-        <tr>
+        <tr id="cluster_{{cluster.id}}">
             <td class="name">
                 {% if cluster.error %}<div class="icon_error" title="Ganeti API Error: {{cluster.error}}"></div>{% endif %}
                 <a href="{% url cluster-detail cluster.slug %}">{{ cluster.hostname }}</a></td>
             <td>{{ cluster.slug }}</td>
             <td>{{ nodes|length }}</td>
             <td>{{ vms|length }}</td>
-            <td>{{ info.tags|join:", "}}</td>
             <td><a href="{% url cluster-edit cluster.slug %}"><div class="edit"></div></a></td>
-            <td><a href="{% url cluster-delete cluster.slug %}"><div class="delete"></div></a></td>
+            <td><a href="{% url cluster-edit cluster.slug %}" class="delete"><div class="delete"></div></a></td>
         </tr>
     {% endwith %}
     {% endwith %}

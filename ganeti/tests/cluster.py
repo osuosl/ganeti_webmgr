@@ -371,7 +371,7 @@ class TestClusterViews(TestCase):
     
     def test_view_edit(self):
         """
-        Tests editing a new cluster
+        Tests editing a cluster
         """
         cluster = globals()['cluster']
         url = '/cluster/%s/edit/' % cluster.slug
@@ -422,6 +422,44 @@ class TestClusterViews(TestCase):
         cluster = response.context['cluster']
         for k, v in data.items():
             self.assertEqual(v, getattr(cluster, k))
+    
+    def test_view_delete(self):
+        """
+        Tests delete a cluster
+        """
+        cluster = globals()['cluster']
+        url = '/cluster/%s/edit/' % cluster.slug
+        
+        # anonymous user
+        response = c.get(url, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'registration/login.html')
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.delete(url)
+        self.assertEqual(403, response.status_code)
+        
+        # authorized (permission)
+        user.grant('admin', cluster)
+        response = c.delete(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        self.assertEquals('1', response.content)
+        self.assertFalse(Cluster.objects.all.filter(id=cluster.id).exists())
+        user.revoke('admin', cluster)
+        
+        # recreate cluster
+        cluster.save()
+        
+        # authorized (GET)
+        user.is_superuser = True
+        user.save()
+        response = c.delete(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        self.assertEquals('1', response.content)
+        self.assertFalse(Cluster.objects.all.filter(id=cluster.id).exists())
     
     def test_view_detail(self):
         """
