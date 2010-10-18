@@ -14,7 +14,7 @@ urlpatterns = patterns('ganeti.views.general',
 # Clusters
 urlpatterns += patterns('ganeti.views.cluster',
     #   List
-    url(r'^clusters/$', 'list', name="cluster-list"),
+    url(r'^clusters/$', 'list_', name="cluster-list"),
     #   Add
     url(r'^cluster/add/?$', 'edit', name="cluster-create"),
     #   Detail
@@ -38,7 +38,7 @@ urlpatterns += patterns('ganeti.views.cluster',
 vm_prefix = '%s%s' %  (cluster, instance)
 urlpatterns += patterns('ganeti.views.virtual_machine',
     #  List
-    url(r'^vms/$', 'list', name="virtualmachine-list"),
+    url(r'^vms/$', 'list_', name="virtualmachine-list"),
     #  Create
     url(r'^vm/add/$', 'create', name="instance-create"),
     url(r'^vm/add/(?P<cluster_slug>\w+)$', 'create', name="instance-create"),

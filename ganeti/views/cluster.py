@@ -124,7 +124,7 @@ def edit(request, cluster_slug=None):
 
 
 @login_required
-def list(request):
+def list_(request):
     """
     List all clusters
     """

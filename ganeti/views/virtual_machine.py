@@ -95,7 +95,7 @@ def reboot(request, cluster_slug, instance):
 
 
 @login_required
-def list(request):
+def list_(request):
     user = request.user
     if user.is_superuser:
         vms = VirtualMachine.objects.all()
