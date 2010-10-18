@@ -1,6 +1,7 @@
 from django.conf.urls.defaults import *
 
-cluster = 'cluster/(?P<cluster_slug>\w+)'
+cluster_slug = '(?P<cluster_slug>\w+)'
+cluster = 'cluster/%s' % cluster_slug
 instance = '/(?P<instance>[^/]+)'
 
 urlpatterns = patterns('ganeti.views.general',
@@ -40,8 +41,8 @@ urlpatterns += patterns('ganeti.views.virtual_machine',
     #  Create
     url(r'^vm/add/$', 'create', name="instance-create"),
     url(r'^vm/add/choices/$', 'cluster_choices', name="instance-create-cluster-choices"),
-    url(r'^vm/add/options/(?P<cluster_slug>\w+)/$', 'cluster_options', name="instance-create-cluster-options"),
-    url(r'^vm/add/(?P<cluster_slug>\w+)$', 'create', name="instance-create"),
+    url(r'^vm/add/options/%s/$' % cluster_slug, 'cluster_options', name="instance-create-cluster-options"),
+    url(r'^vm/add/%s$' % cluster_slug, 'create', name="instance-create"),
     
     #  Detail
     url(r'^%s/?$' % vm_prefix, 'detail', name="instance-detail"),
