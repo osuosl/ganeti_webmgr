@@ -314,8 +314,8 @@ class NewVirtualMachineForm(forms.Form):
     Virtual Machine Creation / Edit form
     """
     FQDN_RE = r'^[\w]+(\.[\w]+)*$'
-    cluster = forms.ModelChoiceField(queryset=Cluster.objects.all(), label='Cluster')
     owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label='Owner')
+    cluster = forms.ModelChoiceField(queryset=Cluster.objects.all(), label='Cluster')
     hostname = forms.RegexField(label='Instance Name', regex=FQDN_RE,
                             error_messages={
                                 'invalid': 'Instance name must be resolvable',
