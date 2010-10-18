@@ -50,7 +50,7 @@ class TestClusterModel(TestCase):
         cluster.save()
         self.assert_(cluster.hash)
         
-        cluster = Cluster(hostname='foo.fake.hostname')
+        cluster = Cluster(hostname='foo.fake.hostname', slug='different')
         cluster.save()
         self.assert_(cluster.hash)
     
@@ -289,6 +289,139 @@ class TestClusterViews(TestCase):
         self.assert_(cluster2 in clusters)
         self.assert_(cluster3 in clusters)
         self.assertEqual(4, len(clusters))
+    
+    def test_view_add(self):
+        """
+        Tests adding a new cluster
+        """
+        url = '/cluster/add/'
+        
+        # anonymous user
+        response = c.get(url, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'registration/login.html')
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.get(url)
+        self.assertEqual(403, response.status_code)
+        
+        # authorized (GET)
+        user.is_superuser = True
+        user.save()
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'cluster/edit.html')
+        
+        data = dict(hostname='new.hostname',
+                    slug='new_hostname',
+                    port=5080,
+                    description='testing editing clusters',
+                    username='tester',
+                    password = 'secret',
+                    virtual_cpus=1,
+                    disk=2,
+                    ram=3
+                    )
+        
+        # test required fields
+        required = ['hostname', 'slug', 'port']
+        for property in required:
+            data_ = {}
+            data_.update(data)
+            del data_[property]
+            response = c.post(url, data_)
+            self.assertEqual(200, response.status_code)
+            self.assertEquals('text/html; charset=utf-8', response['content-type'])
+            self.assertTemplateUsed(response, 'cluster/edit.html')
+        
+        # test not-requireds
+        for property in filter(lambda x: not x in data.keys(), data.keys()):
+            data_ = {}
+            data_.update(data)
+            del data_[property]
+            response = c.post(url, data_, follow=True)
+            self.assertEqual(200, response.status_code)
+            self.assertEquals('text/html; charset=utf-8', response['content-type'])
+            self.assertTemplateUsed(response, 'cluster/detail.html')
+            cluster = response.context['cluster']
+            for k, v in data.items():
+                self.assertEqual(v, getattr(cluster, k))
+            Cluster.objects.all().delete()
+        
+        # success
+        response = c.post(url, data, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'cluster/detail.html')
+        cluster = response.context['cluster']
+        for k, v in data.items():
+            self.assertEqual(v, getattr(cluster, k))
+        
+        # test unique fields
+        for property in ['hostname','slug']:
+            data_ = {}
+            data_.update(data)
+            data_[property] = 'different'
+            response = c.post(url, data_)
+            self.assertEqual(200, response.status_code)
+            self.assertEquals('text/html; charset=utf-8', response['content-type'])
+            self.assertTemplateUsed(response, 'cluster/edit.html')
+    
+    def test_view_edit(self):
+        """
+        Tests editing a new cluster
+        """
+        cluster = globals()['cluster']
+        url = '/cluster/%s/edit/' % cluster.slug
+        
+        # anonymous user
+        response = c.get(url, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'registration/login.html')
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.get(url)
+        self.assertEqual(403, response.status_code)
+        
+        # authorized (permission)
+        user.grant('admin', cluster)
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'cluster/edit.html')
+        self.assertEqual(cluster, response.context['cluster'])
+        user.revoke('admin', cluster)
+        
+        # authorized (GET)
+        user.is_superuser = True
+        user.save()
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'cluster/edit.html')
+        
+        data = dict(hostname='new.hostname',
+                    slug='new_hostname',
+                    port=5080,
+                    description='testing editing clusters',
+                    username='tester',
+                    password = 'secret',
+                    virtual_cpus=1,
+                    disk=2,
+                    ram=3
+                    )
+        
+        # success
+        response = c.post(url, data, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'cluster/detail.html')
+        cluster = response.context['cluster']
+        for k, v in data.items():
+            self.assertEqual(v, getattr(cluster, k))
     
     def test_view_detail(self):
         """
@@ -598,7 +731,6 @@ class TestClusterViews(TestCase):
         self.assertEquals('application/json', response['content-type'])
         self.assertEqual([], group.get_perms(cluster))
         self.assertEqual('1', response.content)
-    
     
     def validate_quota(self, cluster_user, template):
         """

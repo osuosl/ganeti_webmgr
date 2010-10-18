@@ -323,7 +323,7 @@ class Cluster(CachedClusterObject):
     A Ganeti cluster that is being tracked by this manager tool
     """
     hostname = models.CharField(max_length=128, unique=True)
-    slug = models.SlugField(max_length=50)
+    slug = models.SlugField(max_length=50, unique=True, db_index=True)
     port = models.PositiveIntegerField(default=5080)
     description = models.CharField(max_length=128, blank=True, null=True)
     username = models.CharField(max_length=128, blank=True, null=True)

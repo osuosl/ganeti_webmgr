@@ -3,21 +3,20 @@
 {% block title %}Edit {{ cluster.slug }} {% endblock %}
 
 {% block content %}
-<div id="clusterform">
-    <fieldset>
-        {% if cluster %}
-        <legend>{{ cluster.hostname }}</legend>
-        {% else %}
-        <legend> Cluster </legend>
-        {% endif %}
-        <form method="post">
-            {{ form.as_p }}
-            {% if cluster %}
-            <input class="submit" type="submit" value="Save">
-            {% else %}
-            <input class="submit" type="submit" value="Add">
-            {% endif %}
-        </form>
-    </fieldset>
-</div>
+
+{% if cluster %}
+<h1>Edit Cluster</h1>
+{% else %}
+<h1>Add Cluster</h1>
+{% endif %}
+
+<form method="post">
+    {{ form.as_p }}
+    
+    {% if cluster %}
+    <input class="submit" type="submit" value="Save">
+    {% else %}
+    <input class="submit" type="submit" value="Add">
+    {% endif %}
+</form>
 {% endblock %}

@@ -105,19 +105,23 @@ def edit(request, cluster_slug=None):
     else:
         cluster = None
     
+    user = request.user
+    if not (user.is_superuser or (cluster and user.has_perm('admin', cluster))):
+        return HttpResponseForbidden()
+    
     if request.method == 'POST':
         form = EditClusterForm(request.POST, instance=cluster)
         if form.is_valid():
-            newcluster = form.save()
-            newcluster.sync_virtual_machines()
-            return HttpResponseRedirect(reverse('cluster-detail', args=[newcluster.slug]))
+            cluster = form.save()
+            cluster.sync_virtual_machines()
+            return HttpResponseRedirect(reverse('cluster-detail', \
+                                                args=[cluster.slug]))
     else:
         form = EditClusterForm(instance=cluster)
     
     return render_to_response("cluster/edit.html", {
         'form' : form,
         'cluster': cluster,
-        'user': request.user,
         },
         context_instance=RequestContext(request),
     )
@@ -248,12 +252,3 @@ def quota(request, cluster_slug, user_id):
 class EditClusterForm(forms.ModelForm):
     class Meta:
         model = Cluster
-    
-    def __init__(self, *args, **kwargs):
-        super(EditClusterForm, self).__init__(*args, **kwargs)
-        instance = getattr(self, 'instance', None)
-        if instance and instance.id:
-            self.fields['hostname'].widget.attrs['readonly'] = True
-            self.fields['hostname'].widget.attrs['class'] = 'disabled'
-            self.fields['port'].widget.attrs['readonly'] = True
-            self.fields['port'].widget.attrs['class'] = 'disabled'
