@@ -194,6 +194,7 @@ INFO = {'architecture': ['64bit', 'x86_64'],
     'uuid': 'a22576ba-9158-4336-8590-a497306f84b9',
     'volume_group_name': 'ganeti'}
 
+OPERATING_SYSTEMS = ['image+debian-osgeo', 'image+ubuntu-lucid']
 
 class RapiProxy(client.GanetiRapiClient):
     """
@@ -210,7 +211,7 @@ class RapiProxy(client.GanetiRapiClient):
         CallProxy.patch(instance, 'GetNodes', False, NODES)
         CallProxy.patch(instance, 'GetNode', False, NODE)
         CallProxy.patch(instance, 'GetInfo', False, INFO)
-        
+        CallProxy.patch(instance, 'GetOperatingSystems', False, OPERATING_SYSTEMS)
         CallProxy.patch(instance, 'StartupInstance', False)
         CallProxy.patch(instance, 'ShutdownInstance', False)
         CallProxy.patch(instance, 'RebootInstance', False)
@@ -225,7 +226,8 @@ class RapiProxy(client.GanetiRapiClient):
     def __getattribute__(self, key):
         if key in ['GetInstances','GetInstance','GetNodes','GetNode', \
                    'GetInfo', 'StartupInstance', 'ShutdownInstance', \
-                   'RebootInstance', 'AddInstanceTags','DeleteInstanceTags'] \
+                   'RebootInstance', 'AddInstanceTags','DeleteInstanceTags', \
+                   'GetOperatingSystems'] \
                     and self.error:
             return self.fail
         return super(RapiProxy, self).__getattribute__(key)

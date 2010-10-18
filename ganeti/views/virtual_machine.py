@@ -304,7 +304,8 @@ def cluster_options(request, cluster_slug):
             user.has_perm('admin', cluster)):
         return HttpResponseForbidden()
     
-    content = json.dumps(cluster.nodes())
+    content = json.dumps({'nodes':cluster.nodes(), \
+                          'os':cluster.rapi.GetOperatingSystems()})
     return HttpResponse(content, mimetype='application/json')
 
 

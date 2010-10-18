@@ -606,7 +606,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         content = json.loads(response.content)
-        self.assertEquals(['gtest1.osuosl.bak', 'gtest2.osuosl.bak'], content)
+        self.assertEquals(['gtest1.osuosl.bak', 'gtest2.osuosl.bak'], content['nodes'])
+        self.assertEquals(['image+debian-osgeo', 'image+ubuntu-lucid'], content['os'])
         user.revoke_all(cluster)
         
         # authorized (cluster admin)
@@ -615,7 +616,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         content = json.loads(response.content)
-        self.assertEquals(['gtest1.osuosl.bak', 'gtest2.osuosl.bak'], content)
+        self.assertEquals(['gtest1.osuosl.bak', 'gtest2.osuosl.bak'], content['nodes'])
+        self.assertEquals(['image+debian-osgeo', 'image+ubuntu-lucid'], content['os'])
         user.revoke_all(cluster)
         
         # authorized (superuser)
@@ -625,7 +627,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         content = json.loads(response.content)
-        self.assertEquals(['gtest1.osuosl.bak', 'gtest2.osuosl.bak'], content)
+        self.assertEquals(['gtest1.osuosl.bak', 'gtest2.osuosl.bak'], content['nodes'])
+        self.assertEquals(['image+debian-osgeo', 'image+ubuntu-lucid'], content['os'])
     
     def test_view_users(self):
         """
