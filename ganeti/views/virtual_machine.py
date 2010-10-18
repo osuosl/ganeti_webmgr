@@ -5,7 +5,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, \
-    HttpResponseForbidden, HttpResponseNotAllowed
+    HttpResponseNotFound, HttpResponseForbidden, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
@@ -263,6 +263,49 @@ def node_choices(cluster_hostname):
     cluster = Cluster.objects.get(hostname__exact=cluster_hostname)
     nodelist = cluster.nodes()
     return zip(nodelist, nodelist)
+
+
+@login_required
+def cluster_choices(request):
+    """
+    Ajax view for looking up list of choices a user or usergroup has.  Returns
+    the list of clusters a user has access to, or the list of clusters one of
+    its groups has.
+    """
+    group_id = request.GET.get('group_id', None)
+    
+    GET = request.GET
+    user = request.user
+    if user.is_superuser:
+        q = Cluster.objects.all()
+    elif 'group_id' in GET:
+        group = get_object_or_404(UserGroup, id=GET['group_id'])
+        if not group.users.filter(id=request.user.id).exists():
+            return HttpResponseForbidden('not a member of this group')
+        q = group.filter_on_perms(Cluster, ['admin','create_vm'])
+    else:
+        q = user.filter_on_perms(Cluster, ['admin','create_vm'], groups=False)
+    
+    clusters = list(q.values_list('slug', 'hostname'))
+    content = json.dumps(clusters)
+    return HttpResponse(content, mimetype='application/json')
+
+
+@login_required
+def cluster_options(request, cluster_slug):
+    """
+    Ajax view for retrieving node and operating system choices for a given
+    cluster.
+    """
+    cluster = get_object_or_404(Cluster, slug__exact=cluster_slug)
+    
+    user = request.user
+    if not (user.is_superuser or user.has_perm('create_vm', cluster) or \
+            user.has_perm('admin', cluster)):
+        return HttpResponseForbidden()
+    
+    content = json.dumps(cluster.nodes())
+    return HttpResponse(content, mimetype='application/json')
 
 
 class NewVirtualMachineForm(forms.Form):

@@ -227,7 +227,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         user1 = User(id=3, username='tester1')
         user1.set_password('secret')
         user1.save()
-        group = UserGroup(name='testing_group')
+        group = UserGroup(id=1, name='testing_group')
         group.save()
         
         g = globals()
@@ -240,6 +240,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         
         # XXX specify permission manually, it is not auto registering for some reason
         register('admin', Cluster)
+        register('create_vm', Cluster)
         register('admin', VirtualMachine)
         register('start', VirtualMachine)
     
@@ -488,6 +489,143 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         
         # POST
         raise NotImplementedError
+    
+    def test_view_cluster_choices(self):
+        """
+        Test retrieving list of clusters a user or usergroup has access to
+        """
+        url = '/vm/add/choices/'
+        Cluster.objects.all().delete()
+        cluster0 = Cluster(hostname='user.create_vm', slug='user_create_vm')
+        cluster0.save()
+        cluster1 = Cluster(hostname='user.admin', slug='user_admin')
+        cluster1.save()
+        cluster2 = Cluster(hostname='superuser', slug='superuser')
+        cluster2.save()
+        cluster3 = Cluster(hostname='group.create_vm', slug='group_create_vm')
+        cluster3.save()
+        cluster4 = Cluster(hostname='group.admin', slug='group_admin')
+        cluster4.save()
+        cluster5 = Cluster(hostname='no.perms.on.this.group', slug='no_perms')
+        cluster5.save()
+        
+        group.users.add(user)
+        group1 = UserGroup(id=2, name='testing_group2')
+        group1.save()
+        group1.grant('admin',cluster5)
+        
+        # anonymous user
+        response = c.get(url, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'registration/login.html')
+        
+        self.assert_(c.login(username=user.username, password='secret'))
+        
+        # invalid group_id
+        response = c.get(url, {'group_id':-1})
+        self.assertEqual(404, response.status_code)
+        
+        # group user is not a member of
+        response = c.get(url, {'group_id':2})
+        self.assertEqual(403, response.status_code)
+        
+        
+        # create_vm permission (group)
+        group.grant('create_vm', cluster3)
+        response = c.get(url, {'group_id':1})
+        self.assertEqual(200, response.status_code)
+        clusters = json.loads(response.content)
+        self.assert_(['group_create_vm','group.create_vm'] in clusters)
+        self.assertEqual(1, len(clusters))
+        
+        # admin permission (group)
+        group.grant('admin', cluster4)
+        response = c.get(url, {'group_id':1})
+        self.assertEqual(200, response.status_code)
+        clusters = json.loads(response.content)
+        self.assert_(['group_create_vm','group.create_vm'] in clusters)
+        self.assert_(['group_admin','group.admin'] in clusters)
+        self.assertEqual(2, len(clusters))
+        
+        # create_vm permission
+        user.grant('create_vm', cluster0)
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        clusters = json.loads(response.content)
+        self.assert_(['user_create_vm','user.create_vm'] in clusters)
+        self.assertEqual(1, len(clusters), clusters)
+        
+        # admin permission
+        user.grant('admin', cluster1)
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        clusters = json.loads(response.content)
+        self.assert_(['user_create_vm','user.create_vm'] in clusters)
+        self.assert_(['user_admin','user.admin'] in clusters)
+        self.assertEqual(2, len(clusters))
+        
+        # authorized (superuser)
+        user.is_superuser = True
+        user.save()
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        clusters = json.loads(response.content)
+        self.assert_(['user_create_vm','user.create_vm'] in clusters)
+        self.assert_(['user_admin','user.admin'] in clusters)
+        self.assert_(['superuser','superuser'] in clusters, clusters)
+        self.assert_(['group_create_vm','group.create_vm'] in clusters)
+        self.assert_(['group_admin','group.admin'] in clusters, clusters)
+        self.assert_(['no_perms','no.perms.on.this.group'] in clusters)
+        self.assertEqual(6, len(clusters))
+    
+    def test_view_cluster_options(self):
+        """
+        Test retrieving list of options a cluster has for vms
+        """
+        url = '/vm/add/options/%s/'
+        args = cluster.slug
+        
+        # anonymous user
+        response = c.post(url % args, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'registration/login.html')
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.get(url % args)
+        self.assertEqual(403, response.status_code)
+        
+        # invalid cluster
+        response = c.get(url % "DoesNotExist")
+        self.assertEqual(404, response.status_code)
+        
+        # authorized (create_vm)
+        grant(user, 'create_vm', cluster)
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        content = json.loads(response.content)
+        self.assertEquals(['gtest1.osuosl.bak', 'gtest2.osuosl.bak'], content)
+        user.revoke_all(cluster)
+        
+        # authorized (cluster admin)
+        grant(user, 'admin', cluster)
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        content = json.loads(response.content)
+        self.assertEquals(['gtest1.osuosl.bak', 'gtest2.osuosl.bak'], content)
+        user.revoke_all(cluster)
+        
+        # authorized (superuser)
+        user.is_superuser = True
+        user.save()
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        content = json.loads(response.content)
+        self.assertEquals(['gtest1.osuosl.bak', 'gtest2.osuosl.bak'], content)
     
     def test_view_users(self):
         """
