@@ -149,7 +149,7 @@ fieldset {border:0px; padding-top:1em;}
 legend {font-size:1.5em; font-weight:bold;}
 form table, form table td, form table td {border:0 !important;}
 form p label {width:12em;}
-form input.submit {margin-left:12.5em;}
+form input.submit{margin-left:12.5em;}
 
 /*   Login   */
 #login {margin: 3em auto 0em auto; width: 30%;}
@@ -159,18 +159,20 @@ form input.submit {margin-left:12.5em;}
 #login p label {width: 5.5em;}
 #login input.submit {margin-left: 6em;}
 
-/*   Clusters   */
-#clusterform p label {width:10em;}
-#clusterform input.submit {margin-left:10.5em;}
-
-/*   Virtual Machines   */
-#virtualmachineform p label {width: 12em;}
-#virtualmachineform input.submit {margin-left:12.5em;}
+/* Clusters */
+#quota {
+    background:#eeeeee;
+    border:1px solid #dddddd;
+    margin:2em;
+    padding: 1em;
+    -moz-border-radius:5px;
+    -webkit-border-radius:5px;
+}
+#quota p label {width:9em;}
 
 /*  Orphans */
 #orphans {margin:1em 0em 0em 1em;}
 #orphans li input {margin:0ex 1ex 0ex 0ex;}
-
 
 #configuration {text-align: center;}
 #configuration form {margin: 0 auto 0 auto; max-width: 800px;}

@@ -11,7 +11,31 @@
 {% endif %}
 
 <form method="post">
-    {{ form.as_p }}
+    {% csrf_token %}
+    <fieldset>
+        {% if form.hostname.errors %}<p class="error">{{form.hostname.errors}}</p>{%endif%}
+        <p><label for="id_hostname" class="required">{{form.hostname.label}}:</label> {{form.hostname}}</p>
+        {% if form.slug.errors %}<p class="error">{{form.hostname.errors}}</p>{%endif%}
+        <p><label for="id_slug" class="required">{{form.slug.label}}:</label> {{form.slug}}</p>
+        {% if form.port.errors %}<p class="error">{{form.hostname.errors}}</p>{%endif%}
+        <p><label for="id_port" class="required">{{form.port.label}}:</label> {{form.port}}</p>
+        {% if form.description.errors %}<p class="error">{{form.hostname.errors}}</p>{%endif%}
+        <p><label for="id_description">{{form.description.label}}:</label> {{form.description}}</p>
+        {% if form.username.errors %}<p class="error">{{form.hostname.errors}}</p>{%endif%}
+        <p><label for="id_username">{{form.username.label}}:</label> {{form.username}}</p>
+        {% if form.password.errors %}<p class="error">{{form.hostname.errors}}</p>{%endif%}
+        <p><label for="id_password">{{form.password.label}}:</label> {{form.password}}</p>
+    </fieldset>
+    
+    <fieldset id="quota">
+        <h3>Default Quota</h3>
+        {% if form.virtual_cpus.errors %}<p class="error">{{form.hostname.errors}}</p>{%endif%}
+        <p><label for="id_virtual_cpus">{{form.virtual_cpus.label}}:</label> {{form.virtual_cpus}}</p>
+        {% if form.disk.errors %}<p class="error">{{form.hostname.errors}}</p>{%endif%}
+        <p><label for="id_disk">{{form.disk.label}}:</label> {{form.disk}}</p>
+        {% if form.ram.errors %}<p class="error">{{form.hostname.errors}}</p>{%endif%}
+        <p><label for="id_ram">{{form.ram.label}}:</label> {{form.ram}}</p>
+    </fieldset>
     
     {% if cluster %}
     <input class="submit" type="submit" value="Save">
