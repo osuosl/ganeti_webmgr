@@ -479,9 +479,10 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         Test creating a virtual machine
         """
         url = '/vm/add/%s'
+        self.assert_(c.login(username=user1.username, password='secret'))
         
         # GET
-        response = c.get(url)
+        response = c.get(url % '')
         self.assertEqual(200, response.status_code)
         
         response = c.get(url % (cluster.slug))
