@@ -6,6 +6,44 @@
     <script src="{{MEDIA_URL}}/js/jquery.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
+            cluster = $("#id_cluster");
+            $("#id_cluster").live('change', function() {
+                id = cluster.("option:selected").html();//children("option:selected").attr('name');
+                /*
+                //$.getJSON('{ url instance-create-cluster-options %}', {'cluster_slug':id},
+                    function(data) {
+                        alert(data);
+                    }
+                );*/
+                alert(id);
+            });
+            $("#id_owner").change(function() {
+                    id = $("#id_owner option:selected");
+                    $.getJSON('{% url instance-create-cluster-choices %}',
+                        {'group_id':id.val()}, function(data) {
+                            // Clear out html
+                            html = cluster.html();
+                            alert(html)
+                            cluster.html("");
+                            //alert(cluster.html)
+                            $.each(data, function(i, item) {
+                                    // TODO item[0] needs to be cluster_id
+                                    child = $("<option> </option>");
+                                    child.attr('text', item[1]);
+                                    child.attr('name', item[0]);
+                                    child.attr('value', i);
+                                    if( i == 0 ) {
+                                        child.attr("selected", "selected");
+                                    }
+                                    //html.bind('change', cluster_change());
+                                    html.append(child);
+                                    //alert(cluster.html());
+                                }
+                            );
+                        }
+                    );
+                }
+            );
             snode = $("#id_snode");
             disk_template = $("#id_disk_template");
             curSelection = $("#id_snode option:selected").index();
@@ -18,13 +56,13 @@
                 } else {
                     snode.parent().hide();
                 }
-            })
+            });
             snode.change(function() {
                 if( snode.attr('readonly') ) {
                     $("#id_snode option:selected").removeAttr('selected');
                     $("#id_snode option").index(curSelection).attr('selected');
                 }
-            })
+            });
         });
     </script>
 {% endblock %}
