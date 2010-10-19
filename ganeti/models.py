@@ -8,6 +8,7 @@ from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.db.models import Sum
 
 
 from object_permissions.registration import register, get_users, get_groups
@@ -211,7 +212,8 @@ class VirtualMachine(CachedClusterObject):
     cluster = models.ForeignKey('Cluster', editable=False,
                                 related_name='virtual_machines')
     hostname = models.CharField(max_length=128)
-    owner = models.ForeignKey('ClusterUser', null=True)
+    owner = models.ForeignKey('ClusterUser', null=True, \
+                              related_name='virtual_machines')
     virtual_cpus = models.IntegerField(default=-1)
     disk_size = models.IntegerField(default=-1)
     ram = models.IntegerField(default=-1)
@@ -477,6 +479,16 @@ class ClusterUser(models.Model):
     def __unicode__(self):
         return self.name
 
+    @property
+    def used_resources(self):
+        """
+        Return dictionary of total resources used by Virtual Machines that this
+        ClusterUser owns
+        """
+        return self.virtual_machines.exclude(ram=-1, disk_size=-1, \
+                                             virtual_cpus=-1) \
+                            .aggregate(disk=Sum('disk_size'), ram=Sum('ram'), \
+                                       virtual_cpus=Sum('virtual_cpus'))
 
 class Profile(ClusterUser):
     """
