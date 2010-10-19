@@ -221,27 +221,29 @@ def create(request, cluster_slug=None):
             snode = data['snode']
             if pnode == 'drdb':
                 snode = None
-            vm = VirtualMachine(cluster=cluster, owner=owner, \
-                                hostname=hostname, disk_size=disk_size, \
-                                ram=ram, virtual_cpus=vcpus)
-            vm.save()
-            c = get_object_or_404(Cluster, hostname=cluster)
-            jobid = 0
+            
             try:
-                jobid = c.rapi.CreateInstance('create', hostname, disk_template, \
-                                  [{"size": disk_size, }],[{"link": "br42", }], \
-                                  memory=ram, os=os, vcpus=2, \
-                                  pnode=pnode, snode=snode) #\
-                                  #hvparams={}, beparams={})
-            except GanetiApiError as e:
-                print jobid
-                print e
-            
-            # grant admin permissions to the owner
-            data['grantee'].grant('admin', vm)
-            
-            return HttpResponseRedirect( \
+                jobid = cluster.rapi.CreateInstance('create', hostname, \
+                        disk_template, \
+                        [{"size": disk_size, }],[{"link": "br42", }], \
+                        memory=ram, os=os, vcpus=2, \
+                        pnode=pnode, snode=snode) #\
+                        #hvparams={}, beparams={})
+      
+                vm = VirtualMachine(cluster=cluster, owner=owner, \
+                                    hostname=hostname, disk_size=disk_size, \
+                                    ram=ram, virtual_cpus=vcpus)
+                vm.save()
+                
+                # grant admin permissions to the owner
+                data['grantee'].grant('admin', vm)
+                
+                return HttpResponseRedirect( \
                 reverse('instance-detail', args=[cluster.slug, vm.hostname]))
+            
+            except GanetiApiError as e:
+                msg = 'Error creating virtual machine on this cluster: %s' % e
+                form._errors["cluster"] = form.error_class([msg])
     
     elif request.method == 'GET':
         form = NewVirtualMachineForm(user, cluster)

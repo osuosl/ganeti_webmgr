@@ -570,20 +570,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
             self.assertTemplateUsed(response, 'virtual_machine/create.html')
             self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
         
-        # POST - ganeti error
-        '''
-        cluster.rapi.error = client.GanetiApiError('Testing Error')
-        response = c.post(url % '', data)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create.html')
-        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
-        cluster.rapi.error = None
-        '''
-        
         # POST - over quota
         # XXX TODO implement!
-        
         
         # POST invalid owner
         data_ = data.copy()
@@ -644,6 +632,15 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assert_(user.has_perm('admin', new_vm))
         user.revoke_all(new_vm)
         VirtualMachine.objects.all().delete()
+        
+        # POST - ganeti error
+        cluster.rapi.CreateInstance.error = client.GanetiApiError('Testing Error')
+        response = c.post(url % '', data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
+        cluster.rapi.CreateInstance.error = None
         
         # POST - User attempting to be other user (superuser)
         INSTANCE['tags'] = ['GANETI_WEB_MANAGER:admin:U:3']
