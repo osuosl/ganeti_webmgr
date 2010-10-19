@@ -196,17 +196,17 @@ def create(request, cluster_slug=None):
         Store in DB and
         Create on given cluster
     """
+    user = request.user
+    if not(user.is_superuser or user.perms_on_any(Cluster, ['admin', 'create_vm'])):
+        return HttpResponseForbidden()
+    
     if cluster_slug is not None:
         cluster = get_object_or_404(Cluster, slug=cluster_slug)
-        oslist = os_choices(cluster)
-        nodes = node_choices(cluster)
     else:
         cluster = None
-        oslist = None
-        nodes = None
 
     if request.method == 'POST':
-        form = NewVirtualMachineForm(request.POST, oslist=oslist, nodes=nodes)
+        form = NewVirtualMachineForm(user, None, request.POST)
         if form.is_valid():
             data = form.cleaned_data
             cluster = data['cluster']
@@ -221,9 +221,9 @@ def create(request, cluster_slug=None):
             snode = data['snode']
             if pnode == 'drdb':
                 snode = None
-            vm = VirtualMachine(cluster=cluster, owner=owner, hostname=hostname, \
-                                disk_size=disk_size, ram=ram, virtual_cpus=vcpus, \
-                                pnode=pnode, snode=snode)
+            vm = VirtualMachine(cluster=cluster, owner=owner, \
+                                hostname=hostname, disk_size=disk_size, \
+                                ram=ram, virtual_cpus=vcpus)
             vm.save()
             c = get_object_or_404(Cluster, hostname=cluster)
             jobid = 0
@@ -236,12 +236,15 @@ def create(request, cluster_slug=None):
             except GanetiApiError as e:
                 print jobid
                 print e
-            #print jobid
-            return HttpResponseRedirect(request.META['HTTP_REFERER'])
+            
+            # grant admin permissions to the owner
+            data['grantee'].grant('admin', vm)
+            
+            return HttpResponseRedirect( \
+                reverse('instance-detail', args=[cluster.slug, vm.hostname]))
     
     elif request.method == 'GET':
-        form = NewVirtualMachineForm(initial={'cluster':cluster,}, \
-                                     oslist=oslist, nodes=nodes)
+        form = NewVirtualMachineForm(user, cluster)
 
     return render_to_response('virtual_machine/create.html', {
         'form': form,
@@ -249,20 +252,6 @@ def create(request, cluster_slug=None):
         },
         context_instance=RequestContext(request),
     )
-
-
-def os_choices(cluster_hostname):
-    """ helper function for building choice list of operating systems """
-    cluster = Cluster.objects.get(hostname__exact=cluster_hostname)
-    oslist = cluster.rapi.GetOperatingSystems()
-    return zip(oslist, oslist)
-
-
-def node_choices(cluster_hostname):
-    """ helper function for building a choices list of nodes """
-    cluster = Cluster.objects.get(hostname__exact=cluster_hostname)
-    nodelist = cluster.nodes()
-    return zip(nodelist, nodelist)
 
 
 @login_required
@@ -334,47 +323,83 @@ class NewVirtualMachineForm(forms.Form):
     disk_size = forms.IntegerField(label='Disk Space (MB)', min_value=100)
     vcpus = forms.IntegerField(label='Virtual CPUs', min_value=1)
     
-    def __init__(self, *args, **kwargs):
-        oslist = kwargs.pop('oslist', None)
-        nodes = kwargs.pop('nodes', None)
-        super(NewVirtualMachineForm, self).__init__(*args, **kwargs)
+    def __init__(self, user, cluster=None, initial=None, *args, **kwargs):
+        self.user = user
+        super(NewVirtualMachineForm, self).__init__(initial, *args, **kwargs)
         
-        if nodes is not None:
-            # Populate the Node lists
-            #nodes = node_choices(cluster_slug)
+        if initial and 'cluster' in initial:
+            try:
+                cluster = Cluster.objects.get(pk=initial['cluster'])
+            except Cluster.DoesNotExist:
+                # defer to clean function to return errors
+                pass
+        
+        if cluster is not None:
+            # set choices based on selected cluster if given
+            oslist = cluster.rapi.GetOperatingSystems()
+            nodelist = cluster.nodes()
+            nodes = zip(nodelist, nodelist)
             self.fields['pnode'].choices = nodes
             self.fields['snode'].choices = nodes
-        if oslist is not None:
-            # Populate the OS List
-            self.fields['os'].choices = oslist
-        else:
-            #clusters = list(Cluster.objects.all()[:1])
-            #cluster_slug = clusters[0].slug
-            #oss = os_choices(cluster_slug)
-            #self.fields['os'].choices = oss
-            pass
+            self.fields['os'].choices = zip(oslist, oslist)
     
     def clean(self):
         cleaned_data = self.cleaned_data
+        
+        if 'owner' in cleaned_data:
+            owner = cleaned_data['owner'].cast()
+            if isinstance(owner, (Organization,)):
+                grantee = owner.user_group
+            else:
+                grantee = owner.user
+            cleaned_data['grantee'] = grantee
+        
+        # superusers bypass all permission and quota checks
+        if not self.user.is_superuser and 'owner' in cleaned_data:
+            msg = None
+            if isinstance(owner, (Organization,)):
+                # check user membership in group if group
+                if not grantee.users.filter(id=self.user.id).exists():
+                    msg = u"User is not a member of the specified group."
+            else:
+                if not owner.user_id == self.user.id:
+                    msg = "You are not allowed to act on behalf of this user."
+            
+            # check permissions on cluster
+            if 'cluster' in cleaned_data:
+                cluster = cleaned_data['cluster']
+                if not (grantee.has_perm('create_vm', cluster) \
+                        or grantee.has_perm('admin', cluster)):
+                    msg = u"Owner does not have permissions for this cluster."
+            
+            # check quota
+            # TODO implement this
+            #if new_ram >
+            #    del cleaned_data['owner']
+            #    msg = u"Owner does not have enough resources remaining."
+            #    self._errors["owner"] = self.error_class([msg])
+            
+            if msg:
+                self._errors["owner"] = self.error_class([msg])
+                del cleaned_data['owner']
+        
         pnode = cleaned_data.get("pnode")
         snode = cleaned_data.get("snode")
         disk_template = cleaned_data.get("disk_template")
-
+        
         # Need to have pnode != snode
         if disk_template == "drdb" and pnode == snode:
             # We know these are not in self._errors now 
             msg = u"Primary and Secondary Nodes must not match."
             self._errors["pnode"] = self.error_class([msg])
-
+            
             # These fields are no longer valid. Remove them from the
             # cleaned data.
             del cleaned_data["pnode"]
             del cleaned_data["snode"]
-
+        
         # Always return the full collection of cleaned data.
         return cleaned_data
-
-
 
 class InstanceConfigForm(forms.Form):
     nic_type = forms.ChoiceField(label="Network adapter model",

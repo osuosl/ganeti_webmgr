@@ -217,6 +217,7 @@ class RapiProxy(client.GanetiRapiClient):
         CallProxy.patch(instance, 'RebootInstance', False)
         CallProxy.patch(instance, 'AddInstanceTags', False)
         CallProxy.patch(instance, 'DeleteInstanceTags', False)
+        CallProxy.patch(instance, 'CreateInstance', False, 1)
         
         return instance
     
@@ -227,7 +228,7 @@ class RapiProxy(client.GanetiRapiClient):
         if key in ['GetInstances','GetInstance','GetNodes','GetNode', \
                    'GetInfo', 'StartupInstance', 'ShutdownInstance', \
                    'RebootInstance', 'AddInstanceTags','DeleteInstanceTags', \
-                   'GetOperatingSystems'] \
+                   'GetOperatingSystems', 'CreateInstance'] \
                     and self.error:
             return self.fail
         return super(RapiProxy, self).__getattribute__(key)
