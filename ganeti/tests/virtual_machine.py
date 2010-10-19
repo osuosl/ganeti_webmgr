@@ -481,7 +481,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         Test creating a virtual machine
         """
         url = '/vm/add/%s'
-        
+        group1 = UserGroup(id=2, name='testing_group2')
+        group1.save()
         cluster1 = Cluster(hostname='test2.osuosl.bak', slug='OSL_TEST2')
         cluster1.save()
         
@@ -605,8 +606,9 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
         self.assert_(user.has_perm('admin', new_vm), user.__dict__)
-        VirtualMachine.objects.all().delete()
         user.revoke_all(cluster)
+        user.revoke_all(new_vm)
+        VirtualMachine.objects.all().delete()
         
         # POST - user authorized for cluster (admin)
         user.grant('admin', cluster)
@@ -619,9 +621,16 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assert_(user.has_perm('admin', new_vm))
         VirtualMachine.objects.all().delete()
         user.revoke_all(cluster)
+        user.revoke_all(new_vm)
         
         # POST - User attempting to be other user
-        # XXX TODO
+        data_ = data.copy()
+        data_['owner'] = user1.id
+        response = c.post(url % '', data_)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
         
         # POST - user authorized for cluster (superuser)
         user.is_superuser = True
@@ -633,10 +642,25 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
         self.assert_(user.has_perm('admin', new_vm))
+        user.revoke_all(new_vm)
         VirtualMachine.objects.all().delete()
         
         # POST - User attempting to be other user (superuser)
-        # XXX TODO
+        INSTANCE['tags'] = ['GANETI_WEB_MANAGER:admin:U:3']
+        data_ = data.copy()
+        data_['owner'] = user1.id
+        response = c.post(url % '', data_, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
+        new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
+        self.assertEqual(new_vm, response.context['instance'])
+        self.assert_(user1.has_perm('admin', new_vm))
+        self.assertEqual([], user.get_perms(new_vm))
+        
+        user.revoke_all(new_vm)
+        user1.revoke_all(new_vm)
+        VirtualMachine.objects.all().delete()
         
         # reset for group owner
         user.is_superuser = False
@@ -678,8 +702,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
         self.assert_(group.has_perm('admin', new_vm))
-        VirtualMachine.objects.all().delete()
         group.revoke_all(cluster)
+        VirtualMachine.objects.all().delete()
         
         # POST - group authorized for cluster (superuser)
         user.is_superuser = True
@@ -691,18 +715,21 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
         self.assert_(group.has_perm('admin', new_vm))
+        group.revoke_all(cluster)
+        VirtualMachine.objects.all().delete()
         
         # POST - not a group member (superuser)
-        self.fail('implement this test')
-        user.is_superuser = True
-        user.save()
+        INSTANCE['tags'] = ['GANETI_WEB_MANAGER:admin:G:2']
+        data_ = data.copy()
+        data_['owner'] = group1.organization.id
         response = c.post(url % '', data, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'virtual_machine/detail.html')
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
-        self.assert_(group.has_perm('admin', new_vm))
+        self.assert_(group1.has_perm('admin', new_vm))
+        self.assertFalse(group.has_perm('admin', new_vm))
     
     def test_view_cluster_choices(self):
         """
