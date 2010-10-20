@@ -38,7 +38,7 @@ urlpatterns += patterns('ganeti.views.virtual_machine',
     #  Create
     url(r'^vm/add/?$', 'create', name="instance-create"),
     url(r'^vm/add/choices/$', 'cluster_choices', name="instance-create-cluster-choices"),
-    url(r'^vm/add/options/%s/$' % cluster_slug, 'cluster_options', name="instance-create-cluster-options"),
+    url(r'^vm/add/options/$', 'cluster_options', name="instance-create-cluster-options"),
     url(r'^vm/add/%s/?$' % cluster_slug, 'create', name="instance-create"),
     
     #  Detail
