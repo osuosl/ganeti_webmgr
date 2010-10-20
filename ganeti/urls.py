@@ -6,9 +6,6 @@ instance = '/(?P<instance>[^/]+)'
 
 urlpatterns = patterns('ganeti.views.general',
     url(r'^$', 'index', name="cluster-overview"),
-    #   Orphans
-    url(r'^orphans/','orphans', name='instance-orphans'),
-    # Authentication
     url(r'^accounts/profile/?', 'user_profile', name="profile"),
 )
 
@@ -56,4 +53,12 @@ urlpatterns += patterns('ganeti.views.virtual_machine',
     url(r'^%s/shutdown/?$' % vm_prefix, 'shutdown', name="instance-shutdown"),
     url(r'^%s/startup/?$' % vm_prefix, 'startup', name="instance-startup"),
     url(r'^%s/reboot/?$' % vm_prefix, 'reboot', name="instance-reboot"),
+)
+
+
+# Virtual Machine Importing
+urlpatterns += patterns('ganeti.views.importing',
+    url(r'^import/orphans/', 'orphans', name='import-orphans'),
+    url(r'^import/missing/', 'missing_ganeti', name='import-missing'),
+    url(r'^import/missing_db/', 'missing_db', name='import-missing_db'),
 )

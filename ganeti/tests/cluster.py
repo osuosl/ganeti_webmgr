@@ -977,4 +977,3 @@ class TestClusterViews(TestCase):
         self.assertEqual('application/json', response['content-type'])
         self.assertEqual('1', response.content)
         self.assertFalse(query.exists())
-    
