@@ -285,11 +285,12 @@ def cluster_choices(request):
 
 
 @login_required
-def cluster_options(request, cluster_id):
+def cluster_options(request):
     """
     Ajax view for retrieving node and operating system choices for a given
     cluster.
     """
+    cluster_id = request.GET.get('cluster_id', None)
     cluster = get_object_or_404(Cluster, id__exact=cluster_id)
     
     user = request.user
