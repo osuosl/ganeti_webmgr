@@ -170,7 +170,9 @@ class CachedClusterObject(models.Model):
         This method is specific to the child object.
         """
         info_ = self.info
-        self.ctime = datetime.fromtimestamp(info_['ctime'])
+        # XXX ganeti 2.1 ctime is always None
+        if info_['ctime'] is not None:
+            self.ctime = datetime.fromtimestamp(info_['ctime'])
         self.mtime = datetime.fromtimestamp(info_['mtime'])
 
     def parse_persistent_info(self):
