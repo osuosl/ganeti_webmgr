@@ -219,7 +219,8 @@ def create(request, cluster_slug=None):
             os = data['os']
             pnode = data['pnode']
             snode = data['snode']
-            if pnode == 'drdb':
+            
+            if disk_template != 'drdb':
                 snode = None
             
             try:
@@ -306,6 +307,14 @@ class NewVirtualMachineForm(forms.Form):
     Virtual Machine Creation / Edit form
     """
     FQDN_RE = r'^[\w]+(\.[\w]+)*$'
+    templates = [
+        (u'', u'---------'),
+        (u'plain', u'plain'),
+        (u'drdb', u'drdb'),
+        (u'file', u'file'),
+        (u'diskless', u'diskless')
+    ]
+    
     owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label='Owner')
     cluster = forms.ModelChoiceField(queryset=Cluster.objects.all(), label='Cluster')
     hostname = forms.RegexField(label='Instance Name', regex=FQDN_RE,
@@ -313,15 +322,10 @@ class NewVirtualMachineForm(forms.Form):
                                 'invalid': 'Instance name must be resolvable',
                             })
     disk_template = forms.ChoiceField(label='Disk Template', \
-                                      choices=[
-                                            ('plain', 'plain'), \
-                                            ('drdb', 'drdb'), \
-                                            ('file','file'), \
-                                            ('diskless', 'diskless')
-                                      ])
-    pnode = forms.ChoiceField(label='Primary Node', choices=[])
-    snode = forms.ChoiceField(label='Secondary Node', choices=[])
-    os = forms.ChoiceField(label='Operating System', choices=[])
+                                      choices=templates)
+    pnode = forms.ChoiceField(label='Primary Node', choices=[(u'', u'---------')])
+    snode = forms.ChoiceField(label='Secondary Node', choices=[(u'', u'---------')])
+    os = forms.ChoiceField(label='Operating System', choices=[(u'', u'---------')])
     ram = forms.IntegerField(label='Memory (MB)', min_value=100)
     disk_size = forms.IntegerField(label='Disk Space (MB)', min_value=100)
     vcpus = forms.IntegerField(label='Virtual CPUs', min_value=1)
