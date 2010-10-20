@@ -357,18 +357,18 @@ class NewVirtualMachineForm(forms.Form):
             self.fields['owner'].choices = choices
     
     def clean(self):
-        cleaned_data = self.cleaned_data
+        data = self.cleaned_data
         
-        if 'owner' in cleaned_data:
-            owner = cleaned_data['owner'].cast()
+        if 'owner' in data:
+            owner = data['owner'].cast()
             if isinstance(owner, (Organization,)):
                 grantee = owner.user_group
             else:
                 grantee = owner.user
-            cleaned_data['grantee'] = grantee
+            data['grantee'] = grantee
         
         # superusers bypass all permission and quota checks
-        if not self.user.is_superuser and 'owner' in cleaned_data:
+        if not self.user.is_superuser and 'owner' in data:
             msg = None
             if isinstance(owner, (Organization,)):
                 # check user membership in group if group
@@ -379,26 +379,44 @@ class NewVirtualMachineForm(forms.Form):
                     msg = "You are not allowed to act on behalf of this user."
             
             # check permissions on cluster
-            if 'cluster' in cleaned_data:
-                cluster = cleaned_data['cluster']
+            if 'cluster' in data:
+                cluster = data['cluster']
                 if not (grantee.has_perm('create_vm', cluster) \
                         or grantee.has_perm('admin', cluster)):
                     msg = u"Owner does not have permissions for this cluster."
             
-            # check quota
-            # TODO implement this
-            #if new_ram >
-            #    del cleaned_data['owner']
-            #    msg = u"Owner does not have enough resources remaining."
-            #    self._errors["owner"] = self.error_class([msg])
+                # check quota
+                quota = cluster.get_quota(owner)
+                if quota.values():
+                    used = owner.used_resources
+                    if used['ram']:
+                        ram = used['ram'] + data.get('ram', 0)
+                        if ram > quota['ram']:
+                            del data['ram']
+                            q_msg = u"Owner does not have enough ram remaining on this cluster."
+                            self._errors["ram"] = self.error_class([q_msg])
+                    
+                    if used['disk']:
+                        disk = used['disk'] + data.get('disk_space', 0)
+                        if disk > quota['disk']:
+                           del data['disk']
+                           q_msg = u"Owner does not have enough diskspace remaining on this cluster."
+                           self._errors["disk"] = self.error_class([q_msg])
+                    
+                    if used['virtual_cpus']:
+                        vcpus = used['virtual_cpus'] + data.get('vcpus', 0)
+                        if vcpus > quota['virtual_cpus']:
+                           del data['vcpus']
+                           q_msg = u"Owner does not have enough virtual cpus remaining on this cluster."
+                           self._errors["vcpus"] = self.error_class([q_msg])
             
             if msg:
                 self._errors["owner"] = self.error_class([msg])
-                del cleaned_data['owner']
+                del data['owner']
         
-        pnode = cleaned_data.get("pnode")
-        snode = cleaned_data.get("snode")
-        disk_template = cleaned_data.get("disk_template")
+        pnode = data.get("pnode")
+        snode = data.get("snode")
+        disk_template = data.get("disk_template")
         
         # Need to have pnode != snode
         if disk_template == "drdb" and pnode == snode:
@@ -408,11 +426,11 @@ class NewVirtualMachineForm(forms.Form):
             
             # These fields are no longer valid. Remove them from the
             # cleaned data.
-            del cleaned_data["pnode"]
-            del cleaned_data["snode"]
+            del data["pnode"]
+            del data["snode"]
         
         # Always return the full collection of cleaned data.
-        return cleaned_data
+        return data
 
 class InstanceConfigForm(forms.Form):
     nic_type = forms.ChoiceField(label="Network adapter model",

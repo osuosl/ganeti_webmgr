@@ -571,8 +571,35 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
             self.assertTemplateUsed(response, 'virtual_machine/create.html')
             self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
         
-        # POST - over quota
-        # XXX TODO implement!
+        # POST - over ram quota
+        profile = user.get_profile()
+        cluster.set_quota(profile, dict(ram=1000, disk=2000, virtual_cpus=10))
+        vm = VirtualMachine(cluster=cluster, ram=100, disk_size=100, virtual_cpus=2, owner=profile).save()
+        data_ = data.copy()
+        data_['ram'] = 2000
+        response = c.post(url % '', data_)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
+        
+        # POST - over disk quota
+        data_ = data.copy()
+        data_['disk'] = 2000
+        response = c.post(url % '', data_)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
+        
+        # POST - over cpu quota
+        data_ = data.copy()
+        data_['vcpus'] = 2000
+        response = c.post(url % '', data_)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
         
         # POST invalid owner
         data_ = data.copy()
