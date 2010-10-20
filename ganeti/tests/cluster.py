@@ -157,7 +157,39 @@ class TestClusterModel(TestCase):
         cluster.sync_virtual_machines()
         self.assert_(VirtualMachine.objects.get(cluster=cluster, hostname=vm_missing), 'missing vm was not created')
         self.assert_(VirtualMachine.objects.get(cluster=cluster, hostname=vm_current.hostname), 'previously existing vm was not created')
+        self.assert_(VirtualMachine.objects.filter(cluster=cluster, hostname=vm_removed.hostname), 'vm not present in ganeti was not removed from db, even though remove flag was false')
+        
+        cluster.sync_virtual_machines(True)
         self.assertFalse(VirtualMachine.objects.filter(cluster=cluster, hostname=vm_removed.hostname), 'vm not present in ganeti was not removed from db')
+
+    def test_missing_in_database(self):
+        """
+        Tests missing_in_ganeti property
+        """
+        cluster = Cluster(hostname='ganeti.osuosl.test')
+        cluster.save()
+        vm_missing = 'gimager.osuosl.bak'
+        vm_current = VirtualMachine(cluster=cluster, hostname='gimager2.osuosl.bak')
+        vm_removed = VirtualMachine(cluster=cluster, hostname='does.not.exist.org')
+        vm_current.save()
+        vm_removed.save()
+        
+        self.assertEqual([u'gimager.osuosl.bak'], cluster.missing_in_db)
+
+    def test_missing_in_ganeti(self):
+        """
+        Tests missing_in_ganeti property
+        """
+        cluster = Cluster(hostname='ganeti.osuosl.test')
+        cluster.save()
+        vm_missing = 'gimager.osuosl.bak'
+        vm_current = VirtualMachine(cluster=cluster, hostname='gimager2.osuosl.bak')
+        vm_removed = VirtualMachine(cluster=cluster, hostname='does.not.exist.org')
+        vm_current.save()
+        vm_removed.save()
+        
+        self.assertEqual([u'does.not.exist.org'], cluster.missing_in_ganeti)
+
 
 class TestClusterViews(TestCase):
     
@@ -905,11 +937,43 @@ class TestClusterViews(TestCase):
     def test_view_delete(self):
         """
         Test the deletion of a cluster
-            through use of the cluster delete
-            view.
         """
-        cluster_d = Cluster(hostname='test.cluster.bak', slug='cluster1')
-        url='/cluster/%s/delete/' % cluster_d.slug
-        response = c.post(url, follow=True)
+        cluster = Cluster(hostname='test.cluster.bak', slug='cluster1')
+        cluster.save()
+        url='/cluster/%s/edit/'
+        args = cluster.slug
+        query = Cluster.objects.filter(hostname='test.cluster.bak')
+        
+        
+        # anonymous user
+        response = c.delete(url % args, follow=True)
         self.assertEqual(200, response.status_code)
-        self.assertRaises(ObjectDoesNotExist, Cluster.objects.get, hostname='test.cluster.bak')
+        self.assertTemplateUsed(response, 'registration/login.html')
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.delete(url % args)
+        self.assertEqual(403, response.status_code)
+        
+        # nonexisent cluster
+        response = c.delete(url % "DOES_NOT_EXIST")
+        self.assertEqual(404, response.status_code)
+        
+        # valid GET authorized user (perm)
+        grant(user, 'admin', cluster)
+        response = c.delete(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('application/json', response['content-type'])
+        self.assertEqual('1', response.content)
+        self.assertFalse(query.exists())
+        
+        # valid GET authorized user (superuser)
+        cluster.save()
+        user.revoke('admin', cluster)
+        user.is_superuser = True
+        user.save()
+        response = c.delete(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('application/json', response['content-type'])
+        self.assertEqual('1', response.content)
+        self.assertFalse(query.exists())

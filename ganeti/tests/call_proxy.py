@@ -20,6 +20,7 @@ class CallProxy(object):
         self.enabled = enabled
         self.kwargs = kwargs
         self.response = response
+        self.error = False
         
         if func:
             self.matching_function = self.create_matching_function(func)
@@ -69,6 +70,9 @@ class CallProxy(object):
         self.calls = []
         
     def __call__ (self, *args, **kwargs):
+        if self.error:
+            raise self.error
+        
         response = None
         kwargs_ = {}
         kwargs_.update(self.kwargs)

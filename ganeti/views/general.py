@@ -3,10 +3,9 @@ import os
 import socket
 
 from django import forms
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.http import HttpResponseRedirect, HttpResponseForbidden
-from django.shortcuts import get_object_or_404, render_to_response
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseRedirect
+from django.shortcuts import render_to_response
 from django.template import RequestContext
 
 from ganeti.models import *
@@ -98,57 +97,3 @@ def user_profile(request):
     return render_to_response('user_profile.html',
      {"user":request.user, 'form':form},
      context_instance=RequestContext(request))
-
-
-
-@user_passes_test(lambda u: u.is_superuser)
-def orphans(request):
-    """
-    displays list of orphaned VirtualMachines, i.e. VirtualMachines without
-    an owner.
-    """
-    # synchronize all cluster objects
-    for cluster in Cluster.objects.all():
-        cluster.sync_virtual_machines()
-        
-    vms = VirtualMachine.objects.filter(owner=None).values_list('id','hostname')
-    vms = list(vms)
-    vmcount = VirtualMachine.objects.count()
-    
-    if request.method == 'POST':
-        # process updates if this was a form submission
-        form = OrphanForm(vms, request.POST)
-        if form.is_valid():
-            # update all selected VirtualMachines
-            data = form.cleaned_data
-            owner = data['owner']
-            vm_ids = data['virtual_machines']
-            VirtualMachine.objects.filter(id__in=vm_ids).update(owner=owner)
-            
-            # remove updated vms from the list
-            vms = filter(lambda x: unicode(x[0]) not in vm_ids, vms)
-        
-    else:
-        form = OrphanForm(vms)
-    
-    return render_to_response("orphans.html", {
-        'vms': vms,
-        'vmcount': vmcount,
-        'form':form,
-        'user': request.user,
-        },
-        context_instance=RequestContext(request),
-    )
-
-
-class OrphanForm(forms.Form):
-    """
-    Form used for assigning owners to VirtualMachines that do not yet have an
-    owner (orphans).
-    """
-    owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all())
-    virtual_machines = forms.MultipleChoiceField()
-
-    def __init__(self, choices, *args, **kwargs):
-        super(OrphanForm, self).__init__(*args, **kwargs)
-        self.fields['virtual_machines'].choices = choices

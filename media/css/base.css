@@ -190,6 +190,15 @@ form input.submit{margin-left:12.5em;}
     width: 100%;
 }
 
+.info {
+    background:#eeeeee;
+    border:1px solid #dddddd;
+    margin:20px 0 20px 0;
+    padding:10px;
+    -moz-border-radius:5px;
+    -webkit-border-radius:5px;
+}
+
 .disabled{ color:grey; background:white; border:white 2px solid; }
 
 ul#errors {color:#AD2E2E;}

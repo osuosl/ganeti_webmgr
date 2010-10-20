@@ -8,10 +8,10 @@ from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.db.models import Sum
 
 
 from object_permissions.registration import register, get_users, get_groups
-from object_permissions.signals import granted, revoked
 from object_permissions.models import UserGroup, ObjectPermissionType
 from util import client
 from util.client import GanetiApiError
@@ -169,7 +169,9 @@ class CachedClusterObject(models.Model):
         This method is specific to the child object.
         """
         info_ = self.info
-        self.ctime = datetime.fromtimestamp(info_['ctime'])
+        # XXX ganeti 2.1 ctime is always None
+        if info_['ctime'] is not None:
+            self.ctime = datetime.fromtimestamp(info_['ctime'])
         self.mtime = datetime.fromtimestamp(info_['mtime'])
 
     def parse_persistent_info(self):
@@ -211,7 +213,8 @@ class VirtualMachine(CachedClusterObject):
     cluster = models.ForeignKey('Cluster', editable=False,
                                 related_name='virtual_machines')
     hostname = models.CharField(max_length=128)
-    owner = models.ForeignKey('ClusterUser', null=True)
+    owner = models.ForeignKey('ClusterUser', null=True, \
+                              related_name='virtual_machines')
     virtual_cpus = models.IntegerField(default=-1)
     disk_size = models.IntegerField(default=-1)
     ram = models.IntegerField(default=-1)
@@ -220,59 +223,57 @@ class VirtualMachine(CachedClusterObject):
     @property
     def rapi(self):
         return get_rapi(self.cluster_hash, self.cluster_id)
-
+    
     def save(self, *args, **kwargs):
         """
-        sets the cluster_hash for newly saved instances
+        sets the cluster_hash for newly saved instances and writes the owner tag
+        to ganeti
         """
         if self.id is None:
             self.cluster_hash = self.cluster.hash
+        
+        info_ = self.info
+        if info_:
+            found = False
+            remove = []
+            for tag in info_['tags']:
+                # update owner from
+                if tag.startswith('GANETI_WEB_MANAGER:OWNER:'):
+                    id = int(tag[25:])
+                    if id == self.owner_id:
+                        found = True
+                    else:
+                        remove.append(tag)
+            if remove:
+                self.rapi.DeleteInstanceTags(self.hostname, remove)
+                for tag in remove:
+                    info_['tags'].remove(tag)
+            if self.owner_id and not found:
+                tag = 'GANETI_WEB_MANAGER:OWNER:%s' % self.owner_id
+                self.rapi.AddInstanceTags(self.hostname, [tag])
+                self.info['tags'].append(tag)
+        
         super(VirtualMachine, self).save(*args, **kwargs)
-
+    
     def parse_persistent_info(self):
         """
         Loads all values from cached info, included persistent properties that
         are stored in the database
         """
         info_ = self.info
-        
-        # Group permission tags by [group|user] & id.  Once they have been
-        # parsed process the lists to set or delete all perms.  This ensures
-        # that only a single query per user will be executed, plus 2 extra
-        # queries to check for users and groups to remove all permissions from.
-        tagged_users = {}
-        tagged_groups = {}
+        owner_parsed = False
         for tag in info_['tags']:
-            if tag.startswith('GANETI_WEB_MANAGER:'):
-                perm, group, id = tag[19:].split(':')
-                group = True if group == 'G' else False
-                if group:
-                    perms = tagged_groups.get(id, [])
-                    tagged_groups[id] = perms
-                else:
-                    perms = tagged_users.get(id, [])
-                    tagged_users[id] = perms
-                perms.append(perm)
-        
-        # set permissions for all uses with permissions
-        for id in tagged_users:
-            try:
-                user = User.objects.get(id=id)
-                user.set_perms(tagged_users[id], self)
-            except (User.DoesNotExist, ObjectPermissionType.DoesNotExist):
-                pass
-        for id in tagged_groups:
-            try:
-                group = UserGroup.objects.get(id=id)
-                group.set_perms(tagged_groups[id], self)
-            except (UserGroup.DoesNotExist, ObjectPermissionType.DoesNotExist):
-                pass
-        
-        # revoke all permissions for any user who had all permissions removed
-        for user in get_users(self).exclude(id__in=tagged_users.keys()):
-            user.revoke_all(self)
-        for group in get_groups(self).exclude(id__in=tagged_groups.keys()):
-            group.revoke_all(self)
+            # update owner from
+            if tag.startswith('GANETI_WEB_MANAGER:OWNER:'):
+                owner_parsed = True
+                try:
+                    id = int(tag[25:])
+                    if id != self.owner_id:
+                        self.owner = ClusterUser.objects.get(id=id)
+                except ClusterUser.DoesNotExist:
+                    self.owner = None
+        if not owner_parsed:
+            self.owner = None
         
         # Parse resource properties
         self.ram = self.info['beparams']['memory']
@@ -281,39 +282,23 @@ class VirtualMachine(CachedClusterObject):
         disk_size = 0
         for disk in self.info['disk.sizes']:
             disk_size += disk
-        self.disk_size = disk_size 
-
-    def add_permission_tag(self, grantee, perm):
-        """
-        Adds a permission tag to this VirtualMachine
-        """
-        group = 'G' if isinstance(grantee, (UserGroup,)) else 'U'
-        tag = 'GANETI_WEB_MANAGER:%s:%s:%s' % (perm, group, grantee.id)
-        self.rapi.AddInstanceTags(self.hostname, (tag,))
-    
-    def remove_permission_tag(self, grantee, perm):
-        """
-        Removes a permission tag from this VirtualMachine
-        """
-        group = 'G' if isinstance(grantee, (UserGroup,)) else 'U'
-        tag = 'GANETI_WEB_MANAGER:%s:%s:%s' % (perm, group, grantee.id)
-        self.rapi.DeleteInstanceTags(self.hostname, (tag,))
+        self.disk_size = disk_size
     
     def _refresh(self):
         return self.rapi.GetInstance(self.hostname)
-
+    
     def shutdown(self):
         return self.rapi.ShutdownInstance(self.hostname)
-
+    
     def startup(self):
         return self.rapi.StartupInstance(self.hostname)
-
+    
     def reboot(self):
         return self.rapi.RebootInstance(self.hostname)
-
+    
     def __repr__(self):
         return "<VirtualMachine: '%s'>" % self.hostname
-
+    
     def __unicode__(self):
         return self.hostname
 
@@ -394,7 +379,7 @@ class Cluster(CachedClusterObject):
             quota.__dict__.update(values)
             quota.save()
     
-    def sync_virtual_machines(self):
+    def sync_virtual_machines(self, remove=False):
         """
         Synchronizes the VirtualMachines in the database with the information
         this ganeti cluster has:
@@ -409,9 +394,31 @@ class Cluster(CachedClusterObject):
             VirtualMachine(cluster=self, hostname=hostname).save()
         
         # deletes VMs that are no longer in ganeti
-        missing_ganeti = filter(lambda x: str(x) not in ganeti, db)
-        if missing_ganeti:
-            self.virtual_machines.filter(hostname__in=missing_ganeti).delete()
+        if remove:
+            missing_ganeti = filter(lambda x: str(x) not in ganeti, db)
+            if missing_ganeti:
+                self.virtual_machines \
+                    .filter(hostname__in=missing_ganeti).delete()
+
+    @property
+    def missing_in_ganeti(self):
+        """
+        Returns list of VirtualMachines that are missing from the ganeti cluster
+        but present in the database
+        """
+        ganeti = self.instances()
+        db = self.virtual_machines.all().values_list('hostname', flat=True)
+        return filter(lambda x: str(x) not in ganeti, db)
+
+    @property
+    def missing_in_db(self):
+        """
+        Returns list of VirtualMachines that are missing from the database, but
+        present in ganeti
+        """
+        ganeti = self.instances()
+        db = self.virtual_machines.all().values_list('hostname', flat=True)
+        return filter(lambda x: unicode(x) not in db, ganeti)
 
     def _refresh(self):
         return self.rapi.GetInfo()
@@ -477,6 +484,17 @@ class ClusterUser(models.Model):
     def __unicode__(self):
         return self.name
 
+    @property
+    def used_resources(self):
+        """
+        Return dictionary of total resources used by Virtual Machines that this
+        ClusterUser owns
+        """
+        return self.virtual_machines.exclude(ram=-1, disk_size=-1, \
+                                             virtual_cpus=-1) \
+                            .aggregate(disk=Sum('disk_size'), ram=Sum('ram'), \
+                                       virtual_cpus=Sum('virtual_cpus'))
+
 
 class Profile(ClusterUser):
     """
@@ -489,6 +507,12 @@ class Profile(ClusterUser):
     
     def set_perms(self, perms, object):
         self.user.set_perms(perms, object)
+
+    def filter_on_perms(self, *args, **kwargs):
+        return self.user.filter_on_perms(*args, **kwargs)
+
+    def has_perm(self, *args, **kwargs):
+        return self.user.has_perm(*args, **kwargs)
 
 
 class Organization(ClusterUser):
@@ -505,6 +529,12 @@ class Organization(ClusterUser):
 
     def set_perms(self, perms, object):
         self.user_group.set_perms(perms, object)
+
+    def filter_on_perms(self, *args, **kwargs):
+        return self.user_group.filter_on_perms(*args, **kwargs)
+
+    def has_perm(self, *args, **kwargs):
+        return self.user_group.has_perm(*args, **kwargs)
 
 
 class Quota(models.Model):
@@ -548,28 +578,9 @@ def update_organization(sender, instance, **kwargs):
     org.save()
 
 
-def add_virtual_machine_tag(sender, perm, object, **kwargs):
-    """
-    Pass through to virtual machine to add permission tag
-    """
-    if isinstance(object, (VirtualMachine,)):
-        object.add_permission_tag(sender, perm)
-
-
-def remove_virtual_machine_tag(sender, perm, object, **kwargs):
-    """
-    Pass through to virtual machine to remove permission tag
-    """
-    if isinstance(object, (VirtualMachine,)):
-        object.remove_permission_tag(sender, perm)
-
-
 models.signals.post_save.connect(create_profile, sender=User)
 models.signals.post_save.connect(update_cluster_hash, sender=Cluster)
 models.signals.post_save.connect(update_organization, sender=UserGroup)
 register('admin', Cluster)
 register('create_vm', Cluster)
 register('admin', VirtualMachine)
-
-granted.connect(add_virtual_machine_tag)
-revoked.connect(remove_virtual_machine_tag)
