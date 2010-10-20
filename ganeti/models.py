@@ -504,6 +504,11 @@ class Profile(ClusterUser):
     def set_perms(self, perms, object):
         self.user.set_perms(perms, object)
 
+    def filter_on_perms(self, *args, **kwargs):
+        return self.user.filter_on_perms(*args, **kwargs)
+
+    def has_perm(self, *args, **kwargs):
+        return self.user.has_perm(*args, **kwargs)
 
 class Organization(ClusterUser):
     """
@@ -520,6 +525,11 @@ class Organization(ClusterUser):
     def set_perms(self, perms, object):
         self.user_group.set_perms(perms, object)
 
+    def filter_on_perms(self, *args, **kwargs):
+        return self.user_group.filter_on_perms(*args, **kwargs)
+
+    def has_perm(self, *args, **kwargs):
+        return self.user_group.has_perm(*args, **kwargs)
 
 class Quota(models.Model):
     """

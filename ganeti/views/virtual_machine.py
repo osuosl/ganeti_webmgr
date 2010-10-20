@@ -282,6 +282,7 @@ def cluster_choices(request):
     return HttpResponse(content, mimetype='application/json')
 
 
+
 @login_required
 def cluster_options(request, cluster_slug):
     """
@@ -329,12 +330,13 @@ class NewVirtualMachineForm(forms.Form):
         self.user = user
         super(NewVirtualMachineForm, self).__init__(initial, *args, **kwargs)
         
-        if initial and 'cluster' in initial:
-            try:
-                cluster = Cluster.objects.get(pk=initial['cluster'])
-            except Cluster.DoesNotExist:
-                # defer to clean function to return errors
-                pass
+        if initial:
+            if 'cluster' in initial and initial['cluster']:
+                try:
+                    cluster = Cluster.objects.get(pk=initial['cluster'])
+                except Cluster.DoesNotExist:
+                    # defer to clean function to return errors
+                    pass
         
         if cluster is not None:
             # set choices based on selected cluster if given
@@ -345,9 +347,19 @@ class NewVirtualMachineForm(forms.Form):
             self.fields['snode'].choices = nodes
             self.fields['os'].choices = zip(oslist, oslist)
         
-        # set cluster choices based on user permissions and group membership
+        # set cluster choices based on the given owner
+        if initial and 'owner' in initial and initial['owner']:
+            try:
+                self.owner = ClusterUser.objects.get(pk=initial['owner']).cast()
+            except ClusterUser.DoesNotExist:
+                self.owner = None
+        else:
+            self.owner = None
+        
+        # set choices based on user permissions and group membership
         if user.is_superuser:
             self.fields['owner'].queryset = ClusterUser.objects.all()
+            self.fields['cluster'].queryset = Cluster.objects.all()
         else:
             choices = [(u'', u'---------')]
             choices += list(user.user_groups.values_list('id','name'))
@@ -355,12 +367,17 @@ class NewVirtualMachineForm(forms.Form):
                 profile = user.get_profile()
                 choices.append((profile.id, profile.name))
             self.fields['owner'].choices = choices
+            
+            # set cluster choices based on the given owner
+            if self.owner:
+                q = self.owner.filter_on_perms(Cluster, ['admin','create_vm'])
+                self.fields['cluster'].queryset = q
     
     def clean(self):
         data = self.cleaned_data
         
-        if 'owner' in data:
-            owner = data['owner'].cast()
+        owner = self.owner
+        if owner:
             if isinstance(owner, (Organization,)):
                 grantee = owner.user_group
             else:
@@ -368,12 +385,14 @@ class NewVirtualMachineForm(forms.Form):
             data['grantee'] = grantee
         
         # superusers bypass all permission and quota checks
-        if not self.user.is_superuser and 'owner' in data:
+        if not self.user.is_superuser and owner:
             msg = None
+            
             if isinstance(owner, (Organization,)):
                 # check user membership in group if group
                 if not grantee.users.filter(id=self.user.id).exists():
                     msg = u"User is not a member of the specified group."
+                
             else:
                 if not owner.user_id == self.user.id:
                     msg = "You are not allowed to act on behalf of this user."
@@ -381,8 +400,8 @@ class NewVirtualMachineForm(forms.Form):
             # check permissions on cluster
             if 'cluster' in data:
                 cluster = data['cluster']
-                if not (grantee.has_perm('create_vm', cluster) \
-                        or grantee.has_perm('admin', cluster)):
+                if not (owner.has_perm('create_vm', cluster) \
+                        or owner.has_perm('admin', cluster)):
                     msg = u"Owner does not have permissions for this cluster."
             
                 # check quota

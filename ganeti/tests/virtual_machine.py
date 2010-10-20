@@ -1187,8 +1187,12 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         models.client.GanetiRapiClient = RapiProxy
         cluster0 = Cluster(hostname='test0', slug='test0')
         cluster1 = Cluster(hostname='test1', slug='test1')
+        cluster2 = Cluster(hostname='test2', slug='test2')
+        cluster3 = Cluster(hostname='test3', slug='test3')
         cluster0.save()
         cluster1.save()
+        cluster2.save()
+        cluster3.save()
         
         user = User(id=2, username='tester0')
         user.set_password('secret')
@@ -1202,6 +1206,8 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         g = globals()
         g['cluster0'] = cluster0
         g['cluster1'] = cluster1
+        g['cluster2'] = cluster2
+        g['cluster3'] = cluster3
         g['user'] = user
         g['user1'] = user1
         g['group'] = group
@@ -1250,6 +1256,45 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual([('gtest1.osuosl.bak', 'gtest1.osuosl.bak'), ('gtest2.osuosl.bak', 'gtest2.osuosl.bak')], form.fields['pnode'].choices)
         self.assertEqual([('gtest1.osuosl.bak', 'gtest1.osuosl.bak'), ('gtest2.osuosl.bak', 'gtest2.osuosl.bak')], form.fields['snode'].choices)
         self.assertEqual([('image+debian-osgeo', 'image+debian-osgeo'), ('image+ubuntu-lucid', 'image+ubuntu-lucid')], form.fields['os'].choices)
+    
+    def test_cluster_choices_init(self):
+        """
+        Tests that cluster choices are based on User permissions
+        
+        Verifies:
+            * superusers have all Clusters as choices
+            * user's and groups only receive clusters they have permissions
+              directly on.
+        """
+        # user with no choices
+        form = NewVirtualMachineForm(user, None, initial={'owner':user.get_profile().id})
+        self.assertEqual([(u'', u'---------')], list(form.fields['cluster'].choices))
+        
+        # user with choices
+        user.grant('admin', cluster0)
+        user.grant('create_vm', cluster1)
+        form = NewVirtualMachineForm(user, None, initial={'owner':user.get_profile().id})
+        self.assertEqual([(u'', u'---------'), (1, u'test0'), (2, u'test1')], list(form.fields['cluster'].choices))
+        
+        # group with no choices
+        form = NewVirtualMachineForm(user, None, initial={'owner':group.organization.id})
+        self.assertEqual([(u'', u'---------')], list(form.fields['cluster'].choices))
+        
+        # group with choices
+        group.grant('admin', cluster2)
+        group.grant('create_vm', cluster3)
+        form = NewVirtualMachineForm(user, None, initial={'owner':group.organization.id})
+        self.assertEqual([(u'', u'---------'), (3, u'test2'), (4, u'test3')], list(form.fields['cluster'].choices))
+        
+        # user - superuser
+        user.is_superuser = True
+        user.save()
+        form = NewVirtualMachineForm(user, None, initial={'owner':user.get_profile().id})
+        self.assertEqual([(u'', u'---------'), (1, u'test0'), (2, u'test1'), (3, u'test2'), (4, u'test3')], list(form.fields['cluster'].choices))
+        
+        # group - superuser
+        form = NewVirtualMachineForm(user, None, initial={'owner':group.organization.id})
+        self.assertEqual([(u'', u'---------'), (1, u'test0'), (2, u'test1'), (3, u'test2'), (4, u'test3')], list(form.fields['cluster'].choices))
     
     def test_owner_choices_init(self):
         """
