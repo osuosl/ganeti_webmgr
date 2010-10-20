@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Orphan VMs{% endblock %}
+
+{% block content %}
+    <h1>Unknown Virtual Machines</h1>
+    
+    <p class="info">
+        Unknown virtual machines are those that exist in the database, but there
+        is no record of them in ganeti.  This may happen if you have manually
+        deleted or renamed a virtual machine using ganeti command line tools.
+    </p>
+    
+    {% if vms %}
+        <form action="{% url import-missing %}" method="post">
+        {{form.errors}}
+        <input type="submit" value="Delete Selected">
+        <ul id="orphans">
+            {% for vm in vms %}
+                <li><input type="checkbox" name="virtual_machines" value="{{vm}}">{{vm}}</li>
+            {% endfor %}
+        </ul>
+        </form>
+    {% endif %}    
+    {% if not vms and vmcount > 0 %}
+        <p>All virtual machines are synchronized</p>
+    {% endif %}
+{% endblock %}

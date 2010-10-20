@@ -59,10 +59,6 @@ class ImportViews(TestCase):
         # XXX specify permission manually, it is not auto registering for some reason
         register('admin', Cluster)
         register('create_vm', Cluster)
-        
-        while INSTANCES:
-            INSTANCES.pop()
-        INSTANCES.extend(['vm0','vm2','vm3','vm5'])
     
     def tearDown(self):
         ObjectPermission.objects.all().delete()
@@ -73,9 +69,6 @@ class ImportViews(TestCase):
         Profile.objects.all().delete()
         UserGroup.objects.all().delete()
         User.objects.all().delete()
-        while INSTANCES:
-            INSTANCES.pop()
-        INSTANCES.extend(['gimager.osuosl.bak', 'gimager2.osuosl.bak'])
     
     def test_orphans_view(self):
         """
@@ -146,3 +139,140 @@ class ImportViews(TestCase):
         self.assertTemplateUsed(response, 'importing/orphans.html')
         self.assertFalse(response.context['form'].errors)
         self.assertEqual([], response.context['vms'])
+    
+    def test_missing_ganeti(self):
+        """
+        Tests view for Virtual Machines missing from ganeti
+        """
+        url = '/import/missing/'
+        cluster0.rapi.GetInstances.response = ['vm0','vm2']
+        cluster1.rapi.GetInstances.response = ['vm3','vm5']
+        
+        # anonymous user
+        response = c.get(url, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'registration/login.html')
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.get(url)
+        self.assertEqual(403, response.status_code)
+        
+        # authorized get (cluster admin perm)
+        user.grant('admin', cluster0)
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'importing/missing.html')
+        self.assertEqual([('vm1','vm1')], response.context['vms'])
+        user.revoke_all(cluster0)
+        
+        # authorized get (superuser)
+        user.is_superuser = True
+        user.save()
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'importing/missing.html')
+        self.assertEqual([('vm1','vm1'), ('vm4','vm4')], response.context['vms'])
+        user.is_superuser = False
+        user.save()
+        
+        # POST - invalid vm
+        user.grant('admin', cluster0)
+        data = {'virtual_machines':[-1]}
+        response = c.post(url, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'importing/missing.html')
+        self.assert_(response.context['form'].errors)
+        
+        # POST - user does not have perms for cluster
+        data = {'virtual_machines':[vm3.hostname]}
+        response = c.post(url, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'importing/missing.html')
+        self.assert_(response.context['form'].errors)
+        
+        # POST - success
+        data = {'virtual_machines':['vm1']}
+        response = c.post(url, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'importing/missing.html')
+        self.assertFalse(response.context['form'].errors)
+        self.assertEqual([], response.context['vms'])
+    
+    def test_missing_db(self):
+        """
+        Tests view for Virtual Machines missing from database
+        """
+        url = '/import/missing_db/'
+        cluster0.rapi.GetInstances.response = ['vm0','vm2']
+        cluster1.rapi.GetInstances.response = ['vm3','vm5']
+        
+        # anonymous user
+        response = c.get(url, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'registration/login.html')
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.get(url)
+        self.assertEqual(403, response.status_code)
+        
+        # authorized get (cluster admin perm)
+        user.grant('admin', cluster0)
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'importing/missing_db.html')
+        self.assertEqual([('1:vm2','vm2')], response.context['vms'])
+        user.revoke_all(cluster0)
+        
+        # authorized get (superuser)
+        user.is_superuser = True
+        user.save()
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'importing/missing_db.html')
+        self.assertEqual([('1:vm2','vm2'), ('2:vm5','vm5')], response.context['vms'])
+        user.is_superuser = False
+        user.save()
+        
+        # POST - invalid vm
+        user.grant('admin', cluster0)
+        data = {'virtual_machines':[-1]}
+        response = c.post(url, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'importing/missing_db.html')
+        self.assert_(response.context['form'].errors)
+        
+        # POST - invalid owner
+        data = {'virtual_machines':[vm0.id], 'owner':-1}
+        response = c.post(url, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'importing/missing_db.html')
+        self.assert_(response.context['form'].errors)
+        
+        # POST - user does not have perms for cluster
+        data = {'virtual_machines':[vm3.hostname], 'owner':owner.id}
+        response = c.post(url, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'importing/missing_db.html')
+        self.assert_(response.context['form'].errors)
+        
+        # POST - success
+        data = {'virtual_machines':['1:vm2'], 'owner':owner.id}
+        response = c.post(url, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'importing/missing_db.html')
+        self.assertFalse(response.context['form'].errors)
+        self.assertEqual([], response.context['vms'])
+        self.assert_(VirtualMachine.objects.filter(hostname='vm1').exists())
