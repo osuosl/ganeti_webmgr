@@ -278,19 +278,19 @@ def cluster_choices(request):
     else:
         q = user.filter_on_perms(Cluster, ['admin','create_vm'], groups=False)
     
-    clusters = list(q.values_list('slug', 'hostname'))
+    clusters = list(q.values_list('id', 'hostname'))
     content = json.dumps(clusters)
     return HttpResponse(content, mimetype='application/json')
 
 
 
 @login_required
-def cluster_options(request, cluster_slug):
+def cluster_options(request, cluster_id):
     """
     Ajax view for retrieving node and operating system choices for a given
     cluster.
     """
-    cluster = get_object_or_404(Cluster, slug__exact=cluster_slug)
+    cluster = get_object_or_404(Cluster, id__exact=cluster_id)
     
     user = request.user
     if not (user.is_superuser or user.has_perm('create_vm', cluster) or \
