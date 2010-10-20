@@ -16,6 +16,7 @@ from ganeti import models
 from ganeti.views.virtual_machine import NewVirtualMachineForm
 VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
+ClusterUser = models.ClusterUser
 
 __all__ = ('TestVirtualMachineModel', 'TestVirtualMachineViews', 'TestNewVirtualMachineForm')
 
@@ -44,6 +45,7 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         Cluster.objects.all().delete()
         User.objects.all().delete()
         UserGroup.objects.all().delete()
+        ClusterUser.objects.all().delete()
     
     def test_trivial(self):
         """
@@ -104,112 +106,69 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(vm.virtual_cpus, 2)
         self.assertEqual(vm.disk_size, 5120)
 
-    def test_parse_permissions(self):
+    def test_parse_owner(self):
         """
-        Test parsing permissions from tags:
-        
-        Verifies:
-            * new tags are added to user/group
-            * existing tags remain granted
-            * removed tags are revoked
+        Tests parsing owner from tags
         """
         vm, cluster = self.create_virtual_machine()
         
-        user0 = User(id=1, username='user0')
-        user1 = User(id=2, username='user1')
-        user2 = User(id=3, username='user2')
-        user0.save()
-        user1.save()
-        user2.save()
-        group0 = UserGroup(id=4, name='group0')
-        group1 = UserGroup(id=5, name='group1')
-        group2 = UserGroup(id=6, name='group2')
-        group0.save()
-        group1.save()
-        group2.save()
+        owner0 = ClusterUser(id=1, name='owner0')
+        owner1 = ClusterUser(id=2, name='owner1')
+        owner0.save()
+        owner1.save()
         
-        user1.grant('admin', vm)
-        user2.grant('admin', vm)
-        user2.grant('start', vm)
-        group1.grant('admin', vm)
-        group2.grant('admin', vm)
-        group2.grant('start', vm)
+        data = INSTANCE.copy()
+        self.assertEqual(None, vm.owner)
         
-        # force info to be parsed
-        #
-        # user that does not exist - error should be caught
-        # group that does not exist - error should be caught
-        # permission that does not exist - error should be caught
-        data = {}
-        data.update(INSTANCE)
-        data['tags'] = ['GANETI_WEB_MANAGER:start:U:1',
-                        'GANETI_WEB_MANAGER:admin:U:1',
-                        'GANETI_WEB_MANAGER:start:U:2',
-                        'GANETI_WEB_MANAGER:admin:G:4',
-                        'GANETI_WEB_MANAGER:start:G:4',
-                        'GANETI_WEB_MANAGER:start:G:5',
-                        'GANETI_WEB_MANAGER:bad_perm:U:1',
-                        'GANETI_WEB_MANAGER:bad_perm:G:4']
+        # set it to a group
+        data['tags'] = ['GANETI_WEB_MANAGER:OWNER:%s' % owner0.id]
         vm.info = data
+        self.assertEqual(owner0, vm.owner)
         
-        # user with new permissions
-        self.assertEqual(['admin','start'], user0.get_perms(vm))
+        # invalid group
+        data['tags'] = ['GANETI_WEB_MANAGER:OWNER:%s' % -1]
+        vm.info = data
+        self.assertEqual(None, vm.owner)
         
-        # user with a granted and revoked permission
-        self.assertEqual(['start'], user1.get_perms(vm))
+        # change it
+        data['tags'] = ['GANETI_WEB_MANAGER:OWNER:%s' % owner1.id]
+        vm.info = data
+        self.assertEqual(owner1, vm.owner)
         
-        # group with new permissions
-        self.assertEqual(['admin','start'], group0.get_perms(vm))
-        
-        # group with a granted and revoked permission
-        self.assertEqual(['start'], group1.get_perms(vm))
-        
-        # user with all permissions revoked
-        self.assertEqual([], user2.get_perms(vm))
-        
-        # group with all permissions revoked
-        self.assertEqual([], group2.get_perms(vm))
-
-    def test_changing_permissions(self):
+        # set it to None
+        data['tags'] = []
+        vm.info = data
+        self.assertEqual(None, vm.owner)
+    
+    def test_update_owner_tag(self):
         """
-        Test granting and revoking permissions:
-        
-        Verifies:
-            * granted permission is added to tags and pushed to ganeti
-            * revoked permission is removed from tags and pushed to ganeti
+        Test changing owner
         """
         vm, cluster = self.create_virtual_machine()
-        user = User(id=1, username='user0')
-        user.save()
-        group = UserGroup(id=1, name='group0')
-        group.save()
-        rapi = vm.rapi
         
-        user.grant('admin', vm)
-        rapi.AddInstanceTags.assertCalled(self)
-        rapi.AddInstanceTags.reset()
+        owner0 = ClusterUser(id=1, name='owner0')
+        owner1 = ClusterUser(id=2, name='owner1')
+        owner0.save()
+        owner1.save()
         
-        group.grant('admin', vm)
-        rapi.AddInstanceTags.assertCalled(self)
-        rapi.AddInstanceTags.reset()
+        # no owner
+        vm.refresh()
+        self.assertEqual([], vm.info['tags'])
         
-        user.revoke('admin', vm)
-        rapi.DeleteInstanceTags.assertCalled(self)
-        rapi.DeleteInstanceTags.reset()
+        # setting owner
+        vm.owner = owner0
+        vm.save()
+        self.assertEqual(['GANETI_WEB_MANAGER:OWNER:%s'%owner0.id], vm.info['tags'])
         
-        group.revoke('admin', vm)
-        rapi.DeleteInstanceTags.assertCalled(self)
-        rapi.DeleteInstanceTags.reset()
+        # changing owner
+        vm.owner = owner1
+        vm.save()
+        self.assertEqual(['GANETI_WEB_MANAGER:OWNER:%s'%owner1.id], vm.info['tags'])
         
-        rapi.error = client.GanetiApiError('testing error')
-        try:
-            user.grant('admin', vm)
-            user.revoke('admin', vm)
-            self.fail('errors were not raised')
-        except client.GanetiApiError:
-            # XXX for now errors are bubbled up.  not sure yet how to handle
-            # the exception
-            pass
+        # setting owner to none
+        vm.owner = None
+        vm.save()
+        self.assertEqual([], vm.info['tags'])
 
 
 class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
@@ -246,8 +205,6 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         register('start', VirtualMachine)
     
     def tearDown(self):
-        INSTANCE['tags'] = []
-        
         ObjectPermission.objects.all().delete()
         GroupObjectPermission.objects.all().delete()
         UserGroup.objects.all().delete()
@@ -610,9 +567,6 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertTemplateUsed(response, 'virtual_machine/create.html')
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
         
-        # setup return value for proxy tags
-        INSTANCE['tags'] = ['GANETI_WEB_MANAGER:admin:U:2']
-        
         # POST - user authorized for cluster (create_vm)
         user.grant('admin', cluster)
         response = c.post(url % '', data, follow=True)
@@ -641,7 +595,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         
         # POST - User attempting to be other user
         data_ = data.copy()
-        data_['owner'] = user1.id
+        data_['owner'] = user1.get_profile().id
         response = c.post(url % '', data_)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
@@ -671,9 +625,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         cluster.rapi.CreateInstance.error = None
         
         # POST - User attempting to be other user (superuser)
-        INSTANCE['tags'] = ['GANETI_WEB_MANAGER:admin:U:3']
         data_ = data.copy()
-        data_['owner'] = user1.id
+        data_['owner'] = user1.get_profile().id
         response = c.post(url % '', data_, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
@@ -699,12 +652,11 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'virtual_machine/create.html')
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
+        group.revoke_all(new_vm)
         VirtualMachine.objects.all().delete()
-        group.revoke_all(cluster)
         
         # add user to group
         group.users.add(user)
-        INSTANCE['tags'] = ['GANETI_WEB_MANAGER:admin:G:1']
         
         # POST - group authorized for cluster (create_vm)
         group.grant('create_vm', cluster)
@@ -715,8 +667,9 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
         self.assert_(group.has_perm('admin', new_vm))
-        VirtualMachine.objects.all().delete()
         group.revoke_all(cluster)
+        group.revoke_all(new_vm)
+        VirtualMachine.objects.all().delete()
         
         # POST - group authorized for cluster (admin)
         group.grant('admin', cluster)
@@ -728,6 +681,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(new_vm, response.context['instance'])
         self.assert_(group.has_perm('admin', new_vm))
         group.revoke_all(cluster)
+        group.revoke_all(new_vm)
         VirtualMachine.objects.all().delete()
         
         # POST - group authorized for cluster (superuser)
@@ -740,14 +694,13 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
         self.assert_(group.has_perm('admin', new_vm))
-        group.revoke_all(cluster)
+        group.revoke_all(new_vm)
         VirtualMachine.objects.all().delete()
         
         # POST - not a group member (superuser)
-        INSTANCE['tags'] = ['GANETI_WEB_MANAGER:admin:G:2']
         data_ = data.copy()
         data_['owner'] = group1.organization.id
-        response = c.post(url % '', data, follow=True)
+        response = c.post(url % '', data_, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'virtual_machine/detail.html')
