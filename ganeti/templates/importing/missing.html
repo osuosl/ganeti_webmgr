@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Orphan VMs{% endblock %}
+
+{% block content %}
+    <h1>Missing Virtual Machines</h1>
+    
+    <p class="info">
+        Missing virtual machines are those that exist in ganeti, but are not
+        present in the database.  This page is used for importing the virtual
+        machines.
+    </p>
+    
+    {% if vms %}
+        <form action="{% url import-missing %}" method="post">
+        {{form.errors}}
+        {{form.owner.label}} {{form.owner}}
+        <input type="submit" value="Import Selected">
+        <ul id="orphans">
+            {% for vm in vms %}
+                <li><input type="checkbox" name="virtual_machines" value="{{vm}}">{{vm}}</li>
+            {% endfor %}
+        </ul>
+        </form>
+    {% endif %}    
+    {% if not vms and vmcount > 0 %}
+        <p>All virtual machines are synchronized</p>
+    {% endif %}
+{% endblock %}
