@@ -13,10 +13,11 @@ from object_permissions.models import ObjectPermission, GroupObjectPermission, \
 from util import client
 from ganeti.tests.rapi_proxy import RapiProxy, INSTANCE
 from ganeti import models
+from ganeti.views.virtual_machine import NewVirtualMachineForm
 VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
 
-__all__ = ('TestVirtualMachineModel', 'TestVirtualMachineViews')
+__all__ = ('TestVirtualMachineModel', 'TestVirtualMachineViews', 'TestNewVirtualMachineForm')
 
 class VirtualMachineTestCaseMixin():
     def create_virtual_machine(self, cluster=None, hostname='vm1.osuosl.bak'):
@@ -1150,3 +1151,118 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual('application/json', response['content-type'])
         self.assertEqual([], group.get_perms(vm))
         self.assertEqual('1', response.content)
+
+
+class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
+    
+    def setUp(self):
+        self.tearDown()
+        models.client.GanetiRapiClient = RapiProxy
+        cluster0 = Cluster(hostname='test0', slug='test0')
+        cluster1 = Cluster(hostname='test1', slug='test1')
+        cluster0.save()
+        cluster1.save()
+        
+        user = User(id=2, username='tester0')
+        user.set_password('secret')
+        user.save()
+        user1 = User(id=3, username='tester1')
+        user1.set_password('secret')
+        user1.save()
+        group = UserGroup(id=1, name='testing_group')
+        group.save()
+        
+        g = globals()
+        g['cluster0'] = cluster0
+        g['cluster1'] = cluster1
+        g['user'] = user
+        g['user1'] = user1
+        g['group'] = group
+        
+        # XXX specify permission manually, it is not auto registering for some reason
+        register('admin', Cluster)
+        register('create_vm', Cluster)
+    
+    def tearDown(self):
+        ObjectPermission.objects.all().delete()
+        GroupObjectPermission.objects.all().delete()
+        UserGroup.objects.all().delete()
+        User.objects.all().delete()
+        VirtualMachine.objects.all().delete()
+        Cluster.objects.all().delete()
+    
+    def test_cluster_init(self):
+        """
+        Tests initializing a form with a Cluster
+        
+        Verifies:
+            * cluster choices are set correctly
+            * node choices are set correctly
+        """
+        
+        # no cluster
+        form = NewVirtualMachineForm(user, None)
+        self.assertEqual([], form.fields['pnode'].choices)
+        self.assertEqual([], form.fields['snode'].choices)
+        self.assertEqual([], form.fields['os'].choices)
+        
+        # cluster provided
+        form = NewVirtualMachineForm(user, cluster0)
+        self.assertEqual([('gtest1.osuosl.bak', 'gtest1.osuosl.bak'), ('gtest2.osuosl.bak', 'gtest2.osuosl.bak')], form.fields['pnode'].choices)
+        self.assertEqual([('gtest1.osuosl.bak', 'gtest1.osuosl.bak'), ('gtest2.osuosl.bak', 'gtest2.osuosl.bak')], form.fields['snode'].choices)
+        self.assertEqual([('image+debian-osgeo', 'image+debian-osgeo'), ('image+ubuntu-lucid', 'image+ubuntu-lucid')], form.fields['os'].choices)
+        
+        # cluster from initial data
+        form = NewVirtualMachineForm(user, None, {'cluster':cluster0.id})
+        self.assertEqual([('gtest1.osuosl.bak', 'gtest1.osuosl.bak'), ('gtest2.osuosl.bak', 'gtest2.osuosl.bak')], form.fields['pnode'].choices)
+        self.assertEqual([('gtest1.osuosl.bak', 'gtest1.osuosl.bak'), ('gtest2.osuosl.bak', 'gtest2.osuosl.bak')], form.fields['snode'].choices)
+        self.assertEqual([('image+debian-osgeo', 'image+debian-osgeo'), ('image+ubuntu-lucid', 'image+ubuntu-lucid')], form.fields['os'].choices)
+        
+        # cluster from initial data
+        form = NewVirtualMachineForm(user, cluster0, {'cluster':cluster0.id})
+        self.assertEqual([('gtest1.osuosl.bak', 'gtest1.osuosl.bak'), ('gtest2.osuosl.bak', 'gtest2.osuosl.bak')], form.fields['pnode'].choices)
+        self.assertEqual([('gtest1.osuosl.bak', 'gtest1.osuosl.bak'), ('gtest2.osuosl.bak', 'gtest2.osuosl.bak')], form.fields['snode'].choices)
+        self.assertEqual([('image+debian-osgeo', 'image+debian-osgeo'), ('image+ubuntu-lucid', 'image+ubuntu-lucid')], form.fields['os'].choices)
+    
+    def test_owner_choices_init(self):
+        """
+        Tests that owner choices are set based on User permissions
+        
+        Verifies:
+            * superusers have all clusterusers as choices
+            * user receives themselves as a choice if they have perms
+            * user receives all groups they are a member of
+        """
+        
+        # user with no choices
+        form = NewVirtualMachineForm(user, cluster0)
+        self.assertEqual([(u'', u'---------')], form.fields['owner'].choices)
+        
+        # user with perms on self, no groups
+        user.grant('admin', cluster0)
+        form = NewVirtualMachineForm(user, None)
+        self.assertEqual([(u'', u'---------'), (1, u'tester0')], form.fields['owner'].choices)
+        user.set_perms(['create_vm'], cluster0)
+        form = NewVirtualMachineForm(user, None)
+        self.assertEqual([(u'', u'---------'), (1, u'tester0')], form.fields['owner'].choices)
+        
+        # user with perms on self and groups
+        group.users.add(user)
+        group.grant('admin', cluster0)
+        form = NewVirtualMachineForm(user, None)
+        self.assertEqual([(u'', u'---------'), (1, u'testing_group'), (1, u'tester0')], form.fields['owner'].choices)
+        user.revoke_all(cluster0)
+        
+        # user with no perms on self, but groups
+        form = NewVirtualMachineForm(user, None)
+        self.assertEqual([(u'', u'---------'),(1, u'testing_group')], form.fields['owner'].choices)
+        group.set_perms(['create_vm'], cluster0)
+        form = NewVirtualMachineForm(user, None)
+        self.assertEqual([(u'', u'---------'), (1, u'testing_group')], form.fields['owner'].choices)
+        group.revoke_all(cluster0)
+        
+        # superuser
+        user.is_superuser = True
+        user.save()
+        form = NewVirtualMachineForm(user, None)
+        self.assertEqual([(u'', u'---------'), (1, u'tester0'), (2, u'tester1'), (3, u'testing_group')], list(form.fields['owner'].choices))

@@ -349,8 +349,9 @@ class NewVirtualMachineForm(forms.Form):
         if user.is_superuser:
             self.fields['owner'].queryset = ClusterUser.objects.all()
         else:
-            choices = list(user.user_groups.values_list('id','name'))
-            if user.perms_on_any(Cluster, ['admin','create_vm']):
+            choices = [(u'', u'---------')]
+            choices += list(user.user_groups.values_list('id','name'))
+            if user.perms_on_any(Cluster, ['admin','create_vm'], False):
                 profile = user.get_profile()
                 choices.append((profile.id, profile.name))
             self.fields['owner'].choices = choices
