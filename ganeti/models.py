@@ -404,10 +404,21 @@ class Cluster(CachedClusterObject):
     def missing_in_ganeti(self):
         """
         Returns list of VirtualMachines that are missing from the ganeti cluster
+        but present in the database
         """
         ganeti = self.instances()
         db = self.virtual_machines.all().values_list('hostname', flat=True)
         return filter(lambda x: str(x) not in ganeti, db)
+
+    @property
+    def missing_in_db(self):
+        """
+        Returns list of VirtualMachines that are missing from the database, but
+        present in ganeti
+        """
+        ganeti = self.instances()
+        db = self.virtual_machines.all().values_list('hostname', flat=True)
+        return filter(lambda x: unicode(x) not in db, ganeti)
 
     def _refresh(self):
         return self.rapi.GetInfo()

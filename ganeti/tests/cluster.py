@@ -162,6 +162,20 @@ class TestClusterModel(TestCase):
         cluster.sync_virtual_machines(True)
         self.assertFalse(VirtualMachine.objects.filter(cluster=cluster, hostname=vm_removed.hostname), 'vm not present in ganeti was not removed from db')
 
+    def test_missing_in_database(self):
+        """
+        Tests missing_in_ganeti property
+        """
+        cluster = Cluster(hostname='ganeti.osuosl.test')
+        cluster.save()
+        vm_missing = 'gimager.osuosl.bak'
+        vm_current = VirtualMachine(cluster=cluster, hostname='gimager2.osuosl.bak')
+        vm_removed = VirtualMachine(cluster=cluster, hostname='does.not.exist.org')
+        vm_current.save()
+        vm_removed.save()
+        
+        self.assertEqual([u'gimager.osuosl.bak'], cluster.missing_in_db)
+
     def test_missing_in_ganeti(self):
         """
         Tests missing_in_ganeti property
@@ -175,6 +189,7 @@ class TestClusterModel(TestCase):
         vm_removed.save()
         
         self.assertEqual([u'does.not.exist.org'], cluster.missing_in_ganeti)
+
 
 class TestClusterViews(TestCase):
     
