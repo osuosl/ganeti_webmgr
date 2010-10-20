@@ -438,8 +438,8 @@ class NewVirtualMachineForm(forms.Form):
                 self._errors["owner"] = self.error_class([msg])
                 del data['owner']
         
-        pnode = data.get("pnode")
-        snode = data.get("snode")
+        pnode = data.get("pnode", '')
+        snode = data.get("snode", '')
         disk_template = data.get("disk_template")
         
         # Need to have pnode != snode
