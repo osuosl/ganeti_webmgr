@@ -379,7 +379,7 @@ class Cluster(CachedClusterObject):
             quota.__dict__.update(values)
             quota.save()
     
-    def sync_virtual_machines(self):
+    def sync_virtual_machines(self, remove=False):
         """
         Synchronizes the VirtualMachines in the database with the information
         this ganeti cluster has:
@@ -394,9 +394,20 @@ class Cluster(CachedClusterObject):
             VirtualMachine(cluster=self, hostname=hostname).save()
         
         # deletes VMs that are no longer in ganeti
-        missing_ganeti = filter(lambda x: str(x) not in ganeti, db)
-        if missing_ganeti:
-            self.virtual_machines.filter(hostname__in=missing_ganeti).delete()
+        if remove:
+            missing_ganeti = filter(lambda x: str(x) not in ganeti, db)
+            if missing_ganeti:
+                self.virtual_machines \
+                    .filter(hostname__in=missing_ganeti).delete()
+
+    @property
+    def missing_in_ganeti(self):
+        """
+        Returns list of VirtualMachines that are missing from the ganeti cluster
+        """
+        ganeti = self.instances()
+        db = self.virtual_machines.all().values_list('hostname', flat=True)
+        return filter(lambda x: str(x) not in ganeti, db)
 
     def _refresh(self):
         return self.rapi.GetInfo()
