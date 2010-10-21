@@ -25,7 +25,18 @@
         };
         
         $(document).ready(function() {
-            $('#tabs').tabs({ spinner: false});
+            $('#tabs').tabs({ 
+                spinner: false,
+                select: function(event, ui) {
+                    var tabID = "#ui-tabs-"+(ui.index);
+                    $(tabID).html("<div class='spinner'>Loading...<img src='{{MEDIA_URL}}/images/ajax-loader.gif'></div>");
+                },
+                ajaxOptions: {
+                    error: function(xhr, status, index, anchor) {
+                        $(anchor.hash).html("Couldn't load this tab. We'll try to fix this as soon as possible.");
+                    }
+                }
+            });
         });
     </script>
 {% endblock %}

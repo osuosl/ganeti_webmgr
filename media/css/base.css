@@ -236,7 +236,11 @@ div.delete, div.edit, div.icon_error {
 .reboot {background:url(/media/images/icons/arrow_refresh.png) no-repeat 4px 4px;}
 .shutdown {background:url(/media/images/icons/stop.png) no-repeat 4px 4px;}
 .startup {background:url(/media/images/icons/add.png) no-repeat 4px 4px;}
-.add:hover, .reboot:hover, .shutdown:hover, .startup:hover {background-color: #dadada !important; color:black;} 
+.add:hover, .reboot:hover, .shutdown:hover, .startup:hover {background-color: #dadada !important; color:black;}
+
+.spinner {margin:0 auto; text-align:center; width:100px}
+.spinner image {display:block; margin:0 auto; width:32px;}
+
 
 #messages li {
     background-color:#c2e192;
@@ -265,5 +269,7 @@ tr.group td.name {background:url(/media/images/icons/group.png) no-repeat 0 4px;
 
 .permissions a {color:#333333;}
 .permissions .none, .quota.default {color:#C1C1C1; font-style:italic;}
+
+
 
 .floatfix {clear:both;}
