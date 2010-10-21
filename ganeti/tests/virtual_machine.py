@@ -727,6 +727,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         cluster4.save()
         cluster5 = Cluster(hostname='no.perms.on.this.group', slug='no_perms')
         cluster5.save()
+        # cluster ids are 1 through 6
         
         group.users.add(user)
         group1 = UserGroup(id=2, name='testing_group2')
@@ -754,7 +755,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         response = c.get(url, {'group_id':1})
         self.assertEqual(200, response.status_code)
         clusters = json.loads(response.content)
-        self.assert_(['group_create_vm','group.create_vm'] in clusters)
+        self.assert_([4,'group.create_vm'] in clusters)
         self.assertEqual(1, len(clusters))
         
         # admin permission (group)
@@ -762,8 +763,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         response = c.get(url, {'group_id':1})
         self.assertEqual(200, response.status_code)
         clusters = json.loads(response.content)
-        self.assert_(['group_create_vm','group.create_vm'] in clusters)
-        self.assert_(['group_admin','group.admin'] in clusters)
+        self.assert_([4,'group.create_vm'] in clusters)
+        self.assert_([5,'group.admin'] in clusters)
         self.assertEqual(2, len(clusters))
         
         # create_vm permission
@@ -771,7 +772,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         clusters = json.loads(response.content)
-        self.assert_(['user_create_vm','user.create_vm'] in clusters)
+        self.assert_([1,'user.create_vm'] in clusters)
         self.assertEqual(1, len(clusters), clusters)
         
         # admin permission
@@ -779,8 +780,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         clusters = json.loads(response.content)
-        self.assert_(['user_create_vm','user.create_vm'] in clusters)
-        self.assert_(['user_admin','user.admin'] in clusters)
+        self.assert_([1,'user.create_vm'] in clusters)
+        self.assert_([2,'user.admin'] in clusters)
         self.assertEqual(2, len(clusters))
         
         # authorized (superuser)
@@ -790,20 +791,20 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/json', response['content-type'])
         clusters = json.loads(response.content)
-        self.assert_(['user_create_vm','user.create_vm'] in clusters)
-        self.assert_(['user_admin','user.admin'] in clusters)
-        self.assert_(['superuser','superuser'] in clusters, clusters)
-        self.assert_(['group_create_vm','group.create_vm'] in clusters)
-        self.assert_(['group_admin','group.admin'] in clusters, clusters)
-        self.assert_(['no_perms','no.perms.on.this.group'] in clusters)
+        self.assert_([1,'user.create_vm'] in clusters)
+        self.assert_([2,'user.admin'] in clusters)
+        self.assert_([3,'superuser'] in clusters, clusters)
+        self.assert_([4,'group.create_vm'] in clusters)
+        self.assert_([5,'group.admin'] in clusters, clusters)
+        self.assert_([6,'no.perms.on.this.group'] in clusters)
         self.assertEqual(6, len(clusters))
     
     def test_view_cluster_options(self):
         """
         Test retrieving list of options a cluster has for vms
         """
-        url = '/vm/add/options/%s/'
-        args = cluster.slug
+        url = '/vm/add/options/?cluster_id=%s'
+        args = cluster.id
         
         # anonymous user
         response = c.post(url % args, follow=True)
@@ -816,7 +817,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(403, response.status_code)
         
         # invalid cluster
-        response = c.get(url % "DoesNotExist")
+        response = c.get(url % "-4")
         self.assertEqual(404, response.status_code)
         
         # authorized (create_vm)
