@@ -17,6 +17,8 @@ from ganeti.models import *
 from util.portforwarder import forward_port
 from util.client import GanetiApiError
 
+empty_field = (u'', u'---------')
+
 @login_required
 def vnc(request, cluster_slug, instance):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
@@ -219,7 +221,8 @@ def create(request, cluster_slug=None):
             os = data['os']
             pnode = data['pnode']
             snode = data['snode']
-            if pnode == 'drdb':
+            
+            if disk_template != 'drdb':
                 snode = None
             
             try:
@@ -277,19 +280,20 @@ def cluster_choices(request):
     else:
         q = user.filter_on_perms(Cluster, ['admin','create_vm'], groups=False)
     
-    clusters = list(q.values_list('slug', 'hostname'))
+    clusters = list(q.values_list('id', 'hostname'))
     content = json.dumps(clusters)
     return HttpResponse(content, mimetype='application/json')
 
 
 
 @login_required
-def cluster_options(request, cluster_slug):
+def cluster_options(request):
     """
     Ajax view for retrieving node and operating system choices for a given
     cluster.
     """
-    cluster = get_object_or_404(Cluster, slug__exact=cluster_slug)
+    cluster_id = request.GET.get('cluster_id', None)
+    cluster = get_object_or_404(Cluster, id__exact=cluster_id)
     
     user = request.user
     if not (user.is_superuser or user.has_perm('create_vm', cluster) or \
@@ -306,6 +310,14 @@ class NewVirtualMachineForm(forms.Form):
     Virtual Machine Creation / Edit form
     """
     FQDN_RE = r'^[\w]+(\.[\w]+)*$'
+    templates = [
+        (u'', u'---------'),
+        (u'plain', u'plain'),
+        (u'drdb', u'drdb'),
+        (u'file', u'file'),
+        (u'diskless', u'diskless')
+    ]
+    
     owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label='Owner')
     cluster = forms.ModelChoiceField(queryset=Cluster.objects.all(), label='Cluster')
     hostname = forms.RegexField(label='Instance Name', regex=FQDN_RE,
@@ -313,15 +325,10 @@ class NewVirtualMachineForm(forms.Form):
                                 'invalid': 'Instance name must be resolvable',
                             })
     disk_template = forms.ChoiceField(label='Disk Template', \
-                                      choices=[
-                                            ('plain', 'plain'), \
-                                            ('drdb', 'drdb'), \
-                                            ('file','file'), \
-                                            ('diskless', 'diskless')
-                                      ])
-    pnode = forms.ChoiceField(label='Primary Node', choices=[])
-    snode = forms.ChoiceField(label='Secondary Node', choices=[])
-    os = forms.ChoiceField(label='Operating System', choices=[])
+                                      choices=templates)
+    pnode = forms.ChoiceField(label='Primary Node', choices=[empty_field])
+    snode = forms.ChoiceField(label='Secondary Node', choices=[empty_field])
+    os = forms.ChoiceField(label='Operating System', choices=[empty_field])
     ram = forms.IntegerField(label='Memory (MB)', min_value=100)
     disk_size = forms.IntegerField(label='Disk Space (MB)', min_value=100)
     vcpus = forms.IntegerField(label='Virtual CPUs', min_value=1)
@@ -340,12 +347,15 @@ class NewVirtualMachineForm(forms.Form):
         
         if cluster is not None:
             # set choices based on selected cluster if given
-            oslist = cluster.rapi.GetOperatingSystems()
+            oses = cluster.rapi.GetOperatingSystems()
             nodelist = cluster.nodes()
             nodes = zip(nodelist, nodelist)
+            nodes.insert(0, empty_field)
+            oslist = zip(oses, oses)
+            oslist.insert(0, empty_field)
             self.fields['pnode'].choices = nodes
             self.fields['snode'].choices = nodes
-            self.fields['os'].choices = zip(oslist, oslist)
+            self.fields['os'].choices = oslist
         
         # set cluster choices based on the given owner
         if initial and 'owner' in initial and initial['owner']:
@@ -433,20 +443,24 @@ class NewVirtualMachineForm(forms.Form):
                 self._errors["owner"] = self.error_class([msg])
                 del data['owner']
         
-        pnode = data.get("pnode")
-        snode = data.get("snode")
+        pnode = data.get("pnode", '')
+        snode = data.get("snode", '')
         disk_template = data.get("disk_template")
         
         # Need to have pnode != snode
-        if disk_template == "drdb" and pnode == snode:
-            # We know these are not in self._errors now 
-            msg = u"Primary and Secondary Nodes must not match."
-            self._errors["pnode"] = self.error_class([msg])
-            
-            # These fields are no longer valid. Remove them from the
-            # cleaned data.
-            del data["pnode"]
-            del data["snode"]
+        if disk_template == "drdb":
+            if pnode == snode and (pnode != '' or snode != ''):
+                # We know these are not in self._errors now 
+                msg = u"Primary and Secondary Nodes must not match."
+                self._errors["pnode"] = self.error_class([msg])
+                
+                # These fields are no longer valid. Remove them from the
+                # cleaned data.
+                del data["pnode"]
+                del data["snode"]
+        else:
+            if "snode" in self._errors:
+                del self._errors["snode"]
         
         # Always return the full collection of cleaned data.
         return data
