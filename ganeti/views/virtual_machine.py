@@ -443,15 +443,19 @@ class NewVirtualMachineForm(forms.Form):
         disk_template = data.get("disk_template")
         
         # Need to have pnode != snode
-        if disk_template == "drdb" and pnode == snode:
-            # We know these are not in self._errors now 
-            msg = u"Primary and Secondary Nodes must not match."
-            self._errors["pnode"] = self.error_class([msg])
-            
-            # These fields are no longer valid. Remove them from the
-            # cleaned data.
-            del data["pnode"]
-            del data["snode"]
+        if disk_template == "drdb":
+            if pnode == snode and (pnode != '' or snode != ''):
+                # We know these are not in self._errors now 
+                msg = u"Primary and Secondary Nodes must not match."
+                self._errors["pnode"] = self.error_class([msg])
+                
+                # These fields are no longer valid. Remove them from the
+                # cleaned data.
+                del data["pnode"]
+                del data["snode"]
+        else:
+            if "snode" in self._errors:
+                del self._errors["snode"]
         
         # Always return the full collection of cleaned data.
         return data
