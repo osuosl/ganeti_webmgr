@@ -7,10 +7,13 @@
 <script type="text/javascript">
     $(document).ready(function() {
         $("a.delete").live("click", function(){
-            parent = this.parentNode.parentNode;
-            $.delete(this.href, function(){
-                $(parent).remove();
-            });
+            name = $(this).parent().parent().children('.name').children('a').html();
+            if (confirm("Remove Cluster: " + name)) {
+                parent = this.parentNode.parentNode;
+                $.delete(this.href, function(){
+                    $(parent).remove();
+                });
+            }
             return false;
         });
     });
