@@ -3,7 +3,7 @@ from django.template import Library, Node, TemplateSyntaxError
 from django.template.defaultfilters import stringfilter
 import re
 
-from ganeti.models import Quota
+from ganeti.models import Cluster, Quota
 
 
 register = Library()
@@ -53,6 +53,14 @@ def cluster_nodes(cluster, bulk=False):
     Helper tag for passing parameter to cluster.nodes()
     """
     return cluster.nodes(bulk)
+
+
+@register.filter
+def cluster_admin(user):
+    """
+    Returns whether the user has admin permission on any Cluster
+    """
+    return user.perms_on_any(Cluster, ['admin'])
 
 
 @register.simple_tag
