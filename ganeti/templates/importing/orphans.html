@@ -11,20 +11,17 @@
         created for.  Ownership does not grant permissions to a user or group
         but it does consume their resource quota.
     </p>
-    
-    {% if vms %}
-        <form action="{% url import-orphans %}" method="post">
-        {{form.errors}}
-        {{form.owner.label}} {{form.owner}}
-        <input type="submit" value="Update Selected">
-        <ul id="orphans">
-            {% for vm in vms %}
-                <li><input type="checkbox" name="virtual_machines" value="{{vm.0}}">{{vm.1}}</li>
-            {% endfor %}
-        </ul>
-        </form>
-    {% endif %}    
-    {% if not vms and vmcount > 0 %}
-        <p>All virtual machines currently have owners!</p>
-    {% endif %}
+
+    <form action="{% url import-orphans %}" method="post">
+    {{form.errors}}
+    {{form.owner.label}} {{form.owner}}
+    <input type="submit" value="Update Selected" {%if not vms%}disabled{%endif%}>
+    <ul id="orphans">
+        {% for vm in vms %}
+            <li><input type="checkbox" name="virtual_machines" value="{{vm.0}}">{{vm.1}}</li>
+        {% empty %}
+            <p>All virtual machines currently have owners</p>
+        {% endfor %}
+    </ul>
+    </form>
 {% endblock %}
