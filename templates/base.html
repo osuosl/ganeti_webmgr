@@ -39,6 +39,8 @@
             <ul>
                 {% if user.is_superuser %}
                     <li><a href="{% url import-orphans %}">Orphan VMs</a></li>
+                    <li><a href="{% url import-missing %}">Import VMs</a></li>
+                    <li><a href="{% url import-missing_db %}">Missing VMs</a></li>
                 {% endif %}
                 {% if group_admin %}
                     <li><a href="{% url usergroup-list %}">User Groups</a></li>
