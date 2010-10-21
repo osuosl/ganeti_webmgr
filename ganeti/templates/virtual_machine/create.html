@@ -78,12 +78,24 @@
 
 {% block content %}
 <div id="virtualmachineform">
-    <fieldset>
-        <legend> New Virtual Machine </legend>
-        <form method="post">
-            {{ form.as_p }}
-            <input class="submit" type="submit" value="Create">
-        </form>
-    </fieldset>
+    <form method="post">
+        <fieldset>
+            <legend> New Virtual Machine </legend>
+                {% for field in form %}
+                    {% if field.label = 'Memory (MB)' %}
+                        <fieldset id="quota">
+                            <h3> Quota </h3>
+                    {% endif %}
+                    
+                    {{ field.errors }}
+                    <p>{{ field.label_tag }} {{ field }}</p>
+                    
+                    {% if field.label = 'Virtual CPUs' %}
+                        </fieldset>
+                    {% endif %}
+                {% endfor %}
+                <input class="submit" type="submit" value="Create">
+        </fieldset>
+    </form>
 </div>
 {% endblock %}
