@@ -17,6 +17,8 @@ from ganeti.models import *
 from util.portforwarder import forward_port
 from util.client import GanetiApiError
 
+empty_field = (u'', u'---------')
+
 @login_required
 def vnc(request, cluster_slug, instance):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
@@ -324,9 +326,9 @@ class NewVirtualMachineForm(forms.Form):
                             })
     disk_template = forms.ChoiceField(label='Disk Template', \
                                       choices=templates)
-    pnode = forms.ChoiceField(label='Primary Node', choices=[(u'', u'---------')])
-    snode = forms.ChoiceField(label='Secondary Node', choices=[(u'', u'---------')])
-    os = forms.ChoiceField(label='Operating System', choices=[(u'', u'---------')])
+    pnode = forms.ChoiceField(label='Primary Node', choices=[empty_field])
+    snode = forms.ChoiceField(label='Secondary Node', choices=[empty_field])
+    os = forms.ChoiceField(label='Operating System', choices=[empty_field])
     ram = forms.IntegerField(label='Memory (MB)', min_value=100)
     disk_size = forms.IntegerField(label='Disk Space (MB)', min_value=100)
     vcpus = forms.IntegerField(label='Virtual CPUs', min_value=1)
@@ -345,12 +347,15 @@ class NewVirtualMachineForm(forms.Form):
         
         if cluster is not None:
             # set choices based on selected cluster if given
-            oslist = cluster.rapi.GetOperatingSystems()
+            oses = cluster.rapi.GetOperatingSystems()
             nodelist = cluster.nodes()
             nodes = zip(nodelist, nodelist)
+            nodes.insert(0, empty_field)
+            oslist = zip(oses, oses)
+            oslist.insert(0, empty_field)
             self.fields['pnode'].choices = nodes
             self.fields['snode'].choices = nodes
-            self.fields['os'].choices = zip(oslist, oslist)
+            self.fields['os'].choices = oslist
         
         # set cluster choices based on the given owner
         if initial and 'owner' in initial and initial['owner']:
