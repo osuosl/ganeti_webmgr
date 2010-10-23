@@ -87,8 +87,8 @@
             <legend> New Virtual Machine </legend>
                 {% for field in form %}
                     {% if field.label = 'Memory (MB)' %}
-                        <fieldset id="quota">
-                            <h3> Quota </h3>
+                        <fieldset>
+                            <h3>Resources</h3>
                     {% endif %}
                     
                     {{ field.errors }}
