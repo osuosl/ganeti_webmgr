@@ -13,7 +13,7 @@
 {% block content %}
 <div id="login">
     <fieldset>
-        <legend>Login</legend>
+        <h2>Login</h2>
         <form method="post">
             {% csrf_token %}
             {{ form.as_p }}
@@ -21,8 +21,8 @@
             <input class="submit"type="submit" value="Login">
         </form>
     </fieldset>
-    <a href="{% url auth_password_reset %}">Forgot password?</a></p>
-    <p><a href="{% url registration_register %}">Not member?</a></p>
+    <p><a href="{% url auth_password_reset %}">Forgot password?</a></p>
+    <p><a href="{% url registration_register %}">Not a member?</a></p>
 </div>
 
 

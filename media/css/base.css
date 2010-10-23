@@ -153,8 +153,15 @@ form input.submit{margin-left:12.5em;}
 
 /*   Login   */
 #login {margin: 3em auto 0em auto; width: 30%;}
-#login fieldset {border:1px black solid;}
-#login fieldset {padding:1em;}
+#login fieldset {
+    background: #eeeeee;
+    border:1px #dddddd solid;
+    margin-bottom:10px;
+    padding:1em;
+    -moz-border-radius:5px;
+    -webkit-border-radius:5px;
+}
+#login fieldset h2 {margin-bottom:5px;}
 #login fieldset p {padding-bottom:1.5ex;}
 #login p label {width: 5.5em;}
 #login input.submit {margin-left: 6em;}
