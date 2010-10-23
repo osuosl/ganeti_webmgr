@@ -213,12 +213,14 @@ def quota(request, cluster_slug, user_id):
             
             # return updated html
             cluster_user = cluster_user.cast()
+            url = reverse('cluster-permissions', args=[cluster.slug])
             if isinstance(cluster_user, (Profile,)):
                 return render_to_response("cluster/user_row.html",
-                        {'object':cluster, 'user':cluster_user.user})
+                    {'object':cluster, 'user':cluster_user.user, 'url':url})
             else:
                 return render_to_response("cluster/group_row.html",
-                        {'object':cluster, 'group':cluster_user.user_group})
+                    {'object':cluster, 'group':cluster_user.user_group, \
+                     'url':url})
         
         # error in form return ajax response
         content = json.dumps(form.errors)
