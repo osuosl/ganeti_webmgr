@@ -10,7 +10,7 @@
             name = $(this).parent().parent().children('.name').children('a').html();
             if (confirm("Remove Cluster: " + name)) {
                 parent = this.parentNode.parentNode;
-                $.delete(this.href, function(){
+                $.delete_(this.href, function(){
                     $(parent).remove();
                 });
             }

@@ -13,7 +13,7 @@ function _ajax_request(url, data, callback, type, method) {
 }
 
 jQuery.extend({
-    delete: function(url, data, callback, type) {
+    delete_: function(url, data, callback, type) {
         return _ajax_request(url, data, callback, type, 'DELETE');
     }
 });
