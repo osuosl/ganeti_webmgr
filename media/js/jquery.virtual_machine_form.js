@@ -1,41 +1,38 @@
 (function($){
-    init_virtual_machine_form = function() {
+    virtual_machines = function() {
         cluster = $("#id_cluster");
         owner = $("#id_owner");
-        function newoption(value) {
-            o = $("<option></option>");
-            o.attr("value", value);
-            o.attr("text", value);
-            return o;
+        snode = $("#id_snode");
+        disk_template = $("#id_disk_template");
+        curSelection = $("#id_snode option:selected").index();
+        if( disk_template.val() != 'drdb') {
+            snode.parent().hide();
         }
-        cluster.live('change',function() {
-            pnode = $("#id_pnode");
-            snode = $("#id_snode");
-            oslist = $("#id_os");
-            id = $(this).children("option:selected").val();
-            $.getJSON('{% url instance-create-cluster-options %}', {'cluster_id':id},
-                function(data) {
-                    pnode.children().not(':first').remove();
-                    snode.children().not(':first').remove();
-                    oslist.children().not(':first').remove();
-                    $.each(data, function(i, items) {
-                        $.each(items, function(key, value) {
-                            child = newoption(value);
-                            if( i == 'nodes' ) {
-                                child2 = child.clone();
-                                pnode.append(child);
-                                snode.append(child2);
-                            }
-                            else if ( i == 'os' ) {
-                                oslist.append(child);
-                            }
-                        });
-                    });
-                });
+        disk_template.change(function() {
+            if( disk_template.val() == 'drdb') {
+                snode.parent().show();
+            } else {
+                snode.parent().hide();
+            }
         });
-        owner.live('change',function() {
-                id = $(this).children("option:selected").val();
-                $.getJSON('{% url instance-create-cluster-choices %}',
+        snode.change(function() {
+            if( snode.attr('readonly') ) {
+                $("#id_snode option:selected").removeAttr('selected');
+                $("#id_snode option").index(curSelection).attr('selected');
+            }
+        });
+    };
+    newoption = function(value) {
+        o = $("<option></option>");
+        o.attr("value", value);
+        o.attr("text", value);
+        return o;
+    };
+    owner_change = function(url) {
+        owner.change(function() {
+            id = $(this).children("option:selected").val();
+            if( id != '' ) {
+                $.getJSON(url,
                     {'group_id':id}, function(data) {
                         cluster.children().not(':first').remove();
                         $.each(data, function(i, item) {
@@ -45,26 +42,37 @@
                                 cluster.append(child);
                         });
                 });
-                //cluster.trigger('change');
-        });
-        snode = $("#id_snode");
-        disk_template = $("#id_disk_template");
-        curSelection = $("#id_snode option:selected").index();
-        if( disk_template.val() != 'drdb') {
-            snode.parent().hide();
-        }
-        disk_template.live('change',function() {
-            if( disk_template.val() == 'drdb') {
-                snode.parent().show();
-            } else {
-                snode.parent().hide();
             }
+            cluster.trigger('change');
         });
-        snode.live('change',function() {
-            if( snode.attr('readonly') ) {
-                $("#id_snode option:selected").removeAttr('selected');
-                $("#id_snode option").index(curSelection).attr('selected');
+    };
+    cluster_change = function(url) {
+        cluster.change(function() {
+            pnode = $("#id_pnode");
+            snode = $("#id_snode");
+            oslist = $("#id_os");
+            id = $(this).children("option:selected").val();
+            if( id != '' ) {
+                $.getJSON(url, {'cluster_id':id},
+                    function(data) {
+                        pnode.children().not(':first').remove();
+                        snode.children().not(':first').remove();
+                        oslist.children().not(':first').remove();
+                        $.each(data, function(i, items) {
+                            $.each(items, function(key, value) {
+                                child = newoption(value);
+                                if( i == 'nodes' ) {
+                                    child2 = child.clone();
+                                    pnode.append(child);
+                                    snode.append(child2);
+                                }
+                                else if ( i == 'os' ) {
+                                    oslist.append(child);
+                                }
+                            });
+                        });
+                    });
             }
         });
     };
-}) (jQuery);
+})(jQuery);
