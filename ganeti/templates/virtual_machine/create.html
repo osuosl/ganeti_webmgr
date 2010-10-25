@@ -4,6 +4,7 @@
 
 {% block head %}
     <script src="{{MEDIA_URL}}/js/jquery.js"></script>
+    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.dynamicform.js"></script>
     <script type="text/javascript">
         function newoption(value) {
             o = $("<option></option>");
@@ -12,6 +13,11 @@
             return o;
         }
         $(document).ready(function() {
+            $("#id_disk").dynamicForm(".add", ".delete", {
+                limit:4,
+                createColor:"green",
+                removeColor:"red"
+            });
             cluster = $("#id_cluster");
             owner = $("#id_owner");
             snode = $("#id_snode");
