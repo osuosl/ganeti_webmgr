@@ -348,8 +348,8 @@ class NewVirtualMachineForm(forms.Form):
     vcpus = forms.IntegerField(label='Virtual CPUs', min_value=1)
     ram = forms.IntegerField(label='Memory (MB)', min_value=100)
     disk_size = forms.IntegerField(label='Disk Size (MB)', min_value=100)
-    nictype = forms.ChoiceField(label='NIC', choices=nics)
-    nic = forms.CharField(label='',
+    nictype = forms.ChoiceField(label='NIC Type', choices=nics)
+    nic = forms.CharField(label='NIC Mode',
                           widget=forms.TextInput(attrs={'size':'8'}))
     
     def __init__(self, user, cluster=None, initial=None, *args, **kwargs):
