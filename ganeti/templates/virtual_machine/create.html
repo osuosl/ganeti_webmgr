@@ -32,7 +32,10 @@
                     {% endif %}
                     
                     {{ field.errors }}
-                    <p>{{ field.label_tag }} {{ field }}</p>
+                    <p>
+                        <label for="id_{{ field.html_name }}">{{ field.label }}:</label>
+                        {{ field }}
+                    </p>
                     
                     {% if field.label = 'CD-ROM Image Path' %}
                         </fieldset>
