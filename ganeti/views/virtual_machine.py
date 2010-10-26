@@ -220,11 +220,12 @@ def create(request, cluster_slug=None):
             disk_template = data['disk_template']
             os = data['os']
             pnode = data['pnode']
-            snode = data['snode']
             
-            if disk_template != 'drdb':
+            if disk_template == 'drdb':
+                snode = data['snode']
+            else:
                 snode = None
-            
+                
             try:
                 jobid = cluster.rapi.CreateInstance('create', hostname, \
                         disk_template, \
