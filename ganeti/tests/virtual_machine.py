@@ -71,15 +71,14 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         self.assertFalse(vm.error)
         
         # Multiple
-        vm = VirtualMachine(cluster=cluster, hostname=vm_hostname, virtual_cpus=3,
-                            ram=512, disks=[[{'size': 512}, {'size': 123}], [{'size':5120}]],
+        vm = VirtualMachine(cluster=cluster, hostname=vm_hostname,
+                            virtual_cpus=3, ram=512, disk_size=5120,
                             owner=owner)
         vm.save()
         self.assertTrue(vm.id)
         self.assertEqual('vm.test.org', vm.hostname)
         self.assertEqual(512, vm.ram)
-        self.assertEqual([[{'size': 512}, {'size': 123}], [{'size':5120}]],
-            vm.disks)
+        self.assertEqual(5120, vm.disk_size)
         self.assertEqual('foobar', vm.owner.name)
         self.assertFalse(vm.error)
     
@@ -522,17 +521,14 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
                     owner=user.get_profile().id, #XXX remove this
                     hostname='new.vm.hostname',
                     disk_template='plain',
-                    disks= [
-                        [],
-                        [{ "size": 128, }, { "size": 321, }],
-                        [{ "size": 512, }],
-                        ],
-                    nics = [
-                        {},
-                        {"bridge": "br1", }
-                        ],
+                    disk_size=5120,
                     ram=256,
                     vcpus=2,
+                    kernelpath='/boot',
+                    rootpath='/',
+                    nictype='routed',
+                    nic='br1',
+                    bootorder='hdd',
                     os='image+ubuntu-lucid',
                     pnode=cluster.nodes()[0],
                     snode=cluster.nodes()[0])
@@ -557,7 +553,9 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
         
         # POST - required values
-        for property in ['cluster', 'hostname', 'disks', 'vcpus', 'pnode', 'os', 'disk_template']:
+        for property in ['cluster', 'hostname', 'disk_size','nictype', 'nic',
+                         'vcpus', 'pnode', 'os', 'disk_template', 'kernelpath',
+                         'rootpath', 'bootorder']:
             data_ = data.copy()
             del data_[property]
             response = c.post(url % '', data_)
@@ -569,7 +567,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         # POST - over ram quota
         profile = user.get_profile()
         cluster.set_quota(profile, dict(ram=1000, disk=2000, virtual_cpus=10))
-        vm = VirtualMachine(cluster=cluster, ram=100, disk=[[{'size':100}]], virtual_cpus=2, owner=profile).save()
+        vm = VirtualMachine(cluster=cluster, ram=100, disk_size=100, virtual_cpus=2, owner=profile).save()
         data_ = data.copy()
         data_['ram'] = 2000
         response = c.post(url % '', data_)
