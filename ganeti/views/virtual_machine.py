@@ -304,7 +304,6 @@ def cluster_options(request):
                           'os':cluster.rapi.GetOperatingSystems()})
     return HttpResponse(content, mimetype='application/json')
 
-
 class NewVirtualMachineForm(forms.Form):
     """
     Virtual Machine Creation / Edit form
@@ -316,6 +315,15 @@ class NewVirtualMachineForm(forms.Form):
         (u'drdb', u'drdb'),
         (u'file', u'file'),
         (u'diskless', u'diskless')
+    ]
+    nics = [
+        (u'', u'---------'),
+        (u'link', u'link'),
+        (u'routed', u'routed')
+    ]
+    bootchoices = [
+        ('hdd', 'Hard Disk'),
+        ('cdrom', 'CD-ROM')
     ]
     
     owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label='Owner')
@@ -329,9 +337,18 @@ class NewVirtualMachineForm(forms.Form):
     pnode = forms.ChoiceField(label='Primary Node', choices=[empty_field])
     snode = forms.ChoiceField(label='Secondary Node', choices=[empty_field])
     os = forms.ChoiceField(label='Operating System', choices=[empty_field])
-    ram = forms.IntegerField(label='Memory (MB)', min_value=100)
-    disk_size = forms.IntegerField(label='Disk Space (MB)', min_value=100)
+    kernelpath = forms.CharField(label='Kernel Path', initial='/boot/')
+    rootpath = forms.CharField(label='Root Path', initial='/')
+    serialconsle = forms.BooleanField(label='Enable Serial Console',
+                                      required=False)
+    bootorder = forms.ChoiceField(label='Boot Device', choices=bootchoices)
+    imagepath = forms.CharField(label='CD-ROM Image Path', required=False)
     vcpus = forms.IntegerField(label='Virtual CPUs', min_value=1)
+    ram = forms.IntegerField(label='Memory (MB)', min_value=100)
+    disk_size = forms.IntegerField(label='Disk Size (MB)', min_value=100)
+    nictype = forms.ChoiceField(label='NIC', choices=nics)
+    nic = forms.CharField(label='',
+                          widget=forms.TextInput(attrs={'size':'8'}))
     
     def __init__(self, user, cluster=None, initial=None, *args, **kwargs):
         self.user = user
