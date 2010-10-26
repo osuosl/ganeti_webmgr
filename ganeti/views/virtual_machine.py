@@ -319,7 +319,8 @@ class NewVirtualMachineForm(forms.Form):
     nics = [
         (u'', u'---------'),
         (u'link', u'link'),
-        (u'routed', u'routed')
+        (u'routed', u'routed'),
+        (u'bridged', u'bridged')
     ]
     bootchoices = [
         ('hdd', 'Hard Disk'),
