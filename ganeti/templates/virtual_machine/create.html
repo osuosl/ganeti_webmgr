@@ -26,15 +26,21 @@
         <fieldset>
             <legend> New Virtual Machine </legend>
                 {% for field in form %}
-                    {% if field.label = 'Memory (MB)' %}
+                    {% if field.label = 'Kernel Path' %}
                         <fieldset>
-                            <h3>Resources</h3>
+                            <h3>Hypervisor Parameters</h3>
                     {% endif %}
                     
                     {{ field.errors }}
                     <p>{{ field.label_tag }} {{ field }}</p>
                     
-                    {% if field.label = 'Virtual CPUs' %}
+                    {% if field.label = 'CD-ROM Image Path' %}
+                        </fieldset>
+                        <fieldset>
+                            <h3>General Parameters</h3>
+                    {% endif %}
+                    
+                    {% if field.label = 'Disks' %}
                         </fieldset>
                     {% endif %}
                 {% endfor %}
