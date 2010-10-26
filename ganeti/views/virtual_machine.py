@@ -337,7 +337,7 @@ class NewVirtualMachineForm(forms.Form):
     pnode = forms.ChoiceField(label='Primary Node', choices=[empty_field])
     snode = forms.ChoiceField(label='Secondary Node', choices=[empty_field])
     os = forms.ChoiceField(label='Operating System', choices=[empty_field])
-    kernelpath = forms.CharField(label='Kernel Path', initial='/boot/')
+    kernelpath = forms.CharField(label='Kernel Path', initial='/boot')
     rootpath = forms.CharField(label='Root Path', initial='/')
     serialconsle = forms.BooleanField(label='Enable Serial Console',
                                       required=False)
