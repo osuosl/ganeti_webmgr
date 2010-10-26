@@ -1214,6 +1214,28 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         VirtualMachine.objects.all().delete()
         Cluster.objects.all().delete()
     
+    def test_default_choices(self):
+        """
+        Test that ChoiceFields have the correct default options
+        """
+        form = NewVirtualMachineForm(user, None)
+        self.assertEqual([
+            (u'', u'---------'),
+            (u'link', u'link'),
+            (u'routed', u'routed'),
+            (u'bridged', u'bridged')
+            ], form.fields['nictype'].choices)
+        self.assertEqual([('hdd', 'Hard Disk'),
+            ('cdrom', 'CD-ROM')
+            ], form.fields['bootorder'].choices)
+        self.assertEqual([
+            (u'', u'---------'),
+            (u'plain', u'plain'),
+            (u'drdb', u'drdb'),
+            (u'file', u'file'),
+            (u'diskless', u'diskless')
+            ], form.fields['disk_template'].choices)
+    
     def test_cluster_init(self):
         """
         Tests initializing a form with a Cluster
