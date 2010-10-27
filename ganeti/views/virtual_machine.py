@@ -219,6 +219,8 @@ def create(request, cluster_slug=None):
             ram = data['ram']
             disk_template = data['disk_template']
             os = data['os']
+            nictype = data['nictype']
+            nicmode = data['nic']
             pnode = data['pnode']
             
             if disk_template == 'drdb':
@@ -227,15 +229,14 @@ def create(request, cluster_slug=None):
                 snode = None
                 
             try:
-                jobid = cluster.rapi.CreateInstance('create', hostname, \
-                        disk_template, \
-                        [{"size": disk_size, }],[{"link": "br42", }], \
-                        memory=ram, os=os, vcpus=2, \
-                        pnode=pnode, snode=snode) #\
-                        #hvparams={}, beparams={})
+                jobid = cluster.rapi.CreateInstance('create', hostname,
+                        disk_template,
+                        [{"size": disk_size, }],[{nictype: nicmode, }],
+                        memory=ram, os=os, vcpus=2,
+                        pnode=pnode, snode=snode)
       
-                vm = VirtualMachine(cluster=cluster, owner=owner, \
-                                    hostname=hostname, disk_size=disk_size, \
+                vm = VirtualMachine(cluster=cluster, owner=owner,
+                                    hostname=hostname, disk_size=disk_size,
                                     ram=ram, virtual_cpus=vcpus)
                 vm.save()
                 
@@ -339,18 +340,20 @@ class NewVirtualMachineForm(forms.Form):
     pnode = forms.ChoiceField(label='Primary Node', choices=[empty_field])
     snode = forms.ChoiceField(label='Secondary Node', choices=[empty_field])
     os = forms.ChoiceField(label='Operating System', choices=[empty_field])
-    kernelpath = forms.CharField(label='Kernel Path', initial='/boot')
-    rootpath = forms.CharField(label='Root Path', initial='/')
-    serialconsle = forms.BooleanField(label='Enable Serial Console',
-                                      required=False)
-    bootorder = forms.ChoiceField(label='Boot Device', choices=bootchoices)
-    imagepath = forms.CharField(label='CD-ROM Image Path', required=False)
+    # BEPARAMS
     vcpus = forms.IntegerField(label='Virtual CPUs', min_value=1)
     ram = forms.IntegerField(label='Memory (MB)', min_value=100)
     disk_size = forms.IntegerField(label='Disk Size (MB)', min_value=100)
     nictype = forms.ChoiceField(label='NIC Type', choices=nics)
     nic = forms.CharField(label='NIC Mode',
                           widget=forms.TextInput(attrs={'size':'8'}))
+    # HVPARAMS
+    kernelpath = forms.CharField(label='Kernel Path', initial='/boot')
+    rootpath = forms.CharField(label='Root Path', initial='/')
+    serialconsle = forms.BooleanField(label='Enable Serial Console',
+                                      required=False)
+    bootorder = forms.ChoiceField(label='Boot Device', choices=bootchoices)
+    imagepath = forms.CharField(label='CD-ROM Image Path', required=False)
     
     def __init__(self, user, cluster=None, initial=None, *args, **kwargs):
         self.user = user

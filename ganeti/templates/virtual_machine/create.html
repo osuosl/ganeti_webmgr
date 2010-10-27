@@ -26,9 +26,9 @@
         <fieldset>
             <legend> New Virtual Machine </legend>
                 {% for field in form %}
-                    {% if field.label = 'Kernel Path' %}
+                    {% if field.label = 'Virtual CPUs' %}
                         <fieldset>
-                            <h3>Hypervisor Parameters</h3>
+                            <h3>General Parameters</h3>
                     {% endif %}
                     
                     {{ field.errors }}
@@ -37,13 +37,13 @@
                         {{ field }}
                     </p>
                     
-                    {% if field.label = 'CD-ROM Image Path' %}
+                    {% if field.label = 'NIC Mode' %}
                         </fieldset>
                         <fieldset>
-                            <h3>General Parameters</h3>
+                            <h3>Hypervisor Parameters</h3>
                     {% endif %}
                     
-                    {% if field.label = 'Disks' %}
+                    {% if field.label = 'CD-ROM Image Path' %}
                         </fieldset>
                     {% endif %}
                 {% endfor %}
