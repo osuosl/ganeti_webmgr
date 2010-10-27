@@ -138,14 +138,15 @@ def detail(request, cluster_slug, instance):
             sleep(1)
             return HttpResponseRedirect(request.path) 
             
-    else: 
-        if vm.info['hvparams']['cdrom_image_path']:
-            vm.info['hvparams']['cdrom_type'] = 'iso'
+    else:
+        if vm.info:
+            if vm.info['hvparams']['cdrom_image_path']:
+                vm.info['hvparams']['cdrom_type'] = 'iso'
+            else:
+                vm.info['hvparams']['cdrom_type'] = 'none'
+            form = InstanceConfigForm(vm.info['hvparams'])
         else:
-            vm.info['hvparams']['cdrom_type'] = 'none'
-        form = InstanceConfigForm(vm.info['hvparams'])
-
-    
+            form = None
 
     return render_to_response("virtual_machine/detail.html", {
         'cluster': cluster,
