@@ -1,4 +1,7 @@
 (function($){
+    /* Virtual machines init function to
+        setup selectors and hide/show of snode
+        */
     virtual_machines = function() {
         cluster = $("#id_cluster");
         owner = $("#id_owner");
@@ -22,12 +25,14 @@
             }
         });
     };
+    /* Create new option items for select field */
     newoption = function(value) {
         o = $("<option></option>");
         o.attr("value", value);
         o.attr("text", value);
         return o;
     };
+    /* Ajax request to update cluster when owner changes */
     owner_change = function(url) {
         owner.change(function() {
             id = $(this).children("option:selected").val();
@@ -46,6 +51,7 @@
             cluster.trigger('change');
         });
     };
+    /* Ajax request to update oslist, pnode, and snode when cluster changes */
     cluster_change = function(url) {
         cluster.change(function() {
             pnode = $("#id_pnode");
