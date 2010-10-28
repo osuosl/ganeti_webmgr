@@ -212,17 +212,24 @@ def create(request, cluster_slug=None):
         form = NewVirtualMachineForm(user, None, request.POST)
         if form.is_valid():
             data = form.cleaned_data
+            owner = data['owner']
             cluster = data['cluster']
             hostname = data['hostname']
-            owner = data['owner']
+            disk_template = data['disk_template']
+            pnode = data['pnode']
+            os = data['os']
+            # BEPARAMS
             vcpus = data['vcpus']
             disk_size = data['disk_size']
             ram = data['ram']
-            disk_template = data['disk_template']
-            os = data['os']
             nictype = data['nictype']
             nicmode = data['nic']
-            pnode = data['pnode']
+            # HVPARAMS
+            kernelpath = data['kernelpath']
+            rootpath = data['rootpath']
+            serialconsole = data['serialconsole']
+            bootorder = data['bootorder']
+            imagepath = data['imagepath']
             
             if disk_template == 'drdb':
                 snode = data['snode']
@@ -234,7 +241,12 @@ def create(request, cluster_slug=None):
                         disk_template,
                         [{"size": disk_size, }],[{nictype: nicmode, }],
                         memory=ram, os=os, vcpus=2,
-                        pnode=pnode, snode=snode)
+                        pnode=pnode, snode=snode,
+                        hvparams=[{'kernel_path': kernelpath},
+                            {'root_path': rootpath},
+                            {'serial_console':serialconsole},
+                            {'boot_order':bootorder},
+                            {'cdrom_image_path':imagepath},])
       
                 vm = VirtualMachine(cluster=cluster, owner=owner,
                                     hostname=hostname, disk_size=disk_size,
@@ -351,7 +363,7 @@ class NewVirtualMachineForm(forms.Form):
     # HVPARAMS
     kernelpath = forms.CharField(label='Kernel Path', initial='/boot')
     rootpath = forms.CharField(label='Root Path', initial='/')
-    serialconsle = forms.BooleanField(label='Enable Serial Console',
+    serialconsole = forms.BooleanField(label='Enable Serial Console',
                                       required=False)
     bootorder = forms.ChoiceField(label='Boot Device', choices=bootchoices)
     imagepath = forms.CharField(label='CD-ROM Image Path', required=False)
