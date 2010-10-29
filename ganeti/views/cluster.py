@@ -244,3 +244,6 @@ def quota(request, cluster_slug, user_id):
 class EditClusterForm(forms.ModelForm):
     class Meta:
         model = Cluster
+        widgets = {
+            'password' : forms.PasswordInput(),
+        }
