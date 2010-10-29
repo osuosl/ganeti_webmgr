@@ -4,18 +4,12 @@
 
 {% block head %}
     <script src="{{MEDIA_URL}}/js/jquery.js"></script>
-    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.dynamicform.js"></script>
     <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.virtual_machine_form.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
             virtual_machines();
             owner_change('{% url instance-create-cluster-choices %}');
             cluster_change('{% url instance-create-cluster-options %}');
-            $("#id_disk").dynamicForm(".add", ".delete", {
-                limit:4,
-                createColor:"green",
-                removeColor:"red"
-            });
         });
     </script>
 {% endblock %}
@@ -37,7 +31,7 @@
                         {{ field }}
                     </p>
                     
-                    {% if field.label = 'NIC Mode' %}
+                    {% if field.label = 'NIC Type' %}
                         </fieldset>
                         <fieldset>
                             <h3>Hypervisor Parameters</h3>
