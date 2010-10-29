@@ -508,6 +508,17 @@ class NewVirtualMachineForm(forms.Form):
             if "snode" in self._errors:
                 del self._errors["snode"]
         
+        # If boot_order = CD-ROM make sure imagepath is set as well.
+        boot_order = data.get('bootorder', '')
+        image_path = data.get('imagepath', '')
+        if boot_order == 'cdrom':
+            if image_path == '':
+                msg = u'Image path required if boot device is CD-ROM.'
+                self._errors["imagepath"] = self.error_class([msg])
+                
+                del data["imagepath"]
+                del data["bootorder"]
+        
         # Always return the full collection of cleaned data.
         return data
 
