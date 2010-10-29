@@ -224,8 +224,8 @@ def create(request, cluster_slug=None):
             vcpus = data['vcpus']
             disk_size = data['disk_size']
             ram = data['ram']
+            nicmode = data['nicmode']
             nictype = data['nictype']
-            nicmode = data['nic']
             # HVPARAMS
             kernelpath = data['kernelpath']
             rootpath = data['rootpath']
@@ -241,8 +241,8 @@ def create(request, cluster_slug=None):
             try:
                 jobid = cluster.rapi.CreateInstance('create', hostname,
                         disk_template,
-                        [{"size": disk_size, }],[{nictype: nicmode, }],
-                        memory=ram, os=os, vcpus=2,
+                        [{"size": disk_size, }],[{nicmode: nictype, }],
+                        memory=ram, os=os, vcpus=vcpus,
                         pnode=pnode, snode=snode,
                         hvparams={'kernel_path': kernelpath, \
                             'root_path': rootpath, \
@@ -368,8 +368,8 @@ class NewVirtualMachineForm(forms.Form):
     vcpus = forms.IntegerField(label='Virtual CPUs', min_value=1)
     ram = forms.IntegerField(label='Memory (MB)', min_value=100)
     disk_size = forms.IntegerField(label='Disk Size (MB)', min_value=100)
-    nictype = forms.ChoiceField(label='NIC Type', choices=nics)
-    nic = forms.CharField(label='NIC Mode',
+    nicmode = forms.ChoiceField(label='NIC Mode', choices=nics)
+    nictype = forms.CharField(label='NIC Type',
                           widget=forms.TextInput(attrs={'size':'8'}))
     # HVPARAMS
     kernelpath = forms.CharField(label='Kernel Path', required=False)
