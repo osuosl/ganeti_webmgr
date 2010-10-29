@@ -81,6 +81,9 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(5120, vm.disk_size)
         self.assertEqual('foobar', vm.owner.name)
         self.assertFalse(vm.error)
+        
+        # Remove cluster
+        Cluster.objects.all().delete();
     
     def test_save(self):
         """
@@ -524,14 +527,13 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
                     disk_size=5120,
                     ram=256,
                     vcpus=2,
-                    kernelpath='/boot',
                     rootpath='/',
                     nictype='routed',
                     nic='br1',
-                    bootorder='hdd',
+                    bootorder='disk',
                     os='image+ubuntu-lucid',
                     pnode=cluster.nodes()[0],
-                    snode=cluster.nodes()[0])
+                    snode=cluster.nodes()[1])
         
         # POST - invalid cluster
         data_ = data.copy()
@@ -554,7 +556,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         
         # POST - required values
         for property in ['cluster', 'hostname', 'disk_size','nictype', 'nic',
-                         'vcpus', 'pnode', 'os', 'disk_template', 'kernelpath',
+                         'vcpus', 'pnode', 'os', 'disk_template',
                          'rootpath', 'bootorder']:
             data_ = data.copy()
             del data_[property]
@@ -605,7 +607,9 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         
         # POST - user authorized for cluster (create_vm)
         user.grant('admin', cluster)
-        response = c.post(url % '', data, follow=True)
+        data_ = data.copy()
+        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
+        response = c.post(url % '', data_, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'virtual_machine/detail.html')
@@ -1225,7 +1229,7 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
             (u'routed', u'routed'),
             (u'bridged', u'bridged')
             ], form.fields['nictype'].choices)
-        self.assertEqual([('hdd', 'Hard Disk'),
+        self.assertEqual([('disk', 'Hard Disk'),
             ('cdrom', 'CD-ROM')
             ], form.fields['bootorder'].choices)
         self.assertEqual([
