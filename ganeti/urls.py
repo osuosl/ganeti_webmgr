@@ -5,12 +5,12 @@ cluster = 'cluster/%s' % cluster_slug
 instance = '/(?P<instance>[^/]+)'
 
 urlpatterns = patterns('ganeti.views.general',
-    url(r'^$', 'index', name="cluster-overview"),
     url(r'^accounts/profile/?', 'user_profile', name="profile"),
 )
 
 # Clusters
 urlpatterns += patterns('ganeti.views.cluster',
+    url(r'^$', 'list_', name="cluster-overview"),
     #   List
     url(r'^clusters/$', 'list_', name="cluster-list"),
     #   Add
