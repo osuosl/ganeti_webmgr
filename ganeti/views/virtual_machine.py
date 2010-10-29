@@ -123,7 +123,8 @@ def detail(request, cluster_slug, instance):
         or user.has_perm('admin', cluster)
     if not admin:
         return HttpResponseForbidden()
-    
+    #TODO Update to use part of the NewVirtualMachineForm in 0.5 release
+    """
     if request.method == 'POST':
         form = InstanceConfigForm(request.POST)
         if form.is_valid():
@@ -149,11 +150,11 @@ def detail(request, cluster_slug, instance):
             form = InstanceConfigForm(vm.info['hvparams'])
         else:
             form = None
-
+    """
     return render_to_response("virtual_machine/detail.html", {
         'cluster': cluster,
         'instance': vm,
-        'configform': form,
+        #'configform': form,
         'admin':admin
         },
         context_instance=RequestContext(request),
