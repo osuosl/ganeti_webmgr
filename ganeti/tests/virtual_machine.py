@@ -1225,7 +1225,18 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         form = NewVirtualMachineForm(user, None)
         self.assertEqual([
             (u'', u'---------'),
-            (u'link', u'link'),
+            (u'rtl8139',u'rtl8139'),
+            (u'ne2k_isa',u'ne2k_isa'),
+            (u'ne2k_pci',u'ne2k_pci'),
+            (u'i82551',u'i82551'),
+            (u'i82557b',u'i82557b'),
+            (u'i82559er',u'i82559er'),
+            (u'pcnet',u'pcnet'),
+            (u'e1000',u'e1000'),
+            (u'paravirtual',u'paravirtual'),
+            ], form.fields['nictype'].choices)
+        self.assertEqual([
+            (u'', u'---------'),
             (u'routed', u'routed'),
             (u'bridged', u'bridged')
             ], form.fields['nicmode'].choices)
