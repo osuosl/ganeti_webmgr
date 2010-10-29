@@ -343,11 +343,22 @@ class NewVirtualMachineForm(forms.Form):
         (u'file', u'file'),
         (u'diskless', u'diskless')
     ]
-    nics = [
+    nicmodes = [
         (u'', u'---------'),
-        (u'link', u'link'),
         (u'routed', u'routed'),
         (u'bridged', u'bridged')
+    ]
+    nictypes = [
+        (u'', u'---------'),
+        (u'rtl8139',u'rtl8139'),
+        (u'ne2k_isa',u'ne2k_isa'),
+        (u'ne2k_pci',u'ne2k_pci'),
+        (u'i82551',u'i82551'),
+        (u'i82557b',u'i82557b'),
+        (u'i82559er',u'i82559er'),
+        (u'pcnet',u'pcnet'),
+        (u'e1000',u'e1000'),
+        (u'paravirtual',u'paravirtual'),
     ]
     bootchoices = [
         ('disk', 'Hard Disk'),
@@ -369,9 +380,8 @@ class NewVirtualMachineForm(forms.Form):
     vcpus = forms.IntegerField(label='Virtual CPUs', min_value=1)
     ram = forms.IntegerField(label='Memory (MB)', min_value=100)
     disk_size = forms.IntegerField(label='Disk Size (MB)', min_value=100)
-    nicmode = forms.ChoiceField(label='NIC Mode', choices=nics)
-    nictype = forms.CharField(label='NIC Type',
-                          widget=forms.TextInput(attrs={'size':'8'}))
+    nicmode = forms.ChoiceField(label='NIC Mode', choices=nicmodes)
+    nictype = forms.ChoiceField(label='NIC Type', choices=nictypes)
     # HVPARAMS
     kernelpath = forms.CharField(label='Kernel Path', required=False)
     rootpath = forms.CharField(label='Root Path', initial='/')
