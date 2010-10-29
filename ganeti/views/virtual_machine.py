@@ -1,5 +1,7 @@
 import json
 
+from time import sleep
+
 from django import forms
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -242,12 +244,21 @@ def create(request, cluster_slug=None):
                         [{"size": disk_size, }],[{nictype: nicmode, }],
                         memory=ram, os=os, vcpus=2,
                         pnode=pnode, snode=snode,
-                        hvparams=[{'kernel_path': kernelpath},
-                            {'root_path': rootpath},
-                            {'serial_console':serialconsole},
-                            {'boot_order':bootorder},
-                            {'cdrom_image_path':imagepath},])
-      
+                        hvparams={'kernel_path': kernelpath, \
+                            'root_path': rootpath, \
+                            'serial_console':serialconsole, \
+                            'boot_order':bootorder, \
+                            'cdrom_image_path':imagepath})
+                
+                # Wait for job to process as the error will not happen
+                #  right away
+                sleep(2)
+                jobstatus = cluster.rapi.GetJobStatus(jobid)
+                
+                # raise an exception if there was an error in the job
+                if jobstatus["status"] == 'error':
+                    raise GanetiApiError(jobstatus["opresult"])
+                    
                 vm = VirtualMachine(cluster=cluster, owner=owner,
                                     hostname=hostname, disk_size=disk_size,
                                     ram=ram, virtual_cpus=vcpus)
@@ -338,7 +349,7 @@ class NewVirtualMachineForm(forms.Form):
         (u'bridged', u'bridged')
     ]
     bootchoices = [
-        ('hdd', 'Hard Disk'),
+        ('disk', 'Hard Disk'),
         ('cdrom', 'CD-ROM')
     ]
     
@@ -361,7 +372,7 @@ class NewVirtualMachineForm(forms.Form):
     nic = forms.CharField(label='NIC Mode',
                           widget=forms.TextInput(attrs={'size':'8'}))
     # HVPARAMS
-    kernelpath = forms.CharField(label='Kernel Path', initial='/boot')
+    kernelpath = forms.CharField(label='Kernel Path', required=False)
     rootpath = forms.CharField(label='Root Path', initial='/')
     serialconsole = forms.BooleanField(label='Enable Serial Console',
                                       required=False)
