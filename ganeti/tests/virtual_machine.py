@@ -889,7 +889,72 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         content = json.loads(response.content)
         self.assertEqual(['gtest1.osuosl.bak', 'gtest2.osuosl.bak'], content['nodes'])
         self.assertEqual(['image+debian-osgeo', 'image+ubuntu-lucid'], content['os'])
-    
+
+
+    def test_view_cluster_defaults(self):
+        """
+        Test retrieval of dict of default parameters set on cluster
+        """
+        url = '/vm/add/defaults/?cluster_id=%s'
+        args = cluster.id        
+        
+        expected = dict(
+            bootorder='disk',
+            ram=512,
+            nictype='paravirtual',
+            rootpath='/dev/vda2',
+            hypervisors=['kvm'],
+            serialconsole=True,
+            imagepath='',
+            nicmode='bridged',
+            vcpus=2,
+            iallocator='',
+            kernelpath=''
+        )
+        
+        #anonymous users
+        response = c.post(url % args, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'registration/login.html')
+        
+        #unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.get(url % args)
+        self.assertEqual(403, response.status_code)
+        
+        #invalid cluster
+        response = c.get(url % "-2")
+        self.assertEqual(404, response.status_code)
+        
+        #authorized (create_vm)
+        grant(user, 'create_vm', cluster)
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('application/json', response['content-type'])
+        content = json.loads(response.content)
+        self.assertEqual(expected, content)
+        user.revoke_all(cluster)
+        
+        #authorized (admin)
+        grant(user, 'admin', cluster)
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('application/json', response['content-type'])
+        content = json.loads(response.content)
+        self.assertEqual(expected, content)
+        user.revoke_all(cluster)
+        
+        #authorized (superuser)
+        user.is_superuser = True
+        user.save()
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('application/json', response['content-type'])
+        content = json.loads(response.content)
+        self.assertEqual(expected, content)
+        user.is_superuser = False
+        user.save()
+
     def test_view_users(self):
         """
         Tests view for cluster users:
