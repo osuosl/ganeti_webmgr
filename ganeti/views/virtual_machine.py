@@ -312,7 +312,6 @@ def cluster_choices(request):
     return HttpResponse(content, mimetype='application/json')
 
 
-
 @login_required
 def cluster_options(request):
     """
@@ -330,6 +329,42 @@ def cluster_options(request):
     content = json.dumps({'nodes':cluster.nodes(), \
                           'os':cluster.rapi.GetOperatingSystems()})
     return HttpResponse(content, mimetype='application/json')
+
+@login_required
+def cluster_defaults(request):
+    """
+    Ajax view for retrieving the default cluster options to be set
+    on the NewVirtualMachineForm.
+    """
+    cluster_id = request.GET.get('cluster_id', None)
+    cluster = get_object_or_404(Cluster, id__exact=cluster_id)
+    
+    user = request.user
+    if not (user.is_superuser or user.has_perm('create_vm', cluster) or \
+            user.has_perm('admin', cluster)):
+        return HttpResponseForbidden()
+    
+    # Create variables so that dictionary lookups are not so horrendous.
+    info = cluster.info
+    beparams = info['default']
+    hv = info['default_hypervisor']
+    hvparams = info['hvparams'][hv]
+    
+    content = json.dumps({
+        'iallocator':info['default_iallocator'],
+        'hypervisors':info['enabled_hypervisors'],
+        'vcpus':beparams['vcpus'],
+        'ram':beparams['memory'],
+        'nictype':hvparams['nic_type'],
+        'nicmode':info['nicparams']['default']['mode'],
+        'kernelpath':hvparams['kernel_path'],
+        'rootpath':hvparams['root_path'],
+        'serialconsole':hvparams['serial_cosole'],
+        'bootorder':hvparams['boot_order'],
+        'imagepath':hvparams['cdrom_image_path'],
+        })
+    return HttpResponse(content, mimetype='application/json')
+
 
 class NewVirtualMachineForm(forms.Form):
     """
@@ -373,6 +408,7 @@ class NewVirtualMachineForm(forms.Form):
                             })
     disk_template = forms.ChoiceField(label='Disk Template', \
                                       choices=templates)
+    #iallocator = forms.BooleanField(label='Automatic Allocation', initial=True)
     pnode = forms.ChoiceField(label='Primary Node', choices=[empty_field])
     snode = forms.ChoiceField(label='Secondary Node', choices=[empty_field])
     os = forms.ChoiceField(label='Operating System', choices=[empty_field])
