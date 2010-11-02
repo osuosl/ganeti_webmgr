@@ -144,9 +144,9 @@ def missing_db(request):
             
             # create missing VMs
             for vm in vm_ids:
-                cluster_id, hostname = vm.split(':')
+                cluster_id, host = vm.split(':')
                 cluster = Cluster.objects.get(id=cluster_id)
-                VirtualMachine(hostname=id, cluster=cluster, owner=owner).save()
+                VirtualMachine(hostname=host, cluster=cluster, owner=owner).save()
             
             # remove created vms from the list
             vms = filter(lambda x: unicode(x[0]) not in vm_ids, vms)
