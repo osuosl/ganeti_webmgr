@@ -9,7 +9,8 @@
         $(document).ready(function() {
             virtual_machines();
             owner_change('{% url instance-create-cluster-choices %}');
-            cluster_change('{% url instance-create-cluster-options %}');
+            cluster_change('{% url instance-create-cluster-options %}',
+                           '{% url instance-create-cluster-defaults %}');
         });
     </script>
 {% endblock %}
