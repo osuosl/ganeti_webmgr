@@ -62,7 +62,7 @@ def orphans(request):
             
             # remove updated vms from the list
             vms = filter(lambda x: unicode(x[0]) not in vm_ids, vms)
-
+    
     else:
         form = ImportForm(vms)
     
@@ -103,7 +103,7 @@ def missing_ganeti(request):
             
             # remove updated vms from the list
             vms = filter(lambda x: unicode(x[0]) not in vm_ids, vms)
-
+    
     else:
         form = VirtualMachineForm(vms)
     
@@ -141,7 +141,7 @@ def missing_db(request):
             data = form.cleaned_data
             owner = data['owner']
             vm_ids = data['virtual_machines']
-
+            
             # create missing VMs
             for vm in vm_ids:
                 cluster_id, hostname = vm.split(':')

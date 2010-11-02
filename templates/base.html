@@ -41,8 +41,8 @@
             <ul>
                 {% if user.is_superuser or cluster_admin%}
                     <li><a href="{% url import-orphans %}">Orphan VMs</a></li>
-                    <li><a href="{% url import-missing %}">Import VMs</a></li>
-                    <li><a href="{% url import-missing_db %}">Missing VMs</a></li>
+                    <li><a href="{% url import-missing_db %}">Import VMs</a></li>
+                    <li><a href="{% url import-missing %}">Missing VMs</a></li>
                 {% endif %}
                 {% if user.is_superuser %}
                     <li><a href="{{SITE_ROOT}}/admin/">Django Admin</a></li>
