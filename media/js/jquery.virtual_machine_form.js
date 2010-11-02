@@ -5,25 +5,32 @@
     virtual_machines = function() {
         cluster = $("#id_cluster");
         owner = $("#id_owner");
-        snode = $("#id_snode");
+        snode_parent = $("#id_snode").parent();
+        pnode_parent = $("#id_pnode").parent();
         disk_template = $("#id_disk_template");
         curSelection = $("#id_snode option:selected").index();
-        if( disk_template.val() != 'drdb') {
-            snode.parent().hide();
-        }
-        disk_template.change(function() {
-            if( disk_template.val() == 'drdb') {
-                snode.parent().show();
+        iallocator = $("#id_iallocator");
+        iallocator.attr('checked', true);
+        iallocator.change(function() {
+            if(iallocator.is(':checked')) {
+                pnode_parent.hide();
+                snode_parent.hide();
             } else {
-                snode.parent().hide();
+                pnode_parent.show();
+                disk_template.change();
             }
         });
-        snode.change(function() {
-            if( snode.attr('readonly') ) {
-                $("#id_snode option:selected").removeAttr('selected');
-                $("#id_snode option").index(curSelection).attr('selected');
+        iallocator.change();
+        disk_template.live('change', function() {
+            if(!iallocator.is(':checked')){
+                if( disk_template.val() == 'drdb') {
+                    snode_parent.show();
+                } else {
+                    snode_parent.hide();
+                }
             }
         });
+        disk_template.change();
     };
     /* Create new option items for select field */
     newoption = function(value) {

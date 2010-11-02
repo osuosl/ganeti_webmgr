@@ -406,9 +406,9 @@ class NewVirtualMachineForm(forms.Form):
                             error_messages={
                                 'invalid': 'Instance name must be resolvable',
                             })
+    iallocator = forms.BooleanField(label='Automatic Allocation')
     disk_template = forms.ChoiceField(label='Disk Template', \
                                       choices=templates)
-    #iallocator = forms.BooleanField(label='Automatic Allocation', initial=True)
     pnode = forms.ChoiceField(label='Primary Node', choices=[empty_field])
     snode = forms.ChoiceField(label='Secondary Node', choices=[empty_field])
     os = forms.ChoiceField(label='Operating System', choices=[empty_field])
