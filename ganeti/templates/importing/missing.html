@@ -16,7 +16,7 @@
     <input type="submit" value="Delete Selected" {%if not vms%}disabled{%endif%}>
     <ul id="orphans">
         {% for vm in vms %}
-            <li><input type="checkbox" name="virtual_machines" value="{{vm}}">{{vm}}</li>
+            <li><input type="checkbox" name="virtual_machines" value="{{vm.0}}">{{vm.1}}</li>
         {% empty %}
             <p>All virtual machines are synchronized</p>
         {% endfor %}
