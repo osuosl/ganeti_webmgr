@@ -145,7 +145,6 @@ class CachedClusterObject(models.Model):
         """
         try:
             self.info = self._refresh()
-            self.parse_info()
             self.cached = datetime.now()
             self.save()
             self.error = None
