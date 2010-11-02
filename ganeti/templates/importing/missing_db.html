@@ -10,7 +10,7 @@
         must be manually imported.
     </p>
     
-        <form action="{% url import-missing %}" method="post">
+        <form action="{% url import-missing_db %}" method="post">
         {{form.errors}}
         {{form.owner.label}} {{form.owner}}
         <input type="submit" value="Import Selected" {%if not vms%}disabled{%endif%}>
