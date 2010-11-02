@@ -88,7 +88,7 @@
                 $.getJSON(url2, {'cluster_id':id},
                         function(data) {
                             bootorder = data['bootorder'];
-                            iallocator = data['iallocator'];
+                            iallocator_data = data['iallocator'];
                             hypervisors = data['hypervisors'];
                             vcpus = data['vcpus'];
                             rootpath = data['rootpath'];
@@ -104,11 +104,11 @@
                             if(hypervisors) {
                                 //list - do nothing for now.
                             }
-                            if(iallocator) {
+                            if(iallocator_data) {
                                 hiddendiv = $("<div style='display: none;'>");
                                 hidden = $("<input type='hidden' />");
                                 hidden.attr('name', 'iallocator_hostname');
-                                hidden.attr('value', iallocator);
+                                hidden.attr('value', iallocator_data);
                                 hiddendiv.append(hidden);
                                 hiddendiv.append("</div>");
                                 $("#id_iallocator").after(hiddendiv);
