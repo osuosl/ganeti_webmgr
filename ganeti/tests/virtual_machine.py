@@ -615,7 +615,9 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertTemplateUsed(response, 'virtual_machine/detail.html')
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
+        self.assert_(user.has_perm('admin', new_vm))
         user.revoke_all(cluster)
+        user.revoke_all(new_vm)
         VirtualMachine.objects.all().delete()
         
         # POST - user authorized for cluster (admin)
