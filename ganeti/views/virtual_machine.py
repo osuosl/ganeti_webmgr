@@ -221,6 +221,9 @@ def create(request, cluster_slug=None):
             disk_template = data['disk_template']
             pnode = data['pnode']
             os = data['os']
+            # Hidden fields
+            if 'iallocator' in data:
+                iallocator = data['iallocator_hostname']
             # BEPARAMS
             vcpus = data['vcpus']
             disk_size = data['disk_size']
@@ -245,6 +248,7 @@ def create(request, cluster_slug=None):
                         [{"size": disk_size, }],[{nicmode: nictype, }],
                         memory=ram, os=os, vcpus=vcpus,
                         pnode=pnode, snode=snode,
+                        iallocator=iallocator,
                         hvparams={'kernel_path': kernelpath, \
                             'root_path': rootpath, \
                             'serial_console':serialconsole, \
