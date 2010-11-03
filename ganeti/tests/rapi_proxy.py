@@ -196,6 +196,7 @@ INFO = {'architecture': ['64bit', 'x86_64'],
 
 OPERATING_SYSTEMS = ['image+debian-osgeo', 'image+ubuntu-lucid']
 
+JOB = {'status': 'success'}
 class RapiProxy(client.GanetiRapiClient):
     """
     Proxy class for testing RAPI interface without a cluster present. This class
@@ -212,6 +213,7 @@ class RapiProxy(client.GanetiRapiClient):
         CallProxy.patch(instance, 'GetNode', False, NODE)
         CallProxy.patch(instance, 'GetInfo', False, INFO)
         CallProxy.patch(instance, 'GetOperatingSystems', False, OPERATING_SYSTEMS)
+        CallProxy.patch(instance, 'GetJobStatus', False, JOB)
         CallProxy.patch(instance, 'StartupInstance', False)
         CallProxy.patch(instance, 'ShutdownInstance', False)
         CallProxy.patch(instance, 'RebootInstance', False)
@@ -228,7 +230,7 @@ class RapiProxy(client.GanetiRapiClient):
         if key in ['GetInstances','GetInstance','GetNodes','GetNode', \
                    'GetInfo', 'StartupInstance', 'ShutdownInstance', \
                    'RebootInstance', 'AddInstanceTags','DeleteInstanceTags', \
-                   'GetOperatingSystems', 'CreateInstance'] \
+                   'GetOperatingSystems', 'GetJobStatus', 'CreateInstance'] \
                     and self.error:
             return self.fail
         return super(RapiProxy, self).__getattribute__(key)
