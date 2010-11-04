@@ -222,10 +222,11 @@ def create(request, cluster_slug=None):
             disk_template = data['disk_template']
             pnode = data['pnode']
             os = data['os']
+            iallocator = data['iallocator']
             # Hidden fields
             iallocator = None
             if 'iallocator_hostname' in data:
-                iallocator = data['iallocator_hostname']
+                iallocator_hostname = data['iallocator_hostname']
             # BEPARAMS
             vcpus = data['vcpus']
             disk_size = data['disk_size']
@@ -239,18 +240,27 @@ def create(request, cluster_slug=None):
             bootorder = data['bootorder']
             imagepath = data['imagepath']
             
+            # If drdb is being used assign the secondary node
             if disk_template == 'drdb':
                 snode = data['snode']
             else:
                 snode = None
-                
+            
+            # If iallocator was not checked do not pass in the iallocator
+            #  name. If iallocator was checked don't pass snode,pnode.
+            if not iallocator:
+                iallocator_hostname = None
+            else:
+                snode = None
+                pnode = None
+            
             try:
                 jobid = cluster.rapi.CreateInstance('create', hostname,
                         disk_template,
                         [{"size": disk_size, }],[{nicmode: nictype, }],
                         memory=ram, os=os, vcpus=vcpus,
                         pnode=pnode, snode=snode,
-                        iallocator=iallocator,
+                        iallocator=iallocator_hostname,
                         hvparams={'kernel_path': kernelpath, \
                             'root_path': rootpath, \
                             'serial_console':serialconsole, \
@@ -358,7 +368,7 @@ def cluster_defaults(request):
     hvparams = info['hvparams'][hv]
     
     content = json.dumps({
-        'iallocator':info['default_iallocator'],
+        'iallocator': 'hail',#info['default_iallocator'],
         'hypervisors':info['enabled_hypervisors'],
         'vcpus':beparams['vcpus'],
         'ram':beparams['memory'],
@@ -413,7 +423,8 @@ class NewVirtualMachineForm(forms.Form):
                             error_messages={
                                 'invalid': 'Instance name must be resolvable',
                             })
-    iallocator = forms.BooleanField(label='Automatic Allocation', required=False)
+    iallocator = forms.BooleanField(label='Automatic Allocation', \
+                                    required=False, initial=True)
     disk_template = forms.ChoiceField(label='Disk Template', \
                                       choices=templates)
     pnode = forms.ChoiceField(label='Primary Node', choices=[empty_field])
@@ -572,6 +583,16 @@ class NewVirtualMachineForm(forms.Form):
                 
                 del data["imagepath"]
                 del data["bootorder"]
+        
+        
+        # If iallocator is checked,
+        #  don't display error messages for nodes
+        iallocator = data.get('iallocator', False)
+        if iallocator:
+            if 'snode' in self._errors:
+                del self._errors['snode']
+            if 'pnode' in self._errors:
+                del self._errors['pnode']
         
         # Always return the full collection of cleaned data.
         return data
