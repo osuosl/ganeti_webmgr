@@ -220,11 +220,10 @@ def create(request, cluster_slug=None):
             cluster = data['cluster']
             hostname = data['hostname']
             disk_template = data['disk_template']
-            pnode = data['pnode']
             os = data['os']
             iallocator = data['iallocator']
             # Hidden fields
-            iallocator = None
+            iallocator_hostname = None
             if 'iallocator_hostname' in data:
                 iallocator_hostname = data['iallocator_hostname']
             # BEPARAMS
@@ -239,6 +238,12 @@ def create(request, cluster_slug=None):
             serialconsole = data['serialconsole']
             bootorder = data['bootorder']
             imagepath = data['imagepath']
+            
+            # Only get pnode if iallocator is not checked
+            if not iallocator:
+                pnode = data['pnode']
+            else:
+                pnode = None
             
             # If drdb is being used assign the secondary node
             if disk_template == 'drdb':
@@ -424,7 +429,7 @@ class NewVirtualMachineForm(forms.Form):
                                 'invalid': 'Instance name must be resolvable',
                             })
     iallocator = forms.BooleanField(label='Automatic Allocation', \
-                                    required=False, initial=True)
+                                    initial=False, required=False)
     disk_template = forms.ChoiceField(label='Disk Template', \
                                       choices=templates)
     pnode = forms.ChoiceField(label='Primary Node', choices=[empty_field])
@@ -556,10 +561,11 @@ class NewVirtualMachineForm(forms.Form):
         
         pnode = data.get("pnode", '')
         snode = data.get("snode", '')
+        iallocator = data.get('iallocator', False)
         disk_template = data.get("disk_template")
         
         # Need to have pnode != snode
-        if disk_template == "drdb":
+        if disk_template == "drdb" and not iallocator:
             if pnode == snode and (pnode != '' or snode != ''):
                 # We know these are not in self._errors now 
                 msg = u"Primary and Secondary Nodes must not match."
@@ -587,12 +593,15 @@ class NewVirtualMachineForm(forms.Form):
         
         # If iallocator is checked,
         #  don't display error messages for nodes
-        iallocator = data.get('iallocator', False)
         if iallocator:
-            if 'snode' in self._errors:
-                del self._errors['snode']
+            if 'pnode' in data:
+                del data['pnode']
+            if 'snode' in data:
+                del data['snode']
             if 'pnode' in self._errors:
                 del self._errors['pnode']
+            if 'snode' in self._errors:
+                del self._errors['snode']
         
         # Always return the full collection of cleaned data.
         return data
