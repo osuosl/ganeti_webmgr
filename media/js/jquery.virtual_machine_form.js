@@ -104,15 +104,19 @@
                                 //list - do nothing for now.
                             }
                             if(iallocator_data) {
-                                hiddendiv = $("<div style='display: none;'>");
+                                // Create input
                                 hidden = $("<input type='hidden' />");
                                 hidden.attr('name', 'iallocator_hostname');
                                 hidden.attr('value', iallocator_data);
+                                // Create div and add input
+                                hiddendiv = $("<div style='display: none;'>");
                                 hiddendiv.append(hidden);
                                 hiddendiv.append("</div>");
+                                // Append div w/input to page
                                 $("#id_iallocator").after(hiddendiv);
-                                // check iallocator checkbox
-                                $("#id_iallocator").attr('checked', true);
+                                // Check iallocator checkbox
+                                $("#id_iallocator").attr('checked', 'checked');
+                                $("#id_iallocator").change();
                             }
                             if(kernelpath) {
                                 $("#id_kernelpath").val(kernelpath);
