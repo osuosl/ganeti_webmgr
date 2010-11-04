@@ -235,7 +235,7 @@ def create(request, cluster_slug=None):
             bootorder = data['bootorder']
             imagepath = data['imagepath']
             
-            if disk_template == 'drdb':
+            if disk_template == 'drbd':
                 snode = data['snode']
             else:
                 snode = None
@@ -376,7 +376,7 @@ class NewVirtualMachineForm(forms.Form):
     templates = [
         (u'', u'---------'),
         (u'plain', u'plain'),
-        (u'drdb', u'drdb'),
+        (u'drbd', u'drbd'),
         (u'file', u'file'),
         (u'diskless', u'diskless')
     ]
@@ -543,7 +543,7 @@ class NewVirtualMachineForm(forms.Form):
         disk_template = data.get("disk_template")
         
         # Need to have pnode != snode
-        if disk_template == "drdb":
+        if disk_template == "drbd":
             if pnode == snode and (pnode != '' or snode != ''):
                 # We know these are not in self._errors now 
                 msg = u"Primary and Secondary Nodes must not match."

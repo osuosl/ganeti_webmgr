@@ -1311,7 +1311,7 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual([
             (u'', u'---------'),
             (u'plain', u'plain'),
-            (u'drdb', u'drdb'),
+            (u'drbd', u'drbd'),
             (u'file', u'file'),
             (u'diskless', u'diskless')
             ], form.fields['disk_template'].choices)
