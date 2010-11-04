@@ -223,7 +223,7 @@ def create(request, cluster_slug=None):
             pnode = data['pnode']
             os = data['os']
             # Hidden fields
-            if 'iallocator' in data:
+            if 'iallocator_hostname' in data:
                 iallocator = data['iallocator_hostname']
             # BEPARAMS
             vcpus = data['vcpus']
