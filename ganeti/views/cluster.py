@@ -98,13 +98,7 @@ def edit(request, cluster_slug=None):
     if request.method == 'POST':
         form = EditClusterForm(request.POST, instance=cluster)
         if form.is_valid():
-            data = form.cleaned_data
-            slug = slugify(data['hostname'].split('.')[0])
-            # Create but don't save cluster because we still need to set
-            #  the cluster.slug
-            cluster = form.save(commit=False)
-            cluster.slug = slug
-            cluster.save()
+            cluster = form.save()
             # TODO Create post signal to import
             #   virtual machines on edit of cluster
             cluster.sync_virtual_machines()
@@ -256,3 +250,14 @@ class EditClusterForm(forms.ModelForm):
         widgets = {
             'password' : forms.PasswordInput(),
         }
+    
+    def clean(self):
+        self.cleaned_data = super(EditClusterForm, self).clean()
+        data = self.cleaned_data
+        
+        # Automatically set the slug on cluster creation
+        if 'slug' not in data:
+            data['slug'] = slugify(data['hostname'].split('.')[0])
+            del self._errors['slug']
+        
+        return data
