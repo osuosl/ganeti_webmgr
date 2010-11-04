@@ -275,4 +275,4 @@ class ImportViews(TestCase):
         self.assertTemplateUsed(response, 'importing/missing_db.html')
         self.assertFalse(response.context['form'].errors)
         self.assertEqual([], response.context['vms'])
-        self.assert_(VirtualMachine.objects.filter(hostname='vm1').exists())
+        self.assert_(VirtualMachine.objects.filter(hostname='vm2').exists())

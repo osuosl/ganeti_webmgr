@@ -524,12 +524,12 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
                     owner=user.get_profile().id, #XXX remove this
                     hostname='new.vm.hostname',
                     disk_template='plain',
-                    disk_size=5120,
+                    disk_size=1000,
                     ram=256,
                     vcpus=2,
                     rootpath='/',
-                    nictype='routed',
-                    nic='br1',
+                    nictype='paravirtual',
+                    nicmode='routed',
                     bootorder='disk',
                     os='image+ubuntu-lucid',
                     pnode=cluster.nodes()[0],
@@ -555,7 +555,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
         
         # POST - required values
-        for property in ['cluster', 'hostname', 'disk_size','nictype', 'nic',
+        for property in ['cluster', 'hostname', 'disk_size','nictype', 'nicmode',
                          'vcpus', 'pnode', 'os', 'disk_template',
                          'rootpath', 'bootorder']:
             data_ = data.copy()
@@ -580,7 +580,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         
         # POST - over disk quota
         data_ = data.copy()
-        data_['disk'] = [[{'size':2000}]]
+        data_['disk_size'] = 2000
         response = c.post(url % '', data_)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
@@ -606,7 +606,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
         
         # POST - user authorized for cluster (create_vm)
-        user.grant('admin', cluster)
+        user.grant('create_vm', cluster)
         data_ = data.copy()
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
         response = c.post(url % '', data_, follow=True)
@@ -615,7 +615,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertTemplateUsed(response, 'virtual_machine/detail.html')
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
-        self.assert_(user.has_perm('admin', new_vm), user.__dict__)
+        self.assert_(user.has_perm('admin', new_vm))
         user.revoke_all(cluster)
         user.revoke_all(new_vm)
         VirtualMachine.objects.all().delete()

@@ -58,11 +58,18 @@ def orphans(request):
             data = form.cleaned_data
             owner = data['owner']
             vm_ids = data['virtual_machines']
-            VirtualMachine.objects.filter(id__in=vm_ids).update(owner=owner)
+            
+            # update the owner and save the vm.  This isn't the most efficient
+            # way of updating the VMs but we would otherwise need to group them
+            # by cluster
+            for id in vm_ids:
+                vm = VirtualMachine.objects.get(id=id)
+                vm.owner = owner
+                vm.save()
             
             # remove updated vms from the list
             vms = filter(lambda x: unicode(x[0]) not in vm_ids, vms)
-
+    
     else:
         form = ImportForm(vms)
     
@@ -103,7 +110,7 @@ def missing_ganeti(request):
             
             # remove updated vms from the list
             vms = filter(lambda x: unicode(x[0]) not in vm_ids, vms)
-
+    
     else:
         form = VirtualMachineForm(vms)
     
@@ -141,12 +148,12 @@ def missing_db(request):
             data = form.cleaned_data
             owner = data['owner']
             vm_ids = data['virtual_machines']
-
+            
             # create missing VMs
             for vm in vm_ids:
-                cluster_id, hostname = vm.split(':')
+                cluster_id, host = vm.split(':')
                 cluster = Cluster.objects.get(id=cluster_id)
-                VirtualMachine(hostname=id, cluster=cluster, owner=owner).save()
+                VirtualMachine(hostname=host, cluster=cluster, owner=owner).save()
             
             # remove created vms from the list
             vms = filter(lambda x: unicode(x[0]) not in vm_ids, vms)

@@ -346,8 +346,8 @@ class TestClusterViews(TestCase):
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'cluster/edit.html')
         
-        data = dict(hostname='new.hostname',
-                    slug='new_hostname',
+        data = dict(hostname='new-host3.hostname',
+                    slug='new-host3',
                     port=5080,
                     description='testing editing clusters',
                     username='tester',
@@ -358,7 +358,7 @@ class TestClusterViews(TestCase):
                     )
         
         # test required fields
-        required = ['hostname', 'slug', 'port']
+        required = ['hostname', 'port']
         for property in required:
             data_ = {}
             data_.update(data)
@@ -435,8 +435,8 @@ class TestClusterViews(TestCase):
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'cluster/edit.html')
         
-        data = dict(hostname='new.hostname',
-                    slug='new_hostname',
+        data = dict(hostname='new-host-1.hostname',
+                    slug='new-host-1',
                     port=5080,
                     description='testing editing clusters',
                     username='tester',

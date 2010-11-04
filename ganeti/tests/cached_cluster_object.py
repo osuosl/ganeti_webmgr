@@ -149,6 +149,7 @@ class CachedClusterObjectBase(TestCase):
         object._refresh.assertCalled(self)
         object.parse_transient_info.assertCalled(self)
         object.parse_persistent_info.assertCalled(self)
+        self.assertEqual(1, len(object.parse_persistent_info.calls))
         self.assert_(object.id)
         self.assertNotEqual(None, object.cached)
         self.assert_(now < object.cached, "Cache time should be newer")

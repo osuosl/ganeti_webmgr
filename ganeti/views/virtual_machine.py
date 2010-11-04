@@ -406,9 +406,9 @@ class NewVirtualMachineForm(forms.Form):
                             error_messages={
                                 'invalid': 'Instance name must be resolvable',
                             })
+    iallocator = forms.BooleanField(label='Automatic Allocation', required=False)
     disk_template = forms.ChoiceField(label='Disk Template', \
                                       choices=templates)
-    #iallocator = forms.BooleanField(label='Automatic Allocation', initial=True)
     pnode = forms.ChoiceField(label='Primary Node', choices=[empty_field])
     snode = forms.ChoiceField(label='Secondary Node', choices=[empty_field])
     os = forms.ChoiceField(label='Operating System', choices=[empty_field])
@@ -519,11 +519,11 @@ class NewVirtualMachineForm(forms.Form):
                             self._errors["ram"] = self.error_class([q_msg])
                     
                     if used['disk']:
-                        disk = used['disk'] + data.get('disk_space', 0)
+                        disk = used['disk'] + data.get('disk_size', 0)
                         if disk > quota['disk']:
-                           del data['disk']
+                           del data['disk_size']
                            q_msg = u"Owner does not have enough diskspace remaining on this cluster."
-                           self._errors["disk"] = self.error_class([q_msg])
+                           self._errors["disk_size"] = self.error_class([q_msg])
                     
                     if used['virtual_cpus']:
                         vcpus = used['virtual_cpus'] + data.get('vcpus', 0)
