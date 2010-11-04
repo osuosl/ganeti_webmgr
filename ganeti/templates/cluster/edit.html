@@ -15,8 +15,10 @@
     <fieldset>
         {% if form.hostname.errors %}<p class="error">{{form.hostname.errors}}</p>{%endif%}
         <p><label for="id_hostname" class="required">{{form.hostname.label}}:</label> {{form.hostname}}</p>
+        {% if cluster %}
         {% if form.slug.errors %}<p class="error">{{form.hostname.errors}}</p>{%endif%}
         <p><label for="id_slug" class="required">{{form.slug.label}}:</label> {{form.slug}}</p>
+        {% endif %}
         {% if form.port.errors %}<p class="error">{{form.hostname.errors}}</p>{%endif%}
         <p><label for="id_port" class="required">{{form.port.label}}:</label> {{form.port}}</p>
         {% if form.description.errors %}<p class="error">{{form.hostname.errors}}</p>{%endif%}
