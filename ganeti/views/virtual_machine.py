@@ -45,7 +45,7 @@ def shutdown(request, cluster_slug, instance):
     
     if not (user.is_superuser or user.has_perm('admin', vm) or \
         user.has_perm('admin', vm.cluster)):
-        return HttpResponseForbidden()
+        return HttpResponseForbidden('You do not have permission to shut down this cluster')
     
     if request.method == 'POST':
         try:
@@ -65,7 +65,7 @@ def startup(request, cluster_slug, instance):
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', vm) or \
         user.has_perm('admin', vm.cluster)):
-            return HttpResponseForbidden()
+            return HttpResponseForbidden('You do not have permission to start up this cluster')
     
     if request.method == 'POST':
         try:
@@ -85,7 +85,7 @@ def reboot(request, cluster_slug, instance):
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', vm) or \
         user.has_perm('admin', vm.cluster)):
-            return HttpResponseForbidden()
+            return HttpResponseForbidden('You do not have permission to reboot this cluster')
     
     if request.method == 'POST':
         try:
@@ -122,7 +122,7 @@ def detail(request, cluster_slug, instance):
     admin = user.is_superuser or user.has_perm('admin', vm) \
         or user.has_perm('admin', cluster)
     if not admin:
-        return HttpResponseForbidden()
+        return HttpResponseForbidden('You do not have permission to view this cluster\'s details')
     #TODO Update to use part of the NewVirtualMachineForm in 0.5 release
     """
     if request.method == 'POST':
@@ -204,7 +204,8 @@ def create(request, cluster_slug=None):
     """
     user = request.user
     if not(user.is_superuser or user.perms_on_any(Cluster, ['admin', 'create_vm'])):
-        return HttpResponseForbidden()
+        return HttpResponseForbidden('You do not have permission to create virtual \
+                   machines')
     
     if cluster_slug is not None:
         cluster = get_object_or_404(Cluster, slug=cluster_slug)
@@ -328,7 +329,8 @@ def cluster_options(request):
     user = request.user
     if not (user.is_superuser or user.has_perm('create_vm', cluster) or \
             user.has_perm('admin', cluster)):
-        return HttpResponseForbidden()
+        return HttpResponseForbidden('You do not have permissions to view \
+        this cluster')
     
     content = json.dumps({'nodes':cluster.nodes(), \
                           'os':cluster.rapi.GetOperatingSystems()})
@@ -346,7 +348,7 @@ def cluster_defaults(request):
     user = request.user
     if not (user.is_superuser or user.has_perm('create_vm', cluster) or \
             user.has_perm('admin', cluster)):
-        return HttpResponseForbidden()
+        return HttpResponseForbidden('You do not have permission to view the default cluster options')
     
     # Create variables so that dictionary lookups are not so horrendous.
     info = cluster.info

@@ -11,6 +11,7 @@ from django.http import HttpResponse, HttpResponseNotFound, \
     HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
+from django.template.defaultfilters import slugify
 
 from object_permissions import get_model_perms, get_user_perms, grant, revoke, \
     get_users, get_groups, get_group_perms
@@ -98,6 +99,8 @@ def edit(request, cluster_slug=None):
         form = EditClusterForm(request.POST, instance=cluster)
         if form.is_valid():
             cluster = form.save()
+            # TODO Create post signal to import
+            #   virtual machines on edit of cluster
             cluster.sync_virtual_machines()
             return HttpResponseRedirect(reverse('cluster-detail', \
                                                 args=[cluster.slug]))
@@ -247,3 +250,14 @@ class EditClusterForm(forms.ModelForm):
         widgets = {
             'password' : forms.PasswordInput(),
         }
+    
+    def clean(self):
+        self.cleaned_data = super(EditClusterForm, self).clean()
+        data = self.cleaned_data
+        
+        # Automatically set the slug on cluster creation
+        if 'slug' not in data:
+            data['slug'] = slugify(data['hostname'].split('.')[0])
+            del self._errors['slug']
+        
+        return data
