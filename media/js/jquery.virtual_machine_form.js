@@ -10,7 +10,6 @@
         disk_template = $("#id_disk_template");
         curSelection = $("#id_snode option:selected").index();
         iallocator = $("#id_iallocator");
-        iallocator.attr('checked', true);
         iallocator.change(function() {
             if(iallocator.is(':checked')) {
                 pnode_parent.hide();
