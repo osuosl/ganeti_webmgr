@@ -44,7 +44,10 @@
         {% comment %}
         <li><a href="#configuration"><span>Configuration</span></a></li>
         {% endcomment %}
-        {% if admin %}<li><a href="{% url vm-users cluster.slug instance.hostname %}"><span>Users</span></a></li>{%endif%}
+        {% if admin %}
+            <li><a href="{% url vm-users cluster.slug instance.hostname %}"><span>Users</span></a></li>
+            <li><a href="{% url instance-vnc cluster.slug instance.hostname %}"><span>VNC</span></a></li>
+        {%endif%}
     </ul>
     <div id="tab1" class="tab_content">
         <ul id="actions">
@@ -90,7 +93,4 @@
     </div>
     {% endcomment %}
 </div>
-
-
-
 {% endblock %}
