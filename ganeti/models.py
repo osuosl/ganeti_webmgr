@@ -211,7 +211,7 @@ class VirtualMachine(CachedClusterObject):
     """
     cluster = models.ForeignKey('Cluster', editable=False,
                                 related_name='virtual_machines')
-    hostname = models.CharField(max_length=128)
+    hostname = models.CharField(max_length=128, unique=True)
     owner = models.ForeignKey('ClusterUser', null=True, \
                               related_name='virtual_machines')
     virtual_cpus = models.IntegerField(default=-1)
