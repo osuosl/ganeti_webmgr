@@ -69,6 +69,7 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         self.assertTrue(vm.id)
         self.assertEqual('vm.test.org', vm.hostname)
         self.assertFalse(vm.error)
+        vm.delete()
         
         # Multiple
         vm = VirtualMachine(cluster=cluster, hostname=vm_hostname,
