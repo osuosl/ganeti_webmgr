@@ -372,7 +372,8 @@ class NewVirtualMachineForm(forms.Form):
     """
     Virtual Machine Creation / Edit form
     """
-    FQDN_RE = r'^[\w]+(\.[\w]+)*$'
+    FQDN_RE = r'(?=^.{1,254}$)(^(?:(?!\d+\.|-)[a-zA-Z0-9_\-]{1,63}(?<!-)\.?)+(?:[a-zA-Z]{2,})$)'
+    
     templates = [
         (u'', u'---------'),
         (u'plain', u'plain'),
@@ -407,7 +408,8 @@ class NewVirtualMachineForm(forms.Form):
     hostname = forms.RegexField(label='Instance Name', regex=FQDN_RE,
                             error_messages={
                                 'invalid': 'Instance name must be resolvable',
-                            })
+                            },
+                            max_length=255)
     iallocator = forms.BooleanField(label='Automatic Allocation', required=False)
     disk_template = forms.ChoiceField(label='Disk Template', \
                                       choices=templates)
