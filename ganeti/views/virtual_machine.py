@@ -373,7 +373,7 @@ def cluster_defaults(request):
     hvparams = info['hvparams'][hv]
     
     content = json.dumps({
-        'iallocator': 'hail',#info['default_iallocator'],
+        'iallocator': info['default_iallocator'],
         'hypervisors':info['enabled_hypervisors'],
         'vcpus':beparams['vcpus'],
         'ram':beparams['memory'],

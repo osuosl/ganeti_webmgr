@@ -5,17 +5,17 @@
     virtual_machines = function() {
         cluster = $("#id_cluster");
         owner = $("#id_owner");
-        snode_parent = $("#id_snode").parent();
-        pnode_parent = $("#id_pnode").parent();
+        var snode = $("#id_snode").parent();
+        var pnode = $("#id_pnode").parent();
         disk_template = $("#id_disk_template");
         curSelection = $("#id_snode option:selected").index();
-        iallocator = $("#id_iallocator");
+        var iallocator = $("#id_iallocator");
         iallocator.change(function() {
             if(iallocator.is(':checked')) {
-                pnode_parent.hide();
-                snode_parent.hide();
+                pnode.hide();
+                snode.hide();
             } else {
-                pnode_parent.show();
+                pnode.show();
                 disk_template.change();
             }
         });
@@ -23,9 +23,9 @@
         disk_template.live('change', function() {
             if(!iallocator.is(':checked')){
                 if( disk_template.val() == 'drdb') {
-                    snode_parent.show();
+                    snode.show();
                 } else {
-                    snode_parent.hide();
+                    snode.hide();
                 }
             }
         });
@@ -86,8 +86,9 @@
                     });
                 $.getJSON(url2, {'cluster_id':id},
                         function(data) {
+                            iallocator_field = $("#id_iallocator");
                             bootorder = data['bootorder'];
-                            iallocator_data = data['iallocator'];
+                            iallocator = data['iallocator'];
                             hypervisors = data['hypervisors'];
                             vcpus = data['vcpus'];
                             rootpath = data['rootpath'];
@@ -103,20 +104,22 @@
                             if(hypervisors) {
                                 //list - do nothing for now.
                             }
-                            if(iallocator_data) {
+                            if(iallocator) {
                                 // Create input
                                 hidden = $("<input type='hidden' />");
                                 hidden.attr('name', 'iallocator_hostname');
-                                hidden.attr('value', iallocator_data);
+                                hidden.attr('value', iallocator);
                                 // Create div and add input
                                 hiddendiv = $("<div style='display: none;'>");
                                 hiddendiv.append(hidden);
                                 hiddendiv.append("</div>");
                                 // Append div w/input to page
-                                $("#id_iallocator").after(hiddendiv);
+                                iallocator_field.after(hiddendiv);
                                 // Check iallocator checkbox
-                                $("#id_iallocator").attr('checked', 'checked');
-                                $("#id_iallocator").change();
+                                iallocator_field.attr('checked', 'checked');
+                                iallocator_field.change();
+                            } else {
+                                iallocator_field.attr('disabled', 'disabled');
                             }
                             if(kernelpath) {
                                 $("#id_kernelpath").val(kernelpath);
