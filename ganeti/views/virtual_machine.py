@@ -328,8 +328,14 @@ def cluster_options(request):
         return HttpResponseForbidden('You do not have permissions to view \
         this cluster')
     
+    oses = cluster.rapi.GetOperatingSystems()
+    # Given 'image+os-name'
+    #  return formatted as 'Os Name'
+    oslist = [" ".join([x.capitalize() for x in \
+                os.replace('image+', '').replace('-', ' ').split(' ')]) \
+                for os in oses]
     content = json.dumps({'nodes':cluster.nodes(), \
-                          'os':cluster.rapi.GetOperatingSystems()})
+                          'os':[[os, osname] for os, osname in zip(oses, oslist)]})
     return HttpResponse(content, mimetype='application/json')
 
 @login_required
