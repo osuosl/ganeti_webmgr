@@ -868,7 +868,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual('application/json', response['content-type'])
         content = json.loads(response.content)
         self.assertEqual(['gtest1.osuosl.bak', 'gtest2.osuosl.bak'], content['nodes'])
-        self.assertEqual(['image+debian-osgeo', 'image+ubuntu-lucid'], content['os'])
+        self.assertEqual([['image+debian-osgeo', 'Debian Osgeo'], \
+            ['image+ubuntu-lucid', 'Ubuntu Lucid']], content['os'])
         user.revoke_all(cluster)
         
         # authorized (cluster admin)
@@ -878,7 +879,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual('application/json', response['content-type'])
         content = json.loads(response.content)
         self.assertEqual(['gtest1.osuosl.bak', 'gtest2.osuosl.bak'], content['nodes'])
-        self.assertEqual(['image+debian-osgeo', 'image+ubuntu-lucid'], content['os'])
+        self.assertEqual([['image+debian-osgeo', 'Debian Osgeo'], \
+            ['image+ubuntu-lucid', 'Ubuntu Lucid']], content['os'])
         user.revoke_all(cluster)
         
         # authorized (superuser)
@@ -889,7 +891,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual('application/json', response['content-type'])
         content = json.loads(response.content)
         self.assertEqual(['gtest1.osuosl.bak', 'gtest2.osuosl.bak'], content['nodes'])
-        self.assertEqual(['image+debian-osgeo', 'image+ubuntu-lucid'], content['os'])
+        self.assertEqual([['image+debian-osgeo', 'Debian Osgeo'], \
+            ['image+ubuntu-lucid', 'Ubuntu Lucid']], content['os'])
 
 
     def test_view_cluster_defaults(self):
