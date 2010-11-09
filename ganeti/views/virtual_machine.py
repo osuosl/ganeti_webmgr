@@ -25,6 +25,12 @@ empty_field = (u'', u'---------')
 @login_required
 def vnc(request, cluster_slug, instance):
     instance = get_object_or_404(VirtualMachine, hostname=instance)
+    
+    user = request.user
+    if not (user.is_superuser or user.has_perm('admin', instance) or \
+        user.has_perm('admin', instance.cluster)):
+        return HttpResponseForbidden('You do not have permission to vnc on this')
+    
     #port, password = instance.setup_vnc_forwarding()
     
     host = instance.info['pnode']

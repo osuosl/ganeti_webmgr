@@ -955,6 +955,19 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         user.is_superuser = False
         user.save()
 
+    def test_view_vnc(self):
+        """
+        Tests view for cluster users:
+        
+        Verifies:
+            * lack of permissions returns 403
+            * nonexistent Cluster returns 404
+            * nonexistent VirtualMachine returns 404
+        """
+        url = "/cluster/%s/%s/vnc/"
+        args = (cluster.slug, vm.hostname)
+        self.validate_get(url, args, 'virtual_machine/vnc.html')
+
     def test_view_users(self):
         """
         Tests view for cluster users:
