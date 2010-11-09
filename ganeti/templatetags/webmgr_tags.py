@@ -34,9 +34,9 @@ def render_instance_status(status):
 def render_storage(value):
     amount = float(value)
     if amount >= 1024:
-        return "%.2f G" % (amount/1024)
+        return "%.2f GB" % (amount/1024)
     else:
-        return "%d M" % int(amount)
+        return "%d MB" % int(amount)
 
 
 @register.filter

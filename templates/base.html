@@ -20,6 +20,7 @@
     <div id="content_column">
         {% block navigation %}
             {% if user.is_authenticated %}
+            {% with user|cluster_admin as cluster_admin %}
             <div id="mainmenu" class="menu">
             <p class="user">You are logged in as: <a href="{% url profile %}">{{user.username}}</a><p>
             
@@ -27,7 +28,9 @@
             <ul>
                 <li><a href="{% url cluster-list %}">Clusters</a></li>
                 <li><a href="{% url virtualmachine-list %}">Virtual Machines</a></li>
+                {% if user.is_superuser or cluster_admin or perms.Cluster.create_vm %}
                 <li><a href="{% url instance-create %}">Create VM </a></li>
+                {% endif %}
                 <li>
                     <span id="searchbar">
                         <a href="{% url logout %}">Logout</a>
@@ -35,7 +38,7 @@
                 </li>
             </ul>
             {% with user|group_admin as group_admin %}
-            {% with user|cluster_admin as cluster_admin %}
+            
             {% if user.is_superuser or group_admin or cluster_admin %}
             <h3>Admin</h3>
             <ul>

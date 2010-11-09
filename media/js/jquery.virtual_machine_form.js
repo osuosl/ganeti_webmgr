@@ -33,10 +33,10 @@
         disk_template.change();
     };
     /* Create new option items for select field */
-    newoption = function(value) {
+    newoption = function(value, text) {
         o = $("<option></option>");
         o.attr("value", value);
-        o.attr("text", value);
+        o.attr("text", text);
         return o;
     };
     /* Ajax request to update cluster when owner changes */
@@ -73,13 +73,14 @@
                         oslist.children().not(':first').remove();
                         $.each(data, function(i, items) {
                             $.each(items, function(key, value) {
-                                child = newoption(value);
                                 if( i == 'nodes' ) {
+                                    child = newoption(key, value);
                                     child2 = child.clone();
                                     pnode.append(child);
                                     snode.append(child2);
                                 }
                                 else if ( i == 'os' ) {
+                                    child = newoption(value[0], value[1])
                                     oslist.append(child);
                                 }
                             });

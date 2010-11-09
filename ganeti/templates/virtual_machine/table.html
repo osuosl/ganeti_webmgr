@@ -33,8 +33,8 @@
             <td>{{ vm.cluster }}</td>
         {% endif %}
         <td>{{ info.pnode }}</td>
-        <td>{{ vm.ram }}</td>
-        <td>{{ vm.disk_size }}</td>
+        <td>{{ vm.ram|render_storage }}</td>
+        <td>{{ vm.disk_size|render_storage }}</td>
         <td>{{ vm.virtual_cpus }}</td>
         {% if info.admin_state %}
             {% if info.oper_state %}

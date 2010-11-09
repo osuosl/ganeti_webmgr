@@ -336,9 +336,24 @@ def cluster_options(request):
         return HttpResponseForbidden('You do not have permissions to view \
         this cluster')
     
+    oslist = cluster_os_list(cluster)
     content = json.dumps({'nodes':cluster.nodes(), \
-                          'os':cluster.rapi.GetOperatingSystems()})
+                          'os':oslist})
     return HttpResponse(content, mimetype='application/json')
+
+
+def cluster_os_list(cluster):
+    """
+    A list of avaiable operating systems
+    on the given cluster.
+    """
+    oses = cluster.rapi.GetOperatingSystems()
+    # Given 'image+os-name'
+    #  return formatted as 'Os Name'
+    return [(os, " ".join([x.capitalize() for x in \
+                os.replace('image+', '').split('-')])) \
+                for os in oses]
+
 
 @login_required
 def cluster_defaults(request):
@@ -418,7 +433,7 @@ class NewVirtualMachineForm(forms.Form):
                                 'invalid': 'Instance name must be resolvable',
                             },
                             max_length=255)
-    iallocator = forms.BooleanField(label='Automatic Allocation', required=False)
+    #iallocator = forms.BooleanField(label='Automatic Allocation', required=False)
     disk_template = forms.ChoiceField(label='Disk Template', \
                                       choices=templates)
     pnode = forms.ChoiceField(label='Primary Node', choices=[empty_field])
@@ -452,11 +467,10 @@ class NewVirtualMachineForm(forms.Form):
         
         if cluster is not None:
             # set choices based on selected cluster if given
-            oses = cluster.rapi.GetOperatingSystems()
+            oslist = cluster_os_list(cluster)
             nodelist = cluster.nodes()
             nodes = zip(nodelist, nodelist)
             nodes.insert(0, empty_field)
-            oslist = zip(oses, oses)
             oslist.insert(0, empty_field)
             self.fields['pnode'].choices = nodes
             self.fields['snode'].choices = nodes

@@ -69,6 +69,7 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         self.assertTrue(vm.id)
         self.assertEqual('vm.test.org', vm.hostname)
         self.assertFalse(vm.error)
+        vm.delete()
         
         # Multiple
         vm = VirtualMachine(cluster=cluster, hostname=vm_hostname,
@@ -867,7 +868,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual('application/json', response['content-type'])
         content = json.loads(response.content)
         self.assertEqual(['gtest1.osuosl.bak', 'gtest2.osuosl.bak'], content['nodes'])
-        self.assertEqual(['image+debian-osgeo', 'image+ubuntu-lucid'], content['os'])
+        self.assertEqual([['image+debian-osgeo', 'Debian Osgeo'], \
+            ['image+ubuntu-lucid', 'Ubuntu Lucid']], content['os'])
         user.revoke_all(cluster)
         
         # authorized (cluster admin)
@@ -877,7 +879,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual('application/json', response['content-type'])
         content = json.loads(response.content)
         self.assertEqual(['gtest1.osuosl.bak', 'gtest2.osuosl.bak'], content['nodes'])
-        self.assertEqual(['image+debian-osgeo', 'image+ubuntu-lucid'], content['os'])
+        self.assertEqual([['image+debian-osgeo', 'Debian Osgeo'], \
+            ['image+ubuntu-lucid', 'Ubuntu Lucid']], content['os'])
         user.revoke_all(cluster)
         
         # authorized (superuser)
@@ -888,7 +891,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual('application/json', response['content-type'])
         content = json.loads(response.content)
         self.assertEqual(['gtest1.osuosl.bak', 'gtest2.osuosl.bak'], content['nodes'])
-        self.assertEqual(['image+debian-osgeo', 'image+ubuntu-lucid'], content['os'])
+        self.assertEqual([['image+debian-osgeo', 'Debian Osgeo'], \
+            ['image+ubuntu-lucid', 'Ubuntu Lucid']], content['os'])
 
 
     def test_view_cluster_defaults(self):
@@ -1348,19 +1352,19 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         form = NewVirtualMachineForm(user, cluster0)
         self.assertEqual([(u'', u'---------'), ('gtest1.osuosl.bak', 'gtest1.osuosl.bak'), ('gtest2.osuosl.bak', 'gtest2.osuosl.bak')], form.fields['pnode'].choices)
         self.assertEqual([(u'', u'---------'), ('gtest1.osuosl.bak', 'gtest1.osuosl.bak'), ('gtest2.osuosl.bak', 'gtest2.osuosl.bak')], form.fields['snode'].choices)
-        self.assertEqual([(u'', u'---------'), ('image+debian-osgeo', 'image+debian-osgeo'), ('image+ubuntu-lucid', 'image+ubuntu-lucid')], form.fields['os'].choices)
+        self.assertEqual([(u'', u'---------'), ('image+debian-osgeo', 'Debian Osgeo'), ('image+ubuntu-lucid', 'Ubuntu Lucid')], form.fields['os'].choices)
         
         # cluster from initial data
         form = NewVirtualMachineForm(user, None, {'cluster':cluster0.id})
         self.assertEqual([(u'', u'---------'), ('gtest1.osuosl.bak', 'gtest1.osuosl.bak'), ('gtest2.osuosl.bak', 'gtest2.osuosl.bak')], form.fields['pnode'].choices)
         self.assertEqual([(u'', u'---------'), ('gtest1.osuosl.bak', 'gtest1.osuosl.bak'), ('gtest2.osuosl.bak', 'gtest2.osuosl.bak')], form.fields['snode'].choices)
-        self.assertEqual([(u'', u'---------'), ('image+debian-osgeo', 'image+debian-osgeo'), ('image+ubuntu-lucid', 'image+ubuntu-lucid')], form.fields['os'].choices)
+        self.assertEqual([(u'', u'---------'), ('image+debian-osgeo', 'Debian Osgeo'), ('image+ubuntu-lucid', 'Ubuntu Lucid')], form.fields['os'].choices)
         
         # cluster from initial data
         form = NewVirtualMachineForm(user, cluster0, {'cluster':cluster0.id})
         self.assertEqual([(u'', u'---------'), ('gtest1.osuosl.bak', 'gtest1.osuosl.bak'), ('gtest2.osuosl.bak', 'gtest2.osuosl.bak')], form.fields['pnode'].choices)
         self.assertEqual([(u'', u'---------'), ('gtest1.osuosl.bak', 'gtest1.osuosl.bak'), ('gtest2.osuosl.bak', 'gtest2.osuosl.bak')], form.fields['snode'].choices)
-        self.assertEqual([(u'', u'---------'), ('image+debian-osgeo', 'image+debian-osgeo'), ('image+ubuntu-lucid', 'image+ubuntu-lucid')], form.fields['os'].choices)
+        self.assertEqual([(u'', u'---------'), ('image+debian-osgeo', 'Debian Osgeo'), ('image+ubuntu-lucid', 'Ubuntu Lucid')], form.fields['os'].choices)
     
     def test_cluster_choices_init(self):
         """
