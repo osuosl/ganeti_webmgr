@@ -11,7 +11,8 @@
         curSelection = $("#id_snode option:selected").index();
         var iallocator = $("#id_iallocator");
         iallocator.change(function() {
-            if(iallocator.is(':checked')) {
+            if(iallocator.is(':checked') &&
+               !iallocator.attr('readonly')) {
                 pnode.hide();
                 snode.hide();
             } else {
@@ -107,7 +108,7 @@
                             if(iallocator) {
                                 // Create input
                                 hidden = $("<input type='hidden' />");
-                                hidden.attr('name', 'iallocator_hostname');
+                                hidden.attr('id', 'id_iallocator_hostname');
                                 hidden.attr('value', iallocator);
                                 // Create div and add input
                                 hiddendiv = $("<div style='display: none;'>");
@@ -119,7 +120,7 @@
                                 iallocator_field.attr('checked', 'checked');
                                 iallocator_field.change();
                             } else {
-                                iallocator_field.attr('disabled', 'disabled');
+                                iallocator_field.attr('readonly', 'readonly');
                             }
                             if(kernelpath) {
                                 $("#id_kernelpath").val(kernelpath);
