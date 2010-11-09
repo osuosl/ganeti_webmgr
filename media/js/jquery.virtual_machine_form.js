@@ -9,20 +9,25 @@
         var pnode = $("#id_pnode").parent();
         disk_template = $("#id_disk_template");
         curSelection = $("#id_snode option:selected").index();
-        var iallocator = $("#id_iallocator");
+        var iallocator = $("#id_iallocator");        
+        if( $("#id_iallocator_hostname").length == 0 ) {
+            iallocator.attr('readonly', 'readonly');
+            iallocator.parent().hide();
+        }
         iallocator.change(function() {
-            if(iallocator.is(':checked') &&
-               !iallocator.attr('readonly')) {
-                pnode.hide();
-                snode.hide();
-            } else {
-                pnode.show();
-                disk_template.change();
+            if(!iallocator.attr('readonly')) {
+                if(iallocator.is(':checked')) {
+                    pnode.hide();
+                    snode.hide();
+                } else {
+                    pnode.show();
+                    disk_template.change();
+                }
             }
         });
         iallocator.change();
-        disk_template.live('change', function() {
-            if(!iallocator.is(':checked')){
+        disk_template.change(function() {
+            if(!iallocator.is(':checked') || iallocator.attr('readonly')) {
                 if( disk_template.val() == 'drdb') {
                     snode.show();
                 } else {
@@ -117,10 +122,13 @@
                                 // Append div w/input to page
                                 iallocator_field.after(hiddendiv);
                                 // Check iallocator checkbox
+                                iallocator_field.removeAttr('readonly');
                                 iallocator_field.attr('checked', 'checked');
+                                iallocator_field.parent().show();
                                 iallocator_field.change();
                             } else {
                                 iallocator_field.attr('readonly', 'readonly');
+                                iallocator_field.parent().hide();
                             }
                             if(kernelpath) {
                                 $("#id_kernelpath").val(kernelpath);
