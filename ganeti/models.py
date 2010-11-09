@@ -1,6 +1,8 @@
 import cPickle
 from datetime import datetime, timedelta
 from hashlib import sha1
+from subprocess import Popen
+import os
 from threading import Thread
 import time
 
@@ -294,6 +296,15 @@ class VirtualMachine(CachedClusterObject):
     
     def reboot(self):
         return self.rapi.RebootInstance(self.hostname)
+    
+    def setup_vnc_forwarding(self):
+        #password = self.set_random_vnc_password(instance)
+        password = 'none'
+        info_ = self.info
+        port = info_['network_port']
+        node = info_['pnode']
+        Popen(['util/portforwarder.py', '%d'%port, '%s:%d'%(node, port)])
+        return port, password
     
     def __repr__(self):
         return "<VirtualMachine: '%s'>" % self.hostname

@@ -21,18 +21,27 @@ from util.client import GanetiApiError
 
 empty_field = (u'', u'---------')
 
+
 @login_required
 def vnc(request, cluster_slug, instance):
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    port, password = cluster.setup_vnc_forwarding(instance)
-
-    return render_to_response("vnc.html",
-                              {'cluster': cluster,
-                               'instance': instance,
-                               'host': request.META['HTTP_HOST'],
+    instance = get_object_or_404(VirtualMachine, hostname=instance)
+    
+    user = request.user
+    if not (user.is_superuser or user.has_perm('admin', instance) or \
+        user.has_perm('admin', instance.cluster)):
+        return HttpResponseForbidden('You do not have permission to vnc on this')
+    
+    #port, password = instance.setup_vnc_forwarding()
+    
+    host = instance.info['pnode']
+    port = instance.info['network_port']
+    password = ''
+    
+    return render_to_response("virtual_machine/vnc.html",
+                              {'instance': instance,
+                               'host': host,
                                'port': port,
-                               'password': password,
-                               'user': request.user},
+                               'password': password},
         context_instance=RequestContext(request),
     )
 
@@ -45,7 +54,7 @@ def shutdown(request, cluster_slug, instance):
     
     if not (user.is_superuser or user.has_perm('admin', vm) or \
         user.has_perm('admin', vm.cluster)):
-        return HttpResponseForbidden('You do not have permission to shut down this cluster')
+        return HttpResponseForbidden('You do not have permission to shut down this virtual machine')
     
     if request.method == 'POST':
         try:
@@ -65,7 +74,7 @@ def startup(request, cluster_slug, instance):
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', vm) or \
         user.has_perm('admin', vm.cluster)):
-            return HttpResponseForbidden('You do not have permission to start up this cluster')
+            return HttpResponseForbidden('You do not have permission to start up this virtual machine')
     
     if request.method == 'POST':
         try:
@@ -85,7 +94,7 @@ def reboot(request, cluster_slug, instance):
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', vm) or \
         user.has_perm('admin', vm.cluster)):
-            return HttpResponseForbidden('You do not have permission to reboot this cluster')
+            return HttpResponseForbidden('You do not have permission to reboot this virtual machine')
     
     if request.method == 'POST':
         try:
@@ -280,8 +289,7 @@ def create(request, cluster_slug=None):
         form = NewVirtualMachineForm(user, cluster)
 
     return render_to_response('virtual_machine/create.html', {
-        'form': form,
-        'user': request.user,
+        'form': form
         },
         context_instance=RequestContext(request),
     )
@@ -572,6 +580,7 @@ class NewVirtualMachineForm(forms.Form):
         
         # Always return the full collection of cleaned data.
         return data
+
 
 class InstanceConfigForm(forms.Form):
     nic_type = forms.ChoiceField(label="Network adapter model",

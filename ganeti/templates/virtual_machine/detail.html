@@ -11,7 +11,15 @@
 <script src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
 <script type="text/javascript">
     $(document).ready(function() {
+        
         $('#tabs').tabs({ spinner: false});
+        {% if admin %}
+            {% ifnotequal instance.info.status "running" %}
+                vnc_tab_index = 2;
+                $('#tabs').tabs("option", "disabled", [vnc_tab_index])
+            {% endifnotequal %}
+        {% endif %}
+        
         $("#actions a").click(function(){
             $.post(this.href, action_response);
             return false;
@@ -44,7 +52,10 @@
         {% comment %}
         <li><a href="#configuration"><span>Configuration</span></a></li>
         {% endcomment %}
-        {% if admin %}<li><a href="{% url vm-users cluster.slug instance.hostname %}"><span>Users</span></a></li>{%endif%}
+        {% if admin %}
+            <li><a href="{% url vm-users cluster.slug instance.hostname %}"><span>Users</span></a></li>
+            <li><a href="{% url instance-vnc cluster.slug instance.hostname %}"><span>VNC</span></a></li>
+        {%endif%}
     </ul>
     <div id="tab1" class="tab_content">
         <ul id="actions">
@@ -90,7 +101,4 @@
     </div>
     {% endcomment %}
 </div>
-
-
-
 {% endblock %}
