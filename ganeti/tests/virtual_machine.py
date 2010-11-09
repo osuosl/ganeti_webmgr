@@ -37,8 +37,7 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         
         # XXX grant permissions to ensure they exist
         # XXX specify permission manually, it is not auto registering for some reason
-        register('admin', VirtualMachine)
-        register('start', VirtualMachine)
+        register(['admin', 'start'], VirtualMachine)
     
     def tearDown(self):
         VirtualMachine.objects.all().delete()
@@ -232,10 +231,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         g['group'] = group
         
         # XXX specify permission manually, it is not auto registering for some reason
-        register('admin', Cluster)
-        register('create_vm', Cluster)
-        register('admin', VirtualMachine)
-        register('start', VirtualMachine)
+        register(['admin', 'create_vm'], Cluster)
+        register(['admin', 'start'], VirtualMachine)
     
     def tearDown(self):
         ObjectPermission.objects.all().delete()
@@ -1289,8 +1286,7 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         g['group'] = group
         
         # XXX specify permission manually, it is not auto registering for some reason
-        register('admin', Cluster)
-        register('create_vm', Cluster)
+        register(['admin', 'create_vm'], Cluster)
     
     def tearDown(self):
         ObjectPermission.objects.all().delete()

@@ -57,8 +57,7 @@ class ImportViews(TestCase):
         dict_['owner'] = user.get_profile()
         
         # XXX specify permission manually, it is not auto registering for some reason
-        register('admin', Cluster)
-        register('create_vm', Cluster)
+        register(['admin', 'create_vm'], Cluster)
     
     def tearDown(self):
         ObjectPermission.objects.all().delete()
