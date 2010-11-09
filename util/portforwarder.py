@@ -29,13 +29,12 @@ def handler(client, remote):
                 server.send(buff)
 
 
-def forward_port(lport, remote, timeout=ACCEPT_TIMEOUT):
+def forward_port(lport, remote, accept_timeout=ACCEPT_TIMEOUT):
     s = socket(AF_INET, SOCK_STREAM)
-
     s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
     s.bind(('0.0.0.0', lport))
     s.listen(1)
-    s.settimeout(ACCEPT_TIMEOUT)
+    s.settimeout(accept_timeout)
     try:
         (client, addrinfo) = s.accept()
         s.close()
