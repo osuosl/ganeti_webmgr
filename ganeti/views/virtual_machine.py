@@ -367,33 +367,37 @@ def cluster_defaults(request):
             user.has_perm('admin', cluster)):
         return HttpResponseForbidden('You do not have permission to view the default cluster options')
     
-    content = json.dumps(default_cluster_info(cluster))
+    content = json.dumps(cluster_default_info(cluster))
     return HttpResponse(content, mimetype='application/json')
 
 
-def default_cluster_info(cluster_id):
+def cluster_default_info(cluster):
+    """
+    Returns a dictionary containing the following
+    default values set on a cluster:
+        iallocator, hypervisors, vcpus, ram, nictype,
+        nicmode, kernelpath, rootpath, serialconsole,
+        bootorder, imagepath
+    """
+    # Create variables so that dictionary lookups are not so horrendous.
+    info = cluster.info
+    beparams = info['beparams']['default']
+    hv = info['default_hypervisor']
+    hvparams = info['hvparams'][hv]
     
-    if cluster_id:
-        cluser = Cluster.objects.get(id__exact=cluster_id)
-        # Create variables so that dictionary lookups are not so horrendous.
-        info = cluster.info
-        beparams = info['beparams']['default']
-        hv = info['default_hypervisor']
-        hvparams = info['hvparams'][hv]
-        
-        return {
-            'iallocator': info['default_iallocator'],
-            'hypervisors':info['enabled_hypervisors'],
-            'vcpus':beparams['vcpus'],
-            'ram':beparams['memory'],
-            'nictype':hvparams['nic_type'],
-            'nicmode':info['nicparams']['default']['mode'],
-            'kernelpath':hvparams['kernel_path'],
-            'rootpath':hvparams['root_path'],
-            'serialconsole':hvparams['serial_console'],
-            'bootorder':hvparams['boot_order'],
-            'imagepath':hvparams['cdrom_image_path'],
-            }
+    return {
+        'iallocator': info['default_iallocator'],
+        'hypervisors':info['enabled_hypervisors'],
+        'vcpus':beparams['vcpus'],
+        'ram':beparams['memory'],
+        'nictype':hvparams['nic_type'],
+        'nicmode':info['nicparams']['default']['mode'],
+        'kernelpath':hvparams['kernel_path'],
+        'rootpath':hvparams['root_path'],
+        'serialconsole':hvparams['serial_console'],
+        'bootorder':hvparams['boot_order'],
+        'imagepath':hvparams['cdrom_image_path'],
+        }
 
 
 class NewVirtualMachineForm(forms.Form):
@@ -472,7 +476,6 @@ class NewVirtualMachineForm(forms.Form):
         if cluster is not None:
             # set choices based on selected cluster if given
             oses = cluster.rapi.GetOperatingSystems()
-            defaults = c
             nodelist = cluster.nodes()
             nodes = zip(nodelist, nodelist)
             nodes.insert(0, empty_field)
@@ -481,6 +484,15 @@ class NewVirtualMachineForm(forms.Form):
             self.fields['pnode'].choices = nodes
             self.fields['snode'].choices = nodes
             self.fields['os'].choices = oslist
+            
+            defaults = cluster_default_info(cluster)
+            if defaults['iallocator'] != '' :
+                self.fields['iallocator'].initial = True
+            self.fields['vcpus'].initial = defaults['vcpus']
+            self.fields['ram'].initial = defaults['ram']
+            self.fields['rootpath'].initial = defaults['rootpath']
+            self.fields['kernelpath'].initial = defaults['kernelpath']
+            self.fields['serialconsole'].initial = defaults['serialconsole']
         
         # set cluster choices based on the given owner
         if initial and 'owner' in initial and initial['owner']:
