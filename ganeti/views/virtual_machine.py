@@ -333,6 +333,7 @@ def cluster_options(request):
                           'os':oslist})
     return HttpResponse(content, mimetype='application/json')
 
+
 def cluster_os_list(cluster):
     """
     A list of avaiable operating systems
@@ -341,10 +342,10 @@ def cluster_os_list(cluster):
     oses = cluster.rapi.GetOperatingSystems()
     # Given 'image+os-name'
     #  return formatted as 'Os Name'
-    oslist = [" ".join([x.capitalize() for x in \
-                os.replace('image+', '').replace('-', ' ').split(' ')]) \
+    return [(os, " ".join([x.capitalize() for x in \
+                os.replace('image+', '').split('-')])) \
                 for os in oses]
-    return [(os, osname) for os, osname in zip(oses, oslist)]
+
 
 @login_required
 def cluster_defaults(request):
