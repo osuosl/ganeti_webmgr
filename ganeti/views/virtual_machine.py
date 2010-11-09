@@ -54,7 +54,7 @@ def shutdown(request, cluster_slug, instance):
     
     if not (user.is_superuser or user.has_perm('admin', vm) or \
         user.has_perm('admin', vm.cluster)):
-        return HttpResponseForbidden('You do not have permission to shut down this cluster')
+        return HttpResponseForbidden('You do not have permission to shut down this virtual machine')
     
     if request.method == 'POST':
         try:
@@ -74,7 +74,7 @@ def startup(request, cluster_slug, instance):
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', vm) or \
         user.has_perm('admin', vm.cluster)):
-            return HttpResponseForbidden('You do not have permission to start up this cluster')
+            return HttpResponseForbidden('You do not have permission to start up this virtual machine')
     
     if request.method == 'POST':
         try:
@@ -94,7 +94,7 @@ def reboot(request, cluster_slug, instance):
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', vm) or \
         user.has_perm('admin', vm.cluster)):
-            return HttpResponseForbidden('You do not have permission to reboot this cluster')
+            return HttpResponseForbidden('You do not have permission to reboot this virtual machine')
     
     if request.method == 'POST':
         try:
