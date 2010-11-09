@@ -1,10 +1,14 @@
-
-<applet archive="{{MEDIA_URL}}/javavnc/VncViewer.jar" code="VncViewer.class" width=1050 height=790 align="middle">
+<applet
+    archive="{{MEDIA_URL}}/javavnc/VncViewer.jar"
+    code="vncviewer.class"
+    width="800"
+    height="600"
+>
     <param name=HOST value="{{ host }}">
     <param name=PORT value="{{ port }}">
+    <param name="Scaling factor" value="auto">
     <!--
         <param name=PASSWORD value="{{ password }}">
         <param name="Open new window" value="yes">
-        <param name="Scaling factor" value="auto">
     -->
 </applet>
