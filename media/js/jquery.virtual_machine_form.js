@@ -9,10 +9,9 @@
         var pnode = $("#id_pnode").parent();
         disk_template = $("#id_disk_template");
         curSelection = $("#id_snode option:selected").index();
-        var iallocator = $("#id_iallocator");        
+        var iallocator = $("#id_iallocator");
         if( $("#id_iallocator_hostname").length == 0 ) {
             iallocator.attr('readonly', 'readonly');
-            iallocator.parent().hide();
         }
         iallocator.change(function() {
             if(!iallocator.attr('readonly')) {
@@ -124,11 +123,9 @@
                                 // Check iallocator checkbox
                                 iallocator_field.removeAttr('readonly');
                                 iallocator_field.attr('checked', 'checked');
-                                iallocator_field.parent().show();
                                 iallocator_field.change();
                             } else {
                                 iallocator_field.attr('readonly', 'readonly');
-                                iallocator_field.parent().hide();
                             }
                             if(kernelpath) {
                                 $("#id_kernelpath").val(kernelpath);
