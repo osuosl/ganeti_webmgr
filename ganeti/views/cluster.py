@@ -256,7 +256,7 @@ class EditClusterForm(forms.ModelForm):
         data = self.cleaned_data
         
         # Automatically set the slug on cluster creation
-        if 'slug' not in data:
+        if 'hostname' in data and data['hostname'] and 'slug' not in data:
             data['slug'] = slugify(data['hostname'].split('.')[0])
             del self._errors['slug']
         

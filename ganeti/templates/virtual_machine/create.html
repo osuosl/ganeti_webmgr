@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load webmgr_tags %}
 
 {% block title %}Create a new Virtual Machine{% endblock %}
 
@@ -19,31 +20,32 @@
 <div id="virtualmachineform">
     <form method="post">
         <fieldset>
-            <legend> New Virtual Machine </legend>
-                {% for field in form %}
-                    {% if field.label = 'Virtual CPUs' %}
-                        <fieldset>
-                            <h3>General Parameters</h3>
-                    {% endif %}
-                    
-                    {{ field.errors }}
-                    <p>
-                        <label for="id_{{ field.html_name }}">{{ field.label }}:</label>
-                        {{ field }}
-                    </p>
-                    
-                    {% if field.label = 'NIC Type' %}
-                        </fieldset>
-                        <fieldset>
-                            <h3>Hypervisor Parameters</h3>
-                    {% endif %}
-                    
-                    {% if field.label = 'CD-ROM Image Path' %}
-                        </fieldset>
-                    {% endif %}
-                {% endfor %}
-                <input class="submit" type="submit" value="Create">
+            <legend class="legendhead"> New Virtual Machine </legend>
+            {% vmfield form.owner %}
+            {% vmfield form.cluster %}
+            {% vmfield form.hostname %}
+            {% vmfield form.disk_template %}
+            {% vmfield form.pnode %}
+            {% vmfield form.snode %}
+            {% vmfield form.os %}
         </fieldset>
+        <fieldset>
+            <legend>General Parameters</legend>
+            {% vmfield form.vcpus %}
+            {% vmfield form.ram %}
+            {% vmfield form.disk_size %}
+            {% vmfield form.nicmode %}
+            {% vmfield form.nictype %}
+        </fieldset>
+        <fieldset>
+            <legend>Hypervisor Parameters</legend>
+            {% vmfield form.kernelpath %}
+            {% vmfield form.rootpath %}
+            {% vmfield form.serialconsole %}
+            {% vmfield form.bootorder %}
+            {% vmfield form.imagepath %}
+        </fieldset>
+        <input class="submit" type="submit" value="Create">
     </form>
 </div>
 {% endblock %}
