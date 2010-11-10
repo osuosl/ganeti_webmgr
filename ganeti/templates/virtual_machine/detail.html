@@ -59,13 +59,15 @@
     </ul>
     <div id="tab1" class="tab_content">
         <ul id="actions">
-            {% ifequal instance.info.status "running" %}
-            <li><a class="shutdown" href="{% url instance-shutdown cluster.slug instance.hostname %}">Shutdown</a></li>
-            <li><a class="reboot" href="{% url instance-reboot cluster.slug instance.hostname %}">Reboot</a></li>
-            <!--li><a class="reboot" href="{% url instance-vnc cluster.slug instance.hostname %}">Remote console (VNC)</a></li-->
-            {% else %}
-            <li><a class="startup" href="{% url instance-startup cluster.slug instance.hostname %}">Start</a></li>
-            {% endifequal %}
+            {% if admin and instance.cluster.username %}
+                {% ifequal instance.info.status "running" %}
+                <li><a class="shutdown" href="{% url instance-shutdown cluster.slug instance.hostname %}">Shutdown</a></li>
+                <li><a class="reboot" href="{% url instance-reboot cluster.slug instance.hostname %}">Reboot</a></li>
+                <!--li><a class="reboot" href="{% url instance-vnc cluster.slug instance.hostname %}">Remote console (VNC)</a></li-->
+                {% else %}
+                <li><a class="startup" href="{% url instance-startup cluster.slug instance.hostname %}">Start</a></li>
+                {% endifequal %}
+            {% endif %}
         </ul>
         <div class="ticket" id="ticket_{{ object.id }}">
             <ul>
