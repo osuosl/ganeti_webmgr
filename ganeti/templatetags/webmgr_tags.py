@@ -7,6 +7,13 @@ from ganeti.models import Cluster, Quota
 
 
 register = Library()
+"""
+These filters were created specifically
+for the Ganeti Web Manager project
+"""
+@register.inclusion_tag('virtual_machine/vmfield.html')
+def vmfield(field):
+    return {'field':field}
 
 """
 These filters were taken from Russel Haering's GanetiWeb project
