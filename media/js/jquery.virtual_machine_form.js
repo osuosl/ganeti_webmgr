@@ -27,7 +27,7 @@
         iallocator.change();
         disk_template.change(function() {
             if(!iallocator.is(':checked') || iallocator.attr('readonly')) {
-                if( disk_template.val() == 'drdb') {
+                if( disk_template.val() == 'drbd') {
                     snode.show();
                 } else {
                     snode.hide();
