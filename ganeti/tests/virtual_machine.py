@@ -6,9 +6,8 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.test.client import Client
 
-from object_permissions import grant, revoke, register, get_user_perms
-from object_permissions.models import ObjectPermission, GroupObjectPermission, \
-    UserGroup
+from object_permissions import grant, register, get_user_perms
+from object_permissions.models import UserGroup
 
 from util import client
 from ganeti.tests.rapi_proxy import RapiProxy, INSTANCE
@@ -235,8 +234,6 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         register(['admin', 'start'], VirtualMachine)
     
     def tearDown(self):
-        ObjectPermission.objects.all().delete()
-        GroupObjectPermission.objects.all().delete()
         UserGroup.objects.all().delete()
         User.objects.all().delete()
         VirtualMachine.objects.all().delete()
@@ -1289,8 +1286,6 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         register(['admin', 'create_vm'], Cluster)
     
     def tearDown(self):
-        ObjectPermission.objects.all().delete()
-        GroupObjectPermission.objects.all().delete()
         UserGroup.objects.all().delete()
         User.objects.all().delete()
         VirtualMachine.objects.all().delete()
