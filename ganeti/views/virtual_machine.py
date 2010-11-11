@@ -229,8 +229,12 @@ def create(request, cluster_slug=None):
             cluster = data['cluster']
             hostname = data['hostname']
             disk_template = data['disk_template']
-            pnode = data['pnode']
             os = data['os']
+            iallocator = data['iallocator']
+            # Hidden fields
+            iallocator_hostname = None
+            if 'iallocator_hostname' in data:
+                iallocator_hostname = data['iallocator_hostname']
             # BEPARAMS
             vcpus = data['vcpus']
             disk_size = data['disk_size']
@@ -244,17 +248,29 @@ def create(request, cluster_slug=None):
             bootorder = data['bootorder']
             imagepath = data['imagepath']
             
+            # If iallocator was not checked do not pass in the iallocator
+            #  name. If iallocator was checked don't pass snode,pnode.
+            if not iallocator:
+                iallocator_hostname = None
+                pnode = data['pnode']
+            else:
+                # Valid iallocator. No need to worry about nodes
+                snode = None
+                pnode = None
+            
+            # If drbd is being used assign the secondary node
             if disk_template == 'drbd':
                 snode = data['snode']
             else:
                 snode = None
-                
+            
             try:
                 jobid = cluster.rapi.CreateInstance('create', hostname,
                         disk_template,
                         [{"size": disk_size, }],[{nicmode: nictype, }],
                         memory=ram, os=os, vcpus=vcpus,
                         pnode=pnode, snode=snode,
+                        iallocator=iallocator_hostname,
                         hvparams={'kernel_path': kernelpath, \
                             'root_path': rootpath, \
                             'serial_console':serialconsole, \
@@ -369,14 +385,26 @@ def cluster_defaults(request):
             user.has_perm('admin', cluster)):
         return HttpResponseForbidden('You do not have permission to view the default cluster options')
     
+    content = json.dumps(cluster_default_info(cluster))
+    return HttpResponse(content, mimetype='application/json')
+
+
+def cluster_default_info(cluster):
+    """
+    Returns a dictionary containing the following
+    default values set on a cluster:
+        iallocator, hypervisors, vcpus, ram, nictype,
+        nicmode, kernelpath, rootpath, serialconsole,
+        bootorder, imagepath
+    """
     # Create variables so that dictionary lookups are not so horrendous.
     info = cluster.info
     beparams = info['beparams']['default']
     hv = info['default_hypervisor']
     hvparams = info['hvparams'][hv]
     
-    content = json.dumps({
-        'iallocator':info['default_iallocator'],
+    return {
+        'iallocator': info['default_iallocator'],
         'hypervisors':info['enabled_hypervisors'],
         'vcpus':beparams['vcpus'],
         'ram':beparams['memory'],
@@ -387,8 +415,7 @@ def cluster_defaults(request):
         'serialconsole':hvparams['serial_console'],
         'bootorder':hvparams['boot_order'],
         'imagepath':hvparams['cdrom_image_path'],
-        })
-    return HttpResponse(content, mimetype='application/json')
+        }
 
 
 class NewVirtualMachineForm(forms.Form):
@@ -433,7 +460,8 @@ class NewVirtualMachineForm(forms.Form):
                                 'invalid': 'Instance name must be resolvable',
                             },
                             max_length=255)
-    #iallocator = forms.BooleanField(label='Automatic Allocation', required=False)
+    iallocator = forms.BooleanField(label='Automatic Allocation', \
+                                    initial=False, required=False)
     disk_template = forms.ChoiceField(label='Disk Template', \
                                       choices=templates)
     pnode = forms.ChoiceField(label='Primary Node', choices=[empty_field])
@@ -475,6 +503,15 @@ class NewVirtualMachineForm(forms.Form):
             self.fields['pnode'].choices = nodes
             self.fields['snode'].choices = nodes
             self.fields['os'].choices = oslist
+            
+            defaults = cluster_default_info(cluster)
+            if defaults['iallocator'] != '' :
+                self.fields['iallocator'].initial = True
+            self.fields['vcpus'].initial = defaults['vcpus']
+            self.fields['ram'].initial = defaults['ram']
+            self.fields['rootpath'].initial = defaults['rootpath']
+            self.fields['kernelpath'].initial = defaults['kernelpath']
+            self.fields['serialconsole'].initial = defaults['serialconsole']
         
         # set cluster choices based on the given owner
         if initial and 'owner' in initial and initial['owner']:
@@ -564,10 +601,11 @@ class NewVirtualMachineForm(forms.Form):
         
         pnode = data.get("pnode", '')
         snode = data.get("snode", '')
+        iallocator = data.get('iallocator', False)
         disk_template = data.get("disk_template")
         
         # Need to have pnode != snode
-        if disk_template == "drbd":
+        if disk_template == "drbd" and not iallocator:
             if pnode == snode and (pnode != '' or snode != ''):
                 # We know these are not in self._errors now 
                 msg = u"Primary and Secondary Nodes must not match."
@@ -591,6 +629,19 @@ class NewVirtualMachineForm(forms.Form):
                 
                 del data["imagepath"]
                 del data["bootorder"]
+        
+        
+        # If iallocator is checked,
+        #  don't display error messages for nodes
+        if iallocator:
+            if 'pnode' in data:
+                del data['pnode']
+            if 'snode' in data:
+                del data['snode']
+            if 'pnode' in self._errors:
+                del self._errors['pnode']
+            if 'snode' in self._errors:
+                del self._errors['snode']
         
         # Always return the full collection of cleaned data.
         return data
