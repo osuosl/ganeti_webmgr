@@ -78,7 +78,7 @@
                         $.each(data, function(i, items) {
                             $.each(items, function(key, value) {
                                 if( i == 'nodes' ) {
-                                    child = newoption(key, value);
+                                    child = newoption(value, value);
                                     child2 = child.clone();
                                     pnode.append(child);
                                     snode.append(child2);
