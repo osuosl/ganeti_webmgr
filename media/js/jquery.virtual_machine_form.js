@@ -111,16 +111,25 @@
                                 //list - do nothing for now.
                             }
                             if(iallocator) {
-                                // Create input
-                                hidden = $("<input type='hidden' />");
-                                hidden.attr('id', 'id_iallocator_hostname');
-                                hidden.attr('value', iallocator);
-                                // Create div and add input
-                                hiddendiv = $("<div style='display: none;'>");
-                                hiddendiv.append(hidden);
-                                hiddendiv.append("</div>");
-                                // Append div w/input to page
-                                iallocator_field.after(hiddendiv);
+                                var ialloc_host = $("#id_iallocator_hostname")
+                                if( ialloc_host.length == 0 ) {
+                                    // Create input
+                                    hidden = $("<input type='hidden' />");
+                                    hidden.attr('id', 'id_iallocator_hostname');
+                                    hidden.attr('value', iallocator);
+                                    // Create div and add input
+                                    hiddendiv = $("<div style='display: none;'>");
+                                    hiddendiv.append(hidden);
+                                    hiddendiv.append("</div>");
+                                    // Append div w/input to page
+                                    iallocator_field.after(hiddendiv);
+                                    iallocator_field.after(' Using: '+iallocator);
+                                    // Append iallocator name before hidden div.
+                                    iallocator_field.parent().after(name);
+                                }
+                                if( ialloc_host.val() != iallocator ) {
+                                    ialloc_host.val(iallocator);
+                                }
                                 // Check iallocator checkbox
                                 iallocator_field.removeAttr('readonly');
                                 iallocator_field.attr('checked', 'checked');
