@@ -58,17 +58,18 @@
         <div class="ticket" id="ticket_{{ cluster.id }}">
             {% with cluster.info as info %}
             <ul>
-            <li>Architecture: {{ info.architecture.0 }}</li>
-            <li>Default hypervisor: {{ info.default_hypervisor }}</li>
-            <li>Available hypervisors: {{ info.enabled_hypervisors|join:", " }}</li>
-            <li>Master node: {{ info.master }}</li>
-            <li>Created: 
-              {% if cluster.ctime %}
-                {{ cluster.ctime|date }}
-              {% else %}
-                <em>unknown</em>
-              {% endif %}
-            <li>Last modified: {{ cluster.mtime|date }}</li>
+                <li>Architecture: {{ info.architecture.0 }}</li>
+                <li>Default hypervisor: {{ info.default_hypervisor }}</li>
+                <li>Available hypervisors: {{ info.enabled_hypervisors|join:", " }}</li>
+                <li>Master node: {{ info.master }}</li>
+                <li>Created: 
+                  {% if cluster.ctime %}
+                    {{ cluster.ctime|date }}
+                  {% else %}
+                    <em>unknown</em>
+                  {% endif %}
+                <li>Last modified: {{ cluster.mtime|date }}</li>
+            </ul>
             {% endwith %}
         </div>
     </div>

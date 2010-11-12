@@ -74,14 +74,14 @@ def cluster_admin(user):
 def node_memory(node):
     total = float(node['mtotal'])/1024
     free = float(node['mfree'])/1024
-    return "%.1f / %.1f" % (free, total)
+    return "%.2f / %.2f" % (free, total)
 
 
 @register.simple_tag
 def node_disk(node):
-    total = node['dtotal']/1024
-    free = node['dfree']/1024
-    return "%d/%d" % (free, total)
+    total = float(node['dtotal'])/1024
+    free = float(node['dfree'])/1024
+    return "%.2f / %.2f " % (free, total)
 
 
 @register.tag
