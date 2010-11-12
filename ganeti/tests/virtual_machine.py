@@ -564,6 +564,35 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertTemplateUsed(response, 'virtual_machine/create.html')
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
         
+        # POST - iallocator support
+        user.grant('create_vm', cluster)
+        data_ = data.copy()
+        del data_['pnode']
+        del data_['snode']
+        data_['iallocator'] = True
+        data_['iallocator_hostname'] = 'hail'
+        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
+        response = c.post(url % '', data_, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
+        new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
+        VirtualMachine.objects.all().delete()
+        self.assert_(user.has_perm('admin', new_vm))
+        user.revoke_all(cluster)
+        user.revoke_all(new_vm)
+        
+        # POST - iallocator enabled, but none passed
+        user.grant('create_vm', cluster)
+        data_ = data.copy()
+        data_['iallocator'] = True
+        response = c.post(url % '', data_, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
+        user.revoke_all(cluster)
+        
         # POST - user authorized for cluster (create_vm)
         user.grant('create_vm', cluster)
         data_ = data.copy()
