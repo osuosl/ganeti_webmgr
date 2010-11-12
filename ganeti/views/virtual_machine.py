@@ -229,6 +229,10 @@ def create(request, cluster_slug=None):
             cluster = data['cluster']
             hostname = data['hostname']
             disk_template = data['disk_template']
+            # Default to not pass in pnode and snode
+            #  since these will be set if the form is correct
+            pnode = None
+            snode = None
             os = data['os']
             iallocator = data['iallocator']
             # Hidden fields
@@ -253,16 +257,10 @@ def create(request, cluster_slug=None):
             if not iallocator:
                 iallocator_hostname = None
                 pnode = data['pnode']
-            else:
-                # Valid iallocator. No need to worry about nodes
-                snode = None
-                pnode = None
             
             # If drbd is being used assign the secondary node
             if disk_template == 'drbd':
                 snode = data['snode']
-            else:
-                snode = None
             
             try:
                 jobid = cluster.rapi.CreateInstance('create', hostname,
@@ -462,6 +460,7 @@ class NewVirtualMachineForm(forms.Form):
                             max_length=255)
     iallocator = forms.BooleanField(label='Automatic Allocation', \
                                     initial=False, required=False)
+    iallocator_hostname = forms.CharField(required=False)
     disk_template = forms.ChoiceField(label='Disk Template', \
                                       choices=templates)
     pnode = forms.ChoiceField(label='Primary Node', choices=[empty_field])
@@ -602,6 +601,7 @@ class NewVirtualMachineForm(forms.Form):
         pnode = data.get("pnode", '')
         snode = data.get("snode", '')
         iallocator = data.get('iallocator', False)
+        iallocator_hostname = data.get('iallocator_hostname', '')
         disk_template = data.get("disk_template")
         
         # Need to have pnode != snode
@@ -630,18 +630,18 @@ class NewVirtualMachineForm(forms.Form):
                 del data["imagepath"]
                 del data["bootorder"]
         
-        
-        # If iallocator is checked,
-        #  don't display error messages for nodes
         if iallocator:
-            if 'pnode' in data:
-                del data['pnode']
-            if 'snode' in data:
-                del data['snode']
-            if 'pnode' in self._errors:
-                del self._errors['pnode']
-            if 'snode' in self._errors:
-                del self._errors['snode']
+            # If iallocator is checked,
+            #  don't display error messages for nodes
+            if iallocator_hostname != '':
+                if 'pnode' in self._errors:
+                    del self._errors['pnode']
+                if 'snode' in self._errors:
+                    del self._errors['snode']
+            else:
+                msg = u'Automatic Allocation was selected, but there is no \
+                      IAllocator available.'
+                self._errors['iallocator'] = self.error_class([msg])
         
         # Always return the full collection of cleaned data.
         return data
