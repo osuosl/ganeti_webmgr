@@ -11,7 +11,7 @@ from object_permissions.models import ObjectPermission, GroupObjectPermission, \
     UserGroup
 
 from util import client
-from ganeti.tests.rapi_proxy import RapiProxy, INSTANCE
+from ganeti.tests.rapi_proxy import RapiProxy, INSTANCE, INFO
 from ganeti import models
 from ganeti.views.virtual_machine import NewVirtualMachineForm
 VirtualMachine = models.VirtualMachine
@@ -1266,6 +1266,8 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         cluster1.save()
         cluster2.save()
         cluster3.save()
+        
+        cluster0.info = INFO
         
         user = User(id=2, username='tester0')
         user.set_password('secret')
