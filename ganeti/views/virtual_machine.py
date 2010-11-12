@@ -125,7 +125,7 @@ def list_(request):
 @login_required
 def detail(request, cluster_slug, instance):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    vm = get_object_or_404(VirtualMachine, hostname=instance)
+    vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
     
     user = request.user
     admin = user.is_superuser or user.has_perm('admin', vm) \
