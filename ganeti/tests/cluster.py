@@ -7,8 +7,7 @@ from django.test import TestCase
 from django.test.client import Client
 
 from object_permissions import *
-from object_permissions.models import ObjectPermissionType, ObjectPermission, \
-    UserGroup, GroupObjectPermission
+from object_permissions.models import UserGroup
 
 
 from ganeti.tests.rapi_proxy import RapiProxy, INFO, NODES, NODES_BULK
@@ -224,8 +223,6 @@ class TestClusterViews(TestCase):
 
     def tearDown(self):
         Quota.objects.all().delete()
-        ObjectPermission.objects.all().delete()
-        GroupObjectPermission.objects.all().delete()
         Cluster.objects.all().delete()
         UserGroup.objects.all().delete()
         User.objects.all().delete()

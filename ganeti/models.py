@@ -14,7 +14,7 @@ from django.db.models import Sum
 
 
 from object_permissions.registration import register, get_users, get_groups
-from object_permissions.models import UserGroup, ObjectPermissionType
+from object_permissions.models import UserGroup
 from util import client
 from util.client import GanetiApiError
 
