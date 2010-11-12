@@ -3,8 +3,7 @@ from django.test import TestCase
 from django.test.client import Client
 
 from object_permissions import *
-from object_permissions.models import ObjectPermissionType, ObjectPermission, \
-    UserGroup, GroupObjectPermission
+from object_permissions.models import UserGroup
 
 from ganeti.tests.rapi_proxy import RapiProxy, INSTANCES
 from ganeti import models
@@ -60,8 +59,6 @@ class ImportViews(TestCase):
         register(['admin', 'create_vm'], Cluster)
     
     def tearDown(self):
-        ObjectPermission.objects.all().delete()
-        GroupObjectPermission.objects.all().delete()
         VirtualMachine.objects.all().delete()
         Cluster.objects.all().delete()
         Organization.objects.all().delete()
