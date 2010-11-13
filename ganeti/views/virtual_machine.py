@@ -506,6 +506,10 @@ class NewVirtualMachineForm(forms.Form):
             defaults = cluster_default_info(cluster)
             if defaults['iallocator'] != '' :
                 self.fields['iallocator'].initial = True
+                self.fields['iallocator_hostname'] = forms.CharField( \
+                                        initial=defaults['iallocator'], \
+                                        required=False, \
+                                        widget = forms.HiddenInput())
             self.fields['vcpus'].initial = defaults['vcpus']
             self.fields['ram'].initial = defaults['ram']
             self.fields['rootpath'].initial = defaults['rootpath']
