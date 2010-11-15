@@ -295,7 +295,7 @@ def create(request, cluster_slug=None):
                 return HttpResponseRedirect( \
                 reverse('instance-detail', args=[cluster.slug, vm.hostname]))
             
-            except GanetiApiError as e:
+            except GanetiApiError, e:
                 msg = 'Error creating virtual machine on this cluster: %s' % e
                 form._errors["cluster"] = form.error_class([msg])
     
