@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.test.client import Client
 
-from object_permissions import grant, register, get_user_perms
+from object_permissions import grant, get_user_perms
 from object_permissions.models import UserGroup
 
 from util import client
@@ -33,11 +33,7 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
     def setUp(self):
         self.tearDown()
         models.client.GanetiRapiClient = RapiProxy
-        
-        # XXX grant permissions to ensure they exist
-        # XXX specify permission manually, it is not auto registering for some reason
-        register(['admin', 'start'], VirtualMachine)
-    
+
     def tearDown(self):
         VirtualMachine.objects.all().delete()
         Cluster.objects.all().delete()
@@ -228,11 +224,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         g['user1'] = user1
         g['c'] = Client()
         g['group'] = group
-        
-        # XXX specify permission manually, it is not auto registering for some reason
-        register(['admin', 'create_vm'], Cluster)
-        register(['admin', 'start'], VirtualMachine)
-    
+
     def tearDown(self):
         UserGroup.objects.all().delete()
         User.objects.all().delete()
@@ -1326,10 +1318,7 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         g['user'] = user
         g['user1'] = user1
         g['group'] = group
-        
-        # XXX specify permission manually, it is not auto registering for some reason
-        register(['admin', 'create_vm'], Cluster)
-    
+
     def tearDown(self):
         UserGroup.objects.all().delete()
         User.objects.all().delete()

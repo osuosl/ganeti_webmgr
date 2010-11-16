@@ -217,9 +217,6 @@ class TestClusterViews(TestCase):
         dict_['group'] = group
         dict_['cluster'] = cluster
         dict_['c'] = Client()
-        
-        # XXX specify permission manually, it is not auto registering for some reason
-        register(['admin', 'create', 'create_vm'], Cluster)
 
     def tearDown(self):
         Quota.objects.all().delete()
