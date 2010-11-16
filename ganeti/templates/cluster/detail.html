@@ -29,7 +29,7 @@
                 spinner: false,
                 select: function(event, ui) {
                     var tabID = "#ui-tabs-"+(ui.index);
-                    $(tabID).html("<div class='spinner'>Loading...<img src='{{MEDIA_URL}}/images/ajax-loader.gif'></div>");
+                    $(tabID).html("<div class='spinner'><br/>Loading...<br/><br/><img src='{{MEDIA_URL}}/images/ajax-loader.gif'></div>");
                 },
                 ajaxOptions: {
                     error: function(xhr, status, index, anchor) {
