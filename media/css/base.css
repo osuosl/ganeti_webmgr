@@ -131,6 +131,26 @@ li {
 }
 #content td a {border:0;}
 
+/* tablesorter style */
+#content table.sorted th {
+    background-color: #eeeeee;
+    background-image: url(/media/images/bg.gif);
+    background-repeat: no-repeat;
+    background-position: center right;
+    border: 1px solid #FFF;
+    padding-right: 15px;
+    cursor: s-resize;
+}
+#content table.sorted .headerSortUp {
+    background-image: url(/media/images/asc.gif);
+}
+#content table.sorted .headerSortDown {
+    background-image: url(/media/images/desc.gif);
+}
+#content table.sorted .headerSortDown, #content table.sorted .headerSortUp {
+    background-color: #7AB0DC;
+}
+
 /**
  * Forms and Form Elements
  **/
