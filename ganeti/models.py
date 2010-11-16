@@ -591,5 +591,5 @@ def update_organization(sender, instance, **kwargs):
 models.signals.post_save.connect(create_profile, sender=User)
 models.signals.post_save.connect(update_cluster_hash, sender=Cluster)
 models.signals.post_save.connect(update_organization, sender=UserGroup)
-register(['admin', 'create_vm'], Cluster)
-register(['admin'], VirtualMachine)
+register(['admin', 'create', 'create_vm'], Cluster)
+register(['admin', 'start'], VirtualMachine)

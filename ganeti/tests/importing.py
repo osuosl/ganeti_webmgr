@@ -54,10 +54,7 @@ class ImportViews(TestCase):
         dict_['vm4'] = vm4
         dict_['c'] = Client()
         dict_['owner'] = user.get_profile()
-        
-        # XXX specify permission manually, it is not auto registering for some reason
-        register(['admin', 'create_vm'], Cluster)
-    
+
     def tearDown(self):
         VirtualMachine.objects.all().delete()
         Cluster.objects.all().delete()
