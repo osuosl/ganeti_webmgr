@@ -401,8 +401,13 @@ def cluster_default_info(cluster):
     hv = info['default_hypervisor']
     hvparams = info['hvparams'][hv]
     
+    try:
+        iallocator_info = info['default_iallocator']
+    except:
+        iallocator_info = None
+    
     return {
-        'iallocator': info['default_iallocator'],
+        'iallocator': iallocator_info,
         'hypervisors':info['enabled_hypervisors'],
         'vcpus':beparams['vcpus'],
         'ram':beparams['memory'],
