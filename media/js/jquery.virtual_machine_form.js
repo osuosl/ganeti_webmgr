@@ -25,6 +25,11 @@
                     pnode.show();
                     disk_template.change();
                 }
+            } else {
+                if(!iallocator.is(':checked')) {
+                    pnode.show();
+                    disk_template.change();
+                }
             }
         });
         iallocator.change();
@@ -122,6 +127,8 @@
                                 iallocator.change();
                             } else {
                                 iallocator.attr('readonly', 'readonly');
+                                iallocator.attr('checked', false);
+                                iallocator.change();
                             }
                             if(kernelpath) {
                                 $("#id_kernelpath").val(kernelpath);
