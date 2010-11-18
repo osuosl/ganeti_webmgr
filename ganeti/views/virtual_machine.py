@@ -323,8 +323,8 @@ def cluster_choices(request):
     if user.is_superuser:
         q = Cluster.objects.all()
     elif 'group_id' in GET:
-        group = get_object_or_404(UserGroup, id=GET['group_id'])
-        if not group.users.filter(id=request.user.id).exists():
+        group = get_object_or_404(Group, id=GET['group_id'])
+        if not group.user_set.filter(id=request.user.id).exists():
             return HttpResponseForbidden('not a member of this group')
         q = group.filter_on_perms(Cluster, ['admin','create_vm'])
     else:
@@ -527,7 +527,7 @@ class NewVirtualMachineForm(forms.Form):
             self.fields['cluster'].queryset = Cluster.objects.all()
         else:
             choices = [(u'', u'---------')]
-            choices += list(user.user_groups.values_list('id','name'))
+            choices += list(user.groups.values_list('id','name'))
             if user.perms_on_any(Cluster, ['admin','create_vm'], False):
                 profile = user.get_profile()
                 choices.append((profile.id, profile.name))
@@ -544,7 +544,7 @@ class NewVirtualMachineForm(forms.Form):
         owner = self.owner
         if owner:
             if isinstance(owner, (Organization,)):
-                grantee = owner.user_group
+                grantee = owner.group
             else:
                 grantee = owner.user
             data['grantee'] = grantee

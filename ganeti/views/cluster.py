@@ -222,7 +222,7 @@ def quota(request, cluster_slug, user_id):
                     {'object':cluster, 'user':cluster_user.user, 'url':url})
             else:
                 return render_to_response("cluster/group_row.html",
-                    {'object':cluster, 'group':cluster_user.user_group, \
+                    {'object':cluster, 'group':cluster_user.group, \
                      'url':url})
         
         # error in form return ajax response

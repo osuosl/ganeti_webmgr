@@ -14,7 +14,6 @@ from django.db.models import Sum
 
 
 from object_permissions.registration import register, get_users, get_groups
-from object_permissions.models import UserGroup
 from util import client
 from util.client import GanetiApiError
 
@@ -528,23 +527,23 @@ class Profile(ClusterUser):
 class Organization(ClusterUser):
     """
     An organization is used for grouping Users.  Organizations are matched with
-    an instance of object_permission.UserGroup.  This model exists so that
-    UserGroups have a 1:1 relation with a ClusterUser on which quotas and
+    an instance of contrib.auth.models.Group.  This model exists so that
+    contrib.auth.models.Group have a 1:1 relation with a ClusterUser on which quotas and
     permissions can be assigned.
     """
-    user_group = models.OneToOneField(UserGroup, related_name='organization')
+    group = models.OneToOneField(Group, related_name='organization')
     
     def grant(self, perm, object):
-        self.user_group.grant(perm, object)
+        self.group.grant(perm, object)
 
     def set_perms(self, perms, object):
-        self.user_group.set_perms(perms, object)
+        self.group.set_perms(perms, object)
 
     def filter_on_perms(self, *args, **kwargs):
-        return self.user_group.filter_on_perms(*args, **kwargs)
+        return self.group.filter_on_perms(*args, **kwargs)
 
     def has_perm(self, *args, **kwargs):
-        return self.user_group.has_perm(*args, **kwargs)
+        return self.group.has_perm(*args, **kwargs)
 
 
 class Quota(models.Model):
@@ -581,15 +580,15 @@ def update_cluster_hash(sender, instance, **kwargs):
 
 def update_organization(sender, instance, **kwargs):
     """
-    Creates a Organizations whenever a object_permissions.UserGroup is created
+    Creates a Organizations whenever a contrib.auth.models.Group is created
     """
-    org, new = Organization.objects.get_or_create(user_group=instance)
+    org, new = Organization.objects.get_or_create(group=instance)
     org.name = instance.name
     org.save()
 
 
 models.signals.post_save.connect(create_profile, sender=User)
 models.signals.post_save.connect(update_cluster_hash, sender=Cluster)
-models.signals.post_save.connect(update_organization, sender=UserGroup)
+models.signals.post_save.connect(update_organization, sender=Group)
 register(['admin', 'create', 'create_vm'], Cluster)
 register(['admin', 'start'], VirtualMachine)

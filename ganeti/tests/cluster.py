@@ -2,12 +2,11 @@ from datetime import datetime
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.test import TestCase
 from django.test.client import Client
 
 from object_permissions import *
-from object_permissions.models import UserGroup
 
 
 from ganeti.tests.rapi_proxy import RapiProxy, INFO, NODES, NODES_BULK
@@ -205,7 +204,7 @@ class TestClusterViews(TestCase):
         user1.set_password('secret')
         user1.save()
         
-        group = UserGroup(name='testing_group')
+        group = Group(name='testing_group')
         group.save()
         
         cluster = Cluster(hostname='test.osuosl.test', slug='OSL_TEST')
@@ -221,7 +220,7 @@ class TestClusterViews(TestCase):
     def tearDown(self):
         Quota.objects.all().delete()
         Cluster.objects.all().delete()
-        UserGroup.objects.all().delete()
+        Group.objects.all().delete()
         User.objects.all().delete()
 
     def validate_get(self, url, args, template):
@@ -562,7 +561,7 @@ class TestClusterViews(TestCase):
 
     def test_view_add_permissions(self):
         """
-        Test adding permissions to a new User or UserGroup
+        Test adding permissions to a new User or Group
         """
         url = '/cluster/%s/permissions/'
         args = cluster.slug
@@ -726,7 +725,7 @@ class TestClusterViews(TestCase):
 
     def test_view_group_permissions(self):
         """
-        Test editing UserGroup permissions on a Cluster
+        Test editing Group permissions on a Cluster
         """
         args = (cluster.slug, group.id)
         args_post = cluster.slug
@@ -922,7 +921,7 @@ class TestClusterViews(TestCase):
     
     def test_view_group_quota(self):
         """
-        Tests updating a UserGroups quota
+        Tests updating a Group's quota
         """
         self.validate_quota(group.organization, template='cluster/group_row.html')
 

@@ -2,12 +2,11 @@ from datetime import datetime
 import json
 
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.test import TestCase
 from django.test.client import Client
 
 from object_permissions import grant, get_user_perms
-from object_permissions.models import UserGroup
 
 from util import client
 from ganeti.tests.rapi_proxy import RapiProxy, INSTANCE, INFO
@@ -38,7 +37,7 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         VirtualMachine.objects.all().delete()
         Cluster.objects.all().delete()
         User.objects.all().delete()
-        UserGroup.objects.all().delete()
+        Group.objects.all().delete()
         ClusterUser.objects.all().delete()
     
     def test_trivial(self):
@@ -214,7 +213,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         user1 = User(id=3, username='tester1')
         user1.set_password('secret')
         user1.save()
-        group = UserGroup(id=1, name='testing_group')
+        group = Group(id=1, name='testing_group')
         group.save()
         
         g = globals()
@@ -226,8 +225,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         g['group'] = group
 
     def tearDown(self):
-        UserGroup.objects.all().delete()
         User.objects.all().delete()
+        Group.objects.all().delete()
         VirtualMachine.objects.all().delete()
         Cluster.objects.all().delete()
     
@@ -459,7 +458,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         with changes to the data
         """
         url = '/vm/add/%s'
-        group1 = UserGroup(id=2, name='testing_group2')
+        group1 = Group(id=2, name='testing_group2')
         group1.save()
         cluster1 = Cluster(hostname='test2.osuosl.bak', slug='OSL_TEST2')
         cluster1.save()
@@ -673,7 +672,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         VirtualMachine.objects.all().delete()
         
         # add user to group
-        group.users.add(user)
+        group.user_set.add(user)
         
         # POST - group authorized for cluster (create_vm)
         group.grant('create_vm', cluster)
@@ -731,7 +730,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         Test viewing the create virtual machine page
         """
         url = '/vm/add/%s'
-        group1 = UserGroup(id=2, name='testing_group2')
+        group1 = Group(id=2, name='testing_group2')
         group1.save()
         cluster1 = Cluster(hostname='test2.osuosl.bak', slug='OSL_TEST2')
         cluster1.save()
@@ -800,8 +799,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         cluster5.save()
         # cluster ids are 1 through 6
         
-        group.users.add(user)
-        group1 = UserGroup(id=2, name='testing_group2')
+        group.user_set.add(user)
+        group1 = Group(id=2, name='testing_group2')
         group1.save()
         group1.grant('admin',cluster5)
         
@@ -1016,7 +1015,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
     
     def test_view_add_permissions(self):
         """
-        Test adding permissions to a new User or UserGroup
+        Test adding permissions to a new User or Group
         """
         url = '/cluster/%s/%s/permissions/'
         args = (cluster.slug, vm.hostname)
@@ -1204,7 +1203,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
     
     def test_view_group_permissions(self):
         """
-        Test editing UserGroup permissions on a Cluster
+        Test editing Group permissions on a Cluster
         """
         args = (cluster.slug, vm.hostname, group.id)
         args_post = (cluster.slug, vm.hostname)
@@ -1307,7 +1306,7 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         user1 = User(id=3, username='tester1')
         user1.set_password('secret')
         user1.save()
-        group = UserGroup(id=1, name='testing_group')
+        group = Group(id=1, name='testing_group')
         group.save()
         
         g = globals()
@@ -1320,8 +1319,8 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         g['group'] = group
 
     def tearDown(self):
-        UserGroup.objects.all().delete()
         User.objects.all().delete()
+        Group.objects.all().delete()
         VirtualMachine.objects.all().delete()
         Cluster.objects.all().delete()
     
@@ -1453,7 +1452,7 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual([(u'', u'---------'), (1, u'tester0')], form.fields['owner'].choices)
         
         # user with perms on self and groups
-        group.users.add(user)
+        group.user_set.add(user)
         group.grant('admin', cluster0)
         form = NewVirtualMachineForm(user, None)
         self.assertEqual([(u'', u'---------'), (1, u'testing_group'), (1, u'tester0')], form.fields['owner'].choices)

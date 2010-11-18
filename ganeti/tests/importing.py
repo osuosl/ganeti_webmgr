@@ -1,9 +1,8 @@
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.test import TestCase
 from django.test.client import Client
 
 from object_permissions import *
-from object_permissions.models import UserGroup
 
 from ganeti.tests.rapi_proxy import RapiProxy, INSTANCES
 from ganeti import models
@@ -24,7 +23,7 @@ class ImportViews(TestCase):
         user.set_password('secret')
         user.save()
         
-        group = UserGroup(name='testing_group')
+        group = Group(name='testing_group')
         group.save()
         
         cluster0 = Cluster(hostname='test0', slug='OSL_TEST0')
@@ -60,8 +59,8 @@ class ImportViews(TestCase):
         Cluster.objects.all().delete()
         Organization.objects.all().delete()
         Profile.objects.all().delete()
-        UserGroup.objects.all().delete()
         User.objects.all().delete()
+        Group.objects.all().delete()
     
     def test_orphans_view(self):
         """
