@@ -23,6 +23,21 @@ def index(request):
         )
 
 
+@login_required
+def user_list(request):
+    
+    user = request.user
+    if not user.is_superuser:
+        return HttpResponseForbidden('Only a superuser may view all users.')
+    
+    users = User.objects.all()
+    
+    return render_to_response("users/list.html",
+                              {'userlist':users},
+        context_instance=RequestContext(request),
+    )
+
+
 class UserProfileForm(forms.Form):
     """
     Form for editing a User's Profile

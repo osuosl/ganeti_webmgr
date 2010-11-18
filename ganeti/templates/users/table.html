@@ -1,0 +1,10 @@
+<table>
+    <tr>
+        <th>Username</th>
+    </tr>
+    <tr>
+        {% for user in userlist %}
+        <td>{{ user.username }}</td>
+        {% endfor %}
+    </tr>
+</table>
