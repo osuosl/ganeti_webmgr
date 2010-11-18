@@ -58,19 +58,19 @@
         <div class="ticket" id="ticket_{{ cluster.id }}">
             <table>
                 {% with cluster.info as info %}
-                <tr><td class="name">Architecture</td><td>{{ info.architecture.0 }}</td></tr>
-                <tr><td class="name">Ganeti Version</td><td>{{info.software_version}}</td></tr>
-                <tr><td class="name">Default hypervisor</td><td>{{ info.default_hypervisor }}</td></tr>
-                <tr><td class="name">Available hypervisors</td><td>{{ info.enabled_hypervisors|join:", " }}</td></tr>
-                <tr><td class="name">Master node</td><td>{{ info.master }}</td></tr>
-                <tr><td class="name">Created</td><td>
+                <tr><td class="name">Architecture</td><td class="name">{{ info.architecture.0 }}</td></tr>
+                <tr><td class="name">Ganeti Version</td><td class="name">{{info.software_version}}</td></tr>
+                <tr><td class="name">Default hypervisor</td><td class="name">{{ info.default_hypervisor }}</td></tr>
+                <tr><td class="name">Available hypervisors</td><td class="name">{{ info.enabled_hypervisors|join:", " }}</td></tr>
+                <tr><td class="name">Master node</td><td class="name">{{ info.master }}</td></tr>
+                <tr><td class="name">Created</td><td class="name">
                 {% if cluster.ctime %}
                     {{ cluster.ctime|date }}
                 {% else %}
                     <em>unknown</em>
                 {% endif %}
                 </td></tr>
-                <tr><td class="name">Last modified</td><td>{{ cluster.mtime|date }}</td></tr>
+                <tr><td class="name">Last modified</td><td class="name">{{ cluster.mtime|date }}</td></tr>
                 {% endwith %}
             </table>
         </div>
