@@ -4,7 +4,7 @@ import socket
 
 from django import forms
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm, SetPasswordForm
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render_to_response
@@ -99,6 +99,76 @@ def user_edit(request, user_id=None):
     )
 
 
+@login_required
+def user_password(request, user_id=None):
+    user = request.user
+    if not user.is_superuser:
+        return HttpResponseForbidden('Only superusers have access to the change \
+                                     password form.')
+
+    user_edit = get_object_or_404(User, id=user_id)
+
+    if request.method == "POST":
+        form = SetPasswordForm(user=user_edit, data=request.POST)
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect(reverse('user-list'))
+    else:
+        form = SetPasswordForm(user=user_edit)
+    
+    return render_to_response("users/password.html", {
+            'form':form,
+            'username':user_edit,
+        },
+        context_instance=RequestContext(request),
+    )
+
+
+@login_required
+def user_profile(request):
+    """
+    Form for editing a User's Profile
+    """
+    form = None
+    user = request.user
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST)
+        form.user = user
+        if form.is_valid():
+            data = form.cleaned_data
+            user.email = data['email']
+            if data['new_password']:
+                user.set_password(data['new_password'])
+            user.save()
+            user.get_profile().save()
+            form = None
+    
+    if not form:
+        
+        form = UserProfileForm(initial={'email':user.email,
+                                        'old_password':'',
+                                        })
+    
+    return render_to_response('user_profile.html',
+     {"user":request.user, 'form':form},
+     context_instance=RequestContext(request))
+
+
+class UserPasswordForm(forms.Form):
+    """
+    Form to change a user's password without needing
+      the old password
+    """
+    password1 = forms.CharField(widget=forms.PasswordInput)
+    password2 = forms.CharField(widget=forms.PasswordInput)
+    
+    def clean_password1(self):
+        raise forms.ValidationError("Unimplemented Method")
+
+    def clean_password2(self):
+        raise forms.ValidationError("Unimplemented Method")
+
+
 class UserEditForm(UserChangeForm):
     """
     Form to edit user, based on Auth.UserChangeForm
@@ -161,33 +231,3 @@ class UserProfileForm(forms.Form):
                 self._errors['new_password'] = self.error_class([msg])
         
         return data
-
-
-@login_required
-def user_profile(request):
-    """
-    Form for editing a User's Profile
-    """
-    form = None
-    user = request.user
-    if request.method == 'POST':
-        form = UserProfileForm(request.POST)
-        form.user = user
-        if form.is_valid():
-            data = form.cleaned_data
-            user.email = data['email']
-            if data['new_password']:
-                user.set_password(data['new_password'])
-            user.save()
-            user.get_profile().save()
-            form = None
-    
-    if not form:
-        
-        form = UserProfileForm(initial={'email':user.email,
-                                        'old_password':'',
-                                        })
-    
-    return render_to_response('user_profile.html',
-     {"user":request.user, 'form':form},
-     context_instance=RequestContext(request))
