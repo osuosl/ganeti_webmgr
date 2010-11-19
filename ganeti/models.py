@@ -593,3 +593,4 @@ models.signals.post_save.connect(update_cluster_hash, sender=Cluster)
 models.signals.post_save.connect(update_organization, sender=UserGroup)
 register(['admin', 'create', 'create_vm'], Cluster)
 register(['admin', 'start'], VirtualMachine)
+
