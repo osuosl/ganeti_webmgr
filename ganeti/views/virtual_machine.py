@@ -401,8 +401,13 @@ def cluster_default_info(cluster):
     hv = info['default_hypervisor']
     hvparams = info['hvparams'][hv]
     
+    try:
+        iallocator_info = info['default_iallocator']
+    except:
+        iallocator_info = None
+    
     return {
-        'iallocator': info['default_iallocator'],
+        'iallocator': iallocator_info,
         'hypervisors':info['enabled_hypervisors'],
         'vcpus':beparams['vcpus'],
         'ram':beparams['memory'],
@@ -506,6 +511,10 @@ class NewVirtualMachineForm(forms.Form):
             defaults = cluster_default_info(cluster)
             if defaults['iallocator'] != '' :
                 self.fields['iallocator'].initial = True
+                self.fields['iallocator_hostname'] = forms.CharField( \
+                                        initial=defaults['iallocator'], \
+                                        required=False, \
+                                        widget = forms.HiddenInput())
             self.fields['vcpus'].initial = defaults['vcpus']
             self.fields['ram'].initial = defaults['ram']
             self.fields['rootpath'].initial = defaults['rootpath']

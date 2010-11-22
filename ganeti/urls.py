@@ -6,6 +6,10 @@ instance = '/(?P<instance>[^/]+)'
 
 urlpatterns = patterns('ganeti.views.general',
     url(r'^accounts/profile/?', 'user_profile', name="profile"),
+    url(r'^users$', 'user_list', name="user-list"),
+    url(r'^users/add$', 'user_add', name="user-create"),
+    url(r'^user/(?P<user_id>\d+)/edit$', 'user_edit', name="user-edit"),
+    url(r'^user/(?P<user_id>\d+)/password/$', 'user_password', name="user-password"),
 )
 
 # Clusters

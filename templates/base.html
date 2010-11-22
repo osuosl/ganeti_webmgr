@@ -48,6 +48,7 @@
                     <li><a href="{% url import-missing %}">Missing VMs</a></li>
                 {% endif %}
                 {% if user.is_superuser %}
+                    <li><a href="{% url user-list %}">Users</a></li>
                     <li><a href="{{SITE_ROOT}}/admin/">Django Admin</a></li>
                 {% endif %}
                 {% if user.is_superuser or group_admin %}

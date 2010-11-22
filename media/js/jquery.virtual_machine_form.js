@@ -9,9 +9,12 @@
         var pnode = $("#id_pnode").parent();
         disk_template = $("#id_disk_template");
         curSelection = $("#id_snode option:selected").index();
-        var iallocator = $("#id_iallocator");
-        if( $("#id_iallocator_hostname").length == 0 ) {
+        iallocator = $("#id_iallocator");
+        iallocator_hostname = $("#id_iallocator_hostname");
+        if( !iallocator_hostname.attr('value') ) {
             iallocator.attr('readonly', 'readonly');
+        } else {
+            iallocator.after(' Using: '+iallocator_hostname.val());
         }
         iallocator.change(function() {
             if(!iallocator.attr('readonly')) {
@@ -19,6 +22,11 @@
                     pnode.hide();
                     snode.hide();
                 } else {
+                    pnode.show();
+                    disk_template.change();
+                }
+            } else {
+                if(!iallocator.is(':checked')) {
                     pnode.show();
                     disk_template.change();
                 }
@@ -92,9 +100,8 @@
                     });
                 $.getJSON(url2, {'cluster_id':id},
                         function(data) {
-                            iallocator_field = $("#id_iallocator");
                             bootorder = data['bootorder'];
-                            iallocator = data['iallocator'];
+                            iallocator_default = data['iallocator'];
                             hypervisors = data['hypervisors'];
                             vcpus = data['vcpus'];
                             rootpath = data['rootpath'];
@@ -110,32 +117,18 @@
                             if(hypervisors) {
                                 //list - do nothing for now.
                             }
-                            if(iallocator) {
-                                var ialloc_host = $("#id_iallocator_hostname")
-                                if( ialloc_host.length == 0 ) {
-                                    // Create input
-                                    hidden = $("<input type='hidden' />");
-                                    hidden.attr('id', 'id_iallocator_hostname');
-                                    hidden.attr('value', iallocator);
-                                    // Create div and add input
-                                    hiddendiv = $("<div style='display: none;'>");
-                                    hiddendiv.append(hidden);
-                                    hiddendiv.append("</div>");
-                                    // Append div w/input to page
-                                    iallocator_field.after(hiddendiv);
-                                    iallocator_field.after(' Using: '+iallocator);
-                                    // Append iallocator name before hidden div.
-                                    iallocator_field.parent().after(name);
-                                }
-                                if( ialloc_host.val() != iallocator ) {
-                                    ialloc_host.val(iallocator);
+                            if(iallocator_default) {
+                                if( !iallocator_hostname.attr('value')) {
+                                    iallocator.after(' Using: '+iallocator_default);
                                 }
                                 // Check iallocator checkbox
-                                iallocator_field.removeAttr('readonly');
-                                iallocator_field.attr('checked', 'checked');
-                                iallocator_field.change();
+                                iallocator.removeAttr('readonly');
+                                iallocator.attr('checked', 'checked');
+                                iallocator.change();
                             } else {
-                                iallocator_field.attr('readonly', 'readonly');
+                                iallocator.attr('readonly', 'readonly');
+                                iallocator.attr('checked', false);
+                                iallocator.change();
                             }
                             if(kernelpath) {
                                 $("#id_kernelpath").val(kernelpath);
