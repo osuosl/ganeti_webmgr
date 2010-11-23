@@ -70,19 +70,20 @@
             {% endif %}
         </ul>
         <div class="ticket" id="ticket_{{ object.id }}">
-            <ul>
+            <table>
                 {% with instance.info as info %}
-                <li>Status: {{ info.oper_state|yesno:"Running,Stopped" }}</li>
-                <li>Autostart: {{ info.admin_state }}</li>
-                <li>UUID: {{ info.uuid }}</li>
-                <li>Primary node: {{ info.pnode }}</li>
-                <li>Failover node: {{ info.snodes|join:", " }}</li>
-                <li>Created on: {{ instance.ctime|date }}</li>
-                <li>Last modified: {{ instance.mtime|date }}</li>
-                <li>NIC type: {{ info.hvparams.nic_type }}</li>
-                <li>Disk type: {{ info.hvparams.disk_type }}</li>
+                <tr><td class="name">Status</td><td class="name">{{ info.oper_state|yesno:"Running,Stopped" }}</td></tr>
+                <tr><td class="name">Autostart</td><td class="name">{{ info.admin_state }}</td></tr>
+                <tr><td class="name">UUID</td><td class="name">{{ info.uuid }}</td></tr>
+                <tr><td class="name">Primary node</td><td class="name">{{ info.pnode }}</td></tr>
+                <tr><td class="name">Failover node</td><td class="name">{{ info.snodes|join:", " }}</td></tr>
+                <tr><td class="name">Created on</td><td class="name">{{ instance.ctime|date }}</td></tr>
+                <tr><td class="name">Last modified</td><td class="name">{{ instance.mtime|date }}</td></tr>
+                <tr><td class="name">NIC type</td><td class="name">{{ info.hvparams.nic_type }}</td></tr>
+                <tr><td class="name">Disk type</td><td class="name">{{ info.hvparams.disk_type }}</td></tr>
                 {% endwith %}
-            </ul>
+            </table>
+
         </div>
     </div>
     {% comment %}
