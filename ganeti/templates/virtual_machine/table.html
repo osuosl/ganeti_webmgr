@@ -1,31 +1,41 @@
 {% load webmgr_tags %}
 
+{% block head %}
+<script src="{{MEDIA_URL}}/js/jquery.tablesorter.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function() { $("#vmlist").tablesorter(); } );
+</script>
+{% endblock %}
+
 {% if cluster %}
     <div class="add"><a href="{% url instance-create cluster.slug %}">Add Virtual Machine</a></div>
 {% else %}
     <div class="add"><a href="{% url instance-create %}">Add Virtual Machine</a></div>
 {% endif %}
-<table>
+<table id="vmlist" class="sorted">
+<thead>
     <tr>
-      <th></th>
+      {% if vm.error %}<th></th>{% endif %}
       <th>Name</th>
       {% if not cluster %}
       <th>Cluster</th>
       {% endif %}
       <th>Node</th>
-      <th>Ram</th>
+      <th>RAM</th>
       <th>Disk Space</th>
-      <th>VCPUs</th>
+      <th>vCPUs</th>
       <th>Status</th>
     </tr>
+</thead>
+<tbody>
     {% for vm in vms %}
     {% with vm.info as info %}
     <tr>
+        {% if vm.error %}
         <td class="error">
-            {% if vm.error %}
             <div class="icon_error" title="Ganeti API Error: {{vm.error}}"></div>
-            {% endif %}
         </td>
+        {% endif %}
         <td class="name">
             <a href="{% url instance-detail vm.cluster.slug vm.hostname %}">{{ vm.hostname }}</a>
         </td>
@@ -54,4 +64,5 @@
     {% empty %}
         <tr class="none"><td colspan="100%">No Virtual Machines</td></tr>
     {% endfor %}
+</tbody>
 </table>

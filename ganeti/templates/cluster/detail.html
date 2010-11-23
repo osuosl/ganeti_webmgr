@@ -29,7 +29,7 @@
                 spinner: false,
                 select: function(event, ui) {
                     var tabID = "#ui-tabs-"+(ui.index);
-                    $(tabID).html("<div class='spinner'>Loading...<img src='{{MEDIA_URL}}/images/ajax-loader.gif'></div>");
+                    $(tabID).html("<div class='spinner'><br/>Loading...<br/><br/><img src='{{MEDIA_URL}}/images/ajax-loader.gif'></div>");
                 },
                 ajaxOptions: {
                     error: function(xhr, status, index, anchor) {
@@ -56,21 +56,23 @@
     </ul>
     <div id="tab1" class="tab_content">
         <div class="ticket" id="ticket_{{ cluster.id }}">
-            {% with cluster.info as info %}
-            <ul>
-                <li>Architecture: {{ info.architecture.0 }}</li>
-                <li>Default hypervisor: {{ info.default_hypervisor }}</li>
-                <li>Available hypervisors: {{ info.enabled_hypervisors|join:", " }}</li>
-                <li>Master node: {{ info.master }}</li>
-                <li>Created: 
-                  {% if cluster.ctime %}
+            <table>
+                {% with cluster.info as info %}
+                <tr><td class="name">Architecture</td><td class="name">{{ info.architecture.0 }}</td></tr>
+                <tr><td class="name">Ganeti Version</td><td class="name">{{info.software_version}}</td></tr>
+                <tr><td class="name">Default hypervisor</td><td class="name">{{ info.default_hypervisor }}</td></tr>
+                <tr><td class="name">Available hypervisors</td><td class="name">{{ info.enabled_hypervisors|join:", " }}</td></tr>
+                <tr><td class="name">Master node</td><td class="name">{{ info.master }}</td></tr>
+                <tr><td class="name">Created</td><td class="name">
+                {% if cluster.ctime %}
                     {{ cluster.ctime|date }}
-                  {% else %}
+                {% else %}
                     <em>unknown</em>
-                  {% endif %}
-                <li>Last modified: {{ cluster.mtime|date }}</li>
-            </ul>
-            {% endwith %}
+                {% endif %}
+                </td></tr>
+                <tr><td class="name">Last modified</td><td class="name">{{ cluster.mtime|date }}</td></tr>
+                {% endwith %}
+            </table>
         </div>
     </div>
 </div>

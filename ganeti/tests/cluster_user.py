@@ -1,7 +1,5 @@
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.test import TestCase
-
-from object_permissions.models import UserGroup
 
 from ganeti.models import VirtualMachine, Cluster, ClusterUser, Profile, Organization
 
@@ -17,7 +15,7 @@ class TestClusterUser(TestCase):
         User.objects.all().delete()
         ClusterUser.objects.all().delete()
         Organization.objects.all().delete()
-        UserGroup.objects.all().delete()
+        Group.objects.all().delete()
         Profile.objects.all().delete()
         VirtualMachine.objects.all().delete()
         Cluster.objects.all().delete()
@@ -40,14 +38,14 @@ class TestClusterUser(TestCase):
         user.delete()
         self.assertFalse(Profile.objects.filter(id=profile.id).exists())
     
-    def test_user_group_signal(self):
+    def test_group_signal(self):
         """
         Test signals related to User:
         
         Verifies:
-            * organization is created/deleted with UserGroup
+            * organization is created/deleted with Group
         """
-        group = UserGroup(name='tester')
+        group = Group(name='tester')
         group.save()
         
         # org created
@@ -74,7 +72,7 @@ class TestClusterUser(TestCase):
         """
         Tests casting ClusterUser into an Organization
         """
-        group = UserGroup(name='tester')
+        group = Group(name='tester')
         group.save()
         
         cluster_user = ClusterUser.objects.all()[0]
