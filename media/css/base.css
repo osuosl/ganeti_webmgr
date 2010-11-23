@@ -242,8 +242,6 @@ div.delete, div.edit, div.icon_error {
     float:left;
 }
 
-.add a, .reboot a, .shutdown a, .startup a {padding: 4px 4px 4px 22px;display:block;}
-
 .add a, .reboot a, .shutdown a, .startup a,
 .add a:visited, .reboot a:visited, .shutdown a:visited, .startup a:visited,
 .add a, .reboot a, .shutdown a, .startup a:link{color:inherit !important;}
@@ -254,9 +252,9 @@ div.delete, div.edit, div.icon_error {
     clear:both;
     color:black;
     float:right; 
-    padding:0;
+    padding:4px 4px 4px 22px;
     margin:2px;
-    width:166px;
+    width:140px;
     -moz-border-radius:5px;
     -webkit-border-radius:5px;
 }
