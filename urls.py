@@ -30,7 +30,7 @@ urlpatterns = patterns('',
     (r'^accounts/', include('registration.urls')),
 
     # Uncomment the next line to enable the admin:
-    (r'^admin/', include(admin.site.urls)),
+    #(r'^admin/', include(admin.site.urls)),
     
     (r'^500/$', 'django.views.generic.simple.direct_to_template', {'template':"500.html"})
 )
