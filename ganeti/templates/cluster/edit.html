@@ -1,6 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}Edit {{ cluster.slug }} {% endblock %}
+{% block title %}
+{% if cluster %}
+Edit {{ cluster.slug }}
+{% else %}
+Add a new cluster
+{% endif %}
+{% endblock %}
 
 {% block content %}
 
