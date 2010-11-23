@@ -78,7 +78,6 @@ def user_edit(request, user_id=None):
         form = UserEditForm(request.POST, instance=user_edit)
         if form.is_valid():
             data = form.cleaned_data
-            form.is_staff = data['is_staff']
             form.is_active = data['is_active']
             form.is_superuser = data['is_superuser']
             form.save()
