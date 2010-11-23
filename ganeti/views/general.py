@@ -181,7 +181,6 @@ class UserEditForm(UserChangeForm):
             'last_name',
             'email',
             'password',
-            'is_staff',
             'is_active',
             'is_superuser',
         )
