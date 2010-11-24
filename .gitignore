@@ -14,5 +14,9 @@ settings.py
 # Object permissions
 object_permissions
 
+# Patch and Diff files
+*.diff
+*.patch
+
 # Komodo files
 *.komodo*
