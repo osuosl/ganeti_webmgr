@@ -564,7 +564,7 @@ class NewVirtualMachineForm(forms.Form):
             
             if isinstance(owner, (Organization,)):
                 # check user membership in group if group
-                if not grantee.users.filter(id=self.user.id).exists():
+                if not grantee.user_set.filter(id=self.user.id).exists():
                     msg = u"User is not a member of the specified group."
                 
             else:
