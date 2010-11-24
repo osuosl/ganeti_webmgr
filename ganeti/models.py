@@ -18,7 +18,6 @@ from util import client
 from util.client import GanetiApiError
 
 
-CURL = client.GenericCurlConfig()
 RAPI_CACHE = {}
 RAPI_CACHE_HASHES = {}
 def get_rapi(hash, cluster):
