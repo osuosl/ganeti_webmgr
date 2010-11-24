@@ -1,6 +1,11 @@
 {% load webmgr_tags %}
 
-<table id="nodes">
+{% block head %}
+<script src="{{MEDIA_URL}}/js/jquery.tablesorter.min.js"></script>
+{% endblock %}
+
+<table id="nodes" class="sorted">
+<thead>
     <tr>
         <th>Name</th>
         <th>Free Memory (GB)</th>
@@ -8,6 +13,8 @@
         <th>Instances (P/S)</th>
         <th>Status</th>
     </tr>
+</thead>
+<tbody>
     {% for node in nodes %}
         <tr>
             <td>{{ node.name }}</td>
@@ -21,8 +28,10 @@
             {% endif %}
         </tr>
     {% endfor %}
+</tbody>
 </table>
 
 <script type="text/javascript">
     $("#nodes .ram, #nodes .disk").progressBar(PBAR_CONF);
+    $("#nodes").tablesorter();
 </script>

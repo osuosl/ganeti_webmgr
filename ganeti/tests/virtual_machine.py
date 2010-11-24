@@ -565,8 +565,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'virtual_machine/detail.html')
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
+        self.assertTrue(user.has_perm('admin', new_vm))
         VirtualMachine.objects.all().delete()
-        self.assert_(user.has_perm('admin', new_vm))
         user.revoke_all(cluster)
         user.revoke_all(new_vm)
         

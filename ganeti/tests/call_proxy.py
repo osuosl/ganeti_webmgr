@@ -105,8 +105,8 @@ class CallProxy(object):
         """
         def base(): pass
         
-        base_code = base.__code__
-        code = func.__code__
+        base_code = base.func_code
+        code = func.func_code
         
         name = 'MATCHING_PROXY: %s' % func.__name__
         

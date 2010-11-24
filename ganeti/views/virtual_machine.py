@@ -295,7 +295,7 @@ def create(request, cluster_slug=None):
                 return HttpResponseRedirect( \
                 reverse('instance-detail', args=[cluster.slug, vm.hostname]))
             
-            except GanetiApiError as e:
+            except GanetiApiError, e:
                 msg = 'Error creating virtual machine on this cluster: %s' % e
                 form._errors["cluster"] = form.error_class([msg])
     
@@ -564,7 +564,7 @@ class NewVirtualMachineForm(forms.Form):
             
             if isinstance(owner, (Organization,)):
                 # check user membership in group if group
-                if not grantee.users.filter(id=self.user.id).exists():
+                if not grantee.user_set.filter(id=self.user.id).exists():
                     msg = u"User is not a member of the specified group."
                 
             else:
