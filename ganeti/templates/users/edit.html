@@ -5,7 +5,11 @@
 {% endblock %}
 
 {% block content %}
-<form method="post">
+{% if username %}
+<form id="user-edit" method="post">
+{% else %}
+<form id="user-create" method="post">
+{% endif %}
     {% csrf_token %}
     <fieldset>
         <legend>

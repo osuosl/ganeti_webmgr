@@ -22,5 +22,6 @@
 
 {% block content %}
 <h1>Users</h1>
+<div class="add"><a href="{% url user-create %}">Add User</a></div>
 {% include "users/table.html" %}
 {% endblock %}
