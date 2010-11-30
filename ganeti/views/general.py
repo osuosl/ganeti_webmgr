@@ -27,7 +27,6 @@ def index(request):
 
 @login_required
 def user_list(request):
-    
     user = request.user
     if not user.is_superuser:
         return HttpResponseForbidden('Only a superuser may view all users.')
@@ -151,22 +150,6 @@ def user_profile(request):
     return render_to_response('user_profile.html',
      {"user":request.user, 'form':form},
      context_instance=RequestContext(request))
-
-
-class UserPasswordForm(forms.Form):
-    """
-    Form to change a user's password without needing
-      the old password
-    """
-    password1 = forms.CharField(widget=forms.PasswordInput)
-    password2 = forms.CharField(widget=forms.PasswordInput)
-    
-    def clean_password1(self):
-        raise forms.ValidationError("Unimplemented Method")
-
-    def clean_password2(self):
-        raise forms.ValidationError("Unimplemented Method")
-
 
 class UserEditForm(UserChangeForm):
     """
