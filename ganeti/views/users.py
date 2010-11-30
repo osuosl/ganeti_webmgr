@@ -56,7 +56,7 @@ def user_add(request):
 def user_edit(request, user_id=None):
     user = request.user
     if not user.is_superuser:
-        return HttpResponseForbidden('Only a superuser may add a user.')
+        return HttpResponseForbidden('Only a superuser may edit a user.')
 
     user_edit = get_object_or_404(User, id=user_id)
 
