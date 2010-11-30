@@ -4,7 +4,8 @@ cluster_slug = '(?P<cluster_slug>[-_A-Za-z0-9]+)'
 cluster = 'cluster/%s' % cluster_slug
 instance = '/(?P<instance>[^/]+)'
 
-urlpatterns = patterns('ganeti.views.general',
+# Users
+urlpatterns = patterns('ganeti.views.users',
     url(r'^accounts/profile/?', 'user_profile', name="profile"),
     url(r'^users$', 'user_list', name="user-list"),
     url(r'^users/add$', 'user_add', name="user-create"),
