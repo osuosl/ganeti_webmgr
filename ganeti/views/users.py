@@ -61,11 +61,8 @@ def user_edit(request, user_id=None):
     user_edit = get_object_or_404(User, id=user_id)
 
     if request.method == "POST":
-        form = UserEditForm(request.POST, instance=user_edit)
+        form = UserEditForm(data=request.POST, instance=user_edit)
         if form.is_valid():
-            data = form.cleaned_data
-            form.is_active = data['is_active']
-            form.is_superuser = data['is_superuser']
             form.save()
             return HttpResponseRedirect(reverse('user-list'))
 
