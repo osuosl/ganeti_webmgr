@@ -30,7 +30,6 @@ from django.db import models
 from django.db.models import Sum
 from django.utils.encoding import force_unicode, smart_unicode
 
-
 from object_permissions.registration import register
 from ganeti import constants
 from util import client
@@ -106,7 +105,7 @@ class CachedClusterObject(models.Model):
     error = None
     mtime = None
     ctime = None
-    
+
     def __init__(self, *args, **kwargs):
         super(CachedClusterObject, self).__init__(*args, **kwargs)
         self.load_info()
@@ -219,7 +218,7 @@ class CachedClusterObject(models.Model):
         """
         Parse properties from cached info that are stored in the database. These
         properties will be searchable by the django query api.
-        
+
         This method is specific to the child object.
         """
         self.mtime = datetime.fromtimestamp(self.__info['mtime'])
@@ -288,6 +287,7 @@ class VirtualMachine(CachedClusterObject):
     cluster_hash = models.CharField(max_length=40, editable=False)
     operating_system = models.CharField(max_length=128)
 
+
     @property
     def rapi(self):
         return get_rapi(self.cluster_hash, self.cluster_id)
@@ -331,7 +331,7 @@ class VirtualMachine(CachedClusterObject):
         are stored in the database
         """
         super(VirtualMachine, self).parse_persistent_info()
-
+        
         # Parse resource properties
         self.ram = self.info['beparams']['memory']
         self.virtual_cpus = self.info['beparams']['vcpus']
@@ -341,6 +341,7 @@ class VirtualMachine(CachedClusterObject):
             disk_size += disk
         self.disk_size = disk_size
         self.operating_system = self.info['os']
+
 
     def _refresh(self):
         return self.rapi.GetInstance(self.hostname)
@@ -616,6 +617,91 @@ class Quota(models.Model):
     ram = models.IntegerField(default=0, null=True)
     disk = models.IntegerField(default=0, null=True)
     virtual_cpus = models.IntegerField(default=0, null=True)
+
+
+class LogAction(models.Model):
+    """
+    Type of action of log entry (for example: addition, deletion)
+
+    @name - a noun (for example: addition)
+    @action_message - a participle ("-ed" if regular) form of verb (for example:
+                      added)
+    """
+    name = models.CharField(max_length=128, primary_key=True) #addition, deletion
+    action_message = models.CharField(max_length=128)         # added, deleted
+
+
+class LogItemManager(models.Manager):
+    def log_action(self, user, affected_object, action, log_message=None):
+        """
+        @user Profile
+        @affected_object any model
+        @action string or LogAction
+        """
+        if isinstance(action, str):
+            action = LogAction.objects.get(name=action)
+
+        m = self.model(
+            id = None,
+            action = action,
+            timestamp = None,
+            user = user, # or user.pk or request.user.pk
+            object_type = ContentType.objects.get_for_model(affected_object),
+            object_id = affected_object.pk,
+            object_repr = force_unicode(affected_object),
+            log_message = log_message,
+        )
+        m.save()
+        return m.id # occasionally someone needs this
+
+
+class LogItem(models.Model):
+    """
+    Single entry in log
+    """
+    action = models.ForeignKey(LogAction)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(Profile)
+
+    object_type = models.ForeignKey(ContentType)
+    object_id = models.PositiveIntegerField()
+    object_repr = models.CharField(max_length=128, blank=True, null=True)
+    affected_object = GenericForeignKey("object_type", "object_id")
+
+    log_message = models.TextField(blank=True, null=True)
+
+    objects = LogItemManager()
+
+    class Meta:
+        ordering = ("timestamp", )
+
+    def __repr__(self):
+        """
+        Returns single line log entry containing informations like:
+        - date and extensive time
+        - user who performed an action
+        - action itself
+        - object affected by the action
+        """
+        # this format:
+        #[2010-11-30 14:12:31] user piotr changed user "piotr": root=True, abc=True
+        #[2010-11-30 14:12:31] user piotr deleted virtual machine "testfarm1"
+        msg = ""
+        if self.log_message:
+            msg = ": %s" % self.log_message
+
+        format = "[%(timestamp)s] user %(user)s %(action_message)s" \
+                 + " %(object_type)s \"%(object_repr)s\"%(msg)s"
+
+        fields = dict(
+            timestamp = self.timestamp,
+            user = self.user,
+            action_message = self.action.action_message,
+            object_type = self.object_type.name,
+            object_repr = self.object_repr,
+            msg = msg,
+        )
+        return format % fields
 
 
 def create_profile(sender, instance, **kwargs):
