@@ -27,8 +27,10 @@ import time
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.generic import GenericForeignKey
 from django.db import models
 from django.db.models import Sum
+from django.utils.encoding import force_unicode
 
 
 from object_permissions.registration import register, get_users, get_groups
@@ -43,19 +45,19 @@ def get_rapi(hash, cluster):
     Retrieves the cached Ganeti RAPI client for a given hash.  The Hash is
     derived from the connection credentials required for a cluster.  If the
     client is not yet cached, it will be created and added.
-    
+
     If a hash does not correspond to any cluster then Cluster.DoesNotExist will
     be raised.
-    
+
     @param cluster - either a cluster object, or ID of object.  This is used for
         resolving the cluster if the client is not already found.  The id is
         used rather than the hash, because the hash is mutable.
-        
+
     @return a Ganeti RAPI client.
     """
     if hash in RAPI_CACHE:
         return RAPI_CACHE[hash]
-        
+
     # always look up the instance, even if we were given a Cluster instance
     # it ensures we are retrieving the latest credentials.  This helps avoid
     # stale credentials.  Retrieve only the values because we don't actually
@@ -72,11 +74,11 @@ def get_rapi(hash, cluster):
     # have been stale.  This avoids constructing a new RAPI that already exists.
     if hash in RAPI_CACHE:
         return RAPI_CACHE[hash]
-    
+
     # delete any old version of the client that was cached.
     if cluster in RAPI_CACHE_HASHES:
         del RAPI_CACHE[RAPI_CACHE_HASHES[cluster]]
-    
+
     rapi = client.GanetiRapiClient(host, port, user, password)
     RAPI_CACHE[hash] = rapi
     RAPI_CACHE_HASHES[cluster] = hash
@@ -103,11 +105,11 @@ class CachedClusterObject(models.Model):
     error = None
     mtime = None
     ctime = None
-    
+
     def __init__(self, *args, **kwargs):
         super(CachedClusterObject, self).__init__(*args, **kwargs)
         self.load_info()
-    
+
     @property
     def info(self):
         """
@@ -157,7 +159,7 @@ class CachedClusterObject(models.Model):
         """
         Retrieve and parse info from the ganeti cluster.  If successfully
         retrieved and parsed, this method will also call save().
-        
+
         Failure while loading the remote class will result in an incomplete
         object.  The error will be stored to self.error
         """
@@ -181,8 +183,8 @@ class CachedClusterObject(models.Model):
         Parse properties from cached info that is stored on the class but not in
         the database.  These properties will be loaded every time the object is
         instantiated.  Properties stored on the class cannot be search
-        efficiently via the django query api.  
-        
+        efficiently via the django query api.
+
         This method is specific to the child object.
         """
         info_ = self.info
@@ -195,7 +197,7 @@ class CachedClusterObject(models.Model):
         """
         Parse properties from cached info that are stored in the database. These
         properties will be searchable by the django query api.
-        
+
         This method is specific to the child object.
         """
         pass
@@ -210,22 +212,22 @@ class VirtualMachine(CachedClusterObject):
     majority of properties are a cache for data stored in the cluster.  All data
     retrieved via the RAPI is stored in VirtualMachine.info, and serialized
     automatically into VirtualMachine.serialized_info.
-    
+
     Attributes that need to be searchable should be stored as model fields.  All
     other attributes will be stored within VirtualMachine.info.
-    
+
     This object uses a lazy update mechanism on instantiation.  If the cached
     info from the Ganeti cluster has expired, it will trigger an update.  This
     allows the cache to function in the absence of a periodic update mechanism
     such as Cron, Celery, or Threads.
-    
+
     The lazy update and periodic update should use separate refresh timeouts
     where LAZY_CACHE_REFRESH > PERIODIC_CACHE_REFRESH.  This ensures that lazy
     cache will only be used if the periodic cache is not updating.
-    
+
     XXX Serialized_info can possibly be changed to a CharField if an upper
         limit can be determined. (Later Date, if it will optimize db)
-    
+
     """
     cluster = models.ForeignKey('Cluster', editable=False,
                                 related_name='virtual_machines')
@@ -236,11 +238,11 @@ class VirtualMachine(CachedClusterObject):
     disk_size = models.IntegerField(default=-1)
     ram = models.IntegerField(default=-1)
     cluster_hash = models.CharField(max_length=40, editable=False)
-    
+
     @property
     def rapi(self):
         return get_rapi(self.cluster_hash, self.cluster_id)
-    
+
     def save(self, *args, **kwargs):
         """
         sets the cluster_hash for newly saved instances and writes the owner tag
@@ -248,7 +250,7 @@ class VirtualMachine(CachedClusterObject):
         """
         if self.id is None:
             self.cluster_hash = self.cluster.hash
-        
+
         info_ = self.info
         if info_:
             found = False
@@ -269,9 +271,9 @@ class VirtualMachine(CachedClusterObject):
                 tag = 'GANETI_WEB_MANAGER:OWNER:%s' % self.owner_id
                 self.rapi.AddInstanceTags(self.hostname, [tag])
                 self.info['tags'].append(tag)
-        
+
         super(VirtualMachine, self).save(*args, **kwargs)
-    
+
     def parse_persistent_info(self):
         """
         Loads all values from cached info, included persistent properties that
@@ -291,7 +293,7 @@ class VirtualMachine(CachedClusterObject):
                     self.owner = None
         if not owner_parsed:
             self.owner = None
-        
+
         # Parse resource properties
         self.ram = self.info['beparams']['memory']
         self.virtual_cpus = self.info['beparams']['vcpus']
@@ -300,19 +302,19 @@ class VirtualMachine(CachedClusterObject):
         for disk in self.info['disk.sizes']:
             disk_size += disk
         self.disk_size = disk_size
-    
+
     def _refresh(self):
         return self.rapi.GetInstance(self.hostname)
-    
+
     def shutdown(self):
         return self.rapi.ShutdownInstance(self.hostname)
-    
+
     def startup(self):
         return self.rapi.StartupInstance(self.hostname)
-    
+
     def reboot(self):
         return self.rapi.RebootInstance(self.hostname)
-    
+
     def setup_vnc_forwarding(self):
         #password = self.set_random_vnc_password(instance)
         password = 'none'
@@ -321,10 +323,10 @@ class VirtualMachine(CachedClusterObject):
         node = info_['pnode']
         Popen(['util/portforwarder.py', '%d'%port, '%s:%d'%(node, port)])
         return port, password
-    
+
     def __repr__(self):
         return "<VirtualMachine: '%s'>" % self.hostname
-    
+
     def __unicode__(self):
         return self.hostname
 
@@ -340,19 +342,19 @@ class Cluster(CachedClusterObject):
     username = models.CharField(max_length=128, blank=True, null=True)
     password = models.CharField(max_length=128, blank=True, null=True)
     hash = models.CharField(max_length=40, editable=False)
-    
+
     # quota properties
     virtual_cpus = models.IntegerField(null=True, blank=True)
     disk = models.IntegerField(null=True, blank=True)
     ram = models.IntegerField(null=True, blank=True)
-    
+
     def __unicode__(self):
         return self.hostname
-    
+
     def save(self):
         self.hash = self.create_hash()
         super(Cluster, self).save()
-    
+
     @property
     def rapi(self):
         """
@@ -375,26 +377,26 @@ class Cluster(CachedClusterObject):
     def get_quota(self, user=None):
         """
         Get the quota for a ClusterUser
-        
+
         @return user's quota, default quota, or none
         """
         if user is None:
             return {'default':1, 'ram':self.ram, 'disk':self.disk, \
                     'virtual_cpus':self.virtual_cpus}
-        
+
         query = Quota.objects.filter(cluster=self, user=user)
         if query.exists():
             (quota,) = query.values('ram', 'disk', 'virtual_cpus')
             quota['default'] = 0
             return quota
-        
+
         return {'default':1, 'ram':self.ram, 'disk':self.disk, \
                     'virtual_cpus':self.virtual_cpus, }
-    
+
     def set_quota(self, user, values=None):
         """
         set the quota for a ClusterUser
-        
+
         @param values: dictionary of values, or None to delete the quota
         """
         kwargs = {'cluster':self, 'user':user}
@@ -404,7 +406,7 @@ class Cluster(CachedClusterObject):
             quota, new = Quota.objects.get_or_create(**kwargs)
             quota.__dict__.update(values)
             quota.save()
-    
+
     def sync_virtual_machines(self, remove=False):
         """
         Synchronizes the VirtualMachines in the database with the information
@@ -414,11 +416,11 @@ class Cluster(CachedClusterObject):
         """
         ganeti = self.instances()
         db = self.virtual_machines.all().values_list('hostname', flat=True)
-        
+
         # add VMs missing from the database
         for hostname in filter(lambda x: unicode(x) not in db, ganeti):
             VirtualMachine(cluster=self, hostname=hostname).save()
-        
+
         # deletes VMs that are no longer in ganeti
         if remove:
             missing_ganeti = filter(lambda x: str(x) not in ganeti, db)
@@ -448,10 +450,10 @@ class Cluster(CachedClusterObject):
 
     def _refresh(self):
         return self.rapi.GetInfo()
-    
+
     def nodes(self, bulk=False):
         """Gets all Cluster Nodes
-        
+
         Calls the rapi client for the nodes of the cluster.
         """
         try:
@@ -495,18 +497,18 @@ class ClusterUser(models.Model):
                                       related_name='users')
     name = models.CharField(max_length=128)
     real_type = models.ForeignKey(ContentType, editable=False, null=True)
-    
+
     def save(self, *args, **kwargs):
         if not self.id:
             self.real_type = self._get_real_type()
         super(ClusterUser, self).save(*args, **kwargs)
-    
+
     def _get_real_type(self):
         return ContentType.objects.get_for_model(type(self))
-    
+
     def cast(self):
         return self.real_type.get_object_for_this_type(pk=self.pk)
-    
+
     def __unicode__(self):
         return self.name
 
@@ -527,10 +529,10 @@ class Profile(ClusterUser):
     Profile associated with a django.contrib.auth.User object.
     """
     user = models.OneToOneField(User)
-    
+
     def grant(self, perm, object):
         self.user.grant(perm, object)
-    
+
     def set_perms(self, perms, object):
         self.user.set_perms(perms, object)
 
@@ -549,7 +551,7 @@ class Organization(ClusterUser):
     permissions can be assigned.
     """
     group = models.OneToOneField(Group, related_name='organization')
-    
+
     def grant(self, perm, object):
         self.group.grant(perm, object)
 
@@ -571,10 +573,95 @@ class Quota(models.Model):
     """
     user = models.ForeignKey(ClusterUser, related_name='quotas')
     cluster = models.ForeignKey(Cluster, related_name='quotas')
-    
+
     ram = models.IntegerField(default=0, null=True)
     disk = models.IntegerField(default=0, null=True)
     virtual_cpus = models.IntegerField(default=0, null=True)
+
+
+class LogAction(models.Model):
+    """
+    Type of action of log entry (for example: addition, deletion)
+
+    @name - a noun (for example: addition)
+    @action_message - a participle ("-ed" if regular) form of verb (for example:
+                      added)
+    """
+    name = models.CharField(max_length=128, primary_key=True) #addition, deletion
+    action_message = models.CharField(max_length=128)         # added, deleted
+
+
+class LogItemManager(models.Manager):
+    def log_action(self, user, affected_object, action, log_message=None):
+        """
+        @user Profile
+        @affected_object any model
+        @action string or LogAction
+        """
+        if isinstance(action, str):
+            action = LogAction.objects.get(name=action)
+
+        m = self.model(
+            id = None,
+            action = action,
+            timestamp = None,
+            user = user, # or user.pk or request.user.pk
+            object_type = ContentType.objects.get_for_model(affected_object),
+            object_id = affected_object.pk,
+            object_repr = force_unicode(affected_object),
+            log_message = log_message,
+        )
+        m.save()
+        return m.id # occasionally someone needs this
+
+
+class LogItem(models.Model):
+    """
+    Single entry in log
+    """
+    action = models.ForeignKey(LogAction)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(Profile)
+
+    object_type = models.ForeignKey(ContentType)
+    object_id = models.PositiveIntegerField()
+    object_repr = models.CharField(max_length=128, blank=True, null=True)
+    affected_object = GenericForeignKey("object_type", "object_id")
+
+    log_message = models.TextField(blank=True, null=True)
+
+    objects = LogItemManager()
+
+    class Meta:
+        ordering = ("timestamp", )
+
+    def __repr__(self):
+        """
+        Returns single line log entry containing informations like:
+        - date and extensive time
+        - user who performed an action
+        - action itself
+        - object affected by the action
+        """
+        # this format:
+        #[2010-11-30 14:12:31] user piotr changed user "piotr": root=True, abc=True
+        #[2010-11-30 14:12:31] user piotr deleted virtual machine "testfarm1"
+        msg = ""
+        if self.log_message:
+            msg = ": %s" % self.log_message
+
+        format = "[%(timestamp)s] user %(user)s %(action_message)s" \
+                 + " %(object_type)s \"%(object_repr)s\"%(msg)s"
+
+        fields = dict(
+            timestamp = self.timestamp,
+            user = self.user,
+            action_message = self.action.action_message,
+            object_type = self.object_type.name,
+            object_repr = self.object_repr,
+            msg = msg,
+        )
+        return format % fields
 
 
 def create_profile(sender, instance, **kwargs):
