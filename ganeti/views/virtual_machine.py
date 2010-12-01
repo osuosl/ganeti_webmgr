@@ -253,6 +253,7 @@ def create(request, cluster_slug=None):
             pnode = None
             snode = None
             os = data['os']
+            name_check = data['name_check']
             iallocator = data['iallocator']
             # Hidden fields
             iallocator_hostname = None
@@ -287,6 +288,7 @@ def create(request, cluster_slug=None):
                         [{"size": disk_size, }],[{nicmode: nictype, }],
                         memory=ram, os=os, vcpus=vcpus,
                         pnode=pnode, snode=snode,
+                        name_check=name_check, ip_check=name_check,
                         iallocator=iallocator_hostname,
                         hvparams={'kernel_path': kernelpath, \
                             'root_path': rootpath, \
@@ -482,6 +484,8 @@ class NewVirtualMachineForm(forms.Form):
                                 'invalid': 'Instance name must be resolvable',
                             },
                             max_length=255)
+    name_check = forms.BooleanField(label='DNS Name Check', \
+                                    initial=True, required=False)
     iallocator = forms.BooleanField(label='Automatic Allocation', \
                                     initial=False, required=False)
     iallocator_hostname = forms.CharField(required=False)
