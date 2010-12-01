@@ -20,7 +20,7 @@
 <div id="virtualmachineform">
     <form method="post">
         <fieldset>
-            <legend class="legendhead"> New Virtual Machine </legend>
+            <h1> New Virtual Machine </h1>
             {% vmfield form.owner %}
             {% vmfield form.cluster %}
             {% vmfield form.hostname %}
@@ -32,7 +32,7 @@
             {% vmfield form.os %}
         </fieldset>
         <fieldset>
-            <legend>General Parameters</legend>
+            <h3>General Parameters</h3>
             {% vmfield form.vcpus %}
             {% vmfield form.ram %}
             {% vmfield form.disk_size %}
@@ -40,7 +40,7 @@
             {% vmfield form.nictype %}
         </fieldset>
         <fieldset>
-            <legend>Hypervisor Parameters</legend>
+            <h3>Hypervisor Parameters</h3>
             {% vmfield form.kernelpath %}
             {% vmfield form.rootpath %}
             {% vmfield form.serialconsole %}

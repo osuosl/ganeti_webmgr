@@ -165,7 +165,7 @@ form p label {
 }
 form ul.errorlist {color:red;padding:1ex 1ex;}
 form p {padding:0.5ex 0ex;}
-fieldset {border:0px; padding-top:1em;}
+fieldset {border:0px; padding-top:0.7em;}
 legend {font-size:1.5em; font-weight:bold;}
 form table, form table td, form table td {border:0 !important;}
 form p label {width:12em;}
