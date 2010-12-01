@@ -187,12 +187,10 @@ form input.submit{margin-left:12.5em;}
 #login input.submit {margin-left: 6em;}
 
 /*   User Profile   */
-#uprofile {margin: 3em auto 0em 0em; width: 50%;}
+#uprofile {margin: 0em auto 0em 0em; width: 50%;}
 #uprofile fieldset {
     margin-bottom:10px;
     padding:1em;
-    -moz-border-radius:5px;
-    -webkit-border-radius:5px;
 }
 #uprofile fieldset h2 {margin-bottom:5px;}
 #uprofile fieldset p {padding-bottom:1.5ex;}
