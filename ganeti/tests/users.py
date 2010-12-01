@@ -4,20 +4,11 @@ from django.test.client import Client
 
 __all__ = ('TestUsersViews',)
 
-"""
-# POST - Anonymous user
-        
-# POST - Normal user
-self.assertTrue(c.login(username=user.username, password='password'))
-c.logout()
-
-# POST - Superuser
-self.assertTrue(c.login(username=superuser.username, password='sudome'))
-c.logout()
-"""
-
 class TestUsersViews(TestCase):
-    
+    """
+    Tests for checking the update/delete/change of password of users
+      that a superuser has access to.
+    """
     def setUp(self):
         self.tearDown()
         
@@ -155,6 +146,8 @@ class TestUsersViews(TestCase):
         self.assertTrue(c.login(username=superuser.username, password='sudome'))
         response = c.get(url, follow=True)
         self.assertEqual(200, response.status_code)
+        self.assertContains(response, test_user.password)
+        self.assertContains(response, test_user.username)
         self.assertTemplateUsed(response, 'users/edit.html')
         c.logout()
         
@@ -162,13 +155,15 @@ class TestUsersViews(TestCase):
         response = c.post(url, data, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'registration/login.html')
-        self.assertEqual(test_user.first_name, '')
+        usercheck = User.objects.get(id=test_user.id)
+        self.assertEqual(usercheck.first_name, '')
         
         # POST - Normal user
         self.assertTrue(c.login(username=user.username, password='password'))
         response = c.post(url, data, follow=True)
         self.assertEqual(403, response.status_code)
-        self.assertEqual(test_user.first_name, '')
+        usercheck = User.objects.get(id=test_user.id)
+        self.assertEqual(usercheck.first_name, '')
         c.logout()
         
         # POST - Superuser
@@ -176,9 +171,10 @@ class TestUsersViews(TestCase):
         response = c.post(url, data, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'users/list.html')
-        self.assertEqual(test_user.first_name, 'John')
-        self.assertEqual(test_user.last_name, 'Williams')
-        self.assertEqual(test_user.email, 'test@example.org')
+        usercheck = User.objects.get(id=test_user.id)
+        self.assertEqual(usercheck.first_name, 'John')
+        self.assertEqual(usercheck.last_name, 'Williams')
+        self.assertEqual(usercheck.email, 'test@example.org')
         c.logout()
     
     def test_view_delete(self):
@@ -263,7 +259,7 @@ class TestUsersViews(TestCase):
         response = c.post(url, data, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'users/list.html')
-        self.assertTrue(test_user.check_password(new_pass))
-        self.assertFalse(test_user.check_password('testpassword'))
+        usercheck = User.objects.get(id=test_user.id)
+        self.assertTrue(usercheck.check_password(new_pass))
         c.logout()
         
