@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if username %}Edit User{% else %}Add User{% endif %}
+{% endblock %}
+
+{% block content %}
+{% if username %}
+<form id="user-edit" method="post">
+{% else %}
+<form id="user-create" method="post">
+{% endif %}
+    {% csrf_token %}
+    <fieldset>
+        <legend>
+            {% if username %}
+                Edit {{ username }}
+            {% else %}
+                Create New User
+            {% endif %}
+        </legend>
+        {{ form.as_p }}
+        <input type="submit" value="{% if username %}Save{% else %}Create{% endif %}">
+    </fieldset>
+</form>
+{% endblock %}
