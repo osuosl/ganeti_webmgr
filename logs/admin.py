@@ -17,11 +17,14 @@
 # USA.
 
 
-from ganeti.tests.accounts import *
-from ganeti.tests.cached_cluster_object import *
-from ganeti.tests.cluster import *
-from ganeti.tests.cluster_user import *
-from ganeti.tests.rapi_cache import *
-from ganeti.tests.importing import *
-from ganeti.tests.virtual_machine import *
-from ganeti.tests.users import *
+from django.contrib import admin
+from models import *
+
+class LogItemAdmin(admin.ModelAdmin):
+    inlines = [admin.TabularInline]
+
+class LogActionAdmin(admin.ModelAdmin):
+    inlines = [admin.TabularInline]
+
+admin.site.register(LogItem, LogItemAdmin)
+admin.site.register(LogAction, LogActionAdmin)
