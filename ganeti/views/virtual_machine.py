@@ -33,7 +33,8 @@ from django.template import RequestContext
 from object_permissions import get_users, get_groups
 from object_permissions.views.permissions import view_users, view_permissions
 
-from logs.models.LogItem.objects import log_action
+from logs.models import LogItem
+log_action = LogItem.objects.log_action
 
 from util.client import GanetiApiError
 from ganeti.models import *
@@ -333,7 +334,7 @@ def create(request, cluster_slug=None):
                 
                 # log information about creating the machine
                 log_action(
-                    user = user,
+                    user = user.get_profile(),
                     affected_object = vm,
                     action = "creation",
                 )
