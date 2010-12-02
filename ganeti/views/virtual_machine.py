@@ -34,6 +34,8 @@ from django.template import RequestContext
 
 from object_permissions.views.permissions import view_users, view_permissions
 
+from logs.models.LogItem.objects import log_action
+
 from util.client import GanetiApiError
 from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine
 
@@ -116,6 +118,13 @@ def shutdown(request, cluster_slug, instance):
         try:
             vm.shutdown()
             msg = [1, 'Virtual machine stopping.']
+
+            # log information about stopping the machine
+            log_action(
+                user = user.get_profile(),
+                affected_object = vm,
+                action = "stop",
+            )
         except GanetiApiError, e:
             msg = [0, str(e)]
         return HttpResponse(json.dumps(msg), mimetype='application/json')
@@ -136,6 +145,13 @@ def startup(request, cluster_slug, instance):
         try:
             vm.startup()
             msg = [1, 'Virtual machine starting.']
+
+            # log information about starting up the machine
+            log_action(
+                user = user.get_profile(),
+                affected_object = vm,
+                action = "start",
+            )
         except GanetiApiError, e:
             msg = [0, str(e)]
         return HttpResponse(json.dumps(msg), mimetype='application/json')
@@ -156,6 +172,13 @@ def reboot(request, cluster_slug, instance):
         try:
             vm.reboot()
             msg = [1, 'Virtual machine rebooting.']
+
+            # log information about restarting the machine
+            log_action(
+                user = user.get_profile(),
+                affected_object = vm,
+                action = "restart",
+            )
         except GanetiApiError, e:
             msg = [0, str(e)]
         return HttpResponse(json.dumps(msg), mimetype='application/json')
@@ -353,6 +376,13 @@ def create(request, cluster_slug=None):
                                     ram=ram, virtual_cpus=vcpus)
                 vm.save()
                 
+                # log information about creating the machine
+                log_action(
+                    user = user,
+                    affected_object = vm,
+                    action = "creation",
+                )
+
                 # grant admin permissions to the owner
                 data['grantee'].grant('admin', vm)
                 
