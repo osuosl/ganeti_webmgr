@@ -61,13 +61,13 @@ class LoggingTest(TestCase):
         pk1 = LogItem.objects.log_action(
             user = profile,
             affected_object = user,
-            action = "create",
+            key = "create",
             log_message = "started test #1",
         )
         pk2 = LogItem.objects.log_action(
             user = profile,
             affected_object = user,
-            action = "delete",
+            key = "delete",
             #log_message = "stopped test #1",
         )
 
@@ -84,13 +84,13 @@ class LoggingTest(TestCase):
         pk1 = LogItem.objects.log_action(
             user = profile,
             affected_object = user,
-            action = "create",
+            key = "create",
             log_message = "started test #1",
         )
         pk2 = LogItem.objects.log_action(
             user = profile,
             affected_object = user,
-            action = "delete",
+            key = "delete",
             #log_message = "stopped test #1",
         )
         item1 = LogItem.objects.get( pk=pk1 )
@@ -125,7 +125,7 @@ class LoggingTest(TestCase):
         LogItem.objects.log_action(
             user = profile,
             affected_object = user,
-            action = "create",
+            key = "create",
         )
 
         self.assertNotEqual(state, cache)
@@ -137,7 +137,7 @@ class LoggingTest(TestCase):
         LogItem.objects.log_action(
             user = profile,
             affected_object = user,
-            action = "delete",
+            key = "delete",
         )
 
         # state should still contain 1 LogAction
@@ -150,7 +150,7 @@ class LoggingTest(TestCase):
         LogItem.objects.log_action(
             user = profile,
             affected_object = user,
-            action = "delete",
+            key = "delete",
         )
         self.assertEqual(state, cache)
 
