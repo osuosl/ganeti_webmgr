@@ -239,7 +239,7 @@ class ImportViews(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'importing/missing_db.html')
-        self.assertItemsEqual([('1:vm2','vm2')], response.context['vms'])
+        self.assertEqual([('1:vm2','vm2')], response.context['vms'])
         user.revoke_all(cluster0)
 
         # authorized get (superuser)
@@ -249,7 +249,7 @@ class ImportViews(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'importing/missing_db.html')
-        self.assertItemsEqual([('1:vm2','vm2'), ('2:vm5','vm5')], response.context['vms'])
+        self.assertEqual([('1:vm2','vm2'), ('2:vm5','vm5')], response.context['vms'])
         user.is_superuser = False
         user.save()
 
