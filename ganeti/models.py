@@ -21,9 +21,6 @@ import cPickle
 from datetime import datetime, timedelta
 from hashlib import sha1
 from subprocess import Popen
-import os
-from threading import Thread
-import time
 
 from django.conf import settings
 from django.contrib.auth.models import User, Group
@@ -34,7 +31,7 @@ from django.db.models import Sum
 from django.utils.encoding import force_unicode
 
 
-from object_permissions.registration import register, get_users, get_groups
+from object_permissions.registration import register
 from util import client
 from util.client import GanetiApiError
 
