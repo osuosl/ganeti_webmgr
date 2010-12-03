@@ -692,6 +692,25 @@ def update_organization(sender, instance, **kwargs):
 models.signals.post_save.connect(create_profile, sender=User)
 models.signals.post_save.connect(update_cluster_hash, sender=Cluster)
 models.signals.post_save.connect(update_organization, sender=Group)
-register(['admin', 'create', 'create_vm'], Cluster)
-register(['admin', 'start'], VirtualMachine)
 
+# Register permissions on our models.
+# These are part of the DB schema and should not be changed without serious
+# forethought.
+# You *must* syncdb after you change these.
+register([
+    "admin",
+    "create_vm",
+    "migrate",
+    "export",
+    "replace_disks",
+    "tags",
+    ],
+    Cluster)
+register([
+    "admin",
+    "power",
+    "remove",
+    "modify",
+    "tags",
+    ],
+    VirtualMachine)

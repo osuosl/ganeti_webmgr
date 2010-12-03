@@ -1108,16 +1108,16 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual('application/json', response['content-type'])
         
         # valid POST user has permissions
-        user1.grant('start', vm)
+        user1.grant('power', vm)
         data = {'permissions':['admin'], 'user':user1.id}
         response = c.post(url % args, data)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'permissions/user_row.html')
         self.assert_(user1.has_perm('admin', vm))
-        self.assertFalse(user1.has_perm('start', vm))
+        self.assertFalse(user1.has_perm('power', vm))
         
         # valid POST group has permissions
-        group.grant('start', vm)
+        group.grant('power', vm)
         data = {'permissions':['admin'], 'group':group.id}
         response = c.post(url % args, data)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
@@ -1190,27 +1190,27 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(404, response.status_code)
         
         # invalid user (POST)
-        user1.grant('start', vm)
+        user1.grant('power', vm)
         data = {'permissions':['admin'], 'user':-1}
         response = c.post(url_post % args_post, data)
         self.assertEqual('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
         
         # no user (POST)
-        user1.grant('start', vm)
+        user1.grant('power', vm)
         data = {'permissions':['admin']}
         response = c.post(url_post % args_post, data)
         self.assertEqual('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
         
         # valid POST user has permissions
-        user1.grant('start', vm)
+        user1.grant('power', vm)
         data = {'permissions':['admin'], 'user':user1.id}
         response = c.post(url_post % args_post, data)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'permissions/user_row.html')
         self.assert_(user1.has_perm('admin', vm))
-        self.assertFalse(user1.has_perm('start', vm))
+        self.assertFalse(user1.has_perm('power', vm))
         
         # valid POST user has no permissions left
         data = {'permissions':[], 'user':user1.id}
@@ -1287,7 +1287,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertNotEqual('0', response.content)
         
         # valid POST group has permissions
-        group.grant('start', vm)
+        group.grant('power', vm)
         data = {'permissions':['admin'], 'group':group.id}
         response = c.post(url_post % args_post, data)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
