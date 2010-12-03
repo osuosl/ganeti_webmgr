@@ -42,36 +42,7 @@ class LogItemManager(models.Manager):
     # Cache to avoid re-looking up LogAction objects all over the place
     _cache = {}
 
-    def _add_to_cache(self, using, action):
-        """
-        Insert LogAction into cache
-        @param using  Database   used database
-        @param action LogAction  action name
-        """
-        key = action.name
-        self.__class__._cache.setdefault( using, {} )[key] = action
-
-    def _get_action_object(self, name):
-        """
-        Bridge used to cache actions
-
-        @param name string
-        """
-        try:
-            action = self.__class__._cache[self.db][name]
-        except KeyError:
-            # get if exists
-            # or create otherwise
-            action, created = LogAction.objects.get_or_create(
-                name = name,
-                defaults = { "action_message": "%sed" % smart_unicode(name) },
-            )
-            # load it into cache
-            self._add_to_cache(self.db, action)
-        return action
-
-    # TODO: perhaps this needs improving
-    # take a look at django.contrib.contenttypes.management.update_contenttypes
+    # XXX: it doesn't refresh when any LogAction is changed or removed
     def clear_cache(self):
         """
         Clears out all LogAction cached objects
@@ -86,15 +57,27 @@ class LogItemManager(models.Manager):
         @param affected_object  any model
         @param action           string or LogAction
         """
-        if isinstance(action, str):
-            action = self._get_action_object(action)
-        else:
-            # just adds to cache it action obj. not yet added
-            try:
-                act = self.__class__._cache[self.db][action.name]
-            except KeyError:
-                self._add_to_cache(self.db, action)
+        key = action
+        string = True
+        # if action is LogAction object
+        if not isinstance(action, str):
+            key = action.name
+            string = False
 
+        try:
+            action = self.__class__._cache[self.db][key]
+        except KeyError:
+            if string:
+                # get if exists
+                # or create otherwise
+                action, created = LogAction.objects.get_or_create(
+                    name = key,
+                    defaults = {"action_message": "%sed" % smart_unicode(key)}
+                )
+            # load into cache
+            self.__class__._cache.setdefault(self.db, {})[key] = action
+
+        # now action is LogAction object
         m = self.model(
             id = None,
             action = action,
