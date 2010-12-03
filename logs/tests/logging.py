@@ -25,7 +25,7 @@ from django.utils.encoding import force_unicode
 from django.conf import settings
 from django import db
 
-from ganeti.models import Profile, VirtualMachine, Cluster
+from ganeti.models import Profile
 from logs.models import LogItem, LogAction
 
 
@@ -33,31 +33,32 @@ class LoggingTest(TestCase):
     def setUp(self):
         self.tearDown()
 
-    def tearDown(self):
-        Profile.objects.all().delete()
-        VirtualMachine.objects.all().delete()
-        Cluster.objects.all().delete()
-        LogItem.objects.all().delete()
-        LogAction.objects.all().delete()
-
-    def test_log_creation(self):
-        """
-        Test different ways of creation of LogItem, LogAction
-        Test representation of LogItems
-
-        Verifies:
-            * LogItem, LogAction are created/deleted properly
-            * LogItem is representated properly
-        """
-        act1 = LogAction(name="creation", action_message="created")
-        act1.save()
-
         user = User(username="testing")
         user.save()
         profile = user.get_profile()
 
+        act1 = LogAction(name="creation", action_message="created")
+        act1.save()
+
+        dict_ = globals()
+        dict_["act1"] = act1
+        dict_["user"] = user
+        dict_["profile"] = profile
+
+    def tearDown(self):
+        Profile.objects.all().delete()
+        LogItem.objects.all().delete()
+        LogAction.objects.all().delete()
+        LogItem.objects.clear_cache()
+
+    def test_log_creation(self):
+        """
+        Test different ways of creation of LogItem, LogAction
+
+        Verifies:
+            * LogItem, LogAction are created/deleted properly
+        """
         self.assertTrue(LogAction.objects.filter(pk=act1.pk).exists())
-        self.assert_(profile, 'Profile was not created')
 
         pk1 = LogItem.objects.log_action(
             user = profile,
@@ -75,6 +76,25 @@ class LoggingTest(TestCase):
         self.assertEqual(len(LogItem.objects.all()), 2)
         self.assertEqual(len(LogAction.objects.all()), 2)
 
+    def test_log_representation(self):
+        """
+        Test representation of LogItems
+
+        Verifies:
+            * LogItem is represented properly
+        """
+        pk1 = LogItem.objects.log_action(
+            user = profile,
+            affected_object = user,
+            action = act1,
+            log_message = "started test #1",
+        )
+        pk2 = LogItem.objects.log_action(
+            user = profile,
+            affected_object = user,
+            action = "delete",
+            #log_message = "stopped test #1",
+        )
         item1 = LogItem.objects.get( pk=pk1 )
         item2 = LogItem.objects.get( pk=pk2 )
 
@@ -92,66 +112,52 @@ class LoggingTest(TestCase):
         Verifies:
             * LogAction properly uses its cache system
         """
-        settings.DEBUG = True
+        # useful references and tools
+        cache = LogItem.objects._cache
+        curr_db = LogItem.objects.db
+        from copy import deepcopy
+
+        # clear cache
         LogItem.objects.clear_cache()
 
-        from django import db
-        db.reset_queries()
+        # state should be empty
+        state = deepcopy(cache)
+        self.assertEqual(state, {})
 
-        act1 = LogAction(name="creation", action_message="created")
-        act1.save()
-
-        user = User(username="testing")
-        user.save()
-        profile = user.get_profile()
-
-        self.assertTrue(LogAction.objects.filter(pk=act1.pk).exists())
-        self.assert_(profile, 'Profile was not created')
-
-        pk1 = LogItem.objects.log_action(
+        LogItem.objects.log_action(
             user = profile,
             affected_object = user,
             action = act1,
         )
 
-        # current number of queries
-        # about 19-20
-        # this variable will test number of sent queries
-        state = len(db.connection.queries)
+        self.assertNotEqual(state, cache)
+
+        # state should contain 1 LogAction
+        state = deepcopy(cache)
+        self.assertEqual(len(state[curr_db]), 1)
 
         LogItem.objects.log_action(
             user = profile,
             affected_object = user,
-            action = "creation",
+            action = "delete",
         )
 
-        # SELECT LogItem, INSERT LogItem
-        state += 2
-        self.assertEqual( state, len(db.connection.queries) )
+        # state should still contain 1 LogAction
+        # but cache should contain 2 LogActions
+        self.assertEqual(len(state[curr_db]), 1)
+        self.assertNotEqual(state, cache)
 
-
+        # caching: state should be the same as cache
+        state = deepcopy(cache)
         LogItem.objects.log_action(
             user = profile,
             affected_object = user,
-            action = "creation",
+            action = "delete",
         )
-
-        # SELECT LogItem, INSERT LogItem
-        state += 2
-        self.assertEqual( state, len(db.connection.queries) )
+        self.assertEqual(state, cache)
 
 
-        LogItem.objects.log_action(
-            user = profile,
-            affected_object = user,
-            action = "change",
-        )
-
-        # SELECT LogAction, some strange SAVEPOINT (???), INSERT LogAction,
-        # INSERT LogItem, SELECT CURRVAL
-        state += 5
-        self.assertEqual( state, len(db.connection.queries) )
-
-
-        # don't forget to reset DEBUG!
-        settings.DEBUG = False
+        # both state and cache should be empty
+        LogItem.objects.clear_cache()
+        state = dict()
+        self.assertEqual(state, cache)
