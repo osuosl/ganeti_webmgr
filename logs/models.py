@@ -61,7 +61,7 @@ class LogItemManager(models.Manager):
         #key = smart_unicode(key)
 
         try:
-            action = self.__class__._cache[self.db][key]
+            action = self._cache[self.db][key]
         except KeyError:
             # get if exists
             # or create otherwise
@@ -69,7 +69,7 @@ class LogItemManager(models.Manager):
                 name = key,
             )
             # load into cache
-            self.__class__._cache.setdefault(self.db, {})[key] = action
+            self.._cache.setdefault(self.db, {})[key] = action
 
         # now action is LogAction object
         m = self.model(
