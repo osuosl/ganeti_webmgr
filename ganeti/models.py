@@ -239,6 +239,7 @@ class VirtualMachine(CachedClusterObject):
     disk_size = models.IntegerField(default=-1)
     ram = models.IntegerField(default=-1)
     cluster_hash = models.CharField(max_length=40, editable=False)
+    operating_system = models.CharField(max_length=128)
 
     @property
     def rapi(self):
@@ -303,6 +304,7 @@ class VirtualMachine(CachedClusterObject):
         for disk in self.info['disk.sizes']:
             disk_size += disk
         self.disk_size = disk_size
+        self.operating_system = self.info['os']
 
     def _refresh(self):
         return self.rapi.GetInstance(self.hostname)

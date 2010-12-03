@@ -21,6 +21,7 @@ $(document).ready(function() { $("#vmlist").tablesorter(); } );
       <th>Cluster</th>
       {% endif %}
       <th>Node</th>
+      <th>OS</th>
       <th>RAM</th>
       <th>Disk Space</th>
       <th>vCPUs</th>
@@ -43,6 +44,7 @@ $(document).ready(function() { $("#vmlist").tablesorter(); } );
             <td>{{ vm.cluster }}</td>
         {% endif %}
         <td>{{ info.pnode }}</td>
+        <td>{{ vm.operating_system }}</td>
         <td>{{ vm.ram|render_storage }}</td>
         <td>{{ vm.disk_size|render_storage }}</td>
         <td>{{ vm.virtual_cpus }}</td>
