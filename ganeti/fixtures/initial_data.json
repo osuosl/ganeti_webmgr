@@ -1,25 +1,25 @@
 [
     {
         "model": "logs.LogAction",
-        "pk": "creation",
+        "pk": "start",
         "fields": {
-            "action_message": "created"
+            "action_message": "started"
         }
     },
 
     {
         "model": "logs.LogAction",
-        "pk": "deletion",
+        "pk": "stop",
         "fields": {
-            "action_message": "deleted"
+            "action_message": "stopped"
         }
     },
 
     {
         "model": "logs.LogAction",
-        "pk": "change",
+        "pk": "restart",
         "fields": {
-            "action_message": "changed"
+            "action_message": "restarted"
         }
     }
 ]
