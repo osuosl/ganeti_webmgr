@@ -56,7 +56,7 @@ class LogItemManager(models.Manager):
         """
         # Want to use unicode?
         # Add this at import section of the file
-        #from django.utils.encoding import smart_unicode 
+        #from django.utils.encoding import smart_unicode
         # Uncomment below:
         #key = smart_unicode(key)
 
@@ -69,7 +69,7 @@ class LogItemManager(models.Manager):
                 name = key,
             )
             # load into cache
-            self.._cache.setdefault(self.db, {})[key] = action
+            self._cache.setdefault(self.db, {})[key] = action
 
         # now action is LogAction object
         m = self.model(
@@ -121,7 +121,7 @@ class LogItem(models.Model):
         if self.log_message:
             msg = ": %s" % self.log_message
 
-        format = "[%(timestamp)s] user %(user)s %(action)sed" \
+        format = "[%(timestamp)s] user %(user)s %(action)s" \
                + " %(object_type)s \"%(object_repr)s\"%(msg)s"
 
         fields = dict(
