@@ -37,11 +37,7 @@ class LoggingTest(TestCase):
         user.save()
         profile = user.get_profile()
 
-        act1 = LogAction(name="creation", action_message="created")
-        act1.save()
-
         dict_ = globals()
-        dict_["act1"] = act1
         dict_["user"] = user
         dict_["profile"] = profile
 
@@ -58,12 +54,14 @@ class LoggingTest(TestCase):
         Verifies:
             * LogItem, LogAction are created/deleted properly
         """
-        self.assertTrue(LogAction.objects.filter(pk=act1.pk).exists())
+        act1 = LogAction(name="create")
+        act1.save()
+        self.assertEqual(len(LogAction.objects.all()), 1)
 
         pk1 = LogItem.objects.log_action(
             user = profile,
             affected_object = user,
-            action = act1,
+            action = "create",
             log_message = "started test #1",
         )
         pk2 = LogItem.objects.log_action(
@@ -86,7 +84,7 @@ class LoggingTest(TestCase):
         pk1 = LogItem.objects.log_action(
             user = profile,
             affected_object = user,
-            action = act1,
+            action = "create",
             log_message = "started test #1",
         )
         pk2 = LogItem.objects.log_action(
@@ -99,7 +97,7 @@ class LoggingTest(TestCase):
         item2 = LogItem.objects.get( pk=pk2 )
 
         self.assertEqual(repr(item1),
-            "[%s] user testing created user \"testing\": started test #1" % item1.timestamp,
+            "[%s] user testing createed user \"testing\": started test #1" % item1.timestamp,
         )
         self.assertEqual(repr(item2),
             "[%s] user testing deleteed user \"testing\"" % item2.timestamp,
@@ -127,7 +125,7 @@ class LoggingTest(TestCase):
         LogItem.objects.log_action(
             user = profile,
             affected_object = user,
-            action = act1,
+            action = "create",
         )
 
         self.assertNotEqual(state, cache)
