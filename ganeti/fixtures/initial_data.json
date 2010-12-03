@@ -6,5 +6,29 @@
             "domain": "localhost",
             "name": "ganeti_webmgr"
         }
+    },
+  
+    {
+        "model": "logs.LogAction",
+        "pk": "start",
+        "fields": {
+            "action_message": "started"
+        }
+    },
+
+    {
+        "model": "logs.LogAction",
+        "pk": "stop",
+        "fields": {
+            "action_message": "stopped"
+        }
+    },
+
+    {
+        "model": "logs.LogAction",
+        "pk": "restart",
+        "fields": {
+            "action_message": "restarted"
+        }
     }
 ]

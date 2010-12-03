@@ -115,9 +115,9 @@ class LogItem(models.Model):
     """
     action = models.ForeignKey(LogAction)
     timestamp = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(Profile)
+    user = models.ForeignKey(Profile, related_name='log_items')
 
-    object_type = models.ForeignKey(ContentType)
+    object_type = models.ForeignKey(ContentType, related_name='log_items')
     object_id = models.PositiveIntegerField()
     object_repr = models.CharField(max_length=128, blank=True, null=True)
     affected_object = GenericForeignKey("object_type", "object_id")
