@@ -46,20 +46,19 @@ class LogItemManager(models.Manager):
         """
         self.__class__._cache.clear()
 
-    def log_action(self, user, affected_object, action, log_message=None):
+    def log_action(self, user, affected_object, key, log_message=None):
         """
         Creates new log entry
 
         @param user             Profile
         @param affected_object  any model
-        @param action           string (LogAction.name)
+        @param key              string (LogAction.name)
         """
-        key = action
         # Want to use unicode?
         # Add this at import section of the file
         #from django.utils.encoding import smart_unicode 
         # Uncomment below:
-        #key = smart_unicode(action)
+        #key = smart_unicode(key)
 
         try:
             action = self.__class__._cache[self.db][key]
