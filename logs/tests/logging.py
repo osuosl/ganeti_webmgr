@@ -54,20 +54,20 @@ class LoggingTest(TestCase):
         Verifies:
             * LogItem, LogAction are created/deleted properly
         """
-        act1 = LogAction(name="create")
+        act1 = LogAction(name="created")
         act1.save()
         self.assertEqual(len(LogAction.objects.all()), 1)
 
         pk1 = LogItem.objects.log_action(
             user = profile,
             affected_object = user,
-            key = "create",
+            key = "created",
             log_message = "started test #1",
         )
         pk2 = LogItem.objects.log_action(
             user = profile,
             affected_object = user,
-            key = "delete",
+            key = "deleted",
             #log_message = "stopped test #1",
         )
 
@@ -84,23 +84,23 @@ class LoggingTest(TestCase):
         pk1 = LogItem.objects.log_action(
             user = profile,
             affected_object = user,
-            key = "create",
+            key = "created",
             log_message = "started test #1",
         )
         pk2 = LogItem.objects.log_action(
             user = profile,
             affected_object = user,
-            key = "delete",
+            key = "deleted",
             #log_message = "stopped test #1",
         )
         item1 = LogItem.objects.get( pk=pk1 )
         item2 = LogItem.objects.get( pk=pk2 )
 
         self.assertEqual(repr(item1),
-            "[%s] user testing createed user \"testing\": started test #1" % item1.timestamp,
+            "[%s] user testing created user \"testing\": started test #1" % item1.timestamp,
         )
         self.assertEqual(repr(item2),
-            "[%s] user testing deleteed user \"testing\"" % item2.timestamp,
+            "[%s] user testing deleted user \"testing\"" % item2.timestamp,
         )
 
     def test_caching(self):
@@ -125,7 +125,7 @@ class LoggingTest(TestCase):
         LogItem.objects.log_action(
             user = profile,
             affected_object = user,
-            key = "create",
+            key = "created",
         )
 
         self.assertNotEqual(state, cache)
@@ -137,7 +137,7 @@ class LoggingTest(TestCase):
         LogItem.objects.log_action(
             user = profile,
             affected_object = user,
-            key = "delete",
+            key = "deleted",
         )
 
         # state should still contain 1 LogAction
@@ -150,7 +150,7 @@ class LoggingTest(TestCase):
         LogItem.objects.log_action(
             user = profile,
             affected_object = user,
-            key = "delete",
+            key = "deleted",
         )
         self.assertEqual(state, cache)
 

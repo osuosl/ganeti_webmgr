@@ -124,7 +124,7 @@ def shutdown(request, cluster_slug, instance):
             log_action(
                 user = user.get_profile(),
                 affected_object = vm,
-                key = "stop",
+                key = "stopped",
             )
         except GanetiApiError, e:
             msg = [0, str(e)]
@@ -151,7 +151,7 @@ def startup(request, cluster_slug, instance):
             log_action(
                 user = user.get_profile(),
                 affected_object = vm,
-                key = "start",
+                key = "started",
             )
         except GanetiApiError, e:
             msg = [0, str(e)]
@@ -178,7 +178,7 @@ def reboot(request, cluster_slug, instance):
             log_action(
                 user = user.get_profile(),
                 affected_object = vm,
-                key = "restart",
+                key = "restarted",
             )
         except GanetiApiError, e:
             msg = [0, str(e)]
@@ -381,7 +381,7 @@ def create(request, cluster_slug=None):
                 log_action(
                     user = user.get_profile(),
                     affected_object = vm,
-                    key = "create",
+                    key = "created",
                 )
 
                 # grant admin permissions to the owner
