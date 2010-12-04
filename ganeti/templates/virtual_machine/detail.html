@@ -70,7 +70,7 @@
             {% endif %}
         </ul>
         <div class="ticket" id="ticket_{{ object.id }}">
-            <table>
+            <table id="vm_ticket_table">
                 {% with instance.info as info %}
                 <tr><td class="name">Status</td><td class="name">{{ info.oper_state|yesno:"Running,Stopped" }}</td></tr>
                 <tr><td class="name">Autostart</td><td class="name">{{ info.admin_state }}</td></tr>
