@@ -31,6 +31,7 @@ from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
 from object_permissions import get_users, get_groups
+from object_permissions.registration import perms_on_any
 from object_permissions.views.permissions import view_users, view_permissions
 
 from util.client import GanetiApiError
@@ -131,11 +132,14 @@ def list_(request):
     user = request.user
     if user.is_superuser:
         vms = VirtualMachine.objects.all()
+        can_create = True
     else:
         vms = user.filter_on_perms(VirtualMachine, ['admin'])
+        can_create = user.perms_on_any(Cluster, ['create_vm'])
     
     return render_to_response('virtual_machine/list.html', {
-        'vms':vms
+        'vms':vms,
+        'can_create':can_create,
         },
         context_instance=RequestContext(request),
     )
