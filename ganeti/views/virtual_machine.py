@@ -84,11 +84,7 @@ def shutdown(request, cluster_slug, instance):
             msg = [1, 'Virtual machine stopping.']
 
             # log information about stopping the machine
-            log_action(
-                user = user,
-                affected_object = vm,
-                key = "stopped",
-            )
+            log_action(user, vm, "stopped")
         except GanetiApiError, e:
             msg = [0, str(e)]
         return HttpResponse(json.dumps(msg), mimetype='application/json')
@@ -111,11 +107,7 @@ def startup(request, cluster_slug, instance):
             msg = [1, 'Virtual machine starting.']
 
             # log information about starting up the machine
-            log_action(
-                user = user,
-                affected_object = vm,
-                key = "started",
-            )
+            log_action(user, vm, "started")
         except GanetiApiError, e:
             msg = [0, str(e)]
         return HttpResponse(json.dumps(msg), mimetype='application/json')
@@ -138,11 +130,7 @@ def reboot(request, cluster_slug, instance):
             msg = [1, 'Virtual machine rebooting.']
 
             # log information about restarting the machine
-            log_action(
-                user = user,
-                affected_object = vm,
-                key = "restarted",
-            )
+            log_action(user, vm, "restarted")
         except GanetiApiError, e:
             msg = [0, str(e)]
         return HttpResponse(json.dumps(msg), mimetype='application/json')
@@ -333,11 +321,7 @@ def create(request, cluster_slug=None):
                 vm.save()
 
                 # log information about creating the machine
-                log_action(
-                    user = user,
-                    affected_object = vm,
-                    key = "created",
-                )
+                log_action(user, vm, "created")
 
                 # grant admin permissions to the owner
                 data['grantee'].grant('admin', vm)
