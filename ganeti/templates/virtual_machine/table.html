@@ -10,17 +10,20 @@ $(document).ready(function() { $("#vmlist").tablesorter(); } );
 {% if cluster %}
     <div class="add"><a href="{% url instance-create cluster.slug %}">Add Virtual Machine</a></div>
 {% else %}
+    {% if can_create %}
     <div class="add"><a href="{% url instance-create %}">Add Virtual Machine</a></div>
+    {% endif %}
 {% endif %}
 <table id="vmlist" class="sorted">
 <thead>
     <tr>
-      {% if vm.error %}<th></th>{% endif %}
+      <th></th>
       <th>Name</th>
       {% if not cluster %}
       <th>Cluster</th>
       {% endif %}
       <th>Node</th>
+      <th>OS</th>
       <th>RAM</th>
       <th>Disk Space</th>
       <th>vCPUs</th>
@@ -31,11 +34,11 @@ $(document).ready(function() { $("#vmlist").tablesorter(); } );
     {% for vm in vms %}
     {% with vm.info as info %}
     <tr>
-        {% if vm.error %}
+        
         <td class="error">
-            <div class="icon_error" title="Ganeti API Error: {{vm.error}}"></div>
+            {% if vm.error %}<div class="icon_error" title="Ganeti API Error: {{vm.error}}"></div>{% endif %}
         </td>
-        {% endif %}
+        
         <td class="name">
             <a href="{% url instance-detail vm.cluster.slug vm.hostname %}">{{ vm.hostname }}</a>
         </td>
@@ -43,6 +46,7 @@ $(document).ready(function() { $("#vmlist").tablesorter(); } );
             <td>{{ vm.cluster }}</td>
         {% endif %}
         <td>{{ info.pnode }}</td>
+        <td>{{ vm.operating_system }}</td>
         <td>{{ vm.ram|render_storage }}</td>
         <td>{{ vm.disk_size|render_storage }}</td>
         <td>{{ vm.virtual_cpus }}</td>

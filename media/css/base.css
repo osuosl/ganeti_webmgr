@@ -1,23 +1,4 @@
-/* Oregon State Colors:
- *  Brand Orange - #d85a1a
- *  Brown - #9d601e
- *  411 (Baige) - #615042
- *  Warm Gray - #c6c0b7
- *  7539 (Gray) - #abada4
- *  5415 (Blue) - #6b859e
- *  5503 (Light Blue) - #a7c4c9
- *
- *  BG - OSU Homepage (09/24/10) - #eeece8
- * */
-/* Current colors
- * Links:
- *  #559BD7
- *  #9DC8EB
- * Text:
- *  white
- * Background:
- *  #9DC8EB
- */
+/* base.css */
 * {
     font-family:"Lucida Grande","DejaVu Sans","Bitstream Vera Sans",Verdana,Arial,sans-serif;
     font-size:12px;
@@ -102,7 +83,11 @@ li {
 .menu .user, .menu .user a {font-size:11px;}
 .menu .user a {display:block;}
 
-#content_wrapper {background:#EEEEEE; border-bottom: 5px solid #666666; width:100%;}
+#content_wrapper {
+    background:#EEEEEE;
+    border-bottom: 5px solid #666666;
+    width:100%;
+}
 #content_column {margin: 0 auto; width:979px;}
 #content {
     background:white;
@@ -207,6 +192,9 @@ form input.submit{margin-left:12.5em;}
     -webkit-border-radius:5px;
 }
 #quota p label {width:9em;}
+
+/* Virtual Machines */
+#content #vm_ticket_table {width:77%;}
 
 /*  Orphans */
 #orphans {margin:1em 0em 0em 1em;}

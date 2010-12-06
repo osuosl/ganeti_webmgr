@@ -98,7 +98,8 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'registration',
     'object_permissions',
-    'ganeti'
+    'ganeti',
+    'logs',
 )
 
 AUTH_PROFILE_MODULE = 'ganeti.Profile'
