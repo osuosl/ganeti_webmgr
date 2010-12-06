@@ -31,6 +31,7 @@ from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
 from object_permissions import get_users, get_groups
+from object_permissions.registration import perms_on_any
 from object_permissions.views.permissions import view_users, view_permissions
 
 from util.client import GanetiApiError
@@ -131,11 +132,14 @@ def list_(request):
     user = request.user
     if user.is_superuser:
         vms = VirtualMachine.objects.all()
+        can_create = True
     else:
         vms = user.filter_on_perms(VirtualMachine, ['admin'])
+        can_create = user.perms_on_any(Cluster, ['create_vm'])
     
     return render_to_response('virtual_machine/list.html', {
-        'vms':vms
+        'vms':vms,
+        'can_create':can_create,
         },
         context_instance=RequestContext(request),
     )
@@ -253,6 +257,7 @@ def create(request, cluster_slug=None):
             pnode = None
             snode = None
             os = data['os']
+            name_check = data['name_check']
             iallocator = data['iallocator']
             # Hidden fields
             iallocator_hostname = None
@@ -287,6 +292,7 @@ def create(request, cluster_slug=None):
                         [{"size": disk_size, }],[{nicmode: nictype, }],
                         memory=ram, os=os, vcpus=vcpus,
                         pnode=pnode, snode=snode,
+                        name_check=name_check, ip_check=name_check,
                         iallocator=iallocator_hostname,
                         hvparams={'kernel_path': kernelpath, \
                             'root_path': rootpath, \
@@ -482,6 +488,8 @@ class NewVirtualMachineForm(forms.Form):
                                 'invalid': 'Instance name must be resolvable',
                             },
                             max_length=255)
+    name_check = forms.BooleanField(label='DNS Name Check', \
+                                    initial=True, required=False)
     iallocator = forms.BooleanField(label='Automatic Allocation', \
                                     initial=False, required=False)
     iallocator_hostname = forms.CharField(required=False)

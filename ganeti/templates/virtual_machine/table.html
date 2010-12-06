@@ -10,7 +10,9 @@ $(document).ready(function() { $("#vmlist").tablesorter(); } );
 {% if cluster %}
     <div class="add"><a href="{% url instance-create cluster.slug %}">Add Virtual Machine</a></div>
 {% else %}
+    {% if can_create %}
     <div class="add"><a href="{% url instance-create %}">Add Virtual Machine</a></div>
+    {% endif %}
 {% endif %}
 <table id="vmlist" class="sorted">
 <thead>

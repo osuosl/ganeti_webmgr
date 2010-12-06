@@ -21,9 +21,6 @@ import cPickle
 from datetime import datetime, timedelta
 from hashlib import sha1
 from subprocess import Popen
-import os
-from threading import Thread
-import time
 
 from django.conf import settings
 from django.contrib.auth.models import User, Group
@@ -34,7 +31,7 @@ from django.db.models import Sum
 from django.utils.encoding import force_unicode, smart_unicode
 
 
-from object_permissions.registration import register, get_users, get_groups
+from object_permissions.registration import register
 from util import client
 from util.client import GanetiApiError
 
@@ -612,6 +609,25 @@ def update_organization(sender, instance, **kwargs):
 models.signals.post_save.connect(create_profile, sender=User)
 models.signals.post_save.connect(update_cluster_hash, sender=Cluster)
 models.signals.post_save.connect(update_organization, sender=Group)
-register(['admin', 'create', 'create_vm'], Cluster)
-register(['admin', 'start'], VirtualMachine)
 
+# Register permissions on our models.
+# These are part of the DB schema and should not be changed without serious
+# forethought.
+# You *must* syncdb after you change these.
+register([
+    "admin",
+    "create_vm",
+    "migrate",
+    "export",
+    "replace_disks",
+    "tags",
+    ],
+    Cluster)
+register([
+    "admin",
+    "power",
+    "remove",
+    "modify",
+    "tags",
+    ],
+    VirtualMachine)

@@ -696,16 +696,16 @@ class TestClusterViews(TestCase):
         self.assertEquals('application/json', response['content-type'])
         
         # valid POST user has permissions
-        user1.grant('create', cluster)
+        user1.grant('create_vm', cluster)
         data = {'permissions':['admin'], 'user':user1.id}
         response = c.post(url % args, data)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'cluster/user_row.html')
         self.assert_(user1.has_perm('admin', cluster))
-        self.assertFalse(user1.has_perm('create', cluster))
+        self.assertFalse(user1.has_perm('create_vm', cluster))
         
         # valid POST group has permissions
-        group.grant('create', cluster)
+        group.grant('create_vm', cluster)
         data = {'permissions':['admin'], 'group':group.id}
         response = c.post(url % args, data)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
@@ -766,27 +766,27 @@ class TestClusterViews(TestCase):
         self.assertEqual(404, response.status_code)
         
         # invalid user (POST)
-        user1.grant('create', cluster)
+        user1.grant('create_vm', cluster)
         data = {'permissions':['admin'], 'user':-1}
         response = c.post(url_post % args_post, data)
         self.assertEquals('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
         
         # no user (POST)
-        user1.grant('create', cluster)
+        user1.grant('create_vm', cluster)
         data = {'permissions':['admin']}
         response = c.post(url_post % args_post, data)
         self.assertEquals('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
         
         # valid POST user has permissions
-        user1.grant('create', cluster)
+        user1.grant('create_vm', cluster)
         data = {'permissions':['admin'], 'user':user1.id}
         response = c.post(url_post % args_post, data)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'cluster/user_row.html')
         self.assert_(user1.has_perm('admin', cluster))
-        self.assertFalse(user1.has_perm('create', cluster))
+        self.assertFalse(user1.has_perm('create_vm', cluster))
         
         # valid POST user has no permissions left
         data = {'permissions':[], 'user':user1.id}
@@ -851,7 +851,7 @@ class TestClusterViews(TestCase):
         self.assertNotEqual('0', response.content)
         
         # valid POST group has permissions
-        group.grant('create', cluster)
+        group.grant('create_vm', cluster)
         data = {'permissions':['admin'], 'group':group.id}
         response = c.post(url_post % args_post, data)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
