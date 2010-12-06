@@ -41,6 +41,37 @@ from util.client import GanetiApiError
 
 empty_field = (u'', u'---------')
 
+@login_required
+def delete(request, cluster_slug, instance):
+    """
+    Delete a VM.
+    """
+
+    user = request.user
+    instance = get_object_or_404(VirtualMachine, cluster__slug=cluster_slug,
+        hostname=instance)
+
+    # Check permissions.
+    if not (
+        user.is_superuser or
+        user.has_perm("remove", instance) or
+        user.has_perm("admin", instance) or
+        user.has_perm("admin", instance.cluster)
+        ):
+        return HttpResponseForbidden()
+
+    # Fancy HTTP methods. Yay?
+    if request.method != 'DELETE':
+        return HttpResponseNotAllowed(["DELETE"])
+
+    # Kill it with fire!
+    jobid = instance.rapi.DeleteInstance(instance.hostname)
+    sleep(2)
+    jobstatus = instance.rapi.GetJobStatus(jobid)
+
+    instance.delete()
+
+    return HttpResponse('1', mimetype='application/json')
 
 @login_required
 def vnc(request, cluster_slug, instance):
