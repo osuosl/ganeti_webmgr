@@ -283,7 +283,7 @@ def create(request, cluster_slug=None):
                 pnode = data['pnode']
             
             # If drbd is being used assign the secondary node
-            if disk_template == 'drbd':
+            if disk_template == 'drbd' and pnode is not None:
                 snode = data['snode']
             
             try:
