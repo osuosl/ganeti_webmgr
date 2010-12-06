@@ -85,7 +85,7 @@ def shutdown(request, cluster_slug, instance):
 
             # log information about stopping the machine
             log_action(
-                user = user.get_profile(),
+                user = user,
                 affected_object = vm,
                 key = "stopped",
             )
@@ -112,7 +112,7 @@ def startup(request, cluster_slug, instance):
 
             # log information about starting up the machine
             log_action(
-                user = user.get_profile(),
+                user = user,
                 affected_object = vm,
                 key = "started",
             )
@@ -139,7 +139,7 @@ def reboot(request, cluster_slug, instance):
 
             # log information about restarting the machine
             log_action(
-                user = user.get_profile(),
+                user = user,
                 affected_object = vm,
                 key = "restarted",
             )
@@ -334,7 +334,7 @@ def create(request, cluster_slug=None):
 
                 # log information about creating the machine
                 log_action(
-                    user = user.get_profile(),
+                    user = user,
                     affected_object = vm,
                     key = "created",
                 )

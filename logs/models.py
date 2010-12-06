@@ -19,7 +19,8 @@
 
 from django.db import models
 
-from ganeti.models import Profile
+#from ganeti.models import Profile
+from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import GenericForeignKey
 from django.utils.encoding import force_unicode
@@ -92,7 +93,7 @@ class LogItem(models.Model):
     """
     action = models.ForeignKey(LogAction)
     timestamp = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(Profile)
+    user = models.ForeignKey(User)
 
     object_type = models.ForeignKey(ContentType)
     object_id = models.PositiveIntegerField()

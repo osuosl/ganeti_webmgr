@@ -35,13 +35,12 @@ class LoggingTest(TestCase):
 
         user = User(username="testing")
         user.save()
-        profile = user.get_profile()
 
         dict_ = globals()
         dict_["user"] = user
-        dict_["profile"] = profile
 
     def tearDown(self):
+        User.objects.all().delete()
         Profile.objects.all().delete()
         LogItem.objects.all().delete()
         LogAction.objects.all().delete()
@@ -59,13 +58,13 @@ class LoggingTest(TestCase):
         self.assertEqual(len(LogAction.objects.all()), 1)
 
         pk1 = LogItem.objects.log_action(
-            user = profile,
+            user = user,
             affected_object = user,
             key = "created",
             log_message = "started test #1",
         )
         pk2 = LogItem.objects.log_action(
-            user = profile,
+            user = user,
             affected_object = user,
             key = "deleted",
             #log_message = "stopped test #1",
@@ -82,13 +81,13 @@ class LoggingTest(TestCase):
             * LogItem is represented properly
         """
         pk1 = LogItem.objects.log_action(
-            user = profile,
+            user = user,
             affected_object = user,
             key = "created",
             log_message = "started test #1",
         )
         pk2 = LogItem.objects.log_action(
-            user = profile,
+            user = user,
             affected_object = user,
             key = "deleted",
             #log_message = "stopped test #1",
@@ -123,7 +122,7 @@ class LoggingTest(TestCase):
         self.assertEqual(state, {})
 
         LogItem.objects.log_action(
-            user = profile,
+            user = user,
             affected_object = user,
             key = "created",
         )
@@ -135,7 +134,7 @@ class LoggingTest(TestCase):
         self.assertEqual(len(state[curr_db]), 1)
 
         LogItem.objects.log_action(
-            user = profile,
+            user = user,
             affected_object = user,
             key = "deleted",
         )
@@ -148,7 +147,7 @@ class LoggingTest(TestCase):
         # caching: state should be the same as cache
         state = deepcopy(cache)
         LogItem.objects.log_action(
-            user = profile,
+            user = user,
             affected_object = user,
             key = "deleted",
         )
