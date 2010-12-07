@@ -1,9 +1,27 @@
 {% load webmgr_tags %}
 
 {% block head %}
-<script src="{{MEDIA_URL}}/js/jquery.tablesorter.min.js"></script>
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.tablesorter.min.js"></script>
 <script type="text/javascript">
-$(document).ready(function() { $("#vmlist").tablesorter(); } );
+    $(document).ready(function() {
+        $("#vmlist").tablesorter();
+
+        $("a.delete").live("click", function(){
+            name = $(this).parent().parent().children('.name').children('a').html();
+            if (confirm("Remove virtual machine: " + name)) {
+                parent = this.parentNode.parentNode;
+                $.delete_(this.href, function(){
+                    $(parent).remove();
+                    /* Show "No Clusters" if deletion makes list empty */
+                    if($('#vms tr').length <= 1) {
+                        $('#vms tr:last').after('<tr class="none"><td colspan="100%">No Virtual Machines</td></tr>');
+                    }
+                });
+            }
+            return false;
+        });
+    });
 </script>
 {% endblock %}
 
@@ -30,7 +48,7 @@ $(document).ready(function() { $("#vmlist").tablesorter(); } );
       <th>Status</th>
     </tr>
 </thead>
-<tbody>
+<tbody id="vms">
     {% for vm in vms %}
     {% with vm.info as info %}
     <tr>
@@ -65,6 +83,7 @@ $(document).ready(function() { $("#vmlist").tablesorter(); } );
         {% endif %}
         {{ info.status|render_instance_status }}</td>
     {% endwith %}
+        <td><a href="{% url instance-delete vm.cluster.slug vm.hostname %}" class="delete"><div class="delete"></div></a></td>
     {% empty %}
         <tr class="none"><td colspan="100%">No Virtual Machines</td></tr>
     {% endfor %}

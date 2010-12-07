@@ -18,29 +18,58 @@
 
 
 import json
+import socket
+import urllib2
 
 from time import sleep
 
 from django import forms
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, \
-    HttpResponseNotFound, HttpResponseForbidden, HttpResponseNotAllowed
+    HttpResponseForbidden, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
-from object_permissions import get_users, get_groups
-from object_permissions.registration import perms_on_any
 from object_permissions.views.permissions import view_users, view_permissions
 
 from util.client import GanetiApiError
-from ganeti.models import *
-from util.portforwarder import forward_port
-from util.client import GanetiApiError
+from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine
 
 empty_field = (u'', u'---------')
 
+@login_required
+def delete(request, cluster_slug, instance):
+    """
+    Delete a VM.
+    """
+
+    user = request.user
+    instance = get_object_or_404(VirtualMachine, cluster__slug=cluster_slug,
+        hostname=instance)
+
+    # Check permissions.
+    if not (
+        user.is_superuser or
+        user.has_perm("remove", instance) or
+        user.has_perm("admin", instance) or
+        user.has_perm("admin", instance.cluster)
+        ):
+        return HttpResponseForbidden()
+
+    # Fancy HTTP methods. Yay?
+    if request.method != 'DELETE':
+        return HttpResponseNotAllowed(["DELETE"])
+
+    # Kill it with fire!
+    jobid = instance.rapi.DeleteInstance(instance.hostname)
+    sleep(2)
+    jobstatus = instance.rapi.GetJobStatus(jobid)
+
+    instance.delete()
+
+    return HttpResponse('1', mimetype='application/json')
 
 @login_required
 def vnc(request, cluster_slug, instance):
@@ -283,7 +312,7 @@ def create(request, cluster_slug=None):
                 pnode = data['pnode']
             
             # If drbd is being used assign the secondary node
-            if disk_template == 'drbd':
+            if disk_template == 'drbd' and pnode is not None:
                 snode = data['snode']
             
             try:
@@ -709,7 +738,7 @@ class InstanceConfigForm(forms.Form):
 
     def clean_cdrom_image_path(self):
         data = self.cleaned_data['cdrom_image_path']
-        if data: 
+        if data:
             if not (data == 'none' or data.startswith('http://')):
                 raise forms.ValidationError('Only HTTP URLs are allowed')
         
