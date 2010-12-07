@@ -114,6 +114,11 @@ li {
     text-align: center;
     vertical-align:top;
 }
+#content td.status, td.actions {
+    padding:5px 0 0 0;
+}
+
+
 #content td a {border:0;}
 
 /* tablesorter style */
@@ -122,7 +127,7 @@ li {
     background-image: url(/media/images/bg.gif);
     background-repeat: no-repeat;
     background-position: center right;
-    border: 1px solid #FFF;
+    border-left: 1px solid #ddd;
     padding-right: 15px;
     cursor: s-resize;
 }
@@ -135,6 +140,13 @@ li {
 #content table.sorted .headerSortDown, #content table.sorted .headerSortUp {
     background-color: #7AB0DC;
 }
+
+#content th.status, #content th.actions {
+    background:none;
+    padding:0;
+}
+#content td.a {padding:0;}
+
 
 /**
  * Forms and Form Elements
@@ -234,11 +246,14 @@ ul.errors {list-style:square;}
 div.edit{background:url(/media/images/icons/edit.png);}
 div.delete{background:url(/media/images/icons/delete.png);}
 div.icon_error {background:url(/media/images/icons/exclamation.png);}
-div.delete, div.edit, div.icon_error {
+div.icon_running {background:url(/media/images/icons/check.png);}
+div.icon_stopped {background:url(/media/images/icons/stop.png);}
+div.delete, div.edit, div.icon_error, .icon_running, .icon_stopped {
     background-repeat:no-repeat;
-    width:16px;
-    height:16px;
     float:left;
+    height:16px;
+    padding:0;
+    width:16px;
 }
 
 .add a, .reboot a, .shutdown a, .startup a,
