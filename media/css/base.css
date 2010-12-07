@@ -206,7 +206,7 @@ form input.submit{margin-left:12.5em;}
 #quota p label {width:9em;}
 
 /* Virtual Machines */
-#content #vm_ticket_table {width:77%;}
+#content #vm_ticket_table {width:75%; border-color:#eee;}
 
 /*  Orphans */
 #orphans {margin:1em 0em 0em 1em;}
@@ -260,11 +260,11 @@ div.delete, div.edit, div.icon_error, .icon_running, .icon_stopped {
 .add a:visited, .reboot a:visited, .shutdown a:visited, .startup a:visited,
 .add a, .reboot a, .shutdown a, .startup a:link{color:inherit !important;}
 
-.add, .reboot, .shutdown, .startup {
+.add, .reboot, .shutdown, .startup, a.delete{
     background-color: #eeeeee !important;
     border: 1px solid #cccccc;
     clear:both;
-    color:black;
+    color:#666 !important;
     float:right; 
     padding:4px 4px 4px 22px;
     margin:2px;
@@ -273,11 +273,13 @@ div.delete, div.edit, div.icon_error, .icon_running, .icon_stopped {
     -webkit-border-radius:5px;
 }
 
+a.delete {background:url(/media/images/icons/delete.png) no-repeat 4px 4px;}
 .add {background:url(/media/images/icons/add.png) no-repeat 4px 4px;}
 .reboot {background:url(/media/images/icons/arrow_refresh.png) no-repeat 4px 4px;}
 .shutdown {background:url(/media/images/icons/stop.png) no-repeat 4px 4px;}
 .startup {background:url(/media/images/icons/add.png) no-repeat 4px 4px;}
-.add:hover, .reboot:hover, .shutdown:hover, .startup:hover {background-color: #dadada !important; color:black;}
+.add:hover, .reboot:hover, .shutdown:hover, .startup:hover, a.delete:hover {
+    background-color: #dadada !important; color:black !important; border-color:#bababa;}
 
 .spinner {margin:0 auto; text-align:center; width:100px}
 .spinner image {display:block; margin:0 auto; width:32px;}
