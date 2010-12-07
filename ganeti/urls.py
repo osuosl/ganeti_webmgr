@@ -17,7 +17,7 @@
 # USA.
 
 
-from django.conf.urls.defaults import *
+from django.conf.urls.defaults import patterns, url
 
 cluster_slug = '(?P<cluster_slug>[-_A-Za-z0-9]+)'
 cluster = 'cluster/%s' % cluster_slug

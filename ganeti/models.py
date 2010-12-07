@@ -351,9 +351,9 @@ class Cluster(CachedClusterObject):
     def __unicode__(self):
         return self.hostname
 
-    def save(self):
+    def save(self, *args, **kwargs):
         self.hash = self.create_hash()
-        super(Cluster, self).save()
+        super(Cluster, self).save(*args, **kwargs)
 
     @property
     def rapi(self):

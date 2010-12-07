@@ -1,6 +1,16 @@
 {% load webmgr_tags %}
 
 {% block head %}
+
+<style>
+    td.actions div.delete {
+        float:none;
+    }
+    #content td.actions a, #content td.actions {
+        padding:5px 0 0 0;
+    }
+</style>
+
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.tablesorter.min.js"></script>
 <script type="text/javascript">
@@ -9,7 +19,7 @@
 
         $("a.delete").live("click", function(){
             name = $(this).parent().parent().children('.name').children('a').html();
-            if (confirm("Remove Cluster: " + name)) {
+            if (confirm("Remove virtual machine: " + name)) {
                 parent = this.parentNode.parentNode;
                 $.delete_(this.href, function(){
                     $(parent).remove();
@@ -35,7 +45,7 @@
 <table id="vmlist" class="sorted">
 <thead>
     <tr>
-      <th></th>
+      <th class="status"></th>
       <th>Name</th>
       {% if not cluster %}
       <th>Cluster</th>
@@ -45,7 +55,7 @@
       <th>RAM</th>
       <th>Disk Space</th>
       <th>vCPUs</th>
-      <th>Status</th>
+      <th class="actions"></th>
     </tr>
 </thead>
 <tbody id="vms">
@@ -53,8 +63,24 @@
     {% with vm.info as info %}
     <tr>
         
-        <td class="error">
-            {% if vm.error %}<div class="icon_error" title="Ganeti API Error: {{vm.error}}"></div>{% endif %}
+        <td class="status">
+            {% if vm.error %}
+                <div class="icon_error" title="Ganeti API Error: {{vm.error}}, last status was {{ info.status|render_instance_status }}"></div>
+            {% else %}
+                {% if info.admin_state %}
+                    {% if info.oper_state %}
+                        <div class="icon_running" title="running"></div>
+                    {% else %}
+                        <div class="icon_error" title="{{ info.status|render_instance_status }}"></div>
+                    {% endif %}
+                {% else %}
+                    {% if info.oper_state %}
+                        <div class="icon_error" title="{{ info.status|render_instance_status }}"></div>
+                    {% else %}
+                        <div class="icon_stopped" title="stopped"></div>
+                    {% endif %}
+                {% endif %}
+            {% endif %}
         </td>
         
         <td class="name">
@@ -68,22 +94,8 @@
         <td>{{ vm.ram|render_storage }}</td>
         <td>{{ vm.disk_size|render_storage }}</td>
         <td>{{ vm.virtual_cpus }}</td>
-        {% if info.admin_state %}
-            {% if info.oper_state %}
-                <td class="status-running">
-            {% else %}
-                <td class="status-error">
-            {% endif %}
-            {% else %}
-            {% if info.oper_state %}
-                <td class="status-error">
-            {% else %}
-                <td class="status-down">
-            {% endif %}
-        {% endif %}
-        {{ info.status|render_instance_status }}</td>
     {% endwith %}
-        <td><a href="{% url instance-delete vm.cluster.slug vm.hostname %}" class="delete"><div class="delete"></div></a></td>
+        <td class="actions"><a href="{% url instance-delete vm.cluster.slug vm.hostname %}" class="delete" title="delete"><div class="delete"></div></a></td>
     {% empty %}
         <tr class="none"><td colspan="100%">No Virtual Machines</td></tr>
     {% endfor %}
