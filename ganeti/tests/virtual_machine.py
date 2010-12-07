@@ -1006,6 +1006,109 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         user.is_superuser = False
         user.save()
     
+    def test_view_delete(self):
+        """
+        Tests view for deleting virtual machines
+        """
+        url = '/cluster/%s/%s/delete'
+        args = (cluster.slug, vm.hostname)
+        
+        # anonymous user
+        response = c.get(url % args, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'registration/login.html')
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.post(url % args)
+        self.assertEqual(403, response.status_code)
+        
+        # invalid vm
+        response = c.get(url % (cluster.slug, "DoesNotExist"))
+        self.assertEqual(404, response.status_code)
+        
+        # authorized GET (vm remove permissions)
+        user.grant('remove', vm)
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/delete.html')
+        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        user.revoke_all(vm)
+        
+        # authorized GET (vm admin permissions)
+        user.grant('admin', vm)
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/delete.html')
+        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        user.revoke_all(cluster)
+        
+        # authorized GET (cluster admin permissions)
+        user.grant('admin', cluster)
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/delete.html')
+        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        user.revoke_all(cluster)
+        
+        # authorized GET (superuser)
+        user.is_superuser = True
+        user.save()
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/delete.html')
+        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        
+        #authorized DELETE (superuser)
+        user1.grant('power', vm)
+        response = c.delete(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('application/json', response['content-type'])
+        self.assertFalse(VirtualMachine.objects.filter(id=vm.id).exists())
+        self.assertFalse(user1.has_perm('power', vm))
+        user.is_superuser = False
+        user.save()
+        vm.save()
+        
+        #authorized DELETE (cluster admin)
+        user.grant('admin', cluster)
+        user1.grant('power', vm)
+        response = c.delete(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('application/json', response['content-type'])
+        self.assertFalse(VirtualMachine.objects.filter(id=vm.id).exists())
+        self.assertFalse(user1.has_perm('power', vm))
+        user.revoke_all(cluster)
+        
+        #authorized DELETE (vm admin)
+        vm.save()
+        user.grant('admin', vm)
+        user1.grant('power', vm)
+        response = c.delete(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('application/json', response['content-type'])
+        self.assertFalse(VirtualMachine.objects.filter(id=vm.id).exists())
+        self.assertFalse(user1.has_perm('power', vm))
+        vm.save()
+        user.revoke_all(vm)
+        
+        #authorized DELETE (cluster admin)
+        vm.save()
+        user.grant('remove', vm)
+        user1.grant('power', vm)
+        response = c.delete(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('application/json', response['content-type'])
+        self.assertFalse(VirtualMachine.objects.filter(id=vm.id).exists())
+        self.assertFalse(user1.has_perm('power', vm))
+        vm.save()
+        user.revoke_all(vm)
+    
+    
     def test_view_vnc(self):
         """
         Tests view for cluster users:

@@ -39,6 +39,7 @@ from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine
 
 empty_field = (u'', u'---------')
 
+
 @login_required
 def delete(request, cluster_slug, instance):
     """
@@ -58,18 +59,24 @@ def delete(request, cluster_slug, instance):
         ):
         return HttpResponseForbidden()
 
-    # Fancy HTTP methods. Yay?
-    if request.method != 'DELETE':
-        return HttpResponseNotAllowed(["DELETE"])
+    if request.method == 'GET':
+        return render_to_response("virtual_machine/delete.html",
+            {'vm': instance},
+            context_instance=RequestContext(request),
+        )
+      
+    elif request.method == 'DELETE':
+        # Delete instance
+        #jobid = instance.rapi.DeleteInstance(instance.hostname)
+        #sleep(2)
+        #jobstatus = instance.rapi.GetJobStatus(jobid)
+        
+        instance.delete()
+        
+        return HttpResponse('1', mimetype='application/json')
+    
+    return HttpResponseNotAllowed(["GET","DELETE"])
 
-    # Kill it with fire!
-    jobid = instance.rapi.DeleteInstance(instance.hostname)
-    sleep(2)
-    jobstatus = instance.rapi.GetJobStatus(jobid)
-
-    instance.delete()
-
-    return HttpResponse('1', mimetype='application/json')
 
 @login_required
 def vnc(request, cluster_slug, instance):
@@ -182,6 +189,8 @@ def detail(request, cluster_slug, instance):
     user = request.user
     admin = user.is_superuser or user.has_perm('admin', vm) \
         or user.has_perm('admin', cluster)
+    remove = admin or user.has_perm('remove', vm)
+    
     if not admin:
         return HttpResponseForbidden('You do not have permission to view this cluster\'s details')
     #TODO Update to use part of the NewVirtualMachineForm in 0.5 release
@@ -216,7 +225,8 @@ def detail(request, cluster_slug, instance):
         'cluster': cluster,
         'instance': vm,
         #'configform': form,
-        'admin':admin
+        'admin':admin,
+        'remove':remove
         },
         context_instance=RequestContext(request),
     )
