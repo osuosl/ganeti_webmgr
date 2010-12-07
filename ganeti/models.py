@@ -32,9 +32,9 @@ from django.utils.encoding import force_unicode, smart_unicode
 
 
 from object_permissions.registration import register
+from ganeti import tags
 from util import client
 from util.client import GanetiApiError
-
 
 RAPI_CACHE = {}
 RAPI_CACHE_HASHES = {}
@@ -256,8 +256,8 @@ class VirtualMachine(CachedClusterObject):
             remove = []
             for tag in info_['tags']:
                 # update owner from
-                if tag.startswith('GANETI_WEB_MANAGER:OWNER:'):
-                    id = int(tag[25:])
+                if tag.startswith(tags.OWNER):
+                    id = int(tag[len(tags.OWNER):])
                     if id == self.owner_id:
                         found = True
                     else:
@@ -267,7 +267,7 @@ class VirtualMachine(CachedClusterObject):
                 for tag in remove:
                     info_['tags'].remove(tag)
             if self.owner_id and not found:
-                tag = 'GANETI_WEB_MANAGER:OWNER:%s' % self.owner_id
+                tag = '%s%s' % (tags.OWNER, self.owner_id)
                 self.rapi.AddInstanceTags(self.hostname, [tag])
                 self.info['tags'].append(tag)
 
@@ -282,10 +282,10 @@ class VirtualMachine(CachedClusterObject):
         owner_parsed = False
         for tag in info_['tags']:
             # update owner from
-            if tag.startswith('GANETI_WEB_MANAGER:OWNER:'):
+            if tag.startswith(tags.OWNER):
                 owner_parsed = True
                 try:
-                    id = int(tag[25:])
+                    id = int(tag[len(tags.OWNER):])
                     if id != self.owner_id:
                         self.owner = ClusterUser.objects.get(id=id)
                 except ClusterUser.DoesNotExist:

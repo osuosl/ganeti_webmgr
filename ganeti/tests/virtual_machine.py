@@ -29,7 +29,7 @@ from object_permissions import grant, get_user_perms
 
 from util import client
 from ganeti.tests.rapi_proxy import RapiProxy, INSTANCE, INFO
-from ganeti import models
+from ganeti import models, tags
 from ganeti.views.virtual_machine import NewVirtualMachineForm
 VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
@@ -166,17 +166,17 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(None, vm.owner)
         
         # set it to a group
-        data['tags'] = ['GANETI_WEB_MANAGER:OWNER:%s' % owner0.id]
+        data['tags'] = ['%s%s' % (tags.OWNER, owner0.id)]
         vm.info = data
         self.assertEqual(owner0, vm.owner)
         
         # invalid group
-        data['tags'] = ['GANETI_WEB_MANAGER:OWNER:%s' % -1]
+        data['tags'] = ['%s%s' % (tags.OWNER, -1)]
         vm.info = data
         self.assertEqual(None, vm.owner)
         
         # change it
-        data['tags'] = ['GANETI_WEB_MANAGER:OWNER:%s' % owner1.id]
+        data['tags'] = ['%s%s' % (tags.OWNER, owner1.id)]
         vm.info = data
         self.assertEqual(owner1, vm.owner)
         
@@ -203,12 +203,12 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         # setting owner
         vm.owner = owner0
         vm.save()
-        self.assertEqual(['GANETI_WEB_MANAGER:OWNER:%s'%owner0.id], vm.info['tags'])
+        self.assertEqual(['%s%s' % (tags.OWNER, owner0.id)], vm.info['tags'])
         
         # changing owner
         vm.owner = owner1
         vm.save()
-        self.assertEqual(['GANETI_WEB_MANAGER:OWNER:%s'%owner1.id], vm.info['tags'])
+        self.assertEqual(['%s%s' % (tags.OWNER, owner1.id)], vm.info['tags'])
         
         # setting owner to none
         vm.owner = None
