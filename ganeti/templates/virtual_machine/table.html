@@ -9,7 +9,7 @@
 
         $("a.delete").live("click", function(){
             name = $(this).parent().parent().children('.name').children('a').html();
-            if (confirm("Remove Cluster: " + name)) {
+            if (confirm("Remove virtual machine: " + name)) {
                 parent = this.parentNode.parentNode;
                 $.delete_(this.href, function(){
                     $(parent).remove();
