@@ -297,8 +297,11 @@ def create(request, cluster_slug=None):
             disk_size = data['disk_size']
             ram = data['ram']
             nicmode = data['nicmode']
+            niclink = data['niclink']
             nictype = data['nictype']
             # HVPARAMS
+            disktype = data['disk_type']
+
             kernelpath = data['kernelpath']
             rootpath = data['rootpath']
             serialconsole = data['serialconsole']
@@ -318,7 +321,7 @@ def create(request, cluster_slug=None):
             try:
                 jobid = cluster.rapi.CreateInstance('create', hostname,
                         disk_template,
-                        [{"size": disk_size, }],[{nicmode: nictype, }],
+                        [{"size": disk_size, }],[{'mode':nicmode, 'link':niclink, }],
                         memory=ram, os=os, vcpus=vcpus,
                         pnode=pnode, snode=snode,
                         name_check=name_check, ip_check=name_check,
@@ -327,6 +330,8 @@ def create(request, cluster_slug=None):
                             'root_path': rootpath, \
                             'serial_console':serialconsole, \
                             'boot_order':bootorder, \
+                            'nic_type':nictype, \
+                            'disk_type':disktype,\
                             'cdrom_image_path':imagepath})
                 
                 # Wait for job to process as the error will not happen
@@ -465,8 +470,10 @@ def cluster_default_info(cluster):
         'hypervisors':info['enabled_hypervisors'],
         'vcpus':beparams['vcpus'],
         'ram':beparams['memory'],
+        'disktype':hvparams['disk_type'],
         'nictype':hvparams['nic_type'],
         'nicmode':info['nicparams']['default']['mode'],
+        'niclink':info['nicparams']['default']['link'],
         'kernelpath':hvparams['kernel_path'],
         'rootpath':hvparams['root_path'],
         'serialconsole':hvparams['serial_console'],
@@ -505,6 +512,16 @@ class NewVirtualMachineForm(forms.Form):
         (u'e1000',u'e1000'),
         (u'paravirtual',u'paravirtual'),
     ]
+    disktypes = [
+        (u'', u'---------'),
+        (u'paravirtual',u'paravirtual'),
+        (u'ioemu',u'ioemu'),
+        (u'ide',u'ide'),
+        (u'scsi',u'scsi'),
+        (u'sd',u'sd'),
+        (u'mtd',u'mtd'),
+        (u'pflash',u'pflash'),
+    ]
     bootchoices = [
         ('disk', 'Hard Disk'),
         ('cdrom', 'CD-ROM')
@@ -531,7 +548,9 @@ class NewVirtualMachineForm(forms.Form):
     vcpus = forms.IntegerField(label='Virtual CPUs', min_value=1)
     ram = forms.IntegerField(label='Memory (MB)', min_value=100)
     disk_size = forms.IntegerField(label='Disk Size (MB)', min_value=100)
+    disk_type = forms.ChoiceField(label='Disk Type', choices=disktypes)
     nicmode = forms.ChoiceField(label='NIC Mode', choices=nicmodes)
+    niclink = forms.CharField(label='NIC Link', required=False)
     nictype = forms.ChoiceField(label='NIC Type', choices=nictypes)
     # HVPARAMS
     kernelpath = forms.CharField(label='Kernel Path', required=False)
@@ -573,9 +592,11 @@ class NewVirtualMachineForm(forms.Form):
                                         widget = forms.HiddenInput())
             self.fields['vcpus'].initial = defaults['vcpus']
             self.fields['ram'].initial = defaults['ram']
+            self.fields['disk_type'].initial = defaults['disktype']
             self.fields['rootpath'].initial = defaults['rootpath']
             self.fields['kernelpath'].initial = defaults['kernelpath']
             self.fields['serialconsole'].initial = defaults['serialconsole']
+            self.fields['niclink'].initial = defaults['niclink']
         
         # set cluster choices based on the given owner
         if initial and 'owner' in initial and initial['owner']:

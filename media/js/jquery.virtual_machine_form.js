@@ -7,7 +7,9 @@
         owner = $("#id_owner");
         var snode = $("#id_snode").parent();
         var pnode = $("#id_pnode").parent();
+        var niclink = $("#id_niclink").parent();
         disk_template = $("#id_disk_template");
+        nicmode = $("#id_nicmode");
         curSelection = $("#id_snode option:selected").index();
         iallocator = $("#id_iallocator");
         iallocator_hostname = $("#id_iallocator_hostname");
@@ -44,6 +46,15 @@
             }
         });
         disk_template.change();
+        nicmode.change(function() {
+            if(nicmode.val() == '') {
+                niclink.hide();
+            } else {
+                niclink.show();
+            }
+        });
+        nicmode.change();
+       
     };
     /* Create new option items for select field */
     newoption = function(value, text) {
@@ -107,8 +118,10 @@
                             vcpus = data['vcpus'];
                             rootpath = data['rootpath'];
                             ram = data['ram'];
+                            disktype = data['disktype'];
                             kernelpath = data['kernelpath'];
                             nicmode = data['nicmode'];
+                            niclink = data['niclink'];
                             nictype = data['nictype'];
                             imagepath = data['imagepath'];
                             if(bootorder) {
@@ -144,8 +157,12 @@
                             if(nicmode) {
                                 $("#id_nicmode :selected").removeAttr('selected');
                                 $("#id_nicmode [value="+nicmode+"]").attr('selected','selected');
+                                $("#id_niclink").parent().show();
                             } else {
                                 $("#id_nicmode :first-child").attr('selected', 'selected');
+                            }
+                            if(niclink){
+                                $("#id_niclink").val(niclink);
                             }
                             if(nictype) {
                                 $("#id_nictype :selected").removeAttr('selected');
@@ -153,6 +170,9 @@
                             }
                             if(ram) {
                                 $("#id_ram").val(ram);
+                            }
+                            if(disktype){
+                                 $("#id_disk_type").val(disktype);
                             }
                             if(rootpath) {
                                 $("#id_rootpath").val(rootpath);

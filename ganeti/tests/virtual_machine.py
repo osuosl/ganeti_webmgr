@@ -490,6 +490,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
                     vcpus=2,
                     rootpath='/',
                     nictype='paravirtual',
+                    disk_type = 'paravirtual',
+                    niclink = 'br43',
                     nicmode='routed',
                     bootorder='disk',
                     os='image+ubuntu-lucid',
@@ -521,7 +523,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
         
         # POST - required values
-        for property in ['cluster', 'hostname', 'disk_size','nictype', 'nicmode',
+        for property in ['cluster', 'hostname', 'disk_size', 'disk_type','nictype', 'nicmode',
                          'vcpus', 'pnode', 'os', 'disk_template',
                          'rootpath', 'bootorder']:
             data_ = data.copy()
@@ -957,6 +959,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
             hypervisors=['kvm'],
             serialconsole=True,
             imagepath='',
+            disktype ='paravirtual',
+            niclink ='br42',
             nicmode='bridged',
             vcpus=2,
             iallocator='',
