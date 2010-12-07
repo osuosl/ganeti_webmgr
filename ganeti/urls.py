@@ -78,6 +78,9 @@ urlpatterns += patterns('ganeti.views.virtual_machine',
     url(r'^%s/shutdown/?$' % vm_prefix, 'shutdown', name="instance-shutdown"),
     url(r'^%s/startup/?$' % vm_prefix, 'startup', name="instance-startup"),
     url(r'^%s/reboot/?$' % vm_prefix, 'reboot', name="instance-reboot"),
+
+    # Delete
+    url(r"^%s/delete/?$" % vm_prefix, "delete", name="instance-delete"),
 )
 
 

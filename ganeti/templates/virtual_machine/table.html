@@ -1,41 +1,62 @@
 {% load webmgr_tags %}
 
 {% block head %}
-<script src="{{MEDIA_URL}}/js/jquery.tablesorter.min.js"></script>
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.tablesorter.min.js"></script>
 <script type="text/javascript">
-$(document).ready(function() { $("#vmlist").tablesorter(); } );
+    $(document).ready(function() {
+        $("#vmlist").tablesorter();
+
+        $("a.delete").live("click", function(){
+            name = $(this).parent().parent().children('.name').children('a').html();
+            if (confirm("Remove Cluster: " + name)) {
+                parent = this.parentNode.parentNode;
+                $.delete_(this.href, function(){
+                    $(parent).remove();
+                    /* Show "No Clusters" if deletion makes list empty */
+                    if($('#vms tr').length <= 1) {
+                        $('#vms tr:last').after('<tr class="none"><td colspan="100%">No Virtual Machines</td></tr>');
+                    }
+                });
+            }
+            return false;
+        });
+    });
 </script>
 {% endblock %}
 
 {% if cluster %}
     <div class="add"><a href="{% url instance-create cluster.slug %}">Add Virtual Machine</a></div>
 {% else %}
+    {% if can_create %}
     <div class="add"><a href="{% url instance-create %}">Add Virtual Machine</a></div>
+    {% endif %}
 {% endif %}
 <table id="vmlist" class="sorted">
 <thead>
     <tr>
-      {% if vm.error %}<th></th>{% endif %}
+      <th></th>
       <th>Name</th>
       {% if not cluster %}
       <th>Cluster</th>
       {% endif %}
       <th>Node</th>
+      <th>OS</th>
       <th>RAM</th>
       <th>Disk Space</th>
       <th>vCPUs</th>
       <th>Status</th>
     </tr>
 </thead>
-<tbody>
+<tbody id="vms">
     {% for vm in vms %}
     {% with vm.info as info %}
     <tr>
-        {% if vm.error %}
+        
         <td class="error">
-            <div class="icon_error" title="Ganeti API Error: {{vm.error}}"></div>
+            {% if vm.error %}<div class="icon_error" title="Ganeti API Error: {{vm.error}}"></div>{% endif %}
         </td>
-        {% endif %}
+        
         <td class="name">
             <a href="{% url instance-detail vm.cluster.slug vm.hostname %}">{{ vm.hostname }}</a>
         </td>
@@ -43,6 +64,7 @@ $(document).ready(function() { $("#vmlist").tablesorter(); } );
             <td>{{ vm.cluster }}</td>
         {% endif %}
         <td>{{ info.pnode }}</td>
+        <td>{{ vm.operating_system }}</td>
         <td>{{ vm.ram|render_storage }}</td>
         <td>{{ vm.disk_size|render_storage }}</td>
         <td>{{ vm.virtual_cpus }}</td>
@@ -61,6 +83,7 @@ $(document).ready(function() { $("#vmlist").tablesorter(); } );
         {% endif %}
         {{ info.status|render_instance_status }}</td>
     {% endwith %}
+        <td><a href="{% url instance-delete vm.cluster.slug vm.hostname %}" class="delete"><div class="delete"></div></a></td>
     {% empty %}
         <tr class="none"><td colspan="100%">No Virtual Machines</td></tr>
     {% endfor %}

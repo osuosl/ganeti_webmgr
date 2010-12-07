@@ -490,6 +490,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
                     vcpus=2,
                     rootpath='/',
                     nictype='paravirtual',
+                    disk_type = 'paravirtual',
+                    niclink = 'br43',
                     nicmode='routed',
                     bootorder='disk',
                     os='image+ubuntu-lucid',
@@ -521,7 +523,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
         
         # POST - required values
-        for property in ['cluster', 'hostname', 'disk_size','nictype', 'nicmode',
+        for property in ['cluster', 'hostname', 'disk_size', 'disk_type','nictype', 'nicmode',
                          'vcpus', 'pnode', 'os', 'disk_template',
                          'rootpath', 'bootorder']:
             data_ = data.copy()
@@ -844,7 +846,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         response = c.get(url, {'group_id':1})
         self.assertEqual(200, response.status_code)
         clusters = json.loads(response.content)
-        self.assert_([4,'group.create_vm'] in clusters)
+        self.assert_([cluster3.id,'group.create_vm'] in clusters)
         self.assertEqual(1, len(clusters))
         
         # admin permission (group)
@@ -852,8 +854,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         response = c.get(url, {'group_id':1})
         self.assertEqual(200, response.status_code)
         clusters = json.loads(response.content)
-        self.assert_([4,'group.create_vm'] in clusters)
-        self.assert_([5,'group.admin'] in clusters)
+        self.assert_([cluster3.id,'group.create_vm'] in clusters)
+        self.assert_([cluster4.id,'group.admin'] in clusters)
         self.assertEqual(2, len(clusters))
         
         # create_vm permission
@@ -861,7 +863,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         clusters = json.loads(response.content)
-        self.assert_([1,'user.create_vm'] in clusters)
+        self.assert_([cluster0.id,'user.create_vm'] in clusters)
         self.assertEqual(1, len(clusters), clusters)
         
         # admin permission
@@ -869,8 +871,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         clusters = json.loads(response.content)
-        self.assert_([1,'user.create_vm'] in clusters)
-        self.assert_([2,'user.admin'] in clusters)
+        self.assert_([cluster0.id,'user.create_vm'] in clusters)
+        self.assert_([cluster1.id,'user.admin'] in clusters)
         self.assertEqual(2, len(clusters))
         
         # authorized (superuser)
@@ -880,12 +882,12 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/json', response['content-type'])
         clusters = json.loads(response.content)
-        self.assert_([1,'user.create_vm'] in clusters)
-        self.assert_([2,'user.admin'] in clusters)
-        self.assert_([3,'superuser'] in clusters, clusters)
-        self.assert_([4,'group.create_vm'] in clusters)
-        self.assert_([5,'group.admin'] in clusters, clusters)
-        self.assert_([6,'no.perms.on.this.group'] in clusters)
+        self.assert_([cluster0.id,'user.create_vm'] in clusters)
+        self.assert_([cluster1.id,'user.admin'] in clusters)
+        self.assert_([cluster2.id,'superuser'] in clusters, clusters)
+        self.assert_([cluster3.id,'group.create_vm'] in clusters)
+        self.assert_([cluster4.id,'group.admin'] in clusters, clusters)
+        self.assert_([cluster5.id,'no.perms.on.this.group'] in clusters)
         self.assertEqual(6, len(clusters))
     
     def test_view_cluster_options(self):
@@ -957,6 +959,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
             hypervisors=['kvm'],
             serialconsole=True,
             imagepath='',
+            disktype ='paravirtual',
+            niclink ='br42',
             nicmode='bridged',
             vcpus=2,
             iallocator='',
@@ -1108,16 +1112,16 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual('application/json', response['content-type'])
         
         # valid POST user has permissions
-        user1.grant('start', vm)
+        user1.grant('power', vm)
         data = {'permissions':['admin'], 'user':user1.id}
         response = c.post(url % args, data)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'permissions/user_row.html')
         self.assert_(user1.has_perm('admin', vm))
-        self.assertFalse(user1.has_perm('start', vm))
+        self.assertFalse(user1.has_perm('power', vm))
         
         # valid POST group has permissions
-        group.grant('start', vm)
+        group.grant('power', vm)
         data = {'permissions':['admin'], 'group':group.id}
         response = c.post(url % args, data)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
@@ -1190,27 +1194,27 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(404, response.status_code)
         
         # invalid user (POST)
-        user1.grant('start', vm)
+        user1.grant('power', vm)
         data = {'permissions':['admin'], 'user':-1}
         response = c.post(url_post % args_post, data)
         self.assertEqual('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
         
         # no user (POST)
-        user1.grant('start', vm)
+        user1.grant('power', vm)
         data = {'permissions':['admin']}
         response = c.post(url_post % args_post, data)
         self.assertEqual('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
         
         # valid POST user has permissions
-        user1.grant('start', vm)
+        user1.grant('power', vm)
         data = {'permissions':['admin'], 'user':user1.id}
         response = c.post(url_post % args_post, data)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'permissions/user_row.html')
         self.assert_(user1.has_perm('admin', vm))
-        self.assertFalse(user1.has_perm('start', vm))
+        self.assertFalse(user1.has_perm('power', vm))
         
         # valid POST user has no permissions left
         data = {'permissions':[], 'user':user1.id}
@@ -1287,7 +1291,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertNotEqual('0', response.content)
         
         # valid POST group has permissions
-        group.grant('start', vm)
+        group.grant('power', vm)
         data = {'permissions':['admin'], 'group':group.id}
         response = c.post(url_post % args_post, data)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])

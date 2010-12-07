@@ -13,10 +13,11 @@
         curSelection = $("#id_snode option:selected").index();
         iallocator = $("#id_iallocator");
         iallocator_hostname = $("#id_iallocator_hostname");
+        using_str = ' Using: '
         if( !iallocator_hostname.attr('value') ) {
             iallocator.attr('readonly', 'readonly');
         } else {
-            iallocator.after(' Using: '+iallocator_hostname.val());
+            iallocator.after("<span>"+using_str+iallocator_hostname.val()+"</span>");
         }
         iallocator.change(function() {
             if(!iallocator.attr('readonly')) {
@@ -132,24 +133,33 @@
                             }
                             if(iallocator_default) {
                                 if( !iallocator_hostname.attr('value')) {
-                                    iallocator.after(' Using: '+iallocator_default);
+                                    iallocator_hostname.attr('value', iallocator_default);
+                                    if( iallocator.siblings("span").length == 0 ) {
+                                        iallocator.after("<span>"+using_str+iallocator_default+"</span>");
+                                    }
                                 }
                                 // Check iallocator checkbox
                                 iallocator.removeAttr('readonly');
                                 iallocator.attr('checked', 'checked');
                                 iallocator.change();
                             } else {
+                                iallocator.siblings("span").remove();
+                                iallocator_hostname.removeAttr('value')
                                 iallocator.attr('readonly', 'readonly');
                                 iallocator.attr('checked', false);
                                 iallocator.change();
                             }
                             if(kernelpath) {
                                 $("#id_kernelpath").val(kernelpath);
+                            } else {
+                                $("#id_kernelpath").val('');
                             }
                             if(nicmode) {
                                 $("#id_nicmode :selected").removeAttr('selected');
                                 $("#id_nicmode [value="+nicmode+"]").attr('selected','selected');
                                 $("#id_niclink").parent().show();
+                            } else {
+                                $("#id_nicmode :first-child").attr('selected', 'selected');
                             }
                             if(niclink){
                                 $("#id_niclink").val(niclink);
@@ -166,6 +176,8 @@
                             }
                             if(rootpath) {
                                 $("#id_rootpath").val(rootpath);
+                            } else {
+                                $("#id_rootpath").val('/');
                             }
                             if(data['serialconsole']) {
                                 $("#id_serialconsole").attr('checked', true);

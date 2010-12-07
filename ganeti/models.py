@@ -21,9 +21,6 @@ import cPickle
 from datetime import datetime, timedelta
 from hashlib import sha1
 from subprocess import Popen
-import os
-from threading import Thread
-import time
 
 from django.conf import settings
 from django.contrib.auth.models import User, Group
@@ -31,10 +28,10 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import GenericForeignKey
 from django.db import models
 from django.db.models import Sum
-from django.utils.encoding import force_unicode
+from django.utils.encoding import force_unicode, smart_unicode
 
 
-from object_permissions.registration import register, get_users, get_groups
+from object_permissions.registration import register
 from util import client
 from util.client import GanetiApiError
 
@@ -239,6 +236,7 @@ class VirtualMachine(CachedClusterObject):
     disk_size = models.IntegerField(default=-1)
     ram = models.IntegerField(default=-1)
     cluster_hash = models.CharField(max_length=40, editable=False)
+    operating_system = models.CharField(max_length=128)
 
     @property
     def rapi(self):
@@ -303,6 +301,7 @@ class VirtualMachine(CachedClusterObject):
         for disk in self.info['disk.sizes']:
             disk_size += disk
         self.disk_size = disk_size
+        self.operating_system = self.info['os']
 
     def _refresh(self):
         return self.rapi.GetInstance(self.hostname)
@@ -580,91 +579,6 @@ class Quota(models.Model):
     virtual_cpus = models.IntegerField(default=0, null=True)
 
 
-class LogAction(models.Model):
-    """
-    Type of action of log entry (for example: addition, deletion)
-
-    @name - a noun (for example: addition)
-    @action_message - a participle ("-ed" if regular) form of verb (for example:
-                      added)
-    """
-    name = models.CharField(max_length=128, primary_key=True) #addition, deletion
-    action_message = models.CharField(max_length=128)         # added, deleted
-
-
-class LogItemManager(models.Manager):
-    def log_action(self, user, affected_object, action, log_message=None):
-        """
-        @user Profile
-        @affected_object any model
-        @action string or LogAction
-        """
-        if isinstance(action, str):
-            action = LogAction.objects.get(name=action)
-
-        m = self.model(
-            id = None,
-            action = action,
-            timestamp = None,
-            user = user, # or user.pk or request.user.pk
-            object_type = ContentType.objects.get_for_model(affected_object),
-            object_id = affected_object.pk,
-            object_repr = force_unicode(affected_object),
-            log_message = log_message,
-        )
-        m.save()
-        return m.id # occasionally someone needs this
-
-
-class LogItem(models.Model):
-    """
-    Single entry in log
-    """
-    action = models.ForeignKey(LogAction)
-    timestamp = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(Profile)
-
-    object_type = models.ForeignKey(ContentType)
-    object_id = models.PositiveIntegerField()
-    object_repr = models.CharField(max_length=128, blank=True, null=True)
-    affected_object = GenericForeignKey("object_type", "object_id")
-
-    log_message = models.TextField(blank=True, null=True)
-
-    objects = LogItemManager()
-
-    class Meta:
-        ordering = ("timestamp", )
-
-    def __repr__(self):
-        """
-        Returns single line log entry containing informations like:
-        - date and extensive time
-        - user who performed an action
-        - action itself
-        - object affected by the action
-        """
-        # this format:
-        #[2010-11-30 14:12:31] user piotr changed user "piotr": root=True, abc=True
-        #[2010-11-30 14:12:31] user piotr deleted virtual machine "testfarm1"
-        msg = ""
-        if self.log_message:
-            msg = ": %s" % self.log_message
-
-        format = "[%(timestamp)s] user %(user)s %(action_message)s" \
-                 + " %(object_type)s \"%(object_repr)s\"%(msg)s"
-
-        fields = dict(
-            timestamp = self.timestamp,
-            user = self.user,
-            action_message = self.action.action_message,
-            object_type = self.object_type.name,
-            object_repr = self.object_repr,
-            msg = msg,
-        )
-        return format % fields
-
-
 def create_profile(sender, instance, **kwargs):
     """
     Create a profile object whenever a new user is created, also keeps the
@@ -695,6 +609,25 @@ def update_organization(sender, instance, **kwargs):
 models.signals.post_save.connect(create_profile, sender=User)
 models.signals.post_save.connect(update_cluster_hash, sender=Cluster)
 models.signals.post_save.connect(update_organization, sender=Group)
-register(['admin', 'create', 'create_vm'], Cluster)
-register(['admin', 'start'], VirtualMachine)
 
+# Register permissions on our models.
+# These are part of the DB schema and should not be changed without serious
+# forethought.
+# You *must* syncdb after you change these.
+register([
+    "admin",
+    "create_vm",
+    "migrate",
+    "export",
+    "replace_disks",
+    "tags",
+    ],
+    Cluster)
+register([
+    "admin",
+    "power",
+    "remove",
+    "modify",
+    "tags",
+    ],
+    VirtualMachine)
