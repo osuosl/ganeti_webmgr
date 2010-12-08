@@ -21,10 +21,10 @@
 {% endblock %}
 
 {% if cluster %}
-    <div class="add"><a href="{% url instance-create cluster.slug %}">Add Virtual Machine</a></div>
+    <a class="button add" href="{% url instance-create cluster.slug %}">Add Virtual Machine</a>
 {% else %}
     {% if can_create %}
-    <div class="add"><a href="{% url instance-create %}">Add Virtual Machine</a></div>
+    <a class="button add" href="{% url instance-create %}">Add Virtual Machine</a>
     {% endif %}
 {% endif %}
 <table id="vmlist" class="sorted">

@@ -8,6 +8,8 @@
     .ui-widget-header {background:none; border-width:0 0 1px 0; -moz-border-radius:0px;}
     .ui-widget-content {border:0;}
     </style>
+    
+    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
     <script src="{{MEDIA_URL}}/js/jquery-ui.min.js"></script>
     <script src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
     <script type="text/javascript">
@@ -37,6 +39,17 @@
                     }
                 }
             });
+            
+            $("a.delete").live("click", function(){
+                if (confirm("Are you sure you want to delete this cluster?")) {
+                    href = "{% url cluster-edit cluster.slug %}";
+                    $.delete_(href, function(){
+                        window.location = "{% url cluster-list %}";
+                    });
+                }
+                return false;
+            });
+            
         });
     </script>
 {% endblock %}
@@ -49,31 +62,35 @@
 </ul>
 <div id="tabs">
     <ul>
-        <li><a href="#tab1"><span>Overview</span></a></li>
+        <li><a href="#overview"><span>Overview</span></a></li>
         <li><a href="{% url cluster-vms cluster.slug %}"><span>Virtual Machines</span></a></li>
         <li><a href="{% url cluster-nodes cluster.slug %}"><span>Nodes</span></a></li>
         {% if admin %}<li><a href="{% url cluster-users cluster.slug %}"><span>Users</span></a></li>{%endif%}
     </ul>
-    <div id="tab1" class="tab_content">
-        <div class="ticket" id="ticket_{{ cluster.id }}">
-            <table>
-                {% with cluster.info as info %}
-                <tr><td class="name">Architecture</td><td class="name">{{ info.architecture.0 }}</td></tr>
-                <tr><td class="name">Ganeti Version</td><td class="name">{{info.software_version}}</td></tr>
-                <tr><td class="name">Default hypervisor</td><td class="name">{{ info.default_hypervisor }}</td></tr>
-                <tr><td class="name">Available hypervisors</td><td class="name">{{ info.enabled_hypervisors|join:", " }}</td></tr>
-                <tr><td class="name">Master node</td><td class="name">{{ info.master }}</td></tr>
-                <tr><td class="name">Created</td><td class="name">
-                {% if cluster.ctime %}
-                    {{ cluster.ctime|date }}
-                {% else %}
-                    <em>unknown</em>
-                {% endif %}
-                </td></tr>
-                <tr><td class="name">Last modified</td><td class="name">{{ cluster.mtime|date }}</td></tr>
-                {% endwith %}
-            </table>
-        </div>
+    <div id="overview" class="tab_content">
+        <ul id="actions">
+            {% if admin %}
+                <li><a class="button edit" href="{% url cluster-edit cluster.slug %}">Edit</a></li>
+                <li><a class="button delete" href="{% url cluster-edit cluster.slug %}">Delete</a></li>
+            {% endif %}
+        </ul>
+        <table class="overview">
+            {% with cluster.info as info %}
+            <tr><td class="name">Architecture</td><td class="name">{{ info.architecture.0 }}</td></tr>
+            <tr><td class="name">Ganeti Version</td><td class="name">{{info.software_version}}</td></tr>
+            <tr><td class="name">Default hypervisor</td><td class="name">{{ info.default_hypervisor }}</td></tr>
+            <tr><td class="name">Available hypervisors</td><td class="name">{{ info.enabled_hypervisors|join:", " }}</td></tr>
+            <tr><td class="name">Master node</td><td class="name">{{ info.master }}</td></tr>
+            <tr><td class="name">Created</td><td class="name">
+            {% if cluster.ctime %}
+                {{ cluster.ctime|date }}
+            {% else %}
+                <em>unknown</em>
+            {% endif %}
+            </td></tr>
+            <tr><td class="name">Last modified</td><td class="name">{{ cluster.mtime|date }}</td></tr>
+            {% endwith %}
+        </table>
     </div>
 </div>
 {% endblock %}
