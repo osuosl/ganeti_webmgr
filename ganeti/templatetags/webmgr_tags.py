@@ -22,7 +22,7 @@ from django.template import Library, Node, TemplateSyntaxError
 from django.template.defaultfilters import stringfilter
 import re
 
-from ganeti.models import Cluster, Quota
+from ganeti.models import Cluster
 
 
 register = Library()
@@ -149,4 +149,12 @@ class GetterNode(Node):
 
     def render(self, context):
         context[self.res_name] = context[self.item_name][self.attr_name]
-        return '' 
+        return ''
+
+# These filters were created by Corbin Simpson IN THE NAME OF AWESOME!
+# Just kidding. Created for ganeti-webmgr at Oregon State University.
+
+@register.filter
+@stringfilter
+def abbreviate_fqdn(value):
+    return value.split(".")[0]
