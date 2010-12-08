@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-
+from collections import defaultdict
 import json
 import socket
 import urllib2
@@ -422,16 +422,47 @@ def cluster_options(request):
 
 def cluster_os_list(cluster):
     """
-    A list of avaiable operating systems
-    on the given cluster.
+    Create a detailed manifest of available operating systems on the cluster.
     """
-    oses = cluster.rapi.GetOperatingSystems()
-    # Given 'image+os-name'
-    #  return formatted as 'Os Name'
-    return [(os, " ".join([x.capitalize() for x in \
-                os.replace('image+', '').split('-')])) \
-                for os in oses]
 
+    return os_prettify(cluster.rapi.GetOperatingSystems())
+
+def os_prettify(oses):
+    """
+    Pretty-print and format a list of operating systems.
+
+    The actual format is a list of tuples of tuples. The first entry in the
+    outer tuple is a label, and then each successive entry is a tuple of the
+    actual Ganeti OS name, and a prettified display name. For example:
+
+    [
+        ("Image",
+            ("image+obonto-hungry-hydralisk", "Obonto Hungry Hydralisk"),
+            ("image+fodoro-core", "Fodoro Core"),
+        ),
+        ("Dobootstrop",
+            ("dobootstrop+dobion-lotso", "Dobion Lotso"),
+        ),
+    ]
+    """
+
+    # In order to convince Django to make optgroups, we need to nest our
+    # iterables two-deep. (("header", ("value, "label"), ("value", "label")))
+    # http://docs.djangoproject.com/en/dev/ref/models/fields/#choices
+    # We do this by making a dict of lists.
+    d = defaultdict(list)
+
+    for name in oses:
+        # Split into type and flavor.
+        t, flavor = name.split("+", 1)
+        # Prettify flavors. "this-boring-string" becomes "This Boring String"
+        flavor = " ".join(word.capitalize() for word in flavor.split("-"))
+        d[t.capitalize()].append((name, flavor))
+
+    l = d.items()
+    l.sort()
+
+    return l
 
 @login_required
 def cluster_defaults(request):
