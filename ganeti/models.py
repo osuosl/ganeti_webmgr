@@ -327,6 +327,8 @@ class VirtualMachine(CachedClusterObject):
         Loads all values from cached info, included persistent properties that
         are stored in the database
         """
+        super(VirtualMachine, self).parse_persistent_info()
+        
         info_ = self.info
         owner_parsed = False
         for tag in info_['tags']:
