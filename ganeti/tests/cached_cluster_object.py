@@ -73,7 +73,8 @@ class CachedClusterObjectBase(TestCase):
         if self.__GanetiRapiClient is not None:
             models.client.GanetiRapiClient = self.__GanetiRapiClient
         
-        settings.LAZY_CACHE_REFRESH = self.__LAZY_CACHE_REFRESH
+        if self.__LAZY_CACHE_REFRESH:
+            settings.LAZY_CACHE_REFRESH = self.__LAZY_CACHE_REFRESH
 
     def test_trivial(self):
         """
