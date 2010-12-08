@@ -16,30 +16,15 @@
 <script type="text/javascript">
     $(document).ready(function() {
         $("#vmlist").tablesorter();
-
-        $("a.delete").live("click", function(){
-            name = $(this).parent().parent().children('.name').children('a').html();
-            if (confirm("Remove virtual machine: " + name)) {
-                parent = this.parentNode.parentNode;
-                $.delete_(this.href, function(){
-                    $(parent).remove();
-                    /* Show "No Clusters" if deletion makes list empty */
-                    if($('#vms tr').length <= 1) {
-                        $('#vms tr:last').after('<tr class="none"><td colspan="100%">No Virtual Machines</td></tr>');
-                    }
-                });
-            }
-            return false;
-        });
     });
 </script>
 {% endblock %}
 
 {% if cluster %}
-    <div class="add"><a href="{% url instance-create cluster.slug %}">Add Virtual Machine</a></div>
+    <a class="button add" href="{% url instance-create cluster.slug %}">Add Virtual Machine</a>
 {% else %}
     {% if can_create %}
-    <div class="add"><a href="{% url instance-create %}">Add Virtual Machine</a></div>
+    <a class="button add" href="{% url instance-create %}">Add Virtual Machine</a>
     {% endif %}
 {% endif %}
 <table id="vmlist" class="sorted">
@@ -55,7 +40,6 @@
       <th>RAM</th>
       <th>Disk Space</th>
       <th>vCPUs</th>
-      <th class="actions"></th>
     </tr>
 </thead>
 <tbody id="vms">
@@ -95,7 +79,6 @@
         <td>{{ vm.disk_size|render_storage }}</td>
         <td>{{ vm.virtual_cpus }}</td>
     {% endwith %}
-        <td class="actions"><a href="{% url instance-delete vm.cluster.slug vm.hostname %}" class="delete" title="delete"><div class="delete"></div></a></td>
     {% empty %}
         <tr class="none"><td colspan="100%">No Virtual Machines</td></tr>
     {% endfor %}
