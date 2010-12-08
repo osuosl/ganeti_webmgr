@@ -67,9 +67,9 @@ def delete(request, cluster_slug, instance):
       
     elif request.method == 'DELETE':
         # Delete instance
-        #jobid = instance.rapi.DeleteInstance(instance.hostname)
-        #sleep(2)
-        #jobstatus = instance.rapi.GetJobStatus(jobid)
+        jobid = instance.rapi.DeleteInstance(instance.hostname)
+        sleep(2)
+        jobstatus = instance.rapi.GetJobStatus(jobid)
         
         instance.delete()
         
