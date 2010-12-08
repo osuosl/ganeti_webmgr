@@ -31,16 +31,14 @@
 {% for cluster in cluster_list %}
     {% with cluster.info as info %}
     {% with cluster.nodes as nodes %}
-    {% with cluster.virtual_machines as vms %}
         <tr id="cluster_{{cluster.id}}">
             <td class="name">
                 {% if cluster.error %}<div class="icon_error" title="Ganeti API Error: {{cluster.error}}"></div>{% endif %}
                 <a href="{% url cluster-detail cluster.slug %}">{{ cluster.hostname }}</a></td>
             <td>{{ cluster.slug }}</td>
             <td>{{ nodes|length }}</td>
-            <td>{{ vms.count }}</td>
+            <td>{{ cluster.virtual_machines.count }}</td>
         </tr>
-    {% endwith %}
     {% endwith %}
     {% endwith %}
 {% empty %}
