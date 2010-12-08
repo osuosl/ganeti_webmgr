@@ -68,12 +68,14 @@
         </td>
         
         <td class="name">
-            <a href="{% url instance-detail vm.cluster.slug vm.hostname %}">{{ vm.hostname }}</a>
+            <a href="{% url instance-detail vm.cluster.slug vm.hostname %}">
+                {{ vm.hostname }}
+            </a>
         </td>
         {% if not cluster %}
-            <td>{{ vm.cluster }}</td>
+            <td>{{ vm.cluster|abbreviate_fqdn }}</td>
         {% endif %}
-        <td>{{ info.pnode }}</td>
+        <td>{{ info.pnode|abbreviate_fqdn }}</td>
         <td>{{ vm.operating_system }}</td>
         <td>{{ vm.ram|render_storage }}</td>
         <td>{{ vm.disk_size|render_storage }}</td>
