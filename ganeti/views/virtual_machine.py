@@ -413,6 +413,13 @@ def cluster_options(request):
 def cluster_os_list(cluster):
     """
     Create a detailed manifest of available operating systems on the cluster.
+    """
+
+    return os_prettify(cluster.rapi.GetOperatingSystems())
+
+def os_prettify(oses):
+    """
+    Pretty-print and format a list of operating systems.
 
     The actual format is a list of tuples of tuples. The first entry in the
     outer tuple is a label, and then each successive entry is a tuple of the
@@ -435,7 +442,7 @@ def cluster_os_list(cluster):
     # We do this by making a dict of lists.
     d = defaultdict(list)
 
-    for name in cluster.rapi.GetOperatingSystems():
+    for name in oses:
         # Split into type and flavor.
         t, flavor = name.split("+", 1)
         # Prettify flavors. "this-boring-string" becomes "This Boring String"
@@ -446,7 +453,6 @@ def cluster_os_list(cluster):
     l.sort()
 
     return l
-
 
 @login_required
 def cluster_defaults(request):

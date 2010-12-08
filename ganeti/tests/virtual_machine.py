@@ -30,7 +30,7 @@ from object_permissions import grant, get_user_perms
 from util import client
 from ganeti.tests.rapi_proxy import RapiProxy, INSTANCE, INFO
 from ganeti import models
-from ganeti.views.virtual_machine import NewVirtualMachineForm
+from ganeti.views.virtual_machine import os_prettify, NewVirtualMachineForm
 VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
 ClusterUser = models.ClusterUser
@@ -918,8 +918,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(['gtest1.osuosl.bak', 'gtest2.osuosl.bak'], content['nodes'])
         self.assertEqual(content["os"],
             [[u'Image',
-                [[u'debian-osgeo', u'Debian Osgeo'],
-                [u'ubuntu-lucid', u'Ubuntu Lucid']]
+                [[u'image+debian-osgeo', u'Debian Osgeo'],
+                [u'image+ubuntu-lucid', u'Ubuntu Lucid']]
             ]]
         )
         user.revoke_all(cluster)
@@ -933,8 +933,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(['gtest1.osuosl.bak', 'gtest2.osuosl.bak'], content['nodes'])
         self.assertEqual(content["os"],
             [[u'Image',
-                [[u'debian-osgeo', u'Debian Osgeo'],
-                [u'ubuntu-lucid', u'Ubuntu Lucid']]
+                [[u'image+debian-osgeo', u'Debian Osgeo'],
+                [u'image+ubuntu-lucid', u'Ubuntu Lucid']]
             ]]
         )
         user.revoke_all(cluster)
@@ -949,8 +949,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(['gtest1.osuosl.bak', 'gtest2.osuosl.bak'], content['nodes'])
         self.assertEqual(content["os"],
             [[u'Image',
-                [[u'debian-osgeo', u'Debian Osgeo'],
-                [u'ubuntu-lucid', u'Ubuntu Lucid']]
+                [[u'image+debian-osgeo', u'Debian Osgeo'],
+                [u'image+ubuntu-lucid', u'Ubuntu Lucid']]
             ]]
         )
     
@@ -1411,8 +1411,8 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
             [
                 (u'', u'---------'),
                 ('Image',
-                    [('debian-osgeo', 'Debian Osgeo'),
-                    ('ubuntu-lucid', 'Ubuntu Lucid')]
+                    [('image+debian-osgeo', 'Debian Osgeo'),
+                    ('image+ubuntu-lucid', 'Ubuntu Lucid')]
                 )
             ]
         )
@@ -1425,8 +1425,8 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
             [
                 (u'', u'---------'),
                 ('Image',
-                    [('debian-osgeo', 'Debian Osgeo'),
-                    ('ubuntu-lucid', 'Ubuntu Lucid')]
+                    [('image+debian-osgeo', 'Debian Osgeo'),
+                    ('image+ubuntu-lucid', 'Ubuntu Lucid')]
                 )
             ]
         )
@@ -1439,8 +1439,8 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
             [
                 (u'', u'---------'),
                 ('Image',
-                    [('debian-osgeo', 'Debian Osgeo'),
-                    ('ubuntu-lucid', 'Ubuntu Lucid')]
+                    [('image+debian-osgeo', 'Debian Osgeo'),
+                    ('image+ubuntu-lucid', 'Ubuntu Lucid')]
                 )
             ]
         )
@@ -1526,3 +1526,31 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         user.save()
         form = NewVirtualMachineForm(user, None)
         self.assertEqual([(u'', u'---------'), (1, u'tester0'), (2, u'tester1'), (3, u'testing_group')], list(form.fields['owner'].choices))
+
+class TestVirtualMachineHelpers(TestCase):
+
+    def test_os_prettify(self):
+        """
+        Test the os_prettify() helper function.
+        """
+
+        # Test a single entry.
+        self.assertEqual(os_prettify(["hurp+durp"]),
+            [("Hurp", ("hurp+durp", "Durp"))])
+
+        # Test the example in the os_prettify() docstring.
+        self.assertEqual(
+            os_prettify([
+                "image+obonto-hungry-hydralisk",
+                "image+fodoro-core",
+                "dobootstrop+dobion-lotso",
+            ]), [
+                ("Image",
+                    ("image+obonto-hungry-hydralisk",
+                        "Obonto Hungry Hydralisk"),
+                    ("image+fodoro-core", "Fodoro Core"),
+                ),
+                ("Dobootstrop",
+                    ("dobootstrop+dobion-lotso", "Dobion Lotso"),
+                ),
+            ])
