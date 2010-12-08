@@ -412,8 +412,21 @@ def cluster_options(request):
 
 def cluster_os_list(cluster):
     """
-    A list of avaiable operating systems
-    on the given cluster.
+    Create a detailed manifest of available operating systems on the cluster.
+
+    The actual format is a list of tuples of tuples. The first entry in the
+    outer tuple is a label, and then each successive entry is a tuple of the
+    actual Ganeti OS name, and a prettified display name. For example:
+
+    [
+        ("Image",
+            ("image+obonto-hungry-hydralisk", "Obonto Hungry Hydralisk"),
+            ("image+fodoro-core", "Fodoro Core"),
+        ),
+        ("Dobootstrop",
+            ("dobootstrop+dobion-lotso", "Dobian Lotso"),
+        ),
+    ]
     """
 
     # In order to convince Django to make optgroups, we need to nest our
