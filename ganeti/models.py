@@ -278,20 +278,20 @@ class VirtualMachine(CachedClusterObject):
         Loads all values from cached info, included persistent properties that
         are stored in the database
         """
+        
         info_ = self.info
-        owner_parsed = False
         for tag in info_['tags']:
-            # update owner from
+            # Update owner Tag. Make sure the tag is set to the owner
+            #  that is set in webmgr.
             if tag.startswith(tags.OWNER):
-                owner_parsed = True
-                try:
-                    id = int(tag[len(tags.OWNER):])
-                    if id != self.owner_id:
-                        self.owner = ClusterUser.objects.get(id=id)
-                except ClusterUser.DoesNotExist:
-                    self.owner = None
-        if not owner_parsed:
-            self.owner = None
+                id = int(tag[len(tags.OWNER):])
+                # Since there is no 'update tag' delete old tag and
+                #  replace with tag containing correct owner id.
+                if id != self.owner_id:
+                    self.rapi.DeleteInstanceTags(self.hostname, [tag])
+                    addtag = '%s%s' % (tags.OWNER, self.owner_id)
+                    self.rapi.AddInstanceTags(self.hostname, [addtag])
+                    self.info['tags'].append(tag)
 
         # Parse resource properties
         self.ram = self.info['beparams']['memory']
