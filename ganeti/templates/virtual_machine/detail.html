@@ -54,7 +54,11 @@
         {% endcomment %}
         {% if admin %}
             <li><a href="{% url vm-users cluster.slug instance.hostname %}"><span>Users</span></a></li>
-            <li><a href="{% url instance-vnc cluster.slug instance.hostname %}"><span>VNC</span></a></li>
+            <li>
+                <a href="{% url instance-vnc cluster.slug instance.hostname %}">
+                    <span>Console</span>
+                </a>
+            </li>
         {%endif%}
     </ul>
     <div id="tab1" class="tab_content">
