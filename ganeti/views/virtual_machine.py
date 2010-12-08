@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-
+from collections import defaultdict
 import json
 import socket
 import urllib2
@@ -415,12 +415,24 @@ def cluster_os_list(cluster):
     A list of avaiable operating systems
     on the given cluster.
     """
-    oses = cluster.rapi.GetOperatingSystems()
-    # Given 'image+os-name'
-    #  return formatted as 'Os Name'
-    return [(os, " ".join([x.capitalize() for x in \
-                os.replace('image+', '').split('-')])) \
-                for os in oses]
+
+    # In order to convince Django to make optgroups, we need to nest our
+    # iterables two-deep. (("header", ("value, "label"), ("value", "label")))
+    # http://docs.djangoproject.com/en/dev/ref/models/fields/#choices
+    # We do this by making a dict of lists.
+    d = defaultdict(list)
+
+    for name in cluster.rapi.GetOperatingSystems():
+        # Split into type and flavor.
+        t, flavor = name.split("+", 1)
+        # Prettify flavors. "this-boring-string" becomes "This Boring String"
+        pretty = " ".join(word.capitalize() for word in flavor.split("-"))
+        d[t.capitalize()].append((flavor, pretty))
+
+    l = d.items()
+    l.sort()
+
+    return l
 
 
 @login_required
