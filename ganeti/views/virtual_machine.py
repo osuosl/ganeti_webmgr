@@ -424,7 +424,7 @@ def cluster_os_list(cluster):
             ("image+fodoro-core", "Fodoro Core"),
         ),
         ("Dobootstrop",
-            ("dobootstrop+dobion-lotso", "Dobian Lotso"),
+            ("dobootstrop+dobion-lotso", "Dobion Lotso"),
         ),
     ]
     """
@@ -439,8 +439,8 @@ def cluster_os_list(cluster):
         # Split into type and flavor.
         t, flavor = name.split("+", 1)
         # Prettify flavors. "this-boring-string" becomes "This Boring String"
-        pretty = " ".join(word.capitalize() for word in flavor.split("-"))
-        d[t.capitalize()].append((flavor, pretty))
+        flavor = " ".join(word.capitalize() for word in flavor.split("-"))
+        d[t.capitalize()].append((name, flavor))
 
     l = d.items()
     l.sort()
