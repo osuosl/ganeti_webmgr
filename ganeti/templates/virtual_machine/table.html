@@ -74,7 +74,7 @@
             <td>{{ vm.cluster }}</td>
         {% endif %}
         <td>{{ info.pnode }}</td>
-        <td>{{ vm.operating_system }}</td>
+        <td>{{ vm.operating_system|render_os }}</td>
         <td>{{ vm.ram|render_storage }}</td>
         <td>{{ vm.disk_size|render_storage }}</td>
         <td>{{ vm.virtual_cpus }}</td>
