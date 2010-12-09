@@ -29,7 +29,7 @@ from object_permissions import grant, get_user_perms
 
 from util import client
 from ganeti.tests.rapi_proxy import RapiProxy, INSTANCE, INFO
-from ganeti import models
+from ganeti import models, constants 
 from ganeti.views.virtual_machine import os_prettify, NewVirtualMachineForm
 VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
@@ -150,40 +150,6 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(vm.ram, 512)
         self.assertEqual(vm.virtual_cpus, 2)
         self.assertEqual(vm.disk_size, 5120)
-
-    def test_parse_owner(self):
-        """
-        Tests parsing owner from tags
-        """
-        vm, cluster = self.create_virtual_machine()
-        
-        owner0 = ClusterUser(id=1, name='owner0')
-        owner1 = ClusterUser(id=2, name='owner1')
-        owner0.save()
-        owner1.save()
-        
-        data = INSTANCE.copy()
-        self.assertEqual(None, vm.owner)
-        
-        # set it to a group
-        data['tags'] = ['GANETI_WEB_MANAGER:OWNER:%s' % owner0.id]
-        vm.info = data
-        self.assertEqual(owner0, vm.owner)
-        
-        # invalid group
-        data['tags'] = ['GANETI_WEB_MANAGER:OWNER:%s' % -1]
-        vm.info = data
-        self.assertEqual(None, vm.owner)
-        
-        # change it
-        data['tags'] = ['GANETI_WEB_MANAGER:OWNER:%s' % owner1.id]
-        vm.info = data
-        self.assertEqual(owner1, vm.owner)
-        
-        # set it to None
-        data['tags'] = []
-        vm.info = data
-        self.assertEqual(None, vm.owner)
     
     def test_update_owner_tag(self):
         """
@@ -203,12 +169,12 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         # setting owner
         vm.owner = owner0
         vm.save()
-        self.assertEqual(['GANETI_WEB_MANAGER:OWNER:%s'%owner0.id], vm.info['tags'])
+        self.assertEqual(['%s%s' % (constants.OWNER_TAG, owner0.id)], vm.info['tags'])
         
         # changing owner
         vm.owner = owner1
         vm.save()
-        self.assertEqual(['GANETI_WEB_MANAGER:OWNER:%s'%owner1.id], vm.info['tags'])
+        self.assertEqual(['%s%s' % (constants.OWNER_TAG, owner1.id)], vm.info['tags'])
         
         # setting owner to none
         vm.owner = None

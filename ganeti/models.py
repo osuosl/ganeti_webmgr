@@ -32,9 +32,9 @@ from django.utils.encoding import force_unicode, smart_unicode
 
 
 from object_permissions.registration import register
+from ganeti import constants
 from util import client
 from util.client import GanetiApiError
-
 
 RAPI_CACHE = {}
 RAPI_CACHE_HASHES = {}
@@ -104,6 +104,7 @@ class CachedClusterObject(models.Model):
     
     __info = None
     error = None
+    mtime = None
     ctime = None
     
     def __init__(self, *args, **kwargs):
@@ -293,8 +294,7 @@ class VirtualMachine(CachedClusterObject):
 
     def save(self, *args, **kwargs):
         """
-        sets the cluster_hash for newly saved instances and writes the owner tag
-        to ganeti
+        sets the cluster_hash for newly saved instances
         """
         if self.id is None:
             self.cluster_hash = self.cluster.hash
@@ -304,9 +304,12 @@ class VirtualMachine(CachedClusterObject):
             found = False
             remove = []
             for tag in info_['tags']:
-                # update owner from
-                if tag.startswith('GANETI_WEB_MANAGER:OWNER:'):
-                    id = int(tag[25:])
+                # Update owner Tag. Make sure the tag is set to the owner
+                #  that is set in webmgr.
+                if tag.startswith(constants.OWNER_TAG):
+                    id = int(tag[len(constants.OWNER_TAG):])
+                    # Since there is no 'update tag' delete old tag and
+                    #  replace with tag containing correct owner id.
                     if id == self.owner_id:
                         found = True
                     else:
@@ -316,7 +319,7 @@ class VirtualMachine(CachedClusterObject):
                 for tag in remove:
                     info_['tags'].remove(tag)
             if self.owner_id and not found:
-                tag = 'GANETI_WEB_MANAGER:OWNER:%s' % self.owner_id
+                tag = '%s%s' % (constants.OWNER_TAG, self.owner_id)
                 self.rapi.AddInstanceTags(self.hostname, [tag])
                 self.info['tags'].append(tag)
 
@@ -328,21 +331,6 @@ class VirtualMachine(CachedClusterObject):
         are stored in the database
         """
         super(VirtualMachine, self).parse_persistent_info()
-        
-        info_ = self.info
-        owner_parsed = False
-        for tag in info_['tags']:
-            # update owner from
-            if tag.startswith('GANETI_WEB_MANAGER:OWNER:'):
-                owner_parsed = True
-                try:
-                    id = int(tag[25:])
-                    if id != self.owner_id:
-                        self.owner = ClusterUser.objects.get(id=id)
-                except ClusterUser.DoesNotExist:
-                    self.owner = None
-        if not owner_parsed:
-            self.owner = None
 
         # Parse resource properties
         self.ram = self.info['beparams']['memory']
