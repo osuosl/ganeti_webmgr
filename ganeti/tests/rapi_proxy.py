@@ -215,7 +215,56 @@ INFO = {'architecture': ['64bit', 'x86_64'],
 
 OPERATING_SYSTEMS = ['image+debian-osgeo', 'image+ubuntu-lucid']
 
-JOB = {'status': 'success'}
+JOB = {'end_ts': [1291845036, 492131],
+ 'id': '119860',
+ 'oplog': [[]],
+ 'opresult': [None],
+ 'ops': [{'OP_ID': 'OP_INSTANCE_SHUTDOWN',
+          'debug_level': 0,
+          'dry_run': False,
+          'instance_name': 'gimager.osuosl.bak',
+          'timeout': 120}],
+ 'opstatus': ['success'],
+ 'received_ts': [1291845002, 555722],
+ 'start_ts': [1291845002, 595336],
+ 'status': 'success',
+ 'summary': ['INSTANCE_SHUTDOWN(gimager.osuosl.bak)']}
+
+JOB_RUNNING = {'end_ts': [1291845036, 492131],
+ 'id': '119860',
+ 'oplog': [[]],
+ 'opresult': [None],
+ 'ops': [{'OP_ID': 'OP_INSTANCE_SHUTDOWN',
+          'debug_level': 0,
+          'dry_run': False,
+          'instance_name': 'gimager.osuosl.bak',
+          'timeout': 120}],
+ 'opstatus': ['success'],
+ 'received_ts': [1291845002, 555722],
+ 'start_ts': [1291845002, 595336],
+ 'status': 'running',
+ 'summary': ['INSTANCE_SHUTDOWN(gimager.osuosl.bak)']}
+
+JOB_ERROR = {'end_ts': [1291836084, 802444],
+ 'id': '119795',
+ 'oplog': [[]],
+ 'opresult': [['OpExecError',
+               ['Could not reboot instance: Cannot reboot instance gimager.osuosl.bak that is not running']]],
+ 'ops': [{'OP_ID': 'OP_INSTANCE_REBOOT',
+          'debug_level': 0,
+          'dry_run': False,
+          'ignore_secondaries': False,
+          'instance_name': 'gimager.osuosl.bak',
+          'reboot_type': 'hard',
+          'shutdown_timeout': 120}],
+ 'opstatus': ['error'],
+ 'received_ts': [1291836084, 639295],
+ 'start_ts': [1291836084, 673097],
+ 'status': 'error',
+ 'summary': ['INSTANCE_REBOOT(gimager.osuosl.bak)']}
+
+
+
 class RapiProxy(client.GanetiRapiClient):
     """
     Proxy class for testing RAPI interface without a cluster present. This class

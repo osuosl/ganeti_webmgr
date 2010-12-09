@@ -35,7 +35,8 @@ VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
 ClusterUser = models.ClusterUser
 
-__all__ = ('TestVirtualMachineModel', 'TestVirtualMachineViews', 'TestNewVirtualMachineForm')
+__all__ = ('TestVirtualMachineModel', 'TestVirtualMachineViews', \
+           'TestNewVirtualMachineForm', 'VirtualMachineTestCaseMixin')
 
 class VirtualMachineTestCaseMixin():
     def create_virtual_machine(self, cluster=None, hostname='vm1.osuosl.bak'):

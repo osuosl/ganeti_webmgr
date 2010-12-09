@@ -251,6 +251,58 @@ if settings.DEBUG or True:
             super(TestModel, self).save(*args, **kwargs)
 
 
+class Job(CachedClusterObject):
+    """
+    model representing a job being run on a ganeti Cluster.  This includes
+    operations such as creating or delting a virtual machine
+    """
+    content_type = models.ForeignKey(ContentType, null=False)
+    object_id = models.IntegerField(null=False)
+    obj = GenericForeignKey('content_type', 'object_id')
+    cluster = models.ForeignKey('Cluster', editable=False, related_name='jobs')
+    cluster_hash = models.CharField(max_length=40, editable=False)
+    
+    @property
+    def rapi(self):
+        return get_rapi(self.cluster_hash, self.cluster_id)
+    
+    def _refresh(self):
+        return self.rapi.GetJobStatus(self.id)
+    
+    def load_info(self):
+        """
+        """
+        if self.id and self.ignore_cache:
+            self.info = self._refresh()
+            self.save()
+    
+    def parse_persistent_info(self):
+        """
+        Parse status and turn off cache bypass flag if job has finished
+        """
+        if self.ignore_cache:
+            info_ = self.info
+            self.status = info_['status']
+            if info_['status'] in ('error','success'):
+                self.ignore_cache = False
+                self.__class__.objects.filter(pk=self.id) \
+                    .update(ignore_cache=False)
+            
+
+    def parse_transient_info(self):
+        pass
+    
+    def save(self, *args, **kwargs):
+        """
+        sets the cluster_hash for newly saved instances and writes the owner tag
+        to ganeti
+        """
+        if self.id is None:
+            self.cluster_hash = self.cluster.hash
+        
+        super(Job, self).save(*args, **kwargs)
+
+
 class VirtualMachine(CachedClusterObject):
     """
     The VirtualMachine (VM) model represents VMs within a Ganeti cluster.  The
@@ -284,6 +336,7 @@ class VirtualMachine(CachedClusterObject):
     ram = models.IntegerField(default=-1)
     cluster_hash = models.CharField(max_length=40, editable=False)
     operating_system = models.CharField(max_length=128)
+    last_job = models.ForeignKey(Job, null=True)
 
 
     @property
@@ -633,6 +686,7 @@ def update_cluster_hash(sender, instance, **kwargs):
     Updates the Cluster hash for all of it's VirtualMachines
     """
     instance.virtual_machines.all().update(cluster_hash=instance.hash)
+    instance.jobs.all().update(cluster_hash=instance.hash)
 
 
 def update_organization(sender, instance, **kwargs):
