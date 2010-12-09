@@ -32,7 +32,7 @@ from django.utils.encoding import force_unicode, smart_unicode
 
 
 from object_permissions.registration import register
-from ganeti import tags
+from ganeti import constants
 from util import client
 from util.client import GanetiApiError
 
@@ -256,8 +256,8 @@ class VirtualMachine(CachedClusterObject):
             remove = []
             for tag in info_['tags']:
                 # update owner from
-                if tag.startswith(tags.OWNER):
-                    id = int(tag[len(tags.OWNER):])
+                if tag.startswith(constants.OWNER):
+                    id = int(tag[len(constants.OWNER):])
                     if id == self.owner_id:
                         found = True
                     else:
@@ -267,7 +267,7 @@ class VirtualMachine(CachedClusterObject):
                 for tag in remove:
                     info_['tags'].remove(tag)
             if self.owner_id and not found:
-                tag = '%s%s' % (tags.OWNER, self.owner_id)
+                tag = '%s%s' % (constants.OWNER, self.owner_id)
                 self.rapi.AddInstanceTags(self.hostname, [tag])
                 self.info['tags'].append(tag)
 
@@ -283,13 +283,13 @@ class VirtualMachine(CachedClusterObject):
         for tag in info_['tags']:
             # Update owner Tag. Make sure the tag is set to the owner
             #  that is set in webmgr.
-            if tag.startswith(tags.OWNER):
-                id = int(tag[len(tags.OWNER):])
+            if tag.startswith(constants.OWNER):
+                id = int(tag[len(constants.OWNER):])
                 # Since there is no 'update tag' delete old tag and
                 #  replace with tag containing correct owner id.
                 if id != self.owner_id:
                     self.rapi.DeleteInstanceTags(self.hostname, [tag])
-                    addtag = '%s%s' % (tags.OWNER, self.owner_id)
+                    addtag = '%s%s' % (constants.OWNER, self.owner_id)
                     self.rapi.AddInstanceTags(self.hostname, [addtag])
                     self.info['tags'].append(tag)
 
