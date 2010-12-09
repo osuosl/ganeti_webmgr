@@ -299,6 +299,30 @@ class VirtualMachine(CachedClusterObject):
         if self.id is None:
             self.cluster_hash = self.cluster.hash
 
+        info_ = self.info
+        if info_:
+            found = False
+            remove = []
+            for tag in info_['tags']:
+                # Update owner Tag. Make sure the tag is set to the owner
+                #  that is set in webmgr.
+                if tag.startswith(constants.OWNER_TAG):
+                    id = int(tag[len(constants.OWNER_TAG):])
+                    # Since there is no 'update tag' delete old tag and
+                    #  replace with tag containing correct owner id.
+                    if id == self.owner_id:
+                        found = True
+                    else:
+                        remove.append(tag)
+            if remove:
+                self.rapi.DeleteInstanceTags(self.hostname, remove)
+                for tag in remove:
+                    info_['tags'].remove(tag)
+            if self.owner_id and not found:
+                tag = '%s%s' % (constants.OWNER_TAG, self.owner_id)
+                self.rapi.AddInstanceTags(self.hostname, [tag])
+                self.info['tags'].append(tag)
+
         super(VirtualMachine, self).save(*args, **kwargs)
 
     def parse_persistent_info(self):
@@ -307,8 +331,6 @@ class VirtualMachine(CachedClusterObject):
         are stored in the database
         """
         super(VirtualMachine, self).parse_persistent_info()
-        
-        self.update_owner_tags()
 
         # Parse resource properties
         self.ram = self.info['beparams']['memory']
@@ -340,31 +362,6 @@ class VirtualMachine(CachedClusterObject):
         node = info_['pnode']
         Popen(['util/portforwarder.py', '%d'%port, '%s:%d'%(node, port)])
         return port, password
-
-    def update_owner_tags(self):
-        info_ = self.info
-        if info_:
-            found = False
-            remove = []
-            for tag in info_['tags']:
-                # Update owner Tag. Make sure the tag is set to the owner
-                #  that is set in webmgr.
-                if tag.startswith(tags.OWNER):
-                    id = int(tag[len(tags.OWNER):])
-                    # Since there is no 'update tag' delete old tag and
-                    #  replace with tag containing correct owner id.
-                    if id == self.owner_id:
-                        found = True
-                    else:
-                        remove.append(tag)
-            if remove:
-                self.rapi.DeleteInstanceTags(self.hostname, remove)
-                for tag in remove:
-                    info_['tags'].remove(tag)
-            if self.owner_id and not found:
-                tag = '%s%s' % (tags.OWNER, self.owner_id)
-                self.rapi.AddInstanceTags(self.hostname, [tag])
-                self.info['tags'].append(tag)
 
     def __repr__(self):
         return "<VirtualMachine: '%s'>" % self.hostname
