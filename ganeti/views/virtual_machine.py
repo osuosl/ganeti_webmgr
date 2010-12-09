@@ -642,19 +642,25 @@ class NewVirtualMachineForm(forms.Form):
         else:
             self.owner = None
 
-        # set choices based on user permissions and group membership
+        # Set up owner and cluster choices.
         if user.is_superuser:
+            # Superusers may do whatever they like.
             self.fields['owner'].queryset = ClusterUser.objects.all()
             self.fields['cluster'].queryset = Cluster.objects.all()
         else:
-            choices = [(u'', u'---------')]
-            choices += list(user.groups.values_list('id','name'))
+            # Fill out owner choices. Remember, the list of owners is a list
+            # of tuple(ClusterUser.id, label). If you put ids from other
+            # Models into this, no magical correction will be applied and you
+            # will assign permissions to the wrong owner; see #2007.
+            owners = [(u'', u'---------')]
+            for group in user.groups.all():
+                owners.append((group.organization.id, group.name))
             if user.perms_on_any(Cluster, ['admin','create_vm'], False):
                 profile = user.get_profile()
-                choices.append((profile.id, profile.name))
-            self.fields['owner'].choices = choices
+                owners.append((profile.id, profile.name))
+            self.fields['owner'].choices = owners
 
-            # set cluster choices based on the given owner
+            # set cluster choices based on the given owner.
             if self.owner:
                 q = self.owner.filter_on_perms(Cluster, ['admin','create_vm'])
                 self.fields['cluster'].queryset = q
