@@ -157,6 +157,11 @@ class GetterNode(Node):
 
 @register.filter
 @stringfilter
+def abbreviate_fqdn(value):
+    return value.split(".")[0]
+
+@register.filter
+@stringfilter
 def render_os(os):
     try:
         t, flavor = os.split("+", 1)
