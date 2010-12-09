@@ -73,7 +73,7 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         vm_hostname='vm.test.org'
         cluster = Cluster(hostname='test.osuosl.bak', slug='OSL_TEST')
         cluster.save()
-        owner = ClusterUser(id=1, name='foobar')
+        owner = ClusterUser(id=32, name='foobar')
         
         # Cluster
         vm = VirtualMachine(cluster=cluster, hostname=vm_hostname)
@@ -150,15 +150,15 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(vm.ram, 512)
         self.assertEqual(vm.virtual_cpus, 2)
         self.assertEqual(vm.disk_size, 5120)
-    
+
     def test_update_owner_tag(self):
         """
         Test changing owner
         """
         vm, cluster = self.create_virtual_machine()
         
-        owner0 = ClusterUser(id=1, name='owner0')
-        owner1 = ClusterUser(id=2, name='owner1')
+        owner0 = ClusterUser(id=74, name='owner0')
+        owner1 = ClusterUser(id=21, name='owner1')
         owner0.save()
         owner1.save()
         
@@ -192,13 +192,13 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         models.client.GanetiRapiClient = RapiProxy
         vm, cluster = self.create_virtual_machine()
         
-        user = User(id=2, username='tester0')
+        user = User(id=69, username='tester0')
         user.set_password('secret')
         user.save()
-        user1 = User(id=3, username='tester1')
+        user1 = User(id=88, username='tester1')
         user1.set_password('secret')
         user1.save()
-        group = Group(id=1, name='testing_group')
+        group = Group(id=42, name='testing_group')
         group.save()
         
         g = globals()
@@ -256,7 +256,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         """
         url = '/vms/'
         
-        user2 = User(id=4, username='tester2', is_superuser=True)
+        user2 = User(id=28, username='tester2', is_superuser=True)
         user2.set_password('secret')
         user2.save()
         
@@ -443,7 +443,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         with changes to the data
         """
         url = '/vm/add/%s'
-        group1 = Group(id=2, name='testing_group2')
+        group1 = Group(id=81, name='testing_group2')
         group1.save()
         cluster1 = Cluster(hostname='test2.osuosl.bak', slug='OSL_TEST2')
         cluster1.save()
@@ -715,7 +715,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         Test viewing the create virtual machine page
         """
         url = '/vm/add/%s'
-        group1 = Group(id=2, name='testing_group2')
+        group1 = Group(id=87, name='testing_group2')
         group1.save()
         cluster1 = Cluster(hostname='test2.osuosl.bak', slug='OSL_TEST2')
         cluster1.save()
@@ -785,7 +785,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         # cluster ids are 1 through 6
         
         group.user_set.add(user)
-        group1 = Group(id=2, name='testing_group2')
+        group1 = Group(id=43, name='testing_group2')
         group1.save()
         group1.grant('admin',cluster5)
         
@@ -801,13 +801,13 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(404, response.status_code)
         
         # group user is not a member of
-        response = c.get(url, {'group_id':2})
+        response = c.get(url, {'group_id': group1.id})
         self.assertEqual(403, response.status_code)
         
         
         # create_vm permission (group)
         group.grant('create_vm', cluster3)
-        response = c.get(url, {'group_id':1})
+        response = c.get(url, {'group_id': group.id})
         self.assertEqual(200, response.status_code)
         clusters = json.loads(response.content)
         self.assert_([cluster3.id,'group.create_vm'] in clusters)
@@ -815,7 +815,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         
         # admin permission (group)
         group.grant('admin', cluster4)
-        response = c.get(url, {'group_id':1})
+        response = c.get(url, {'group_id': group.id})
         self.assertEqual(200, response.status_code)
         clusters = json.loads(response.content)
         self.assert_([cluster3.id,'group.create_vm'] in clusters)
@@ -1400,13 +1400,13 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         
         cluster0.info = INFO
         
-        user = User(id=2, username='tester0')
+        user = User(id=67, username='tester0')
         user.set_password('secret')
         user.save()
-        user1 = User(id=3, username='tester1')
+        user1 = User(id=70, username='tester1')
         user1.set_password('secret')
         user1.save()
-        group = Group(id=1, name='testing_group')
+        group = Group(id=45, name='testing_group')
         group.save()
         
         g = globals()
@@ -1570,31 +1570,58 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         # user with perms on self, no groups
         user.grant('admin', cluster0)
         form = NewVirtualMachineForm(user, None)
-        self.assertEqual([(u'', u'---------'), (1, u'tester0')], form.fields['owner'].choices)
+        self.assertEqual(
+            [
+                (u'', u'---------'),
+                (user.profile.id, u'tester0'),
+            ], form.fields['owner'].choices)
         user.set_perms(['create_vm'], cluster0)
         form = NewVirtualMachineForm(user, None)
-        self.assertEqual([(u'', u'---------'), (1, u'tester0')], form.fields['owner'].choices)
+        self.assertEqual(
+            [
+                (u'', u'---------'),
+                (user.profile.id, u'tester0'),
+            ], form.fields['owner'].choices)
         
         # user with perms on self and groups
         group.user_set.add(user)
         group.grant('admin', cluster0)
         form = NewVirtualMachineForm(user, None)
-        self.assertEqual([(u'', u'---------'), (1, u'testing_group'), (1, u'tester0')], form.fields['owner'].choices)
+        self.assertEqual(
+            [
+                (u'', u'---------'),
+                (group.organization.id, u'testing_group'),
+                (user.profile.id, u'tester0'),
+            ], form.fields['owner'].choices)
         user.revoke_all(cluster0)
         
         # user with no perms on self, but groups
         form = NewVirtualMachineForm(user, None)
-        self.assertEqual([(u'', u'---------'),(1, u'testing_group')], form.fields['owner'].choices)
+        self.assertEqual(
+            [
+                (u'', u'---------'),
+                (group.organization.id, u'testing_group'),
+            ], form.fields['owner'].choices)
         group.set_perms(['create_vm'], cluster0)
         form = NewVirtualMachineForm(user, None)
-        self.assertEqual([(u'', u'---------'), (1, u'testing_group')], form.fields['owner'].choices)
+        self.assertEqual(
+            [
+                (u'', u'---------'),
+                (group.organization.id, u'testing_group'),
+            ], form.fields['owner'].choices)
         group.revoke_all(cluster0)
         
         # superuser
         user.is_superuser = True
         user.save()
         form = NewVirtualMachineForm(user, None)
-        self.assertEqual([(u'', u'---------'), (1, u'tester0'), (2, u'tester1'), (3, u'testing_group')], list(form.fields['owner'].choices))
+        self.assertEqual(
+            [
+                (u'', u'---------'),
+                (user.profile.id, u'tester0'),
+                (user1.profile.id, u'tester1'),
+                (group.organization.id, u'testing_group'),
+            ], list(form.fields['owner'].choices))
 
 class TestVirtualMachineHelpers(TestCase):
 
