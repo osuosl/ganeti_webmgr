@@ -30,7 +30,6 @@ from django.db import models
 from django.db.models import Sum
 from django.utils.encoding import force_unicode, smart_unicode
 
-
 from object_permissions.registration import register
 from ganeti import constants
 from util import client
@@ -106,7 +105,7 @@ class CachedClusterObject(models.Model):
     error = None
     mtime = None
     ctime = None
-    
+
     def __init__(self, *args, **kwargs):
         super(CachedClusterObject, self).__init__(*args, **kwargs)
         self.load_info()
@@ -219,7 +218,7 @@ class CachedClusterObject(models.Model):
         """
         Parse properties from cached info that are stored in the database. These
         properties will be searchable by the django query api.
-        
+
         This method is specific to the child object.
         """
         self.mtime = datetime.fromtimestamp(self.__info['mtime'])
@@ -288,6 +287,7 @@ class VirtualMachine(CachedClusterObject):
     cluster_hash = models.CharField(max_length=40, editable=False)
     operating_system = models.CharField(max_length=128)
 
+
     @property
     def rapi(self):
         return get_rapi(self.cluster_hash, self.cluster_id)
@@ -331,7 +331,7 @@ class VirtualMachine(CachedClusterObject):
         are stored in the database
         """
         super(VirtualMachine, self).parse_persistent_info()
-
+        
         # Parse resource properties
         self.ram = self.info['beparams']['memory']
         self.virtual_cpus = self.info['beparams']['vcpus']
@@ -341,6 +341,7 @@ class VirtualMachine(CachedClusterObject):
             disk_size += disk
         self.disk_size = disk_size
         self.operating_system = self.info['os']
+
 
     def _refresh(self):
         return self.rapi.GetInstance(self.hostname)

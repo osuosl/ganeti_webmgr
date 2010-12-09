@@ -20,3 +20,6 @@ object_permissions
 
 # Komodo files
 *.komodo*
+
+# vim swap files
+*.swp

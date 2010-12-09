@@ -18,23 +18,21 @@
 
 
 from django.db import models
-from django.utils.encoding import force_unicode, smart_unicode
 
-from ganeti.models import Profile
+#from ganeti.models import Profile
+from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import GenericForeignKey
+from django.utils.encoding import force_unicode
 
 
 class LogAction(models.Model):
     """
     Type of action of log entry (for example: addition, deletion)
 
-    @param name           string  noun (for example: addition)
-    @param action_message string  participle ("-ed" if regular) form of verb
-                                  (for example: added)
+    @param name           string  verb (for example: add)
     """
-    name = models.CharField(max_length=128, primary_key=True) #addition, deletion
-    action_message = models.CharField(max_length=128)         # added, deleted
+    name = models.CharField(max_length=128, unique=True) #add, delete
 
 
 class LogItemManager(models.Manager):
@@ -42,64 +40,44 @@ class LogItemManager(models.Manager):
     # Cache to avoid re-looking up LogAction objects all over the place
     _cache = {}
 
-    def _add_to_cache(self, using, action):
-        """
-        Insert LogAction into cache
-        @param using  Database   used database
-        @param action LogAction  action name
-        """
-        key = action.name
-        self.__class__._cache.setdefault( using, {} )[key] = action
-
-    def _get_action_object(self, name):
-        """
-        Bridge used to cache actions
-
-        @param name string
-        """
-        try:
-            action = self.__class__._cache[self.db][name]
-        except KeyError:
-            # get if exists
-            # or create otherwise
-            action, created = LogAction.objects.get_or_create(
-                name = name,
-                defaults = { "action_message": "%sed" % smart_unicode(name) },
-            )
-            # load it into cache
-            self._add_to_cache(self.db, action)
-        return action
-
-    # TODO: perhaps this needs improving
-    # take a look at django.contrib.contenttypes.management.update_contenttypes
+    # XXX: it doesn't refresh when any LogAction is changed or removed
     def clear_cache(self):
         """
         Clears out all LogAction cached objects
         """
         self.__class__._cache.clear()
 
-    def log_action(self, user, affected_object, action, log_message=None):
+    def log_action(self, user, affected_object, key, log_message=None):
         """
         Creates new log entry
 
         @param user             Profile
         @param affected_object  any model
-        @param action           string or LogAction
+        @param key              string (LogAction.name)
         """
-        if isinstance(action, str):
-            action = self._get_action_object(action)
-        else:
-            # just adds to cache it action obj. not yet added
-            try:
-                act = self.__class__._cache[self.db][action.name]
-            except KeyError:
-                self._add_to_cache(self.db, action)
+        # Want to use unicode?
+        # Add this at import section of the file
+        #from django.utils.encoding import smart_unicode
+        # Uncomment below:
+        #key = smart_unicode(key)
 
+        try:
+            action = self._cache[self.db][key]
+        except KeyError:
+            # get if exists
+            # or create otherwise
+            action, created = LogAction.objects.get_or_create(
+                name = key,
+            )
+            # load into cache
+            self._cache.setdefault(self.db, {})[key] = action
+
+        # now action is LogAction object
         m = self.model(
             id = None,
             action = action,
             timestamp = None,
-            user = user, # or user.pk or request.user.pk
+            user = user,
             object_type = ContentType.objects.get_for_model(affected_object),
             object_id = affected_object.pk,
             object_repr = force_unicode(affected_object),
@@ -115,9 +93,9 @@ class LogItem(models.Model):
     """
     action = models.ForeignKey(LogAction)
     timestamp = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(Profile)
+    user = models.ForeignKey(User, related_name='log_items')
+    object_type = models.ForeignKey(ContentType, related_name='log_items')
 
-    object_type = models.ForeignKey(ContentType)
     object_id = models.PositiveIntegerField()
     object_repr = models.CharField(max_length=128, blank=True, null=True)
     affected_object = GenericForeignKey("object_type", "object_id")
@@ -144,13 +122,13 @@ class LogItem(models.Model):
         if self.log_message:
             msg = ": %s" % self.log_message
 
-        format = "[%(timestamp)s] user %(user)s %(action_message)s" \
+        format = "[%(timestamp)s] user %(user)s %(action)s" \
                + " %(object_type)s \"%(object_repr)s\"%(msg)s"
 
         fields = dict(
             timestamp = self.timestamp,
             user = self.user,
-            action_message = self.action.action_message,
+            action = self.action.name,
             object_type = self.object_type.name,
             object_repr = self.object_repr,
             msg = msg,
