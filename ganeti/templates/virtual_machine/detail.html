@@ -54,42 +54,42 @@
         {% endcomment %}
         {% if admin %}
             <li><a href="{% url vm-users cluster.slug instance.hostname %}"><span>Users</span></a></li>
-            <li><a href="{% url instance-vnc cluster.slug instance.hostname %}"><span>VNC</span></a></li>
+            <li>
+                <a href="{% url instance-vnc cluster.slug instance.hostname %}">
+                    <span>Console</span>
+                </a>
+            </li>
         {%endif%}
     </ul>
     <div id="tab1" class="tab_content">
         <ul id="actions">
             {% with instance.cluster.username as username %}
                 {% if remove and username %}
-                    <li><a class="delete" href="{% url instance-delete cluster.slug instance.hostname %}">Delete</a></li>
+                    <li><a class="button delete" href="{% url instance-delete cluster.slug instance.hostname %}">Delete</a></li>
                 {% endif %}
                 {% if admin and username %}
                     {% ifequal instance.info.status "running" %}
-                    <li><a class="shutdown" href="{% url instance-shutdown cluster.slug instance.hostname %}">Shutdown</a></li>
-                    <li><a class="reboot" href="{% url instance-reboot cluster.slug instance.hostname %}">Reboot</a></li>
-                    <!--li><a class="reboot" href="{% url instance-vnc cluster.slug instance.hostname %}">Remote console (VNC)</a></li-->
+                    <li><a class="button shutdown" href="{% url instance-shutdown cluster.slug instance.hostname %}">Shutdown</a></li>
+                    <li><a class="button reboot" href="{% url instance-reboot cluster.slug instance.hostname %}">Reboot</a></li>
                     {% else %}
-                    <li><a class="startup" href="{% url instance-startup cluster.slug instance.hostname %}">Start</a></li>
+                    <li><a class="button startup" href="{% url instance-startup cluster.slug instance.hostname %}">Start</a></li>
                     {% endifequal %}
                 {% endif %}
             {% endwith %}
         </ul>
-        <div class="ticket" id="ticket_{{ object.id }}">
-            <table id="vm_ticket_table">
-                {% with instance.info as info %}
-                <tr><td class="name">Status</td><td class="name">{{ info.oper_state|yesno:"Running,Stopped" }}</td></tr>
-                <tr><td class="name">Autostart</td><td class="name">{{ info.admin_state }}</td></tr>
-                <tr><td class="name">UUID</td><td class="name">{{ info.uuid }}</td></tr>
-                <tr><td class="name">Primary node</td><td class="name">{{ info.pnode }}</td></tr>
-                <tr><td class="name">Failover node</td><td class="name">{{ info.snodes|join:", " }}</td></tr>
-                <tr><td class="name">Created on</td><td class="name">{{ instance.ctime|date }}</td></tr>
-                <tr><td class="name">Last modified</td><td class="name">{{ instance.mtime|date }}</td></tr>
-                <tr><td class="name">NIC type</td><td class="name">{{ info.hvparams.nic_type }}</td></tr>
-                <tr><td class="name">Disk type</td><td class="name">{{ info.hvparams.disk_type }}</td></tr>
-                {% endwith %}
-            </table>
-
-        </div>
+        <table class="overview">
+            {% with instance.info as info %}
+            <tr><td class="name">Status</td><td class="name">{{ info.oper_state|yesno:"Running,Stopped" }}</td></tr>
+            <tr><td class="name">Autostart</td><td class="name">{{ info.admin_state }}</td></tr>
+            <tr><td class="name">UUID</td><td class="name">{{ info.uuid }}</td></tr>
+            <tr><td class="name">Primary node</td><td class="name">{{ info.pnode }}</td></tr>
+            <tr><td class="name">Failover node</td><td class="name">{{ info.snodes|join:", " }}</td></tr>
+            <tr><td class="name">Created on</td><td class="name">{{ instance.ctime|date }}</td></tr>
+            <tr><td class="name">Last modified</td><td class="name">{{ instance.mtime|date }}</td></tr>
+            <tr><td class="name">NIC type</td><td class="name">{{ info.hvparams.nic_type }}</td></tr>
+            <tr><td class="name">Disk type</td><td class="name">{{ info.hvparams.disk_type }}</td></tr>
+            {% endwith %}
+        </table>
     </div>
     {% comment %}
     <div id="configuration">

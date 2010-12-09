@@ -21,10 +21,10 @@
 {% endblock %}
 
 {% if cluster %}
-    <div class="add"><a href="{% url instance-create cluster.slug %}">Add Virtual Machine</a></div>
+    <a class="button add" href="{% url instance-create cluster.slug %}">Add Virtual Machine</a>
 {% else %}
     {% if can_create %}
-    <div class="add"><a href="{% url instance-create %}">Add Virtual Machine</a></div>
+    <a class="button add" href="{% url instance-create %}">Add Virtual Machine</a>
     {% endif %}
 {% endif %}
 <table id="vmlist" class="sorted">
@@ -74,7 +74,7 @@
             <td>{{ vm.cluster }}</td>
         {% endif %}
         <td>{{ info.pnode }}</td>
-        <td>{{ vm.operating_system }}</td>
+        <td>{{ vm.operating_system|render_os }}</td>
         <td>{{ vm.ram|render_storage }}</td>
         <td>{{ vm.disk_size|render_storage }}</td>
         <td>{{ vm.virtual_cpus }}</td>

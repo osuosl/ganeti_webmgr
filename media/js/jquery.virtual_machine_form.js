@@ -52,6 +52,15 @@
         o.attr("text", text);
         return o;
     };
+    /* Create new option group for select field */
+    newoptgroup = function(value, options) {
+        group = $("<optgroup></optgroup>");
+        group.attr("label", value);
+        $.each(options, function(i, option) {
+            group.append(newoption(option[0], option[1]));
+        });
+        return group;
+    };
     /* Ajax request to update cluster when owner changes */
     owner_change = function(url) {
         owner.change(function() {
@@ -93,7 +102,7 @@
                                     snode.append(child2);
                                 }
                                 else if ( i == 'os' ) {
-                                    child = newoption(value[0], value[1])
+                                    child = newoptgroup(value[0], value[1]);
                                     oslist.append(child);
                                 }
                             });

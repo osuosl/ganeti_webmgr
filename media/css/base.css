@@ -206,7 +206,7 @@ form input.submit{margin-left:12.5em;}
 #quota p label {width:9em;}
 
 /* Virtual Machines */
-#content #vm_ticket_table {width:75%; border-color:#eee;}
+#content .overview {width:75%; border-color:#eee;}
 
 /*  Orphans */
 #orphans {margin:1em 0em 0em 1em;}
@@ -243,11 +243,17 @@ ul#errors {color:#AD2E2E;}
 ul.errors {list-style:square;}
 
 .add, .delete, .edit, .reboot, .shutdown, .startup {cursor:pointer; margin-right:3px;}
-div.edit{background:url(/media/images/icons/edit.png);}
-div.delete{background:url(/media/images/icons/delete.png);}
+.edit{background:url(/media/images/icons/edit.png) no-repeat;}
+.delete{background:url(/media/images/icons/delete.png) no-repeat;}
 div.icon_error {background:url(/media/images/icons/exclamation.png);}
 div.icon_running {background:url(/media/images/icons/check.png);}
 div.icon_stopped {background:url(/media/images/icons/stop.png);}
+
+.add {background:url(/media/images/icons/add.png) no-repeat;}
+.reboot {background:url(/media/images/icons/arrow_refresh.png) no-repeat;}
+.shutdown {background:url(/media/images/icons/stop.png) no-repeat;}
+.startup {background:url(/media/images/icons/add.png) no-repeat;}
+
 div.delete, div.edit, div.icon_error, .icon_running, .icon_stopped {
     background-repeat:no-repeat;
     float:left;
@@ -256,12 +262,9 @@ div.delete, div.edit, div.icon_error, .icon_running, .icon_stopped {
     width:16px;
 }
 
-.add a, .reboot a, .shutdown a, .startup a,
-.add a:visited, .reboot a:visited, .shutdown a:visited, .startup a:visited,
-.add a, .reboot a, .shutdown a, .startup a:link{color:inherit !important;}
-
-.add, .reboot, .shutdown, .startup, a.delete{
+.button {
     background-color: #eeeeee !important;
+    background-position:4px 4px;
     border: 1px solid #cccccc;
     clear:both;
     color:#666 !important;
@@ -273,13 +276,11 @@ div.delete, div.edit, div.icon_error, .icon_running, .icon_stopped {
     -webkit-border-radius:5px;
 }
 
-a.delete {background:url(/media/images/icons/delete.png) no-repeat 4px 4px;}
-.add {background:url(/media/images/icons/add.png) no-repeat 4px 4px;}
-.reboot {background:url(/media/images/icons/arrow_refresh.png) no-repeat 4px 4px;}
-.shutdown {background:url(/media/images/icons/stop.png) no-repeat 4px 4px;}
-.startup {background:url(/media/images/icons/add.png) no-repeat 4px 4px;}
-.add:hover, .reboot:hover, .shutdown:hover, .startup:hover, a.delete:hover {
-    background-color: #dadada !important; color:black !important; border-color:#bababa;}
+.button:hover {
+    background-color: #dadada !important;
+    color:black !important;
+    border-color:#bababa;
+}
 
 .spinner {margin:0 auto; text-align:center; width:100px}
 .spinner image {display:block; margin:0 auto; width:32px;}
@@ -316,3 +317,9 @@ tr.group td.name {background:url(/media/images/icons/group.png) no-repeat 0 4px;
 
 
 .floatfix {clear:both;}
+
+
+.ui-tabs-panel {
+    padding-left:0 !important;
+    padding-right:0 !important;
+}

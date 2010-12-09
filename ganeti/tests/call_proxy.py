@@ -77,7 +77,7 @@ class CallProxy(object):
                     testcase.fail("exact call (%s) was made: %s" % (f, calls))
         else:
             # simple match
-            testcase.assertFalse(calls, '%s was not called' % f)
+            testcase.assertFalse(calls, '%s was called' % f)
         
     def enable(self):
         self.enabled = True

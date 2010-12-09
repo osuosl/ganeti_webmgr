@@ -16,7 +16,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-
 import cPickle
 from datetime import datetime
 import time
@@ -28,25 +27,11 @@ from util import client
 from ganeti.tests.rapi_proxy import RapiProxy
 from ganeti.tests.call_proxy import CallProxy
 from ganeti import models
-CachedClusterObject = models.CachedClusterObject
 
+CachedClusterObject = models.CachedClusterObject
+TestModel = models.TestModel
 
 __all__ = ('TestCachedClusterObject',)
-
-
-class TestModel(CachedClusterObject):
-    """ simple implementation of a cached model that has been instrumented """
-    
-    data = {'mtime': 1285883187.8692031, 'ctime': 1285799513.4741089}
-    throw_error = None
-    
-    def _refresh(self):
-        if self.throw_error:
-            raise self.throw_error
-        return self.data
-
-    def save(self, *args, **kwargs):
-        self.id = 1
 
 
 class CachedClusterObjectBase(TestCase):
@@ -58,12 +43,15 @@ class CachedClusterObjectBase(TestCase):
     """
     
     __GanetiRapiClient = None
+    __LAZY_CACHE_REFRESH = None
     
     def setUp(self):
         self.tearDown()
         self.__GanetiRapiClient = models.client.GanetiRapiClient
         models.client.GanetiRapiClient = RapiProxy
-        
+        self.__LAZY_CACHE_REFRESH = settings.LAZY_CACHE_REFRESH
+        settings.LAZY_CACHE_REFRESH = 50
+    
     def create_model(self, *args):
         """
         create an instance of the model being tested, this will instrument
@@ -76,11 +64,17 @@ class CachedClusterObjectBase(TestCase):
         CallProxy.patch(object, 'parse_persistent_info')
         CallProxy.patch(object, '_refresh')
         CallProxy.patch(object, 'load_info')
+        CallProxy.patch(object, 'save')
         return object
     
     def tearDown(self):
+        TestModel.objects.all().delete()
+        
         if self.__GanetiRapiClient is not None:
             models.client.GanetiRapiClient = self.__GanetiRapiClient
+        
+        if self.__LAZY_CACHE_REFRESH:
+            settings.LAZY_CACHE_REFRESH = self.__LAZY_CACHE_REFRESH
 
     def test_trivial(self):
         """
@@ -112,8 +106,8 @@ class CachedClusterObjectBase(TestCase):
         
         Verifies:
             * If serialized is available it will be deserialized and returned
-            * If serialiezed info is not available it will be returned
-            * Setting info serializes info automatically
+            * If serialized info is not available, None will be returned
+            * Setting info, clears serialized info. (delayed till save)
             * Setting info triggers info to be parsed
         """
         object = self.create_model()
@@ -126,9 +120,13 @@ class CachedClusterObjectBase(TestCase):
         
         # set info
         object.info = data
-        self.assertEqual(object.serialized_info, serialized_info)
+        self.assertEqual(None, object.serialized_info)
         object.parse_transient_info.assertCalled(self)
         object.parse_persistent_info.assertCalled(self)
+        
+        # save causes serialization
+        object.save()
+        self.assertEqual(serialized_info, object.serialized_info)
         
         # serialized data, check twice for caching mechanism
         object.serialized_info = serialized_info
@@ -203,24 +201,93 @@ class CachedClusterObjectBase(TestCase):
             * If cache has timed out, refresh
             * otherwise parse cached transient info only
         """
-        settings.LAZY_CACHE_REFRESH = 50
         object = self.create_model()
         object.save()
         
         # no cache time
         object.load_info()
         object._refresh.assertCalled(self)
+        object._refresh.reset()
         
         # cached, but not expired
-        object.refreshed = False
         object.load_info()
-        self.assertFalse(object.refreshed)
+        object._refresh.assertNotCalled(self)
         object.parse_transient_info.assertCalled(self)
+        object.parse_transient_info.reset()
         
         # sleep to let cache expire
         time.sleep(.1)
         object.load_info()
         object._refresh.assertCalled(self)
+        object._refresh.reset()
+    
+    def test_no_change_quick_update(self):
+        """
+        Tests that if no change has been made (signified by mtime), then an
+        update query is used instead of Model.save()
+        
+        Verifies:
+            * null Model.mtime causes save()
+            * newer info.mtime causes save()
+            * equal mtime causes update
+        """
+        object = self.create_model()
+        object.save()
+        object.save.reset()
+        
+        # mtime is None (object was never refreshed or parsed)
+        object.refresh()
+        object.save.assertCalled(self)
+        object.save.reset()
+        
+        # mtime still the same as static data, no save
+        object.refresh()
+        object.save.assertNotCalled(self)
+        
+        # info.mtime newer, Model.save() called
+        # XXX make a copy of the data to ensure this test does not conflict
+        # with any other tests.
+        data = object.data.copy()
+        data['mtime'] = object.data['mtime'] + 100
+        object.data = data
+        object.refresh()
+        object.save.assertCalled(self)
+    
+    def test_cache_disabled(self):
+        """
+        Tests that CachedClusterObjectBase.ignore_cache causes the cache to be
+        ignored
+        
+        Verifies:
+            * rapi call made even if mtime has not passed
+            * object is still updated if mtime is new
+        """
+        object = self.create_model()
+        object.save()
+        
+        # no cache time
+        object.load_info()
+        object._refresh.assertCalled(self)
+        object._refresh.reset()
+        
+        # cache enabled
+        object.load_info()
+        object._refresh.assertNotCalled(self)
+        
+        # enable ignore cache, refresh should be called each time
+        object.ignore_cache=True
+        object.load_info()
+        object._refresh.assertCalled(self)
+        object._refresh.reset()
+        object.load_info()
+        object._refresh.assertCalled(self)
+        object._refresh.reset()
+        
+        # cache re-enabled, cache should be used instead
+        object.ignore_cache=False
+        object.load_info()
+        object._refresh.assertNotCalled(self)
+
 
 class TestCachedClusterObject(CachedClusterObjectBase):
     Model = TestModel

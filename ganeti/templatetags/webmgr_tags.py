@@ -20,9 +20,10 @@
 from django import template
 from django.template import Library, Node, TemplateSyntaxError
 from django.template.defaultfilters import stringfilter
+from django.utils.safestring import mark_safe
 import re
 
-from ganeti.models import Cluster, Quota
+from ganeti.models import Cluster
 
 
 register = Library()
@@ -149,4 +150,17 @@ class GetterNode(Node):
 
     def render(self, context):
         context[self.res_name] = context[self.item_name][self.attr_name]
-        return '' 
+        return ''
+
+# These filters were created by Corbin Simpson IN THE NAME OF AWESOME!
+# Just kidding. Created for ganeti-webmgr at Oregon State University.
+
+@register.filter
+@stringfilter
+def render_os(os):
+    try:
+        t, flavor = os.split("+", 1)
+        flavor = " ".join(i.capitalize() for i in flavor.split("-"))
+        return mark_safe("%s (<em>%s</em>)" % (flavor, t))
+    except ValueError:
+        return mark_safe("<em>Unknown or invalid OS</em>")

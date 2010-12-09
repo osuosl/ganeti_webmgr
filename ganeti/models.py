@@ -98,12 +98,15 @@ class CachedClusterObject(models.Model):
     handling cache loading transparently
     """
     serialized_info = models.TextField(null=True, default=None, editable=False)
+    mtime = models.DateTimeField(null=True, editable=False)
     cached = models.DateTimeField(null=True, editable=False)
+    ignore_cache = models.BooleanField(default=False)
+    
     __info = None
     error = None
     mtime = None
     ctime = None
-
+    
     def __init__(self, *args, **kwargs):
         super(CachedClusterObject, self).__init__(*args, **kwargs)
         self.load_info()
@@ -113,6 +116,8 @@ class CachedClusterObject(models.Model):
         """
         Getter for self.info, a dictionary of data about a VirtualMachine.  This
         is a proxy to self.serialized_info that handles deserialization.
+        Accessing this property will lazily deserialize info if it has not yet
+        been deserialized.
         """
         if self.__info is None:
             if self.serialized_info is not None:
@@ -126,10 +131,13 @@ class CachedClusterObject(models.Model):
         serialization.  When info is set, it will be parsed will trigger
         self._parse_info() to update persistent and non-persistent properties
         stored on the model instance.
+        
+        Calling this method will not force serialization.  Serialization of info
+        is lazy and will only occur when saving.
         """
         self.__info = value
-        self.serialized_info = cPickle.dumps(self.__info)
         self.parse_info()
+        self.serialized_info = None
 
     def load_info(self):
         """
@@ -137,9 +145,14 @@ class CachedClusterObject(models.Model):
         includes a lazy cache mechanism that uses a timer to decide whether or
         not to refresh the cached information with new information from the
         ganeti cluster.
+        
+        This will ignore the cache when self.ignore_cache is True
         """
         if self.id:
-            if self.cached is None \
+            if self.ignore_cache:
+                self.refresh()
+            
+            elif self.cached is None \
                 or datetime.now() > self.cached+timedelta(0, 0, 0, settings.LAZY_CACHE_REFRESH):
                     self.refresh()
             else:
@@ -162,9 +175,21 @@ class CachedClusterObject(models.Model):
         object.  The error will be stored to self.error
         """
         try:
-            self.info = self._refresh()
+            info_ = self._refresh()
+            mtime = datetime.fromtimestamp(info_['mtime'])
             self.cached = datetime.now()
-            self.save()
+            
+            if self.mtime is None or mtime > self.mtime:
+                # there was an update. Set info and save the object
+                self.info = info_
+                self.save()
+            else:
+                # There was no change on the server.  Only update the cache
+                # time. This bypasses the info serialization mechanism and
+                # uses a smaller query.
+                self.__class__.objects.filter(pk=self.id) \
+                    .update(cached=self.cached)
+                
             self.error = None
         except GanetiApiError, e:
             self.error = str(e)
@@ -189,19 +214,44 @@ class CachedClusterObject(models.Model):
         # XXX ganeti 2.1 ctime is always None
         if info_['ctime'] is not None:
             self.ctime = datetime.fromtimestamp(info_['ctime'])
-        self.mtime = datetime.fromtimestamp(info_['mtime'])
 
     def parse_persistent_info(self):
         """
         Parse properties from cached info that are stored in the database. These
         properties will be searchable by the django query api.
-
+        
         This method is specific to the child object.
         """
-        pass
+        self.mtime = datetime.fromtimestamp(self.__info['mtime'])
+
+    def save(self, *args, **kwargs):
+        """
+        overridden to ensure info is serialized prior to save
+        """
+        if self.serialized_info is None:
+            self.serialized_info = cPickle.dumps(self.__info)
+        super(CachedClusterObject, self).save(*args, **kwargs)
 
     class Meta:
         abstract = True
+
+
+if settings.DEBUG or True:
+    # XXX - if in debug mode create a model for testing cached cluster objects
+    class TestModel(CachedClusterObject):
+        """ simple implementation of a cached model that has been instrumented """
+        saved = False
+        data = {'mtime': 1285883187.8692031, 'ctime': 1285799513.4741089}
+        throw_error = None
+        
+        def _refresh(self):
+            if self.throw_error:
+                raise self.throw_error
+            return self.data
+
+        def save(self, *args, **kwargs):
+            self.saved = True
+            super(TestModel, self).save(*args, **kwargs)
 
 
 class VirtualMachine(CachedClusterObject):
@@ -244,13 +294,10 @@ class VirtualMachine(CachedClusterObject):
 
     def save(self, *args, **kwargs):
         """
-        sets the cluster_hash for newly saved instances and writes the owner tag
-        to ganeti
+        sets the cluster_hash for newly saved instances
         """
         if self.id is None:
             self.cluster_hash = self.cluster.hash
-
-        self.update_owner_tags()
 
         super(VirtualMachine, self).save(*args, **kwargs)
 
@@ -259,6 +306,7 @@ class VirtualMachine(CachedClusterObject):
         Loads all values from cached info, included persistent properties that
         are stored in the database
         """
+        super(VirtualMachine, self).parse_persistent_info()
         
         self.update_owner_tags()
 
