@@ -93,7 +93,7 @@ li {
     background:white;
     border-left: 1px solid #DDDDDD;
     border-right: 1px solid #DDDDDD;
-    float:left;    
+    float:left;
     min-height:490px;
     padding:10px 10px 20px 10px;
     width: 812px;
@@ -101,7 +101,9 @@ li {
 #content h1 {margin:10px 0 10px 0;}
 #content table {margin-top:15px;  width:100%; border: 1px solid #dddddd;}
 #content th {background:#eeeeee; border-bottom:1px solid #dddddd !important;}
-#content td.name {text-align:left; padding-left:0;}
+#content td.name {text-align:center;}
+#content td.actions {width:16px;}
+#content tr.group_row {margin:auto;}
 #content tr.none td {border-bottom: 1px solid white; font-style:italic;}
 #content td.error {padding-right:0 !important; width:16px;}
 #content td {border-left:1px solid white; border-right: 1px solid white;}
@@ -242,7 +244,7 @@ form input.submit{margin-left:12.5em;}
 ul#errors {color:#AD2E2E;}
 ul.errors {list-style:square;}
 
-.add, .delete, .edit, .reboot, .shutdown, .startup {cursor:pointer; margin-right:3px;}
+.add, .delete, .edit, .reboot, .shutdown, .startup {cursor:pointer;}
 .edit{background:url(/media/images/icons/edit.png) no-repeat;}
 .delete{background:url(/media/images/icons/delete.png) no-repeat;}
 div.icon_error {background:url(/media/images/icons/exclamation.png);}
@@ -256,7 +258,7 @@ div.icon_stopped {background:url(/media/images/icons/stop.png);}
 
 div.delete, div.edit, div.icon_error, .icon_running, .icon_stopped {
     background-repeat:no-repeat;
-    float:left;
+    float:right;
     height:16px;
     padding:0;
     width:16px;

@@ -18,7 +18,7 @@
         <td>{{ user.date_joined|date }}</td>
         <td>{{ user.last_login|date }}</td>
         <td><a href="{% url user-edit user.id %}"><div class="edit"></div></a></td>
-        <td><a href="{% url user-edit user.id %}" class="delete"><div class="delete"></div></a></td>
+        <td><a href="{% url user-edit user.id %}"><div class="delete"></div></a></td>
     </tr>
     {% endfor %}
 </table>
