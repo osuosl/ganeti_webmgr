@@ -25,4 +25,3 @@ from ganeti.tests.rapi_cache import *
 from ganeti.tests.importing import *
 from ganeti.tests.virtual_machine import *
 from ganeti.tests.users import *
-from ganeti.tests.logging import *

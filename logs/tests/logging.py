@@ -57,18 +57,9 @@ class LoggingTest(TestCase):
         act1.save()
         self.assertEqual(len(LogAction.objects.all()), 1)
 
-        pk1 = LogItem.objects.log_action(
-            user = user,
-            affected_object = user,
-            key = "created",
-            log_message = "started test #1",
-        )
-        pk2 = LogItem.objects.log_action(
-            user = user,
-            affected_object = user,
-            key = "deleted",
-            #log_message = "stopped test #1",
-        )
+        pk1 = LogItem.objects.log_action(user, user, "created",
+                                         log_message = "started test #1")
+        pk2 = LogItem.objects.log_action(user, user, "deleted")
 
         self.assertEqual(len(LogItem.objects.all()), 2)
         self.assertEqual(len(LogAction.objects.all()), 2)
@@ -80,18 +71,9 @@ class LoggingTest(TestCase):
         Verifies:
             * LogItem is represented properly
         """
-        pk1 = LogItem.objects.log_action(
-            user = user,
-            affected_object = user,
-            key = "created",
-            log_message = "started test #1",
-        )
-        pk2 = LogItem.objects.log_action(
-            user = user,
-            affected_object = user,
-            key = "deleted",
-            #log_message = "stopped test #1",
-        )
+        pk1 = LogItem.objects.log_action(user, user, "created",
+                                         log_message = "started test #1")
+        pk2 = LogItem.objects.log_action(user, user, "deleted")
         item1 = LogItem.objects.get( pk=pk1 )
         item2 = LogItem.objects.get( pk=pk2 )
 
@@ -121,23 +103,14 @@ class LoggingTest(TestCase):
         state = deepcopy(cache)
         self.assertEqual(state, {})
 
-        LogItem.objects.log_action(
-            user = user,
-            affected_object = user,
-            key = "created",
-        )
-
+        LogItem.objects.log_action(user, user, "created")
         self.assertNotEqual(state, cache)
 
         # state should contain 1 LogAction
         state = deepcopy(cache)
         self.assertEqual(len(state[curr_db]), 1)
 
-        LogItem.objects.log_action(
-            user = user,
-            affected_object = user,
-            key = "deleted",
-        )
+        LogItem.objects.log_action(user, user, "deleted")
 
         # state should still contain 1 LogAction
         # but cache should contain 2 LogActions
@@ -146,11 +119,7 @@ class LoggingTest(TestCase):
 
         # caching: state should be the same as cache
         state = deepcopy(cache)
-        LogItem.objects.log_action(
-            user = user,
-            affected_object = user,
-            key = "deleted",
-        )
+        LogItem.objects.log_action(user, user, "deleted")
         self.assertEqual(state, cache)
 
 
