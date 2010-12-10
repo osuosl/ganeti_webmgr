@@ -197,7 +197,7 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         vm.rapi.GetJobStatus.response = JOB_RUNNING
         
         # reboot enables ignore_cache flag
-        job_id = vm.startup()
+        job_id = vm.startup().id
         vm = VirtualMachine.objects.get(id=vm.id)
         self.assert_(Job.objects.filter(id=job_id).exists())
         self.assert_(vm.ignore_cache)
@@ -223,7 +223,7 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         vm.rapi.GetJobStatus.response = JOB_RUNNING
         
         # reboot enables ignore_cache flag
-        job_id = vm.shutdown()
+        job_id = vm.shutdown().id
         self.assert_(Job.objects.filter(id=job_id).exists())
         vm = VirtualMachine.objects.get(id=vm.id)
         self.assert_(vm.ignore_cache)
@@ -251,7 +251,7 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         vm.rapi.GetJobStatus.response = JOB_RUNNING
         
         # reboot enables ignore_cache flag
-        job_id = vm.reboot()
+        job_id = vm.reboot().id
         self.assert_(Job.objects.filter(id=job_id).exists())
         vm = VirtualMachine.objects.get(id=vm.id)
         self.assert_(vm.ignore_cache)
@@ -472,7 +472,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/json', response['content-type'])
         content = json.loads(response.content)
-        self.assertEqual(1, content[0])
+        self.assertEqual('1', content['id'])
         user.revoke('admin', vm)
         VirtualMachine.objects.all().update(last_job=None)
         Job.objects.all().delete()
@@ -483,7 +483,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/json', response['content-type'])
         content = json.loads(response.content)
-        self.assertEqual(1, content[0])
+        self.assertEqual('1', content['id'])
         user.revoke('admin', cluster)
         VirtualMachine.objects.all().update(last_job=None)
         Job.objects.all().delete()
@@ -495,7 +495,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         response = c.post(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/json', response['content-type'])
-        self.assertEqual(1, content[0])
+        self.assertEqual('1', content['id'])
         VirtualMachine.objects.all().update(last_job=None)
         Job.objects.all().delete()
         

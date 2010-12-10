@@ -216,7 +216,7 @@ INFO = {'architecture': ['64bit', 'x86_64'],
 OPERATING_SYSTEMS = ['image+debian-osgeo', 'image+ubuntu-lucid']
 
 JOB = {'end_ts': [1291845036, 492131],
- 'id': '119860',
+ 'id': '1',
  'oplog': [[]],
  'opresult': [None],
  'ops': [{'OP_ID': 'OP_INSTANCE_SHUTDOWN',
@@ -231,7 +231,7 @@ JOB = {'end_ts': [1291845036, 492131],
  'summary': ['INSTANCE_SHUTDOWN(gimager.osuosl.bak)']}
 
 JOB_RUNNING = {'end_ts': [1291845036, 492131],
- 'id': '119860',
+ 'id': '1',
  'oplog': [[]],
  'opresult': [None],
  'ops': [{'OP_ID': 'OP_INSTANCE_SHUTDOWN',
@@ -246,7 +246,7 @@ JOB_RUNNING = {'end_ts': [1291845036, 492131],
  'summary': ['INSTANCE_SHUTDOWN(gimager.osuosl.bak)']}
 
 JOB_ERROR = {'end_ts': [1291836084, 802444],
- 'id': '119795',
+ 'id': '1',
  'oplog': [[]],
  'opresult': [['OpExecError',
                ['Could not reboot instance: Cannot reboot instance gimager.osuosl.bak that is not running']]],
