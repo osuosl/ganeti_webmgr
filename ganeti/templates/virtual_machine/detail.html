@@ -57,7 +57,7 @@
             {# XXX convert to json and then parse, avoids potential js hacks #}
             data = $.parseJSON('{{instance.last_job.info|json}}');
             display_job(data);
-            poll_job_status({{instance.last_job_id}});
+            poll_job_status({{instance.last_job.job_id}});
         {% else %}
             {% if instance.error %}
                 display_ganeti_error("{{instance.error}}");
@@ -78,7 +78,7 @@
     function poll_job_status(job_id) {
         checkInterval = setInterval(function(){
             $.ajax({
-                    url: "{{SITE_ROOT}}/job/"+job_id+"/status/",
+                    url: "{% url cluster-detail cluster.slug %}/job/"+job_id+"/status/",
                     success: function(data) {
                         if (data.status == 'success'){
                                 $("#messages").empty();

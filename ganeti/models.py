@@ -259,9 +259,7 @@ class JobManager(models.Manager):
     """
     def create(self, **kwargs):
         """ helper method for creating a job with disabled cache """
-        job = Job(ignore_cache=True)
-        for k in kwargs:
-            setattr(job, k, kwargs[k])
+        job = Job(ignore_cache=True, **kwargs)
         job.save(force_insert=True)
         return job
 
@@ -276,6 +274,7 @@ class Job(CachedClusterObject):
     status (success/error) has been detected.  The cache can be disabled by
     settning ignore_cache=True.
     """
+    job_id = models.IntegerField(null=False)
     content_type = models.ForeignKey(ContentType, null=False)
     object_id = models.IntegerField(null=False)
     obj = GenericForeignKey('content_type', 'object_id')
@@ -292,7 +291,7 @@ class Job(CachedClusterObject):
         return get_rapi(self.cluster_hash, self.cluster_id)
     
     def _refresh(self):
-        return self.rapi.GetJobStatus(self.id)
+        return self.rapi.GetJobStatus(self.job_id)
     
     def load_info(self):
         """
@@ -438,7 +437,9 @@ class VirtualMachine(CachedClusterObject):
         # if the cache bypass is enabled then check the status of the last job
         # when the job is complete we can reenable the cache.
         if self.ignore_cache and not self.last_job_id is None:
-            data = self.rapi.GetJobStatus(self.last_job_id)
+            (job_id,) = Job.objects.filter(pk=self.last_job_id)\
+                            .values_list('job_id', flat=True)
+            data = self.rapi.GetJobStatus(job_id)
             status = data['status']
             
             if status in ('success', 'error'):
@@ -462,24 +463,24 @@ class VirtualMachine(CachedClusterObject):
 
     def shutdown(self):
         id = self.rapi.ShutdownInstance(self.hostname)
-        job = Job.objects.create(id=id, obj=self, cluster_id=self.cluster_id)
-        self.last_job_id = id
+        job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
+        self.last_job = job
         VirtualMachine.objects.filter(pk=self.id) \
             .update(last_job=job, ignore_cache=True)
         return job
 
     def startup(self):
         id = self.rapi.StartupInstance(self.hostname)
-        job = Job.objects.create(id=id, obj=self, cluster_id=self.cluster_id)
-        self.last_job_id = id
+        job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
+        self.last_job = job
         VirtualMachine.objects.filter(pk=self.id) \
             .update(last_job=job, ignore_cache=True)
         return job
 
     def reboot(self):
         id = self.rapi.RebootInstance(self.hostname)
-        job = Job.objects.create(id=id, obj=self, cluster_id=self.cluster_id)
-        self.last_job_id = id
+        job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
+        self.last_job = job
         VirtualMachine.objects.filter(pk=self.id) \
             .update(last_job=job, ignore_cache=True)
         return job

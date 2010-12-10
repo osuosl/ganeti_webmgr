@@ -57,7 +57,7 @@ class TestJobModel(TestCase, VirtualMachineTestCaseMixin):
         """
         Test instantiating a Job with extra parameters
         """
-        return Job(cluster=cluster, obj=vm)
+        return Job(job_id=1, cluster=cluster, obj=vm)
     
     def test_save(self):
         """
@@ -68,7 +68,7 @@ class TestJobModel(TestCase, VirtualMachineTestCaseMixin):
             * Job can be loaded
             * Hash is copied from cluster
         """
-        job = Job(cluster=cluster, obj=vm)
+        job = Job(job_id=1, cluster=cluster, obj=vm)
         job.save()
         
         job = Job.objects.get(id=job.id)

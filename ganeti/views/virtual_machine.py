@@ -365,7 +365,7 @@ def create(request, cluster_slug=None):
                                     ram=ram, virtual_cpus=vcpus)
                 vm.ignore_cache = True
                 vm.save()
-                job = Job.objects.create(id=job_id, obj=vm, cluster=cluster)
+                job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
                 VirtualMachine.objects.filter(id=vm.id).update(last_job=job)
 
                 # log information about creating the machine
