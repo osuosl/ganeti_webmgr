@@ -30,6 +30,7 @@
         
         $("#actions a").not('.delete').click(function(){
             if (actions_enabled){
+                actions_enabled = false;
                 $.post(this.href, action_response);
             }
             return false;
@@ -41,13 +42,21 @@
             data = $.parseJSON('{{instance.last_job.info|json}}');
             display_job(data);
             poll_job_status({{instance.last_job_id}});
+        {% else %}
+            {% if instance.error %}
+                display_ganeti_error("{{instance.error}}");
+            {% endif %}
         {% endif %}
     });
     
     function action_response(result) {
-        actions_enabled = false;
-        poll_job_status(result['id'])
-        display_job(result);
+        if (result.ops == undefined) {
+            display_ganeti_error(result[1]);
+            actions_enabled = true;
+        } else {
+            poll_job_status(result['id'])
+            display_job(result);
+        }
     }
 
     function poll_job_status(job_id) {
@@ -89,6 +98,12 @@
         }
     }
 
+    function display_ganeti_error(msg) {
+        $("#messages").empty();
+        html = "<li class='error'>Error in Ganeti API:<p>" + msg + "</p></li>";
+        $("#messages").append(html);
+    }
+
     function format_op(str){
         return str;
     }
@@ -98,9 +113,7 @@
 
 {% block content %}
 <h1>{{ instance.hostname }}</h1>
-<ul id="messages">
-    {%if not instance.last_job_id and instance.error %}<li class="error">Error in Ganeti API:<p>{{instance.error}}</p></li>{%endif%}
-</ul>
+<ul id="messages"></ul>
 <div id="tabs">
     <ul id="tabs">
         <li><a href="#tab1"><span>Overview</span></a></li>
