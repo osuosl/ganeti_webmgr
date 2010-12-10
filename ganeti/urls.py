@@ -33,6 +33,11 @@ urlpatterns = patterns('ganeti.views.users',
     url(r'^user/(?P<user_id>\d+)/keys/?$', 'user_keys_list', name="user-keys-list"),
     url(r'^keys/add/?$', 'key_add', name="key-add"),
     url(r'^keys/(?P<key_id>\d+)/edit/?$', 'key_edit', name="key-edit"),
+    url(r'^keys/(?P<key_id>\d+)/delete/?$', 'key_delete', name="key-delete"),
+    # ajax
+    url(r'^keys/ajax/get/', 'key_get_ajax', name="key-get-ajax"),
+    url(r'^keys/ajax/list/', 'user_keys_list_ajax', name="key-list-ajax"),
+    url(r'^keys/ajax/save/', 'key_save_ajax', name="key-save-ajax"),
 )
 
 # Clusters

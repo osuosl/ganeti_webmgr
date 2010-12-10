@@ -133,8 +133,10 @@ def user_profile(request):
                                         'old_password':'',
                                         })
     
+    keys = SSHKey.objects.filter(user__pk=user.pk)
+
     return render_to_response('user_profile.html',
-     {"user":request.user, 'form':form},
+    {"user":request.user, 'form':form, 'keyslist':keys},
      context_instance=RequestContext(request))
 
 
@@ -165,7 +167,7 @@ def key_edit(request, key_id=None):
         form = SSHKeyForm(data=request.POST, instance=key_edit)
         if form.is_valid():
             form.save()
-            return HttpResponseRedirect(reverse('user-keys-list', args=[key_edit.user.pk]))
+            return HttpResponseRedirect(reverse('profile'))
     elif request.method == "DELETE":
         key_edit.delete()
         return HttpResponse('1', mimetype='application/json')
@@ -179,12 +181,56 @@ def key_edit(request, key_id=None):
         context_instance=RequestContext(request),
     )
 
+@login_required
+def key_save_ajax(request):
+    user = request.user
+    if not user.is_superuser:
+        return HttpResponseForbidden("Only superuser can modify SSH keys")
+
+    if request.is_ajax:
+        id = request.GET.get("id")
+        key = request.POST.get("key")
+        if id is not None:
+            # update existing
+            SSHKey.objects.filter(pk=id).update(key=key)
+        else:
+            # save new
+            SSHKey(user=user, key=key).save()
+        return HttpResponse("1")
+    return HttpResponse("0")
+
+@login_required
+def key_get_ajax(request):
+    user = request.user
+    if not user.is_superuser:
+        return HttpResponseForbidden("Only superuser can modify SSH keys")
+
+    if request.is_ajax:
+        id = request.GET.get("id")
+        if id is not None:
+            return HttpResponse( SSHKey.objects.get(pk=id).key )
+
+    return HttpResponse("Cannot retrieve information")
+
+@login_required
+def user_keys_list_ajax(request):
+    user = request.user
+    if not user.is_superuser:
+        return HttpResponseForbidden('Only superuser can list user\'s SSH keys.')
+
+    keys = SSHKey.objects.filter(user__pk=user.pk)
+
+    return render_to_response("users/keys_list_ajax.html", {
+            'keyslist': keys
+        },
+        context_instance=RequestContext(request),
+    )
 
 @login_required
 def key_add(request, key_id=None):
     user = request.user
     if not user.is_superuser:
-        return HttpResponseForbidden('Only superuser can delete user\'s SSH key.')
+        return HttpResponseForbidden('Only superuser can create new SSH key.')
 
     if request.method == "POST":
         form = SSHKeyForm(request.POST, instance=SSHKey(user=request.user))
@@ -200,6 +246,17 @@ def key_add(request, key_id=None):
         },
         context_instance=RequestContext(request),
     )
+
+
+@login_required
+def key_delete(request, key_id=None):
+    user = request.user
+    if not user.is_superuser:
+        return HttpResponseForbidden('Only superuser can delete user\'s SSH key.')
+
+    key_edit = get_object_or_404(SSHKey, pk=key_id)
+    key_edit.delete()
+    return HttpResponseRedirect(reverse('profile'))
 
 
 class SSHKeyForm(forms.ModelForm):
