@@ -38,7 +38,7 @@ from logs.models import LogItem
 log_action = LogItem.objects.log_action
 
 from util.client import GanetiApiError
-from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine
+from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine, Job
 
 empty_field = (u'', u'---------')
 
@@ -117,16 +117,16 @@ def shutdown(request, cluster_slug, instance):
 
     if request.method == 'POST':
         try:
-            vm.shutdown()
-            msg = [1, 'Virtual machine stopping.']
-
+            job = vm.shutdown()
+            job.load_info()
+            msg = job.info
+            
             # log information about stopping the machine
             log_action(user, vm, "stopped")
         except GanetiApiError, e:
             msg = [0, str(e)]
         return HttpResponse(json.dumps(msg), mimetype='application/json')
-    return HttpResponseNotAllowed(['GET', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', \
-                                  'TRACE'])
+    return HttpResponseNotAllowed(['POST'])
 
 
 @login_required
@@ -140,16 +140,16 @@ def startup(request, cluster_slug, instance):
 
     if request.method == 'POST':
         try:
-            vm.startup()
-            msg = [1, 'Virtual machine starting.']
-
+            job = vm.startup()
+            job.load_info()
+            msg = job.info
+            
             # log information about starting up the machine
             log_action(user, vm, "started")
         except GanetiApiError, e:
             msg = [0, str(e)]
         return HttpResponse(json.dumps(msg), mimetype='application/json')
-    return HttpResponseNotAllowed(['GET', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', \
-                                  'TRACE'])
+    return HttpResponseNotAllowed(['POST'])
 
 
 @login_required
@@ -163,16 +163,16 @@ def reboot(request, cluster_slug, instance):
 
     if request.method == 'POST':
         try:
-            vm.reboot()
-            msg = [1, 'Virtual machine rebooting.']
-
+            job = vm.reboot()
+            job.load_info()
+            msg = job.info
+            
             # log information about restarting the machine
             log_action(user, vm, "restarted")
         except GanetiApiError, e:
             msg = [0, str(e)]
         return HttpResponse(json.dumps(msg), mimetype='application/json')
-    return HttpResponseNotAllowed(['GET', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', \
-                                  'TRACE'])
+    return HttpResponseNotAllowed(['POST'])
 
 
 @login_required
@@ -338,7 +338,7 @@ def create(request, cluster_slug=None):
                 snode = data['snode']
 
             try:
-                jobid = cluster.rapi.CreateInstance('create', hostname,
+                job_id = cluster.rapi.CreateInstance('create', hostname,
                         disk_template,
                         [{"size": disk_size, }],[{nicmode: nictype, }],
                         memory=ram, os=os, vcpus=vcpus,
@@ -354,7 +354,7 @@ def create(request, cluster_slug=None):
                 # Wait for job to process as the error will not happen
                 #  right away
                 sleep(2)
-                jobstatus = cluster.rapi.GetJobStatus(jobid)
+                jobstatus = cluster.rapi.GetJobStatus(job_id)
 
                 # raise an exception if there was an error in the job
                 if jobstatus["status"] == 'error':
@@ -363,7 +363,10 @@ def create(request, cluster_slug=None):
                 vm = VirtualMachine(cluster=cluster, owner=owner,
                                     hostname=hostname, disk_size=disk_size,
                                     ram=ram, virtual_cpus=vcpus)
+                vm.ignore_cache = True
                 vm.save()
+                job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
+                VirtualMachine.objects.filter(id=vm.id).update(last_job=job)
 
                 # log information about creating the machine
                 log_action(user, vm, "created")

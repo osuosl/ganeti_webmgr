@@ -215,7 +215,124 @@ INFO = {'architecture': ['64bit', 'x86_64'],
 
 OPERATING_SYSTEMS = ['image+debian-osgeo', 'image+ubuntu-lucid']
 
-JOB = {'status': 'success'}
+JOB = {'end_ts': [1291845036, 492131],
+ 'id': '1',
+ 'oplog': [[]],
+ 'opresult': [None],
+ 'ops': [{'OP_ID': 'OP_INSTANCE_SHUTDOWN',
+          'debug_level': 0,
+          'dry_run': False,
+          'instance_name': 'gimager.osuosl.bak',
+          'timeout': 120}],
+ 'opstatus': ['success'],
+ 'received_ts': [1291845002, 555722],
+ 'start_ts': [1291845002, 595336],
+ 'status': 'success',
+ 'summary': ['INSTANCE_SHUTDOWN(gimager.osuosl.bak)']}
+
+JOB_RUNNING = {'end_ts': [1291845036, 492131],
+ 'id': '1',
+ 'oplog': [[]],
+ 'opresult': [None],
+ 'ops': [{'OP_ID': 'OP_INSTANCE_SHUTDOWN',
+          'debug_level': 0,
+          'dry_run': False,
+          'instance_name': 'gimager.osuosl.bak',
+          'timeout': 120}],
+ 'opstatus': ['success'],
+ 'received_ts': [1291845002, 555722],
+ 'start_ts': [1291845002, 595336],
+ 'status': 'running',
+ 'summary': ['INSTANCE_SHUTDOWN(gimager.osuosl.bak)']}
+
+JOB_ERROR = {'end_ts': [1291836084, 802444],
+ 'id': '1',
+ 'oplog': [[]],
+ 'opresult': [['OpExecError',
+               ['Could not reboot instance: Cannot reboot instance gimager.osuosl.bak that is not running']]],
+ 'ops': [{'OP_ID': 'OP_INSTANCE_REBOOT',
+          'debug_level': 0,
+          'dry_run': False,
+          'ignore_secondaries': False,
+          'instance_name': 'gimager.osuosl.bak',
+          'reboot_type': 'hard',
+          'shutdown_timeout': 120}],
+ 'opstatus': ['error'],
+ 'received_ts': [1291836084, 639295],
+ 'start_ts': [1291836084, 673097],
+ 'status': 'error',
+ 'summary': ['INSTANCE_REBOOT(gimager.osuosl.bak)']}
+
+
+JOB_LOG = {'end_ts': [1292007990, 759365],
+ 'id': '121061',
+ 'oplog': [[[1,
+             [1292007953, 699881],
+             'message',
+             ' - INFO: Selected nodes for instance gimager3.osuosl.bak via iallocator hail: gtest2.osuosl.bak'],
+            [2,
+             [1292007953, 979254],
+             'message',
+             '* creating instance disks...'],
+            [3,
+             [1292007954, 276561],
+             'message',
+             'adding instance gimager3.osuosl.bak to cluster config'],
+            [4,
+             [1292007954, 357390],
+             'message',
+             ' - INFO: Waiting for instance gimager3.osuosl.bak to sync disks.'],
+            [5,
+             [1292007954, 496430],
+             'message',
+             " - INFO: Instance gimager3.osuosl.bak's disks are in sync."],
+            [6,
+             [1292007954, 498135],
+             'message',
+             '* running the instance OS create scripts...'],
+            [7, [1292007990, 267330], 'message', '* starting instance...']]],
+ 'opresult': [['gtest2.osuosl.bak']],
+ 'ops': [{'OP_ID': 'OP_INSTANCE_CREATE',
+          'beparams': {},
+          'debug_level': 0,
+          'disk_template': 'plain',
+          'disks': [{'size': 2000}],
+          'dry_run': False,
+          'file_driver': 'loop',
+          'file_storage_dir': None,
+          'force_variant': False,
+          'hvparams': {'boot_order': 'disk',
+                       'cdrom_image_path': '',
+                       'kernel_path': '',
+                       'root_path': '/dev/vda2',
+                       'serial_console': True},
+          'hypervisor': 'kvm',
+          'iallocator': 'hail',
+          'identify_defaults': False,
+          'instance_name': 'gimager3.osuosl.bak',
+          'ip_check': True,
+          'mode': 'create',
+          'name_check': True,
+          'nics': [{}],
+          'no_install': None,
+          'os_type': 'image+ubuntu-maverick',
+          'osparams': {},
+          'pnode': 'gtest2.osuosl.bak',
+          'snode': None,
+          'source_handshake': None,
+          'source_instance_name': None,
+          'source_x509_ca': None,
+          'src_node': None,
+          'src_path': None,
+          'start': True,
+          'wait_for_sync': True}],
+ 'opstatus': ['success'],
+ 'received_ts': [1292007950, 338883],
+ 'start_ts': [1292007950, 367402],
+ 'status': 'success',
+ 'summary': ['INSTANCE_CREATE(gimager3.osuosl.bak)']}
+
+
 class RapiProxy(client.GanetiRapiClient):
     """
     Proxy class for testing RAPI interface without a cluster present. This class
@@ -233,9 +350,9 @@ class RapiProxy(client.GanetiRapiClient):
         CallProxy.patch(instance, 'GetInfo', False, INFO)
         CallProxy.patch(instance, 'GetOperatingSystems', False, OPERATING_SYSTEMS)
         CallProxy.patch(instance, 'GetJobStatus', False, JOB)
-        CallProxy.patch(instance, 'StartupInstance', False)
-        CallProxy.patch(instance, 'ShutdownInstance', False)
-        CallProxy.patch(instance, 'RebootInstance', False)
+        CallProxy.patch(instance, 'StartupInstance', False, 1)
+        CallProxy.patch(instance, 'ShutdownInstance', False, 1)
+        CallProxy.patch(instance, 'RebootInstance', False, 1)
         CallProxy.patch(instance, 'AddInstanceTags', False)
         CallProxy.patch(instance, 'DeleteInstanceTags', False)
         CallProxy.patch(instance, 'CreateInstance', False, 1)

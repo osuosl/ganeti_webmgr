@@ -16,6 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
+import json as json_lib
 
 from django import template
 from django.template import Library, Node, TemplateSyntaxError
@@ -102,6 +103,11 @@ def node_disk(node):
     total = float(node['dtotal'])/1024
     free = float(node['dfree'])/1024
     return "%.2f / %.2f " % (free, total)
+
+
+@register.filter
+def json(obj):
+    return mark_safe(json_lib.dumps(obj))
 
 
 @register.tag
