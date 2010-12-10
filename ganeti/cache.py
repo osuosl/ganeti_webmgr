@@ -45,12 +45,15 @@ def update_cache():
     print '------[cache update]-------------------------------'
     for cluster in Cluster.objects.all():
         infos = cluster.instances(bulk=True)
-        base = VirtualMachine.objects.all()
+        base = cluster.virtual_machines.all()
         no_updates = []
         
         for info in infos:
-            vm, new = base.get_or_create(cluster=cluster, hostname=info['name'])
-            if new or vm.mtime < datetime.fromtimestamp(info['mtime']) \
+            
+            try:
+                vm = base.get(hostname=info['name'])
+                
+                if not vm.mtime or vm.mtime < datetime.fromtimestamp(info['mtime']) \
                 or info['status'] != vm.info['status']:
                     print '    Virtual Machine (updated) : %s' % info['name']
                     # only update the whole object if it is new or modified. 
@@ -60,10 +63,16 @@ def update_cache():
                     # to check this would result in state changes being lost
                     vm.info = info
                     vm.save()
-            else:
-                # no changes to this VirtualMachine
-                print '    Virtual Machine : %s' % info['name']
-                no_updates.append(vm.id)
+                else:
+                    # no changes to this VirtualMachine
+                    print '    Virtual Machine : %s' % info['name']
+                    no_updates.append(vm.id)
+                
+            except VirtualMachine.DoesNotExist:
+                # new vm
+                vm = VirtualMachine(cluster=cluster, hostname=info['name'])
+                vm.info = info
+                vm.save()
             
         # batch update the cache update time for VMs that weren't modified
         if no_updates:
