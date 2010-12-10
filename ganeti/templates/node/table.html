@@ -17,7 +17,7 @@
 <tbody>
     {% for node in nodes %}
         <tr>
-            <td>{{ node.name }}</td>
+            <td>{{ node.name|abbreviate_fqdn }}</td>
             <td class="ram">{% node_memory node %}</td>
             <td class="disk">{% node_disk node %}</td>
             <td>{{ node.pinst_cnt }} / {{ node.sinst_cnt }}</td>
