@@ -28,12 +28,13 @@ from django.test.client import Client
 from object_permissions import grant, get_user_perms
 
 from util import client
-from ganeti.tests.rapi_proxy import RapiProxy, INSTANCE, INFO
+from ganeti.tests.rapi_proxy import RapiProxy, INSTANCE, INFO, JOB, JOB_RUNNING
 from ganeti import models, constants 
 from ganeti.views.virtual_machine import os_prettify, NewVirtualMachineForm
 VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
 ClusterUser = models.ClusterUser
+Job = models.Job
 
 __all__ = ('TestVirtualMachineModel', 'TestVirtualMachineViews', \
            'TestNewVirtualMachineForm', 'VirtualMachineTestCaseMixin')
@@ -54,6 +55,7 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         models.client.GanetiRapiClient = RapiProxy
 
     def tearDown(self):
+        Job.objects.all().delete()
         VirtualMachine.objects.all().delete()
         Cluster.objects.all().delete()
         User.objects.all().delete()
@@ -182,6 +184,89 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         vm.save()
         self.assertEqual([], vm.info['tags'])
 
+    def test_start(self):
+        """
+        Test VirtualMachine.start()
+        
+        Verifies:
+            * job is created
+            * cache is disabled while job is running
+            * cache is reenabled when job is finished
+        """
+        vm, cluster = self.create_virtual_machine()
+        vm.rapi.GetJobStatus.response = JOB_RUNNING
+        
+        # reboot enables ignore_cache flag
+        job_id = vm.startup()
+        vm = VirtualMachine.objects.get(id=vm.id)
+        self.assert_(Job.objects.filter(id=job_id).exists())
+        self.assert_(vm.ignore_cache)
+        self.assert_(vm.last_job_id)
+        
+        # finished job resets ignore_cache flag
+        vm.rapi.GetJobStatus.response = JOB
+        vm = VirtualMachine.objects.get(id=vm.id)
+        self.assertFalse(vm.ignore_cache)
+        self.assertFalse(vm.last_job_id)
+        self.assert_(Job.objects.get(id=job_id).finished)
+
+    def test_stop(self):
+        """
+        Test VirtualMachine.stop()
+        
+        Verifies:
+            * job is created
+            * cache is disabled while job is running
+            * cache is reenabled when job is finished
+        """
+        vm, cluster = self.create_virtual_machine()
+        vm.rapi.GetJobStatus.response = JOB_RUNNING
+        
+        # reboot enables ignore_cache flag
+        job_id = vm.shutdown()
+        self.assert_(Job.objects.filter(id=job_id).exists())
+        vm = VirtualMachine.objects.get(id=vm.id)
+        self.assert_(vm.ignore_cache)
+        self.assert_(vm.last_job_id)
+        self.assert_(Job.objects.filter(id=job_id).values()[0]['ignore_cache'])
+        
+        # finished job resets ignore_cache flag
+        vm.rapi.GetJobStatus.response = JOB
+        vm = VirtualMachine.objects.get(id=vm.id)
+        self.assertFalse(vm.ignore_cache)
+        self.assertFalse(vm.last_job_id)
+        self.assertFalse(Job.objects.filter(id=job_id).values()[0]['ignore_cache'])
+        self.assert_(Job.objects.get(id=job_id).finished)
+
+    def test_reboot(self):
+        """
+        Test vm.reboot()
+        
+        Verifies:
+            * job is created
+            * cache is disabled while job is running
+            * cache is reenabled when job is finished
+        """
+        vm, cluster = self.create_virtual_machine()
+        vm.rapi.GetJobStatus.response = JOB_RUNNING
+        
+        # reboot enables ignore_cache flag
+        job_id = vm.reboot()
+        self.assert_(Job.objects.filter(id=job_id).exists())
+        vm = VirtualMachine.objects.get(id=vm.id)
+        self.assert_(vm.ignore_cache)
+        self.assert_(vm.last_job_id)
+        self.assert_(Job.objects.filter(id=job_id).values()[0]['ignore_cache'])
+        
+        # finished job resets ignore_cache flag
+        vm.rapi.GetJobStatus.response = JOB
+        self.assert_(Job.objects.filter(id=job_id).exists())
+        vm = VirtualMachine.objects.get(id=vm.id)
+        self.assertFalse(vm.ignore_cache)
+        self.assertFalse(vm.last_job_id)
+        self.assertFalse(Job.objects.filter(id=job_id).values()[0]['ignore_cache'])
+        self.assert_(Job.objects.get(id=job_id).finished)
+
 
 class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
     """
@@ -211,6 +296,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         g['group'] = group
 
     def tearDown(self):
+        Job.objects.all().delete()
         User.objects.all().delete()
         Group.objects.all().delete()
         VirtualMachine.objects.all().delete()
@@ -359,6 +445,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         """
         generic function for testing urls that post with no data
         """
+        vm = globals()['vm']
         args = args if args else (cluster.slug, vm.hostname)
         
         # anonymous user
@@ -387,6 +474,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         content = json.loads(response.content)
         self.assertEqual(1, content[0])
         user.revoke('admin', vm)
+        VirtualMachine.objects.all().update(last_job=None)
+        Job.objects.all().delete()
         
         # authorized (cluster admin)
         grant(user, 'admin', cluster)
@@ -396,14 +485,19 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         content = json.loads(response.content)
         self.assertEqual(1, content[0])
         user.revoke('admin', cluster)
+        VirtualMachine.objects.all().update(last_job=None)
+        Job.objects.all().delete()
         
         # authorized (superuser)
         user.is_superuser = True
         user.save()
+        
         response = c.post(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/json', response['content-type'])
         self.assertEqual(1, content[0])
+        VirtualMachine.objects.all().update(last_job=None)
+        Job.objects.all().delete()
         
         # error while issuing reboot command
         msg = "SIMULATING_AN_ERROR"

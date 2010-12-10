@@ -251,16 +251,39 @@ if settings.DEBUG or True:
             super(TestModel, self).save(*args, **kwargs)
 
 
+class JobManager(models.Manager):
+    """
+    Custom manager for Ganeti Jobs model
+    """
+    def create(self, **kwargs):
+        """ helper method for creating a job with disabled cache """
+        job = Job(ignore_cache=True)
+        for k in kwargs:
+            setattr(job, k, kwargs[k])
+        job.save(force_insert=True)
+        return job
+
+
 class Job(CachedClusterObject):
     """
     model representing a job being run on a ganeti Cluster.  This includes
-    operations such as creating or delting a virtual machine
+    operations such as creating or delting a virtual machine.
+    
+    Jobs are a special type of CachedClusterObject.  Job's run once then become
+    immutable.  The lazy cache is modified to become permanent once a complete
+    status (success/error) has been detected.  The cache can be disabled by
+    settning ignore_cache=True.
     """
     content_type = models.ForeignKey(ContentType, null=False)
     object_id = models.IntegerField(null=False)
     obj = GenericForeignKey('content_type', 'object_id')
     cluster = models.ForeignKey('Cluster', editable=False, related_name='jobs')
     cluster_hash = models.CharField(max_length=40, editable=False)
+    
+    finished = models.DateTimeField(null=True)
+    status = models.CharField(max_length=10)
+    
+    objects = JobManager()
     
     @property
     def rapi(self):
@@ -271,6 +294,8 @@ class Job(CachedClusterObject):
     
     def load_info(self):
         """
+        Load info for class.  This will load from ganeti if ignore_cache==True,
+        otherwise this will always load from the cache.
         """
         if self.id and self.ignore_cache:
             self.info = self._refresh()
@@ -282,12 +307,20 @@ class Job(CachedClusterObject):
         """
         if self.ignore_cache:
             info_ = self.info
+            
             self.status = info_['status']
-            if info_['status'] in ('error','success'):
+            if self.ignore_cache and info_['status'] in ('error','success'):
                 self.ignore_cache = False
                 self.__class__.objects.filter(pk=self.id) \
                     .update(ignore_cache=False)
             
+            if info_['end_ts']:
+                self.finished = self.parse_end_timestamp(info_)
+
+    @classmethod
+    def parse_end_timestamp(cls, info):
+        sec, micro = info['end_ts']
+        return datetime.fromtimestamp(sec+(micro/1000000.0))
 
     def parse_transient_info(self):
         pass
@@ -297,10 +330,17 @@ class Job(CachedClusterObject):
         sets the cluster_hash for newly saved instances and writes the owner tag
         to ganeti
         """
-        if self.id is None:
+        if self.id is None or self.cluster_hash == '':
             self.cluster_hash = self.cluster.hash
         
         super(Job, self).save(*args, **kwargs)
+
+
+    def __repr__(self):
+        return "<Job: '%s'>" % self.id
+    
+    def __str__(self):
+        return repr(self)
 
 
 class VirtualMachine(CachedClusterObject):
@@ -392,19 +432,55 @@ class VirtualMachine(CachedClusterObject):
             disk_size += disk
         self.disk_size = disk_size
         self.operating_system = self.info['os']
+        
+        # if the cache bypass is enabled then check the status of the last job
+        # when the job is complete we can reenable the cache.
+        if self.ignore_cache and not self.last_job_id is None:
+            data = self.rapi.GetJobStatus(self.last_job_id)
+            status = data['status']
+            
+            if status in ('success', 'error'):
+                finished = Job.parse_end_timestamp(data)
+                Job.objects.filter(pk=self.last_job_id) \
+                    .update(status=status, ignore_cache=False, finished=finished)
+                self.ignore_cache = False
+            
+            if status == 'success':
+                VirtualMachine.objects.filter(pk=self.id) \
+                    .update(ignore_cache=False, last_job=None)
+                self.last_job = None
+            
+            elif status == 'error':
+                VirtualMachine.objects.filter(pk=self.id) \
+                    .update(ignore_cache=False)
 
 
     def _refresh(self):
         return self.rapi.GetInstance(self.hostname)
 
     def shutdown(self):
-        return self.rapi.ShutdownInstance(self.hostname)
+        id = self.rapi.ShutdownInstance(self.hostname)
+        job = Job.objects.create(id=id, obj=self, cluster_id=self.cluster_id)
+        self.last_job_id = id
+        VirtualMachine.objects.filter(pk=self.id) \
+            .update(last_job=job, ignore_cache=True)
+        return id
 
     def startup(self):
-        return self.rapi.StartupInstance(self.hostname)
+        id = self.rapi.StartupInstance(self.hostname)
+        job = Job.objects.create(id=id, obj=self, cluster_id=self.cluster_id)
+        self.last_job_id = id
+        VirtualMachine.objects.filter(pk=self.id) \
+            .update(last_job=job, ignore_cache=True)
+        return id
 
     def reboot(self):
-        return self.rapi.RebootInstance(self.hostname)
+        id = self.rapi.RebootInstance(self.hostname)
+        job = Job.objects.create(id=id, obj=self, cluster_id=self.cluster_id)
+        self.last_job_id = id
+        VirtualMachine.objects.filter(pk=self.id) \
+            .update(last_job=job, ignore_cache=True)
+        return id
 
     def setup_vnc_forwarding(self):
         #password = self.set_random_vnc_password(instance)
