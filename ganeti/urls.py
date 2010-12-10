@@ -30,14 +30,20 @@ urlpatterns = patterns('ganeti.views.users',
     url(r'^users/add$', 'user_add', name="user-create"),
     url(r'^user/(?P<user_id>\d+)/edit/?$', 'user_edit', name="user-edit"),
     url(r'^user/(?P<user_id>\d+)/password/?$', 'user_password', name="user-password"),
+
+    # ssh keys (non-ajax actions)
     url(r'^user/(?P<user_id>\d+)/keys/?$', 'user_keys_list', name="user-keys-list"),
-    url(r'^keys/add/?$', 'key_add', name="key-add"),
+    url(r'^keys/(?P<user_id>\d+)/add/?$', 'key_add', name="key-add"),
     url(r'^keys/(?P<key_id>\d+)/edit/?$', 'key_edit', name="key-edit"),
     url(r'^keys/(?P<key_id>\d+)/delete/?$', 'key_delete', name="key-delete"),
-    # ajax
-    url(r'^keys/ajax/get/', 'key_get_ajax', name="key-get-ajax"),
-    url(r'^keys/ajax/list/', 'user_keys_list_ajax', name="key-list-ajax"),
-    url(r'^keys/ajax/save/', 'key_save_ajax', name="key-save-ajax"),
+    # ssh kets (ajax actions)
+    url(r'^keys/ajax/get/$', 'key_ajax_get', name="key-ajax-get"),
+    url(r'^keys/ajax/get/(?P<key_id>\d+)$', 'key_ajax_get', name="key-ajax-get"),
+    url(r'^keys/ajax/list/$', 'keys_ajax_list', name="keys-ajax-list"),
+    url(r'^keys/ajax/list/(?P<user_id>\d+)$', 'keys_ajax_list', name="keys-ajax-list"),
+    #url(r'^keys/ajax/save/$', 'key_ajax_save', name="key-ajax-save"),
+    url(r'^keys/ajax/save/(?P<user_id>\d+)/$', 'key_ajax_save', name="key-ajax-save"),
+    url(r'^keys/ajax/save/(?P<user_id>\d+)/(?P<key_id>\d*)$', 'key_ajax_save', name="key-ajax-save"),
 )
 
 # Clusters

@@ -10,6 +10,7 @@
             <td name="id">{{ key.id }}</td>
             <td name="host">{{ key.key|ssh_hostname }}</td>
             <td>{{ key.key|truncate:40 }}</td>
+
             <td><a href="{% url key-edit key.id %}" class="edit"><div class="edit"></div></a></td>
             <td><a href="{% url key-delete key.id %}" class="delete"><div class="delete"></div></a></td>
         </tr>

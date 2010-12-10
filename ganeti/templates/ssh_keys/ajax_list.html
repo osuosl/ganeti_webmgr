@@ -1,0 +1,15 @@
+    <fieldset id="ukeys" style="display: none;">
+        <form method="post">
+            {{ key_form.as_p }}
+            <input type="submit" class="submit" value="Submit" id="new_key_submit" /><input type="button" value="Cancel" id="new_key_cancel" />
+        </form>
+    </fieldset>
+
+    {% if user_id %}
+    <a class="button add" id="add_key" href="{% url key-add user_id=user_id %}">Add SSH key</a>
+    {% else %}
+    <a class="button add" id="add_key" href="{% url key-add user_id=user.id %}">Add SSH key</a>
+    {% endif %}
+    <table id="key_list">
+        {% include "ssh_keys/ajax_list_response.html" %}
+    </table>

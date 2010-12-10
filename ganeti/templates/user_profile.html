@@ -4,81 +4,7 @@
 {% block title %}User Profile{% endblock %}
 
 {% block head %}
-<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
-<script type="text/javascript">
-    var id = null;
-
-    function refresh_keys() {
-        $("table#key_list").html("&nbsp;").load("{% url key-list-ajax %}");
-    }
-
-    $(document).ready(function() {
-        $("a.delete").live("click", function(){
-            host = $(this).parents("tr").children("[name=\"host\"]").html();
-            name = $(this).parents("tr").children("[name=\"id\"]").html();
-            if (confirm("Remove key for: " + host)) {
-                parent = this.parentNode.parentNode;
-                $.delete_(this.href, function(){
-                    $(parent).remove();
-                });
-            }
-            // ensures we don't save already deleted key
-            $("table#new_key").css("display", "none");
-            $("textarea#key").val("");
-            return false;
-        });
-
-        $("a#add_key").click(function(e) {
-            e.preventDefault();
-            table_new = $("table#new_key");
-
-            // toggle visibility of the table
-            if (table_new.css("display")=="none") {
-                table_new.css("display", "block");
-            } else {
-                table_new.css("display", "none");
-            }
-            id = null;
-        });
-
-        $("input#new_key_cancel").click(function(e) {
-            e.preventDefault();
-            $("table#new_key").css("display", "none");
-            $("textarea#key").val("");
-
-            refresh_keys();
-        });
-
-        $("a.edit").live("click", function(){
-            id = $(this).parents("tr").children("[name=\"id\"]").html();
-
-            // loading
-            $("textarea#key").html("&nbsp;").load("{% url key-get-ajax %}?id="+id);
-
-            // show table
-            $("table#new_key").css("display", "block");
-            return false;
-        });
-
-        $("input#new_key_submit").click(function(e) {
-            e.preventDefault();
-
-            // saving
-            id_s = "";
-            if (id != null) {
-                id_s = "?id=" + id;
-                alert("{% url key-save-ajax %}" + id_s);
-            }
-            $.post("{% url key-save-ajax %}" + id_s, {"key": $("textarea#key").val()});
-
-            // hide table
-            $("table#new_key").css("display", "none");
-
-            refresh_keys();
-            id = null;
-        });
-    });
-</script>
+    {% include "ssh_keys/ajax_header.html" %}
 {% endblock %}
 
 {% block content %}
@@ -90,35 +16,6 @@
         </form>
     </fieldset>
 
-    <h1>{{user.username}} SSH keys</h1>
-
-    <table id="new_key" style="width: 0%; display: none;">
-        <tr><th><label for="key">SSH key</label></th></tr>
-        <tr><td><textarea name="key" id="key" cols="55" rows="7"></textarea></td></tr>
-        <tr><td style="text-align: right;">
-            <input type="submit" value="Submit" id="new_key_submit" />
-            &nbsp;
-            <input type="submit" value="Cancel" id="new_key_cancel" />
-        </td></tr>
-    </table>
-
-    <a class="button add" id="add_key" href="{% url key-add %}">Add SSH key</a>
-    <table id="key_list">
-        <tr>
-            <th>id</th>
-            <th>user@hostname</th>
-            <th>part of the key</th>
-            <th></th>
-            <th></th>
-        </tr>
-        {% for key in keyslist %}
-        <tr>
-            <td name="id">{{ key.id }}</td>
-            <td name="host">{{ key.key|ssh_hostname }}</td>
-            <td>{{ key.key|truncate:40 }}</td>
-            <td><a href="{% url key-edit key.id %}" class="edit"><div class="edit"></div></a></td>
-            <td><a href="{% url key-delete key.id %}" class="delete"><div class="delete"></div></a></td>
-        </tr>
-        {% endfor %}
-    </table>
+    <h2>{{user.username}} SSH keys</h2>
+    {% include "ssh_keys/ajax_list.html" %}
 {% endblock %}

@@ -1,0 +1,79 @@
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
+<script type="text/javascript">
+    var id = null;
+
+    function refresh_keys() {
+        {% if user_id %}
+        $("table#key_list").html("&nbsp;").load("{% url keys-ajax-list user_id=user_id %}");
+        {% else %}
+        $("table#key_list").html("&nbsp;").load("{% url keys-ajax-list user_id=user.id %}");
+        {% endif %}
+    }
+
+    $(document).ready(function() {
+        $("a.delete").live("click", function(){
+            host = $(this).parents("tr").children("[name=\"host\"]").html();
+            name = $(this).parents("tr").children("[name=\"id\"]").html();
+            if (confirm("Remove key for: " + host)) {
+                parent = this.parentNode.parentNode;
+                $.delete_(this.href, function(){
+                    $(parent).remove();
+                });
+            }
+            // ensures we don't save already deleted key
+            $("#ukeys").hide();
+            $("textarea#id_key").val("");
+            return false;
+        });
+
+        $("a#add_key").click(function(e) {
+            e.preventDefault();
+            table_new = $("#ukeys");
+
+            // toggle visibility of the table
+            if (table_new.css("display")=="none")
+                table_new.show();
+            else
+                table_new.hide();
+
+            id = null;
+        });
+
+        $("input#new_key_cancel").click(function(e) {
+            e.preventDefault();
+            $("#ukeys").hide();
+            $("textarea#id_key").val("");
+
+            refresh_keys();
+        });
+
+        $("a.edit").live("click", function(){
+            id = $(this).parents("tr").children("[name=\"id\"]").html();
+
+            // loading
+            $("textarea#id_key").html("&nbsp;").load("{% url key-ajax-get %}"+id);
+            $("#ukeys").show();
+            return false;
+        });
+
+        $("input#new_key_submit").click(function(e) {
+            e.preventDefault();
+
+            // saving
+            id_s = "";
+            if (id != null) id_s=id;
+
+            {% if user_id %}
+            $.post("{% url key-ajax-save user_id=user_id %}" + id_s, {"key": $("textarea#id_key").val()});
+            {% else %}
+            $.post("{% url key-ajax-save user_id=user.id %}" + id_s, {"key": $("textarea#id_key").val()});
+            {% endif %}
+
+            $("#ukeys").hide();
+            $("textarea#id_key").val("");
+
+            refresh_keys();
+            id = null;
+        });
+    });
+</script>
