@@ -103,7 +103,6 @@ class CachedClusterObject(models.Model):
     
     __info = None
     error = None
-    mtime = None
     ctime = None
 
     def __init__(self, *args, **kwargs):
@@ -378,7 +377,6 @@ class VirtualMachine(CachedClusterObject):
     cluster_hash = models.CharField(max_length=40, editable=False)
     operating_system = models.CharField(max_length=128)
     last_job = models.ForeignKey(Job, null=True)
-
 
     @property
     def rapi(self):
