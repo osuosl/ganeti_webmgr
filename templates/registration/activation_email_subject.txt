@@ -1,1 +1,1 @@
-Account registered at {{ SITE_NAME }}
+Account registered at {{ site.name }}

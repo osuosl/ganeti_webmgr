@@ -1,5 +1,5 @@
-You registered an account with {{ SITE_NAME }}:
+You registered an account with {{ site.name }}:
 
 Before you may login you must confirm your account.  Click on this link or copy any paste it to your browser's address bar:
 
-http://{{ HOSTNAME }}/accounts/activate/{{ activation_key }}/
+http://{{ site.domain }}/accounts/activate/{{ activation_key }}/
