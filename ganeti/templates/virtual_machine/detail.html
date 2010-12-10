@@ -13,6 +13,22 @@
     margin:10px auto 0 auto;
     width:16px;
 }
+
+#log {
+    display:block;
+    margin:10px 20px 0 20px;
+    padding: 0 0 10px 0;
+    overflow:auto;
+}
+
+#log li {
+    border:0;
+    font: 12px monospace;
+    margin:0;
+    padding:1px 0;
+    text-align:left;
+}
+
 </style>
 <script src="{{MEDIA_URL}}/js/jquery-ui.min.js"></script>
 <script src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
@@ -88,13 +104,22 @@
             html = $("<li>"+data.status+":<br>"+reason+"</li>");
             html.addClass('error');
             $("#messages").append(html);
-            $('#toggleactions').show();
+            actions_enabled = true;
         } else {
             $("#messages").empty();
             op = format_op(data['ops'][0]['OP_ID']);
-            html = $("<li>"+op+"<code class='log'></code><img class='spinner_small' src='{{MEDIA_URL}}/images/ajax-loader_small.gif'></li>");
+            html = $("<li>"+op+"<pre id='log'><ul></ul><img class='spinner_small' src='{{MEDIA_URL}}/images/ajax-loader_small.gif'></pre></li>");
             $("#messages").append(html)
-            $("#code").append(html);
+            
+            // append log messages that are not already displayed
+            current_log_count = $("#log ul li").length;
+            if (data['oplog'][0].length != 0) {
+                log = data['oplog'][0];
+                for (i=current_log_count; i<log.length; i++) {
+                    $("#log ul")
+                        .append("<li>"+log[i][3]+"</li>");
+                }
+            }
         }
     }
 

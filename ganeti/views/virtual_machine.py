@@ -38,7 +38,7 @@ from logs.models import LogItem
 log_action = LogItem.objects.log_action
 
 from util.client import GanetiApiError
-from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine
+from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine, Job
 
 empty_field = (u'', u'---------')
 
@@ -338,7 +338,7 @@ def create(request, cluster_slug=None):
                 snode = data['snode']
 
             try:
-                jobid = cluster.rapi.CreateInstance('create', hostname,
+                job_id = cluster.rapi.CreateInstance('create', hostname,
                         disk_template,
                         [{"size": disk_size, }],[{nicmode: nictype, }],
                         memory=ram, os=os, vcpus=vcpus,
@@ -354,7 +354,7 @@ def create(request, cluster_slug=None):
                 # Wait for job to process as the error will not happen
                 #  right away
                 sleep(2)
-                jobstatus = cluster.rapi.GetJobStatus(jobid)
+                jobstatus = cluster.rapi.GetJobStatus(job_id)
 
                 # raise an exception if there was an error in the job
                 if jobstatus["status"] == 'error':
@@ -363,7 +363,10 @@ def create(request, cluster_slug=None):
                 vm = VirtualMachine(cluster=cluster, owner=owner,
                                     hostname=hostname, disk_size=disk_size,
                                     ram=ram, virtual_cpus=vcpus)
+                vm.ignore_cache = True
                 vm.save()
+                job = Job.objects.create(id=job_id, obj=vm, cluster=cluster)
+                VirtualMachine.objects.filter(id=vm.id).update(last_job=job)
 
                 # log information about creating the machine
                 log_action(user, vm, "created")
