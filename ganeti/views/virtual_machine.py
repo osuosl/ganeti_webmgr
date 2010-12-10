@@ -125,8 +125,7 @@ def shutdown(request, cluster_slug, instance):
         except GanetiApiError, e:
             msg = [0, str(e)]
         return HttpResponse(json.dumps(msg), mimetype='application/json')
-    return HttpResponseNotAllowed(['GET', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', \
-                                  'TRACE'])
+    return HttpResponseNotAllowed(['POST'])
 
 
 @login_required
@@ -148,8 +147,7 @@ def startup(request, cluster_slug, instance):
         except GanetiApiError, e:
             msg = [0, str(e)]
         return HttpResponse(json.dumps(msg), mimetype='application/json')
-    return HttpResponseNotAllowed(['GET', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', \
-                                  'TRACE'])
+    return HttpResponseNotAllowed(['POST'])
 
 
 @login_required
@@ -171,8 +169,7 @@ def reboot(request, cluster_slug, instance):
         except GanetiApiError, e:
             msg = [0, str(e)]
         return HttpResponse(json.dumps(msg), mimetype='application/json')
-    return HttpResponseNotAllowed(['GET', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', \
-                                  'TRACE'])
+    return HttpResponseNotAllowed(['POST'])
 
 
 @login_required
