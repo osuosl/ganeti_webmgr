@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load webmgr_tags %}
+
+{% block title %}User's SSH keys{% endblock %}
+
+{% block head %}
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
+<script type="text/javascript">
+    $(document).ready(function() {
+        $("a.delete").live("click", function(){
+            host = $(this).parents("tr").children("[name=\"host\"]").html();
+            name = $(this).parents("tr").children("[name=\"id\"]").html();
+            if (confirm("Remove key for: " + host)) {
+                parent = this.parentNode.parentNode;
+                $.delete_(this.href, function(){
+                    $(parent).remove();
+                });
+            }
+            return false;
+        });
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<h1>User's SSH keys</h1>
+<a class="button add" href="{% url key-add %}">Add SSH key</a>
+<table>
+    <tr>
+        <th>id</th>
+        <th>user@hostname</th>
+        <th>part of the key</th>
+        <th></th>
+        <th></th>
+    </tr>
+    {% for key in keyslist %}
+    <tr>
+        <td name="id">{{ key.id }}</td>
+        <td name="host">{{ key.key|ssh_hostname }}</td>
+        <td>{{ key.key|truncate:40 }}</td>
+        <td><a href="{% url key-edit key.id %}"><div class="edit"></div></a></td>
+        <td><a href="{% url key-edit key.id %}" class="delete"><div class="delete"></div></a></td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

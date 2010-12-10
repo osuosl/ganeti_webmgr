@@ -29,6 +29,7 @@ from ganeti.models import Cluster
 
 
 register = Library()
+
 """
 These filters were created specifically
 for the Ganeti Web Manager project
@@ -36,6 +37,28 @@ for the Ganeti Web Manager project
 @register.inclusion_tag('virtual_machine/vmfield.html')
 def vmfield(field):
     return {'field':field}
+
+@register.filter
+@stringfilter
+def ssh_hostname(value):
+    """
+    If value is good SSH public key, then returns the user@hostname for who
+    the key is set.
+    """
+    pos = value.rfind(" ")
+    if pos > -1:
+        return value[pos+1:]
+    return value
+
+@register.filter
+@stringfilter
+def truncate(value, count):
+    """
+    Truncates value after specified number of chars
+    """
+    if count < len(value):
+        return value[:count] + " ..."
+    return value
 
 """
 These filters were taken from Russel Haering's GanetiWeb project
@@ -147,7 +170,7 @@ class NicsNode(Node):
         instance = context[self.instance_name]
         context[self.res_name] = zip(instance['nic.bridges'], instance['nic.ips'], instance['nic.links'],
                                      instance['nic.macs'], instance['nic.modes'])
-        return '' 
+        return ''
 
 
 @register.tag

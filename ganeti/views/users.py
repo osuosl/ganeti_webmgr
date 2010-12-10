@@ -138,6 +138,76 @@ def user_profile(request):
      context_instance=RequestContext(request))
 
 
+@login_required
+def user_keys_list(request, user_id=None):
+    user = request.user
+    if not user.is_superuser:
+        return HttpResponseForbidden('Only superuser can list user\'s SSH keys.')
+
+    keys = SSHKey.objects.filter(user__pk=user.pk)
+
+    return render_to_response("users/keys_list.html", {
+            'keyslist': keys
+        },
+        context_instance=RequestContext(request),
+    )
+
+
+@login_required
+def key_edit(request, key_id=None):
+    user = request.user
+    if not user.is_superuser:
+        return HttpResponseForbidden('Only superuser can edit user\'s SSH key.')
+
+    key_edit = get_object_or_404(SSHKey, pk=key_id)
+
+    if request.method == "POST":
+        form = SSHKeyForm(data=request.POST, instance=key_edit)
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect(reverse('user-keys-list', args=[key_edit.user.pk]))
+    elif request.method == "DELETE":
+        key_edit.delete()
+        return HttpResponse('1', mimetype='application/json')
+    else:
+        form = SSHKeyForm(instance=key_edit)
+
+    return render_to_response("users/key_edit.html", {
+            'form': form,
+            'key': key_edit,
+        },
+        context_instance=RequestContext(request),
+    )
+
+
+@login_required
+def key_add(request, key_id=None):
+    user = request.user
+    if not user.is_superuser:
+        return HttpResponseForbidden('Only superuser can delete user\'s SSH key.')
+
+    if request.method == "POST":
+        form = SSHKeyForm(request.POST, instance=SSHKey(user=request.user))
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect(reverse('user-keys-list', args=[user.pk]))
+
+    else:
+        form = SSHKeyForm()
+
+    return render_to_response("users/key_edit.html", {
+            'form':form,
+        },
+        context_instance=RequestContext(request),
+    )
+
+
+class SSHKeyForm(forms.ModelForm):
+    class Meta:
+        model = SSHKey
+        exclude = ("user", )
+
+
 class UserEditForm(UserChangeForm):
     """
     Form to edit user, based on Auth.UserChangeForm

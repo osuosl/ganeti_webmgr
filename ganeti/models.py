@@ -773,6 +773,16 @@ class Quota(models.Model):
     virtual_cpus = models.IntegerField(default=0, null=True)
 
 
+class SSHKey(models.Model):
+    """
+    Model representing user's SSH public key. Virtual machines rely on
+    many ssh keys.
+    """
+    key = models.TextField()
+    #filename = models.CharField(max_length=128) # saves key file's name
+    user = models.ForeignKey(User)
+
+
 def create_profile(sender, instance, **kwargs):
     """
     Create a profile object whenever a new user is created, also keeps the
