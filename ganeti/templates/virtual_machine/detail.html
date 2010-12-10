@@ -105,7 +105,19 @@
     }
 
     function format_op(str){
-        return str;
+        str = str.substring(3).replace('_',' ').toLowerCase();
+        str = cap_first(str);
+        return str
+    }
+    
+    function cap_first(str) {
+        new_str = '';
+        str = str.split(' ');
+        for(var i=0; i < str.length; i++) {
+                new_str += str[i].substring(0,1).toUpperCase() +
+                str[i].substring(1,str[i].length) + ' ';
+        }
+        return new_str;
     }
 
 </script>
