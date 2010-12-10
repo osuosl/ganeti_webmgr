@@ -117,9 +117,10 @@ def shutdown(request, cluster_slug, instance):
 
     if request.method == 'POST':
         try:
-            vm.shutdown()
-            msg = [1, 'Virtual machine stopping.']
-
+            job = vm.shutdown()
+            job.load_info()
+            msg = job.info
+            
             # log information about stopping the machine
             log_action(user, vm, "stopped")
         except GanetiApiError, e:
@@ -139,9 +140,10 @@ def startup(request, cluster_slug, instance):
 
     if request.method == 'POST':
         try:
-            vm.startup()
-            msg = [1, 'Virtual machine starting.']
-
+            job = vm.startup()
+            job.load_info()
+            msg = job.info
+            
             # log information about starting up the machine
             log_action(user, vm, "started")
         except GanetiApiError, e:
@@ -161,9 +163,10 @@ def reboot(request, cluster_slug, instance):
 
     if request.method == 'POST':
         try:
-            vm.reboot()
-            msg = [1, 'Virtual machine rebooting.']
-
+            job = vm.reboot()
+            job.load_info()
+            msg = job.info
+            
             # log information about restarting the machine
             log_action(user, vm, "restarted")
         except GanetiApiError, e:

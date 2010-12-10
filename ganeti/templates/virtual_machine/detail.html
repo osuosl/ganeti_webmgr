@@ -6,6 +6,12 @@
 <style>
 .ui-widget-header {background:none; border-width:0 0 1px 0; -moz-border-radius:0px;}
 .ui-widget-content {border:0;}
+
+.spinner_small {
+    display:block;
+    margin:10px auto 0 auto;
+    width:16px;
+}
 </style>
 <script src="{{MEDIA_URL}}/js/jquery-ui.min.js"></script>
 <script src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
@@ -26,18 +32,52 @@
         });
     });
     
-    function action_response(result) {
-        html = $("<li>"+result[1]+"</li>");
-        if (result[0] == 0) {
-            html.addClass('error');
-        }
-        $("#messages").append(html);
-        // set timer to fadeout and remove the message
-        setTimeout(function(){
-            html.fadeOut(1000,
-                function(){html.remove()});
-            }, 2000);
+        function action_response(result) {
+                $('#toggleactions').hide();
+        jobid=result['id'];
+        checkInterval = setInterval(function(){
+        $.ajax({
+                url: "{{SITE_ROOT}}/job/"+jobid+"/status/",
+                success: function(data) {
+                    if (data.status == 'success'){
+                            $("#messages").empty();
+                        clearInterval(checkInterval);
+                        window.location.reload();
+                    }
+                    
+                    display_job(data);
+                    if (data.status == 'error'){
+                        clearInterval(checkInterval);
+                    }
+                }
+        });        
+        },3000);
+            // Endof setInterval 
+            // Time set to value : 3000 (3 seconds)
+        display_job(result);
     }
+
+    function display_job(data) {
+        if (data.status == 'error') {
+             $("#messages").empty();
+            var reason = data.opresult[0][1][0];
+            html = $("<li>"+data.status+":<br>"+reason+"</li>");
+            html.addClass('error');
+            $("#messages").append(html);
+            $('#toggleactions').show();
+        } else {
+            $("#messages").empty();
+            op = format_op(data['ops'][0]['OP_ID']);
+            html = $("<li>"+op+"<code class='log'></code><img class='spinner_small' src='{{MEDIA_URL}}/images/ajax-loader_small.gif'></li>");
+            $("#messages").append(html)
+            $("#code").append(html);
+        }
+    }
+
+    function format_op(str){
+        return str;
+    }
+
 </script>
 {% endblock %}
 

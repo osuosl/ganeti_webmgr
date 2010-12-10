@@ -466,7 +466,7 @@ class VirtualMachine(CachedClusterObject):
         self.last_job_id = id
         VirtualMachine.objects.filter(pk=self.id) \
             .update(last_job=job, ignore_cache=True)
-        return id
+        return job
 
     def startup(self):
         id = self.rapi.StartupInstance(self.hostname)
@@ -474,7 +474,7 @@ class VirtualMachine(CachedClusterObject):
         self.last_job_id = id
         VirtualMachine.objects.filter(pk=self.id) \
             .update(last_job=job, ignore_cache=True)
-        return id
+        return job
 
     def reboot(self):
         id = self.rapi.RebootInstance(self.hostname)
@@ -482,7 +482,7 @@ class VirtualMachine(CachedClusterObject):
         self.last_job_id = id
         VirtualMachine.objects.filter(pk=self.id) \
             .update(last_job=job, ignore_cache=True)
-        return id
+        return job
 
     def setup_vnc_forwarding(self):
         #password = self.set_random_vnc_password(instance)
