@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load webmgr_tags %}
 
 {% block title %} Virtual Machine {{ instance.hostname }}{% endblock %}
 {% block head %}
@@ -16,8 +17,9 @@
 <script src="{{MEDIA_URL}}/js/jquery-ui.min.js"></script>
 <script src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
 <script type="text/javascript">
+    var actions_enabled = true;
+
     $(document).ready(function() {
-        
         $('#tabs').tabs({ spinner: false});
         {% if admin %}
             {% ifnotequal instance.info.status "running" %}
@@ -27,39 +29,52 @@
         {% endif %}
         
         $("#actions a").not('.delete').click(function(){
-            $.post(this.href, action_response);
+            if (actions_enabled){
+                $.post(this.href, action_response);
+            }
             return false;
         });
+        
+        {% if instance.last_job_id %}
+            {# there is a running job, display it and poll for status #}
+            {# XXX convert to json and then parse, avoids potential js hacks #}
+            data = $.parseJSON('{{instance.last_job.info|json}}');
+            display_job(data);
+            poll_job_status({{instance.last_job_id}});
+        {% endif %}
     });
     
-        function action_response(result) {
-                $('#toggleactions').hide();
-        jobid=result['id'];
-        checkInterval = setInterval(function(){
-        $.ajax({
-                url: "{{SITE_ROOT}}/job/"+jobid+"/status/",
-                success: function(data) {
-                    if (data.status == 'success'){
-                            $("#messages").empty();
-                        clearInterval(checkInterval);
-                        window.location.reload();
-                    }
-                    
-                    display_job(data);
-                    if (data.status == 'error'){
-                        clearInterval(checkInterval);
-                    }
-                }
-        });        
-        },3000);
-            // Endof setInterval 
-            // Time set to value : 3000 (3 seconds)
+    function action_response(result) {
+        actions_enabled = false;
+        poll_job_status(result['id'])
         display_job(result);
+    }
+
+    function poll_job_status(job_id) {
+        checkInterval = setInterval(function(){
+            $.ajax({
+                    url: "{{SITE_ROOT}}/job/"+job_id+"/status/",
+                    success: function(data) {
+                        if (data.status == 'success'){
+                                $("#messages").empty();
+                            clearInterval(checkInterval);
+                            window.location.reload();
+                        }
+                        
+                        display_job(data);
+                        if (data.status == 'error'){
+                            clearInterval(checkInterval);
+                        }
+                    }
+            });        
+        },3000);
+        // Endof setInterval 
+        // Time set to value : 3000 (3 seconds)
     }
 
     function display_job(data) {
         if (data.status == 'error') {
-             $("#messages").empty();
+            $("#messages").empty();
             var reason = data.opresult[0][1][0];
             html = $("<li>"+data.status+":<br>"+reason+"</li>");
             html.addClass('error');
@@ -84,7 +99,7 @@
 {% block content %}
 <h1>{{ instance.hostname }}</h1>
 <ul id="messages">
-    {%if instance.error%}<li class="error">Error in Ganeti API:<p>{{instance.error}}</p></li>{%endif%}
+    {%if not instance.last_job_id and instance.error %}<li class="error">Error in Ganeti API:<p>{{instance.error}}</p></li>{%endif%}
 </ul>
 <div id="tabs">
     <ul id="tabs">
