@@ -30,6 +30,10 @@ from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import GenericForeignKey
 
+from django.core.validators import RegexValidator
+from django.utils.translation import ugettext_lazy as _
+import re
+
 from django.db import models
 from django.db.models import Sum
 from django.db.models.signals import post_save, post_syncdb
@@ -97,6 +101,12 @@ def clear_rapi_cache():
     """
     RAPI_CACHE.clear()
     RAPI_CACHE_HASHES.clear()
+
+
+ssh_public_key_re = re.compile(
+    r'^ssh-(rsa|dsa) [A-Z0-9+/=]+ [A-Z0-9-_.]+@[A-Z0-9-_.]+$', re.IGNORECASE)
+validate_sshkey = RegexValidator(ssh_public_key_re,
+    _(u"Enter a valid SSH public key (SSH2 RSA or DSA)."), "invalid")
 
 
 class CachedClusterObject(models.Model):
@@ -778,7 +788,7 @@ class SSHKey(models.Model):
     Model representing user's SSH public key. Virtual machines rely on
     many ssh keys.
     """
-    key = models.TextField()
+    key = models.TextField(validators=[validate_sshkey])
     #filename = models.CharField(max_length=128) # saves key file's name
     user = models.ForeignKey(User)
 

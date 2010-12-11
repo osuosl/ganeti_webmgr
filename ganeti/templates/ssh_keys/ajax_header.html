@@ -10,6 +10,22 @@
         {% endif %}
     }
 
+    function update(responseText, statusText, xhr, $form) {
+        if (responseText == 1) {
+            // 1 code means success
+            $("#ukeys").hide();
+            $("textarea#id_key").val("");
+
+            refresh_keys();
+        } else {
+            // parse errors
+            errors = responseText;
+            for (key in errors) {
+                $("#errors").append("<li>"+ errors[key] +"</li>")
+            }
+        }
+    }
+
     $(document).ready(function() {
         $("a.delete").live("click", function(){
             host = $(this).parents("tr").children("[name=\"host\"]").html();
@@ -29,6 +45,9 @@
         $("a#add_key").click(function(e) {
             e.preventDefault();
             table_new = $("#ukeys");
+
+            // set action
+            $("input#id").val("");
 
             // toggle visibility of the table
             if (table_new.css("display")=="none")
@@ -50,30 +69,26 @@
         $("a.edit").live("click", function(){
             id = $(this).parents("tr").children("[name=\"id\"]").html();
 
+            // set action
+            $("input#id").val(id);
+
             // loading
             $("textarea#id_key").html("&nbsp;").load("{% url key-ajax-get %}"+id);
             $("#ukeys").show();
             return false;
         });
 
-        $("input#new_key_submit").click(function(e) {
-            e.preventDefault();
-
-            // saving
-            id_s = "";
-            if (id != null) id_s=id;
-
-            {% if user_id %}
-            $.post("{% url key-ajax-save user_id=user_id %}" + id_s, {"key": $("textarea#id_key").val()});
-            {% else %}
-            $.post("{% url key-ajax-save user_id=user.id %}" + id_s, {"key": $("textarea#id_key").val()});
-            {% endif %}
-
-            $("#ukeys").hide();
-            $("textarea#id_key").val("");
-
-            refresh_keys();
-            id = null;
+        // form submit button
+        $(".ajax_form .submit").live("click", function(){
+            $("#errors").empty();
+            $.ajax({
+                type: "POST",
+                url: "{% if user_id %}{% url key-ajax-save user_id=user_id %}{%else%}{%url key-ajax-save user_id=user.id%}{%endif%}",
+                dataType: "json",
+                data: $(".ajax_form").serialize(),
+                success: update
+            });
+            return false;
         });
     });
 </script>

@@ -8,6 +8,7 @@
         <th>Last Login</th>
         <th></th>
         <th></th>
+        <th></th>
     </tr>
     {% for user in userlist %}
     <tr>
@@ -19,6 +20,7 @@
         <td>{{ user.last_login|date }}</td>
         <td><a href="{% url user-edit user.id %}"><div class="edit"></div></a></td>
         <td><a href="{% url user-edit user.id %}" class="delete_user"><div class="delete"></div></a></td>
+        <td><a href="{% url user-keys-list user.id %}">SSH</a></td>
     </tr>
     {% endfor %}
 </table>

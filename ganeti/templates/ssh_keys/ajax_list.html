@@ -1,7 +1,17 @@
     <fieldset id="ukeys" style="display: none;">
-        <form method="post">
-            {{ key_form.as_p }}
-            <input type="submit" class="submit" value="Submit" id="new_key_submit" /><input type="button" value="Cancel" id="new_key_cancel" />
+        <form method="post" id="sshkey_form" class="ajax_form"
+            action="{% if user_id %}{% url key-ajax-save user_id=user_id %}{%else%}{%url key-ajax-save user_id=user.id%}{%endif%}">
+            <ul id="errors"></ul>
+            <table>
+                <tr><td>{{ key_form.key.label }}</td></tr>
+                <tr><td>{{ key_form.key }}</td></tr>
+                <tr><td>
+                <input type="submit" class="submit" value="Submit" id="new_key_submit" />
+                <input type="button" class="cancel" value="Cancel" id="new_key_cancel" />
+                <input type="hidden" name="id" id="id" />
+                </td></tr>
+            </table>
+            {# key_form.as_p #}
         </form>
     </fieldset>
 

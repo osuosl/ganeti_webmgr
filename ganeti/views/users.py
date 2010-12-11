@@ -1,6 +1,7 @@
 import urllib2
 import os
 import socket
+import json
 
 from django import forms
 from django.contrib.auth.decorators import login_required
@@ -260,13 +261,15 @@ def key_ajax_save(request, user_id=None, key_id=None):
         if not (user.is_superuser or user==user_id):
             return HttpResponseForbidden("Only superuser or owner can save user's SSH key.")
 
-        if key_id: instance=SSHKey(user=User.objects.get(pk=user_id), pk=key_id)
+        key_id = request.POST.get("id")
+        if key_id: instance=SSHKey(user=User.objects.get(pk=user_id), pk=int(key_id))
         else: instance=SSHKey(user=User.objects.get(pk=user_id))
         form = SSHKeyForm(data=request.POST, instance=instance)
         if form.is_valid():
             form.save()
-
-        return HttpResponse("1", mimetype="application/json")
+            return HttpResponse("1", mimetype="application/json")
+        else:
+            return HttpResponse(json.dumps(form.errors), mimetype="application/json")
     return HttpResponse("Cannot retrieve information")
 
 
