@@ -172,7 +172,7 @@
                 {% if remove and username %}
                     <li><a class="button delete" href="{% url instance-delete cluster.slug instance.hostname %}">Delete</a></li>
                 {% endif %}
-                {% if admin and username %}
+                {% if admin or power and username %}
                     {% ifequal instance.info.status "running" %}
                     <li><a class="button shutdown" href="{% url instance-shutdown cluster.slug instance.hostname %}">Shutdown</a></li>
                     <li><a class="button reboot" href="{% url instance-reboot cluster.slug instance.hostname %}">Reboot</a></li>

@@ -111,7 +111,7 @@ def shutdown(request, cluster_slug, instance):
                            cluster__slug=cluster_slug)
     user = request.user
 
-    if not (user.is_superuser or user.has_perm('admin', vm) or \
+    if not (user.is_superuser or user.has_any_perms(vm, ['admin','power'], True) or \
         user.has_perm('admin', vm.cluster)):
         return HttpResponseForbidden('You do not have permission to shut down this virtual machine')
 
@@ -134,7 +134,7 @@ def startup(request, cluster_slug, instance):
     vm = get_object_or_404(VirtualMachine, hostname=instance, \
                            cluster__slug=cluster_slug)
     user = request.user
-    if not (user.is_superuser or user.has_perm('admin', vm) or \
+    if not (user.is_superuser or user.has_any_perms(vm, ['admin','power'], True) or \
         user.has_perm('admin', vm.cluster)):
             return HttpResponseForbidden('You do not have permission to start up this virtual machine')
 
@@ -157,7 +157,7 @@ def reboot(request, cluster_slug, instance):
     vm = get_object_or_404(VirtualMachine, hostname=instance, \
                            cluster__slug=cluster_slug)
     user = request.user
-    if not (user.is_superuser or user.has_perm('admin', vm) or \
+    if not (user.is_superuser or user.has_any_perms(vm, ['admin','power'], True) or \
         user.has_perm('admin', vm.cluster)):
             return HttpResponseForbidden('You do not have permission to reboot this virtual machine')
 
@@ -182,7 +182,7 @@ def list_(request):
         vms = VirtualMachine.objects.all()
         can_create = True
     else:
-        vms = user.filter_on_perms(VirtualMachine, ['admin'])
+        vms = user.filter_on_perms(VirtualMachine, ['admin', 'power'])
         can_create = user.perms_on_any(Cluster, ['create_vm'])
     
     return render_to_response('virtual_machine/list.html', {
@@ -201,9 +201,15 @@ def detail(request, cluster_slug, instance):
     user = request.user
     admin = user.is_superuser or user.has_perm('admin', vm) \
         or user.has_perm('admin', cluster)
-    remove = admin or user.has_perm('remove', vm)
+    if admin:
+        remove = True
+        power = True
+    else:
+        remove = user.has_perm('remove', vm)
+        power = user.has_perm('power', vm)
     
-    if not admin:
+    if not (admin or power):
+        print admin, power
         return HttpResponseForbidden('You do not have permission to view this cluster\'s details')
     #TODO Update to use part of the NewVirtualMachineForm in 0.5 release
     """
@@ -238,7 +244,8 @@ def detail(request, cluster_slug, instance):
         'instance': vm,
         #'configform': form,
         'admin':admin,
-        'remove':remove
+        'remove':remove,
+        'power':power
         },
         context_instance=RequestContext(request),
     )
