@@ -209,7 +209,6 @@ def detail(request, cluster_slug, instance):
         power = user.has_perm('power', vm)
     
     if not (admin or power):
-        print admin, power
         return HttpResponseForbidden('You do not have permission to view this cluster\'s details')
     #TODO Update to use part of the NewVirtualMachineForm in 0.5 release
     """
