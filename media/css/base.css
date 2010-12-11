@@ -245,8 +245,8 @@ ul#errors {color:#AD2E2E;}
 ul.errors {list-style:square;}
 
 .add, .delete, .edit, .reboot, .shutdown, .startup {cursor:pointer;}
-.edit{background:url(/media/images/icons/edit.png) no-repeat;}
-.delete{background:url(/media/images/icons/delete.png) no-repeat;}
+div.edit, a.edit{background:url(/media/images/icons/edit.png) no-repeat;}
+div.delete, a.delete{background:url(/media/images/icons/delete.png) no-repeat;}
 div.icon_error {background:url(/media/images/icons/exclamation.png);}
 div.icon_running {background:url(/media/images/icons/check.png);}
 div.icon_stopped {background:url(/media/images/icons/stop.png);}
@@ -266,7 +266,7 @@ div.delete, div.edit, div.icon_error, .icon_running, .icon_stopped {
 
 .button {
     background-color: #eeeeee !important;
-    background-position:4px 4px;
+    background-position:4px 4px !important;
     border: 1px solid #cccccc;
     clear:both;
     color:#666 !important;
