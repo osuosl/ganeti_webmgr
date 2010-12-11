@@ -180,13 +180,19 @@ class CachedClusterObject(models.Model):
             if self.mtime is None or mtime > self.mtime:
                 # there was an update. Set info and save the object
                 self.info = info_
+                self.check_job_status()
                 self.save()
             else:
                 # There was no change on the server.  Only update the cache
                 # time. This bypasses the info serialization mechanism and
                 # uses a smaller query.
-                self.__class__.objects.filter(pk=self.id) \
-                    .update(cached=self.cached)
+                updates = self.check_job_status()
+                if updates:
+                    self.__class__.objects.filter(pk=self.id) \
+                        .update(cached=self.cached, **updates)
+                else:
+                    self.__class__.objects.filter(pk=self.id) \
+                        .update(cached=self.cached)
                 
             self.error = None
         except GanetiApiError, e:
@@ -198,6 +204,9 @@ class CachedClusterObject(models.Model):
         and must be implemented by it.
         """
         raise NotImplementedError
+
+    def check_job_status(self):
+        pass
 
     def parse_transient_info(self):
         """
@@ -431,10 +440,15 @@ class VirtualMachine(CachedClusterObject):
             disk_size += disk
         self.disk_size = disk_size
         self.operating_system = self.info['os']
+
+    def check_job_status(self):
+        """
+        if the cache bypass is enabled then check the status of the last job
+        when the job is complete we can reenable the cache.
         
-        # if the cache bypass is enabled then check the status of the last job
-        # when the job is complete we can reenable the cache.
-        if self.ignore_cache and not self.last_job_id is None:
+        @returns - dictionary of values that were updates
+        """
+        if self.ignore_cache and self.last_job_id:
             (job_id,) = Job.objects.filter(pk=self.last_job_id)\
                             .values_list('job_id', flat=True)
             data = self.rapi.GetJobStatus(job_id)
@@ -447,14 +461,11 @@ class VirtualMachine(CachedClusterObject):
                 self.ignore_cache = False
             
             if status == 'success':
-                VirtualMachine.objects.filter(pk=self.id) \
-                    .update(ignore_cache=False, last_job=None)
                 self.last_job = None
+                return dict(ignore_cache=False, last_job=None)
             
             elif status == 'error':
-                VirtualMachine.objects.filter(pk=self.id) \
-                    .update(ignore_cache=False)
-
+                return dict(ignore_cache=False)
 
     def _refresh(self):
         return self.rapi.GetInstance(self.hostname)
