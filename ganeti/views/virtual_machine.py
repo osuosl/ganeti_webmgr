@@ -570,7 +570,7 @@ class NewVirtualMachineForm(forms.Form):
     ]
 
     owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label='Owner')
-    cluster = forms.ModelChoiceField(queryset=Cluster.objects.all(), label='Cluster')
+    cluster = forms.ModelChoiceField(queryset=Cluster.objects.none(), label='Cluster')
     hostname = forms.RegexField(label='Instance Name', regex=FQDN_RE,
                             error_messages={
                                 'invalid': 'Instance name must be resolvable',
@@ -663,10 +663,14 @@ class NewVirtualMachineForm(forms.Form):
                 owners.append((profile.id, profile.name))
             self.fields['owner'].choices = owners
 
-            # set cluster choices based on the given owner.
+            # Set cluster choices.  If an owner has been selected then filter
+            # by the owner.  Otherwise show everything the user has access to
+            # through themselves or any groups they are a member of
             if self.owner:
                 q = self.owner.filter_on_perms(Cluster, ['admin','create_vm'])
-                self.fields['cluster'].queryset = q
+            else:
+                q = user.filter_on_perms(Cluster, ['admin','create_vm'])
+            self.fields['cluster'].queryset = q
 
     def clean(self):
         data = self.cleaned_data

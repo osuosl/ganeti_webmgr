@@ -1615,24 +1615,41 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         
         Verifies:
             * superusers have all Clusters as choices
-            * user's and groups only receive clusters they have permissions
-              directly on.
+            * if owner is set, only display clusters the owner has permissions
+              directly on.  This includes both users and groups
+            * if no owner is set, choices include clusters that the user has
+              permission directly on, or through a group
         """
-        # user with no choices
+        
+        # no owner, no permissions
+        form = NewVirtualMachineForm(user, None)
+        self.assertEqual([(u'', u'---------')], list(form.fields['cluster'].choices))
+        
+        # no owner, group and direct permissions
+        user.grant('admin', cluster0)
+        user.grant('create_vm', cluster1)
+        group.grant('admin', cluster2)
+        group.user_set.add(user)
+        self.assertEqual([(u'', u'---------'), (1, u'test0'), (2, u'test1'), (3, u'test2')], list(form.fields['cluster'].choices))
+        user.revoke_all(cluster0)
+        user.revoke_all(cluster1)
+        group.revoke_all(cluster2)
+        
+        # owner, user with no choices
         form = NewVirtualMachineForm(user, None, initial={'owner':user.get_profile().id})
         self.assertEqual([(u'', u'---------')], list(form.fields['cluster'].choices))
         
-        # user with choices
+        # owner, user with choices
         user.grant('admin', cluster0)
         user.grant('create_vm', cluster1)
         form = NewVirtualMachineForm(user, None, initial={'owner':user.get_profile().id})
         self.assertEqual([(u'', u'---------'), (1, u'test0'), (2, u'test1')], list(form.fields['cluster'].choices))
         
-        # group with no choices
+        # owner, group with no choices
         form = NewVirtualMachineForm(user, None, initial={'owner':group.organization.id})
         self.assertEqual([(u'', u'---------')], list(form.fields['cluster'].choices))
         
-        # group with choices
+        # owner, group with choices
         group.grant('admin', cluster2)
         group.grant('create_vm', cluster3)
         form = NewVirtualMachineForm(user, None, initial={'owner':group.organization.id})
