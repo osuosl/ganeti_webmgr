@@ -61,7 +61,7 @@
         
         $("#actions a").not('.delete').click(function(){
             if (actions_enabled){
-                actions_enabled = false;
+                
                 $.post(this.href, action_response);
             }
             return false;
@@ -84,6 +84,7 @@
         if (result.ops == undefined) {
             display_ganeti_error(result[1]);
             actions_enabled = true;
+            $('#actions a').removeClass('disabled');
         } else {
             poll_job_status(result['id'])
             display_job(result);
@@ -91,6 +92,9 @@
     }
 
     function poll_job_status(job_id) {
+        actions_enabled = false;
+        $('#actions a').addClass('disabled');
+        
         checkInterval = setInterval(function(){
             $.ajax({
                     url: "{% url cluster-detail cluster.slug %}/job/"+job_id+"/status/",

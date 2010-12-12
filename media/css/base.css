@@ -256,6 +256,12 @@ div.icon_stopped {background:url(/media/images/icons/stop.png);}
 .shutdown {background:url(/media/images/icons/stop.png) no-repeat;}
 .startup {background:url(/media/images/icons/add.png) no-repeat;}
 
+div.edit.disabled, a.edit.disabled{background:url(/media/images/icons/edit-disabled.png) no-repeat;}
+div.delete.disabled, a.delete.disabled{background:url(/media/images/icons/delete-disabled.png) no-repeat;}
+.reboot.disabled {background:url(/media/images/icons/arrow_refresh-disabled.png) no-repeat;}
+.shutdown.disabled {background:url(/media/images/icons/stop-disabled.png) no-repeat;}
+.startup.disabled {background:url(/media/images/icons/add-disabled.png) no-repeat;}
+
 div.delete, div.edit, div.icon_error, .icon_running, .icon_stopped {
     background-repeat:no-repeat;
     float:right;
@@ -283,6 +289,9 @@ div.delete, div.edit, div.icon_error, .icon_running, .icon_stopped {
     color:black !important;
     border-color:#bababa;
 }
+
+.button.disabled {color: #aaa !important;}
+.button.disabled:hover {background-color: #eee !important;}
 
 .spinner {margin:0 auto; text-align:center; width:100px}
 .spinner image {display:block; margin:0 auto; width:32px;}
