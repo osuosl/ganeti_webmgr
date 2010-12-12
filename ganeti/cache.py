@@ -23,6 +23,8 @@ import sys
 from threading import Thread
 import time
 
+import cPickle
+
 # ==========================================================
 # Setup django environment 
 # ==========================================================
@@ -50,7 +52,7 @@ class Timer():
     
     def tick(self, msg=''):
         now = datetime.now()
-        print '    [%s] Time since last tick: %s' % (msg, (now-self.last_tick))
+        print '    %s - Time since last tick: %s' % (msg, (now-self.last_tick))
         self.last_tick = now
 
 
@@ -65,29 +67,24 @@ def _update_cache():
     for cluster in Cluster.objects.all():
         print '%s:' % cluster.hostname
         infos = cluster.instances(bulk=True)
-        timer.tick('ganeti fetch')
-        
-        base = cluster.virtual_machines.all()
+        timer.tick('info fetched from ganeti     ')
         no_updates = []
         
-        
-        mtimes = base.values_list('hostname','mtime', 'id')
+        mtimes = cluster.virtual_machines.all() \
+            .values_list('hostname', 'id', 'mtime', 'status')
         d = {}
-        for name, mtime, id in mtimes:
-            d[name] = (mtime, id)
-        timer.tick('mtimes fetched from db')
-        
+        for name, id, mtime, status in mtimes:
+            d[name] = (id, mtime, status)
+        timer.tick('mtimes fetched from db       ')
         
         for info in infos:
             
             try:
-                #vm = base.get(hostname=info['name'])
                 name = info['name']
-                mtime, id = d[name]
-                #print mtime
+                id, mtime, status = d[name]
                 
-                if True: #\
-                #or info['status'] != vm.info['status']:
+                if not mtime or mtime < datetime.fromtimestamp(info['mtime']) \
+                or status != info['status']:
                     #print '    Virtual Machine (updated) : %s' % name
                     #print '        %s :: %s' % (mtime, datetime.fromtimestamp(info['mtime']))
                     # only update the whole object if it is new or modified. 
@@ -95,10 +92,9 @@ def _update_cache():
                     # XXX status changes will not always be reflected in mtime
                     # explicitly check status to see if it has changed.  failing
                     # to check this would result in state changes being lost
-                    vm = base.get(pk=id)
-                    vm.info = info
-                    vm.save()
-                    timer.tick('save')
+                    data = VirtualMachine.parse_persistent_info(info)
+                    VirtualMachine.objects.filter(pk=id) \
+                        .update(serialized_info=cPickle.dumps(info), **data)
                 else:
                     # no changes to this VirtualMachine
                     #print '    Virtual Machine : %s' % name
@@ -114,7 +110,9 @@ def _update_cache():
         if no_updates:
             base.filter(id__in=no_updates).update(cached=datetime.now())
         timer.tick('records or timestamps updated')
+    print '    updated: %s out of %s' % (len(infos)-len(no_updates), len(infos))
     timer.stop()
+    
 
 from django.db import transaction
 

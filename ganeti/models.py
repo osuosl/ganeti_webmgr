@@ -162,7 +162,9 @@ class CachedClusterObject(models.Model):
     def parse_info(self):
         """ Parse all values from the cached info """
         self.parse_transient_info()
-        self.parse_persistent_info()
+        data = self.parse_persistent_info(self.info)
+        for k in data:
+            setattr(self, k, data[k])
 
     def refresh(self):
         """
@@ -222,14 +224,15 @@ class CachedClusterObject(models.Model):
         if info_['ctime'] is not None:
             self.ctime = datetime.fromtimestamp(info_['ctime'])
 
-    def parse_persistent_info(self):
+    @classmethod
+    def parse_persistent_info(cls, info):
         """
         Parse properties from cached info that are stored in the database. These
         properties will be searchable by the django query api.
 
         This method is specific to the child object.
         """
-        self.mtime = datetime.fromtimestamp(self.__info['mtime'])
+        return {'mtime': datetime.fromtimestamp(info['mtime'])}
 
     def save(self, *args, **kwargs):
         """
@@ -310,21 +313,18 @@ class Job(CachedClusterObject):
             self.info = self._refresh()
             self.save()
     
-    def parse_persistent_info(self):
+    @classmethod
+    def parse_persistent_info(cls, info):
         """
         Parse status and turn off cache bypass flag if job has finished
         """
-        if self.ignore_cache:
-            info_ = self.info
-            
-            self.status = info_['status']
-            if self.ignore_cache and info_['status'] in ('error','success'):
-                self.ignore_cache = False
-                self.__class__.objects.filter(pk=self.id) \
-                    .update(ignore_cache=False)
-            
-            if info_['end_ts']:
-                self.finished = self.parse_end_timestamp(info_)
+        data = {}
+        data['status'] = info['status']
+        if data['status'] in ('error','success'):
+            data['ignore_cache'] = False
+        if info['end_ts']:
+            data['finished'] = cls.parse_end_timestamp(info)
+        return data
 
     @classmethod
     def parse_end_timestamp(cls, info):
@@ -385,6 +385,8 @@ class VirtualMachine(CachedClusterObject):
     ram = models.IntegerField(default=-1)
     cluster_hash = models.CharField(max_length=40, editable=False)
     operating_system = models.CharField(max_length=128)
+    status = models.CharField(max_length=10)
+
     last_job = models.ForeignKey(Job, null=True)
 
     @property
@@ -424,22 +426,26 @@ class VirtualMachine(CachedClusterObject):
 
         super(VirtualMachine, self).save(*args, **kwargs)
 
-    def parse_persistent_info(self):
+    @classmethod
+    def parse_persistent_info(cls, info):
         """
         Loads all values from cached info, included persistent properties that
         are stored in the database
         """
-        super(VirtualMachine, self).parse_persistent_info()
+        data = super(VirtualMachine, cls).parse_persistent_info(info)
         
         # Parse resource properties
-        self.ram = self.info['beparams']['memory']
-        self.virtual_cpus = self.info['beparams']['vcpus']
+        data['ram'] = info['beparams']['memory']
+        data['virtual_cpus'] = info['beparams']['vcpus']
         # Sum up the size of each disk used by the VM
         disk_size = 0
-        for disk in self.info['disk.sizes']:
+        for disk in info['disk.sizes']:
             disk_size += disk
-        self.disk_size = disk_size
-        self.operating_system = self.info['os']
+        data['disk_size'] = disk_size
+        data['operating_system'] = info['os']
+        data['status'] = info['status']
+        
+        return data
 
     def check_job_status(self):
         """
