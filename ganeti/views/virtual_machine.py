@@ -183,7 +183,7 @@ def list_(request):
         vms = VirtualMachine.objects.all()
         can_create = True
     else:
-        vms = user.filter_on_perms(VirtualMachine, ['admin', 'power'])
+        vms = user.filter_on_perms(VirtualMachine, ['admin', 'power','remove'])
         can_create = user.perms_on_any(Cluster, ['create_vm'])
     
     return render_to_response('virtual_machine/list.html', {
@@ -209,7 +209,7 @@ def detail(request, cluster_slug, instance):
         remove = user.has_perm('remove', vm)
         power = user.has_perm('power', vm)
     
-    if not (admin or power):
+    if not (admin or power or remove):
         return render_403(request, 'You do not have permission to view this cluster\'s details')
     #TODO Update to use part of the NewVirtualMachineForm in 0.5 release
     """
