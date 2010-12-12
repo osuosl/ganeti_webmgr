@@ -46,12 +46,11 @@ class Timer():
     
     def stop(self):
         self.end = datetime.now()
-        print 'Time since last tick: %s' % (self.end-self.last_tick)
-        print 'total time: %s' %  (self.end - self.start)
+        print '    Total time: %s' %  (self.end - self.start)
     
     def tick(self, msg=''):
         now = datetime.now()
-        print '[%s] Time since last tick: %s' % (msg, (now-self.last_tick))
+        print '    [%s] Time since last tick: %s' % (msg, (now-self.last_tick))
         self.last_tick = now
 
 
@@ -64,6 +63,7 @@ def _update_cache():
     timer = Timer()
     print '------[cache update]-------------------------------'
     for cluster in Cluster.objects.all():
+        print '%s:' % cluster.hostname
         infos = cluster.instances(bulk=True)
         timer.tick('ganeti fetch')
         
@@ -71,51 +71,54 @@ def _update_cache():
         no_updates = []
         
         
-        mtimes = base.values_list('hostname','mtime')
+        mtimes = base.values_list('hostname','mtime', 'id')
         d = {}
-        for x, y in mtimes:
-            d[x] = y
-        timer.tick('mtimes fetched')
+        for name, mtime, id in mtimes:
+            d[name] = (mtime, id)
+        timer.tick('mtimes fetched from db')
         
         
         for info in infos:
             
             try:
                 #vm = base.get(hostname=info['name'])
-                mtime = d[info['name']]
-                print mtime
+                name = info['name']
+                mtime, id = d[name]
+                #print mtime
                 
-                if not mtime or mtime < datetime.fromtimestamp(info['mtime']): #\
+                if True: #\
                 #or info['status'] != vm.info['status']:
-                    print '    Virtual Machine (updated) : %s' % info['name']
+                    #print '    Virtual Machine (updated) : %s' % name
+                    #print '        %s :: %s' % (mtime, datetime.fromtimestamp(info['mtime']))
                     # only update the whole object if it is new or modified. 
                     #
                     # XXX status changes will not always be reflected in mtime
                     # explicitly check status to see if it has changed.  failing
                     # to check this would result in state changes being lost
-                    vm = base.get(hostname=info['name'])
+                    vm = base.get(pk=id)
                     vm.info = info
                     vm.save()
+                    timer.tick('save')
                 else:
                     # no changes to this VirtualMachine
-                    print '    Virtual Machine : %s' % info['name']
-                    no_updates.append(vm.id)
+                    #print '    Virtual Machine : %s' % name
+                    no_updates.append(id)
                 
             except VirtualMachine.DoesNotExist:
                 # new vm
                 vm = VirtualMachine(cluster=cluster, hostname=info['name'])
                 vm.info = info
-                vm.save()
-        
-        timer.tick('records processed')
+                vm.save() 
         
         # batch update the cache update time for VMs that weren't modified
         if no_updates:
             base.filter(id__in=no_updates).update(cached=datetime.now())
+        timer.tick('records or timestamps updated')
     timer.stop()
 
 from django.db import transaction
 
+@transaction.commit_on_success()
 def update_cache():
     #with transaction.commit_on_success():
     _update_cache()
