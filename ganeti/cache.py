@@ -35,32 +35,65 @@ from django.conf import settings
 from ganeti.models import Cluster, VirtualMachine
 
 
-def update_cache():
+class Timer():
+    
+    def __init__(self, start=True):
+        self.start()
+    
+    def start(self):
+        self.start = datetime.now()
+        self.last_tick = self.start
+    
+    def stop(self):
+        self.end = datetime.now()
+        print 'Time since last tick: %s' % (self.end-self.last_tick)
+        print 'total time: %s' %  (self.end - self.start)
+    
+    def tick(self, msg=''):
+        now = datetime.now()
+        print '[%s] Time since last tick: %s' % (msg, (now-self.last_tick))
+        self.last_tick = now
+
+
+def _update_cache():
     """
     Updates the cache for all all VirtualMachines in all clusters.  This method
     processes the data in bulk, where possible, to reduce runtime.  Generally
     this should be faster than refreshing individual VirtualMachines.
     """
-    start = datetime.now()
+    timer = Timer()
     print '------[cache update]-------------------------------'
     for cluster in Cluster.objects.all():
         infos = cluster.instances(bulk=True)
+        timer.tick('ganeti fetch')
+        
         base = cluster.virtual_machines.all()
         no_updates = []
+        
+        
+        mtimes = base.values_list('hostname','mtime')
+        d = {}
+        for x, y in mtimes:
+            d[x] = y
+        timer.tick('mtimes fetched')
+        
         
         for info in infos:
             
             try:
-                vm = base.get(hostname=info['name'])
+                #vm = base.get(hostname=info['name'])
+                mtime = d[info['name']]
+                print mtime
                 
-                if not vm.mtime or vm.mtime < datetime.fromtimestamp(info['mtime']) \
-                or info['status'] != vm.info['status']:
+                if not mtime or mtime < datetime.fromtimestamp(info['mtime']): #\
+                #or info['status'] != vm.info['status']:
                     print '    Virtual Machine (updated) : %s' % info['name']
                     # only update the whole object if it is new or modified. 
                     #
                     # XXX status changes will not always be reflected in mtime
                     # explicitly check status to see if it has changed.  failing
                     # to check this would result in state changes being lost
+                    vm = base.get(hostname=info['name'])
                     vm.info = info
                     vm.save()
                 else:
@@ -73,11 +106,20 @@ def update_cache():
                 vm = VirtualMachine(cluster=cluster, hostname=info['name'])
                 vm.info = info
                 vm.save()
-            
+        
+        timer.tick('records processed')
+        
         # batch update the cache update time for VMs that weren't modified
         if no_updates:
             base.filter(id__in=no_updates).update(cached=datetime.now())
-    print '    Runtime: %s' % (datetime.now()-start)
+    timer.stop()
+
+from django.db import transaction
+
+def update_cache():
+    #with transaction.commit_on_success():
+    _update_cache()
+
 
 
 class CacheUpdateThread(Thread):
