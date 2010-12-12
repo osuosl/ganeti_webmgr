@@ -39,3 +39,9 @@ def render_404(request, message):
     template = loader.get_template('404.html')
     context = RequestContext(request)
     return HttpResponseNotFound(template.render(context))
+
+
+def view_500(request):
+    template = loader.get_template('500.html')
+    context = RequestContext(request)
+    return HttpResponseNotFound(template.render(context))

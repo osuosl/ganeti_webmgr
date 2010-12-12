@@ -54,6 +54,7 @@ urlpatterns = patterns('',
     (r'^500/$', 'django.views.generic.simple.direct_to_template', {'template':"500.html"})
 )
 
+handler500 = 'ganeti.views.view_500'
 
 
 #The following is used to serve up local media files like images
@@ -63,4 +64,3 @@ if settings.DEBUG:
         (r'^media/(?P<path>.*)', 'django.views.static.serve',\
          {'document_root':  settings.MEDIA_ROOT}),
     )
-    
