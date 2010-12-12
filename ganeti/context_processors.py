@@ -16,26 +16,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-from django.http import HttpResponseNotFound, HttpResponseForbidden
-from django.template import RequestContext
-from django.template import Context, loader
+from django.conf import settings
 
 
-def render_403(request, message):
+def site(request):
     """
-    Render a 403 response
-    """
-    template = loader.get_template('403.html')
-    context = RequestContext(request, {
-        'message': message,
-    })
-    return HttpResponseForbidden(template.render(context))
-
-
-def render_404(request, message):
-    """
-    Render a 404 response
-    """
-    template = loader.get_template('404.html')
-    context = RequestContext(request)
-    return HttpResponseNotFound(template.render(context))
+    adds site properties to the context
+    """    
+    return {'SITE_DOMAIN':settings.SITE_DOMAIN, 'SITE_NAME':settings.SITE_NAME}

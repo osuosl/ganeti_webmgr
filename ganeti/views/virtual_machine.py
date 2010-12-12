@@ -28,7 +28,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, \
-    HttpResponseForbidden, HttpResponseNotAllowed
+    HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
@@ -39,6 +39,7 @@ log_action = LogItem.objects.log_action
 
 from util.client import GanetiApiError
 from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine, Job
+from ganeti.views import render_403
 
 empty_field = (u'', u'---------')
 
@@ -60,7 +61,7 @@ def delete(request, cluster_slug, instance):
         user.has_perm("admin", instance) or
         user.has_perm("admin", instance.cluster)
         ):
-        return HttpResponseForbidden()
+        return render_403(request, 'You do not have sufficient privileges')
 
     if request.method == 'GET':
         return render_to_response("virtual_machine/delete.html",
@@ -88,7 +89,7 @@ def vnc(request, cluster_slug, instance):
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', instance) or \
         user.has_perm('admin', instance.cluster)):
-        return HttpResponseForbidden('You do not have permission to vnc on this')
+        return render_403(request, 'You do not have permission to vnc on this')
 
     #port, password = instance.setup_vnc_forwarding()
 
@@ -113,7 +114,7 @@ def shutdown(request, cluster_slug, instance):
 
     if not (user.is_superuser or user.has_any_perms(vm, ['admin','power'], True) or \
         user.has_perm('admin', vm.cluster)):
-        return HttpResponseForbidden('You do not have permission to shut down this virtual machine')
+        return render_403(request, 'You do not have permission to shut down this virtual machine')
 
     if request.method == 'POST':
         try:
@@ -136,7 +137,7 @@ def startup(request, cluster_slug, instance):
     user = request.user
     if not (user.is_superuser or user.has_any_perms(vm, ['admin','power'], True) or \
         user.has_perm('admin', vm.cluster)):
-            return HttpResponseForbidden('You do not have permission to start up this virtual machine')
+            return render_403(request, 'You do not have permission to start up this virtual machine')
 
     if request.method == 'POST':
         try:
@@ -159,7 +160,7 @@ def reboot(request, cluster_slug, instance):
     user = request.user
     if not (user.is_superuser or user.has_any_perms(vm, ['admin','power'], True) or \
         user.has_perm('admin', vm.cluster)):
-            return HttpResponseForbidden('You do not have permission to reboot this virtual machine')
+            return render_403(request, 'You do not have permission to reboot this virtual machine')
 
     if request.method == 'POST':
         try:
@@ -209,7 +210,7 @@ def detail(request, cluster_slug, instance):
         power = user.has_perm('power', vm)
     
     if not (admin or power):
-        return HttpResponseForbidden('You do not have permission to view this cluster\'s details')
+        return render_403(request, 'You do not have permission to view this cluster\'s details')
     #TODO Update to use part of the NewVirtualMachineForm in 0.5 release
     """
     if request.method == 'POST':
@@ -261,7 +262,7 @@ def users(request, cluster_slug, instance):
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', vm) or \
         user.has_perm('admin', cluster)):
-        return HttpResponseForbidden("You do not have sufficient privileges")
+        return render_403(request, "You do not have sufficient privileges")
 
     url = reverse('vm-permissions', args=[cluster.slug, vm.hostname])
     return view_users(request, vm, url)
@@ -278,7 +279,7 @@ def permissions(request, cluster_slug, instance, user_id=None, group_id=None):
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', vm) or \
         user.has_perm('admin', cluster)):
-        return HttpResponseForbidden("You do not have sufficient privileges")
+        return render_403(request, "You do not have sufficient privileges")
 
     url = reverse('vm-permissions', args=[cluster.slug, vm.hostname])
     return view_permissions(request, vm, url, user_id, group_id)
@@ -293,7 +294,7 @@ def create(request, cluster_slug=None):
     """
     user = request.user
     if not(user.is_superuser or user.perms_on_any(Cluster, ['admin', 'create_vm'])):
-        return HttpResponseForbidden('You do not have permission to create virtual \
+        return render_403(request, 'You do not have permission to create virtual \
                    machines')
 
     if cluster_slug is not None:
@@ -413,7 +414,7 @@ def cluster_choices(request):
     elif 'group_id' in GET:
         group = get_object_or_404(Group, id=GET['group_id'])
         if not group.user_set.filter(id=request.user.id).exists():
-            return HttpResponseForbidden('not a member of this group')
+            return render_403(request, 'not a member of this group')
         q = group.filter_on_perms(Cluster, ['admin','create_vm'])
     else:
         q = user.filter_on_perms(Cluster, ['admin','create_vm'], groups=False)
@@ -435,7 +436,7 @@ def cluster_options(request):
     user = request.user
     if not (user.is_superuser or user.has_perm('create_vm', cluster) or \
             user.has_perm('admin', cluster)):
-        return HttpResponseForbidden('You do not have permissions to view \
+        return render_403(request, 'You do not have permissions to view \
         this cluster')
 
     oslist = cluster_os_list(cluster)
@@ -500,7 +501,7 @@ def cluster_defaults(request):
     user = request.user
     if not (user.is_superuser or user.has_perm('create_vm', cluster) or \
             user.has_perm('admin', cluster)):
-        return HttpResponseForbidden('You do not have permission to view the default cluster options')
+        return render_403(request, 'You do not have permission to view the default cluster options')
 
     content = json.dumps(cluster_default_info(cluster))
     return HttpResponse(content, mimetype='application/json')
