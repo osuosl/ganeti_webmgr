@@ -348,7 +348,7 @@ def create(request, cluster_slug=None):
                 job_id = cluster.rapi.CreateInstance('create', hostname,
                         disk_template,
                         [{"size": disk_size, }],[{nicmode: nictype, }],
-                        memory=ram, os=os, vcpus=vcpus,
+                        os=os, vcpus=vcpus,
                         pnode=pnode, snode=snode,
                         name_check=name_check, ip_check=name_check,
                         iallocator=iallocator_hostname,
@@ -356,7 +356,8 @@ def create(request, cluster_slug=None):
                             'root_path': rootpath, \
                             'serial_console':serialconsole, \
                             'boot_order':bootorder, \
-                            'cdrom_image_path':imagepath})
+                            'cdrom_image_path':imagepath},
+                        beparams={"memory": ram})
 
                 # Wait for job to process as the error will not happen
                 #  right away
