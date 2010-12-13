@@ -585,6 +585,7 @@ class TestClusterViews(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'cluster/edit.html')
+	self.assertEqual(None, cluster.info)
         
         data = dict(hostname='new-host-1.hostname',
                     slug='new-host-1',
@@ -605,10 +606,11 @@ class TestClusterViews(TestCase):
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'cluster/detail.html')
         cluster = response.context['cluster']
+	self.assertNotEqual(None, cluster.info)
         del data_['confirm_password']
         for k, v in data_.items():
             self.assertEqual(v, getattr(cluster, k))
-    
+
     def test_view_delete(self):
         """
         Tests delete a cluster
