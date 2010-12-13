@@ -63,13 +63,22 @@
         o.attr("text", text);
         return o;
     };
+    /* Create new option group for select field */
+    newoptgroup = function(value, options) {
+        group = $("<optgroup></optgroup>");
+        group.attr("label", value);
+        $.each(options, function(i, option) {
+            group.append(newoption(option[0], option[1]));
+        });
+        return group;
+    };
     /* Ajax request to update cluster when owner changes */
     owner_change = function(url) {
         owner.change(function() {
             id = $(this).children("option:selected").val();
             if( id != '' ) {
                 $.getJSON(url,
-                    {'group_id':id}, function(data) {
+                    {'clusteruser_id':id}, function(data) {
                         cluster.children().not(':first').remove();
                         $.each(data, function(i, item) {
                                 child = $("<option> </option>");
@@ -104,7 +113,7 @@
                                     snode.append(child2);
                                 }
                                 else if ( i == 'os' ) {
-                                    child = newoption(value[0], value[1])
+                                    child = newoptgroup(value[0], value[1]);
                                     oslist.append(child);
                                 }
                             });

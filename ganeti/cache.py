@@ -23,6 +23,8 @@ import sys
 from threading import Thread
 import time
 
+import cPickle
+
 # ==========================================================
 # Setup django environment 
 # ==========================================================
@@ -35,40 +37,92 @@ from django.conf import settings
 from ganeti.models import Cluster, VirtualMachine
 
 
-def update_cache():
+class Timer():
+    
+    def __init__(self, start=True):
+        self.start()
+    
+    def start(self):
+        self.start = datetime.now()
+        self.last_tick = self.start
+    
+    def stop(self):
+        self.end = datetime.now()
+        print '    Total time: %s' %  (self.end - self.start)
+    
+    def tick(self, msg=''):
+        now = datetime.now()
+        print '    %s - Time since last tick: %s' % (msg, (now-self.last_tick))
+        self.last_tick = now
+
+
+def _update_cache():
     """
     Updates the cache for all all VirtualMachines in all clusters.  This method
     processes the data in bulk, where possible, to reduce runtime.  Generally
     this should be faster than refreshing individual VirtualMachines.
     """
-    start = datetime.now()
+    timer = Timer()
     print '------[cache update]-------------------------------'
     for cluster in Cluster.objects.all():
+        print '%s:' % cluster.hostname
+        base = cluster.virtual_machines.all()
         infos = cluster.instances(bulk=True)
-        base = VirtualMachine.objects.all()
-        no_updates = []
+        timer.tick('info fetched from ganeti     ')
+        updated = 0
+        
+        mtimes = base.values_list('hostname', 'id', 'mtime', 'status')
+        d = {}
+        for name, id, mtime, status in mtimes:
+            d[name] = (id, mtime, status)
+        timer.tick('mtimes fetched from db       ')
         
         for info in infos:
-            vm, new = base.get_or_create(cluster=cluster, hostname=info['name'])
-            if new or vm.mtime < datetime.fromtimestamp(info['mtime']) \
-                or info['status'] != vm.info['status']:
-                    print '    Virtual Machine (updated) : %s' % info['name']
+            
+            try:
+                name = info['name']
+                id, mtime, status = d[name]
+                if not mtime or mtime < datetime.fromtimestamp(info['mtime']) \
+                or status != info['status']:
+                    #print '    Virtual Machine (updated) : %s' % name
+                    #print '        %s :: %s' % (mtime, datetime.fromtimestamp(info['mtime']))
                     # only update the whole object if it is new or modified. 
                     #
                     # XXX status changes will not always be reflected in mtime
                     # explicitly check status to see if it has changed.  failing
                     # to check this would result in state changes being lost
-                    vm.info = info
-                    vm.save()
-            else:
-                # no changes to this VirtualMachine
-                print '    Virtual Machine : %s' % info['name']
-                no_updates.append(vm.id)
-            
-        # batch update the cache update time for VMs that weren't modified
-        if no_updates:
-            base.filter(id__in=no_updates).update(cached=datetime.now())
-    print '    Runtime: %s' % (datetime.now()-start)
+                    data = VirtualMachine.parse_persistent_info(info)
+                    VirtualMachine.objects.filter(pk=id) \
+                        .update(serialized_info=cPickle.dumps(info), **data)
+                    updated += 1
+                
+            except VirtualMachine.DoesNotExist:
+                # new vm
+                vm = VirtualMachine(cluster=cluster, hostname=info['name'])
+                vm.info = info
+                vm.save() 
+        
+        # batch update the cache updated time for all VMs in this cluster. This
+        # will set the last updated time for both VMs that were modified and for
+        # those that weren't.  even if it wasn't modified we want the last
+        # updated time to be up to date.
+        #
+        # XXX don't bother checking to see whether this query needs to run.  It
+        # normal usage it will almost always need to
+        base.update(cached=datetime.now())
+        
+        timer.tick('records or timestamps updated')
+    print '    updated: %s out of %s' % (updated, len(infos))
+    timer.stop()
+    
+
+from django.db import transaction
+
+@transaction.commit_on_success()
+def update_cache():
+    #with transaction.commit_on_success():
+    _update_cache()
+
 
 
 class CacheUpdateThread(Thread):

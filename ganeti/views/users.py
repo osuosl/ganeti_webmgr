@@ -6,17 +6,19 @@ from django import forms
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm, SetPasswordForm
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
 from ganeti.models import *
+from ganeti.views import render_403
+
 
 @login_required
 def user_list(request):
     user = request.user
     if not user.is_superuser:
-        return HttpResponseForbidden('Only a superuser may view all users.')
+        return render_403(request, 'Only a superuser may view all users.')
     
     users = User.objects.all()
     
@@ -31,7 +33,7 @@ def user_list(request):
 def user_add(request):
     user = request.user
     if not user.is_superuser:
-        return HttpResponseForbidden('Only a superuser may add a user.')
+        return render_403(request, 'Only a superuser may add a user.')
 
     if request.method == "POST":
         form = UserCreationForm(request.POST)
@@ -56,7 +58,7 @@ def user_add(request):
 def user_edit(request, user_id=None):
     user = request.user
     if not user.is_superuser:
-        return HttpResponseForbidden('Only a superuser may edit a user.')
+        return render_403(request, 'Only a superuser may edit a user.')
 
     user_edit = get_object_or_404(User, id=user_id)
 
@@ -85,7 +87,7 @@ def user_edit(request, user_id=None):
 def user_password(request, user_id=None):
     user = request.user
     if not user.is_superuser:
-        return HttpResponseForbidden('Only superusers have access to the change \
+        return render_403(request, 'Only superusers have access to the change \
                                      password form.')
 
     user_edit = get_object_or_404(User, id=user_id)
@@ -134,6 +136,7 @@ def user_profile(request):
     return render_to_response('user_profile.html',
      {"user":request.user, 'form':form},
      context_instance=RequestContext(request))
+
 
 class UserEditForm(UserChangeForm):
     """

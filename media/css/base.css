@@ -93,7 +93,7 @@ li {
     background:white;
     border-left: 1px solid #DDDDDD;
     border-right: 1px solid #DDDDDD;
-    float:left;    
+    float:left;
     min-height:490px;
     padding:10px 10px 20px 10px;
     width: 812px;
@@ -101,7 +101,9 @@ li {
 #content h1 {margin:10px 0 10px 0;}
 #content table {margin-top:15px;  width:100%; border: 1px solid #dddddd;}
 #content th {background:#eeeeee; border-bottom:1px solid #dddddd !important;}
-#content td.name {text-align:left; padding-left:0;}
+#content td.name {text-align:center;}
+#content td.actions {width:16px;}
+#content tr.group_row {margin:auto;}
 #content tr.none td {border-bottom: 1px solid white; font-style:italic;}
 #content td.error {padding-right:0 !important; width:16px;}
 #content td {border-left:1px solid white; border-right: 1px solid white;}
@@ -206,7 +208,7 @@ form input.submit{margin-left:12.5em;}
 #quota p label {width:9em;}
 
 /* Virtual Machines */
-#content #vm_ticket_table {width:75%; border-color:#eee;}
+#content .overview {width:75%; border-color:#eee;}
 
 /*  Orphans */
 #orphans {margin:1em 0em 0em 1em;}
@@ -242,26 +244,35 @@ form input.submit{margin-left:12.5em;}
 ul#errors {color:#AD2E2E;}
 ul.errors {list-style:square;}
 
-.add, .delete, .edit, .reboot, .shutdown, .startup {cursor:pointer; margin-right:3px;}
-div.edit{background:url(/media/images/icons/edit.png);}
-div.delete{background:url(/media/images/icons/delete.png);}
+.add, .delete, .edit, .reboot, .shutdown, .startup {cursor:pointer;}
+div.edit, a.edit{background:url(/media/images/icons/edit.png) no-repeat;}
+div.delete, a.delete{background:url(/media/images/icons/delete.png) no-repeat;}
 div.icon_error {background:url(/media/images/icons/exclamation.png);}
 div.icon_running {background:url(/media/images/icons/check.png);}
 div.icon_stopped {background:url(/media/images/icons/stop.png);}
+
+.add {background:url(/media/images/icons/add.png) no-repeat;}
+.reboot {background:url(/media/images/icons/arrow_refresh.png) no-repeat;}
+.shutdown {background:url(/media/images/icons/stop.png) no-repeat;}
+.startup {background:url(/media/images/icons/add.png) no-repeat;}
+
+div.edit.disabled, a.edit.disabled{background:url(/media/images/icons/edit-disabled.png) no-repeat;}
+div.delete.disabled, a.delete.disabled{background:url(/media/images/icons/delete-disabled.png) no-repeat;}
+.reboot.disabled {background:url(/media/images/icons/arrow_refresh-disabled.png) no-repeat;}
+.shutdown.disabled {background:url(/media/images/icons/stop-disabled.png) no-repeat;}
+.startup.disabled {background:url(/media/images/icons/add-disabled.png) no-repeat;}
+
 div.delete, div.edit, div.icon_error, .icon_running, .icon_stopped {
     background-repeat:no-repeat;
-    float:left;
+    float:right;
     height:16px;
     padding:0;
     width:16px;
 }
 
-.add a, .reboot a, .shutdown a, .startup a,
-.add a:visited, .reboot a:visited, .shutdown a:visited, .startup a:visited,
-.add a, .reboot a, .shutdown a, .startup a:link{color:inherit !important;}
-
-.add, .reboot, .shutdown, .startup, a.delete{
+.button {
     background-color: #eeeeee !important;
+    background-position:4px 4px !important;
     border: 1px solid #cccccc;
     clear:both;
     color:#666 !important;
@@ -273,13 +284,14 @@ div.delete, div.edit, div.icon_error, .icon_running, .icon_stopped {
     -webkit-border-radius:5px;
 }
 
-a.delete {background:url(/media/images/icons/delete.png) no-repeat 4px 4px;}
-.add {background:url(/media/images/icons/add.png) no-repeat 4px 4px;}
-.reboot {background:url(/media/images/icons/arrow_refresh.png) no-repeat 4px 4px;}
-.shutdown {background:url(/media/images/icons/stop.png) no-repeat 4px 4px;}
-.startup {background:url(/media/images/icons/add.png) no-repeat 4px 4px;}
-.add:hover, .reboot:hover, .shutdown:hover, .startup:hover, a.delete:hover {
-    background-color: #dadada !important; color:black !important; border-color:#bababa;}
+.button:hover {
+    background-color: #dadada !important;
+    color:black !important;
+    border-color:#bababa;
+}
+
+.button.disabled {color: #aaa !important;}
+.button.disabled:hover {background-color: #eee !important;}
 
 .spinner {margin:0 auto; text-align:center; width:100px}
 .spinner image {display:block; margin:0 auto; width:32px;}
@@ -316,3 +328,9 @@ tr.group td.name {background:url(/media/images/icons/group.png) no-repeat 0 4px;
 
 
 .floatfix {clear:both;}
+
+
+.ui-tabs-panel {
+    padding-left:0 !important;
+    padding-right:0 !important;
+}

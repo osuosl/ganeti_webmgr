@@ -16,13 +16,16 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
+from math import log10
+import re
+import json as json_lib
 
 from django import template
 from django.template import Library, Node, TemplateSyntaxError
 from django.template.defaultfilters import stringfilter
-import re
+from django.utils.safestring import mark_safe
 
-from ganeti.models import Cluster, Quota
+from ganeti.models import Cluster
 
 
 register = Library()
@@ -89,18 +92,37 @@ def cluster_admin(user):
     return user.perms_on_any(Cluster, ['admin'])
 
 
+def format_part_total(part, total):
+    """
+    Pretty-print a quantity out of a given total.
+    """
+
+    total = float(total) / 1024
+    part = float(part) / 1024
+    return "%.*f / %.*f" % (
+        int(3 - log10(part)), part, int(3 - log10(total)), total)
+
 @register.simple_tag
 def node_memory(node):
-    total = float(node['mtotal'])/1024
-    free = float(node['mfree'])/1024
-    return "%.2f / %.2f" % (free, total)
+    """
+    Pretty-print a memory quantity, in GiB, with significant figures.
+    """
+
+    return format_part_total(node["mfree"], node["mtotal"])
 
 
 @register.simple_tag
 def node_disk(node):
-    total = float(node['dtotal'])/1024
-    free = float(node['dfree'])/1024
-    return "%.2f / %.2f " % (free, total)
+    """
+    Pretty-print a disk quantity, in GiB, with significant figures.
+    """
+
+    return format_part_total(node["dfree"], node["dtotal"])
+
+
+@register.filter
+def json(obj):
+    return mark_safe(json_lib.dumps(obj))
 
 
 @register.tag
@@ -149,4 +171,22 @@ class GetterNode(Node):
 
     def render(self, context):
         context[self.res_name] = context[self.item_name][self.attr_name]
-        return '' 
+        return ''
+
+# These filters were created by Corbin Simpson IN THE NAME OF AWESOME!
+# Just kidding. Created for ganeti-webmgr at Oregon State University.
+
+@register.filter
+@stringfilter
+def abbreviate_fqdn(value):
+    return value.split(".")[0]
+
+@register.filter
+@stringfilter
+def render_os(os):
+    try:
+        t, flavor = os.split("+", 1)
+        flavor = " ".join(i.capitalize() for i in flavor.split("-"))
+        return mark_safe("%s (<em>%s</em>)" % (flavor, t))
+    except ValueError:
+        return mark_safe("<em>Unknown or invalid OS</em>")

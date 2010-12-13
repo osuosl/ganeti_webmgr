@@ -16,15 +16,5 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
+OWNER_TAG = 'gwm:owner:'
 
-from django.contrib import admin
-from models import *
-
-class LogItemAdmin(admin.ModelAdmin):
-    inlines = [admin.TabularInline]
-
-class LogActionAdmin(admin.ModelAdmin):
-    inlines = [admin.TabularInline]
-
-admin.site.register(LogItem, LogItemAdmin)
-admin.site.register(LogAction, LogActionAdmin)

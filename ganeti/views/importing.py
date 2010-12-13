@@ -19,11 +19,11 @@
 
 from django import forms
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
 from ganeti.models import VirtualMachine, Cluster, ClusterUser
+from ganeti.views import render_403
 
 
 class VirtualMachineForm(forms.Form):
@@ -62,7 +62,7 @@ def orphans(request):
     else:
         clusters = user.filter_on_perms(Cluster, ['admin'])
         if not clusters:
-            return HttpResponseForbidden()
+            return render_403(request, 'You do not have sufficient privileges')
     
     vms = VirtualMachine.objects.filter(owner=None, cluster__in=clusters) \
                                             .values_list('id','hostname')
@@ -111,7 +111,7 @@ def missing_ganeti(request):
     else:
         clusters = user.filter_on_perms(Cluster, ['admin'])
         if not clusters:
-            return HttpResponseForbidden()
+            return render_403(request, 'You do not have sufficient privileges')
     
     vms = []
     for cluster in clusters:
@@ -152,7 +152,7 @@ def missing_db(request):
     else:
         clusters = user.filter_on_perms(Cluster, ['admin'])
         if not clusters:
-            return HttpResponseForbidden()
+            return render_403(request, 'You do not have sufficient privileges')
     
     vms = []
     for cluster in clusters:

@@ -21,8 +21,8 @@ from django.conf import settings
 from django.conf.urls.defaults import *
 
 # Uncomment the next two lines to enable the admin:
-from django.contrib import admin
-admin.autodiscover()
+#from django.contrib import admin
+#admin.autodiscover()
 
 urlpatterns = patterns('',
     # Example:
@@ -54,6 +54,7 @@ urlpatterns = patterns('',
     (r'^500/$', 'django.views.generic.simple.direct_to_template', {'template':"500.html"})
 )
 
+handler500 = 'ganeti.views.view_500'
 
 
 #The following is used to serve up local media files like images
@@ -63,4 +64,3 @@ if settings.DEBUG:
         (r'^media/(?P<path>.*)', 'django.views.static.serve',\
          {'document_root':  settings.MEDIA_ROOT}),
     )
-    

@@ -7,25 +7,27 @@
 <table id="nodes" class="sorted">
 <thead>
     <tr>
+        <th class="status"></th>
         <th>Name</th>
         <th>Free Memory (GB)</th>
         <th>Free Disk (GB)</th>
         <th>Instances (P/S)</th>
-        <th>Status</th>
     </tr>
 </thead>
 <tbody>
     {% for node in nodes %}
         <tr>
-            <td>{{ node.name }}</td>
+            <td class="status">
+            {% if node.offline %}
+                <div class="icon_stopped" title="Offline"></div>
+            {% else %}
+                <div class="icon_running" title="Online"></div>
+            {% endif %}
+            </td>
+            <td>{{ node.name|abbreviate_fqdn }}</td>
             <td class="ram">{% node_memory node %}</td>
             <td class="disk">{% node_disk node %}</td>
             <td>{{ node.pinst_cnt }} / {{ node.sinst_cnt }}</td>
-            {% if node.offline %}
-                <td class="status-down">{{ node.status|render_node_status }}</td>
-            {% else %}
-                <td class="status-running">{{ node.status|render_node_status }}</td>
-            {% endif %}
         </tr>
     {% endfor %}
 </tbody>

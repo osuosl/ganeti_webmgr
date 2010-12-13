@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-
+from collections import defaultdict
 import json
 import socket
 import urllib2
@@ -28,16 +28,21 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, \
-    HttpResponseForbidden, HttpResponseNotAllowed
+    HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
 from object_permissions.views.permissions import view_users, view_permissions
 
+from logs.models import LogItem
+log_action = LogItem.objects.log_action
+
 from util.client import GanetiApiError
-from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine
+from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine, Job
+from ganeti.views import render_403
 
 empty_field = (u'', u'---------')
+
 
 @login_required
 def delete(request, cluster_slug, instance):
@@ -56,36 +61,42 @@ def delete(request, cluster_slug, instance):
         user.has_perm("admin", instance) or
         user.has_perm("admin", instance.cluster)
         ):
-        return HttpResponseForbidden()
+        return render_403(request, 'You do not have sufficient privileges')
 
-    # Fancy HTTP methods. Yay?
-    if request.method != 'DELETE':
-        return HttpResponseNotAllowed(["DELETE"])
+    if request.method == 'GET':
+        return render_to_response("virtual_machine/delete.html",
+            {'vm': instance},
+            context_instance=RequestContext(request),
+        )
+      
+    elif request.method == 'DELETE':
+        # Delete instance
+        jobid = instance.rapi.DeleteInstance(instance.hostname)
+        sleep(2)
+        jobstatus = instance.rapi.GetJobStatus(jobid)
+        
+        instance.delete()
+        
+        return HttpResponse('1', mimetype='application/json')
+    
+    return HttpResponseNotAllowed(["GET","DELETE"])
 
-    # Kill it with fire!
-    jobid = instance.rapi.DeleteInstance(instance.hostname)
-    sleep(2)
-    jobstatus = instance.rapi.GetJobStatus(jobid)
-
-    instance.delete()
-
-    return HttpResponse('1', mimetype='application/json')
 
 @login_required
 def vnc(request, cluster_slug, instance):
     instance = get_object_or_404(VirtualMachine, hostname=instance)
-    
+
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', instance) or \
         user.has_perm('admin', instance.cluster)):
-        return HttpResponseForbidden('You do not have permission to vnc on this')
-    
+        return render_403(request, 'You do not have permission to vnc on this')
+
     #port, password = instance.setup_vnc_forwarding()
-    
+
     host = instance.info['pnode']
     port = instance.info['network_port']
     password = ''
-    
+
     return render_to_response("virtual_machine/vnc.html",
                               {'instance': instance,
                                'host': host,
@@ -100,20 +111,23 @@ def shutdown(request, cluster_slug, instance):
     vm = get_object_or_404(VirtualMachine, hostname=instance, \
                            cluster__slug=cluster_slug)
     user = request.user
-    
-    if not (user.is_superuser or user.has_perm('admin', vm) or \
+
+    if not (user.is_superuser or user.has_any_perms(vm, ['admin','power'], True) or \
         user.has_perm('admin', vm.cluster)):
-        return HttpResponseForbidden('You do not have permission to shut down this virtual machine')
-    
+        return render_403(request, 'You do not have permission to shut down this virtual machine')
+
     if request.method == 'POST':
         try:
-            vm.shutdown()
-            msg = [1, 'Virtual machine stopping.']
+            job = vm.shutdown()
+            job.load_info()
+            msg = job.info
+            
+            # log information about stopping the machine
+            log_action(user, vm, "stopped")
         except GanetiApiError, e:
             msg = [0, str(e)]
         return HttpResponse(json.dumps(msg), mimetype='application/json')
-    return HttpResponseNotAllowed(['GET', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', \
-                                  'TRACE'])
+    return HttpResponseNotAllowed(['POST'])
 
 
 @login_required
@@ -121,19 +135,22 @@ def startup(request, cluster_slug, instance):
     vm = get_object_or_404(VirtualMachine, hostname=instance, \
                            cluster__slug=cluster_slug)
     user = request.user
-    if not (user.is_superuser or user.has_perm('admin', vm) or \
+    if not (user.is_superuser or user.has_any_perms(vm, ['admin','power'], True) or \
         user.has_perm('admin', vm.cluster)):
-            return HttpResponseForbidden('You do not have permission to start up this virtual machine')
-    
+            return render_403(request, 'You do not have permission to start up this virtual machine')
+
     if request.method == 'POST':
         try:
-            vm.startup()
-            msg = [1, 'Virtual machine starting.']
+            job = vm.startup()
+            job.load_info()
+            msg = job.info
+            
+            # log information about starting up the machine
+            log_action(user, vm, "started")
         except GanetiApiError, e:
             msg = [0, str(e)]
         return HttpResponse(json.dumps(msg), mimetype='application/json')
-    return HttpResponseNotAllowed(['GET', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', \
-                                  'TRACE'])
+    return HttpResponseNotAllowed(['POST'])
 
 
 @login_required
@@ -141,19 +158,22 @@ def reboot(request, cluster_slug, instance):
     vm = get_object_or_404(VirtualMachine, hostname=instance, \
                            cluster__slug=cluster_slug)
     user = request.user
-    if not (user.is_superuser or user.has_perm('admin', vm) or \
+    if not (user.is_superuser or user.has_any_perms(vm, ['admin','power'], True) or \
         user.has_perm('admin', vm.cluster)):
-            return HttpResponseForbidden('You do not have permission to reboot this virtual machine')
-    
+            return render_403(request, 'You do not have permission to reboot this virtual machine')
+
     if request.method == 'POST':
         try:
-            vm.reboot()
-            msg = [1, 'Virtual machine rebooting.']
+            job = vm.reboot()
+            job.load_info()
+            msg = job.info
+            
+            # log information about restarting the machine
+            log_action(user, vm, "restarted")
         except GanetiApiError, e:
             msg = [0, str(e)]
         return HttpResponse(json.dumps(msg), mimetype='application/json')
-    return HttpResponseNotAllowed(['GET', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', \
-                                  'TRACE'])
+    return HttpResponseNotAllowed(['POST'])
 
 
 @login_required
@@ -163,7 +183,7 @@ def list_(request):
         vms = VirtualMachine.objects.all()
         can_create = True
     else:
-        vms = user.filter_on_perms(VirtualMachine, ['admin'])
+        vms = user.filter_on_perms(VirtualMachine, ['admin', 'power','remove'])
         can_create = user.perms_on_any(Cluster, ['create_vm'])
     
     return render_to_response('virtual_machine/list.html', {
@@ -178,12 +198,19 @@ def list_(request):
 def detail(request, cluster_slug, instance):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
-    
+
     user = request.user
     admin = user.is_superuser or user.has_perm('admin', vm) \
         or user.has_perm('admin', cluster)
-    if not admin:
-        return HttpResponseForbidden('You do not have permission to view this cluster\'s details')
+    if admin:
+        remove = True
+        power = True
+    else:
+        remove = user.has_perm('remove', vm)
+        power = user.has_perm('power', vm)
+    
+    if not (admin or power or remove):
+        return render_403(request, 'You do not have permission to view this cluster\'s details')
     #TODO Update to use part of the NewVirtualMachineForm in 0.5 release
     """
     if request.method == 'POST':
@@ -194,14 +221,14 @@ def detail(request, cluster_slug, instance):
                 data['cdrom_image_path'] = 'none'
             elif data['cdrom_image_path'] != vm.hvparams['cdrom_image_path']:
                 # This should be an http URL
-                if not (data['cdrom_image_path'].startswith('http://') or 
+                if not (data['cdrom_image_path'].startswith('http://') or
                         data['cdrom_image_path'] == 'none'):
                     # Remove this, we don't want them to be able to read local files
                     del data['cdrom_image_path']
             vm.set_params(**data)
             sleep(1)
-            return HttpResponseRedirect(request.path) 
-            
+            return HttpResponseRedirect(request.path)
+
     else:
         if vm.info:
             if vm.info['hvparams']['cdrom_image_path']:
@@ -216,7 +243,9 @@ def detail(request, cluster_slug, instance):
         'cluster': cluster,
         'instance': vm,
         #'configform': form,
-        'admin':admin
+        'admin':admin,
+        'remove':remove,
+        'power':power
         },
         context_instance=RequestContext(request),
     )
@@ -229,12 +258,12 @@ def users(request, cluster_slug, instance):
     """
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     vm = get_object_or_404(VirtualMachine, hostname=instance)
-    
+
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', vm) or \
         user.has_perm('admin', cluster)):
-        return HttpResponseForbidden("You do not have sufficient privileges")
-    
+        return render_403(request, "You do not have sufficient privileges")
+
     url = reverse('vm-permissions', args=[cluster.slug, vm.hostname])
     return view_users(request, vm, url)
 
@@ -246,11 +275,11 @@ def permissions(request, cluster_slug, instance, user_id=None, group_id=None):
     """
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     vm = get_object_or_404(VirtualMachine, hostname=instance)
-    
+
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', vm) or \
         user.has_perm('admin', cluster)):
-        return HttpResponseForbidden("You do not have sufficient privileges")
+        return render_403(request, "You do not have sufficient privileges")
 
     url = reverse('vm-permissions', args=[cluster.slug, vm.hostname])
     return view_permissions(request, vm, url, user_id, group_id)
@@ -265,9 +294,9 @@ def create(request, cluster_slug=None):
     """
     user = request.user
     if not(user.is_superuser or user.perms_on_any(Cluster, ['admin', 'create_vm'])):
-        return HttpResponseForbidden('You do not have permission to create virtual \
+        return render_403(request, 'You do not have permission to create virtual \
                    machines')
-    
+
     if cluster_slug is not None:
         cluster = get_object_or_404(Cluster, slug=cluster_slug)
     else:
@@ -307,19 +336,19 @@ def create(request, cluster_slug=None):
             serialconsole = data['serialconsole']
             bootorder = data['bootorder']
             imagepath = data['imagepath']
-            
+
             # If iallocator was not checked do not pass in the iallocator
             #  name. If iallocator was checked don't pass snode,pnode.
             if not iallocator:
                 iallocator_hostname = None
                 pnode = data['pnode']
-            
+
             # If drbd is being used assign the secondary node
             if disk_template == 'drbd' and pnode is not None:
                 snode = data['snode']
-            
+
             try:
-                jobid = cluster.rapi.CreateInstance('create', hostname,
+                job_id = cluster.rapi.CreateInstance('create', hostname,
                         disk_template,
                         [{"size": disk_size, }],[{'mode':nicmode, 'link':niclink, }],
                         memory=ram, os=os, vcpus=vcpus,
@@ -333,31 +362,37 @@ def create(request, cluster_slug=None):
                             'nic_type':nictype, \
                             'disk_type':disktype,\
                             'cdrom_image_path':imagepath})
-                
+
                 # Wait for job to process as the error will not happen
                 #  right away
                 sleep(2)
-                jobstatus = cluster.rapi.GetJobStatus(jobid)
-                
+                jobstatus = cluster.rapi.GetJobStatus(job_id)
+
                 # raise an exception if there was an error in the job
                 if jobstatus["status"] == 'error':
                     raise GanetiApiError(jobstatus["opresult"])
-                    
+
                 vm = VirtualMachine(cluster=cluster, owner=owner,
                                     hostname=hostname, disk_size=disk_size,
                                     ram=ram, virtual_cpus=vcpus)
+                vm.ignore_cache = True
                 vm.save()
-                
+                job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
+                VirtualMachine.objects.filter(id=vm.id).update(last_job=job)
+
+                # log information about creating the machine
+                log_action(user, vm, "created")
+
                 # grant admin permissions to the owner
                 data['grantee'].grant('admin', vm)
-                
+
                 return HttpResponseRedirect( \
                 reverse('instance-detail', args=[cluster.slug, vm.hostname]))
-            
+
             except GanetiApiError, e:
                 msg = 'Error creating virtual machine on this cluster: %s' % e
                 form._errors["cluster"] = form.error_class([msg])
-    
+
     elif request.method == 'GET':
         form = NewVirtualMachineForm(user, cluster)
 
@@ -375,20 +410,21 @@ def cluster_choices(request):
     the list of clusters a user has access to, or the list of clusters one of
     its groups has.
     """
-    group_id = request.GET.get('group_id', None)
-    
-    GET = request.GET
+    clusteruser_id = request.GET.get('clusteruser_id', None)
+
     user = request.user
     if user.is_superuser:
         q = Cluster.objects.all()
-    elif 'group_id' in GET:
-        group = get_object_or_404(Group, id=GET['group_id'])
-        if not group.user_set.filter(id=request.user.id).exists():
-            return HttpResponseForbidden('not a member of this group')
-        q = group.filter_on_perms(Cluster, ['admin','create_vm'])
+    elif clusteruser_id is not None:
+        clusteruser = get_object_or_404(ClusterUser, id=clusteruser_id).cast()
+        if isinstance(clusteruser, Organization):
+            target = clusteruser.group
+        else:
+            target = clusteruser.user
+        q = target.filter_on_perms(Cluster, ["admin", "create_vm"])
     else:
         q = user.filter_on_perms(Cluster, ['admin','create_vm'], groups=False)
-    
+
     clusters = list(q.values_list('id', 'hostname'))
     content = json.dumps(clusters)
     return HttpResponse(content, mimetype='application/json')
@@ -402,13 +438,13 @@ def cluster_options(request):
     """
     cluster_id = request.GET.get('cluster_id', None)
     cluster = get_object_or_404(Cluster, id__exact=cluster_id)
-    
+
     user = request.user
     if not (user.is_superuser or user.has_perm('create_vm', cluster) or \
             user.has_perm('admin', cluster)):
-        return HttpResponseForbidden('You do not have permissions to view \
+        return render_403(request, 'You do not have permissions to view \
         this cluster')
-    
+
     oslist = cluster_os_list(cluster)
     content = json.dumps({'nodes':cluster.nodes(), \
                           'os':oslist})
@@ -417,16 +453,47 @@ def cluster_options(request):
 
 def cluster_os_list(cluster):
     """
-    A list of avaiable operating systems
-    on the given cluster.
+    Create a detailed manifest of available operating systems on the cluster.
     """
-    oses = cluster.rapi.GetOperatingSystems()
-    # Given 'image+os-name'
-    #  return formatted as 'Os Name'
-    return [(os, " ".join([x.capitalize() for x in \
-                os.replace('image+', '').split('-')])) \
-                for os in oses]
 
+    return os_prettify(cluster.rapi.GetOperatingSystems())
+
+def os_prettify(oses):
+    """
+    Pretty-print and format a list of operating systems.
+
+    The actual format is a list of tuples of tuples. The first entry in the
+    outer tuple is a label, and then each successive entry is a tuple of the
+    actual Ganeti OS name, and a prettified display name. For example:
+
+    [
+        ("Image",
+            ("image+obonto-hungry-hydralisk", "Obonto Hungry Hydralisk"),
+            ("image+fodoro-core", "Fodoro Core"),
+        ),
+        ("Dobootstrop",
+            ("dobootstrop+dobion-lotso", "Dobion Lotso"),
+        ),
+    ]
+    """
+
+    # In order to convince Django to make optgroups, we need to nest our
+    # iterables two-deep. (("header", ("value, "label"), ("value", "label")))
+    # http://docs.djangoproject.com/en/dev/ref/models/fields/#choices
+    # We do this by making a dict of lists.
+    d = defaultdict(list)
+
+    for name in oses:
+        # Split into type and flavor.
+        t, flavor = name.split("+", 1)
+        # Prettify flavors. "this-boring-string" becomes "This Boring String"
+        flavor = " ".join(word.capitalize() for word in flavor.split("-"))
+        d[t.capitalize()].append((name, flavor))
+
+    l = d.items()
+    l.sort()
+
+    return l
 
 @login_required
 def cluster_defaults(request):
@@ -436,12 +503,12 @@ def cluster_defaults(request):
     """
     cluster_id = request.GET.get('cluster_id', None)
     cluster = get_object_or_404(Cluster, id__exact=cluster_id)
-    
+
     user = request.user
     if not (user.is_superuser or user.has_perm('create_vm', cluster) or \
             user.has_perm('admin', cluster)):
-        return HttpResponseForbidden('You do not have permission to view the default cluster options')
-    
+        return render_403(request, 'You do not have permission to view the default cluster options')
+
     content = json.dumps(cluster_default_info(cluster))
     return HttpResponse(content, mimetype='application/json')
 
@@ -459,12 +526,12 @@ def cluster_default_info(cluster):
     beparams = info['beparams']['default']
     hv = info['default_hypervisor']
     hvparams = info['hvparams'][hv]
-    
+
     try:
         iallocator_info = info['default_iallocator']
     except:
         iallocator_info = None
-    
+
     return {
         'iallocator': iallocator_info,
         'hypervisors':info['enabled_hypervisors'],
@@ -487,7 +554,7 @@ class NewVirtualMachineForm(forms.Form):
     Virtual Machine Creation / Edit form
     """
     FQDN_RE = r'(?=^.{1,254}$)(^(?:(?!\d+\.|-)[a-zA-Z0-9_\-]{1,63}(?<!-)\.?)+(?:[a-zA-Z]{2,})$)'
-    
+
     templates = [
         (u'', u'---------'),
         (u'plain', u'plain'),
@@ -526,9 +593,9 @@ class NewVirtualMachineForm(forms.Form):
         ('disk', 'Hard Disk'),
         ('cdrom', 'CD-ROM')
     ]
-    
+
     owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label='Owner')
-    cluster = forms.ModelChoiceField(queryset=Cluster.objects.all(), label='Cluster')
+    cluster = forms.ModelChoiceField(queryset=Cluster.objects.none(), label='Cluster')
     hostname = forms.RegexField(label='Instance Name', regex=FQDN_RE,
                             error_messages={
                                 'invalid': 'Instance name must be resolvable',
@@ -559,11 +626,11 @@ class NewVirtualMachineForm(forms.Form):
                                       required=False)
     bootorder = forms.ChoiceField(label='Boot Device', choices=bootchoices)
     imagepath = forms.CharField(label='CD-ROM Image Path', required=False)
-    
+
     def __init__(self, user, cluster=None, initial=None, *args, **kwargs):
         self.user = user
         super(NewVirtualMachineForm, self).__init__(initial, *args, **kwargs)
-        
+
         if initial:
             if 'cluster' in initial and initial['cluster']:
                 try:
@@ -571,7 +638,7 @@ class NewVirtualMachineForm(forms.Form):
                 except Cluster.DoesNotExist:
                     # defer to clean function to return errors
                     pass
-        
+
         if cluster is not None:
             # set choices based on selected cluster if given
             oslist = cluster_os_list(cluster)
@@ -582,7 +649,7 @@ class NewVirtualMachineForm(forms.Form):
             self.fields['pnode'].choices = nodes
             self.fields['snode'].choices = nodes
             self.fields['os'].choices = oslist
-            
+
             defaults = cluster_default_info(cluster)
             if defaults['iallocator'] != '' :
                 self.fields['iallocator'].initial = True
@@ -598,6 +665,7 @@ class NewVirtualMachineForm(forms.Form):
             self.fields['serialconsole'].initial = defaults['serialconsole']
             self.fields['niclink'].initial = defaults['niclink']
         
+
         # set cluster choices based on the given owner
         if initial and 'owner' in initial and initial['owner']:
             try:
@@ -606,27 +674,37 @@ class NewVirtualMachineForm(forms.Form):
                 self.owner = None
         else:
             self.owner = None
-        
-        # set choices based on user permissions and group membership
+
+        # Set up owner and cluster choices.
         if user.is_superuser:
+            # Superusers may do whatever they like.
             self.fields['owner'].queryset = ClusterUser.objects.all()
             self.fields['cluster'].queryset = Cluster.objects.all()
         else:
-            choices = [(u'', u'---------')]
-            choices += list(user.groups.values_list('id','name'))
+            # Fill out owner choices. Remember, the list of owners is a list
+            # of tuple(ClusterUser.id, label). If you put ids from other
+            # Models into this, no magical correction will be applied and you
+            # will assign permissions to the wrong owner; see #2007.
+            owners = [(u'', u'---------')]
+            for group in user.groups.all():
+                owners.append((group.organization.id, group.name))
             if user.perms_on_any(Cluster, ['admin','create_vm'], False):
                 profile = user.get_profile()
-                choices.append((profile.id, profile.name))
-            self.fields['owner'].choices = choices
-            
-            # set cluster choices based on the given owner
+                owners.append((profile.id, profile.name))
+            self.fields['owner'].choices = owners
+
+            # Set cluster choices.  If an owner has been selected then filter
+            # by the owner.  Otherwise show everything the user has access to
+            # through themselves or any groups they are a member of
             if self.owner:
                 q = self.owner.filter_on_perms(Cluster, ['admin','create_vm'])
-                self.fields['cluster'].queryset = q
-    
+            else:
+                q = user.filter_on_perms(Cluster, ['admin','create_vm'])
+            self.fields['cluster'].queryset = q
+
     def clean(self):
         data = self.cleaned_data
-        
+
         owner = self.owner
         if owner:
             if isinstance(owner, (Organization,)):
@@ -634,27 +712,27 @@ class NewVirtualMachineForm(forms.Form):
             else:
                 grantee = owner.user
             data['grantee'] = grantee
-        
+
         # superusers bypass all permission and quota checks
         if not self.user.is_superuser and owner:
             msg = None
-            
+
             if isinstance(owner, (Organization,)):
                 # check user membership in group if group
                 if not grantee.user_set.filter(id=self.user.id).exists():
                     msg = u"User is not a member of the specified group."
-                
+
             else:
                 if not owner.user_id == self.user.id:
                     msg = "You are not allowed to act on behalf of this user."
-            
+
             # check permissions on cluster
             if 'cluster' in data:
                 cluster = data['cluster']
                 if not (owner.has_perm('create_vm', cluster) \
                         or owner.has_perm('admin', cluster)):
                     msg = u"Owner does not have permissions for this cluster."
-            
+
                 # check quota
                 quota = cluster.get_quota(owner)
                 if quota.values():
@@ -665,38 +743,38 @@ class NewVirtualMachineForm(forms.Form):
                             del data['ram']
                             q_msg = u"Owner does not have enough ram remaining on this cluster."
                             self._errors["ram"] = self.error_class([q_msg])
-                    
+
                     if used['disk']:
                         disk = used['disk'] + data.get('disk_size', 0)
                         if disk > quota['disk']:
                            del data['disk_size']
                            q_msg = u"Owner does not have enough diskspace remaining on this cluster."
                            self._errors["disk_size"] = self.error_class([q_msg])
-                    
+
                     if used['virtual_cpus']:
                         vcpus = used['virtual_cpus'] + data.get('vcpus', 0)
                         if vcpus > quota['virtual_cpus']:
                            del data['vcpus']
                            q_msg = u"Owner does not have enough virtual cpus remaining on this cluster."
                            self._errors["vcpus"] = self.error_class([q_msg])
-            
+
             if msg:
                 self._errors["owner"] = self.error_class([msg])
                 del data['owner']
-        
+
         pnode = data.get("pnode", '')
         snode = data.get("snode", '')
         iallocator = data.get('iallocator', False)
         iallocator_hostname = data.get('iallocator_hostname', '')
         disk_template = data.get("disk_template")
-        
+
         # Need to have pnode != snode
         if disk_template == "drbd" and not iallocator:
             if pnode == snode and (pnode != '' or snode != ''):
-                # We know these are not in self._errors now 
+                # We know these are not in self._errors now
                 msg = u"Primary and Secondary Nodes must not match."
                 self._errors["pnode"] = self.error_class([msg])
-                
+
                 # These fields are no longer valid. Remove them from the
                 # cleaned data.
                 del data["pnode"]
@@ -704,7 +782,7 @@ class NewVirtualMachineForm(forms.Form):
         else:
             if "snode" in self._errors:
                 del self._errors["snode"]
-        
+
         # If boot_order = CD-ROM make sure imagepath is set as well.
         boot_order = data.get('bootorder', '')
         image_path = data.get('imagepath', '')
@@ -712,10 +790,10 @@ class NewVirtualMachineForm(forms.Form):
             if image_path == '':
                 msg = u'Image path required if boot device is CD-ROM.'
                 self._errors["imagepath"] = self.error_class([msg])
-                
+
                 del data["imagepath"]
                 del data["bootorder"]
-        
+
         if iallocator:
             # If iallocator is checked,
             #  don't display error messages for nodes
@@ -728,7 +806,7 @@ class NewVirtualMachineForm(forms.Form):
                 msg = u'Automatic Allocation was selected, but there is no \
                       IAllocator available.'
                 self._errors['iallocator'] = self.error_class([msg])
-        
+
         # Always return the full collection of cleaned data.
         return data
 
@@ -740,7 +818,7 @@ class InstanceConfigForm(forms.Form):
                                           ('e1000', 'Intel PRO/1000'),
                                           ('ne2k_pci', 'NE2000 PCI')))
 
-    disk_type = forms.ChoiceField(label="Hard disk type", 
+    disk_type = forms.ChoiceField(label="Hard disk type",
                                   choices=(('paravirtual', 'Paravirtualized'),
                                            ('scsi', 'SCSI'),
                                            ('ide', 'IDE')))
@@ -749,8 +827,8 @@ class InstanceConfigForm(forms.Form):
                                    choices=(('disk', 'Hard disk'),
                                             ('cdrom', 'CDROM')))
 
-    cdrom_type = forms.ChoiceField(label="CD-ROM Drive", 
-                                   choices=(('none', 'Disabled'), 
+    cdrom_type = forms.ChoiceField(label="CD-ROM Drive",
+                                   choices=(('none', 'Disabled'),
                                             ('iso', 'ISO Image over HTTP (see below)')),
                                    widget=forms.widgets.RadioSelect())
 
@@ -762,7 +840,7 @@ class InstanceConfigForm(forms.Form):
         if data:
             if not (data == 'none' or data.startswith('http://')):
                 raise forms.ValidationError('Only HTTP URLs are allowed')
-        
+
             elif data != 'none':
                 # Check if the image is there
                 oldtimeout = socket.getdefaulttimeout()

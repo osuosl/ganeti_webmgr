@@ -1,25 +1,14 @@
 {% extends "base.html" %}
 
+{% load webmgr_tags %}
+
 {% block title %}Clusters{% endblock %}
 
 {% block head %}
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
 <script type="text/javascript">
     $(document).ready(function() {
-        $("a.delete").live("click", function(){
-            name = $(this).parent().parent().children('.name').children('a').html();
-            if (confirm("Remove Cluster: " + name)) {
-                parent = this.parentNode.parentNode;
-                $.delete_(this.href, function(){
-                    $(parent).remove();
-                    /* Show "No Clusters" if deletion makes list empty */
-                    if($('#clusters tr').length <= 1) {
-                        $('#clusters tr:last').after('<tr class="none"><td colspan="100%">No Clusters</td></tr>');
-                    }
-                });
-            }
-            return false;
-        });
+        
     });
 </script>
 {% endblock %}
@@ -28,7 +17,7 @@
 <h1>Clusters</h1>
 
 {% if user.is_superuser %}
-<div class="add"><a href="{% url cluster-create %}">Add Cluster</a></div>
+<a class="button add" href="{% url cluster-create %}">Add Cluster</a>
 {% endif %}
 
 <table id="clusters">
@@ -40,24 +29,21 @@
         <!-- This should be changed to instance-list at a later date -->
         {% endcomment %}
         <th>VMs</th>
-        <th></th>
-        <th></th>
     </tr>
 {% for cluster in cluster_list %}
     {% with cluster.info as info %}
     {% with cluster.nodes as nodes %}
-    {% with cluster.virtual_machines as vms %}
         <tr id="cluster_{{cluster.id}}">
             <td class="name">
                 {% if cluster.error %}<div class="icon_error" title="Ganeti API Error: {{cluster.error}}"></div>{% endif %}
-                <a href="{% url cluster-detail cluster.slug %}">{{ cluster.hostname }}</a></td>
+                <a href="{% url cluster-detail cluster.slug %}">
+                    {{ cluster.hostname|abbreviate_fqdn }}
+                </a>
+            </td>
             <td>{{ cluster.slug }}</td>
             <td>{{ nodes|length }}</td>
-            <td>{{ vms.count }}</td>
-            <td><a href="{% url cluster-edit cluster.slug %}"><div class="edit"></div></a></td>
-            <td><a href="{% url cluster-edit cluster.slug %}" class="delete"><div class="delete"></div></a></td>
+            <td>{{ cluster.virtual_machines.count }}</td>
         </tr>
-    {% endwith %}
     {% endwith %}
     {% endwith %}
 {% empty %}

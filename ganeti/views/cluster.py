@@ -26,8 +26,7 @@ from django import forms
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, HttpResponseNotFound, \
-    HttpResponseRedirect, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.template.defaultfilters import slugify
@@ -36,6 +35,7 @@ from object_permissions import get_model_perms, get_user_perms, grant, revoke, \
     get_users, get_groups, get_group_perms
 from object_permissions.views.permissions import view_users, view_permissions
 from ganeti.models import *
+from ganeti.views import render_403, render_404
 from util.portforwarder import forward_port
 
 # Regex for a resolvable hostname
@@ -51,7 +51,7 @@ def detail(request, cluster_slug):
     user = request.user
     admin = True if user.is_superuser else user.has_perm('admin', cluster)
     if not admin:
-        return HttpResponseForbidden("You do not have sufficient privileges")
+        return render_403(request, "You do not have sufficient privileges")
     
     return render_to_response("cluster/detail.html", {
         'cluster': cluster,
@@ -70,7 +70,7 @@ def nodes(request, cluster_slug):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
-        return HttpResponseForbidden("You do not have sufficient privileges")
+        return render_403(request, "You do not have sufficient privileges")
     
     return render_to_response("node/table.html", \
                         {'cluster': cluster, 'nodes':cluster.nodes(True)}, \
@@ -88,7 +88,7 @@ def virtual_machines(request, cluster_slug):
     user = request.user
     admin = True if user.is_superuser else user.has_perm('admin', cluster)
     if not admin:
-        return HttpResponseForbidden("You do not have sufficient privileges")
+        return render_403(request, "You do not have sufficient privileges")
     
     if admin:
         vms = cluster.virtual_machines.all()
@@ -112,7 +112,7 @@ def edit(request, cluster_slug=None):
     
     user = request.user
     if not (user.is_superuser or (cluster and user.has_perm('admin', cluster))):
-        return HttpResponseForbidden()
+        return render_403(request, "You do not have sufficient privileges")
     
     if request.method == 'POST':
         form = EditClusterForm(request.POST, instance=cluster)
@@ -166,7 +166,7 @@ def users(request, cluster_slug):
     
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
-        return HttpResponseForbidden("You do not have sufficient privileges")
+        return render_403(request, "You do not have sufficient privileges")
     
     url = reverse('cluster-permissions', args=[cluster.slug])
     return view_users(request, cluster, url, template='cluster/users.html')
@@ -180,7 +180,7 @@ def permissions(request, cluster_slug, user_id=None, group_id=None):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
-        return HttpResponseForbidden("You do not have sufficient privileges")
+        return render_403(request, "You do not have sufficient privileges")
 
     url = reverse('cluster-permissions', args=[cluster.slug])
     return view_permissions(request, cluster, url, user_id, group_id,
@@ -213,7 +213,7 @@ def quota(request, cluster_slug, user_id):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
-        return HttpResponseForbidden("You do not have sufficient privileges")
+        return render_403(request, "You do not have sufficient privileges")
     
     if request.method == 'POST':
         form = QuotaForm(request.POST)
@@ -255,7 +255,7 @@ def quota(request, cluster_slug, user_id):
         if quota:
             data.update(quota)
     else:
-        return HttpResponseNotFound('User was not found')
+        return render_404(request, 'User was not found')
     
     form = QuotaForm(data)
     return render_to_response("cluster/quota.html", \
