@@ -405,17 +405,18 @@ def cluster_choices(request):
     the list of clusters a user has access to, or the list of clusters one of
     its groups has.
     """
-    group_id = request.GET.get('group_id', None)
+    clusteruser_id = request.GET.get('clusteruser_id', None)
 
-    GET = request.GET
     user = request.user
     if user.is_superuser:
         q = Cluster.objects.all()
-    elif 'group_id' in GET:
-        group = get_object_or_404(Group, id=GET['group_id'])
-        if not group.user_set.filter(id=request.user.id).exists():
-            return render_403(request, 'not a member of this group')
-        q = group.filter_on_perms(Cluster, ['admin','create_vm'])
+    elif clusteruser_id is not None:
+        clusteruser = get_object_or_404(ClusterUser, id=clusteruser_id).cast()
+        if isinstance(clusteruser, Organization):
+            target = clusteruser.group
+        else:
+            target = clusteruser.user
+        q = target.filter_on_perms(Cluster, ["admin", "create_vm"])
     else:
         q = user.filter_on_perms(Cluster, ['admin','create_vm'], groups=False)
 

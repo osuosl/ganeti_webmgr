@@ -67,7 +67,7 @@
             id = $(this).children("option:selected").val();
             if( id != '' ) {
                 $.getJSON(url,
-                    {'group_id':id}, function(data) {
+                    {'clusteruser_id':id}, function(data) {
                         cluster.children().not(':first').remove();
                         $.each(data, function(i, item) {
                                 child = $("<option> </option>");

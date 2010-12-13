@@ -890,42 +890,37 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertTemplateUsed(response, 'registration/login.html')
         
         self.assert_(c.login(username=user.username, password='secret'))
-        
-        # invalid group_id
-        response = c.get(url, {'group_id':-1})
+
+        # Invalid ClusterUser
+        response = c.get(url, {'clusteruser_id':-1})
         self.assertEqual(404, response.status_code)
-        
-        # group user is not a member of
-        response = c.get(url, {'group_id': group1.id})
-        self.assertEqual(403, response.status_code)
-        
-        
-        # create_vm permission (group)
+
+        # create_vm permission through a group
         group.grant('create_vm', cluster3)
-        response = c.get(url, {'group_id': group.id})
+        response = c.get(url, {'clusteruser_id': group.organization.id})
         self.assertEqual(200, response.status_code)
         clusters = json.loads(response.content)
         self.assert_([cluster3.id,'group.create_vm'] in clusters)
         self.assertEqual(1, len(clusters))
-        
-        # admin permission (group)
+
+        # admin permission through a group
         group.grant('admin', cluster4)
-        response = c.get(url, {'group_id': group.id})
+        response = c.get(url, {'clusteruser_id': group.organization.id})
         self.assertEqual(200, response.status_code)
         clusters = json.loads(response.content)
         self.assert_([cluster3.id,'group.create_vm'] in clusters)
         self.assert_([cluster4.id,'group.admin'] in clusters)
         self.assertEqual(2, len(clusters))
-        
-        # create_vm permission
+
+        # create_vm permission on the user
         user.grant('create_vm', cluster0)
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         clusters = json.loads(response.content)
         self.assert_([cluster0.id,'user.create_vm'] in clusters)
         self.assertEqual(1, len(clusters), clusters)
-        
-        # admin permission
+
+        # admin permission on the user
         user.grant('admin', cluster1)
         response = c.get(url)
         self.assertEqual(200, response.status_code)
@@ -933,8 +928,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assert_([cluster0.id,'user.create_vm'] in clusters)
         self.assert_([cluster1.id,'user.admin'] in clusters)
         self.assertEqual(2, len(clusters))
-        
-        # authorized (superuser)
+
+        # Superusers see everything
         user.is_superuser = True
         user.save()
         response = c.get(url)
