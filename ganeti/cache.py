@@ -66,12 +66,12 @@ def _update_cache():
     print '------[cache update]-------------------------------'
     for cluster in Cluster.objects.all():
         print '%s:' % cluster.hostname
+        base = cluster.virtual_machines.all()
         infos = cluster.instances(bulk=True)
         timer.tick('info fetched from ganeti     ')
-        no_updates = []
+        updated = 0
         
-        mtimes = cluster.virtual_machines.all() \
-            .values_list('hostname', 'id', 'mtime', 'status')
+        mtimes = base.values_list('hostname', 'id', 'mtime', 'status')
         d = {}
         for name, id, mtime, status in mtimes:
             d[name] = (id, mtime, status)
@@ -82,7 +82,6 @@ def _update_cache():
             try:
                 name = info['name']
                 id, mtime, status = d[name]
-                
                 if not mtime or mtime < datetime.fromtimestamp(info['mtime']) \
                 or status != info['status']:
                     #print '    Virtual Machine (updated) : %s' % name
@@ -95,10 +94,7 @@ def _update_cache():
                     data = VirtualMachine.parse_persistent_info(info)
                     VirtualMachine.objects.filter(pk=id) \
                         .update(serialized_info=cPickle.dumps(info), **data)
-                else:
-                    # no changes to this VirtualMachine
-                    #print '    Virtual Machine : %s' % name
-                    no_updates.append(id)
+                    updated += 1
                 
             except VirtualMachine.DoesNotExist:
                 # new vm
@@ -106,11 +102,17 @@ def _update_cache():
                 vm.info = info
                 vm.save() 
         
-        # batch update the cache update time for VMs that weren't modified
-        if no_updates:
-            base.filter(id__in=no_updates).update(cached=datetime.now())
+        # batch update the cache updated time for all VMs in this cluster. This
+        # will set the last updated time for both VMs that were modified and for
+        # those that weren't.  even if it wasn't modified we want the last
+        # updated time to be up to date.
+        #
+        # XXX don't bother checking to see whether this query needs to run.  It
+        # normal usage it will almost always need to
+        base.update(cached=datetime.now())
+        
         timer.tick('records or timestamps updated')
-    print '    updated: %s out of %s' % (len(infos)-len(no_updates), len(infos))
+    print '    updated: %s out of %s' % (updated, len(infos))
     timer.stop()
     
 
