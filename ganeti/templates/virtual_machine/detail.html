@@ -49,6 +49,7 @@
 <script src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
 <script type="text/javascript">
     var actions_enabled = true;
+    var checkInterval;
 
     $(document).ready(function() {
         $('#tabs').tabs({ spinner: false});
@@ -69,9 +70,7 @@
         
         {% if instance.last_job_id %}
             {# there is a running job, display it and poll for status #}
-            {# XXX convert to json and then parse, avoids potential js hacks #}
-            data = $.parseJSON('{{instance.last_job.info|json}}');
-            display_job(data);
+            get_job_status({{instance.last_job.job_id}});
             poll_job_status({{instance.last_job.job_id}});
         {% else %}
             {% if instance.error %}
@@ -91,29 +90,33 @@
         }
     }
 
+    // poll for job status, first poll is delayed by 3000ms
     function poll_job_status(job_id) {
         actions_enabled = false;
         $('#actions a').addClass('disabled');
-        
-        checkInterval = setInterval(function(){
-            $.ajax({
-                    url: "{% url cluster-detail cluster.slug %}/job/"+job_id+"/status/",
-                    success: function(data) {
-                        if (data.status == 'success'){
-                                $("#messages").empty();
+        checkInterval = setInterval(get_job_status, 3000, job_id);
+    }
+
+    // get job status
+    function get_job_status(job_id) {
+        $.ajax({
+                url: "{% url cluster-detail cluster.slug %}/job/"+job_id+"/status/",
+                success: function(data) {
+                    if (data.status == 'success'){
+                            $("#messages").empty();
+                        clearInterval(checkInterval);
+                        window.location.reload();
+                    }
+                    
+                    display_job(data);
+                    if (data.status == 'error'){
+                        if (checkInterval != undefined){
                             clearInterval(checkInterval);
-                            window.location.reload();
-                        }
-                        
-                        display_job(data);
-                        if (data.status == 'error'){
-                            clearInterval(checkInterval);
+                            checkInterval = undefined;
                         }
                     }
-            });        
-        },3000);
-        // Endof setInterval 
-        // Time set to value : 3000 (3 seconds)
+                }
+        });
     }
 
     function display_job(data) {
