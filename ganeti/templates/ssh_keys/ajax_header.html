@@ -2,29 +2,36 @@
 <script type="text/javascript">
     var id = null;
 
-    function refresh_keys() {
+    /*function refresh_keys() {
         {% if user_id %}
-        $("table#key_list").html("&nbsp;").load("{% url keys-ajax-list user_id=user_id %}");
+        $("#key_list").html("&nbsp;").load("{% url keys-ajax-list user_id=user_id %}");
         {% else %}
-        $("table#key_list").html("&nbsp;").load("{% url keys-ajax-list user_id=user.id %}");
+        $("#key_list").html("&nbsp;").load("{% url keys-ajax-list user_id=user.id %}");
         {% endif %}
-    }
+    }*/
 
-    function update(responseText, statusText, xhr, $form) {
-        if (responseText == 1) {
-            // 1 code means success
-            $("#ukeys").hide();
-            $("textarea#id_key").val("");
+    function update(responseText, statusText, xhr) {
+        // int is the value of record ID and means success
+        //$("#ukeys").hide();
+        $(".qtip").qtip("destroy");
 
-            refresh_keys();
+        // get only one table row, not the whole table
+        if (id!=null) {
+            // old record, update existing row
+            $("#tr"+id).replaceWith(responseText);
         } else {
-            // parse errors
-            errors = responseText;
-            for (key in errors) {
-                $("#errors").append("<li>"+ errors[key] +"</li>")
-            }
+            // new record, add to the end of table
+            $("#key_list").html( $("#key_list").html() + responseText);
         }
     }
+
+    function fail(xhr, statusText, exception) {
+        // parse errors
+        errors = $.parseJSON(xhr.responseText);
+        for (key in errors) {
+            $(".qtip #errors").append("<li>"+ errors[key] +"</li>");
+        }
+    } 
 
     $(document).ready(function() {
         $("a.delete").live("click", function(){
@@ -38,16 +45,52 @@
             }
             // ensures we don't save already deleted key
             $("#ukeys").hide();
-            $("textarea#id_key").val("");
+            $("#id_key").val("");
             return false;
         });
 
-        $("a#add_key").click(function(e) {
-            e.preventDefault();
-            table_new = $("#ukeys");
+        $("#add_key").live("click", function() {
+            // destroy old qtip before showing new one
+            $(".qtip").qtip("destroy");
+
+            $(this).qtip({
+                content: {
+                    url: "{% url key-ajax-get %}",
+                    title: {text:"SSH key: ", button: "close"},
+                },
+                position: {
+                    corner: {target:"bottomLeft", tooltip:"topRight"}
+                },
+                style: {name:"dark",border:{radius:5},width:340,tip:"bottomMiddle",
+                background:"#eee"},
+                show: {when: false, ready: true},
+                hide: {fixed: true, when: false},
+                api: {onShow: function(){$(".ajax_form textarea").focus()}}
+            });
+
+            id = null;
+
+            /*table_new = $("#ukeys");
+            table_new.html("&nbsp;").load("{% url key-ajax-get %}");
 
             // set action
-            $("input#id").val("");
+            $("#item_id").val("");
+
+            // toggle visibility of the table
+            if (table_new.css("display")=="none")
+                table_new.show();
+            else
+                table_new.hide();
+
+            id = null;*/
+            return false;
+        });
+        /*$("#add_key").live("click", function() {
+            table_new = $("#ukeys");
+            table_new.html("&nbsp;").load("{% url key-ajax-get %}");
+
+            // set action
+            $("#item_id").val("");
 
             // toggle visibility of the table
             if (table_new.css("display")=="none")
@@ -56,37 +99,61 @@
                 table_new.hide();
 
             id = null;
+            return false;
         });
 
-        $("input#new_key_cancel").click(function(e) {
-            e.preventDefault();
+        $(".ajax_form .cancel").live("click", function(e) {
             $("#ukeys").hide();
-            $("textarea#id_key").val("");
+            $("#id_key").val("");
 
+            id = null;
             refresh_keys();
-        });
+            return false;
+        });*/
 
-        $("a.edit").live("click", function(){
+        $(".edit").live("click", function(){
             id = $(this).parents("tr").children("[name=\"id\"]").html();
 
-            // set action
-            $("input#id").val(id);
+            // destroy old qtip before showing new one
+            $(".qtip").qtip("destroy");
 
+            $(this).qtip({
+                content: {
+                    url: "{% url key-ajax-get %}"+id,
+                    title: {text:"SSH key: ", button: "close"},
+                },
+                position: {
+                    corner: {target:"bottomLeft", tooltip:"topRight"}
+                },
+                style: {name:"dark",border:{radius:5},width:340,tip:"bottomMiddle",
+                background:"#eee"},
+                show: {when: false, ready: true},
+                hide: {fixed: true, when: false},
+                api: {onShow: function(){$(".ajax_form textarea").focus()}}
+            });
             // loading
-            $("textarea#id_key").html("&nbsp;").load("{% url key-ajax-get %}"+id);
-            $("#ukeys").show();
+            /*$("#ukeys").html("&nbsp;").load("{% url key-ajax-get %}"+id);
+            $("#ukeys").show();*/
+
             return false;
         });
 
         // form submit button
         $(".ajax_form .submit").live("click", function(){
+            //setting ID
+            if (id)
+                data = $(".ajax_form").serialize()+"&id="+id;
+            else
+                data = $(".ajax_form").serialize();
+
             $("#errors").empty();
             $.ajax({
                 type: "POST",
                 url: "{% if user_id %}{% url key-ajax-save user_id=user_id %}{%else%}{%url key-ajax-save user_id=user.id%}{%endif%}",
-                dataType: "json",
-                data: $(".ajax_form").serialize(),
-                success: update
+                dataType: "text",
+                data: data,
+                success: update,
+                error: fail
             });
             return false;
         });

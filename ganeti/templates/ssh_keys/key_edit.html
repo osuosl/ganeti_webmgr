@@ -6,11 +6,9 @@
 {% endblock %}
 
 {% block content %}
-{% if key %}
-<form id="key-edit" method="post">
-{% else %}
-<form id="key-add" method="post">
-{% endif %}
+{# load this form from template form.html #}
+{# no, it's not a good idea #}
+<form id="key-form" method="post">
     {% csrf_token %}
     <fieldset>
         <legend>{% if key %}Edit {{ key.key|ssh_hostname }}{% else %}Add new SSH key{% endif %}</legend>
