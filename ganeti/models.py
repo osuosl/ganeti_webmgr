@@ -25,6 +25,8 @@ from subprocess import Popen
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.generic import GenericForeignKey
+
 from django.db import models
 from django.db.models import Sum
 
@@ -101,7 +103,6 @@ class CachedClusterObject(models.Model):
     
     __info = None
     error = None
-    mtime = None
     ctime = None
 
     def __init__(self, *args, **kwargs):
@@ -161,7 +162,9 @@ class CachedClusterObject(models.Model):
     def parse_info(self):
         """ Parse all values from the cached info """
         self.parse_transient_info()
-        self.parse_persistent_info()
+        data = self.parse_persistent_info(self.info)
+        for k in data:
+            setattr(self, k, data[k])
 
     def refresh(self):
         """
@@ -179,13 +182,19 @@ class CachedClusterObject(models.Model):
             if self.mtime is None or mtime > self.mtime:
                 # there was an update. Set info and save the object
                 self.info = info_
+                self.check_job_status()
                 self.save()
             else:
                 # There was no change on the server.  Only update the cache
                 # time. This bypasses the info serialization mechanism and
                 # uses a smaller query.
-                self.__class__.objects.filter(pk=self.id) \
-                    .update(cached=self.cached)
+                updates = self.check_job_status()
+                if updates:
+                    self.__class__.objects.filter(pk=self.id) \
+                        .update(cached=self.cached, **updates)
+                else:
+                    self.__class__.objects.filter(pk=self.id) \
+                        .update(cached=self.cached)
                 
             self.error = None
         except GanetiApiError, e:
@@ -197,6 +206,9 @@ class CachedClusterObject(models.Model):
         and must be implemented by it.
         """
         raise NotImplementedError
+
+    def check_job_status(self):
+        pass
 
     def parse_transient_info(self):
         """
@@ -212,14 +224,15 @@ class CachedClusterObject(models.Model):
         if info_['ctime'] is not None:
             self.ctime = datetime.fromtimestamp(info_['ctime'])
 
-    def parse_persistent_info(self):
+    @classmethod
+    def parse_persistent_info(cls, info):
         """
         Parse properties from cached info that are stored in the database. These
         properties will be searchable by the django query api.
 
         This method is specific to the child object.
         """
-        self.mtime = datetime.fromtimestamp(self.__info['mtime'])
+        return {'mtime': datetime.fromtimestamp(info['mtime'])}
 
     def save(self, *args, **kwargs):
         """
@@ -249,6 +262,94 @@ if settings.DEBUG or True:
         def save(self, *args, **kwargs):
             self.saved = True
             super(TestModel, self).save(*args, **kwargs)
+
+
+class JobManager(models.Manager):
+    """
+    Custom manager for Ganeti Jobs model
+    """
+    def create(self, **kwargs):
+        """ helper method for creating a job with disabled cache """
+        job = Job(ignore_cache=True, **kwargs)
+        job.save(force_insert=True)
+        return job
+
+
+class Job(CachedClusterObject):
+    """
+    model representing a job being run on a ganeti Cluster.  This includes
+    operations such as creating or delting a virtual machine.
+    
+    Jobs are a special type of CachedClusterObject.  Job's run once then become
+    immutable.  The lazy cache is modified to become permanent once a complete
+    status (success/error) has been detected.  The cache can be disabled by
+    settning ignore_cache=True.
+    """
+    job_id = models.IntegerField(null=False)
+    content_type = models.ForeignKey(ContentType, null=False)
+    object_id = models.IntegerField(null=False)
+    obj = GenericForeignKey('content_type', 'object_id')
+    cluster = models.ForeignKey('Cluster', editable=False, related_name='jobs')
+    cluster_hash = models.CharField(max_length=40, editable=False)
+    
+    finished = models.DateTimeField(null=True)
+    status = models.CharField(max_length=10)
+    
+    objects = JobManager()
+    
+    @property
+    def rapi(self):
+        return get_rapi(self.cluster_hash, self.cluster_id)
+    
+    def _refresh(self):
+        return self.rapi.GetJobStatus(self.job_id)
+    
+    def load_info(self):
+        """
+        Load info for class.  This will load from ganeti if ignore_cache==True,
+        otherwise this will always load from the cache.
+        """
+        if self.id and self.ignore_cache:
+            self.info = self._refresh()
+            self.save()
+    
+    @classmethod
+    def parse_persistent_info(cls, info):
+        """
+        Parse status and turn off cache bypass flag if job has finished
+        """
+        data = {}
+        data['status'] = info['status']
+        if data['status'] in ('error','success'):
+            data['ignore_cache'] = False
+        if info['end_ts']:
+            data['finished'] = cls.parse_end_timestamp(info)
+        return data
+
+    @classmethod
+    def parse_end_timestamp(cls, info):
+        sec, micro = info['end_ts']
+        return datetime.fromtimestamp(sec+(micro/1000000.0))
+
+    def parse_transient_info(self):
+        pass
+    
+    def save(self, *args, **kwargs):
+        """
+        sets the cluster_hash for newly saved instances and writes the owner tag
+        to ganeti
+        """
+        if self.id is None or self.cluster_hash == '':
+            self.cluster_hash = self.cluster.hash
+        
+        super(Job, self).save(*args, **kwargs)
+
+
+    def __repr__(self):
+        return "<Job: '%s'>" % self.id
+    
+    def __str__(self):
+        return repr(self)
 
 
 class VirtualMachine(CachedClusterObject):
@@ -284,7 +385,9 @@ class VirtualMachine(CachedClusterObject):
     ram = models.IntegerField(default=-1)
     cluster_hash = models.CharField(max_length=40, editable=False)
     operating_system = models.CharField(max_length=128)
+    status = models.CharField(max_length=10)
 
+    last_job = models.ForeignKey(Job, null=True)
 
     @property
     def rapi(self):
@@ -323,35 +426,79 @@ class VirtualMachine(CachedClusterObject):
 
         super(VirtualMachine, self).save(*args, **kwargs)
 
-    def parse_persistent_info(self):
+    @classmethod
+    def parse_persistent_info(cls, info):
         """
         Loads all values from cached info, included persistent properties that
         are stored in the database
         """
-        super(VirtualMachine, self).parse_persistent_info()
+        data = super(VirtualMachine, cls).parse_persistent_info(info)
         
         # Parse resource properties
-        self.ram = self.info['beparams']['memory']
-        self.virtual_cpus = self.info['beparams']['vcpus']
+        data['ram'] = info['beparams']['memory']
+        data['virtual_cpus'] = info['beparams']['vcpus']
         # Sum up the size of each disk used by the VM
         disk_size = 0
-        for disk in self.info['disk.sizes']:
+        for disk in info['disk.sizes']:
             disk_size += disk
-        self.disk_size = disk_size
-        self.operating_system = self.info['os']
+        data['disk_size'] = disk_size
+        data['operating_system'] = info['os']
+        data['status'] = info['status']
+        
+        return data
 
+    def check_job_status(self):
+        """
+        if the cache bypass is enabled then check the status of the last job
+        when the job is complete we can reenable the cache.
+        
+        @returns - dictionary of values that were updates
+        """
+        if self.ignore_cache and self.last_job_id:
+            (job_id,) = Job.objects.filter(pk=self.last_job_id)\
+                            .values_list('job_id', flat=True)
+            data = self.rapi.GetJobStatus(job_id)
+            status = data['status']
+            
+            if status in ('success', 'error'):
+                finished = Job.parse_end_timestamp(data)
+                Job.objects.filter(pk=self.last_job_id) \
+                    .update(status=status, ignore_cache=False, finished=finished)
+                self.ignore_cache = False
+            
+            if status == 'success':
+                self.last_job = None
+                return dict(ignore_cache=False, last_job=None)
+            
+            elif status == 'error':
+                return dict(ignore_cache=False)
 
     def _refresh(self):
         return self.rapi.GetInstance(self.hostname)
 
     def shutdown(self):
-        return self.rapi.ShutdownInstance(self.hostname)
+        id = self.rapi.ShutdownInstance(self.hostname)
+        job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
+        self.last_job = job
+        VirtualMachine.objects.filter(pk=self.id) \
+            .update(last_job=job, ignore_cache=True)
+        return job
 
     def startup(self):
-        return self.rapi.StartupInstance(self.hostname)
+        id = self.rapi.StartupInstance(self.hostname)
+        job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
+        self.last_job = job
+        VirtualMachine.objects.filter(pk=self.id) \
+            .update(last_job=job, ignore_cache=True)
+        return job
 
     def reboot(self):
-        return self.rapi.RebootInstance(self.hostname)
+        id = self.rapi.RebootInstance(self.hostname)
+        job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
+        self.last_job = job
+        VirtualMachine.objects.filter(pk=self.id) \
+            .update(last_job=job, ignore_cache=True)
+        return job
 
     def setup_vnc_forwarding(self):
         #password = self.set_random_vnc_password(instance)
@@ -633,6 +780,7 @@ def update_cluster_hash(sender, instance, **kwargs):
     Updates the Cluster hash for all of it's VirtualMachines
     """
     instance.virtual_machines.all().update(cluster_hash=instance.hash)
+    instance.jobs.all().update(cluster_hash=instance.hash)
 
 
 def update_organization(sender, instance, **kwargs):

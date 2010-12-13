@@ -16,13 +16,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-from ganeti.tests.accounts import *
-from ganeti.tests.cache_updater import *
-from ganeti.tests.cached_cluster_object import *
-from ganeti.tests.cluster import *
-from ganeti.tests.cluster_user import *
-from ganeti.tests.importing import *
-from ganeti.tests.job import *
-from ganeti.tests.rapi_cache import *
-from ganeti.tests.users import *
-from ganeti.tests.virtual_machine import *
+from django.conf import settings
+
+
+def site(request):
+    """
+    adds site properties to the context
+    """    
+    return {'SITE_DOMAIN':settings.SITE_DOMAIN, 'SITE_NAME':settings.SITE_NAME}

@@ -16,13 +16,17 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-from ganeti.tests.accounts import *
-from ganeti.tests.cache_updater import *
-from ganeti.tests.cached_cluster_object import *
-from ganeti.tests.cluster import *
-from ganeti.tests.cluster_user import *
-from ganeti.tests.importing import *
-from ganeti.tests.job import *
-from ganeti.tests.rapi_cache import *
-from ganeti.tests.users import *
-from ganeti.tests.virtual_machine import *
+import sys
+
+class MuteStdout(object):
+    """ context manager that mutes stdout """
+    def __enter__( self ):
+        self.stdout = sys.stdout
+        sys.stdout = self
+    
+    def __exit__( self, type, value, tb ):
+        sys.stdout = self.stdout
+    
+    def write(self, str):
+        """ ignore all calls to write """
+        pass

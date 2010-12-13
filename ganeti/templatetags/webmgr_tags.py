@@ -18,6 +18,7 @@
 
 from math import log10
 import re
+import json as json_lib
 
 from django import template
 from django.template import Library, Node, TemplateSyntaxError
@@ -117,6 +118,11 @@ def node_disk(node):
     """
 
     return format_part_total(node["dfree"], node["dtotal"])
+
+
+@register.filter
+def json(obj):
+    return mark_safe(json_lib.dumps(obj))
 
 
 @register.tag

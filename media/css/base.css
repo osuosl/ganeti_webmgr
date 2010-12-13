@@ -245,8 +245,8 @@ ul#errors {color:#AD2E2E;}
 ul.errors {list-style:square;}
 
 .add, .delete, .edit, .reboot, .shutdown, .startup {cursor:pointer;}
-.edit{background:url(/media/images/icons/edit.png) no-repeat;}
-.delete{background:url(/media/images/icons/delete.png) no-repeat;}
+div.edit, a.edit{background:url(/media/images/icons/edit.png) no-repeat;}
+div.delete, a.delete{background:url(/media/images/icons/delete.png) no-repeat;}
 div.icon_error {background:url(/media/images/icons/exclamation.png);}
 div.icon_running {background:url(/media/images/icons/check.png);}
 div.icon_stopped {background:url(/media/images/icons/stop.png);}
@@ -255,6 +255,12 @@ div.icon_stopped {background:url(/media/images/icons/stop.png);}
 .reboot {background:url(/media/images/icons/arrow_refresh.png) no-repeat;}
 .shutdown {background:url(/media/images/icons/stop.png) no-repeat;}
 .startup {background:url(/media/images/icons/add.png) no-repeat;}
+
+div.edit.disabled, a.edit.disabled{background:url(/media/images/icons/edit-disabled.png) no-repeat;}
+div.delete.disabled, a.delete.disabled{background:url(/media/images/icons/delete-disabled.png) no-repeat;}
+.reboot.disabled {background:url(/media/images/icons/arrow_refresh-disabled.png) no-repeat;}
+.shutdown.disabled {background:url(/media/images/icons/stop-disabled.png) no-repeat;}
+.startup.disabled {background:url(/media/images/icons/add-disabled.png) no-repeat;}
 
 div.delete, div.edit, div.icon_error, .icon_running, .icon_stopped {
     background-repeat:no-repeat;
@@ -266,7 +272,7 @@ div.delete, div.edit, div.icon_error, .icon_running, .icon_stopped {
 
 .button {
     background-color: #eeeeee !important;
-    background-position:4px 4px;
+    background-position:4px 4px !important;
     border: 1px solid #cccccc;
     clear:both;
     color:#666 !important;
@@ -283,6 +289,9 @@ div.delete, div.edit, div.icon_error, .icon_running, .icon_stopped {
     color:black !important;
     border-color:#bababa;
 }
+
+.button.disabled {color: #aaa !important;}
+.button.disabled:hover {background-color: #eee !important;}
 
 .spinner {margin:0 auto; text-align:center; width:100px}
 .spinner image {display:block; margin:0 auto; width:32px;}

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load webmgr_tags %}
 
 {% block title %} Virtual Machine {{ instance.hostname }}{% endblock %}
 {% block head %}
@@ -6,12 +7,51 @@
 <style>
 .ui-widget-header {background:none; border-width:0 0 1px 0; -moz-border-radius:0px;}
 .ui-widget-content {border:0;}
+
+.spinner_small {
+    display:block;
+    margin:10px auto 0 auto;
+    width:16px;
+}
+
+#log {
+    display:block;
+    border-top:1px solid #124612;
+    margin:0;
+    padding: 10px;
+    overflow:auto;
+}
+
+#log li {
+    border:0;
+    color:black;
+    font: 12px monospace;
+    margin:0;
+    padding:1px 0;
+    text-align:left;
+}
+
+#messages li {
+    background-color:#eee;
+    border-width:1px;
+    padding:0;
+}
+
+#messages h3 {
+    background: url({{MEDIA_URL}}/images/ajax-loader_arrows.gif) 5px 5px no-repeat;
+    background-color:#C2E192;
+    padding: 5px 0 5px 25px;
+    margin:0;
+    text-align:left;
+}
 </style>
 <script src="{{MEDIA_URL}}/js/jquery-ui.min.js"></script>
 <script src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
 <script type="text/javascript">
+    var actions_enabled = true;
+    var checkInterval;
+
     $(document).ready(function() {
-        
         $('#tabs').tabs({ spinner: false});
         {% if admin %}
             {% ifnotequal instance.info.status "running" %}
@@ -21,31 +61,122 @@
         {% endif %}
         
         $("#actions a").not('.delete').click(function(){
-            $.post(this.href, action_response);
+            if (actions_enabled){
+                
+                $.post(this.href, action_response);
+            }
             return false;
         });
+        
+        {% if instance.last_job_id %}
+            {# there is a running job, display it and poll for status #}
+            get_job_status({{instance.last_job.job_id}});
+            poll_job_status({{instance.last_job.job_id}});
+        {% else %}
+            {% if instance.error %}
+                display_ganeti_error("{{instance.error}}");
+            {% endif %}
+        {% endif %}
     });
     
     function action_response(result) {
-        html = $("<li>"+result[1]+"</li>");
-        if (result[0] == 0) {
-            html.addClass('error');
+        if (result.ops == undefined) {
+            display_ganeti_error(result[1]);
+            actions_enabled = true;
+            $('#actions a').removeClass('disabled');
+        } else {
+            poll_job_status(result['id'])
+            display_job(result);
         }
-        $("#messages").append(html);
-        // set timer to fadeout and remove the message
-        setTimeout(function(){
-            html.fadeOut(1000,
-                function(){html.remove()});
-            }, 2000);
     }
+
+    // poll for job status, first poll is delayed by 3000ms
+    function poll_job_status(job_id) {
+        actions_enabled = false;
+        $('#actions a').addClass('disabled');
+        checkInterval = setInterval(get_job_status, 3000, job_id);
+    }
+
+    // get job status
+    function get_job_status(job_id) {
+        $.ajax({
+                url: "{% url cluster-detail cluster.slug %}/job/"+job_id+"/status/",
+                success: function(data) {
+                    if (data.status == 'success'){
+                            $("#messages").empty();
+                        clearInterval(checkInterval);
+                        window.location.reload();
+                    }
+                    
+                    display_job(data);
+                    if (data.status == 'error'){
+                        if (checkInterval != undefined){
+                            clearInterval(checkInterval);
+                            checkInterval = undefined;
+                        }
+                    }
+                }
+        });
+    }
+
+    function display_job(data) {
+        if (data.status == 'error') {
+            $("#messages").empty();
+            var reason = data.opresult[0][1][0];
+            html = $("<li>"+data.status+":<br>"+reason+"</li>");
+            html.addClass('error');
+            $("#messages").append(html);
+            actions_enabled = true;
+        } else {
+            $("#messages").empty();
+            op = format_op(data['ops'][0]['OP_ID']);
+            html = $("<li><h3>"+op+"</h3></li>");
+            $("#messages").append(html)
+            
+            // append log messages that are not already displayed
+            current_log_count = $("#log ul li").length;
+            if (data['oplog'][0].length != 0) {
+                if ($('#log').length==0){
+                    html.append("<pre id='log'><ul></ul></pre>");
+                }
+                
+                log = data['oplog'][0];
+                for (i=current_log_count; i<log.length; i++) {
+                    $("#log ul")
+                        .append("<li>"+log[i][3]+"</li>");
+                }
+            }
+        }
+    }
+
+    function display_ganeti_error(msg) {
+        $("#messages").empty();
+        html = "<li class='error'>Error in Ganeti API:<p>" + msg + "</p></li>";
+        $("#messages").append(html);
+    }
+
+    function format_op(str){
+        str = str.substring(3).replace('_',' ').toLowerCase();
+        str = cap_first(str);
+        return str
+    }
+    
+    function cap_first(str) {
+        new_str = '';
+        str = str.split(' ');
+        for(var i=0; i < str.length; i++) {
+                new_str += str[i].substring(0,1).toUpperCase() +
+                str[i].substring(1,str[i].length) + ' ';
+        }
+        return new_str;
+    }
+
 </script>
 {% endblock %}
 
 {% block content %}
 <h1>{{ instance.hostname }}</h1>
-<ul id="messages">
-    {%if instance.error%}<li class="error">Error in Ganeti API:<p>{{instance.error}}</p></li>{%endif%}
-</ul>
+<ul id="messages"></ul>
 <div id="tabs">
     <ul id="tabs">
         <li><a href="#tab1"><span>Overview</span></a></li>
@@ -67,7 +198,7 @@
                 {% if remove and username %}
                     <li><a class="button delete" href="{% url instance-delete cluster.slug instance.hostname %}">Delete</a></li>
                 {% endif %}
-                {% if admin and username %}
+                {% if admin or power and username %}
                     {% ifequal instance.info.status "running" %}
                     <li><a class="button shutdown" href="{% url instance-shutdown cluster.slug instance.hostname %}">Shutdown</a></li>
                     <li><a class="button reboot" href="{% url instance-reboot cluster.slug instance.hostname %}">Reboot</a></li>

@@ -28,7 +28,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, \
-    HttpResponseForbidden, HttpResponseNotAllowed
+    HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
@@ -38,7 +38,8 @@ from logs.models import LogItem
 log_action = LogItem.objects.log_action
 
 from util.client import GanetiApiError
-from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine
+from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine, Job
+from ganeti.views import render_403
 
 empty_field = (u'', u'---------')
 
@@ -60,7 +61,7 @@ def delete(request, cluster_slug, instance):
         user.has_perm("admin", instance) or
         user.has_perm("admin", instance.cluster)
         ):
-        return HttpResponseForbidden()
+        return render_403(request, 'You do not have sufficient privileges')
 
     if request.method == 'GET':
         return render_to_response("virtual_machine/delete.html",
@@ -88,7 +89,7 @@ def vnc(request, cluster_slug, instance):
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', instance) or \
         user.has_perm('admin', instance.cluster)):
-        return HttpResponseForbidden('You do not have permission to vnc on this')
+        return render_403(request, 'You do not have permission to vnc on this')
 
     #port, password = instance.setup_vnc_forwarding()
 
@@ -111,22 +112,22 @@ def shutdown(request, cluster_slug, instance):
                            cluster__slug=cluster_slug)
     user = request.user
 
-    if not (user.is_superuser or user.has_perm('admin', vm) or \
+    if not (user.is_superuser or user.has_any_perms(vm, ['admin','power'], True) or \
         user.has_perm('admin', vm.cluster)):
-        return HttpResponseForbidden('You do not have permission to shut down this virtual machine')
+        return render_403(request, 'You do not have permission to shut down this virtual machine')
 
     if request.method == 'POST':
         try:
-            vm.shutdown()
-            msg = [1, 'Virtual machine stopping.']
-
+            job = vm.shutdown()
+            job.load_info()
+            msg = job.info
+            
             # log information about stopping the machine
             log_action(user, vm, "stopped")
         except GanetiApiError, e:
             msg = [0, str(e)]
         return HttpResponse(json.dumps(msg), mimetype='application/json')
-    return HttpResponseNotAllowed(['GET', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', \
-                                  'TRACE'])
+    return HttpResponseNotAllowed(['POST'])
 
 
 @login_required
@@ -134,22 +135,22 @@ def startup(request, cluster_slug, instance):
     vm = get_object_or_404(VirtualMachine, hostname=instance, \
                            cluster__slug=cluster_slug)
     user = request.user
-    if not (user.is_superuser or user.has_perm('admin', vm) or \
+    if not (user.is_superuser or user.has_any_perms(vm, ['admin','power'], True) or \
         user.has_perm('admin', vm.cluster)):
-            return HttpResponseForbidden('You do not have permission to start up this virtual machine')
+            return render_403(request, 'You do not have permission to start up this virtual machine')
 
     if request.method == 'POST':
         try:
-            vm.startup()
-            msg = [1, 'Virtual machine starting.']
-
+            job = vm.startup()
+            job.load_info()
+            msg = job.info
+            
             # log information about starting up the machine
             log_action(user, vm, "started")
         except GanetiApiError, e:
             msg = [0, str(e)]
         return HttpResponse(json.dumps(msg), mimetype='application/json')
-    return HttpResponseNotAllowed(['GET', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', \
-                                  'TRACE'])
+    return HttpResponseNotAllowed(['POST'])
 
 
 @login_required
@@ -157,22 +158,22 @@ def reboot(request, cluster_slug, instance):
     vm = get_object_or_404(VirtualMachine, hostname=instance, \
                            cluster__slug=cluster_slug)
     user = request.user
-    if not (user.is_superuser or user.has_perm('admin', vm) or \
+    if not (user.is_superuser or user.has_any_perms(vm, ['admin','power'], True) or \
         user.has_perm('admin', vm.cluster)):
-            return HttpResponseForbidden('You do not have permission to reboot this virtual machine')
+            return render_403(request, 'You do not have permission to reboot this virtual machine')
 
     if request.method == 'POST':
         try:
-            vm.reboot()
-            msg = [1, 'Virtual machine rebooting.']
-
+            job = vm.reboot()
+            job.load_info()
+            msg = job.info
+            
             # log information about restarting the machine
             log_action(user, vm, "restarted")
         except GanetiApiError, e:
             msg = [0, str(e)]
         return HttpResponse(json.dumps(msg), mimetype='application/json')
-    return HttpResponseNotAllowed(['GET', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', \
-                                  'TRACE'])
+    return HttpResponseNotAllowed(['POST'])
 
 
 @login_required
@@ -182,7 +183,7 @@ def list_(request):
         vms = VirtualMachine.objects.all()
         can_create = True
     else:
-        vms = user.filter_on_perms(VirtualMachine, ['admin'])
+        vms = user.filter_on_perms(VirtualMachine, ['admin', 'power','remove'])
         can_create = user.perms_on_any(Cluster, ['create_vm'])
     
     return render_to_response('virtual_machine/list.html', {
@@ -201,10 +202,15 @@ def detail(request, cluster_slug, instance):
     user = request.user
     admin = user.is_superuser or user.has_perm('admin', vm) \
         or user.has_perm('admin', cluster)
-    remove = admin or user.has_perm('remove', vm)
+    if admin:
+        remove = True
+        power = True
+    else:
+        remove = user.has_perm('remove', vm)
+        power = user.has_perm('power', vm)
     
-    if not admin:
-        return HttpResponseForbidden('You do not have permission to view this cluster\'s details')
+    if not (admin or power or remove):
+        return render_403(request, 'You do not have permission to view this cluster\'s details')
     #TODO Update to use part of the NewVirtualMachineForm in 0.5 release
     """
     if request.method == 'POST':
@@ -238,7 +244,8 @@ def detail(request, cluster_slug, instance):
         'instance': vm,
         #'configform': form,
         'admin':admin,
-        'remove':remove
+        'remove':remove,
+        'power':power
         },
         context_instance=RequestContext(request),
     )
@@ -255,7 +262,7 @@ def users(request, cluster_slug, instance):
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', vm) or \
         user.has_perm('admin', cluster)):
-        return HttpResponseForbidden("You do not have sufficient privileges")
+        return render_403(request, "You do not have sufficient privileges")
 
     url = reverse('vm-permissions', args=[cluster.slug, vm.hostname])
     return view_users(request, vm, url)
@@ -272,7 +279,7 @@ def permissions(request, cluster_slug, instance, user_id=None, group_id=None):
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', vm) or \
         user.has_perm('admin', cluster)):
-        return HttpResponseForbidden("You do not have sufficient privileges")
+        return render_403(request, "You do not have sufficient privileges")
 
     url = reverse('vm-permissions', args=[cluster.slug, vm.hostname])
     return view_permissions(request, vm, url, user_id, group_id)
@@ -287,7 +294,7 @@ def create(request, cluster_slug=None):
     """
     user = request.user
     if not(user.is_superuser or user.perms_on_any(Cluster, ['admin', 'create_vm'])):
-        return HttpResponseForbidden('You do not have permission to create virtual \
+        return render_403(request, 'You do not have permission to create virtual \
                    machines')
 
     if cluster_slug is not None:
@@ -338,7 +345,7 @@ def create(request, cluster_slug=None):
                 snode = data['snode']
 
             try:
-                jobid = cluster.rapi.CreateInstance('create', hostname,
+                job_id = cluster.rapi.CreateInstance('create', hostname,
                         disk_template,
                         [{"size": disk_size, }],[{nicmode: nictype, }],
                         memory=ram, os=os, vcpus=vcpus,
@@ -354,7 +361,7 @@ def create(request, cluster_slug=None):
                 # Wait for job to process as the error will not happen
                 #  right away
                 sleep(2)
-                jobstatus = cluster.rapi.GetJobStatus(jobid)
+                jobstatus = cluster.rapi.GetJobStatus(job_id)
 
                 # raise an exception if there was an error in the job
                 if jobstatus["status"] == 'error':
@@ -363,7 +370,10 @@ def create(request, cluster_slug=None):
                 vm = VirtualMachine(cluster=cluster, owner=owner,
                                     hostname=hostname, disk_size=disk_size,
                                     ram=ram, virtual_cpus=vcpus)
+                vm.ignore_cache = True
                 vm.save()
+                job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
+                VirtualMachine.objects.filter(id=vm.id).update(last_job=job)
 
                 # log information about creating the machine
                 log_action(user, vm, "created")
@@ -404,7 +414,7 @@ def cluster_choices(request):
     elif 'group_id' in GET:
         group = get_object_or_404(Group, id=GET['group_id'])
         if not group.user_set.filter(id=request.user.id).exists():
-            return HttpResponseForbidden('not a member of this group')
+            return render_403(request, 'not a member of this group')
         q = group.filter_on_perms(Cluster, ['admin','create_vm'])
     else:
         q = user.filter_on_perms(Cluster, ['admin','create_vm'], groups=False)
@@ -426,7 +436,7 @@ def cluster_options(request):
     user = request.user
     if not (user.is_superuser or user.has_perm('create_vm', cluster) or \
             user.has_perm('admin', cluster)):
-        return HttpResponseForbidden('You do not have permissions to view \
+        return render_403(request, 'You do not have permissions to view \
         this cluster')
 
     oslist = cluster_os_list(cluster)
@@ -491,7 +501,7 @@ def cluster_defaults(request):
     user = request.user
     if not (user.is_superuser or user.has_perm('create_vm', cluster) or \
             user.has_perm('admin', cluster)):
-        return HttpResponseForbidden('You do not have permission to view the default cluster options')
+        return render_403(request, 'You do not have permission to view the default cluster options')
 
     content = json.dumps(cluster_default_info(cluster))
     return HttpResponse(content, mimetype='application/json')
@@ -567,7 +577,7 @@ class NewVirtualMachineForm(forms.Form):
     ]
 
     owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label='Owner')
-    cluster = forms.ModelChoiceField(queryset=Cluster.objects.all(), label='Cluster')
+    cluster = forms.ModelChoiceField(queryset=Cluster.objects.none(), label='Cluster')
     hostname = forms.RegexField(label='Instance Name', regex=FQDN_RE,
                             error_messages={
                                 'invalid': 'Instance name must be resolvable',
@@ -660,10 +670,14 @@ class NewVirtualMachineForm(forms.Form):
                 owners.append((profile.id, profile.name))
             self.fields['owner'].choices = owners
 
-            # set cluster choices based on the given owner.
+            # Set cluster choices.  If an owner has been selected then filter
+            # by the owner.  Otherwise show everything the user has access to
+            # through themselves or any groups they are a member of
             if self.owner:
                 q = self.owner.filter_on_perms(Cluster, ['admin','create_vm'])
-                self.fields['cluster'].queryset = q
+            else:
+                q = user.filter_on_perms(Cluster, ['admin','create_vm'])
+            self.fields['cluster'].queryset = q
 
     def clean(self):
         data = self.cleaned_data

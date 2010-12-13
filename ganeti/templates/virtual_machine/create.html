@@ -4,6 +4,7 @@
 {% block title %}Create a new Virtual Machine{% endblock %}
 
 {% block head %}
+    <link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}/css/virtual_machine_create.css"/>
     <script src="{{MEDIA_URL}}/js/jquery.js"></script>
     <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.virtual_machine_form.js"></script>
     <script type="text/javascript">
@@ -12,11 +13,34 @@
             owner_change('{% url instance-create-cluster-choices %}');
             cluster_change('{% url instance-create-cluster-options %}',
                            '{% url instance-create-cluster-defaults %}');
+            
+            $('#virtualmachineform input, #virtualmachineform select')
+                .live('focus', function(){
+                    name = this.name;
+                    label = $(this).prev('label').html()
+                    $content = $('#help-'+name);
+                    
+                    if ($content.length!=0) {
+                        $('#help')
+                            .show()
+                        $('#help div')
+                            .empty()
+                            .html($content.html());
+                        $('#help h3')
+                            .empty()
+                            .html(label);
+                    }
+                });
         });
     </script>
+    
+    <style>
+        
+    </style>
 {% endblock %}
 
 {% block content %}
+
 <div id="virtualmachineform">
     <form method="post">
         <fieldset>
@@ -50,5 +74,101 @@
         </fieldset>
         <input class="submit" type="submit" value="Create">
     </form>
+    
+    
 </div>
+
+    <div id="help">
+        <h3></h3>
+        <div></div>
+    </div>
+
+    <div id="help-contents">
+        {# performatted help content that will be copied into the help div #}
+        <div id="help-owner">
+            <p>
+            The owner indicates who this virtual machine belongs to. Resources
+            used by the virtual machine will be deducted from the owner's
+            quota.</p>
+            <p>
+            An owner may be a user or a group.  If you are a member of a group
+            you may create a virtual machine on behalf of that group.
+            </p>
+        </div>
+        <div id="help-cluster">
+            <p>
+            which cluster to deploy the new virtual machine on.
+            </p>
+        </div>
+        <div id="help-hostname">
+            Fully qualified hostname to assign to this virtual machine.
+        </div>
+        
+        
+        <div id="help-name_check">
+            ?????
+        </div>
+        <div id="help-iallocator">
+            Automatically select primary and secondary node to allocate disks on.
+        </div>
+        <div id="help-disk_template">
+            Template for creating disks
+            
+            <ul>
+                <li>plain - </li>
+                <li>drdb - </li>
+                <li>file -</li>
+                <li>diskless -</li>
+            </ul>
+        </div>
+        <div id="help-os">
+            Operating system to install on the virtual machine. Your choices are
+            limited to the images configured on the cluster.
+            
+            <ul>
+                <li>Deb Bootstrap</li>
+                <li>Images - preinstalled operating systems</li>
+            </ul>
+        </div>
+        
+        <div id="help-vcpus">
+            Number of virtual cpus to allocate to this virtual machine. This will
+            be deducted from the owner's quota.
+        </div>
+        <div id="help-ram">
+           Amount of ram to allocate to this virtual machine. This will
+            be deducted from the owner's quota.
+        </div>
+        <div id="help-disk_size">
+            Size of disk to allocate to this virtual machine. This will
+            be deducted from the owner's quota.
+        </div>
+        <div id="help-nicmode">
+            <ul>
+                <li>bridged - </li>
+                <li>routed - </li>
+            </ul>
+        </div>
+        <div id="help-nictype">
+        </div>
+        
+        <div id="help-kernelpath">
+            
+        </div>
+        <div id="help-rootpath">
+            
+        </div>
+        <div id="help-serialconsole">
+            
+        </div>
+        <div id="help-bootorder">
+            Which device should be tried first by the bootloader.
+        </div>
+        <div id="help-imagepath">
+            
+        </div>
+        
+        
+    </div>
+
 {% endblock %}
