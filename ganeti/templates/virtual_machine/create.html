@@ -26,7 +26,7 @@
                         $('#help div')
                             .empty()
                             .html($content.html());
-                        $('#help h3')
+                        $('#help legend')
                             .empty()
                             .html(label);
                     }
@@ -57,7 +57,7 @@
             {% vmfield form.os %}
         </fieldset>
         <fieldset>
-            <h3>General Parameters</h3>
+            <legend>General Parameters</legend>
             {% vmfield form.vcpus %}
             {% vmfield form.ram %}
             {% vmfield form.disk_size %}
@@ -67,7 +67,7 @@
             {% vmfield form.nictype %}
         </fieldset>
         <fieldset>
-            <h3>Hypervisor Parameters</h3>
+            <legend>Hypervisor Parameters</legend>
             {% vmfield form.kernelpath %}
             {% vmfield form.rootpath %}
             {% vmfield form.serialconsole %}
@@ -81,7 +81,7 @@
 </div>
 
     <div id="help">
-        <h3></h3>
+        <legend></legend>
         <div></div>
     </div>
 

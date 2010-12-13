@@ -37,8 +37,8 @@ Add a new cluster
         <p><label for="id_confirm_password">{{form.confirm_password.label}}:</label> {{form.confirm_password}}</p>
     </fieldset>
     
-    <fieldset id="quota">
-        <h3>Default Quota</h3>
+    <fieldset>
+        <legend>Default Quota</legend>
         {% if form.virtual_cpus.errors %}<p class="error">{{form.hostname.errors}}</p>{%endif%}
         <p><label for="id_virtual_cpus">{{form.virtual_cpus.label}}:</label> {{form.virtual_cpus}}</p>
         {% if form.disk.errors %}<p class="error">{{form.hostname.errors}}</p>{%endif%}

@@ -2,11 +2,11 @@
 {% block title %}User Profile{% endblock %}
 
 {% block content %}
-	<h1>Profile information for {{user.username}}</h1>
-	<fieldset id="uprofile">
-		<form action="{% url profile %}" method="post">
-			{{ form.as_p }}
-			<input class="submit" id="save" type="submit" value="Update"/>
-		</form>
-	</fieldset>
+    <h1>Profile information for {{user.username}}</h1>
+    <fieldset id="uprofile">
+        <form action="{% url profile %}" method="post">
+            {{ form.as_p }}
+            <input class="submit" id="save" type="submit" value="Update"/>
+        </form>
+    </fieldset>
 {% endblock content %}
