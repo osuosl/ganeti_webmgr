@@ -100,6 +100,30 @@ class CachedClusterObjectBase(TestCase):
         object.__init__(1)
         object.load_info.assertCalled(self)
     
+    def test_timestamp_precision(self):
+        """
+        Tests that timestamps can be stored with microsecond precision using
+        PreciseDateTimeField.
+        
+        This may be database specific:
+            * mysql - supported
+            * sqlite - only 5 digits of precision
+            * postgresql -
+        """
+        obj = self.create_model()
+        timestamp = 1285883000.1234567
+        dt = datetime.fromtimestamp(timestamp)
+        
+        obj.mtime = dt
+        obj.cached = dt
+        obj.save()
+        
+        # XXX query values only. otherwise they may be updated
+        values = TestModel.objects.filter(pk=obj.id).values('mtime','cached')[0]
+        
+        self.assertEqual(timestamp, float(values['mtime']))
+        self.assertEqual(timestamp, float(values['cached']))
+    
     def test_info(self):
         """
         Tests retrieving and setting info

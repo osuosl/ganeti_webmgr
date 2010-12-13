@@ -32,6 +32,7 @@ from django.db.models import Sum
 
 from object_permissions.registration import register
 from ganeti import constants
+from ganeti.fields import PreciseDateTimeField
 from util import client
 from util.client import GanetiApiError
 
@@ -97,8 +98,8 @@ class CachedClusterObject(models.Model):
     handling cache loading transparently
     """
     serialized_info = models.TextField(null=True, default=None, editable=False)
-    mtime = models.DateTimeField(null=True, editable=False)
-    cached = models.DateTimeField(null=True, editable=False)
+    mtime = PreciseDateTimeField(null=True, editable=False)
+    cached = PreciseDateTimeField(null=True, editable=False)
     ignore_cache = models.BooleanField(default=False)
     
     __info = None

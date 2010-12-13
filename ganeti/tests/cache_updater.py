@@ -91,9 +91,9 @@ class TestCacheUpdater(TestCase, VirtualMachineTestCaseMixin):
         vm1, chaff = self.create_virtual_machine(cluster, 'vm2.osuosl.bak')
         
         os = 'image+gentoo-hardened-cf'
-        mtime_timestamp = 1285883000.8692031
+        mtime_timestamp = 1285883000.8692000
         mtime = datetime.fromtimestamp(mtime_timestamp)
-        new_mtime_timestamp = 1999999999.8692031
+        new_mtime_timestamp = 1999999999.8692000
         new_mtime = datetime.fromtimestamp(new_mtime_timestamp)
         cached = datetime.now()
         
