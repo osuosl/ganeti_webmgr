@@ -82,7 +82,7 @@ def _update_cache():
             try:
                 name = info['name']
                 id, mtime, status = d[name]
-                if not mtime or mtime < datetime.fromtimestamp(info['mtime']) \
+                if not mtime or mtime < info['mtime'] \
                 or status != info['status']:
                     #print '    Virtual Machine (updated) : %s' % name
                     #print '        %s :: %s' % (mtime, datetime.fromtimestamp(info['mtime']))
