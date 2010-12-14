@@ -111,7 +111,7 @@ class CachedClusterObjectBase(TestCase):
             * postgresql -
         """
         obj = self.create_model()
-        timestamp = 1285883000.1234567
+        timestamp = 1285883000.123456
         dt = datetime.fromtimestamp(timestamp)
         
         obj.mtime = dt
@@ -165,13 +165,13 @@ class CachedClusterObjectBase(TestCase):
             * transient info is parsed
             * persistent info is parsed
         """
-        object = self.create_model(1)
-        object.parse_info()
-        object.parse_transient_info.assertCalled(self)
-        object.parse_persistent_info.assertCalled(self)
+        obj = self.create_model(1)
+        obj.parse_info()
+        obj.parse_transient_info.assertCalled(self)
+        obj.parse_persistent_info.assertCalled(self)
         
-        self.assertEqual(object.ctime, datetime.fromtimestamp(1285799513.4741089))
-        self.assertEqual(object.mtime, datetime.fromtimestamp(1285883187.8692031))
+        self.assertEqual(obj.ctime, datetime.fromtimestamp(1285799513.4741000))
+        self.assertEqual(obj.mtime, datetime.fromtimestamp(1285883187.8692000))
     
     def test_refresh(self, object=None):
         """
