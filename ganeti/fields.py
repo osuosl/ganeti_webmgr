@@ -74,9 +74,11 @@ class PreciseDateTimeField(DecimalField):
             
         return None
     
-    def db_types(self, connection):
+    def db_type(self, connection):
         engine = connection.settings_dict['ENGINE']
         if engine == 'django.db.backends.mysql':
             return 'decimal(%s, %s)' % (self.max_digits, self.decimal_places)
+        elif engine =='django.db.backends.postgresql':
+            return 'numeric(%s, %s)' % (self.max_digits, self.decimal_places)
         elif  engine == 'django.db.backends.sqlite3':
-            return 'decimal(%s,%s)' % (self.max_digits, self.decimal_places)
+            return 'character'
