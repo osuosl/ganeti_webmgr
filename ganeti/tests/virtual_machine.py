@@ -1748,7 +1748,11 @@ class TestVirtualMachineHelpers(TestCase):
 
         # Test a single entry.
         self.assertEqual(os_prettify(["hurp+durp"]),
-            [("Hurp", ("hurp+durp", "Durp"))])
+            [
+                ("Hurp",
+                    [("hurp+durp", "Durp")]
+                )
+            ])
 
         # Test the example in the os_prettify() docstring.
         self.assertEqual(
@@ -1757,16 +1761,17 @@ class TestVirtualMachineHelpers(TestCase):
                 "image+fodoro-core",
                 "dobootstrop+dobion-lotso",
             ]), [
-                ("Image",
+                ("Dobootstrop", [
+                    ("dobootstrop+dobion-lotso", "Dobion Lotso"),
+                ]),
+                ("Image", [
                     ("image+obonto-hungry-hydralisk",
                         "Obonto Hungry Hydralisk"),
                     ("image+fodoro-core", "Fodoro Core"),
-                ),
-                ("Dobootstrop",
-                    ("dobootstrop+dobion-lotso", "Dobion Lotso"),
-                ),
+                ]),
             ])
 
         # Test entries that do not follow the pattern.
+        # This one is from #2157. Still parses, just in a weird way.
         self.assertEqual(os_prettify(["debian-pressed+ia32"]),
-            [("Unknown", ("debian-pressed+ia32", "debian-pressed+ia32"))])
+            [('Debian-pressed', [('debian-pressed+ia32', 'Ia32')])])
