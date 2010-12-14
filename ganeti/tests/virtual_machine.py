@@ -36,8 +36,13 @@ Cluster = models.Cluster
 ClusterUser = models.ClusterUser
 Job = models.Job
 
-__all__ = ('TestVirtualMachineModel', 'TestVirtualMachineViews', \
-           'TestNewVirtualMachineForm', 'VirtualMachineTestCaseMixin')
+__all__ = (
+    'TestVirtualMachineModel',
+    'TestVirtualMachineViews',
+    "TestVirtualMachineHelpers",
+    'TestNewVirtualMachineForm',
+    'VirtualMachineTestCaseMixin',
+)
 
 class VirtualMachineTestCaseMixin():
     def create_virtual_machine(self, cluster=None, hostname='vm1.osuosl.bak'):
@@ -1761,3 +1766,7 @@ class TestVirtualMachineHelpers(TestCase):
                     ("dobootstrop+dobion-lotso", "Dobion Lotso"),
                 ),
             ])
+
+        # Test entries that do not follow the pattern.
+        self.assertEqual(os_prettify(["debian-pressed+ia32"]),
+            [("Unknown", ("debian-pressed+ia32", "debian-pressed+ia32"))])
