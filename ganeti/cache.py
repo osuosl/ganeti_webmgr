@@ -52,7 +52,7 @@ class Timer():
     
     def tick(self, msg=''):
         now = datetime.now()
-        print '    %s - Time since last tick: %s' % (msg, (now-self.last_tick))
+        print '    %s : %s' % (msg, (now-self.last_tick))
         self.last_tick = now
 
 
@@ -74,13 +74,12 @@ def _update_cache():
         mtimes = base.values_list('hostname', 'id', 'mtime', 'status')
         d = {}
         for name, id, mtime, status in mtimes:
-            d[name] = (id, float(mtime), status)
+            d[name] = (id, float(mtime) if mtime else None, status)
         timer.tick('mtimes fetched from db       ')
         
         for info in infos:
-            
-            try:
-                name = info['name']
+            name = info['name']
+            if name in d:
                 id, mtime, status = d[name]
                 if not mtime or mtime < info['mtime'] \
                 or status != info['status']:
@@ -95,8 +94,7 @@ def _update_cache():
                     VirtualMachine.objects.filter(pk=id) \
                         .update(serialized_info=cPickle.dumps(info), **data)
                     updated += 1
-                
-            except VirtualMachine.DoesNotExist:
+            else:
                 # new vm
                 vm = VirtualMachine(cluster=cluster, hostname=info['name'])
                 vm.info = info
