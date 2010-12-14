@@ -121,21 +121,15 @@
             collisions.</p>
         </div>
         <div id="help-iallocator">
-            <p>
-            Automatically select primary and secondary node to allocate disks
-            on.</p>
+            <p>Automatically select primary and secondary node to allocate disks on.</p>
             <p>
             When selected it will use the cluster default <a href="http://docs.ganeti.org/ganeti/current/html/iallocator.html">iallocator</a>
             (if set by the cluster). The iallocator being used will be displayed
             after the checkbox.</p>
         </div>
         <div id="help-disk_template">
-            <p>
-            Disk layout template for the virtual machine on the cluster
-            node.</p>
-            <p>
-            The available choices are:</p>
-            <p>
+            <p>Disk layout template for the virtual machine on the cluster node.</p>
+            <p>he available choices are:</p>
             <ul>
                 <li><b>plain</b> - Disk devices will be logical volumes <i>(e.g.  LVM)</i></li>
                 <li><b>drbd</b> - Disk devices will be <a href="http://www.drbd.org/">DRBD</a>
@@ -145,7 +139,7 @@
                 <li><b>diskless</b> - This creates a virtual machine with no
                 disks. Its useful for testing only (or other special
                 cases).</li>
-            </ul></p>
+            </ul>
             <p>
             If drbd is selected, then a primary and secondary node will need to
             be chosen unless automatic allocation has been selection. DRBD will
@@ -160,8 +154,7 @@
             <p>
             The secondary node to use for the virtual machine (in case
             automatic allocation is not used).</p>
-            <p>
-            This is only required when using the drbd disk template.</p>
+            <p>This is only required when using the drbd disk template.</p>
         </div>
         <div id="help-os">
             <p>
@@ -177,27 +170,23 @@
         <div id="help-vcpus">
             <p>
             Number of virtual cpus to allocate to this virtual machine.<p>
-            <p>
-            <b><i>This will be deducted from the owner's quota.</i></b></p>
+            <p><b><i>This will be deducted from the owner's quota.</i></b></p>
         </div>
         <div id="help-ram">
             <p>
             Amount of ram to allocate to this virtual machine in megabytes.</p>
-            <p>
-            <b><i>This will be deducted from the owner's quota.</i></b></p>
+            <p><b><i>This will be deducted from the owner's quota.</i></b></p>
         </div>
         <div id="help-disk_size">
             <p>
             Size of the system disk to allocate to this virtual machine in
             megabytes.</p>
-            <p>
-            <b><i>This will be deducted from the owner's quota.</i></b></p>
+            <p><b><i>This will be deducted from the owner's quota.</i></b></p>
         </div>
         <div id="help-disk_type">
             <p>
             This parameter determines the way the disks are presented to the
             virtual machine. The possible options are:</p>
-            <p>
             <ul>
                 <li><b>paravirtual</b> - (HVM &amp; KVM)</li>
                 <li><b>ioemu</b> - (default for HVM &amp; KVM) (HVM &amp; KVM)</li>
@@ -206,24 +195,21 @@
                 <li><b>sd</b> - (KVM)</li>
                 <li><b>mtd</b> - (KVM)</li>
                 <li><b>pflash</b> - (KVM)</li>
-            </ul></p>
-            <p>
-            Valid for the Xen HVM and KVM hypervisors.</p>
+            </ul>
+            <p>Valid for the Xen HVM and KVM hypervisors.</p>
         </div>
         <div id="help-nicmode">
             <p>
             This option specifies how the virtual machine connects to the
             network. More information on this can be found in the <a
             href="http://docs.ganeti.org/ganeti/current/html/install.html#configuring-the-network">Ganeti tutorial documentation</a>.</p>
-            <p>
-            When in doubt, choose <b>bridged</b>.</p>
-            <p>
+            <p>When in doubt, choose <b>bridged</b>.</p>
             <ul>
                 <li><b>bridged</b> - The virtual machine's network interface will be
                 attached to a software bridge running on the node.</li>
                 <li><b>routed</b> - The virtual machine's network interface will be
                 routed</li>
-            </ul></p>
+            </ul>
         </div>
         <div id="help-niclink">
             <p>
@@ -238,7 +224,6 @@
             <p>
             This parameter determines the way the network cards are presented to
             the virtual machine. The possible options are:</p>
-            <p>
             <ul>
                 <li><b>rtl8139</b> - (default for Xen HVM) (HVM &amp; KVM)</li>
                 <li><b>ne2k_isa</b> - (HVM &amp; KVM)</li>
@@ -249,9 +234,8 @@
                 <li><b>pcnet</b> - (KVM)</li>
                 <li><b>e1000</b> - (KVM)</li>
                 <li><b>paravirtual</b> - (default for KVM) (KVM &amp; HVM)</li>
-            </ul></p>
-            <p>
-            Valid for the Xen PVM and KVM hypervisors.</p>
+            </ul>
+            <p>Valid for the Xen PVM and KVM hypervisors.</p>
         </div>
 
         <div id="help-kernelpath">
@@ -260,42 +244,35 @@
            the virtual machine with. Xen PVM instances always require this,
            while for KVM if this option is empty, it will cause the machine to
            load the kernel from its disks.</p>
-           <p>
-           Valid for the Xen PVM and KVM hypervisors.
+           <p>Valid for the Xen PVM and KVM hypervisors.</p>
         </div>
         <div id="help-rootpath">
             <p>
             This option specifies the name of the root device. This is always
             needed for Xen PVM, while for KVM it is only used if the
             kernel_path option is also specified.</p>
-            <p>
-            Valid for the Xen PVM and KVM hypervisors.</p>
+            <p>Valid for the Xen PVM and KVM hypervisors.</p>
         </div>
         <div id="help-serialconsole">
            <p>
            This boolean option specifies whether to emulate a serial console
            for the instance.</p>
-           <p>
-           Valid for the KVM hypervisor.</p>
+           <p>Valid for the KVM hypervisor.</p>
         </div>
         <div id="help-bootorder">
-            <p>
-            Value denoting boot order for the virtual machine.</p>
-            <p>
+            <p>Value denoting boot order for the virtual machine.</p>
             <ul>
                 <li><b>Hard Disk</b> - boot from the first disk device</li>
                 <li><b>CD-ROM</b> - boot from the cdrom (requires CD Image path
                 being set)</li>
-            </ul></p>
-            <p>
-            Valid for the Xen HVM and KVM hypervisors.</p>
+            </ul>
+            <p>Valid for the Xen HVM and KVM hypervisors.</p>
         </div>
         <div id="help-imagepath">
            <p>
            The path to a CDROM image on the node to attach to the virtual
            machine.</p>
-           <p>
-           Valid for the Xen HVM and KVM hypervisors.</p>
+           <p>Valid for the Xen HVM and KVM hypervisors.</p>
         </div>
 
 
