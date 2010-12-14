@@ -23,15 +23,19 @@ from hashlib import sha1
 from subprocess import Popen
 
 from django.conf import settings
+
+from django.contrib.sites import models as sites_app
+from django.contrib.sites.management import create_default_site
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import GenericForeignKey
 
 from django.db import models
 from django.db.models import Sum
+from django.db.models.signals import post_save, post_syncdb
 
 from object_permissions.registration import register
-from ganeti import constants
+from ganeti import constants, management
 from util import client
 from util.client import GanetiApiError
 
@@ -791,10 +795,16 @@ def update_organization(sender, instance, **kwargs):
     org.name = instance.name
     org.save()
 
+post_save.connect(create_profile, sender=User)
+post_save.connect(update_cluster_hash, sender=Cluster)
+post_save.connect(update_organization, sender=Group)
 
-models.signals.post_save.connect(create_profile, sender=User)
-models.signals.post_save.connect(update_cluster_hash, sender=Cluster)
-models.signals.post_save.connect(update_organization, sender=Group)
+# Disconnect create_default_site from django.contrib.sites so that
+#  the useless table for sites is not created. This will be
+#  reconnected for other apps to use in update_sites_module.
+post_syncdb.disconnect(create_default_site, sender=sites_app)
+post_syncdb.connect(management.update_sites_module, sender=sites_app, \
+  dispatch_uid = "ganeti.management.update_sites_module")
 
 # Register permissions on our models.
 # These are part of the DB schema and should not be changed without serious
