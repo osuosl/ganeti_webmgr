@@ -24,7 +24,7 @@
             <div id="mainmenu" class="menu">
             <p class="user">You are logged in as: <a href="{% url profile %}">{{user.username}}</a><p>
             
-            <legend></legend>
+            <h3></h3>
             <ul>
                 <li><a href="{% url cluster-list %}">Clusters</a></li>
                 <li><a href="{% url virtualmachine-list %}">Virtual Machines</a></li>
@@ -40,7 +40,7 @@
             {% with user|group_admin as group_admin %}
             
             {% if user.is_superuser or group_admin or cluster_admin %}
-            <legend>Admin</legend>
+            <h3>Admin</h3>
             <ul>
                 {% if user.is_superuser or cluster_admin%}
                     <li><a href="{% url import-orphans %}">Orphan VMs</a></li>
