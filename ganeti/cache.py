@@ -74,7 +74,7 @@ def _update_cache():
         mtimes = base.values_list('hostname', 'id', 'mtime', 'status')
         d = {}
         for name, id, mtime, status in mtimes:
-            d[name] = (id, mtime, status)
+            d[name] = (id, float(mtime), status)
         timer.tick('mtimes fetched from db       ')
         
         for info in infos:

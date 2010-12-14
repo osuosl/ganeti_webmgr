@@ -252,7 +252,7 @@ if settings.DEBUG or True:
     class TestModel(CachedClusterObject):
         """ simple implementation of a cached model that has been instrumented """
         saved = False
-        data = {'mtime': 1285883187.8692031, 'ctime': 1285799513.4741089}
+        data = {'mtime': 1285883187.8692000, 'ctime': 1285799513.4741000}
         throw_error = None
         
         def _refresh(self):

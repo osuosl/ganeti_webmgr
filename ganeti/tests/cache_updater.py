@@ -50,7 +50,7 @@ class TestCacheUpdater(TestCase, VirtualMachineTestCaseMixin):
         vm1, chaff = self.create_virtual_machine(cluster, 'vm2.osuosl.bak')
         
         os = 'image+gentoo-hardened-cf'
-        mtime_timestamp = 1285883000.8692031
+        mtime_timestamp = 1285883000.8692000
         mtime = datetime.fromtimestamp(mtime_timestamp)
         cached = datetime.now()
         
@@ -69,18 +69,18 @@ class TestCacheUpdater(TestCase, VirtualMachineTestCaseMixin):
         vm0 = VirtualMachine.objects.get(pk=vm0.id)
         vm1 = VirtualMachine.objects.get(pk=vm1.id)
         
-        self.assertEqual(mtime, vm0.mtime)
-        self.assertEqual(mtime, vm1.mtime)
+        vm0 = VirtualMachine.objects.filter(pk=vm0.id).values('mtime','cached','status','operating_system')[0]
+        vm1 = VirtualMachine.objects.filter(pk=vm1.id).values('mtime','cached','status','operating_system')[0]
         
         # properties should not be updated because mtime and status indicated it
         # was already up to date
-        self.assertNotEqual(os, vm0.operating_system)
-        self.assertNotEqual(os, vm1.operating_system)
+        self.assertNotEqual(os, vm0['operating_system'])
+        self.assertNotEqual(os, vm1['operating_system'])
         
-        if cached > vm0.cached:
+        if cached > datetime.fromtimestamp(float(vm0['cached'])):
             self.fail('cache is not newer: %s, %s' % (cached, vm0.cached))
         
-        if cached > vm1.cached:
+        if cached > datetime.fromtimestamp(float(vm1['cached'])):
             self.fail('cache is not newer: %s, %s' % (cached, vm1.cached))
 
     def test_updated_mtime(self):
@@ -91,7 +91,7 @@ class TestCacheUpdater(TestCase, VirtualMachineTestCaseMixin):
         vm1, chaff = self.create_virtual_machine(cluster, 'vm2.osuosl.bak')
         
         os = 'image+gentoo-hardened-cf'
-        mtime_timestamp = 1285883000.8692000
+        mtime_timestamp = 1285883000.1234000
         mtime = datetime.fromtimestamp(mtime_timestamp)
         new_mtime_timestamp = 1999999999.8692000
         new_mtime = datetime.fromtimestamp(new_mtime_timestamp)
@@ -103,27 +103,29 @@ class TestCacheUpdater(TestCase, VirtualMachineTestCaseMixin):
         data[0]['mtime'] = new_mtime_timestamp
         data[1]['mtime'] = new_mtime_timestamp
         cluster.rapi.GetInstances.response = data
+        
         VirtualMachine.objects.all().update(mtime=mtime, cached=cached, \
                             operating_system='image+fake', status='running')
         
         # run updater and refresh the objects from the db
         with MuteStdout():
             update_cache()
-        vm0 = VirtualMachine.objects.get(pk=vm0.id)
-        vm1 = VirtualMachine.objects.get(pk=vm1.id)
+        vm0 = VirtualMachine.objects.filter(pk=vm0.id).values('mtime','cached','status','operating_system')[0]
+        vm1 = VirtualMachine.objects.filter(pk=vm1.id).values('mtime','cached','status','operating_system')[0]
         
         # check for properties that are updated
-        self.assertEqual(new_mtime, vm0.mtime)
-        self.assertEqual(new_mtime, vm1.mtime)
-        self.assertEqual("running", vm0.status)
-        self.assertEqual("running", vm1.status)
-        self.assertEqual(os, vm0.operating_system)
-        self.assertEqual(os, vm1.operating_system)
+        self.assertEqual(os, vm0['operating_system'])
+        self.assertEqual(os, vm1['operating_system'])
+        self.assertEqual(new_mtime_timestamp, float(vm0['mtime']))
+        self.assertEqual(new_mtime_timestamp, float(vm1['mtime']))
+        self.assertEqual("running", vm0['status'])
+        self.assertEqual("running", vm1['status'])
         
-        if cached > vm0.cached:
+        
+        if cached > datetime.fromtimestamp(float(vm0['cached'])):
             self.fail('cache is not newer: %s, %s' % (cached, vm0.cached))
         
-        if cached > vm1.cached:
+        if cached > datetime.fromtimestamp(float(vm1['cached'])):
             self.fail('cache is not newer: %s, %s' % (cached, vm1.cached))
     
     def test_updated_status(self):
@@ -134,7 +136,7 @@ class TestCacheUpdater(TestCase, VirtualMachineTestCaseMixin):
         vm1, chaff = self.create_virtual_machine(cluster, 'vm2.osuosl.bak')
         
         os = 'image+gentoo-hardened-cf'
-        mtime_timestamp = 1285883000.8692031
+        mtime_timestamp = 1285883000.8692000
         mtime = datetime.fromtimestamp(mtime_timestamp)
         cached = datetime.now()
         
@@ -150,19 +152,19 @@ class TestCacheUpdater(TestCase, VirtualMachineTestCaseMixin):
         # run updater and refresh the objects from the db
         with MuteStdout():
             update_cache()
-        vm0 = VirtualMachine.objects.get(pk=vm0.id)
-        vm1 = VirtualMachine.objects.get(pk=vm1.id)
+        vm0 = VirtualMachine.objects.filter(pk=vm0.id).values('mtime','cached','status','operating_system')[0]
+        vm1 = VirtualMachine.objects.filter(pk=vm1.id).values('mtime','cached','status','operating_system')[0]
         
         # check for properties that are updated
-        self.assertEqual(mtime, vm0.mtime)
-        self.assertEqual(mtime, vm1.mtime)
-        self.assertEqual("running", vm0.status)
-        self.assertEqual("running", vm1.status)
-        self.assertEqual(os, vm0.operating_system)
-        self.assertEqual(os, vm1.operating_system)
+        self.assertEqual(os, vm0['operating_system'])
+        self.assertEqual(os, vm1['operating_system'])
+        self.assertEqual(mtime_timestamp, float(vm0['mtime']))
+        self.assertEqual(mtime_timestamp, float(vm1['mtime']))
+        self.assertEqual("running", vm0['status'])
+        self.assertEqual("running", vm1['status'])
         
-        if cached > vm0.cached:
+        if cached > datetime.fromtimestamp(float(vm0['cached'])):
             self.fail('cache is not newer: %s, %s' % (cached, vm0.cached))
         
-        if cached > vm1.cached:
+        if cached > datetime.fromtimestamp(float(vm1['cached'])):
             self.fail('cache is not newer: %s, %s' % (cached, vm1.cached))

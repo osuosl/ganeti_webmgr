@@ -29,13 +29,15 @@ class PreciseDateTimeField(DecimalField):
     
     __metaclass__ = models.SubfieldBase
     
-    def __init__(self, decimal_places=7, **kwargs):
+    def __init__(self, **kwargs):
         # XXX set default values.  doing this here rather than as kwargs
         # because default ordering of DecimalField.__init__ may be different
         if not 'decimal_places' in kwargs:
-            kwargs[''] = 7
+            kwargs['decimal_places'] = 6
         if not 'max_digits' in kwargs:
             kwargs['max_digits'] = kwargs['decimal_places'] + 12
+        
+        self.shifter = 10.0**kwargs['decimal_places']
         
         super(PreciseDateTimeField, self).__init__(**kwargs)
 
@@ -47,20 +49,34 @@ class PreciseDateTimeField(DecimalField):
             return None
         if isinstance(value, (datetime,)):
             return value
-        if isinstance(value, (Decimal,)):
+        if isinstance(value, (Decimal, str, unicode)):
             value = float(value)
         if isinstance(value, (float,)):
             return datetime.fromtimestamp(value)
+        
         raise ValidationError('Unable to convert %s to datetime.' % value)
 
     def get_db_prep_value(self, value, **kwargs):
         if value:
-            return time.mktime(value.timetuple()) + value.microsecond/(10*self.decimal_places)
+            return time.mktime(value.timetuple()) + value.microsecond/(10**self.decimal_places)
         return None
     
     def get_db_prep_save(self, value, connection):
         if value:
-            d = Decimal('%f' % (time.mktime(value.timetuple()) + value.microsecond/(10*self.decimal_places)))
-            return connection.ops.value_to_db_decimal(d, self.max_digits, self.decimal_places)
+            if isinstance(value, (datetime,)):
+                return Decimal('%f' % (time.mktime(value.timetuple()) + value.microsecond/self.shifter))
+            
+            if isinstance(value, (float,)):
+                return Decimal(float)
+            
+            if isinstance(value, (Decimal,)):
+                return value
             
         return None
+    
+    def db_types(self, connection):
+        engine = connection.settings_dict['ENGINE']
+        if engine == 'django.db.backends.mysql':
+            return 'decimal(%s, %s)' % (self.max_digits, self.decimal_places)
+        elif  engine == 'django.db.backends.sqlite3':
+            return 'decimal(%s,%s)' % (self.max_digits, self.decimal_places)
