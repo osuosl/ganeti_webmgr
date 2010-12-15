@@ -41,9 +41,11 @@ class Timer():
     
     def __init__(self, start=True):
         self.start()
+        self.ticks = []
     
     def start(self):
         self.start = datetime.now()
+        self.ticks = []
         self.last_tick = self.start
     
     def stop(self):
@@ -52,8 +54,10 @@ class Timer():
     
     def tick(self, msg=''):
         now = datetime.now()
-        print '    %s - Time since last tick: %s' % (msg, (now-self.last_tick))
+        duration = now-self.last_tick
+        print '    %s : %s' % (msg, duration)
         self.last_tick = now
+        self.ticks.append(duration.seconds + duration.microseconds/1000000.0)
 
 
 def _update_cache():
@@ -74,15 +78,14 @@ def _update_cache():
         mtimes = base.values_list('hostname', 'id', 'mtime', 'status')
         d = {}
         for name, id, mtime, status in mtimes:
-            d[name] = (id, mtime, status)
+            d[name] = (id, float(mtime) if mtime else None, status)
         timer.tick('mtimes fetched from db       ')
         
         for info in infos:
-            
-            try:
-                name = info['name']
+            name = info['name']
+            if name in d:
                 id, mtime, status = d[name]
-                if not mtime or mtime < datetime.fromtimestamp(info['mtime']) \
+                if not mtime or mtime < info['mtime'] \
                 or status != info['status']:
                     #print '    Virtual Machine (updated) : %s' % name
                     #print '        %s :: %s' % (mtime, datetime.fromtimestamp(info['mtime']))
@@ -95,8 +98,7 @@ def _update_cache():
                     VirtualMachine.objects.filter(pk=id) \
                         .update(serialized_info=cPickle.dumps(info), **data)
                     updated += 1
-                
-            except VirtualMachine.DoesNotExist:
+            else:
                 # new vm
                 vm = VirtualMachine(cluster=cluster, hostname=info['name'])
                 vm.info = info
@@ -114,14 +116,15 @@ def _update_cache():
         timer.tick('records or timestamps updated')
     print '    updated: %s out of %s' % (updated, len(infos))
     timer.stop()
-    
+    return timer.ticks
+
 
 from django.db import transaction
 
 @transaction.commit_on_success()
 def update_cache():
     #with transaction.commit_on_success():
-    _update_cache()
+    return _update_cache()
 
 
 

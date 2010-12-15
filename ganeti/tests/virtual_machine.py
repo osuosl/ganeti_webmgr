@@ -153,8 +153,8 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         vm, cluster = self.create_virtual_machine()
         vm.info = INSTANCE
         
-        self.assertEqual(vm.ctime, datetime.fromtimestamp(1285799513.4741089))
-        self.assertEqual(vm.mtime, datetime.fromtimestamp(1285883187.8692031))
+        self.assertEqual(vm.ctime, datetime.fromtimestamp(1285799513.4741000))
+        self.assertEqual(vm.mtime, datetime.fromtimestamp(1285883187.8692000))
         self.assertEqual(vm.ram, 512)
         self.assertEqual(vm.virtual_cpus, 2)
         self.assertEqual(vm.disk_size, 5120)
