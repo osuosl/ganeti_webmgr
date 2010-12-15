@@ -486,11 +486,14 @@ def os_prettify(oses):
     d = defaultdict(list)
 
     for name in oses:
-        # Split into type and flavor.
-        t, flavor = name.split("+", 1)
-        # Prettify flavors. "this-boring-string" becomes "This Boring String"
-        flavor = " ".join(word.capitalize() for word in flavor.split("-"))
-        d[t.capitalize()].append((name, flavor))
+        try:
+            # Split into type and flavor.
+            t, flavor = name.split("+", 1)
+            # Prettify flavors. "this-boring-string" becomes "This Boring String"
+            flavor = " ".join(word.capitalize() for word in flavor.split("-"))
+            d[t.capitalize()].append((name, flavor))
+        except ValueError:
+            d["Unknown"].append((name, name))
 
     l = d.items()
     l.sort()
