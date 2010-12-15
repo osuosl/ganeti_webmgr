@@ -41,9 +41,11 @@ class Timer():
     
     def __init__(self, start=True):
         self.start()
+        self.ticks = []
     
     def start(self):
         self.start = datetime.now()
+        self.ticks = []
         self.last_tick = self.start
     
     def stop(self):
@@ -52,8 +54,10 @@ class Timer():
     
     def tick(self, msg=''):
         now = datetime.now()
-        print '    %s : %s' % (msg, (now-self.last_tick))
+        duration = now-self.last_tick
+        print '    %s : %s' % (msg, duration)
         self.last_tick = now
+        self.ticks.append(duration.seconds + duration.microseconds/1000000.0)
 
 
 def _update_cache():
@@ -112,14 +116,15 @@ def _update_cache():
         timer.tick('records or timestamps updated')
     print '    updated: %s out of %s' % (updated, len(infos))
     timer.stop()
-    
+    return timer.ticks
+
 
 from django.db import transaction
 
 @transaction.commit_on_success()
 def update_cache():
     #with transaction.commit_on_success():
-    _update_cache()
+    return _update_cache()
 
 
 
