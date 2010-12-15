@@ -36,8 +36,13 @@ Cluster = models.Cluster
 ClusterUser = models.ClusterUser
 Job = models.Job
 
-__all__ = ('TestVirtualMachineModel', 'TestVirtualMachineViews', \
-           'TestNewVirtualMachineForm', 'VirtualMachineTestCaseMixin')
+__all__ = (
+    'TestVirtualMachineModel',
+    'TestVirtualMachineViews',
+    "TestVirtualMachineHelpers",
+    'TestNewVirtualMachineForm',
+    'VirtualMachineTestCaseMixin',
+)
 
 class VirtualMachineTestCaseMixin():
     def create_virtual_machine(self, cluster=None, hostname='vm1.osuosl.bak'):
@@ -1743,7 +1748,11 @@ class TestVirtualMachineHelpers(TestCase):
 
         # Test a single entry.
         self.assertEqual(os_prettify(["hurp+durp"]),
-            [("Hurp", ("hurp+durp", "Durp"))])
+            [
+                ("Hurp",
+                    [("hurp+durp", "Durp")]
+                )
+            ])
 
         # Test the example in the os_prettify() docstring.
         self.assertEqual(
@@ -1752,12 +1761,17 @@ class TestVirtualMachineHelpers(TestCase):
                 "image+fodoro-core",
                 "dobootstrop+dobion-lotso",
             ]), [
-                ("Image",
+                ("Dobootstrop", [
+                    ("dobootstrop+dobion-lotso", "Dobion Lotso"),
+                ]),
+                ("Image", [
                     ("image+obonto-hungry-hydralisk",
                         "Obonto Hungry Hydralisk"),
                     ("image+fodoro-core", "Fodoro Core"),
-                ),
-                ("Dobootstrop",
-                    ("dobootstrop+dobion-lotso", "Dobion Lotso"),
-                ),
+                ]),
             ])
+
+        # Test entries that do not follow the pattern.
+        # This one is from #2157. Still parses, just in a weird way.
+        self.assertEqual(os_prettify(["debian-pressed+ia32"]),
+            [('Debian-pressed', [('debian-pressed+ia32', 'Ia32')])])
