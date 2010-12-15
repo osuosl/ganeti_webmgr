@@ -108,7 +108,7 @@
             // keys and editing existing ones
             if (id) url_id = id;
             else url_id = "";
-            $(this).action = url_id;
+            this.action = this.action + url_id;
 
             $(this).ajaxSubmit({success: update});
             return false;
