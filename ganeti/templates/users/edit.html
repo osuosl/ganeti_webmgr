@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block head %}
-    {% include "ssh_keys/ajax_header.html" %}
+    {% include "ssh_keys/header.html" %}
 {% endblock %}
 
 {% block content %}
@@ -31,6 +31,6 @@
 {% if username %}
 <br />
 <h2>{{username.username}} SSH keys</h2>
-{% include "ssh_keys/ajax_list.html" %}
+{% include "ssh_keys/list.html" %}
 {% endif %}
 {% endblock %}

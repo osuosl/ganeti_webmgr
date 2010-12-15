@@ -4,7 +4,7 @@
 {% block title %}User Profile{% endblock %}
 
 {% block head %}
-    {% include "ssh_keys/ajax_header.html" %}
+    {% include "ssh_keys/header.html" %}
 {% endblock %}
 
 {% block content %}
@@ -16,6 +16,6 @@
         </form>
     </fieldset>
 
-    <h2>{{user.username}} SSH keys</h2>
-    {% include "ssh_keys/ajax_list.html" %}
+    <h2>SSH keys</h2>
+    {% include "ssh_keys/list.html" %}
 {% endblock %}

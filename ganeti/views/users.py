@@ -7,7 +7,7 @@ from django import forms
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm, SetPasswordForm
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
@@ -147,91 +147,9 @@ def user_profile(request):
      context_instance=RequestContext(request))
 
 
-########### K E Y S
 
 @login_required
-def user_keys_list(request, user_id=None):
-    user = request.user
-    if not (user.is_superuser or user_id==user.id):
-        return HttpResponseForbidden('Only superuser or owner can list user\'s SSH keys.')
-
-    keys = SSHKey.objects.filter(user__pk=user_id).order_by("pk")
-
-    return render_to_response("users/keys_list.html", {
-            'keyslist': keys,
-            'user_id': user_id,
-            'key_form': SSHKeyForm(),
-        },
-        context_instance=RequestContext(request),
-    )
-
-
-@login_required
-def key_add(request, user_id=None):
-    user = request.user
-    if not (user.is_superuser or user_id==user.id):
-        return HttpResponseForbidden('Only superuser or owner can create new SSH key.')
-
-    if request.method == "POST":
-        form = SSHKeyForm(request.POST, instance=SSHKey(user=User.objects.get(pk=user_id)))
-        if form.is_valid():
-            obj = form.save()
-            return HttpResponseRedirect(reverse('user-keys-list', args=[obj.user.pk]))
-
-    else:
-        form = SSHKeyForm()
-
-    return render_to_response("ssh_keys/key_edit.html", {
-            'form':form,
-        },
-        context_instance=RequestContext(request),
-    )
-
-
-@login_required
-def key_edit(request, key_id=None):
-    user = request.user
-    key_edit = get_object_or_404(SSHKey, pk=key_id)
-
-    if not (user.is_superuser or key_edit.user==user):
-        return HttpResponseForbidden('Only superuser or owner can edit user\'s SSH key.')
-
-    if request.method == "POST":
-        form = SSHKeyForm(data=request.POST, instance=key_edit)
-        if form.is_valid():
-            obj = form.save()
-            return HttpResponseRedirect(reverse('user-keys-list', args=[obj.user.pk]))
-
-    elif request.method == "DELETE":
-        key_edit.delete()
-        return HttpResponse('1', mimetype='application/json')
-
-    else:
-        form = SSHKeyForm(instance=key_edit)
-
-    return render_to_response("ssh_keys/key_edit.html", {
-            'form': form,
-            'key': key_edit,
-        },
-        context_instance=RequestContext(request),
-    )
-
-
-@login_required
-def key_delete(request, key_id=None):
-    user = request.user
-    key_edit = get_object_or_404(SSHKey, pk=key_id)
-
-    user_id = key_edit.user.pk
-    if not (user.is_superuser or key_edit.user==user):
-        return HttpResponseForbidden('Only superuser or owner can delete user\'s SSH key.')
-
-    key_edit.delete()
-    return HttpResponseRedirect(reverse('user-keys-list', args=[user_id]))
-
-
-@login_required
-def key_ajax_get(request, key_id=None):
+def key_get(request, key_id=None):
     if request.is_ajax:
         user = request.user
         form, user_cmp = None, request.user
@@ -244,46 +162,51 @@ def key_ajax_get(request, key_id=None):
         if not (user.is_superuser or user_cmp==user):
             return HttpResponseForbidden("Only superuser or owner can get user's SSH key.")
         
-        return render_to_response(
-                "ssh_keys/form.html",{"key_form":form},
-                context_instance=RequestContext(request))
+        return render_to_response("ssh_keys/form.html", {"key_form": form},
+                                  context_instance=RequestContext(request))
     return HttpResponse("Cannot retrieve information")
 
 
 @login_required
-def keys_ajax_list(request, user_id=None):
+def key_save(request, key_id=None):
     if request.is_ajax:
-        user = request.user
-        if not (user.is_superuser or user==user_id):
-            return HttpResponseForbidden("Only superuser or owner can get user's SSH keys.")
+        # get key's user id
+        if key_id:
+            key_edit = get_object_or_404(SSHKey, pk=key_id)
+            owner_id = key_edit.user.id
+        else:
+            key_edit = SSHKey(user=request.user)
+            owner_id = request.user.id
 
-        keys = SSHKey.objects.filter(user__pk=user_id).order_by("pk")
-        return render_to_response("ssh_keys/ajax_list_response.html", {
-                'keyslist': keys
-            },
-            context_instance=RequestContext(request),
-        )
-    return HttpResponse("Cannot retrieve information")
-    
-
-@login_required
-def key_ajax_save(request, user_id=None, key_id=None):
-    if request.is_ajax:
+        # check if the user has appropriate permissions
         user = request.user
-        if not (user.is_superuser or user==user_id):
+        if not (user.is_superuser or user.id==owner_id):
             return HttpResponseForbidden("Only superuser or owner can save user's SSH key.")
 
-        key_id = request.POST.get("id")
-        if key_id: instance=SSHKey(user=User.objects.get(pk=user_id), pk=int(key_id))
-        else: instance=SSHKey(user=User.objects.get(pk=user_id))
-        form = SSHKeyForm(data=request.POST, instance=instance)
+        form = SSHKeyForm(data=request.POST, instance=key_edit)
         if form.is_valid():
             obj = form.save()
-            return render_to_response("ssh_keys/row.html",
-                    {"key":obj},context_instance=RequestContext(request))
-            return HttpResponse(obj.id, mimetype="application/json")
+            return render_to_response("ssh_keys/row.html", {"key": obj},
+                                      context_instance=RequestContext(request))
         else:
-            return HttpResponse(json.dumps(form.errors), mimetype="application/json", status=400)
+            return HttpResponse(json.dumps(form.errors),
+                                mimetype="application/json")
+    return HttpResponse("Cannot retrieve information")
+
+
+@login_required
+def key_delete(request, key_id=None):
+    user = request.user
+    key_edit = get_object_or_404(SSHKey, pk=key_id)
+
+    user_id = key_edit.user.pk
+    if not (user.is_superuser or key_edit.user==user):
+        return HttpResponseForbidden('Only superuser or owner can delete user\'s SSH key.')
+
+    if request.method == "DELETE":
+        key_edit.delete()
+        return HttpResponse("1", mimetype="application/json")
+
     return HttpResponse("Cannot retrieve information")
 
 
@@ -292,7 +215,6 @@ class SSHKeyForm(forms.ModelForm):
         model = SSHKey
         exclude = ("user", )
 
-############ K E Y S
 
 class UserEditForm(UserChangeForm):
     """

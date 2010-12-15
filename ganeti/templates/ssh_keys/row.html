@@ -1,10 +1,9 @@
 {% load webmgr_tags %}
-        <tr id="tr{{ key.id }}">
-            <td name="id">{{ key.id }}</td>
+        <tr id="{{ key.id }}">
+            <td>{{ key.key|ssh_keytype }}</td>
+            <td name="key">{{ key.key|ssh_keypart_truncate:50 }}</td>
             <td name="host">{{ key.key|ssh_hostname }}</td>
-            <td>{{ key.key|truncate:40 }}</td>
 
-            <!-- XXX: invalid to nest <div> inside <a>-->
-            <td><a href="{% url key-edit key.id %}" class="edit"><div class="edit"></div></a></td>
+            <td><a href="{% url key-get key.id %}" class="edit"><div class="edit"></div></a></td>
             <td><a href="{% url key-delete key.id %}" class="delete"><div class="delete"></div></a></td>
         </tr>

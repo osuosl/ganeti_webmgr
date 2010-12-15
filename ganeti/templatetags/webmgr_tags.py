@@ -40,6 +40,16 @@ def vmfield(field):
 
 @register.filter
 @stringfilter
+def truncate(value, count):
+    """
+    Truncates value after specified number of chars
+    """
+    if count < len(value):
+        return value[:count] + " ..."
+    return value
+
+@register.filter
+@stringfilter
 def ssh_hostname(value):
     """
     If value is good SSH public key, then returns the user@hostname for who
@@ -52,13 +62,32 @@ def ssh_hostname(value):
 
 @register.filter
 @stringfilter
-def truncate(value, count):
+def ssh_keytype(value):
     """
-    Truncates value after specified number of chars
+    If value is good SSH public key, then returns the user@hostname for who
+    the key is set.
     """
-    if count < len(value):
-        return value[:count] + " ..."
+    pos = value.find(" ")
+    if pos > -1:
+        return value[:pos]
     return value
+
+@register.filter
+@stringfilter
+def ssh_keypart_truncate(value, count):
+    try:
+        pos0 = value.find(" ")
+        pos1 = value.rfind(" ")
+        if (pos0==-1 or pos1==-1) or (pos0==pos1):
+            raise BaseException
+        value = value[pos0+1:pos1]
+        
+        if len(value) > count:
+            value = "%s ... %s" % (value[:(count/2)], value[(-count/2):])
+    except BaseException:
+        pass
+    finally:
+        return value
 
 """
 These filters were taken from Russel Haering's GanetiWeb project

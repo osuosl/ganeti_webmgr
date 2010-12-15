@@ -1,0 +1,117 @@
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.form.js"></script>
+<script type="text/javascript">
+    var id = null;
+
+    // update appropriate row or add new in case the request succeded
+    function update(responseText, statusText, xhr, $form) {
+        if (xhr.getResponseHeader("Content-Type") == "application/json") {
+            // handle errors
+            fail(responseText);
+
+        } else {
+            // everything went fine
+
+            // int is the value of record ID and means success
+            $(".qtip").qtip("destroy");
+
+            // get only one table row, not the whole table
+            if (id!=null) {
+                // old record, update existing row
+                $("#"+id).replaceWith(responseText);
+            } else {
+                // new record, add to the end of table
+                $("#key_list").html( $("#key_list").html() + responseText);
+            }
+        }
+    }
+
+    // show list of errors from XHR object request
+    function fail(responseText) {
+        // parse errors
+        errors = responseText;
+        for (key in errors) {
+            $(".qtip #errors").append("<li>"+ errors[key] +"</li>");
+        }
+    } 
+
+    // Open new qtip popup window
+    function popup_qtip(obj, get_url) {
+        // destroy old qtip before showing new one
+        $(".qtip").qtip("destroy");
+
+        $(obj).qtip({
+            content: {
+                url: get_url,
+                title: {text:"SSH key: ", button: "close"},
+            },
+            position: {
+                corner: {target:"bottomLeft", tooltip:"topRight"}
+            },
+            style: {name:"dark",border:{radius:5},width:360,tip:"bottomMiddle",
+            background:"#eee"},
+            show: {when: false, ready: true},
+            hide: {fixed: true, when: false},
+            api: {onShow: function(){$(".ajax_form textarea").focus()}}
+        });
+    }
+
+    $(document).ready(function() {
+
+        // "Add" button clicked
+        $("#add_key").live("click", function() {
+            // popup new qtip window
+            popup_qtip(this, this.href);
+
+            // set global var id to null
+            id = null;
+            return false;
+        });
+
+        // "Delete" link clicked
+        $("a.delete").live("click", function(){
+            host = $(this).parents("tr").children("[name=\"host\"]").html();
+            key = $(this).parents("tr").children("[name=\"key\"]").html();
+            _id = $(this).parents("tr").attr("id");
+            if (confirm("Remove key \""+key+"\" for "+host + "?")) {
+                parent = this.parentNode.parentNode;
+                $.delete_(this.href, function(){
+                    $(parent).remove();
+                });
+            }
+
+            // ensures we don't save already deleted key
+            if (id==_id) {
+                $(".qtip").qtip("destroy");
+                id = null;
+            }
+            return false;
+        });
+
+        // "Edit" link clicked
+        $("a.edit").live("click", function(){
+            id = $(this).parents("tr").attr("id");
+
+            // popup new qtip window
+            popup_qtip(this, this.href);
+
+            return false;
+        });
+
+        // Form submitted
+        $(".ajax_form").live("submit", function() {
+            //makes sure no errors are presented
+            $(".qtip #errors").empty();
+
+            //setting ID
+            // this is needed because there are different urls for creating new
+            // keys and editing existing ones
+            if (id) url_id = id;
+            else url_id = "";
+            $(this).action = url_id;
+
+            $(this).ajaxSubmit({success: update});
+            return false;
+        });
+    });
+</script>
