@@ -84,7 +84,8 @@ def delete(request, cluster_slug, instance):
 
 @login_required
 def vnc(request, cluster_slug, instance):
-    instance = get_object_or_404(VirtualMachine, hostname=instance)
+    instance = get_object_or_404(VirtualMachine, hostname=instance, \
+                                 cluster__slug=cluster_slug)
 
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', instance) or \
