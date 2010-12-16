@@ -207,6 +207,96 @@ class TestClusterModel(TestCase):
         
         self.assertEqual([u'does.not.exist.org'], cluster.missing_in_ganeti)
 
+    def test_sync_virtual_machines_in_edit_view(self):
+        '''
+        Test if sync_virtual_machines is run after editing a cluster
+        for the second time
+        '''
+        #configuring stuff needed to test edit view
+        user = User(id=2, username='tester0')
+        user.set_password('secret')
+        user.save()
+        cluster = Cluster(hostname='test.osuosl.test', slug='OSL_TEST')
+        cluster.save()
+        url = '/cluster/%s/edit/' % cluster.slug
+
+        dict_ = globals()
+        dict_['user'] = user
+        dict_['cluster'] = cluster
+        dict_['c'] = Client()
+
+        cluster.virtual_machines.all().delete()
+
+        #run view_edit test
+        response = c.get(url, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'registration/login.html')
+        
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.get(url)
+        self.assertEqual(403, response.status_code)
+        
+        user.grant('admin', cluster)
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'cluster/edit.html')
+        self.assertEqual(cluster, response.context['cluster'])
+        user.revoke('admin', cluster)
+
+        user.is_superuser = True
+        user.save()
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'cluster/edit.html')
+        
+        data = dict(hostname='new-host-1.hostname',
+                    slug='new-host-1',
+                    port=5080,
+                    description='testing editing clusters',
+                    username='tester',
+                    password = 'secret',
+                    confirm_password = 'secret',
+                    virtual_cpus=1,
+                    disk=2,
+                    ram=3
+                    )
+        
+        data_ = data.copy()
+        response = c.post(url, data, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'cluster/detail.html')
+        cluster = response.context['cluster']
+        del data_['confirm_password']
+        for k, v in data_.items():
+            self.assertEqual(v, getattr(cluster, k))
+
+        self.assert_(cluster.virtual_machines.all().exists())
+
+        cluster.virtual_machines.all().delete()
+        
+        #run view_edit again..
+        url = '/cluster/%s/edit/' % cluster.slug
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'cluster/edit.html')
+        
+        data_ = data.copy()
+        response = c.post(url, data, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'cluster/detail.html')
+        cluster = response.context['cluster']
+        del data_['confirm_password']
+        for k, v in data_.items():
+            self.assertEqual(v, getattr(cluster, k))
+
+        #test success
+        self.assert_(cluster.virtual_machines.all().exists())
+
 
 class TestClusterViews(TestCase):
     
