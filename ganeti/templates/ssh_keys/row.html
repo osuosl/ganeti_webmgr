@@ -1,6 +1,5 @@
 {% load webmgr_tags %}
         <tr id="{{ key.id }}">
-            <td>{{ key.key|ssh_keytype }}</td>
             <td name="key">{{ key.key|ssh_keypart_truncate:50 }}</td>
             <td name="host">{{ key.key|ssh_hostname }}</td>
 

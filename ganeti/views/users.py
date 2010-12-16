@@ -195,7 +195,7 @@ def key_save(request, key_id=None):
 
 
 @login_required
-def key_delete(request, key_id=None):
+def key_delete(request, key_id):
     user = request.user
     key_edit = get_object_or_404(SSHKey, pk=key_id)
 
