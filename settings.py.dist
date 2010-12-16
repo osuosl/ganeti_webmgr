@@ -30,12 +30,11 @@ TIME_ZONE = 'America/Los_Angeles'
 # http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = 'en-us'
 
-# SITE_ID is used to by django.contrib.sites module to associate the database record
-#  with the SITE_ID of an application
+# Unique site id used by many modules to distinguish site from others.
 SITE_ID = 1
 
-# SITE_NAME and SITE_DOMAIN are used by the post_syncdb signal to update the database record
-#  used by the django.contrib.sites module so that admins don't have to manually set this.
+# Site name and domain referenced by some modules to provide links back to
+#  the site.
 SITE_NAME = 'Ganeti Web Manager'
 SITE_DOMAIN = 'localhost:8000'
 
