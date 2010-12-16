@@ -1775,3 +1775,12 @@ class TestVirtualMachineHelpers(TestCase):
         # This one is from #2157. Still parses, just in a weird way.
         self.assertEqual(os_prettify(["debian-pressed+ia32"]),
             [('Debian-pressed', [('debian-pressed+ia32', 'Ia32')])])
+
+        # Test that #2157 causes "Unknown" entries.
+        self.assertEqual(os_prettify(["deb-ver1", "noop"]),
+            [
+                ("Unknown", [
+                    ("deb-ver1", "deb-ver1"),
+                    ("noop", "noop"),
+                ]),
+            ])
