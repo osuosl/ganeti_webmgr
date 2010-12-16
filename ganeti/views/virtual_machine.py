@@ -24,6 +24,7 @@ import urllib2
 from time import sleep
 
 from django import forms
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
@@ -92,11 +93,14 @@ def vnc(request, cluster_slug, instance):
         user.has_perm('admin', instance.cluster)):
         return render_403(request, 'You do not have permission to vnc on this')
 
-    #port, password = instance.setup_vnc_forwarding()
+    if settings.VNC_PROXY:
+        host = 'localhost'
+        port, password = instance.setup_vnc_forwarding()
 
-    host = instance.info['pnode']
-    port = instance.info['network_port']
-    password = ''
+    else:
+        host = instance.info['pnode']
+        port = instance.info['network_port']
+        password = ''
 
     return render_to_response("virtual_machine/vnc.html",
                               {'instance': instance,

@@ -36,6 +36,10 @@ from ganeti.fields import PreciseDateTimeField
 from util import client
 from util.client import GanetiApiError
 
+if settings.VNC_PROXY:
+    from vncauthproxy.vapclient import request_forwarding
+
+
 RAPI_CACHE = {}
 RAPI_CACHE_HASHES = {}
 def get_rapi(hash, cluster):
@@ -502,12 +506,11 @@ class VirtualMachine(CachedClusterObject):
         return job
 
     def setup_vnc_forwarding(self):
-        #password = self.set_random_vnc_password(instance)
         password = 'none'
         info_ = self.info
         port = info_['network_port']
         node = info_['pnode']
-        Popen(['util/portforwarder.py', '%d'%port, '%s:%d'%(node, port)])
+        request_forwarding(12345, self.hostname, port, password)
         return port, password
 
     def __repr__(self):
