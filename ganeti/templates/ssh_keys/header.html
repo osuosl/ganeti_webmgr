@@ -1,3 +1,7 @@
+<style>
+    #key_list a {background:none;}
+    #key_list a.edit div {padding-right:10px;}
+</style>
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.form.js"></script>
 <script type="text/javascript">
@@ -14,7 +18,6 @@
 
             // int is the value of record ID and means success
             $(".qtip").hide();
-            $(".qtip").qtip("destroy");
 
             // get only one table row, not the whole table
             if (id!=null) {
@@ -45,12 +48,12 @@
         $(obj).qtip({
             content: {
                 url: get_url,
-                title: {text:"SSH key: ", button: "close"},
+                title: {text:"SSH key: ", button: "close"}
             },
             position: {
                 corner: {target:"bottomLeft", tooltip:"topRight"}
             },
-            style: {name:"dark",border:{radius:5},width:360,tip:"bottomMiddle",
+            style: {name:"dark",border:{radius:5},width:390,tip:false,
             background:"#eee"},
             show: {when: false, ready: true},
             hide: {fixed: true, when: false},
