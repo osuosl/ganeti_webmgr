@@ -4,6 +4,7 @@
 {% block title %} Virtual Machine {{ instance.hostname }}{% endblock %}
 {% block head %}
 <link href="{{MEDIA_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.cookie.js"></script>
 <style>
 .ui-widget-header {background:none; border-width:0 0 1px 0; -moz-border-radius:0px;}
 .ui-widget-content {border:0;}
@@ -52,7 +53,13 @@
     var checkInterval;
 
     $(document).ready(function() {
-        $('#tabs').tabs({ spinner: false});
+        $('#tabs').tabs({ 
+            spinner: false,
+            cookie: {
+                expires: 1,
+                name: 'vm-tabs-cookie'
+            },
+		});
         {% if admin %}
             {% ifnotequal instance.info.status "running" %}
                 vnc_tab_index = 2;
@@ -62,7 +69,6 @@
         
         $("#actions a").not('.delete').click(function(){
             if (actions_enabled){
-                
                 $.post(this.href, action_response);
             }
             return false;

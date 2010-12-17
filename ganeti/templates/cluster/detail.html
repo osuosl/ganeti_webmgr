@@ -10,6 +10,7 @@
     </style>
     
     <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
+	<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.cookie.js"></script>
     <script src="{{MEDIA_URL}}/js/jquery-ui.min.js"></script>
     <script src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
     <script type="text/javascript">
@@ -27,8 +28,12 @@
         };
         
         $(document).ready(function() {
-            $('#tabs').tabs({ 
+            $('#tabs').tabs({
                 spinner: false,
+                cookie: {
+                    expires: 1,
+                    name: 'cluster-tabs-cookie'
+                },
                 select: function(event, ui) {
                     var tabID = "#ui-tabs-"+(ui.index);
                     $(tabID).html("<div class='spinner'><br/>Loading...<br/><br/><img src='{{MEDIA_URL}}/images/ajax-loader.gif'></div>");
@@ -49,7 +54,6 @@
                 }
                 return false;
             });
-            
         });
     </script>
 {% endblock %}
