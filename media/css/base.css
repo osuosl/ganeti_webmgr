@@ -19,7 +19,7 @@ body {
 
 h1 {font-size: 1.5em; margin-top: 0px;}
 h2 {font-size: 1.4em;}
-h3 {font-size: 1.1em; margin-bottom: .5ex;}
+h3 {font-size: 1.1em; margin: 15px 0 0.5ex 0;}
 h3 a, h3 a:visited {color: #559BD7; font-size: 1em; text-decoration: none;}
 
 a:link, a:visited{color: #5B80B2; text-decoration: none;}

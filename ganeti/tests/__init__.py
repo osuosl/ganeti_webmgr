@@ -24,5 +24,6 @@ from ganeti.tests.cluster_user import *
 from ganeti.tests.importing import *
 from ganeti.tests.job import *
 from ganeti.tests.rapi_cache import *
+from ganeti.tests.ssh_keys import *
 from ganeti.tests.users import *
 from ganeti.tests.virtual_machine import *

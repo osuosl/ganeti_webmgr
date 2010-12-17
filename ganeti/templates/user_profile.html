@@ -1,5 +1,11 @@
 {% extends "base.html" %}
+{% load webmgr_tags %}
+
 {% block title %}User Profile{% endblock %}
+
+{% block head %}
+    {% include "ssh_keys/header.html" %}
+{% endblock %}
 
 {% block content %}
     <h1>Profile information for {{user.username}}</h1>
@@ -9,4 +15,7 @@
             <input class="submit" id="save" type="submit" value="Update"/>
         </form>
     </fieldset>
-{% endblock content %}
+
+    <h3>SSH keys</h3>
+    {% include "ssh_keys/list.html" %}
+{% endblock %}
