@@ -30,8 +30,13 @@ TIME_ZONE = 'America/Los_Angeles'
 # http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = 'en-us'
 
+# Unique site id used by many modules to distinguish site from others.
 SITE_ID = 1
 
+# Site name and domain referenced by some modules to provide links back to
+#  the site.
+SITE_NAME = 'Ganeti Web Manager'
+SITE_DOMAIN = 'localhost:8000'
 
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
