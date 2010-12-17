@@ -185,20 +185,20 @@
 <ul id="messages"></ul>
 <div id="tabs">
     <ul id="tabs">
-        <li><a href="#tab1"><span>Overview</span></a></li>
+        <li><a href="#overview"><span>Overview</span></a></li>
         {% comment %}
         <li><a href="#configuration"><span>Configuration</span></a></li>
         {% endcomment %}
         {% if admin %}
-            <li><a href="{% url vm-users cluster.slug instance.hostname %}"><span>Users</span></a></li>
+            <li><a title="users" href="{% url vm-users cluster.slug instance.hostname %}"><span>Users</span></a></li>
             <li>
-                <a href="{% url instance-vnc cluster.slug instance.hostname %}">
+                <a title="console" href="{% url instance-vnc cluster.slug instance.hostname %}">
                     <span>Console</span>
                 </a>
             </li>
         {%endif%}
     </ul>
-    <div id="tab1" class="tab_content">
+    <div id="overview" class="tab_content">
         <ul id="actions">
             {% with instance.cluster.username as username %}
                 {% if remove and username %}
