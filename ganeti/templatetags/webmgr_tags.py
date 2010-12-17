@@ -50,14 +50,15 @@ def truncate(value, count):
 
 @register.filter
 @stringfilter
-def ssh_hostname(value):
+def ssh_comment(value):
     """
     If value is good SSH public key, then returns the user@hostname for who
     the key is set.
     """
-    pos = value.rfind(" ")
-    if pos > -1:
-        return value[pos+1:]
+    pos1 = value.find(" ")
+    pos2 = value[(pos1+1):].find(" ")
+    if pos2 > -1:
+        return value[pos1+pos2+2:]
     return value
 
 @register.filter
@@ -77,10 +78,10 @@ def ssh_keytype(value):
 def ssh_keypart_truncate(value, count):
     try:
         pos0 = value.find(" ")
-        pos1 = value.rfind(" ")
+        pos1 = value[(pos0+1):].find(" ") + pos0
         if (pos0==-1 or pos1==-1) or (pos0==pos1):
             raise BaseException
-        value = value[pos0+1:pos1]
+        value = value[pos0+1:pos1+1]
         
         if len(value) > count:
             value = "%s ... %s" % (value[:(count/2)], value[(-count/2):])

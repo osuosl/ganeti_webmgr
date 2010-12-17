@@ -1,4 +1,8 @@
+{% if key_id %}
+        <form method="post" id="sshkey_form" class="ajax_form" action="{% url key-save key_id %}">
+{% else %}
         <form method="post" id="sshkey_form" class="ajax_form" action="{% url key-save %}">
+{% endif %}
             <ul id="errors"></ul>
             <table>
                 <tr><td>{{ key_form.key.label }}</td></tr>

@@ -104,7 +104,7 @@ def clear_rapi_cache():
 
 
 ssh_public_key_re = re.compile(
-    r'^ssh-(rsa|dsa) [A-Z0-9+/=]+ [A-Z0-9-_.]+@[A-Z0-9-_.]+$', re.IGNORECASE)
+    r'^ssh-(rsa|dsa) [A-Z0-9+/=]+ .+$', re.IGNORECASE)
 validate_sshkey = RegexValidator(ssh_public_key_re,
     _(u"Enter a valid SSH public key (SSH2 RSA or DSA)."), "invalid")
 

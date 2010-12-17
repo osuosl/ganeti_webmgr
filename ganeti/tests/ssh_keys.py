@@ -101,7 +101,7 @@ class TestSSHKeys(TestCase):
             self.assertEqual(200, response.status_code)
             self.assertTemplateUsed(response, "registration/login.html")
 
-        # test unauthorized access
+        # test unauthorized access (== not owner)
         for i in [ urls["get_existing"], urls["save_existing"], urls["delete"] ]:
             self.assert_( c.login(username=user1.username, password="secret") )
             response = c.get(i)
@@ -129,25 +129,26 @@ class TestSSHKeys(TestCase):
             * new object is being created
             * 404 thrown for non-existant objects
         """
-        c.login(username=user.username, password="secret")
+        for u in [user, admin]:
+            c.login(username=u.username, password="secret")
 
-        # appropriate object is being got
-        response = c.get( reverse("key-get", args=[key.id]) )
-        self.assertEqual( 200, response.status_code )
-        self.assertEquals("text/html; charset=utf-8", response["content-type"])
-        self.assertTemplateUsed(response, "ssh_keys/form.html")
-        self.assertContains(response, key.key, count=1)
+            # appropriate object is being got
+            response = c.get( reverse("key-get", args=[key.id]) )
+            self.assertEqual( 200, response.status_code )
+            self.assertEquals("text/html; charset=utf-8", response["content-type"])
+            self.assertTemplateUsed(response, "ssh_keys/form.html")
+            self.assertContains(response, key.key, count=1)
 
-        # new object is being created
-        response = c.get( reverse("key-get") )
-        self.assertEqual( 200, response.status_code )
-        self.assertEquals("text/html; charset=utf-8", response["content-type"])
-        self.assertTemplateUsed(response, "ssh_keys/form.html")
-        self.assertNotContains(response, key.key,)
+            # new object is being created
+            response = c.get( reverse("key-get") )
+            self.assertEqual( 200, response.status_code )
+            self.assertEquals("text/html; charset=utf-8", response["content-type"])
+            self.assertTemplateUsed(response, "ssh_keys/form.html")
+            self.assertNotContains(response, key.key,)
 
-        # 404 for non-existing object
-        response = c.get( reverse("key-get", args=[key.id+10]) )
-        self.assertEqual( 404, response.status_code )
+            # 404 for non-existing object
+            response = c.get( reverse("key-get", args=[key.id+10]) )
+            self.assertEqual( 404, response.status_code )
 
     def test_saving(self):
         """
@@ -158,36 +159,37 @@ class TestSSHKeys(TestCase):
             * returned form errors for invalid key
             * returned appropriate HTML row after saving
         """
-        c.login(username=user.username, password="secret")
+        for u in [user, admin]:
+            c.login(username=u.username, password="secret")
 
-        # 404 for non-existing row
-        response = c.get( reverse("key-save", args=[key.id+10]) )
-        self.assertEqual( 404, response.status_code )
+            # 404 for non-existing row
+            response = c.get( reverse("key-save", args=[key.id+10]) )
+            self.assertEqual( 404, response.status_code )
 
-        # form errors
-        # note: for this tests cannot be used assertFormError assertion
-        #  * invalid key (existing object)
-        response = c.post( reverse("key-save", args=[key.id]), {"key":"key"} )
-        self.assertEquals("application/json", response["content-type"])
-        self.assertContains( response, validate_sshkey.message, count=1 )
-        #  * invalid key (new object)
-        response = c.post( reverse("key-save"), {"key":"key"} )
-        self.assertEquals("application/json", response["content-type"])
-        self.assertContains( response, validate_sshkey.message, count=1 )
-        #  * missing fields
-        response = c.post( reverse("key-save", args=[key.id]) )
-        self.assertEquals( "application/json", response["content-type"] )
-        self.assertNotContains( response, validate_sshkey.message )
-        #  * missing fields
-        response = c.post( reverse("key-save") )
-        self.assertEquals( "application/json", response["content-type"] )
-        self.assertNotContains( response, validate_sshkey.message )
+            # form errors
+            # note: for this tests cannot be used assertFormError assertion
+            #  * invalid key (existing object)
+            response = c.post( reverse("key-save", args=[key.id]), {"key":"key"} )
+            self.assertEquals("application/json", response["content-type"])
+            self.assertContains( response, validate_sshkey.message, count=1 )
+            #  * invalid key (new object)
+            response = c.post( reverse("key-save"), {"key":"key"} )
+            self.assertEquals("application/json", response["content-type"])
+            self.assertContains( response, validate_sshkey.message, count=1 )
+            #  * missing fields
+            response = c.post( reverse("key-save", args=[key.id]) )
+            self.assertEquals( "application/json", response["content-type"] )
+            self.assertNotContains( response, validate_sshkey.message )
+            #  * missing fields
+            response = c.post( reverse("key-save") )
+            self.assertEquals( "application/json", response["content-type"] )
+            self.assertNotContains( response, validate_sshkey.message )
 
-        # successful creation of new object
-        response = c.post( reverse("key-save"), {"key": "ssh-rsa t t@t"})
-        self.assertEqual( 200, response.status_code )
-        self.assertTemplateUsed( response, "ssh_keys/row.html" )
-        self.assertContains( response, "t@t", count=1 )
+            # successful creation of new object
+            response = c.post( reverse("key-save"), {"key": "ssh-rsa t t@t"})
+            self.assertEqual( 200, response.status_code )
+            self.assertTemplateUsed( response, "ssh_keys/row.html" )
+            self.assertContains( response, "t@t", count=1 )
 
     def test_deletion(self):
         """
@@ -197,17 +199,20 @@ class TestSSHKeys(TestCase):
             * thrown 404 for non-existing objects
             * successfully deleted objects
         """
-        key_id = key.id
+        for u in [user, admin]:
+            key1 = SSHKey(key="ssh-rsa test tester0@testing", user=user)
+            key1.save()
+            key_id = key1.id
 
-        c.login(username=user.username, password="secret")
+            c.login(username=u.username, password="secret")
 
-        # 404 for non-existing objects
-        response = c.get( reverse("key-delete", args=[key.id+10]) )
-        self.assertEqual( 404, response.status_code )
+            # 404 for non-existing objects
+            response = c.get( reverse("key-delete", args=[key_id+10]) )
+            self.assertEqual( 404, response.status_code )
 
-        # successful deletion
-        response = c.delete( reverse("key-delete", args=[key.id]) )
-        self.assertEqual( 200, response.status_code )
-        self.assertEquals("application/json", response['content-type'])
-        self.assertContains(response, "1", count=1)
-        self.assertEqual(0, len(SSHKey.objects.filter(id=key_id)) )
+            # successful deletion
+            response = c.delete( reverse("key-delete", args=[key_id]) )
+            self.assertEqual( 200, response.status_code )
+            self.assertEquals("application/json", response['content-type'])
+            self.assertContains(response, "1", count=1)
+            self.assertEqual(0, len(SSHKey.objects.filter(id=key_id)) )

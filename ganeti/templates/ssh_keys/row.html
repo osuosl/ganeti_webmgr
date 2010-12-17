@@ -1,7 +1,7 @@
 {% load webmgr_tags %}
-        <tr id="{{ key.id }}">
+        <tr id="sshkey_{{ key.id }}">
             <td name="key">{{ key.key|ssh_keypart_truncate:50 }}</td>
-            <td name="host">{{ key.key|ssh_hostname }}</td>
+            <td name="host">{{ key.key|ssh_comment }}</td>
 
             <td><a href="{% url key-get key.id %}" class="edit"><div class="edit"></div></a></td>
             <td><a href="{% url key-delete key.id %}" class="delete"><div class="delete"></div></a></td>

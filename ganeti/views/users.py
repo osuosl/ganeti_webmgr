@@ -162,8 +162,8 @@ def key_get(request, key_id=None):
         if not (user.is_superuser or user_cmp==user):
             return HttpResponseForbidden("Only superuser or owner can get user's SSH key.")
         
-        return render_to_response("ssh_keys/form.html", {"key_form": form},
-                                  context_instance=RequestContext(request))
+        return render_to_response("ssh_keys/form.html", {"key_form": form,
+                    "key_id":key_id}, context_instance=RequestContext(request))
     return HttpResponse("Cannot retrieve information")
 
 
