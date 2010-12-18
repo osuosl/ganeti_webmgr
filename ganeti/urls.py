@@ -91,8 +91,8 @@ urlpatterns += patterns('ganeti.views.virtual_machine',
     # Delete
     url(r"^%s/delete/?$" % vm_prefix, "delete", name="instance-delete"),
 
-    # SSH Keys - not implemented yet
-    #url(r'^%s/keys/?$' % vm_prefix, "keys", name="instance-keys"),
+    # SSH Keys
+    url(r'^%s/keys/(?P<api_key>\w+)/?$' % vm_prefix, "ssh_keys", name="instance-keys"),
 )
 
 

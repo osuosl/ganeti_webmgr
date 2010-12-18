@@ -34,12 +34,14 @@ from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
 from object_permissions.views.permissions import view_users, view_permissions
+from object_permissions import get_users_any
 
 from logs.models import LogItem
 log_action = LogItem.objects.log_action
 
 from util.client import GanetiApiError
-from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine, Job
+from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine, \
+        Job, SSHKey
 from ganeti.views import render_403
 
 empty_field = (u'', u'---------')
@@ -179,6 +181,24 @@ def reboot(request, cluster_slug, instance):
             msg = [0, str(e)]
         return HttpResponse(json.dumps(msg), mimetype='application/json')
     return HttpResponseNotAllowed(['POST'])
+
+
+def ssh_keys(request, cluster_slug, instance, api_key):
+    """
+    Show all ssh keys which belong to users, who are specified vm's admin
+    """
+    import settings
+    if settings.WEB_MGR_API_KEY != api_key:
+        return HttpResponseForbidden("You're not allowed to view keys.")
+
+    vm = get_object_or_404(VirtualMachine, hostname=instance, \
+                           cluster__slug=cluster_slug)
+    users = get_users_any(vm, ["admin",])
+    #keys = SSHKey.objects.all()
+    keys = SSHKey.objects.filter(user__in=users)
+    # update above
+    keys = [ [key.key, key.user.username] for key in keys]
+    return HttpResponse(json.dumps(keys), mimetype="application/json")
 
 
 @login_required
