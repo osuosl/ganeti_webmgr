@@ -197,7 +197,7 @@ def ssh_keys(request, cluster_slug, instance, api_key):
     users = get_users_any(vm, ["admin",]).values_list("id",flat=True)
     keys = SSHKey.objects.filter(user__in=users).values_list('key','user__username').order_by('user__username')
 
-    keys_list = [ [key[0], key[1] ] for key in keys]
+    keys_list = list(keys)
     return HttpResponse(json.dumps(keys_list), mimetype="application/json")
 
 

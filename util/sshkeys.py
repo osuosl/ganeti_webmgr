@@ -15,9 +15,9 @@ class BadMimetype(BaseException):
 
 
 class Application:
-    def __init__(self, hostname, key, cluster_slug, vm_name, url="%s/cluster/%s/%s/keys/%s/"):
+    def __init__(self, hostname, api_key, cluster_slug, vm_name, url="http://%s/cluster/%s/%s/keys/%s/"):
         self.hostname = hostname
-        self.key = key
+        self.key = api_key
         self.cluster_slug = cluster_slug
         self.vm_name = vm_name
         self.url = url
@@ -42,15 +42,10 @@ class Application:
         """
         Returns string with authorized_keys file syntax and some comments
         """
-        s = "### VM: %s %s\n" % (self.cluster_slug, self.vm_name)
-        u = ""
+        s = ""
         for i in data:
-            # check which user is that
-            # if some new, then append the comment line with explanation
-            if i[1] != u:
-                u = i[1]
-                s += "# user %s\n" % u
-
+            # append comment with username
+            s += "# added automatically for ganeti web manager user: " + i[1]
             # append key
             s += "%s\n" % i[0]
         return s
@@ -63,31 +58,17 @@ class Application:
             s = self.printout(self.parse(self.get()))
         except BaseException, e:
             sys.stderr.write("Errors occured, could not retrieve informations.\n")
-            sys.stderr.write(str(e))
+            sys.stderr.write(str(e)+"\n")
         else:
             sys.stdout.write(s)
 
 
 def main():
-    parser = OptionParser()
-    parser.add_option("-H", "--host", dest="hostname",
-            help="Host where Ganeti WebMgr is running")
+    # TODO: rewrite it
+    if len(sys.argv)!=5:
+        raise ArgumentException("Too much or too few arguments!")
 
-    parser.add_option("-k", "--key", dest="key",
-            help="Ganeti API key used to connect to the application")
-
-    parser.add_option("-c", "--cluster", dest="cluster_slug",
-            help="Cluster name")
-
-    parser.add_option("-m", "--machine", dest="vm_name",
-            help="Virtual Machine instance name")
-
-    options, args = parser.parse_args(sys.argv)
-
-    # test if every required arg has been passed to argv
-    for arg in ["hostname", "key", "cluster_slug", "vm_name"]:
-        if not arg in options.__dict__.keys():
-            raise ArgumentException("%s option is required" % arg)
+    options = dict(hostname=sys.argv[1], cluster_slug=sys.argv[2], vm_name=sys.argv[3], api_key=sys.argv[4])
 
     return options
 
@@ -96,9 +77,17 @@ if __name__ == "__main__":
     try:
         options = main()
     except ArgumentException, e:
-        print str(e)
+        sys.stderr.write(str(e)+"\n"*2)
+        sys.stderr.write(
+"""Usage:   sshkeys.py  HOSTNAME  CLUSTER_SLUG  VM_NAME  API_KEY
+
+HOSTNAME\thost Ganeti is running on
+CLUSTER_SLUG\tcluster short name
+VM_NAME\t\tvirtual machine instance name
+API_KEY\t\tGaneti API key used to connect to the application
+""")
         sys.exit(1)
     else:
-        a = Application(**options.__dict__)
+        a = Application(**options)
         a.run()
 
