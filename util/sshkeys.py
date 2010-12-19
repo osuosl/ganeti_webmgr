@@ -45,7 +45,7 @@ class Application:
         s = ""
         for i in data:
             # append comment with username
-            s += "# added automatically for ganeti web manager user: " + i[1]
+            s += "# added automatically for ganeti web manager user: %s\n" % i[1]
             # append key
             s += "%s\n" % i[0]
         return s
@@ -64,7 +64,6 @@ class Application:
 
 
 def main():
-    # TODO: rewrite it
     if len(sys.argv)!=5:
         raise ArgumentException("Too much or too few arguments!")
 
