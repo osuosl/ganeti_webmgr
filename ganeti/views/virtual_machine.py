@@ -29,7 +29,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, \
-    HttpResponseNotAllowed
+    HttpResponseNotAllowed, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
@@ -193,12 +193,12 @@ def ssh_keys(request, cluster_slug, instance, api_key):
 
     vm = get_object_or_404(VirtualMachine, hostname=instance, \
                            cluster__slug=cluster_slug)
+
     users = get_users_any(vm, ["admin",])
-    #keys = SSHKey.objects.all()
-    keys = SSHKey.objects.filter(user__in=users)
-    # update above
-    keys = [ [key.key, key.user.username] for key in keys]
-    return HttpResponse(json.dumps(keys), mimetype="application/json")
+    keys = SSHKey.objects.filter(user__in=users).order_by(user)
+
+    keys_list = [ [key.key, key.user.username] for key in keys]
+    return HttpResponse(json.dumps(keys_list), mimetype="application/json")
 
 
 @login_required
