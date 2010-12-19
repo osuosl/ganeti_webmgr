@@ -142,7 +142,7 @@ def cluster_admin(user):
     """
     Returns whether the user has admin permission on any Cluster
     """
-    return user.perms_on_any(Cluster, ['admin'])
+    return user.has_any_perms(Cluster, ['admin'])
 
 
 def format_part_total(part, total):

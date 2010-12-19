@@ -740,8 +740,8 @@ class Profile(ClusterUser):
     def set_perms(self, perms, object):
         self.user.set_perms(perms, object)
 
-    def filter_on_perms(self, *args, **kwargs):
-        return self.user.filter_on_perms(*args, **kwargs)
+    def get_objects_any_perms(self, *args, **kwargs):
+        return self.user.get_objects_any_perms(*args, **kwargs)
 
     def has_perm(self, *args, **kwargs):
         return self.user.has_perm(*args, **kwargs)
@@ -762,8 +762,8 @@ class Organization(ClusterUser):
     def set_perms(self, perms, object):
         self.group.set_perms(perms, object)
 
-    def filter_on_perms(self, *args, **kwargs):
-        return self.group.filter_on_perms(*args, **kwargs)
+    def get_objects_any_perms(self, *args, **kwargs):
+        return self.group.get_objects_any_perms(*args, **kwargs)
 
     def has_perm(self, *args, **kwargs):
         return self.group.has_perm(*args, **kwargs)

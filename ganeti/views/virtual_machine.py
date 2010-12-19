@@ -117,7 +117,7 @@ def shutdown(request, cluster_slug, instance):
                            cluster__slug=cluster_slug)
     user = request.user
 
-    if not (user.is_superuser or user.has_any_perms(vm, ['admin','power'], True) or \
+    if not (user.is_superuser or user.has_any_perms(vm, ['admin','power']) or \
         user.has_perm('admin', vm.cluster)):
         return render_403(request, 'You do not have permission to shut down this virtual machine')
 
@@ -140,7 +140,7 @@ def startup(request, cluster_slug, instance):
     vm = get_object_or_404(VirtualMachine, hostname=instance, \
                            cluster__slug=cluster_slug)
     user = request.user
-    if not (user.is_superuser or user.has_any_perms(vm, ['admin','power'], True) or \
+    if not (user.is_superuser or user.has_any_perms(vm, ['admin','power']) or \
         user.has_perm('admin', vm.cluster)):
             return render_403(request, 'You do not have permission to start up this virtual machine')
 
@@ -163,7 +163,7 @@ def reboot(request, cluster_slug, instance):
     vm = get_object_or_404(VirtualMachine, hostname=instance, \
                            cluster__slug=cluster_slug)
     user = request.user
-    if not (user.is_superuser or user.has_any_perms(vm, ['admin','power'], True) or \
+    if not (user.is_superuser or user.has_any_perms(vm, ['admin','power']) or \
         user.has_perm('admin', vm.cluster)):
             return render_403(request, 'You do not have permission to reboot this virtual machine')
 
@@ -188,8 +188,8 @@ def list_(request):
         vms = VirtualMachine.objects.all()
         can_create = True
     else:
-        vms = user.filter_on_perms(VirtualMachine, ['admin', 'power','remove'])
-        can_create = user.perms_on_any(Cluster, ['create_vm'])
+        vms = user.get_objects_any_perms(VirtualMachine, ['admin', 'power','remove'])
+        can_create = user.has_any_perms(Cluster, ['create_vm'])
     
     return render_to_response('virtual_machine/list.html', {
         'vms':vms,
@@ -298,7 +298,7 @@ def create(request, cluster_slug=None):
         Create on given cluster
     """
     user = request.user
-    if not(user.is_superuser or user.perms_on_any(Cluster, ['admin', 'create_vm'])):
+    if not(user.is_superuser or user.has_any_perms(Cluster, ['admin', 'create_vm'])):
         return render_403(request, 'You do not have permission to create virtual \
                    machines')
 
@@ -428,9 +428,9 @@ def cluster_choices(request):
             target = clusteruser.group
         else:
             target = clusteruser.user
-        q = target.filter_on_perms(Cluster, ["admin", "create_vm"])
+        q = target.get_objects_any_perms(Cluster, ["admin", "create_vm"])
     else:
-        q = user.filter_on_perms(Cluster, ['admin','create_vm'], groups=False)
+        q = user.get_objects_any_perms(Cluster, ['admin','create_vm'], False)
 
     clusters = list(q.values_list('id', 'hostname'))
     content = json.dumps(clusters)
@@ -698,7 +698,7 @@ class NewVirtualMachineForm(forms.Form):
             owners = [(u'', u'---------')]
             for group in user.groups.all():
                 owners.append((group.organization.id, group.name))
-            if user.perms_on_any(Cluster, ['admin','create_vm'], False):
+            if user.has_any_perms(Cluster, ['admin','create_vm'], False):
                 profile = user.get_profile()
                 owners.append((profile.id, profile.name))
             self.fields['owner'].choices = owners
@@ -707,9 +707,9 @@ class NewVirtualMachineForm(forms.Form):
             # by the owner.  Otherwise show everything the user has access to
             # through themselves or any groups they are a member of
             if self.owner:
-                q = self.owner.filter_on_perms(Cluster, ['admin','create_vm'])
+                q = self.owner.get_objects_any_perms(Cluster, ['admin','create_vm'])
             else:
-                q = user.filter_on_perms(Cluster, ['admin','create_vm'])
+                q = user.get_objects_any_perms(Cluster, ['admin','create_vm'])
             self.fields['cluster'].queryset = q
 
     def clean(self):
