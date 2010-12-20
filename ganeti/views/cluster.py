@@ -34,6 +34,10 @@ from django.template.defaultfilters import slugify
 from object_permissions import get_model_perms, get_user_perms, grant, revoke, \
     get_users, get_groups, get_group_perms
 from object_permissions.views.permissions import view_users, view_permissions
+
+from logs.models import LogItem
+log_action = LogItem.objects.log_action
+
 from ganeti.models import *
 from ganeti.views import render_403, render_404
 from util.portforwarder import forward_port
@@ -183,9 +187,16 @@ def permissions(request, cluster_slug, user_id=None, group_id=None):
         return render_403(request, "You do not have sufficient privileges")
 
     url = reverse('cluster-permissions', args=[cluster.slug])
-    return view_permissions(request, cluster, url, user_id, group_id,
+    response, modified = view_permissions(request, cluster, url, user_id, group_id,
                             user_template='cluster/user_row.html',
                             group_template='cluster/group_row.html')
+    
+    # log changes if any.
+    if modified:
+        # log information about creating the machine
+        log_action(user, cluster, "modified permissions")
+    
+    return response
 
 
 class QuotaForm(forms.Form):

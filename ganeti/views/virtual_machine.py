@@ -287,7 +287,14 @@ def permissions(request, cluster_slug, instance, user_id=None, group_id=None):
         return render_403(request, "You do not have sufficient privileges")
 
     url = reverse('vm-permissions', args=[cluster.slug, vm.hostname])
-    return view_permissions(request, vm, url, user_id, group_id)
+    response, modified = view_permissions(request, vm, url, user_id, group_id)
+    
+    # log changes if any.
+    if modified:
+        # log information about creating the machine
+        log_action(user, vm, "modified permissions")
+    
+    return response
 
 
 @login_required
