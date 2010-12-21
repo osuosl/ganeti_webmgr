@@ -44,10 +44,9 @@ class Application:
         """
         s = ""
         for i in data:
-            # append comment with username
-            s += "# added automatically for ganeti web manager user: %s\n" % i[1]
-            # append key
-            s += "%s\n" % i[0]
+            # append key and comment with username
+            s += "%s  added automatically for ganeti web manager user: %s\n" % \
+                 (i[0], i[1])
         return s
 
     def run(self):
