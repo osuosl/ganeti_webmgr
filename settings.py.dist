@@ -132,3 +132,12 @@ PERIODIC_CACHE_REFRESH = 15
 #
 # XXX the proxy is not working, disabled for now
 VNC_PROXY=False
+
+
+# API Key for authenticating scripts that pull information from ganeti, such as
+# list of sshkey's to assign to a virtual machine
+#
+# XXX this is a temporary feature that will eventually be replaced by a system
+#     that automatically creates keys per virtual machine.  This is just a quick
+#     way of enabled a secure method to pull sshkeys from ganeti web manager
+WEB_MGR_API_KEY = "CHANGE_ME"

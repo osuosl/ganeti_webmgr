@@ -22,6 +22,7 @@ import json
 
 from django.conf import settings
 from django.contrib.auth.models import User, Group
+from django.core.urlresolvers import reverse
 from django.test import TestCase
 from django.test.client import Client
 
@@ -35,6 +36,7 @@ VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
 ClusterUser = models.ClusterUser
 Job = models.Job
+SSHKey = models.SSHKey
 
 __all__ = (
     'TestVirtualMachineModel',
@@ -536,7 +538,54 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         Test rebooting a virtual machine
         """
         self.validate_post_only_url('/cluster/%s/%s/reboot')
-    
+
+    def test_view_ssh_keys(self):
+        """
+        Test getting SSH keys belonging to users, who have admin permission on
+        specified virtual machine
+        """
+        # second virtual machine created
+        vm1, cluster1 = self.create_virtual_machine(cluster, 'vm2.osuosl.bak')
+
+        # grant admin permission to first user
+        user.grant("admin", vm)
+        
+        # add some keys
+        key = SSHKey(key="ssh-rsa test test@test", user=user)
+        key.save()
+        key1 = SSHKey(key="ssh-dsa test asd@asd", user=user)
+        key1.save()
+
+        # get API key
+        import settings, json
+        key = settings.WEB_MGR_API_KEY
+
+        # forbidden
+        response = c.get( reverse("instance-keys", args=[cluster.slug, vm.hostname, key+"a"]))
+        self.assertEqual( 403, response.status_code )
+
+        # not found
+        response = c.get( reverse("instance-keys", args=[cluster.slug, vm.hostname+"a", key]))
+        self.assertEqual( 404, response.status_code )
+        response = c.get( reverse("instance-keys", args=[cluster.slug+"a", vm.hostname, key]))
+        self.assertEqual( 404, response.status_code )
+
+        # vm with users who have admin perms
+        response = c.get( reverse("instance-keys", args=[cluster.slug, vm.hostname, key]))
+        self.assertEqual( 200, response.status_code )
+        self.assertEquals("application/json", response["content-type"])
+        self.assertEqual( len(json.loads(response.content)), 2 )
+        self.assertContains(response, "test@test", count=1)
+        self.assertContains(response, "asd@asd", count=1)
+
+        # vm without users who have admin perms
+        response = c.get( reverse("instance-keys", args=[cluster.slug, vm1.hostname, key]))
+        self.assertEqual( 200, response.status_code )
+        self.assertEquals("application/json", response["content-type"])
+        self.assertEqual( len(json.loads(response.content)), 0 )
+        self.assertNotContains(response, "test@test")
+        self.assertNotContains(response, "asd@asd")
+
     def test_view_create_data(self):
         """
         Test creating a virtual machine
