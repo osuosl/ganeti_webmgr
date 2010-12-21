@@ -42,12 +42,12 @@ class Application:
         """
         Returns string with authorized_keys file syntax and some comments
         """
-        s = ""
+        s = []
         for i in data:
             # append key and comment with username
-            s += "%s  added automatically for ganeti web manager user: %s\n" % \
-                 (i[0], i[1])
-        return s
+            s.append("%s  added automatically for ganeti web manager user: %s\n" % \
+                    (i[0], i[1]))
+        return "".join(s)
 
     def run(self):
         """
