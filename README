@@ -6,8 +6,7 @@ Ganeti Web Manager is a Django based web application that allows administrators
 and clients access to their ganeti clusters.  
 
 Ganeti compatibility:
-    2.3.x - supported
-    2.2.x - supported
+  >=2.2.x - supported
     2.1.x - mostly supported
     2.0.x - unsupported but may work
     1.x   - unsupported
