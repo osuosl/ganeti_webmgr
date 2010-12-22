@@ -218,3 +218,14 @@ The cache system is transparent and will load cached data automatically when
 the object is initialized.
 
 Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/Cache_System
+
+
+================================================================================
+ SSH Keys
+================================================================================
+
+Ganeti Web Manager allows users to store SSH Keys. Each virtual machine has a
+view that will return SSH keys for users with access. This can be used as a
+Ganeti post-install hook to deploy user's keys on the VMs.
+
+Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/PermissionsSSHKeys
