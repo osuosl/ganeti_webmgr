@@ -17,6 +17,9 @@ Browser compatibility:
 
 The VNC console requires websocket support
 
+    * Mozilla Firefox
+    * Chrome / Chromium
+
 Project page: http://code.osuosl.org/projects/ganeti-webmgr
 Mailing List: http://groups.google.com/group/ganeti-webmgr
 IRC:          #ganeti-webmgr on freenode.net
