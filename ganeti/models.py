@@ -831,6 +831,28 @@ post_syncdb.disconnect(create_default_site, sender=sites_app)
 post_syncdb.connect(management.update_sites_module, sender=sites_app, \
   dispatch_uid = "ganeti.management.update_sites_module")
 
+def regenerate_cu_children(sender, **kwargs):
+    """
+    Resets may destroy Profiles and/or Organizations. We need to regenerate
+    them.
+    """
+
+    # So. What are we actually doing here?
+    # Whenever a User or Group is saved, the associated Profile or
+    # Organization is also updated. This means that, if a Profile for a User
+    # is absent, it will be created.
+    # More importantly, *why* might a Profile be missing? Simple. Resets of
+    # the ganeti app destroy them. This shouldn't happen in production, and
+    # only occasionally in development, but it's good to explicitly handle
+    # this particular case so that missing Profiles not resulting from a reset
+    # are easier to diagnose.
+    for user in User.objects.all():
+        user.save()
+    for group in Group.objects.all():
+        group.save()
+
+post_syncdb.connect(regenerate_cu_children)
+
 # Register permissions on our models.
 # These are part of the DB schema and should not be changed without serious
 # forethought.
