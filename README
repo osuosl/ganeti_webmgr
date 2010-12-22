@@ -91,6 +91,25 @@ IRC:          #ganeti-webmgr on freenode.net
 
 Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/Install
 
+================================================================================
+ Ganeti RAPI users and passwords
+================================================================================
+
+Before you can start using Ganeti Web Manager you will need to create a user
+and password on the Ganeti cluster.
+
+Here is an example with a user jack and password abc123:
+
+    echo -n 'jack:Ganeti Remote API:abc123' | openssl md5
+
+Add the hash to /var/lib/ganeti/rapi_users on all the nodes in the cluster and
+restart ganeti-rapi. Here's an example using above:
+
+    # Hashed password for jack
+    jack {HA1}54c12257ee9be413f2f3182435514aae write
+
+Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/Managing_Clusters#Ganeti-RAPI-users-and-passwords
+
 
 ================================================================================
  Importing a Cluster
