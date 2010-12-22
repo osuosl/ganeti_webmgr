@@ -48,7 +48,6 @@ urlpatterns += patterns('ganeti.views.cluster',
     url(r'^cluster/add/?$', 'edit', name="cluster-create"),
     #   Detail
     url(r'^%s/?$' % cluster, 'detail', name="cluster-detail"),
-    url(r'^%s/?#overview$' % cluster, 'detail', name="cluster-detail-overview"),
     #   Edit
     url(r'^%s/edit/?$' % cluster, 'edit', name="cluster-edit"),
     #   User
@@ -76,7 +75,6 @@ urlpatterns += patterns('ganeti.views.virtual_machine',
     
     #  Detail
     url(r'^%s/?$' % vm_prefix, 'detail', name="instance-detail"),
-    url(r'^%s/?#overview$' % vm_prefix, 'detail', name="instance-detail-overview"),
     url(r'^%s/users/?$' % vm_prefix, 'users', name="vm-users"),
     url(r'^%s/permissions/?$' % vm_prefix, 'permissions', name="vm-permissions"),
     url(r'^%s/permissions/user/(?P<user_id>\d+)/?$' % vm_prefix, 'permissions', name="vm-permissions-user"),
