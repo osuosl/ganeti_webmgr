@@ -4,6 +4,10 @@
     {% if username %}Edit User{% else %}Add User{% endif %}
 {% endblock %}
 
+{% block head %}
+    {% include "ssh_keys/header.html" %}
+{% endblock %}
+
 {% block content %}
 {% if username %}
 <form id="user-edit" method="post">
@@ -23,4 +27,9 @@
         <input type="submit" value="{% if username %}Save{% else %}Create{% endif %}">
     </fieldset>
 </form>
+
+{% if username %}
+<h3>SSH keys</h3>
+{% include "ssh_keys/list.html" %}
+{% endif %}
 {% endblock %}

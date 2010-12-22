@@ -29,6 +29,7 @@ from ganeti.models import Cluster
 
 
 register = Library()
+
 """
 These filters were created specifically
 for the Ganeti Web Manager project
@@ -36,6 +37,58 @@ for the Ganeti Web Manager project
 @register.inclusion_tag('virtual_machine/vmfield.html')
 def vmfield(field):
     return {'field':field}
+
+@register.filter
+@stringfilter
+def truncate(value, count):
+    """
+    Truncates value after specified number of chars
+    """
+    if count < len(value):
+        return value[:count] + " ..."
+    return value
+
+@register.filter
+@stringfilter
+def ssh_comment(value):
+    """
+    If value is good SSH public key, then returns the user@hostname for who
+    the key is set.
+    """
+    pos1 = value.find(" ")
+    pos2 = value[(pos1+1):].find(" ")
+    if pos2 > -1:
+        return value[pos1+pos2+2:]
+    return value
+
+@register.filter
+@stringfilter
+def ssh_keytype(value):
+    """
+    If value is good SSH public key, then returns the user@hostname for who
+    the key is set.
+    """
+    pos = value.find(" ")
+    if pos > -1:
+        return value[:pos]
+    return value
+
+@register.filter
+@stringfilter
+def ssh_keypart_truncate(value, count):
+    try:
+        pos0 = value.find(" ")
+        pos1 = value[(pos0+1):].find(" ") + pos0
+        if (pos0==-1 or pos1==-1) or (pos0==pos1):
+            raise BaseException
+        value = value[pos0+1:pos1+1]
+        
+        if len(value) > count:
+            value = "%s ... %s" % (value[:(count/2)], value[(-count/2):])
+    except BaseException:
+        pass
+    finally:
+        return value
 
 """
 These filters were taken from Russel Haering's GanetiWeb project
@@ -89,7 +142,7 @@ def cluster_admin(user):
     """
     Returns whether the user has admin permission on any Cluster
     """
-    return user.perms_on_any(Cluster, ['admin'])
+    return user.has_any_perms(Cluster, ['admin'])
 
 
 def format_part_total(part, total):
@@ -147,7 +200,7 @@ class NicsNode(Node):
         instance = context[self.instance_name]
         context[self.res_name] = zip(instance['nic.bridges'], instance['nic.ips'], instance['nic.links'],
                                      instance['nic.macs'], instance['nic.modes'])
-        return '' 
+        return ''
 
 
 @register.tag

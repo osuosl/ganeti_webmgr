@@ -30,6 +30,10 @@ from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import GenericForeignKey
 
+from django.core.validators import RegexValidator
+from django.utils.translation import ugettext_lazy as _
+import re
+
 from django.db import models
 from django.db.models import Sum
 from django.db.models.signals import post_save, post_syncdb
@@ -97,6 +101,12 @@ def clear_rapi_cache():
     """
     RAPI_CACHE.clear()
     RAPI_CACHE_HASHES.clear()
+
+
+ssh_public_key_re = re.compile(
+    r'^ssh-(rsa|dsa|dss) [A-Z0-9+/=]+ .+$', re.IGNORECASE)
+validate_sshkey = RegexValidator(ssh_public_key_re,
+    _(u"Enter a valid SSH public key with comment (SSH2 RSA or DSA)."), "invalid")
 
 
 class CachedClusterObject(models.Model):
@@ -730,8 +740,8 @@ class Profile(ClusterUser):
     def set_perms(self, perms, object):
         self.user.set_perms(perms, object)
 
-    def filter_on_perms(self, *args, **kwargs):
-        return self.user.filter_on_perms(*args, **kwargs)
+    def get_objects_any_perms(self, *args, **kwargs):
+        return self.user.get_objects_any_perms(*args, **kwargs)
 
     def has_perm(self, *args, **kwargs):
         return self.user.has_perm(*args, **kwargs)
@@ -752,8 +762,8 @@ class Organization(ClusterUser):
     def set_perms(self, perms, object):
         self.group.set_perms(perms, object)
 
-    def filter_on_perms(self, *args, **kwargs):
-        return self.group.filter_on_perms(*args, **kwargs)
+    def get_objects_any_perms(self, *args, **kwargs):
+        return self.group.get_objects_any_perms(*args, **kwargs)
 
     def has_perm(self, *args, **kwargs):
         return self.group.has_perm(*args, **kwargs)
@@ -771,6 +781,16 @@ class Quota(models.Model):
     ram = models.IntegerField(default=0, null=True)
     disk = models.IntegerField(default=0, null=True)
     virtual_cpus = models.IntegerField(default=0, null=True)
+
+
+class SSHKey(models.Model):
+    """
+    Model representing user's SSH public key. Virtual machines rely on
+    many ssh keys.
+    """
+    key = models.TextField(validators=[validate_sshkey])
+    #filename = models.CharField(max_length=128) # saves key file's name
+    user = models.ForeignKey(User)
 
 
 def create_profile(sender, instance, **kwargs):

@@ -26,10 +26,17 @@ instance = '/(?P<instance>[^/]+)'
 # Users
 urlpatterns = patterns('ganeti.views.users',
     url(r'^accounts/profile/?', 'user_profile', name="profile"),
-    url(r'^users$', 'user_list', name="user-list"),
+    url(r'^users/?$', 'user_list', name="user-list"),
     url(r'^users/add$', 'user_add', name="user-create"),
-    url(r'^user/(?P<user_id>\d+)/edit$', 'user_edit', name="user-edit"),
-    url(r'^user/(?P<user_id>\d+)/password/$', 'user_password', name="user-password"),
+    url(r'^user/(?P<user_id>\d+)/edit/?$', 'user_edit', name="user-edit"),
+    url(r'^user/(?P<user_id>\d+)/password/?$', 'user_password', name="user-password"),
+
+    # ssh keys
+    url(r'^keys/get/$',                     'key_get', name="key-get"),
+    url(r'^keys/get/(?P<key_id>\d+)/?$',    'key_get', name="key-get"),
+    url(r'^keys/save/$',                    'key_save', name="key-save"),
+    url(r'^keys/save/(?P<key_id>\d+)/?$',   'key_save', name="key-save"),
+    url(r'^keys/delete/(?P<key_id>\d+)/?$', 'key_delete', name="key-delete"),
 )
 
 # Clusters
@@ -83,6 +90,9 @@ urlpatterns += patterns('ganeti.views.virtual_machine',
 
     # Delete
     url(r"^%s/delete/?$" % vm_prefix, "delete", name="instance-delete"),
+
+    # SSH Keys
+    url(r'^%s/keys/(?P<api_key>\w+)/?$' % vm_prefix, "ssh_keys", name="instance-keys"),
 )
 
 

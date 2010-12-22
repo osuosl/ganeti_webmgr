@@ -60,7 +60,7 @@ def orphans(request):
     if user.is_superuser:
         clusters = Cluster.objects.all()
     else:
-        clusters = user.filter_on_perms(Cluster, ['admin'])
+        clusters = user.get_objects_any_perms(Cluster, ['admin'])
         if not clusters:
             return render_403(request, 'You do not have sufficient privileges')
     
@@ -109,7 +109,7 @@ def missing_ganeti(request):
     if user.is_superuser:
         clusters = Cluster.objects.all()
     else:
-        clusters = user.filter_on_perms(Cluster, ['admin'])
+        clusters = user.get_objects_any_perms(Cluster, ['admin'])
         if not clusters:
             return render_403(request, 'You do not have sufficient privileges')
     
@@ -150,7 +150,7 @@ def missing_db(request):
     if user.is_superuser:
         clusters = Cluster.objects.all()
     else:
-        clusters = user.filter_on_perms(Cluster, ['admin'])
+        clusters = user.get_objects_any_perms(Cluster, ['admin'])
         if not clusters:
             return render_403(request, 'You do not have sufficient privileges')
     

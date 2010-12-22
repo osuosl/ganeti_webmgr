@@ -1,0 +1,16 @@
+==================
+Changelog
+==================
+
+v0.4
+----
+ * Initial Release
+   
+   * Caching system
+   * Permissions system: 
+       * user & group management
+       * per cluster/vm permissions
+   * basic VM management: Create, Delete, Start, Stop, Reboot
+   * ssh key feed 
+   * basic quota system
+   * Import tools

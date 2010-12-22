@@ -5,7 +5,19 @@
 Ganeti Web Manager is a Django based web application that allows administrators
 and clients access to their ganeti clusters.  
 
-http://code.osuosl.org/projects/ganeti-webmgr
+Ganeti compatibility:
+  >=2.2.x - supported
+    2.1.x - mostly supported
+    2.0.x - unsupported but may work
+    1.x   - unsupported
+
+Browser compatibility:
+    * Mozilla Firefox
+    * Chrome / Chromium
+
+Project page: http://code.osuosl.org/projects/ganeti-webmgr
+Mailing List: http://groups.google.com/group/ganeti-webmgr
+IRC:          #ganeti-webmgr on freenode.net
 
 
 ================================================================================
@@ -13,81 +25,159 @@ http://code.osuosl.org/projects/ganeti-webmgr
 ================================================================================
 
 1.  Install Dependencies
-    * Django
+    * Django >= 1.2
     * django-registration
     * object_permissions (packaged with releases)
+    * sqlite3, mysql, or postgresql
 
-2. Deploy this code somewhere.
+2. Deploy this code somewhere (i.e. /var/lib/django/ganeti_webmgr)
 3. Copy settings.py.dist to settings.py
 4. Create a database and configure your settings:
 
- DATABASE_ENGINE = ''   <-- Change This to 'mysql', 'postgresql', 'postgresql_psycopg2' or 'oracle'
- DATABASE_NAME = ''     <-- Change This
- DATABASE_USER = ''     <-- Change This
- DATABASE_PASSWORD = '' <-- Change This
+ DATABASE_ENGINE = ''   <-- Change This to 'mysql', 'postgresql',
+                            'postgresql_psycopg2' or 'sqlite3'
+ DATABASE_NAME = ''     <-- Change this to a database name, or a file for SQLite
+ DATABASE_USER = ''     <-- Change this (not needed for SQLite)
+ DATABASE_PASSWORD = '' <-- Change this (not needed for SQLite)
  DATABASE_HOST = ''     <-- Change this (not needed if database is localhost)
  DATABASE_PORT = ''     <-- Change this (not needed if database is localhost)
 
-5. Initialize the databse
+5. If you are using the Django sites module, you will can set the id, name and
+   domain of your site in settings.py and the site will automatically be
+   created when syncdb is run.
+
+ # Unique site id used by many modules to distinguish site from others.
+ SITE_ID = 1
+
+ # Site name and domain referenced by some modules to provide links back to the
+ # site.
+ SITE_NAME = 'Ganeti Web Manager'
+ SITE_DOMAIN = 'localhost:8000'
+
+6. Initialize the databse
 
     ./manage.py syncdb
 
-6. run the server
+7. run the server
 
-    Development: ./manage.py runserver
-    Production:  follow the guides on django-project.com for configuring Apache
-    
-    http://docs.djangoproject.com/en/1.2/howto/deployment/
-    
+    Development:
+
+    ./manage.py runserver
+
+    Production:
+
+    1. Change your SECRET_KEY and WEB_MGR_API_KEY to unique (and hopefully
+       unguessable) strings in your settings.py.
+
+    2. Follow the django guide to deploy [1] with apache. Here is an example
+       mod_wsgi file:
+
+        import os
+        import sys
+
+        path = '/var/lib/django/ganeti_webmgr'
+        if path not in sys.path:
+                sys.path.append(path)
+
+                os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+
+                import django.core.handlers.wsgi
+                application = django.core.handlers.wsgi.WSGIHandler()
+
+    3. Configure cron job for periodic cache updater [2].
+
+ [1] http://docs.djangoproject.com/en/1.2/howto/deployment/
+ [2] http://code.osuosl.org/projects/ganeti-webmgr/wiki/Cache_System#Updating-with-cron
+
+Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/Install
 
 ================================================================================
- Creating a Cluster
+ Ganeti RAPI users and passwords
+================================================================================
+
+Before you can start using Ganeti Web Manager you will need to create a user
+and password on the Ganeti cluster.
+
+Here is an example with a user jack and password abc123:
+
+    echo -n 'jack:Ganeti Remote API:abc123' | openssl md5
+
+Add the hash to /var/lib/ganeti/rapi_users on all the nodes in the cluster and
+restart ganeti-rapi. Here's an example using above:
+
+    # Hashed password for jack
+    jack {HA1}54c12257ee9be413f2f3182435514aae write
+
+Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/Managing_Clusters#Ganeti-RAPI-users-and-passwords
+
+
+================================================================================
+ Importing a Cluster
 ================================================================================
 
 1. Use the admin user created during syncdb to log in.
-2. Create a cluster:  Clusters -> Add Cluster
-3. When the cluster is created it will automatically synchronize the list of
+2. Import a cluster:  Clusters -> Add Cluster
+3. Fill out properties and click save
+
+When the cluster is created it will automatically synchronize the list of
 Virtual Machines with information from the ganeti cluster.
+
+Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/Importing_a_Cluster
 
 
 ================================================================================
  Users, Groups, and Permissions
 ================================================================================
 
-Permissions may be granted on clusters and virtual machines.  This allows access
-for any part of the cluster to be controlled
+Permissions may be granted to both clusters and virtual machines. The
+permissions system is intended to allow users to manage themselves. Any object
+that can have its permissions edited will have a Users tab.
 
-Clusters:
-  1. Clusters -> Cluster -> User
-  2. Click permissions for existing user, or add for a new user
-  3. edit and save.
+Adding users to objects:
+  1. Navigate to Group, Cluster, or VirtualMachine detail page
+  2. Click Add New User
+  3. Select user or group
+  4. Select permissions
+  5. Save
 
-Virtual Machines:
-  1. Virtual Machines -> Virtual Machine -> User
-  2. Click permissions for existing user, or add for a new user
-  3. edit and save
-  
+Updating permissions:
+  1. Navigate to Group, Cluster, or VirtualMachine detail page
+  2. Click Users tab
+  3. Click permissions column
+  4. Select permissions and save
+
+Deleting permissions:
+  1. Navigate to Group, Cluster, or VirtualMachine detail page
+  2. Click Users tab
+  3. Click the delete icon
+
+Deleting a user will remove all permissions, and other properties associated
+with the user such as cluster quotas.
 
 Users may belong to any number of user groups.  User groups can be assigned
 permissions and quotas just like users.  Users inherit permissions from groups
 and may act on their behalf to create virtual machines.
+
+Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/Permissions
 
 
 ================================================================================
  Assigning Quotas
 ================================================================================
 
-NOTE: quotas can be edited but they are not restricting usage, yet.
+Quotas restrict the usage of cluster resources by users and groups. Default
+quotas can be set by editing clusters, if no quota is set unlimited access is
+allowed. This will affect all users and groups.
 
-Cluster quotas will restrict how much resources a User or Group can consume.  A
-default quota can be assigned to a cluster, which will affect all users and
-groups.  This can be overridden by:
+The default quota can be overridden on the cluster users page:
 
    1. Clusters -> Cluster -> Users
-   2. click on the quota
-   3. edit values
+   2. Click on the quota
+   3. Edit values
 
-entering no values for the quota grants unlimited amount of that resource.
+Leaving a value empty specifies unlimited access for that resource.
+
+Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/Permissions#Quotas
 
 
 ================================================================================
@@ -101,8 +191,28 @@ that do not have any permissions assigned.
 You only need to grant permissions directly on virtual machines if you are
 granting access to non-admin users.
 
+Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/Managing_Clusters#Orphaned-Virtual-Machines
 
 
+================================================================================
+ Cache System
+================================================================================
 
+Ganeti Web Manager uses a cache system that stores information about ganeti
+clusters in the database. This allows the following:
 
+      ---  Ganeti  ---
+     /                \
+    /                  \
+ Cluster ->       ->   Bulk
+  Model  <- cache <-  Updater
 
+    * Permissions are stored in the database and are associated to the cached
+      objects
+    * The cached data can be searched and or filtered
+    * Limits the amount of traffic between the webserver and ganeti cluster.
+
+The cache system is transparent and will load cached data automatically when
+the object is initialized.
+
+Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/Cache_System
