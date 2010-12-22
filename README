@@ -5,6 +5,13 @@
 Ganeti Web Manager is a Django based web application that allows administrators
 and clients access to their ganeti clusters.  
 
+Ganeti compatibility:
+    2.3.x - supported
+    2.2.x - supported
+    2.1.x - mostly supported
+    2.0.x - unsupported but may work
+    1.x   - unsupported
+
 Project page: http://code.osuosl.org/projects/ganeti-webmgr
 Mailing List: http://groups.google.com/group/ganeti-webmgr
 IRC:          #ganeti-webmgr on freenode.net
@@ -56,7 +63,10 @@ IRC:          #ganeti-webmgr on freenode.net
 
     Production:
 
-    1. Follow the django guide to deploy [1] with apache. Here is an example
+    1. Change your SECRET_KEY and WEB_MGR_API_KEY to unique (and hopefully
+       unguessable) strings in your settings.py.
+
+    2. Follow the django guide to deploy [1] with apache. Here is an example
        mod_wsgi file:
 
         import os
@@ -71,7 +81,7 @@ IRC:          #ganeti-webmgr on freenode.net
                 import django.core.handlers.wsgi
                 application = django.core.handlers.wsgi.WSGIHandler()
 
-    2. Configure cron job for periodic cache updater [2].
+    3. Configure cron job for periodic cache updater [2].
 
  [1] http://docs.djangoproject.com/en/1.2/howto/deployment/
  [2] http://code.osuosl.org/projects/ganeti-webmgr/wiki/Cache_System#Updating-with-cron
@@ -169,7 +179,7 @@ Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/Managing_Clusters#O
 Ganeti Web Manager uses a cache system that stores information about ganeti
 clusters in the database. This allows the following:
 
-      ---   Ganeti ---
+      ---  Ganeti  ---
      /                \
     /                  \
  Cluster ->       ->   Bulk
