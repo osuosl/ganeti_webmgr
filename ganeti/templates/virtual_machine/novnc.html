@@ -1,6 +1,19 @@
+    <script type="text/javascript">
+        var VNC_native_ws, WEB_SOCKET_SWF_LOCATION;
+        
+        /* If no builtin websockets then load web_socket.js */
+        if (window.WebSocket) {
+            VNC_native_ws = true;
+        } else {
+            // TODO: IMPROVE THIS (urgent)
+            VNC_native_ws = false;
+            WEB_SOCKET_SWF_LOCATION = "{{MEDIA_URL}}/novnc/" +
+                        "web-socket-js/WebSocketMain.swf";
+        }
+    </script>
     <link rel="stylesheet" href="{{MEDIA_URL}}/novnc/plain.css" title="plain">
     <script type="text/javascript" src="{{MEDIA_URL}}/novnc/util.js"></script>
-    <!-- probably redundant -->
+    <!-- probably redundant ↓ -->
     <script type="text/javascript" src="{{MEDIA_URL}}/novnc/webutil.js"></script>
     <script type="text/javascript" src="{{MEDIA_URL}}/novnc/base64.js"></script>
     <script type="text/javascript" src="{{MEDIA_URL}}/novnc/des.js"></script>
@@ -11,130 +24,126 @@
     <script type="text/javascript" src="{{MEDIA_URL}}/novnc/web-socket-js/FABridge.js"></script>
     <script type="text/javascript" src="{{MEDIA_URL}}/novnc/web-socket-js/web_socket.js"></script>
     <script type="text/javascript">
-        var VNC_native_ws, WEB_SOCKET_SWF_LOCATION;
-        
-        /* If no builtin websockets then load web_socket.js */
-        if (window.WebSocket) {
-            VNC_native_ws = true;
-        } else {
-            // TODO: IMPROVE THIS (urgent)
-            VNC_native_ws = false;
-            WEB_SOCKET_SWF_LOCATION = "{{MEDIA_URL}}/js/novnc/" +
-                        "web-socket-js/WebSocketMain.swf";
-            extra += start + "web-socket-js/swfobject.js" + end;
-            extra += start + "web-socket-js/FABridge.js" + end;
-            extra += start + "web-socket-js/web_socket.js" + end;
+
+        // TODO: switch to jQ
+        var rfb;
+        var host, port; // VNC proxy
+
+        function disconnect() {
+            rfb.disconnect();
+            return false;
+        }
+        function sendCAD() {
+            rfb.sendCtrlAltDel();
+            return false;
+        }
+        function updateState(rfb, state, oldstate, msg) {
+            var s, sb, cad, klass;
+
+            s = $('#VNC_status');
+            sb = $('#VNC_status_bar');
+            cad = $('#sendCADBtn');
+            dcb = $('#disconnectBtn');
+            cb = $('#connectBtn');
+
+            switch (state) {
+                case 'failed':
+                case 'fatal':
+                    klass = "VNC_status_error";
+                    break;
+                case 'normal':
+                    klass = "VNC_status_normal";
+                    break;
+                case 'disconnected':
+                case 'loaded':
+                    klass = "VNC_status_normal";
+                    break;
+                case 'password':
+                    msg = 'Password required';
+                    klass = "VNC_status_warn";
+                    break;
+                default:
+                    klass = "VNC_status_warn";
+            }
+
+            if (state === "normal") {
+                cad.removeAttr("disabled");
+                dcb.removeAttr("disabled");
+
+                cb.attr("disabled", "disabled");
+            }
+            else {
+                cad.attr("disabled", "disabled");
+                dcb.attr("disabled", "disabled");
+
+                cb.removeAttr("disabled");
+            }
+
+            if (typeof(msg) !== 'undefined') {
+                sb.attr("class", klass);
+                s.html(msg);
+            }
+        }
+
+        function start() {
+            var target_host, target_port, password; // VNC server
+
+            target_host = "{{ host }}";
+            target_port = "{{ port }}";
+
+            // jQ value from field
+            password = $("#password").val();
+
+            // Ajax stuff here
+            url = "{% url vm-vnc-proxy host port %}";
+            $.ajax({
+                "async": false,
+                "url": url,
+                "success": function(data, s, x){
+                    host = "localhost";
+                    port = data;
+                }
+            });
+
+            rfb = new RFB({
+                'target':       $D('VNC_canvas'), // TODO: nonjQ remainder
+                'encrypt':      $('#encryption').attr('checked') ? true : false,
+                'true_color':   true,
+                'local_cursor': true,
+                'shared':       true,
+                'updateState':  updateState
+            });
+            rfb.connect(host, port, password);
+
+            return false;
         }
     </script>
 
+    <label for="password">Password:</label>
+    <input type="password" value="{{ password }}" id="password" /><br />
+    <input type="checkbox" id="encryption" />
+    <label for="encryption">Encrypt</label><br />
+    <input type="button" name="connect" id="connectBtn" value="Connect" onclick="start()" />
 
-        <label for="password">Password:</label>
-        <input type="password" value="{{ password }}" id="password" /><br />
-        <input type="checkbox" id="encryption" />
-        <label for="encryption">Encrypt</label><br />
-        <input type="button" name="connect" id="connect" value="Connect" onclick="start()" />
-
-        <div id="VNC_screen">
-            <div id="VNC_status_bar" class="VNC_status_bar" style="margin-top: 0px;">
-                <table border=0 width="100%">
-                    <tr>
-                        <td>
-                            <div id="VNC_status">noVNC client</div>
-                        </td>
-                        <td width="1%">
-                            <div id="VNC_buttons">
-                                <input type=button value="Send CtrlAltDel" id="sendCtrlAltDelButton" disabled="disabled" />
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-            </div>
-            <canvas id="VNC_canvas" width="640px" height="20px">
-                <!-- TODO: maybe add Java VNC here? -->
-                Canvas is not supported in your browser. Please use new versions
-                of Chrome or Firefox.
-            </canvas>
+    <div id="VNC_screen">
+        <div id="VNC_status_bar" class="VNC_status_bar" style="margin-top: 0px;">
+            <table border=0 width="100%">
+                <tr>
+                    <td>
+                        <div id="VNC_status">noVNC client</div>
+                    </td>
+                    <td width="1%">
+                        <div id="VNC_buttons">
+                            <input type=button value="Disconnect" id="disconnectBtn" disabled="disabled" onclick="disconnect()" />
+                            <input type=button value="Send CtrlAltDel" id="sendCADBtn" disabled="disabled" onclick="sendCAD()" />
+                        </div>
+                    </td>
+                </tr>
+            </table>
         </div>
-
-        <script type="text/javascript">
-            // TODO: switch to jQ
-
-            var rfb;
-
-            function getPort(data, textstatus, xhr) {
-                return data;
-            }
-            function sendCtrlAltDel() {
-                rfb.sendCtrlAltDel();
-                return false;
-            }
-            function updateState(rfb, state, oldstate, msg) {
-                var s, sb, cad, klass;
-                s = $('#VNC_status');
-                sb = $('#VNC_status_bar');
-                cad = $('#sendCtrlAltDelButton');
-                switch (state) {
-                    case 'failed':
-                    case 'fatal':
-                        klass = "VNC_status_error";
-                        break;
-                    case 'normal':
-                        klass = "VNC_status_normal";
-                        break;
-                    case 'disconnected':
-                    case 'loaded':
-                        klass = "VNC_status_normal";
-                        break;
-                    case 'password':
-                        msg = 'Password required';
-                        klass = "VNC_status_warn";
-                        break;
-                    default:
-                        klass = "VNC_status_warn";
-                }
-
-                if (state === "normal") { cad.disabled = false; }
-                else                    { cad.disabled = true; }
-
-                if (typeof(msg) !== 'undefined') {
-                    sb.attr("class", klass);
-                    s.html(msg);
-                }
-            }
-
-            function start() {
-                var target_host, target_port, password; // VNC server
-                var host, port;                         // VNC proxy
-
-                $('#sendCtrlAltDelButton').live("click", sendCtrlAltDel);
-
-                target_host = "{{ host }}";
-                target_port = "{{ port }}";
-
-                // jQ value from field
-                //password = WebUtil.getQueryVar('password', '');
-                password = $("#password").val();
-
-                // Ajax stuff here
-                // TODO: urgent force django view to support this
-                url = "{% url vm-vnc-proxy host port %}";
-                $.get(url, function(data){
-                    host = "localhost";
-                    port = data;
-                });
-                alert(host + " " + port + " " + password);
-
-                rfb = new RFB({
-                    'target':       $('#VNC_canvas'),
-                    'encrypt':      $('#encryption').attr('checked') ? true : false,
-                    'true_color':   true,
-                    'local_cursor': true,
-                    'shared':       true,
-                    'updateState':  updateState
-                });
-                rfb.connect(host, port, password);
-
-                // TODO: add disconnect option
-                return false;
-            }
-        </script>
+        <canvas id="VNC_canvas" width="640px" height="20px">
+            <!-- TODO: maybe add Java VNC here? -->
+            Canvas is not supported in your browser. Please use new versions
+            of Chrome or Firefox.
+        </canvas>
+    </div>

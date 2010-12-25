@@ -117,11 +117,16 @@ def vnc(request, cluster_slug, instance):
 
 @login_required
 def vnc_proxy(request, target_host, target_port):
+    import urllib2
     # read
-    url = "http://localhost:8888/proxy/%s:%s" % (target_host, target_port)
+    url = "http://localhost:8888/proxy/%s:%s/" % (target_host, target_port)
+    try:
+        result = urllib2.urlopen(url).read()
+    except:
+        result = "error"
     
     # return port number
-    return HttpResponse("")
+    return HttpResponse(result)
 
 
 @login_required
