@@ -18,10 +18,10 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-import SocketServer
-import threading
-import subprocess
 import sys
+import os.path
+import threading
+import SocketServer
 from optparse import OptionParser, OptionValueError
 
 from server import WebProxyServer
@@ -29,19 +29,23 @@ from websocketproxy import WebsocketProxy
 
 
 class DaemonThread(threading.Thread):
-    def __init__(self, pool, host, port, pool_port):
+    def __init__(self, pool, host, port, pool_port, ssl_only, ssl_cert, ssl_key):
         self.pool = pool
         self.host = host
         self.port = port
         self.pool_port = pool_port
+
+        self.ssl_only = ssl_only
+        self.ssl_cert = ssl_cert
+        self.ssl_key = ssl_key
+
         self.proxy = None
-        self.proxy_connected = False
-        self.timer = None
         super(DaemonThread, self).__init__()
 
     def run(self):
         print "new thread run proxy at %s" % self.pool_port
-        self.proxy = WebsocketProxy("", self.pool_port, self.host, self.port)
+        self.proxy = WebsocketProxy("", self.pool_port, self.host, self.port,
+            self.ssl_only, self.ssl_cert, self.ssl_key)
         self.proxy.start_server()
 
         # append the port
@@ -50,10 +54,14 @@ class DaemonThread(threading.Thread):
 
 
 class Daemon:
-    def __init__(self, start_port=1000, end_port=2000):
+    def __init__(self, start_port=1000, end_port=2000,
+                 ssl_only=False, ssl_cert=None, ssl_key=None):
         self.start_port = start_port
         self.end_port = end_port
         self.pool = list( range(self.start_port, self.end_port+1) ) # future compability
+        self.ssl_only = ssl_only
+        self.ssl_cert = ssl_cert
+        self.ssl_key = ssl_key
 
     def webproxy(self, host, port, pool_port=None):
         # XXX: check if port isn't taken by someone else
@@ -65,7 +73,8 @@ class Daemon:
             self.pool.pop( self.pool.index(pool_port) )
 
         # create thread with host, port, pool_port
-        t1 = DaemonThread(self.pool, host, port, pool_port)
+        t1 = DaemonThread(self.pool, host, port, pool_port, self.ssl_only,
+                self.ssl_cert, self.ssl_key)
         t1.start()
 
         return "%s" % pool_port
@@ -81,8 +90,16 @@ def main():
             help="beginning port for the pool", type="int")
     parser.add_option("-E", "--end-port", dest="end_port", default=8000,
             help="ending port for the pool", type="int")
-    parser.add_option("-v", dest="verbose", action="store_true", default=False,
+    parser.add_option("-v", "--verbose", dest="verbose", action="store_true",
+            default=False,
             help="verbose mode")
+    parser.add_option("--sslonly", dest="ssl_only", action="store_true",
+            default=False,
+            help="Allow only SSL connections")
+    parser.add_option("--cert", dest="ssl_cert", default=None,
+            help="SSL certificate file")
+    parser.add_option("--key", dest="ssl_key", default=None,
+            help="SSL key file (if separate from cert)")
     
     options, args = parser.parse_args()
 
@@ -100,6 +117,20 @@ def main():
 
     if not (options.end_port - options.begin_port) > 100:
         raise OptionValueError("Too few ports in pool, try lower begin pool port or higher end pool port")
+
+    if (options.ssl_only and not os.path.exists(options.ssl_cert)) or \
+       (options.ssl_cert and not os.path.exists(options.ssl_cert)):
+        raise OptionValueError("You must specify existing certificate file")
+    elif options.ssl_cert:
+        options.ssl_cert = os.path.abspath(options.ssl_cert)
+
+    if options.ssl_key and not os.path.exists(options.ssl_key):
+        raise OptionValueError("You must specify existing key file")
+    elif options.ssl_key:
+        options.ssl_file = os.path.abspath(options.ssl_file)
+
+    if options.ssl_cert and options.ssl_cert == options.ssl_key:
+        raise OptionValueError("Certificate and key files must not be the same")
     
     return options
 
@@ -113,7 +144,13 @@ if __name__=="__main__":
         sys.exit(1)
 
     else:
-        d = Daemon(options.begin_port, options.end_port)
+        d = Daemon(
+            start_port = options.begin_port,
+            end_port = options.end_port,
+            ssl_only = options.ssl_only,
+            ssl_cert = options.ssl_cert,
+            ssl_key = options.ssl_key,
+        )
 
         WebsocketProxy.DEBUG = options.verbose
         handler = WebProxyServer

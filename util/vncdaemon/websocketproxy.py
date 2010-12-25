@@ -286,6 +286,7 @@ class WebsocketProxy:
                 self.socket.settimeout(30.0)  # timeout set to 30s
                 connection, address = self.socket.accept()
                 self.socket.settimeout(None)  # timeout disabled
+                # TODO: suggestion: timeout 30s everywhere?
 
                 self.log("Client connection from %s:%s" % address)
 
