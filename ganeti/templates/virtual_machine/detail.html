@@ -193,11 +193,7 @@
         {% endcomment %}
         {% if admin %}
             <li><a title="users" href="{% url vm-users cluster.slug instance.hostname %}"><span>Users</span></a></li>
-            <li>
-                <a title="console" href="{% url instance-vnc cluster.slug instance.hostname %}">
-                    <span>Console</span>
-                </a>
-            </li>
+            <li><a href="#vnc"><span>Console</span></a></li>
         {%endif%}
     </ul>
     <div id="overview" class="tab_content">
@@ -230,6 +226,13 @@
             {% endwith %}
         </table>
     </div>
+    {% if admin %}
+    {# If you want to maitain Java VNC console then here should be some condition #}
+    {# I don't know if it's my work #}
+    <div id="vnc" class="tab_content">
+        {% include "virtual_machine/novnc.html" %}
+    </div>
+    {% endif %}
     {% comment %}
     <div id="configuration">
         {% if configform %}

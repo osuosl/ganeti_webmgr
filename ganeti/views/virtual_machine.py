@@ -105,13 +105,23 @@ def vnc(request, cluster_slug, instance):
         port = instance.info['network_port']
         password = ''
 
-    return render_to_response("virtual_machine/vnc.html",
+    #return render_to_response("virtual_machine/vnc.html",
+    return render_to_response("virtual_machine/novnc.html",
                               {'instance': instance,
                                'host': host,
                                'port': port,
                                'password': password},
         context_instance=RequestContext(request),
     )
+
+
+@login_required
+def vnc_proxy(request, target_host, target_port):
+    # read
+    url = "http://localhost:8888/proxy/%s:%s" % (target_host, target_port)
+    
+    # return port number
+    return HttpResponse("")
 
 
 @login_required
@@ -265,13 +275,27 @@ def detail(request, cluster_slug, instance):
         else:
             form = None
     """
+    # switching console HACK
+    if settings.VNC_PROXY:
+        host = 'localhost'
+        port, password = vm.setup_vnc_forwarding()
+
+    else:
+        host = vm.info['pnode']
+        port = vm.info['network_port']
+        password = ''
+
     return render_to_response("virtual_machine/detail.html", {
         'cluster': cluster,
         'instance': vm,
         #'configform': form,
         'admin':admin,
         'remove':remove,
-        'power':power
+        'power':power,
+        # VNC stuff below
+        'host': host,
+        'port': port,
+        'password': password,
         },
         context_instance=RequestContext(request),
     )

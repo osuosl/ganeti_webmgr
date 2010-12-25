@@ -80,8 +80,9 @@ urlpatterns += patterns('ganeti.views.virtual_machine',
     url(r'^%s/permissions/user/(?P<user_id>\d+)/?$' % vm_prefix, 'permissions', name="vm-permissions-user"),
     url(r'^%s/permissions/group/(?P<group_id>\d+)/?$' % vm_prefix, 'permissions', name="vm-permissions-user"),
     
-    #  Start, Stop, Reboot
+    #  Start, Stop, Reboot, VNC
     url(r'^%s/vnc/?$' % vm_prefix, 'vnc', name="instance-vnc"),
+    url(r'^vm/vnc_proxy/(?P<target_host>[^/]+)/(?P<target_port>\d+)/?$', 'vnc_proxy', name="vm-vnc-proxy"),
     url(r'^%s/shutdown/?$' % vm_prefix, 'shutdown', name="instance-shutdown"),
     url(r'^%s/startup/?$' % vm_prefix, 'startup', name="instance-startup"),
     url(r'^%s/reboot/?$' % vm_prefix, 'reboot', name="instance-reboot"),
