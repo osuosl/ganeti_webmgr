@@ -17,10 +17,13 @@ import traceback
 class WebsocketError(socket.error):
     pass
 
+class WebsocketClose(WebsocketError):
+    pass
+
 
 class WebsocketProxy:
     DEBUG = False
-    flash_policy_response = """<cross-domain-policy><allow-access-from domain="*" to ports="*" /></cross-domain-policy>\n"""
+    flash_policy_response = """<cross-domain-policy><allow-access-from domain="*" to-ports="*" /></cross-domain-policy>\n"""
     server_response = [
         "HTTP/1.1 101 Web Socket Protocol Handshake",
         "Upgrade: WebSocket",
@@ -127,7 +130,7 @@ class WebsocketProxy:
             self.log("Handshake: got flash policy")
             sock.send(self.flash_policy_response)
             sock.close()
-            return False
+            return "flash"
         
         elif handshake[0] in ("\x16", "\x80"):
             retsock = ssl.wrap_socket(
@@ -151,7 +154,7 @@ class WebsocketProxy:
 
         handshake = retsock.recv(4096)
         if len(handshake) == 0:
-            raise WebsocketError("Handshake: client closed connection")
+            raise WebsocketClose("Handshake: client closed connection")
 
         h = self.parse_handshake(handshake)
 
@@ -206,16 +209,16 @@ class WebsocketProxy:
             if target in ins:
                 buf = target.recv(self.buffer_size)
                 if len(buf) == 0:
-                    raise WebsocketError("Target closed")
+                    raise WebsocketClose("Target closed")
                 cqueue.append(self.encode(buf))
 
             if client in ins:
                 buf = client.recv(self.buffer_size)
                 if len(buf) == 0:
-                    raise WebsocketError("Client closed")
+                    raise WebsocketClose("Client closed")
 
                 if buf == "\xff\x00":
-                    raise WebsocketError("Client sent orderly close frame")
+                    raise WebsocketClose("Client sent orderly close frame")
                 
                 elif buf[-1] == "\xff":
                     if cpartial:
@@ -275,19 +278,30 @@ class WebsocketProxy:
 
         connection = None
         try:
-            self.socket.settimeout(30.0)  # timeout set to 30s
-            connection, address = self.socket.accept()
-            self.socket.settimeout(None)  # timeout disabled
+            # when using browser without Websockets, so that it uses Flash object
+            # for creating sockets, Flash establishes two connections, one by one
+            # we don't want to create two separate threads for flash, so we use
+            # this loop to handle upcoming Flash connections
+            for i in range(2):
+                self.socket.settimeout(30.0)  # timeout set to 30s
+                connection, address = self.socket.accept()
+                self.socket.settimeout(None)  # timeout disabled
 
-            self.log("Client connection from %s:%s" % address)
+                self.log("Client connection from %s:%s" % address)
 
-            # make handshake
-            csock = self.do_handshake(connection)
+                # make handshake
+                csock = self.do_handshake(connection)
 
-            if not csock:
-                raise WebsocketError("No connection after handshake")
+                if isinstance(csock, str)  and  csock=="flash":
+                    # flash
+                    self.log("Waiting for next Flash connection")
+                    continue  # second iteration
 
-            self.handle(csock)
+                elif not csock:
+                    raise WebsocketError("No connection after handshake")
+
+                self.handle(csock)
+                break # we don't need second iteration
 
         except BaseException, e:
             self.log("ERROR: %s" % str(e))

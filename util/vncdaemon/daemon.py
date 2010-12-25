@@ -81,6 +81,8 @@ def main():
             help="beginning port for the pool", type="int")
     parser.add_option("-E", "--end-port", dest="end_port", default=8000,
             help="ending port for the pool", type="int")
+    parser.add_option("-v", dest="verbose", action="store_true", default=False,
+            help="verbose mode")
     
     options, args = parser.parse_args()
 
@@ -113,6 +115,7 @@ if __name__=="__main__":
     else:
         d = Daemon(options.begin_port, options.end_port)
 
+        WebsocketProxy.DEBUG = options.verbose
         handler = WebProxyServer
         handler.webproxy_func = d.webproxy
 
