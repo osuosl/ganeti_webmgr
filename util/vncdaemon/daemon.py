@@ -95,7 +95,7 @@ def main():
             help="verbose mode")
     parser.add_option("--sslonly", dest="ssl_only", action="store_true",
             default=False,
-            help="Allow only SSL connections")
+            help="allow only SSL connections")
     parser.add_option("--cert", dest="ssl_cert", default=None,
             help="SSL certificate file")
     parser.add_option("--key", dest="ssl_key", default=None,

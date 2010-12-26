@@ -230,6 +230,19 @@
     {# If you want to maitain Java VNC console then here should be some condition #}
     {# I don't know if it's my work #}
     <div id="vnc" class="tab_content">
+        {# fix 1959 #}
+        <ul id="actions">
+            {% with instance.cluster.username as username %}
+                {% if admin or power and username %}
+                    {% ifequal instance.info.status "running" %}
+                    <li><a class="button shutdown" href="{% url instance-shutdown cluster.slug instance.hostname %}">Shutdown</a></li>
+                    <li><a class="button reboot" href="{% url instance-reboot cluster.slug instance.hostname %}">Reboot</a></li>
+                    {% else %}
+                    <li><a class="button startup" href="{% url instance-startup cluster.slug instance.hostname %}">Start</a></li>
+                    {% endifequal %}
+                {% endif %}
+            {% endwith %}
+        </ul>
         {% include "virtual_machine/novnc.html" %}
     </div>
     {% endif %}
