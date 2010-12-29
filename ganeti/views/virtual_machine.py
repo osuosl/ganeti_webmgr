@@ -86,6 +86,7 @@ def delete(request, cluster_slug, instance):
     return HttpResponseNotAllowed(["GET","DELETE"])
 
 
+# XXX: not used with noVNC
 @login_required
 def vnc(request, cluster_slug, instance):
     instance = get_object_or_404(VirtualMachine, hostname=instance, \
@@ -116,17 +117,18 @@ def vnc(request, cluster_slug, instance):
 
 
 @login_required
-def vnc_proxy(request, target_host, target_port):
-    import urllib2
-    # read
-    url = "http://localhost:8888/proxy/%s:%s/" % (target_host, target_port)
-    try:
-        result = urllib2.urlopen(url).read()
-    except:
-        result = "error"
+def vnc_proxy(request, cluster_slug, instance):
+    instance = get_object_or_404(VirtualMachine, hostname=instance, \
+                                 cluster__slug=cluster_slug)
+
+    user = request.user
+    if not (user.is_superuser or user.has_perm('admin', instance) or \
+        user.has_perm('admin', instance.cluster)):
+        return render_403(request, 'You do not have permission to vnc on this')
     
-    # return port number
-    return HttpResponse(result)
+    result = json.dumps(instance.setup_vnc_forwarding())
+
+    return HttpResponse(result, mimetype="application/json")
 
 
 @login_required
@@ -280,16 +282,6 @@ def detail(request, cluster_slug, instance):
         else:
             form = None
     """
-    # switching console HACK
-    if settings.VNC_PROXY:
-        host = 'localhost'
-        port, password = vm.setup_vnc_forwarding()
-
-    else:
-        host = vm.info['pnode']
-        port = vm.info['network_port']
-        password = ''
-
     return render_to_response("virtual_machine/detail.html", {
         'cluster': cluster,
         'instance': vm,
@@ -297,10 +289,6 @@ def detail(request, cluster_slug, instance):
         'admin':admin,
         'remove':remove,
         'power':power,
-        # VNC stuff below
-        'host': host,
-        'port': port,
-        'password': password,
         },
         context_instance=RequestContext(request),
     )

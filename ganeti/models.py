@@ -20,7 +20,7 @@
 import cPickle
 from datetime import datetime, timedelta
 from hashlib import sha1
-from subprocess import Popen
+import socket
 
 from django.conf import settings
 
@@ -519,14 +519,27 @@ class VirtualMachine(CachedClusterObject):
             .update(last_job=job, ignore_cache=True)
         return job
 
-    def setup_vnc_forwarding(self):
+    def setup_vnc_forwarding(self, sport=''):
+        # TODO: random password generate
         #password = self.set_random_vnc_password(instance)
         password = 'none'
         info_ = self.info
         port = info_['network_port']
         node = info_['pnode']
-        Popen(['util/portforwarder.py', '%d'%port, '%s:%d'%(node, port)])
-        return port, password
+
+        socket_file = "/tmp/vncproxy.sock"
+        request = ":".join((sport, node, str(port), password))
+        
+        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        sock.connect(socket_file)
+        sock.send(request)
+        response = sock.recv(1024).strip()
+        sock.close()
+
+        if response.startswith("FAIL"):
+            return False, False
+        else:
+            return response, password
 
     def __repr__(self):
         return "<VirtualMachine: '%s'>" % self.hostname

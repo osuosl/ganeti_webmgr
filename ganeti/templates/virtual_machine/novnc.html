@@ -27,7 +27,7 @@
 
         // TODO: switch to jQ
         var rfb;
-        var host, port; // VNC proxy
+        var host, port, password; // VNC proxy connection settings
 
         function disconnect() {
             rfb.disconnect();
@@ -86,22 +86,16 @@
         }
 
         function start() {
-            var target_host, target_port, password; // VNC server
-
-            target_host = "{{ host }}";
-            target_port = "{{ port }}";
-
-            // jQ value from field
-            password = $("#password").val();
-
             // Ajax stuff here
-            url = "{% url vm-vnc-proxy host port %}";
+            url = "{% url vm-vnc-proxy cluster.slug instance.hostname %}";
             $.ajax({
                 "async": false,
                 "url": url,
+                "dataType": "json",
                 "success": function(data, s, x){
                     host = "localhost";
-                    port = data;
+                    port = data[0];
+                    password = data[1];
                 }
             });
 
@@ -119,8 +113,6 @@
         }
     </script>
 
-    <label for="password">Password:</label>
-    <input type="password" value="{{ password }}" id="password" /><br />
     <input type="checkbox" id="encryption" />
     <label for="encryption">Encrypt</label><br />
     <input type="button" name="connect" id="connectBtn" value="Connect" onclick="start()" />
