@@ -40,8 +40,12 @@ from gevent.select import select
 # - HARD include Flash support? Maybe need to change something in VncAuthProxy._run
 class WebSocketError(socket.error):
     pass
+class WebSocketFlash(socket.error):
+    pass
 
 class WebSocket:
+    policy_response = '<cross-domain-policy><allow-access-from domain="*" ' + \
+                      'to-ports="*" /></cross-domain-policy>\n'
     server_response = [
         "HTTP/1.1 101 Web Socket Protocol Handshake",
         "Upgrade: WebSocket",
@@ -86,7 +90,7 @@ class WebSocket:
         req_lines = handshake.split("\r\n")
 
         if not req_lines[0].startswith("GET "):
-            raise WebsocketError("WS Handshake: invalid, no GET request line")
+            raise WebSocketError("WS Handshake: invalid, no GET request line")
 
         ret["path"] = req_lines[0].split(" ")[1]
 
@@ -110,10 +114,16 @@ class WebSocket:
         handshake = self.socket.recv(1024, socket.MSG_PEEK)
 
         if not handshake:
-            self.client.close()
+            self.socket.close()
             raise WebSocketError("WS: Got empty handshake")
 
-        # TODO: flash in here?
+        elif handshake.startswith("<policy-file-request/>"):
+            handshake = self.socket.recv(1024)
+            self.log("Sending flash policy response")
+            self.socket.send(self.policy_response)
+            self.socket.close()
+            raise WebSocketFlash("WS: Got Flash handshake")
+
         elif handshake[0] in ("\x16", "\x80"):
             retsock = ssl.SSLSocket(
                 self.socket,
@@ -520,9 +530,22 @@ class VncAuthProxy(gevent.Greenlet):
             self._cleanup()
 
         for sock in rlist:
-            self.client, addrinfo = sock.accept()
-            self.info("Connection from %s:%d" % addrinfo[:2])
-            # TODO: flash connection?
+            for i in range(2):
+                try:
+                    self.client, addrinfo = sock.accept()
+                    self.info("Connection from %s:%d" % addrinfo[:2])
+
+                    self._handshake()
+
+                except WebSocketFlash, e:
+                    self.info(str(e))
+                    continue
+
+                except Timeout:
+                    pass
+
+                else:
+                    break
 
             # Close all listening sockets, we only want a one-shot connection
             # from a single client.
@@ -530,7 +553,26 @@ class VncAuthProxy(gevent.Greenlet):
                 listener.close()
             break
 
-        self._handshake()
+            """try:
+                self.client, addrinfo = sock.accept()
+                self.info("Connection from %s:%d" % addrinfo[:2])
+                # TODO: flash connection?
+
+                # Close all listening sockets, we only want a one-shot connection
+                # from a single client.
+                for listener in sockets:
+                    listener.close()
+
+                self._handshake()
+
+            except WebSocketFlash, e:
+                self.info("Got flash exception")
+                self.client, addrinfo = sock.accept()
+                self.info("Flash re-connection from %s:%d" % addrinfo[:2])
+                self._handshake()
+
+            finally:
+                break"""
 
 
 if __name__ == '__main__':
