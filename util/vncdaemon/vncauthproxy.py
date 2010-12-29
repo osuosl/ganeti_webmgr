@@ -541,8 +541,8 @@ class VncAuthProxy(gevent.Greenlet):
                     self.info(str(e))
                     continue
 
-                except Timeout:
-                    pass
+                except BaseException, e:
+                    self.info("Random exception occured: %s" % str(e))
 
                 else:
                     break
@@ -552,27 +552,6 @@ class VncAuthProxy(gevent.Greenlet):
             for listener in sockets:
                 listener.close()
             break
-
-            """try:
-                self.client, addrinfo = sock.accept()
-                self.info("Connection from %s:%d" % addrinfo[:2])
-                # TODO: flash connection?
-
-                # Close all listening sockets, we only want a one-shot connection
-                # from a single client.
-                for listener in sockets:
-                    listener.close()
-
-                self._handshake()
-
-            except WebSocketFlash, e:
-                self.info("Got flash exception")
-                self.client, addrinfo = sock.accept()
-                self.info("Flash re-connection from %s:%d" % addrinfo[:2])
-                self._handshake()
-
-            finally:
-                break"""
 
 
 if __name__ == '__main__':
