@@ -130,7 +130,9 @@ def user_profile(request):
             if data['new_password']:
                 user.set_password(data['new_password'])
             user.save()
-            user.get_profile().save()
+            p = user.get_profile()
+            p.use_novnc = data['use_novnc']
+            p.save()
             form = None
             messages.add_message(request, messages.SUCCESS,
                                  'Saved successfully')
@@ -139,6 +141,7 @@ def user_profile(request):
         
         form = UserProfileForm(initial={'email':user.email,
                                         'old_password':'',
+                                        'use_novnc':user.get_profile().use_novnc,
                                         })
     
     keys = SSHKey.objects.filter(user__pk=user.pk).order_by("pk")
@@ -262,6 +265,7 @@ class UserProfileForm(forms.Form):
     old_password = forms.CharField(required=False, widget=forms.PasswordInput)
     new_password = forms.CharField(required=False, widget=forms.PasswordInput)
     confirm_password = forms.CharField(required=False, widget=forms.PasswordInput)
+    use_novnc = forms.BooleanField(required=False)
 
     # needed to verify the user's password
     user = None

@@ -20,7 +20,6 @@
 import cPickle
 from datetime import datetime, timedelta
 from hashlib import sha1
-import socket
 
 from django.conf import settings
 
@@ -45,8 +44,14 @@ from util import client
 from util.client import GanetiApiError
 
 if settings.VNC_PROXY:
-    from vncauthproxy.vapclient import request_forwarding
+    from util.vncdaemon.vapclient import request_forwarding
 
+import random
+import string
+
+def generate_random_password(length=12):
+    "Generate random sequence of specified length"
+    return "".join( random.sample(string.letters + string.digits, length) )
 
 RAPI_CACHE = {}
 RAPI_CACHE_HASHES = {}
@@ -520,26 +525,22 @@ class VirtualMachine(CachedClusterObject):
         return job
 
     def setup_vnc_forwarding(self, sport=''):
-        # TODO: random password generate
-        #password = self.set_random_vnc_password(instance)
-        password = 'none'
+        password = ''
         info_ = self.info
         port = info_['network_port']
         node = info_['pnode']
 
-        socket_file = "/tmp/vncproxy.sock"
-        request = ":".join((sport, node, str(port), password))
-        
-        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        sock.connect(socket_file)
-        sock.send(request)
-        response = sock.recv(1024).strip()
-        sock.close()
+        # use proxy for VNC connection
+        if settings.VNC_PROXY:
+            password = generate_random_password()
+            result = request_forwarding(sport, node, port, password)
+            if not result:
+                return False, False
+            else:
+                return int(result), password
 
-        if response.startswith("FAIL"):
-            return False, False
         else:
-            return response, password
+            return port, password
 
     def __repr__(self):
         return "<VirtualMachine: '%s'>" % self.hostname
@@ -746,6 +747,7 @@ class Profile(ClusterUser):
     Profile associated with a django.contrib.auth.User object.
     """
     user = models.OneToOneField(User)
+    use_novnc = models.BooleanField(default=False)
 
     def grant(self, perm, object):
         self.user.grant(perm, object)

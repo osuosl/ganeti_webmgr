@@ -87,7 +87,7 @@
 
         function start() {
             // Ajax stuff here
-            url = "{% url vm-vnc-proxy cluster.slug instance.hostname %}";
+            url = "{% url instance-vnc-proxy cluster.slug instance.hostname %}";
             $.ajax({
                 "async": false,
                 "url": url,

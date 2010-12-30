@@ -227,10 +227,7 @@
         </table>
     </div>
     {% if admin %}
-    {# If you want to maitain Java VNC console then here should be some condition #}
-    {# I don't know if it's my work #}
     <div id="vnc" class="tab_content">
-        {# fix 1959 #}
         <ul id="actions">
             {% with instance.cluster.username as username %}
                 {% if admin or power and username %}
@@ -243,7 +240,11 @@
                 {% endif %}
             {% endwith %}
         </ul>
+        {% if use_novnc %}
         {% include "virtual_machine/novnc.html" %}
+        {% else %}
+        {% include "virtual_machine/vnc.html" %}
+        {% endif %}
     </div>
     {% endif %}
     {% comment %}

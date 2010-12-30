@@ -86,29 +86,20 @@ def delete(request, cluster_slug, instance):
     return HttpResponseNotAllowed(["GET","DELETE"])
 
 
-# XXX: not used with noVNC
 @login_required
-def vnc(request, cluster_slug, instance):
-    instance = get_object_or_404(VirtualMachine, hostname=instance, \
-                                 cluster__slug=cluster_slug)
+def vnc_applet(request, cluster_slug, instance, host=None, port=None,
+               password=None):
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    instance = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
 
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', instance) or \
         user.has_perm('admin', instance.cluster)):
         return render_403(request, 'You do not have permission to vnc on this')
 
-    if settings.VNC_PROXY:
-        host = 'localhost'
-        port, password = instance.setup_vnc_forwarding()
-
-    else:
-        host = instance.info['pnode']
-        port = instance.info['network_port']
-        password = ''
-
-    #return render_to_response("virtual_machine/vnc.html",
-    return render_to_response("virtual_machine/novnc.html",
-                              {'instance': instance,
+    return render_to_response("virtual_machine/vnc_applet.html",
+                              {'cluster': cluster,
+                               'instance': instance,
                                'host': host,
                                'port': port,
                                'password': password},
@@ -289,6 +280,7 @@ def detail(request, cluster_slug, instance):
         'admin':admin,
         'remove':remove,
         'power':power,
+        'use_novnc': user.get_profile().use_novnc,
         },
         context_instance=RequestContext(request),
     )

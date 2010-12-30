@@ -24,22 +24,27 @@ import socket
 CTRL_SOCKET = "/tmp/vncproxy.sock"
 
 def request_forwarding(sport, daddr, dport, password):
-    sport = str(int(sport))
-    dport = str(int(dport))
-    assert(len(password) > 0)
+    try:
+        sport = str(int(sport)) if sport else ""
+        dport = str(int(dport))
+        if not password:
+            return False
 
-    request = ":".join([sport, daddr, dport, password])
-    request = ":gwm1.osuosl.org:11003:test"
+        request = ":".join((sport, daddr, dport, password))
 
-    ctrl = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        ctrl = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        ctrl.connect(CTRL_SOCKET)
+        ctrl.send(request)
+        response = ctrl.recv(1024).strip()
+        ctrl.close()
 
-    ctrl.connect(CTRL_SOCKET)
-    ctrl.send(request)
-    response = ctrl.recv(1024).strip()
-    if response.startswith("FAIL"):
+        if response.startswith("FAIL"):
+            return False
+        else:
+            return response
+
+    except:
         return False
-    else:
-        return response
 
 if __name__ == '__main__':
     print request_forwarding(*sys.argv[1:])
