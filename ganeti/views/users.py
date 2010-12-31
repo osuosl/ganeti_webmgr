@@ -4,6 +4,7 @@ import socket
 import json
 
 from django import forms
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm, SetPasswordForm
 from django.core.urlresolvers import reverse
@@ -132,6 +133,8 @@ def user_profile(request):
             user.save()
             user.get_profile().save()
             form = None
+            messages.add_message(request, messages.SUCCESS,
+                                 'Saved successfully')
     
     if not form:
         
