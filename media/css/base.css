@@ -9,7 +9,7 @@
 html {width: 100%;}
 
 body {
-    background-color:#333;
+    background-color: #333;
     color:#333333;
     height: auto;
     margin: 0em;
@@ -231,6 +231,7 @@ form input.submit{margin-left:12.5em;}
     padding-bottom: 1em;
     text-align: center;
     width: 100%;
+    color: #F7F7F7;
 }
 
 .info {
