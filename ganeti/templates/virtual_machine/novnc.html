@@ -5,7 +5,6 @@
         if (window.WebSocket) {
             VNC_native_ws = true;
         } else {
-            // TODO: IMPROVE THIS (urgent)
             VNC_native_ws = false;
             WEB_SOCKET_SWF_LOCATION = "{{MEDIA_URL}}/novnc/" +
                         "web-socket-js/WebSocketMain.swf";
@@ -13,8 +12,7 @@
     </script>
     <link rel="stylesheet" href="{{MEDIA_URL}}/novnc/plain.css" title="plain">
     <script type="text/javascript" src="{{MEDIA_URL}}/novnc/util.js"></script>
-    <!-- probably redundant ↓ -->
-    <script type="text/javascript" src="{{MEDIA_URL}}/novnc/webutil.js"></script>
+    <!--<script type="text/javascript" src="{{MEDIA_URL}}/novnc/webutil.js"></script>-->
     <script type="text/javascript" src="{{MEDIA_URL}}/novnc/base64.js"></script>
     <script type="text/javascript" src="{{MEDIA_URL}}/novnc/des.js"></script>
     <script type="text/javascript" src="{{MEDIA_URL}}/novnc/canvas.js"></script>
@@ -25,7 +23,6 @@
     <script type="text/javascript" src="{{MEDIA_URL}}/novnc/web-socket-js/web_socket.js"></script>
     <script type="text/javascript">
 
-        // TODO: switch to jQ
         var rfb;
         var host, port, password; // VNC proxy connection settings
 
@@ -100,7 +97,9 @@
             });
 
             rfb = new RFB({
-                'target':       $D('VNC_canvas'), // TODO: nonjQ remainder
+                                // jQuery doesn't work with that, need to stick
+                                // to pure DOM
+                'target':       document.getElementById('VNC_canvas'),
                 'encrypt':      $('#encryption').attr('checked') ? true : false,
                 'true_color':   true,
                 'local_cursor': true,
@@ -134,7 +133,6 @@
             </table>
         </div>
         <canvas id="VNC_canvas" width="640px" height="20px">
-            <!-- TODO: maybe add Java VNC here? -->
             Canvas is not supported in your browser. Please use new versions
             of Chrome or Firefox.
         </canvas>
