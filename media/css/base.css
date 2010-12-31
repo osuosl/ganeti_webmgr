@@ -330,7 +330,12 @@ tr.group td.name {background:url(/media/images/icons/group.png) no-repeat 0 4px;
 .permissions a {color:#333333;}
 .permissions .none, .quota.default {color:#C1C1C1; font-style:italic;}
 
-
+#vnc_errors {
+    background-color: #ee9c98;
+    border: 4px solid #ff8b87;
+    padding: 10px;
+    margin-bottom: 10px;
+}
 
 .floatfix {clear:both;}
 

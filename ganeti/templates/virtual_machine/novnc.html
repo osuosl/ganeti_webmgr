@@ -26,6 +26,14 @@
         var rfb;
         var host, port, password; // VNC proxy connection settings
 
+        function show_errors() {
+            if (host===false || port===false || password===false) {
+                $("#vnc_errors").html("Probably your proxy is not running or some errors occured. Try again.");
+                $("#vnc_errors").show();
+                return false;
+            }
+            return true;
+        }
         function disconnect() {
             rfb.disconnect();
             return false;
@@ -83,18 +91,21 @@
         }
 
         function start() {
-            // Ajax stuff here
+            $("#vnc_errors").hide();
+
             url = "{% url instance-vnc-proxy cluster.slug instance.hostname %}";
             $.ajax({
                 "async": false,
                 "url": url,
                 "dataType": "json",
                 "success": function(data, s, x){
-                    host = "localhost";
-                    port = data[0];
-                    password = data[1];
+                    host = data[0];
+                    port = data[1];
+                    password = data[2];
+                    //alert(host + ":" + port + ":" + password);
                 }
             });
+            if (!show_errors()) return false;
 
             rfb = new RFB({
                                 // jQuery doesn't work with that, need to stick

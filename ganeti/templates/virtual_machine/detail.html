@@ -228,6 +228,10 @@
     </div>
     {% if admin %}
     <div id="vnc" class="tab_content">
+        <div id="vnc_errors" style="display: none;">
+            Probably your proxy is not running.
+        </div>
+
         <ul id="actions">
             {% with instance.cluster.username as username %}
                 {% if admin or power and username %}
