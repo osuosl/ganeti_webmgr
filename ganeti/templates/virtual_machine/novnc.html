@@ -38,6 +38,9 @@
             rfb.disconnect();
             return false;
         }
+        // users exits the page by following link or closing the tab or sth else
+        $(window).bind("unload", disconnect);
+
         function sendCAD() {
             rfb.sendCtrlAltDel();
             return false;
