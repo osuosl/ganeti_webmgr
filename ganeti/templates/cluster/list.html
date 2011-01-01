@@ -23,7 +23,7 @@
 <table id="clusters">
     <tr>
         <th>Hostname</th>
-        <th>Slug</th>
+        <th>Description</th>
         <th>Nodes</th>
         {% comment %}
         <!-- This should be changed to instance-list at a later date -->
@@ -40,7 +40,7 @@
                     {{ cluster.hostname|abbreviate_fqdn }}
                 </a>
             </td>
-            <td>{{ cluster.slug }}</td>
+            <td>{{ cluster.description }}</td>
             <td>{{ nodes|length }}</td>
             <td>{{ cluster.virtual_machines.count }}</td>
         </tr>
