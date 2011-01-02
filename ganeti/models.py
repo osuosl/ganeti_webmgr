@@ -748,7 +748,6 @@ class Profile(ClusterUser):
     Profile associated with a django.contrib.auth.User object.
     """
     user = models.OneToOneField(User)
-    use_novnc = models.BooleanField(default=False)
 
     def grant(self, perm, object):
         self.user.grant(perm, object)

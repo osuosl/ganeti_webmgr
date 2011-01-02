@@ -280,7 +280,6 @@ def detail(request, cluster_slug, instance):
         'admin':admin,
         'remove':remove,
         'power':power,
-        'use_novnc': user.get_profile().use_novnc,
         },
         context_instance=RequestContext(request),
     )

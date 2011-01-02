@@ -244,11 +244,7 @@
                 {% endif %}
             {% endwith %}
         </ul>
-        {% if use_novnc %}
         {% include "virtual_machine/novnc.html" %}
-        {% else %}
-        {% include "virtual_machine/vnc.html" %}
-        {% endif %}
     </div>
     {% endif %}
     {% comment %}
