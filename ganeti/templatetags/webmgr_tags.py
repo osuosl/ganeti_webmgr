@@ -149,7 +149,6 @@ def format_part_total(part, total):
     """
     Pretty-print a quantity out of a given total.
     """
-
     total = float(total) / 1024
     part = float(part) / 1024
     return "%.*f / %.*f" % (
@@ -160,7 +159,6 @@ def node_memory(node):
     """
     Pretty-print a memory quantity, in GiB, with significant figures.
     """
-
     return format_part_total(node["mfree"], node["mtotal"])
 
 
@@ -169,9 +167,31 @@ def node_disk(node):
     """
     Pretty-print a disk quantity, in GiB, with significant figures.
     """
-
     return format_part_total(node["dfree"], node["dtotal"])
 
+@register.simple_tag
+def cluster_memory(cluster):
+    """
+    Pretty-print a memory quantity of the whole cluster [GiB]
+    """
+    nodes = cluster_nodes(cluster, True)
+    mfree, mtotal = 0, 0
+    for i in nodes:
+        mfree += i["mfree"]
+        mtotal += i["mtotal"]
+    return format_part_total(mfree, mtotal)
+
+@register.simple_tag
+def cluster_disk(cluster):
+    """
+    Pretty-print a memory quantity of the whole cluster [GiB]
+    """
+    nodes = cluster_nodes(cluster, True)
+    dfree, dtotal = 0, 0
+    for i in nodes:
+        dfree += i["dfree"]
+        dtotal += i["dtotal"]
+    return format_part_total(dfree, dtotal)
 
 @register.filter
 def json(obj):

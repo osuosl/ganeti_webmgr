@@ -18,9 +18,6 @@
 
 
 import json
-import os
-import socket
-import urllib2
 
 from django import forms
 from django.contrib.auth import authenticate, login, logout

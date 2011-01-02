@@ -7,6 +7,24 @@
 {% block head %}
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.tablesorter.min.js"></script>
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
+<script type="text/javascript">
+    var PBAR_CONF = {
+        steps: 0,
+        showText: true,
+        textFormat: 'fraction',
+        boxImage: '/media/images/progressbar/progressbar.gif',
+        barImage: {
+            0:  '/media/images/progressbar/progressbg_red.gif',
+            30: '/media/images/progressbar/progressbg_orange.gif',
+            50: '/media/images/progressbar/progressbg_yellow.gif',
+            75: '/media/images/progressbar/progressbg_green.gif',
+        }
+    };
+    $(document).ready(function() {
+        
+    });
+</script>
 {% endblock %}
 
 {% block content %}
@@ -19,13 +37,17 @@
 <table id="clusters" class="sorted">
 <thead>
     <tr>
-        <th>Hostname</th>
-        <th>Description</th>
+        <th>Cluster</th>
+        <th>Ganeti version</th>
+        <th>Default hypervisor</th>
+        <th>Master node</th>
         <th>Nodes</th>
         {% comment %}
         <!-- This should be changed to instance-list at a later date -->
         {% endcomment %}
         <th>VMs</th>
+        <th>Free memory [GiB]</th>
+        <th>Free disk [GiB]</th>
     </tr>
 </thead>
 <tbody>
@@ -39,9 +61,13 @@
                     {{ cluster.hostname|abbreviate_fqdn }}
                 </a>
             </td>
-            <td>{{ cluster.description }}</td>
+            <td>{{ info.software_version }}</td>
+            <td>{{ info.default_hypervisor }}</td>
+            <td>{{ info.master }}</td>
             <td>{{ nodes|length }}</td>
             <td>{{ cluster.virtual_machines.count }}</td>
+            <td class="ram">{% cluster_memory cluster %}</td>
+            <td class="disk">{% cluster_disk cluster %}</td>
         </tr>
     {% endwith %}
     {% endwith %}
@@ -51,7 +77,9 @@
 </tbody>
 </table>
 
+<!-- Progress bars for free memory/disk -->
 <script type="text/javascript">
+    $("#clusters .ram, #clusters .disk").progressBar(PBAR_CONF);
     $("#clusters").tablesorter();
 </script>
 {% endblock %}
