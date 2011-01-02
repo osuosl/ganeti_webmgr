@@ -274,6 +274,9 @@ div.delete, div.edit, div.icon_error, .icon_running, .icon_stopped {
     padding:0;
     width:16px;
 }
+div.icon_error {
+    float:left;
+}
 
 .button {
     background-color: #eeeeee !important;
