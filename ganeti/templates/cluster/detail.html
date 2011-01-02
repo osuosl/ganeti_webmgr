@@ -45,6 +45,12 @@
 	    
             $("a.delete").live("click", function(){
                 if (confirm("Are you sure you want to delete this cluster?")) {
+					
+                    $("a.delete").text("Deleting...");
+                    $("a.delete").removeAttr("href");
+                    $("a.delete").addClass("deleting");
+                    $("a.delete").removeClass("delete");
+
                     href = "{% url cluster-edit cluster.slug %}";
                     $.delete_(href, function(){
                         window.location = "{% url cluster-list %}";
