@@ -13,6 +13,8 @@
         steps: 0,
         showText: true,
         textFormat: 'fraction',
+        // XXX there's issue, bars doesn't scale the progress to the given width
+        width: 120,
         boxImage: '/media/images/progressbar/progressbar.gif',
         barImage: {
             0:  '/media/images/progressbar/progressbg_red.gif',
@@ -20,7 +22,6 @@
             50: '/media/images/progressbar/progressbg_yellow.gif',
             75: '/media/images/progressbar/progressbg_green.gif',
         },
-        width: 80,
     };
     $(document).ready(function() {
         
