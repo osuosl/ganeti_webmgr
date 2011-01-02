@@ -132,11 +132,17 @@ PERIODIC_CACHE_REFRESH = 15
 # access to the VNC servers.  When disabled, the console tab will connect 
 # directly to the VNC server running on the virtual machine.
 #
-# Expected values: False if no proxy, string with proxy host otherwise
+# Expected values: False if no proxy, string with proxy host and port otherwise
+# String syntax: "HOST:PORT", for example: "localhost:8888"
 #
-# To run proxy:
-#  $ python util/vncauthproxy.py -t30 --websockets
-# If you want to use encryption, then add --cert=FILE.pem above
+# Note: you will probably have to open more ports in firewall. For proxy's default
+# settings, it uses port 8888 for listening for requests and ports 7000..8000
+# for serving proxy.
+#
+# To run proxy (in 'util' directory):
+#  $ python vncauthproxy.py --websockets
+# If you want to use encryption, then:
+#  $ python vncauthproxy.py --websockets --cert=FILE.pem
 VNC_PROXY=False
 
 

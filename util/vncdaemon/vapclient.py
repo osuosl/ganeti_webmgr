@@ -20,20 +20,23 @@
 
 import sys
 import socket
+import json
 
 CTRL_SOCKET = "/tmp/vncproxy.sock"
 
-def request_forwarding(sport, daddr, dport, password):
+def request_forwarding(server, sport, daddr, dport, password):
     try:
-        sport = str(int(sport)) if sport else ""
-        dport = str(int(dport))
+        host, port = server
+        port = int(port)
+        sport = int(sport) if sport else None
+        dport = int(dport)
         if not password:
             return False
 
-        request = ":".join((sport, daddr, dport, password))
+        request = json.dumps({"sport":sport, "daddr":daddr, "dport":dport, "password":password})
 
-        ctrl = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        ctrl.connect(CTRL_SOCKET)
+        ctrl = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        ctrl.connect( (host, port) )
         ctrl.send(request)
         response = ctrl.recv(1024).strip()
         ctrl.close()
@@ -47,4 +50,4 @@ def request_forwarding(sport, daddr, dport, password):
         return False
 
 if __name__ == '__main__':
-    print request_forwarding(*sys.argv[1:])
+    print request_forwarding(sys.argv[1].split(":"), *sys.argv[2:])

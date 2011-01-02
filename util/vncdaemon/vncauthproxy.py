@@ -21,6 +21,7 @@
 
 import os
 import sys
+import json
 
 import logging
 import gevent
@@ -244,8 +245,6 @@ class VncAuthProxy(gevent.Greenlet):
                                           socket.SOCK_STREAM, 0, socket.AI_PASSIVE):
                 af, socktype, proto, canonname, sa = res
                 try:
-                    # TODO: encrypt this?
-                    # only if possible
                     self.server = socket.socket(af, socktype, proto)
                 except socket.error, msg:
                     self.server = None
@@ -380,15 +379,22 @@ class VncAuthProxy(gevent.Greenlet):
                 listener.close()
             break
 
+def process_JSON(data):
+    result = json.loads(data)
+    if not ["daddr", "dport", "password", "sport"] == result.keys() or \
+       not isinstance(result["dport"], int) or \
+       not (isinstance(result["sport"], int) or isinstance(result["sport"], type(None))):
+        raise Exception("Malformed JSON request")
+    return result["sport"], result["daddr"], result["dport"], result["password"]
 
 if __name__ == '__main__':
     from optparse import OptionParser
 
     parser = OptionParser()
-    parser.add_option("-s", "--socket", dest="ctrl_socket",
-                      help="UNIX socket path for control connections",
-                      default="/tmp/vncproxy.sock",
-                      metavar="PATH")
+    parser.add_option("-H", "--host", dest="hostname", default="localhost",
+                      help="server hostname", metavar="HOSTNAME")
+    parser.add_option("-p", "--port", dest="port", default=8888,
+                      help="server port", metavar="PORT", type="int")
     parser.add_option("-d", "--debug", action="store_true", dest="debug",
                       help="Enable debugging information")
     parser.add_option("-l", "--log", dest="logfile", default=None,
@@ -419,8 +425,8 @@ if __name__ == '__main__':
                         format="%(asctime)s %(levelname)s: %(message)s",
                         datefmt="%m/%d/%Y %H:%M:%S")
 
-    if os.path.exists(opts.ctrl_socket):
-        logging.critical("Socket '%s' already exists" % opts.ctrl_socket)
+    if not 0 <= opts.port <= 65536:
+        logging.critical("Server port should be in range 0..65536")
         sys.exit(1)
 
     if not 0 <= opts.begin_port <= 65536:
@@ -456,17 +462,12 @@ if __name__ == '__main__':
         logging.critical("Certificate and key files must not be the same")
         sys.exit(1)
 
-    # TODO: make this tunable? chgrp as well?
-    old_umask = os.umask(0077)
-
-    ctrl = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    ctrl.bind(opts.ctrl_socket)
-
-    os.umask(old_umask)
+    ctrl = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    ctrl.bind( (opts.hostname, opts.port) )
 
     ctrl.listen(1)
-    logging.info("Initalized, waiting for control connections at %s" %
-                 opts.ctrl_socket)
+    logging.info("Initalized, waiting for control connections at %s:%d" %
+                 (opts.hostname, opts.port))
 
     pool = list(range(opts.begin_port, opts.end_port+1))
 
@@ -479,14 +480,17 @@ if __name__ == '__main__':
         logging.info("New control connection")
         line = client.recv(1024).strip()
         try:
-            # Control message format:
-            # TODO: make this json-based?
             # TODO: support multiple forwardings in the same message?
-            # <source_port>:<destination_address>:<destination_port>:<password>
+
+            # Control message format:
+            # {"sport":<source_port>, "daddr":<destination_address>,
+            #  "dport":<destination_port>, "password":<password>}
             # <password> will be used for MITM authentication of clients
             # connecting to <source_port>, who will subsequently be forwarded
             # to a VNC server at <destination_address>:<destination_port>
-            sport, daddr, dport, password = line.split(':')
+            # note: <source_port> may be empty
+            
+            sport, daddr, dport, password = process_JSON(line)
 
             if not sport:
                 if len(pool)>=1:
@@ -519,5 +523,5 @@ if __name__ == '__main__':
                 opts.websockets, opts.ssl_only, opts.ssl_cert, opts.ssl_key,
                 pool)
 
-    os.unlink(opts.ctrl_socket)
+    ctrl.close()
     sys.exit(0)

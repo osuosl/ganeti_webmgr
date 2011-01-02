@@ -532,13 +532,14 @@ class VirtualMachine(CachedClusterObject):
 
         # use proxy for VNC connection
         if settings.VNC_PROXY:
+            proxy_server = settings.VNC_PROXY.split(":")
             password = generate_random_password()
-            result = request_forwarding(sport, node, port, password)
+            result = request_forwarding(proxy_server, sport, node, port, password)
             if not result:
                 return False, False, False
             else:
                 # in future: maybe need to extract host from VNC_PROXY
-                return settings.VNC_PROXY, int(result), password
+                return proxy_server[0], int(result), password
 
         else:
             return node, port, password
