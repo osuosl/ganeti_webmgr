@@ -6,11 +6,7 @@
 
 {% block head %}
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
-<script type="text/javascript">
-    $(document).ready(function() {
-        
-    });
-</script>
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.tablesorter.min.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -20,7 +16,8 @@
 <a class="button add" href="{% url cluster-create %}">Add Cluster</a>
 {% endif %}
 
-<table id="clusters">
+<table id="clusters" class="sorted">
+<thead>
     <tr>
         <th>Hostname</th>
         <th>Description</th>
@@ -30,6 +27,8 @@
         {% endcomment %}
         <th>VMs</th>
     </tr>
+</thead>
+<tbody>
 {% for cluster in cluster_list %}
     {% with cluster.info as info %}
     {% with cluster.nodes as nodes %}
@@ -49,5 +48,10 @@
 {% empty %}
     <tr class="none"><td colspan="100%">No Clusters</td></tr>
 {% endfor %}
+</tbody>
 </table>
+
+<script type="text/javascript">
+    $("#clusters").tablesorter();
+</script>
 {% endblock %}
