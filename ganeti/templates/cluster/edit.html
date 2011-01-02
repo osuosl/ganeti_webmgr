@@ -33,8 +33,6 @@ Add a new cluster
         <p><label for="id_username">{{form.username.label}}:</label> {{form.username}}</p>
         {% if form.password.errors %}<p class="error">{{form.password.errors}}</p>{%endif%}
         <p><label for="id_password">{{form.password.label}}:</label> {{form.password}}</p>
-        {% if form.confirm_password.errors %}<p class="error">{{form.confirm_password.errors}}</p>{%endif%}
-        <p><label for="id_confirm_password">{{form.confirm_password.label}}:</label> {{form.confirm_password}}</p>
     </fieldset>
     
     <fieldset>
