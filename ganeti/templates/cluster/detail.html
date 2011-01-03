@@ -78,8 +78,8 @@
     <div id="overview" class="tab_content">
         <ul id="actions">
             {% if admin %}
-                <li><a class="button edit" href="{% url cluster-edit cluster.slug %}">Edit</a></li>
-                <li><a class="button delete" href="{% url cluster-edit cluster.slug %}">Delete</a></li>
+                <li><a class="button edit" title="edit cluster" href="{% url cluster-edit cluster.slug %}">Edit</a></li>
+                <li><a class="button delete" title="delete cluster" href="{% url cluster-edit cluster.slug %}">Delete</a></li>
             {% endif %}
         </ul>
         <table class="overview">
