@@ -87,14 +87,6 @@
         {% endif %}
     });
 
-    $('.button.shutdown').click(function() {
-        return confirm('Are you sure you want to shutdown?');
-    });
-
-    $('.button.reboot').click(function() {
-        return confirm('Are you sure you want to reboot?');
-    });
-    
     function action_response(result) {
         if (result.ops == undefined) {
             display_ganeti_error(result[1]);
