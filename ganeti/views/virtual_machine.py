@@ -93,10 +93,10 @@ def novnc(request, cluster_slug, instance):
 
     user = request.user
 
-    admin = user.is_superuser or user.has_perm('admin', vm) \
+    admin = user.is_superuser or user.has_perm('admin', instance) \
         or user.has_perm('admin', cluster)
     if not admin:
-        return render_403(request, 'You do not have permission to vnc on this')
+        return HttpResponseForbidden('You do not have permission to vnc on this')
 
     return render_to_response("virtual_machine/novnc.html",
                               {'cluster': cluster,
@@ -115,7 +115,7 @@ def vnc_proxy(request, cluster_slug, instance):
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', instance) or \
         user.has_perm('admin', instance.cluster)):
-        return render_403(request, 'You do not have permission to vnc on this')
+        return HttpResponseForbidden('You do not have permission to vnc on this')
     
     result = json.dumps(instance.setup_vnc_forwarding())
 
