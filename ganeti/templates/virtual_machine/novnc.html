@@ -3,16 +3,6 @@
         Probably your proxy is not running.
     </div>
 
-    <ul id="actions">
-        <li><a class="button delete" href="{% url instance-delete cluster.slug instance.hostname %}">Delete</a></li>
-        {% ifequal instance.info.status "running" %}
-        <li><a class="button shutdown" href="{% url instance-shutdown cluster.slug instance.hostname %}">Shutdown</a></li>
-        <li><a class="button reboot" href="{% url instance-reboot cluster.slug instance.hostname %}">Reboot</a></li>
-        {% else %}
-        <li><a class="button startup" href="{% url instance-startup cluster.slug instance.hostname %}">Start</a></li>
-        {% endifequal %}
-    </ul>
-
     <script type="text/javascript">
         var VNC_native_ws, WEB_SOCKET_SWF_LOCATION;
         

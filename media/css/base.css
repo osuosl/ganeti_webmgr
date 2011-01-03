@@ -101,7 +101,10 @@ li {
     padding:10px 10px 20px 10px;
     width: 812px;
 }
-#content h1 {margin:10px 0 10px 0;}
+#content h1 {
+    margin:10px 0 10px 0;
+    /*clear: both;*/ /* NOTE: if VM name is too long at detail page, uncomment this */
+}
 #content table {margin-top:15px;  width:100%; border: 1px solid #dddddd;}
 #content th {background:#eeeeee; border-bottom:1px solid #dddddd !important;}
 #content td.name {text-align:center;}
@@ -151,6 +154,21 @@ li {
     padding:0;
 }
 #content td.a {padding:0;}
+
+
+/**
+ * Actions (buttons Delete, Shutdown, Start, Reboot)
+ *
+ **/
+#content #actions {
+    float: right;
+}
+#content #actions li {
+    float: left;
+}
+#content #actions .button {
+    width: 90px;
+}
 
 
 /**
