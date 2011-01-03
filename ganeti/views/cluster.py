@@ -275,12 +275,10 @@ def quota(request, cluster_slug, user_id):
 
 
 class EditClusterForm(forms.ModelForm):
-    confirm_password = forms.CharField(required=False, widget=forms.PasswordInput)
     class Meta:
         model = Cluster
         widgets = {
             'password' : forms.PasswordInput(),
-            'confirm_password' : forms.PasswordInput(),
         }
         
     
@@ -291,7 +289,6 @@ class EditClusterForm(forms.ModelForm):
         host = data.get('hostname', None)
         user = data.get('username', None)
         new = data.get('password', None)
-        confirm = data.get('confirm_password', None)
         
         # Automatically set the slug on cluster creation
         if not host:
@@ -304,18 +301,7 @@ class EditClusterForm(forms.ModelForm):
                 msg = 'Enter a password'
                 self._errors['password'] = self.error_class([msg])
             
-            if not confirm:
-                if 'confirm_password' in data: del data['confirm_password']
-                msg = 'Confirm new password'
-                self._errors['confirm_password'] = self.error_class([msg])
-            
-            if new and confirm and new != confirm:
-                del data['password']
-                del data['confirm_password']
-                msg = 'Passwords do not match'
-                self._errors['password'] = self.error_class([msg])
-                
-        elif new or confirm:
+        elif new:
             msg = 'Enter a username'
             self._errors['username'] = self.error_class([msg])
             
@@ -323,19 +309,7 @@ class EditClusterForm(forms.ModelForm):
                 if 'password' in data: del data['password']
                 msg = 'Enter a password'
                 self._errors['password'] = self.error_class([msg])
-                
-            if not confirm:
-                if 'confirm_password' in data: del data['confirm_password']
-                msg = 'Confirm new password'
-                self._errors['confirm_password'] = self.error_class([msg])
-            
-            if new and confirm and new != confirm:
-                del data['password']
-                del data['confirm_password']
-                msg = 'Passwords do not match'
-                self._errors['password'] = self.error_class([msg])
-            
-                
+
         if 'hostname' in data and data['hostname'] and 'slug' not in data:
             data['slug'] = slugify(data['hostname'].split('.')[0])
             del self._errors['slug']

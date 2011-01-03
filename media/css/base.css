@@ -250,6 +250,7 @@ ul.errors {list-style:square;}
 .add, .delete, .edit, .reboot, .shutdown, .startup {cursor:pointer;}
 div.edit, a.edit{background:url(/media/images/icons/edit.png) no-repeat;}
 div.delete, a.delete{background:url(/media/images/icons/delete.png) no-repeat;}
+div.deleting, a.deleting{background:url(/media/images/ajax-loader_small_transparent.gif) no-repeat;}
 div.icon_error {background:url(/media/images/icons/exclamation.png);}
 div.icon_running {background:url(/media/images/icons/check.png);}
 div.icon_stopped {background:url(/media/images/icons/stop.png);}
