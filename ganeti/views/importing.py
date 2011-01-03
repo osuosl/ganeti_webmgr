@@ -65,7 +65,7 @@ def orphans(request):
             return render_403(request, 'You do not have sufficient privileges')
     
     vms = VirtualMachine.objects.filter(owner=None, cluster__in=clusters) \
-                                            .values_list('id','hostname')
+                          .order_by('hostname').values_list('id','hostname')
     vms = list(vms)
     vmcount = VirtualMachine.objects.count()
     
