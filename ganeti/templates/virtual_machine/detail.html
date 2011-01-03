@@ -65,8 +65,12 @@
             {% endifnotequal %}
         {% endif %}
         
-        $("#actions a").not('.delete').click(function(){
+        $("#actions a").not('.delete').click(function() {
             if (actions_enabled){
+                if ((this.className == 'button shutdown' || this.className == 'button reboot')
+                    && !(confirm('Are you sure you want to ' + this.title + '?'))) {
+                    return false;
+                }
                 $.post(this.href, action_response);
             }
             return false;
@@ -81,6 +85,14 @@
                 display_ganeti_error("{{instance.error}}");
             {% endif %}
         {% endif %}
+    });
+
+    $('.button.shutdown').click(function() {
+        return confirm('Are you sure you want to shutdown?');
+    });
+
+    $('.button.reboot').click(function() {
+        return confirm('Are you sure you want to reboot?');
     });
     
     function action_response(result) {
@@ -204,8 +216,8 @@
                 {% endif %}
                 {% if admin or power and username %}
                     {% ifequal instance.info.status "running" %}
-                    <li><a class="button shutdown" href="{% url instance-shutdown cluster.slug instance.hostname %}">Shutdown</a></li>
-                    <li><a class="button reboot" href="{% url instance-reboot cluster.slug instance.hostname %}">Reboot</a></li>
+                    <li><a class="button shutdown" title="shutdown" href="{% url instance-shutdown cluster.slug instance.hostname %}">Shutdown</a></li>
+                    <li><a class="button reboot" title="reboot" href="{% url instance-reboot cluster.slug instance.hostname %}">Reboot</a></li>
                     {% else %}
                     <li><a class="button startup" href="{% url instance-startup cluster.slug instance.hostname %}">Start</a></li>
                     {% endifequal %}
