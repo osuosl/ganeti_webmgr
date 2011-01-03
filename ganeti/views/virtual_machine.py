@@ -87,22 +87,22 @@ def delete(request, cluster_slug, instance):
 
 
 @login_required
-def vnc_applet(request, cluster_slug, instance, host=None, port=None,
-               password=None):
+def novnc(request, cluster_slug, instance):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     instance = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
 
     user = request.user
-    if not (user.is_superuser or user.has_perm('admin', instance) or \
-        user.has_perm('admin', instance.cluster)):
+
+    admin = user.is_superuser or user.has_perm('admin', vm) \
+        or user.has_perm('admin', cluster)
+    if not admin:
         return render_403(request, 'You do not have permission to vnc on this')
 
-    return render_to_response("virtual_machine/vnc_applet.html",
+    return render_to_response("virtual_machine/novnc.html",
                               {'cluster': cluster,
                                'instance': instance,
-                               'host': host,
-                               'port': port,
-                               'password': password},
+                               'admin':admin,
+                               },
         context_instance=RequestContext(request),
     )
 

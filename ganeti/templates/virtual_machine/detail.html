@@ -54,6 +54,7 @@
     $(document).ready(function() {
         $('#tabs').tabs({ 
             spinner: false,
+            cache: true,
             select: function(event, ui) {
                         window.location.hash = ui.tab.hash;
                     }
@@ -193,7 +194,7 @@
         {% endcomment %}
         {% if admin %}
             <li><a title="users" href="{% url vm-users cluster.slug instance.hostname %}"><span>Users</span></a></li>
-            <li><a href="#vnc"><span>Console</span></a></li>
+            <li><a title="console" href="{% url instance-vnc cluster.slug instance.hostname %}"><span>Console</span></a></li>
         {%endif%}
     </ul>
     <div id="overview" class="tab_content">
@@ -226,27 +227,6 @@
             {% endwith %}
         </table>
     </div>
-    {% if admin %}
-    <div id="vnc" class="tab_content">
-        <div id="vnc_errors" style="display: none;">
-            Probably your proxy is not running.
-        </div>
-
-        <ul id="actions">
-            {% with instance.cluster.username as username %}
-                {% if admin or power and username %}
-                    {% ifequal instance.info.status "running" %}
-                    <li><a class="button shutdown" href="{% url instance-shutdown cluster.slug instance.hostname %}">Shutdown</a></li>
-                    <li><a class="button reboot" href="{% url instance-reboot cluster.slug instance.hostname %}">Reboot</a></li>
-                    {% else %}
-                    <li><a class="button startup" href="{% url instance-startup cluster.slug instance.hostname %}">Start</a></li>
-                    {% endifequal %}
-                {% endif %}
-            {% endwith %}
-        </ul>
-        {% include "virtual_machine/novnc.html" %}
-    </div>
-    {% endif %}
     {% comment %}
     <div id="configuration">
         {% if configform %}
