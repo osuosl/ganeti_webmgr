@@ -43,6 +43,7 @@ from util.client import GanetiApiError
 from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine, \
         Job, SSHKey
 from ganeti.views import render_403
+from ganeti.fields import DataVolumeField
 
 empty_field = (u'', u'---------')
 
@@ -650,8 +651,8 @@ class NewVirtualMachineForm(forms.Form):
     os = forms.ChoiceField(label='Operating System', choices=[empty_field])
     # BEPARAMS
     vcpus = forms.IntegerField(label='Virtual CPUs', min_value=1)
-    ram = forms.IntegerField(label='Memory (MB)', min_value=100)
-    disk_size = forms.IntegerField(label='Disk Size (MB)', min_value=100)
+    ram = DataVolumeField(label='Memory', min_value=100)
+    disk_size = DataVolumeField(label='Disk Size', min_value=100)
     disk_type = forms.ChoiceField(label='Disk Type', choices=disktypes)
     nicmode = forms.ChoiceField(label='NIC Mode', choices=nicmodes)
     niclink = forms.CharField(label='NIC Link', required=False)
