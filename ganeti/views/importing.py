@@ -65,8 +65,12 @@ def orphans(request):
             return render_403(request, 'You do not have sufficient privileges')
     
     vms = VirtualMachine.objects.filter(owner=None, cluster__in=clusters) \
-                          .order_by('hostname').values_list('id','hostname')
-    vms = list(vms)
+                          .order_by('hostname').values_list('id','hostname','cluster')
+    clusterdict = {}
+    for i in clusters:
+        clusterdict[i.id] = i.hostname
+
+    vms = [ (i[0], clusterdict[i[2]] + ': ' + i[1]) for i in vms ]
     vmcount = VirtualMachine.objects.count()
     
     if request.method == 'POST':
@@ -113,10 +117,19 @@ def missing_ganeti(request):
         if not clusters:
             return render_403(request, 'You do not have sufficient privileges')
     
-    vms = []
+    vms = {}
     for cluster in clusters:
-        vms.extend(cluster.missing_in_ganeti)
-    vms = zip(vms, vms)
+        for vm in cluster.missing_in_ganeti:
+            vms[vm] = cluster.hostname + ': ' + vm
+
+    vmhostnames = vms.keys()
+    vmhostnames.sort()
+
+    vms_tuplelist = []
+    for i in vmhostnames:
+        vms_tuplelist.append((i, vms[i]))
+
+    vms = vms_tuplelist
     
     if request.method == 'POST':
         # process updates if this was a form submission
@@ -154,10 +167,19 @@ def missing_db(request):
         if not clusters:
             return render_403(request, 'You do not have sufficient privileges')
     
-    vms = []
+    vms = {}
     for cluster in clusters:
         for hostname in cluster.missing_in_db:
-            vms.append(('%s:%s' % (cluster.id, hostname), hostname))
+            vms[hostname] = ('%s:%s' % (cluster.id, hostname), cluster.hostname + ': ' + hostname)
+    vmhostnames = vms.keys()
+    vmhostnames.sort()
+
+    vms_tuplelist = []
+    for i in vmhostnames:
+        vms_tuplelist.append(vms[i])
+
+    vms = vms_tuplelist
+    
     
     if request.method == 'POST':
         # process updates if this was a form submission
