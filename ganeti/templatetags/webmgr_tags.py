@@ -243,3 +243,8 @@ def render_os(os):
         return mark_safe("%s (<em>%s</em>)" % (flavor, t))
     except ValueError:
         return mark_safe("<em>Unknown or invalid OS</em>")
+
+@register.filter
+def mult(value, arg):
+    # pinched from http://code.djangoproject.com/ticket/361
+    return int(value) * int(arg)

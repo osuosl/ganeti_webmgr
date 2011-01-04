@@ -1,10 +1,12 @@
 from datetime import datetime
 from decimal import Decimal
 import time
+import re
 
 from django.core.exceptions import ValidationError
 from django.db.models.fields import DecimalField
 from django.db import models
+from django.forms.fields import CharField
 
 class PreciseDateTimeField(DecimalField):
     """
@@ -83,3 +85,53 @@ class PreciseDateTimeField(DecimalField):
             return 'numeric(%s, %s)' % (self.max_digits, self.decimal_places)
         elif  engine == 'django.db.backends.sqlite3':
             return 'character'
+
+
+class DataVolumeField(CharField):
+    min_value = 0.
+
+    def __init__(self, min_value=0., **kwargs):
+        super(DataVolumeField, self).__init__(**kwargs)
+        self.min_value = min_value
+
+    def clean(self, value):
+        # returns an integer MB, because everyone needs more than 64 KB
+        value = value.upper()
+        multiplier = 1.
+        if 'T' in value:
+            multiplier = 1024. * 1024.
+        if 'G' in value:
+            multiplier = 1024.
+        elif 'M' in value: # just for clarity
+            multiplier = 1.
+        cleanedstring = re.sub(r'[^0-9.]', value)
+        return int(float(cleanedstring) * multiplier)
+
+class DataVolumeField(CharField):
+    min_value = None
+    max_value = None
+
+    def __init__(self, min_value=None, max_value=None, **kwargs):
+        super(DataVolumeField, self).__init__(**kwargs)
+        self.min_value = min_value
+        self.max_value = max_value
+
+    def validate(self, value):
+        if self.min_value != None and value < self.min_value:
+            raise ValidationError('Must be at least ' + str(self.min_value))
+        if self.max_value != None and value > self.max_value:
+            raise ValidationError('Must be at less than ' + str(self.min_value))
+
+    def to_python(self, value):
+        # returns an integer MB, because everyone needs more than 64 KB
+        value = value.upper()
+        multiplier = 1.
+        if 'T' in value:
+            multiplier = 1024. * 1024.
+        if 'G' in value:
+            multiplier = 1024.
+        elif 'M' in value: # just for clarity
+            multiplier = 1.
+        cleanedstring = re.sub(r'[^0-9.]', '', value)
+        intvalue = int(float(cleanedstring) * multiplier)
+        return intvalue

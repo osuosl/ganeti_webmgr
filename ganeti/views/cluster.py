@@ -41,6 +41,7 @@ log_action = LogItem.objects.log_action
 from ganeti.models import *
 from ganeti.views import render_403, render_404
 from util.portforwarder import forward_port
+from ganeti.fields import DataVolumeField
 
 # Regex for a resolvable hostname
 FQDN_RE = r'^[\w]+(\.[\w]+)*$'
@@ -207,14 +208,11 @@ class QuotaForm(forms.Form):
     
     user = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), \
                                   widget=forms.HiddenInput)
-    ram = forms.IntegerField(label='Memory (MB)', required=False, min_value=0, \
-                             widget=input)
+    ram = DataVolumeField(label='Memory', required=False, min_value=0)
     virtual_cpus = forms.IntegerField(label='Virtual CPUs', required=False, \
                                     min_value=0, widget=input)
-    disk = forms.IntegerField(label='Disk Space (MB)', required=False, \
-                              min_value=0, widget=input)
+    disk = DataVolumeField(label='Disk Space', required=False, min_value=0)
     delete = forms.BooleanField(required=False, widget=forms.HiddenInput)
-
 
 @login_required
 def quota(request, cluster_slug, user_id):
