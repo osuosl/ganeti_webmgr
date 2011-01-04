@@ -15,32 +15,6 @@ from django.template import RequestContext
 from ganeti.models import *
 from ganeti.views import render_403
 
-class UserChangeFormWithNonRetardedPasswordChanging(UserChangeForm):
-    # Do not pass password as a field or this will end up
-    # even more retarded than it was originally
-    new_password1 = forms.CharField(label='New password',
-                                    widget=forms.PasswordInput, required=False)
-    new_password2 = forms.CharField(label='Confirm password',
-                                    widget=forms.PasswordInput, required=False)
-
-    def __init__(self, *args, **kwargs):
-        super(UserChangeFormWithNonRetardedPasswordChanging, self).__init__(*args, **kwargs)
-    
-    def clean_new_password2(self):
-        password1 = self.cleaned_data.get('new_password1')
-        password2 = self.cleaned_data.get('new_password2')
-        if password1 != password2:
-            raise forms.ValidationError("The two password fields didn't match.")
-        return password2
-
-    def save(self, commit=True):
-        password1 = self.cleaned_data.get('new_password1')
-        password2 = self.cleaned_data.get('new_password2')
-        if password1 and password2:
-            self.instance.set_password(self.cleaned_data['new_password1'])
-        return super(UserChangeFormWithNonRetardedPasswordChanging, self).save(commit)
-        
-
 @login_required
 def user_list(request):
     user = request.user
@@ -244,22 +218,41 @@ class SSHKeyForm(forms.ModelForm):
         exclude = ("user", )
 
 
-class UserEditForm(UserChangeFormWithNonRetardedPasswordChanging):
+class UserEditForm(UserChangeForm):
     """
-    Form to edit user, based on Auth.UserChangeFormWithNonRetardedPasswordChanging
+    Form to edit user, based on Auth.UserChangeForm
     """
+
+    new_password1 = forms.CharField(label='New password',
+                                    widget=forms.PasswordInput, required=False)
+    new_password2 = forms.CharField(label='Confirm password',
+                                    widget=forms.PasswordInput, required=False)
     
-    class Meta(UserChangeFormWithNonRetardedPasswordChanging.Meta):
+    class Meta(UserChangeForm.Meta):
         fields = (
             'username',
-            'first_name',
-            'last_name',
+            #'first_name',
+            #'last_name',
             'email',
-            #'password',
             'is_active',
             'is_superuser',
         )
+
+    def __init__(self, *args, **kwargs):
+        super(UserEditForm, self).__init__(*args, **kwargs)
     
+    def clean_new_password2(self):
+        password2 = self.cleaned_data.get('new_password2')
+        if self.cleaned_data.get('new_password1') != password2:
+            raise forms.ValidationError("The two password fields didn't match.")
+        return password2
+
+    def save(self, commit=True):
+        password1 = self.cleaned_data.get('new_password1')
+        if password1 and self.cleaned_data.get('new_password2'):
+            self.instance.set_password(password1)
+        return super(UserEditForm, self).save(commit)
+
 
 class UserProfileForm(forms.Form):
     """
