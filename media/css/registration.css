@@ -1,4 +1,4 @@
-/* base.css */
+/* registration.css */
 * {
     font-family:"Lucida Grande","DejaVu Sans","Bitstream Vera Sans",Verdana,Arial,sans-serif;
     font-size:12px;
@@ -61,37 +61,13 @@ li {
 }
 #title a:link, #title a:visited {color: white;}
 
-.menu {
-    float:left;
-    color:#555555;
-    padding:30px 10px 0 0;
-    width:130px;
-}
-
-.menu ul {
-    float:left;
-    list-style-type: none;
-    padding-left: 20px;
-}
-.menu ul li { height:18px; margin: 0px; }
-.menu ul li a {color: #666666 !important; text-decoration: none;}
-.menu ul li a:hover {color: black !important;}
-.menu ul li:hover {list-style: disc;}
-.menu h3 {
-    float:left;
-    border-bottom:1px solid #BBBBBB;
-    margin: 15px 0 5px 0;
-    width:100%;
-}
-.menu .user, .menu .user a {font-size:11px;}
-.menu .user a {display:block;}
-
 #content_wrapper {
     background:#EEEEEE;
     border-bottom: 5px solid #666;
+    padding-left:3px;
     width:100%;
 }
-#content_column {margin: 0 auto; width:979px;}
+#content_column {margin: 0 auto; width:55%;}
 #content {
     background:white;
     border-left: 1px solid #DDDDDD;
@@ -99,7 +75,8 @@ li {
     float:left;
     min-height:490px;
     padding:10px 10px 20px 10px;
-    width: 812px;
+    margin: 0 auto;
+    width:100%;
 }
 #content h1 {margin:10px 0 10px 0;}
 #content table {margin-top:15px;  width:100%; border: 1px solid #dddddd;}
@@ -174,7 +151,7 @@ form p label {width:12em;}
 form input.submit{margin-left:12.5em;}
 
 /*   Login   */
-#login {margin: 3em auto 0em auto; width: 30%;}
+#login {margin: 3em auto 0em auto; width: 40%;}
 #login fieldset {
     background: #eeeeee;
     border:1px #dddddd solid;
