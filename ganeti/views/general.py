@@ -22,7 +22,7 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 #from object_permissions import get_model_perms, get_user_perms, grant, revoke, \
 #    get_users, get_groups, get_group_perms
-#from ganeti.models import *
+from ganeti.models import Cluster
 
 
 @login_required
@@ -31,7 +31,7 @@ def index(request):
 
     # should be more complex query in future
     # like: user.is_admin_on_any(Cluster)
-    if (user.is_superuser):
-        return HttpResponseRedirect(reverse("cluster-list"))
+    if (user.is_superuser or user.has_any_perm(Cluster, ["admin",])):
+        return HttpResponseRedirect(reverse("cluster-status"))
     else:
         return HttpResponseRedirect(reverse("virtualmachine-list"))

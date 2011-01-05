@@ -23,7 +23,7 @@ from django import forms
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.template.defaultfilters import slugify
@@ -136,6 +136,53 @@ def edit(request, cluster_slug=None):
     return render_to_response("cluster/edit.html", {
         'form' : form,
         'cluster': cluster,
+        },
+        context_instance=RequestContext(request),
+    )
+
+
+@login_required
+def status(request):
+    """
+    Status page with all clusters
+    """
+    user = request.user
+    if user.is_superuser:
+        cluster_list = Cluster.objects.all()
+    else:
+        cluster_list = user.get_objects_any_perms(Cluster, ['admin', 'create_vm'])
+        if not cluster_list:
+            return HttpResponseForbidden('You do not have sufficient privileges')
+
+    #ganeti errors
+    #XXX: not implemented yet
+    ganeti_errors = ["simulation"]
+
+    #job failures
+    #XXX: not filtered yet in a proper way
+    job_errors = Job.objects.filter(status="error")
+
+    #orphaned
+    orphaned = VirtualMachine.objects.filter(owner=None, cluster__in=cluster_list).count()
+
+    #ready for import vms
+    import_ready = 0
+
+    #missing vms
+    missing = 0
+
+    for cluster in cluster_list:
+        import_ready += len(cluster.missing_in_db)
+        missing += len(cluster.missing_in_ganeti)
+
+    return render_to_response("cluster/status.html", {
+        'cluster_list': cluster_list,
+        'user': request.user,
+        'ganeti_errors': ganeti_errors,
+        'job_errors': job_errors,
+        'orphaned': orphaned,
+        'import_ready': import_ready,
+        'missing': missing,
         },
         context_instance=RequestContext(request),
     )

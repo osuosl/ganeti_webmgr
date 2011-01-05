@@ -49,8 +49,6 @@
             <!-- This should be changed to instance-list at a later date -->
             {% endcomment %}
             <th>VMs</th>
-            <th>Free resources</th>
-            <!--<th>Free disk</th>-->
         </tr>
     </thead>
     <tbody>
@@ -70,8 +68,6 @@
                 <td>{{ info.master }}</td>
                 <td>{{ nodes|length }}</td>
                 <td>{{ cluster.virtual_machines.count }}</td>
-                <td class="resources">RAM: {% cluster_memory cluster %}<br/>Disk: {% cluster_disk cluster %}</td>
-                <!--<td class="disk">{% cluster_disk cluster %}</td>-->
             </tr>
         {% endwith %}
         {% endwith %}
@@ -86,4 +82,76 @@
     $("#clusters .ram, #clusters .disk").progressBar(PBAR_CONF);
     $("#clusters").tablesorter();
 </script>
+
+{% if ganeti_errors or job_errors %}
+<div class="errors_list">
+    <h2>Errors and failures</h2>
+
+    {% if ganeti_errors %}
+    <h3>Ganeti errors</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Cluster</th>
+                <th>Description</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><a href="">gwm</a></td>
+                <td><a href="">Authorization failed</a></td>
+                <td>01/05/11 16:21</td>
+            </tr>
+        </tbody>
+    </table>
+    {% endif %}
+
+    {% if job_errors %}
+    <h3>Jobs failures</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Cluster</th>
+                <th>Related object</th>
+                <th>Info</th>
+                <th>Finish time</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for jerror in job_errors %}
+            <tr>
+                <td><a href="">{{ jerror.cluster|abbreviate_fqdn }}</a></td>
+                <td><a href="">{{ jerror.obj }}</a></td>
+                <td>{{ jerror.info.ops.0.OP_ID|format_job_op }}</td>
+                <td>{{ jerror.finished }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+</div>
+{% endif %}
+
+{% if orphaned or import or missing %}
+<div class="administration">
+    <h2>Administration</h2>
+    {% if orphaned %}
+    <h3>Orphaned VMs</h3>
+    <p><a href="{% url import-orphans %}">Adopt {{ orphaned }} VMs.</a></p>
+    {% endif %}
+
+    {% if import_ready %}
+    <h3>Ready to import VMs</h3>
+    <p><a href="{% url import-missing %}">Import {{ import_ready }} VMs.</a></p>
+    {% endif %}
+
+    {% if missing %}
+    <h3>Missing VMS from ganeti</h3>
+    <p><a href="{% url import-missing_db %}">Remove {{ missing }} VMs.</a></p>
+    {% endif %}
+
+</div>
+{% endif %}
 {% endblock %}

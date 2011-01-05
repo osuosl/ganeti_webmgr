@@ -145,6 +145,10 @@ def cluster_admin(user):
     return user.has_any_perms(Cluster, ['admin'])
 
 
+@register.filter
+def format_job_op(op):
+    return op[3:].replace("_", " ").title()
+
 def format_part_total(part, total):
     """
     Pretty-print a quantity out of a given total.

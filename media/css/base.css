@@ -164,6 +164,20 @@ li {
     float: left;
 }
 
+/**
+ * Errors, failures and administration links - status page
+ *
+ **/
+#content .errors_list {
+    margin-top: 2em;
+    background-color: #FFFAFA;
+    border: 1px solid #FFB9B9;
+    padding: 5px;
+}
+#content .administration {
+    margin-top: 2em;
+    padding: 5px;
+}
 
 /**
  * Forms and Form Elements
