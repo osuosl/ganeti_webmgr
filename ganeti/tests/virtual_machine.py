@@ -398,8 +398,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
             self.assertEqual(mimetype, response['content-type'])
         if template:
             self.assertTemplateUsed(response, template)
-
-        return response.content
+        return response
     
     def test_view_list(self):
         """

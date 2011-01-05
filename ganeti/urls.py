@@ -48,7 +48,7 @@ urlpatterns += patterns('ganeti.views.users',
 # Clusters
 urlpatterns += patterns('ganeti.views.cluster',
     #   Status page
-    url(r'^clusters/status/?$', 'status', name="cluster-status"),
+    url(r'^clusters/overview/?$', 'overview', name="cluster-overview"),
     #   List
     url(r'^clusters/?$', 'list_', name="cluster-list"),
     #   Add

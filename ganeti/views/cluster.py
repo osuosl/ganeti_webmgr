@@ -142,7 +142,7 @@ def edit(request, cluster_slug=None):
 
 
 @login_required
-def status(request):
+def overview(request):
     """
     Status page with all clusters
     """
@@ -175,7 +175,7 @@ def status(request):
         import_ready += len(cluster.missing_in_db)
         missing += len(cluster.missing_in_ganeti)
 
-    return render_to_response("cluster/status.html", {
+    return render_to_response("cluster/overview.html", {
         'cluster_list': cluster_list,
         'user': request.user,
         'ganeti_errors': ganeti_errors,

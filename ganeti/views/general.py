@@ -31,7 +31,7 @@ def index(request):
 
     # should be more complex query in future
     # like: user.is_admin_on_any(Cluster)
-    if (user.is_superuser or user.has_any_perm(Cluster, ["admin",])):
-        return HttpResponseRedirect(reverse("cluster-status"))
+    if (user.is_superuser or user.has_any_perms(Cluster, ["admin",])):
+        return HttpResponseRedirect(reverse("cluster-overview"))
     else:
         return HttpResponseRedirect(reverse("virtualmachine-list"))

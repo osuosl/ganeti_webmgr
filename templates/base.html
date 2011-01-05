@@ -27,7 +27,7 @@
             <h3></h3>
             <ul>
                 {% if user.is_superuser or cluster_admin %}
-                <li><a href="{% url cluster-status %}">Status</a></li>
+                <li><a href="{% url cluster-overview %}">Overview</a></li>
                 {% endif %}
                 <li><a href="{% url cluster-list %}">Clusters</a></li>
                 <li><a href="{% url virtualmachine-list %}">Virtual Machines</a></li>
