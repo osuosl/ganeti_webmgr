@@ -116,12 +116,12 @@ class DataVolumeField(CharField):
             else:
                 return None
 
-        matches = re.match(r'([0-9]+(\.[0-9]+)?)( *)(M|G|T|MB|GB|TB)?$', value)
+        matches = re.match(r'([0-9]+(?:\.[0-9]+)?)\s*(M|G|T|MB|GB|TB)?$', value)
         if matches == None:
             raise ValidationError('Invalid format.')
 
         multiplier = 1.
-        unit = matches.group(4)
+        unit = matches.group(2)
         if unit != None:
             unit = unit[0]
             if unit == 'M':
