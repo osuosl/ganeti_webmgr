@@ -413,6 +413,9 @@ class VirtualMachine(CachedClusterObject):
 
     last_job = models.ForeignKey(Job, null=True)
 
+    class Meta:
+        ordering = ["hostname", ]
+
     @property
     def rapi(self):
         return get_rapi(self.cluster_hash, self.cluster_id)
@@ -567,6 +570,9 @@ class Cluster(CachedClusterObject):
     virtual_cpus = models.IntegerField(null=True, blank=True)
     disk = models.IntegerField(null=True, blank=True)
     ram = models.IntegerField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["hostname", "description"]
 
     def __unicode__(self):
         return self.hostname

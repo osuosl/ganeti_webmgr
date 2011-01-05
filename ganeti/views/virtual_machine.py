@@ -34,7 +34,7 @@ from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
 from object_permissions.views.permissions import view_users, view_permissions
-from object_permissions import get_users_any
+from object_permissions import get_users_any, user_has_any_perms
 
 from logs.models import LogItem
 log_action = LogItem.objects.log_action
@@ -213,12 +213,23 @@ def ssh_keys(request, cluster_slug, instance, api_key):
 @login_required
 def list_(request):
     user = request.user
+
+    # there are 3 cases
+    #1) user is superuser
     if user.is_superuser:
         vms = VirtualMachine.objects.all()
         can_create = True
+
+    #2) user has any perms on any VM
+    #3) user belongs to the group which has perms on any VM
     else:
-        vms = user.get_objects_any_perms(VirtualMachine, ['admin', 'power','remove'])
-        can_create = user.has_any_perms(Cluster, ['create_vm'])
+        vms = user.get_objects_any_perms(VirtualMachine, groups=True)
+        can_create = user.has_any_perms(Cluster, ['create_vm', ])
+
+    job_errors = []
+    if vms:
+        # get jobs errors list
+        pass
     
     return render_to_response('virtual_machine/list.html', {
         'vms':vms,
