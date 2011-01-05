@@ -160,7 +160,7 @@ def status(request):
 
     #job failures
     #XXX: not filtered yet in a proper way
-    job_errors = Job.objects.filter(status="error")
+    job_errors = Job.objects.filter(status="error").order_by("-finished")[:5]
 
     #orphaned
     orphaned = VirtualMachine.objects.filter(owner=None, cluster__in=cluster_list).count()

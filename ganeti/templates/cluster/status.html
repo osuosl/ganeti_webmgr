@@ -2,7 +2,7 @@
 
 {% load webmgr_tags %}
 
-{% block title %}Clusters{% endblock %}
+{% block title %}Overview{% endblock %}
 
 {% block head %}
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
@@ -30,7 +30,7 @@
 {% endblock %}
 
 {% block content %}
-<h1>Clusters</h1>
+<h1>Overview</h1>
 
 {% if user.is_superuser %}
 <a class="button add" href="{% url cluster-create %}">Add Cluster</a>
@@ -89,7 +89,7 @@
 
     {% if ganeti_errors %}
     <h3>Ganeti errors</h3>
-    <table>
+    <table class="sorted">
         <thead>
             <tr>
                 <th>Cluster</th>
@@ -109,7 +109,7 @@
 
     {% if job_errors %}
     <h3>Jobs failures</h3>
-    <table>
+    <table class="sorted">
         <thead>
             <tr>
                 <th>Cluster</th>
@@ -132,25 +132,36 @@
     {% endif %}
 
 </div>
+<script type="text/javascript">
+    $(".errors_list table").tablesorter();
+</script>
 {% endif %}
 
 {% if orphaned or import or missing %}
 <div class="administration">
     <h2>Administration</h2>
+    <table style="width: auto;">
     {% if orphaned %}
-    <h3>Orphaned VMs</h3>
-    <p><a href="{% url import-orphans %}">Adopt {{ orphaned }} VMs.</a></p>
+        <tr>
+            <th>Orphaned VMs</th>
+            <td><a href="{% url import-orphans %}">Adopt {{ orphaned }}</a></td>
+        </tr>
     {% endif %}
 
     {% if import_ready %}
-    <h3>Ready to import VMs</h3>
-    <p><a href="{% url import-missing %}">Import {{ import_ready }} VMs.</a></p>
+        <tr>
+            <th>VMs ready to import</th>
+            <td><a href="{% url import-missing %}">Import {{ import_ready }}</a></td>
+        </tr>
     {% endif %}
 
     {% if missing %}
-    <h3>Missing VMS from ganeti</h3>
-    <p><a href="{% url import-missing_db %}">Remove {{ missing }} VMs.</a></p>
+        <tr>
+            <th>VMs missing from ganeti</th>
+            <td><a href="{% url import-missing_db %}">Remove {{ missing }}</a></td>
+        </tr>
     {% endif %}
+    </table>
 
 </div>
 {% endif %}
