@@ -70,7 +70,7 @@ def orphans(request):
     for i in clusters:
         clusterdict[i.id] = i.hostname
 
-    vms = [ (i[0], clusterdict[i[2]] + ': ' + i[1]) for i in vms ]
+    vms = [ (i[0], clusterdict[i[2]], i[1]) for i in vms ]
     vmcount = VirtualMachine.objects.count()
     
     if request.method == 'POST':
@@ -120,14 +120,14 @@ def missing_ganeti(request):
     vms = {}
     for cluster in clusters:
         for vm in cluster.missing_in_ganeti:
-            vms[vm] = cluster.hostname + ': ' + vm
+            vms[vm] = (cluster.hostname, vm)
 
     vmhostnames = vms.keys()
     vmhostnames.sort()
 
     vms_tuplelist = []
     for i in vmhostnames:
-        vms_tuplelist.append((i, vms[i]))
+        vms_tuplelist.append((i, vms[i][0], vms[i][1]))
 
     vms = vms_tuplelist
     
@@ -170,7 +170,7 @@ def missing_db(request):
     vms = {}
     for cluster in clusters:
         for hostname in cluster.missing_in_db:
-            vms[hostname] = ('%s:%s' % (cluster.id, hostname), cluster.hostname + ': ' + hostname)
+            vms[hostname] = ('%s:%s' % (cluster.id, hostname), cluster.hostname, hostname)
     vmhostnames = vms.keys()
     vmhostnames.sort()
 
