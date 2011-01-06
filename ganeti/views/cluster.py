@@ -279,7 +279,8 @@ class EditClusterForm(forms.ModelForm):
             'password' : forms.PasswordInput(),
         }
         
-    
+    ram = DataVolumeField(label='Memory', required=False, min_value=0)
+    disk = DataVolumeField(label='Disk Space', required=False, min_value=0)    
     
     def clean(self):
         self.cleaned_data = super(EditClusterForm, self).clean()
