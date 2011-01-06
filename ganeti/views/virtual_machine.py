@@ -27,6 +27,7 @@ from django import forms
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
+from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, \
     HttpResponseNotAllowed, HttpResponseForbidden
@@ -229,11 +230,19 @@ def list_(request):
     job_errors = []
     if vms:
         # get jobs errors list
-        pass
+        # not so easy because GenericFF is not supported well
+        vm_type = ContentType.objects.get_for_model(VirtualMachine)
+        job_errors = Job.objects.filter( content_type=vm_type, object_id__in=vms,
+                status="error" ).order_by("finished")
     
+    # TODO: implement ganeti errors
+    ganeti_errors = ["something",]
+
     return render_to_response('virtual_machine/list.html', {
         'vms':vms,
         'can_create':can_create,
+        'ganeti_errors':ganeti_errors,
+        'job_errors':job_errors,
         },
         context_instance=RequestContext(request),
     )

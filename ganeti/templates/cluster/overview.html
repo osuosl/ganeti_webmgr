@@ -121,8 +121,8 @@
         <tbody>
             {% for jerror in job_errors %}
             <tr>
-                <td><a href="">{{ jerror.cluster|abbreviate_fqdn }}</a></td>
-                <td><a href="">{{ jerror.obj }}</a></td>
+                <td><a href="{% url cluster-detail jerror.cluster.slug %}">{{ jerror.cluster|abbreviate_fqdn }}</a></td>
+                <td>{{ jerror.obj }}</td>
                 <td>{{ jerror.info.ops.0.OP_ID|format_job_op }}</td>
                 <td>{{ jerror.finished }}</td>
             </tr>
