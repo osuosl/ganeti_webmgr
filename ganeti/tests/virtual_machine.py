@@ -1674,7 +1674,8 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
             (u'bridged', u'bridged')
             ], form.fields['nicmode'].choices)
         self.assertEqual([('disk', 'Hard Disk'),
-            ('cdrom', 'CD-ROM')
+            ('cdrom', 'CD-ROM'),
+            ('network', 'Network')
             ], form.fields['bootorder'].choices)
         self.assertEqual([
             (u'', u'---------'),

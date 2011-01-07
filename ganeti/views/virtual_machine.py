@@ -657,7 +657,8 @@ class NewVirtualMachineForm(forms.Form):
     ]
     bootchoices = [
         ('disk', 'Hard Disk'),
-        ('cdrom', 'CD-ROM')
+        ('cdrom', 'CD-ROM'),
+        ('network', 'Network'),
     ]
 
     owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label='Owner')
