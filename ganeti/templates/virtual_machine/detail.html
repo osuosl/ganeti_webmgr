@@ -54,6 +54,7 @@
     $(document).ready(function() {
         $('#tabs').tabs({ 
             spinner: false,
+            cache: true,
             select: function(event, ui) {
                         window.location.hash = ui.tab.hash;
                     }
@@ -65,8 +66,12 @@
             {% endifnotequal %}
         {% endif %}
         
-        $("#actions a").not('.delete').click(function(){
+        $("#actions a").not('.delete').click(function() {
             if (actions_enabled){
+                if ((this.className == 'button shutdown' || this.className == 'button reboot')
+                    && !(confirm('Are you sure you want to ' + this.title + '?'))) {
+                    return false;
+                }
                 $.post(this.href, action_response);
             }
             return false;
@@ -82,7 +87,7 @@
             {% endif %}
         {% endif %}
     });
-    
+
     function action_response(result) {
         if (result.ops == undefined) {
             display_ganeti_error(result[1]);
@@ -189,11 +194,7 @@
         {% endcomment %}
         {% if admin %}
             <li><a title="users" href="{% url vm-users cluster.slug instance.hostname %}"><span>Users</span></a></li>
-            <li>
-                <a title="console" href="{% url instance-vnc cluster.slug instance.hostname %}">
-                    <span>Console</span>
-                </a>
-            </li>
+            <li><a title="console" href="{% url instance-vnc cluster.slug instance.hostname %}"><span>Console</span></a></li>
         {%endif%}
     </ul>
     <div id="overview" class="tab_content">
@@ -204,14 +205,15 @@
                 {% endif %}
                 {% if admin or power and username %}
                     {% ifequal instance.info.status "running" %}
-                    <li><a class="button shutdown" href="{% url instance-shutdown cluster.slug instance.hostname %}">Shutdown</a></li>
-                    <li><a class="button reboot" href="{% url instance-reboot cluster.slug instance.hostname %}">Reboot</a></li>
+                    <li><a class="button shutdown" title="shutdown" href="{% url instance-shutdown cluster.slug instance.hostname %}">Shutdown</a></li>
+                    <li><a class="button reboot" title="reboot" href="{% url instance-reboot cluster.slug instance.hostname %}">Reboot</a></li>
                     {% else %}
                     <li><a class="button startup" href="{% url instance-startup cluster.slug instance.hostname %}">Start</a></li>
                     {% endifequal %}
                 {% endif %}
             {% endwith %}
         </ul>
+
         <table class="overview">
             {% with instance.info as info %}
             <tr><td class="name">Status</td><td class="name">{{ info.oper_state|yesno:"Running,Stopped" }}</td></tr>

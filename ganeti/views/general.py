@@ -16,16 +16,22 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-from ganeti.tests.accounts import *
-from ganeti.tests.cache_updater import *
-from ganeti.tests.cached_cluster_object import *
-from ganeti.tests.cluster import *
-from ganeti.tests.cluster_user import *
-from ganeti.tests.general import *
-from ganeti.tests.importing import *
-from ganeti.tests.job import *
-from ganeti.tests.rapi_cache import *
-from ganeti.tests.ssh_keys import *
-from ganeti.tests.users import *
-from ganeti.tests.virtual_machine import *
-from ganeti.tests.fields import *
+
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.core.urlresolvers import reverse
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
+#from object_permissions import get_model_perms, get_user_perms, grant, revoke, \
+#    get_users, get_groups, get_group_perms
+from ganeti.models import Cluster
+
+
+@login_required
+def index(request):
+    user = request.user
+
+    # should be more complex query in future
+    # like: user.is_admin_on_any(Cluster)
+    if (user.is_superuser or user.has_any_perms(Cluster, ["admin",])):
+        return HttpResponseRedirect(reverse("cluster-overview"))
+    else:
+        return HttpResponseRedirect(reverse("virtualmachine-list"))

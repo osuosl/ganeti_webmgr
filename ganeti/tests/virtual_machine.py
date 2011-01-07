@@ -343,6 +343,62 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, template)
+
+    def validate_get_configurable(self, url, args, template=False,
+            mimetype=False, status=False, perms=[]):
+        """
+        More configurable version of validate_get.
+        Additional arguments (only if set) affects only authorized user test.
+
+        @template: used template
+        @mimetype: returned mimetype
+        @status:   returned Http status code
+        @perms:    set of perms granted on authorized user
+
+        @return    response content
+        """
+        # anonymous user
+        response = c.get(url % args, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'registration/login.html')
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.get(url % args)
+        self.assertEqual(403, response.status_code)
+        
+        # nonexisent cluster
+        response = c.get(url % ("DOES_NOT_EXIST", vm.id))
+        self.assertEqual(404, response.status_code)
+        
+        # nonexisent vm
+        response = c.get(url % (cluster.slug, vm.id))
+        self.assertEqual(404, response.status_code)
+        
+        # authorized user (perm)
+        if perms:
+            for perm in perms:
+                grant(user, perm, vm)
+        response = c.get(url % args)
+        if status:
+            self.assertEqual(status, response.status_code)
+        if mimetype:
+            self.assertEqual(mimetype, response['content-type'])
+        if template:
+            self.assertTemplateUsed(response, template)
+        
+        # authorized user (superuser)
+        user.revoke_all(vm)
+        user.is_superuser = True
+        user.save()
+        response = c.get(url % args)
+        if status:
+            self.assertEqual(200, response.status_code)
+        if mimetype:
+            self.assertEqual(mimetype, response['content-type'])
+        if template:
+            self.assertTemplateUsed(response, template)
+        return response
     
     def test_view_list(self):
         """
@@ -1234,10 +1290,9 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         vm.save()
         user.revoke_all(vm)
     
-    
     def test_view_vnc(self):
         """
-        Tests view for cluster users:
+        Tests view for cluster Ajax vnc (noVNC) script:
         
         Verifies:
             * lack of permissions returns 403
@@ -1246,7 +1301,31 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         """
         url = "/cluster/%s/%s/vnc/"
         args = (cluster.slug, vm.hostname)
-        self.validate_get(url, args, 'virtual_machine/vnc.html')
+        self.validate_get(url, args, 'virtual_machine/novnc.html')
+    
+    def test_view_vnc_proxy(self):
+        """
+        Tests view for cluster users:
+        
+        Verifies:
+            * lack of permissions returns 403
+            * nonexistent Cluster returns 404
+            * nonexistent VirtualMachine returns 404
+            * no ports set (not running proxy)
+        """
+        url = "/cluster/%s/%s/vnc_proxy/"
+        args = (cluster.slug, vm.hostname)
+        response = self.validate_get_configurable(url, args, False,
+            "application/json", 200, ["admin",])
+        if settings.VNC_PROXY:
+            self.assertEqual(json.loads(response), (False, False, False))
+        else:
+            # NOTE: cannot test with not-real VM
+            #info_ = vm.info
+            #host = info_["pnode"]
+            #port = info_["network_port"]
+            #password = ""
+            self.assertNotEqual(json.loads(response), (False, False, False))
     
     def test_view_users(self):
         """

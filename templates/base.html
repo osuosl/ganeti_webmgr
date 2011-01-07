@@ -26,6 +26,9 @@
             
             <h3></h3>
             <ul>
+                {% if user.is_superuser or cluster_admin %}
+                <li><a href="{% url cluster-overview %}">Overview</a></li>
+                {% endif %}
                 <li><a href="{% url cluster-list %}">Clusters</a></li>
                 <li><a href="{% url virtualmachine-list %}">Virtual Machines</a></li>
                 {% if user.is_superuser or cluster_admin or perms.Cluster.create_vm %}
@@ -42,7 +45,7 @@
             {% if user.is_superuser or group_admin or cluster_admin %}
             <h3>Admin</h3>
             <ul>
-                {% if user.is_superuser or cluster_admin%}
+                {% if user.is_superuser or cluster_admin %}
                     <li><a href="{% url import-orphans %}">Orphan VMs</a></li>
                     <li><a href="{% url import-missing_db %}">Import VMs</a></li>
                     <li><a href="{% url import-missing %}">Missing VMs</a></li>
@@ -73,6 +76,9 @@
         <a href="http://www.djangoproject.com/">
              <img src="{{ MEDIA_URL }}/django.gif" alt="A Django site" title="A Django site" border=0 />
         </a>
+        </p>
+        <p>
+            Created in <a href="https://osuosl.org">Oregon State University Open Source Lab</a>.
         </p>
     </div>
     

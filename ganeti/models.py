@@ -20,7 +20,6 @@
 import cPickle
 from datetime import datetime, timedelta
 from hashlib import sha1
-from subprocess import Popen
 
 from django.conf import settings
 
@@ -45,8 +44,14 @@ from util import client
 from util.client import GanetiApiError
 
 if settings.VNC_PROXY:
-    from vncauthproxy.vapclient import request_forwarding
+    from util.vncdaemon.vapclient import request_forwarding
 
+import random
+import string
+
+def generate_random_password(length=12):
+    "Generate random sequence of specified length"
+    return "".join( random.sample(string.letters + string.digits, length) )
 
 RAPI_CACHE = {}
 RAPI_CACHE_HASHES = {}
@@ -408,6 +413,9 @@ class VirtualMachine(CachedClusterObject):
 
     last_job = models.ForeignKey(Job, null=True)
 
+    class Meta:
+        ordering = ["hostname", ]
+
     @property
     def rapi(self):
         return get_rapi(self.cluster_hash, self.cluster_id)
@@ -519,14 +527,25 @@ class VirtualMachine(CachedClusterObject):
             .update(last_job=job, ignore_cache=True)
         return job
 
-    def setup_vnc_forwarding(self):
-        #password = self.set_random_vnc_password(instance)
-        password = 'none'
+    def setup_vnc_forwarding(self, sport=''):
+        password = ''
         info_ = self.info
         port = info_['network_port']
         node = info_['pnode']
-        Popen(['util/portforwarder.py', '%d'%port, '%s:%d'%(node, port)])
-        return port, password
+
+        # use proxy for VNC connection
+        if settings.VNC_PROXY:
+            proxy_server = settings.VNC_PROXY.split(":")
+            password = generate_random_password()
+            result = request_forwarding(proxy_server, sport, node, port, password)
+            if not result:
+                return False, False, False
+            else:
+                # in future: maybe need to extract host from VNC_PROXY
+                return proxy_server[0], int(result), password
+
+        else:
+            return node, port, password
 
     def __repr__(self):
         return "<VirtualMachine: '%s'>" % self.hostname
@@ -551,6 +570,9 @@ class Cluster(CachedClusterObject):
     virtual_cpus = models.IntegerField(null=True, blank=True)
     disk = models.IntegerField(null=True, blank=True)
     ram = models.IntegerField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["hostname", "description"]
 
     def __unicode__(self):
         return self.hostname

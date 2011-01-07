@@ -27,6 +27,7 @@ from django import forms
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
+from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, \
     HttpResponseNotAllowed, HttpResponseForbidden
@@ -34,7 +35,7 @@ from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
 from object_permissions.views.permissions import view_users, view_permissions
-from object_permissions import get_users_any
+from object_permissions import get_users_any, user_has_any_perms
 
 from logs.models import LogItem
 log_action = LogItem.objects.log_action
@@ -43,6 +44,7 @@ from util.client import GanetiApiError
 from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine, \
         Job, SSHKey
 from ganeti.views import render_403
+from ganeti.fields import DataVolumeField
 
 empty_field = (u'', u'---------')
 
@@ -86,31 +88,39 @@ def delete(request, cluster_slug, instance):
 
 
 @login_required
-def vnc(request, cluster_slug, instance):
+def novnc(request, cluster_slug, instance):
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    instance = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
+
+    user = request.user
+
+    admin = user.is_superuser or user.has_perm('admin', instance) \
+        or user.has_perm('admin', cluster)
+    if not admin:
+        return HttpResponseForbidden('You do not have permission to vnc on this')
+
+    return render_to_response("virtual_machine/novnc.html",
+                              {'cluster': cluster,
+                               'instance': instance,
+                               'admin':admin,
+                               },
+        context_instance=RequestContext(request),
+    )
+
+
+@login_required
+def vnc_proxy(request, cluster_slug, instance):
     instance = get_object_or_404(VirtualMachine, hostname=instance, \
                                  cluster__slug=cluster_slug)
 
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', instance) or \
         user.has_perm('admin', instance.cluster)):
-        return render_403(request, 'You do not have permission to vnc on this')
+        return HttpResponseForbidden('You do not have permission to vnc on this')
+    
+    result = json.dumps(instance.setup_vnc_forwarding())
 
-    if settings.VNC_PROXY:
-        host = 'localhost'
-        port, password = instance.setup_vnc_forwarding()
-
-    else:
-        host = instance.info['pnode']
-        port = instance.info['network_port']
-        password = ''
-
-    return render_to_response("virtual_machine/vnc.html",
-                              {'instance': instance,
-                               'host': host,
-                               'port': port,
-                               'password': password},
-        context_instance=RequestContext(request),
-    )
+    return HttpResponse(result, mimetype="application/json")
 
 
 @login_required
@@ -204,16 +214,35 @@ def ssh_keys(request, cluster_slug, instance, api_key):
 @login_required
 def list_(request):
     user = request.user
+
+    # there are 3 cases
+    #1) user is superuser
     if user.is_superuser:
         vms = VirtualMachine.objects.all()
         can_create = True
+
+    #2) user has any perms on any VM
+    #3) user belongs to the group which has perms on any VM
     else:
-        vms = user.get_objects_any_perms(VirtualMachine, ['admin', 'power','remove'])
-        can_create = user.has_any_perms(Cluster, ['create_vm'])
+        vms = user.get_objects_any_perms(VirtualMachine, groups=True)
+        can_create = user.has_any_perms(Cluster, ['create_vm', ])
+
+    job_errors = []
+    if vms:
+        # get jobs errors list
+        # not so easy because GenericFF is not supported well
+        vm_type = ContentType.objects.get_for_model(VirtualMachine)
+        job_errors = Job.objects.filter( content_type=vm_type, object_id__in=vms,
+                status="error" ).order_by("finished")
     
+    # TODO: implement ganeti errors
+    ganeti_errors = ["something",]
+
     return render_to_response('virtual_machine/list.html', {
         'vms':vms,
         'can_create':can_create,
+        'ganeti_errors':ganeti_errors,
+        'job_errors':job_errors,
         },
         context_instance=RequestContext(request),
     )
@@ -270,7 +299,7 @@ def detail(request, cluster_slug, instance):
         #'configform': form,
         'admin':admin,
         'remove':remove,
-        'power':power
+        'power':power,
         },
         context_instance=RequestContext(request),
     )
@@ -650,8 +679,8 @@ class NewVirtualMachineForm(forms.Form):
     os = forms.ChoiceField(label='Operating System', choices=[empty_field])
     # BEPARAMS
     vcpus = forms.IntegerField(label='Virtual CPUs', min_value=1)
-    ram = forms.IntegerField(label='Memory (MB)', min_value=100)
-    disk_size = forms.IntegerField(label='Disk Size (MB)', min_value=100)
+    ram = DataVolumeField(label='Memory', min_value=100)
+    disk_size = DataVolumeField(label='Disk Size', min_value=100)
     disk_type = forms.ChoiceField(label='Disk Type', choices=disktypes)
     nicmode = forms.ChoiceField(label='NIC Mode', choices=nicmodes)
     niclink = forms.CharField(label='NIC Link', required=False)

@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% load webmgr_tags %}
+
+{% block title %}Overview{% endblock %}
+
+{% block head %}
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.tablesorter.min.js"></script>
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
+<script type="text/javascript">
+    var PBAR_CONF = {
+        steps: 0,
+        showText: true,
+        textFormat: 'fraction',
+        // XXX there's issue, bars doesn't scale the progress to the given width
+        width: 120,
+        boxImage: '/media/images/progressbar/progressbar.gif',
+        barImage: {
+            0:  '/media/images/progressbar/progressbg_red.gif',
+            30: '/media/images/progressbar/progressbg_orange.gif',
+            50: '/media/images/progressbar/progressbg_yellow.gif',
+            75: '/media/images/progressbar/progressbg_green.gif',
+        },
+    };
+    $(document).ready(function() {
+        
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<h1>Overview</h1>
+
+{% if user.is_superuser %}
+<a class="button add" href="{% url cluster-create %}">Add Cluster</a>
+{% endif %}
+
+<table id="clusters" class="sorted">
+    <thead>
+        <tr>
+            <th>Cluster</th>
+            <th>Version</th>
+            <th>Memory [GiB]</th>
+            <th>Disk [GiB]</th>
+            <th>Nodes</th>
+            <th>VMs</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for cluster in cluster_list %}
+        {% with cluster.info as info %}
+        {% with cluster.nodes as nodes %}
+            <tr id="cluster_{{cluster.id}}">
+                <td class="name">
+                    {% if cluster.error %}<div class="icon_error" title="Ganeti API Error: {{cluster.error}}"></div>{% endif %}
+                    <a href="{% url cluster-detail cluster.slug %}">
+                        {{ cluster.hostname|abbreviate_fqdn }}
+                    </a>
+                </td>
+                <td>{{ info.software_version }}</td>
+                <td class="ram">{% cluster_memory cluster %}</td>
+                <td class="disk">{% cluster_disk cluster %}</td>
+                <td title="Running/All">{% format_online_nodes cluster %}</td>
+                <td title="Running/All">{% format_running_vms cluster %}</td>
+            </tr>
+        {% endwith %}
+        {% endwith %}
+    {% empty %}
+        <tr class="none"><td colspan="100%">No Clusters</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<!-- Progress bars for free memory/disk and sorting -->
+<script type="text/javascript">
+    $("#clusters .ram, #clusters .disk").progressBar(PBAR_CONF);
+    $("#clusters").tablesorter();
+</script>
+
+{% if ganeti_errors or job_errors %}
+<div class="errors_list">
+    <h2>Errors and failures</h2>
+
+    {% if ganeti_errors %}
+    <h3>Ganeti errors</h3>
+    <table class="sorted">
+        <thead>
+            <tr>
+                <th>Cluster</th>
+                <th>Description</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><a href="">gwm</a></td>
+                <td><a href="">Authorization failed</a></td>
+                <td>01/05/11 16:21</td>
+            </tr>
+        </tbody>
+    </table>
+    {% endif %}
+
+    {% if job_errors %}
+    <h3>Jobs failures</h3>
+    <table class="sorted">
+        <thead>
+            <tr>
+                <th>Cluster</th>
+                <th>Related object</th>
+                <th>Info</th>
+                <th>Finish time</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for jerror in job_errors %}
+            <tr>
+                <td><a href="{% url cluster-detail jerror.cluster.slug %}">{{ jerror.cluster|abbreviate_fqdn }}</a></td>
+                <td>{{ jerror.obj }}</td>
+                <td>{{ jerror.info.ops.0.OP_ID|format_job_op }}</td>
+                <td>{{ jerror.finished }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+</div>
+<script type="text/javascript">
+    $(".errors_list table").tablesorter();
+</script>
+{% endif %}
+
+{% if orphaned or import or missing %}
+<div class="administration">
+    <h2>Administration</h2>
+    <table style="width: auto;">
+    {% if orphaned %}
+        <tr>
+            <th>Orphaned VMs</th>
+            <td><a href="{% url import-orphans %}">Adopt {{ orphaned }}</a></td>
+        </tr>
+    {% endif %}
+
+    {% if import_ready %}
+        <tr>
+            <th>VMs ready to import</th>
+            <td><a href="{% url import-missing %}">Import {{ import_ready }}</a></td>
+        </tr>
+    {% endif %}
+
+    {% if missing %}
+        <tr>
+            <th>VMs missing from ganeti</th>
+            <td><a href="{% url import-missing_db %}">Remove {{ missing }}</a></td>
+        </tr>
+    {% endif %}
+    </table>
+
+</div>
+{% endif %}
+{% endblock %}

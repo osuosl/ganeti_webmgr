@@ -18,15 +18,12 @@
 
 
 import json
-import os
-import socket
-import urllib2
 
 from django import forms
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.template.defaultfilters import slugify
@@ -41,6 +38,7 @@ log_action = LogItem.objects.log_action
 from ganeti.models import *
 from ganeti.views import render_403, render_404
 from util.portforwarder import forward_port
+from ganeti.fields import DataVolumeField
 
 # Regex for a resolvable hostname
 FQDN_RE = r'^[\w]+(\.[\w]+)*$'
@@ -144,6 +142,53 @@ def edit(request, cluster_slug=None):
 
 
 @login_required
+def overview(request):
+    """
+    Status page with all clusters
+    """
+    user = request.user
+    if user.is_superuser:
+        cluster_list = Cluster.objects.all()
+    else:
+        cluster_list = user.get_objects_any_perms(Cluster, ['admin', 'create_vm'])
+        if not cluster_list:
+            return HttpResponseForbidden('You do not have sufficient privileges')
+
+    #ganeti errors
+    #XXX: not implemented yet
+    ganeti_errors = ["simulation"]
+
+    #job failures
+    #XXX: not filtered yet in a proper way
+    job_errors = Job.objects.filter(status="error").order_by("-finished")[:5]
+
+    #orphaned
+    orphaned = VirtualMachine.objects.filter(owner=None, cluster__in=cluster_list).count()
+
+    #ready for import vms
+    import_ready = 0
+
+    #missing vms
+    missing = 0
+
+    for cluster in cluster_list:
+        import_ready += len(cluster.missing_in_db)
+        missing += len(cluster.missing_in_ganeti)
+
+    return render_to_response("cluster/overview.html", {
+        'cluster_list': cluster_list,
+        'user': request.user,
+        'ganeti_errors': ganeti_errors,
+        'job_errors': job_errors,
+        'orphaned': orphaned,
+        'import_ready': import_ready,
+        'missing': missing,
+        },
+        context_instance=RequestContext(request),
+    )
+
+
+@login_required
 def list_(request):
     """
     List all clusters
@@ -207,14 +252,11 @@ class QuotaForm(forms.Form):
     
     user = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), \
                                   widget=forms.HiddenInput)
-    ram = forms.IntegerField(label='Memory (MB)', required=False, min_value=0, \
-                             widget=input)
+    ram = DataVolumeField(label='Memory', required=False, min_value=0)
     virtual_cpus = forms.IntegerField(label='Virtual CPUs', required=False, \
                                     min_value=0, widget=input)
-    disk = forms.IntegerField(label='Disk Space (MB)', required=False, \
-                              min_value=0, widget=input)
+    disk = DataVolumeField(label='Disk Space', required=False, min_value=0)
     delete = forms.BooleanField(required=False, widget=forms.HiddenInput)
-
 
 @login_required
 def quota(request, cluster_slug, user_id):
@@ -281,7 +323,8 @@ class EditClusterForm(forms.ModelForm):
             'password' : forms.PasswordInput(),
         }
         
-    
+    ram = DataVolumeField(label='Memory', required=False, min_value=0)
+    disk = DataVolumeField(label='Disk Space', required=False, min_value=0)    
     
     def clean(self):
         self.cleaned_data = super(EditClusterForm, self).clean()

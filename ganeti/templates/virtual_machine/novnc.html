@@ -1,0 +1,168 @@
+{% if admin %}
+    <div id="vnc_errors" style="display: none;">
+        Probably your proxy is not running.
+    </div>
+
+    <ul id="actions2">
+        {% ifequal instance.info.status "running" %}
+        <li><a class="button shutdown" href="{% url instance-shutdown cluster.slug instance.hostname %}">Shutdown</a></li>
+        <li><a class="button reboot" href="{% url instance-reboot cluster.slug instance.hostname %}">Reboot</a></li>
+        {% else %}
+        <li><a class="button startup" href="{% url instance-startup cluster.slug instance.hostname %}">Start</a></li>
+        {% endifequal %}
+    </ul>
+
+    <script type="text/javascript">
+        var VNC_native_ws, WEB_SOCKET_SWF_LOCATION;
+        
+        /* If no builtin websockets then load web_socket.js */
+        if (window.WebSocket) {
+            VNC_native_ws = true;
+        } else {
+            VNC_native_ws = false;
+            WEB_SOCKET_SWF_LOCATION = "{{MEDIA_URL}}/novnc/" +
+                        "web-socket-js/WebSocketMain.swf";
+        }
+    </script>
+    <link rel="stylesheet" href="{{MEDIA_URL}}/novnc/plain.css" title="plain">
+    <script type="text/javascript" src="{{MEDIA_URL}}/novnc/util.js"></script>
+    <!--<script type="text/javascript" src="{{MEDIA_URL}}/novnc/webutil.js"></script>-->
+    <script type="text/javascript" src="{{MEDIA_URL}}/novnc/base64.js"></script>
+    <script type="text/javascript" src="{{MEDIA_URL}}/novnc/des.js"></script>
+    <script type="text/javascript" src="{{MEDIA_URL}}/novnc/canvas.js"></script>
+    <script type="text/javascript" src="{{MEDIA_URL}}/novnc/rfb.js"></script>
+    <!-- include swf vnc -->
+    <script type="text/javascript" src="{{MEDIA_URL}}/novnc/web-socket-js/swfobject.js"></script>
+    <script type="text/javascript" src="{{MEDIA_URL}}/novnc/web-socket-js/FABridge.js"></script>
+    <script type="text/javascript" src="{{MEDIA_URL}}/novnc/web-socket-js/web_socket.js"></script>
+    <script type="text/javascript">
+
+        var rfb;
+        var host, port, password; // VNC proxy connection settings
+
+        function show_errors() {
+            if (host===false || port===false || password===false) {
+                $("#vnc_errors").html("Probably your proxy is not running or some errors occured. Try again.");
+                $("#vnc_errors").show();
+                return false;
+            }
+            return true;
+        }
+        function disconnect() {
+            rfb.disconnect();
+            return false;
+        }
+        // users exits the page by following link or closing the tab or sth else
+        $(window).bind("unload", disconnect);
+
+        function sendCAD() {
+            rfb.sendCtrlAltDel();
+            return false;
+        }
+        function updateState(rfb, state, oldstate, msg) {
+            var s, sb, cad, klass;
+
+            s = $('#VNC_status');
+            sb = $('#VNC_status_bar');
+            cad = $('#sendCADBtn');
+            dcb = $('#disconnectBtn');
+            cb = $('#connectBtn');
+
+            switch (state) {
+                case 'failed':
+                case 'fatal':
+                    klass = "VNC_status_error";
+                    break;
+                case 'normal':
+                    klass = "VNC_status_normal";
+                    break;
+                case 'disconnected':
+                case 'loaded':
+                    klass = "VNC_status_normal";
+                    break;
+                case 'password':
+                    msg = 'Password required';
+                    klass = "VNC_status_warn";
+                    break;
+                default:
+                    klass = "VNC_status_warn";
+            }
+
+            if (state === "normal") {
+                cad.removeAttr("disabled");
+                dcb.removeAttr("disabled");
+
+                cb.attr("disabled", "disabled");
+            }
+            else {
+                cad.attr("disabled", "disabled");
+                dcb.attr("disabled", "disabled");
+
+                cb.removeAttr("disabled");
+            }
+
+            if (typeof(msg) !== 'undefined') {
+                sb.attr("class", klass);
+                s.html(msg);
+            }
+        }
+
+        function start() {
+            $("#vnc_errors").hide();
+
+            url = "{% url instance-vnc-proxy cluster.slug instance.hostname %}";
+            $.ajax({
+                "async": false,
+                "url": url,
+                "dataType": "json",
+                "success": function(data, s, x){
+                    host = data[0];
+                    port = data[1];
+                    password = data[2];
+                    //alert(host + ":" + port + ":" + password);
+                }
+            });
+            if (!show_errors()) return false;
+
+            rfb = new RFB({
+                                // jQuery doesn't work with that, need to stick
+                                // to pure DOM
+                'target':       document.getElementById('VNC_canvas'),
+                'encrypt':      $('#encryption').attr('checked') ? true : false,
+                'true_color':   true,
+                'local_cursor': true,
+                'shared':       true,
+                'updateState':  updateState
+            });
+            rfb.connect(host, port, password);
+
+            return false;
+        }
+    </script>
+
+    <input type="checkbox" id="encryption" />
+    <label for="encryption">Encrypt</label><br />
+    <input type="button" name="connect" id="connectBtn" value="Connect" onclick="start()" />
+
+    <div id="VNC_screen">
+        <div id="VNC_status_bar" class="VNC_status_bar" style="margin-top: 0px;">
+            <table border=0 width="100%">
+                <tr>
+                    <td>
+                        <div id="VNC_status">noVNC client</div>
+                    </td>
+                    <td width="1%">
+                        <div id="VNC_buttons">
+                            <input type=button value="Disconnect" id="disconnectBtn" disabled="disabled" onclick="disconnect()" />
+                            <input type=button value="Send CtrlAltDel" id="sendCADBtn" disabled="disabled" onclick="sendCAD()" />
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <canvas id="VNC_canvas" width="640px" height="20px">
+            Canvas is not supported in your browser. Please use new versions
+            of Chrome or Firefox.
+        </canvas>
+    </div>
+{% endif %}

@@ -1,10 +1,12 @@
 from datetime import datetime
 from decimal import Decimal
 import time
+import re
 
 from django.core.exceptions import ValidationError
 from django.db.models.fields import DecimalField
 from django.db import models
+from django.forms.fields import CharField
 
 class PreciseDateTimeField(DecimalField):
     """
@@ -83,3 +85,51 @@ class PreciseDateTimeField(DecimalField):
             return 'numeric(%s, %s)' % (self.max_digits, self.decimal_places)
         elif  engine == 'django.db.backends.sqlite3':
             return 'character'
+
+class DataVolumeField(CharField):
+    min_value = None
+    max_value = None
+    required = True
+
+    def __init__(self, min_value=None, max_value=None, required=True, **kwargs):
+        super(DataVolumeField, self).__init__(**kwargs)
+        self.min_value = min_value
+        self.max_value = max_value
+        self.required = required
+
+    def validate(self, value):
+        if value == None and not self.required:
+            return
+        if self.min_value != None and value < self.min_value:
+            raise ValidationError('Must be at least ' + str(self.min_value))
+        if self.max_value != None and value > self.max_value:
+            raise ValidationError('Must be at less than ' + str(self.min_value))
+
+    # this gets called before validate
+    def to_python(self, value):
+        # returns an integer MB, because everyone needs more than 64 KB
+        value = value.upper().strip()
+
+        if len(value) == 0:
+            if self.required:
+                raise ValidationError('Empty.')
+            else:
+                return None
+
+        matches = re.match(r'([0-9]+(?:\.[0-9]+)?)\s*(M|G|T|MB|GB|TB)?$', value)
+        if matches == None:
+            raise ValidationError('Invalid format.')
+
+        multiplier = 1.
+        unit = matches.group(2)
+        if unit != None:
+            unit = unit[0]
+            if unit == 'M':
+                multiplier = 1.
+            elif unit == 'G':
+                multiplier = 1024.
+            elif unit == 'T':
+                multiplier = 1024. * 1024.
+
+        intvalue = int(float(matches.group(1)) * multiplier)
+        return intvalue

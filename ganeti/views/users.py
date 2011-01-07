@@ -15,7 +15,6 @@ from django.template import RequestContext
 from ganeti.models import *
 from ganeti.views import render_403
 
-
 @login_required
 def user_list(request):
     user = request.user
@@ -223,18 +222,37 @@ class UserEditForm(UserChangeForm):
     """
     Form to edit user, based on Auth.UserChangeForm
     """
+
+    new_password1 = forms.CharField(label='New password',
+                                    widget=forms.PasswordInput, required=False)
+    new_password2 = forms.CharField(label='Confirm password',
+                                    widget=forms.PasswordInput, required=False)
     
     class Meta(UserChangeForm.Meta):
         fields = (
             'username',
-            'first_name',
-            'last_name',
+            #'first_name',
+            #'last_name',
             'email',
-            'password',
             'is_active',
             'is_superuser',
         )
+
+    def __init__(self, *args, **kwargs):
+        super(UserEditForm, self).__init__(*args, **kwargs)
     
+    def clean_new_password2(self):
+        password2 = self.cleaned_data.get('new_password2')
+        if self.cleaned_data.get('new_password1') != password2:
+            raise forms.ValidationError("The two password fields didn't match.")
+        return password2
+
+    def save(self, commit=True):
+        password1 = self.cleaned_data.get('new_password1')
+        if password1 and self.cleaned_data.get('new_password2'):
+            self.instance.set_password(password1)
+        return super(UserEditForm, self).save(commit)
+
 
 class UserProfileForm(forms.Form):
     """

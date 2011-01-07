@@ -64,12 +64,13 @@ def orphans(request):
         if not clusters:
             return render_403(request, 'You do not have sufficient privileges')
     
-    vms = VirtualMachine.objects.filter(owner=None, cluster__in=clusters) \
-                                            .values_list('id','hostname')
-    vms = list(vms)
-    vmcount = VirtualMachine.objects.count()
+    vms_with_cluster = VirtualMachine.objects.filter(owner=None, cluster__in=clusters) \
+                          .order_by('hostname').values_list('id','hostname','cluster')
     
     if request.method == 'POST':
+        # strip cluster from vms
+        vms = [(i[0], i[1]) for i in vms_with_cluster]
+
         # process updates if this was a form submission
         form = OrphanForm(vms, request.POST)
         if form.is_valid():
@@ -88,9 +89,18 @@ def orphans(request):
             
             # remove updated vms from the list
             vms = filter(lambda x: unicode(x[0]) not in vm_ids, vms)
+            vms_with_cluster = filter(lambda x: unicode(x[0]) not in vm_ids, vms_with_cluster)
     
     else:
+        # strip cluster from vms
+        vms = [(i[0], i[1]) for i in vms_with_cluster]
         form = ImportForm(vms)
+
+    clusterdict = {}
+    for i in clusters:
+        clusterdict[i.id] = i.hostname
+    vms = [ (i[0], clusterdict[i[2]], i[1]) for i in vms_with_cluster ]
+    vmcount = VirtualMachine.objects.count()
     
     return render_to_response("importing/orphans.html", {
         'vms': vms,
@@ -112,11 +122,11 @@ def missing_ganeti(request):
         clusters = user.get_objects_any_perms(Cluster, ['admin'])
         if not clusters:
             return render_403(request, 'You do not have sufficient privileges')
-    
+
     vms = []
     for cluster in clusters:
-        vms.extend(cluster.missing_in_ganeti)
-    vms = zip(vms, vms)
+        for vm in cluster.missing_in_ganeti:
+            vms.append((vm, vm))
     
     if request.method == 'POST':
         # process updates if this was a form submission
@@ -132,7 +142,21 @@ def missing_ganeti(request):
     
     else:
         form = VirtualMachineForm(vms)
-    
+
+    vms = {}
+    for cluster in clusters:
+        for vm in cluster.missing_in_ganeti:
+            vms[vm] = (cluster.hostname, vm)
+
+    vmhostnames = vms.keys()
+    vmhostnames.sort()
+
+    vms_tuplelist = []
+    for i in vmhostnames:
+        vms_tuplelist.append((i, vms[i][0], vms[i][1]))
+
+    vms = vms_tuplelist
+        
     return render_to_response("importing/missing.html", {
         'vms': vms,
         'form':form,
@@ -180,6 +204,19 @@ def missing_db(request):
     else:
         form = ImportForm(vms)
     
+    vms = {}
+    for cluster in clusters:
+        for hostname in cluster.missing_in_db:
+            vms[hostname] = ('%s:%s' % (cluster.id, hostname), cluster.hostname, hostname)
+    vmhostnames = vms.keys()
+    vmhostnames.sort()
+
+    vms_tuplelist = []
+    for i in vmhostnames:
+        vms_tuplelist.append(vms[i])
+
+    vms = vms_tuplelist
+
     return render_to_response("importing/missing_db.html", {
         'vms': vms,
         'form':form,
