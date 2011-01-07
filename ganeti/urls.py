@@ -25,8 +25,10 @@ instance = '/(?P<instance>[^/]+)'
 
 # General
 urlpatterns = patterns('ganeti.views.general',
-    #   Index page
-    url(r'^$', 'index', name="index"),
+    #   Index page - it's status page
+    url(r'^$', 'overview', name="index"),
+    #   Status page
+    url(r'^overview/?$', 'overview', name="overview"),
 )
 
 # Users
@@ -47,8 +49,6 @@ urlpatterns += patterns('ganeti.views.users',
 
 # Clusters
 urlpatterns += patterns('ganeti.views.cluster',
-    #   Status page
-    url(r'^clusters/overview/?$', 'overview', name="cluster-overview"),
     #   List
     url(r'^clusters/?$', 'list_', name="cluster-list"),
     #   Add

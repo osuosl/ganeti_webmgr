@@ -20,9 +20,12 @@
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
+from django.shortcuts import render_to_response
+from django.template import RequestContext
+from django.contrib.contenttypes.models import ContentType
 #from object_permissions import get_model_perms, get_user_perms, grant, revoke, \
 #    get_users, get_groups, get_group_perms
-from ganeti.models import Cluster
+from ganeti.models import Cluster, VirtualMachine, Job
 
 
 @login_required
@@ -35,3 +38,70 @@ def index(request):
         return HttpResponseRedirect(reverse("cluster-overview"))
     else:
         return HttpResponseRedirect(reverse("virtualmachine-list"))
+
+
+@login_required
+def overview(request):
+    """
+    Status page
+    """
+    user = request.user
+
+    admin = True
+    if user.is_superuser:
+        cluster_list = Cluster.objects.all()
+
+    else:
+        cluster_list = user.get_objects_any_perms(Cluster, ['admin', 'create_vm'],
+            groups=True)
+
+        if not cluster_list:
+            #return HttpResponseForbidden('You do not have sufficient privileges')
+            admin = False
+
+    #ganeti errors
+    #XXX: not implemented yet
+    ganeti_errors = ["simulation"]
+
+    if admin:
+        job_errors = Job.objects.filter(cluster__in=cluster_list, status="error"). \
+                order_by("-finished")[:5]
+
+        #orphaned
+        orphaned = VirtualMachine.objects.filter(owner=None,
+                cluster__in=cluster_list).count()
+
+        #ready for import vms
+        import_ready = 0
+
+        #missing vms
+        missing = 0
+
+        for cluster in cluster_list:
+            import_ready += len(cluster.missing_in_db)
+            missing += len(cluster.missing_in_ganeti)
+
+    else:
+        vms = user.get_objects_any_perms(VirtualMachine, groups=True)
+
+        # content type of VirtualMachine model
+        vm_type = ContentType.objects.get_for_model(VirtualMachine)
+        job_errors = Job.objects.filter( content_type=vm_type, object_id__in=vms,
+                status="error" ).order_by("finished")[:5]
+
+        #orphaned, ready to import, missing
+        orphaned = import_ready = missing = 0
+
+
+    return render_to_response("overview.html", {
+        'admin':admin,
+        'cluster_list': cluster_list,
+        'user': request.user,
+        'ganeti_errors': ganeti_errors,
+        'job_errors': job_errors,
+        'orphaned': orphaned,
+        'import_ready': import_ready,
+        'missing': missing,
+        },
+        context_instance=RequestContext(request),
+    )

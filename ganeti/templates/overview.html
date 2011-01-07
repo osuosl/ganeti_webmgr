@@ -87,14 +87,14 @@
     <table class="sorted">
         <thead>
             <tr>
-                <th>Cluster</th>
+                {% if admin %}<th>Cluster</th>{% else %}<th>Virtual Machine</th>{% endif %}
                 <th>Description</th>
                 <th>Date</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td><a href="">gwm</a></td>
+                {% if admin %}<td><a href="">gwm</a></td>{% else %}<td><a href="">pbnan1.gwm.osuosl.org</a></td>{% endif %}
                 <td><a href="">Authorization failed</a></td>
                 <td>01/05/11 16:21</td>
             </tr>
@@ -107,8 +107,8 @@
     <table class="sorted">
         <thead>
             <tr>
-                <th>Cluster</th>
-                <th>Related object</th>
+                {% if admin %}<th>Cluster</th>
+                <th>Related object</th>{% else %}<th>Virtual Machine</th>{% endif %}
                 <th>Info</th>
                 <th>Finish time</th>
             </tr>
@@ -116,8 +116,9 @@
         <tbody>
             {% for jerror in job_errors %}
             <tr>
-                <td><a href="{% url cluster-detail jerror.cluster.slug %}">{{ jerror.cluster|abbreviate_fqdn }}</a></td>
-                <td>{{ jerror.obj }}</td>
+                {% if admin %}<td><a href="{% url cluster-detail jerror.cluster.slug %}">{{ jerror.cluster|abbreviate_fqdn }}</a></td>
+                <td>{{ jerror.obj }}</td>{% else %}
+                <td><a href="{% url instance-detail jerror.obj.cluster.slug jerror.obj.hostname %}">{{ jerror.obj }}</a></td>{% endif %}
                 <td>{{ jerror.info.ops.0.OP_ID|format_job_op }}</td>
                 <td>{{ jerror.finished }}</td>
             </tr>
@@ -160,4 +161,5 @@
 
 </div>
 {% endif %}
+
 {% endblock %}
