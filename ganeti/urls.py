@@ -23,8 +23,14 @@ cluster_slug = '(?P<cluster_slug>[-_A-Za-z0-9]+)'
 cluster = 'cluster/%s' % cluster_slug
 instance = '/(?P<instance>[^/]+)'
 
+# General
+urlpatterns = patterns('ganeti.views.general',
+    #   Index page
+    url(r'^$', 'index', name="index"),
+)
+
 # Users
-urlpatterns = patterns('ganeti.views.users',
+urlpatterns += patterns('ganeti.views.users',
     url(r'^accounts/profile/?', 'user_profile', name="profile"),
     url(r'^users/?$', 'user_list', name="user-list"),
     url(r'^users/add$', 'user_add', name="user-create"),
@@ -41,9 +47,10 @@ urlpatterns = patterns('ganeti.views.users',
 
 # Clusters
 urlpatterns += patterns('ganeti.views.cluster',
-    url(r'^$', 'list_', name="cluster-overview"),
+    #   Status page
+    url(r'^clusters/overview/?$', 'overview', name="cluster-overview"),
     #   List
-    url(r'^clusters/$', 'list_', name="cluster-list"),
+    url(r'^clusters/?$', 'list_', name="cluster-list"),
     #   Add
     url(r'^cluster/add/?$', 'edit', name="cluster-create"),
     #   Detail
@@ -80,8 +87,9 @@ urlpatterns += patterns('ganeti.views.virtual_machine',
     url(r'^%s/permissions/user/(?P<user_id>\d+)/?$' % vm_prefix, 'permissions', name="vm-permissions-user"),
     url(r'^%s/permissions/group/(?P<group_id>\d+)/?$' % vm_prefix, 'permissions', name="vm-permissions-user"),
     
-    #  Start, Stop, Reboot
-    url(r'^%s/vnc/?$' % vm_prefix, 'vnc', name="instance-vnc"),
+    #  Start, Stop, Reboot, VNC
+    url(r'^%s/vnc/?$' % vm_prefix, 'novnc', name="instance-vnc"),
+    url(r'^%s/vnc_proxy/?$' % vm_prefix, 'vnc_proxy', name="instance-vnc-proxy"),
     url(r'^%s/shutdown/?$' % vm_prefix, 'shutdown', name="instance-shutdown"),
     url(r'^%s/startup/?$' % vm_prefix, 'startup', name="instance-startup"),
     url(r'^%s/reboot/?$' % vm_prefix, 'reboot', name="instance-reboot"),

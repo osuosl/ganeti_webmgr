@@ -33,6 +33,7 @@ from ganeti import models
 Cluster = models.Cluster
 VirtualMachine = models.VirtualMachine
 Quota = models.Quota
+Job = models.Job
 
 
 __all__ = ('TestClusterViews', 'TestClusterModel')
@@ -302,6 +303,7 @@ class TestClusterViews(TestCase):
     
     def setUp(self):
         self.tearDown()
+        models.client.GanetiRapiClient = RapiProxy
         
         User(id=1, username='anonymous').save()
         settings.ANONYMOUS_USER_ID=1
@@ -363,6 +365,66 @@ class TestClusterViews(TestCase):
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, template)
 
+    def validate_get_configurable(self, url, args, template=False,
+            mimetype=False, status=False, perms=[]):
+        """
+        More configurable version of validate_get.
+        Additional arguments (only if set) affects only authorized user test.
+
+        @template: used template
+        @mimetype: returned mimetype
+        @status:   returned Http status code
+        @perms:    set of perms granted on authorized user
+
+        @return    response content
+        """
+        # anonymous user
+        response = c.get(url % args, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'registration/login.html')
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.get(url % args)
+        self.assertEqual(403, response.status_code)
+        
+        # nonexisent cluster
+        if args:
+            response = c.get(url % "DOES_NOT_EXIST")
+            self.assertEqual(404, response.status_code)
+        
+        result = []
+
+        # authorized user (perm)
+        if perms:
+            for perm in perms:
+                grant(user, perm, cluster)
+        response = c.get(url % args)
+        if status:
+            self.assertEqual(status, response.status_code)
+        if mimetype:
+            self.assertEqual(mimetype, response['content-type'])
+        if template:
+            self.assertTemplateUsed(response, template)
+
+        result.append(response)
+        
+        # authorized user (superuser)
+        user.revoke_all(cluster)
+        user.is_superuser = True
+        user.save()
+        response = c.get(url % args)
+        if status:
+            self.assertEqual(200, response.status_code)
+        if mimetype:
+            self.assertEqual(mimetype, response['content-type'])
+        if template:
+            self.assertTemplateUsed(response, template)
+
+        result.append(response)
+
+        return result
+
     def test_view_list(self):
         """
         Tests displaying the list of clusters
@@ -421,7 +483,40 @@ class TestClusterViews(TestCase):
         self.assert_(cluster2 in clusters)
         self.assert_(cluster3 in clusters)
         self.assertEqual(4, len(clusters))
-    
+
+    def test_view_overview(self):
+        """
+        Tests overview (status) page
+        """
+        # TODO: in future, add Ganeti errors checking
+        cluster1 = Cluster(hostname='cluster1', slug='cluster1')
+        cluster1.save()
+        job1 = Job.objects.create(job_id=1234, obj=cluster1, cluster=cluster,
+                finished="2011-01-05 21:59", status="error")
+
+        url = "/clusters/overview/"
+        result = self.validate_get_configurable(url, [], "cluster/overview.html",
+            "text/html; charset=utf-8", 200, ["admin","create_vm"])
+
+        clusters = result[0].context['cluster_list']
+        self.assert_(cluster in clusters)
+        self.assertEqual(1, len(clusters))
+        self.assert_(job1 in result[0].context["job_errors"])
+        self.assertEqual(0, result[0].context["orphaned"])
+        self.assertEqual(0, result[0].context["missing"])
+        # 2 * len(clusters)
+        self.assertEqual(2, result[0].context["import_ready"])
+
+        clusters = result[1].context['cluster_list']
+        self.assert_(cluster in clusters)
+        self.assert_(cluster1 in clusters)
+        self.assertEqual(2, len(clusters))
+        self.assert_(job1 in result[0].context["job_errors"])
+        self.assertEqual(0, result[1].context["orphaned"])
+        self.assertEqual(0, result[1].context["missing"])
+        # 2 * len(clusters)
+        self.assertEqual(4, result[1].context["import_ready"])
+
     def test_view_add(self):
         """
         Tests adding a new cluster

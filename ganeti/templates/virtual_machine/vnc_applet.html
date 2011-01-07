@@ -1,0 +1,13 @@
+    <applet
+        archive="{{MEDIA_URL}}/javavnc/VncViewer.jar"
+        code="vncviewer.class"
+        width="800"
+        height="600"
+    >
+        <param name=HOST value="{{ host }}">
+        <param name=PORT value="{{ port }}">
+        {% if password %}
+        <param name=PASSWORD value="{{ password }}">
+        {% endif %}
+        <param name="Scaling factor" value="auto">
+    </applet>

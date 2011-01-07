@@ -7,6 +7,26 @@
 {% block head %}
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.tablesorter.min.js"></script>
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
+<script type="text/javascript">
+    var PBAR_CONF = {
+        steps: 0,
+        showText: true,
+        textFormat: 'fraction',
+        // XXX there's issue, bars doesn't scale the progress to the given width
+        width: 120,
+        boxImage: '/media/images/progressbar/progressbar.gif',
+        barImage: {
+            0:  '/media/images/progressbar/progressbg_red.gif',
+            30: '/media/images/progressbar/progressbg_orange.gif',
+            50: '/media/images/progressbar/progressbg_yellow.gif',
+            75: '/media/images/progressbar/progressbg_green.gif',
+        },
+    };
+    $(document).ready(function() {
+        
+    });
+</script>
 {% endblock %}
 
 {% block content %}
@@ -17,41 +37,53 @@
 {% endif %}
 
 <table id="clusters" class="sorted">
-<thead>
-    <tr>
-        <th>Hostname</th>
-        <th>Description</th>
-        <th>Nodes</th>
-        {% comment %}
-        <!-- This should be changed to instance-list at a later date -->
-        {% endcomment %}
-        <th>VMs</th>
-    </tr>
-</thead>
-<tbody>
-{% for cluster in cluster_list %}
-    {% with cluster.info as info %}
-    {% with cluster.nodes as nodes %}
-        <tr id="cluster_{{cluster.id}}">
-            <td class="name">
-                {% if cluster.error %}<div class="icon_error" title="Ganeti API Error: {{cluster.error}}"></div>{% endif %}
-                <a href="{% url cluster-detail cluster.slug %}">
-                    {{ cluster.hostname|abbreviate_fqdn }}
-                </a>
-            </td>
-            <td>{{ cluster.description }}</td>
-            <td>{{ nodes|length }}</td>
-            <td>{{ cluster.virtual_machines.count }}</td>
+    <thead>
+        <tr>
+            <th>Cluster</th>
+            <th>Desc.</th>
+            <th>Version</th>
+            <th>Hypervisor</th>
+            <th>Master node</th>
+            <th>Nodes</th>
+            {% comment %}
+            <!-- This should be changed to instance-list at a later date -->
+            {% endcomment %}
+            <th>VMs</th>
+            <th>Free resources</th>
+            <!--<th>Free disk</th>-->
         </tr>
-    {% endwith %}
-    {% endwith %}
-{% empty %}
-    <tr class="none"><td colspan="100%">No Clusters</td></tr>
-{% endfor %}
-</tbody>
+    </thead>
+    <tbody>
+    {% for cluster in cluster_list %}
+        {% with cluster.info as info %}
+        {% with cluster.nodes as nodes %}
+            <tr id="cluster_{{cluster.id}}">
+                <td class="name">
+                    {% if cluster.error %}<div class="icon_error" title="Ganeti API Error: {{cluster.error}}"></div>{% endif %}
+                    <a href="{% url cluster-detail cluster.slug %}">
+                        {{ cluster.hostname|abbreviate_fqdn }}
+                    </a>
+                </td>
+                <td>{{ cluster.description }}</td>
+                <td>{{ info.software_version }}</td>
+                <td>{{ info.default_hypervisor }}</td>
+                <td>{{ info.master }}</td>
+                <td>{{ nodes|length }}</td>
+                <td>{{ cluster.virtual_machines.count }}</td>
+                <td class="resources">RAM: {% cluster_memory cluster %}<br/>Disk: {% cluster_disk cluster %}</td>
+                <!--<td class="disk">{% cluster_disk cluster %}</td>-->
+            </tr>
+        {% endwith %}
+        {% endwith %}
+    {% empty %}
+        <tr class="none"><td colspan="100%">No Clusters</td></tr>
+    {% endfor %}
+    </tbody>
 </table>
 
+<!-- Progress bars for free memory/disk and sorting -->
 <script type="text/javascript">
+    $("#clusters .ram, #clusters .disk").progressBar(PBAR_CONF);
     $("#clusters").tablesorter();
 </script>
 {% endblock %}

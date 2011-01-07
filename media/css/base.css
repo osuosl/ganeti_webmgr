@@ -9,7 +9,7 @@
 html {width: 100%;}
 
 body {
-    background-color:#333;
+    background-color: #333;
     color:#333333;
     height: auto;
     margin: 0em;
@@ -154,6 +154,32 @@ li {
 
 
 /**
+ * Actions (buttons Delete, Shutdown, Start, Reboot)
+ *
+ **/
+#content #actions2 {
+    float: right;
+}
+#content #actions2 li {
+    float: left;
+}
+
+/**
+ * Errors, failures and administration links - status page
+ *
+ **/
+#content .errors_list {
+    margin-top: 2em;
+    background-color: #FFFCFC;
+    border: 1px solid #FFBFBF;
+    padding: 5px;
+}
+#content .administration {
+    margin-top: 2em;
+    padding: 5px;
+}
+
+/**
  * Forms and Form Elements
  **/
 /*  Default Settings */
@@ -231,6 +257,7 @@ form input.submit{margin-left:12.5em;}
     padding-bottom: 1em;
     text-align: center;
     width: 100%;
+    color: #F7F7F7;
 }
 
 .info {
@@ -272,6 +299,9 @@ div.delete, div.edit, div.icon_error, .icon_running, .icon_stopped {
     height:16px;
     padding:0;
     width:16px;
+}
+div.icon_error {
+    float:left;
 }
 
 .button {
@@ -329,7 +359,12 @@ tr.group td.name {background:url(/media/images/icons/group.png) no-repeat 0 4px;
 .permissions a {color:#333333;}
 .permissions .none, .quota.default {color:#C1C1C1; font-style:italic;}
 
-
+#vnc_errors {
+    background-color: #ee9c98;
+    border: 4px solid #ff8b87;
+    padding: 10px;
+    margin-bottom: 10px;
+}
 
 .floatfix {clear:both;}
 

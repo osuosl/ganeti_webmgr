@@ -145,11 +145,16 @@ def cluster_admin(user):
     return user.has_any_perms(Cluster, ['admin'])
 
 
+@register.filter
+def format_job_op(op):
+    return op[3:].replace("_", " ").title()
+
 def format_part_total(part, total):
     """
     Pretty-print a quantity out of a given total.
     """
-
+    if not (part or total):
+        return "0"
     total = float(total) / 1024
     part = float(part) / 1024
     return "%.*f / %.*f" % (
@@ -160,7 +165,6 @@ def node_memory(node):
     """
     Pretty-print a memory quantity, in GiB, with significant figures.
     """
-
     return format_part_total(node["mfree"], node["mtotal"])
 
 
@@ -169,9 +173,51 @@ def node_disk(node):
     """
     Pretty-print a disk quantity, in GiB, with significant figures.
     """
-
     return format_part_total(node["dfree"], node["dtotal"])
 
+@register.simple_tag
+def cluster_memory(cluster):
+    """
+    Pretty-print a memory quantity of the whole cluster [GiB]
+    """
+    nodes = cluster_nodes(cluster, True)
+    mfree, mtotal = 0, 0
+    for i in nodes:
+        mfree += i["mfree"]
+        mtotal += i["mtotal"]
+    return format_part_total(mfree, mtotal)
+
+@register.simple_tag
+def cluster_disk(cluster):
+    """
+    Pretty-print a memory quantity of the whole cluster [GiB]
+    """
+    nodes = cluster_nodes(cluster, True)
+    dfree, dtotal = 0, 0
+    for i in nodes:
+        dfree += i["dfree"]
+        dtotal += i["dtotal"]
+    return format_part_total(dfree, dtotal)
+
+@register.simple_tag
+def format_running_vms(cluster):
+    """
+    Return number of VMs that are available and number of all VMs
+    """
+    return "%d/%d" % (cluster.virtual_machines.filter(status="running").count(),
+                      cluster.virtual_machines.all().count())
+
+@register.simple_tag
+def format_online_nodes(cluster):
+    """
+    Return number of nodes that are online and number of all nodes
+    """
+    n = 0
+    nodes = cluster.nodes(True)
+    for i in nodes:
+        if not i['offline']:
+            n += 1
+    return "%d/%d" % (n, len(nodes))
 
 @register.filter
 def json(obj):
