@@ -183,6 +183,8 @@ def cluster_memory(cluster):
     nodes = cluster_nodes(cluster, True)
     mfree, mtotal = 0, 0
     for i in nodes:
+        if isinstance(i, str):
+            continue
         mfree += i["mfree"]
         mtotal += i["mtotal"]
     return format_part_total(mfree, mtotal)
@@ -195,6 +197,8 @@ def cluster_disk(cluster):
     nodes = cluster_nodes(cluster, True)
     dfree, dtotal = 0, 0
     for i in nodes:
+        if isinstance(i, str):
+            continue
         dfree += i["dfree"]
         dtotal += i["dtotal"]
     return format_part_total(dfree, dtotal)
@@ -215,6 +219,8 @@ def format_online_nodes(cluster):
     n = 0
     nodes = cluster.nodes(True)
     for i in nodes:
+        if isinstance(i, str):
+            continue
         if not i['offline']:
             n += 1
     return "%d/%d" % (n, len(nodes))

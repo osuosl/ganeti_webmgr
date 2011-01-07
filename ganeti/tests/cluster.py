@@ -484,39 +484,6 @@ class TestClusterViews(TestCase):
         self.assert_(cluster3 in clusters)
         self.assertEqual(4, len(clusters))
 
-    def test_view_overview(self):
-        """
-        Tests overview (status) page
-        """
-        # TODO: in future, add Ganeti errors checking
-        cluster1 = Cluster(hostname='cluster1', slug='cluster1')
-        cluster1.save()
-        job1 = Job.objects.create(job_id=1234, obj=cluster1, cluster=cluster,
-                finished="2011-01-05 21:59", status="error")
-
-        url = "/clusters/overview/"
-        result = self.validate_get_configurable(url, [], "cluster/overview.html",
-            "text/html; charset=utf-8", 200, ["admin","create_vm"])
-
-        clusters = result[0].context['cluster_list']
-        self.assert_(cluster in clusters)
-        self.assertEqual(1, len(clusters))
-        self.assert_(job1 in result[0].context["job_errors"])
-        self.assertEqual(0, result[0].context["orphaned"])
-        self.assertEqual(0, result[0].context["missing"])
-        # 2 * len(clusters)
-        self.assertEqual(2, result[0].context["import_ready"])
-
-        clusters = result[1].context['cluster_list']
-        self.assert_(cluster in clusters)
-        self.assert_(cluster1 in clusters)
-        self.assertEqual(2, len(clusters))
-        self.assert_(job1 in result[0].context["job_errors"])
-        self.assertEqual(0, result[1].context["orphaned"])
-        self.assertEqual(0, result[1].context["missing"])
-        # 2 * len(clusters)
-        self.assertEqual(4, result[1].context["import_ready"])
-
     def test_view_add(self):
         """
         Tests adding a new cluster

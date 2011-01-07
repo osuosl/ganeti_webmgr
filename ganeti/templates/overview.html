@@ -36,6 +36,7 @@
 <a class="button add" href="{% url cluster-create %}">Add Cluster</a>
 {% endif %}
 
+{% if admin %}
 <table id="clusters" class="sorted">
     <thead>
         <tr>
@@ -71,6 +72,7 @@
     {% endfor %}
     </tbody>
 </table>
+{% endif %}
 
 <!-- Progress bars for free memory/disk and sorting -->
 <script type="text/javascript">
@@ -131,6 +133,10 @@
 <script type="text/javascript">
     $(".errors_list table").tablesorter();
 </script>
+{% else %}
+<div class="no_errors">
+    <h2>No errors.</h2>
+</div>
 {% endif %}
 
 {% if orphaned or import or missing %}
