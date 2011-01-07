@@ -40,6 +40,7 @@
       <th>RAM</th>
       <th>Disk Space</th>
       <th>vCPUs</th>
+      <th>Info</th>
     </tr>
 </thead>
 <tbody id="vms">
@@ -80,6 +81,7 @@
         <td>{{ vm.ram|render_storage }}</td>
         <td>{{ vm.disk_size|render_storage }}</td>
         <td>{{ vm.virtual_cpus }}</td>
+        <td>{{ info }}</td>
     {% endwith %}
     {% empty %}
         <tr class="none"><td colspan="100%">No Virtual Machines</td></tr>

@@ -40,14 +40,10 @@
     <thead>
         <tr>
             <th>Cluster</th>
-            <th>Desc.</th>
             <th>Version</th>
-            <th>Hypervisor</th>
-            <th>Master node</th>
+            <th>Memory [GiB]</th>
+            <th>Disk [GiB]</th>
             <th>Nodes</th>
-            {% comment %}
-            <!-- This should be changed to instance-list at a later date -->
-            {% endcomment %}
             <th>VMs</th>
         </tr>
     </thead>
@@ -62,12 +58,11 @@
                         {{ cluster.hostname|abbreviate_fqdn }}
                     </a>
                 </td>
-                <td>{{ cluster.description }}</td>
                 <td>{{ info.software_version }}</td>
-                <td>{{ info.default_hypervisor }}</td>
-                <td>{{ info.master }}</td>
-                <td>{{ nodes|length }}</td>
-                <td>{{ cluster.virtual_machines.count }}</td>
+                <td class="ram">{% cluster_memory cluster %}</td>
+                <td class="disk">{% cluster_disk cluster %}</td>
+                <td title="Running/All">{% format_online_nodes cluster %}</td>
+                <td title="Running/All">{% format_running_vms cluster %}</td>
             </tr>
         {% endwith %}
         {% endwith %}

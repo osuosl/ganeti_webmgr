@@ -199,6 +199,26 @@ def cluster_disk(cluster):
         dtotal += i["dtotal"]
     return format_part_total(dfree, dtotal)
 
+@register.simple_tag
+def format_running_vms(cluster):
+    """
+    Return number of VMs that are available and number of all VMs
+    """
+    return "%d/%d" % (cluster.virtual_machines.filter(status="running").count(),
+                      cluster.virtual_machines.all().count())
+
+@register.simple_tag
+def format_online_nodes(cluster):
+    """
+    Return number of nodes that are online and number of all nodes
+    """
+    n = 0
+    nodes = cluster.nodes(True)
+    for i in nodes:
+        if not i['offline']:
+            n += 1
+    return "%d/%d" % (n, len(nodes))
+
 @register.filter
 def json(obj):
     return mark_safe(json_lib.dumps(obj))
