@@ -170,8 +170,6 @@ li {
  **/
 #content .errors_list {
     margin-top: 2em;
-    background-color: #FFFCFC;
-    border: 1px solid #FFBFBF;
     padding: 5px;
 }
 #content .administration {
