@@ -20,7 +20,13 @@
 from django.contrib.auth.models import User, Group
 from django.test import TestCase
 
-from ganeti.models import VirtualMachine, Cluster, ClusterUser, Profile, Organization
+from ganeti.tests.rapi_proxy import RapiProxy
+from ganeti import models
+VirtualMachine = models.VirtualMachine
+Cluster = models.Cluster
+ClusterUser = models.ClusterUser
+Profile = models.Profile
+Organization = models.Organization
 
 __all__ = ('TestClusterUser',)
 
@@ -28,6 +34,7 @@ __all__ = ('TestClusterUser',)
 class TestClusterUser(TestCase):
     
     def setUp(self):
+        models.client.GanetiRapiClient = RapiProxy
         self.tearDown()
     
     def tearDown(self):
@@ -103,21 +110,69 @@ class TestClusterUser(TestCase):
         """
         Tests retrieving dictionary of resources used by a cluster user
         """
-        owner = ClusterUser(name='owner')
-        owner.save()
-        c = Cluster(hostname='testing')
-        c.save()
+        c1 = Cluster(hostname="testing1", slug="test1")
+        c2 = Cluster(hostname="testing2", slug="test2")
+        c3 = Cluster(hostname="testing3", slug="test3")
+        user = User(username="owner")
+        quota = {"disk": 26, "ram":6, "virtual_cpus":14}
+
+        for i in (c1, c2, c3, user): i.save()
+
+        owner = user.get_profile()
+        c1.set_quota(owner, quota)
+        #c2.set_quota(owner, quota)
+        c3.set_quota(owner, quota)
         
-        vm0 = VirtualMachine(hostname='one', owner=owner, cluster=c)
-        vm1 = VirtualMachine(hostname='two', ram=1, virtual_cpus=3, disk_size=5, owner=owner, cluster=c)
-        vm2 = VirtualMachine(hostname='three', ram=2, virtual_cpus=4, disk_size=6, owner=owner, cluster=c)
-        vm3 = VirtualMachine(hostname='four', ram=3, virtual_cpus=5, disk_size=7, cluster=c)
-        vm0.save()
-        vm1.save()
-        vm2.save()
-        vm3.save()
+        vm11 = VirtualMachine(hostname="1one", owner=owner, cluster=c1, status="running")
+        vm21 = VirtualMachine(hostname="2one", owner=owner, cluster=c2, status="running")
+        vm31 = VirtualMachine(hostname="3one", owner=owner, cluster=c2, status="running")
+
+        vm12 = VirtualMachine(hostname="1two", owner=owner, cluster=c1, status="running",
+                ram=1, virtual_cpus=3, disk_size=6)
+        vm22 = VirtualMachine(hostname="2two", owner=owner, cluster=c2, status="running",
+                ram=1, virtual_cpus=3, disk_size=6)
+        vm32 = VirtualMachine(hostname="3two", owner=owner, cluster=c3, status="running",
+                ram=1, virtual_cpus=3, disk_size=6)
+
+        vm13 = VirtualMachine(hostname="1three", owner=owner, cluster=c1, status="stopped",
+                ram=1, virtual_cpus=3, disk_size=6)
+        vm23 = VirtualMachine(hostname="2three", owner=owner, cluster=c2, status="stopped",
+                ram=1, virtual_cpus=3, disk_size=6)
+        vm33 = VirtualMachine(hostname="3three", owner=owner, cluster=c3, status="stopped",
+                ram=1, virtual_cpus=3, disk_size=6)
+
+        for i in (vm11, vm12, vm13, vm21, vm22, vm23, vm31, vm32, vm33):
+            i.save()
+            owner.grant("admin", i)
         
-        used = owner.used_resources
-        self.assertEqual(1+2, used['ram'])
-        self.assertEqual(3+4, used['virtual_cpus'])
-        self.assertEqual(5+6, used['disk'])
+        self.assert_(c1 in owner.clusters.all())
+        self.assert_(c2 not in owner.clusters.all())
+        self.assert_(c3 in owner.clusters.all())
+
+        result = owner.used_resources(cluster=None, only_running=False)
+        self.assert_(c1.hostname in result.keys())
+        self.assert_(c2.hostname not in result.keys())
+        self.assert_(c3.hostname in result.keys())
+        self.assertEqual(result[c1.hostname]["disk"], 12)
+        self.assertEqual(result[c1.hostname]["ram"], 2)
+        self.assertEqual(result[c1.hostname]["virtual_cpus"], 6)
+        self.assertEqual(result[c1.hostname], result[c3.hostname])
+
+        result = owner.used_resources(cluster=None, only_running=True)
+        self.assert_(c1.hostname in result.keys())
+        self.assert_(c2.hostname not in result.keys())
+        self.assert_(c3.hostname in result.keys())
+        self.assertEqual(result[c1.hostname]["disk"], 6)
+        self.assertEqual(result[c1.hostname]["ram"], 1)
+        self.assertEqual(result[c1.hostname]["virtual_cpus"], 3)
+        self.assertEqual(result[c1.hostname], result[c3.hostname])
+
+        result = owner.used_resources(cluster=c1, only_running=False)
+        self.assertEqual(result["disk"], 12)
+        self.assertEqual(result["ram"], 2)
+        self.assertEqual(result["virtual_cpus"], 6)
+
+        result = owner.used_resources(cluster=c1, only_running=True)
+        self.assertEqual(result["disk"], 6)
+        self.assertEqual(result["ram"], 1)
+        self.assertEqual(result["virtual_cpus"], 3)

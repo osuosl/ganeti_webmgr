@@ -1,3 +1,5 @@
+# coding: utf-8
+
 # Copyright (C) 2010 Oregon State University et al.
 # Copyright (C) 2010 Greek Research and Technology Network
 #
@@ -413,6 +415,9 @@ class VirtualMachine(CachedClusterObject):
 
     last_job = models.ForeignKey(Job, null=True)
 
+    # stopped, runned times
+    #stopped
+
     class Meta:
         ordering = ["hostname", ]
 
@@ -541,7 +546,6 @@ class VirtualMachine(CachedClusterObject):
             if not result:
                 return False, False, False
             else:
-                # in future: maybe need to extract host from VNC_PROXY
                 return proxy_server[0], int(result), password
 
         else:
@@ -738,27 +742,49 @@ class ClusterUser(models.Model):
     def __unicode__(self):
         return self.name
 
-    @property
-    def used_resources(self):
+    #@property
+    def used_resources(self, cluster=None, only_running=False):
         """
         Return dictionary of total resources used by Virtual Machines that this
         ClusterUser owns
         """
-        return self.virtual_machines.exclude(ram=-1, disk_size=-1, \
-                                             virtual_cpus=-1) \
-                            .aggregate(disk=Sum('disk_size'), ram=Sum('ram'), \
-                                       virtual_cpus=Sum('virtual_cpus'))
-
-    @property
-    def used_resources_running(self):
-        """
-        Return dictionary of total resources used by running
-        Virtual Machines that this ClusterUser owns
-        """
-        return self.virtual_machines.filter(status='running').exclude(
-                   ram=-1, disk_size=-1, virtual_cpus=-1
-                   ).aggregate(ram=Sum('ram'),
-                   virtual_cpus=Sum('virtual_cpus'))
+        # XXX: errror in get_objects_any_perms? when groups==True it returns
+        #      duplicated data
+        #
+        #      ↓ this is really strange
+        # XXX: even when using distinct, aggregations are being made on all VMs
+        #base = self.cast().get_objects_any_perms(VirtualMachine).distinct()
+        
+        base = self.cast().get_objects_any_perms(VirtualMachine, groups=False)
+        
+        if only_running:
+            base = base.filter(status="running")
+        base = base.exclude(ram=-1, disk_size=-1, virtual_cpus=-1)
+        
+        if cluster:
+            base = base.filter(cluster=cluster) \
+                       .aggregate(disk=Sum("disk_size"), ram=Sum("ram"),
+                              virtual_cpus=Sum("virtual_cpus"))
+            return base
+        
+        else:
+            base = base.filter(cluster__in=self.clusters.all()) \
+                       .values("cluster__hostname", "ram", "disk_size", "virtual_cpus") 
+            
+            result = {}
+            for i in base:
+                hostname = i["cluster__hostname"]
+                if hostname not in result.keys():
+                    result[hostname] = {
+                        "disk": i["disk_size"],
+                        "ram":  i["ram"],
+                        "virtual_cpus": i["virtual_cpus"],
+                    }
+                else:
+                    result[hostname]["disk"] += i["disk_size"]
+                    result[hostname]["ram"] += i["ram"]
+                    result[hostname]["virtual_cpus"] += i["virtual_cpus"]
+            return result
 
 
 class Profile(ClusterUser):
