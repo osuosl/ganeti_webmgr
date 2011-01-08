@@ -14,7 +14,22 @@
 
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.tablesorter.min.js"></script>
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
 <script type="text/javascript">
+    var PBAR_CONF = {
+        steps: 0,
+        showText: true,
+        textFormat: 'fraction',
+        // XXX there's issue, bars doesn't scale the progress to the given width
+        width: 120,
+        boxImage: '/media/images/progressbar/progressbar.gif',
+        barImage: {
+            75:  '/media/images/progressbar/progressbg_red.gif',
+            50: '/media/images/progressbar/progressbg_orange.gif',
+            30: '/media/images/progressbar/progressbg_yellow.gif',
+            0: '/media/images/progressbar/progressbg_green.gif',
+        },
+    };
     $(document).ready(function() {
         $("#vmlist").tablesorter();
     });
@@ -60,6 +75,7 @@
     <a class="button add" href="{% url instance-create %}">Add Virtual Machine</a>
     {% endif %}
 {% endif %}
+
 <div id="vm-wrapper">
 {% include "virtual_machine/inner_table.html" %}
 </div>

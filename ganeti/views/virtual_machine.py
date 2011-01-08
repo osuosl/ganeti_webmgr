@@ -344,15 +344,10 @@ def vm_table(request):
                 status="error" ).order_by("finished")
     vms = render_vms(request, vms)
 
-    # TODO: implement ganeti errors
-    ganeti_errors = ["something",]
-
     return render_to_response('virtual_machine/inner_table.html', {
         'vms':vms,
         'can_create':can_create,
-        'ganeti_errors':ganeti_errors,
-        'job_errors':job_errors,
-        },
+       },
         context_instance=RequestContext(request),
     )
 

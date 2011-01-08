@@ -161,6 +161,20 @@ def format_part_total(part, total):
         int(3 - log10(part)), part, int(3 - log10(total)), total)
 
 @register.simple_tag
+def diff(a, b):
+    if a and b:
+        return int(a)-int(b)
+    else:
+        return 0
+
+@register.simple_tag
+def diff_render_storage(a, b):
+    data = 0
+    if a and b:
+        data = int(a)-int(b)
+    return render_storage(data)
+
+@register.simple_tag
 def node_memory(node):
     """
     Pretty-print a memory quantity, in GiB, with significant figures.
