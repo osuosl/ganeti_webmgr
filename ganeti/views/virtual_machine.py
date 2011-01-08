@@ -415,6 +415,7 @@ def create(request, cluster_slug=None):
         form = NewVirtualMachineForm(user, None, request.POST)
         if form.is_valid():
             data = form.cleaned_data
+            start = data['start']
             owner = data['owner']
             cluster = data['cluster']
             hostname = data['hostname']
@@ -460,7 +461,7 @@ def create(request, cluster_slug=None):
                 job_id = cluster.rapi.CreateInstance('create', hostname,
                         disk_template,
                         [{"size": disk_size, }],[{'mode':nicmode, 'link':niclink, }],
-                        os=os, vcpus=vcpus,
+                        start=start, os=os, vcpus=vcpus,
                         pnode=pnode, snode=snode,
                         name_check=name_check, ip_check=name_check,
                         iallocator=iallocator_hostname,
@@ -709,6 +710,8 @@ class NewVirtualMachineForm(forms.Form):
         ('network', 'Network'),
     ]
 
+    start = forms.BooleanField(label='Start up after creation',
+                               initial=True, required=False)
     owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label='Owner')
     cluster = forms.ModelChoiceField(queryset=Cluster.objects.none(), label='Cluster')
     hostname = forms.RegexField(label='Instance Name', regex=FQDN_RE,

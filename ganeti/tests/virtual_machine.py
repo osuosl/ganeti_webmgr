@@ -652,6 +652,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         cluster1 = Cluster(hostname='test2.osuosl.bak', slug='OSL_TEST2')
         cluster1.save()
         data = dict(cluster=cluster.id,
+                    start=True,
                     owner=user.get_profile().id, #XXX remove this
                     hostname='new.vm.hostname',
                     disk_template='plain',

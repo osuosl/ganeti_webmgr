@@ -41,6 +41,7 @@
     <form method="post">
         <fieldset>
             <h1> New Virtual Machine </h1>
+            {% vmfield form.start %}
             {% vmfield form.owner %}
             {% vmfield form.cluster %}
             {% vmfield form.hostname %}
