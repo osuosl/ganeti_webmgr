@@ -41,10 +41,10 @@
     <form method="post">
         <fieldset>
             <h1> New Virtual Machine </h1>
-            {% vmfield form.start %}
             {% vmfield form.owner %}
             {% vmfield form.cluster %}
             {% vmfield form.hostname %}
+            {% vmfield form.start %}
             {% vmfield form.name_check %}
             {% vmfield form.iallocator %}
             {% vmfield form.iallocator_hostname.as_hidden %}
