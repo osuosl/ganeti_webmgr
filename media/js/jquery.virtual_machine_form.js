@@ -46,14 +46,6 @@
             }
         });
         disk_template.change();
-        nicmode.change(function() {
-            if(nicmode.val() == '') {
-                niclink.hide();
-            } else {
-                niclink.show();
-            }
-        });
-        nicmode.change();
        
     };
     /* Create new option items for select field */
@@ -166,7 +158,6 @@
                             if(nicmode) {
                                 $("#id_nicmode :selected").removeAttr('selected');
                                 $("#id_nicmode [value="+nicmode+"]").attr('selected','selected');
-                                $("#id_niclink").parent().show();
                             } else {
                                 $("#id_nicmode :first-child").attr('selected', 'selected');
                             }
