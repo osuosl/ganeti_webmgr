@@ -22,6 +22,13 @@ class TestDataVolumeFieldToPython(TestCase):
 
         pass
 
+    def test_clean_none(self):
+        """
+        Check that a ValidationError is raised when None is passed in.
+        """
+
+        self.assertRaises(ValidationError, self.f.clean, None)
+
     def test_validationerror(self):
         """
         Make sure that ValidationError is raised when appropriate.
