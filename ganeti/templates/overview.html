@@ -23,6 +23,19 @@
             75: '/media/images/progressbar/progressbg_green.gif',
         },
     };
+    var PBAR2_CONF = {
+        steps: 0,
+        showText: true,
+        textFormat: 'fraction',
+        width: 120,
+        boxImage: '/media/images/progressbar/progressbar.gif',
+        barImage: {
+            75:  '/media/images/progressbar/progressbg_red.gif',
+            50: '/media/images/progressbar/progressbg_orange.gif',
+            30: '/media/images/progressbar/progressbg_yellow.gif',
+            0: '/media/images/progressbar/progressbg_green.gif',
+        },
+    };
     $(document).ready(function() {
         
     });
@@ -72,16 +85,90 @@
     {% endfor %}
     </tbody>
 </table>
-{% endif %}
-
 <!-- Progress bars for free memory/disk and sorting -->
 <script type="text/javascript">
     $("#clusters .ram, #clusters .disk").progressBar(PBAR_CONF);
     $("#clusters").tablesorter();
 </script>
 
+{% else %}
+<table id="clusters" class="sorted">
+    <thead>
+        <tr>
+            <th>Cluster</th>
+            <th>Virtual Machines</th>
+        </tr>
+    </thead>
+    <tbody id="vms">
+        {% for cluster, info in cluster_list.items %}
+        <tr>
+            <td>{{ cluster|abbreviate_fqdn }}</td>
+            <td title="Running / total">{{ info.running }} / {{ info.total }}</td>
+        {% empty %}
+            <tr class="none"><td colspan="100%">No Virtual Machines</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+<script type="text/javascript">
+    $("#vmlist").tablesorter();
+</script>
+{% endif %}
+
+{% if resources %}
+<div id="quota_consumption">
+<h2>Your quota consumption</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Cluster</th>
+            <th>Disk</th>
+            <th>RAM</th>
+            <th>Virtual CPUs</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for cluster, res in resources.items %}
+        <tr>
+            <td><a href="{% url cluster-detail cluster|abbreviate_fqdn %}">{{ cluster|abbreviate_fqdn }}</a></td>
+
+            {% if res.used.disk > res.set.disk %}
+            <td>
+                <div class="icon_error"></div>
+                Exceeded by {% diff_render_storage res.used.disk res.set.disk %}
+            </td>
+            {% else %}
+            <td class="disk">{{ res.used.disk }} / {{ res.set.disk }}</td>
+            {% endif %}
+
+            {% if res.used.ram > res.set.ram %}
+            <td>
+                <div class="icon_error"></div>
+                Exceeded by {% diff_render_storage res.used.ram res.set.ram %}
+            </td>
+            {% else %}
+            <td class="ram">{{ res.used.ram }} / {{ res.set.ram }}</td>
+            {% endif %}
+
+            {% if res.used.virtual_cpus > res.set.virtual_cpus %}
+            <td>
+                <div class="icon_error"></div>
+                Exceeded by {% diff_render_storage res.used.virtual_cpus res.set.virtual_cpus %}
+            </td>
+            {% else %}
+            <td class="vcpus">{{ res.used.virtual_cpus }} / {{ res.set.virtual_cpus }}</td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+<script type="text/javascript">
+    $("#quota_consumption .ram, #quota_consumption .disk, #quota_consumption .vcpus").progressBar(PBAR2_CONF);
+</script>
+{% endif %}
+
 {% if ganeti_errors or job_errors %}
-<div class="errors_list">
+<div id="errors_list">
     <h2>Errors and failures</h2>
 
     {% if ganeti_errors %}
@@ -131,16 +218,16 @@
 
 </div>
 <script type="text/javascript">
-    $(".errors_list table").tablesorter();
+    $("#errors_list table").tablesorter();
 </script>
 {% else %}
-<div class="no_errors">
+<div id="no_errors">
     <h2>No errors.</h2>
 </div>
 {% endif %}
 
-{% if orphaned or import or missing %}
-<div class="administration">
+{% if orphaned or import_ready or missing %}
+<div id="administration">
     <h2>Administration</h2>
     <table style="width: auto;">
     {% if orphaned %}

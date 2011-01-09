@@ -415,10 +415,6 @@ class VirtualMachine(CachedClusterObject):
 
     last_job = models.ForeignKey(Job, null=True)
 
-    # stopped, run times
-    stopped = models.IntegerField(default=0)
-    run = models.IntegerField(default=1)
-
     class Meta:
         ordering = ["hostname", ]
 
@@ -743,7 +739,6 @@ class ClusterUser(models.Model):
     def __unicode__(self):
         return self.name
 
-    #@property
     def used_resources(self, cluster=None, only_running=False):
         """
         Return dictionary of total resources used by VMs that this ClusterUser
@@ -751,8 +746,8 @@ class ClusterUser(models.Model):
         @param cluster  if set, get only VMs from specified cluster
         @param only_running  if set, get only running VMs
         """
-        base = self.cast().get_objects_any_perms(VirtualMachine, groups=False)
-
+        base = self.cast().get_objects_any_perms(VirtualMachine, groups=True)
+        
         if only_running:
             base = base.filter(status="running")
         base = base.exclude(ram=-1, disk_size=-1, virtual_cpus=-1)

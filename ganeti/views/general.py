@@ -52,7 +52,7 @@ def overview(request):
         cluster_list = Cluster.objects.all()
 
     else:
-        cluster_list = user.get_objects_any_perms(Cluster, ['admin', 'create_vm'],
+        cluster_list = user.get_objects_all_perms(Cluster, ['admin',],
             groups=True)
 
         if not cluster_list:
@@ -64,6 +64,8 @@ def overview(request):
     ganeti_errors = ["simulation"]
 
     if admin:
+        vms = None
+
         job_errors = Job.objects.filter(cluster__in=cluster_list, status="error"). \
                 order_by("-finished")[:5]
 
@@ -85,13 +87,38 @@ def overview(request):
         vms = user.get_objects_any_perms(VirtualMachine, groups=True)
 
         # content type of VirtualMachine model
+        # NOTE: done that way because if behavior of GenericForeignType
+        #       i.e. Django doesn't allow to filter on GenericForeignType
         vm_type = ContentType.objects.get_for_model(VirtualMachine)
         job_errors = Job.objects.filter( content_type=vm_type, object_id__in=vms,
                 status="error" ).order_by("finished")[:5]
 
+        # info showed non-admin user instead of table with list of clusters
+        cluster_list = {}
+        for vm in vms:
+            hostname = vm.cluster.hostname
+            if hostname in cluster_list.keys():
+                if vm.status == "running":
+                    cluster_list[hostname]["running"] += 1
+                cluster_list[hostname]["total"] += 1
+            else:
+                running = 1 if vm.status=="running" else 0
+                cluster_list[hostname] = {
+                    "running": running,
+                    "total": 1,
+                }
+
         #orphaned, ready to import, missing
         orphaned = import_ready = missing = 0
 
+    quota = {}
+    owner = user.get_profile()
+    resources = owner.used_resources()
+    for cluster in resources.keys():
+        quota[cluster] = {
+            "used": resources[cluster],
+            "set": Cluster.objects.get(hostname=cluster).get_quota(owner),
+        }
 
     return render_to_response("overview.html", {
         'admin':admin,
@@ -102,6 +129,7 @@ def overview(request):
         'orphaned': orphaned,
         'import_ready': import_ready,
         'missing': missing,
+        'resources': quota,
         },
         context_instance=RequestContext(request),
     )

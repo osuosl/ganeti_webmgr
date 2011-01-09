@@ -153,7 +153,7 @@ def list_(request):
     if user.is_superuser:
         cluster_list = Cluster.objects.all()
     else:
-        cluster_list = user.get_objects_any_perms(Cluster, ['admin', 'create_vm'])
+        cluster_list = user.get_objects_any_perms(Cluster, ['admin',])
     return render_to_response("cluster/list.html", {
         'cluster_list': cluster_list,
         'user': request.user,
