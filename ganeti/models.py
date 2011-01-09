@@ -746,8 +746,10 @@ class ClusterUser(models.Model):
     #@property
     def used_resources(self, cluster=None, only_running=False):
         """
-        Return dictionary of total resources used by Virtual Machines that this
-        ClusterUser owns
+        Return dictionary of total resources used by VMs that this ClusterUser
+        has perms to.
+        @param cluster  if set, get only VMs from specified cluster
+        @param only_running  if set, get only running VMs
         """
         base = self.cast().get_objects_any_perms(VirtualMachine, groups=False)
 
