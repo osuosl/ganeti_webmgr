@@ -86,6 +86,54 @@ def delete(request, cluster_slug, instance):
     
     return HttpResponseNotAllowed(["GET","DELETE"])
 
+@login_required
+def reinstall(request, cluster_slug, instance):
+    """
+    Reinstall a VM.
+    """
+
+    user = request.user
+    instance = get_object_or_404(VirtualMachine, cluster__slug=cluster_slug,
+        hostname=instance)
+
+    # Check permissions.
+    # Reinstalling is somewhat similar to deleting in that you destroy data,
+    # so use that for now.
+    if not (
+        user.is_superuser or
+        user.has_any_perms(instance, ["remove", "admin"]) or
+        user.has_perm("admin", instance.cluster)
+        ):
+        return render_403(request, 'You do not have sufficient privileges')
+
+    if request.method == 'GET':
+        return render_to_response("virtual_machine/reinstall.html",
+            {'vm': instance, 'oschoices': cluster_os_list(instance.cluster),
+             'current_os': instance.operating_system, 'submitted': False},
+            context_instance=RequestContext(request),
+        )
+      
+    elif request.method == 'POST':
+        # Reinstall instance
+        try:
+            job_id = instance.rapi.ReinstallInstance(instance.hostname, os=request.POST['os'])
+        except KeyError:
+            job_id = instance.rapi.ReinstallInstance(instance.hostname, os=instance.operating_system)
+
+        sleep(2)
+        jobstatus = instance.rapi.GetJobStatus(job_id)
+
+        job = Job.objects.create(job_id=job_id, obj=instance, cluster=instance.cluster)
+        VirtualMachine.objects.filter(id=instance.id).update(last_job=job, ignore_cache=True)
+        
+        #return render_to_response("virtual_machine/reinstall.html",
+        #    {'submitted': True},
+        #    context_instance=RequestContext(request),
+        #)
+        return HttpResponseRedirect(
+            reverse('instance-detail', args=[instance.cluster.slug, instance.hostname]))
+    
+    return HttpResponseNotAllowed(["GET","POST"])
 
 @login_required
 def novnc(request, cluster_slug, instance):

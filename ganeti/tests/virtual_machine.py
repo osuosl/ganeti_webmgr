@@ -274,7 +274,6 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         self.assertFalse(Job.objects.filter(id=job_id).values()[0]['ignore_cache'])
         self.assert_(Job.objects.get(id=job_id).finished)
 
-
 class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
     """
     Tests for views showing virtual machines
@@ -1287,6 +1286,92 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual('application/json', response['content-type'])
         self.assertFalse(VirtualMachine.objects.filter(id=vm.id).exists())
         self.assertFalse(user1.has_perm('power', vm))
+        vm.save()
+        user.revoke_all(vm)
+
+    def test_view_reinstall(self):
+        """
+        Tests view for reinstalling virtual machines
+        """
+        url = '/cluster/%s/%s/reinstall'
+        args = (cluster.slug, vm.hostname)
+        
+        # anonymous user
+        response = c.get(url % args, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'registration/login.html')
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.post(url % args)
+        self.assertEqual(403, response.status_code)
+        
+        # invalid vm
+        response = c.get(url % (cluster.slug, "DoesNotExist"))
+        self.assertEqual(404, response.status_code)
+        
+        # authorized GET (vm remove permissions)
+        user.grant('remove', vm)
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/reinstall.html')
+        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        user.revoke_all(vm)
+        
+        # authorized GET (vm admin permissions)
+        user.grant('admin', vm)
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/reinstall.html')
+        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        user.revoke_all(cluster)
+        
+        # authorized GET (cluster admin permissions)
+        user.grant('admin', cluster)
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/reinstall.html')
+        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        user.revoke_all(cluster)
+        
+        # authorized GET (superuser)
+        user.is_superuser = True
+        user.save()
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/reinstall.html')
+        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        
+        #authorized POST (superuser)
+        response = c.post(url % args)
+        self.assertEqual(302, response.status_code)
+        user.is_superuser = False
+        user.save()
+        vm.save()
+        
+        #authorized POST (cluster admin)
+        user.grant('admin', cluster)
+        response = c.post(url % args)
+        self.assertEqual(302, response.status_code)
+        user.revoke_all(cluster)
+        
+        #authorized POST (vm admin)
+        vm.save()
+        user.grant('admin', vm)
+        response = c.post(url % args)
+        self.assertEqual(302, response.status_code)
+        vm.save()
+        user.revoke_all(vm)
+        
+        #authorized POST (cluster admin)
+        vm.save()
+        user.grant('remove', vm)
+        response = c.post(url % args)
+        self.assertEqual(302, response.status_code)
         vm.save()
         user.revoke_all(vm)
     
