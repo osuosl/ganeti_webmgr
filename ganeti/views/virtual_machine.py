@@ -29,6 +29,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
+from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.http import HttpResponse, HttpResponseRedirect, \
     HttpResponseNotAllowed, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response
@@ -259,6 +260,22 @@ def ssh_keys(request, cluster_slug, instance, api_key):
     return HttpResponse(json.dumps(keys_list), mimetype="application/json")
 
 
+def render_vms(request, query):
+    paginator = Paginator(query, 10)
+
+    page = 1
+    if request.is_ajax:
+        query = request.GET.get('page')
+        if query is not None:
+            page = query
+
+    try:
+        vms = paginator.page(page)
+    except (EmptyPage, InvalidPage):
+        vms = paginator.page(paginator.num_pages)
+
+    return vms
+
 @login_required
 def list_(request):
     user = request.user
@@ -282,11 +299,50 @@ def list_(request):
         vm_type = ContentType.objects.get_for_model(VirtualMachine)
         job_errors = Job.objects.filter( content_type=vm_type, object_id__in=vms,
                 status="error" ).order_by("finished")
+    vms = render_vms(request, vms)
     
     # TODO: implement ganeti errors
     ganeti_errors = ["something",]
 
     return render_to_response('virtual_machine/list.html', {
+        'vms':vms,
+        'can_create':can_create,
+        'ganeti_errors':ganeti_errors,
+        'job_errors':job_errors,
+        },
+        context_instance=RequestContext(request),
+    )
+
+
+@login_required
+def vm_table(request):
+    user = request.user
+
+    # there are 3 cases
+    #1) user is superuser
+    if user.is_superuser:
+        vms = VirtualMachine.objects.all()
+        can_create = True
+
+    #2) user has any perms on any VM
+    #3) user belongs to the group which has perms on any VM
+    else:
+        vms = user.get_objects_any_perms(VirtualMachine, groups=True)
+        can_create = user.has_any_perms(Cluster, ['create_vm', ])
+
+    job_errors = []
+    if vms:
+        # get jobs errors list
+        # not so easy because GenericFF is not supported well
+        vm_type = ContentType.objects.get_for_model(VirtualMachine)
+        job_errors = Job.objects.filter( content_type=vm_type, object_id__in=vms,
+                status="error" ).order_by("finished")
+    vms = render_vms(request, vms)
+
+    # TODO: implement ganeti errors
+    ganeti_errors = ["something",]
+
+    return render_to_response('virtual_machine/inner_table.html', {
         'vms':vms,
         'can_create':can_create,
         'ganeti_errors':ganeti_errors,

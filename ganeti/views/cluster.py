@@ -23,6 +23,7 @@ from django import forms
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.urlresolvers import reverse
+from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
@@ -36,7 +37,7 @@ from logs.models import LogItem
 log_action = LogItem.objects.log_action
 
 from ganeti.models import *
-from ganeti.views import render_403, render_404
+from ganeti.views import render_403, render_404, virtual_machine
 from util.portforwarder import forward_port
 from ganeti.fields import DataVolumeField
 
@@ -96,7 +97,9 @@ def virtual_machines(request, cluster_slug):
         vms = cluster.virtual_machines.all()
     else:
         vms = user.filter_on_perms(['admin'], VirtualMachine, cluster=cluster)
-    
+
+    vms = virtual_machine.render_vms(request, vms)
+
     return render_to_response("virtual_machine/table.html", \
                 {'cluster': cluster, 'vms':vms}, \
                 context_instance=RequestContext(request))
