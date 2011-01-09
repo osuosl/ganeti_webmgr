@@ -749,24 +749,28 @@ class ClusterUser(models.Model):
         Return dictionary of total resources used by Virtual Machines that this
         ClusterUser owns
         """
-        # XXX: errror in get_objects_any_perms? when groups==True it returns
-        #      duplicated data
-        #
-        #      ↓ this is really strange
-        # XXX: even when using distinct, aggregations are being made on all VMs
-        #base = self.cast().get_objects_any_perms(VirtualMachine).distinct()
-        
         base = self.cast().get_objects_any_perms(VirtualMachine, groups=False)
-        
+
         if only_running:
             base = base.filter(status="running")
         base = base.exclude(ram=-1, disk_size=-1, virtual_cpus=-1)
         
         if cluster:
             base = base.filter(cluster=cluster) \
-                       .aggregate(disk=Sum("disk_size"), ram=Sum("ram"),
-                              virtual_cpus=Sum("virtual_cpus"))
-            return base
+                       .values("ram", "disk_size", "virtual_cpus")
+            # XXX: we don't aggregate, because the base query is being distincted.
+            #      Due to QuerySet lazyness, "DISTINCT" is appended just before
+            #      realization of the query. This way, DISTINCT tries to distinct
+            #      on already aggregated data. BAD WAY!
+            #
+            #      Solution? We count in Python.
+            
+            result = {"disk":0, "ram":0, "virtual_cpus":0}
+            for i in base:
+                result["disk"] += i["disk_size"]
+                result["ram"] += i["ram"]
+                result["virtual_cpus"] += i["virtual_cpus"]
+            return result
         
         else:
             base = base.filter(cluster__in=self.clusters.all()) \

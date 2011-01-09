@@ -27,6 +27,7 @@ Cluster = models.Cluster
 ClusterUser = models.ClusterUser
 Profile = models.Profile
 Organization = models.Organization
+Quota = models.Quota
 
 __all__ = ('TestClusterUser',)
 
@@ -45,6 +46,7 @@ class TestClusterUser(TestCase):
         Profile.objects.all().delete()
         VirtualMachine.objects.all().delete()
         Cluster.objects.all().delete()
+        Quota.objects.all().delete()
     
     def test_user_signal(self):
         """
@@ -149,6 +151,7 @@ class TestClusterUser(TestCase):
         self.assert_(c2 not in owner.clusters.all())
         self.assert_(c3 in owner.clusters.all())
 
+        # multiple clusters - every VM
         result = owner.used_resources(cluster=None, only_running=False)
         self.assert_(c1.hostname in result.keys())
         self.assert_(c2.hostname not in result.keys())
@@ -158,6 +161,7 @@ class TestClusterUser(TestCase):
         self.assertEqual(result[c1.hostname]["virtual_cpus"], 6)
         self.assertEqual(result[c1.hostname], result[c3.hostname])
 
+        # multiple clusters - only running VMs
         result = owner.used_resources(cluster=None, only_running=True)
         self.assert_(c1.hostname in result.keys())
         self.assert_(c2.hostname not in result.keys())
@@ -167,11 +171,13 @@ class TestClusterUser(TestCase):
         self.assertEqual(result[c1.hostname]["virtual_cpus"], 3)
         self.assertEqual(result[c1.hostname], result[c3.hostname])
 
+        # single cluster - every VM
         result = owner.used_resources(cluster=c1, only_running=False)
         self.assertEqual(result["disk"], 12)
         self.assertEqual(result["ram"], 2)
         self.assertEqual(result["virtual_cpus"], 6)
 
+        # single cluster - only running VMs
         result = owner.used_resources(cluster=c1, only_running=True)
         self.assertEqual(result["disk"], 6)
         self.assertEqual(result["ram"], 1)
