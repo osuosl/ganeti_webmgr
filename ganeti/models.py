@@ -720,8 +720,8 @@ class ClusterUser(models.Model):
     """
     Base class for objects that may interact with a Cluster or VirtualMachine.
     """
-    clusters = models.ManyToManyField(Cluster, through='Quota',
-                                      related_name='users')
+    #clusters = models.ManyToManyField(Cluster, through='Quota',
+    #                                  related_name='users')
     name = models.CharField(max_length=128)
     real_type = models.ForeignKey(ContentType, editable=False, null=True)
 
@@ -746,8 +746,9 @@ class ClusterUser(models.Model):
         @param cluster  if set, get only VMs from specified cluster
         @param only_running  if set, get only running VMs
         """
-        base = self.cast().get_objects_any_perms(VirtualMachine, groups=True)
-        
+        owner = self.cast()
+        base = owner.get_objects_any_perms(VirtualMachine, groups=True)
+
         if only_running:
             base = base.filter(status="running")
         base = base.exclude(ram=-1, disk_size=-1, virtual_cpus=-1)
@@ -770,8 +771,9 @@ class ClusterUser(models.Model):
             return result
         
         else:
-            base = base.filter(cluster__in=self.clusters.all()) \
-                       .values("cluster__hostname", "ram", "disk_size", "virtual_cpus") 
+            base = base.filter(
+                cluster__in=Cluster.objects.filter(virtual_machines__owner=owner.user)
+            ).values("cluster__hostname", "ram", "disk_size", "virtual_cpus") 
             
             result = {}
             for i in base:

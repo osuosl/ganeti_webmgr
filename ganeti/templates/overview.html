@@ -90,37 +90,16 @@
     $("#clusters .ram, #clusters .disk").progressBar(PBAR_CONF);
     $("#clusters").tablesorter();
 </script>
-
-{% else %}
-<table id="clusters" class="sorted">
-    <thead>
-        <tr>
-            <th>Cluster</th>
-            <th>Virtual Machines</th>
-        </tr>
-    </thead>
-    <tbody id="vms">
-        {% for cluster, info in cluster_list.items %}
-        <tr>
-            <td>{{ cluster|abbreviate_fqdn }}</td>
-            <td title="Running / total">{{ info.running }} / {{ info.total }}</td>
-        {% empty %}
-            <tr class="none"><td colspan="100%">No Virtual Machines</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
-<script type="text/javascript">
-    $("#vmlist").tablesorter();
-</script>
 {% endif %}
 
 {% if resources %}
-<div id="quota_consumption">
-<h2>Your quota consumption</h2>
+<div id="usage_summary">
+<h2>Usage summary</h2>
 <table>
     <thead>
         <tr>
             <th>Cluster</th>
+            {% if not admin %}<th>Your VMs</th>{% endif %}
             <th>Disk</th>
             <th>RAM</th>
             <th>Virtual CPUs</th>
@@ -131,31 +110,39 @@
         <tr>
             <td><a href="{% url cluster-detail cluster|abbreviate_fqdn %}">{{ cluster|abbreviate_fqdn }}</a></td>
 
-            {% if res.used.disk > res.set.disk %}
-            <td>
-                <div class="icon_error"></div>
-                Exceeded by {% diff_render_storage res.used.disk res.set.disk %}
-            </td>
-            {% else %}
-            <td class="disk">{{ res.used.disk }} / {{ res.set.disk }}</td>
-            {% endif %}
+            {% if not admin %}<td title="Running / total">{{ res.running }} / {{ res.total }}</td>{% endif %}
 
-            {% if res.used.ram > res.set.ram %}
-            <td>
-                <div class="icon_error"></div>
-                Exceeded by {% diff_render_storage res.used.ram res.set.ram %}
-            </td>
+            {% if res.set.default == 1 %}
+                <td>{{ res.used.disk|render_storage }}</td>
+                <td>{{ res.used.ram|render_storage }}</td>
+                <td>{{ res.used.virtual_cpus }}</td>
             {% else %}
-            <td class="ram">{{ res.used.ram }} / {{ res.set.ram }}</td>
-            {% endif %}
+                {% if res.used.disk > res.set.disk %}
+                <td>
+                    <div class="icon_error"></div>
+                    Exceeded by {% diff_render_storage res.used.disk res.set.disk %}
+                </td>
+                {% else %}
+                <td class="disk">{{ res.used.disk }} / {{ res.set.disk }}</td>
+                {% endif %}
 
-            {% if res.used.virtual_cpus > res.set.virtual_cpus %}
-            <td>
-                <div class="icon_error"></div>
-                Exceeded by {% diff_render_storage res.used.virtual_cpus res.set.virtual_cpus %}
-            </td>
-            {% else %}
-            <td class="vcpus">{{ res.used.virtual_cpus }} / {{ res.set.virtual_cpus }}</td>
+                {% if res.used.ram > res.set.ram %}
+                <td>
+                    <div class="icon_error"></div>
+                    Exceeded by {% diff_render_storage res.used.ram res.set.ram %}
+                </td>
+                {% else %}
+                <td class="ram">{{ res.used.ram }} / {{ res.set.ram }}</td>
+                {% endif %}
+
+                {% if res.used.virtual_cpus > res.set.virtual_cpus %}
+                <td>
+                    <div class="icon_error"></div>
+                    Exceeded by {% diff_render_storage res.used.virtual_cpus res.set.virtual_cpus %}
+                </td>
+                {% else %}
+                <td class="vcpus">{{ res.used.virtual_cpus }} / {{ res.set.virtual_cpus }}</td>
+                {% endif %}
             {% endif %}
         </tr>
         {% endfor %}
@@ -163,7 +150,7 @@
 </table>
 </div>
 <script type="text/javascript">
-    $("#quota_consumption .ram, #quota_consumption .disk, #quota_consumption .vcpus").progressBar(PBAR2_CONF);
+    $("#usage_summary .ram, #quota_consumption .disk, #quota_consumption .vcpus").progressBar(PBAR2_CONF);
 </script>
 {% endif %}
 

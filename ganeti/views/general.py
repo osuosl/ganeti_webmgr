@@ -93,21 +93,6 @@ def overview(request):
         job_errors = Job.objects.filter( content_type=vm_type, object_id__in=vms,
                 status="error" ).order_by("finished")[:5]
 
-        # info showed non-admin user instead of table with list of clusters
-        cluster_list = {}
-        for vm in vms:
-            hostname = vm.cluster.hostname
-            if hostname in cluster_list.keys():
-                if vm.status == "running":
-                    cluster_list[hostname]["running"] += 1
-                cluster_list[hostname]["total"] += 1
-            else:
-                running = 1 if vm.status=="running" else 0
-                cluster_list[hostname] = {
-                    "running": running,
-                    "total": 1,
-                }
-
         #orphaned, ready to import, missing
         orphaned = import_ready = missing = 0
 
@@ -119,6 +104,9 @@ def overview(request):
             "used": resources[cluster],
             "set": Cluster.objects.get(hostname=cluster).get_quota(owner),
         }
+        if vms:
+            quota[cluster]["running"] = vms.filter(status="running").count()
+            quota[cluster]["total"] = vms.count()
 
     return render_to_response("overview.html", {
         'admin':admin,
