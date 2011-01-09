@@ -739,6 +739,10 @@ class ClusterUser(models.Model):
     def __unicode__(self):
         return self.name
 
+    @property
+    def clusters(self):
+        return Cluster.objects.filter(virtual_machines__owner=self).distinct()
+
     def used_resources(self, cluster=None, only_running=False):
         """
         Return dictionary of total resources used by VMs that this ClusterUser
@@ -772,7 +776,7 @@ class ClusterUser(models.Model):
         
         else:
             base = base.filter(
-                cluster__in=Cluster.objects.filter(virtual_machines__owner=owner.user)
+                cluster__in=self.clusters
             ).values("cluster__hostname", "ram", "disk_size", "virtual_cpus") 
             
             result = {}

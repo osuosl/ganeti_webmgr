@@ -147,14 +147,14 @@ class TestClusterUser(TestCase):
             i.save()
             owner.grant("admin", i)
         
-        self.assert_(c1 in owner.clusters.all())
-        self.assert_(c2 not in owner.clusters.all())
-        self.assert_(c3 in owner.clusters.all())
+        self.assert_(c1 in owner.clusters)
+        self.assert_(c2 in owner.clusters) # this is so because there is unlimited quota
+        self.assert_(c3 in owner.clusters)
 
         # multiple clusters - every VM
         result = owner.used_resources(cluster=None, only_running=False)
         self.assert_(c1.hostname in result.keys())
-        self.assert_(c2.hostname not in result.keys())
+        self.assert_(c2.hostname in result.keys())
         self.assert_(c3.hostname in result.keys())
         self.assertEqual(result[c1.hostname]["disk"], 12)
         self.assertEqual(result[c1.hostname]["ram"], 2)
@@ -164,7 +164,7 @@ class TestClusterUser(TestCase):
         # multiple clusters - only running VMs
         result = owner.used_resources(cluster=None, only_running=True)
         self.assert_(c1.hostname in result.keys())
-        self.assert_(c2.hostname not in result.keys())
+        self.assert_(c2.hostname in result.keys())
         self.assert_(c3.hostname in result.keys())
         self.assertEqual(result[c1.hostname]["disk"], 6)
         self.assertEqual(result[c1.hostname]["ram"], 1)
