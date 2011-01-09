@@ -119,7 +119,7 @@ def render_storage(value):
         amount = amount / 1024.0
         if amount >= 1024:
             return "%.2f TiB" % (amount/1024)
-        return "%.2f GiB" % (amount/1024)
+        return "%.2f GiB" % (amount)
     else:
         return "%d MiB" % int(amount)
 
