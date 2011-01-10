@@ -99,7 +99,7 @@
     <thead>
         <tr>
             <th>Cluster</th>
-            {% if not admin %}<th>Your VMs</th>{% endif %}
+            <th>Your VMs</th>
             <th>Disk</th>
             <th>RAM</th>
             <th>Virtual CPUs</th>
@@ -110,7 +110,7 @@
         <tr>
             <td><a href="{% url cluster-detail cluster|abbreviate_fqdn %}">{{ cluster|abbreviate_fqdn }}</a></td>
 
-            {% if not admin %}<td title="Running / total">{{ res.running }} / {{ res.total }}</td>{% endif %}
+            <td title="Running / total">{{ res.running }} / {{ res.total }}</td>
 
             {% if not res.set.disk %}
                 <td>{{ res.used.disk|render_storage }}</td>

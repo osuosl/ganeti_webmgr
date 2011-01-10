@@ -64,7 +64,8 @@ def overview(request):
     ganeti_errors = ["simulation"]
 
     if admin:
-        vms = None
+        vms = VirtualMachine.objects.filter(owner=user)
+        #vms = None
 
         job_errors = Job.objects.filter(cluster__in=cluster_list, status="error"). \
                 order_by("-finished")[:5]
