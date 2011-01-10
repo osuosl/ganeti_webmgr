@@ -108,21 +108,21 @@ li {
 /**
  * Forms 
  */
-form input.submit {color:black; width:6em;}
+form p {padding:0.5ex 0ex;}
 form p label {
     float: left;
     text-align: right;
     margin-top: 0.3ex;
     margin-right: 0.5em;
     display: block;
+    width:12em;
 }
 form ul.errorlist {color:red;padding:1ex 1ex;}
-form p {padding:0.5ex 0ex;}
-fieldset {border:0px; padding-top:0.7em;}
-legend {font-size: 1.1em; font-weight:bold; padding-top: 10px;}
 form table, form table td, form table td {border:0 !important;}
-form p label {width:12em;}
-form input.submit{margin-left:12.5em;}
+form input.submit{color:black; width:6em;margin-left:12.5em;}
+
+fieldset {border:0px;}
+legend {font-size: 1.1em; font-weight:bold; padding-top: 10px;}
 
 /* Login Form */
 #login {margin: 3em auto 0em auto; width: 40%;}
@@ -141,6 +141,15 @@ form input.submit{margin-left:12.5em;}
 
 /* Registration Form */
 #registration {margin: 2em auto 0em auto; width:50%;}
+#registration p label {width:10.5em;}
+#registration input {width:16em;}
+#registration input.submit {margin-left: 11em; width:6em;}
+
+/* Password Reset Form */
+#passwordreset {margin: 2em auto 0em auto; width:50%;}
+#passwordreset p label {width:7.5em;}
+#passwordreset input {width:18em;}
+#passwordreset input.submit {margin-left: 8em; width:6em;}
 
 /* Footer */
 #footer {
