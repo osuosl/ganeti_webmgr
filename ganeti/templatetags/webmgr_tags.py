@@ -116,9 +116,12 @@ def render_instance_status(status):
 def render_storage(value):
     amount = float(value)
     if amount >= 1024:
-        return "%.2f GB" % (amount/1024)
+        amount = amount / 1024.0
+        if amount >= 1024:
+            return "%.2f TiB" % (amount/1024)
+        return "%.2f GiB" % (amount)
     else:
-        return "%d MB" % int(amount)
+        return "%d MiB" % int(amount)
 
 
 @register.filter
@@ -161,6 +164,20 @@ def format_part_total(part, total):
         int(3 - log10(part)), part, int(3 - log10(total)), total)
 
 @register.simple_tag
+def diff(a, b):
+    if a and b:
+        return int(a)-int(b)
+    else:
+        return 0
+
+@register.simple_tag
+def diff_render_storage(a, b):
+    data = 0
+    if a and b:
+        data = int(a)-int(b)
+    return render_storage(data)
+
+@register.simple_tag
 def node_memory(node):
     """
     Pretty-print a memory quantity, in GiB, with significant figures.
@@ -183,6 +200,8 @@ def cluster_memory(cluster):
     nodes = cluster_nodes(cluster, True)
     mfree, mtotal = 0, 0
     for i in nodes:
+        if isinstance(i, str):
+            continue
         mfree += i["mfree"]
         mtotal += i["mtotal"]
     return format_part_total(mfree, mtotal)
@@ -195,6 +214,8 @@ def cluster_disk(cluster):
     nodes = cluster_nodes(cluster, True)
     dfree, dtotal = 0, 0
     for i in nodes:
+        if isinstance(i, str):
+            continue
         dfree += i["dfree"]
         dtotal += i["dtotal"]
     return format_part_total(dfree, dtotal)
@@ -215,6 +236,8 @@ def format_online_nodes(cluster):
     n = 0
     nodes = cluster.nodes(True)
     for i in nodes:
+        if isinstance(i, str):
+            continue
         if not i['offline']:
             n += 1
     return "%d/%d" % (n, len(nodes))

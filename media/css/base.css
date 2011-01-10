@@ -168,11 +168,7 @@ li {
  * Errors, failures and administration links - status page
  *
  **/
-#content .errors_list {
-    margin-top: 2em;
-    padding: 5px;
-}
-#content .administration {
+#content #errors_list, #content #usage_summary, #content #administration {
     margin-top: 2em;
     padding: 5px;
 }

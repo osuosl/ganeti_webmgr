@@ -706,7 +706,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assert_(c.login(username=user2.username, password='secret'))
 
         # POST - over ram quota (user's first VM)
-        self.assertEqual(profile.used_resources, {'ram': None, 'disk': None, 'virtual_cpus': None})
+        self.assertEqual(profile.used_resources(cluster), {'ram': 0, 'disk': 0, 'virtual_cpus': 0})
         cluster.set_quota(profile, dict(ram=1000, disk=2000, virtual_cpus=10))
         data_ = data.copy()
         data_['ram'] = 2000
@@ -738,7 +738,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
 
         # POST - over ram quota (user's first VM) (start = False)
-        self.assertEqual(profile.used_resources, {'ram': None, 'disk': None, 'virtual_cpus': None})
+        self.assertEqual(profile.used_resources(cluster), {'ram': 0, 'disk': 0, 'virtual_cpus': 0})
         cluster.set_quota(profile, dict(ram=1000, disk=2000, virtual_cpus=10))
         data_ = data.copy()
         data_['start'] = False

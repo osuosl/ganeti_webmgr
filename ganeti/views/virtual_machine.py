@@ -130,10 +130,6 @@ def reinstall(request, cluster_slug, instance):
         job = Job.objects.create(job_id=job_id, obj=instance, cluster=instance.cluster)
         VirtualMachine.objects.filter(id=instance.id).update(last_job=job, ignore_cache=True)
         
-        #return render_to_response("virtual_machine/reinstall.html",
-        #    {'submitted': True},
-        #    context_instance=RequestContext(request),
-        #)
         return HttpResponseRedirect(
             reverse('instance-detail', args=[instance.cluster.slug, instance.hostname]))
     
@@ -212,17 +208,17 @@ def startup(request, cluster_slug, instance):
     if not user.is_superuser and vm.owner:
         # check quota
         quota = vm.cluster.get_quota(vm.owner)
-        if quota.values():
-            used_running = vm.owner.used_resources_running
-
-            used_running['ram'] = 0 if used_running['ram'] is None else used_running['ram']
-            ram = used_running['ram'] + vm.ram
+        if any(quota.values()):
+            used = vm.owner.used_resources(vm.cluster, only_running=True)
+            
+            used['ram'] = 0 if used['ram'] is None else used['ram']
+            ram = used['ram'] + vm.ram
             if quota['ram'] is not None and ram > quota['ram']:
                 msg = 'Owner does not have enough RAM remaining on this cluster to start the virtual machine.'
                 return HttpResponse(json.dumps([0, msg]), mimetype='application/json')
-
-            used_running['virtual_cpus'] = 0 if used_running['virtual_cpus'] is None else used_running['virtual_cpus']
-            vcpus = used_running['virtual_cpus'] + vm.virtual_cpus
+            
+            used['virtual_cpus'] = 0 if used['virtual_cpus'] is None else used['virtual_cpus']
+            vcpus = used['virtual_cpus'] + vm.virtual_cpus
             if quota['virtual_cpus'] and vcpus > quota['virtual_cpus']:
                 msg = 'Owner does not have enough Virtual CPUs remaining on this cluster to start the virtual machine.'
                 return HttpResponse(json.dumps([0, msg]), mimetype='application/json')
@@ -298,6 +294,7 @@ def render_vms(request, query):
 
     return vms
 
+
 @login_required
 def list_(request):
     user = request.user
@@ -314,23 +311,9 @@ def list_(request):
         vms = user.get_objects_any_perms(VirtualMachine, groups=True)
         can_create = user.has_any_perms(Cluster, ['create_vm', ])
 
-    job_errors = []
-    if vms:
-        # get jobs errors list
-        # not so easy because GenericFF is not supported well
-        vm_type = ContentType.objects.get_for_model(VirtualMachine)
-        job_errors = Job.objects.filter( content_type=vm_type, object_id__in=vms,
-                status="error" ).order_by("finished")
-    vms = render_vms(request, vms)
-    
-    # TODO: implement ganeti errors
-    ganeti_errors = ["something",]
-
     return render_to_response('virtual_machine/list.html', {
         'vms':vms,
         'can_create':can_create,
-        'ganeti_errors':ganeti_errors,
-        'job_errors':job_errors,
         },
         context_instance=RequestContext(request),
     )
@@ -361,15 +344,10 @@ def vm_table(request):
                 status="error" ).order_by("finished")
     vms = render_vms(request, vms)
 
-    # TODO: implement ganeti errors
-    ganeti_errors = ["something",]
-
     return render_to_response('virtual_machine/inner_table.html', {
         'vms':vms,
         'can_create':can_create,
-        'ganeti_errors':ganeti_errors,
-        'job_errors':job_errors,
-        },
+       },
         context_instance=RequestContext(request),
     )
 
@@ -933,8 +911,8 @@ class NewVirtualMachineForm(forms.Form):
                 start = data.get('start', True)
                 quota = cluster.get_quota(owner)
                 if quota.values():
-                    used = owner.used_resources
-                    used_running = owner.used_resources_running
+                    used = owner.used_resources(cluster)
+                    used_running = owner.used_resources(cluster, only_running=True)
                     
                     used_running['ram'] = 0 if used_running['ram'] is None else used_running['ram']
                     ram = used_running['ram'] + data.get('ram', 0)
@@ -942,21 +920,21 @@ class NewVirtualMachineForm(forms.Form):
                         del data['ram']
                         q_msg = u"Owner does not have enough ram remaining on this cluster. You may choose to not automatically start the instance or reduce the amount of ram."
                         self._errors["ram"] = self.error_class([q_msg])
-
+                    
                     used['disk'] = 0 if used['disk'] is None else used['disk']
                     disk = used['disk'] + data.get('disk_size', 0)
                     if quota['disk'] and disk > quota['disk']:
                         del data['disk_size']
                         q_msg = u"Owner does not have enough diskspace remaining on this cluster."
                         self._errors["disk_size"] = self.error_class([q_msg])
-
+                    
                     used_running['virtual_cpus'] = 0 if used_running['virtual_cpus'] is None else used_running['virtual_cpus']
                     vcpus = used_running['virtual_cpus'] + data.get('vcpus', 0)
                     if quota['virtual_cpus'] and vcpus > quota['virtual_cpus'] and start:
                         del data['vcpus']
                         q_msg = u"Owner does not have enough virtual cpus remaining on this cluster. You may choose to not automatically start the instance or reduce the amount of virtual cpus."
                         self._errors["vcpus"] = self.error_class([q_msg])
-
+            
             if msg:
                 self._errors["owner"] = self.error_class([msg])
                 del data['owner']

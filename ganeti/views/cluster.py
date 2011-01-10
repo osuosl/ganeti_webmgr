@@ -145,53 +145,6 @@ def edit(request, cluster_slug=None):
 
 
 @login_required
-def overview(request):
-    """
-    Status page with all clusters
-    """
-    user = request.user
-    if user.is_superuser:
-        cluster_list = Cluster.objects.all()
-    else:
-        cluster_list = user.get_objects_any_perms(Cluster, ['admin', 'create_vm'])
-        if not cluster_list:
-            return HttpResponseForbidden('You do not have sufficient privileges')
-
-    #ganeti errors
-    #XXX: not implemented yet
-    ganeti_errors = ["simulation"]
-
-    #job failures
-    #XXX: not filtered yet in a proper way
-    job_errors = Job.objects.filter(status="error").order_by("-finished")[:5]
-
-    #orphaned
-    orphaned = VirtualMachine.objects.filter(owner=None, cluster__in=cluster_list).count()
-
-    #ready for import vms
-    import_ready = 0
-
-    #missing vms
-    missing = 0
-
-    for cluster in cluster_list:
-        import_ready += len(cluster.missing_in_db)
-        missing += len(cluster.missing_in_ganeti)
-
-    return render_to_response("cluster/overview.html", {
-        'cluster_list': cluster_list,
-        'user': request.user,
-        'ganeti_errors': ganeti_errors,
-        'job_errors': job_errors,
-        'orphaned': orphaned,
-        'import_ready': import_ready,
-        'missing': missing,
-        },
-        context_instance=RequestContext(request),
-    )
-
-
-@login_required
 def list_(request):
     """
     List all clusters
@@ -200,7 +153,7 @@ def list_(request):
     if user.is_superuser:
         cluster_list = Cluster.objects.all()
     else:
-        cluster_list = user.get_objects_any_perms(Cluster, ['admin', 'create_vm'])
+        cluster_list = user.get_objects_all_perms(Cluster, ['admin',])
     return render_to_response("cluster/list.html", {
         'cluster_list': cluster_list,
         'user': request.user,

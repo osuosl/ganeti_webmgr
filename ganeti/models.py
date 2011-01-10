@@ -1,3 +1,5 @@
+# coding: utf-8
+
 # Copyright (C) 2010 Oregon State University et al.
 # Copyright (C) 2010 Greek Research and Technology Network
 #
@@ -34,7 +36,7 @@ from django.utils.translation import ugettext_lazy as _
 import re
 
 from django.db import models
-from django.db.models import Sum
+from django.db.models import Sum, F
 from django.db.models.signals import post_save, post_syncdb
 
 from object_permissions.registration import register
@@ -541,7 +543,6 @@ class VirtualMachine(CachedClusterObject):
             if not result:
                 return False, False, False
             else:
-                # in future: maybe need to extract host from VNC_PROXY
                 return proxy_server[0], int(result), password
 
         else:
@@ -719,8 +720,8 @@ class ClusterUser(models.Model):
     """
     Base class for objects that may interact with a Cluster or VirtualMachine.
     """
-    clusters = models.ManyToManyField(Cluster, through='Quota',
-                                      related_name='users')
+    #clusters = models.ManyToManyField(Cluster, through='Quota',
+    #                                  related_name='users')
     name = models.CharField(max_length=128)
     real_type = models.ForeignKey(ContentType, editable=False, null=True)
 
@@ -738,27 +739,56 @@ class ClusterUser(models.Model):
     def __unicode__(self):
         return self.name
 
-    @property
-    def used_resources(self):
+    def used_resources(self, cluster=None, only_running=False):
         """
-        Return dictionary of total resources used by Virtual Machines that this
-        ClusterUser owns
+        Return dictionary of total resources used by VMs that this ClusterUser
+        has perms to.
+        @param cluster  if set, get only VMs from specified cluster
+        @param only_running  if set, get only running VMs
         """
-        return self.virtual_machines.exclude(ram=-1, disk_size=-1, \
-                                             virtual_cpus=-1) \
-                            .aggregate(disk=Sum('disk_size'), ram=Sum('ram'), \
-                                       virtual_cpus=Sum('virtual_cpus'))
+        owner = self.cast()
+        base = owner.get_objects_any_perms(VirtualMachine, groups=True)
 
-    @property
-    def used_resources_running(self):
-        """
-        Return dictionary of total resources used by running
-        Virtual Machines that this ClusterUser owns
-        """
-        return self.virtual_machines.filter(status='running').exclude(
-                   ram=-1, disk_size=-1, virtual_cpus=-1
-                   ).aggregate(ram=Sum('ram'),
-                   virtual_cpus=Sum('virtual_cpus'))
+        if only_running:
+            base = base.filter(status="running")
+        base = base.exclude(ram=-1, disk_size=-1, virtual_cpus=-1)
+        
+        if cluster:
+            base = base.filter(cluster=cluster) \
+                       .values("ram", "disk_size", "virtual_cpus")
+            # XXX: we don't aggregate, because the base query is being distincted.
+            #      Due to QuerySet lazyness, "DISTINCT" is appended just before
+            #      realization of the query. This way, DISTINCT tries to distinct
+            #      on already aggregated data. BAD WAY!
+            #
+            #      Solution? We count in Python.
+            
+            result = {"disk":0, "ram":0, "virtual_cpus":0}
+            for i in base:
+                result["disk"] += i["disk_size"]
+                result["ram"] += i["ram"]
+                result["virtual_cpus"] += i["virtual_cpus"]
+            return result
+        
+        else:
+            base = base.filter(
+                cluster__in=Cluster.objects.filter(virtual_machines__owner=owner.user)
+            ).values("cluster__hostname", "ram", "disk_size", "virtual_cpus") 
+            
+            result = {}
+            for i in base:
+                hostname = i["cluster__hostname"]
+                if hostname not in result.keys():
+                    result[hostname] = {
+                        "disk": i["disk_size"],
+                        "ram":  i["ram"],
+                        "virtual_cpus": i["virtual_cpus"],
+                    }
+                else:
+                    result[hostname]["disk"] += i["disk_size"]
+                    result[hostname]["ram"] += i["ram"]
+                    result[hostname]["virtual_cpus"] += i["virtual_cpus"]
+            return result
 
 
 class Profile(ClusterUser):
