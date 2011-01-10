@@ -84,7 +84,8 @@ def overview(request):
             missing += len(cluster.missing_in_ganeti)
 
     else:
-        vms = user.get_objects_any_perms(VirtualMachine, groups=True)
+        #vms = user.get_objects_any_perms(VirtualMachine, groups=True)
+        vms = VirtualMachine.objects.filter(owner=user)
 
         # content type of VirtualMachine model
         # NOTE: done that way because if behavior of GenericForeignType
