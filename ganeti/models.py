@@ -36,7 +36,7 @@ from django.utils.translation import ugettext_lazy as _
 import re
 
 from django.db import models
-from django.db.models import Sum, F
+from django.db.models import Sum, F, Q
 from django.db.models.signals import post_save, post_syncdb
 
 from logs.models import LogItem
@@ -117,6 +117,56 @@ ssh_public_key_re = re.compile(
     r'^ssh-(rsa|dsa|dss) [A-Z0-9+/=]+ .+$', re.IGNORECASE)
 validate_sshkey = RegexValidator(ssh_public_key_re,
     _(u"Enter a valid SSH public key with comment (SSH2 RSA or DSA)."), "invalid")
+
+
+class GanetiErrorManager(models.Manager):
+    def store_error(self, msg, code=None, cluster=None, vm=None):
+        """
+        Manager method used to store errors
+        """
+        if isinstance(cluster, str):
+            cluster = Cluster.objects.get(Q(hostname=cluster) | Q(slug=cluster))
+
+        if isinstance(vm, VirtualMachine):
+            cluster = vm.cluster
+
+        elif isinstance(vm, str) and isinstance(cluster, Cluster):
+            vm = VirtualMachine.objects.get(cluster=cluster, hostname=vm)
+
+        m = self.model(
+            id = None,
+            msg = msg,
+            code = code,
+            timestamp = None,
+            user = user,
+            cluster = cluster,
+            vm = vm,
+        )
+        m.save()
+        return m.id
+
+
+class GanetiError(models.Model):
+    """
+    Class for storing errors which occured in Ganeti
+    """
+    msg = models.TextField()
+    code = models.PositiveSmallIntegerField(blank=True, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(User, related_name="ganeti_errors")
+
+    cluster = models.ForeignKey("Cluster", null=True, blank=True,
+            related_name="ganeti_errors")
+    virtual_machine = models.ForeignKey("VirtualMachine", null=True, blank=True,
+            related_name="ganeti_errors")
+
+    objects = GanetiErrorManager()
+
+    class Meta:
+        ordering = ("-timestamp", "code", "msg")
+
+    def __unicode__(self):
+        base = "[%s] %s" % (self.timestamp, self.msg)
 
 
 class CachedClusterObject(models.Model):
