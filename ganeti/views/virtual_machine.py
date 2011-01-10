@@ -917,29 +917,27 @@ class NewVirtualMachineForm(forms.Form):
                     msg = u"Owner does not have permissions for this cluster."
 
                 # check quota
-                start = data.get('start', True)
+                start = data['start']
                 quota = cluster.get_quota(owner)
                 if quota.values():
-                    used = owner.used_resources(cluster)
-                    used_running = owner.used_resources(cluster, only_running=True)
+                    used = owner.used_resources(cluster, only_running=True)
                     
-                    ram = used_running['ram'] + data.get('ram', 0)
-                    if quota['ram'] is not None and ram > quota['ram'] and start:
-                        del data['ram']
-                        q_msg = u"Owner does not have enough ram remaining on this cluster. You may choose to not automatically start the instance or reduce the amount of ram."
-                        self._errors["ram"] = self.error_class([q_msg])
+                    if start and quota['ram'] is not None and \
+                        (used['ram'] + data['ram']) > quota['ram']:
+                            del data['ram']
+                            q_msg = u"Owner does not have enough ram remaining on this cluster. You may choose to not automatically start the instance or reduce the amount of ram."
+                            self._errors["ram"] = self.error_class([q_msg])
                     
-                    disk = used['disk'] + data.get('disk_size', 0)
-                    if quota['disk'] and disk > quota['disk']:
+                    if quota['disk'] and used['disk'] + data['disk_size'] > quota['disk']:
                         del data['disk_size']
                         q_msg = u"Owner does not have enough diskspace remaining on this cluster."
                         self._errors["disk_size"] = self.error_class([q_msg])
                     
-                    vcpus = used_running['virtual_cpus'] + data.get('vcpus', 0)
-                    if quota['virtual_cpus'] and vcpus > quota['virtual_cpus'] and start:
-                        del data['vcpus']
-                        q_msg = u"Owner does not have enough virtual cpus remaining on this cluster. You may choose to not automatically start the instance or reduce the amount of virtual cpus."
-                        self._errors["vcpus"] = self.error_class([q_msg])
+                    if start and quota['virtual_cpus'] is not None and \
+                        (used['virtual_cpus'] + data['vcpus']) > quota['virtual_cpus']:
+                            del data['vcpus']
+                            q_msg = u"Owner does not have enough virtual cpus remaining on this cluster. You may choose to not automatically start the instance or reduce the amount of virtual cpus."
+                            self._errors["vcpus"] = self.error_class([q_msg])
             
             if msg:
                 self._errors["owner"] = self.error_class([msg])
