@@ -168,11 +168,7 @@ li {
  * Errors, failures and administration links - status page
  *
  **/
-#content .errors_list {
-    margin-top: 2em;
-    padding: 5px;
-}
-#content .administration {
+#content #errors_list, #content #usage_summary, #content #administration {
     margin-top: 2em;
     padding: 5px;
 }
@@ -282,6 +278,7 @@ div.icon_stopped {background:url(/media/images/icons/stop.png);}
 
 .add {background:url(/media/images/icons/add.png) no-repeat;}
 .reboot {background:url(/media/images/icons/arrow_refresh.png) no-repeat;}
+.reinstall {background:url(/media/images/icons/arrow_refresh.png) no-repeat;}
 .shutdown {background:url(/media/images/icons/stop.png) no-repeat;}
 .startup {background:url(/media/images/icons/add.png) no-repeat;}
 

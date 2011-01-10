@@ -66,7 +66,7 @@
             {% endifnotequal %}
         {% endif %}
         
-        $("#actions a").not('.delete').click(function() {
+        $("#actions a").not('.delete, .reinstall').click(function() {
             if (actions_enabled){
                 if ((this.className == 'button shutdown' || this.className == 'button reboot')
                     && !(confirm('Are you sure you want to ' + this.title + '?'))) {
@@ -138,7 +138,14 @@
             actions_enabled = true;
         } else {
             $("#messages").empty();
-            op = format_op(data['ops'][0]['OP_ID']);
+            sub_op = 0;
+            for (i=0; i<data['opstatus'].length; ++i) {
+                if (data['opstatus'][i] != 'success') {
+                    sub_op = i;
+                    break;
+                }
+            }
+            op = format_op(data['ops'][sub_op]['OP_ID']);
             html = $("<li><h3>"+op+"</h3></li>");
             $("#messages").append(html)
             
@@ -158,9 +165,11 @@
         }
     }
 
+    /* XXX: temporarily (maybe permanently) using this for reporting
+    when a quota limit has been encountered on startup */
     function display_ganeti_error(msg) {
         $("#messages").empty();
-        html = "<li class='error'>Error in Ganeti API:<p>" + msg + "</p></li>";
+        html = "<li class='error'>Error:<p>" + msg + "</p></li>";
         $("#messages").append(html);
     }
 
@@ -202,6 +211,7 @@
             {% with instance.cluster.username as username %}
                 {% if remove and username %}
                     <li><a class="button delete" href="{% url instance-delete cluster.slug instance.hostname %}">Delete</a></li>
+                    <li><a class="button reinstall" href="{% url instance-reinstall cluster.slug instance.hostname %}">Reinstall</a></li>
                 {% endif %}
                 {% if admin or power and username %}
                     {% ifequal instance.info.status "running" %}

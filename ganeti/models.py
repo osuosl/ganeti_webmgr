@@ -1,3 +1,5 @@
+# coding: utf-8
+
 # Copyright (C) 2010 Oregon State University et al.
 # Copyright (C) 2010 Greek Research and Technology Network
 #
@@ -34,7 +36,7 @@ from django.utils.translation import ugettext_lazy as _
 import re
 
 from django.db import models
-from django.db.models import Sum
+from django.db.models import Sum, F
 from django.db.models.signals import post_save, post_syncdb
 
 from object_permissions.registration import register
@@ -541,7 +543,6 @@ class VirtualMachine(CachedClusterObject):
             if not result:
                 return False, False, False
             else:
-                # in future: maybe need to extract host from VNC_PROXY
                 return proxy_server[0], int(result), password
 
         else:
@@ -719,8 +720,8 @@ class ClusterUser(models.Model):
     """
     Base class for objects that may interact with a Cluster or VirtualMachine.
     """
-    clusters = models.ManyToManyField(Cluster, through='Quota',
-                                      related_name='users')
+    #clusters = models.ManyToManyField(Cluster, through='Quota',
+    #                                  related_name='users')
     name = models.CharField(max_length=128)
     real_type = models.ForeignKey(ContentType, editable=False, null=True)
 
@@ -738,16 +739,53 @@ class ClusterUser(models.Model):
     def __unicode__(self):
         return self.name
 
-    @property
-    def used_resources(self):
+    def used_resources(self, cluster=None, only_running=False):
         """
-        Return dictionary of total resources used by Virtual Machines that this
-        ClusterUser owns
+        Return dictionary of total resources used by VMs that this ClusterUser
+        has perms to.
+        @param cluster  if set, get only VMs from specified cluster
+        @param only_running  if set, get only running VMs
         """
-        return self.virtual_machines.exclude(ram=-1, disk_size=-1, \
-                                             virtual_cpus=-1) \
-                            .aggregate(disk=Sum('disk_size'), ram=Sum('ram'), \
-                                       virtual_cpus=Sum('virtual_cpus'))
+        # XXX - order_by must be cleared or it breaks annotation grouping since
+        #       the default order_by field is also added to the group_by clause
+        base = self.virtual_machines.all().order_by()
+
+        if only_running:
+            base = base.filter(status="running")
+        base = base.exclude(ram=-1, disk_size=-1, virtual_cpus=-1)
+        
+        if cluster:
+            base = base.filter(cluster=cluster)
+            result = base.aggregate(ram=Sum('ram'), disk=Sum('disk_size'), \
+                                  virtual_cpus=Sum('virtual_cpus'))
+            
+            # repack with zeros instead of Nones
+            if result['disk'] is None:
+                result['disk'] = 0
+            if result['ram'] is None:
+                result['ram'] = 0
+            if result['virtual_cpus'] is None:
+                result['virtual_cpus'] = 0
+            return result
+        
+        else:
+            base = base.values('cluster').annotate(ram=Sum('ram'), \
+                                            disk=Sum('disk_size'), \
+                                            virtual_cpus=Sum('virtual_cpus'))
+            
+            # repack as dictionary
+            result = {}
+            for used in base:
+                # repack with zeros instead of Nones
+                if used['disk'] is None:
+                    used['disk'] = 0
+                if used['ram'] is None:
+                    used['ram'] = 0
+                if used['virtual_cpus'] is None:
+                    used['virtual_cpus'] = 0
+                result[used.pop('cluster')] = used
+                
+            return result
 
 
 class Profile(ClusterUser):

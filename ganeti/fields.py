@@ -107,7 +107,18 @@ class DataVolumeField(CharField):
 
     # this gets called before validate
     def to_python(self, value):
-        # returns an integer MB, because everyone needs more than 64 KB
+        """
+        Turn a bytecount into an integer, in megabytes.
+
+        XXX looks like it's actually mebibytes
+        XXX this should handle the SI base2 versions as well (MiB, GiB, etc.)
+        XXX should round up to the next megabyte?
+        """
+
+        if value is None:
+            # XXX is this the right thing?
+            return None
+
         value = value.upper().strip()
 
         if len(value) == 0:

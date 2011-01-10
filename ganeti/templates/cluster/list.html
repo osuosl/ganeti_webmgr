@@ -45,12 +45,8 @@
             <th>Hypervisor</th>
             <th>Master node</th>
             <th>Nodes</th>
-            {% comment %}
-            <!-- This should be changed to instance-list at a later date -->
-            {% endcomment %}
             <th>VMs</th>
             <th>Free resources</th>
-            <!--<th>Free disk</th>-->
         </tr>
     </thead>
     <tbody>
@@ -71,7 +67,6 @@
                 <td>{{ nodes|length }}</td>
                 <td>{{ cluster.virtual_machines.count }}</td>
                 <td class="resources">RAM: {% cluster_memory cluster %}<br/>Disk: {% cluster_disk cluster %}</td>
-                <!--<td class="disk">{% cluster_disk cluster %}</td>-->
             </tr>
         {% endwith %}
         {% endwith %}

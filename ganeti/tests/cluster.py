@@ -468,8 +468,8 @@ class TestClusterViews(TestCase):
         self.assertTemplateUsed(response, 'cluster/list.html')
         clusters = response.context['cluster_list']
         self.assert_(cluster in clusters)
-        self.assert_(cluster1 in clusters)
-        self.assertEqual(2, len(clusters))
+        self.assert_(cluster1 not in clusters)
+        self.assertEqual(1, len(clusters))
         
         # authorized (superuser)
         self.assert_(c.login(username=user2.username, password='secret'))
@@ -483,39 +483,6 @@ class TestClusterViews(TestCase):
         self.assert_(cluster2 in clusters)
         self.assert_(cluster3 in clusters)
         self.assertEqual(4, len(clusters))
-
-    def test_view_overview(self):
-        """
-        Tests overview (status) page
-        """
-        # TODO: in future, add Ganeti errors checking
-        cluster1 = Cluster(hostname='cluster1', slug='cluster1')
-        cluster1.save()
-        job1 = Job.objects.create(job_id=1234, obj=cluster1, cluster=cluster,
-                finished="2011-01-05 21:59", status="error")
-
-        url = "/clusters/overview/"
-        result = self.validate_get_configurable(url, [], "cluster/overview.html",
-            "text/html; charset=utf-8", 200, ["admin","create_vm"])
-
-        clusters = result[0].context['cluster_list']
-        self.assert_(cluster in clusters)
-        self.assertEqual(1, len(clusters))
-        self.assert_(job1 in result[0].context["job_errors"])
-        self.assertEqual(0, result[0].context["orphaned"])
-        self.assertEqual(0, result[0].context["missing"])
-        # 2 * len(clusters)
-        self.assertEqual(2, result[0].context["import_ready"])
-
-        clusters = result[1].context['cluster_list']
-        self.assert_(cluster in clusters)
-        self.assert_(cluster1 in clusters)
-        self.assertEqual(2, len(clusters))
-        self.assert_(job1 in result[0].context["job_errors"])
-        self.assertEqual(0, result[1].context["orphaned"])
-        self.assertEqual(0, result[1].context["missing"])
-        # 2 * len(clusters)
-        self.assertEqual(4, result[1].context["import_ready"])
 
     def test_view_add(self):
         """
@@ -547,7 +514,6 @@ class TestClusterViews(TestCase):
                     description='testing editing clusters',
                     username='tester',
                     password = 'secret',
-                    confirm_password = 'secret',
                     virtual_cpus=1,
                     disk=2,
                     ram=3
@@ -573,7 +539,6 @@ class TestClusterViews(TestCase):
             self.assertEquals('text/html; charset=utf-8', response['content-type'])
             self.assertTemplateUsed(response, 'cluster/detail.html')
             cluster = response.context['cluster']
-            del data_['confirm_password']
             for k, v in data_.items():
                 self.assertEqual(v, getattr(cluster, k))
             Cluster.objects.all().delete()
@@ -593,7 +558,6 @@ class TestClusterViews(TestCase):
         data_ = data.copy()
         del data_['username']
         del data_['password']
-        del data_['confirm_password']
         response = c.post(url, data_, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
@@ -604,7 +568,7 @@ class TestClusterViews(TestCase):
         Cluster.objects.all().delete()
         
         #test username/password/confirm_password relationships
-        relation = ['username', 'password', 'confirm_password']
+        relation = ['username', 'password']
         for property in relation:
             data_ = data.copy()
             del data_[property]
@@ -612,30 +576,6 @@ class TestClusterViews(TestCase):
             self.assertEqual(200, response.status_code)
             self.assertEquals('text/html; charset=utf-8', response['content-type'])
             self.assertTemplateUsed(response, 'cluster/edit.html')
-        
-        data_ = data.copy()
-        del data_['password']
-        del data_['confirm_password']
-        response = c.post(url, data_, follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/edit.html')
-        
-        data_ = data.copy()
-        del data_['username']
-        del data_['confirm_password']
-        response = c.post(url, data_, follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/edit.html')
-        
-        data_ = data.copy()
-        del data_['password']
-        del data_['username']
-        response = c.post(url, data_, follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/edit.html')
         
         # test unique fields
         response = c.post(url, data)

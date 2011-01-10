@@ -29,6 +29,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
+from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.http import HttpResponse, HttpResponseRedirect, \
     HttpResponseNotAllowed, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response
@@ -86,6 +87,53 @@ def delete(request, cluster_slug, instance):
     
     return HttpResponseNotAllowed(["GET","DELETE"])
 
+@login_required
+def reinstall(request, cluster_slug, instance):
+    """
+    Reinstall a VM.
+    """
+
+    user = request.user
+    instance = get_object_or_404(VirtualMachine, cluster__slug=cluster_slug,
+        hostname=instance)
+
+    # Check permissions.
+    # Reinstalling is somewhat similar to deleting in that you destroy data,
+    # so use that for now.
+    if not (
+        user.is_superuser or
+        user.has_any_perms(instance, ["remove", "admin"]) or
+        user.has_perm("admin", instance.cluster)
+        ):
+        return render_403(request, 'You do not have sufficient privileges')
+
+    if request.method == 'GET':
+        return render_to_response("virtual_machine/reinstall.html",
+            {'vm': instance, 'oschoices': cluster_os_list(instance.cluster),
+             'current_os': instance.operating_system, 'submitted': False},
+            context_instance=RequestContext(request),
+        )
+      
+    elif request.method == 'POST':
+        # Reinstall instance
+        try:
+            # no_startup=True prevents quota circumventions. possible future solution would be a checkbox
+            # asking whether they want to start up, and check quota here if they do (would also involve
+            # checking whether this VM is already running and subtracting that)
+            job_id = instance.rapi.ReinstallInstance(instance.hostname, os=request.POST['os'], no_startup=True)
+        except KeyError:
+            job_id = instance.rapi.ReinstallInstance(instance.hostname, os=instance.operating_system, no_startup=True)
+
+        sleep(2)
+        jobstatus = instance.rapi.GetJobStatus(job_id)
+
+        job = Job.objects.create(job_id=job_id, obj=instance, cluster=instance.cluster)
+        VirtualMachine.objects.filter(id=instance.id).update(last_job=job, ignore_cache=True)
+        
+        return HttpResponseRedirect(
+            reverse('instance-detail', args=[instance.cluster.slug, instance.hostname]))
+    
+    return HttpResponseNotAllowed(["GET","POST"])
 
 @login_required
 def novnc(request, cluster_slug, instance):
@@ -156,6 +204,21 @@ def startup(request, cluster_slug, instance):
         user.has_perm('admin', vm.cluster)):
             return render_403(request, 'You do not have permission to start up this virtual machine')
 
+    # superusers bypass quota checks
+    if not user.is_superuser and vm.owner:
+        # check quota
+        quota = vm.cluster.get_quota(vm.owner)
+        if any(quota.values()):
+            used = vm.owner.used_resources(vm.cluster, only_running=True)
+            
+            if quota['ram'] is not None and (used['ram'] + vm.ram) > quota['ram']:
+                msg = 'Owner does not have enough RAM remaining on this cluster to start the virtual machine.'
+                return HttpResponse(json.dumps([0, msg]), mimetype='application/json')
+            
+            if quota['virtual_cpus'] and (used['virtual_cpus'] + vm.virtual_cpus) > quota['virtual_cpus']:
+                msg = 'Owner does not have enough Virtual CPUs remaining on this cluster to start the virtual machine.'
+                return HttpResponse(json.dumps([0, msg]), mimetype='application/json')
+
     if request.method == 'POST':
         try:
             job = vm.startup()
@@ -211,8 +274,62 @@ def ssh_keys(request, cluster_slug, instance, api_key):
     return HttpResponse(json.dumps(keys_list), mimetype="application/json")
 
 
+def render_vms(request, query):
+    """
+    Helper function for paginating a virtual machine query
+    """
+    paginator = Paginator(query, 10)
+
+    page = 1
+    if request.is_ajax:
+        query = request.GET.get('page')
+        if query is not None:
+            page = query
+
+    try:
+        vms = paginator.page(page)
+    except (EmptyPage, InvalidPage):
+        vms = paginator.page(paginator.num_pages)
+
+    return vms
+
+
 @login_required
 def list_(request):
+    """
+    View for displaying a list of VirtualMachines
+    """
+    user = request.user
+
+    # there are 3 cases
+    #1) user is superuser
+    if user.is_superuser:
+        vms = VirtualMachine.objects.all()
+        can_create = True
+
+    #2) user has any perms on any VM
+    #3) user belongs to the group which has perms on any VM
+    else:
+        vms = user.get_objects_any_perms(VirtualMachine, groups=True)
+        can_create = user.has_any_perms(Cluster, ['create_vm', ])
+
+    # paginate, sort
+    vms = render_vms(request, vms)
+
+    return render_to_response('virtual_machine/list.html', {
+        'vms':vms,
+        'can_create':can_create,
+        },
+        context_instance=RequestContext(request),
+    )
+
+
+@login_required
+def vm_table(request):
+    """
+    View for displaying the virtual machine table.  This is used for ajax calls
+    to reload the table.   Usually because of a page or sort change.
+    """
     user = request.user
 
     # there are 3 cases
@@ -234,22 +351,21 @@ def list_(request):
         vm_type = ContentType.objects.get_for_model(VirtualMachine)
         job_errors = Job.objects.filter( content_type=vm_type, object_id__in=vms,
                 status="error" ).order_by("finished")
-    
-    # TODO: implement ganeti errors
-    ganeti_errors = ["something",]
+    vms = render_vms(request, vms)
 
-    return render_to_response('virtual_machine/list.html', {
+    return render_to_response('virtual_machine/inner_table.html', {
         'vms':vms,
         'can_create':can_create,
-        'ganeti_errors':ganeti_errors,
-        'job_errors':job_errors,
-        },
+       },
         context_instance=RequestContext(request),
     )
 
 
 @login_required
 def detail(request, cluster_slug, instance):
+    """
+    Display details of virtual machine.
+    """
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
 
@@ -367,6 +483,7 @@ def create(request, cluster_slug=None):
         form = NewVirtualMachineForm(user, None, request.POST)
         if form.is_valid():
             data = form.cleaned_data
+            start = data['start']
             owner = data['owner']
             cluster = data['cluster']
             hostname = data['hostname']
@@ -412,7 +529,7 @@ def create(request, cluster_slug=None):
                 job_id = cluster.rapi.CreateInstance('create', hostname,
                         disk_template,
                         [{"size": disk_size, }],[{'mode':nicmode, 'link':niclink, }],
-                        os=os, vcpus=vcpus,
+                        start=start, os=os, vcpus=vcpus,
                         pnode=pnode, snode=snode,
                         name_check=name_check, ip_check=name_check,
                         iallocator=iallocator_hostname,
@@ -657,9 +774,12 @@ class NewVirtualMachineForm(forms.Form):
     ]
     bootchoices = [
         ('disk', 'Hard Disk'),
-        ('cdrom', 'CD-ROM')
+        ('cdrom', 'CD-ROM'),
+        ('network', 'Network'),
     ]
 
+    start = forms.BooleanField(label='Start up after creation',
+                               initial=True, required=False)
     owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label='Owner')
     cluster = forms.ModelChoiceField(queryset=Cluster.objects.none(), label='Cluster')
     hostname = forms.RegexField(label='Instance Name', regex=FQDN_RE,
@@ -800,30 +920,28 @@ class NewVirtualMachineForm(forms.Form):
                     msg = u"Owner does not have permissions for this cluster."
 
                 # check quota
+                start = data['start']
                 quota = cluster.get_quota(owner)
                 if quota.values():
-                    used = owner.used_resources
-                    if used['ram']:
-                        ram = used['ram'] + data.get('ram', 0)
-                        if ram > quota['ram']:
+                    used = owner.used_resources(cluster, only_running=True)
+                    
+                    if start and quota['ram'] is not None and \
+                        (used['ram'] + data['ram']) > quota['ram']:
                             del data['ram']
-                            q_msg = u"Owner does not have enough ram remaining on this cluster."
+                            q_msg = u"Owner does not have enough ram remaining on this cluster. You may choose to not automatically start the instance or reduce the amount of ram."
                             self._errors["ram"] = self.error_class([q_msg])
-
-                    if used['disk']:
-                        disk = used['disk'] + data.get('disk_size', 0)
-                        if disk > quota['disk']:
-                           del data['disk_size']
-                           q_msg = u"Owner does not have enough diskspace remaining on this cluster."
-                           self._errors["disk_size"] = self.error_class([q_msg])
-
-                    if used['virtual_cpus']:
-                        vcpus = used['virtual_cpus'] + data.get('vcpus', 0)
-                        if vcpus > quota['virtual_cpus']:
-                           del data['vcpus']
-                           q_msg = u"Owner does not have enough virtual cpus remaining on this cluster."
-                           self._errors["vcpus"] = self.error_class([q_msg])
-
+                    
+                    if quota['disk'] and used['disk'] + data['disk_size'] > quota['disk']:
+                        del data['disk_size']
+                        q_msg = u"Owner does not have enough diskspace remaining on this cluster."
+                        self._errors["disk_size"] = self.error_class([q_msg])
+                    
+                    if start and quota['virtual_cpus'] is not None and \
+                        (used['virtual_cpus'] + data['vcpus']) > quota['virtual_cpus']:
+                            del data['vcpus']
+                            q_msg = u"Owner does not have enough virtual cpus remaining on this cluster. You may choose to not automatically start the instance or reduce the amount of virtual cpus."
+                            self._errors["vcpus"] = self.error_class([q_msg])
+            
             if msg:
                 self._errors["owner"] = self.error_class([msg])
                 del data['owner']

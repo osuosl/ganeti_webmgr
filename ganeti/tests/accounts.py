@@ -134,7 +134,7 @@ class TestAccountViews(TestCase):
         response = c.post(url, data, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/list.html')
+        self.assertTemplateUsed(response, 'overview.html')
     
     def test_view_logout(self):
         """

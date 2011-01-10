@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load webmgr_tags %}
+
+{% block title %}Reinstall Virtual Machine{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}/css/delete.css"/>
+{% endblock %}
+
+{% block content %}
+
+{% if not submitted %}
+
+<div id="confirm">
+    <div class="message">
+        Are you sure you want to reinstall this virtual machine?  This action
+        can not be undone. The contents of the virtual machine will be lost.
+        <br />While the reinstall is in progress, the detail page will indicate that a "Instance Shutdown" job is running.
+        <br />Once the reinstall is complete, you can click "Start" to boot up the virtual machine.
+        <ul><li>{{vm.hostname}}</li></ul>
+        <br />Warning: This may not work if you choose an operating system other than
+        the one this virtual machine was initally installed with. If a
+        reinstallation is unsuccessful, reinstall with the virtual machine's
+        original operating system.
+    </div>
+    <form method="post">
+        <label for="os">Operating System</label>
+        <select name="os" id="os">
+{% for osgroup in oschoices %}
+            <optgroup label="{{ osgroup.0 }}">
+    {% for oschoice in osgroup.1 %}
+        {% if oschoice.0 == current_os %}
+                <option value="{{ oschoice.0 }}" selected="selected">
+                    {{ oschoice.1 }}</option>
+        {% else %}
+                <option value="{{ oschoice.0 }}">{{ oschoice.1 }}</option>
+        {% endif %}
+    {% endfor %}
+            </optgroup>
+{% endfor %}
+        </select><br /><br />
+
+        <input id="reinstall" type="submit" value="Reinstall" />
+    </form>
+</div>
+
+{% else %}
+<div id="success" style="display:block">
+    <!-- This never gets shown with the current code, since it redirects straight
+         back to the detail page. -->
+</div>
+{% endif %}
+
+{% endblock %}

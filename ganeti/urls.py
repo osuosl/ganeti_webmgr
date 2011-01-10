@@ -25,8 +25,10 @@ instance = '/(?P<instance>[^/]+)'
 
 # General
 urlpatterns = patterns('ganeti.views.general',
-    #   Index page
-    url(r'^$', 'index', name="index"),
+    #   Index page - it's status page
+    url(r'^$', 'overview', name="index"),
+    #   Status page
+    url(r'^overview/?$', 'overview', name="overview"),
 )
 
 # Users
@@ -47,8 +49,6 @@ urlpatterns += patterns('ganeti.views.users',
 
 # Clusters
 urlpatterns += patterns('ganeti.views.cluster',
-    #   Status page
-    url(r'^clusters/overview/?$', 'overview', name="cluster-overview"),
     #   List
     url(r'^clusters/?$', 'list_', name="cluster-list"),
     #   Add
@@ -79,6 +79,9 @@ urlpatterns += patterns('ganeti.views.virtual_machine',
     url(r'^vm/add/options/$', 'cluster_options', name="instance-create-cluster-options"),
     url(r'^vm/add/defaults/$', 'cluster_defaults', name="instance-create-cluster-defaults"),
     url(r'^vm/add/%s/?$' % cluster_slug, 'create', name="instance-create"),
+
+    #  VM Table
+    url(r'^vm/table/$', 'vm_table', name="virtualmachine-table"),
     
     #  Detail
     url(r'^%s/?$' % vm_prefix, 'detail', name="instance-detail"),
@@ -96,6 +99,9 @@ urlpatterns += patterns('ganeti.views.virtual_machine',
 
     # Delete
     url(r"^%s/delete/?$" % vm_prefix, "delete", name="instance-delete"),
+
+    # Reinstall
+    url(r"^%s/reinstall/?$" % vm_prefix, "reinstall", name="instance-reinstall"),
 
     # SSH Keys
     url(r'^%s/keys/(?P<api_key>\w+)/?$' % vm_prefix, "ssh_keys", name="instance-keys"),
