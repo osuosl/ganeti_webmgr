@@ -313,6 +313,9 @@ def list_(request):
         vms = user.get_objects_any_perms(VirtualMachine, groups=True)
         can_create = user.has_any_perms(Cluster, ['create_vm', ])
 
+    # paginate, sort
+    vms = render_vms(request, vms)
+
     return render_to_response('virtual_machine/list.html', {
         'vms':vms,
         'can_create':can_create,
