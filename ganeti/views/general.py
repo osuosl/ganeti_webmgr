@@ -64,7 +64,7 @@ def overview(request):
     ganeti_errors = ["simulation"]
 
     if admin:
-        vms = VirtualMachine.objects.filter(owner=user)
+        vms = VirtualMachine.objects.filter(owner=user.get_profile())
         #vms = None
 
         job_errors = Job.objects.filter(cluster__in=cluster_list, status="error"). \
@@ -86,7 +86,7 @@ def overview(request):
 
     else:
         #vms = user.get_objects_any_perms(VirtualMachine, groups=True)
-        vms = VirtualMachine.objects.filter(owner=user)
+        vms = VirtualMachine.objects.filter(owner=user.get_profile())
 
         # content type of VirtualMachine model
         # NOTE: done that way because if behavior of GenericForeignType
@@ -106,9 +106,9 @@ def overview(request):
             "used": resources[cluster],
             "set": Cluster.objects.get(hostname=cluster).get_quota(owner),
         }
-        if vms:
-            quota[cluster]["running"] = vms.filter(status="running").count()
-            quota[cluster]["total"] = vms.count()
+        #if vms:
+        quota[cluster]["running"] = vms.filter(status="running").count()
+        quota[cluster]["total"] = vms.count()
 
     return render_to_response("overview.html", {
         'admin':admin,

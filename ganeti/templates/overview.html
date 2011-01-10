@@ -127,7 +127,6 @@
 
             {% if not res.set.ram %}
                 <td>{{ res.used.ram|render_storage }}</td>
-                <td>{{ res.used.virtual_cpus }}</td>
             {% else %}
                 {% if res.used.ram > res.set.ram %}
                 <td>
@@ -157,7 +156,7 @@
 </table>
 </div>
 <script type="text/javascript">
-    $("#usage_summary .ram, #quota_consumption .disk, #quota_consumption .vcpus").progressBar(PBAR2_CONF);
+    $("#usage_summary .ram, #usage_summary .disk, #usage_summary .vcpus").progressBar(PBAR2_CONF);
 </script>
 {% endif %}
 
