@@ -208,17 +208,17 @@ def startup(request, cluster_slug, instance):
     if not user.is_superuser and vm.owner:
         # check quota
         quota = vm.cluster.get_quota(vm.owner)
-        if quota.values():
-            used_running = vm.owner.used_resources_running
-
-            used_running['ram'] = 0 if used_running['ram'] is None else used_running['ram']
-            ram = used_running['ram'] + vm.ram
+        if any(quota.values()):
+            used = vm.owner.used_resources(vm.cluster, only_running=True)
+            
+            used['ram'] = 0 if used['ram'] is None else used['ram']
+            ram = used['ram'] + vm.ram
             if quota['ram'] is not None and ram > quota['ram']:
                 msg = 'Owner does not have enough RAM remaining on this cluster to start the virtual machine.'
                 return HttpResponse(json.dumps([0, msg]), mimetype='application/json')
-
-            used_running['virtual_cpus'] = 0 if used_running['virtual_cpus'] is None else used_running['virtual_cpus']
-            vcpus = used_running['virtual_cpus'] + vm.virtual_cpus
+            
+            used['virtual_cpus'] = 0 if used['virtual_cpus'] is None else used['virtual_cpus']
+            vcpus = used['virtual_cpus'] + vm.virtual_cpus
             if quota['virtual_cpus'] and vcpus > quota['virtual_cpus']:
                 msg = 'Owner does not have enough Virtual CPUs remaining on this cluster to start the virtual machine.'
                 return HttpResponse(json.dumps([0, msg]), mimetype='application/json')
@@ -912,7 +912,7 @@ class NewVirtualMachineForm(forms.Form):
                 quota = cluster.get_quota(owner)
                 if quota.values():
                     used = owner.used_resources(cluster)
-                    used_running = owner.used_resources(cluster, running_only=True)
+                    used_running = owner.used_resources(cluster, only_running=True)
                     
                     used_running['ram'] = 0 if used_running['ram'] is None else used_running['ram']
                     ram = used_running['ram'] + data.get('ram', 0)
