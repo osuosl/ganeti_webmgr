@@ -145,11 +145,16 @@ legend {font-size: 1.1em; font-weight:bold; padding-top: 10px;}
 #registration input {width:16em;}
 #registration input.submit {margin-left: 11em; width:6em;}
 
-/* Password Reset Form */
+/* Password Reset Request Form */
 #passwordreset {margin: 2em auto 0em auto; width:50%;}
 #passwordreset p label {width:7.5em;}
 #passwordreset input {width:18em;}
 #passwordreset input.submit {margin-left: 8em; width:6em;}
+
+/* Password Reset Completion Form */
+#passwordreset2 {margin: 2em auto 0em auto; width:53%;}
+#passwordreset2 p label {width:14.5em;}
+#passwordreset2 input.submit {margin-left: 15em; width:6em;}
 
 /* Footer */
 #footer {
