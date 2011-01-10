@@ -3,9 +3,13 @@
 {% block content %}
 
 {% if activation_key %}
-    <p>Account failed to activate. Please contact your administrator.</p>
+    <h1>Activation Failed</h1>
+    <p>There was an error while trying to activate your account. 
+    Please contact your local administrator.</p>
 {% else %}
-    <p>Account activated.</p>
+    <h1>Activation Complete</h1>
+    <p>Your account has been successfully activated. 
+    You may login <a href="{% url auth_login %}">here</a>.</p>
 {% endif %}
 
 {% endblock %}
