@@ -16,6 +16,7 @@
         Are you sure you want to reinstall this virtual machine?  This action
         can not be undone. The contents of the virtual machine will be lost.
         <br />While the reinstall is in progress, the detail page will indicate that a "Instance Shutdown" job is running.
+        <br />Once the reinstall is complete, you can click "Start" to boot up the virtual machine.
         <ul><li>{{vm.hostname}}</li></ul>
         <br />Warning: This may not work if you choose an operating system other than
         the one this virtual machine was initally installed with. If a
@@ -45,10 +46,8 @@
 
 {% else %}
 <div id="success" style="display:block">
-    Reinstall in progress. The virtual machine will automatically start up
-    after a successful reinstallation.
-    <br />If the virtual machine does not start up after a few minutes, try
-    reinstalling with the virtual machine's original operating system.
+    <!-- This never gets shown with the current code, since it redirects straight
+         back to the detail page. -->
 </div>
 {% endif %}
 

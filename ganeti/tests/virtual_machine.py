@@ -582,6 +582,38 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         """
         self.validate_post_only_url('/cluster/%s/%s/startup')
     
+    def test_view_startup_overquota(self):
+        """
+        Test starting a virtual machine that would cause the owner to exceed quota
+        """
+        vm = globals()['vm']
+        args = (cluster.slug, vm.hostname)
+        url = '/cluster/%s/%s/startup'
+
+        # authorized (permission)
+        self.assert_(c.login(username=user.username, password='secret'))
+
+        grant(user, 'admin', vm)
+        cluster.set_quota(user.get_profile(), dict(ram=10, disk=2000, virtual_cpus=10))
+        vm.owner_id = user.get_profile().id
+        vm.ram = 128
+        vm.virtual_cpus = 1
+        vm.save()
+
+        response = c.post(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('application/json', response['content-type'])
+        self.assert_('Owner does not have enough RAM' in response.content)
+        user.revoke('admin', vm)
+        VirtualMachine.objects.all().update(last_job=None)
+        Job.objects.all().delete()        
+
+        # restore values
+        cluster.set_quota(user.get_profile(), dict(ram=10, disk=2000, virtual_cpus=10))
+        vm.owner_id = None
+        vm.ram = -1
+        vm.virtual_cpus = -1
+
     def test_view_shutdown(self):
         """
         Test shutting down a virtual machine
@@ -640,6 +672,108 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual( len(json.loads(response.content)), 0 )
         self.assertNotContains(response, "test@test")
         self.assertNotContains(response, "asd@asd")
+
+    def test_view_create_quota_first_vm(self):
+        # XXX seperated from test_view_create_data since it was polluting the environment for later tests
+        url = '/vm/add/%s'
+        data = dict(cluster=cluster.id,
+                    start=True,
+                    owner=user.get_profile().id, #XXX remove this
+                    hostname='new.vm.hostname',
+                    disk_template='plain',
+                    disk_size=1000,
+                    ram=256,
+                    vcpus=2,
+                    rootpath='/',
+                    nictype='paravirtual',
+                    disk_type = 'paravirtual',
+                    niclink = 'br43',
+                    nicmode='routed',
+                    bootorder='disk',
+                    os='image+ubuntu-lucid',
+                    pnode=cluster.nodes()[0],
+                    snode=cluster.nodes()[1])
+
+
+        # set up for testing quota on user's first VM
+        user2 = User(id=43, username='quotatester')
+        user2.set_password('secret')
+        user2.grant('create_vm', cluster)
+        user2.save()
+        #print user2.__dict__
+        #print user.__dict__
+        profile = user2.get_profile()
+        self.assert_(c.login(username=user2.username, password='secret'))
+
+        # POST - over ram quota (user's first VM)
+        self.assertEqual(profile.used_resources, {'ram': None, 'disk': None, 'virtual_cpus': None})
+        cluster.set_quota(profile, dict(ram=1000, disk=2000, virtual_cpus=10))
+        data_ = data.copy()
+        data_['ram'] = 2000
+        data_['owner'] = profile.id
+        response = c.post(url % '', data_)
+        self.assertEqual(200, response.status_code) # 302 if vm creation succeeds
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
+        
+        # POST - over disk quota (user's first WM)
+        data_ = data.copy()
+        data_['disk_size'] = 9001
+        data_['owner'] = profile.id
+        response = c.post(url % '', data_)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
+        
+        # POST - over cpu quota (user's first VM)
+        data_ = data.copy()
+        data_['vcpus'] = 2000
+        data_['owner'] = profile.id
+        response = c.post(url % '', data_)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
+
+        # POST - over ram quota (user's first VM) (start = False)
+        self.assertEqual(profile.used_resources, {'ram': None, 'disk': None, 'virtual_cpus': None})
+        cluster.set_quota(profile, dict(ram=1000, disk=2000, virtual_cpus=10))
+        data_ = data.copy()
+        data_['start'] = False
+        data_['ram'] = 2000
+        data_['owner'] = profile.id
+        response = c.post(url % '', data_)
+        self.assertEqual(302, response.status_code) # 302 if vm creation succeeds
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTrue(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
+        VirtualMachine.objects.filter(hostname='new.vm.hostname').delete()
+        
+        # POST - over disk quota (user's first VM) (start = False)
+        data_ = data.copy()
+        data_['start'] = False
+        data_['disk_size'] = 9001
+        data_['owner'] = profile.id
+        response = c.post(url % '', data_)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
+        
+        # POST - over cpu quota (user's first VM) (start = False)
+        data_ = data.copy()
+        data_['start'] = False
+        data_['vcpus'] = 2000
+        data_['owner'] = profile.id
+        response = c.post(url % '', data_)
+        self.assertEqual(302, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTrue(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
+        VirtualMachine.objects.filter(hostname='new.vm.hostname').delete()
+
+        # clean up after quota tests
+        self.assert_(c.login(username=user.username, password='secret'))
 
     def test_view_create_data(self):
         """
@@ -711,6 +845,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         vm = VirtualMachine(cluster=cluster, ram=100, disk_size=100, virtual_cpus=2, owner=profile).save()
         data_ = data.copy()
         data_['ram'] = 2000
+        data_['owner'] = profile.id
         response = c.post(url % '', data_)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
@@ -720,6 +855,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         # POST - over disk quota
         data_ = data.copy()
         data_['disk_size'] = 2000
+        data_['owner'] = profile.id
         response = c.post(url % '', data_)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
@@ -729,12 +865,13 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         # POST - over cpu quota
         data_ = data.copy()
         data_['vcpus'] = 2000
+        data_['owner'] = profile.id
         response = c.post(url % '', data_)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'virtual_machine/create.html')
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
-        
+
         # POST invalid owner
         data_ = data.copy()
         data_['owner'] = -1

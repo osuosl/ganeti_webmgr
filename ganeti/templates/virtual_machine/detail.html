@@ -165,9 +165,11 @@
         }
     }
 
+    /* XXX: temporarily (maybe permanently) using this for reporting
+    when a quota limit has been encountered on startup */
     function display_ganeti_error(msg) {
         $("#messages").empty();
-        html = "<li class='error'>Error in Ganeti API:<p>" + msg + "</p></li>";
+        html = "<li class='error'>Error:<p>" + msg + "</p></li>";
         $("#messages").append(html);
     }
 

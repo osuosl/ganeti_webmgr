@@ -749,6 +749,17 @@ class ClusterUser(models.Model):
                             .aggregate(disk=Sum('disk_size'), ram=Sum('ram'), \
                                        virtual_cpus=Sum('virtual_cpus'))
 
+    @property
+    def used_resources_running(self):
+        """
+        Return dictionary of total resources used by running
+        Virtual Machines that this ClusterUser owns
+        """
+        return self.virtual_machines.filter(status='running').exclude(
+                   ram=-1, disk_size=-1, virtual_cpus=-1
+                   ).aggregate(ram=Sum('ram'),
+                   virtual_cpus=Sum('virtual_cpus'))
+
 
 class Profile(ClusterUser):
     """

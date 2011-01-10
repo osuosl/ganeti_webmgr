@@ -41,6 +41,7 @@
     <form method="post">
         <fieldset>
             <h1> New Virtual Machine </h1>
+            {% vmfield form.start %}
             {% vmfield form.owner %}
             {% vmfield form.cluster %}
             {% vmfield form.hostname %}
@@ -108,6 +109,12 @@
         </div>
 
 
+        <div id="help-start">
+            <p>
+            Uncheck this if you don't want the instance to automatically start
+            after creation. If you do so, you can start it manually on the
+            virtual machine detail page.</p>
+        </div>
         <div id="help-name_check">
             <p>
             Check the virtual machine DNS name via the resolver <i>(e.g. in DNS
