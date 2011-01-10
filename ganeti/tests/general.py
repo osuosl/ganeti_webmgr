@@ -135,8 +135,8 @@ class TestGeneralViews(TestCase):
         clusters = result[0].context['cluster_list']
         self.assert_(cluster not in clusters)
         self.assertEqual(0, len(clusters))
-        self.assert_(job in result[0].context["job_errors"])
-        self.assertEqual(1, len(result[0].context["job_errors"]))
+        self.assert_(job not in result[0].context["job_errors"]) # due to no clusters
+        self.assertEqual(0, len(result[0].context["job_errors"]))
         self.assertEqual(0, result[0].context["orphaned"])
         self.assertEqual(0, result[0].context["missing"])
         self.assertEqual(0, result[0].context["import_ready"])

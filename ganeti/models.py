@@ -510,7 +510,7 @@ class VirtualMachine(CachedClusterObject):
         job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
         self.last_job = job
         VirtualMachine.objects.filter(pk=self.id) \
-            .update(last_job=job, stopped=F('stopped')+1, ignore_cache=True)
+            .update(last_job=job, ignore_cache=True)
         return job
 
     def startup(self):
@@ -518,7 +518,7 @@ class VirtualMachine(CachedClusterObject):
         job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
         self.last_job = job
         VirtualMachine.objects.filter(pk=self.id) \
-            .update(last_job=job, run=F('run')+1, ignore_cache=True)
+            .update(last_job=job, ignore_cache=True)
         return job
 
     def reboot(self):
@@ -526,7 +526,7 @@ class VirtualMachine(CachedClusterObject):
         job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
         self.last_job = job
         VirtualMachine.objects.filter(pk=self.id) \
-            .update(last_job=job, stopped=F('stopped')+1, run=F('run')+1, ignore_cache=True)
+            .update(last_job=job, ignore_cache=True)
         return job
 
     def setup_vnc_forwarding(self, sport=''):

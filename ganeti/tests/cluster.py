@@ -468,8 +468,8 @@ class TestClusterViews(TestCase):
         self.assertTemplateUsed(response, 'cluster/list.html')
         clusters = response.context['cluster_list']
         self.assert_(cluster in clusters)
-        self.assert_(cluster1 in clusters)
-        self.assertEqual(2, len(clusters))
+        self.assert_(cluster1 not in clusters)
+        self.assertEqual(1, len(clusters))
         
         # authorized (superuser)
         self.assert_(c.login(username=user2.username, password='secret'))
