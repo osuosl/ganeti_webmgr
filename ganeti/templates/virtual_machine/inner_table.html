@@ -60,25 +60,31 @@
 </tbody>
 </table>
 
-<div class="pagination">
-    <span class="step-links">
-        {% if vms.has_previous %}
-        <a id="prev" href="{% url virtualmachine-table %}?page={{ vms.previous_page_number }}">previous</a>
-        {% else %}
-        <span style="visibility:hidden;">previous</span>
-        {% endif %}
+<ul class="pagination">
+    {% if vms.has_previous %}
+    <li class="previous">
+        <a href="{% url virtualmachine-table %}?page={{ vms.previous_page_number }}">&laquo; Previous</a>
+    </li>
+    {% endif %}
 
-        <span class="current">
-        Page {{ vms.number }} of {{ vms.paginator.num_pages }}.
-        </span>
+    {% for page in vms.paginator.page_range %}
+    {% if page == vms.number %}
+    <li class="active paginator-item">
+        <span>{{ page }}</span>
+    </li>
+    {% else %}
+    <li class="paginator-item">
+        <span>{{ page }}</span>
+    </li>
+    {% endif %}
+    {% endfor %}
 
-        {% if vms.has_next %}
-        <a id="next" href="{% url virtualmachine-table %}?page={{ vms.next_page_number }}">next</a>
-        {% else %}
-        <span style="visibility:hidden;">next</span>
-        {% endif %}
-    </span>
-</div>
+    {% if vms.has_next %}
+    <li class="next">
+        <a href="{% url virtualmachine-table %}?page={{ vms.next_page_number }}">Next &raquo;</a>
+    </li>
+    {% endif %}
+</ul>
 
 {% if ganeti_errors or job_errors %}
 <div class="errors_list">

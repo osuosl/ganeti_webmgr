@@ -368,3 +368,40 @@ tr.group td.name {background:url(/media/images/icons/group.png) no-repeat 0 4px;
     padding-left:0 !important;
     padding-right:0 !important;
 }
+
+.pagination { margin-top: 4px; }
+.pagination ul{border:0; margin:0; padding:0;}
+.pagination li{
+    border:0; margin:0; padding:0;
+    font-size:11px;
+    list-style:none;
+    margin-right:2px;
+}
+.pagination li span{
+    float:left;
+    padding:3px 6px;
+    display:block;
+    border:solid 1px #9aafe5
+    margin-right:2px;
+    text-decoration:none;
+}
+.pagination .next a,
+.pagination .previous a {
+    font-weight:bold;
+}
+.pagination .active {
+    background:#2e6ab1;
+    color:#FFFFFF;
+    font-weight:bold;
+    display:block;
+    float:left;
+}
+.pagination a:link,
+.pagination a:visited {
+    color:#0e509e;
+    display:block;
+    float:left;
+    padding:3px 6px;
+    text-decoration:none;
+}
+.pagination a:hover { border: solid 1px #0e509e; }
