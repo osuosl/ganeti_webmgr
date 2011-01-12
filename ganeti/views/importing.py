@@ -86,22 +86,20 @@ def orphans(request):
                 vm = VirtualMachine.objects.get(id=id)
                 vm.owner = owner
                 vm.save()
-            
+
             # remove updated vms from the list
-            vms = filter(lambda x: unicode(x[0]) not in vm_ids, vms)
-            vms_with_cluster = filter(lambda x: unicode(x[0]) not in vm_ids, vms_with_cluster)
-    
+            vms_with_cluster = [i for i in vms_with_cluster
+                if unicode(i[0]) not in vm_ids]
+
     else:
         # strip cluster from vms
-        vms = [(i[0], i[1]) for i in vms_with_cluster]
-        form = ImportForm(vms)
+        form = ImportForm([(i[0], i[1]) for i in vms_with_cluster])
 
     clusterdict = {}
     for i in clusters:
         clusterdict[i.id] = i.hostname
     vms = [ (i[0], clusterdict[i[2]], i[1]) for i in vms_with_cluster ]
-    vmcount = VirtualMachine.objects.count()
-    
+
     return render_to_response("importing/orphans.html", {
         'vms': vms,
         'form':form,
