@@ -24,9 +24,7 @@ import urllib2
 from time import sleep
 
 from django import forms
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
@@ -36,7 +34,7 @@ from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
 from object_permissions.views.permissions import view_users, view_permissions
-from object_permissions import get_users_any, user_has_any_perms
+from object_permissions import get_users_any
 
 from logs.models import LogItem
 log_action = LogItem.objects.log_action
@@ -74,17 +72,18 @@ def delete(request, cluster_slug, instance):
             {'vm': instance},
             context_instance=RequestContext(request),
         )
-      
+
     elif request.method == 'DELETE':
         # Delete instance
         jobid = instance.rapi.DeleteInstance(instance.hostname)
+        # XXX this is the kiss of fucking death
         sleep(2)
-        jobstatus = instance.rapi.GetJobStatus(jobid)
-        
+        instance.rapi.GetJobStatus(jobid)
+
         instance.delete()
-        
+
         return HttpResponse('1', mimetype='application/json')
-    
+
     return HttpResponseNotAllowed(["GET","DELETE"])
 
 @login_required
@@ -125,7 +124,7 @@ def reinstall(request, cluster_slug, instance):
             job_id = instance.rapi.ReinstallInstance(instance.hostname, os=instance.operating_system, no_startup=True)
 
         sleep(2)
-        jobstatus = instance.rapi.GetJobStatus(job_id)
+        instance.rapi.GetJobStatus(job_id)
 
         job = Job.objects.create(job_id=job_id, obj=instance, cluster=instance.cluster)
         VirtualMachine.objects.filter(id=instance.id).update(last_job=job, ignore_cache=True)
@@ -1031,12 +1030,11 @@ class InstanceConfigForm(forms.Form):
                 socket.setdefaulttimeout(5)
                 try:
                     print "Trying to open"
-                    response = urllib2.urlopen(data)
-                    socket.setdefaulttimeout(oldtimeout)
+                    urllib2.urlopen(data)
                 except ValueError:
-                    socket.setdefaulttimeout(oldtimeout)
                     raise forms.ValidationError('%s is not a valid URL' % data)
                 except: # urllib2 HTTP errors
-                    socket.setdefaulttimeout(oldtimeout)
                     raise forms.ValidationError('Invalid URL')
+                finally:
+                    socket.setdefaulttimeout(oldtimeout)
         return data
