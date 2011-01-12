@@ -188,7 +188,8 @@ class GanetiErrorManager(models.Manager):
             user = vm.owner if vm else None
 
         m, created = self.get_or_create(msg=msg, code=code, cluster=cluster,
-            virtual_machine=vm, user=user, fixed=False, defaults={"id":None, "fixed":False, })
+            virtual_machine=vm, user=user, fixed=False, defaults={"id":None,
+            "fixed":False, })
         """m = self.model(
             id = None,
             msg = msg,
@@ -200,6 +201,7 @@ class GanetiErrorManager(models.Manager):
             virtual_machine = vm,
         )
         m.save()"""
+        # TODO: unneccessary?
         if not created and m.fixed:
             m.fixed = False
             m.save()

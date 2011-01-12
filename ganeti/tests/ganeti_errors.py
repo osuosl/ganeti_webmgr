@@ -34,9 +34,9 @@ Cluster = models.Cluster
 GanetiError = models.GanetiError
 GanetiErrorManager = models.GanetiErrorManager
 
-__all__ = ('TestGanetiErrorObject',)
+__all__ = ('TestGanetiErrorModel',)
 
-class TestGanetiErrorObject(TestCase):
+class TestGanetiErrorModel(TestCase):
     """
     Class for testing ganeti error storage.
     """
@@ -102,7 +102,7 @@ class TestGanetiErrorObject(TestCase):
         vm0.save()
         vm1.save()
 
-        msg = client.GanetiApiError("Simulating an error")
+        msg = client.GanetiApiError("Simulating an error", 777)
         RapiProxy.error = msg
 
         # force an error on all objects to test its capture
@@ -111,14 +111,57 @@ class TestGanetiErrorObject(TestCase):
             self.assertEqual(str(msg), i.error)
 
             # get errors for object
+            # TODO: check .user?
+            # TODO: check log format
             if isinstance(i, VirtualMachine):
-                print GanetiError.objects.get_errors(cluster=i.cluster)
+                errors = GanetiError.objects.get_errors(cluster=i.cluster)
+                self.assertEqual(2, len(errors))
+                self.assertEqual(errors[0].fixed, False)
+                self.assertEqual(errors[1].fixed, False)
+                self.assertEqual(errors[0].msg, str(msg))
+                self.assertEqual(errors[1].msg, str(msg))
+                self.assertEqual(errors[0].code, msg.code)
+                self.assertEqual(errors[1].code, msg.code)
+
+                fixed = GanetiError.objects.get_errors(cluster=i.cluster, fixed=True)
+                self.assertEqual(0, len(fixed))
+
             else:
-                print GanetiError.objects.get_errors(cluster=i)
-            # check for log format
-            # set as fixed
-            # get again in last loop
+                errors = GanetiError.objects.get_errors(cluster=i)
+                self.assertEqual(1, len(errors))
+                self.assertEqual(errors[0].fixed, False)
+                self.assertEqual(errors[0].msg, str(msg))
+                self.assertEqual(errors[0].code, msg.code)
+
+                fixed = GanetiError.objects.get_errors(cluster=i, fixed=True)
+                self.assertEqual(0, len(fixed))
         
+        # set all errors as fixed
+        for i in (cluster0, cluster1, vm0, vm1):
+            if isinstance(i, VirtualMachine):
+                GanetiError.objects.fix_errors(cluster=i.cluster)
+
+                fixed = GanetiError.objects.get_errors(cluster=i.cluster, fixed=True)
+                self.assertEqual(2, len(fixed))
+                self.assertEqual(fixed[0].fixed, True)
+                self.assertEqual(fixed[1].fixed, True)
+                self.assertEqual(fixed[0].msg, str(msg))
+                self.assertEqual(fixed[1].msg, str(msg))
+                self.assertEqual(fixed[0].code, msg.code)
+                self.assertEqual(fixed[1].code, msg.code)
+
+            else:
+                GanetiError.objects.fix_errors(cluster=i)
+
+                fixed = GanetiError.objects.get_errors(cluster=i, fixed=True)
+                self.assertEqual(2, len(fixed))
+                self.assertEqual(fixed[0].fixed, True)
+                self.assertEqual(fixed[1].fixed, True)
+                self.assertEqual(fixed[0].msg, str(msg))
+                self.assertEqual(fixed[1].msg, str(msg))
+                self.assertEqual(fixed[0].code, msg.code)
+                self.assertEqual(fixed[1].code, msg.code)
+
         # clear the error and retry
         RapiProxy.error = None
 
