@@ -120,10 +120,21 @@ validate_sshkey = RegexValidator(ssh_public_key_re,
 
 
 class GanetiErrorManager(models.Manager):
-    def store_error(self, msg, code=None, cluster=None, vm=None):
+
+    # TODO: add functions like "
+
+    def store_error(self, msg, code=None, user=None, cluster=None, vm=None):
         """
         Manager method used to store errors
+
+        @param  msg  error's message
+        @param code  error's code
+        @param user  user who caused the error to appear
+        @param cluster  cluster affected by the error
+        @param vm    virtual machine affected by the error
         """
+        # TODO: check if exists in DB
+
         if isinstance(cluster, str):
             cluster = Cluster.objects.get(Q(hostname=cluster) | Q(slug=cluster))
 
@@ -133,14 +144,18 @@ class GanetiErrorManager(models.Manager):
         elif isinstance(vm, str) and isinstance(cluster, Cluster):
             vm = VirtualMachine.objects.get(cluster=cluster, hostname=vm)
 
+        if not user:
+            user = vm.owner
+
         m = self.model(
             id = None,
             msg = msg,
             code = code,
+            fixed = False,
             timestamp = None,
             user = user,
             cluster = cluster,
-            vm = vm,
+            virtual_machine = vm,
         )
         m.save()
         return m.id
@@ -153,8 +168,14 @@ class GanetiError(models.Model):
     msg = models.TextField()
     code = models.PositiveSmallIntegerField(blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    # determines if the errors still appears or not
+    fixed = models.BooleanField(default=False)
+
+    # user who caused the error to appear
     user = models.ForeignKey(User, related_name="ganeti_errors")
 
+    # cluster and VM affected by the error (if any)
     cluster = models.ForeignKey("Cluster", null=True, blank=True,
             related_name="ganeti_errors")
     virtual_machine = models.ForeignKey("VirtualMachine", null=True, blank=True,
@@ -166,6 +187,7 @@ class GanetiError(models.Model):
         ordering = ("-timestamp", "code", "msg")
 
     def __unicode__(self):
+        # TODO: improve that log format
         base = "[%s] %s" % (self.timestamp, self.msg)
 
 
@@ -280,8 +302,14 @@ class CachedClusterObject(models.Model):
                         .update(cached=self.cached)
                 
             self.error = None
+
         except GanetiApiError, e:
+            # TODO: store errors (via GanetiErrorManager)
             self.error = str(e)
+
+        else:
+            # TODO: remote all not fixed ganeti errors (via GanetiErrorManager)
+            pass
 
     def _refresh(self):
         """
