@@ -114,13 +114,15 @@ def reinstall(request, cluster_slug, instance):
       
     elif request.method == 'POST':
         # Reinstall instance
-        try:
-            # no_startup=True prevents quota circumventions. possible future solution would be a checkbox
-            # asking whether they want to start up, and check quota here if they do (would also involve
-            # checking whether this VM is already running and subtracting that)
-            job_id = instance.rapi.ReinstallInstance(instance.hostname, os=request.POST['os'], no_startup=True)
-        except KeyError:
-            job_id = instance.rapi.ReinstallInstance(instance.hostname, os=instance.operating_system, no_startup=True)
+        if "os" in request.POST:
+            os = request.POST["os"]
+        else:
+            os = instance.operating_system
+
+        # no_startup=True prevents quota circumventions. possible future solution would be a checkbox
+        # asking whether they want to start up, and check quota here if they do (would also involve
+        # checking whether this VM is already running and subtracting that)
+        job_id = instance.rapi.ReinstallInstance(instance.hostname, os=os, no_startup=True)
 
         sleep(2)
         instance.rapi.GetJobStatus(job_id)
