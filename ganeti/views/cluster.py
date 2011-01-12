@@ -20,25 +20,20 @@
 import json
 
 from django import forms
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
-from django.core.paginator import Paginator, InvalidPage, EmptyPage
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.template.defaultfilters import slugify
 
-from object_permissions import get_model_perms, get_user_perms, grant, revoke, \
-    get_users, get_groups, get_group_perms
 from object_permissions.views.permissions import view_users, view_permissions
 
 from logs.models import LogItem
 log_action = LogItem.objects.log_action
 
-from ganeti.models import *
+from ganeti.models import Cluster, ClusterUser, Profile, VirtualMachine
 from ganeti.views import render_403, render_404, virtual_machine
-from util.portforwarder import forward_port
 from ganeti.fields import DataVolumeField
 
 # Regex for a resolvable hostname
