@@ -25,7 +25,6 @@ from time import sleep
 
 from django import forms
 from django.contrib.auth.decorators import login_required
-from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.http import HttpResponse, HttpResponseRedirect, \
@@ -341,15 +340,8 @@ def vm_table(request):
     #3) user belongs to the group which has perms on any VM
     else:
         vms = user.get_objects_any_perms(VirtualMachine, groups=True)
-        can_create = user.has_any_perms(Cluster, ['create_vm', ])
+        can_create = user.has_any_perms(Cluster, ['create_vm'])
 
-    job_errors = []
-    if vms:
-        # get jobs errors list
-        # not so easy because GenericFF is not supported well
-        vm_type = ContentType.objects.get_for_model(VirtualMachine)
-        job_errors = Job.objects.filter( content_type=vm_type, object_id__in=vms,
-                status="error" ).order_by("finished")
     vms = render_vms(request, vms)
 
     return render_to_response('virtual_machine/inner_table.html', {
