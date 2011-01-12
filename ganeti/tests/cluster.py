@@ -1089,6 +1089,7 @@ class TestClusterViews(TestCase):
         user.save()
         self.assert_(c.login(username=user.username, password='secret'))
         cluster.virtual_machines.all().delete()
+        url = '/cluster/%s/edit/' % cluster.slug
         
         data = dict(hostname='new-host-1.hostname',
                     slug='new-host-1',
@@ -1108,7 +1109,6 @@ class TestClusterViews(TestCase):
         cluster.virtual_machines.all().delete()
         
         #run view_edit again..
-        url = '/cluster/%s/edit/' % cluster.slug
         c.post(url, data, follow=True)
         
         # assert that no VMs were created
