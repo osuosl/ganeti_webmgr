@@ -111,6 +111,11 @@ class TestGanetiErrorObject(TestCase):
             self.assertEqual(str(msg), i.error)
 
             # get errors for object
+            if isinstance(i, VirtualMachine):
+                print GanetiError.objects.get_errors(cluster=i.cluster)
+            else:
+                print GanetiError.objects.get_errors(cluster=i)
+            # check for log format
             # set as fixed
             # get again in last loop
         
