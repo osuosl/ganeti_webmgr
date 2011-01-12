@@ -1,7 +1,7 @@
-{% extends "base.html" %}
+{% extends "reg_base.html" %}
 
 {% block content %}
-
-<p>Account successfully activated.</p>
-
+<h1>Activation Complete</h1>
+<p>Your account has been successfully activated. 
+You may login <a href="{% url auth_login %}">here</a>.</p>
 {% endblock %}

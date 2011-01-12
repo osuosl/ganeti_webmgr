@@ -1,20 +1,13 @@
-{% extends "base.html" %}
-
-{% block javascript_ready %}
-    $("label[for='id_password2']").parent().css("vertical-align", "top");
-    $("label[for='id_zip']").parent().css("vertical-align", "top");
-    $("label[for='id_email']").parent().css("vertical-align", "top");
-{% endblock %}
+{% extends "reg_base.html" %}
 
 {% block content %}
-<form method="post" action=".">
-  <table>
-  {% for field in form %}
-      {% if field.errors %}<tr><td>{{field.errors}}</td></tr>{%endif%}
-      <tr><td>{{field.label_tag}}</td><td>{{field}}</td></tr>
-  {% endfor %}
-  </table>
-
-  <input type="submit" value="Submit" />
-</form>
+<div id="registration">
+    <h1>Registration</h1>
+    <fieldset>
+        <form method="post">
+          {{ form.as_p }}
+          <input class="submit"type="submit" value="Create" />
+        </form>
+    </fieldset>
+</div>
 {% endblock %}
