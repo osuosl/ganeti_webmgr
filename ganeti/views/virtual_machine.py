@@ -21,6 +21,10 @@ import json
 import socket
 import urllib2
 
+# XXX Sleep is used current in 3 places because ganeti takes a few seconds to process jobs.
+#  Information on whether or not an operation succeeded is gathered from ganeti in this aspect
+#  thus the extra 2 second wait. This should go away once logging has been fully implemented so
+#  a user of the system can no if their job succeeded or failed.
 from time import sleep
 
 from django import forms
