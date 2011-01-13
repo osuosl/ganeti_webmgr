@@ -121,12 +121,19 @@ validate_sshkey = RegexValidator(ssh_public_key_re,
 
 class GanetiErrorManager(models.Manager):
 
-    def fix_errors(self, code=None, user=None, cluster=None, vm=None):
+    def fix_error(self, id):
+        """
+        Fix one particular error (used in overview template).
+        """
+        return self.get(pk=id).update(fixed=True)
+
+
+    def fix_errors(self, msg=None, code=None, user=None, cluster=None, vm=None):
         """
         Fix errors instead of deleting them.
         """
         base = self.get_errors(code, user, cluster, vm, fixed=False)
-        base.update(fixed=True)
+        return base.update(fixed=True)
 
 
     def remove_errors(self, *args, **kwargs):
@@ -137,7 +144,7 @@ class GanetiErrorManager(models.Manager):
         return base.delete()
 
 
-    def get_errors(self, code=None, user=None, cluster=None, vm=None, fixed=None):
+    def get_errors(self, msg=None, code=None, user=None, cluster=None, vm=None, fixed=None):
         """
         Manager method used for getting QuerySet of all errors depending on
         passed arguments.
@@ -149,6 +156,8 @@ class GanetiErrorManager(models.Manager):
         @param fixed  get fixed / broken / all errors
         """
         base = self.all()
+        if msg:    base = base.filter(msg=msg)
+
         if code:    base = base.filter(code=code)
 
         if user:    base = base.filter(user=user)
@@ -188,19 +197,11 @@ class GanetiErrorManager(models.Manager):
             user = vm.owner if vm else None
 
         m, created = self.get_or_create(msg=msg, code=code, cluster=cluster,
-            virtual_machine=vm, user=user, fixed=False, defaults={"id":None,
-            "fixed":False, })
-        """m = self.model(
-            id = None,
-            msg = msg,
-            code = code,
-            fixed = False,
-            timestamp = None,
-            user = user,
-            cluster = cluster,
-            virtual_machine = vm,
-        )
-        m.save()"""
+            virtual_machine=vm, user=user, fixed=False,
+            defaults={
+                "id":None,
+                "fixed":False,
+            })
         # TODO: unneccessary?
         if not created and m.fixed:
             m.fixed = False
