@@ -144,7 +144,8 @@ class GanetiErrorManager(models.Manager):
         return base.delete()
 
 
-    def get_errors(self, msg=None, code=None, cluster=None, vm=None, cleared=None):
+    def get_errors(self, msg=None, code=None, cluster=None, vm=None,
+            cleared=None, clusters=None, vms=None):
         """
         Manager method used for getting QuerySet of all errors depending on
         passed arguments.
@@ -160,8 +161,11 @@ class GanetiErrorManager(models.Manager):
         if code:    base = base.filter(code=code)
 
         if cluster: base = base.filter(cluster=cluster)
+        elif clusters:
+                    base = base.filter(cluster__in=clusters)
 
         if vm:      base = base.filter(virtual_machine=vm)
+        elif vms:   base = base.filter(virtual_machine__in=vms)
 
         if cleared == True:
             base = base.filter(cleared=True)

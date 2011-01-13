@@ -64,6 +64,7 @@ class TestGanetiErrorModel(TestCase):
         Cluster.objects.all().delete()
         GanetiError.objects.all().delete()
 
+    # TODO: add tests for clusters/vms in get_errors
     # TODO: maybe split into individual tests? Not sure
     def test_manager_methods(self):
         """

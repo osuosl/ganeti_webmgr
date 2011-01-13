@@ -175,11 +175,13 @@
             </tr>
         </thead>
         <tbody>
+            {% for error in ganeti_errors %}
             <tr>
-                {% if admin %}<td><a href="">gwm</a></td>{% else %}<td><a href="">pbnan1.gwm.osuosl.org</a></td>{% endif %}
-                <td><a href="">Authorization failed</a></td>
-                <td>01/05/11 16:21</td>
+                {% if admin %}<td><a href="{% url cluster-detail error.cluster|abbreviate_fqdn %}">{{ error.cluster|abbreviate_fqdn }}</a></td>{% else %}<td><a href="{% url instance-detail error.virtual_machine.cluster.slug error.virtual_machine.hostname %}">{{ error.virtual_machine }}</a></td>{% endif %}
+                <td>{% if error.code %}{{ error.code }}: {%endif%}{{ error.msg }}</td>
+                <td>{{ error.timestamp }}</td>
             </tr>
+            {% endfor %}
         </tbody>
     </table>
     {% endif %}
