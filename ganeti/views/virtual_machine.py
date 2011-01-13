@@ -570,6 +570,8 @@ def modify(request, cluster_slug, instance):
         return render_403(request, 'You do not have permissions to edit \
             this virtual machine')
 
+    form = None
+
     if request.method == 'POST':
         form = ModifyVirtualMachineForm(user, None, request.POST)
         if form.is_valid():
