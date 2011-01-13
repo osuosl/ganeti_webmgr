@@ -665,7 +665,7 @@ def modify(request, cluster_slug, instance):
         context_instance=RequestContext(request),
     )
 
-2
+
 @login_required
 def cluster_choices(request):
     """
