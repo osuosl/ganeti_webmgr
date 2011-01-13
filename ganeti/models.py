@@ -132,7 +132,7 @@ class GanetiErrorManager(models.Manager):
         """
         Fix errors instead of deleting them.
         """
-        base = self.get_errors(code, cluster, vm, fixed=False)
+        base = self.get_errors(msg, code, cluster, vm, fixed=False)
         return base.update(fixed=True)
 
 
@@ -155,7 +155,7 @@ class GanetiErrorManager(models.Manager):
         @param fixed  get fixed / broken / all errors
         """
         base = self.all()
-        if msg:    base = base.filter(msg=msg)
+        if msg:     base = base.filter(msg=msg)
 
         if code:    base = base.filter(code=code)
 
@@ -171,7 +171,7 @@ class GanetiErrorManager(models.Manager):
         return base
 
 
-    def store_error(self, msg, user=None, cluster=None, vm=None):
+    def store_error(self, msg, code=None, cluster=None, vm=None):
         """
         Manager method used to store errors
 
@@ -193,8 +193,8 @@ class GanetiErrorManager(models.Manager):
             msg=msg, code=code, cluster=cluster,
             virtual_machine=vm, fixed=False,
             defaults={
-                "id":None,
-                "fixed":False,
+                "id": None,
+                "fixed": False,
             })
 
         # TODO: unneccessary?
@@ -348,7 +348,6 @@ class CachedClusterObject(models.Model):
         except GanetiApiError, e:
             self.error = str(e)
 
-            # TODO: find a way to save user data
             if isinstance(self, Cluster):
                 GanetiError.objects.store_error(str(e), e.code, cluster=self)
 

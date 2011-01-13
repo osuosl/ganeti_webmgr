@@ -65,10 +65,15 @@ class TestGanetiErrorModel(TestCase):
         GanetiError.objects.all().delete()
 
     # TODO: test manager methods
-    # TODO: fix docstrings
-
-    def test_refresh(self, object):
+    # TODO: maybe split into individual tests? Not sure
+    def test_manager_methods(self):
         """
+        """
+
+    def refresh(self, object):
+        """
+        NOTE: this test is borrowed from TestCachedClusterObject.
+
         Test forced refresh of cached data
         
         Verifies:
@@ -93,7 +98,7 @@ class TestGanetiErrorModel(TestCase):
         Test an error during refresh
         
         Verifies:
-            * error will be saved in object.error
+            * error will be saved as GanetiError object
             * successful refresh after will clear error
         """
         cluster0 = self.create_model(Cluster, hostname="test0", slug="OSL_TEST0")
@@ -138,7 +143,7 @@ class TestGanetiErrorModel(TestCase):
                 fixed = GanetiError.objects.get_errors(cluster=i, fixed=True)
                 self.assertEqual(0, len(fixed))
         
-        # set all errors as fixed
+        # set all errors as fixed  and test if it was a success
         for i in (cluster0, cluster1, vm0, vm1):
             if isinstance(i, VirtualMachine):
                 GanetiError.objects.fix_errors(cluster=i.cluster)
@@ -168,5 +173,5 @@ class TestGanetiErrorModel(TestCase):
         RapiProxy.error = None
 
         for i in (cluster0, cluster1, vm0, vm1):
-            self.test_refresh(i)
+            self.refresh(i)
             self.assertEqual(None, i.error)
