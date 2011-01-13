@@ -64,6 +64,9 @@ class TestGanetiErrorModel(TestCase):
         Cluster.objects.all().delete()
         GanetiError.objects.all().delete()
 
+    # TODO: test manager methods
+    # TODO: fix docstrings
+
     def test_refresh(self, object):
         """
         Test forced refresh of cached data
@@ -111,7 +114,6 @@ class TestGanetiErrorModel(TestCase):
             self.assertEqual(str(msg), i.error)
 
             # get errors for object
-            # TODO: check .user?
             # TODO: check log format
             if isinstance(i, VirtualMachine):
                 errors = GanetiError.objects.get_errors(cluster=i.cluster)

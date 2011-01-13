@@ -128,11 +128,11 @@ class GanetiErrorManager(models.Manager):
         return self.get(pk=id).update(fixed=True)
 
 
-    def fix_errors(self, msg=None, code=None, user=None, cluster=None, vm=None):
+    def fix_errors(self, msg=None, code=None, cluster=None, vm=None):
         """
         Fix errors instead of deleting them.
         """
-        base = self.get_errors(code, user, cluster, vm, fixed=False)
+        base = self.get_errors(code, cluster, vm, fixed=False)
         return base.update(fixed=True)
 
 
@@ -144,13 +144,12 @@ class GanetiErrorManager(models.Manager):
         return base.delete()
 
 
-    def get_errors(self, msg=None, code=None, user=None, cluster=None, vm=None, fixed=None):
+    def get_errors(self, msg=None, code=None, cluster=None, vm=None, fixed=None):
         """
         Manager method used for getting QuerySet of all errors depending on
         passed arguments.
 
         @param  code  error's code
-        @param  user  user who made that error appear
         @param cluster  affected cluster
         @param  vm    affected vm
         @param fixed  get fixed / broken / all errors
@@ -159,8 +158,6 @@ class GanetiErrorManager(models.Manager):
         if msg:    base = base.filter(msg=msg)
 
         if code:    base = base.filter(code=code)
-
-        if user:    base = base.filter(user=user)
 
         if cluster: base = base.filter(cluster=cluster)
 
@@ -174,13 +171,12 @@ class GanetiErrorManager(models.Manager):
         return base
 
 
-    def store_error(self, msg, code=None, user=None, cluster=None, vm=None):
+    def store_error(self, msg, user=None, cluster=None, vm=None):
         """
         Manager method used to store errors
 
         @param  msg  error's message
         @param code  error's code
-        @param user  user who caused the error to appear
         @param cluster  cluster affected by the error
         @param vm    virtual machine affected by the error
         """
@@ -193,15 +189,14 @@ class GanetiErrorManager(models.Manager):
         elif isinstance(vm, str) and isinstance(cluster, Cluster):
             vm = VirtualMachine.objects.get(cluster=cluster, hostname=vm)
 
-        if not user:
-            user = vm.owner if vm else None
-
-        m, created = self.get_or_create(msg=msg, code=code, cluster=cluster,
-            virtual_machine=vm, user=user, fixed=False,
+        m, created = self.get_or_create(
+            msg=msg, code=code, cluster=cluster,
+            virtual_machine=vm, fixed=False,
             defaults={
                 "id":None,
                 "fixed":False,
             })
+
         # TODO: unneccessary?
         if not created and m.fixed:
             m.fixed = False
@@ -220,9 +215,6 @@ class GanetiError(models.Model):
     # determines if the errors still appears or not
     fixed = models.BooleanField(default=False)
 
-    # user who caused the error to appear
-    user = models.ForeignKey(User, related_name="ganeti_errors", null=True)
-
     # cluster and VM affected by the error (if any)
     cluster = models.ForeignKey("Cluster", null=True, blank=True,
             related_name="ganeti_errors")
@@ -236,6 +228,7 @@ class GanetiError(models.Model):
 
     def __repr__(self):
         return "<GanetiError '%s'>" % (self.msg)
+
     def __unicode__(self):
         # TODO: improve that log format
         base = "[%s] %s" % (self.timestamp, self.msg)
@@ -357,20 +350,20 @@ class CachedClusterObject(models.Model):
 
             # TODO: find a way to save user data
             if isinstance(self, Cluster):
-                GanetiError.objects.store_error(str(e), e.code, user=None, cluster=self)
+                GanetiError.objects.store_error(str(e), e.code, cluster=self)
 
             elif isinstance(self, VirtualMachine):
-                GanetiError.objects.store_error(str(e), e.code, user=None, vm=self)
+                GanetiError.objects.store_error(str(e), e.code, vm=self)
 
         else:
             self.error = None
 
             # TODO: find a way to save user data
             if isinstance(self, Cluster):
-                GanetiError.objects.fix_errors(user=None, cluster=self)
+                GanetiError.objects.fix_errors(cluster=self)
 
             elif isinstance(self, VirtualMachine):
-                GanetiError.objects.fix_errors(user=None, vm=self)
+                GanetiError.objects.fix_errors(vm=self)
 
     def _refresh(self):
         """
