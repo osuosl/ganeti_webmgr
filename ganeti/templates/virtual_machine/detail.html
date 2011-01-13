@@ -129,10 +129,8 @@
 <div id="tabs">
     <ul id="tabs">
         <li><a href="#overview"><span>Overview</span></a></li>
-        {% comment %}
-        <li><a href="#configuration"><span>Configuration</span></a></li>
-        {% endcomment %}
         {% if admin %}
+            <li><a title="edit" href="{% url vm-edit cluster.slug instance.hostname %}"><span>Edit</span></a></li>
             <li><a title="users" href="{% url vm-users cluster.slug instance.hostname %}"><span>Users</span></a></li>
         {%endif%}
 	{% if admin or power %}
@@ -172,22 +170,5 @@
             {% endwith %}
         </table>
     </div>
-    {% comment %}
-    <div id="configuration">
-        {% if configform %}
-        <form method="post" align="center">
-        <table>
-        {{ configform.as_table }}
-        </table>
-        <input type="Submit" value="Update" />
-        </form>
-        {% else %}
-        <div style="width:35%;margin:0 auto;">
-            <div class="icon_error"></div>
-            <p>Configuration Form could not be loaded.</p>
-        </div>
-        {% endif %}
-    </div>
-    {% endcomment %}
 </div>
 {% endblock %}
