@@ -385,34 +385,7 @@ def detail(request, cluster_slug, instance):
     
     if not (admin or power or remove):
         return render_403(request, 'You do not have permission to view this cluster\'s details')
-        
-    #TODO Update to use part of the NewVirtualMachineForm in 0.5 release
-    """
-    if request.method == 'POST':
-        form = InstanceConfigForm(request.POST)
-        if form.is_valid():
-            data = form.cleaned_data
-            if data['cdrom_type'] == 'none':
-                data['cdrom_image_path'] = 'none'
-            elif data['cdrom_image_path'] != vm.hvparams['cdrom_image_path']:
-                # This should be an http URL
-                if not (data['cdrom_image_path'].startswith('http://') or
-                        data['cdrom_image_path'] == 'none'):
-                    # Remove this, we don't want them to be able to read local files
-                    del data['cdrom_image_path']
-            vm.set_params(**data)
-            return HttpResponseRedirect(request.path)
-
-    else:
-        if vm.info:
-            if vm.info['hvparams']['cdrom_image_path']:
-                vm.info['hvparams']['cdrom_type'] = 'iso'
-            else:
-                vm.info['hvparams']['cdrom_type'] = 'none'
-            form = InstanceConfigForm(vm.info['hvparams'])
-        else:
-            form = None
-    """
+	
     if vm.pending_delete:
         template = 'virtual_machine/delete_status.html' 
     else:
@@ -421,7 +394,6 @@ def detail(request, cluster_slug, instance):
     return render_to_response(template, {
         'cluster': cluster,
         'instance': vm,
-        #'configform': form,
         'admin':admin,
         'cluster_admin':cluster_admin,
         'remove':remove,
@@ -579,6 +551,60 @@ def create(request, cluster_slug=None):
 
     return render_to_response('virtual_machine/create.html', {
         'form': form
+        },
+        context_instance=RequestContext(request),
+    )
+
+
+@login_required
+def edit(request, cluster_slug, instance):
+    #TODO Update to use part of the NewVirtualMachineForm in 0.5 release
+     
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
+
+    user = request.user
+    admin = user.is_superuser or user.has_perm('admin', vm) \
+        or user.has_perm('admin', cluster)
+
+    form = None
+
+    if request.method == 'POST':
+        form = EditVirtualMachineForm(user, None, request.POST)
+        if form.is_valid():
+            """
+            data = form.cleaned_data
+            if data['cdrom_type'] == 'none':
+                data['cdrom_image_path'] = 'none'
+            elif data['cdrom_image_path'] != vm.hvparams['cdrom_image_path']:
+                # This should be an http URL
+                if not (data['cdrom_image_path'].startswith('http://') or
+                        data['cdrom_image_path'] == 'none'):
+                    # Remove this, we don't want them to be able to read local files
+                    del data['cdrom_image_path']
+            vm.set_params(**data)
+            sleep(1)
+            return HttpResponseRedirect(request.path)
+            
+            else:
+                if vm.info:
+                    if vm.info['hvparams']['cdrom_image_path']:
+                        vm.info['hvparams']['cdrom_type'] = 'iso'
+                    else:
+                        vm.info['hvparams']['cdrom_type'] = 'none'
+                    form = EditVirtualMachineForm(vm.info['hvparams'])
+                else:
+                    form = None
+            """
+            pass
+	elif request.method == 'GET':
+		form = EditVirtualMachineForm(user, cluster)
+
+    return render_to_response("virtual_machine/edit.html", {
+        'cluster': cluster,
+        'instance': vm,
+        'admin': admin,
+        'form': form,
         },
         context_instance=RequestContext(request),
     )
@@ -994,6 +1020,13 @@ class NewVirtualMachineForm(forms.Form):
 
         # Always return the full collection of cleaned data.
         return data
+
+
+class EditVirtualMachineForm(NewVirtualMachineForm):
+
+    def __init__(self, user, cluster=None, *args, **kwargs):
+        super(NewVirtualMachineForm, self).__init__(user, cluster, *args, **kwargs)
+        del self.fields['start']
 
 
 class InstanceConfigForm(forms.Form):
