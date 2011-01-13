@@ -1,0 +1,9 @@
+{% if admin %}
+<h1>Edit</h1>
+<fieldset>
+    <form method="post">
+        {{ form.as_p }}
+        <input class="submit" type="submit" value="Edit" />
+    </form>
+</fieldset>
+{% endif %}
