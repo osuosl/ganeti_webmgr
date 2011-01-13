@@ -130,6 +130,7 @@
     <ul id="tabs">
         <li><a href="#overview"><span>Overview</span></a></li>
         {% if admin %}
+            <li><a title="edit" href="{% url vm-edit cluster.slug instance.hostname %}"><span>Edit</span></a></li>
             <li><a title="users" href="{% url vm-users cluster.slug instance.hostname %}"><span>Users</span></a></li>
         {%endif%}
 	{% if admin or power %}
