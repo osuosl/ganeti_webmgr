@@ -125,7 +125,7 @@ class GanetiErrorManager(models.Manager):
         """
         Fix one particular error (used in overview template).
         """
-        return self.get(pk=id).update(fixed=True)
+        return self.filter(pk=id).update(fixed=True)
 
 
     def fix_errors(self, msg=None, code=None, cluster=None, vm=None):

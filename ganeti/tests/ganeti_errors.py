@@ -64,11 +64,117 @@ class TestGanetiErrorModel(TestCase):
         Cluster.objects.all().delete()
         GanetiError.objects.all().delete()
 
-    # TODO: test manager methods
     # TODO: maybe split into individual tests? Not sure
     def test_manager_methods(self):
         """
+        Test useful GanetiErrorManager methods:
+        * store_error
+        * get_errors
+        * fix_errors
+        * fix_error
+        * remove_errors
+
+        Verifies:
+            * all those methods are free of errors
         """
+        cluster0 = self.create_model(Cluster, hostname="test0", slug="OSL_TEST0")
+        cluster1 = self.create_model(Cluster, hostname="test1", slug="OSL_TEST1")
+        cluster2 = self.create_model(Cluster, hostname="test2", slug="OSL_TEST2")
+        cluster0.save()
+        cluster1.save()
+        cluster2.save()
+        vm0 = self.create_model(VirtualMachine,cluster=cluster0, hostname="vm0.test.org")
+        vm1 = self.create_model(VirtualMachine,cluster=cluster1, hostname="vm1.test.org")
+        vm0.save()
+        vm1.save()
+
+        msg = client.GanetiApiError("Simulating an error", 777)
+        RapiProxy.error = msg
+
+        # test store_error
+        store_error = GanetiError.objects.store_error
+        store_error(str(msg), msg.code, cluster="OSL_TEST0")
+        store_error(str(msg), msg.code, cluster="test1")
+        store_error(str(msg), msg.code, cluster=cluster2)
+        store_error(str(msg), msg.code, vm=vm0)
+        store_error(str(msg), msg.code, cluster=cluster1, vm="vm1.test.org")
+
+        # test get_errors
+        get_errors = GanetiError.objects.get_errors
+        
+        errors = get_errors(msg=str(msg))
+        self.assertEqual(len(errors), 5)
+        errors = get_errors(msg=str(msg) + "NOTHING")
+        self.assertEqual(len(errors), 0)
+
+        errors = get_errors(code=msg.code)
+        self.assertEqual(len(errors), 5)
+        errors = get_errors(code=msg.code + 123)
+        self.assertEqual(len(errors), 0)
+
+        errors = get_errors(cluster=cluster0)
+        self.assertEqual(len(errors), 2)
+        errors = get_errors(cluster=cluster1)
+        self.assertEqual(len(errors), 2)
+        errors = get_errors(cluster=cluster2)
+        self.assertEqual(len(errors), 1)
+
+        errors = get_errors(vm=vm0)
+        self.assertEqual(len(errors), 1)
+        errors = get_errors(vm=vm1)
+        self.assertEqual(len(errors), 1)
+
+        # test fix_error(s)
+        fix_error = GanetiError.objects.fix_error
+        fix_errors = GanetiError.objects.fix_errors
+
+        errors = get_errors()
+        self.assertEqual(len(errors), 5)
+        errors = get_errors(fixed=False).order_by("id")
+        self.assertEqual(len(errors), 5)
+
+        fix_error(errors[0].id)
+        errors = get_errors()
+        self.assertEqual(len(errors), 5)
+        errors = get_errors(fixed=False)
+        self.assertEqual(len(errors), 4)
+
+        fix_errors(cluster=cluster2)
+        errors = get_errors()
+        self.assertEqual(len(errors), 5)
+        errors = get_errors(fixed=False)
+        self.assertEqual(len(errors), 3)
+
+        fix_errors(vm=vm1)
+        errors = get_errors()
+        self.assertEqual(len(errors), 5)
+        errors = get_errors(fixed=False)
+        self.assertEqual(len(errors), 2)
+
+        fix_errors(msg=str(msg))
+        errors = get_errors()
+        self.assertEqual(len(errors), 5)
+        errors = get_errors(fixed=False)
+        self.assertEqual(len(errors), 0)
+
+        # test remove_errors
+        remove_errors = GanetiError.objects.remove_errors
+
+        errors = get_errors()
+        self.assertEqual(len(errors), 5)
+
+        remove_errors(cluster=cluster2)
+        errors = get_errors()
+        self.assertEqual(len(errors), 4)
+
+        remove_errors(vm=vm1)
+        errors = get_errors()
+        self.assertEqual(len(errors), 3)
+
+        remove_errors(msg=str(msg))
+        errors = get_errors()
+        self.assertEqual(len(errors), 0)
+
 
     def refresh(self, object):
         """
