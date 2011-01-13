@@ -121,19 +121,19 @@ validate_sshkey = RegexValidator(ssh_public_key_re,
 
 class GanetiErrorManager(models.Manager):
 
-    def fix_error(self, id):
+    def clear_error(self, id):
         """
-        Fix one particular error (used in overview template).
+        Clear one particular error (used in overview template).
         """
-        return self.filter(pk=id).update(fixed=True)
+        return self.filter(pk=id).update(cleared=True)
 
 
-    def fix_errors(self, msg=None, code=None, cluster=None, vm=None):
+    def clear_errors(self, msg=None, code=None, cluster=None, vm=None):
         """
-        Fix errors instead of deleting them.
+        Clear errors instead of deleting them.
         """
-        base = self.get_errors(msg, code, cluster, vm, fixed=False)
-        return base.update(fixed=True)
+        base = self.get_errors(msg, code, cluster, vm, cleared=False)
+        return base.update(cleared=True)
 
 
     def remove_errors(self, *args, **kwargs):
@@ -144,7 +144,7 @@ class GanetiErrorManager(models.Manager):
         return base.delete()
 
 
-    def get_errors(self, msg=None, code=None, cluster=None, vm=None, fixed=None):
+    def get_errors(self, msg=None, code=None, cluster=None, vm=None, cleared=None):
         """
         Manager method used for getting QuerySet of all errors depending on
         passed arguments.
@@ -152,7 +152,7 @@ class GanetiErrorManager(models.Manager):
         @param  code  error's code
         @param cluster  affected cluster
         @param  vm    affected vm
-        @param fixed  get fixed / broken / all errors
+        @param cleared  get cleared / broken / all errors
         """
         base = self.all()
         if msg:     base = base.filter(msg=msg)
@@ -163,10 +163,10 @@ class GanetiErrorManager(models.Manager):
 
         if vm:      base = base.filter(virtual_machine=vm)
 
-        if fixed == True:
-            base = base.filter(fixed=True)
-        elif fixed == False:
-            base = base.filter(fixed=False)
+        if cleared == True:
+            base = base.filter(cleared=True)
+        elif cleared == False:
+            base = base.filter(cleared=False)
 
         return base
 
@@ -191,15 +191,15 @@ class GanetiErrorManager(models.Manager):
 
         m, created = self.get_or_create(
             msg=msg, code=code, cluster=cluster,
-            virtual_machine=vm, fixed=False,
+            virtual_machine=vm, cleared=False,
             defaults={
                 "id": None,
-                "fixed": False,
+                "cleared": False,
             })
 
         # TODO: unneccessary?
-        if not created and m.fixed:
-            m.fixed = False
+        if not created and m.cleared:
+            m.cleared = False
             m.save()
         return m.id
 
@@ -213,7 +213,7 @@ class GanetiError(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
 
     # determines if the errors still appears or not
-    fixed = models.BooleanField(default=False)
+    cleared = models.BooleanField(default=False)
 
     # cluster and VM affected by the error (if any)
     cluster = models.ForeignKey("Cluster", null=True, blank=True,
@@ -359,10 +359,10 @@ class CachedClusterObject(models.Model):
 
             # TODO: find a way to save user data
             if isinstance(self, Cluster):
-                GanetiError.objects.fix_errors(cluster=self)
+                GanetiError.objects.clear_errors(cluster=self)
 
             elif isinstance(self, VirtualMachine):
-                GanetiError.objects.fix_errors(vm=self)
+                GanetiError.objects.clear_errors(vm=self)
 
     def _refresh(self):
         """
