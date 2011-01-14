@@ -39,6 +39,9 @@ from django.db import models
 from django.db.models import Sum, F
 from django.db.models.signals import post_save, post_syncdb
 
+from logs.models import LogItem
+log_action = LogItem.objects.log_action
+
 from object_permissions.registration import register
 from object_permissions import signals as op_signals
 from ganeti import constants, management
@@ -48,7 +51,6 @@ from util.client import GanetiApiError
 
 if settings.VNC_PROXY:
     from util.vncdaemon.vapclient import request_forwarding
-
 import random
 import string
 
@@ -914,19 +916,14 @@ post_syncdb.connect(regenerate_cu_children)
 
 def log_group_create(sender, editor, **kwargs):
     """ log group creation signal """
-    log_action(sender, editor, 'created')
+    log_action(editor, sender, 'created')
 
 def log_group_edit(sender, editor, **kwargs):
     """ log group edit signal """
-    log_action(sender, editor, 'edited')
-
-def log_group_delete(sender, editor, **kwargs):
-    """ log group delete signal """
-    log_action(sender, editor, 'deleted')
+    log_action(editor, sender, 'edited')
 
 op_signals.view_group_created.connect(log_group_create)
 op_signals.view_group_edited.connect(log_group_edit)
-op_signals.view_group_deleted.connect(log_group_delete)
 
 
 # Register permissions on our models.
