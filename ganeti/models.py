@@ -31,7 +31,7 @@ from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import GenericForeignKey
 
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, MinValueValidator
 from django.utils.translation import ugettext_lazy as _
 import re
 
@@ -518,7 +518,7 @@ class VirtualMachine(CachedClusterObject):
             if status in ('success', 'error'):
                 finished = Job.parse_end_timestamp(data)
                 Job.objects.filter(pk=self.last_job_id) \
-                    .update(status=status, ignore_cache=False, finished=finished)
+                    .update(status=status, ignore_cache=Falverbose_namese, finished=finished)
                 self.ignore_cache = False
             
             if status == 'success':
