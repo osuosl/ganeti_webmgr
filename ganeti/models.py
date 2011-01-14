@@ -40,6 +40,7 @@ from django.db.models import Sum, F
 from django.db.models.signals import post_save, post_syncdb
 
 from object_permissions.registration import register
+from object_permissions import signals as op_signals
 from ganeti import constants, management
 from ganeti.fields import PreciseDateTimeField
 from util import client
@@ -909,6 +910,24 @@ def regenerate_cu_children(sender, **kwargs):
         group.save()
 
 post_syncdb.connect(regenerate_cu_children)
+
+
+def log_group_create(sender, editor, **kwargs):
+    """ log group creation signal """
+    log_action(sender, editor, 'created')
+
+def log_group_edit(sender, editor, **kwargs):
+    """ log group edit signal """
+    log_action(sender, editor, 'edited')
+
+def log_group_delete(sender, editor, **kwargs):
+    """ log group delete signal """
+    log_action(sender, editor, 'deleted')
+
+op_signals.view_group_created.connect(log_group_create)
+op_signals.view_group_edited.connect(log_group_edit)
+op_signals.view_group_deleted.connect(log_group_delete)
+
 
 # Register permissions on our models.
 # These are part of the DB schema and should not be changed without serious
