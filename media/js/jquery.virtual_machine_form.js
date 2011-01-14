@@ -1,7 +1,8 @@
 (function($){
-    /* Virtual machines init function to
-        setup selectors and hide/show of snode
-        */
+    /* 
+    Virtual machines init function to
+    setup selectors and hide/show of snode
+    */
     virtual_machines = function() {
         cluster = $("#id_cluster");
         owner = $("#id_owner");
@@ -17,7 +18,8 @@
         if( !iallocator_hostname.attr('value') ) {
             iallocator.attr('readonly', 'readonly');
         } else {
-            iallocator.after("<span>"+using_str+iallocator_hostname.val()+"</span>");
+            iallocator.after("<span>"+using_str+iallocator_hostname.val()+
+                    "</span>");
         }
         iallocator.change(function() {
             if(!iallocator.attr('readonly')) {
@@ -126,17 +128,22 @@
                             nictype = data['nictype'];
                             imagepath = data['imagepath'];
                             if(bootorder) {
-                                $("#id_bootorder :selected").removeAttr('selected');
-                                $("#id_bootorder [value="+bootorder+"]").attr('selected','selected');
+                                $("#id_bootorder :selected").removeAttr(
+                                        'selected');
+                                $("#id_bootorder [value="+bootorder+"]").attr(
+                                        'selected','selected');
                             }
                             if(hypervisors) {
                                 //list - do nothing for now.
                             }
                             if(iallocator_default) {
                                 if( !iallocator_hostname.attr('value')) {
-                                    iallocator_hostname.attr('value', iallocator_default);
-                                    if( iallocator.siblings("span").length == 0 ) {
-                                        iallocator.after("<span>"+using_str+iallocator_default+"</span>");
+                                    iallocator_hostname.attr('value',
+                                            iallocator_default);
+                                    if(iallocator.siblings("span").length 
+                                            == 0){
+                                        iallocator.after("<span>"+using_str+
+                                                iallocator_default+"</span>");
                                     }
                                 }
                                 // Check iallocator checkbox
@@ -156,17 +163,22 @@
                                 $("#id_kernelpath").val('');
                             }
                             if(nicmode) {
-                                $("#id_nicmode :selected").removeAttr('selected');
-                                $("#id_nicmode [value="+nicmode+"]").attr('selected','selected');
+                                $("#id_nicmode :selected").removeAttr(
+                                        'selected');
+                                $("#id_nicmode [value="+nicmode+"]").attr(
+                                        'selected','selected');
                             } else {
-                                $("#id_nicmode :first-child").attr('selected', 'selected');
+                                $("#id_nicmode :first-child").attr('selected', 
+                                        'selected');
                             }
                             if(niclink){
                                 $("#id_niclink").val(niclink);
                             }
                             if(nictype) {
-                                $("#id_nictype :selected").removeAttr('selected');
-                                $("#id_nictype [value="+nictype+"]").attr('selected','selected');
+                                $("#id_nictype :selected").removeAttr(
+                                        'selected');
+                                $("#id_nictype [value="+nictype+"]").attr(
+                                        'selected','selected');
                             }
                             if(ram) {
                                 $("#id_ram").val(ram);
