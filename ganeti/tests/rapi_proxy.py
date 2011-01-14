@@ -131,8 +131,35 @@ NODES_BULK = [
     'sinst_list': [],
     'sip': '192.168.16.136',
     'tags': [],
-    'uuid': '1fee760b-b240-4d7a-a514-5c9441877a01'}
+    'uuid': '1fee760b-b240-4d7a-a514-5c9441877a01'},
+    {
+    "cnodes": None,
+    "csockets": None,
+    "ctime": 1272388723.7258999,
+    "ctotal": None,
+    "dfree": None,
+    "drained": False,
+    "dtotal": None,
+    "master_candidate": False,
+    "mfree": None,
+    "mnode": None,
+    "mtime": 1293527598.306725,
+    "mtotal": None,
+    "name": "node3.osuosl.org",
+    "offline": True,
+    "pinst_cnt": 0,
+    "pinst_list": [],
+    "pip": "10.192.0.179",
+    "role": "O",
+    "serial_no": 2,
+    "sinst_cnt": 0,
+    "sinst_list": [],
+    "sip": "192.168.166.179",
+    "tags": [],
+    "uuid": "5b1001e7-2595-47d4-a1ae-5a6da7b461ca"}
 ]
+
+
 
 NODE = {'cnodes': 1,
     'csockets': 1,

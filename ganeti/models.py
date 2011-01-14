@@ -39,7 +39,11 @@ from django.db import models
 from django.db.models import Sum, F
 from django.db.models.signals import post_save, post_syncdb
 
+from logs.models import LogItem
+log_action = LogItem.objects.log_action
+
 from object_permissions.registration import register
+from object_permissions import signals as op_signals
 from ganeti import constants, management
 from ganeti.fields import PreciseDateTimeField
 from util import client
@@ -47,7 +51,6 @@ from util.client import GanetiApiError
 
 if settings.VNC_PROXY:
     from util.vncdaemon.vapclient import request_forwarding
-
 import random
 import string
 
@@ -769,20 +772,17 @@ class ClusterUser(models.Model):
             return result
         
         else:
-            base = base.values('cluster').annotate(ram=Sum('ram'), \
-                                            disk=Sum('disk_size'), \
-                                            virtual_cpus=Sum('virtual_cpus'))
+            base = base.values('cluster').annotate(ram_=Sum('ram'), \
+                                            disk_=Sum('disk_size'), \
+                                            virtual_cpus_=Sum('virtual_cpus'))
             
             # repack as dictionary
             result = {}
             for used in base:
-                # repack with zeros instead of Nones
-                if used['disk'] is None:
-                    used['disk'] = 0
-                if used['ram'] is None:
-                    used['ram'] = 0
-                if used['virtual_cpus'] is None:
-                    used['virtual_cpus'] = 0
+                # repack with zeros instead of Nones, change index names
+                used['disk'] = 0 if not used['disk_'] else used['disk_']
+                used['ram'] = 0 if not used['ram_'] else used['ram_']
+                used['virtual_cpus'] = 0 if not used['virtual_cpus_'] else used['virtual_cpus_']
                 result[used.pop('cluster')] = used
                 
             return result
@@ -912,6 +912,19 @@ def regenerate_cu_children(sender, **kwargs):
         group.save()
 
 post_syncdb.connect(regenerate_cu_children)
+
+
+def log_group_create(sender, editor, **kwargs):
+    """ log group creation signal """
+    log_action(editor, sender, 'created')
+
+def log_group_edit(sender, editor, **kwargs):
+    """ log group edit signal """
+    log_action(editor, sender, 'edited')
+
+op_signals.view_group_created.connect(log_group_create)
+op_signals.view_group_edited.connect(log_group_edit)
+
 
 # Register permissions on our models.
 # These are part of the DB schema and should not be changed without serious
