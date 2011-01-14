@@ -41,6 +41,7 @@ from django.template import RequestContext
 
 from object_permissions.views.permissions import view_users, view_permissions
 from object_permissions import get_users_any, user_has_any_perms
+from object_permissions import signals as op_signals
 
 from logs.models import LogItem
 log_action = LogItem.objects.log_action
@@ -91,6 +92,7 @@ def delete(request, cluster_slug, instance):
     
     return HttpResponseNotAllowed(["GET","DELETE"])
 
+
 @login_required
 def reinstall(request, cluster_slug, instance):
     """
@@ -139,6 +141,7 @@ def reinstall(request, cluster_slug, instance):
     
     return HttpResponseNotAllowed(["GET","POST"])
 
+
 @login_required
 def novnc(request, cluster_slug, instance):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
@@ -164,14 +167,14 @@ def novnc(request, cluster_slug, instance):
 def vnc_proxy(request, cluster_slug, instance):
     instance = get_object_or_404(VirtualMachine, hostname=instance, \
                                  cluster__slug=cluster_slug)
-
+    
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', instance) or \
         user.has_perm('admin', instance.cluster)):
         return HttpResponseForbidden('You do not have permission to vnc on this')
     
     result = json.dumps(instance.setup_vnc_forwarding())
-
+    
     return HttpResponse(result, mimetype="application/json")
 
 
@@ -456,14 +459,7 @@ def permissions(request, cluster_slug, instance, user_id=None, group_id=None):
         return render_403(request, "You do not have sufficient privileges")
 
     url = reverse('vm-permissions', args=[cluster.slug, vm.hostname])
-    response, modified = view_permissions(request, vm, url, user_id, group_id)
-    
-    # log changes if any.
-    if modified:
-        # log information about creating the machine
-        log_action(user, vm, "modified permissions")
-    
-    return response
+    return view_permissions(request, vm, url, user_id, group_id)
 
 
 @login_required
@@ -1044,3 +1040,29 @@ class InstanceConfigForm(forms.Form):
                     socket.setdefaulttimeout(oldtimeout)
                     raise forms.ValidationError('Invalid URL')
         return data
+
+
+def recv_user_add(sender, editor, user, obj, **kwargs):
+    """
+    receiver for object_permissions.signals.view_add_user, Logs action
+    """
+    log_action(editor, obj, "added user")
+
+
+def recv_user_remove(sender, editor, user, obj, **kwargs):
+    """
+    receiver for object_permissions.signals.view_remove_user, Logs action
+    """
+    log_action(editor, obj, "removed user")
+
+
+def recv_perm_edit(sender, editor, user, obj, **kwargs):
+    """
+    receiver for object_permissions.signals.view_edit_user, Logs action
+    """
+    log_action(editor, obj, "modified permissions")
+
+
+op_signals.view_add_user.connect(recv_user_add, sender=VirtualMachine)
+op_signals.view_remove_user.connect(recv_user_remove, sender=VirtualMachine)
+op_signals.view_edit_user.connect(recv_perm_edit, sender=VirtualMachine)

@@ -32,6 +32,7 @@ from django.template.defaultfilters import slugify
 from object_permissions import get_model_perms, get_user_perms, grant, revoke, \
     get_users, get_groups, get_group_perms
 from object_permissions.views.permissions import view_users, view_permissions
+from object_permissions import signals as op_signals
 
 from logs.models import LogItem
 log_action = LogItem.objects.log_action
@@ -181,7 +182,8 @@ def users(request, cluster_slug):
 @login_required
 def permissions(request, cluster_slug, user_id=None, group_id=None):
     """
-    Update a users permissions.
+    Update a users permissions. This wraps object_permissions.view_permissions()
+    with our custom permissions checks.
     """
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     user = request.user
@@ -189,16 +191,35 @@ def permissions(request, cluster_slug, user_id=None, group_id=None):
         return render_403(request, "You do not have sufficient privileges")
 
     url = reverse('cluster-permissions', args=[cluster.slug])
-    response, modified = view_permissions(request, cluster, url, user_id, group_id,
+    return view_permissions(request, cluster, url, user_id, group_id,
                             user_template='cluster/user_row.html',
                             group_template='cluster/group_row.html')
-    
-    # log changes if any.
-    if modified:
-        # log information about creating the machine
-        log_action(user, cluster, "modified permissions")
-    
-    return response
+
+
+def user_added(sender, editor, user, obj, **kwargs):
+    """
+    receiver for object_permissions.signals.view_add_user, Logs action
+    """
+    log_action(editor, obj, "added user")
+
+
+def user_removed(sender, editor, user, obj, **kwargs):
+    """
+    receiver for object_permissions.signals.view_add_user, Logs action
+    """
+    log_action(editor, obj, "removed user")
+
+
+def user_edited(sender, editor, user, obj, **kwargs):
+    """
+    receiver for object_permissions.signals.view_add_user, Logs action
+    """
+    log_action(editor, obj, "modified permissions")
+
+
+op_signals.view_add_user.connect(user_added, sender=Cluster)
+op_signals.view_remove_user.connect(user_removed, sender=Cluster)
+op_signals.view_edit_user.connect(user_edited, sender=Cluster)
 
 
 class QuotaForm(forms.Form):
@@ -315,3 +336,36 @@ class EditClusterForm(forms.ModelForm):
             del self._errors['slug']
         
         return data
+
+
+def recv_user_add(sender, editor, user, obj, **kwargs):
+    """
+    receiver for object_permissions.signals.view_add_user, Logs action
+    """
+    log_action(editor, obj, "added user")
+
+
+def recv_user_remove(sender, editor, user, obj, **kwargs):
+    """
+    receiver for object_permissions.signals.view_remove_user, Logs action
+    """
+    log_action(editor, obj, "removed user")
+    
+    # remove custom quota user may have had.
+    if isinstance(user, (User,)):
+        cluster_user = user.get_profile()
+    else:
+        cluster_user = user.organization
+    cluster_user.quotas.filter(cluster=obj).delete()
+
+
+def recv_perm_edit(sender, editor, user, obj, **kwargs):
+    """
+    receiver for object_permissions.signals.view_edit_user, Logs action
+    """
+    log_action(editor, obj, "modified permissions")
+
+
+op_signals.view_add_user.connect(recv_user_add, sender=Cluster)
+op_signals.view_remove_user.connect(recv_user_remove, sender=Cluster)
+op_signals.view_edit_user.connect(recv_perm_edit, sender=Cluster)

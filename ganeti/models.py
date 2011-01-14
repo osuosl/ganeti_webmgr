@@ -39,7 +39,11 @@ from django.db import models
 from django.db.models import Sum, F
 from django.db.models.signals import post_save, post_syncdb
 
+from logs.models import LogItem
+log_action = LogItem.objects.log_action
+
 from object_permissions.registration import register
+from object_permissions import signals as op_signals
 from ganeti import constants, management
 from ganeti.fields import PreciseDateTimeField
 from util import client
@@ -47,7 +51,6 @@ from util.client import GanetiApiError
 
 if settings.VNC_PROXY:
     from util.vncdaemon.vapclient import request_forwarding
-
 import random
 import string
 
@@ -909,6 +912,19 @@ def regenerate_cu_children(sender, **kwargs):
         group.save()
 
 post_syncdb.connect(regenerate_cu_children)
+
+
+def log_group_create(sender, editor, **kwargs):
+    """ log group creation signal """
+    log_action(editor, sender, 'created')
+
+def log_group_edit(sender, editor, **kwargs):
+    """ log group edit signal """
+    log_action(editor, sender, 'edited')
+
+op_signals.view_group_created.connect(log_group_create)
+op_signals.view_group_edited.connect(log_group_edit)
+
 
 # Register permissions on our models.
 # These are part of the DB schema and should not be changed without serious
