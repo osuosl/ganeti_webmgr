@@ -368,3 +368,9 @@ tr.group td.name {background:url(/media/images/icons/group.png) no-repeat 0 4px;
     padding-left:0 !important;
     padding-right:0 !important;
 }
+
+
+/* replace single dropdown option with a grey'd out label */
+.disabled-text{
+    color:darkgray;
+}
