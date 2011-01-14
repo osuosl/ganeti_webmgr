@@ -29,34 +29,8 @@
                     '{% url instance-create-cluster-options %}',
                     '{% url instance-create-cluster-defaults %}'
             );
-            
+            // auto-select and disable single opt. dropdowns    
             refreshSingleOptDropdowns();
-           
-            /*
-            // init virtual machines form jQuery plugin
-            virtual_machines();
-            // AJAX update the clusters when owner changes
-            owner_change('{% url instance-create-cluster-choices %}');
-            // AJAX update the oslist, pnode, and snode when cluster changes
-            cluster_change('{% url instance-create-cluster-options %}',
-                           '{% url instance-create-cluster-defaults %}');
-
-            // replace single-option dropdowns with a static label
-            // Note: This should be made into a jQuery plugin at some point.
-            $('select').each(function(){
-                var curDropdown = $(this)
-                var options = $(curDropdown.find('option'));
-                console.log(curDropdown);
-                if(options.length == 1){
-                    curDropdown.hide();
-                    curDropdown.parent().append(
-                        "<p class='disabled-text'>"+
-                            "   "+options.text()+
-                        "</p>"
-                    );
-                }
-            });
-            */    
         });
 
         // ----------
@@ -102,16 +76,16 @@
                 var curDropdown = $(this);
                 var options = $(curDropdown.find('option'));
                 if(options.length == 1)
-                    curDropdown.attr('DISABLED', '1');
+                    curDropdown.attr('disabled', 'disabled');
                 else
-                    curDropdown.removeAttr('DISABLED');
+                    curDropdown.removeAttr('disabled');
             });
         }
 
         // -------------------
         // live form updating
         // -------------------
-        function initLiveFormUpdating(url, url1, url2){
+        function initLiveFormUpdating(url_choices, url_options, url_defaults){
             /* initialize the live form updating */
             var cluster = $("#id_cluster");
             var owner = $("#id_owner");
@@ -161,7 +135,7 @@
             owner.change(function() {
                 id = $(this).children("option:selected").val();
                 if( id != '' ) {
-                    $.getJSON(url, {'clusteruser_id':id}, function(data) {
+                    $.getJSON(url_choices, {'clusteruser_id':id}, function(data) {
                         cluster.children().not(':first').remove();
                         $.each(data, function(i, item) {
                             child = $("<option> </option>");
@@ -172,6 +146,7 @@
                     });
                 }
                 cluster.trigger('change');
+                refreshSingleOptDropdowns();
             });
 
             /* Ajax request to update oslist, pnode, and snode when cluster changes */
@@ -181,9 +156,8 @@
                 var oslist = $("#id_os");
                 var id = $(this).children("option:selected").val();
                 
-                if( id != '' ) {  
-                    
-                    $.getJSON(url1, {'cluster_id':id}, function(data) {
+                if( id != '' ) {
+                    $.getJSON(url_options, {'cluster_id':id}, function(data) {
                         pnode.children().not(':first').remove();
                         snode.children().not(':first').remove();
                         oslist.children().not(':first').remove();
@@ -202,9 +176,10 @@
                                 }
                             });
                         });
+                        refreshSingleOptDropdowns(); 
                     });
 
-                    $.getJSON(url2, {'cluster_id':id}, function(data) {
+                    $.getJSON(url_defaults, {'cluster_id':id}, function(data) {
                         var bootorder = data['bootorder'];
                         var iallocator_default = data['iallocator'];
                         var hypervisors = data['hypervisors'];
@@ -290,6 +265,8 @@
                             $("#id_vcpus").val(vcpus);
                         if(imagepath)
                             $("#id_imagepath").val(imagepath);
+                        
+                        refreshSingleOptDropdowns();
                     });
                 }
             });
