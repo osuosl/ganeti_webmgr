@@ -41,7 +41,7 @@ from django.template import RequestContext
 
 from object_permissions.views.permissions import view_users, view_permissions
 from object_permissions import get_users_any, user_has_any_perms
-
+from object_permissions import signals as op_signals
 
 from logs.models import LogItem
 log_action = LogItem.objects.log_action
@@ -1040,3 +1040,29 @@ class InstanceConfigForm(forms.Form):
                     socket.setdefaulttimeout(oldtimeout)
                     raise forms.ValidationError('Invalid URL')
         return data
+
+
+def recv_user_add(sender, editor, user, obj, **kwargs):
+    """
+    receiver for object_permissions.signals.view_add_user, Logs action
+    """
+    log_action(editor, obj, "added user")
+
+
+def recv_user_remove(sender, editor, user, obj, **kwargs):
+    """
+    receiver for object_permissions.signals.view_remove_user, Logs action
+    """
+    log_action(editor, obj, "removed user")
+
+
+def recv_perm_edit(sender, editor, user, obj, **kwargs):
+    """
+    receiver for object_permissions.signals.view_edit_user, Logs action
+    """
+    log_action(editor, obj, "modified permissions")
+
+
+op_signals.view_add_user.connect(recv_user_add, sender=VirtualMachine)
+op_signals.view_remove_user.connect(recv_user_remove, sender=VirtualMachine)
+op_signals.view_edit_user.connect(recv_perm_edit, sender=VirtualMachine)
