@@ -1,49 +1,33 @@
 {% load object_permission_tags %}
+{% load webmgr_tags %}
 
 <html>
     <head>
     <title>{% block title %}Ganeti Web Manager{% endblock %}</title>
-    <link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}/css/base.css"/>
-    
-    <style>
-        #content {
-            background:#eeeeee;
-            border:0;
-            float: none;
-            margin:0 auto 0 auto;
-            
-        }
-    </style>
-    
+    <link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}/css/registration.css"/>
     {% block head %}{% endblock %}
-    
-    
-    
     </head>
     <body>
     <div id="header">
         <div id="title">
-            <a href="/">{% block header_title %}Ganeti Web Manager {%endblock%}</a>
+            <a href="/"><img src="{{MEDIA_URL}}/logo.png"/></a>
         </div>
     </div>
-
     <div id="content_wrapper">
-    <div id="content_column">
-        <div id="content">
-            {% block content %}
-            {% endblock %}
+        <div id="content_column">
+            <div id="content">
+                {% block content %}
+                {% endblock %}
+            </div>
+            <div class="floatfix"></div>
         </div>
-    </div>
     </div>
     
     <div id="footer">
         <p>
         <a href="http://www.djangoproject.com/">
-            <img src="{{ MEDIA_URL }}/django.gif" alt="A Django site" title="A Django site" border=0 />
+             <img src="{{ MEDIA_URL }}/django.png" alt="A Django site" title="A Django site" border=0 />
         </a>
-        </p>
-        <p>
-            Created in <a href="https://osuosl.org">Oregon State University Open Source Lab</a>.
         </p>
     </div>
     

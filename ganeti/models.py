@@ -746,48 +746,42 @@ class ClusterUser(models.Model):
         @param cluster  if set, get only VMs from specified cluster
         @param only_running  if set, get only running VMs
         """
-        owner = self.cast()
-        base = owner.get_objects_any_perms(VirtualMachine, groups=True)
+        # XXX - order_by must be cleared or it breaks annotation grouping since
+        #       the default order_by field is also added to the group_by clause
+        base = self.virtual_machines.all().order_by()
 
         if only_running:
             base = base.filter(status="running")
         base = base.exclude(ram=-1, disk_size=-1, virtual_cpus=-1)
         
         if cluster:
-            base = base.filter(cluster=cluster) \
-                       .values("ram", "disk_size", "virtual_cpus")
-            # XXX: we don't aggregate, because the base query is being distincted.
-            #      Due to QuerySet lazyness, "DISTINCT" is appended just before
-            #      realization of the query. This way, DISTINCT tries to distinct
-            #      on already aggregated data. BAD WAY!
-            #
-            #      Solution? We count in Python.
+            base = base.filter(cluster=cluster)
+            result = base.aggregate(ram=Sum('ram'), disk=Sum('disk_size'), \
+                                  virtual_cpus=Sum('virtual_cpus'))
             
-            result = {"disk":0, "ram":0, "virtual_cpus":0}
-            for i in base:
-                result["disk"] += i["disk_size"]
-                result["ram"] += i["ram"]
-                result["virtual_cpus"] += i["virtual_cpus"]
+            # repack with zeros instead of Nones
+            if result['disk'] is None:
+                result['disk'] = 0
+            if result['ram'] is None:
+                result['ram'] = 0
+            if result['virtual_cpus'] is None:
+                result['virtual_cpus'] = 0
             return result
         
         else:
-            base = base.filter(
-                cluster__in=Cluster.objects.filter(virtual_machines__owner=owner.user)
-            ).values("cluster__hostname", "ram", "disk_size", "virtual_cpus") 
+            base = base.values('cluster').annotate(ram_=Sum('ram'), \
+                                            disk_=Sum('disk_size'), \
+                                            virtual_cpus_=Sum('virtual_cpus'))
             
+            # repack as dictionary
             result = {}
-            for i in base:
-                hostname = i["cluster__hostname"]
-                if hostname not in result.keys():
-                    result[hostname] = {
-                        "disk": i["disk_size"],
-                        "ram":  i["ram"],
-                        "virtual_cpus": i["virtual_cpus"],
-                    }
-                else:
-                    result[hostname]["disk"] += i["disk_size"]
-                    result[hostname]["ram"] += i["ram"]
-                    result[hostname]["virtual_cpus"] += i["virtual_cpus"]
+            for used in base:
+                # repack with zeros instead of Nones, change index names
+                used['disk'] = 0 if not used['disk_'] else used['disk_']
+                used['ram'] = 0 if not used['ram_'] else used['ram_']
+                used['virtual_cpus'] = 0 if not used['virtual_cpus_'] else used['virtual_cpus_']
+                result[used.pop('cluster')] = used
+                
             return result
 
 

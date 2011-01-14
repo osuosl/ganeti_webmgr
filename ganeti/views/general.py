@@ -104,7 +104,7 @@ def overview(request):
     for cluster in resources.keys():
         quota[cluster] = {
             "used": resources[cluster],
-            "set": Cluster.objects.get(hostname=cluster).get_quota(owner),
+            "set": Cluster.objects.get(pk=cluster).get_quota(owner),
         }
         #if vms:
         quota[cluster]["running"] = vms.filter(status="running").count()
