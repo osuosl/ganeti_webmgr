@@ -7,12 +7,6 @@
     <link rel="stylesheet" type="text/css"
             href="{{MEDIA_URL}}/css/virtual_machine_create.css"/>
     <script src="{{MEDIA_URL}}/js/jquery.js"></script>
-
-    <!--
-    <script type="text/javascript" 
-            src="{{MEDIA_URL}}/js/jquery.virtual_machine_form.js"></script>
-    -->
-
     <script type="text/javascript">
         
         // -------
@@ -71,6 +65,9 @@
                 will be ignored and treated as if they don't exist. This is
                 useful if the dropdown has "blank" options such as "-----" or
                 "- choose one -" etc.
+
+                Note that if this is used on other pages, it might be a good
+                idea to make this into a jQuery plugin.
             */
             $('select').each(function(){
                 var curDropdown = $(this);
@@ -87,6 +84,8 @@
         // -------------------
         function initLiveFormUpdating(url_choices, url_options, url_defaults){
             /* initialize the live form updating */
+
+            // setup element references
             var cluster = $("#id_cluster");
             var owner = $("#id_owner");
             var snode = $("#id_snode").parent();
@@ -98,11 +97,14 @@
             var iallocator = $("#id_iallocator");
             var iallocator_hostname = $("#id_iallocator_hostname");
             var using_str = ' Using: '
+            
             if(!iallocator_hostname.attr('value'))
                 iallocator.attr('readonly', 'readonly');
             else
                 iallocator.after("<span>"+using_str+iallocator_hostname.val()+
                         "</span>");
+            
+            // setup change hooks for iallocator
             iallocator.change(function() {
                 if(!iallocator.attr('readonly')) {
                     if(iallocator.is(':checked')) {
@@ -120,6 +122,8 @@
                 }
             });
             iallocator.change();
+            
+            // setup change hooks for disk_template
             disk_template.change(function() {
                 if(!iallocator.is(':checked') || iallocator.attr('readonly')) {
                     if( disk_template.val() == 'drbd') {
@@ -131,10 +135,11 @@
             });
             disk_template.change();    
 
-            /* Ajax request to update cluster when owner changes */
+            // setup change hooks for the owner dropdown 
             owner.change(function() {
                 id = $(this).children("option:selected").val();
                 if( id != '' ) {
+                    // JSON update the cluster when the owner changes
                     $.getJSON(url_choices, {'clusteruser_id':id}, function(data) {
                         cluster.children().not(':first').remove();
                         $.each(data, function(i, item) {
@@ -143,13 +148,14 @@
                             child.attr('text', item[1]);
                             cluster.append(child);
                         });
+                        refreshSingleOptDropdowns();
                     });
                 }
+                // trigger the cluster dropdown change hook
                 cluster.trigger('change');
-                refreshSingleOptDropdowns();
             });
 
-            /* Ajax request to update oslist, pnode, and snode when cluster changes */
+            // setup change hooks for the cluster dropdown
             cluster.change(function() {
                 var pnode = $("#id_pnode");
                 var snode = $("#id_snode");
@@ -157,6 +163,8 @@
                 var id = $(this).children("option:selected").val();
                 
                 if( id != '' ) {
+                    
+                    // JSON update oslist, pnode, and snode when cluster changes
                     $.getJSON(url_options, {'cluster_id':id}, function(data) {
                         pnode.children().not(':first').remove();
                         snode.children().not(':first').remove();
@@ -176,6 +184,7 @@
                                 }
                             });
                         });
+                        // trigger the cluster dropdown change hook
                         refreshSingleOptDropdowns(); 
                     });
 
@@ -266,6 +275,7 @@
                         if(imagepath)
                             $("#id_imagepath").val(imagepath);
                         
+                        // trigger the cluster dropdown change hook
                         refreshSingleOptDropdowns();
                     });
                 }
