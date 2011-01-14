@@ -350,6 +350,13 @@ def recv_user_remove(sender, editor, user, obj, **kwargs):
     receiver for object_permissions.signals.view_remove_user, Logs action
     """
     log_action(editor, obj, "removed user")
+    
+    # remove custom quota user may have had.
+    if isinstance(user, (User,)):
+        cluster_user = user.get_profile()
+    else:
+        cluster_user = user.organization
+    cluster_user.quotas.filter(cluster=obj).delete()
 
 
 def recv_perm_edit(sender, editor, user, obj, **kwargs):
