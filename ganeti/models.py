@@ -37,6 +37,7 @@ import re
 
 from django.db import models
 from django.db.models import Sum, F, Q
+from django.db.models.query import QuerySet
 from django.db.models.signals import post_save, post_syncdb
 
 from logs.models import LogItem
@@ -128,11 +129,13 @@ class GanetiErrorManager(models.Manager):
         return self.filter(pk=id).update(cleared=True)
 
 
-    def clear_errors(self, msg=None, code=None, cluster=None, vm=None):
+    def clear_errors(self, msg=None, code=None, cls=None, obj=None):
         """
         Clear errors instead of deleting them.
         """
-        base = self.get_errors(msg, code, cluster, vm, cleared=False)
+        if not cls and obj:
+            cls = obj.__class__
+        base = self.get_errors(msg, code, cls, obj, cleared=False)
         return base.update(cleared=True)
 
 
@@ -144,15 +147,15 @@ class GanetiErrorManager(models.Manager):
         return base.delete()
 
 
-    def get_errors(self, msg=None, code=None, cluster=None, vm=None,
-            cleared=None, clusters=None, vms=None):
+    def get_errors(self, msg=None, code=None, cls=None, obj=None, cleared=None):
         """
         Manager method used for getting QuerySet of all errors depending on
         passed arguments.
 
+        @param  msg   error's message
         @param  code  error's code
-        @param cluster  affected cluster
-        @param  vm    affected vm
+        @param  cls   affected object type (model)
+        @param  obj   affected object (itself or just QuerySet)
         @param cleared  get cleared / broken / all errors
         """
         base = self.all()
@@ -160,12 +163,42 @@ class GanetiErrorManager(models.Manager):
 
         if code:    base = base.filter(code=code)
 
-        if cluster: base = base.filter(cluster=cluster)
-        elif clusters:
-                    base = base.filter(cluster__in=clusters)
+        if obj:
+            cluster_ = False
+            if cls == Cluster: cluster_ = True
+            elif obj.__class__ == Cluster: cluster_ = True
 
-        if vm:      base = base.filter(virtual_machine=vm)
-        elif vms:   base = base.filter(virtual_machine__in=vms)
+            # if obj is QuerySet then 'cls' arg is mandatory
+            if isinstance(obj, QuerySet):
+                ct = ContentType.objects.get_for_model(cls)
+                base1 = base.filter(obj_type=ct, obj_id__in=obj)
+
+            # if obj is instance of some model, then 'cls' is not needed
+            else:
+                if cls:
+                    ct = ContentType.objects.get_for_model(cls)
+                else:
+                    ct = ContentType.objects.get_for_model(obj.__class__)
+                base1 = base.filter(obj_type=ct, obj_id=obj.pk)
+
+            # if it's Cluster, then we need to get all of its vms
+            if cluster_:
+                vm_type = ContentType.objects.get_for_model(VirtualMachine)
+                if isinstance(obj, Cluster):
+                    base2 = base.filter(
+                        obj_type=vm_type,
+                        obj_id__in=VirtualMachine.objects.filter(cluster=obj)
+                    )
+                else:
+                    base2 = base.filter(
+                        obj_type=vm_type,
+                        obj_id__in=VirtualMachine.objects.filter(cluster__in=obj)
+                    )
+
+                base = base1 | base2
+
+            else:
+                base = base1
 
         if cleared == True:
             base = base.filter(cleared=True)
@@ -175,30 +208,23 @@ class GanetiErrorManager(models.Manager):
         return base
 
 
-    def store_error(self, msg, code=None, cluster=None, vm=None):
+    def store_error(self, msg, code=None, obj=None):
         """
         Manager method used to store errors
 
         @param  msg  error's message
         @param code  error's code
-        @param cluster  cluster affected by the error
-        @param vm    virtual machine affected by the error
+        @param  obj  object (i.e. cluster or vm) affected by the error
         """
-        if isinstance(cluster, str):
-            cluster = Cluster.objects.get(Q(hostname=cluster) | Q(slug=cluster))
-
-        if isinstance(vm, VirtualMachine):
-            cluster = vm.cluster
-
-        elif isinstance(vm, str) and isinstance(cluster, Cluster):
-            vm = VirtualMachine.objects.get(cluster=cluster, hostname=vm)
+        ct = ContentType.objects.get_for_model(obj.__class__)
 
         m, created = self.get_or_create(
-            msg=msg, code=code, cluster=cluster,
-            virtual_machine=vm, cleared=False,
+            msg=msg, code=code, obj_type=ct, obj_id=obj.pk,
+            cleared=False,
             defaults={
                 "id": None,
                 "cleared": False,
+                "obj": obj,
             })
 
         # TODO: unneccessary?
@@ -220,10 +246,14 @@ class GanetiError(models.Model):
     cleared = models.BooleanField(default=False)
 
     # cluster and VM affected by the error (if any)
-    cluster = models.ForeignKey("Cluster", null=True, blank=True,
-            related_name="ganeti_errors")
-    virtual_machine = models.ForeignKey("VirtualMachine", null=True, blank=True,
-            related_name="ganeti_errors")
+    obj_type = models.ForeignKey(ContentType, related_name="ganeti_errors")
+    obj_id = models.PositiveIntegerField()
+    obj = GenericForeignKey("obj_type", "obj_id")
+
+    #cluster = models.ForeignKey("Cluster", null=True, blank=True,
+    #        related_name="ganeti_errors")
+    #virtual_machine = models.ForeignKey("VirtualMachine", null=True, blank=True,
+    #        related_name="ganeti_errors")
 
     objects = GanetiErrorManager()
 
@@ -352,11 +382,7 @@ class CachedClusterObject(models.Model):
         except GanetiApiError, e:
             self.error = str(e)
 
-            if isinstance(self, Cluster):
-                GanetiError.objects.store_error(str(e), e.code, cluster=self)
-
-            elif isinstance(self, VirtualMachine):
-                GanetiError.objects.store_error(str(e), e.code, vm=self)
+            GanetiError.objects.store_error(str(e), e.code, obj=self)
 
         else:
             self.error = None

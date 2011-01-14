@@ -94,11 +94,11 @@ class TestGanetiErrorModel(TestCase):
 
         # test store_error
         store_error = GanetiError.objects.store_error
-        store_error(str(msg), msg.code, cluster="OSL_TEST0")
-        store_error(str(msg), msg.code, cluster="test1")
-        store_error(str(msg), msg.code, cluster=cluster2)
-        store_error(str(msg), msg.code, vm=vm0)
-        store_error(str(msg), msg.code, cluster=cluster1, vm="vm1.test.org")
+        store_error(str(msg), msg.code, obj=cluster0)
+        store_error(str(msg), msg.code, obj=cluster1)
+        store_error(str(msg), msg.code, obj=cluster2)
+        store_error(str(msg), msg.code, obj=vm0)
+        store_error(str(msg), msg.code, obj=vm1)
 
         # test get_errors
         get_errors = GanetiError.objects.get_errors
@@ -113,17 +113,22 @@ class TestGanetiErrorModel(TestCase):
         errors = get_errors(code=msg.code + 123)
         self.assertEqual(len(errors), 0)
 
-        errors = get_errors(cluster=cluster0)
+        errors = get_errors(obj=cluster0)
         self.assertEqual(len(errors), 2)
-        errors = get_errors(cluster=cluster1)
+        errors = get_errors(obj=cluster1)
         self.assertEqual(len(errors), 2)
-        errors = get_errors(cluster=cluster2)
+        errors = get_errors(obj=cluster2)
         self.assertEqual(len(errors), 1)
 
-        errors = get_errors(vm=vm0)
+        errors = get_errors(obj=vm0)
         self.assertEqual(len(errors), 1)
-        errors = get_errors(vm=vm1)
+        errors = get_errors(obj=vm1)
         self.assertEqual(len(errors), 1)
+
+        errors = get_errors(cls=Cluster, obj=Cluster.objects.all())
+        self.assertEqual(len(errors), 5)
+        errors = get_errors(cls=VirtualMachine, obj=VirtualMachine.objects.all())
+        self.assertEqual(len(errors), 2)
 
         # test clear_error(s)
         clear_error = GanetiError.objects.clear_error
@@ -140,13 +145,13 @@ class TestGanetiErrorModel(TestCase):
         errors = get_errors(cleared=False)
         self.assertEqual(len(errors), 4)
 
-        clear_errors(cluster=cluster2)
+        clear_errors(obj=cluster2)
         errors = get_errors()
         self.assertEqual(len(errors), 5)
         errors = get_errors(cleared=False)
         self.assertEqual(len(errors), 3)
 
-        clear_errors(vm=vm1)
+        clear_errors(obj=vm1)
         errors = get_errors()
         self.assertEqual(len(errors), 5)
         errors = get_errors(cleared=False)
@@ -164,11 +169,11 @@ class TestGanetiErrorModel(TestCase):
         errors = get_errors()
         self.assertEqual(len(errors), 5)
 
-        remove_errors(cluster=cluster2)
+        remove_errors(obj=cluster2)
         errors = get_errors()
         self.assertEqual(len(errors), 4)
 
-        remove_errors(vm=vm1)
+        remove_errors(obj=vm1)
         errors = get_errors()
         self.assertEqual(len(errors), 3)
 
