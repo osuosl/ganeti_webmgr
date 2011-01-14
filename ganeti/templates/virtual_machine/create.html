@@ -4,9 +4,11 @@
 {% block title %}Create a new Virtual Machine{% endblock %}
 
 {% block head %}
-    <link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}/css/virtual_machine_create.css"/>
+    <link rel="stylesheet" type="text/css"
+            href="{{MEDIA_URL}}/css/virtual_machine_create.css"/>
     <script src="{{MEDIA_URL}}/js/jquery.js"></script>
-    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.virtual_machine_form.js"></script>
+    <script type="text/javascript" 
+            c="{{MEDIA_URL}}/js/jquery.virtual_machine_form.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
             // init virtual machines form jQuery plugin
