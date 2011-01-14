@@ -769,20 +769,17 @@ class ClusterUser(models.Model):
             return result
         
         else:
-            base = base.values('cluster').annotate(ram=Sum('ram'), \
-                                            disk=Sum('disk_size'), \
-                                            virtual_cpus=Sum('virtual_cpus'))
+            base = base.values('cluster').annotate(ram_=Sum('ram'), \
+                                            disk_=Sum('disk_size'), \
+                                            virtual_cpus_=Sum('virtual_cpus'))
             
             # repack as dictionary
             result = {}
             for used in base:
-                # repack with zeros instead of Nones
-                if used['disk'] is None:
-                    used['disk'] = 0
-                if used['ram'] is None:
-                    used['ram'] = 0
-                if used['virtual_cpus'] is None:
-                    used['virtual_cpus'] = 0
+                # repack with zeros instead of Nones, change index names
+                used['disk'] = 0 if not used['disk_'] else used['disk_']
+                used['ram'] = 0 if not used['ram_'] else used['ram_']
+                used['virtual_cpus'] = 0 if not used['virtual_cpus_'] else used['virtual_cpus_']
                 result[used.pop('cluster')] = used
                 
             return result
