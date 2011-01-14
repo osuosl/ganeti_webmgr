@@ -8,7 +8,8 @@
             href="{{MEDIA_URL}}/css/virtual_machine_create.css"/>
     <script src="{{MEDIA_URL}}/js/jquery.js"></script>
     <script type="text/javascript" 
-            c="{{MEDIA_URL}}/js/jquery.virtual_machine_form.js"></script>
+            src="{{MEDIA_URL}}/js/jquery.virtual_machine_form.js"></script>
+    
     <script type="text/javascript">
         $(document).ready(function() {
             // init virtual machines form jQuery plugin
@@ -18,23 +19,24 @@
             // AJAX update the oslist, pnode, and snode when cluster changes
             cluster_change('{% url instance-create-cluster-options %}',
                            '{% url instance-create-cluster-defaults %}');
-            // replace single-option dropdowns with a static label of that option
+
+            // replace single-option dropdowns with a static label
             // Note: This should be made into a jQuery plugin at some point.
-            /*
             $('select').each(function(){
                 var curDropdown = $(this)
-                var options = curDropdown.find('option');
-                console.log($(this));
+                var options = $(curDropdown.find('option'));
+                console.log(curDropdown);
                 if(options.length == 1){
-                    curDropdown.replaceWith(
+                    curDropdown.hide();
+                    curDropdown.parent().append(
                         "<p class='disabled-text'>"+
-                        "   "+$(options).text()+
+                            "   "+options.text()+
                         "</p>"
                     );
                 }
             });
-            */
-
+            
+            // initialize the help popups for each item
             $('#virtualmachineform input, #virtualmachineform select')
                 .live('focus', function(){
                     name = this.name;

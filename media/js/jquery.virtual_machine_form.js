@@ -66,25 +66,26 @@
         });
         return group;
     };
+
     /* Ajax request to update cluster when owner changes */
     owner_change = function(url) {
         owner.change(function() {
             id = $(this).children("option:selected").val();
             if( id != '' ) {
-                $.getJSON(url,
-                    {'clusteruser_id':id}, function(data) {
-                        cluster.children().not(':first').remove();
-                        $.each(data, function(i, item) {
-                                child = $("<option> </option>");
-                                child.attr('value', item[0]);
-                                child.attr('text', item[1]);
-                                cluster.append(child);
-                        });
+                $.getJSON(url, {'clusteruser_id':id}, function(data) {
+                    cluster.children().not(':first').remove();
+                    $.each(data, function(i, item) {
+                        child = $("<option> </option>");
+                        child.attr('value', item[0]);
+                        child.attr('text', item[1]);
+                        cluster.append(child);
+                    });
                 });
             }
             cluster.trigger('change');
         });
     };
+
     /* Ajax request to update oslist, pnode, and snode when cluster changes */
     cluster_change = function(url1, url2) {
         cluster.change(function() {
