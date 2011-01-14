@@ -518,7 +518,7 @@ class VirtualMachine(CachedClusterObject):
             if status in ('success', 'error'):
                 finished = Job.parse_end_timestamp(data)
                 Job.objects.filter(pk=self.last_job_id) \
-                    .update(status=status, ignore_cache=False, finished=finished)
+                    .update(status=status, ignore_cache=Falverbose_namese, finished=finished)
                 self.ignore_cache = False
             
             if status == 'success':
@@ -956,6 +956,87 @@ class GanetiError(models.Model):
     def __unicode__(self):
         base = "[%s] %s" % (self.timestamp, self.msg)
         return base
+
+
+class VirtualMachineTemplate(models.Model):
+    """
+    Virtual Machine Template holds all the values for the create virtual machine
+      form so that they can automatically be used or edited by a user.
+    """
+    FQDN_RE = r'(?=^.{1,254}$)(^(?:(?!\d+\.|-)[a-zA-Z0-9_\-]{1,63}(?<!-)\.?)+(?:[a-zA-Z]{2,})$)'
+
+    templates = (
+        (u'', u'---------'),
+        (u'plain', u'plain'),
+        (u'drbd', u'drbd'),
+        (u'file', u'file'),
+        (u'diskless', u'diskless')
+    )
+    nicmodes = (
+        (u'', u'---------'),
+        (u'routed', u'routed'),
+        (u'bridged', u'bridged')
+    )
+    nictypes = (
+        (u'', u'---------'),
+        (u'rtl8139',u'rtl8139'),
+        (u'ne2k_isa',u'ne2k_isa'),
+        (u'ne2k_pci',u'ne2k_pci'),
+        (u'i82551',u'i82551'),
+        (u'i82557b',u'i82557b'),
+        (u'i82559er',u'i82559er'),
+        (u'pcnet',u'pcnet'),
+        (u'e1000',u'e1000'),
+        (u'paravirtual',u'paravirtual'),
+    )
+    disktypes = (
+        (u'', u'---------'),
+        (u'paravirtual',u'paravirtual'),
+        (u'ioemu',u'ioemu'),
+        (u'ide',u'ide'),
+        (u'scsi',u'scsi'),
+        (u'sd',u'sd'),
+        (u'mtd',u'mtd'),
+        (u'pflash',u'pflash'),
+    )
+    bootchoices = (
+        ('disk', 'Hard Disk'),
+        ('cdrom', 'CD-ROM'),
+        ('network', 'Network'),
+    )
+
+    owner = models.ForeignKey('ClusterUser')
+    cluster = models.ForeignKey('Cluster')
+    hostname = models.CharField(verbose_name='instance Name',validators=[ \
+                                RegexValidator(FQDN_RE,  \
+                                message='Instance name must be resolvable'), \
+                                ],max_length=255)
+    start = models.BooleanField(verbose_name='start up after creation',
+                               default=True)
+    name_check = models.BooleanField(verbose_name='dNS Name Check', \
+                                    default=True)
+    iallocator = models.BooleanField(verbose_name='automatic Allocation', \
+                                    default=False)
+    iallocator_hostname = models.CharField(null=True)
+    disk_template = models.CharField(choices=templates)
+    pnode = models.CharField(verbose_name='primary node')
+    snode = models.CharField(verbose_name='secondary node')
+    os = models.CharField(verbose_name='operating system')
+    # BEPARAMS
+    vcpus = models.IntegerField(verbose_name='Virtual CPUs', validators=[MinValueValidator(1)])
+    ram = models.IntegerField(verbose_name='Memory', validators=[MinValueValidator(100)])
+    disk_size = models.IntegerField(verbose_name='Disk Size', validators=[MinValueValidator(100)])
+    disk_type = models.CharField(verbose_name='Disk Type', choices=disktypes)
+    nicmode = models.CharField(verbose_name='NIC Mode', choices=nicmodes)
+    niclink = models.CharField(verbose_name='NIC Link', null=True)
+    nictype = models.CharField(verbose_name='NIC Type', choices=nictypes)
+    # HVPARAMS
+    kernelpath = models.CharField(verbose_name='kernel Path', null=True)
+    rootpath = models.CharField(verbose_name='root Path', default='/')
+    serialconsole = models.BooleanField(verbose_name='enable Serial Console',
+                                      null=True)
+    bootorder = models.CharField(verbose_name='Boot Device', choices=bootchoices)
+    imagepath = models.CharField(verbose_name='dD-ROM image path', null=True)
 
 
 class ClusterUser(models.Model):
