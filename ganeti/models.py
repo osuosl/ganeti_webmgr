@@ -518,7 +518,7 @@ class VirtualMachine(CachedClusterObject):
             if status in ('success', 'error'):
                 finished = Job.parse_end_timestamp(data)
                 Job.objects.filter(pk=self.last_job_id) \
-                    .update(status=status, ignore_cache=Falverbose_namese, finished=finished)
+                    .update(status=status, ignore_cache=False, finished=finished)
                 self.ignore_cache = False
             
             if status == 'success':
