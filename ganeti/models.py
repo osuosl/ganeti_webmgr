@@ -758,6 +758,51 @@ class Cluster(CachedClusterObject):
             return None
 
 
+class VirtualMachineTemplate(models.Model):
+    """
+    Virtual Machine Template holds all the values for the create virtual machine
+      form so that they can automatically be used or edited by a user.
+    """
+    cluster = models.ForeignKey('Cluster')
+    start = models.BooleanField(verbose_name='Start up After Creation', \
+                default=True)
+    name_check = models.BooleanField(verbose_name='DNS Name Check', \
+                default=True)
+    iallocator = models.BooleanField(verbose_name='Automatic Allocation', \
+                default=False)
+    iallocator_hostname = models.CharField(null=True, max_length=255)
+    disk_template = models.CharField(max_length=16)
+    pnode = models.CharField(verbose_name='Primary Node', max_length=255, \
+                null=True, blank=True)
+    snode = models.CharField(verbose_name='Secondary Node', max_length=255, \
+                null=True, blank=True)
+    os = models.CharField(verbose_name='Operating System', max_length=255)
+    # BEPARAMS
+    vcpus = models.IntegerField(verbose_name='Virtual CPUs', \
+                validators=[MinValueValidator(1)])
+    ram = models.IntegerField(verbose_name='Memory', \
+                validators=[MinValueValidator(100)])
+    disk_size = models.IntegerField(verbose_name='Disk Size', \
+                validators=[MinValueValidator(100)])
+    disk_type = models.CharField(verbose_name='Disk Type', max_length=255)
+    nicmode = models.CharField(verbose_name='NIC Mode', max_length=255)
+    niclink = models.CharField(verbose_name='NIC Link', max_length=255, \
+                null=True, blank=True)
+    nictype = models.CharField(verbose_name='NIC Type', max_length=255)
+    # HVPARAMS
+    kernelpath = models.CharField(verbose_name='Kernel Path', null=True, \
+                blank=True, max_length=255)
+    rootpath = models.CharField(verbose_name='Root Path', default='/', \
+                max_length=255)
+    serialconsole = models.BooleanField(verbose_name='Enable Serial Console')
+    bootorder = models.CharField(verbose_name='Boot Device', max_length=255)
+    imagepath = models.CharField(verbose_name='CD-ROM Image Path', null=True, \
+                blank=True, max_length=512)
+
+    def __unicode__(self):
+        return self.templatename
+
+
 if settings.DEBUG or True:
     # XXX - if in debug mode create a model for testing cached cluster objects
     class TestModel(CachedClusterObject):

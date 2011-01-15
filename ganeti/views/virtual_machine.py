@@ -763,6 +763,67 @@ class NewVirtualMachineForm(forms.ModelForm):
     """
     Virtual Machine Creation / Edit form
     """
+    FQDN_RE = r'(?=^.{1,254}$)(^(?:(?!\d+\.|-)[a-zA-Z0-9_\-]{1,63}(?<!-)\.?)+(?:[a-zA-Z]{2,})$)'
+
+    templates = [
+        (u'', u'---------'),
+        (u'plain', u'plain'),
+        (u'drbd', u'drbd'),
+        (u'file', u'file'),
+        (u'diskless', u'diskless')
+    ]
+    nicmodes = [
+        (u'', u'---------'),
+        (u'routed', u'routed'),
+        (u'bridged', u'bridged')
+    ]
+    nictypes = [
+        (u'', u'---------'),
+        (u'rtl8139',u'rtl8139'),
+        (u'ne2k_isa',u'ne2k_isa'),
+        (u'ne2k_pci',u'ne2k_pci'),
+        (u'i82551',u'i82551'),
+        (u'i82557b',u'i82557b'),
+        (u'i82559er',u'i82559er'),
+        (u'pcnet',u'pcnet'),
+        (u'e1000',u'e1000'),
+        (u'paravirtual',u'paravirtual'),
+    ]
+    disktypes = [
+        (u'', u'---------'),
+        (u'paravirtual',u'paravirtual'),
+        (u'ioemu',u'ioemu'),
+        (u'ide',u'ide'),
+        (u'scsi',u'scsi'),
+        (u'sd',u'sd'),
+        (u'mtd',u'mtd'),
+        (u'pflash',u'pflash'),
+    ]
+    bootchoices = [
+        ('disk', 'Hard Disk'),
+        ('cdrom', 'CD-ROM'),
+        ('network', 'Network'),
+    ]
+
+    owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label='Owner')
+    cluster = forms.ModelChoiceField(queryset=Cluster.objects.none(), label='Cluster')
+    hostname = forms.RegexField(label='Instance Name', regex=FQDN_RE,
+                            error_messages={
+                                'invalid': 'Instance name must be resolvable',
+                            },
+                            max_length=255)
+    pnode = forms.ChoiceField(label='Primary Node', choices=[empty_field])
+    snode = forms.ChoiceField(label='Secondary Node', choices=[empty_field])
+    os = forms.ChoiceField(label='Operating System', choices=[empty_field])
+    disk_template = forms.ChoiceField(label='Disk Template', \
+                                      choices=templates)
+    ram = DataVolumeField(label='Memory', min_value=100)
+    disk_size = DataVolumeField(label='Disk Size', min_value=100)
+    disk_type = forms.ChoiceField(label='Disk Type', choices=disktypes)
+    nicmode = forms.ChoiceField(label='NIC Mode', choices=nicmodes)
+    nictype = forms.ChoiceField(label='NIC Type', choices=nictypes)
+    bootorder = forms.ChoiceField(label='Boot Device', choices=bootchoices)
+
     class Meta:
         model = VirtualMachineTemplate
 
