@@ -46,7 +46,7 @@ log_action = LogItem.objects.log_action
 
 from util.client import GanetiApiError
 from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine, \
-        Job, SSHKey
+        Job, SSHKey, VirtualMachineTemplate
 from ganeti.views import render_403
 from ganeti.fields import DataVolumeField
 
@@ -759,10 +759,13 @@ def cluster_default_info(cluster):
         }
 
 
-class NewVirtualMachineForm(forms.Form):
+class NewVirtualMachineForm(forms.ModelForm):
     """
     Virtual Machine Creation / Edit form
     """
+    class Meta:
+        model = VirtualMachineTemplate
+
     def __init__(self, user, cluster=None, initial=None, *args, **kwargs):
         self.user = user
         super(NewVirtualMachineForm, self).__init__(initial, *args, **kwargs)
