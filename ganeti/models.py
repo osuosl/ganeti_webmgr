@@ -963,53 +963,7 @@ class VirtualMachineTemplate(models.Model):
     Virtual Machine Template holds all the values for the create virtual machine
       form so that they can automatically be used or edited by a user.
     """
-    FQDN_RE = r'(?=^.{1,254}$)(^(?:(?!\d+\.|-)[a-zA-Z0-9_\-]{1,63}(?<!-)\.?)+(?:[a-zA-Z]{2,})$)'
-
-    emptychoice = ((u'remove', u'REMOVE'),)
-
-    templates = (
-        (u'plain', u'plain'),
-        (u'drbd', u'drbd'),
-        (u'file', u'file'),
-        (u'diskless', u'diskless')
-    )
-    nicmodes = (
-        (u'routed', u'routed'),
-        (u'bridged', u'bridged')
-    )
-    nictypes = (
-        (u'rtl8139',u'rtl8139'),
-        (u'ne2k_isa',u'ne2k_isa'),
-        (u'ne2k_pci',u'ne2k_pci'),
-        (u'i82551',u'i82551'),
-        (u'i82557b',u'i82557b'),
-        (u'i82559er',u'i82559er'),
-        (u'pcnet',u'pcnet'),
-        (u'e1000',u'e1000'),
-        (u'paravirtual',u'paravirtual'),
-    )
-    disktypes = (
-        #(u'', u'---------'),
-        (u'paravirtual',u'paravirtual'),
-        (u'ioemu',u'ioemu'),
-        (u'ide',u'ide'),
-        (u'scsi',u'scsi'),
-        (u'sd',u'sd'),
-        (u'mtd',u'mtd'),
-        (u'pflash',u'pflash'),
-    )
-    bootchoices = (
-        ('disk', 'Hard Disk'),
-        ('cdrom', 'CD-ROM'),
-        ('network', 'Network'),
-    )
-
-    owner = models.ForeignKey('ClusterUser', verbose_name='Owner')
     cluster = models.ForeignKey('Cluster')
-    hostname = models.CharField(verbose_name='Instance Name',validators=[ \
-                RegexValidator(FQDN_RE, \
-                message='Instance name must be resolvable'), \
-                ],max_length=255)
     start = models.BooleanField(verbose_name='Start up After Creation', \
                 default=True)
     name_check = models.BooleanField(verbose_name='DNS Name Check', \
@@ -1017,13 +971,12 @@ class VirtualMachineTemplate(models.Model):
     iallocator = models.BooleanField(verbose_name='Automatic Allocation', \
                 default=False)
     iallocator_hostname = models.CharField(null=True, max_length=255)
-    disk_template = models.CharField(choices=templates, max_length=16)
+    disk_template = models.CharField(max_length=16)
     pnode = models.CharField(verbose_name='Primary Node', max_length=255, \
-                choices=emptychoice)
+                null=True, blank=True)
     snode = models.CharField(verbose_name='Secondary Node', max_length=255, \
-                choices=emptychoice, blank=True, null=True)
-    os = models.CharField(verbose_name='Operating System', max_length=255, \
-                choices=emptychoice)
+                null=True, blank=True)
+    os = models.CharField(verbose_name='Operating System', max_length=255)
     # BEPARAMS
     vcpus = models.IntegerField(verbose_name='Virtual CPUs', \
                 validators=[MinValueValidator(1)])
@@ -1031,25 +984,23 @@ class VirtualMachineTemplate(models.Model):
                 validators=[MinValueValidator(100)])
     disk_size = models.IntegerField(verbose_name='Disk Size', \
                 validators=[MinValueValidator(100)])
-    disk_type = models.CharField(verbose_name='Disk Type', choices=disktypes, \
-                max_length=255)
-    nicmode = models.CharField(verbose_name='NIC Mode', choices=nicmodes, \
-                max_length=255)
-    niclink = models.CharField(verbose_name='NIC Link', null=True, \
-                max_length=255)
-    nictype = models.CharField(verbose_name='NIC Type', choices=nictypes, \
-                max_length=255)
+    disk_type = models.CharField(verbose_name='Disk Type', max_length=255)
+    nicmode = models.CharField(verbose_name='NIC Mode', max_length=255)
+    niclink = models.CharField(verbose_name='NIC Link', max_length=255, \
+                null=True, blank=True)
+    nictype = models.CharField(verbose_name='NIC Type', max_length=255)
     # HVPARAMS
     kernelpath = models.CharField(verbose_name='Kernel Path', null=True, \
-                max_length=255)
+                blank=True, max_length=255)
     rootpath = models.CharField(verbose_name='Root Path', default='/', \
                 max_length=255)
     serialconsole = models.BooleanField(verbose_name='Enable Serial Console')
-    bootorder = models.CharField(verbose_name='Boot Device', \
-                choices=bootchoices, max_length=255)
+    bootorder = models.CharField(verbose_name='Boot Device', max_length=255)
     imagepath = models.CharField(verbose_name='CD-ROM Image Path', null=True, \
-                max_length=512)
+                blank=True, max_length=512)
 
+    def __unicode__(self):
+        return self.templatename
 
 class ClusterUser(models.Model):
     """
