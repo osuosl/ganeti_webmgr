@@ -369,39 +369,37 @@ tr.group td.name {background:url(/media/images/icons/group.png) no-repeat 0 4px;
     padding-right:0 !important;
 }
 
-.pagination { margin-top: 4px; }
-.pagination ul{border:0; margin:0; padding:0;}
+.pagination {float:right; margin-top: 15px;}
 .pagination li{
-    border:0; margin:0; padding:0;
+    margin:0;
+    display:inline;
     font-size:11px;
     list-style:none;
-    margin-right:2px;
-}
-.pagination li span{
-    float:left;
     padding:3px 6px;
-    display:block;
-    border:solid 1px #9aafe5
-    margin-right:2px;
-    text-decoration:none;
 }
 .pagination .next a,
-.pagination .previous a {
-    font-weight:bold;
+.pagination .previous a { font-weight:bold; }
+.pagination .paginator-item {
+    border:solid 1px #9aafe5;
+    cursor:pointer;
+    margin:0 2px 0 0;
+}
+.pagination .paginator-item:hover {
+    background-color:#9aafe5 !important;
+    color:red;
 }
 .pagination .active {
     background:#2e6ab1;
+    border-color:#2e6ab1;
     color:#FFFFFF;
+    cursor:auto;
     font-weight:bold;
-    display:block;
-    float:left;
 }
 .pagination a:link,
 .pagination a:visited {
+    margin:0;
     color:#0e509e;
-    display:block;
-    float:left;
-    padding:3px 6px;
     text-decoration:none;
 }
-.pagination a:hover { border: solid 1px #0e509e; }
+.pagination a:hover { text-decoration:underline;}
+.pagination
