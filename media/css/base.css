@@ -379,17 +379,16 @@ tr.group td.name {background:url(/media/images/icons/group.png) no-repeat 0 4px;
 }
 .pagination .next a,
 .pagination .previous a { font-weight:bold; }
-.pagination .paginator-item {
+.pagination .page {
     border:solid 1px #9aafe5;
     cursor:pointer;
     margin:0 2px 0 0;
 }
-.pagination .paginator-item:hover {
-    background-color:#9aafe5 !important;
-    color:red;
+.pagination li.page:hover {
+    background-color:#9aafe5;
 }
 .pagination .active {
-    background:#2e6ab1;
+    background-color:#2e6ab1 !important;
     border-color:#2e6ab1;
     color:#FFFFFF;
     cursor:auto;

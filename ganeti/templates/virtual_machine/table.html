@@ -15,41 +15,34 @@
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.tablesorter.min.js"></script>
 <script type="text/javascript">
-    $(document).ready(function() {
-        $("#vmlist").tablesorter();
-    });
-
-    function ajax_get_update() {
+    function ajax_get_update(url) {
         $.get(url, function(results) {
            $('#vm-wrapper').html(results);
         }, "html");
     }
 
     $(document).ready( function() {
-        $('.pagination .previous').click(function(e) {
+        $("#vmlist").tablesorter();
+        
+        $('.pagination .previous').live('click', function(e) {
             e.preventDefault();
             url = ($('.pagination .previous a')[0].href);
-            ajax_get_update();
+            ajax_get_update(url);
         });
-        $('.pagination .next').click(function(e) {
+        
+        $('.pagination .next').live('click', function(e) {
             e.preventDefault();
             url = ($('.pagination .next a')[0].href);
-            ajax_get_update();
+            ajax_get_update(url);
+        });
+        
+        $('.pagination .page:not(.active)').live('click', function() {
+            page = $(this).html();
+            url = '{% url virtualmachine-table %}?page=' + page;
+            ajax_get_update(url);
         });
     });
 
-    $(document).ajaxStop( function() {
-        $('.pagination .previous').click(function(e) {
-            e.preventDefault();
-            url = ($('.pagination .previous a')[0].href);
-            ajax_get_update();
-        });
-        $('.pagination .next').click(function(e) {
-            e.preventDefault();
-            url = ($('.pagination .next a')[0].href);
-            ajax_get_update();
-        });
-    });
 </script>
 {% endblock %}
 

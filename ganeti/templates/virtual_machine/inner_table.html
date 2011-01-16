@@ -68,7 +68,7 @@
     {% endif %}
 
     {% for page in vms.paginator.page_range %}
-    <li class="{%if page == vms.number%}active{%endif%} paginator-item">{{ page }}</li>
+    <li class="{%if page == vms.number%}active{%endif%} page">{{ page }}</li>
     {% endfor %}
 
     {% if vms.has_next %}
