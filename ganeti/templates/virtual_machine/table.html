@@ -41,6 +41,17 @@
             url = '{% url virtualmachine-table %}?page=' + page;
             ajax_get_update(url);
         });
+        
+        $('.spinner')
+            .hide()
+            .ajaxStart(function() {
+                $(this).show();
+                $('#vmlist tr td').hide();
+                $('.pagination').hide();
+            })
+            .ajaxStop(function() {
+                $(this).hide()
+            });
     });
 
 </script>
@@ -54,6 +65,9 @@
     {% endif %}
 {% endif %}
 
+
+
 <div id="vm-wrapper">
 {% include "virtual_machine/inner_table.html" %}
 </div>
+<div class="spinner" ><br/>Loading...<br/><br/><img src='{{ MEDIA_URL }}/images/ajax-loader.gif'></div>
