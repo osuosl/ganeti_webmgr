@@ -80,12 +80,7 @@ def delete(request, cluster_slug, instance):
     elif request.method == 'DELETE':
         # Delete instance
         jobid = instance.rapi.DeleteInstance(instance.hostname)
-        # XXX this is the kiss of fucking death
-        sleep(2)
-        instance.rapi.GetJobStatus(jobid)
-
         instance.delete()
-
         return HttpResponse('1', mimetype='application/json')
 
     return HttpResponseNotAllowed(["GET","DELETE"])
@@ -102,7 +97,7 @@ def reinstall(request, cluster_slug, instance):
         hostname=instance)
 
     # Check permissions.
-    # Reinstalling is somewhat similar to deleting in that you destroy data,
+    # XXX Reinstalling is somewhat similar to deleting in that you destroy data,
     # so use that for now.
     if not (
         user.is_superuser or
@@ -125,14 +120,11 @@ def reinstall(request, cluster_slug, instance):
         else:
             os = instance.operating_system
 
-        # no_startup=True prevents quota circumventions. possible future solution would be a checkbox
+        # XXX no_startup=True prevents quota circumventions. possible future solution would be a checkbox
         # asking whether they want to start up, and check quota here if they do (would also involve
         # checking whether this VM is already running and subtracting that)
+        
         job_id = instance.rapi.ReinstallInstance(instance.hostname, os=os, no_startup=True)
-
-        sleep(2)
-        instance.rapi.GetJobStatus(job_id)
-
         job = Job.objects.create(job_id=job_id, obj=instance, cluster=instance.cluster)
         VirtualMachine.objects.filter(id=instance.id).update(last_job=job, ignore_cache=True)
         
@@ -396,7 +388,6 @@ def detail(request, cluster_slug, instance):
                     # Remove this, we don't want them to be able to read local files
                     del data['cdrom_image_path']
             vm.set_params(**data)
-            sleep(1)
             return HttpResponseRedirect(request.path)
 
     else:
@@ -534,17 +525,7 @@ def create(request, cluster_slug=None):
                             'disk_type':disktype,\
                             'cdrom_image_path':imagepath},
                         beparams={"memory": ram})
-
-
-                # Wait for job to process as the error will not happen
-                #  right away
-                sleep(2)
-                jobstatus = cluster.rapi.GetJobStatus(job_id)
-
-                # raise an exception if there was an error in the job
-                if jobstatus["status"] == 'error':
-                    raise GanetiApiError(jobstatus["opresult"])
-
+                
                 vm = VirtualMachine(cluster=cluster, owner=owner,
                                     hostname=hostname, disk_size=disk_size,
                                     ram=ram, virtual_cpus=vcpus)
