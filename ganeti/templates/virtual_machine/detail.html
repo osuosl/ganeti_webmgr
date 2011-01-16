@@ -227,15 +227,15 @@
         <table class="overview">
             {% with instance.info as info %}
             <tr><td>Owner</td><td>{{ instance.owner.name }}</td></tr>
-            <tr><td class="name">Status</td><td class="name">{{ info.oper_state|yesno:"Running,Stopped" }}</td></tr>
-            <tr><td class="name">Autostart</td><td class="name">{{ info.admin_state }}</td></tr>
-            <tr><td class="name">UUID</td><td class="name">{{ info.uuid }}</td></tr>
-            <tr><td class="name">Primary node</td><td class="name">{{ info.pnode }}</td></tr>
-            <tr><td class="name">Failover node</td><td class="name">{{ info.snodes|join:", " }}</td></tr>
-            <tr><td class="name">Created on</td><td class="name">{{ instance.ctime|date }}</td></tr>
-            <tr><td class="name">Last modified</td><td class="name">{{ instance.mtime|date }}</td></tr>
-            <tr><td class="name">NIC type</td><td class="name">{{ info.hvparams.nic_type }}</td></tr>
-            <tr><td class="name">Disk type</td><td class="name">{{ info.hvparams.disk_type }}</td></tr>
+            <tr><td>Status</td><td>{{ info.oper_state|yesno:"Running,Stopped" }}</td></tr>
+            <tr><td>Autostart</td><td>{{ info.admin_state }}</td></tr>
+            <tr><td>UUID</td><td>{{ info.uuid }}</td></tr>
+            <tr><td>Primary node</td><td>{{ info.pnode }}</td></tr>
+            <tr><td>Failover node</td><td>{{ info.snodes|join:", " }}</td></tr>
+            <tr><td>Created on</td><td>{{ instance.ctime|date }}</td></tr>
+            <tr><td>Last modified</td><td>{{ instance.mtime|date }}</td></tr>
+            <tr><td>NIC type</td><td>{{ info.hvparams.nic_type }}</td></tr>
+            <tr><td>Disk type</td><td>{{ info.hvparams.disk_type }}</td></tr>
             {% endwith %}
         </table>
     </div>
