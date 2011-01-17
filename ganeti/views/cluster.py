@@ -89,12 +89,8 @@ def virtual_machines(request, cluster_slug):
     admin = True if user.is_superuser else user.has_perm('admin', cluster)
     if not admin:
         return render_403(request, "You do not have sufficient privileges")
-    
-    if admin:
-        vms = cluster.virtual_machines.all()
-    else:
-        vms = user.filter_on_perms(['admin'], VirtualMachine, cluster=cluster)
 
+    vms = cluster.virtual_machines.select_related().all()
     vms = virtual_machine.render_vms(request, vms)
 
     return render_to_response("virtual_machine/table.html", \

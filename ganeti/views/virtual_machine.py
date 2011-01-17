@@ -317,6 +317,8 @@ def list_(request):
         vms = user.get_objects_any_perms(VirtualMachine, groups=True)
         can_create = user.has_any_perms(Cluster, ['create_vm', ])
 
+    vms = vms.select_related()
+
     # paginate, sort
     vms = render_vms(request, vms)
 
