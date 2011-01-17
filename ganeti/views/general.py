@@ -64,8 +64,8 @@ def overview(request):
         #vms = None
 
         #ganeti errors
-        ganeti_errors = GanetiError.objects.get_errors(clusters=cluster_list,
-            cleared=False)
+        ganeti_errors = GanetiError.objects.get_errors(cls=Cluster,
+                obj=cluster_list, cleared=False)
 
         job_errors = Job.objects.filter(cluster__in=cluster_list, status="error"). \
                 order_by("-finished")[:5]
@@ -89,7 +89,8 @@ def overview(request):
         vms = VirtualMachine.objects.filter(owner=user.get_profile())
 
         #ganeti errors
-        ganeti_errors = GanetiError.objects.get_errors(vms=vms, cleared=False)
+        ganeti_errors = GanetiError.objects.get_errors(cls=VirtualMachine, 
+                obj=vms, cleared=False)
 
         # content type of VirtualMachine model
         # NOTE: done that way because if behavior of GenericForeignType
