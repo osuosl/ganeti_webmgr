@@ -49,7 +49,6 @@
 <script src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
 <script type="text/javascript">
     var actions_enabled = true;
-    var checkInterval;
 
     $(document).ready(function() {
         $('#tabs').tabs({ 
@@ -80,7 +79,7 @@
         {% if instance.last_job_id %}
             {# there is a running job, display it and poll for status #}
             get_job_status({{instance.last_job.job_id}});
-            poll_job_status({{instance.last_job.job_id}});
+            poll_job_status({{instance.last_job.job_id}}, job_complete);
         {% else %}
             {% if instance.error %}
                 display_ganeti_error("{{instance.error}}");
@@ -88,80 +87,18 @@
         {% endif %}
     });
 
+    function job_complete() {
+        window.location.reload();
+    }
+
     function action_response(result) {
         if (result.ops == undefined) {
             display_ganeti_error(result[1]);
             actions_enabled = true;
             $('#actions a').removeClass('disabled');
         } else {
-            poll_job_status(result['id'])
+            poll_job_status(result['id'], job_complete)
             display_job(result);
-        }
-    }
-
-    // poll for job status, first poll is delayed by 3000ms
-    function poll_job_status(job_id) {
-        actions_enabled = false;
-        $('#actions a').addClass('disabled');
-        checkInterval = setInterval(get_job_status, 3000, job_id);
-    }
-
-    // get job status
-    function get_job_status(job_id) {
-        $.ajax({
-                url: "{% url cluster-detail cluster.slug %}/job/"+job_id+"/status/",
-                success: function(data) {
-                    if (data.status == 'success'){
-                            $("#messages").empty();
-                        clearInterval(checkInterval);
-                        window.location.reload();
-                    }
-                    
-                    display_job(data);
-                    if (data.status == 'error'){
-                        if (checkInterval != undefined){
-                            clearInterval(checkInterval);
-                            checkInterval = undefined;
-                        }
-                    }
-                }
-        });
-    }
-
-    function display_job(data) {
-        if (data.status == 'error') {
-            $("#messages").empty();
-            var reason = data.opresult[0][1][0];
-            html = $("<li>"+data.status+":<br>"+reason+"</li>");
-            html.addClass('error');
-            $("#messages").append(html);
-            actions_enabled = true;
-        } else {
-            $("#messages").empty();
-            sub_op = 0;
-            for (i=0; i<data['opstatus'].length; ++i) {
-                if (data['opstatus'][i] != 'success') {
-                    sub_op = i;
-                    break;
-                }
-            }
-            op = format_op(data['ops'][sub_op]['OP_ID']);
-            html = $("<li><h3>"+op+"</h3></li>");
-            $("#messages").append(html)
-            
-            // append log messages that are not already displayed
-            current_log_count = $("#log ul li").length;
-            if (data['oplog'][0].length != 0) {
-                if ($('#log').length==0){
-                    html.append("<pre id='log'><ul></ul></pre>");
-                }
-                
-                log = data['oplog'][0];
-                for (i=current_log_count; i<log.length; i++) {
-                    $("#log ul")
-                        .append("<li>"+log[i][3]+"</li>");
-                }
-            }
         }
     }
 
@@ -172,24 +109,10 @@
         html = "<li class='error'>Error:<p>" + msg + "</p></li>";
         $("#messages").append(html);
     }
-
-    function format_op(str){
-        str = str.substring(3).replace('_',' ').toLowerCase();
-        str = cap_first(str);
-        return str
-    }
-    
-    function cap_first(str) {
-        new_str = '';
-        str = str.split(' ');
-        for(var i=0; i < str.length; i++) {
-                new_str += str[i].substring(0,1).toUpperCase() +
-                str[i].substring(1,str[i].length) + ' ';
-        }
-        return new_str;
-    }
-
 </script>
+
+{% include "job_status.html" %}
+
 {% endblock %}
 
 {% block content %}
