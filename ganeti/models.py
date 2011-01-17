@@ -133,8 +133,8 @@ class GanetiErrorManager(models.Manager):
         """
         Clear errors instead of deleting them.
         """
-        if not cls and obj:
-            cls = obj.__class__
+        #if not cls and obj:
+        #    cls = obj.__class__
         base = self.get_errors(msg, code, cls, obj, cleared=False)
         return base.update(cleared=True)
 
@@ -381,18 +381,11 @@ class CachedClusterObject(models.Model):
                 
         except GanetiApiError, e:
             self.error = str(e)
-
             GanetiError.objects.store_error(str(e), e.code, obj=self)
 
         else:
             self.error = None
-
-            # TODO: find a way to save user data
-            if isinstance(self, Cluster):
-                GanetiError.objects.clear_errors(cluster=self)
-
-            elif isinstance(self, VirtualMachine):
-                GanetiError.objects.clear_errors(vm=self)
+            GanetiError.objects.clear_errors(obj=self)
 
     def _refresh(self):
         """

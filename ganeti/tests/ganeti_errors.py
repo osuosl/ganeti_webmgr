@@ -233,7 +233,7 @@ class TestGanetiErrorModel(TestCase):
             # get errors for object
             # TODO: check log format
             if isinstance(i, VirtualMachine):
-                errors = GanetiError.objects.get_errors(cluster=i.cluster)
+                errors = GanetiError.objects.get_errors(obj=i.cluster)
                 self.assertEqual(2, len(errors))
                 self.assertEqual(errors[0].cleared, False)
                 self.assertEqual(errors[1].cleared, False)
@@ -242,25 +242,25 @@ class TestGanetiErrorModel(TestCase):
                 self.assertEqual(errors[0].code, msg.code)
                 self.assertEqual(errors[1].code, msg.code)
 
-                cleared = GanetiError.objects.get_errors(cluster=i.cluster, cleared=True)
+                cleared = GanetiError.objects.get_errors(obj=i.cluster, cleared=True)
                 self.assertEqual(0, len(cleared))
 
             else:
-                errors = GanetiError.objects.get_errors(cluster=i)
+                errors = GanetiError.objects.get_errors(obj=i)
                 self.assertEqual(1, len(errors))
                 self.assertEqual(errors[0].cleared, False)
                 self.assertEqual(errors[0].msg, str(msg))
                 self.assertEqual(errors[0].code, msg.code)
 
-                cleared = GanetiError.objects.get_errors(cluster=i, cleared=True)
+                cleared = GanetiError.objects.get_errors(obj=i, cleared=True)
                 self.assertEqual(0, len(cleared))
         
         # set all errors as cleared  and test if it was a success
         for i in (cluster0, cluster1, vm0, vm1):
             if isinstance(i, VirtualMachine):
-                GanetiError.objects.clear_errors(cluster=i.cluster)
+                GanetiError.objects.clear_errors(obj=i.cluster)
 
-                cleared = GanetiError.objects.get_errors(cluster=i.cluster, cleared=True)
+                cleared = GanetiError.objects.get_errors(obj=i.cluster, cleared=True)
                 self.assertEqual(2, len(cleared))
                 self.assertEqual(cleared[0].cleared, True)
                 self.assertEqual(cleared[1].cleared, True)
@@ -270,9 +270,9 @@ class TestGanetiErrorModel(TestCase):
                 self.assertEqual(cleared[1].code, msg.code)
 
             else:
-                GanetiError.objects.clear_errors(cluster=i)
+                GanetiError.objects.clear_errors(obj=i)
 
-                cleared = GanetiError.objects.get_errors(cluster=i, cleared=True)
+                cleared = GanetiError.objects.get_errors(obj=i, cleared=True)
                 self.assertEqual(2, len(cleared))
                 self.assertEqual(cleared[0].cleared, True)
                 self.assertEqual(cleared[1].cleared, True)
