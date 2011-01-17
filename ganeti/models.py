@@ -129,13 +129,13 @@ class GanetiErrorManager(models.Manager):
         return self.filter(pk=id).update(cleared=True)
 
 
-    def clear_errors(self, msg=None, code=None, cls=None, obj=None):
+    def clear_errors(self, cls=None, obj=None, **kwargs):
         """
         Clear errors instead of deleting them.
         """
         #if not cls and obj:
         #    cls = obj.__class__
-        base = self.get_errors(msg, code, cls, obj, cleared=False)
+        base = self.get_errors(cls=cls, obj=obj, cleared=False, **kwargs)
         return base.update(cleared=True)
 
 
@@ -147,7 +147,7 @@ class GanetiErrorManager(models.Manager):
         return base.delete()
 
 
-    def get_errors(self, msg=None, code=None, cls=None, obj=None, cleared=None):
+    def get_errors(self, cls=None, obj=None, **kwargs):
         """
         Manager method used for getting QuerySet of all errors depending on
         passed arguments.
@@ -158,10 +158,7 @@ class GanetiErrorManager(models.Manager):
         @param  obj   affected object (itself or just QuerySet)
         @param cleared  get cleared / broken / all errors
         """
-        base = self.all()
-        if msg:     base = base.filter(msg=msg)
-
-        if code:    base = base.filter(code=code)
+        base = self.filter(**kwargs)
 
         if obj:
             cluster_ = False
@@ -199,11 +196,6 @@ class GanetiErrorManager(models.Manager):
 
             else:
                 base = base1
-
-        if cleared == True:
-            base = base.filter(cleared=True)
-        elif cleared == False:
-            base = base.filter(cleared=False)
 
         return base
 
