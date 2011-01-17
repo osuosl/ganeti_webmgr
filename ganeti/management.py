@@ -36,19 +36,19 @@ def update_sites_module(sender, **kwargs):
     id, name, domain = (1, 'example.com', 'example.com')
     try:
         id = settings.SITE_ID
-    except AttributeError as e:
+    except AttributeError, e:
         print e
         print 'Using: \'%s\' for site id.' % id
 
     try:
         name = settings.SITE_NAME
-    except AttributeError as e:
+    except AttributeError, e:
         print e
         print 'Using: \'%s\' for site name.' % name
 
     try:
         domain = settings.SITE_DOMAIN
-    except AttributeError as e:
+    except AttributeError, e:
         print e
         print 'Using: \'%s\' for site domain.' % domain
     
