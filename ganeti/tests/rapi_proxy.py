@@ -289,7 +289,17 @@ JOB_ERROR = {'end_ts': [1291836084, 802444],
  'start_ts': [1291836084, 673097],
  'status': 'error',
  'summary': ['INSTANCE_REBOOT(gimager.osuosl.bak)']}
-
+JOB_DELETE_SUCCESS = {'status': 'success',
+    'ops': [{'dry_run': False,
+    'instance_name': 'test.gwm.osuosl.org',
+    'debug_level': 0,
+    'OP_ID': 'OP_INSTANCE_REMOVE',
+    'ignore_failures': False, 'shutdown_timeout': 120}],
+    'end_ts': [1295224140, 247101], 'start_ts': [1295224139, 507156],
+    'summary': ['INSTANCE_REMOVE(kennym4.gwm.osuosl.org)'],
+    'received_ts': [1295224139, 489597], 'opresult': [None],
+    'opstatus': ['success'],
+    'oplog': [[]], 'id': '17050'}
 
 JOB_LOG = {'end_ts': [1292007990, 759365],
  'id': '121061',

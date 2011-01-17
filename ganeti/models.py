@@ -39,7 +39,11 @@ from django.db import models
 from django.db.models import Sum, F
 from django.db.models.signals import post_save, post_syncdb
 
+from logs.models import LogItem
+log_action = LogItem.objects.log_action
+
 from object_permissions.registration import register
+from object_permissions import signals as op_signals
 from ganeti import constants, management
 from ganeti.fields import PreciseDateTimeField
 from util import client
@@ -47,7 +51,6 @@ from util.client import GanetiApiError
 
 if settings.VNC_PROXY:
     from util.vncdaemon.vapclient import request_forwarding
-
 import random
 import string
 
@@ -202,8 +205,12 @@ class CachedClusterObject(models.Model):
         """
         try:
             info_ = self._refresh()
-            mtime = datetime.fromtimestamp(info_['mtime'])
-            self.cached = datetime.now()
+            if info_:
+                mtime = datetime.fromtimestamp(info_['mtime'])
+                self.cached = datetime.now()
+            else:
+                # no info retrieved, use current mtime
+                mtime = self.mtime
             
             if self.mtime is None or mtime > self.mtime:
                 # there was an update. Set info and save the object
@@ -218,7 +225,7 @@ class CachedClusterObject(models.Model):
                 if updates:
                     self.__class__.objects.filter(pk=self.id) \
                         .update(cached=self.cached, **updates)
-                else:
+                elif self.id is not None:
                     self.__class__.objects.filter(pk=self.id) \
                         .update(cached=self.cached)
                 
@@ -412,9 +419,19 @@ class VirtualMachine(CachedClusterObject):
     cluster_hash = models.CharField(max_length=40, editable=False)
     operating_system = models.CharField(max_length=128)
     status = models.CharField(max_length=10)
-
+    
+    # The last job reference indicates that there is at least one pending job
+    # for this virtual machine.  There may be more than one job, and that can
+    # never be prevented.  This just indicates that job(s) are pending and the
+    # job related code should be run (status, cleanup, etc).
     last_job = models.ForeignKey(Job, null=True)
-
+    
+    # deleted flag indicates a VM is being deleted, but the job has not
+    # completed yet.  VMs that have pending_delete are still displayed in lists
+    # and counted in quotas, but only so status can be checked.
+    pending_delete = models.BooleanField(default=False)
+    deleted = False
+    
     class Meta:
         ordering = ["hostname", ]
 
@@ -497,12 +514,25 @@ class VirtualMachine(CachedClusterObject):
             
             if status == 'success':
                 self.last_job = None
+                # if the job was a deletion, then delete this vm
+                # XXX return a None to prevent refresh() from trying to update
+                #     the cache setting for this VM
+                # XXX delete may have multiple ops in it, but delete is always
+                #     the last command run.
+                if data['ops'][-1]['OP_ID'] == 'OP_INSTANCE_REMOVE':
+                    self.delete()
+                    self.deleted = True
+                    return None
+                
                 return dict(ignore_cache=False, last_job=None)
             
             elif status == 'error':
                 return dict(ignore_cache=False)
 
     def _refresh(self):
+        # XXX if delete is pending then no need to refresh this object.
+        if self.pending_delete:
+            return None
         return self.rapi.GetInstance(self.hostname)
 
     def shutdown(self):
@@ -909,6 +939,19 @@ def regenerate_cu_children(sender, **kwargs):
         group.save()
 
 post_syncdb.connect(regenerate_cu_children)
+
+
+def log_group_create(sender, editor, **kwargs):
+    """ log group creation signal """
+    log_action(editor, sender, 'created')
+
+def log_group_edit(sender, editor, **kwargs):
+    """ log group edit signal """
+    log_action(editor, sender, 'edited')
+
+op_signals.view_group_created.connect(log_group_create)
+op_signals.view_group_edited.connect(log_group_edit)
+
 
 # Register permissions on our models.
 # These are part of the DB schema and should not be changed without serious
