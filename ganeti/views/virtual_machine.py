@@ -35,6 +35,7 @@ from django.http import HttpResponse, HttpResponseRedirect, \
     HttpResponseNotAllowed, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
+from django.conf import settings
 
 from object_permissions.views.permissions import view_users, view_permissions
 from object_permissions import get_users_any
@@ -264,7 +265,6 @@ def ssh_keys(request, cluster_slug, instance, api_key):
     """
     Show all ssh keys which belong to users, who are specified vm's admin
     """
-    import settings
     if settings.WEB_MGR_API_KEY != api_key:
         return HttpResponseForbidden("You're not allowed to view keys.")
 
@@ -282,7 +282,7 @@ def render_vms(request, query):
     """
     Helper function for paginating a virtual machine query
     """
-    paginator = Paginator(query, 10)
+    paginator = Paginator(query, settings.ITEMS_PER_PAGE)
 
     page = 1
     if request.is_ajax:

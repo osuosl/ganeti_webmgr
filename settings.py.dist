@@ -116,6 +116,7 @@ DATE_FORMAT = "d/m/Y H:i"
 DATETIME_FORMAT = "d/m/Y H:i"
 
 ACCOUNT_ACTIVATION_DAYS = 7
+ITEMS_PER_PAGE = 10
 
 # Ganeti Cached Cluster Objects Timeouts
 #    lazy cache is the fallback cache timer that is checked when the object is
