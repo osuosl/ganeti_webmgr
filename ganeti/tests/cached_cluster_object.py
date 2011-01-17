@@ -208,11 +208,13 @@ class CachedClusterObjectBase(TestCase):
         
         # force an error to test its capture
         object.throw_error = client.GanetiApiError(msg)
+        object.save()
         object.refresh()
         self.assertEqual(msg, object.error)
         
         # clear the error and retry
         object.throw_error = None
+        object.save()
         self.test_refresh(object)
         self.assertEqual(None, object.error)
     
