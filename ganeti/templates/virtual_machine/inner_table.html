@@ -17,24 +17,27 @@
 </thead>
 <tbody id="vms">
     {% for vm in vms.object_list %}
-    {% with vm.info as info %}
+    {% if not vm.deleted %}
     <tr>
-        
         <td class="status">
             {% if vm.error %}
-                <div class="icon_error" title="Ganeti API Error: {{vm.error}}, last status was {{ info.status|render_instance_status }}"></div>
+                <div class="icon_error" title="Ganeti API Error: {{vm.error}}, last status was {{ vm.status|render_instance_status }}"></div>
             {% else %}
-                {% if info.admin_state %}
-                    {% if info.oper_state %}
-                        <div class="icon_running" title="running"></div>
-                    {% else %}
-                        <div class="icon_error" title="{{ info.status|render_instance_status }}"></div>
-                    {% endif %}
+                {% if vm.pending_delete %}
+                    <div class="icon_deleting" title="delete in progress"></div>
                 {% else %}
-                    {% if info.oper_state %}
-                        <div class="icon_error" title="{{ info.status|render_instance_status }}"></div>
+                    {% if info.admin_state %}
+                        {% if info.oper_state %}
+                            <div class="icon_running" title="running"></div>
+                        {% else %}
+                            <div class="icon_error" title="{{ vm.status|render_instance_status }}"></div>
+                        {% endif %}
                     {% else %}
-                        <div class="icon_stopped" title="stopped"></div>
+                        {% if info.oper_state %}
+                            <div class="icon_error" title="{{ vm.status|render_instance_status }}"></div>
+                        {% else %}
+                            <div class="icon_stopped" title="stopped"></div>
+                        {% endif %}
                     {% endif %}
                 {% endif %}
             {% endif %}
@@ -48,12 +51,12 @@
         {% if not cluster %}
             <td>{{ vm.cluster|abbreviate_fqdn }}</td>
         {% endif %}
-        <td>{{ info.pnode|abbreviate_fqdn }}</td>
+        <td>{{ vm.info.pnode|abbreviate_fqdn }}</td>
         <td>{{ vm.operating_system|render_os }}</td>
         <td>{{ vm.ram|render_storage }}</td>
         <td>{{ vm.disk_size|render_storage }}</td>
         <td>{{ vm.virtual_cpus }}</td>
-    {% endwith %}
+    {% endif %}
     {% empty %}
         <tr class="none"><td colspan="100%">No Virtual Machines</td></tr>
     {% endfor %}

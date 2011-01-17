@@ -70,20 +70,25 @@ def delete(request, cluster_slug, instance):
         user.has_perm("admin", instance.cluster)
         ):
         return render_403(request, 'You do not have sufficient privileges')
-
+    
     if request.method == 'GET':
         return render_to_response("virtual_machine/delete.html",
             {'vm': instance},
             context_instance=RequestContext(request),
         )
+    
+    elif request.method == 'POST':
+        # start deletion job and mark the VirtualMachine as pending_delete and
+        # disable the cache for this VM.
+        job_id = instance.rapi.DeleteInstance(instance.hostname)
+        job = Job.objects.create(job_id=job_id, obj=instance, cluster_id=instance.cluster_id)
+        VirtualMachine.objects.filter(id=instance.id) \
+            .update(last_job=job, ignore_cache=True, pending_delete=True)
+        
+        return HttpResponseRedirect( \
+            reverse('instance-detail', args=[cluster_slug, instance.hostname]))
 
-    elif request.method == 'DELETE':
-        # Delete instance
-        jobid = instance.rapi.DeleteInstance(instance.hostname)
-        instance.delete()
-        return HttpResponse('1', mimetype='application/json')
-
-    return HttpResponseNotAllowed(["GET","DELETE"])
+    return HttpResponseNotAllowed(["GET","POST"])
 
 
 @login_required
@@ -373,6 +378,7 @@ def detail(request, cluster_slug, instance):
     
     if not (admin or power or remove):
         return render_403(request, 'You do not have permission to view this cluster\'s details')
+        
     #TODO Update to use part of the NewVirtualMachineForm in 0.5 release
     """
     if request.method == 'POST':
@@ -400,7 +406,12 @@ def detail(request, cluster_slug, instance):
         else:
             form = None
     """
-    return render_to_response("virtual_machine/detail.html", {
+    if vm.pending_delete:
+        template = 'virtual_machine/delete_status.html' 
+    else:
+        template = 'virtual_machine/detail.html'
+    
+    return render_to_response(template, {
         'cluster': cluster,
         'instance': vm,
         #'configform': form,
@@ -510,6 +521,14 @@ def create(request, cluster_slug=None):
                 snode = data['snode']
 
             try:
+                # XXX attempt to load the virtual machine.  This ensure that if
+                # there was a previous vm with the same hostname, but had not
+                # successfully been deleted, then it will be deleted now
+                try:
+                    VirtualMachine.objects.get(cluster=cluster, hostname=hostname)
+                except VirtualMachine.DoesNotExist:
+                    pass
+                
                 job_id = cluster.rapi.CreateInstance('create', hostname,
                         disk_template,
                         [{"size": disk_size, }],[{'mode':nicmode, 'link':niclink, }],
