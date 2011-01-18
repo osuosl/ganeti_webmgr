@@ -23,8 +23,6 @@
                     '{% url instance-create-cluster-options %}',
                     '{% url instance-create-cluster-defaults %}'
             );
-            // auto-select and disable single opt. dropdowns    
-            refreshSingleOptDropdowns();
         });
 
         // ----------
@@ -51,10 +49,10 @@
                 });
         }
 
-        // ---------------------------------
-        // auto-select single-opt dropdowns
-        // ---------------------------------
-        function refreshSingleOptDropdowns(ignoreOpt){
+        // --------------------------------
+        // auto-select single-opt dropdown
+        // --------------------------------
+        function processSingleOptDropdown(dropdown, ignoreOpt){
             /* 
                 Auto-select and disable single-opt dropdowns. 
             
@@ -69,14 +67,44 @@
                 Note that if this is used on other pages, it might be a good
                 idea to make this into a jQuery plugin.
             */
-            $('select').each(function(){
-                var curDropdown = $(this);
-                var options = $(curDropdown.find('option'));
-                if(options.length == 1)
-                    curDropdown.attr('disabled', 'disabled');
-                else
-                    curDropdown.removeAttr('disabled');
-            });
+
+            // TEMP >>>
+            ignoreOpt = '---------';
+            // <<< TEMP
+
+            var curDropdown = dropdown;
+            var optElems = $(curDropdown.find('option'));
+            var opts = [];
+
+            console.log("curDropdown = ");
+            console.log(curDropdown);
+
+            // create a new list of options sans any "blanks", if specified
+            if(ignoreOpt != undefined){
+                optElems.each(function(i, opt){
+                    if($(opt).text() != ignoreOpt){
+                        console.log("current optElem "+$(opt).text()
+                                +" != "+ignoreOpt);
+                        console.log("pushing "+$(opt)+" onto opts...");
+                        opts.push(opt);
+                    } else
+                        console.log("Ignoring current optElem "+$(opt).text());
+                });
+            } else
+                opts = optElems;
+
+            // if there's only one option, not including "blank" options,
+            // select it and disable the dropdown
+            if(opts.length == 1){
+                $(opts).attr('selected', 'selected');
+                //curDropdown.trigger('change');
+                //curDropdown.attr('disabled', 'disabled');
+            // otherwise, there're no options, disable dropbdown
+            } else if(opts.length == 0) {
+                //curDropdown.attr('disabled', 'disabled');
+            // otherwise, enable the dropdown
+            } else
+                curDropdown.removeAttr('disabled');
         }
 
         // -------------------
@@ -137,6 +165,7 @@
 
             // setup change hooks for the owner dropdown 
             owner.change(function() {
+                var dropdown = $(this);
                 id = $(this).children("option:selected").val();
                 if( id != '' ) {
                     // JSON update the cluster when the owner changes
@@ -148,7 +177,9 @@
                             child.attr('text', item[1]);
                             cluster.append(child);
                         });
-                        refreshSingleOptDropdowns();
+
+                        // refresh the dropdown
+                        processSingleOptDropdown(dropdown);
                     });
                 }
                 // trigger the cluster dropdown change hook
@@ -160,6 +191,7 @@
                 var pnode = $("#id_pnode");
                 var snode = $("#id_snode");
                 var oslist = $("#id_os");
+                var dropdown = $(this);
                 var id = $(this).children("option:selected").val();
                 
                 if( id != '' ) {
@@ -184,8 +216,9 @@
                                 }
                             });
                         });
-                        // trigger the cluster dropdown change hook
-                        refreshSingleOptDropdowns(); 
+
+                        // refresh the dropdowns
+                        processSingleOptDropdown(dropdown);
                     });
 
                     $.getJSON(url_defaults, {'cluster_id':id}, function(data) {
@@ -275,8 +308,8 @@
                         if(imagepath)
                             $("#id_imagepath").val(imagepath);
                         
-                        // trigger the cluster dropdown change hook
-                        refreshSingleOptDropdowns();
+                        // refresh the dropdowns
+                        processSingleOptDropdown(dropdown); 
                     });
                 }
             });
