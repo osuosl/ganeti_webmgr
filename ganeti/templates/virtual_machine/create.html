@@ -49,35 +49,29 @@
                 });
         }
 
-        // --------------------------------
-        // auto-select single-opt dropdown
-        // --------------------------------
-        function processSingleOptDropdown(dropdown, ignoreOpt){
+        // -------------------------------
+        // auto-select singleton dropdown
+        // -------------------------------
+        function processSingletonDropdown(dropdown, ignoreOpt){
             /* 
-                Auto-select and disable single-opt dropdowns. 
-            
-                I.e., if a dropdown has only one option, select it, and
-                disable the the dropdown.
+            Auto-select and read-onlyify the specified single-option dropdown, 
+            i.e., if the specified dropdown has only one option, select it, 
+            and make the dropdown read-only. dropdown must be a jQuery object.
                 
-                If ignoreOpt is supplied, options with ignoreOpt as a label
-                will be ignored and treated as if they don't exist. This is
-                useful if the dropdown has "blank" options such as "-----" or
-                "- choose one -" etc.
+            If ignoreOpt is supplied, options with ignoreOpt as a label will 
+            be ignored and treated as if they don't exist. This is useful if 
+            the dropdown has "blank" options such as "-----" or 
+            "- choose one -" etc.
 
-                Note that if this is used on other pages, it might be a good
-                idea to make this into a jQuery plugin.
+            Note that this should probably eventually be made into a jQuery 
+            plugin.
             */
 
-            // TEMP >>>
-            ignoreOpt = '---------';
-            // <<< TEMP
-
-            var curDropdown = dropdown;
-            var optElems = $(curDropdown.find('option'));
+            var optElems = $(dropdown.find('option'));
             var opts = [];
 
-            console.log("curDropdown = ");
-            console.log(curDropdown);
+            console.log("dropdown = ");
+            console.log(dropdown);
 
             // create a new list of options sans any "blanks", if specified
             if(ignoreOpt != undefined){
@@ -97,14 +91,16 @@
             // select it and disable the dropdown
             if(opts.length == 1){
                 $(opts).attr('selected', 'selected');
-                curDropdown.trigger('change');
-                curDropdown.attr('disabled', 'disabled');
+                dropdown.change();
+                dropdown.attr('readonly', 'readonly');
+
             // otherwise, there're no options, disable dropbdown
             } else if(opts.length == 0) {
-                //curDropdown.attr('disabled', 'disabled');
+                dropdown.attr('readonly', 'readonly');
+
             // otherwise, enable the dropdown
             } else
-                curDropdown.removeAttr('disabled');
+                dropdown.removeAttr('disabled');
         }
 
         // -------------------
@@ -116,18 +112,22 @@
             // -----------
             // class data
             // -----------
-            var cluster = $("#id_cluster");
-            var owner = $("#id_owner");
-            var snode = $("#id_snode").parent();
-            var pnode = $("#id_pnode").parent();
-            var niclink = $("#id_niclink").parent();
-            var disk_template = $("#id_disk_template");
-            var nicmode = $("#id_nicmode");
-            var curSelection = $("#id_snode option:selected").index();
-            var iallocator = $("#id_iallocator");
-            var iallocator_hostname = $("#id_iallocator_hostname");
-            var using_str = ' Using: '
+            var cluster =               $("#id_cluster");
+            var owner =                 $("#id_owner");
+            var snode =                 $("#id_snode").parent();
+            var pnode =                 $("#id_pnode").parent();
+            var niclink =               $("#id_niclink").parent();
+            var disk_template =         $("#id_disk_template");
+            var nicmode =               $("#id_nicmode");
+            var curSelection =          $("#id_snode option:selected").index();
+            var iallocator =            $("#id_iallocator");
+            var iallocator_hostname =   $("#id_iallocator_hostname");
+            var using_str =             ' Using: ';
+            var blankOptStr =           '---------';
 
+            // ------------
+            // init stuffs
+            // ------------
             this.init = function(){
                 /* initialize the live form updator */
 
@@ -139,15 +139,19 @@
                         "</span>");
              
                 // setup form element change hooks
-                setupChangeHooks();
+                _initChangeHooks();
 
                 // fire off some initial changes
                 iallocator.change();
                 disk_template.change();
+                
+                // process the owner dropdown, i.e., if it only has a single
+                // option, select it, and make the dropdown read-only
+                processSingletonDropdown(owner, blankOptStr);
             }
             
-            function setupChangeHooks(){
-                /* setup change hooks for the form items */
+            function _initChangeHooks(){
+                /* setup change hooks for the form elements */
 
                 // iallocator change
                 iallocator.change(function() {
@@ -170,11 +174,10 @@
                 // disk_template change
                 disk_template.change(function() {
                     if(!iallocator.is(':checked') || iallocator.attr('readonly')) {
-                        if( disk_template.val() == 'drbd') {
+                        if( disk_template.val() == 'drbd')
                             snode.show();
-                        } else {
+                        else
                             snode.hide();
-                        }
                     }
                 });
 
@@ -184,8 +187,7 @@
                     id = $(this).children("option:selected").val();
                     if( id != '' ) {
                         // JSON update the cluster when the owner changes
-                        $.getJSON(url_choices, 
-                                {'clusteruser_id':id}, function(data) {
+                        $.getJSON(url_choices, {'clusteruser_id':id}, function(data){
                                     cluster.children().not(':first').remove();
                                     $.each(data, function(i, item) {
                                         child = $("<option> </option>");
@@ -193,10 +195,11 @@
                                         child.attr('text', item[1]);
                                         cluster.append(child);
                                     });
+                            processSingletonDropdown(cluster, blankOptStr);
                         });
                     }
                     // trigger the cluster dropdown change hook
-                    cluster.trigger('change');
+                    cluster.change();
                 });
 
                 // cluster change
