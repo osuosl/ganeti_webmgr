@@ -420,6 +420,7 @@ class VirtualMachine(CachedClusterObject):
 
     class Meta:
         ordering = ["hostname", ]
+        unique_together = (("cluster", "hostname"),)
 
     @property
     def rapi(self):

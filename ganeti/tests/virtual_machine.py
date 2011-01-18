@@ -23,6 +23,7 @@ import json
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.core.urlresolvers import reverse
+from django.db.utils import IntegrityError
 from django.test import TestCase
 from django.test.client import Client
 
@@ -104,6 +105,10 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(5120, vm.disk_size)
         self.assertEqual('foobar', vm.owner.name)
         self.assertFalse(vm.error)
+        
+        # test unique constraints
+        vm = VirtualMachine(cluster=cluster, hostname=vm_hostname)
+        self.assertRaises(IntegrityError, vm.save)
         
         # Remove cluster
         Cluster.objects.all().delete();
