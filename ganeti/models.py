@@ -970,7 +970,8 @@ class VirtualMachineTemplate(models.Model):
                 default=True)
     iallocator = models.BooleanField(verbose_name='Automatic Allocation', \
                 default=False)
-    iallocator_hostname = models.CharField(null=True, max_length=255)
+    iallocator_hostname = models.CharField(null=True, blank=True, \
+                max_length=255)
     disk_template = models.CharField(max_length=16)
     pnode = models.CharField(verbose_name='Primary Node', max_length=255, \
                 null=True, blank=True)
