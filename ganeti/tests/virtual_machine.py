@@ -472,7 +472,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'virtual_machine/list.html')
-        vms = response.context['vms']
+        vms = response.context['vms'].object_list
         self.assertFalse(vms)
         
         # user with some perms
@@ -481,7 +481,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'virtual_machine/list.html')
-        vms = response.context['vms']
+        vms = response.context['vms'].object_list
         self.assert_(vm in vms)
         self.assert_(vm1 in vms)
         self.assertEqual(2, len(vms))
@@ -492,7 +492,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'virtual_machine/list.html')
-        vms = response.context['vms']
+        vms = response.context['vms'].object_list
         self.assert_(vm in vms)
         self.assert_(vm1 in vms)
         self.assert_(vm2 in vms)
