@@ -45,10 +45,6 @@
 {% block content %}
 <h1>Overview</h1>
 
-{% if user.is_superuser %}
-<a class="button add" href="{% url cluster-create %}">Add Cluster</a>
-{% endif %}
-
 {% if admin %}
 <table id="clusters" class="sorted">
     <thead>
