@@ -15,41 +15,45 @@
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.tablesorter.min.js"></script>
 <script type="text/javascript">
-    $(document).ready(function() {
-        $("#vmlist").tablesorter();
-    });
-
-    function ajax_get_update() {
+    function ajax_get_update(url) {
         $.get(url, function(results) {
            $('#vm-wrapper').html(results);
         }, "html");
     }
 
     $(document).ready( function() {
-        $('.step-links #prev').click(function(e) {
+        $("#vmlist").tablesorter();
+        
+        $('.pagination .previous').live('click', function(e) {
             e.preventDefault();
-            url = ($('.step-links #prev')[0].href);
-          ajax_get_update();
+            url = ($('.pagination .previous a')[0].href);
+            ajax_get_update(url);
         });
-        $('.step-links #next').click(function(e) {
+        
+        $('.pagination .next').live('click', function(e) {
             e.preventDefault();
-            url = ($('.step-links #next')[0].href);
-            ajax_get_update();
+            url = ($('.pagination .next a')[0].href);
+            ajax_get_update(url);
         });
+        
+        $('.pagination .page:not(.active)').live('click', function() {
+            page = $(this).html();
+            url = '{% url virtualmachine-table %}?page=' + page;
+            ajax_get_update(url);
+        });
+        
+        $('.spinner')
+            .hide()
+            .ajaxStart(function() {
+                $(this).show();
+                $('#vmlist tr td').hide();
+                $('.pagination').hide();
+            })
+            .ajaxStop(function() {
+                $(this).hide()
+            });
     });
 
-    $(document).ajaxStop( function() {
-        $('.step-links #prev').click( function(e) {
-            e.preventDefault();
-            url = ($('.step-links #prev')[0].href);
-            ajax_get_update();
-        });
-        $('.step-links #next').click( function(e) {
-            e.preventDefault();
-            url = ($('.step-links #next')[0].href);
-            ajax_get_update();
-        });
-    });
 </script>
 {% endblock %}
 
@@ -64,3 +68,4 @@
 <div id="vm-wrapper">
 {% include "virtual_machine/inner_table.html" %}
 </div>
+<div class="spinner" ><br/>Loading...<br/><br/><img src='{{ MEDIA_URL }}/images/ajax-loader.gif'></div>

@@ -36,7 +36,8 @@ from django.utils.translation import ugettext_lazy as _
 import re
 
 from django.db import models
-from django.db.models import Sum, F
+from django.db.models import Sum, F, Q
+from django.db.models.query import QuerySet
 from django.db.models.signals import post_save, post_syncdb
 
 from logs.models import LogItem
@@ -117,6 +118,147 @@ ssh_public_key_re = re.compile(
     r'^ssh-(rsa|dsa|dss) [A-Z0-9+/=]+ .+$', re.IGNORECASE)
 validate_sshkey = RegexValidator(ssh_public_key_re,
     _(u"Enter a valid SSH public key with comment (SSH2 RSA or DSA)."), "invalid")
+
+
+class GanetiErrorManager(models.Manager):
+
+    def clear_error(self, id):
+        """
+        Clear one particular error (used in overview template).
+        """
+        return self.filter(pk=id).update(cleared=True)
+
+
+    def clear_errors(self, cls=None, obj=None, **kwargs):
+        """
+        Clear errors instead of deleting them.
+        """
+        #if not cls and obj:
+        #    cls = obj.__class__
+        base = self.get_errors(cls=cls, obj=obj, cleared=False, **kwargs)
+        return base.update(cleared=True)
+
+
+    def remove_errors(self, *args, **kwargs):
+        """
+        Just shortcut if someone wants to remove some errors.
+        """
+        base = self.get_errors(*args, **kwargs)
+        return base.delete()
+
+
+    def get_errors(self, cls=None, obj=None, **kwargs):
+        """
+        Manager method used for getting QuerySet of all errors depending on
+        passed arguments.
+
+        @param  msg   error's message
+        @param  code  error's code
+        @param  cls   affected object type (model)
+        @param  obj   affected object (itself or just QuerySet)
+        @param cleared  get cleared / broken / all errors
+        """
+        base = self.filter(**kwargs)
+
+        if obj:
+            cluster_ = False
+            if cls == Cluster: cluster_ = True
+            elif obj.__class__ == Cluster: cluster_ = True
+
+            # if obj is QuerySet then 'cls' arg is mandatory
+            if isinstance(obj, QuerySet):
+                ct = ContentType.objects.get_for_model(cls)
+                base1 = base.filter(obj_type=ct, obj_id__in=obj)
+
+            # if obj is instance of some model, then 'cls' is not needed
+            else:
+                if cls:
+                    ct = ContentType.objects.get_for_model(cls)
+                else:
+                    ct = ContentType.objects.get_for_model(obj.__class__)
+                base1 = base.filter(obj_type=ct, obj_id=obj.pk)
+
+            # if it's Cluster, then we need to get all of its vms
+            if cluster_:
+                vm_type = ContentType.objects.get_for_model(VirtualMachine)
+                if isinstance(obj, Cluster):
+                    base2 = base.filter(
+                        obj_type=vm_type,
+                        obj_id__in=VirtualMachine.objects.filter(cluster=obj)
+                    )
+                else:
+                    base2 = base.filter(
+                        obj_type=vm_type,
+                        obj_id__in=VirtualMachine.objects.filter(cluster__in=obj)
+                    )
+
+                base = base1 | base2
+
+            else:
+                base = base1
+
+        return base
+
+
+    def store_error(self, msg, code=None, obj=None):
+        """
+        Manager method used to store errors
+
+        @param  msg  error's message
+        @param code  error's code
+        @param  obj  object (i.e. cluster or vm) affected by the error
+        """
+        ct = ContentType.objects.get_for_model(obj.__class__)
+
+        m, created = self.get_or_create(
+            msg=msg, code=code, obj_type=ct, obj_id=obj.pk,
+            cleared=False,
+            defaults={
+                "id": None,
+                "cleared": False,
+                "obj": obj,
+            })
+
+        # TODO: unneccessary?
+        if not created and m.cleared:
+            m.cleared = False
+            m.save()
+        return m.id
+
+
+class GanetiError(models.Model):
+    """
+    Class for storing errors which occured in Ganeti
+    """
+    msg = models.TextField()
+    code = models.PositiveSmallIntegerField(blank=True, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    # determines if the errors still appears or not
+    cleared = models.BooleanField(default=False)
+
+    # cluster and VM affected by the error (if any)
+    obj_type = models.ForeignKey(ContentType, related_name="ganeti_errors")
+    obj_id = models.PositiveIntegerField()
+    obj = GenericForeignKey("obj_type", "obj_id")
+
+    #cluster = models.ForeignKey("Cluster", null=True, blank=True,
+    #        related_name="ganeti_errors")
+    #virtual_machine = models.ForeignKey("VirtualMachine", null=True, blank=True,
+    #        related_name="ganeti_errors")
+
+    objects = GanetiErrorManager()
+
+    class Meta:
+        ordering = ("-timestamp", "code", "msg")
+
+    def __repr__(self):
+        return "<GanetiError '%s'>" % (self.msg)
+
+    def __unicode__(self):
+        # TODO: improve that log format
+        base = "[%s] %s" % (self.timestamp, self.msg)
+        return base
 
 
 class CachedClusterObject(models.Model):
@@ -205,8 +347,12 @@ class CachedClusterObject(models.Model):
         """
         try:
             info_ = self._refresh()
-            mtime = datetime.fromtimestamp(info_['mtime'])
-            self.cached = datetime.now()
+            if info_:
+                mtime = datetime.fromtimestamp(info_['mtime'])
+                self.cached = datetime.now()
+            else:
+                # no info retrieved, use current mtime
+                mtime = self.mtime
             
             if self.mtime is None or mtime > self.mtime:
                 # there was an update. Set info and save the object
@@ -221,13 +367,17 @@ class CachedClusterObject(models.Model):
                 if updates:
                     self.__class__.objects.filter(pk=self.id) \
                         .update(cached=self.cached, **updates)
-                else:
+                elif self.id is not None:
                     self.__class__.objects.filter(pk=self.id) \
                         .update(cached=self.cached)
                 
-            self.error = None
         except GanetiApiError, e:
             self.error = str(e)
+            GanetiError.objects.store_error(str(e), e.code, obj=self)
+
+        else:
+            self.error = None
+            GanetiError.objects.clear_errors(obj=self)
 
     def _refresh(self):
         """
@@ -415,9 +565,19 @@ class VirtualMachine(CachedClusterObject):
     cluster_hash = models.CharField(max_length=40, editable=False)
     operating_system = models.CharField(max_length=128)
     status = models.CharField(max_length=10)
-
+    
+    # The last job reference indicates that there is at least one pending job
+    # for this virtual machine.  There may be more than one job, and that can
+    # never be prevented.  This just indicates that job(s) are pending and the
+    # job related code should be run (status, cleanup, etc).
     last_job = models.ForeignKey(Job, null=True)
-
+    
+    # deleted flag indicates a VM is being deleted, but the job has not
+    # completed yet.  VMs that have pending_delete are still displayed in lists
+    # and counted in quotas, but only so status can be checked.
+    pending_delete = models.BooleanField(default=False)
+    deleted = False
+    
     class Meta:
         ordering = ["hostname", ]
         unique_together = (("cluster", "hostname"),)
@@ -501,12 +661,25 @@ class VirtualMachine(CachedClusterObject):
             
             if status == 'success':
                 self.last_job = None
+                # if the job was a deletion, then delete this vm
+                # XXX return a None to prevent refresh() from trying to update
+                #     the cache setting for this VM
+                # XXX delete may have multiple ops in it, but delete is always
+                #     the last command run.
+                if data['ops'][-1]['OP_ID'] == 'OP_INSTANCE_REMOVE':
+                    self.delete()
+                    self.deleted = True
+                    return None
+                
                 return dict(ignore_cache=False, last_job=None)
             
             elif status == 'error':
                 return dict(ignore_cache=False)
 
     def _refresh(self):
+        # XXX if delete is pending then no need to refresh this object.
+        if self.pending_delete:
+            return None
         return self.rapi.GetInstance(self.hostname)
 
     def shutdown(self):

@@ -17,15 +17,15 @@
 # USA.
 
 
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
+from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.contrib.contenttypes.models import ContentType
 #from object_permissions import get_model_perms, get_user_perms, grant, revoke, \
 #    get_users, get_groups, get_group_perms
-from ganeti.models import Cluster, VirtualMachine, Job
+from ganeti.models import Cluster, VirtualMachine, Job, GanetiError
 
 
 @login_required
@@ -59,13 +59,13 @@ def overview(request):
             #return HttpResponseForbidden('You do not have sufficient privileges')
             admin = False
 
-    #ganeti errors
-    #XXX: not implemented yet
-    ganeti_errors = ["simulation"]
-
     if admin:
         vms = VirtualMachine.objects.filter(owner=user.get_profile())
         #vms = None
+
+        #ganeti errors
+        ganeti_errors = GanetiError.objects.get_errors(cls=Cluster,
+                obj=cluster_list, cleared=False)
 
         job_errors = Job.objects.filter(cluster__in=cluster_list, status="error"). \
                 order_by("-finished")[:5]
@@ -87,6 +87,10 @@ def overview(request):
     else:
         #vms = user.get_objects_any_perms(VirtualMachine, groups=True)
         vms = VirtualMachine.objects.filter(owner=user.get_profile())
+
+        #ganeti errors
+        ganeti_errors = GanetiError.objects.get_errors(cls=VirtualMachine, 
+                obj=vms, cleared=False)
 
         # content type of VirtualMachine model
         # NOTE: done that way because if behavior of GenericForeignType

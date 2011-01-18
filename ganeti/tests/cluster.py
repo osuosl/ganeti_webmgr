@@ -1138,7 +1138,7 @@ class TestClusterViews(TestCase):
         self.assert_(c.login(username=user.username, password='secret'))
         cluster.virtual_machines.all().delete()
         url = '/cluster/%s/edit/' % cluster.slug
-        
+
         data = dict(hostname='new-host-1.hostname',
                     slug='new-host-1',
                     port=5080,
