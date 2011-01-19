@@ -291,13 +291,10 @@ div.delete.disabled, a.delete.disabled{background:url(/media/images/icons/delete
 
 div.delete, div.edit, div.icon_error, .icon_running, .icon_stopped, .icon_deleting {
     background-repeat:no-repeat;
-    float:right;
     height:16px;
+    float:left;
     padding:0;
     width:16px;
-}
-div.icon_error {
-    float:left;
 }
 
 .button {
