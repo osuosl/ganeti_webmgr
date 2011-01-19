@@ -37,7 +37,11 @@
         },
     };
     $(document).ready(function() {
+        $("#clusters .ram, #clusters .disk").progressBar(PBAR_CONF);
+        $("#clusters").tablesorter();
         
+        $("#usage_summary .ram, #usage_summary .disk, #usage_summary .vcpus").progressBar(PBAR2_CONF);
+         $("#errors_list table").tablesorter();
     });
 </script>
 {% endblock %}
@@ -81,11 +85,6 @@
     {% endfor %}
     </tbody>
 </table>
-<!-- Progress bars for free memory/disk and sorting -->
-<script type="text/javascript">
-    $("#clusters .ram, #clusters .disk").progressBar(PBAR_CONF);
-    $("#clusters").tablesorter();
-</script>
 {% endif %}
 
 {% if resources %}
@@ -151,9 +150,6 @@
     </tbody>
 </table>
 </div>
-<script type="text/javascript">
-    $("#usage_summary .ram, #usage_summary .disk, #usage_summary .vcpus").progressBar(PBAR2_CONF);
-</script>
 {% endif %}
 
 {% if ganeti_errors or job_errors %}
@@ -207,13 +203,6 @@
     </table>
     {% endif %}
 
-</div>
-<script type="text/javascript">
-    $("#errors_list table").tablesorter();
-</script>
-{% else %}
-<div id="no_errors">
-    <h2>No errors.</h2>
 </div>
 {% endif %}
 
