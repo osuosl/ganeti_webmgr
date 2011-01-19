@@ -570,8 +570,6 @@ def modify(request, cluster_slug, instance):
         return render_403(request, 'You do not have permissions to edit \
             this virtual machine')
 
-    form = None
-
     if request.method == 'POST':
         form = ModifyVirtualMachineForm(user, None, request.POST)
         if form.is_valid():
@@ -1085,9 +1083,21 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
 =======
 class EditVirtualMachineForm(NewVirtualMachineForm):
 
-    def __init__(self, user, cluster=None, *args, **kwargs):
-        super(NewVirtualMachineForm, self).__init__(user, cluster, *args, **kwargs)
+    def __init__(self, user, cluster=None, initial=None, *args, **kwargs):
+        super(EditVirtualMachineForm, self).__init__(user, cluster, \
+                *args, **kwargs)
+        del self.fields['name_check']
+        del self.fields['disk_type']
+        del self.fields['pnode']
+        del self.fields['snode']
         del self.fields['start']
+        del self.fields['owner']
+        del self.fields['cluster']
+        del self.fields['hostname']
+        del self.fields['iallocator']
+        del self.fields['iallocator_hostname']
+        del self.fields['disk_template']
+        del self.fields['os']        
 
 >>>>>>> Added edit form for VM, but it is currently broken. Committing initial work. Urls, views, editvirtualmachineform.
 
