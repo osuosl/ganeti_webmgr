@@ -17,12 +17,13 @@
             
             // init the help tips for the individ. form objects
             initHelpTips();
+
             // init the live-form updater
-            var formUpdater = new VMCreate_formUpdater(
+            var frmUpdater = new formUpdater(
                     '{% url instance-create-cluster-choices %}',
                     '{% url instance-create-cluster-options %}',
                     '{% url instance-create-cluster-defaults %}');
-            formUpdater.init();
+            frmUpdater.init();
         });
 
         // ----------
@@ -70,19 +71,13 @@
             var optElems = $(dropdown.find('option'));
             var opts = [];
 
-            console.log("dropdown = ");
-            console.log(dropdown);
+            console.log("processing dropdown " + dropdown.attr('id') + "...");
 
             // create a new list of options sans any "blanks", if specified
             if(ignoreOpt != undefined){
                 optElems.each(function(i, opt){
-                    if($(opt).text() != ignoreOpt){
-                        console.log("current optElem "+$(opt).text()
-                                +" != "+ignoreOpt);
-                        console.log("pushing "+$(opt)+" onto opts...");
+                    if($(opt).text() != ignoreOpt)
                         opts.push(opt);
-                    } else
-                        console.log("Ignoring current optElem "+$(opt).text());
                 });
             } else
                 opts = optElems;
@@ -91,12 +86,12 @@
             // select it and disable the dropdown
             if(opts.length == 1){
                 $(opts).attr('selected', 'selected');
+                dropdown.attr('disabled', 'disabled');
                 dropdown.change();
-                dropdown.attr('readonly', 'readonly');
 
-            // otherwise, there're no options, disable dropbdown
+            // otherwise, there're no options, disable dropbown
             } else if(opts.length == 0) {
-                dropdown.attr('readonly', 'readonly');
+                dropdown.attr('disabled', 'disabled');
 
             // otherwise, enable the dropdown
             } else
@@ -106,8 +101,8 @@
         // -------------------
         // live form updating
         // -------------------
-        function VMCreate_formUpdater(url_choices, url_options, url_defaults){
-            /* singleton class for live form updating */
+        function formUpdater(url_choices, url_options, url_defaults){
+            /* class for live form updating */
             
             // -----------
             // class data
@@ -183,28 +178,34 @@
 
                 // owner change
                 owner.change(function() {
+
                     var dropdown = $(this);
-                    id = $(this).children("option:selected").val();
-                    if( id != '' ) {
+                    var id = $(this).children("option:selected").val();
+
+                    if(id != '') {
                         // JSON update the cluster when the owner changes
                         $.getJSON(url_choices, {'clusteruser_id':id}, function(data){
-                                    cluster.children().not(':first').remove();
-                                    $.each(data, function(i, item) {
-                                        child = $("<option> </option>");
-                                        child.attr('value', item[0]);
-                                        child.attr('text', item[1]);
-                                        cluster.append(child);
-                                    });
+                            cluster.children().not(':first').remove();
+                            $.each(data, function(i, item) {
+                                child = $("<option> </option>");
+                                child.attr('value', item[0]);
+                                child.attr('text', item[1]);
+                                cluster.append(child);
+                            });
+
+                            // process dropdown if it's a singleton
                             processSingletonDropdown(cluster, blankOptStr);
+
+                            // trigger a change in the cluster
+                            cluster.change();
                         });
                     }
-                    // trigger the cluster dropdown change hook
-                    cluster.change();
                 });
 
                 // cluster change
                 cluster.change(function() {
-                    var pnode = $("#id_pnode");
+
+                    var pnode   = $("#id_pnode");
                     var snode = $("#id_snode");
                     var oslist = $("#id_os");
                     var dropdown = $(this);
@@ -224,17 +225,26 @@
                                         child2 = child.clone();
                                         pnode.append(child);
                                         snode.append(child2);
+
+                                        processSingletonDropdown(pnode, 
+                                                blankOptStr);
+                                        processSingletonDropdown(snode, 
+                                                blankOptStr);
                                     }
                                     else if (i == 'os') {
                                         child = _newOptGroup(value[0], 
                                                 value[1]);
                                         oslist.append(child);
+
+                                        processSingletonDropdown(oslist,
+                                                blankOptStr);
                                     }
                                 });
                             });
                         });
 
                         $.getJSON(url_defaults, {'cluster_id':id}, function(data) {
+
                             var bootorder = data['bootorder'];
                             var iallocator_default = data['iallocator'];
                             var hypervisors = data['hypervisors'];
