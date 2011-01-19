@@ -557,9 +557,7 @@ def create(request, cluster_slug=None):
 
 
 @login_required
-def edit(request, cluster_slug, instance):
-    #TODO Update to use part of the NewVirtualMachineForm in 0.5 release
-     
+def edit(request, cluster_slug, instance):     
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
 
@@ -567,10 +565,8 @@ def edit(request, cluster_slug, instance):
     admin = user.is_superuser or user.has_perm('admin', vm) \
         or user.has_perm('admin', cluster)
 
-    form = None
-
     if request.method == 'POST':
-        form = EditVirtualMachineForm(user, None, request.POST)
+        form = EditVirtualMachineForm(user, None, request.POST, instance=vm)
         if form.is_valid():
             """
             data = form.cleaned_data
@@ -597,8 +593,8 @@ def edit(request, cluster_slug, instance):
                     form = None
             """
             pass
-	elif request.method == 'GET':
-		form = EditVirtualMachineForm(user, cluster)
+    elif request.method == 'GET':
+        form = EditVirtualMachineForm(user, cluster, instance=vm)
 
     return render_to_response("virtual_machine/edit.html", {
         'cluster': cluster,
@@ -838,7 +834,7 @@ class NewVirtualMachineForm(forms.ModelForm):
                 except Cluster.DoesNotExist:
                     # defer to clean function to return errors
                     pass
-
+        """
         if cluster is not None:
             # set choices based on selected cluster if given
             oslist = cluster_os_list(cluster)
@@ -864,7 +860,7 @@ class NewVirtualMachineForm(forms.ModelForm):
             self.fields['kernelpath'].initial = defaults['kernelpath']
             self.fields['serialconsole'].initial = defaults['serialconsole']
             self.fields['niclink'].initial = defaults['niclink']
-        
+        """
 
         # set cluster choices based on the given owner
         if initial and 'owner' in initial and initial['owner']:
@@ -1011,9 +1007,21 @@ class NewVirtualMachineForm(forms.ModelForm):
 
 class EditVirtualMachineForm(NewVirtualMachineForm):
 
-    def __init__(self, user, cluster=None, *args, **kwargs):
-        super(NewVirtualMachineForm, self).__init__(user, cluster, *args, **kwargs)
+    def __init__(self, user, cluster=None, initial=None, *args, **kwargs):
+        super(EditVirtualMachineForm, self).__init__(user, cluster, \
+                *args, **kwargs)
+        del self.fields['name_check']
+        del self.fields['disk_type']
+        del self.fields['pnode']
+        del self.fields['snode']
         del self.fields['start']
+        del self.fields['owner']
+        del self.fields['cluster']
+        del self.fields['hostname']
+        del self.fields['iallocator']
+        del self.fields['iallocator_hostname']
+        del self.fields['disk_template']
+        del self.fields['os']        
 
 
 class InstanceConfigForm(forms.Form):
