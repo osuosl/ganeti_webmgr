@@ -568,8 +568,6 @@ def modify(request, cluster_slug, instance):
     admin = user.is_superuser or user.has_perm('admin', vm) \
         or user.has_perm('admin', cluster)
 
-    form = None
-
     if request.method == 'POST':
         form = ModifyVirtualMachineForm(user, None, request.POST)
         if form.is_valid():
