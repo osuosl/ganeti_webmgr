@@ -57,14 +57,15 @@
                 });
         }
 
-        // ---------------------------
-        // process singleton dropdown
-        // ---------------------------
-        function processSingletonDropdown(dropdown, ignoreOpt){
+        // ------------------
+        // dropdown to label
+        // ------------------
+        function dropdownToLabel(dropdown, ignoreOpt){
             /*
-            If the specified dropdown has only one option, select that option,
-            hide the dropdown, and replace it with a label of that option. 
-            Note that dropdown must be a jQuery object.
+            Conditionally convert dropdowns to labels, i.e. if the specified 
+            dropdown has only one option, select that option, hide the
+            dropdown, and replace it with a label of that option. Note that 
+            dropdown must be a jQuery object.
                 
             If ignoreOpt is supplied, options with called ignoreOpt will 
             be ignored and treated as if they don't exist. This is useful if 
@@ -156,7 +157,7 @@
                 
                 // process the owner dropdown, i.e., if it only has a single
                 // option, select it, and make the dropdown read-only
-                processSingletonDropdown(owner, blankOptStr);
+                dropdownToLabel(owner, blankOptStr);
             }
             
             function _initChangeHooks(){
@@ -208,7 +209,7 @@
                             });
 
                             // process dropdown if it's a singleton
-                            processSingletonDropdown(cluster, blankOptStr);
+                            dropdownToLabel(cluster, blankOptStr);
 
                             // trigger a change in the cluster
                             cluster.change();
@@ -240,9 +241,9 @@
                                         pnode.append(child);
                                         snode.append(child2);
 
-                                        processSingletonDropdown(pnode, 
+                                        dropdownToLabel(pnode, 
                                                 blankOptStr);
-                                        processSingletonDropdown(snode, 
+                                        dropdownToLabel(snode, 
                                                 blankOptStr);
                                     }
                                     else if (i == 'os') {
@@ -250,7 +251,7 @@
                                                 value[1]);
                                         oslist.append(child);
 
-                                        processSingletonDropdown(oslist,
+                                        dropdownToLabel(oslist,
                                                 blankOptStr);
                                     }
                                 });
