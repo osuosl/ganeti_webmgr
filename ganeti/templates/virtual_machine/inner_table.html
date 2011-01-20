@@ -18,6 +18,7 @@
 <tbody id="vms">
     {% for vm in vms.object_list %}
     {% if not vm.deleted %}
+    {% with vm.info as info %}
     <tr>
         <td class="status">
             {% if vm.error %}
@@ -51,11 +52,12 @@
         {% if not cluster %}
             <td>{{ vm.cluster|abbreviate_fqdn }}</td>
         {% endif %}
-        <td>{{ vm.info.pnode|abbreviate_fqdn }}</td>
+        <td>{{ info.pnode|abbreviate_fqdn }}</td>
         <td>{{ vm.operating_system|render_os }}</td>
         <td>{{ vm.ram|render_storage }}</td>
         <td>{{ vm.disk_size|render_storage }}</td>
         <td>{{ vm.virtual_cpus }}</td>
+    {% endwith %}
     {% endif %}
     {% empty %}
         <tr class="none"><td colspan="100%">No Virtual Machines</td></tr>
