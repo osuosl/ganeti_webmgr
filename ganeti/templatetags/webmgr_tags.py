@@ -39,6 +39,12 @@ def vmfield(field):
     return {'field':field}
 
 @register.filter
+def class_name(obj):
+    """ returns the modelname of the objects class """
+    return obj.__class__.__name__
+    
+
+@register.filter
 @stringfilter
 def truncate(value, count):
     """

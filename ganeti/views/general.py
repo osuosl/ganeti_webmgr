@@ -19,13 +19,14 @@
 
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
-from django.http import HttpResponseRedirect
-from django.shortcuts import render_to_response
+from django.http import HttpResponseRedirect, HttpResponse
+from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.contrib.contenttypes.models import ContentType
-#from object_permissions import get_model_perms, get_user_perms, grant, revoke, \
-#    get_users, get_groups, get_group_perms
+
+
 from ganeti.models import Cluster, VirtualMachine, Job, GanetiError
+from ganeti.views import render_403
 
 
 @login_required
@@ -127,3 +128,30 @@ def overview(request):
         },
         context_instance=RequestContext(request),
     )
+
+
+@login_required
+def clear_ganeti_error(request):
+    """
+    Clear a single error message
+    """
+    user = request.user
+    error = get_object_or_404(GanetiError, pk=request.POST.get('id', None))
+    obj = error.obj
+    
+    print obj, obj.__class__
+    
+    # if not a superuser, check permissions on the object itself
+    if not user.is_superuser:
+        if isinstance(obj, (Cluster,)) and not user.has_perm('admin', obj):
+            return render_403(request, "You do not have sufficient privileges")
+        elif isinstance(obj, (VirtualMachine,)):
+            # object is a virtual machine, check perms on VM and on Cluster
+            if not (obj.owner_id == user.get_profile().pk or \
+                user.has_perm('admin', obj.cluster)):
+                    return render_403(request, "You do not have sufficient privileges")
+    
+    # clear the error
+    GanetiError.objects.filter(pk=error.pk).update(cleared=True)
+    
+    return HttpResponse('1', mimetype='application/json')

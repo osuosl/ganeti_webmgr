@@ -173,6 +173,30 @@ li {
     padding: 5px;
 }
 
+#errors_list h2 {
+    background-color:#D63535;
+    color:white;
+    padding: 5px 10px;
+    margin-bottom:0;
+    -moz-border-radius-topleft:5px;
+    -moz-border-radius-topright:5px;
+}
+
+#errors_list table {
+    margin:0;
+}
+
+#errors_list td.Cluster {
+    padding-left: 25px;
+    background:url(/media/images/icons/cluster.png) no-repeat 4px 4px;
+}
+
+#errors_list td.VirtualMachine {
+    padding-left: 25px;
+    background:url(/media/images/icons/vm.png) no-repeat 4px 4px;
+}
+
+
 /**
  * Forms and Form Elements
  **/
@@ -276,6 +300,7 @@ div.icon_error {background:url(/media/images/icons/exclamation.png);}
 div.icon_running {background:url(/media/images/icons/check.png);}
 div.icon_stopped {background:url(/media/images/icons/stop.png);}
 div.icon_deleting {background:url(/media/images/icons/check_red.png);}
+.clear {background:url(/media/images/icons/cancel-disabled.png);}
 
 .add {background:url(/media/images/icons/add.png) no-repeat;}
 .reboot {background:url(/media/images/icons/arrow_refresh.png) no-repeat;}
@@ -289,12 +314,18 @@ div.delete.disabled, a.delete.disabled{background:url(/media/images/icons/delete
 .shutdown.disabled {background:url(/media/images/icons/stop-disabled.png) no-repeat;}
 .startup.disabled {background:url(/media/images/icons/add-disabled.png) no-repeat;}
 
-div.delete, div.edit, div.icon_error, .icon_running, .icon_stopped, .icon_deleting {
+
+div.delete, div.edit, div.icon_error, .icon_running, .icon_stopped, .icon_deleting, .clear {
     background-repeat:no-repeat;
     height:16px;
     float:left;
     padding:0;
     width:16px;
+}
+
+div.clear:hover {background:url(/media/images/icons/cancel.png) no-repeat !important;}
+.clear {
+    cursor:pointer;
 }
 
 .button {
