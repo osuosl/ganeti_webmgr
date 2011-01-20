@@ -209,8 +209,8 @@ class GanetiErrorManager(models.Manager):
         @param  obj  object (i.e. cluster or vm) affected by the error
         """
         ct = ContentType.objects.get_for_model(obj.__class__)
-
-        m, created = self.get_or_create(
+        
+        error, created = self.get_or_create(
             msg=msg, code=code, obj_type=ct, obj_id=obj.pk,
             cleared=False,
             defaults={
@@ -218,12 +218,8 @@ class GanetiErrorManager(models.Manager):
                 "cleared": False,
                 "obj": obj,
             })
-
-        # TODO: unneccessary?
-        if not created and m.cleared:
-            m.cleared = False
-            m.save()
-        return m.id
+        
+        return error
 
 
 class GanetiError(models.Model):
@@ -242,11 +238,6 @@ class GanetiError(models.Model):
     obj_id = models.PositiveIntegerField()
     obj = GenericForeignKey("obj_type", "obj_id")
 
-    #cluster = models.ForeignKey("Cluster", null=True, blank=True,
-    #        related_name="ganeti_errors")
-    #virtual_machine = models.ForeignKey("VirtualMachine", null=True, blank=True,
-    #        related_name="ganeti_errors")
-
     objects = GanetiErrorManager()
 
     class Meta:
@@ -256,7 +247,6 @@ class GanetiError(models.Model):
         return "<GanetiError '%s'>" % (self.msg)
 
     def __unicode__(self):
-        # TODO: improve that log format
         base = "[%s] %s" % (self.timestamp, self.msg)
         return base
 
