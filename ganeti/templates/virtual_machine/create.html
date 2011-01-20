@@ -6,6 +6,13 @@
 {% block head %}
     <link rel="stylesheet" type="text/css"
             href="{{MEDIA_URL}}/css/virtual_machine_create.css"/>
+    <style>
+        /* temp styles */
+        .disabledText{
+            color:gray;
+            font-weight:bold;
+        }
+    </style>
     <script src="{{MEDIA_URL}}/js/jquery.js"></script>
     <script type="text/javascript">
         
@@ -68,8 +75,11 @@
             plugin.
             */
 
-            var optElems = $(dropdown.find('option'));
+            var optElems = dropdown.find('option');
             var opts = [];
+            var PROCESSED_OP_ID = "processedOption";
+            var processedOpElems =
+                    dropdown.siblings().filter('.'+PROCESSED_OP_ID);
 
             console.log("processing dropdown " + dropdown.attr('id') + "...");
 
@@ -79,23 +89,28 @@
                     if($(opt).text() != ignoreOpt)
                         opts.push(opt);
                 });
-            } else
+            } else {
                 opts = optElems;
+            }
 
             // if there's only one option, not including "blank" options,
-            // select it and disable the dropdown
+            // select it, hide the dropdown, and replace it with a label
             if(opts.length == 1){
                 $(opts).attr('selected', 'selected');
-                dropdown.attr('disabled', 'disabled');
                 dropdown.change();
-
-            // otherwise, there're no options, disable dropbown
-            } else if(opts.length == 0) {
-                dropdown.attr('disabled', 'disabled');
+                dropdown.hide();
+                if(processedOpElems.length == 0){
+                    dropdown.parent().append(
+                        "<div class='"+PROCESSED_OP_ID+" disabledText'>" + 
+                            $(opts).text() + 
+                        "</div>");
+                }
 
             // otherwise, enable the dropdown
-            } else
-                dropdown.removeAttr('disabled');
+            } else {
+                dropdown.show();
+                processedOpElems.remove();
+            }
         }
 
         // -------------------
