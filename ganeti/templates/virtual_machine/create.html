@@ -57,16 +57,16 @@
                 });
         }
 
-        // -------------------------------
-        // auto-select singleton dropdown
-        // -------------------------------
+        // ---------------------------
+        // process singleton dropdown
+        // ---------------------------
         function processSingletonDropdown(dropdown, ignoreOpt){
-            /* 
-            Auto-select and read-onlyify the specified single-option dropdown, 
-            i.e., if the specified dropdown has only one option, select it, 
-            and make the dropdown read-only. dropdown must be a jQuery object.
+            /*
+            If the specified dropdown has only one option, select that option,
+            hide the dropdown, and replace it with a label of that option. 
+            Note that dropdown must be a jQuery object.
                 
-            If ignoreOpt is supplied, options with ignoreOpt as a label will 
+            If ignoreOpt is supplied, options with called ignoreOpt will 
             be ignored and treated as if they don't exist. This is useful if 
             the dropdown has "blank" options such as "-----" or 
             "- choose one -" etc.
@@ -80,8 +80,6 @@
             var PROCESSED_OP_ID = "processedOption";
             var processedOpElems =
                     dropdown.siblings().filter('.'+PROCESSED_OP_ID);
-
-            console.log("processing dropdown " + dropdown.attr('id') + "...");
 
             // create a new list of options sans any "blanks", if specified
             if(ignoreOpt != undefined){
@@ -106,7 +104,8 @@
                         "</div>");
                 }
 
-            // otherwise, enable the dropdown
+            // otherwise, replace the processed option, if it exists, with a
+            // label
             } else {
                 dropdown.show();
                 processedOpElems.remove();
