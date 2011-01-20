@@ -120,4 +120,5 @@ urlpatterns += patterns('ganeti.views.importing',
 # Jobs
 urlpatterns += patterns('ganeti.views.jobs',
     url(r'^%s/job/(?P<job_id>\d+)/status' % cluster, 'status', name='job-status'),
+    url(r'^job/clear/?', 'clear', name='job-clear'),
 )

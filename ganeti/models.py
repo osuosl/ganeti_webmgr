@@ -461,6 +461,7 @@ class Job(CachedClusterObject):
     cluster = models.ForeignKey('Cluster', editable=False, related_name='jobs')
     cluster_hash = models.CharField(max_length=40, editable=False)
     
+    cleared = models.BooleanField(default=False)
     finished = models.DateTimeField(null=True)
     status = models.CharField(max_length=10)
     

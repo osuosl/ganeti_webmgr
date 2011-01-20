@@ -47,10 +47,17 @@
         $("#usage_summary .ram, #usage_summary .disk, #usage_summary .vcpus").progressBar(PBAR2_CONF);
         $("#errors_list table").tablesorter();
         
-        $("#errors_list tr.gerror div.clear").live("click", function(){
+        $("#errors_list div.clear").live("click", function(){
             row = this.parentNode.parentNode
             id = row.id.substring(7);
-            $.post("{% url error-clear %}", {id:id}, function(){
+            
+            if ($(row).hasClass('gerror')) {
+                url = "{% url error-clear %}";
+            } else if ($(row).hasClass('jerror')) {
+                url = "{% url job-clear %}";
+            }
+            
+            $.post(url, {id:id}, function(){
                 $(row).fadeOut(1000, function(){
                     $(row).remove();
                     if($("#errors_list tr").length==0) {
@@ -170,26 +177,30 @@
 </div>
 {% endif %}
 
-{% if ganeti_errors or job_errors %}
+{% if errors %}
 <div id="errors_list">
     <h2>Errors and Failures</h2>
     <table>
-    
-    {% for error in ganeti_errors %}
-        <tr class="gerror" id="gerror_{{error.id}}">
-            {% include "overview/object_link.html" %}
-            <td>{{ error.msg }}</td>
-            <td>{{ error.timestamp|date }}</td>
-            <td><div class="clear" title="clear message"></div></td>
-        </tr>
-    {% endfor %}
-    {% for error in job_errors %}
-        <tr>
-            {% include "overview/object_link.html" %}
-            <td>{{ error.info.ops.0.OP_ID|format_job_op }}</td>
-            <td>{{ error.finished|date }}</td>
-            <td><div class="clear" title="clear message"></div></td>
-        </tr>
+    {% for tuple in errors %}
+        {% with tuple.0 as is_ganeti_error %}
+        {% with tuple.1 as error %}
+            {% if is_ganeti_error %}
+                <tr class="gerror" id="gerror_{{error.pk}}">
+                    {% include "overview/object_link.html" %}
+                    <td>{{ error.msg }}</td>
+                    <td>{{ error.timestamp|date }}</td>
+                    <td><div class="clear" title="clear message"></div></td>
+                </tr>
+            {% else %}
+                <tr class="jerror" id="jerror_{{error.pk}}">
+                    {% include "overview/object_link.html" %}
+                    <td>{{ error.info.ops.0.OP_ID|format_job_op }}</td>
+                    <td>{{ error.finished|date }}</td>
+                    <td><div class="clear" title="clear message"></div></td>
+                </tr>
+            {% endif %}
+        {% endwith %}
+        {% endwith %}
     {% endfor %}
     </table>
 </div>
