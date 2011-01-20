@@ -37,7 +37,13 @@
         },
     };
     $(document).ready(function() {
-        $("#clusters .ram, #clusters .disk").progressBar(PBAR_CONF);
+        $("#clusters .ram, #clusters .disk").each(function(){
+            $this = $(this);
+            if ($this.html() != 'unknown') {
+                console.log($this.html);
+                $this.progressBar(PBAR_CONF);
+            }
+        });
         $("#clusters").tablesorter();
         $("#usage_summary .ram, #usage_summary .disk, #usage_summary .vcpus").progressBar(PBAR2_CONF);
         $("#errors_list table").tablesorter();

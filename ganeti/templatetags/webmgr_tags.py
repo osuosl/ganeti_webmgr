@@ -163,7 +163,7 @@ def format_part_total(part, total):
     Pretty-print a quantity out of a given total.
     """
     if not (part or total):
-        return "0"
+        return "unknown"
     total = float(total) / 1024
     part = float(part) / 1024
     return "%.*f / %.*f" % (
