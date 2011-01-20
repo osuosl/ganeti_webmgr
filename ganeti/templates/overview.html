@@ -177,31 +177,19 @@
     <table>
     
     {% for error in ganeti_errors %}
-        {% with error.obj|class_name as class %}
         <tr class="gerror" id="gerror_{{error.id}}">
-            <td class="{{class}} name">
-                {% ifequal class 'Cluster' %}
-                    <a href="{% url cluster-detail error.obj.slug %}">{{ error.obj|abbreviate_fqdn }}</a>
-                {% endifequal %}
-                {% ifequal class 'VirtualMachine' %}
-                    <a href="{% url instance-detail error.obj.cluster.slug error.obj.hostname %}">{{ error.obj|abbreviate_fqdn }}</a>
-                {% endifequal %}
-            </td>
+            {% include "overview/object_link.html" %}
             <td>{{ error.msg }}</td>
             <td>{{ error.timestamp|date }}</td>
             <td><div class="clear" title="clear message"></div></td>
         </tr>
-        {% endwith %}
     {% endfor %}
-    
-    {% for jerror in job_errors %}
+    {% for error in job_errors %}
         <tr>
-            {% if admin %}<td><a href="{% url cluster-detail jerror.cluster.slug %}">{{ jerror.cluster|abbreviate_fqdn }}</a></td>
-            <td>{{ jerror.obj }}</td>{% else %}
-            <td><a href="{% url instance-detail jerror.obj.cluster.slug jerror.obj.hostname %}">{{ jerror.obj }}</a></td>{% endif %}
-            <td>{{ jerror.info.ops.0.OP_ID|format_job_op }}</td>
-            <td>{{ jerror.finished|date }}</td>
-            <td>X</td>
+            {% include "overview/object_link.html" %}
+            <td>{{ error.info.ops.0.OP_ID|format_job_op }}</td>
+            <td>{{ error.finished|date }}</td>
+            <td><div class="clear" title="clear message"></div></td>
         </tr>
     {% endfor %}
     </table>

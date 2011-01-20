@@ -104,7 +104,6 @@ li {
 #content h1 {margin:10px 0 10px 0;}
 #content table {margin-top:15px;  width:100%; border: 1px solid #dddddd;}
 #content th {background:#eeeeee; border-bottom:1px solid #dddddd !important;}
-#content td.name {text-align:center;}
 #content td.actions {width:16px;}
 #content tr.group_row {margin:auto;}
 #content tr.none td {border-bottom: 1px solid white; font-style:italic;}
@@ -156,10 +155,10 @@ li {
  * Actions (buttons Delete, Shutdown, Start, Reboot)
  *
  **/
-#content #actions2 {
+#actions2 {
     float: right;
 }
-#content #actions2 li {
+#actions2 li {
     float: left;
 }
 
@@ -167,14 +166,12 @@ li {
  * Errors, failures and administration links - status page
  *
  **/
-#content #errors_list, #content #usage_summary, #content #administration,
-#content #no_errors {
+#errors_list, #usage_summary, #administration {
     margin-top: 2em;
-    padding: 5px;
 }
 
 #errors_list h2 {
-    background-color:#D63535;
+    background-color:#BA2525;
     color:white;
     padding: 5px 10px;
     margin-bottom:0;
@@ -430,4 +427,3 @@ tr.group td.name {background:url(/media/images/icons/group.png) no-repeat 0 4px;
     text-decoration:none;
 }
 .pagination a:hover { text-decoration:underline;}
-.pagination
