@@ -40,7 +40,6 @@
         $("#clusters .ram, #clusters .disk").each(function(){
             $this = $(this);
             if ($this.html() != 'unknown') {
-                console.log($this.html);
                 $this.progressBar(PBAR_CONF);
             }
         });
