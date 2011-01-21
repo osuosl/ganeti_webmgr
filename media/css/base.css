@@ -9,11 +9,40 @@
 html {width: 100%;}
 
 body {
-    background-color: #333;
+    background: url(/media/images/background_with_menu.png) repeat-y center #eee;
     color:#333333;
-    height: auto;
-    margin: 0em;
     min-width:974px;
+}
+
+/* Sticky footer */
+html, body { height:100%;}
+#wrap {min-height: 100%;}
+#content {
+    overflow:auto;
+    min-height:400px;
+    padding-bottom: 115px; /* must be same height as the footer */
+}
+
+#footer {
+    background-color:#333;
+    border-top: 5px solid #666;
+    clear:both;
+    color: #F7F7F7;
+    height: 100px;
+    margin: -115px auto 0 auto; /* negative value of footer height */
+    position: relative;
+    padding: 5px 0;
+    text-align: center;
+    width: 100%;
+}
+
+/*Sticky footer - Opera Fix*/
+body:before {
+    content:"";
+    height:100%;
+    float:left;
+    width:0;
+    margin-top:-32767px;
 }
 
 
@@ -86,20 +115,15 @@ li {
 .menu .user, .menu .user a {font-size:11px;}
 .menu .user a {display:block;}
 
-#content_wrapper {
-    background:#EEEEEE;
-    border-bottom: 5px solid #666;
-    width:100%;
-}
+#content_wrapper { background:#eee; width:100%;}
 #content_column {margin: 0 auto; width:979px;}
 #content {
     background:white;
     border-left: 1px solid #DDDDDD;
     border-right: 1px solid #DDDDDD;
     float:left;
-    min-height:490px;
     padding:10px 10px 20px 10px;
-    width: 812px;
+    width: 817px;
 }
 #content h1 {margin:10px 0 10px 0;}
 #content table {margin-top:15px;  width:100%; border: 1px solid #dddddd;}
@@ -118,10 +142,7 @@ li {
     text-align: center;
     vertical-align:top;
 }
-#content td.status, td.actions {
-    padding:5px 0 0 0;
-}
-
+#content td.status, td.actions { padding:5px 0 0 0;}
 #content td a {border:0;}
 
 /* tablesorter style */
@@ -263,17 +284,6 @@ form input.submit{margin-left:12.5em;}
 #configuration th {text-align: right;}
 #configuration td {text-align: left;}
 #configuration input[type="text"] {width: 30em;}
-
-#footer {
-    clear: both;
-    margin: 0 auto;
-    padding: 0em;
-    padding-top: 1em;
-    padding-bottom: 1em;
-    text-align: center;
-    width: 100%;
-    color: #F7F7F7;
-}
 
 .info {
     background:#eeeeee;
