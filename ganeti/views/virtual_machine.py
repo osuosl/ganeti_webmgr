@@ -1067,16 +1067,29 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
 
     exclude = ('start', 'owner', 'cluster', 'hostname', 'name_check',
         'iallocator', 'iallocator_hostname', 'disk_template', 'pnode', 'snode',\
+<<<<<<< HEAD
         'os', 'disk_size', 'nicmode')
+=======
+        'os')
+>>>>>>> Fixed issue with user tab being disabled if vm shutdown because edit tab was added. Added form fields to edit.html and jquery to submit the form via ajax. (Submission not working correctly) Moved the initial data setup into the edit view so that the initial data would not be set everytime the form was initialized (which is what happens when you hit submit on a django form).
 
     class Meta:
         model = VirtualMachineTemplate
 
     def __init__(self, user, cluster, initial=None, *args, **kwargs):
+<<<<<<< HEAD
         super(ModifyVirtualMachineForm, self).__init__(user, cluster=cluster, \
                 initial=initial, *args, **kwargs)
         # Remove all fields in the form that are not required to modify the 
         #   instance.
+=======
+        super(EditVirtualMachineForm, self).__init__(user, cluster=cluster, \
+                initial=initial, *args, **kwargs)
+        # Cannot simply use exclude as choice fields had to be overridden
+        #  in the form, and exclude will only remove the model field.
+        #for field in self.Meta.exclude:
+            #del self.fields[field]
+>>>>>>> Fixed issue with user tab being disabled if vm shutdown because edit tab was added. Added form fields to edit.html and jquery to submit the form via ajax. (Submission not working correctly) Moved the initial data setup into the edit view so that the initial data would not be set everytime the form was initialized (which is what happens when you hit submit on a django form).
         for field in self.exclude:
             del self.fields[field]
 
