@@ -7,7 +7,7 @@
         $('#actions a').addClass('disabled');
         checkInterval = setInterval(get_job_status, 3000, job_id, callback);
     }
-
+    
     // get job status
     function get_job_status(job_id, callback) {
         $.ajax({

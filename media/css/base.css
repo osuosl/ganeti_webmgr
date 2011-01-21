@@ -178,12 +178,9 @@ li {
  * Actions (buttons Delete, Shutdown, Start, Reboot)
  *
  **/
-#actions2 {
-    float: right;
-}
-#actions2 li {
-    float: left;
-}
+#actions.horizontal li {float: left;}
+#actions.horizontal .button {width:120px;}
+
 
 /**
  * Errors, failures and administration links - status page
@@ -316,14 +313,16 @@ div.icon_deleting {background:url(/media/images/icons/check_red.png);}
 .reinstall {background:url(/media/images/icons/arrow_refresh.png) no-repeat;}
 .shutdown {background:url(/media/images/icons/stop.png) no-repeat;}
 .startup {background:url(/media/images/icons/add.png) no-repeat;}
+.encrypt {background:url(/media/images/icons/lock_open.png) no-repeat;}
+.connect {background:url(/media/images/icons/disconnect.png) no-repeat;}
 
 div.edit.disabled, a.edit.disabled{background:url(/media/images/icons/edit-disabled.png) no-repeat;}
 div.delete.disabled, a.delete.disabled{background:url(/media/images/icons/delete-disabled.png) no-repeat;}
 .reboot.disabled {background:url(/media/images/icons/arrow_refresh-disabled.png) no-repeat;}
 .shutdown.disabled {background:url(/media/images/icons/stop-disabled.png) no-repeat;}
 .startup.disabled {background:url(/media/images/icons/add-disabled.png) no-repeat;}
-
-
+.encrypt.enabled {background:url(/media/images/icons/lock.png) no-repeat;}
+.connect.enabled {background:url(/media/images/icons/disconnect.png) no-repeat;}
 div.delete, div.edit, div.icon_error, .icon_running, .icon_stopped, .icon_deleting, .clear {
     background-repeat:no-repeat;
     height:16px;
@@ -333,9 +332,7 @@ div.delete, div.edit, div.icon_error, .icon_running, .icon_stopped, .icon_deleti
 }
 
 div.clear:hover {background:url(/media/images/icons/cancel.png) no-repeat !important;}
-.clear {
-    cursor:pointer;
-}
+.clear {cursor:pointer;}
 
 .button {
     background-color: #eeeeee !important;
@@ -343,6 +340,7 @@ div.clear:hover {background:url(/media/images/icons/cancel.png) no-repeat !impor
     border: 1px solid #cccccc;
     clear:both;
     color:#666 !important;
+    cursor:pointer;
     float:right; 
     padding:4px 4px 4px 22px;
     margin:2px;
@@ -354,11 +352,18 @@ div.clear:hover {background:url(/media/images/icons/cancel.png) no-repeat !impor
 .button:hover {
     background-color: #dadada !important;
     color:black !important;
-    border-color:#bababa;
+    border-color:#aaaaaa;
+}
+
+.button.enabled {
+    background-color: #cccccc !important;
+    color:black !important;
+    border-color:#999;
 }
 
 .button.disabled {color: #aaa !important;}
-.button.disabled:hover {background-color: #eee !important;}
+.button.disabled:hover {background-color: #eee !important; border-color:#ccc;}
+.button.disabled.enabled:hover {border-color:#999;}
 
 .spinner {margin:0 auto; text-align:center; width:100px}
 .spinner image {display:block; margin:0 auto; width:32px;}
@@ -439,3 +444,6 @@ tr.group td.name {background:url(/media/images/icons/group.png) no-repeat 0 4px;
     text-decoration:none;
 }
 .pagination a:hover { text-decoration:underline;}
+
+/* No VNC tab */
+#encrypt_check {display:none;}

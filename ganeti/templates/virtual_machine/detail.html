@@ -64,9 +64,9 @@
                 $('#tabs').tabs("option", "disabled", [vnc_tab_index])
             {% endifnotequal %}
         {% endif %}
-        
-        $("#actions a").not('.delete, .reinstall').click(function() {
-            if (actions_enabled){
+        //$("#actions a").not('.delete, .reinstall').click(function() {return false;});
+        $("#actions a.power").live("click", function() {
+            if (actions_enabled) {
                 if ((this.className == 'button shutdown' || this.className == 'button reboot')
                     && !(confirm('Are you sure you want to ' + this.title + '?'))) {
                     return false;
@@ -138,10 +138,10 @@
                 {% endif %}
                 {% if admin or power and username %}
                     {% ifequal instance.info.status "running" %}
-                    <li><a class="button shutdown" title="shutdown" href="{% url instance-shutdown cluster.slug instance.hostname %}">Shutdown</a></li>
-                    <li><a class="button reboot" title="reboot" href="{% url instance-reboot cluster.slug instance.hostname %}">Reboot</a></li>
+                    <li><a class="button shutdown power" title="shutdown" href="{% url instance-shutdown cluster.slug instance.hostname %}">Shutdown</a></li>
+                    <li><a class="button reboot power" title="reboot" href="{% url instance-reboot cluster.slug instance.hostname %}">Reboot</a></li>
                     {% else %}
-                    <li><a class="button startup" href="{% url instance-startup cluster.slug instance.hostname %}">Start</a></li>
+                    <li><a class="button startup power" href="{% url instance-startup cluster.slug instance.hostname %}">Start</a></li>
                     {% endifequal %}
                 {% endif %}
             {% endwith %}
