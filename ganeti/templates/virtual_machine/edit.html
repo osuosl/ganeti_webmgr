@@ -1,21 +1,7 @@
+{% extends "base.html" %}
 {% load webmgr_tags %}
-<script src="{{MEDIA_URL}}/js/jquery.form.js"></script>
-<script type="text/javascript">
-    var options = {  
-        type:       'POST',
-        url:        '{% url instance-detail cluster.slug instance.hostname %}#edit', 
-        success:    function() { 
-            alert('Thanks for your submission!');
-            $('#tabs').tabs('select', 1);
-        } 
-    };
-    $(document).ready(function() {
-        $('#vmeditform').ajaxForm(options);
-    });
-</script>
-
-{% if admin %}
-<h1>Edit</h1>
+{% block content %}
+<h1>Edit {{ instance.hostname }}</h1>
 <fieldset>
     <form id="vmeditform" method="post">
         <fieldset>
@@ -39,4 +25,4 @@
         <input class="submit" type="submit" value="Edit" />
     </form>
 </fieldset>
-{% endif %}
+{% endblock %}
