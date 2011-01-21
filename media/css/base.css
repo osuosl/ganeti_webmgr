@@ -1,0 +1,142 @@
+/* base.css */
+* {
+    font-family:"Lucida Grande","DejaVu Sans","Bitstream Vera Sans",Verdana,Arial,sans-serif;
+    font-size:12px;
+    margin: 0px;
+    padding: 0px;
+}
+
+html {width: 100%;}
+html, body { height:100%; /* Sticky Footer */ } 
+body {
+    color:#333333;
+    min-width:974px;
+    background-color:red;
+}
+
+/*Sticky footer - Opera Fix*/
+body:before {
+    content:"";
+    height:100%;
+    float:left;
+    width:0;
+    margin-top:-32767px;
+}
+
+h1 {font-size: 1.5em; margin-top: 0px;}
+h2 {font-size: 1.4em;}
+h3 {font-size: 1.1em; margin: 15px 0 0.5ex 0;}
+h3 a, h3 a:visited {color: #559BD7; font-size: 1em; text-decoration: none;}
+
+a:link, a:visited{color: #5B80B2; text-decoration: none;}
+a:hover, a:active {color: #7AB0DC;}
+
+table {border-collapse:collapse;}
+tr.even {background: #fafafa;}
+td a {border:0;}
+
+ul {margin-top: 0px; list-style-type: square;}
+li {
+    font-size:12px;
+    line-height:16px;
+    list-style:none;
+    margin-left:0px; 
+}
+
+/**
+ * Forms and Form Elements
+ **/
+/*  Default Settings */
+form input.submit {color:black; width:6em;}
+form p label {
+    float: left;
+    text-align: right;
+    margin-top: 0.3ex;
+    margin-right: 0.5em;
+    display: block;
+}
+form ul.errorlist {color:red;padding:1ex 1ex;}
+form p {padding:0.5ex 0ex;}
+fieldset {border:0px; padding-top:0.7em;}
+legend {font-size: 1.1em; font-weight:bold; padding-top: 10px;}
+form table, form table td, form table td {border:0 !important;}
+form p label {width:12em;}
+form input.submit{margin-left:12.5em;}
+
+#body_wrapper {min-height: 100%; /* Sticky footer */ }
+#header_strip {height:5px; background-color:#C16328; border-bottom:1px solid #ccc;}
+#header {
+    background: #222;
+    margin:0 auto;
+    width: 100%;
+    position:relative;
+}
+#header a img {border:0;}
+#header a:active, #header a:link,
+#header a:visited, #header a:hover {color: white; font-weight: bold;}
+
+#inner_header {position:relative;}
+#inner_header, #title a {
+    color: white;
+    font-size: 21px;
+    font-weight: bold;
+    margin:0 auto;
+    padding: 11px 0 5px 0px;
+    text-align: left;
+    width:829px;
+}
+#inner_header a {margin-left:130px;}
+
+#content_wrapper {
+    background:#eee;
+    width:100%;
+}
+
+#content{
+    overflow:hidden; /* sticky footer */
+    padding-bottom: 75px; /* sticky footer - must be same height as the footer, includes footer padding */
+}
+
+#content_column {margin: 0 auto; width:979px;}
+#content {
+    background:white;
+    border-left: 1px solid #DDDDDD;
+    border-right: 1px solid #DDDDDD;
+    float:left;
+    padding:10px 10px 20px 10px;
+    width: 817px;
+}
+#content h1 {margin:10px 0 10px 0;}
+#content table {margin-top:15px;  width:100%; border: 1px solid #dddddd;}
+#content th {background:#eeeeee; border-bottom:1px solid #dddddd !important;}
+#content td.actions {width:16px;}
+#content tr.group_row {margin:auto;}
+#content tr.none td {border-bottom: 1px solid white; font-style:italic;}
+#content td.error {padding-right:0 !important; width:16px;}
+#content td {border-left:1px solid white; border-right: 1px solid white;}
+#content td, #content th, #content td a {
+    border-bottom:1px solid #EEEEEE;
+    font-family:"Lucida Grande",Verdana,Arial,sans-serif;
+    font-size:12px;
+    line-height:14px;
+    padding:5px;
+    text-align: center;
+    vertical-align:top;
+}
+#content th.status, #content th.actions { background:none; padding:0;}
+#content td a {border:0; padding:0;}
+
+#footer {
+    background: url(/media/images/footerBack.jpg) repeat-x 0 0 #1d1d1d;
+    border-top: 2px solid #666;
+    clear:both; /* sticky footer */
+    color: #C8CED3;
+    height: 60px; /* sticky footer - must have fixed height */
+    margin: -75px auto 0 auto; /* Sticky footer - top is negative value of footer height, includes padding */
+    padding: 5px 0;
+    text-align: center;
+    width: 100%;
+}
+#footer a {color:#C16328;}
+
+.floatfix {clear:both;}
