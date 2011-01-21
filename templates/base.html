@@ -11,23 +11,23 @@
     <body>
 
     <div id="body_wrapper">
-    <div id="header_strip"></div>
-    <div id="header">
-        <div id="inner_header">
-            <a href="/"><img src="{{MEDIA_URL}}/logo.png"/></a>
-            {% block inner_header %}{% endblock %}
-        </div>
-    </div>
-    <div id="content_wrapper">
-        <div id="content_column">
-            {% block navigation %}{% endblock %}
-            <div id="content">
-                {% block content %}{% endblock %}
+        <div id="header_strip"></div>
+        <div id="header">
+            <div id="inner_header">
+                <a href="/"><img src="{{MEDIA_URL}}/logo.png"/></a>
+                {% block inner_header %}{% endblock %}
             </div>
-            <div class="floatfix"></div>
+        </div>
+        <div id="content_wrapper">
+            <div id="content_column">
+                {% block navigation %}{% endblock %}
+                <div id="content">
+                    {% block content %}{% endblock %}
+                </div>
+                <div class="floatfix"></div>
+            </div>
         </div>
     </div>
-    
     <div id="footer">
         <p>
             A Project by the <a href="https://osuosl.org">Oregon State University Open Source Lab</a>.
