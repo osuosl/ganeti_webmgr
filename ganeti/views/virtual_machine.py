@@ -665,7 +665,7 @@ def modify(request, cluster_slug, instance):
         context_instance=RequestContext(request),
     )
 
-
+2
 @login_required
 def cluster_choices(request):
     """
@@ -1063,7 +1063,6 @@ class NewVirtualMachineForm(forms.ModelForm):
         return data
 
 
-<<<<<<< HEAD
 class ModifyVirtualMachineForm(NewVirtualMachineForm):
 
     exclude = ('start', 'owner', 'cluster', 'hostname', 'name_check',
@@ -1080,26 +1079,7 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
         #   instance.
         for field in self.exclude:
             del self.fields[field]
-=======
-class EditVirtualMachineForm(NewVirtualMachineForm):
 
-    def __init__(self, user, cluster=None, initial=None, *args, **kwargs):
-        super(EditVirtualMachineForm, self).__init__(user, cluster, \
-                *args, **kwargs)
-        del self.fields['name_check']
-        del self.fields['disk_type']
-        del self.fields['pnode']
-        del self.fields['snode']
-        del self.fields['start']
-        del self.fields['owner']
-        del self.fields['cluster']
-        del self.fields['hostname']
-        del self.fields['iallocator']
-        del self.fields['iallocator_hostname']
-        del self.fields['disk_template']
-        del self.fields['os']        
-
->>>>>>> Added edit form for VM, but it is currently broken. Committing initial work. Urls, views, editvirtualmachineform.
 
 class InstanceConfigForm(forms.Form):
     nic_type = forms.ChoiceField(label="Network adapter model",
