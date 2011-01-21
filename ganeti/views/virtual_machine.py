@@ -566,10 +566,37 @@ def edit(request, cluster_slug, instance):
         or user.has_perm('admin', cluster)
 
     if request.method == 'POST':
-        form = EditVirtualMachineForm(user, None, request.POST, instance=vm)
+        form = EditVirtualMachineForm(user, None, request.POST)
         if form.is_valid():
-            """
             data = form.cleaned_data
+            vcpus = data['vcpus']
+            ram = data['ram']
+            disksize = data['disk_size']
+            disktype = data['disk_type']
+            bootorder = data['bootorder']
+            nictype = data['nictype']
+            nicmode = data['nicmode']
+            niclink = data['niclink']
+            rootpath = data['rootpath']
+            kernelpath = data['kernelpath']
+            serialconsole = data['serialconsole']
+            imagepath = data['imagepath']
+            """
+            cluster.rapi.ModifyInstance(instance, \
+                        hvparams={'kernel_path': kernelpath, \
+                            'root_path': rootpath, \
+                            'serial_console':serialconsole, \
+                            'boot_order':bootorder, \
+                            'nic_type':nictype, \
+                            'disk_type':disktype,\
+                            'cdrom_image_path':imagepath},
+                        beparams={"memory": ram})
+            """
+            """
+            return HttpResponseRedirect( \
+            reverse('instance-detail', args=[cluster.slug, vm.hostname]))
+            """
+            """
             if data['cdrom_type'] == 'none':
                 data['cdrom_image_path'] = 'none'
             elif data['cdrom_image_path'] != vm.hvparams['cdrom_image_path']:
@@ -592,9 +619,31 @@ def edit(request, cluster_slug, instance):
                 else:
                     form = None
             """
-            pass
-    elif request.method == 'GET':
-        form = EditVirtualMachineForm(user, cluster, instance=vm)
+
+    elif request.method == 'GET':              
+        # Need to set initial values from vm.info as these are not saved
+        #  per the vm model.
+        # initial = vm.info
+        if vm.info and 'hvparams' in vm.info:
+            info = vm.info
+            initial = {}
+            hvparams = info['hvparams']
+            # XXX Convert ram, and disk_size to str since they come out
+            #  from ganeti as ints, and the DataVolumeField does not like
+            #  ints.
+            initial['vcpus'] = info['beparams']['vcpus']
+            initial['ram'] = str(info['beparams']['memory'])
+            initial['disk_size'] = str(info['disk.sizes'][0])
+            initial['disk_type'] = hvparams['disk_type']
+            initial['bootorder'] = hvparams['boot_order']
+            initial['nictype'] = hvparams['nic_type']
+            initial['nicmode'] = info['nic.modes'][0]
+            initial['niclink'] = info['nic.links'][0]
+            initial['rootpath'] = hvparams['root_path']
+            initial['kernelpath'] = hvparams['kernel_path']
+            initial['serialconsole'] = hvparams['serial_console']
+            initial['imagepath'] = hvparams['cdrom_image_path']
+        form = EditVirtualMachineForm(user, cluster, initial=initial)
 
     return render_to_response("virtual_machine/edit.html", {
         'cluster': cluster,
@@ -605,7 +654,7 @@ def edit(request, cluster_slug, instance):
         context_instance=RequestContext(request),
     )
 
-
+2
 @login_required
 def cluster_choices(request):
     """
@@ -834,7 +883,6 @@ class NewVirtualMachineForm(forms.ModelForm):
                 except Cluster.DoesNotExist:
                     # defer to clean function to return errors
                     pass
-        """
         if cluster is not None:
             # set choices based on selected cluster if given
             oslist = cluster_os_list(cluster)
@@ -860,7 +908,6 @@ class NewVirtualMachineForm(forms.ModelForm):
             self.fields['kernelpath'].initial = defaults['kernelpath']
             self.fields['serialconsole'].initial = defaults['serialconsole']
             self.fields['niclink'].initial = defaults['niclink']
-        """
 
         # set cluster choices based on the given owner
         if initial and 'owner' in initial and initial['owner']:
@@ -1007,22 +1054,22 @@ class NewVirtualMachineForm(forms.ModelForm):
 
 class EditVirtualMachineForm(NewVirtualMachineForm):
 
-    def __init__(self, user, cluster=None, initial=None, *args, **kwargs):
-        super(EditVirtualMachineForm, self).__init__(user, cluster, \
-                *args, **kwargs)
-        del self.fields['name_check']
-        del self.fields['disk_type']
-        del self.fields['pnode']
-        del self.fields['snode']
-        del self.fields['start']
-        del self.fields['owner']
-        del self.fields['cluster']
-        del self.fields['hostname']
-        del self.fields['iallocator']
-        del self.fields['iallocator_hostname']
-        del self.fields['disk_template']
-        del self.fields['os']        
+    exclude = ('start', 'owner', 'cluster', 'hostname', 'name_check',
+        'iallocator', 'iallocator_hostname', 'disk_template', 'pnode', 'snode',\
+        'os')
 
+    class Meta:
+        model = VirtualMachineTemplate
+
+    def __init__(self, user, cluster, initial=None, *args, **kwargs):
+        super(EditVirtualMachineForm, self).__init__(user, cluster=cluster, \
+                initial=initial, *args, **kwargs)
+        # Cannot simply use exclude as choice fields had to be overridden
+        #  in the form, and exclude will only remove the model field.
+        #for field in self.Meta.exclude:
+            #del self.fields[field]
+        for field in self.exclude:
+            del self.fields[field]
 
 class InstanceConfigForm(forms.Form):
     nic_type = forms.ChoiceField(label="Network adapter model",

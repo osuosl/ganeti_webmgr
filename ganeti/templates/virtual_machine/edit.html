@@ -1,8 +1,41 @@
+{% load webmgr_tags %}
+<script src="{{MEDIA_URL}}/js/jquery.form.js"></script>
+<script type="text/javascript">
+    var options = {  
+        type:       'POST',
+        url:        '{% url instance-detail cluster.slug instance.hostname %}#edit', 
+        success:    function() { 
+            alert('Thanks for your submission!');
+            $('#tabs').tabs('select', 1);
+        } 
+    };
+    $(document).ready(function() {
+        $('#vmeditform').ajaxForm(options);
+    });
+</script>
+
 {% if admin %}
 <h1>Edit</h1>
 <fieldset>
-    <form method="post">
-        {{ form.as_p }}
+    <form id="vmeditform" method="post">
+        <fieldset>
+            <legend>General Parameters</legend>
+            {% vmfield form.vcpus %}
+            {% vmfield form.ram %}
+            {% vmfield form.disk_size %}
+            {% vmfield form.disk_type %}
+            {% vmfield form.nicmode %}
+            {% vmfield form.niclink %}
+            {% vmfield form.nictype %}
+        </fieldset>
+        <fieldset>
+            <legend>Hypervisor Parameters</legend>
+            {% vmfield form.kernelpath %}
+            {% vmfield form.rootpath %}
+            {% vmfield form.serialconsole %}
+            {% vmfield form.bootorder %}
+            {% vmfield form.imagepath %}
+        </fieldset>
         <input class="submit" type="submit" value="Edit" />
     </form>
 </fieldset>
