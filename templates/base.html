@@ -12,9 +12,14 @@
     <body>
         
     <div id="wrap">
+    <div id="strip"></div>
     <div id="header">
         <div id="title">
             <a href="/"><img src="{{MEDIA_URL}}/logo.png"/></a>
+            
+            <div id="user_menu">
+                You are logged in as <a href="{% url profile %}">{{user.username}}</a>, <a href="{% url logout %}">Logout</a>
+            </div>
         </div>
     </div>
 
@@ -24,9 +29,6 @@
             {% if user.is_authenticated %}
             {% with user|cluster_admin as cluster_admin %}
             <div id="mainmenu" class="menu">
-            <p class="user">You are logged in as: <a href="{% url profile %}">{{user.username}}</a><p>
-            
-            <h3></h3>
             <ul>
                 <li><a href="{% url overview %}">Overview</a></li>
                 <li><a href="{% url cluster-list %}">Clusters</a></li>
@@ -34,11 +36,6 @@
                 {% if user.is_superuser or cluster_admin or perms.Cluster.create_vm %}
                 <li><a href="{% url instance-create %}">Create VM </a></li>
                 {% endif %}
-                <li>
-                    <span id="searchbar">
-                        <a href="{% url logout %}">Logout</a>
-                    </span>
-                </li>
             </ul>
             {% with user|group_admin as group_admin %}
             
@@ -74,12 +71,7 @@
     
     <div id="footer">
         <p>
-        <a href="http://www.djangoproject.com/">
-             <img src="{{ MEDIA_URL }}/django.png" alt="A Django site" title="A Django site" border=0 />
-        </a>
-        </p>
-        <p>
-            Created in <a href="https://osuosl.org">Oregon State University Open Source Lab</a>.
+            A Project by the <a href="https://osuosl.org">Oregon State University Open Source Lab</a>.
         </p>
     </div>
     

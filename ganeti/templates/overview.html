@@ -128,7 +128,7 @@
     <tbody>
         {% for cluster, res in resources.items %}
         <tr>
-            <td><a href="{% url cluster-detail cluster|abbreviate_fqdn %}">{{ cluster|abbreviate_fqdn }}</a></td>
+            <td><a href="{% url cluster-detail cluster.slug %}">{{ cluster|abbreviate_fqdn }}</a></td>
 
             <td title="Running / total">{{ res.running }} / {{ res.total }}</td>
 

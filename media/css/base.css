@@ -20,20 +20,23 @@ html, body { height:100%;}
 #content {
     overflow:auto;
     min-height:400px;
-    padding-bottom: 115px; /* must be same height as the footer */
+    padding-bottom: 75px; /* must be same height as the footer */
 }
 
 #footer {
-    background-color:#333;
-    border-top: 5px solid #666;
+    background: url(/media/images/footerBack.jpg) repeat-x 0 0 #1d1d1d;
+    border-top: 2px solid #666;
     clear:both;
-    color: #F7F7F7;
-    height: 100px;
-    margin: -115px auto 0 auto; /* negative value of footer height */
+    color: #C8CED3;
+    height: 60px;
+    margin: -75px auto 0 auto; /* negative value of footer height */
     position: relative;
     padding: 5px 0;
     text-align: center;
     width: 100%;
+}
+#footer a {
+    color:#C16328;
 }
 
 /*Sticky footer - Opera Fix*/
@@ -69,16 +72,51 @@ li {
 }
 
 #header {
-    background: #f7f7f7;
-    border-bottom:2px solid #C16328;
+    background: #222;
+    /*border-top:5px solid #C16328;*/
+    border-top:1px solid #ccc;
     margin:0 auto;
     width: 100%;
+    
+    position:relative;
 }
-
+#strip {
+    height:5px;
+    background-color:#C16328;
+}
 #header a img {border:0;}
 #header a:active, #header a:link,
 #header a:visited, #header a:hover {color: white; font-weight: bold;}
 
+#user_menu {
+    background-color:#C16328;
+    border: 1px solid #ccc;
+    border-width:0px 1px 1px 1px;
+    
+    font-weight:normal;
+    font-size:11px;
+    height:18px;
+    padding:5px 5px 0 10px;
+    position:absolute;
+    right:50px;
+    top:-1px;
+    -moz-border-radius-bottomleft:5px;
+    -moz-border-radius-bottomright:5px;
+}
+
+#user_menu a {
+    font-size:11px !important;
+    margin:0 !important;
+    padding:0 !important;
+}
+
+#user_menu a:hover {
+    text-decoration:underline;
+}
+
+#title {
+    position:relative;
+}
 #title, #title a {
     color: white;
     font-size: 21px;
@@ -87,6 +125,8 @@ li {
     padding: 11px 0 5px 80px;
     text-align: left;
     width:909px;
+    
+    
 }
 #title a:link, #title a:visited {color: white;}
 
