@@ -17,15 +17,16 @@
 # USA.
 
 
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
-from django.shortcuts import render_to_response
+from django.http import HttpResponseRedirect, HttpResponse
+from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.contrib.contenttypes.models import ContentType
-#from object_permissions import get_model_perms, get_user_perms, grant, revoke, \
-#    get_users, get_groups, get_group_perms
-from ganeti.models import Cluster, VirtualMachine, Job
+
+
+from ganeti.models import Cluster, VirtualMachine, Job, GanetiError
+from ganeti.views import render_403
 
 
 @login_required
@@ -38,6 +39,36 @@ def index(request):
         return HttpResponseRedirect(reverse("cluster-overview"))
     else:
         return HttpResponseRedirect(reverse("virtualmachine-list"))
+
+
+def merge_errors(errors, jobs):
+    """ helper function for merging queryset of GanetiErrors and Job Errors """
+    merged = []
+    job_iter = iter(jobs)
+    try:
+        job = job_iter.next()
+    except StopIteration:
+        job = None
+    for error in errors:
+        if job is None or error.timestamp > job.finished:
+            merged.append((True, error))
+        else:
+            # found a newer job, append jobs till the next job is older
+            while job is not None and job.finished > error.timestamp:
+                merged.append((False, job))
+                try:
+                    job = job_iter.next()
+                except StopIteration:
+                    job = None
+                    
+    # append any left over jobs
+    while job is not None:
+        merged.append((False, job))
+        try:
+            job = job_iter.next()
+        except StopIteration:
+            job = None
+    return merged
 
 
 @login_required
@@ -54,32 +85,33 @@ def overview(request):
     else:
         cluster_list = user.get_objects_all_perms(Cluster, ['admin',],
             groups=True)
-
+        
         if not cluster_list:
             #return HttpResponseForbidden('You do not have sufficient privileges')
             admin = False
 
-    #ganeti errors
-    #XXX: not implemented yet
-    ganeti_errors = ["simulation"]
+    #orphaned, ready to import, missing
+    orphaned = import_ready = missing = 0
 
     if admin:
         vms = VirtualMachine.objects.filter(owner=user.get_profile())
         #vms = None
 
-        job_errors = Job.objects.filter(cluster__in=cluster_list, status="error"). \
+        #ganeti errors
+        ganeti_errors = GanetiError.objects.get_errors(cls=Cluster,
+                obj=cluster_list, cleared=False)
+        
+        
+        job_errors = Job.objects \
+                .filter(cluster__in=cluster_list, status="error", cleared=False). \
                 order_by("-finished")[:5]
-
+        
+        errors = merge_errors(ganeti_errors, job_errors)
+        
         #orphaned
         orphaned = VirtualMachine.objects.filter(owner=None,
                 cluster__in=cluster_list).count()
-
-        #ready for import vms
-        import_ready = 0
-
-        #missing vms
-        missing = 0
-
+        
         for cluster in cluster_list:
             import_ready += len(cluster.missing_in_db)
             missing += len(cluster.missing_in_ganeti)
@@ -88,15 +120,18 @@ def overview(request):
         #vms = user.get_objects_any_perms(VirtualMachine, groups=True)
         vms = VirtualMachine.objects.filter(owner=user.get_profile())
 
+        #ganeti errors
+        ganeti_errors = GanetiError.objects.get_errors(cls=VirtualMachine, 
+                obj=vms, cleared=False)
+
         # content type of VirtualMachine model
         # NOTE: done that way because if behavior of GenericForeignType
         #       i.e. Django doesn't allow to filter on GenericForeignType
         vm_type = ContentType.objects.get_for_model(VirtualMachine)
         job_errors = Job.objects.filter( content_type=vm_type, object_id__in=vms,
                 status="error" ).order_by("finished")[:5]
-
-        #orphaned, ready to import, missing
-        orphaned = import_ready = missing = 0
+        
+        errors = merge_errors(ganeti_errors, job_errors)
 
     quota = {}
     owner = user.get_profile()
@@ -114,8 +149,7 @@ def overview(request):
         'admin':admin,
         'cluster_list': cluster_list,
         'user': request.user,
-        'ganeti_errors': ganeti_errors,
-        'job_errors': job_errors,
+        'errors': errors,
         'orphaned': orphaned,
         'import_ready': import_ready,
         'missing': missing,
@@ -123,3 +157,28 @@ def overview(request):
         },
         context_instance=RequestContext(request),
     )
+
+
+@login_required
+def clear_ganeti_error(request):
+    """
+    Clear a single error message
+    """
+    user = request.user
+    error = get_object_or_404(GanetiError, pk=request.POST.get('id', None))
+    obj = error.obj
+    
+    # if not a superuser, check permissions on the object itself
+    if not user.is_superuser:
+        if isinstance(obj, (Cluster,)) and not user.has_perm('admin', obj):
+            return render_403(request, "You do not have sufficient privileges")
+        elif isinstance(obj, (VirtualMachine,)):
+            # object is a virtual machine, check perms on VM and on Cluster
+            if not (obj.owner_id == user.get_profile().pk or \
+                user.has_perm('admin', obj.cluster)):
+                    return render_403(request, "You do not have sufficient privileges")
+    
+    # clear the error
+    GanetiError.objects.filter(pk=error.pk).update(cleared=True)
+    
+    return HttpResponse('1', mimetype='application/json')

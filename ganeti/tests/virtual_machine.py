@@ -23,13 +23,14 @@ import json
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.core.urlresolvers import reverse
+from django.db.utils import IntegrityError
 from django.test import TestCase
 from django.test.client import Client
 
 from object_permissions import grant, get_user_perms
 
 from util import client
-from ganeti.tests.rapi_proxy import RapiProxy, INSTANCE, INFO, JOB, JOB_RUNNING
+from ganeti.tests.rapi_proxy import RapiProxy, INSTANCE, INFO, JOB, JOB_RUNNING, JOB_DELETE_SUCCESS
 from ganeti import models, constants 
 from ganeti.views.virtual_machine import os_prettify, NewVirtualMachineForm
 VirtualMachine = models.VirtualMachine
@@ -104,6 +105,10 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(5120, vm.disk_size)
         self.assertEqual('foobar', vm.owner.name)
         self.assertFalse(vm.error)
+        
+        # test unique constraints
+        vm = VirtualMachine(cluster=cluster, hostname=vm_hostname)
+        self.assertRaises(IntegrityError, vm.save)
         
         # Remove cluster
         Cluster.objects.all().delete();
@@ -273,7 +278,52 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         self.assertFalse(vm.last_job_id)
         self.assertFalse(Job.objects.filter(id=job_id).values()[0]['ignore_cache'])
         self.assert_(Job.objects.get(id=job_id).finished)
-
+    
+    def test_load_pending_delete(self):
+        """
+        Tests loading a VM that has a pending delete
+        
+        Verifies:
+            * The job is still running so the VM will be loaded
+        """
+        vm, cluster = self.create_virtual_machine()
+        vm.rapi.GetJobStatus.response = JOB_RUNNING
+        vm.refresh()
+        vm.ignore_cache = True
+        vm.pending_delete = True
+        vm.last_job = Job.objects.create(job_id=1, obj=vm, cluster_id=vm.cluster_id)
+        vm.save()
+        
+        # Test loading vm, job is running so it should not be deleted yet 
+        vm = VirtualMachine.objects.get(pk=vm.pk)
+        self.assert_(vm.id)
+        self.assert_(vm.pending_delete)
+        self.assertFalse(vm.deleted)
+    
+    def test_load_deleted(self): 
+        """
+        Tests loading a VM that has a pending delete
+        
+        Verifies:
+            * The Job is finished.  It will load the VM but it will be deleted
+            and marked as such.
+        """
+        vm, cluster = self.create_virtual_machine()
+        vm.rapi.GetJobStatus.response = JOB_RUNNING
+        vm.refresh()
+        vm.ignore_cache = True
+        vm.pending_delete = True
+        vm.last_job = Job.objects.create(job_id=1, obj=vm, cluster_id=vm.cluster_id)
+        vm.save()
+        
+        # Test loading vm, delete job is finished
+        vm.rapi.GetJobStatus.response = JOB_DELETE_SUCCESS
+        vm = VirtualMachine.objects.get(pk=vm.pk)
+        self.assertFalse(vm.id)
+        self.assert_(vm.pending_delete)
+        self.assert_(vm.deleted)
+        self.assertFalse(VirtualMachine.objects.filter(pk=vm.pk).exists())
+    
 class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
     """
     Tests for views showing virtual machines
@@ -427,7 +477,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'virtual_machine/list.html')
-        vms = response.context['vms']
+        vms = response.context['vms'].object_list
         self.assertFalse(vms)
         
         # user with some perms
@@ -436,7 +486,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'virtual_machine/list.html')
-        vms = response.context['vms']
+        vms = response.context['vms'].object_list
         self.assert_(vm in vms)
         self.assert_(vm1 in vms)
         self.assertEqual(2, len(vms))
@@ -447,7 +497,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'virtual_machine/list.html')
-        vms = response.context['vms']
+        vms = response.context['vms'].object_list
         self.assert_(vm in vms)
         self.assert_(vm1 in vms)
         self.assert_(vm2 in vms)
@@ -1382,48 +1432,61 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertTemplateUsed(response, 'virtual_machine/delete.html')
         self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
         
-        #authorized DELETE (superuser)
+        #authorized POST (superuser)
         user1.grant('power', vm)
-        response = c.delete(url % args)
+        vm.rapi.GetJobStatus.response = JOB_RUNNING
+        response = c.post(url % args, follow=True)
         self.assertEqual(200, response.status_code)
-        self.assertEqual('application/json', response['content-type'])
-        self.assertFalse(VirtualMachine.objects.filter(id=vm.id).exists())
-        self.assertFalse(user1.has_perm('power', vm))
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/delete_status.html')
+        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        pending_delete, job_id = VirtualMachine.objects.filter(id=vm.id).values('pending_delete','last_job_id')[0]
+        self.assert_(pending_delete)
+        self.assert_(job_id)
         user.is_superuser = False
         user.save()
         vm.save()
         
-        #authorized DELETE (cluster admin)
+        #authorized POST (cluster admin)
         user.grant('admin', cluster)
         user1.grant('power', vm)
-        response = c.delete(url % args)
+        response = c.post(url % args, follow=True)
         self.assertEqual(200, response.status_code)
-        self.assertEqual('application/json', response['content-type'])
-        self.assertFalse(VirtualMachine.objects.filter(id=vm.id).exists())
-        self.assertFalse(user1.has_perm('power', vm))
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/delete_status.html')
+        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        pending_delete, job_id = VirtualMachine.objects.filter(id=vm.id).values('pending_delete','last_job_id')[0]
+        self.assert_(pending_delete)
+        self.assert_(job_id)
         user.revoke_all(cluster)
         
-        #authorized DELETE (vm admin)
+        #authorized POST (vm admin)
         vm.save()
         user.grant('admin', vm)
         user1.grant('power', vm)
-        response = c.delete(url % args)
+        response = c.post(url % args, follow=True)
         self.assertEqual(200, response.status_code)
-        self.assertEqual('application/json', response['content-type'])
-        self.assertFalse(VirtualMachine.objects.filter(id=vm.id).exists())
-        self.assertFalse(user1.has_perm('power', vm))
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/delete_status.html')
+        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        pending_delete, job_id = VirtualMachine.objects.filter(id=vm.id).values('pending_delete','last_job_id')[0]
+        self.assert_(pending_delete)
+        self.assert_(job_id)
         vm.save()
         user.revoke_all(vm)
         
-        #authorized DELETE (cluster admin)
+        #authorized POST (cluster admin)
         vm.save()
         user.grant('remove', vm)
         user1.grant('power', vm)
-        response = c.delete(url % args)
+        response = c.post(url % args, follow=True)
         self.assertEqual(200, response.status_code)
-        self.assertEqual('application/json', response['content-type'])
-        self.assertFalse(VirtualMachine.objects.filter(id=vm.id).exists())
-        self.assertFalse(user1.has_perm('power', vm))
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/delete_status.html')
+        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        pending_delete, job_id = VirtualMachine.objects.filter(id=vm.id).values('pending_delete','last_job_id')[0]
+        self.assert_(pending_delete)
+        self.assert_(job_id)
         vm.save()
         user.revoke_all(vm)
 

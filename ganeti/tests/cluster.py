@@ -530,7 +530,7 @@ class TestClusterViews(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'cluster/edit.html')
-	self.assertEqual(None, cluster.info)
+        self.assertEqual(None, cluster.info)
         
         data = dict(hostname='new-host-1.hostname',
                     slug='new-host-1',
@@ -825,6 +825,13 @@ class TestClusterViews(TestCase):
         self.assert_(user1.has_perm('admin', cluster))
         self.assertFalse(user1.has_perm('create_vm', cluster))
         
+        # add quota to the user
+        user_quota = {'default':0, 'ram':51, 'virtual_cpus':10, 'disk':3000}
+        quota = Quota(cluster=cluster, user=user1.get_profile())
+        quota.__dict__.update(user_quota)
+        quota.save()
+        self.assertEqual(user_quota, cluster.get_quota(user1.get_profile()))
+        
         # valid POST user has no permissions left
         data = {'permissions':[], 'user':user1.id}
         response = c.post(url_post % args_post, data)
@@ -832,6 +839,23 @@ class TestClusterViews(TestCase):
         self.assertEquals('application/json', response['content-type'])
         self.assertEqual([], get_user_perms(user, cluster))
         self.assertEqual('1', response.content)
+        
+        # quota should be deleted (and showing default)
+        self.assertEqual(1, cluster.get_quota(user1.get_profile())['default'])
+        self.assertFalse(user1.get_profile().quotas.all().exists())
+        
+        # no permissions specified - user with no quota
+        user1.grant('create_vm', cluster)
+        cluster.set_quota(user1.get_profile(), None)
+        data = {'permissions':[], 'user':user1.id}
+        response = c.post(url % args, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        self.assertNotEqual('0', response.content)
+        
+        # quota should be deleted (and showing default)
+        self.assertEqual(1, cluster.get_quota(user1.get_profile())['default'])
+        self.assertFalse(user1.get_profile().quotas.all().exists())
 
     def test_view_group_permissions(self):
         """
@@ -895,6 +919,13 @@ class TestClusterViews(TestCase):
         self.assertTemplateUsed(response, 'cluster/group_row.html')
         self.assertEqual(['admin'], group.get_perms(cluster))
         
+        # add quota to the group
+        user_quota = {'default':0, 'ram':51, 'virtual_cpus':10, 'disk':3000}
+        quota = Quota(cluster=cluster, user=group.organization)
+        quota.__dict__.update(user_quota)
+        quota.save()
+        self.assertEqual(user_quota, cluster.get_quota(group.organization))
+        
         # valid POST group has no permissions left
         data = {'permissions':[], 'group':group.id}
         response = c.post(url_post % args_post, data)
@@ -902,6 +933,23 @@ class TestClusterViews(TestCase):
         self.assertEquals('application/json', response['content-type'])
         self.assertEqual([], group.get_perms(cluster))
         self.assertEqual('1', response.content)
+        
+        # quota should be deleted (and showing default)
+        self.assertEqual(1, cluster.get_quota(group.organization)['default'])
+        self.assertFalse(group.organization.quotas.all().exists())
+        
+        # no permissions specified - user with no quota
+        group.grant('create_vm', cluster)
+        cluster.set_quota(group.organization, None)
+        data = {'permissions':[], 'group':group.id}
+        response = c.post(url % args, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        self.assertNotEqual('0', response.content)
+        
+        # quota should be deleted (and showing default)
+        self.assertEqual(1, cluster.get_quota(group.organization)['default'])
+        self.assertFalse(group.organization.quotas.all().exists())
     
     def validate_quota(self, cluster_user, template):
         """
@@ -1090,7 +1138,7 @@ class TestClusterViews(TestCase):
         self.assert_(c.login(username=user.username, password='secret'))
         cluster.virtual_machines.all().delete()
         url = '/cluster/%s/edit/' % cluster.slug
-        
+
         data = dict(hostname='new-host-1.hostname',
                     slug='new-host-1',
                     port=5080,

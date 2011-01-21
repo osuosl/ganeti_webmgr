@@ -135,8 +135,8 @@ class TestGeneralViews(TestCase):
         clusters = result[0].context['cluster_list']
         self.assert_(cluster not in clusters)
         self.assertEqual(0, len(clusters))
-        self.assert_(job not in result[0].context["job_errors"]) # due to no clusters
-        self.assertEqual(0, len(result[0].context["job_errors"]))
+        self.assert_((False, job) not in result[0].context["errors"]) # due to no clusters
+        self.assertEqual(0, len(result[0].context["errors"]))
         self.assertEqual(0, result[0].context["orphaned"])
         self.assertEqual(0, result[0].context["missing"])
         self.assertEqual(0, result[0].context["import_ready"])
@@ -144,8 +144,8 @@ class TestGeneralViews(TestCase):
         clusters = result[1].context['cluster_list']
         self.assert_(cluster in clusters)
         self.assertEqual(1, len(clusters))
-        self.assert_(job in result[1].context["job_errors"])
-        self.assertEqual(1, len(result[1].context["job_errors"]))
+        self.assert_((False, job) in result[1].context["errors"])
+        self.assertEqual(1, len(result[1].context["errors"]))
         self.assertEqual(1, result[1].context["orphaned"])
         self.assertEqual(1, result[1].context["missing"])
         self.assertEqual(2, result[1].context["import_ready"])
@@ -154,9 +154,9 @@ class TestGeneralViews(TestCase):
         self.assert_(cluster in clusters)
         self.assert_(cluster1 in clusters)
         self.assertEqual(2, len(clusters))
-        self.assert_(job in result[2].context["job_errors"])
-        self.assert_(job1 in result[2].context["job_errors"])
-        self.assertEqual(2, len(result[2].context["job_errors"]))
+        self.assert_((False, job) in result[2].context["errors"])
+        self.assert_((False, job1) in result[2].context["errors"])
+        self.assertEqual(2, len(result[2].context["errors"]))
         self.assertEqual(2, result[2].context["orphaned"])
         self.assertEqual(2, result[2].context["missing"])
         self.assertEqual(4, result[2].context["import_ready"])

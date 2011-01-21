@@ -28,19 +28,18 @@ import urllib2
 from time import sleep
 
 from django import forms
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import Group
-from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.http import HttpResponse, HttpResponseRedirect, \
     HttpResponseNotAllowed, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
+from django.conf import settings
 
 from object_permissions.views.permissions import view_users, view_permissions
-from object_permissions import get_users_any, user_has_any_perms
+from object_permissions import get_users_any
+from object_permissions import signals as op_signals
 
 from logs.models import LogItem
 log_action = LogItem.objects.log_action
@@ -72,24 +71,26 @@ def delete(request, cluster_slug, instance):
         user.has_perm("admin", instance.cluster)
         ):
         return render_403(request, 'You do not have sufficient privileges')
-
+    
     if request.method == 'GET':
         return render_to_response("virtual_machine/delete.html",
             {'vm': instance},
             context_instance=RequestContext(request),
         )
-      
-    elif request.method == 'DELETE':
-        # Delete instance
-        jobid = instance.rapi.DeleteInstance(instance.hostname)
-        sleep(2)
-        jobstatus = instance.rapi.GetJobStatus(jobid)
-        
-        instance.delete()
-        
-        return HttpResponse('1', mimetype='application/json')
     
-    return HttpResponseNotAllowed(["GET","DELETE"])
+    elif request.method == 'POST':
+        # start deletion job and mark the VirtualMachine as pending_delete and
+        # disable the cache for this VM.
+        job_id = instance.rapi.DeleteInstance(instance.hostname)
+        job = Job.objects.create(job_id=job_id, obj=instance, cluster_id=instance.cluster_id)
+        VirtualMachine.objects.filter(id=instance.id) \
+            .update(last_job=job, ignore_cache=True, pending_delete=True)
+        
+        return HttpResponseRedirect( \
+            reverse('instance-detail', args=[cluster_slug, instance.hostname]))
+
+    return HttpResponseNotAllowed(["GET","POST"])
+
 
 @login_required
 def reinstall(request, cluster_slug, instance):
@@ -102,7 +103,7 @@ def reinstall(request, cluster_slug, instance):
         hostname=instance)
 
     # Check permissions.
-    # Reinstalling is somewhat similar to deleting in that you destroy data,
+    # XXX Reinstalling is somewhat similar to deleting in that you destroy data,
     # so use that for now.
     if not (
         user.is_superuser or
@@ -120,17 +121,16 @@ def reinstall(request, cluster_slug, instance):
       
     elif request.method == 'POST':
         # Reinstall instance
-        try:
-            # no_startup=True prevents quota circumventions. possible future solution would be a checkbox
-            # asking whether they want to start up, and check quota here if they do (would also involve
-            # checking whether this VM is already running and subtracting that)
-            job_id = instance.rapi.ReinstallInstance(instance.hostname, os=request.POST['os'], no_startup=True)
-        except KeyError:
-            job_id = instance.rapi.ReinstallInstance(instance.hostname, os=instance.operating_system, no_startup=True)
+        if "os" in request.POST:
+            os = request.POST["os"]
+        else:
+            os = instance.operating_system
 
-        sleep(2)
-        jobstatus = instance.rapi.GetJobStatus(job_id)
-
+        # XXX no_startup=True prevents quota circumventions. possible future solution would be a checkbox
+        # asking whether they want to start up, and check quota here if they do (would also involve
+        # checking whether this VM is already running and subtracting that)
+        
+        job_id = instance.rapi.ReinstallInstance(instance.hostname, os=os, no_startup=True)
         job = Job.objects.create(job_id=job_id, obj=instance, cluster=instance.cluster)
         VirtualMachine.objects.filter(id=instance.id).update(last_job=job, ignore_cache=True)
         
@@ -138,6 +138,7 @@ def reinstall(request, cluster_slug, instance):
             reverse('instance-detail', args=[instance.cluster.slug, instance.hostname]))
     
     return HttpResponseNotAllowed(["GET","POST"])
+
 
 @login_required
 def novnc(request, cluster_slug, instance):
@@ -164,14 +165,14 @@ def novnc(request, cluster_slug, instance):
 def vnc_proxy(request, cluster_slug, instance):
     instance = get_object_or_404(VirtualMachine, hostname=instance, \
                                  cluster__slug=cluster_slug)
-
+    
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', instance) or \
         user.has_perm('admin', instance.cluster)):
         return HttpResponseForbidden('You do not have permission to vnc on this')
     
     result = json.dumps(instance.setup_vnc_forwarding())
-
+    
     return HttpResponse(result, mimetype="application/json")
 
 
@@ -264,7 +265,6 @@ def ssh_keys(request, cluster_slug, instance, api_key):
     """
     Show all ssh keys which belong to users, who are specified vm's admin
     """
-    import settings
     if settings.WEB_MGR_API_KEY != api_key:
         return HttpResponseForbidden("You're not allowed to view keys.")
 
@@ -282,7 +282,7 @@ def render_vms(request, query):
     """
     Helper function for paginating a virtual machine query
     """
-    paginator = Paginator(query, 10)
+    paginator = Paginator(query, settings.ITEMS_PER_PAGE)
 
     page = 1
     if request.is_ajax:
@@ -317,6 +317,8 @@ def list_(request):
         vms = user.get_objects_any_perms(VirtualMachine, groups=True)
         can_create = user.has_any_perms(Cluster, ['create_vm', ])
 
+    vms = vms.select_related()
+
     # paginate, sort
     vms = render_vms(request, vms)
 
@@ -346,15 +348,8 @@ def vm_table(request):
     #3) user belongs to the group which has perms on any VM
     else:
         vms = user.get_objects_any_perms(VirtualMachine, groups=True)
-        can_create = user.has_any_perms(Cluster, ['create_vm', ])
+        can_create = user.has_any_perms(Cluster, ['create_vm'])
 
-    job_errors = []
-    if vms:
-        # get jobs errors list
-        # not so easy because GenericFF is not supported well
-        vm_type = ContentType.objects.get_for_model(VirtualMachine)
-        job_errors = Job.objects.filter( content_type=vm_type, object_id__in=vms,
-                status="error" ).order_by("finished")
     vms = render_vms(request, vms)
 
     return render_to_response('virtual_machine/inner_table.html', {
@@ -385,6 +380,7 @@ def detail(request, cluster_slug, instance):
     
     if not (admin or power or remove):
         return render_403(request, 'You do not have permission to view this cluster\'s details')
+        
     #TODO Update to use part of the NewVirtualMachineForm in 0.5 release
     """
     if request.method == 'POST':
@@ -400,7 +396,6 @@ def detail(request, cluster_slug, instance):
                     # Remove this, we don't want them to be able to read local files
                     del data['cdrom_image_path']
             vm.set_params(**data)
-            sleep(1)
             return HttpResponseRedirect(request.path)
 
     else:
@@ -413,7 +408,12 @@ def detail(request, cluster_slug, instance):
         else:
             form = None
     """
-    return render_to_response("virtual_machine/detail.html", {
+    if vm.pending_delete:
+        template = 'virtual_machine/delete_status.html' 
+    else:
+        template = 'virtual_machine/detail.html'
+    
+    return render_to_response(template, {
         'cluster': cluster,
         'instance': vm,
         #'configform': form,
@@ -456,14 +456,7 @@ def permissions(request, cluster_slug, instance, user_id=None, group_id=None):
         return render_403(request, "You do not have sufficient privileges")
 
     url = reverse('vm-permissions', args=[cluster.slug, vm.hostname])
-    response, modified = view_permissions(request, vm, url, user_id, group_id)
-    
-    # log changes if any.
-    if modified:
-        # log information about creating the machine
-        log_action(user, vm, "modified permissions")
-    
-    return response
+    return view_permissions(request, vm, url, user_id, group_id)
 
 
 @login_required
@@ -530,6 +523,14 @@ def create(request, cluster_slug=None):
                 snode = data['snode']
 
             try:
+                # XXX attempt to load the virtual machine.  This ensure that if
+                # there was a previous vm with the same hostname, but had not
+                # successfully been deleted, then it will be deleted now
+                try:
+                    VirtualMachine.objects.get(cluster=cluster, hostname=hostname)
+                except VirtualMachine.DoesNotExist:
+                    pass
+                
                 job_id = cluster.rapi.CreateInstance('create', hostname,
                         disk_template,
                         [{"size": disk_size, }],[{'mode':nicmode, 'link':niclink, }],
@@ -545,17 +546,7 @@ def create(request, cluster_slug=None):
                             'disk_type':disktype,\
                             'cdrom_image_path':imagepath},
                         beparams={"memory": ram})
-
-
-                # Wait for job to process as the error will not happen
-                #  right away
-                sleep(2)
-                jobstatus = cluster.rapi.GetJobStatus(job_id)
-
-                # raise an exception if there was an error in the job
-                if jobstatus["status"] == 'error':
-                    raise GanetiApiError(jobstatus["opresult"])
-
+                
                 vm = VirtualMachine(cluster=cluster, owner=owner,
                                     hostname=hostname, disk_size=disk_size,
                                     ram=ram, virtual_cpus=vcpus)
@@ -1035,12 +1026,37 @@ class InstanceConfigForm(forms.Form):
                 socket.setdefaulttimeout(5)
                 try:
                     print "Trying to open"
-                    response = urllib2.urlopen(data)
-                    socket.setdefaulttimeout(oldtimeout)
+                    urllib2.urlopen(data)
                 except ValueError:
-                    socket.setdefaulttimeout(oldtimeout)
                     raise forms.ValidationError('%s is not a valid URL' % data)
                 except: # urllib2 HTTP errors
-                    socket.setdefaulttimeout(oldtimeout)
                     raise forms.ValidationError('Invalid URL')
+                finally:
+                    socket.setdefaulttimeout(oldtimeout)
         return data
+
+
+def recv_user_add(sender, editor, user, obj, **kwargs):
+    """
+    receiver for object_permissions.signals.view_add_user, Logs action
+    """
+    log_action(editor, obj, "added user")
+
+
+def recv_user_remove(sender, editor, user, obj, **kwargs):
+    """
+    receiver for object_permissions.signals.view_remove_user, Logs action
+    """
+    log_action(editor, obj, "removed user")
+
+
+def recv_perm_edit(sender, editor, user, obj, **kwargs):
+    """
+    receiver for object_permissions.signals.view_edit_user, Logs action
+    """
+    log_action(editor, obj, "modified permissions")
+
+
+op_signals.view_add_user.connect(recv_user_add, sender=VirtualMachine)
+op_signals.view_remove_user.connect(recv_user_remove, sender=VirtualMachine)
+op_signals.view_edit_user.connect(recv_perm_edit, sender=VirtualMachine)

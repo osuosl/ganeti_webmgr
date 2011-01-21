@@ -37,17 +37,42 @@
         },
     };
     $(document).ready(function() {
+        $("#clusters .ram, #clusters .disk").each(function(){
+            $this = $(this);
+            if ($this.html() != 'unknown') {
+                $this.progressBar(PBAR_CONF);
+            }
+        });
+        $("#clusters").tablesorter();
+        $("#usage_summary .ram, #usage_summary .disk, #usage_summary .vcpus").progressBar(PBAR2_CONF);
+        $("#errors_list table").tablesorter();
         
+        $("#errors_list div.clear").live("click", function(){
+            row = this.parentNode.parentNode
+            id = row.id.substring(7);
+            
+            if ($(row).hasClass('gerror')) {
+                url = "{% url error-clear %}";
+            } else if ($(row).hasClass('jerror')) {
+                url = "{% url job-clear %}";
+            }
+            
+            $.post(url, {id:id}, function(){
+                $(row).fadeOut(1000, function(){
+                    $(row).remove();
+                    if($("#errors_list tr").length==0) {
+                        $("#errors_list").remove();
+                    }
+                });
+            });
+        });
     });
+    
 </script>
 {% endblock %}
 
 {% block content %}
 <h1>Overview</h1>
-
-{% if user.is_superuser %}
-<a class="button add" href="{% url cluster-create %}">Add Cluster</a>
-{% endif %}
 
 {% if admin %}
 <table id="clusters" class="sorted">
@@ -85,11 +110,6 @@
     {% endfor %}
     </tbody>
 </table>
-<!-- Progress bars for free memory/disk and sorting -->
-<script type="text/javascript">
-    $("#clusters .ram, #clusters .disk").progressBar(PBAR_CONF);
-    $("#clusters").tablesorter();
-</script>
 {% endif %}
 
 {% if resources %}
@@ -155,67 +175,34 @@
     </tbody>
 </table>
 </div>
-<script type="text/javascript">
-    $("#usage_summary .ram, #usage_summary .disk, #usage_summary .vcpus").progressBar(PBAR2_CONF);
-</script>
 {% endif %}
 
-{% if ganeti_errors or job_errors %}
+{% if errors %}
 <div id="errors_list">
-    <h2>Errors and failures</h2>
-
-    {% if ganeti_errors %}
-    <h3>Ganeti errors</h3>
-    <table class="sorted">
-        <thead>
-            <tr>
-                {% if admin %}<th>Cluster</th>{% else %}<th>Virtual Machine</th>{% endif %}
-                <th>Description</th>
-                <th>Date</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                {% if admin %}<td><a href="">gwm</a></td>{% else %}<td><a href="">pbnan1.gwm.osuosl.org</a></td>{% endif %}
-                <td><a href="">Authorization failed</a></td>
-                <td>01/05/11 16:21</td>
-            </tr>
-        </tbody>
+    <h2>Errors and Failures</h2>
+    <table>
+    {% for tuple in errors %}
+        {% with tuple.0 as is_ganeti_error %}
+        {% with tuple.1 as error %}
+            {% if is_ganeti_error %}
+                <tr class="gerror" id="gerror_{{error.pk}}">
+                    {% include "overview/object_link.html" %}
+                    <td>{{ error.msg }}</td>
+                    <td>{{ error.timestamp|date }}</td>
+                    <td><div class="clear" title="clear message"></div></td>
+                </tr>
+            {% else %}
+                <tr class="jerror" id="jerror_{{error.pk}}">
+                    {% include "overview/object_link.html" %}
+                    <td>{{ error.info.ops.0.OP_ID|format_job_op }}</td>
+                    <td>{{ error.finished|date }}</td>
+                    <td><div class="clear" title="clear message"></div></td>
+                </tr>
+            {% endif %}
+        {% endwith %}
+        {% endwith %}
+    {% endfor %}
     </table>
-    {% endif %}
-
-    {% if job_errors %}
-    <h3>Jobs failures</h3>
-    <table class="sorted">
-        <thead>
-            <tr>
-                {% if admin %}<th>Cluster</th>
-                <th>Related object</th>{% else %}<th>Virtual Machine</th>{% endif %}
-                <th>Info</th>
-                <th>Finish time</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for jerror in job_errors %}
-            <tr>
-                {% if admin %}<td><a href="{% url cluster-detail jerror.cluster.slug %}">{{ jerror.cluster|abbreviate_fqdn }}</a></td>
-                <td>{{ jerror.obj }}</td>{% else %}
-                <td><a href="{% url instance-detail jerror.obj.cluster.slug jerror.obj.hostname %}">{{ jerror.obj }}</a></td>{% endif %}
-                <td>{{ jerror.info.ops.0.OP_ID|format_job_op }}</td>
-                <td>{{ jerror.finished }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% endif %}
-
-</div>
-<script type="text/javascript">
-    $("#errors_list table").tablesorter();
-</script>
-{% else %}
-<div id="no_errors">
-    <h2>No errors.</h2>
 </div>
 {% endif %}
 

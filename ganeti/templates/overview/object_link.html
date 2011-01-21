@@ -1,0 +1,12 @@
+{% load webmgr_tags %}
+
+{% with error.obj|class_name as class %}
+<td class="{{class}} name">
+    {% ifequal class 'Cluster' %}
+        <a href="{% url cluster-detail error.obj.slug %}">{{ error.obj|abbreviate_fqdn }}</a>
+    {% endifequal %}
+    {% ifequal class 'VirtualMachine' %}
+        <a href="{% url instance-detail error.obj.cluster.slug error.obj.hostname %}">{{ error.obj|abbreviate_fqdn }}</a>
+    {% endifequal %}
+</td>
+{% endwith %}

@@ -16,7 +16,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-
 from django.conf.urls.defaults import patterns, url
 
 cluster_slug = '(?P<cluster_slug>[-_A-Za-z0-9]+)'
@@ -29,6 +28,9 @@ urlpatterns = patterns('ganeti.views.general',
     url(r'^$', 'overview', name="index"),
     #   Status page
     url(r'^overview/?$', 'overview', name="overview"),
+    
+    # clear errors
+    url(r'^error/clear/?$', 'clear_ganeti_error', name="error-clear")
 )
 
 # Users
@@ -118,4 +120,5 @@ urlpatterns += patterns('ganeti.views.importing',
 # Jobs
 urlpatterns += patterns('ganeti.views.jobs',
     url(r'^%s/job/(?P<job_id>\d+)/status' % cluster, 'status', name='job-status'),
+    url(r'^job/clear/?', 'clear', name='job-clear'),
 )

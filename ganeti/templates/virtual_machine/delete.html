@@ -5,18 +5,6 @@
 
 {% block head %}
     <link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}/css/delete.css"/>
-    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
-    <script type="text/javascript">
-        $(document).ready(function() {
-            $('#delete').click(function(){
-                href = "{% url instance-delete vm.cluster.slug vm.hostname %}";
-                $.delete_(href, function(){
-                    $("#confirm").hide();
-                    $("#success").show();
-                });
-            });
-        });
-    </script>
 {% endblock %}
 
 {% block content %}
@@ -26,10 +14,9 @@
         can not be undone.  The virtual machine will be removed from the cluster.
         <ul><li>{{vm.hostname}}</li></ul>
     </div>
-    <input id="delete" type="button" value="Delete" />
+    <form method="post" action="{% url instance-delete vm.cluster.slug vm.hostname %}">
+        <input id="delete" type="submit" value="Delete" />
+    </form>
 </div>
 
-<div id="success">
-    Deleted.
-</div>
 {% endblock %}

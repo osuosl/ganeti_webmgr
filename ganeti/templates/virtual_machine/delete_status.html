@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load webmgr_tags %}
+
+{% block title %}Delete In Progress{% endblock %}
+
+{% block head %}
+    <style>
+        #success {display:none;}
+    </style>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            
+            job_id = '{{instance.last_job.job_id}}';
+            if (job_id == '') {
+                {# job was finished before we loaded the page #}
+                job_complete();
+            } else {
+                poll_job_status(job_id, job_complete);
+            }
+        });
+        
+        function job_complete() {
+            console.log(123);
+            $('#messages').hide()
+            $('#success').show()
+        }
+    </script>
+{% endblock %}
+
+{% block content %}
+    <h1>Deleting: {{instance.hostname}}</h1>
+
+    {% include "job_status.html" %}
+    <ul id="messages"></ul>
+    
+    <div id="success">Deleted.</div>
+{% endblock %}
