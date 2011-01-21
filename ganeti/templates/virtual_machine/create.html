@@ -65,7 +65,7 @@
             Conditionally convert dropdowns to labels, i.e. if the specified 
             dropdown has only one option, select that option, hide the
             dropdown, and replace it with a label of that option. Note that 
-            dropdown must be a jQuery object.
+            'dropdown' must be a jQuery object.
                 
             If ignoreOpt is supplied, options with called ignoreOpt will 
             be ignored and treated as if they don't exist. This is useful if 
@@ -359,7 +359,7 @@
                 o.attr("value", value);
                 o.attr("text", text);
                 return o;
-            };
+            }
 
             function _newOptGroup(value, options) {
                 /* Create new option group for select field */
@@ -369,7 +369,7 @@
                     group.append(_newOpt(option[0], option[1]));
                 });
                 return group;
-            };
+            }
         }
     </script>
 {% endblock %}
