@@ -379,9 +379,11 @@ def detail(request, cluster_slug, instance):
     if admin:
         remove = True
         power = True
+        modify = True
     else:
         remove = user.has_perm('remove', vm)
         power = user.has_perm('power', vm)
+        modify = user.has_perm('modify', vm)
     
     if not (admin or power or remove):
         return render_403(request, 'You do not have permission to view this cluster\'s details')
@@ -398,6 +400,7 @@ def detail(request, cluster_slug, instance):
         'cluster_admin':cluster_admin,
         'remove':remove,
         'power':power,
+        'modify':modify,
         },
         context_instance=RequestContext(request),
     )
@@ -557,7 +560,7 @@ def create(request, cluster_slug=None):
 
 
 @login_required
-def edit(request, cluster_slug, instance):     
+def modify(request, cluster_slug, instance):     
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
 
@@ -566,7 +569,7 @@ def edit(request, cluster_slug, instance):
         or user.has_perm('admin', cluster)
 
     if request.method == 'POST':
-        form = EditVirtualMachineForm(user, None, request.POST)
+        form = ModifyVirtualMachineForm(user, None, request.POST)
         if form.is_valid():
             data = form.cleaned_data
             vcpus = data['vcpus']
@@ -643,12 +646,11 @@ def edit(request, cluster_slug, instance):
             initial['kernelpath'] = hvparams['kernel_path']
             initial['serialconsole'] = hvparams['serial_console']
             initial['imagepath'] = hvparams['cdrom_image_path']
-        form = EditVirtualMachineForm(user, cluster, initial=initial)
+        form = ModifyVirtualMachineForm(user, cluster, initial=initial)
 
     return render_to_response("virtual_machine/edit.html", {
         'cluster': cluster,
         'instance': vm,
-        'admin': admin,
         'form': form,
         },
         context_instance=RequestContext(request),
@@ -1052,7 +1054,7 @@ class NewVirtualMachineForm(forms.ModelForm):
         return data
 
 
-class EditVirtualMachineForm(NewVirtualMachineForm):
+class ModifyVirtualMachineForm(NewVirtualMachineForm):
 
     exclude = ('start', 'owner', 'cluster', 'hostname', 'name_check',
         'iallocator', 'iallocator_hostname', 'disk_template', 'pnode', 'snode',\
@@ -1062,12 +1064,10 @@ class EditVirtualMachineForm(NewVirtualMachineForm):
         model = VirtualMachineTemplate
 
     def __init__(self, user, cluster, initial=None, *args, **kwargs):
-        super(EditVirtualMachineForm, self).__init__(user, cluster=cluster, \
+        super(ModifyVirtualMachineForm, self).__init__(user, cluster=cluster, \
                 initial=initial, *args, **kwargs)
-        # Cannot simply use exclude as choice fields had to be overridden
-        #  in the form, and exclude will only remove the model field.
-        #for field in self.Meta.exclude:
-            #del self.fields[field]
+        # Remove all fields in the form that are not required to modify the 
+        #   instance.
         for field in self.exclude:
             del self.fields[field]
 
