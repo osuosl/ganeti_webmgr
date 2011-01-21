@@ -101,6 +101,7 @@ form input.submit{margin-left:12.5em;}
     border-left: 1px solid #DDDDDD;
     border-right: 1px solid #DDDDDD;
     float:left;
+    min-height:400px;
     padding:10px 10px 20px 10px;
     width: 817px;
 }
