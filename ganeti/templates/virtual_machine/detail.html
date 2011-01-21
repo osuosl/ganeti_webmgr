@@ -68,7 +68,7 @@ h1 a:hover {text-decoration:underline;}
 		});
         {% if admin %}
             {% ifnotequal instance.info.status "running" %}
-                vnc_tab_index = 2;
+                vnc_tab_index = 3;
                 $('#tabs').tabs("option", "disabled", [vnc_tab_index])
             {% endifnotequal %}
         {% endif %}
