@@ -60,7 +60,7 @@
 		});
         {% if admin %}
             {% ifnotequal instance.info.status "running" %}
-                vnc_tab_index = 3;
+                vnc_tab_index = 2;
                 $('#tabs').tabs("option", "disabled", [vnc_tab_index])
             {% endifnotequal %}
         {% endif %}
@@ -130,7 +130,6 @@
     <ul id="tabs">
         <li><a href="#overview"><span>Overview</span></a></li>
         {% if admin %}
-            <li><a title="edit" href="{% url vm-edit cluster.slug instance.hostname %}"><span>Edit</span></a></li>
             <li><a title="users" href="{% url vm-users cluster.slug instance.hostname %}"><span>Users</span></a></li>
         {%endif%}
 	{% if admin or power %}
