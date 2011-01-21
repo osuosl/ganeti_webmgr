@@ -1,6 +1,6 @@
 /* content.css */
 
-body, #content_wrapper {
+#body_wrapper {
     background: url(/media/images/background_with_menu.png) repeat-y center #eee !important;
 }
 

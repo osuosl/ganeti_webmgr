@@ -7,11 +7,11 @@
 }
 
 html {width: 100%;}
-html, body { height:100%; /* Sticky Footer */ } 
+html, body {height:100%; /* Sticky Footer */ } 
 body {
+    background:url(/media/images/body_background.png) repeat-x top #eee;
     color:#333333;
     min-width:974px;
-    background-color:red;
 }
 
 /*Sticky footer - Opera Fix*/
@@ -63,8 +63,12 @@ form table, form table td, form table td {border:0 !important;}
 form p label {width:12em;}
 form input.submit{margin-left:12.5em;}
 
-#body_wrapper {min-height: 100%; /* Sticky footer */ }
-#header_strip {height:5px; background-color:#C16328; border-bottom:1px solid #ccc;}
+#body_wrapper {
+    min-height: 100%; /* Sticky footer */ 
+    width:979px;
+    margin:0 auto;
+}
+
 #header {
     background: #222;
     margin:0 auto;
@@ -74,7 +78,7 @@ form input.submit{margin-left:12.5em;}
 #header a img {border:0;}
 #header a:active, #header a:link,
 #header a:visited, #header a:hover {color: white; font-weight: bold;}
-
+#header_strip {height:5px; background-color:#C16328; border-bottom:1px solid #ccc;}
 #inner_header {position:relative;}
 #inner_header, #title a {
     color: white;
@@ -91,12 +95,6 @@ form input.submit{margin-left:12.5em;}
     background:#eee;
     width:100%;
 }
-
-#content{
-    overflow:hidden; /* sticky footer */
-    padding-bottom: 75px; /* sticky footer - must be same height as the footer, includes footer padding */
-}
-
 #content_column {margin: 0 auto; width:979px;}
 #content {
     background:white;
