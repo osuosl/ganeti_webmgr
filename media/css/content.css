@@ -1,98 +1,14 @@
-/* base.css */
-* {
-    font-family:"Lucida Grande","DejaVu Sans","Bitstream Vera Sans",Verdana,Arial,sans-serif;
-    font-size:12px;
-    margin: 0px;
-    padding: 0px;
+/* content.css */
+
+body, #content_wrapper {
+    background: url(/media/images/background_with_menu.png) repeat-y center #eee !important;
 }
 
-html {width: 100%;}
-
-body {
-    background: url(/media/images/background_with_menu.png) repeat-y center #eee;
-    color:#333333;
-    min-width:974px;
-}
-
-/* Sticky footer */
-html, body { height:100%;}
-#wrap {min-height: 100%;}
-#content {
-    overflow:auto;
-    min-height:400px;
-    padding-bottom: 75px; /* must be same height as the footer */
-}
-
-#footer {
-    background: url(/media/images/footerBack.jpg) repeat-x 0 0 #1d1d1d;
-    border-top: 2px solid #666;
-    clear:both;
-    color: #C8CED3;
-    height: 60px;
-    margin: -75px auto 0 auto; /* negative value of footer height */
-    position: relative;
-    padding: 5px 0;
-    text-align: center;
-    width: 100%;
-}
-#footer a {
-    color:#C16328;
-}
-
-/*Sticky footer - Opera Fix*/
-body:before {
-    content:"";
-    height:100%;
-    float:left;
-    width:0;
-    margin-top:-32767px;
-}
-
-
-h1 {font-size: 1.5em; margin-top: 0px;}
-h2 {font-size: 1.4em;}
-h3 {font-size: 1.1em; margin: 15px 0 0.5ex 0;}
-h3 a, h3 a:visited {color: #559BD7; font-size: 1em; text-decoration: none;}
-
-a:link, a:visited{color: #5B80B2; text-decoration: none;}
-a:hover, a:active {color: #7AB0DC;}
-
-table {border-collapse:collapse;}
-tr.even {background: #fafafa;}
-
-
-td a {border:0;}
-
-ul {margin-top: 0px; list-style-type: square;}
-li {
-    font-size:12px;
-    line-height:16px;
-    list-style:none;
-    margin-left:0px; 
-}
-
-#header {
-    background: #222;
-    /*border-top:5px solid #C16328;*/
-    border-top:1px solid #ccc;
-    margin:0 auto;
-    width: 100%;
-    
-    position:relative;
-}
-#strip {
-    height:5px;
-    background-color:#C16328;
-}
-#header a img {border:0;}
-#header a:active, #header a:link,
-#header a:visited, #header a:hover {color: white; font-weight: bold;}
 
 #user_menu {
     background-color:#C16328;
     border: 1px solid #ccc;
     border-width:0px 1px 1px 1px;
-    
     font-weight:normal;
     font-size:11px;
     height:18px;
@@ -103,32 +19,8 @@ li {
     -moz-border-radius-bottomleft:5px;
     -moz-border-radius-bottomright:5px;
 }
-
-#user_menu a {
-    font-size:11px !important;
-    margin:0 !important;
-    padding:0 !important;
-}
-
-#user_menu a:hover {
-    text-decoration:underline;
-}
-
-#title {
-    position:relative;
-}
-#title, #title a {
-    color: white;
-    font-size: 21px;
-    font-weight: bold;
-    margin:0 auto;
-    padding: 11px 0 5px 80px;
-    text-align: left;
-    width:909px;
-    
-    
-}
-#title a:link, #title a:visited {color: white;}
+#user_menu a {font-size:11px !important; margin:0 !important; padding:0 !important;}
+#user_menu a:hover {text-decoration:underline;}
 
 .menu {
     float:left;
@@ -136,12 +28,7 @@ li {
     padding:30px 10px 0 0;
     width:130px;
 }
-
-.menu ul {
-    float:left;
-    list-style-type: none;
-    padding-left: 20px;
-}
+.menu ul {float:left; list-style-type: none; padding-left: 20px;}
 .menu ul li { height:18px; margin: 0px; }
 .menu ul li a {color: #666666 !important; text-decoration: none;}
 .menu ul li a:hover {color: black !important;}
@@ -157,35 +44,9 @@ li {
 
 #content_wrapper { background:#eee; width:100%;}
 #content_column {margin: 0 auto; width:979px;}
-#content {
-    background:white;
-    border-left: 1px solid #DDDDDD;
-    border-right: 1px solid #DDDDDD;
-    float:left;
-    padding:10px 10px 20px 10px;
-    width: 817px;
-}
-#content h1 {margin:10px 0 10px 0;}
-#content table {margin-top:15px;  width:100%; border: 1px solid #dddddd;}
-#content th {background:#eeeeee; border-bottom:1px solid #dddddd !important;}
-#content td.actions {width:16px;}
-#content tr.group_row {margin:auto;}
-#content tr.none td {border-bottom: 1px solid white; font-style:italic;}
-#content td.error {padding-right:0 !important; width:16px;}
-#content td {border-left:1px solid white; border-right: 1px solid white;}
-#content td, #content th, #content td a {
-    border-bottom:1px solid #EEEEEE;
-    font-family:"Lucida Grande",Verdana,Arial,sans-serif;
-    font-size:12px;
-    line-height:14px;
-    padding:5px;
-    text-align: center;
-    vertical-align:top;
-}
+#content {float:left; width: 817px;}
 #content td.ram, td.disk {text-align:left !important;}
-
 #content td.status, td.actions { padding:5px 0 0 0;}
-#content td a {border:0;}
 
 /* tablesorter style */
 #content table.sorted th {
@@ -197,12 +58,8 @@ li {
     padding-right: 15px;
     cursor: s-resize;
 }
-#content table.sorted .headerSortUp {
-    background-image: url(/media/images/asc.gif);
-}
-#content table.sorted .headerSortDown {
-    background-image: url(/media/images/desc.gif);
-}
+#content table.sorted .headerSortUp {background-image: url(/media/images/asc.gif);}
+#content table.sorted .headerSortDown {background-image: url(/media/images/desc.gif);}
 #content table.sorted .headerSortDown, #content table.sorted .headerSortUp {
     background-color: #7AB0DC;
 }
@@ -226,10 +83,7 @@ li {
  * Errors, failures and administration links - status page
  *
  **/
-#errors_list, #usage_summary, #administration {
-    margin-top: 2em;
-}
-
+#errors_list, #usage_summary, #administration { margin-top: 2em;}
 #errors_list h2 {
     background-color:#BA2525;
     color:white;
@@ -238,63 +92,19 @@ li {
     -moz-border-radius-topleft:5px;
     -moz-border-radius-topright:5px;
 }
-
-#errors_list table {
-    margin:0;
-}
-
+#errors_list table {margin:0;}
 #errors_list td.Cluster {
     padding-left: 25px;
     background:url(/media/images/icons/cluster.png) no-repeat 4px 4px;
 }
-
 #errors_list td.VirtualMachine {
     padding-left: 25px;
     background:url(/media/images/icons/vm.png) no-repeat 4px 4px;
 }
 
-
-/**
- * Forms and Form Elements
- **/
-/*  Default Settings */
-form input.submit {color:black; width:6em;}
-form p label {
-    float: left;
-    text-align: right;
-    margin-top: 0.3ex;
-    margin-right: 0.5em;
-    display: block;
-}
-form ul.errorlist {color:red;padding:1ex 1ex;}
-form p {padding:0.5ex 0ex;}
-fieldset {border:0px; padding-top:0.7em;}
-legend {font-size: 1.1em; font-weight:bold; padding-top: 10px;}
-form table, form table td, form table td {border:0 !important;}
-form p label {width:12em;}
-form input.submit{margin-left:12.5em;}
-
-/*   Login   */
-#login {margin: 3em auto 0em auto; width: 30%;}
-#login fieldset {
-    background: #eeeeee;
-    border:1px #dddddd solid;
-    margin-bottom:10px;
-    padding:1em;
-    -moz-border-radius:5px;
-    -webkit-border-radius:5px;
-}
-#login fieldset h2 {margin-bottom:5px;}
-#login fieldset p {padding-bottom:1.5ex;}
-#login p label {width: 5.5em;}
-#login input.submit {margin-left: 6em;}
-
 /*   User Profile   */
 #uprofile {margin: 0em auto 0em 0em; width: 50%;}
-#uprofile fieldset {
-    margin-bottom:10px;
-    padding:1em;
-}
+#uprofile fieldset { margin-bottom:10px; padding:1em; }
 #uprofile fieldset h2 {margin-bottom:5px;}
 #uprofile fieldset p {padding-bottom:1.5ex;}
 #uprofile p label {width: 10.5em;}
@@ -444,13 +254,7 @@ tr.group td.name {background:url(/media/images/icons/group.png) no-repeat 0 4px;
     margin-bottom: 10px;
 }
 
-.floatfix {clear:both;}
-
-
-.ui-tabs-panel {
-    padding-left:0 !important;
-    padding-right:0 !important;
-}
+.ui-tabs-panel {padding-left:0 !important; padding-right:0 !important;}
 
 .pagination {float:right; margin-top: 15px;}
 .pagination li{
@@ -462,14 +266,8 @@ tr.group td.name {background:url(/media/images/icons/group.png) no-repeat 0 4px;
 }
 .pagination .next a,
 .pagination .previous a { font-weight:bold; }
-.pagination .page {
-    border:solid 1px #9aafe5;
-    cursor:pointer;
-    margin:0 2px 0 0;
-}
-.pagination li.page:hover {
-    background-color:#9aafe5;
-}
+.pagination .page {border:solid 1px #9aafe5; cursor:pointer; margin:0 2px 0 0;}
+.pagination li.page:hover { background-color:#9aafe5;}
 .pagination .active {
     background-color:#2e6ab1 !important;
     border-color:#2e6ab1;
