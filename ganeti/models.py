@@ -629,10 +629,13 @@ class Cluster(CachedClusterObject):
         if user is None:
             return {'default':1, 'ram':self.ram, 'disk':self.disk, \
                     'virtual_cpus':self.virtual_cpus}
-
-        query = Quota.objects.filter(cluster=self, user=user)
-        if query.exists():
-            (quota,) = query.values('ram', 'disk', 'virtual_cpus')
+        
+        # attempt to query user specific quota first.  if it does not exist then
+        # fall back to the default quota
+        query = Quota.objects.filter(cluster=self, user=user) \
+                    .values('ram', 'disk', 'virtual_cpus')
+        if len(query):
+            (quota,) = query
             quota['default'] = 0
             return quota
 
