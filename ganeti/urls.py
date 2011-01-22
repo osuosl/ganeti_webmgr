@@ -28,6 +28,7 @@ urlpatterns = patterns('ganeti.views.general',
     url(r'^$', 'overview', name="index"),
     #   Status page
     url(r'^overview/?$', 'overview', name="overview"),
+    url(r'^used_resources/?$', 'used_resources', name="used_resources"),
     
     # clear errors
     url(r'^error/clear/?$', 'clear_ganeti_error', name="error-clear")

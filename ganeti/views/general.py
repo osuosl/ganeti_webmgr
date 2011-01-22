@@ -17,6 +17,7 @@
 # USA.
 
 from django.contrib.auth.decorators import login_required
+from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.db.models import Q, Count
 from django.http import HttpResponseRedirect, HttpResponse
@@ -24,20 +25,9 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.contrib.contenttypes.models import ContentType
 
-from ganeti.models import Cluster, VirtualMachine, Job, GanetiError
-from ganeti.views import render_403
-
-
-@login_required
-def index(request):
-    user = request.user
-
-    # should be more complex query in future
-    # like: user.is_admin_on_any(Cluster)
-    if (user.is_superuser or user.has_any_perms(Cluster, ["admin",])):
-        return HttpResponseRedirect(reverse("cluster-overview"))
-    else:
-        return HttpResponseRedirect(reverse("virtualmachine-list"))
+from ganeti.models import Cluster, VirtualMachine, Job, GanetiError, \
+    ClusterUser, Profile, Organization
+from ganeti.views import render_403, render_404
 
 
 def merge_errors(errors, jobs):
@@ -156,6 +146,18 @@ def overview(request):
     for cluster in vms_running:
         vm_summary[cluster['cluster__hostname']]['running'] = cluster['running']
     
+    
+    # get list of personas for the user:  All groups, plus the user.
+    # include the user only if it owns a vm or has perms on at least one cluster
+    profile = user.get_profile()
+    if profile.virtual_machines.count() or \
+        user.has_any_perms(Cluster, ['admin', 'create_vm']):
+            personas = [profile]
+    else:
+        personas = []
+    personas += list(Organization.objects.filter(group__user=user))
+    
+    
     # get resources used per cluster
     owner = user.get_profile()
     resources = get_used_resources(owner)
@@ -169,11 +171,43 @@ def overview(request):
         'import_ready': import_ready,
         'missing': missing,
         'resources': resources,
-        'vm_summary': vm_summary
+        'vm_summary': vm_summary,
+        'personas': personas
         },
         context_instance=RequestContext(request),
     )
 
+
+@login_required
+def used_resources(request):
+    """ view for returning used resources for a given cluster user """
+    try:
+        cluster_user_id = request.GET['id']
+    except KeyError:
+        return render_404(request, 'requested user was not found')
+    cu = get_object_or_404(ClusterUser, pk=cluster_user_id)
+    
+    # must be a super user, the user in question, or a member of the group
+    user = request.user
+    if not user.is_superuser:
+        user_type = ContentType.objects.get_for_model(Profile)
+        if cu.real_type_id == user_type.pk:
+            if not Profile.objects.filter(clusteruser_ptr=cu.pk, user=user)\
+                .exists():
+                return render_403(request, 'You are not authorized to view this page')
+        else:
+            q = Organization.objects.filter(clusteruser_ptr=cu.pk, \
+                                               group__user=user)
+            g = Organization.objects.filter(clusteruser_ptr=cu.pk)[0].group
+            if not Organization.objects.filter(clusteruser_ptr=cu.pk, \
+                                               group__user=user).exists():
+                return render_403(request, 'You are not authorized to view this page')
+    
+    resources = get_used_resources(cu)
+    return render_to_response("overview/used_resources.html", {
+        'resources':resources
+    })
+    
 
 @login_required
 def clear_ganeti_error(request):

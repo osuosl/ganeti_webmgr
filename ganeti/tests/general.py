@@ -74,6 +74,7 @@ class TestGeneralViews(TestCase):
     def tearDown(self):
         Cluster.objects.all().delete()
         User.objects.all().delete()
+        Group.objects.all().delete()
         Job.objects.all().delete()
 
     def test_view_overview(self):
@@ -154,3 +155,65 @@ class TestGeneralViews(TestCase):
         self.assertEqual(2, response.context["orphaned"])
         self.assertEqual(2, response.context["missing"])
         self.assertEqual(4, response.context["import_ready"])
+    
+    def test_used_resources(self):
+        """ tests the used_resources view """
+        
+        group0 = Group.objects.create(name='group0')
+        group1 = Group.objects.create(name='group1')
+        user.groups.add(group0)
+        user1.groups.add(group1)
+        
+        url = "/used_resources/"
+        args = {}
+        template = "overview/used_resources.html"
+        mimetype = "text/html; charset=utf-8"
+
+        # anonymous user
+        response = c.get(url, args, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'registration/login.html')
+        
+        # 404 - no id
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.get(url, {})
+        self.assertEqual(404, response.status_code)
+        
+        # 404 - invalid id
+        response = c.get(url, {'id':1234567})
+        self.assertEqual(404, response.status_code)
+        
+        # unauthorized user (different user)
+        response = c.get(url, {'id':user2.get_profile().pk})
+        self.assertEqual(403, response.status_code)
+        
+        # unauthorized user (in different group)
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.get(url, {'id':group1.organization.pk})
+        self.assertEqual(403, response.status_code)
+        
+        # authorized user (same user)
+        response = c.get(url, {'id':user.get_profile().pk})
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(mimetype, response['content-type'])
+        self.assertTemplateUsed(response, template)
+        
+        # authorized user (in group)
+        response = c.get(url, {'id':group0.organization.pk})
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(mimetype, response['content-type'])
+        self.assertTemplateUsed(response, template)
+        
+        # authorized user (superuser)
+        self.assert_(c.login(username=user2.username, password='secret'))
+        response = c.get(url, {'id':user.get_profile().pk})
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(mimetype, response['content-type'])
+        self.assertTemplateUsed(response, template)
+        
+        # authorized user (superuser)
+        self.assert_(c.login(username=user2.username, password='secret'))
+        response = c.get(url, {'id':group1.organization.pk})
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(mimetype, response['content-type'])
+        self.assertTemplateUsed(response, template)

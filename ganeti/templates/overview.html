@@ -66,6 +66,15 @@
                 });
             });
         });
+        
+        $("#usage_summary select").change(function(){
+            
+            val = $(this).val()
+            $.get("{% url used_resources %}", {id:val}, function(html){
+                $("#usage_summary table").replaceWith(html);
+                $("#usage_summary .ram, #usage_summary .disk, #usage_summary .vcpus").progressBar(PBAR2_CONF);
+            });
+        })
     });
     
 </script>
@@ -140,7 +149,15 @@
 </div>
 
 <div id="usage_summary">
-<h2>Resource Usage: Peter</h2>
+<h2>Resource Usage:
+
+<select>
+    {% for persona in personas %}
+    <option value="{{persona.clusteruser_ptr_id}}">{{persona.name}}</option>
+    {% endfor %}
+</select>
+
+</h2>
 {% include "overview/used_resources.html" %}
 </div>
 
