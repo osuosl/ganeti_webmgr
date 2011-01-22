@@ -4,7 +4,6 @@
     background: url(/media/images/background_with_menu.png) repeat-y center #eee !important;
 }
 
-
 #user_menu {
     background-color:#C16328;
     border: 1px solid #ccc;
@@ -75,25 +74,31 @@
 
 /**
  * Actions (buttons Delete, Shutdown, Start, Reboot)
- *
  **/
 #actions.horizontal li {float: left;}
 #actions.horizontal .button {width:120px;}
 
-
 /**
- * Errors, failures and administration links - status page
- *
- **/
-#errors_list, #usage_summary, #administration { margin-top: 2em;}
-#errors_list h2 {
-    background-color:#BA2525;
+ * Overview/Status page
+ */
+#errors_list h2, #usage_summary h2, #cluster_summary h2, #vm_summary h2 {
+    border-width:1px;
+    border-style:solid;
     color:white;
     padding: 5px 10px;
+    font-size:11px;
     margin-bottom:0;
     -moz-border-radius-topleft:5px;
     -moz-border-radius-topright:5px;
+    -webkit-border-top-left-radius: 5px;
+    -webkit-border-top-right-radius: 5px;
 }
+
+/**
+ * Errors, failures and administration links - status page
+ **/
+#errors_list, #usage_summary, #administration { margin-top: 2em;}
+#errors_list h2 {background-color:#BA2525; border-color:#891F1F}
 #errors_list table {margin:0;}
 #errors_list td.Cluster {
     padding-left: 25px;
@@ -287,3 +292,7 @@ tr.group td.name {background:url(/media/images/icons/group.png) no-repeat 0 4px;
 
 /* No VNC tab */
 #encrypt_check {display:none;}
+
+
+#usage_summary h2 {background-color:#1C962C; border-color:#14661D;}
+#usage_summary table {margin:0}
