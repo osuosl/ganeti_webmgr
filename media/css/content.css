@@ -18,6 +18,8 @@
     top:-1px;
     -moz-border-radius-bottomleft:5px;
     -moz-border-radius-bottomright:5px;
+    -webkit-border-bottom-left-radius: 5px;
+    -webkit-border-bottom-right-radius: 5px;
 }
 #user_menu a {font-size:11px !important; margin:0 !important; padding:0 !important;}
 #user_menu a:hover {text-decoration:underline;}
