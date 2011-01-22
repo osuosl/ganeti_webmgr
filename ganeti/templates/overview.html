@@ -75,6 +75,8 @@
 <h1>Overview</h1>
 
 {% if admin %}
+<div id="cluster_summary">
+<h2>Cluster Status</h2>
 <table id="clusters" class="sorted">
     <thead>
         <tr>
@@ -110,11 +112,12 @@
     {% endfor %}
     </tbody>
 </table>
+</div>
 {% endif %}
 
-{% if resources %}
+
 <div id="usage_summary">
-<h2>Usage summary</h2>
+<h2>Resource Usage: Peter</h2>
 <table>
     <thead>
         <tr>
@@ -171,11 +174,12 @@
                 {% endif %}
             {% endif %}
         </tr>
+        {% empty %}
+        <tr><td colspan="100%" class="none">You do not own any virtual machines</td></tr>
         {% endfor %}
     </tbody>
 </table>
 </div>
-{% endif %}
 
 {% if errors %}
 <div id="errors_list">

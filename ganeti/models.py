@@ -120,137 +120,6 @@ validate_sshkey = RegexValidator(ssh_public_key_re,
     _(u"Enter a valid SSH public key with comment (SSH2 RSA or DSA)."), "invalid")
 
 
-class GanetiErrorManager(models.Manager):
-
-    def clear_error(self, id):
-        """
-        Clear one particular error (used in overview template).
-        """
-        return self.filter(pk=id).update(cleared=True)
-
-
-    def clear_errors(self, cls=None, obj=None, **kwargs):
-        """
-        Clear errors instead of deleting them.
-        """
-        #if not cls and obj:
-        #    cls = obj.__class__
-        base = self.get_errors(cls=cls, obj=obj, cleared=False, **kwargs)
-        return base.update(cleared=True)
-
-
-    def remove_errors(self, *args, **kwargs):
-        """
-        Just shortcut if someone wants to remove some errors.
-        """
-        base = self.get_errors(*args, **kwargs)
-        return base.delete()
-
-
-    def get_errors(self, cls=None, obj=None, **kwargs):
-        """
-        Manager method used for getting QuerySet of all errors depending on
-        passed arguments.
-
-        @param  msg   error's message
-        @param  code  error's code
-        @param  cls   affected object type (model)
-        @param  obj   affected object (itself or just QuerySet)
-        @param cleared  get cleared / broken / all errors
-        """
-        base = self.filter(**kwargs)
-
-        if obj:
-            cluster_ = False
-            if cls == Cluster: cluster_ = True
-            elif obj.__class__ == Cluster: cluster_ = True
-
-            # if obj is QuerySet then 'cls' arg is mandatory
-            if isinstance(obj, QuerySet):
-                ct = ContentType.objects.get_for_model(cls)
-                base1 = base.filter(obj_type=ct, obj_id__in=obj)
-
-            # if obj is instance of some model, then 'cls' is not needed
-            else:
-                if cls:
-                    ct = ContentType.objects.get_for_model(cls)
-                else:
-                    ct = ContentType.objects.get_for_model(obj.__class__)
-                base1 = base.filter(obj_type=ct, obj_id=obj.pk)
-
-            # if it's Cluster, then we need to get all of its vms
-            if cluster_:
-                vm_type = ContentType.objects.get_for_model(VirtualMachine)
-                if isinstance(obj, Cluster):
-                    base2 = base.filter(
-                        obj_type=vm_type,
-                        obj_id__in=VirtualMachine.objects.filter(cluster=obj)
-                    )
-                else:
-                    base2 = base.filter(
-                        obj_type=vm_type,
-                        obj_id__in=VirtualMachine.objects.filter(cluster__in=obj)
-                    )
-
-                base = base1 | base2
-
-            else:
-                base = base1
-
-        return base
-
-
-    def store_error(self, msg, code=None, obj=None):
-        """
-        Manager method used to store errors
-
-        @param  msg  error's message
-        @param code  error's code
-        @param  obj  object (i.e. cluster or vm) affected by the error
-        """
-        ct = ContentType.objects.get_for_model(obj.__class__)
-        
-        error, created = self.get_or_create(
-            msg=msg, code=code, obj_type=ct, obj_id=obj.pk,
-            cleared=False,
-            defaults={
-                "id": None,
-                "cleared": False,
-                "obj": obj,
-            })
-        
-        return error
-
-
-class GanetiError(models.Model):
-    """
-    Class for storing errors which occured in Ganeti
-    """
-    msg = models.TextField()
-    code = models.PositiveSmallIntegerField(blank=True, null=True)
-    timestamp = models.DateTimeField(auto_now_add=True)
-
-    # determines if the errors still appears or not
-    cleared = models.BooleanField(default=False)
-
-    # cluster and VM affected by the error (if any)
-    obj_type = models.ForeignKey(ContentType, related_name="ganeti_errors")
-    obj_id = models.PositiveIntegerField()
-    obj = GenericForeignKey("obj_type", "obj_id")
-
-    objects = GanetiErrorManager()
-
-    class Meta:
-        ordering = ("-timestamp", "code", "msg")
-
-    def __repr__(self):
-        return "<GanetiError '%s'>" % (self.msg)
-
-    def __unicode__(self):
-        base = "[%s] %s" % (self.timestamp, self.msg)
-        return base
-
-
 class CachedClusterObject(models.Model):
     """
     mixin class for objects that reside on the cluster but some portion is
@@ -363,7 +232,7 @@ class CachedClusterObject(models.Model):
                 
         except GanetiApiError, e:
             self.error = str(e)
-            GanetiError.objects.store_error(str(e), e.code, obj=self)
+            GanetiError.objects.store_error(str(e), obj=self, code=e.code)
 
         else:
             self.error = None
@@ -413,24 +282,6 @@ class CachedClusterObject(models.Model):
 
     class Meta:
         abstract = True
-
-
-if settings.DEBUG or True:
-    # XXX - if in debug mode create a model for testing cached cluster objects
-    class TestModel(CachedClusterObject):
-        """ simple implementation of a cached model that has been instrumented """
-        saved = False
-        data = {'mtime': 1285883187.8692000, 'ctime': 1285799513.4741000}
-        throw_error = None
-        
-        def _refresh(self):
-            if self.throw_error:
-                raise self.throw_error
-            return self.data
-
-        def save(self, *args, **kwargs):
-            self.saved = True
-            super(TestModel, self).save(*args, **kwargs)
 
 
 class JobManager(models.Manager):
@@ -882,6 +733,128 @@ class Cluster(CachedClusterObject):
             return self.rapi.GetInstance(instance)
         except GanetiApiError:
             return None
+
+
+if settings.DEBUG or True:
+    # XXX - if in debug mode create a model for testing cached cluster objects
+    class TestModel(CachedClusterObject):
+        """ simple implementation of a cached model that has been instrumented """
+        cluster = models.ForeignKey(Cluster)
+        saved = False
+        data = {'mtime': 1285883187.8692000, 'ctime': 1285799513.4741000}
+        throw_error = None
+        
+        def _refresh(self):
+            if self.throw_error:
+                raise self.throw_error
+            return self.data
+
+        def save(self, *args, **kwargs):
+            self.saved = True
+            super(TestModel, self).save(*args, **kwargs)
+
+
+class GanetiErrorManager(models.Manager):
+
+    def clear_error(self, id):
+        """
+        Clear one particular error (used in overview template).
+        """
+        return self.filter(pk=id).update(cleared=True)
+
+    def clear_errors(self, *args, **kwargs):
+        """
+        Clear errors instead of deleting them.
+        """
+        return self.get_errors(cleared=False, *args, **kwargs) \
+            .update(cleared=True)
+
+    def remove_errors(self, *args, **kwargs):
+        """
+        Just shortcut if someone wants to remove some errors.
+        """
+        return self.get_errors(*args, **kwargs).delete()
+
+    def get_errors(self, obj=None, **kwargs):
+        """
+        Manager method used for getting QuerySet of all errors depending on
+        passed arguments.
+        
+        @param  obj   affected object (itself or just QuerySet)
+        @param kwargs: additional kwargs for filtering GanetiErrors
+        """
+        if obj is None:
+            return self.filter(**kwargs)
+        
+        # Create base query of errors to return.
+        #
+        # if it's a Cluster or a queryset for Clusters, then we need to get all
+        # errors from the Clusters.  Do this by filtering on GanetiError.cluster
+        # instead of obj_id.
+        if isinstance(obj, (Cluster,)):
+            return self.filter(cluster=obj, **kwargs)
+        
+        elif isinstance(obj, (QuerySet,)):
+            if obj.model == Cluster:
+                return self.filter(cluster__in=obj, **kwargs)
+            else:
+                ct = ContentType.objects.get_for_model(obj.model)
+                return self.filter(obj_type=ct, obj_id__in=obj, **kwargs)
+        
+        else:
+            ct = ContentType.objects.get_for_model(obj.__class__)
+            return self.filter(obj_type=ct, obj_id=obj.pk, **kwargs)
+
+    def store_error(self, msg, obj, **kwargs):
+        """
+        Manager method used to store errors
+
+        @param  msg  error's message
+        @param code  error's code
+        @param  obj  object (i.e. cluster or vm) affected by the error
+        """
+        ct = ContentType.objects.get_for_model(obj.__class__)
+        # XXX use a try/except instead of get_or_create().  get_or_create()
+        # does not allow us to set cluster_id.  This means we'd have to query
+        # the cluster object to create the error.  we can't guarunteee the
+        # cluster will already be queried so use create() instead which does
+        # allow cluster_id
+        try:
+            return self.get(msg=msg, obj_type=ct, obj_id=obj.pk, **kwargs)
+        except GanetiError.DoesNotExist:
+            cluster_id = obj.pk if isinstance(obj, (Cluster,)) else obj.cluster_id
+            return self.create(msg=msg, obj_type=ct, obj_id=obj.pk, \
+                               cluster_id=cluster_id, **kwargs)
+
+
+class GanetiError(models.Model):
+    """
+    Class for storing errors which occured in Ganeti
+    """
+    cluster = models.ForeignKey(Cluster)
+    msg = models.TextField()
+    code = models.PositiveSmallIntegerField(blank=True, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+    # determines if the errors still appears or not
+    cleared = models.BooleanField(default=False)
+
+    # cluster object (cluster, VM, Node) affected by the error (if any)
+    obj_type = models.ForeignKey(ContentType, related_name="ganeti_errors")
+    obj_id = models.PositiveIntegerField()
+    obj = GenericForeignKey("obj_type", "obj_id")
+
+    objects = GanetiErrorManager()
+
+    class Meta:
+        ordering = ("-timestamp", "code", "msg")
+
+    def __repr__(self):
+        return "<GanetiError '%s'>" % (self.msg)
+
+    def __unicode__(self):
+        base = "[%s] %s" % (self.timestamp, self.msg)
+        return base
 
 
 class ClusterUser(models.Model):
