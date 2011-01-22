@@ -81,10 +81,11 @@
 /**
  * Overview/Status page
  */
-#errors_list h2, #usage_summary h2, #cluster_summary h2, #vm_summary h2 {
-    border-width:1px;
-    border-style:solid;
-    color:white;
+#errors_list h2, #usage_summary h2, #cluster_summary h2, #vm_summary h2,
+#administration h2 {
+    border:1px solid #888;
+    
+    color:#222;
     padding: 5px 10px;
     font-size:11px;
     margin-bottom:0;
@@ -98,7 +99,7 @@
  * Errors, failures and administration links - status page
  **/
 #errors_list, #usage_summary, #administration { margin-top: 2em;}
-#errors_list h2 {background-color:#BA2525; border-color:#891F1F}
+#errors_list h2 {background-color:#F77456; border-color:#891F1F}
 #errors_list table {margin:0;}
 #errors_list td.Cluster {
     padding-left: 25px;
@@ -294,5 +295,6 @@ tr.group td.name {background:url(/media/images/icons/group.png) no-repeat 0 4px;
 #encrypt_check {display:none;}
 
 
-#usage_summary h2 {background-color:#1C962C; border-color:#14661D;}
-#usage_summary table {margin:0}
+#usage_summary h2, #cluster_summary h2 {background-color:#C2E192; }
+#usage_summary table, #cluster_summary table, #administration table {margin:0}
+#administration h2 {background-color:#F7F7A8; }

@@ -75,6 +75,8 @@
 <h1>Overview</h1>
 
 {% if admin %}
+<div id="cluster_summary">
+<h2>Cluster Status</h2>
 <table id="clusters" class="sorted">
     <thead>
         <tr>
@@ -110,10 +112,12 @@
     {% endfor %}
     </tbody>
 </table>
+</div>
 {% endif %}
 
+
 <div id="usage_summary">
-<h2>Usage Summary</h2>
+<h2>Resource Usage: Peter</h2>
 <table>
     <thead>
         <tr>
