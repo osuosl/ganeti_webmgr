@@ -13,10 +13,8 @@
     <div id="body_wrapper">
         <div id="header_strip"></div>
         <div id="header">
-            <div id="inner_header">
-                <a href="/"><img src="{{MEDIA_URL}}/logo.png"/></a>
-                {% block inner_header %}{% endblock %}
-            </div>
+            <a href="/" id="logo"><img src="{{MEDIA_URL}}/logo.png"/></a>
+            {% block inner_header %}{% endblock %}
         </div>
         <div id="content_wrapper">
             <div id="content_column">
@@ -28,12 +26,8 @@
             </div>
         </div>
     </div>
-
     <div id="footer">
-        <p>
-            A Project by the <a href="https://osuosl.org">Oregon State University Open Source Lab</a>.
-        </p>
+        A Project by the <a href="https://osuosl.org">Oregon State University Open Source Lab</a>.
     </div>
-    
     </body>
 </html>
