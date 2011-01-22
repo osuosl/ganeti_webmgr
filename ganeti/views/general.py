@@ -16,14 +16,13 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
+from django.db.models import Q
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.contrib.contenttypes.models import ContentType
-
 
 from ganeti.models import Cluster, VirtualMachine, Job, GanetiError
 from ganeti.views import render_403
@@ -78,76 +77,71 @@ def overview(request):
     """
     user = request.user
 
-    admin = True
     if user.is_superuser:
-        cluster_list = Cluster.objects.all()
-
+        clusters = Cluster.objects.all()
     else:
-        cluster_list = user.get_objects_all_perms(Cluster, ['admin',],
-            groups=True)
-        
-        if not cluster_list:
-            #return HttpResponseForbidden('You do not have sufficient privileges')
-            admin = False
+        clusters = user.get_objects_all_perms(Cluster, ['admin',])
+    admin = user.is_superuser or clusters
 
     #orphaned, ready to import, missing
     orphaned = import_ready = missing = 0
 
-    if admin:
-        vms = VirtualMachine.objects.filter(owner=user.get_profile())
-        #vms = None
+    # Get query containing any virtual machines the user has permissions for
+    vms = user.get_objects_any_perms(VirtualMachine, groups=True).values('pk')
 
-        #ganeti errors
-        ganeti_errors = GanetiError.objects.get_errors(cls=Cluster,
-                obj=cluster_list, cleared=False)
+    if admin:
+        # filter VMs from the vm list where the user is an admin.  These VMs are
+        # already shown in that section
+        vms = vms.exclude(cluster__in=clusters)
         
-        
-        job_errors = Job.objects \
-                .filter(cluster__in=cluster_list, status="error", cleared=False). \
-                order_by("-finished")[:5]
-        
-        errors = merge_errors(ganeti_errors, job_errors)
-        
-        #orphaned
+        # build list of admin tasks for this user's clusters
         orphaned = VirtualMachine.objects.filter(owner=None,
-                cluster__in=cluster_list).count()
-        
-        for cluster in cluster_list:
+                cluster__in=clusters).count()
+        for cluster in clusters:
             import_ready += len(cluster.missing_in_db)
             missing += len(cluster.missing_in_ganeti)
-
-    else:
-        #vms = user.get_objects_any_perms(VirtualMachine, groups=True)
-        vms = VirtualMachine.objects.filter(owner=user.get_profile())
-
-        #ganeti errors
-        ganeti_errors = GanetiError.objects.get_errors(cls=VirtualMachine, 
+    
+    # build list of job errors.  Include jobs from any vm the user has access to
+    # If the user has admin on any cluster then those clusters and it's objects
+    # must be included too.
+    #
+    # XXX all jobs have the cluster listed, filtering by cluster includes jobs
+    # for both the cluster itself and any of its VMs or Nodes
+    q = Q(status='error', cleared=False)
+    vm_type = ContentType.objects.get_for_model(VirtualMachine)
+    q &= Q(content_type=vm_type, object_id__in=vms,)
+    if admin:
+        q |= Q(cluster__in=clusters)
+    job_errors = Job.objects.filter(q).order_by("-finished")[:5]
+    
+    # build list of job errors.  Include jobs from any vm the user has access to
+    # If the user has admin on any cluster then those clusters and it's objects
+    # must be included too.
+    ganeti_errors = GanetiError.objects.get_errors(cls=VirtualMachine, 
                 obj=vms, cleared=False)
-
-        # content type of VirtualMachine model
-        # NOTE: done that way because if behavior of GenericForeignType
-        #       i.e. Django doesn't allow to filter on GenericForeignType
-        vm_type = ContentType.objects.get_for_model(VirtualMachine)
-        job_errors = Job.objects.filter( content_type=vm_type, object_id__in=vms,
-                status="error" ).order_by("finished")[:5]
-        
-        errors = merge_errors(ganeti_errors, job_errors)
-
+    if admin:
+        ganeti_errors |= GanetiError.objects.get_errors(cls=Cluster,
+            obj=clusters, cleared=False)
+    
+    # merge error lists
+    errors = merge_errors(ganeti_errors, job_errors)
+    
+    # get resources used per cluster
     quota = {}
     owner = user.get_profile()
+    owned_vms = VirtualMachine.objects.filter(owner=owner)
     resources = owner.used_resources()
     for cluster in resources.keys():
         quota[cluster] = {
             "used": resources[cluster],
             "set": Cluster.objects.get(pk=cluster).get_quota(owner),
         }
-        #if vms:
-        quota[cluster]["running"] = vms.filter(status="running").count()
-        quota[cluster]["total"] = vms.count()
-
+        quota[cluster]["running"] = owned_vms.filter(status="running").count()
+        quota[cluster]["total"] = owned_vms.count()
+    
     return render_to_response("overview.html", {
         'admin':admin,
-        'cluster_list': cluster_list,
+        'cluster_list': clusters,
         'user': request.user,
         'errors': errors,
         'orphaned': orphaned,
