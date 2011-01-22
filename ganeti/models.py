@@ -133,9 +133,7 @@ class GanetiErrorManager(models.Manager):
         """
         Clear errors instead of deleting them.
         """
-        #if not cls and obj:
-        #    cls = obj.__class__
-        base = self.get_errors(cls=cls, obj=obj, cleared=False, **kwargs)
+        base = self.get_errors(obj=obj, cleared=False, **kwargs)
         return base.update(cleared=True)
 
 
@@ -151,54 +149,39 @@ class GanetiErrorManager(models.Manager):
         """
         Manager method used for getting QuerySet of all errors depending on
         passed arguments.
-
-        @param  msg   error's message
-        @param  code  error's code
-        @param  cls   affected object type (model)
+        
         @param  obj   affected object (itself or just QuerySet)
-        @param cleared  get cleared / broken / all errors
+        @param kwargs: additional kwargs for filtering GanetiErrors
         """
-        base = self.filter(**kwargs)
-
-        if obj:
-            cluster_ = False
-            if cls == Cluster: cluster_ = True
-            elif obj.__class__ == Cluster: cluster_ = True
-
-            # if obj is QuerySet then 'cls' arg is mandatory
-            if isinstance(obj, QuerySet):
-                ct = ContentType.objects.get_for_model(cls)
-                base1 = base.filter(obj_type=ct, obj_id__in=obj)
-
-            # if obj is instance of some model, then 'cls' is not needed
+        if not obj:
+            return self.filter(**kwargs)
+        
+        cluster_ = isinstance(obj, (Cluster,)) or isinstance(obj, (QuerySet,)) \
+                    and obj.model == Cluster
+        
+        # filter by object or queryset
+        if isinstance(obj, QuerySet):
+            ct = ContentType.objects.get_for_model(obj.model)
+            q = Q(obj_type=ct, obj_id__in=obj)
+        else:
+            ct = ContentType.objects.get_for_model(obj.__class__)
+            q = Q(obj_type=ct, obj_id=obj.pk)
+        
+        # if it's Cluster, then we need to get all of its vms
+        if cluster_:
+            vm_type = ContentType.objects.get_for_model(VirtualMachine)
+            if isinstance(obj, Cluster):
+                q |= Q(
+                    obj_type=vm_type,
+                    obj_id__in=VirtualMachine.objects.filter(cluster=obj)
+                )
             else:
-                if cls:
-                    ct = ContentType.objects.get_for_model(cls)
-                else:
-                    ct = ContentType.objects.get_for_model(obj.__class__)
-                base1 = base.filter(obj_type=ct, obj_id=obj.pk)
-
-            # if it's Cluster, then we need to get all of its vms
-            if cluster_:
-                vm_type = ContentType.objects.get_for_model(VirtualMachine)
-                if isinstance(obj, Cluster):
-                    base2 = base.filter(
-                        obj_type=vm_type,
-                        obj_id__in=VirtualMachine.objects.filter(cluster=obj)
-                    )
-                else:
-                    base2 = base.filter(
-                        obj_type=vm_type,
-                        obj_id__in=VirtualMachine.objects.filter(cluster__in=obj)
-                    )
-
-                base = base1 | base2
-
-            else:
-                base = base1
-
-        return base
-
+                q |= Q(
+                    obj_type=vm_type,
+                    obj_id__in=VirtualMachine.objects.filter(cluster__in=obj)
+                )
+            
+        return self.filter(q, **kwargs)
 
     def store_error(self, msg, code=None, obj=None):
         """
