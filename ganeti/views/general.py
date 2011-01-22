@@ -154,9 +154,8 @@ def overview(request):
         user.has_any_perms(Cluster, ['admin', 'create_vm']) or not personas:
             personas += [profile]
     
-    # get resources used per cluster
-    owner = user.get_profile()
-    resources = get_used_resources(owner)
+    # get resources used per cluster from the first persona in the list
+    resources = get_used_resources(personas[0])
     
     return render_to_response("overview.html", {
         'admin':admin,
