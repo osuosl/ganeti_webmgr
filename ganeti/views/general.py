@@ -146,17 +146,13 @@ def overview(request):
     for cluster in vms_running:
         vm_summary[cluster['cluster__hostname']]['running'] = cluster['running']
     
-    
     # get list of personas for the user:  All groups, plus the user.
     # include the user only if it owns a vm or has perms on at least one cluster
     profile = user.get_profile()
+    personas = list(Organization.objects.filter(group__user=user))
     if profile.virtual_machines.count() or \
-        user.has_any_perms(Cluster, ['admin', 'create_vm']):
-            personas = [profile]
-    else:
-        personas = []
-    personas += list(Organization.objects.filter(group__user=user))
-    
+        user.has_any_perms(Cluster, ['admin', 'create_vm']) or not personas:
+            personas += [profile]
     
     # get resources used per cluster
     owner = user.get_profile()
