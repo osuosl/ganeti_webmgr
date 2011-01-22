@@ -783,35 +783,27 @@ class GanetiErrorManager(models.Manager):
         @param  obj   affected object (itself or just QuerySet)
         @param kwargs: additional kwargs for filtering GanetiErrors
         """
-        if not obj:
+        if obj is None:
             return self.filter(**kwargs)
         
-        cluster_ = isinstance(obj, (Cluster,)) or isinstance(obj, (QuerySet,)) \
-                    and obj.model == Cluster
+        # Create base query of errors to return.
+        #
+        # if it's a Cluster or a queryset for Clusters, then we need to get all
+        # errors from the Clusters.  Do this by filtering on GanetiError.cluster
+        # instead of obj_id.
+        if isinstance(obj, (Cluster,)):
+            return self.filter(cluster=obj, **kwargs)
         
-        # filter by object or queryset
-        if isinstance(obj, QuerySet):
-            ct = ContentType.objects.get_for_model(obj.model)
-            q = Q(obj_type=ct, obj_id__in=obj)
+        elif isinstance(obj, (QuerySet,)):
+            if obj.model == Cluster:
+                return self.filter(cluster__in=obj, **kwargs)
+            else:
+                ct = ContentType.objects.get_for_model(obj.model)
+                return self.filter(obj_type=ct, obj_id__in=obj, **kwargs)
+        
         else:
             ct = ContentType.objects.get_for_model(obj.__class__)
-            q = Q(obj_type=ct, obj_id=obj.pk)
-        
-        # if it's Cluster, then we need to get all of its vms
-        if cluster_:
-            vm_type = ContentType.objects.get_for_model(VirtualMachine)
-            if isinstance(obj, Cluster):
-                q |= Q(
-                    obj_type=vm_type,
-                    obj_id__in=VirtualMachine.objects.filter(cluster=obj)
-                )
-            else:
-                q |= Q(
-                    obj_type=vm_type,
-                    obj_id__in=VirtualMachine.objects.filter(cluster__in=obj)
-                )
-            
-        return self.filter(q, **kwargs)
+            return self.filter(obj_type=ct, obj_id=obj.pk, **kwargs)
 
     def store_error(self, msg, obj, **kwargs):
         """
