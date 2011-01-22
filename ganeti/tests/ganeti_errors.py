@@ -126,9 +126,9 @@ class TestGanetiErrorModel(TestCase, TestGanetiErrorBase):
         errors = get_errors(obj=vm1)
         self.assertEqual(len(errors), 1)
 
-        errors = get_errors(cls=Cluster, obj=Cluster.objects.all())
+        errors = get_errors(obj=Cluster.objects.all())
         self.assertEqual(len(errors), 5)
-        errors = get_errors(cls=VirtualMachine, obj=VirtualMachine.objects.all())
+        errors = get_errors(obj=VirtualMachine.objects.all())
         self.assertEqual(len(errors), 2)
 
         # test clear_error(s)

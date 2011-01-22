@@ -117,11 +117,10 @@ def overview(request):
     # build list of job errors.  Include jobs from any vm the user has access to
     # If the user has admin on any cluster then those clusters and it's objects
     # must be included too.
-    ganeti_errors = GanetiError.objects.get_errors(cls=VirtualMachine, 
-                obj=vms, cleared=False)
+    ganeti_errors = GanetiError.objects.get_errors(obj=vms, cleared=False)
     if admin:
-        ganeti_errors |= GanetiError.objects.get_errors(cls=Cluster,
-            obj=clusters, cleared=False)
+        ganeti_errors |= GanetiError.objects.get_errors(obj=clusters, \
+                                                        cleared=False)
     
     # merge error lists
     errors = merge_errors(ganeti_errors, job_errors)
