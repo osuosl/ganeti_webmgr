@@ -125,34 +125,32 @@ def overview(request):
     # merge error lists
     errors = merge_errors(ganeti_errors, job_errors)
     
-    # get vm summary
+    # get vm summary - running and totals need to be done as separate queries
+    # and then merged into a single list
     vms_running = vms.filter(status='running')\
                         .values('cluster__hostname','cluster__slug')\
                         .annotate(running=Count('pk'))
     vms_total = vms.order_by().values('cluster__hostname','cluster__slug') \
                         .annotate(total=Count('pk'))
     vm_summary = {}
-    print vms_total
     for cluster in vms_total:
         vm_summary[cluster.pop('cluster__hostname')] = cluster
     for cluster in vms_running:
         vm_summary[cluster['cluster__hostname']]['running'] = cluster['running']
-    
     
     # get resources used per cluster
     quota = {}
     owner = user.get_profile()
     owned_vms = VirtualMachine.objects.filter(owner=owner)
     resources = owner.used_resources()
-    for cluster in resources.keys():
+    for id in resources.keys():
+        cluster = Cluster.objects.get(pk=id)
         quota[cluster] = {
-            "used": resources[cluster],
-            "set": Cluster.objects.get(pk=cluster).get_quota(owner),
+            "used": resources[cluster.pk],
+            "set": cluster.get_quota(owner),
         }
         quota[cluster]["running"] = owned_vms.filter(status="running").count()
         quota[cluster]["total"] = owned_vms.count()
-    
-    print resources
     
     return render_to_response("overview.html", {
         'admin':admin,

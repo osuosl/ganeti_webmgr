@@ -154,8 +154,7 @@
     <tbody>
         {% for cluster, res in resources.items %}
         <tr>
-            <td><a href="">{{ cluster|abbreviate_fqdn }}</a></td>
-
+            <td>{{ cluster|abbreviate_fqdn }}</td>
             <td title="Running / total">{{ res.running }} / {{ res.total }}</td>
 
             {% if not res.set.disk %}
