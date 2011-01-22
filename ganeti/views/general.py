@@ -70,6 +70,24 @@ def merge_errors(errors, jobs):
     return merged
 
 
+def get_used_resources(cluster_user):
+    """ help function for querying resources used for a given cluster_user """
+    resources = {}
+    owned_vms = cluster_user.virtual_machines.all()
+    used = cluster_user.used_resources()
+    clusters = Cluster.objects.in_bulk(used.keys())
+    for id in used.keys():
+        cluster = clusters[id]
+        resources[cluster] = {
+            "used": used[cluster.pk],
+            "set": cluster.get_quota(cluster_user),
+        }
+        resources[cluster]["total"] = owned_vms.filter(cluster=cluster).count()
+        resources[cluster]["running"] = owned_vms.filter(cluster=cluster, \
+                                                    status="running").count()
+    return resources
+
+
 @login_required
 def overview(request):
     """
@@ -139,18 +157,8 @@ def overview(request):
         vm_summary[cluster['cluster__hostname']]['running'] = cluster['running']
     
     # get resources used per cluster
-    quota = {}
     owner = user.get_profile()
-    owned_vms = VirtualMachine.objects.filter(owner=owner)
-    resources = owner.used_resources()
-    for id in resources.keys():
-        cluster = Cluster.objects.get(pk=id)
-        quota[cluster] = {
-            "used": resources[cluster.pk],
-            "set": cluster.get_quota(owner),
-        }
-        quota[cluster]["running"] = owned_vms.filter(status="running").count()
-        quota[cluster]["total"] = owned_vms.count()
+    resources = get_used_resources(owner)
     
     return render_to_response("overview.html", {
         'admin':admin,
@@ -160,7 +168,7 @@ def overview(request):
         'orphaned': orphaned,
         'import_ready': import_ready,
         'missing': missing,
-        'resources': quota,
+        'resources': resources,
         'vm_summary': vm_summary
         },
         context_instance=RequestContext(request),
