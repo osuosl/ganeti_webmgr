@@ -18,7 +18,7 @@
 
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
@@ -125,6 +125,20 @@ def overview(request):
     # merge error lists
     errors = merge_errors(ganeti_errors, job_errors)
     
+    # get vm summary
+    vms_running = vms.filter(status='running')\
+                        .values('cluster__hostname','cluster__slug')\
+                        .annotate(running=Count('pk'))
+    vms_total = vms.order_by().values('cluster__hostname','cluster__slug') \
+                        .annotate(total=Count('pk'))
+    vm_summary = {}
+    print vms_total
+    for cluster in vms_total:
+        vm_summary[cluster.pop('cluster__hostname')] = cluster
+    for cluster in vms_running:
+        vm_summary[cluster['cluster__hostname']]['running'] = cluster['running']
+    
+    
     # get resources used per cluster
     quota = {}
     owner = user.get_profile()
@@ -138,6 +152,8 @@ def overview(request):
         quota[cluster]["running"] = owned_vms.filter(status="running").count()
         quota[cluster]["total"] = owned_vms.count()
     
+    print resources
+    
     return render_to_response("overview.html", {
         'admin':admin,
         'cluster_list': clusters,
@@ -147,6 +163,7 @@ def overview(request):
         'import_ready': import_ready,
         'missing': missing,
         'resources': quota,
+        'vm_summary': vm_summary
         },
         context_instance=RequestContext(request),
     )

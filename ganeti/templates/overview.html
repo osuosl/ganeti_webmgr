@@ -115,6 +115,29 @@
 </div>
 {% endif %}
 
+<div id="vm_summary">
+<h2>Virtual Machine Status</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Cluster</th>
+            <th>Running</th>
+            <th>Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for hostname, dict in vm_summary.items %}
+            <tr>
+                <td>{{hostname|abbreviate_fqdn}}</td>
+                <td>{{dict.running}}</td>
+                <td>{{dict.total}}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="100%" class="none">You do have access to any virtual machines</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
 
 <div id="usage_summary">
 <h2>Resource Usage: Peter</h2>
@@ -131,7 +154,7 @@
     <tbody>
         {% for cluster, res in resources.items %}
         <tr>
-            <td><a href="{% url cluster-detail cluster.slug %}">{{ cluster|abbreviate_fqdn }}</a></td>
+            <td><a href="">{{ cluster|abbreviate_fqdn }}</a></td>
 
             <td title="Running / total">{{ res.running }} / {{ res.total }}</td>
 
