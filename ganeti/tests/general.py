@@ -74,7 +74,7 @@ class TestGeneralViews(TestCase):
     def tearDown(self):
         Cluster.objects.all().delete()
         User.objects.all().delete()
-
+        Job.objects.all().delete()
 
     def test_view_overview(self):
         """
@@ -99,8 +99,6 @@ class TestGeneralViews(TestCase):
         mimetype = "text/html; charset=utf-8"
         status = 200
 
-        result = []
-
         # anonymous user
         response = c.get(url % args, follow=True)
         self.assertEqual(200, response.status_code)
@@ -114,7 +112,15 @@ class TestGeneralViews(TestCase):
         self.assertEqual(status, response.status_code)
         self.assertEqual(mimetype, response['content-type'])
         self.assertTemplateUsed(response, template)
-        result.append(response)
+        clusters = response.context['cluster_list']
+        self.assert_(cluster not in clusters)
+        self.assertEqual(0, len(clusters))
+        self.assert_((False, job) in response.context["errors"]) # due to no clusters
+        self.assertFalse((False, job1) in response.context["errors"]) # due to no clusters
+        self.assertEqual(1, len(response.context["errors"]))
+        self.assertEqual(0, response.context["orphaned"])
+        self.assertEqual(0, response.context["missing"])
+        self.assertEqual(0, response.context["import_ready"])
 
         # authorized user (admin on one cluster)
         self.assert_(c.login(username=user1.username, password='secret'))
@@ -122,7 +128,15 @@ class TestGeneralViews(TestCase):
         self.assertEqual(status, response.status_code)
         self.assertEqual(mimetype, response['content-type'])
         self.assertTemplateUsed(response, template)
-        result.append(response)
+        clusters = response.context['cluster_list']
+        self.assert_(cluster in clusters)
+        self.assertEqual(1, len(clusters))
+        self.assert_((False, job) in response.context["errors"])
+        self.assertFalse((False, job1) in response.context["errors"]) # due to no clusters
+        self.assertEqual(1, len(response.context["errors"]))
+        self.assertEqual(1, response.context["orphaned"])
+        self.assertEqual(1, response.context["missing"])
+        self.assertEqual(2, response.context["import_ready"])
 
         # authorized user (superuser)
         self.assert_(c.login(username=user2.username, password='secret'))
@@ -130,33 +144,13 @@ class TestGeneralViews(TestCase):
         self.assertEqual(status, response.status_code)
         self.assertEqual(mimetype, response['content-type'])
         self.assertTemplateUsed(response, template)
-        result.append(response)
-
-        clusters = result[0].context['cluster_list']
-        self.assert_(cluster not in clusters)
-        self.assertEqual(0, len(clusters))
-        self.assert_((False, job) not in result[0].context["errors"]) # due to no clusters
-        self.assertEqual(0, len(result[0].context["errors"]))
-        self.assertEqual(0, result[0].context["orphaned"])
-        self.assertEqual(0, result[0].context["missing"])
-        self.assertEqual(0, result[0].context["import_ready"])
-
-        clusters = result[1].context['cluster_list']
-        self.assert_(cluster in clusters)
-        self.assertEqual(1, len(clusters))
-        self.assert_((False, job) in result[1].context["errors"])
-        self.assertEqual(1, len(result[1].context["errors"]))
-        self.assertEqual(1, result[1].context["orphaned"])
-        self.assertEqual(1, result[1].context["missing"])
-        self.assertEqual(2, result[1].context["import_ready"])
-
-        clusters = result[2].context['cluster_list']
+        clusters = response.context['cluster_list']
         self.assert_(cluster in clusters)
         self.assert_(cluster1 in clusters)
         self.assertEqual(2, len(clusters))
-        self.assert_((False, job) in result[2].context["errors"])
-        self.assert_((False, job1) in result[2].context["errors"])
-        self.assertEqual(2, len(result[2].context["errors"]))
-        self.assertEqual(2, result[2].context["orphaned"])
-        self.assertEqual(2, result[2].context["missing"])
-        self.assertEqual(4, result[2].context["import_ready"])
+        self.assert_((False, job) in response.context["errors"])
+        self.assert_((False, job1) in response.context["errors"])
+        self.assertEqual(2, len(response.context["errors"]))
+        self.assertEqual(2, response.context["orphaned"])
+        self.assertEqual(2, response.context["missing"])
+        self.assertEqual(4, response.context["import_ready"])
