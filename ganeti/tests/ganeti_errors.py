@@ -95,11 +95,11 @@ class TestGanetiErrorModel(TestCase, TestGanetiErrorBase):
 
         # test store_error
         store_error = GanetiError.objects.store_error
-        store_error(str(msg), msg.code, obj=cluster0)
-        store_error(str(msg), msg.code, obj=cluster1)
-        store_error(str(msg), msg.code, obj=cluster2)
-        store_error(str(msg), msg.code, obj=vm0)
-        store_error(str(msg), msg.code, obj=vm1)
+        store_error(str(msg), obj=cluster0, code=msg.code)
+        store_error(str(msg), obj=cluster1, code=msg.code)
+        store_error(str(msg), obj=cluster2, code=msg.code)
+        store_error(str(msg), obj=vm0, code=msg.code)
+        store_error(str(msg), obj=vm1, code=msg.code)
 
         # test get_errors
         get_errors = GanetiError.objects.get_errors
@@ -314,11 +314,11 @@ class TestErrorViews(TestCase, TestGanetiErrorBase):
 
         # test store_error
         store_error = GanetiError.objects.store_error
-        c_error = store_error(str(msg), msg.code, obj=cluster)
+        c_error = store_error(str(msg), obj=cluster, code=msg.code)
         c_error = GanetiError.objects.get(pk=c_error.pk)
         self.assertFalse(c_error.cleared)
         
-        vm_error = store_error(str(msg), msg.code, obj=vm)
+        vm_error = store_error(str(msg), obj=vm, code=msg.code)
         vm_error = GanetiError.objects.get(pk=vm_error.pk)
         self.assertFalse(vm_error.cleared)
         
