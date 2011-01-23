@@ -314,7 +314,8 @@ def list_(request):
     #2) user has any perms on any VM
     #3) user belongs to the group which has perms on any VM
     else:
-        vms = user.get_objects_any_perms(VirtualMachine, groups=True)
+        vms = user.get_objects_any_perms(VirtualMachine, groups=True, \
+                                        cluster=['admin'])
         can_create = user.has_any_perms(Cluster, ['create_vm', ])
 
     vms = vms.select_related()
