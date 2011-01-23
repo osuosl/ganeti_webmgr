@@ -23,6 +23,7 @@ import json
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.core.urlresolvers import reverse
+from django.db.utils import IntegrityError
 from django.test import TestCase
 from django.test.client import Client
 
@@ -104,6 +105,10 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(5120, vm.disk_size)
         self.assertEqual('foobar', vm.owner.name)
         self.assertFalse(vm.error)
+        
+        # test unique constraints
+        vm = VirtualMachine(cluster=cluster, hostname=vm_hostname)
+        self.assertRaises(IntegrityError, vm.save)
         
         # Remove cluster
         Cluster.objects.all().delete();
@@ -472,7 +477,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'virtual_machine/list.html')
-        vms = response.context['vms']
+        vms = response.context['vms'].object_list
         self.assertFalse(vms)
         
         # user with some perms
@@ -481,7 +486,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'virtual_machine/list.html')
-        vms = response.context['vms']
+        vms = response.context['vms'].object_list
         self.assert_(vm in vms)
         self.assert_(vm1 in vms)
         self.assertEqual(2, len(vms))
@@ -492,7 +497,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'virtual_machine/list.html')
-        vms = response.context['vms']
+        vms = response.context['vms'].object_list
         self.assert_(vm in vms)
         self.assert_(vm1 in vms)
         self.assert_(vm2 in vms)

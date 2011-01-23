@@ -5,80 +5,29 @@
     <head>
     <title>{% block title %}Ganeti Web Manager{% endblock %}</title>
     <link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}/css/base.css"/>
-    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.js"></script>
-    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip.js"></script>
+    {% block basehead %}{% endblock %}
     {% block head %}{% endblock %}
     </head>
     <body>
-    <div id="header">
-        <div id="title">
-            <a href="/"><img src="{{MEDIA_URL}}/logo.png"/></a>
-        </div>
-    </div>
 
-    <div id="content_wrapper">
-    <div id="content_column">
-        {% block navigation %}
-            {% if user.is_authenticated %}
-            {% with user|cluster_admin as cluster_admin %}
-            <div id="mainmenu" class="menu">
-            <p class="user">You are logged in as: <a href="{% url profile %}">{{user.username}}</a><p>
-            
-            <h3></h3>
-            <ul>
-                <li><a href="{% url overview %}">Overview</a></li>
-                <li><a href="{% url cluster-list %}">Clusters</a></li>
-                <li><a href="{% url virtualmachine-list %}">Virtual Machines</a></li>
-                {% if user.is_superuser or cluster_admin or perms.Cluster.create_vm %}
-                <li><a href="{% url instance-create %}">Create VM </a></li>
-                {% endif %}
-                <li>
-                    <span id="searchbar">
-                        <a href="{% url logout %}">Logout</a>
-                    </span>
-                </li>
-            </ul>
-            {% with user|group_admin as group_admin %}
-            
-            {% if user.is_superuser or group_admin or cluster_admin %}
-            <h3>Admin</h3>
-            <ul>
-                {% if user.is_superuser or cluster_admin %}
-                    <li><a href="{% url import-orphans %}">Orphan VMs</a></li>
-                    <li><a href="{% url import-missing_db %}">Import VMs</a></li>
-                    <li><a href="{% url import-missing %}">Missing VMs</a></li>
-                {% endif %}
-                {% if user.is_superuser %}
-                    <li><a href="{% url user-list %}">Users</a></li>
-                {% endif %}
-                {% if user.is_superuser or group_admin %}
-                    <li><a href="{% url usergroup-list %}">Groups</a></li>
-                {% endif %}
-            </ul>
-            {% endif %}
-            {% endwith %}
-            {% endwith %}
-            </div>
-            {% endif %}
-        {% endblock %}
-        <div id="content">
-            {% block content %}
-            {% endblock %}
+    <div id="body_wrapper">
+        <div id="header_strip"></div>
+        <div id="header">
+            <a href="/" id="logo"><img src="{{MEDIA_URL}}/logo.png"/></a>
+            {% block inner_header %}{% endblock %}
         </div>
-        <div class="floatfix"></div>
+        <div id="content_wrapper">
+            <div id="content_column">
+                {% block navigation %}{% endblock %}
+                <div id="content">
+                    {% block content %}{% endblock %}
+                </div>
+                <div class="floatfix"></div>
+            </div>
+        </div>
     </div>
-    </div>
-    
     <div id="footer">
-        <p>
-        <a href="http://www.djangoproject.com/">
-             <img src="{{ MEDIA_URL }}/django.png" alt="A Django site" title="A Django site" border=0 />
-        </a>
-        </p>
-        <p>
-            Created in <a href="https://osuosl.org">Oregon State University Open Source Lab</a>.
-        </p>
+        A Project by the <a href="https://osuosl.org">Oregon State University Open Source Lab</a>.
     </div>
-    
     </body>
 </html>

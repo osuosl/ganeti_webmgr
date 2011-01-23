@@ -74,7 +74,8 @@ class TestGeneralViews(TestCase):
     def tearDown(self):
         Cluster.objects.all().delete()
         User.objects.all().delete()
-
+        Group.objects.all().delete()
+        Job.objects.all().delete()
 
     def test_view_overview(self):
         """
@@ -99,8 +100,6 @@ class TestGeneralViews(TestCase):
         mimetype = "text/html; charset=utf-8"
         status = 200
 
-        result = []
-
         # anonymous user
         response = c.get(url % args, follow=True)
         self.assertEqual(200, response.status_code)
@@ -114,7 +113,15 @@ class TestGeneralViews(TestCase):
         self.assertEqual(status, response.status_code)
         self.assertEqual(mimetype, response['content-type'])
         self.assertTemplateUsed(response, template)
-        result.append(response)
+        clusters = response.context['cluster_list']
+        self.assert_(cluster not in clusters)
+        self.assertEqual(0, len(clusters))
+        self.assert_((False, job) in response.context["errors"]) # due to no clusters
+        self.assertFalse((False, job1) in response.context["errors"]) # due to no clusters
+        self.assertEqual(1, len(response.context["errors"]))
+        self.assertEqual(0, response.context["orphaned"])
+        self.assertEqual(0, response.context["missing"])
+        self.assertEqual(0, response.context["import_ready"])
 
         # authorized user (admin on one cluster)
         self.assert_(c.login(username=user1.username, password='secret'))
@@ -122,7 +129,15 @@ class TestGeneralViews(TestCase):
         self.assertEqual(status, response.status_code)
         self.assertEqual(mimetype, response['content-type'])
         self.assertTemplateUsed(response, template)
-        result.append(response)
+        clusters = response.context['cluster_list']
+        self.assert_(cluster in clusters)
+        self.assertEqual(1, len(clusters))
+        self.assert_((False, job) in response.context["errors"])
+        self.assertFalse((False, job1) in response.context["errors"]) # due to no clusters
+        self.assertEqual(1, len(response.context["errors"]))
+        self.assertEqual(1, response.context["orphaned"])
+        self.assertEqual(1, response.context["missing"])
+        self.assertEqual(2, response.context["import_ready"])
 
         # authorized user (superuser)
         self.assert_(c.login(username=user2.username, password='secret'))
@@ -130,33 +145,75 @@ class TestGeneralViews(TestCase):
         self.assertEqual(status, response.status_code)
         self.assertEqual(mimetype, response['content-type'])
         self.assertTemplateUsed(response, template)
-        result.append(response)
-
-        clusters = result[0].context['cluster_list']
-        self.assert_(cluster not in clusters)
-        self.assertEqual(0, len(clusters))
-        self.assert_(job not in result[0].context["job_errors"]) # due to no clusters
-        self.assertEqual(0, len(result[0].context["job_errors"]))
-        self.assertEqual(0, result[0].context["orphaned"])
-        self.assertEqual(0, result[0].context["missing"])
-        self.assertEqual(0, result[0].context["import_ready"])
-
-        clusters = result[1].context['cluster_list']
-        self.assert_(cluster in clusters)
-        self.assertEqual(1, len(clusters))
-        self.assert_(job in result[1].context["job_errors"])
-        self.assertEqual(1, len(result[1].context["job_errors"]))
-        self.assertEqual(1, result[1].context["orphaned"])
-        self.assertEqual(1, result[1].context["missing"])
-        self.assertEqual(2, result[1].context["import_ready"])
-
-        clusters = result[2].context['cluster_list']
+        clusters = response.context['cluster_list']
         self.assert_(cluster in clusters)
         self.assert_(cluster1 in clusters)
         self.assertEqual(2, len(clusters))
-        self.assert_(job in result[2].context["job_errors"])
-        self.assert_(job1 in result[2].context["job_errors"])
-        self.assertEqual(2, len(result[2].context["job_errors"]))
-        self.assertEqual(2, result[2].context["orphaned"])
-        self.assertEqual(2, result[2].context["missing"])
-        self.assertEqual(4, result[2].context["import_ready"])
+        self.assert_((False, job) in response.context["errors"])
+        self.assert_((False, job1) in response.context["errors"])
+        self.assertEqual(2, len(response.context["errors"]))
+        self.assertEqual(2, response.context["orphaned"])
+        self.assertEqual(2, response.context["missing"])
+        self.assertEqual(4, response.context["import_ready"])
+    
+    def test_used_resources(self):
+        """ tests the used_resources view """
+        
+        group0 = Group.objects.create(name='group0')
+        group1 = Group.objects.create(name='group1')
+        user.groups.add(group0)
+        user1.groups.add(group1)
+        
+        url = "/used_resources/"
+        args = {}
+        template = "overview/used_resources.html"
+        mimetype = "text/html; charset=utf-8"
+
+        # anonymous user
+        response = c.get(url, args, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'registration/login.html')
+        
+        # 404 - no id
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.get(url, {})
+        self.assertEqual(404, response.status_code)
+        
+        # 404 - invalid id
+        response = c.get(url, {'id':1234567})
+        self.assertEqual(404, response.status_code)
+        
+        # unauthorized user (different user)
+        response = c.get(url, {'id':user2.get_profile().pk})
+        self.assertEqual(403, response.status_code)
+        
+        # unauthorized user (in different group)
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.get(url, {'id':group1.organization.pk})
+        self.assertEqual(403, response.status_code)
+        
+        # authorized user (same user)
+        response = c.get(url, {'id':user.get_profile().pk})
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(mimetype, response['content-type'])
+        self.assertTemplateUsed(response, template)
+        
+        # authorized user (in group)
+        response = c.get(url, {'id':group0.organization.pk})
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(mimetype, response['content-type'])
+        self.assertTemplateUsed(response, template)
+        
+        # authorized user (superuser)
+        self.assert_(c.login(username=user2.username, password='secret'))
+        response = c.get(url, {'id':user.get_profile().pk})
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(mimetype, response['content-type'])
+        self.assertTemplateUsed(response, template)
+        
+        # authorized user (superuser)
+        self.assert_(c.login(username=user2.username, password='secret'))
+        response = c.get(url, {'id':group1.organization.pk})
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(mimetype, response['content-type'])
+        self.assertTemplateUsed(response, template)

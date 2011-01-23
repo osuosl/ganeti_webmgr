@@ -530,7 +530,7 @@ class TestClusterViews(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'cluster/edit.html')
-	self.assertEqual(None, cluster.info)
+        self.assertEqual(None, cluster.info)
         
         data = dict(hostname='new-host-1.hostname',
                     slug='new-host-1',

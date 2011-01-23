@@ -36,7 +36,8 @@ from django.utils.translation import ugettext_lazy as _
 import re
 
 from django.db import models
-from django.db.models import Sum, F
+from django.db.models import Sum, F, Q
+from django.db.models.query import QuerySet
 from django.db.models.signals import post_save, post_syncdb
 
 from logs.models import LogItem
@@ -229,9 +230,13 @@ class CachedClusterObject(models.Model):
                     self.__class__.objects.filter(pk=self.id) \
                         .update(cached=self.cached)
                 
-            self.error = None
         except GanetiApiError, e:
             self.error = str(e)
+            GanetiError.objects.store_error(str(e), obj=self, code=e.code)
+
+        else:
+            self.error = None
+            GanetiError.objects.clear_errors(obj=self)
 
     def _refresh(self):
         """
@@ -279,24 +284,6 @@ class CachedClusterObject(models.Model):
         abstract = True
 
 
-if settings.DEBUG or True:
-    # XXX - if in debug mode create a model for testing cached cluster objects
-    class TestModel(CachedClusterObject):
-        """ simple implementation of a cached model that has been instrumented """
-        saved = False
-        data = {'mtime': 1285883187.8692000, 'ctime': 1285799513.4741000}
-        throw_error = None
-        
-        def _refresh(self):
-            if self.throw_error:
-                raise self.throw_error
-            return self.data
-
-        def save(self, *args, **kwargs):
-            self.saved = True
-            super(TestModel, self).save(*args, **kwargs)
-
-
 class JobManager(models.Manager):
     """
     Custom manager for Ganeti Jobs model
@@ -325,6 +312,7 @@ class Job(CachedClusterObject):
     cluster = models.ForeignKey('Cluster', editable=False, related_name='jobs')
     cluster_hash = models.CharField(max_length=40, editable=False)
     
+    cleared = models.BooleanField(default=False)
     finished = models.DateTimeField(null=True)
     status = models.CharField(max_length=10)
     
@@ -434,6 +422,7 @@ class VirtualMachine(CachedClusterObject):
     
     class Meta:
         ordering = ["hostname", ]
+        unique_together = (("cluster", "hostname"),)
 
     @property
     def rapi(self):
@@ -640,10 +629,13 @@ class Cluster(CachedClusterObject):
         if user is None:
             return {'default':1, 'ram':self.ram, 'disk':self.disk, \
                     'virtual_cpus':self.virtual_cpus}
-
-        query = Quota.objects.filter(cluster=self, user=user)
-        if query.exists():
-            (quota,) = query.values('ram', 'disk', 'virtual_cpus')
+        
+        # attempt to query user specific quota first.  if it does not exist then
+        # fall back to the default quota
+        query = Quota.objects.filter(cluster=self, user=user) \
+                    .values('ram', 'disk', 'virtual_cpus')
+        if len(query):
+            (quota,) = query
             quota['default'] = 0
             return quota
 
@@ -746,6 +738,128 @@ class Cluster(CachedClusterObject):
             return None
 
 
+if settings.DEBUG or True:
+    # XXX - if in debug mode create a model for testing cached cluster objects
+    class TestModel(CachedClusterObject):
+        """ simple implementation of a cached model that has been instrumented """
+        cluster = models.ForeignKey(Cluster)
+        saved = False
+        data = {'mtime': 1285883187.8692000, 'ctime': 1285799513.4741000}
+        throw_error = None
+        
+        def _refresh(self):
+            if self.throw_error:
+                raise self.throw_error
+            return self.data
+
+        def save(self, *args, **kwargs):
+            self.saved = True
+            super(TestModel, self).save(*args, **kwargs)
+
+
+class GanetiErrorManager(models.Manager):
+
+    def clear_error(self, id):
+        """
+        Clear one particular error (used in overview template).
+        """
+        return self.filter(pk=id).update(cleared=True)
+
+    def clear_errors(self, *args, **kwargs):
+        """
+        Clear errors instead of deleting them.
+        """
+        return self.get_errors(cleared=False, *args, **kwargs) \
+            .update(cleared=True)
+
+    def remove_errors(self, *args, **kwargs):
+        """
+        Just shortcut if someone wants to remove some errors.
+        """
+        return self.get_errors(*args, **kwargs).delete()
+
+    def get_errors(self, obj=None, **kwargs):
+        """
+        Manager method used for getting QuerySet of all errors depending on
+        passed arguments.
+        
+        @param  obj   affected object (itself or just QuerySet)
+        @param kwargs: additional kwargs for filtering GanetiErrors
+        """
+        if obj is None:
+            return self.filter(**kwargs)
+        
+        # Create base query of errors to return.
+        #
+        # if it's a Cluster or a queryset for Clusters, then we need to get all
+        # errors from the Clusters.  Do this by filtering on GanetiError.cluster
+        # instead of obj_id.
+        if isinstance(obj, (Cluster,)):
+            return self.filter(cluster=obj, **kwargs)
+        
+        elif isinstance(obj, (QuerySet,)):
+            if obj.model == Cluster:
+                return self.filter(cluster__in=obj, **kwargs)
+            else:
+                ct = ContentType.objects.get_for_model(obj.model)
+                return self.filter(obj_type=ct, obj_id__in=obj, **kwargs)
+        
+        else:
+            ct = ContentType.objects.get_for_model(obj.__class__)
+            return self.filter(obj_type=ct, obj_id=obj.pk, **kwargs)
+
+    def store_error(self, msg, obj, **kwargs):
+        """
+        Manager method used to store errors
+
+        @param  msg  error's message
+        @param code  error's code
+        @param  obj  object (i.e. cluster or vm) affected by the error
+        """
+        ct = ContentType.objects.get_for_model(obj.__class__)
+        # XXX use a try/except instead of get_or_create().  get_or_create()
+        # does not allow us to set cluster_id.  This means we'd have to query
+        # the cluster object to create the error.  we can't guarunteee the
+        # cluster will already be queried so use create() instead which does
+        # allow cluster_id
+        try:
+            return self.get(msg=msg, obj_type=ct, obj_id=obj.pk, **kwargs)
+        except GanetiError.DoesNotExist:
+            cluster_id = obj.pk if isinstance(obj, (Cluster,)) else obj.cluster_id
+            return self.create(msg=msg, obj_type=ct, obj_id=obj.pk, \
+                               cluster_id=cluster_id, **kwargs)
+
+
+class GanetiError(models.Model):
+    """
+    Class for storing errors which occured in Ganeti
+    """
+    cluster = models.ForeignKey(Cluster)
+    msg = models.TextField()
+    code = models.PositiveSmallIntegerField(blank=True, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+    # determines if the errors still appears or not
+    cleared = models.BooleanField(default=False)
+
+    # cluster object (cluster, VM, Node) affected by the error (if any)
+    obj_type = models.ForeignKey(ContentType, related_name="ganeti_errors")
+    obj_id = models.PositiveIntegerField()
+    obj = GenericForeignKey("obj_type", "obj_id")
+
+    objects = GanetiErrorManager()
+
+    class Meta:
+        ordering = ("-timestamp", "code", "msg")
+
+    def __repr__(self):
+        return "<GanetiError '%s'>" % (self.msg)
+
+    def __unicode__(self):
+        base = "[%s] %s" % (self.timestamp, self.msg)
+        return base
+
+
 class ClusterUser(models.Model):
     """
     Base class for objects that may interact with a Cluster or VirtualMachine.
@@ -799,17 +913,20 @@ class ClusterUser(models.Model):
             return result
         
         else:
-            base = base.values('cluster').annotate(ram_=Sum('ram'), \
-                                            disk_=Sum('disk_size'), \
-                                            virtual_cpus_=Sum('virtual_cpus'))
+            base = base.values('cluster').annotate(ram=Sum('ram'), \
+                                            disk=Sum('disk_size'), \
+                                            virtual_cpus=Sum('virtual_cpus'))
             
             # repack as dictionary
             result = {}
             for used in base:
                 # repack with zeros instead of Nones, change index names
-                used['disk'] = 0 if not used['disk_'] else used['disk_']
-                used['ram'] = 0 if not used['ram_'] else used['ram_']
-                used['virtual_cpus'] = 0 if not used['virtual_cpus_'] else used['virtual_cpus_']
+                if used['disk'] is None:
+                    used['disk'] = 0
+                if used['ram'] is None:
+                    used['ram'] = 0
+                if used['virtual_cpus'] is None:
+                    used['virtual_cpus'] = 0
                 result[used.pop('cluster')] = used
                 
             return result

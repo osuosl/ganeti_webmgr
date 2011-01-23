@@ -28,6 +28,7 @@ from ganeti.tests.rapi_proxy import RapiProxy
 from ganeti.tests.call_proxy import CallProxy
 from ganeti import models
 
+Cluster = models.Cluster
 CachedClusterObject = models.CachedClusterObject
 TestModel = models.TestModel
 
@@ -52,12 +53,13 @@ class CachedClusterObjectBase(TestCase):
         self.__LAZY_CACHE_REFRESH = settings.LAZY_CACHE_REFRESH
         settings.LAZY_CACHE_REFRESH = 50
     
-    def create_model(self, *args):
+    def create_model(self, **kwargs):
         """
         create an instance of the model being tested, this will instrument
         some methods of the model to check if they have been called
         """
-        object = self.Model(*args)
+        cluster, chaff = Cluster.objects.get_or_create(hostname='test.foo.org')
+        object = self.Model(cluster=cluster, **kwargs)
         
         # patch model class
         CallProxy.patch(object, 'parse_transient_info')
@@ -69,6 +71,7 @@ class CachedClusterObjectBase(TestCase):
     
     def tearDown(self):
         TestModel.objects.all().delete()
+        Cluster.objects.all().delete()
         
         if self.__GanetiRapiClient is not None:
             models.client.GanetiRapiClient = self.__GanetiRapiClient
@@ -96,8 +99,8 @@ class CachedClusterObjectBase(TestCase):
         
         # XXX simulate loading existing instance by calling __init__ again and
         # passing a value for id
-        object = self.create_model(1)
-        object.__init__(1)
+        object = self.create_model(id=1)
+        object.__init__(1, cluster=object.cluster)
         object.load_info.assertCalled(self)
     
     def test_timestamp_precision(self):
@@ -165,7 +168,7 @@ class CachedClusterObjectBase(TestCase):
             * transient info is parsed
             * persistent info is parsed
         """
-        obj = self.create_model(1)
+        obj = self.create_model(id=1)
         obj.parse_info()
         obj.parse_transient_info.assertCalled(self)
         obj.parse_persistent_info.assertCalled(self)
