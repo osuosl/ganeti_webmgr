@@ -223,7 +223,7 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
         # 404 - VM
         store_error(str(msg1), obj=vm0, code=msg1.code)
         errors = get_errors(obj=cluster0)
-        self.assertEqual(len(errors), 0)
+        self.assertEqual(len(errors), 1)
         errors = get_errors(obj=vm0)
         self.assertEqual(len(errors), 1)
         remove_errors(obj=cluster0)
