@@ -63,9 +63,10 @@ class TestGanetiErrorBase():
         VirtualMachine.objects.all().delete()
         Cluster.objects.all().delete()
         GanetiError.objects.all().delete()
+        RapiProxy.error = None
 
 
-class TestGanetiErrorModel(TestCase, TestGanetiErrorBase):
+class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
     """
     Class for testing ganeti error storage.
     """
@@ -182,7 +183,6 @@ class TestGanetiErrorModel(TestCase, TestGanetiErrorBase):
         errors = get_errors()
         self.assertEqual(len(errors), 0)
 
-
     def test_specified_code_values(self):
         """
         Test if errors with code in (401, 404) are stored in a proper way.
@@ -203,36 +203,46 @@ class TestGanetiErrorModel(TestCase, TestGanetiErrorBase):
         get_errors = GanetiError.objects.get_errors
         remove_errors = GanetiError.objects.remove_errors
 
-        # 401
+        # 401 - cluster
         store_error(str(msg0), obj=cluster0, code=msg0.code)
         errors = get_errors(obj=cluster0)
         self.assertEqual(len(errors), 1)
         errors = get_errors(obj=vm0)
         self.assertEqual(len(errors), 0)
         remove_errors(obj=cluster0)
-
+        
+        # 401 - VM
         store_error(str(msg0), obj=vm0, code=msg0.code)
+        errors = get_errors(obj=cluster0)
+        self.assertEqual(len(errors), 1)
         errors = get_errors(obj=vm0)
         self.assertEqual(len(errors), 0)
         remove_errors(obj=cluster0)
         remove_errors(obj=vm0)
 
-        # 404
+        # 404 - VM
         store_error(str(msg1), obj=vm0, code=msg1.code)
         errors = get_errors(obj=cluster0)
-        self.assertEqual(len(errors), 1)
+        self.assertEqual(len(errors), 0)
         errors = get_errors(obj=vm0)
         self.assertEqual(len(errors), 1)
         remove_errors(obj=cluster0)
+        remove_errors(obj=vm0)
 
+        # 404 - cluster
         store_error(str(msg1), obj=cluster0, code=msg1.code)
         errors = get_errors(obj=cluster0)
         self.assertEqual(len(errors), 1)
         errors = get_errors(obj=vm0)
         self.assertEqual(len(errors), 0)
-
-        RapiProxy.error = None
         
+        # 404 - VM, but error is really with cluster
+        store_error(str(msg1), obj=vm0, code=msg1.code)
+        errors = get_errors(obj=cluster0)
+        self.assertEqual(len(errors), 1)
+        errors = get_errors(obj=vm0)
+        self.assertEqual(len(errors), 0)
+        remove_errors(obj=cluster0)
 
     def refresh(self, object):
         """
@@ -337,7 +347,7 @@ class TestGanetiErrorModel(TestCase, TestGanetiErrorBase):
             self.assertEqual(None, i.error)
 
 
-class TestErrorViews(TestCase, TestGanetiErrorBase):
+class TestErrorViews(TestGanetiErrorBase, TestCase):
     
     def setUp(self):
         super(TestErrorViews, self).setUp()
