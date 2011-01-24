@@ -211,6 +211,12 @@ class TestGanetiErrorModel(TestCase, TestGanetiErrorBase):
         self.assertEqual(len(errors), 0)
         remove_errors(obj=cluster0)
 
+        store_error(str(msg0), obj=vm0, code=msg0.code)
+        errors = get_errors(obj=vm0)
+        self.assertEqual(len(errors), 0)
+        remove_errors(obj=cluster0)
+        remove_errors(obj=vm0)
+
         # 404
         store_error(str(msg1), obj=vm0, code=msg1.code)
         errors = get_errors(obj=cluster0)
@@ -224,8 +230,9 @@ class TestGanetiErrorModel(TestCase, TestGanetiErrorBase):
         self.assertEqual(len(errors), 1)
         errors = get_errors(obj=vm0)
         self.assertEqual(len(errors), 0)
-        
 
+        RapiProxy.error = None
+        
 
     def refresh(self, object):
         """
