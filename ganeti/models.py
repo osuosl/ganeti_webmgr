@@ -45,8 +45,10 @@ log_action = LogItem.objects.log_action
 
 from object_permissions.registration import register
 from object_permissions import signals as op_signals
+
 from ganeti import constants, management
 from ganeti.fields import PreciseDateTimeField
+from ganeti import permissions
 from util import client
 from util.client import GanetiApiError
 
@@ -1074,20 +1076,5 @@ op_signals.view_group_edited.connect(log_group_edit)
 # These are part of the DB schema and should not be changed without serious
 # forethought.
 # You *must* syncdb after you change these.
-register([
-    "admin",
-    "create_vm",
-    "migrate",
-    "export",
-    "replace_disks",
-    "tags",
-    ],
-    Cluster)
-register([
-    "admin",
-    "power",
-    "remove",
-    "modify",
-    "tags",
-    ],
-    VirtualMachine)
+register(permissions.CLUSTER_PARAMS, Cluster)
+register(permissions.VIRTUAL_MACHINE_PARAMS, VirtualMachine)
