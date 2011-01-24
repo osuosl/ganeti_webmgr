@@ -56,6 +56,24 @@ def user_add(request):
 
 
 @login_required
+def user_detail(request, user_id=None):
+    user = request.user
+    if not user.is_superuser:
+        return render_403(request, 'Only a superuser may view a user.')
+
+    user = get_object_or_404(User, id=user_id)
+    
+    keys = SSHKey.objects.filter(user__pk=user_id).order_by("pk")
+
+    return render_to_response("users/detail.html", {
+            'user_detail':user,
+            'keyslist': keys,
+        },
+        context_instance=RequestContext(request),
+    )
+
+
+@login_required
 def user_edit(request, user_id=None):
     user = request.user
     if not user.is_superuser:
