@@ -183,6 +183,50 @@ class TestGanetiErrorModel(TestCase, TestGanetiErrorBase):
         self.assertEqual(len(errors), 0)
 
 
+    def test_specified_code_values(self):
+        """
+        Test if errors with code in (401, 404) are stored in a proper way.
+        See tickets #2877, #2883.
+
+        Verifies:
+            * Manager store_error works properly for specific code numbers
+        """
+        cluster0 = self.create_model(Cluster, hostname="test0", slug="OSL_TEST0")
+        vm0 = self.create_model(VirtualMachine,cluster=cluster0, hostname="vm0.test.org")
+
+        msg0 = client.GanetiApiError("Simulating 401 error", 401)
+        msg1 = client.GanetiApiError("Simulating 404 error", 404)
+        msg2 = client.GanetiApiError("Simulating normal error", 777)
+        RapiProxy.error = msg0
+
+        store_error = GanetiError.objects.store_error
+        get_errors = GanetiError.objects.get_errors
+        remove_errors = GanetiError.objects.remove_errors
+
+        # 401
+        store_error(str(msg0), obj=cluster0, code=msg0.code)
+        errors = get_errors(obj=cluster0)
+        self.assertEqual(len(errors), 1)
+        errors = get_errors(obj=vm0)
+        self.assertEqual(len(errors), 0)
+        remove_errors(obj=cluster0)
+
+        # 404
+        store_error(str(msg1), obj=vm0, code=msg1.code)
+        errors = get_errors(obj=cluster0)
+        self.assertEqual(len(errors), 1)
+        errors = get_errors(obj=vm0)
+        self.assertEqual(len(errors), 1)
+        remove_errors(obj=cluster0)
+
+        store_error(str(msg1), obj=cluster0, code=msg1.code)
+        errors = get_errors(obj=cluster0)
+        self.assertEqual(len(errors), 1)
+        errors = get_errors(obj=vm0)
+        self.assertEqual(len(errors), 0)
+        
+
+
     def refresh(self, object):
         """
         NOTE: this test is borrowed from TestCachedClusterObject.
