@@ -51,6 +51,13 @@ urlpatterns += patterns('ganeti.views.users',
     url(r'^keys/delete/(?P<key_id>\d+)/?$', 'key_delete', name="key-delete"),
 )
 
+#Groups
+urlpatterns += patterns('object_permissions.views.groups',
+    url(r'^group/(?P<id>\d+)/?$', 'detail',
+            {'template':'ganeti/group/detail.html'},
+            name="usergroup-detail"),
+)
+
 # Clusters
 urlpatterns += patterns('ganeti.views.cluster',
     #   List

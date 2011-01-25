@@ -40,6 +40,8 @@
     <ul>
         <li><a href="#detail"><span>Detail</span></a></li>
         <li><a title="permissions" href="{% url user-all-permissions user_detail.pk %}"><span>Permissions</span></a></li>
+        <li><a title="usage" href="{% url used_resources %}?id={{user_detail.get_profile.pk}}"><span>Resource Usage</span></a></li>
+        {% block tabs %}{% endblock tabs %}
     </ul>
     <div id="detail">
         <ul id="actions">
