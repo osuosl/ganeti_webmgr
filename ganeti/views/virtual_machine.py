@@ -142,20 +142,17 @@ def reinstall(request, cluster_slug, instance):
 
 @login_required
 def novnc(request, cluster_slug, instance):
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    instance = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
-
+    vm = get_object_or_404(VirtualMachine, hostname=instance, \
+                           cluster__slug=cluster_slug)
     user = request.user
-
-    admin = user.is_superuser or user.has_perm('admin', instance) \
-        or user.has_perm('admin', cluster)
-    if not admin:
-        return HttpResponseForbidden('You do not have permission to vnc on this')
+    if not (user.is_superuser \
+        or user.has_any_perms(vm, ['admin', 'power']) \
+        or user.has_perm('admin', vm.cluster)):
+            return HttpResponseForbidden('You do not have permission to vnc on this')
 
     return render_to_response("virtual_machine/novnc.html",
-                              {'cluster': cluster,
-                               'instance': instance,
-                               'admin':admin,
+                              {'cluster_slug': cluster_slug,
+                               'instance': vm,
                                },
         context_instance=RequestContext(request),
     )
@@ -454,15 +451,15 @@ def permissions(request, cluster_slug, instance, user_id=None, group_id=None):
     """
     Update a users permissions.
     """
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    vm = get_object_or_404(VirtualMachine, hostname=instance)
+    vm = get_object_or_404(VirtualMachine, hostname=instance, \
+                           cluster__slug=cluster_slug)
 
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', vm) or \
-        user.has_perm('admin', cluster)):
+        user.has_perm('admin', vm.cluster)):
         return render_403(request, "You do not have sufficient privileges")
 
-    url = reverse('vm-permissions', args=[cluster.slug, vm.hostname])
+    url = reverse('vm-permissions', args=[cluster_slug, vm.hostname])
     return view_permissions(request, vm, url, user_id, group_id)
 
 
