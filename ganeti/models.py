@@ -810,26 +810,58 @@ class GanetiErrorManager(models.Manager):
             ct = ContentType.objects.get_for_model(obj.__class__)
             return self.filter(obj_type=ct, obj_id=obj.pk, **kwargs)
 
-    def store_error(self, msg, obj, **kwargs):
+    def store_error(self, msg, obj, code, **kwargs):
         """
         Manager method used to store errors
 
         @param  msg  error's message
-        @param code  error's code
         @param  obj  object (i.e. cluster or vm) affected by the error
+        @param code  error's code number
         """
         ct = ContentType.objects.get_for_model(obj.__class__)
+        is_cluster = isinstance(obj, Cluster)
+        
+        # 401 -- bad permissions
+        # 401 is cluster-specific error and thus shouldn't appear on any other
+        # object.
+        if code == 401:
+            if not is_cluster:
+                # NOTE: what we do here is almost like:
+                #  return self.store_error(msg=msg, code=code, obj=obj.cluster)
+                # we just omit the recursiveness
+                obj = obj.cluster
+                ct = ContentType.objects.get_for_model(Cluster)
+                is_cluster = True
+
+        # 404 -- object not found
+        # 404 can occur on any object, but when it occurs on a cluster, then any
+        # of its children must not see the error again
+        elif code == 404:
+            if not is_cluster:
+                # return if the error exists for cluster
+                try:
+                    c_ct = ContentType.objects.get_for_model(Cluster)
+                    return self.get(msg=msg, obj_type=c_ct, code=code,
+                            obj_id=obj.cluster_id, cleared=False)
+
+                except GanetiError.DoesNotExist:
+                    # we want to proceed when the error is not cluster-specific
+                    pass
+
         # XXX use a try/except instead of get_or_create().  get_or_create()
         # does not allow us to set cluster_id.  This means we'd have to query
-        # the cluster object to create the error.  we can't guarunteee the
+        # the cluster object to create the error.  we can't guaranteee the
         # cluster will already be queried so use create() instead which does
         # allow cluster_id
         try:
-            return self.get(msg=msg, obj_type=ct, obj_id=obj.pk, **kwargs)
+            return self.get(msg=msg, obj_type=ct, obj_id=obj.pk, code=code,
+                            **kwargs)
+
         except GanetiError.DoesNotExist:
-            cluster_id = obj.pk if isinstance(obj, (Cluster,)) else obj.cluster_id
-            return self.create(msg=msg, obj_type=ct, obj_id=obj.pk, \
-                               cluster_id=cluster_id, **kwargs)
+            cluster_id = obj.pk if is_cluster else obj.cluster_id
+
+            return self.create(msg=msg, obj_type=ct, obj_id=obj.pk,
+                               cluster_id=cluster_id, code=code, **kwargs)
 
 
 class GanetiError(models.Model):

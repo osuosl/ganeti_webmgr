@@ -126,12 +126,14 @@
         {% endcomment %}
         {% if admin %}
             <li><a title="users" href="{% url vm-users cluster.slug instance.hostname %}"><span>Users</span></a></li>
-            <li><a title="console" href="{% url instance-vnc cluster.slug instance.hostname %}"><span>Console</span></a></li>
         {%endif%}
+	{% if admin or power %}
+	    <li><a title="console" href="{% url instance-vnc cluster.slug instance.hostname %}"><span>Console</span></a></li>
+        {% endif %}
     </ul>
     <div id="overview" class="tab_content">
         <ul id="actions">
-            {% with instance.cluster.username as username %}
+            {% with cluster.username as username %}
                 {% if remove and username %}
                     <li><a class="button delete" href="{% url instance-delete cluster.slug instance.hostname %}">Delete</a></li>
                     <li><a class="button reinstall" href="{% url instance-reinstall cluster.slug instance.hostname %}">Reinstall</a></li>

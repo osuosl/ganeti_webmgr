@@ -119,6 +119,15 @@ form input.submit{margin-left:12.5em;}
 #content th.status, #content th.actions { background:none; padding:0;}
 #content td a {border:0; padding:0;}
 
+/* tablesorter style */
+#content table.sorted th {
+    background: url(/media/images/bg.gif) no-repeat center right #eee;
+    padding-right: 15px;
+    cursor: s-resize;
+}
+#content table.sorted .ascending {background-image: url(/media/images/asc.gif);}
+#content table.sorted .descending {background-image: url(/media/images/desc.gif);}
+
 #footer {
     background: url(/media/images/footerBack.jpg) repeat-x 0 0 #1d1d1d;
     border-top: 2px solid #666;
