@@ -15,31 +15,59 @@
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.tablesorter.min.js"></script>
 <script type="text/javascript">
-    function ajax_get_update(url) {
-        $.get(url, function(results) {
-           $('#vm-wrapper').html(results);
+    function ajax_get_update() {
+        {% if cluster %}
+            url = "{% url cluster-virtualmachine-table cluster.slug %}";
+        {% else %}
+            url = "{% url virtualmachine-table %}";
+        {% endif %}
+        $.get(url, FETCH_ARGS, function(results) {
+            $results = $(results);
+            tbody = $results.children("tbody");
+            pagination = $results[2];
+            $('#vm-wrapper .pagination').replaceWith(pagination);
+            $('#vmlist tbody').replaceWith(tbody);
         }, "html");
     }
 
+    var FETCH_ARGS = {page:1};
+    var current_order_by = null;
+
     $(document).ready( function() {
-        $("#vmlist").tablesorter();
-        
         $('.pagination .previous').live('click', function(e) {
             e.preventDefault();
-            url = ($('.pagination .previous a')[0].href);
-            ajax_get_update(url);
+            FETCH_ARGS["page"] = FETCH_ARGS["page"] - 1;
+            ajax_get_update();
         });
         
         $('.pagination .next').live('click', function(e) {
             e.preventDefault();
-            url = ($('.pagination .next a')[0].href);
-            ajax_get_update(url);
+            FETCH_ARGS["page"] = FETCH_ARGS["page"] + 1;
+            ajax_get_update();
         });
         
         $('.pagination .page:not(.active)').live('click', function() {
-            page = $(this).html();
-            url = '{% url virtualmachine-table %}?page=' + page;
-            ajax_get_update(url);
+            FETCH_ARGS["page"] =  parseInt($(this).html());
+            ajax_get_update();
+        });
+        
+        $('#vmlist th').live("click", function(){
+            $this = $(this)
+            field = $this.html();
+            order_by = $this.attr("order_by");
+            if (field==current_order_by && $this.hasClass("ascending")) {
+                $this.addClass("descending")
+                        .removeClass("ascending");
+                order_by = "-" + order_by;
+            } else {
+                $('#vmlist th').removeClass('ascending')
+                    .removeClass('descending');
+                $this.addClass("ascending");
+            }
+            FETCH_ARGS["page"] = 1;
+            FETCH_ARGS["order_by"] = order_by;
+            current_order_by = field;
+            ajax_get_update();
         });
         
         $('.spinner')
@@ -47,7 +75,7 @@
             .ajaxStart(function() {
                 $(this).show();
                 $('#vmlist tr td').hide();
-                $('.pagination').hide();
+                $('#vm-wrapper .pagination').hide();
             })
             .ajaxStop(function() {
                 $(this).hide()

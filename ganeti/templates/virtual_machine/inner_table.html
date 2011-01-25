@@ -3,16 +3,16 @@
 <table id="vmlist" class="sorted">
 <thead>
     <tr>
-      <th class="status"></th>
-      <th>Name</th>
+      <th class="status" order_by="status"></th>
+      <th order_by="hostname">Name</th>
       {% if not cluster %}
-      <th>Cluster</th>
+      <th order_by="cluster__hostname">Cluster</th>
       {% endif %}
-      <th>Node</th>
-      <th>OS</th>
-      <th>RAM</th>
-      <th>Disk Space</th>
-      <th>vCPUs</th>
+      <th order_by="cluster__hostname">Node</th>
+      <th order_by="operating_system">OS</th>
+      <th order_by="ram">RAM</th>
+      <th order_by="disk_size">Disk Space</th>
+      <th order_by="virtual_cpus">vCPUs</th>
     </tr>
 </thead>
 <tbody id="vms">

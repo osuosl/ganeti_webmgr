@@ -282,13 +282,12 @@ def render_vms(request, query):
     """
     Helper function for paginating a virtual machine query
     """
-    paginator = Paginator(query, settings.ITEMS_PER_PAGE)
-
-    page = 1
-    if request.is_ajax:
-        query = request.GET.get('page')
-        if query is not None:
-            page = query
+    GET = request.GET
+    if 'order_by' in GET:
+        query = query.order_by(GET['order_by'])
+    count = GET['count'] if 'count' in GET else settings.ITEMS_PER_PAGE
+    paginator = Paginator(query, count)
+    page = request.GET.get('page', 1)
 
     try:
         vms = paginator.page(page)
@@ -332,7 +331,7 @@ def list_(request):
 
 
 @login_required
-def vm_table(request):
+def vm_table(request, cluster_slug=None):
     """
     View for displaying the virtual machine table.  This is used for ajax calls
     to reload the table.   Usually because of a page or sort change.
@@ -348,14 +347,21 @@ def vm_table(request):
     #2) user has any perms on any VM
     #3) user belongs to the group which has perms on any VM
     else:
-        vms = user.get_objects_any_perms(VirtualMachine, groups=True)
+        vms = user.get_objects_any_perms(VirtualMachine, groups=True, cluster=['admin'])
         can_create = user.has_any_perms(Cluster, ['create_vm'])
+
+    if cluster_slug:
+        cluster = Cluster.objects.get(slug=cluster_slug)
+        vms = vms.filter(cluster=cluster)
+    else:
+        cluster = None
 
     vms = render_vms(request, vms)
 
     return render_to_response('virtual_machine/inner_table.html', {
         'vms':vms,
         'can_create':can_create,
+        'cluster':cluster
        },
         context_instance=RequestContext(request),
     )
