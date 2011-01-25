@@ -7,8 +7,8 @@
     <link rel="stylesheet" type="text/css"
             href="{{MEDIA_URL}}/css/virtual_machine_create.css"/>
     <style>
-        /* temp styles */
-        .disabledText{
+        /* single option dropdown label style */  
+        .singleOptionDropdownLabel{
             color:gray;
             font-weight:bold;
         }
@@ -72,13 +72,13 @@
             the dropdown has "blank" options such as "-----" or 
             "- choose one -" etc.
 
-            Note that this should probably eventually be made into a jQuery 
-            plugin.
+            Note that it might be nice to make this into a jQuery plugin
+            eventually.
             */
 
             var optElems = dropdown.find('option');
             var opts = [];
-            var PROCESSED_OP_ID = "processedOption";
+            var PROCESSED_OP_ID = "singleOptionDropdownLabel";
             var processedOpElems =
                     dropdown.siblings().filter('.'+PROCESSED_OP_ID);
 
@@ -88,16 +88,22 @@
                     if($(opt).text() != ignoreOpt)
                         opts.push(opt);
                 });
+
+            // otherwise just use the options as is
             } else {
                 opts = optElems;
             }
 
-            // if there's only one option, not including "blank" options,
-            // select it, hide the dropdown, and replace it with a label
+            // if there's only one option, (not including "blank" options if
+            // specified,) select it, hide the dropdown, and replace it with 
+            // a label
             if(opts.length == 1){
                 $(opts).attr('selected', 'selected');
-                dropdown.change();
                 dropdown.hide();
+                dropdown.change();
+                
+                // if no processed options (label versions of the single-option
+                // dropdown) make the label
                 if(processedOpElems.length == 0){
                     dropdown.parent().append(
                         "<div class='"+PROCESSED_OP_ID+" disabledText'>" + 
