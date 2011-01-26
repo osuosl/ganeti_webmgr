@@ -38,6 +38,7 @@ for the Ganeti Web Manager project
 def vmfield(field):
     return {'field':field}
 
+
 @register.filter
 def class_name(obj):
     """ returns the modelname of the objects class """
@@ -54,6 +55,7 @@ def truncate(value, count):
         return value[:count] + " ..."
     return value
 
+
 @register.filter
 @stringfilter
 def ssh_comment(value):
@@ -67,6 +69,7 @@ def ssh_comment(value):
         return value[pos1+pos2+2:]
     return value
 
+
 @register.filter
 @stringfilter
 def ssh_keytype(value):
@@ -78,6 +81,7 @@ def ssh_keytype(value):
     if pos > -1:
         return value[:pos]
     return value
+
 
 @register.filter
 @stringfilter
@@ -95,6 +99,7 @@ def ssh_keypart_truncate(value, count):
         pass
     finally:
         return value
+
 
 """
 These filters were taken from Russel Haering's GanetiWeb project
@@ -158,6 +163,7 @@ def cluster_admin(user):
 def format_job_op(op):
     return op[3:].replace("_", " ").title()
 
+
 def format_part_total(part, total):
     """
     Pretty-print a quantity out of a given total.
@@ -169,6 +175,7 @@ def format_part_total(part, total):
     return "%.*f / %.*f" % (
         int(3 - log10(part)), part, int(3 - log10(total)), total)
 
+
 @register.simple_tag
 def diff(a, b):
     if a and b:
@@ -176,12 +183,14 @@ def diff(a, b):
     else:
         return 0
 
+
 @register.simple_tag
 def diff_render_storage(a, b):
     data = 0
     if a and b:
         data = int(a)-int(b)
     return render_storage(data)
+
 
 @register.simple_tag
 def node_memory(node):
@@ -198,6 +207,7 @@ def node_disk(node):
     """
     return format_part_total(node["dfree"], node["dtotal"])
 
+
 @register.simple_tag
 def cluster_memory(cluster):
     """
@@ -211,6 +221,7 @@ def cluster_memory(cluster):
         mfree += i["mfree"]
         mtotal += i["mtotal"]
     return format_part_total(mfree, mtotal)
+
 
 @register.simple_tag
 def cluster_disk(cluster):
@@ -226,6 +237,7 @@ def cluster_disk(cluster):
         dtotal += i["dtotal"]
     return format_part_total(dfree, dtotal)
 
+
 @register.simple_tag
 def format_running_vms(cluster):
     """
@@ -233,6 +245,7 @@ def format_running_vms(cluster):
     """
     return "%d/%d" % (cluster.virtual_machines.filter(status="running").count(),
                       cluster.virtual_machines.all().count())
+
 
 @register.simple_tag
 def format_online_nodes(cluster):
@@ -247,6 +260,7 @@ def format_online_nodes(cluster):
         if not i['offline']:
             n += 1
     return "%d/%d" % (n, len(nodes))
+
 
 @register.filter
 def json(obj):
@@ -309,6 +323,7 @@ class GetterNode(Node):
 def abbreviate_fqdn(value):
     return value.split(".")[0]
 
+
 @register.filter
 @stringfilter
 def render_os(os):
@@ -318,6 +333,7 @@ def render_os(os):
         return mark_safe("%s (<em>%s</em>)" % (flavor, t))
     except ValueError:
         return mark_safe("<em>Unknown or invalid OS</em>")
+
 
 @register.filter
 def mult(value, arg):
