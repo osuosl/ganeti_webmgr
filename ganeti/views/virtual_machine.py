@@ -373,8 +373,9 @@ def detail(request, cluster_slug, instance):
     vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
 
     user = request.user
-    admin = user.is_superuser or user.has_perm('admin', vm) \
-        or user.has_perm('admin', cluster)
+    cluster_admin = user.is_superuser or user.has_perm('admin', cluster)
+    admin = cluster_admin or user.has_perm('admin', vm) \
+    
     if admin:
         remove = True
         power = True
@@ -422,6 +423,7 @@ def detail(request, cluster_slug, instance):
         'instance': vm,
         #'configform': form,
         'admin':admin,
+        'cluster_admin':cluster_admin,
         'remove':remove,
         'power':power,
         },
