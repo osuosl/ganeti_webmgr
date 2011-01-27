@@ -367,6 +367,23 @@ class Job(CachedClusterObject):
         
         super(Job, self).save(*args, **kwargs)
 
+    @property
+    def current_operation(self):
+        """
+        Jobs may consist of multiple commands/operations.  This helper
+        method will return the operation that is currently running or errored
+        out, or the last operation if all operations have completed
+        
+        @returns raw name of the current operation
+        """
+        info = self.info
+        index = 0
+        for i in range(len(info['opstatus'])):
+            if info['opstatus'][i] != 'success':
+                index = i
+                break;
+        return info['ops'][index]['OP_ID']
+
 
     def __repr__(self):
         return "<Job: '%s'>" % self.id
