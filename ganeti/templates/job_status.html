@@ -33,22 +33,24 @@
     }
     
     function display_job(data) {
+        // get the sub operation that is either running or errored
+        for (i=0; i<data['opstatus'].length; ++i) {
+            if (data['opstatus'][i] != 'success') {
+                sub_op = i;
+                break;
+            }
+        }
+        
         if (data.status == 'error') {
             $("#messages").empty();
-            var reason = data.opresult[0][1][0];
-            html = $("<li>"+data.status+":<br>"+reason+"</li>");
-            html.addClass('error');
+            var reason = data.opresult[sub_op][1][0];
+            html = $("<li class='error'>"+data.status+":<br>"+reason+"</li>");
             $("#messages").append(html);
             actions_enabled = true;
         } else {
             $("#messages").empty();
             sub_op = 0;
-            for (i=0; i<data['opstatus'].length; ++i) {
-                if (data['opstatus'][i] != 'success') {
-                    sub_op = i;
-                    break;
-                }
-            }
+            
             op = format_op(data['ops'][sub_op]['OP_ID']);
             html = $("<li><h3>"+op+"</h3></li>");
             $("#messages").append(html)
