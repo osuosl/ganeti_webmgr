@@ -584,8 +584,8 @@ def modify(request, cluster_slug, instance):
             kernelpath = data['kernelpath']
             serialconsole = data['serialconsole']
             imagepath = data['imagepath']
-            """
-            cluster.rapi.ModifyInstance(instance, \
+            
+            job_id = cluster.rapi.ModifyInstance(instance, \
                         hvparams={'kernel_path': kernelpath, \
                             'root_path': rootpath, \
                             'serial_console':serialconsole, \
@@ -594,11 +594,16 @@ def modify(request, cluster_slug, instance):
                             'disk_type':disktype,\
                             'cdrom_image_path':imagepath},
                         beparams={"memory": ram})
-            """
-            """
+            
+            job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
+            VirtualMachine.objects.filter(id=vm.id).update(last_job=job)
+
+            # log information about modifying this instance
+            log_action(user, vm, "modified")
+            
             return HttpResponseRedirect( \
             reverse('instance-detail', args=[cluster.slug, vm.hostname]))
-            """
+            
             """
             if data['cdrom_type'] == 'none':
                 data['cdrom_image_path'] = 'none'
