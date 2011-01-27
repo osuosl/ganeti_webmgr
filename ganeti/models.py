@@ -398,7 +398,7 @@ class VirtualMachine(CachedClusterObject):
         limit can be determined. (Later Date, if it will optimize db)
 
     """
-    cluster = models.ForeignKey('Cluster', editable=False,
+    cluster = models.ForeignKey('Cluster', editable=False, default=0,
                                 related_name='virtual_machines')
     hostname = models.CharField(max_length=128)
     owner = models.ForeignKey('ClusterUser', null=True, \

@@ -5,6 +5,14 @@
 {% block head %}
 <link href="{{MEDIA_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
 <style>
+
+
+h1 a, h1 .cluster {
+    color:#C16328 !important;
+    font-size:inherit;
+}
+h1 a:hover {text-decoration:underline;}
+
 .ui-widget-header {background:none; border-width:0 0 1px 0; -moz-border-radius:0px;}
 .ui-widget-content {border:0;}
 
@@ -116,7 +124,15 @@
 {% endblock %}
 
 {% block content %}
-<h1>{{ instance.hostname }}</h1>
+<h1>
+    {% if cluster_admin %}
+    <a href="{% url cluster-detail cluster.slug %}#virtual_machines">{{cluster.hostname|abbreviate_fqdn}}</a>
+    {% else %}
+    <span class="cluster">{{cluster.hostname|abbreviate_fqdn}}</span>
+    {% endif %}
+    : {{ instance.hostname }}
+</h1>
+
 <ul id="messages"></ul>
 <div id="tabs">
     <ul id="tabs">
