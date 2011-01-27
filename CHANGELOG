@@ -14,3 +14,20 @@ v0.4
    * ssh key feed 
    * basic quota system
    * Import tools
+
+
+v0.5
+----
+
+Notable Changes:
+  * Status Dashboard is now the front page for GWM
+     * lists cluster status for admins.
+     * lists summary of virtual machines status for users.
+     * lists resource usage for the user and groups.
+     * error list including job failures and ganeti errors.
+  * Integrated NoVNC, an HTML5 + WebSockets VNC viewer
+  * Super users can now view resource usage and permissions for users and groups.
+  * Virtual machine lists are now paginated for quicker loading
+  * Ram and CPU quota is now based off running virtual machines
+  * Improved layout
+  * Virtual Machines list now properly works for cluster admins
