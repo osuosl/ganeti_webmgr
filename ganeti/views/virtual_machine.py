@@ -596,7 +596,8 @@ def modify(request, cluster_slug, instance):
                         beparams={"memory": ram})
             
             job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
-            VirtualMachine.objects.filter(id=vm.id).update(last_job=job)
+            VirtualMachine.objects.filter(id=vm.id).update(last_job=job, \
+                                                           ignore_cache=True)
 
             # log information about modifying this instance
             log_action(user, vm, "modified")
