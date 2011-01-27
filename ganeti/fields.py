@@ -144,3 +144,8 @@ class DataVolumeField(CharField):
 
         intvalue = int(float(matches.group(1)) * multiplier)
         return intvalue
+
+
+# Field rule used by South for database migrations
+from south.modelsinspector import add_introspection_rules
+add_introspection_rules([], ["^ganeti\.fields\.PreciseDateTimeField"])

@@ -1,28 +1,38 @@
+<script type="text/javascript" src="{{MEDIA_URL}}/novnc/util.js"></script>
+<script type="text/javascript" src="{{MEDIA_URL}}/novnc/base64.js"></script>
+<script type="text/javascript" src="{{MEDIA_URL}}/novnc/des.js"></script>
+<script type="text/javascript" src="{{MEDIA_URL}}/novnc/canvas.js"></script>
+<script type="text/javascript" src="{{MEDIA_URL}}/novnc/rfb.js"></script>
 <script type="text/javascript">
     var VNC_native_ws, WEB_SOCKET_SWF_LOCATION;
+    var WEB_SOCKET_DEBUG = false;
     
     /* If no builtin websockets then load web_socket.js */
     if (window.WebSocket) {
         VNC_native_ws = true;
     } else {
+        var extra = "", start, end;
+        start = "<script class='wtf' src='";
+        end = "'><\/script>";
+        
         VNC_native_ws = false;
-        WEB_SOCKET_SWF_LOCATION = "{{MEDIA_URL}}/novnc/" +
-                    "web-socket-js/WebSocketMain.swf";
+        WEB_SOCKET_SWF_LOCATION = "{{MEDIA_URL}}/novnc/web-socket-js/WebSocketMain.swf";
+        extra += start + "{{MEDIA_URL}}/novnc/web-socket-js/swfobject.js" + end;
+        extra += start + "{{MEDIA_URL}}/novnc/web-socket-js/FABridge.js" + end;
+        extra += start + "{{MEDIA_URL}}/novnc/web-socket-js/web_socket.js" + end;
+        $(document).append(extra);
+        
+        // XXX initialize the websocket - normally web_socket.js does this, but
+        // since we're loading this with ajax the document.load event is never
+        // fired
+        WebSocket.__initialize();
     }
 </script>
-<link rel="stylesheet" href="{{MEDIA_URL}}/novnc/plain.css" title="plain">
-<script type="text/javascript" src="{{MEDIA_URL}}/novnc/util.js"></script>
-<!--<script type="text/javascript" src="{{MEDIA_URL}}/novnc/webutil.js"></script>-->
-<script type="text/javascript" src="{{MEDIA_URL}}/novnc/base64.js"></script>
-<script type="text/javascript" src="{{MEDIA_URL}}/novnc/des.js"></script>
-<script type="text/javascript" src="{{MEDIA_URL}}/novnc/canvas.js"></script>
-<script type="text/javascript" src="{{MEDIA_URL}}/novnc/rfb.js"></script>
-<!-- include swf vnc -->
-<script type="text/javascript" src="{{MEDIA_URL}}/novnc/web-socket-js/swfobject.js"></script>
-<script type="text/javascript" src="{{MEDIA_URL}}/novnc/web-socket-js/FABridge.js"></script>
-<script type="text/javascript" src="{{MEDIA_URL}}/novnc/web-socket-js/web_socket.js"></script>
-<script type="text/javascript">
 
+
+<link rel="stylesheet" href="{{MEDIA_URL}}/novnc/plain.css" title="plain">
+
+<script type="text/javascript">
     var rfb;
     var host, port, password; // VNC proxy connection settings
     
