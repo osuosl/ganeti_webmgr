@@ -116,6 +116,8 @@ DATE_FORMAT = "d/m/Y H:i"
 DATETIME_FORMAT = "d/m/Y H:i"
 
 ACCOUNT_ACTIVATION_DAYS = 7
+
+# default items per page
 ITEMS_PER_PAGE = 10
 
 # Ganeti Cached Cluster Objects Timeouts
