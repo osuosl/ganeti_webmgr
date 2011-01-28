@@ -7,7 +7,7 @@
 <script type="text/javascript">
     $(document).ready(function() {
         $("a.delete_user").live("click", function(){
-            name = $(this).parents("tr").children("[name=\"username\"]").html();
+            name = $(this).parents("tr").children("[name=\"username\"]").children('a').html();
             if (confirm("Remove User: " + name)) {
                 parent = this.parentNode.parentNode;
                 $.delete_(this.href, function(){
