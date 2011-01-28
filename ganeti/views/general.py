@@ -127,11 +127,11 @@ def get_vm_counts(clusters, update=None, timeout=600):
         result[ i.hostname ]["import_ready"] = len(i.missing_in_db)
         result[ i.hostname ]["missing"] = len(i.missing_in_ganeti)
 
-        # add result[ i.hostname ] into cache
-        cache.set(i.hostname, result[i.hostname], timeout)
-
         import_ready += result[i.hostname]["import_ready"]
         missing += result[i.hostname]["missing"]
+
+    # add all results into cache
+    cache.set_many(result)
 
     return orphaned, import_ready, missing
 
