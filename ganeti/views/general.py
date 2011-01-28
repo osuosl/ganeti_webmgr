@@ -19,7 +19,8 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
-from django.db.models import Q, Count
+from django.core.cache import cache
+from django.db.models import Q, Count, Sum
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
@@ -78,6 +79,63 @@ def get_used_resources(cluster_user):
     return resources
 
 
+def get_vm_counts(clusters, update=None, timeout=600):
+    """
+    Helper for getting the list of orphaned/ready to import/missing VMs.
+    Caches by the way.
+
+    @param clusters the list of clusters, for which numbers of VM are counted.
+                    May be None, if update is set.
+    @param  update  QuerySet of clusters. If set, the function will try to
+                    update selected cluster's cache. Otherwise, it'll just read
+                    them from cache (and add into it if neccessary.)
+    @param timeout  specified timeout for cache, in seconds.
+    """
+    orphaned = import_ready = missing = 0
+
+    if update:
+        # update all clusters
+
+        cluster_list = update
+
+    else:
+        # update only clusters from not_cached list
+
+        cached = cache.get_many((i.hostname for i in clusters))
+        cluster_list = clusters.exclude(hostname__in=cached.keys())
+
+        for k in cached.values():
+            orphaned += k["orphaned"]
+            import_ready += k["import_ready"]
+            missing += k["missing"]
+
+    base = VirtualMachine.objects.filter(cluster__in=cluster_list,
+            owner=None).order_by()
+    base = base.values("cluster__hostname").annotate(orphaned=Count("id"))
+    
+    result = {}
+    for i in base:
+        result[ i["cluster__hostname"] ] = {
+                "orphaned": i["orphaned"],
+                "import_ready": 0,
+                "missing": 0,
+            }
+
+        orphaned += i["orphaned"]
+
+    for i in cluster_list:
+        result[ i.hostname ]["import_ready"] = len(i.missing_in_db)
+        result[ i.hostname ]["missing"] = len(i.missing_in_ganeti)
+
+        # add result[ i.hostname ] into cache
+        cache.set(i.hostname, result[i.hostname], timeout)
+
+        import_ready += result[i.hostname]["import_ready"]
+        missing += result[i.hostname]["missing"]
+
+    return orphaned, import_ready, missing
+
+
 @login_required
 def overview(request):
     """
@@ -103,11 +161,7 @@ def overview(request):
         vms = vms.exclude(cluster__in=clusters)
         
         # build list of admin tasks for this user's clusters
-        orphaned = VirtualMachine.objects.filter(owner=None,
-                cluster__in=clusters).count()
-        for cluster in clusters:
-            import_ready += len(cluster.missing_in_db)
-            missing += len(cluster.missing_in_ganeti)
+        orphaned, import_ready, missing = get_vm_counts(clusters)
     
     # build list of job errors.  Include jobs from any vm the user has access to
     # If the user has admin on any cluster then those clusters and it's objects
@@ -167,7 +221,7 @@ def overview(request):
         'missing': missing,
         'resources': resources,
         'vm_summary': vm_summary,
-        'personas': personas
+        'personas': personas,
         },
         context_instance=RequestContext(request),
     )
