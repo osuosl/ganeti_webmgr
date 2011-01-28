@@ -148,17 +148,14 @@
             this.init = function(){
                 /* initialize the live form updator */
 
-                // initialize the iallocator stuffs
+                // disable the iallocator stuff by default
                 if(!iallocator_hostname.attr('value'))
                     iallocator.attr('readonly', 'readonly');
                 else
                     iallocator.after("<span>" +
                             using_str+iallocator_hostname.val() +
                             "</span>");
-                iallocator_hostname.removeAttr('value')
-                iallocator.hide();
-                iallocator.siblings("label").hide();
-                iallocator.attr('disabled', 'disabled');
+                _iallocatorDisable();
              
                 // setup form element change hooks
                 _initChangeHooks();
@@ -304,7 +301,8 @@
 
                             // otherwise, iallocator data isn't empty, show the
                             // checkbox and check it.
-                            if(iallocator_default != ""){
+                            if(iallocator_default != "" && 
+                                    iallocator_default != undefined){
                                 if(!iallocator_hostname.attr('value')) {
                                     iallocator_hostname.attr('value',
                                             iallocator_default);
@@ -317,9 +315,13 @@
                                 }
                                 // Check iallocator checkbox
                                 iallocator.show();
-                                iallocator.siblings("label").show();
+                                iallocator.siblings().show();
                                 iallocator.removeAttr('disabled');
+                                iallocator.removeAttr('readonly');
+                                iallocator.attr('checked', 'true');
                                 iallocator.change();
+                            } else {
+                                _iallocatorDisable();
                             }
 
                             if(kernelpath){
@@ -382,6 +384,15 @@
             // ----------------
             // private helpers
             // ----------------
+            function _iallocatorDisable(){
+                /* Disable and hide all of the iallocator stuffs */
+                iallocator_hostname.removeAttr('value')
+                iallocator.hide();
+                iallocator.siblings().hide();
+                iallocator.attr('disabled', 'disabled');
+                iallocator.change();
+            }
+
             function _newOpt(value, text) {
                 /* Create new option items for select field */
                 o = $("<option></option>");
