@@ -233,4 +233,10 @@ Ganeti Web Manager allows users to store SSH Keys. Each virtual machine has a
 view that will return SSH keys for users with access. This can be used as a
 Ganeti post-install hook to deploy user's keys on the VMs.
 
+To allow VMs to copy keys, copy util/hooks/sshkeys.sh to the instance
+definition hooks directory on every node in the clsuter and make the file
+executable. Next, add the required variables to the variant config file
+or main instance definition config file. The config file can be found in
+util/hooks/sshkeys.conf and includes documentation for each variable.
+
 Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/PermissionsSSHKeys

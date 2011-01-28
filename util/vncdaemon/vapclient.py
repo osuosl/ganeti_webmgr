@@ -37,7 +37,7 @@ def request_forwarding(server, sport, daddr, dport, password):
 
         ctrl = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         ctrl.connect( (host, port) )
-        ctrl.send(request)
+        ctrl.send("%s\r\n" % request)
         response = ctrl.recv(1024).strip()
         ctrl.close()
 
