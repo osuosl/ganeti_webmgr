@@ -1065,7 +1065,7 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
 
     exclude = ('start', 'owner', 'cluster', 'hostname', 'name_check',
         'iallocator', 'iallocator_hostname', 'disk_template', 'pnode', 'snode',\
-        'os')
+        'os', 'disk_size', 'nicmode')
 
     class Meta:
         model = VirtualMachineTemplate
