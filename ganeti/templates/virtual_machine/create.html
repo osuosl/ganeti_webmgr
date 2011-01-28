@@ -7,10 +7,11 @@
     <link rel="stylesheet" type="text/css"
             href="{{MEDIA_URL}}/css/virtual_machine_create.css"/>
     <style>
-        /* temp styles */
-        .disabledText{
+        /* single option dropdown label style */  
+        .singleOptionDropdownLabel{
             color:gray;
             font-weight:bold;
+            cursor:default;
         }
     </style>
     <script src="{{MEDIA_URL}}/js/jquery.js"></script>
@@ -21,16 +22,16 @@
         // -------
         $(document).ready(function() {
             /* run when document is fully loaded */
-            
-            // init the help tips for the individ. form objects
-            initHelpTips();
-
+           
             // init the live-form updater
             var frmUpdater = new formUpdater(
                     '{% url instance-create-cluster-choices %}',
                     '{% url instance-create-cluster-options %}',
                     '{% url instance-create-cluster-defaults %}');
             frmUpdater.init();
+ 
+            // init the help tips for the individ. form objects
+            initHelpTips();
         });
 
         // ----------
@@ -72,13 +73,13 @@
             the dropdown has "blank" options such as "-----" or 
             "- choose one -" etc.
 
-            Note that this should probably eventually be made into a jQuery 
-            plugin.
+            Note that it might be nice to make this into a jQuery plugin
+            eventually.
             */
 
             var optElems = dropdown.find('option');
             var opts = [];
-            var PROCESSED_OP_ID = "processedOption";
+            var PROCESSED_OP_ID = "singleOptionDropdownLabel";
             var processedOpElems =
                     dropdown.siblings().filter('.'+PROCESSED_OP_ID);
 
@@ -88,16 +89,22 @@
                     if($(opt).text() != ignoreOpt)
                         opts.push(opt);
                 });
+
+            // otherwise just use the options as is
             } else {
                 opts = optElems;
             }
 
-            // if there's only one option, not including "blank" options,
-            // select it, hide the dropdown, and replace it with a label
+            // if there's only one option, (not including "blank" options if
+            // specified,) select it, hide the dropdown, and replace it with 
+            // a label
             if(opts.length == 1){
                 $(opts).attr('selected', 'selected');
-                dropdown.change();
                 dropdown.hide();
+                dropdown.change();
+                
+                // if no processed options (label versions of the single-option
+                // dropdown) make the label
                 if(processedOpElems.length == 0){
                     dropdown.parent().append(
                         "<div class='"+PROCESSED_OP_ID+" disabledText'>" + 
@@ -141,12 +148,14 @@
             this.init = function(){
                 /* initialize the live form updator */
 
-                // disable the auto allocator if it hasn't a value
+                // disable the iallocator stuff by default
                 if(!iallocator_hostname.attr('value'))
                     iallocator.attr('readonly', 'readonly');
                 else
-                    iallocator.after("<span>"+using_str+iallocator_hostname.val()+
-                        "</span>");
+                    iallocator.after("<span>" +
+                            using_str+iallocator_hostname.val() +
+                            "</span>");
+                _iallocatorDisable();
              
                 // setup form element change hooks
                 _initChangeHooks();
@@ -174,7 +183,7 @@
                             disk_template.change();
                         }
                     } else {
-                        if(!iallocator.is(':checked')) {
+                        if(!iallocator.is(':checked')){
                             pnode.show();
                             disk_template.change();
                         }
@@ -183,11 +192,13 @@
 
                 // disk_template change
                 disk_template.change(function() {
-                    if(!iallocator.is(':checked') || iallocator.attr('readonly')) {
-                        if( disk_template.val() == 'drbd')
+                    if(!iallocator.is(':checked') || 
+                            iallocator.attr('readonly')) {
+                        if( disk_template.val() == 'drbd'){
                             snode.show();
-                        else
+                        } else {
                             snode.hide();
+                        }
                     }
                 });
 
@@ -199,7 +210,8 @@
 
                     if(id != '') {
                         // JSON update the cluster when the owner changes
-                        $.getJSON(url_choices, {'clusteruser_id':id}, function(data){
+                        $.getJSON(url_choices, {'clusteruser_id':id}, 
+                                function(data){
                             cluster.children().not(':first').remove();
                             $.each(data, function(i, item) {
                                 child = $("<option> </option>");
@@ -228,8 +240,10 @@
                     
                     if( id != '' ) {
                         
-                        // JSON update oslist, pnode, and snode when cluster changes
-                        $.getJSON(url_options, {'cluster_id':id}, function(data) {
+                        // JSON update oslist, pnode, and snode when cluster 
+                        // changes
+                        $.getJSON(url_options, {'cluster_id':id}, 
+                                function(data){
                             pnode.children().not(':first').remove();
                             snode.children().not(':first').remove();
                             oslist.children().not(':first').remove();
@@ -258,7 +272,8 @@
                             });
                         });
 
-                        $.getJSON(url_defaults, {'cluster_id':id}, function(data) {
+                        $.getJSON(url_defaults, {'cluster_id':id}, 
+                                function(data) {
 
                             var bootorder = data['bootorder'];
                             var iallocator_default = data['iallocator'];
@@ -283,68 +298,84 @@
                             if(hypervisors) {
                                 //list - do nothing for now.
                             }
-                            
-                            if(iallocator_default) {
-                                if( !iallocator_hostname.attr('value')) {
+
+                            // otherwise, iallocator data isn't empty, show the
+                            // checkbox and check it.
+                            if(iallocator_default != "" && 
+                                    iallocator_default != undefined){
+                                if(!iallocator_hostname.attr('value')) {
                                     iallocator_hostname.attr('value',
                                             iallocator_default);
                                     if(iallocator.siblings("span").length 
                                             == 0){
-                                        iallocator.after("<span>"+using_str+
-                                                iallocator_default+"</span>");
+                                        iallocator.after("<span>" + using_str +
+                                                iallocator_default + 
+                                                "</span>");
                                     }
                                 }
                                 // Check iallocator checkbox
+                                iallocator.show();
+                                iallocator.siblings().show();
+                                iallocator.removeAttr('disabled');
                                 iallocator.removeAttr('readonly');
-                                iallocator.attr('checked', 'checked');
+                                iallocator.attr('checked', 'true');
                                 iallocator.change();
                             } else {
-                                iallocator.siblings("span").remove();
-                                iallocator_hostname.removeAttr('value')
-                                iallocator.attr('readonly', 'readonly');
-                                iallocator.attr('checked', false);
-                                iallocator.change();
+                                _iallocatorDisable();
                             }
 
-                            if(kernelpath)
+                            if(kernelpath){
                                 $("#id_kernelpath").val(kernelpath);
-                            else
+                            } else {
                                 $("#id_kernelpath").val('');
+                            }
 
                             if(nicmode) {
                                 $("#id_nicmode :selected").removeAttr(
                                         'selected');
                                 $("#id_nicmode [value="+nicmode+"]").attr(
                                         'selected','selected');
-                            } else 
+                            } else { 
                                 $("#id_nicmode :first-child").attr('selected', 
                                         'selected');
+                            }
 
-                            if(niclink)
+                            if(niclink){
                                 $("#id_niclink").val(niclink);
+                            }
+                            
                             if(nictype) {
                                 $("#id_nictype :selected").removeAttr(
                                         'selected');
                                 $("#id_nictype [value="+nictype+"]").attr(
                                         'selected','selected');
                             }
-                            if(ram)
+
+                            if(ram){
                                 $("#id_ram").val(ram);
+                            }
 
-                            if(disktype)
+                            if(disktype){
                                  $("#id_disk_type").val(disktype);
+                            }
                             
-                            if(rootpath)
+                            if(rootpath){
                                 $("#id_rootpath").val(rootpath);
-                            else
+                            } else {
                                 $("#id_rootpath").val('/');
+                            }
 
-                            if(data['serialconsole'])
+                            if(data['serialconsole']){
                                 $("#id_serialconsole").attr('checked', true);
-                            if(vcpus)
+                            }
+                            
+                            if(vcpus){
                                 $("#id_vcpus").val(vcpus);
-                            if(imagepath)
+                            }
+                            
+                            if(imagepath){
                                 $("#id_imagepath").val(imagepath);
+                            }
                         });
                     }
                 });
@@ -353,6 +384,16 @@
             // ----------------
             // private helpers
             // ----------------
+            function _iallocatorDisable(){
+                /* Disable and hide all of the iallocator stuffs */
+                iallocator.hide();
+                iallocator_hostname.removeAttr('value')
+                iallocator.siblings().hide();
+                iallocator.attr('disabled', 'disabled');
+                iallocator.removeAttr('checked');
+                iallocator.change();
+            }
+
             function _newOpt(value, text) {
                 /* Create new option items for select field */
                 o = $("<option></option>");

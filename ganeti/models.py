@@ -39,6 +39,7 @@ from django.db import models
 from django.db.models import Sum, F, Q
 from django.db.models.query import QuerySet
 from django.db.models.signals import post_save, post_syncdb
+from django.db.utils import DatabaseError
 
 from logs.models import LogItem
 log_action = LogItem.objects.log_action
@@ -964,20 +965,20 @@ class ClusterUser(models.Model):
             return result
         
         else:
-            base = base.values('cluster').annotate(ram=Sum('ram'), \
-                                            disk=Sum('disk_size'), \
-                                            virtual_cpus=Sum('virtual_cpus'))
+            base = base.values('cluster').annotate(uram=Sum('ram'), \
+                                            udisk=Sum('disk_size'), \
+                                            uvirtual_cpus=Sum('virtual_cpus'))
             
             # repack as dictionary
             result = {}
             for used in base:
                 # repack with zeros instead of Nones, change index names
-                if used['disk'] is None:
-                    used['disk'] = 0
-                if used['ram'] is None:
-                    used['ram'] = 0
-                if used['virtual_cpus'] is None:
-                    used['virtual_cpus'] = 0
+                used['ram'] = 0 if not used['uram'] else used['uram']
+                used['disk'] = 0 if not used['udisk'] else used['udisk']
+                used['virtual_cpus'] = 0 if not used['uvirtual_cpus'] else used['uvirtual_cpus']
+                used.pop("uvirtual_cpus")
+                used.pop("udisk")
+                used.pop("uram")
                 result[used.pop('cluster')] = used
                 
             return result
@@ -1053,10 +1054,16 @@ def create_profile(sender, instance, **kwargs):
     Create a profile object whenever a new user is created, also keeps the
     profile name synchronized with the username
     """
-    profile, new = Profile.objects.get_or_create(user=instance)
-    if profile.name != instance.username:
-        profile.name = instance.username
-        profile.save()
+    try:
+        profile, new = Profile.objects.get_or_create(user=instance)
+        if profile.name != instance.username:
+            profile.name = instance.username
+            profile.save()
+    except DatabaseError:
+        # XXX - since we're using south to track migrations the Profile table
+        # won't be available the first time syncdb is run.  Catch the error here
+        # and let the south migration handle it.
+        pass
 
 
 def update_cluster_hash(sender, instance, **kwargs):
@@ -1101,10 +1108,16 @@ def regenerate_cu_children(sender, **kwargs):
     # only occasionally in development, but it's good to explicitly handle
     # this particular case so that missing Profiles not resulting from a reset
     # are easier to diagnose.
-    for user in User.objects.all():
-        user.save()
-    for group in Group.objects.all():
-        group.save()
+    try:
+        for user in User.objects.filter(profile__isnull=True):
+            user.save()
+        for group in Group.objects.filter(organization__isnull=True):
+            group.save()
+    except DatabaseError:
+        # XXX - since we're using south to track migrations the Profile table
+        # won't be available the first time syncdb is run.  Catch the error here
+        # and let the south migration handle it.
+        pass
 
 post_syncdb.connect(regenerate_cu_children)
 
