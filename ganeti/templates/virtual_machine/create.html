@@ -186,7 +186,7 @@
                             disk_template.change();
                         }
                     } else {
-                        if(!iallocator.is(':checked')) {
+                        if(!iallocator.is(':checked')){
                             pnode.show();
                             disk_template.change();
                         }
@@ -195,11 +195,13 @@
 
                 // disk_template change
                 disk_template.change(function() {
-                    if(!iallocator.is(':checked') || iallocator.attr('readonly')) {
-                        if( disk_template.val() == 'drbd')
+                    if(!iallocator.is(':checked') || 
+                            iallocator.attr('readonly')) {
+                        if( disk_template.val() == 'drbd'){
                             snode.show();
-                        else
+                        } else {
                             snode.hide();
+                        }
                     }
                 });
 
@@ -211,7 +213,8 @@
 
                     if(id != '') {
                         // JSON update the cluster when the owner changes
-                        $.getJSON(url_choices, {'clusteruser_id':id}, function(data){
+                        $.getJSON(url_choices, {'clusteruser_id':id}, 
+                                function(data){
                             cluster.children().not(':first').remove();
                             $.each(data, function(i, item) {
                                 child = $("<option> </option>");
@@ -240,8 +243,10 @@
                     
                     if( id != '' ) {
                         
-                        // JSON update oslist, pnode, and snode when cluster changes
-                        $.getJSON(url_options, {'cluster_id':id}, function(data) {
+                        // JSON update oslist, pnode, and snode when cluster 
+                        // changes
+                        $.getJSON(url_options, {'cluster_id':id}, 
+                                function(data){
                             pnode.children().not(':first').remove();
                             snode.children().not(':first').remove();
                             oslist.children().not(':first').remove();
@@ -270,7 +275,8 @@
                             });
                         });
 
-                        $.getJSON(url_defaults, {'cluster_id':id}, function(data) {
+                        $.getJSON(url_defaults, {'cluster_id':id}, 
+                                function(data) {
 
                             var bootorder = data['bootorder'];
                             var iallocator_default = data['iallocator'];
@@ -315,45 +321,58 @@
                                 iallocator.change();
                             }
 
-                            if(kernelpath)
+                            if(kernelpath){
                                 $("#id_kernelpath").val(kernelpath);
-                            else
+                            } else {
                                 $("#id_kernelpath").val('');
+                            }
 
                             if(nicmode) {
                                 $("#id_nicmode :selected").removeAttr(
                                         'selected');
                                 $("#id_nicmode [value="+nicmode+"]").attr(
                                         'selected','selected');
-                            } else 
+                            } else { 
                                 $("#id_nicmode :first-child").attr('selected', 
                                         'selected');
+                            }
 
-                            if(niclink)
+                            if(niclink){
                                 $("#id_niclink").val(niclink);
+                            }
+                            
                             if(nictype) {
                                 $("#id_nictype :selected").removeAttr(
                                         'selected');
                                 $("#id_nictype [value="+nictype+"]").attr(
                                         'selected','selected');
                             }
-                            if(ram)
+
+                            if(ram){
                                 $("#id_ram").val(ram);
+                            }
 
-                            if(disktype)
+                            if(disktype){
                                  $("#id_disk_type").val(disktype);
+                            }
                             
-                            if(rootpath)
+                            if(rootpath){
                                 $("#id_rootpath").val(rootpath);
-                            else
+                            } else {
                                 $("#id_rootpath").val('/');
+                            }
 
-                            if(data['serialconsole'])
+                            if(data['serialconsole']){
                                 $("#id_serialconsole").attr('checked', true);
-                            if(vcpus)
+                            }
+                            
+                            if(vcpus){
                                 $("#id_vcpus").val(vcpus);
-                            if(imagepath)
+                            }
+                            
+                            if(imagepath){
                                 $("#id_imagepath").val(imagepath);
+                            }
                         });
                     }
                 });
