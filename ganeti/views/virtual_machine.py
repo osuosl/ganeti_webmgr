@@ -574,11 +574,11 @@ def modify(request, cluster_slug, instance):
             data = form.cleaned_data
             vcpus = data['vcpus']
             ram = data['ram']
-            disksize = data['disk_size']
+            #disksize = data['disk_size']
             disktype = data['disk_type']
             bootorder = data['bootorder']
             nictype = data['nictype']
-            nicmode = data['nicmode']
+            #nicmode = data['nicmode']
             niclink = data['niclink']
             rootpath = data['rootpath']
             kernelpath = data['kernelpath']
@@ -586,6 +586,7 @@ def modify(request, cluster_slug, instance):
             imagepath = data['imagepath']
             
             job_id = cluster.rapi.ModifyInstance(instance, \
+                        nics=[(0, {'link':niclink, }),],
                         hvparams={'kernel_path': kernelpath, \
                             'root_path': rootpath, \
                             'serial_console':serialconsole, \
@@ -593,7 +594,7 @@ def modify(request, cluster_slug, instance):
                             'nic_type':nictype, \
                             'disk_type':disktype,\
                             'cdrom_image_path':imagepath},
-                        beparams={"memory": ram})
+                        beparams={'vcpus':vcpus,'memory': ram})
             
             job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
             VirtualMachine.objects.filter(id=vm.id).update(last_job=job, \
@@ -1064,7 +1065,7 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
 
     exclude = ('start', 'owner', 'cluster', 'hostname', 'name_check',
         'iallocator', 'iallocator_hostname', 'disk_template', 'pnode', 'snode',\
-        'os')
+        'os', 'disk_size', 'nicmode')
 
     class Meta:
         model = VirtualMachineTemplate
