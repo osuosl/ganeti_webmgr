@@ -96,7 +96,7 @@ form input.submit{margin-left:12.5em;}
     border-right: 1px solid #DDDDDD;
     float:left;
     min-height:400px;
-    padding:10px 10px 20px 10px;
+    padding:10px 10px 87px 10px; /* Sticky footer - bottom padding must be at least the height of the footer */
     width: 817px;
 }
 #content h1 {margin:10px 0 10px 0;}
@@ -135,6 +135,7 @@ form input.submit{margin-left:12.5em;}
     color: #C8CED3;
     height: 60px; /* sticky footer - must have fixed height */
     margin: -67px auto 0px auto; /* Sticky footer - top is negative value of footer height, includes padding */
+    position:relative; /* Sticky Footer */
     padding: 5px 0 0 0;
     text-align: center;
     min-width:979px;
