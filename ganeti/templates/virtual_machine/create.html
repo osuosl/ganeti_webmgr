@@ -316,8 +316,9 @@
                                     }
                                 }
                                 // Check iallocator checkbox
-                                iallocator.removeAttr('readonly');
-                                iallocator.attr('checked', 'checked');
+                                iallocator.show();
+                                iallocator.siblings("label").show();
+                                iallocator.removeAttr('disabled');
                                 iallocator.change();
                             }
 
