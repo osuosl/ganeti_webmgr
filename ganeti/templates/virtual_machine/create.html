@@ -386,10 +386,11 @@
             // ----------------
             function _iallocatorDisable(){
                 /* Disable and hide all of the iallocator stuffs */
-                iallocator_hostname.removeAttr('value')
                 iallocator.hide();
+                iallocator_hostname.removeAttr('value')
                 iallocator.siblings().hide();
                 iallocator.attr('disabled', 'disabled');
+                iallocator.removeAttr('checked');
                 iallocator.change();
             }
 
