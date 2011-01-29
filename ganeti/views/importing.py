@@ -24,6 +24,7 @@ from django.template import RequestContext
 
 from ganeti.models import VirtualMachine, Cluster, ClusterUser
 from ganeti.views import render_403
+from ganeti.views.general import update_vm_counts
 
 
 class VirtualMachineForm(forms.Form):
@@ -82,10 +83,16 @@ def orphans(request):
             # update the owner and save the vm.  This isn't the most efficient
             # way of updating the VMs but we would otherwise need to group them
             # by cluster
+            orphaned = {}
             for id in vm_ids:
                 vm = VirtualMachine.objects.get(id=id)
                 vm.owner = owner
                 vm.save()
+                if vm.cluster.hostname in orphaned.keys():
+                    orphaned[cluster.hostname] += 1
+                else:
+                    orphaned[cluster.hostname] = 1
+            update_vm_counts(orphaned=orphaned)
 
             # remove updated vms from the list
             vms_with_cluster = [i for i in vms_with_cluster
@@ -133,7 +140,17 @@ def missing_ganeti(request):
             # update all selected VirtualMachines
             data = form.cleaned_data
             vm_ids = data['virtual_machines']
-            VirtualMachine.objects.filter(hostname__in=vm_ids).delete()
+            q = VirtualMachine.objects.filter(hostname__in=vm_ids)
+
+            missing = {}
+            for i in q:
+                if i.cluster in missing.keys():
+                    missing[ i.cluster.hostname ] += 1
+                else:
+                    missing[ i.cluster ] = 1
+            update_vm_counts(missing=missing)
+
+            q.delete()
             
             # remove updated vms from the list
             vms = filter(lambda x: unicode(x[0]) not in vm_ids, vms)
@@ -190,11 +207,18 @@ def missing_db(request):
             owner = data['owner']
             vm_ids = data['virtual_machines']
             
+            import_ready = {}
             # create missing VMs
             for vm in vm_ids:
                 cluster_id, host = vm.split(':')
                 cluster = Cluster.objects.get(id=cluster_id)
                 VirtualMachine(hostname=host, cluster=cluster, owner=owner).save()
+
+                if cluster.hostname in import_ready.keys():
+                    import_ready[cluster.hostname] += 1
+                else:
+                    import_ready[cluster.hostname] = 1
+            update_vm_counts(import_ready=import_ready)
             
             # remove created vms from the list
             vms = filter(lambda x: unicode(x[0]) not in vm_ids, vms)

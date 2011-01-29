@@ -77,6 +77,7 @@ class TestGeneralViews(TestCase):
         Group.objects.all().delete()
         Job.objects.all().delete()
 
+
     def test_view_overview(self):
         """
         Tests overview (status) page
@@ -217,3 +218,17 @@ class TestGeneralViews(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertEqual(mimetype, response['content-type'])
         self.assertTemplateUsed(response, template)
+
+
+    def test_vm_counts(self):
+        """
+        Tests the helper function get_vm_counts.
+        """
+        cluster1 = Cluster(hostname="cluster1")
+        cluster2 = Cluster(hostname="cluster2")
+        vm11 = VirtualMachine(cluster=cluster1, hostname="vm11")
+        vm12 = VirtualMachine(cluster=cluster1, hostname="vm12")
+        vm13 = VirtualMachine(cluster=cluster1, hostname="vm13")
+        vm21 = VirtualMachine(cluster=cluster2, hostname="vm21")
+        vm22 = VirtualMachine(cluster=cluster2, hostname="vm22")
+        vm23 = VirtualMachine(cluster=cluster2, hostname="vm23")

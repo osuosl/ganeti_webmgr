@@ -79,35 +79,76 @@ def get_used_resources(cluster_user):
     return resources
 
 
-def get_vm_counts(clusters, update=None, timeout=600):
+def update_vm_counts(orphaned=None, import_ready=None, missing=None):
+    """
+    Updates the cache for numbers of orphaned / ready to import / missing VMs.
+
+    If the cluster's data is not in cache, it's being calculated again.
+    Otherwise it's being subtracked by the values from argument list.
+    """
+    result = {}
+    if orphaned:
+        for cluster, v in orphaned.items():
+            if cluster in result.keys():
+                result[cluster]["orphaned"] = v
+            else:
+                result[cluster] = {"orphaned":v, "import_ready":0, "missing":0}
+
+    if import_ready:
+        for cluster, v in import_ready.items():
+            if cluster in result.keys():
+                result[cluster]["import_ready"] = v
+            else:
+                result[cluster] = {"orphaned":0, "import_ready":v, "missing":0}
+
+    if missing:
+        for cluster, v in missing.items():
+            if cluster in result.keys():
+                result[cluster]["missing"] = v
+            else:
+                result[cluster] = {"orphaned":0, "import_ready":0, "missing":v}
+
+    result2 = cache.get_many(result.keys())
+    # result2 is IN result
+    for cluster, v in result2.items():
+        v["orphaned"] -= result[cluster]["orphaned"]
+        v["import_ready"] -= result[cluster]["import_ready"]
+        v["missing"] -= result[cluster]["missing"]
+        result2[cluster] = v
+        result.pop(cluster)
+    cache.set_many(result2)
+    
+    # force update for items not in result2
+    if result:
+        get_vm_counts(Cluster.objects.filter(hostname__in=result.keys()),
+                force=True)
+
+
+def get_vm_counts(clusters, force=False, timeout=600):
     """
     Helper for getting the list of orphaned/ready to import/missing VMs.
     Caches by the way.
 
     @param clusters the list of clusters, for which numbers of VM are counted.
                     May be None, if update is set.
-    @param  update  QuerySet of clusters. If set, the function will try to
-                    update selected cluster's cache. Otherwise, it'll just read
-                    them from cache (and add into it if neccessary.)
+    @param force    boolean, if set, then all clusters will be force updated
     @param timeout  specified timeout for cache, in seconds.
     """
     orphaned = import_ready = missing = 0
 
-    if update:
-        # update all clusters
-
-        cluster_list = update
+    if force:
+        # update all given clusters
+        cluster_list = clusters
 
     else:
         # update only clusters from not_cached list
-
         cached = cache.get_many((i.hostname for i in clusters))
         cluster_list = clusters.exclude(hostname__in=cached.keys())
 
-        for k in cached.values():
-            orphaned += k["orphaned"]
-            import_ready += k["import_ready"]
-            missing += k["missing"]
+    for k in cached.values():
+        orphaned += k["orphaned"]
+        import_ready += k["import_ready"]
+        missing += k["missing"]
 
     base = VirtualMachine.objects.filter(cluster__in=cluster_list,
             owner=None).order_by()
