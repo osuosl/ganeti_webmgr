@@ -47,7 +47,6 @@ li {
  * Forms and Form Elements
  **/
 /*  Default Settings */
-label {font-weight:bold;}
 form input.submit {color:black; width:6em;}
 form p label {
     float: left;
