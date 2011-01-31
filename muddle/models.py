@@ -1,9 +1,26 @@
 import cPickle
 from datetime import datetime, timedelta
 
+from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
+
+
+# Models for testing
+if settings.DEBUG or True:
+    class TestModel(models.Model):
+        value = models.IntegerField(null=True)
+        value2 = models.IntegerField(null=True)
+    class TestModelChild(models.Model):
+        value = models.IntegerField(null=True)
+        value2 = models.IntegerField(null=True)
+        parent = models.ForeignKey(TestModel, null=True)
+    class TestModelChildChild(models.Model):
+        value = models.IntegerField(null=True)
+        value2 = models.IntegerField(null=True)
+        parent = models.ForeignKey(TestModelChild, null=True)
+
 
 class PluginConfig(models.Model):
     """
