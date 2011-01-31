@@ -124,7 +124,7 @@ def update_vm_counts(orphaned=None, import_ready=None, missing=None):
                 force=True)
 
 
-def get_vm_counts(clusters, force=False, timeout=600):
+def get_vm_counts(clusters, timeout=600):
     """
     Helper for getting the list of orphaned/ready to import/missing VMs.
     Caches by the way.
@@ -135,45 +135,39 @@ def get_vm_counts(clusters, force=False, timeout=600):
     @param timeout  specified timeout for cache, in seconds.
     """
     orphaned = import_ready = missing = 0
-
-    if force:
-        # update all given clusters
-        cluster_list = clusters
-
-    else:
-        # update only clusters from not_cached list
-        cached = cache.get_many((i.hostname for i in clusters))
-        cluster_list = clusters.exclude(hostname__in=cached.keys())
-
+    cached = cache.get_many((cluster.pk for cluster in clusters))
+    cluster_list = clusters.exclude(pk__in=cached.keys())
+        
+    # total the cached values first
     for k in cached.values():
         orphaned += k["orphaned"]
         import_ready += k["import_ready"]
         missing += k["missing"]
-
-    base = VirtualMachine.objects.filter(cluster__in=cluster_list,
-            owner=None).order_by()
-    base = base.values("cluster__hostname").annotate(orphaned=Count("id"))
     
-    result = {}
-    for i in base:
-        result[ i["cluster__hostname"] ] = {
-                "orphaned": i["orphaned"],
-                "import_ready": 0,
-                "missing": 0,
-            }
-
-        orphaned += i["orphaned"]
-
-    for i in cluster_list:
-        result[ i.hostname ]["import_ready"] = len(i.missing_in_db)
-        result[ i.hostname ]["missing"] = len(i.missing_in_ganeti)
-
-        import_ready += result[i.hostname]["import_ready"]
-        missing += result[i.hostname]["missing"]
-
-    # add all results into cache
-    cache.set_many(result)
-
+    # update the values that were not cached
+    if cluster_list.count():
+        base = VirtualMachine.objects.filter(cluster__in=cluster_list,
+                owner=None).order_by()
+        base = base.values("cluster__pk").annotate(orphaned=Count("id"))
+        
+        result = {}
+        for i in base:
+            result[ i["cluster__pk"] ] = {"orphaned": i["orphaned"]}
+            orphaned += i["orphaned"]
+        
+        for cluster in cluster_list:
+            if cluster.pk not in result:
+                result[cluster.pk] = {"orphaned": 0}
+            
+            result[ cluster.pk ]["import_ready"] = len(cluster.missing_in_db)
+            result[ cluster.pk ]["missing"] = len(cluster.missing_in_ganeti)
+            
+            import_ready += result[cluster.pk]["import_ready"]
+            missing += result[cluster.pk]["missing"]
+        
+        # add all results into cache
+        cache.set_many(result, timeout)
+    
     return orphaned, import_ready, missing
 
 
