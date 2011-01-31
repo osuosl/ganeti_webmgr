@@ -46,7 +46,6 @@
             <th>Master node</th>
             <th>Nodes</th>
             <th>VMs</th>
-            <th>Free resources</th>
         </tr>
     </thead>
     <tbody>
@@ -66,7 +65,6 @@
                 <td>{{ info.master }}</td>
                 <td>{{ nodes|length }}</td>
                 <td>{{ cluster.virtual_machines.count }}</td>
-                <td class="resources">RAM: {% cluster_memory cluster %}<br/>Disk: {% cluster_disk cluster %}</td>
             </tr>
         {% endwith %}
         {% endwith %}
