@@ -218,8 +218,10 @@ def cluster_memory(cluster, nodes=None):
     for i in nodes:
         if isinstance(i, str):
             continue
-        mfree += i["mfree"]
-        mtotal += i["mtotal"]
+        if i["mfree"]:
+            mfree += i["mfree"]
+        if i["mtotal"]:
+            mtotal += i["mtotal"]
     return format_part_total(mfree, mtotal)
 
 
@@ -233,8 +235,10 @@ def cluster_disk(cluster, nodes=None):
     for i in nodes:
         if isinstance(i, str):
             continue
-        dfree += i["dfree"]
-        dtotal += i["dtotal"]
+        if i["dfree"]:
+            dfree += i["dfree"]
+        if i["dtotal"]:
+            dtotal += i["dtotal"]
     return format_part_total(dfree, dtotal)
 
 
