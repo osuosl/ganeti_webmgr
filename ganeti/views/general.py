@@ -79,65 +79,48 @@ def get_used_resources(cluster_user):
     return resources
 
 
-def update_vm_counts(orphaned=None, import_ready=None, missing=None):
+def update_vm_counts(key, data):
     """
     Updates the cache for numbers of orphaned / ready to import / missing VMs.
 
-    If the cluster's data is not in cache, it's being calculated again.
-    Otherwise it's being subtracked by the values from argument list.
-    """
-    result = {}
-    if orphaned:
-        for cluster, v in orphaned.items():
-            if cluster in result.keys():
-                result[cluster]["orphaned"] = v
-            else:
-                result[cluster] = {"orphaned":v, "import_ready":0, "missing":0}
-
-    if import_ready:
-        for cluster, v in import_ready.items():
-            if cluster in result.keys():
-                result[cluster]["import_ready"] = v
-            else:
-                result[cluster] = {"orphaned":0, "import_ready":v, "missing":0}
-
-    if missing:
-        for cluster, v in missing.items():
-            if cluster in result.keys():
-                result[cluster]["missing"] = v
-            else:
-                result[cluster] = {"orphaned":0, "import_ready":0, "missing":v}
-
-    result2 = cache.get_many(result.keys())
-    # result2 is IN result
-    for cluster, v in result2.items():
-        v["orphaned"] -= result[cluster]["orphaned"]
-        v["import_ready"] -= result[cluster]["import_ready"]
-        v["missing"] -= result[cluster]["missing"]
-        result2[cluster] = v
-        result.pop(cluster)
-    cache.set_many(result2)
+    If the cluster's data is not in cache it is ignored.  This is only for
+    updating the cache with information we already have.
     
-    # force update for items not in result2
-    if result:
-        get_vm_counts(Cluster.objects.filter(hostname__in=result.keys()),
-                force=True)
+    @param key - admin data key that is being updated: orphaned, ready_to_import,
+        or missing
+    @param data - dict of data stored by cluster.pk
+    """
+    format_key = 'cluster_admin_%d'
+    keys = [format_key % k for k in data.keys()]
+    cached = cache.get_many(keys)
+    
+    for k, v in data.items():
+        try:
+            values = cached[format_key % k]
+            values[key] += v
+        except KeyError:
+            pass
+    
+    cache.set_many(cached, 600)
 
 
 def get_vm_counts(clusters, timeout=600):
     """
     Helper for getting the list of orphaned/ready to import/missing VMs.
     Caches by the way.
+    
+    This caches data under the keys:   cluster_admin_<cluster_id>
 
     @param clusters the list of clusters, for which numbers of VM are counted.
                     May be None, if update is set.
-    @param force    boolean, if set, then all clusters will be force updated
     @param timeout  specified timeout for cache, in seconds.
     """
+    format_key = 'cluster_admin_%d'
     orphaned = import_ready = missing = 0
-    cached = cache.get_many((cluster.pk for cluster in clusters))
-    cluster_list = clusters.exclude(pk__in=cached.keys())
-        
+    cached = cache.get_many((format_key % cluster.pk for cluster in clusters))
+    keys = (key[14:] for key in cached.keys())
+    cluster_list = clusters.exclude(pk__in=keys)
+    
     # total the cached values first
     for k in cached.values():
         orphaned += k["orphaned"]
@@ -148,22 +131,24 @@ def get_vm_counts(clusters, timeout=600):
     if cluster_list.count():
         base = VirtualMachine.objects.filter(cluster__in=cluster_list,
                 owner=None).order_by()
-        base = base.values("cluster__pk").annotate(orphaned=Count("id"))
+        annoted = base.values("cluster__pk").annotate(orphaned=Count("id"))
         
         result = {}
-        for i in base:
-            result[ i["cluster__pk"] ] = {"orphaned": i["orphaned"]}
+        for i in annoted:
+            result[format_key % i["cluster__pk"]] = {"orphaned": i["orphaned"]}
             orphaned += i["orphaned"]
         
         for cluster in cluster_list:
+            key = format_key % cluster.pk
+            
             if cluster.pk not in result:
-                result[cluster.pk] = {"orphaned": 0}
+                result[key] = {"orphaned": 0}
             
-            result[ cluster.pk ]["import_ready"] = len(cluster.missing_in_db)
-            result[ cluster.pk ]["missing"] = len(cluster.missing_in_ganeti)
+            result[key]["import_ready"] = len(cluster.missing_in_db)
+            result[key]["missing"] = len(cluster.missing_in_ganeti)
             
-            import_ready += result[cluster.pk]["import_ready"]
-            missing += result[cluster.pk]["missing"]
+            import_ready += result[key]["import_ready"]
+            missing += result[key]["missing"]
         
         # add all results into cache
         cache.set_many(result, timeout)

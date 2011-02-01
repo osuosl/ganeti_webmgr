@@ -71,7 +71,7 @@ def orphans(request):
     if request.method == 'POST':
         # strip cluster from vms
         vms = [(i[0], i[1]) for i in vms_with_cluster]
-
+        
         # process updates if this was a form submission
         form = OrphanForm(vms, request.POST)
         if form.is_valid():
@@ -88,12 +88,12 @@ def orphans(request):
                 vm = VirtualMachine.objects.get(id=id)
                 vm.owner = owner
                 vm.save()
-                if vm.cluster.hostname in orphaned.keys():
-                    orphaned[cluster.hostname] += 1
+                if vm.cluster_id in orphaned.keys():
+                    orphaned[vm.cluster_id] += 1
                 else:
-                    orphaned[cluster.hostname] = 1
-            update_vm_counts(orphaned=orphaned)
-
+                    orphaned[vm.cluster_id] = 1
+            update_vm_counts(key='orphaned', data=orphaned)
+            
             # remove updated vms from the list
             vms_with_cluster = [i for i in vms_with_cluster
                 if unicode(i[0]) not in vm_ids]
@@ -145,10 +145,10 @@ def missing_ganeti(request):
             missing = {}
             for i in q:
                 if i.cluster in missing.keys():
-                    missing[ i.cluster.hostname ] += 1
+                    missing[ i.cluster_id ] += 1
                 else:
-                    missing[ i.cluster ] = 1
-            update_vm_counts(missing=missing)
+                    missing[ i.cluster_id ] = 1
+            update_vm_counts(key='missing', data=missing)
 
             q.delete()
             
@@ -215,10 +215,10 @@ def missing_db(request):
                 VirtualMachine(hostname=host, cluster=cluster, owner=owner).save()
 
                 if cluster.hostname in import_ready.keys():
-                    import_ready[cluster.hostname] += 1
+                    import_ready[cluster.pk] += 1
                 else:
-                    import_ready[cluster.hostname] = 1
-            update_vm_counts(import_ready=import_ready)
+                    import_ready[cluster.pk] = 1
+            update_vm_counts(key='import_ready', data=import_ready)
             
             # remove created vms from the list
             vms = filter(lambda x: unicode(x[0]) not in vm_ids, vms)
