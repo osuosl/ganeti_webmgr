@@ -62,7 +62,7 @@
 {% endblock %}
 
 {% block content %}
-<h1>Cluster: {{ cluster.hostname }}</h1>
+<h1><a class="breadcrumb" href="{% url cluster-list %}">Cluster</a> : {{ cluster.hostname }}</h1>
 
 <ul id="messages">
     {%if cluster.error%}<li class="error">Error in Ganeti API:<p>{{cluster.error}}</p></li>{%endif%}

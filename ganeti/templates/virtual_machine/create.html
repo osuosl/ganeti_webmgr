@@ -416,11 +416,10 @@
 {% endblock %}
 
 {% block content %}
-
 <div id="virtualmachineform">
     <form method="post">
         <fieldset>
-            <h1> New Virtual Machine </h1>
+            <h1><span class="breadcrumb">Virtual Machine</span> : Create</h1>
             {% vmfield form.owner %}
             {% vmfield form.cluster %}
             {% vmfield form.hostname %}

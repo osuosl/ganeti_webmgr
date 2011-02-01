@@ -19,6 +19,7 @@
 
 from django.conf import settings
 from django.contrib.auth.models import User, Group
+from django.core.cache import cache
 from django.test import TestCase
 from django.test.client import Client
 
@@ -31,6 +32,7 @@ Cluster = models.Cluster
 VirtualMachine = models.VirtualMachine
 Job = models.Job
 
+from ganeti.views.general import update_vm_counts
 
 __all__ = ('TestGeneralViews', )
 
@@ -76,6 +78,15 @@ class TestGeneralViews(TestCase):
         User.objects.all().delete()
         Group.objects.all().delete()
         Job.objects.all().delete()
+        self.clear_cache()
+    
+    def clear_cache(self):
+        # delete caches to make sure we don't get any unused states
+        cache.delete('cluster_admin_0')
+        cache.delete('cluster_admin_1')
+        cache.delete('cluster_admin_2')
+        cache.delete('cluster_admin_3')
+        cache.delete('cluster_admin_4')
 
     def test_view_overview(self):
         """
@@ -106,6 +117,7 @@ class TestGeneralViews(TestCase):
         self.assertTemplateUsed(response, 'registration/login.html')
         
         # authorized user (non-admin)
+        self.clear_cache()
         user.grant("admin", vm)
         user.save()
         self.assert_(c.login(username=user.username, password='secret'))
@@ -124,6 +136,7 @@ class TestGeneralViews(TestCase):
         self.assertEqual(0, response.context["import_ready"])
 
         # authorized user (admin on one cluster)
+        self.clear_cache()
         self.assert_(c.login(username=user1.username, password='secret'))
         response = c.get(url % args)
         self.assertEqual(status, response.status_code)
@@ -140,6 +153,7 @@ class TestGeneralViews(TestCase):
         self.assertEqual(2, response.context["import_ready"])
 
         # authorized user (superuser)
+        self.clear_cache()
         self.assert_(c.login(username=user2.username, password='secret'))
         response = c.get(url % args)
         self.assertEqual(status, response.status_code)
@@ -217,3 +231,78 @@ class TestGeneralViews(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertEqual(mimetype, response['content-type'])
         self.assertTemplateUsed(response, template)
+    
+    def test_cluster_admin_counts_cache(self):
+        """ tests the cache for the admin cluster counts on the status page
+        these tests will fail if cache is not configured
+        
+        Verifies:
+            * existing values are updated
+            * any of the dict keys can be updated
+            * keys not in the cache are discarded
+        """
+        ids = ['cluster_admin_0', 'cluster_admin_1', 'cluster_admin_2']
+        
+        data = {
+            'cluster_admin_0':{'orphaned':1,'missing':2,'ready_to_import':3},
+            'cluster_admin_1':{'orphaned':4,'missing':5,'ready_to_import':6}
+        }
+        cache.set_many(data)
+        
+        update = {
+            0:4,
+            1:5,
+            3:6,
+        }
+        
+        # update orphaned
+        update_vm_counts('orphaned', update)
+        cached = cache.get_many(ids)
+        self.assert_('cluster_admin_0' in cached)
+        self.assert_('cluster_admin_1' in cached)
+        self.assertFalse('cluster_admin_2' in cached)
+        self.assertEqual(5, cached['cluster_admin_0']['orphaned'])
+        self.assertEqual(2, cached['cluster_admin_0']['missing'])
+        self.assertEqual(3, cached['cluster_admin_0']['ready_to_import'])
+        self.assertEqual(9, cached['cluster_admin_1']['orphaned'])
+        self.assertEqual(5, cached['cluster_admin_1']['missing'])
+        self.assertEqual(6, cached['cluster_admin_1']['ready_to_import'])
+        
+        # update orphaned
+        update_vm_counts('missing', update)
+        cached = cache.get_many(ids)
+        self.assert_('cluster_admin_0' in cached)
+        self.assert_('cluster_admin_1' in cached)
+        self.assertFalse('cluster_admin_2' in cached)
+        self.assertEqual(5, cached['cluster_admin_0']['orphaned'])
+        self.assertEqual(6, cached['cluster_admin_0']['missing'])
+        self.assertEqual(3, cached['cluster_admin_0']['ready_to_import'])
+        self.assertEqual(9, cached['cluster_admin_1']['orphaned'])
+        self.assertEqual(10, cached['cluster_admin_1']['missing'])
+        self.assertEqual(6, cached['cluster_admin_1']['ready_to_import'])
+        
+        # update ready_to_import
+        update_vm_counts('ready_to_import', update)
+        cached = cache.get_many(ids)
+        self.assert_('cluster_admin_0' in cached)
+        self.assert_('cluster_admin_1' in cached)
+        self.assertFalse('cluster_admin_2' in cached)
+        self.assertEqual(5, cached['cluster_admin_0']['orphaned'])
+        self.assertEqual(6, cached['cluster_admin_0']['missing'])
+        self.assertEqual(7, cached['cluster_admin_0']['ready_to_import'])
+        self.assertEqual(9, cached['cluster_admin_1']['orphaned'])
+        self.assertEqual(10, cached['cluster_admin_1']['missing'])
+        self.assertEqual(11, cached['cluster_admin_1']['ready_to_import'])
+
+    def test_vm_counts(self):
+        """
+        Tests the helper function get_vm_counts.
+        """
+        cluster1 = Cluster(hostname="cluster1")
+        cluster2 = Cluster(hostname="cluster2")
+        vm11 = VirtualMachine(cluster=cluster1, hostname="vm11")
+        vm12 = VirtualMachine(cluster=cluster1, hostname="vm12")
+        vm13 = VirtualMachine(cluster=cluster1, hostname="vm13")
+        vm21 = VirtualMachine(cluster=cluster2, hostname="vm21")
+        vm22 = VirtualMachine(cluster=cluster2, hostname="vm22")
+        vm23 = VirtualMachine(cluster=cluster2, hostname="vm23")

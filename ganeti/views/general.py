@@ -19,7 +19,8 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
-from django.db.models import Q, Count
+from django.core.cache import cache
+from django.db.models import Q, Count, Sum
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
@@ -78,6 +79,83 @@ def get_used_resources(cluster_user):
     return resources
 
 
+def update_vm_counts(key, data):
+    """
+    Updates the cache for numbers of orphaned / ready to import / missing VMs.
+
+    If the cluster's data is not in cache it is ignored.  This is only for
+    updating the cache with information we already have.
+    
+    @param key - admin data key that is being updated: orphaned, ready_to_import,
+        or missing
+    @param data - dict of data stored by cluster.pk
+    """
+    format_key = 'cluster_admin_%d'
+    keys = [format_key % k for k in data.keys()]
+    cached = cache.get_many(keys)
+    
+    for k, v in data.items():
+        try:
+            values = cached[format_key % k]
+            values[key] += v
+        except KeyError:
+            pass
+    
+    cache.set_many(cached, 600)
+
+
+def get_vm_counts(clusters, timeout=600):
+    """
+    Helper for getting the list of orphaned/ready to import/missing VMs.
+    Caches by the way.
+    
+    This caches data under the keys:   cluster_admin_<cluster_id>
+
+    @param clusters the list of clusters, for which numbers of VM are counted.
+                    May be None, if update is set.
+    @param timeout  specified timeout for cache, in seconds.
+    """
+    format_key = 'cluster_admin_%d'
+    orphaned = import_ready = missing = 0
+    cached = cache.get_many((format_key % cluster.pk for cluster in clusters))
+    keys = (key[14:] for key in cached.keys())
+    cluster_list = clusters.exclude(pk__in=keys)
+    
+    # total the cached values first
+    for k in cached.values():
+        orphaned += k["orphaned"]
+        import_ready += k["import_ready"]
+        missing += k["missing"]
+    
+    # update the values that were not cached
+    if cluster_list.count():
+        base = VirtualMachine.objects.filter(cluster__in=cluster_list,
+                owner=None).order_by()
+        annoted = base.values("cluster__pk").annotate(orphaned=Count("id"))
+        
+        result = {}
+        for i in annoted:
+            result[format_key % i["cluster__pk"]] = {"orphaned": i["orphaned"]}
+            orphaned += i["orphaned"]
+        
+        for cluster in cluster_list:
+            key = format_key % cluster.pk
+            
+            if cluster.pk not in result:
+                result[key] = {"orphaned": 0}
+            
+            result[key]["import_ready"] = len(cluster.missing_in_db)
+            result[key]["missing"] = len(cluster.missing_in_ganeti)
+            
+            import_ready += result[key]["import_ready"]
+            missing += result[key]["missing"]
+        
+        # add all results into cache
+        cache.set_many(result, timeout)
+    
+    return orphaned, import_ready, missing
+
+
 @login_required
 def overview(request):
     """
@@ -103,11 +181,7 @@ def overview(request):
         vms = vms.exclude(cluster__in=clusters)
         
         # build list of admin tasks for this user's clusters
-        orphaned = VirtualMachine.objects.filter(owner=None,
-                cluster__in=clusters).count()
-        for cluster in clusters:
-            import_ready += len(cluster.missing_in_db)
-            missing += len(cluster.missing_in_ganeti)
+        orphaned, import_ready, missing = get_vm_counts(clusters)
     
     # build list of job errors.  Include jobs from any vm the user has access to
     # If the user has admin on any cluster then those clusters and it's objects
@@ -168,7 +242,7 @@ def overview(request):
         'missing': missing,
         'resources': resources,
         'vm_summary': vm_summary,
-        'personas': personas
+        'personas': personas,
         },
         context_instance=RequestContext(request),
     )
