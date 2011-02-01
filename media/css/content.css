@@ -1,5 +1,8 @@
 /* content.css */
 
+h1 .breadcrumb {color:#C16328 !important; font-size:inherit;}
+h1 a.breadcrumb:hover {text-decoration:underline;}
+
 #body_wrapper {
     background: url(/media/images/background_with_menu.png) repeat-y center #eee !important;
 }

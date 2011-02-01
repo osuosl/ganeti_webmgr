@@ -35,7 +35,7 @@
 {% endblock %}
 
 {% block content %}
-<h2>Users > {{ user_detail.username }}</h2>
+<h1><a class="breadcrumb" href="{%url user-list %}">Users</a> : {{ user_detail.username }}</h1>
 <div id="tabs">
     <ul>
         <li><a href="#detail"><span>Detail</span></a></li>

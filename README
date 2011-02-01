@@ -76,7 +76,12 @@ IRC:          #ganeti-webmgr on freenode.net
     1. Change your SECRET_KEY and WEB_MGR_API_KEY to unique (and hopefully
        unguessable) strings in your settings.py.
 
-    2. Follow the django guide to deploy [1] with apache. Here is an example
+    2. Ensure the server has the ability to send emails or you have access to
+       an SMTP server. Set EMAIL_HOST, EMAIL_PORT, and DEFAULT_FROM_EMAIL in
+       settings.py. For more complicated outgoing mail setups, please refer to
+       the django email documentation [1].
+
+    3. Follow the django guide to deploy [2] with apache. Here is an example
        mod_wsgi file:
 
         import os
@@ -91,10 +96,11 @@ IRC:          #ganeti-webmgr on freenode.net
                 import django.core.handlers.wsgi
                 application = django.core.handlers.wsgi.WSGIHandler()
 
-    3. Configure cron job for periodic cache updater [2].
+    4. Configure cron job for periodic cache updater [3].
 
- [1] http://docs.djangoproject.com/en/1.2/howto/deployment/
- [2] http://code.osuosl.org/projects/ganeti-webmgr/wiki/Cache_System#Updating-with-cron
+ [1] http://docs.djangoproject.com/en/1.2/topics/email/
+ [2] http://docs.djangoproject.com/en/1.2/howto/deployment/
+ [3] http://code.osuosl.org/projects/ganeti-webmgr/wiki/Cache_System#Updating-with-cron
 
 Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/Install
 
@@ -232,5 +238,11 @@ Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/Cache_System
 Ganeti Web Manager allows users to store SSH Keys. Each virtual machine has a
 view that will return SSH keys for users with access. This can be used as a
 Ganeti post-install hook to deploy user's keys on the VMs.
+
+To allow VMs to copy keys, copy util/hooks/sshkeys.sh to the instance
+definition hooks directory on every node in the clsuter and make the file
+executable. Next, add the required variables to the variant config file
+or main instance definition config file. The config file can be found in
+util/hooks/sshkeys.conf and includes documentation for each variable.
 
 Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/PermissionsSSHKeys

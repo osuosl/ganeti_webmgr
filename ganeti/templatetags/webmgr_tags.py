@@ -209,11 +209,11 @@ def node_disk(node):
 
 
 @register.simple_tag
-def cluster_memory(cluster):
+def cluster_memory(cluster, nodes=None):
     """
     Pretty-print a memory quantity of the whole cluster [GiB]
     """
-    nodes = cluster_nodes(cluster, True)
+    nodes = nodes if nodes else cluster.nodes(True)
     mfree, mtotal = 0, 0
     for i in nodes:
         if isinstance(i, str):
@@ -224,11 +224,11 @@ def cluster_memory(cluster):
 
 
 @register.simple_tag
-def cluster_disk(cluster):
+def cluster_disk(cluster, nodes=None):
     """
     Pretty-print a memory quantity of the whole cluster [GiB]
     """
-    nodes = cluster_nodes(cluster, True)
+    nodes = nodes if nodes else cluster.nodes(True) 
     dfree, dtotal = 0, 0
     for i in nodes:
         if isinstance(i, str):
@@ -248,12 +248,12 @@ def format_running_vms(cluster):
 
 
 @register.simple_tag
-def format_online_nodes(cluster):
+def format_online_nodes(cluster, nodes=None):
     """
     Return number of nodes that are online and number of all nodes
     """
     n = 0
-    nodes = cluster.nodes(True)
+    nodes = nodes if nodes else cluster.nodes(True)
     for i in nodes:
         if isinstance(i, str):
             continue

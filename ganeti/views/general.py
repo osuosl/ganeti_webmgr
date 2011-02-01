@@ -189,12 +189,13 @@ def overview(request):
     #
     # XXX all jobs have the cluster listed, filtering by cluster includes jobs
     # for both the cluster itself and any of its VMs or Nodes
-    q = Q(status='error', cleared=False)
+    error_clause = Q(status='error', cleared=False)
     vm_type = ContentType.objects.get_for_model(VirtualMachine)
-    q &= Q(content_type=vm_type, object_id__in=vms,)
+    select_clause = Q(content_type=vm_type, object_id__in=vms,)
     if admin:
-        q |= Q(cluster__in=clusters)
-    job_errors = Job.objects.filter(q).order_by("-finished")[:5]
+        select_clause |= Q(cluster__in=clusters)
+    job_errors = Job.objects.filter(error_clause & select_clause) \
+        .order_by("-finished")[:5]
     
     # build list of job errors.  Include jobs from any vm the user has access to
     # If the user has admin on any cluster then those clusters and it's objects

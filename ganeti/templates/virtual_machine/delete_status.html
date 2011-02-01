@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "menu_base.html" %}
 {% load webmgr_tags %}
 
 {% block title %}Delete In Progress{% endblock %}
@@ -10,7 +10,6 @@
 
     <script type="text/javascript">
         $(document).ready(function() {
-            
             job_id = '{{instance.last_job.job_id}}';
             if (job_id == '') {
                 {# job was finished before we loaded the page #}
@@ -21,7 +20,6 @@
         });
         
         function job_complete() {
-            console.log(123);
             $('#messages').hide()
             $('#success').show()
         }

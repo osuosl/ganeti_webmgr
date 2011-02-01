@@ -39,6 +39,7 @@ from django.db import models
 from django.db.models import Sum, F, Q
 from django.db.models.query import QuerySet
 from django.db.models.signals import post_save, post_syncdb
+from django.db.utils import DatabaseError
 
 from logs.models import LogItem
 log_action = LogItem.objects.log_action
@@ -366,6 +367,23 @@ class Job(CachedClusterObject):
             self.cluster_hash = self.cluster.hash
         
         super(Job, self).save(*args, **kwargs)
+
+    @property
+    def current_operation(self):
+        """
+        Jobs may consist of multiple commands/operations.  This helper
+        method will return the operation that is currently running or errored
+        out, or the last operation if all operations have completed
+        
+        @returns raw name of the current operation
+        """
+        info = self.info
+        index = 0
+        for i in range(len(info['opstatus'])):
+            if info['opstatus'][i] != 'success':
+                index = i
+                break;
+        return info['ops'][index]['OP_ID']
 
 
     def __repr__(self):
@@ -1036,10 +1054,16 @@ def create_profile(sender, instance, **kwargs):
     Create a profile object whenever a new user is created, also keeps the
     profile name synchronized with the username
     """
-    profile, new = Profile.objects.get_or_create(user=instance)
-    if profile.name != instance.username:
-        profile.name = instance.username
-        profile.save()
+    try:
+        profile, new = Profile.objects.get_or_create(user=instance)
+        if profile.name != instance.username:
+            profile.name = instance.username
+            profile.save()
+    except DatabaseError:
+        # XXX - since we're using south to track migrations the Profile table
+        # won't be available the first time syncdb is run.  Catch the error here
+        # and let the south migration handle it.
+        pass
 
 
 def update_cluster_hash(sender, instance, **kwargs):
@@ -1084,10 +1108,16 @@ def regenerate_cu_children(sender, **kwargs):
     # only occasionally in development, but it's good to explicitly handle
     # this particular case so that missing Profiles not resulting from a reset
     # are easier to diagnose.
-    for user in User.objects.all():
-        user.save()
-    for group in Group.objects.all():
-        group.save()
+    try:
+        for user in User.objects.filter(profile__isnull=True):
+            user.save()
+        for group in Group.objects.filter(organization__isnull=True):
+            group.save()
+    except DatabaseError:
+        # XXX - since we're using south to track migrations the Profile table
+        # won't be available the first time syncdb is run.  Catch the error here
+        # and let the south migration handle it.
+        pass
 
 post_syncdb.connect(regenerate_cu_children)
 
