@@ -1,21 +1,18 @@
-<script type="text/javascript" src="{{SITE_ROOT}}/novnc/util.js"></script>
-<script type="text/javascript" src="{{SITE_ROOT}}/novnc/base64.js"></script>
-<script type="text/javascript" src="{{SITE_ROOT}}/novnc/des.js"></script>
-<script type="text/javascript" src="{{SITE_ROOT}}/novnc/canvas.js"></script>
-<script type="text/javascript" src="{{SITE_ROOT}}/novnc/rfb.js"></script>
 <script type="text/javascript">
-    var VNC_native_ws, WEB_SOCKET_SWF_LOCATION;
+    var VNC_native_ws, Websock_native, WEB_SOCKET_SWF_LOCATION;
     var WEB_SOCKET_DEBUG = false;
     
     /* If no builtin websockets then load web_socket.js */
     if (window.WebSocket) {
         VNC_native_ws = true;
+        Websock_native = true;
     } else {
         var extra = "", start, end;
         start = "<script src='";
         end = "'><\/script>";
         
         VNC_native_ws = false;
+        Websock_native = false;
         WEB_SOCKET_SWF_LOCATION = "{{SITE_ROOT}}/novnc/web-socket-js/WebSocketMain.swf";
         extra += start + "{{SITE_ROOT}}/novnc/web-socket-js/swfobject.js" + end;
         extra += start + "{{SITE_ROOT}}/novnc/web-socket-js/FABridge.js" + end;
@@ -25,14 +22,30 @@
         // XXX initialize the websocket - normally web_socket.js does this, but
         // since we're loading this with ajax the document.load event is never
         // fired
+        
         WebSocket.__initialize();
+        console.log(window.WebSocket);
     }
 </script>
 
+<script type="text/javascript" src="{{SITE_ROOT}}/novnc/util.js"></script>
+<script type="text/javascript" src="{{SITE_ROOT}}/novnc/base64.js"></script>
+<script type="text/javascript" src="{{SITE_ROOT}}/novnc/websock.js"></script>
+<script type="text/javascript">
+    // XXX we have to reset this to false because websock.js inits this again
+    Websock_native = VNC_native_ws;
+</script>
+<script type="text/javascript" src="{{SITE_ROOT}}/novnc/des.js"></script>
+<script type="text/javascript" src="{{SITE_ROOT}}/novnc/canvas.js"></script>
+<script type="text/javascript" src="{{SITE_ROOT}}/novnc/rfb.js"></script>
 
 <link rel="stylesheet" href="{{SITE_ROOT}}/novnc/plain.css" title="plain">
 
 <script type="text/javascript">
+
+    // XXX we have to reset this to false because websock.js inits this again
+    Websock_native = VNC_native_ws;
+
     var rfb;
     var host, port, password; // VNC proxy connection settings
     
