@@ -10,11 +10,9 @@ Add a new cluster
 
 {% block content %}
 
-{% if cluster %}
-<h1>Edit Cluster</h1>
-{% else %}
-<h1>Add Cluster</h1>
-{% endif %}
+<h1><a class="breadcrumb" href="{% url cluster-list %}">Cluster</a> :
+{% if cluster %}Edit{% else %}Add{% endif %}</h1>
+
 
 <form method="post">
     {% csrf_token %}
