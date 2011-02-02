@@ -797,6 +797,16 @@ class Cluster(CachedClusterObject):
         db = self.virtual_machines.all().values_list('hostname', flat=True)
         return filter(lambda x: unicode(x) not in db, ganeti)
 
+    @property
+    def ram(self):
+        """ returns dict of free and total ram """
+        return self.nodes.aggregate(free=Sum('ram'), total=Sum('ram_total'))
+    
+    @property
+    def disk(self):
+        """ returns dict of free and total disk space """
+        return self.nodes.aggregate(free=Sum('ram'), total=Sum('ram_total'))
+
     def _refresh(self):
         return self.rapi.GetInfo()
     

@@ -35,6 +35,7 @@ from ganeti import models, constants
 from ganeti.views.virtual_machine import os_prettify, NewVirtualMachineForm
 VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
+Node = models.Node
 ClusterUser = models.ClusterUser
 Job = models.Job
 SSHKey = models.SSHKey
@@ -51,6 +52,7 @@ class VirtualMachineTestCaseMixin():
     def create_virtual_machine(self, cluster=None, hostname='vm1.osuosl.bak'):
         cluster = cluster if cluster else Cluster(hostname='test.osuosl.bak', slug='OSL_TEST')
         cluster.save()
+        cluster.sync_nodes()
         vm = VirtualMachine(cluster=cluster, hostname=hostname)
         vm.save()
         return vm, cluster
@@ -65,6 +67,7 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
     def tearDown(self):
         Job.objects.all().delete()
         VirtualMachine.objects.all().delete()
+        Node.objects.all().delete()
         Cluster.objects.all().delete()
         User.objects.all().delete()
         Group.objects.all().delete()
@@ -356,6 +359,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         User.objects.all().delete()
         Group.objects.all().delete()
         VirtualMachine.objects.all().delete()
+        Node.objects.all().delete()
         Cluster.objects.all().delete()
     
     def validate_get(self, url, args, template):
@@ -741,8 +745,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
                     nicmode='routed',
                     bootorder='disk',
                     os='image+ubuntu-lucid',
-                    pnode=cluster.nodes()[0],
-                    snode=cluster.nodes()[1])
+                    pnode=cluster.nodes.all()[0],
+                    snode=cluster.nodes.all()[1])
 
 
         # set up for testing quota on user's first VM
@@ -850,8 +854,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
                     nicmode='routed',
                     bootorder='disk',
                     os='image+ubuntu-lucid',
-                    pnode=cluster.nodes()[0],
-                    snode=cluster.nodes()[1])
+                    pnode=cluster.nodes.all()[0],
+                    snode=cluster.nodes.all()[1])
         
         # login user
         self.assert_(c.login(username=user.username, password='secret'))

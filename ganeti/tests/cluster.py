@@ -32,6 +32,7 @@ from ganeti.tests.rapi_proxy import RapiProxy, INFO, NODES, NODES_BULK
 from ganeti import models
 Cluster = models.Cluster
 VirtualMachine = models.VirtualMachine
+Node = models.Node
 Quota = models.Quota
 Job = models.Job
 
@@ -46,9 +47,11 @@ class TestClusterModel(TestCase):
         self.tearDown()
     
     def tearDown(self):
-        Cluster.objects.all().delete()
         User.objects.all().delete()
         Quota.objects.all().delete()
+        VirtualMachine.objects.all().delete()
+        Node.objects.all().delete()
+        Cluster.objects.all().delete()
 
     def test_trivial(self):
         """
@@ -179,6 +182,29 @@ class TestClusterModel(TestCase):
         
         cluster.sync_virtual_machines(True)
         self.assertFalse(VirtualMachine.objects.filter(cluster=cluster, hostname=vm_removed.hostname), 'vm not present in ganeti was not removed from db')
+    
+    def test_sync_nodes(self):
+        """
+        Tests synchronizing cached Nodes (stored in db) with info
+        the ganeti cluster is storing
+        
+        Verifies:
+            * Node no longer in ganeti are deleted
+            * Nodes missing from the database are added
+        """
+        cluster = Cluster.objects.create(hostname='ganeti.osuosl.test')
+        node_missing = 'gtest1.osuosl.bak'
+        node_current = Node.objects.create(cluster=cluster, hostname='gtest2.osuosl.bak')
+        node_removed = Node.objects.create(cluster=cluster, hostname='does.not.exist.org')
+        
+        cluster.sync_nodes()
+        self.assert_(Node.objects.get(cluster=cluster, hostname=node_missing), 'missing node was not created')
+        self.assert_(Node.objects.get(cluster=cluster, hostname=node_current.hostname), 'previously existing node was not created')
+        self.assert_(Node.objects.filter(cluster=cluster, hostname=node_removed.hostname), 'node not present in ganeti was not removed from db, even though remove flag was false')
+        
+        cluster.sync_nodes(True)
+        self.assertFalse(Node.objects.filter(cluster=cluster, hostname=node_removed.hostname), 'node not present in ganeti was not removed from db')
+
 
     def test_missing_in_database(self):
         """
