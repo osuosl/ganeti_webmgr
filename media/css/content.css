@@ -74,6 +74,15 @@ h1 a.breadcrumb:hover {text-decoration:underline;}
 }
 #content td.a {padding:0;}
 
+/**
+ *Tabs
+ */
+.ui-tabs-nav {
+    border-radius:0 !important;
+    -moz-border-radius:0 !important;
+    -webkit-border-radius:0 !important;
+}
+
 
 /**
  * Actions (buttons Delete, Shutdown, Start, Reboot)
