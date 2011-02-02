@@ -73,7 +73,7 @@ def nodes(request, cluster_slug):
         return render_403(request, "You do not have sufficient privileges")
     
     return render_to_response("node/table.html", \
-                        {'cluster': cluster, 'nodes':cluster.nodes(True)}, \
+                        {'cluster': cluster, 'nodes':cluster.nodes.all()}, \
         context_instance=RequestContext(request),
     )
 
