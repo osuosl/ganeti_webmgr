@@ -565,8 +565,10 @@ def modify(request, cluster_slug, instance):
     vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
 
     user = request.user
-    admin = user.is_superuser or user.has_perm('admin', vm) \
-        or user.has_perm('admin', cluster)
+    if not (user.is_superuser or user.has_perm('admin', vm) \
+        or user.has_perm('modify', vm)):
+        return render_403(request, 'You do not have permissions to edit \
+            this virtual machine')
 
     if request.method == 'POST':
         form = ModifyVirtualMachineForm(user, None, request.POST)
