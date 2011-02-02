@@ -37,10 +37,9 @@
 <script type="text/javascript" src="{{SITE_ROOT}}/novnc/des.js"></script>
 <script type="text/javascript" src="{{SITE_ROOT}}/novnc/canvas.js"></script>
 <script type="text/javascript" src="{{SITE_ROOT}}/novnc/rfb.js"></script>
-
 <link rel="stylesheet" href="{{SITE_ROOT}}/novnc/plain.css" title="plain">
-
 <style>
+    #VNC_status_bar.VNC_status_bar {background-color:#ddd; margin-top:5px;}
     #actions {margin-bottom:30px;}
 </style>
 
@@ -51,12 +50,15 @@
 
     var rfb;
     var host, port, password; // VNC proxy connection settings
+    var connected = false;
     
     $('#connect').click(function() {
         $this = $(this);
         if($this.hasClass('enabled')) {
             rfb.disconnect();
+            connected = false;
         } else {
+            connected = true;
             start();
         }
         return false;
@@ -64,12 +66,14 @@
     
     $('#encrypt').click(function(){
         $this = $(this)
-        if ($this.hasClass('enabled')){
-            $('#encrypt_check').attr('checked',false);
-            $this.removeClass('enabled')
-        } else {
-            $('#encrypt_check').attr('checked',true);
-            $this.addClass('enabled')
+        if (!connected) {
+            if ($this.hasClass('enabled')){
+                $('#encrypt_check').attr('checked',false);
+                $this.removeClass('enabled')
+            } else {
+                $('#encrypt_check').attr('checked',true);
+                $this.addClass('enabled')
+            }
         }
         return false;
     });
@@ -83,12 +87,19 @@
         });
     
     // users exits the page by following link or closing the tab or sth else
-    $(window).bind("unload", disconnect);
+    $(window).bind("unload", function(){
+        if (rfb != undefined) {
+            rfb.disconnect();
+        }
+    });
     
+
     function show_errors() {
         if (host===false || port===false || password===false) {
-            $("#vnc_errors").html("Probably your proxy is not running or some errors occured. Try again.");
-            $("#vnc_errors").show();
+            connected = false;
+            $("#VNC_status_bar")
+                .attr("class", "VNC_status_error")
+                .html("Probably your proxy is not running or some errors occured. Try again.");
             return false;
         }
         return true;
@@ -116,16 +127,23 @@
         }
         
         if (state == "normal") {
-            $('#connect').addClass('enabled')
+            connected = true;
+            $('#connect')
+                .addClass('enabled')
+                .html('Disconnect');
             $('#ctrlaltdelete').removeClass('disabled')
         } else {
-            $('#connect').removeClass('enabled')
+            connected = false;
+            $('#connect')
+                .removeClass('enabled')
+                .html('Connect');
             $('#ctrlaltdelete').addClass('disabled')
         }
         
         if (msg != undefined) {
-            $('#VNC_status_bar').attr("class", klass);
-            $('#VNC_status').html(msg);
+            $('#VNC_status_bar')
+                .attr("class", klass)
+                .html(msg);
         }
     }
     
@@ -168,27 +186,16 @@
     {% else %}
     <li><a class="button startup power" href="{% url instance-startup cluster_slug instance.hostname %}">Start</a></li>
     {% endifequal %}
-    <li><a id="ctrlaltdelete" href="#" class="button reboot disabled">Ctrl-Alt-Delete</a></li>
+    <li><a id="ctrlaltdelete" href="#" class="button reboot disabled" title="Send Ctrl-Alt-Delete">Ctrl-Alt-Delete</a></li>
 </ul>
 
 <input type="checkbox" id="encrypt_check" />
 
-
-<div id="vnc_errors" style="display: none;">
-    Probably your proxy is not running.
-</div>
-
 <div id="VNC_screen">
-    <div id="VNC_status_bar" class="VNC_status_bar" style="margin-top: 0px;">
-        <table border=0 width="100%">
-            <tr>
-                <td>
-                    <div id="VNC_status">noVNC client</div>
-                </td>
-            </tr>
-        </table>
+    <div id="VNC_status_bar" class="VNC_status_bar" style="margin-top: 5px;">
+        noVNC client
     </div>
-    <canvas id="VNC_canvas" width="812px" height="20px">
+    <canvas id="VNC_canvas" width="812px" height="400px">
         Canvas is not supported in your browser. Please use new versions
         of Chrome or Firefox.
     </canvas>
