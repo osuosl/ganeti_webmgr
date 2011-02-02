@@ -139,6 +139,8 @@
             var curSelection =          $("#id_snode option:selected").index();
             var iallocator =            $("#id_iallocator");
             var iallocator_hostname =   $("#id_iallocator_hostname");
+            var bootOrder =             $("#id_bootorder");
+            var imagePath =             $("#id_imagepath");
             var using_str =             ' Using: ';
             var blankOptStr =           '---------';
 
@@ -156,13 +158,17 @@
                             using_str+iallocator_hostname.val() +
                             "</span>");
                 _iallocatorDisable();
-             
+            
+                // hide CD-ROM Image Path stuffs by default
+                _imagePathHide();
+
                 // setup form element change hooks
                 _initChangeHooks();
 
                 // fire off some initial changes
                 iallocator.change();
                 disk_template.change();
+                bootOrder.change();
                 
                 // process the owner dropdown, i.e., if it only has a single
                 // option, select it, and make the dropdown read-only
@@ -171,6 +177,21 @@
             
             function _initChangeHooks(){
                 /* setup change hooks for the form elements */
+
+                // boot device change
+                bootOrder.change(function(){
+                    /* 
+                    Only show image path stuffs if CD-ROM is selected in
+                    the boot order dropdown.
+                    */
+                    var dropdown = $(this);
+                    var id = $(this).children("option:selected").val();
+                    if(id == 'cdrom'){
+                        _imagePathShow();
+                    } else {
+                        _imagePathHide();
+                    }
+                });
 
                 // iallocator change
                 iallocator.change(function() {
@@ -239,7 +260,6 @@
                     var id = $(this).children("option:selected").val();
                     
                     if( id != '' ) {
-                        
                         // JSON update oslist, pnode, and snode when cluster 
                         // changes
                         $.getJSON(url_options, {'cluster_id':id}, 
@@ -384,6 +404,16 @@
             // ----------------
             // private helpers
             // ----------------
+            function _imagePathHide(){
+                imagePath.hide();
+                imagePath.siblings().hide();
+            }
+
+            function _imagePathShow(){
+                imagePath.show();
+                imagePath.siblings().show();
+            }
+
             function _iallocatorDisable(){
                 /* Disable and hide all of the iallocator stuffs */
                 iallocator.hide();
