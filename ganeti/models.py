@@ -478,7 +478,7 @@ class VirtualMachine(CachedClusterObject):
                 tag = '%s%s' % (constants.OWNER_TAG, self.owner_id)
                 self.rapi.AddInstanceTags(self.hostname, [tag])
                 self.info['tags'].append(tag)
-
+        
         super(VirtualMachine, self).save(*args, **kwargs)
 
     @classmethod
@@ -607,6 +607,7 @@ class Node(CachedClusterObject):
     cluster = models.ForeignKey('Cluster', related_name='nodes')
     hostname = models.CharField(max_length=128, unique=True)
     cluster_hash = models.CharField(max_length=40, editable=False)
+    offline = models.BooleanField()
     
     # resources
     disk = models.IntegerField(default=-1)
@@ -617,6 +618,14 @@ class Node(CachedClusterObject):
     def _refresh(self):
         """ returns node info from the ganeti server """
         return self.rapi.GetNode(self.hostname)
+    
+    def save(self, *args, **kwargs):
+        """
+        sets the cluster_hash for newly saved instances
+        """
+        if self.id is None:
+            self.cluster_hash = self.cluster.hash
+        super(Node, self).save(*args, **kwargs)
     
     @property
     def rapi(self):
@@ -633,8 +642,9 @@ class Node(CachedClusterObject):
         # Parse resource properties
         data['ram'] = info['mfree']
         data['ram_total'] = info['mtotal']
-        data['disk'] = info['mfree']
-        data['disk_total'] = info['mtotal']
+        data['disk'] = info['dfree']
+        data['disk_total'] = info['dtotal']
+        data['offline'] = info['offline']
         
         return data
     
@@ -1119,10 +1129,11 @@ def create_profile(sender, instance, **kwargs):
 
 def update_cluster_hash(sender, instance, **kwargs):
     """
-    Updates the Cluster hash for all of it's VirtualMachines
+    Updates the Cluster hash for all of it's VirtualMachines, Nodes, and Jobs
     """
     instance.virtual_machines.all().update(cluster_hash=instance.hash)
     instance.jobs.all().update(cluster_hash=instance.hash)
+    instance.nodes.all().update(cluster_hash=instance.hash)
 
 
 def update_organization(sender, instance, **kwargs):

@@ -163,16 +163,16 @@ NODES_BULK = [
 
 NODE = {'cnodes': 1,
     'csockets': 1,
-    'ctime': None,
+    'ctime': 1285799513.4741000,
     'ctotal': 2,
-    'dfree': 56092,
+    'dfree': 2222,
     'drained': False,
-    'dtotal': 66460,
+    'dtotal': 6666,
     'master_candidate': True,
-    'mfree': 1187,
+    'mfree': 1111,
     'mnode': 586,
-    'mtime': None,
-    'mtotal': 1997,
+    'mtime': 1285883187.8692000,
+    'mtotal': 9999,
     'name': 'gtest1.osuosl.bak',
     'offline': False,
     'pinst_cnt': 2,
@@ -480,7 +480,7 @@ class RapiProxy(client.GanetiRapiClient):
         instance.__init__(*args, **kwargs)
         CallProxy.patch(instance, 'GetInstances', False, INSTANCES)
         CallProxy.patch(instance, 'GetInstance', False, INSTANCE)
-        CallProxy.patch(instance, 'GetNodes', False, NODES)
+        CallProxy.patch(instance, 'GetNodes', False, NODES_BULK)
         CallProxy.patch(instance, 'GetNode', False, NODE)
         CallProxy.patch(instance, 'GetInfo', False, INFO)
         CallProxy.patch(instance, 'GetOperatingSystems', False, OPERATING_SYSTEMS)
