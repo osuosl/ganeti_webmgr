@@ -758,7 +758,7 @@ class Cluster(CachedClusterObject):
             return None
 
 
-if settings.DEBUG or True:
+if settings.TESTING:
     # XXX - if in debug mode create a model for testing cached cluster objects
     class TestModel(CachedClusterObject):
         """ simple implementation of a cached model that has been instrumented """

@@ -5,6 +5,14 @@ import os.path
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
+# XXX - Django sets DEBUG to False when running unittests.  They want to ensure
+# that you test as if it were a production environment.  Unfortunately we have
+# some models and other settings used only for testing.  We use the TESTING flag
+# to enable or disable these items.
+#
+# If you run the unittests without this set to TRUE, you will get many errors!
+TESTING = False
+
 ADMINS = (
     # ('Your Name', 'your_email@domain.com'),
 )
