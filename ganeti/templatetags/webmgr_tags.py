@@ -206,8 +206,7 @@ def cluster_memory(cluster):
     """
     Pretty-print a memory quantity of the whole cluster [GiB]
     """
-    d = cluster.ram
-    print d
+    d = cluster.available_ram
     free = d['free']
     total = d['total']
     return format_part_total(free, total)
@@ -218,7 +217,7 @@ def cluster_disk(cluster, nodes=None):
     """
     Pretty-print a memory quantity of the whole cluster [GiB]
     """
-    d = cluster.ram
+    d = cluster.available_disk
     free = d['free']
     total = d['total']
     return format_part_total(free, total)
