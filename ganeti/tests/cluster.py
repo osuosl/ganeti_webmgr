@@ -234,6 +234,39 @@ class TestClusterModel(TestCase):
         
         self.assertEqual([u'does.not.exist.org'], cluster.missing_in_ganeti)
 
+    def test_available_ram(self):
+        """
+        Tests that the available_ram property returns the correct values
+        """
+        cluster = Cluster.objects.create(hostname='ganeti.osuosl.test')
+        
+        Node.objects.create(cluster=cluster, hostname='foo', ram=123, ram_total=678)
+        Node.objects.create(cluster=cluster, hostname='bar', ram=456, ram_total=989)
+        Node.objects.create(cluster=cluster, hostname='xoo')
+        Node.objects.create(cluster=cluster, hostname='xar', ram=111)
+        Node.objects.create(cluster=cluster, hostname='boo', ram_total=111)
+        
+        ram = cluster.available_ram
+        self.assertEqual(579, ram['free'])
+        self.assertEqual(1667, ram['total'])
+    
+    def test_available_disk(self):
+        """
+        Tests that the available_disk property returns the correct values
+        """
+        cluster = Cluster.objects.create(hostname='ganeti.osuosl.test')
+        cluster.sync_nodes()
+        
+        Node.objects.create(cluster=cluster, hostname='foo', disk=123, disk_total=678)
+        Node.objects.create(cluster=cluster, hostname='bar', disk=456, disk_total=989)
+        Node.objects.create(cluster=cluster, hostname='xoo')
+        Node.objects.create(cluster=cluster, hostname='xar', disk=111)
+        Node.objects.create(cluster=cluster, hostname='boo', disk_total=111)
+        
+        disk = cluster.available_disk
+        self.assertEqual(579, disk['free'])
+        self.assertEqual(1667, disk['total'])
+    
 
 class TestClusterViews(TestCase):
     

@@ -798,14 +798,16 @@ class Cluster(CachedClusterObject):
         return filter(lambda x: unicode(x) not in db, ganeti)
 
     @property
-    def ram(self):
+    def available_ram(self):
         """ returns dict of free and total ram """
-        return self.nodes.aggregate(free=Sum('ram'), total=Sum('ram_total'))
+        return self.nodes.exclude(Q(ram=-1) | Q(ram_total=-1)) \
+            .aggregate(free=Sum('ram'), total=Sum('ram_total'))
     
     @property
-    def disk(self):
+    def available_disk(self):
         """ returns dict of free and total disk space """
-        return self.nodes.aggregate(free=Sum('ram'), total=Sum('ram_total'))
+        return self.nodes.exclude(Q(disk=-1) | Q(disk_total=-1)) \
+            .aggregate(free=Sum('disk'), total=Sum('disk_total'))
 
     def _refresh(self):
         return self.rapi.GetInfo()
