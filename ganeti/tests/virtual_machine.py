@@ -723,6 +723,82 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertNotContains(response, "test@test")
         self.assertNotContains(response, "asd@asd")
 
+    def test_view_modify(self):
+        """
+        Test modifying an instance
+        """
+        vm = globals()['vm']
+        args = (cluster.slug, vm.hostname)
+        url = '/cluster/%s/%s/edit' % args
+    
+        user = User(id=52, username='modifier')
+        user.set_password('secret2')
+        user.grant('modify', vm)
+        user.save()
+
+        ## GET
+        # Anonymous User
+        response = c.get(url)
+        self.assertEqual(302, response.status_code)
+
+        # User with Modify Permissions
+        self.assertTrue(c.login(username=user.username, password='secret2'))
+        self.assertFalse(user.is_superuser)
+        self.assertTrue(user.has_perm('modify', vm))
+        self.assertFalse(user.has_perm('admin', vm))
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/edit.html')
+        user.revoke_all(vm)
+        c.logout()
+
+        # User with Admin Permissions
+        user.grant('admin', vm)
+        user.save()
+        self.assertTrue(c.login(username=user.username, password='secret2'))
+        self.assertFalse(user.is_superuser)
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/edit.html')
+        user.revoke_all(vm)
+        c.logout()
+
+         # Superuser
+        user.is_superuser = True
+        user.save()
+        self.assertTrue(c.login(username=user.username, password='secret2'))
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/edit.html')
+        c.logout()
+        user.is_superuser = False
+        user.save()
+
+        ## POST
+        data = dict(vcpus=2,
+            ram=512,
+            disktype='paravirtual',
+            bootorder='disk',
+            nictype='br0',
+            niclink='paravirtual',
+            rootpath='/dev/vda1',
+            kernelpath='/boot/vmlinuz-2.32.6-27-generic',
+            serialconsole=True,
+            imagepath='')
+
+        # Anonymous User
+        response = c.post(url, data)
+        self.assertEqual(302, response.status_code)
+
+        # User with Modify Permissions
+        self.fail("Test Not Fully Implemented")  
+        # Superuser
+        # User with Admin Permissions
+        
+
     def test_view_create_quota_first_vm(self):
         # XXX seperated from test_view_create_data since it was polluting the environment for later tests
         url = '/vm/add/%s'
