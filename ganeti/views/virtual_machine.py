@@ -160,15 +160,15 @@ def novnc(request, cluster_slug, instance):
 
 @login_required
 def vnc_proxy(request, cluster_slug, instance):
-    instance = get_object_or_404(VirtualMachine, hostname=instance, \
+    vm = get_object_or_404(VirtualMachine, hostname=instance, \
                                  cluster__slug=cluster_slug)
-    
     user = request.user
-    if not (user.is_superuser or user.has_perm('admin', instance) or \
-        user.has_perm('admin', instance.cluster)):
-        return HttpResponseForbidden('You do not have permission to vnc on this')
+    if not (user.is_superuser \
+        or user.has_any_perms(vm, ['admin', 'power']) \
+        or user.has_perm('admin', vm.cluster)):
+            return HttpResponseForbidden('You do not have permission to vnc on this')
     
-    result = json.dumps(instance.setup_vnc_forwarding())
+    result = json.dumps(vm.setup_vnc_forwarding())
     
     return HttpResponse(result, mimetype="application/json")
 
