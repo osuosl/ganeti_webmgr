@@ -139,6 +139,8 @@
             var curSelection =          $("#id_snode option:selected").index();
             var iallocator =            $("#id_iallocator");
             var iallocator_hostname =   $("#id_iallocator_hostname");
+            var bootorder =             $("#id_bootorder");
+            var imagepath =             $("#id_imagepath");
             var using_str =             ' Using: ';
             var blankOptStr =           '---------';
 
@@ -156,13 +158,18 @@
                             using_str+iallocator_hostname.val() +
                             "</span>");
                 _iallocatorDisable();
-             
+            
+                // hide CD-ROM Image Path stuff by default
+                imagepath.hide();
+                imagepath.siblings().hide();
+
                 // setup form element change hooks
                 _initChangeHooks();
 
                 // fire off some initial changes
                 iallocator.change();
                 disk_template.change();
+                bootorder.change();
                 
                 // process the owner dropdown, i.e., if it only has a single
                 // option, select it, and make the dropdown read-only
@@ -171,6 +178,20 @@
             
             function _initChangeHooks(){
                 /* setup change hooks for the form elements */
+
+                // boot device change
+                bootorder.change(function(){
+                    var dropdown = $(this);
+                    var id = $(this).children("option:selected").val();
+
+                    if(id == 'cdrom'){
+                        imagepath.show();
+                        imagepath.siblings().show();
+                    } else {
+                        imagepath.hide();
+                        imagepath.siblings().hide();
+                    }
+                });
 
                 // iallocator change
                 iallocator.change(function() {
