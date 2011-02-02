@@ -225,7 +225,6 @@
 
                 // owner change
                 owner.change(function() {
-
                     var dropdown = $(this);
                     var id = $(this).children("option:selected").val();
 
@@ -252,17 +251,16 @@
 
                 // cluster change
                 cluster.change(function() {
-
-                    var pnode   = $("#id_pnode");
-                    var snode = $("#id_snode");
-                    var oslist = $("#id_os");
-                    var dropdown = $(this);
+                    var pnode       = $("#id_pnode");
+                    var snode       = $("#id_snode");
+                    var oslist      = $("#id_os");
+                    var dropdown    = $(this);
                     var id = $(this).children("option:selected").val();
                     
                     if( id != '' ) {
                         // JSON update oslist, pnode, and snode when cluster 
                         // changes
-                        $.getJSON(url_options, {'cluster_id':id}, 
+                        $.getJSON(url_options, {'cluster_id':id},
                                 function(data){
                             pnode.children().not(':first').remove();
                             snode.children().not(':first').remove();
@@ -292,44 +290,33 @@
                             });
                         });
 
-                        $.getJSON(url_defaults, {'cluster_id':id}, 
-                                function(data) {
+                        $.getJSON(url_defaults, {'cluster_id':id}, function(d){
+                            /* fill default options */
 
-                            var bootorder = data['bootorder'];
-                            var iallocator_default = data['iallocator'];
-                            var hypervisors = data['hypervisors'];
-                            var vcpus = data['vcpus'];
-                            var rootpath = data['rootpath'];
-                            var ram = data['ram'];
-                            var disktype = data['disktype'];
-                            var kernelpath = data['kernelpath'];
-                            var nicmode = data['nicmode'];
-                            var niclink = data['niclink'];
-                            var nictype = data['nictype'];
-                            var imagepath = data['imagepath'];
-                            
-                            if(bootorder) {
+                            // boot device dropdown
+                            if(d['bootorder']) {
                                 $("#id_bootorder :selected").removeAttr(
                                         'selected');
-                                $("#id_bootorder [value="+bootorder+"]").attr(
+                                $("#id_bootorder [value="+d['bootorder']
+                                        +"]").attr(
                                         'selected','selected');
                             }
                             
-                            if(hypervisors) {
+                            // hypervisors
+                            if(d['hypervisors']) {
                                 //list - do nothing for now.
                             }
 
-                            // otherwise, iallocator data isn't empty, show the
-                            // checkbox and check it.
-                            if(iallocator_default != "" && 
-                                    iallocator_default != undefined){
+                            // iallocator checkbox
+                            if(d['iallocator'] != "" && 
+                                    d['iallocator'] != undefined){
                                 if(!iallocator_hostname.attr('value')) {
                                     iallocator_hostname.attr('value',
-                                            iallocator_default);
+                                            d['iallocator']);
                                     if(iallocator.siblings("span").length 
                                             == 0){
                                         iallocator.after("<span>" + using_str +
-                                                iallocator_default + 
+                                                d['iallocator'] + 
                                                 "</span>");
                                     }
                                 }
@@ -344,56 +331,66 @@
                                 _iallocatorDisable();
                             }
 
-                            if(kernelpath){
-                                $("#id_kernelpath").val(kernelpath);
+                            // kernel path text box
+                            if(d['kernelpath']){
+                                $("#id_kernelpath").val(d['kernelpath']);
                             } else {
                                 $("#id_kernelpath").val('');
                             }
 
-                            if(nicmode) {
+                            // nic mode dropdown
+                            if(d['nicmode']) {
                                 $("#id_nicmode :selected").removeAttr(
                                         'selected');
-                                $("#id_nicmode [value="+nicmode+"]").attr(
+                                $("#id_nicmode [value="+d['nicmode']+"]").attr(
                                         'selected','selected');
                             } else { 
                                 $("#id_nicmode :first-child").attr('selected', 
                                         'selected');
                             }
 
-                            if(niclink){
-                                $("#id_niclink").val(niclink);
+                            // nic link text box
+                            if(d['niclink']){
+                                $("#id_niclink").val(d['niclink']);
                             }
                             
-                            if(nictype) {
+                            // nic type dropdown
+                            if(d['nictype']) {
                                 $("#id_nictype :selected").removeAttr(
                                         'selected');
-                                $("#id_nictype [value="+nictype+"]").attr(
+                                $("#id_nictype [value="+d['nictype']+"]").attr(
                                         'selected','selected');
                             }
 
-                            if(ram){
-                                $("#id_ram").val(ram);
+                            // memory text box
+                            if(d['ram']){
+                                $("#id_ram").val(d['ram']);
                             }
 
-                            if(disktype){
-                                 $("#id_disk_type").val(disktype);
+                            // disk type dropdown
+                            if(d['disktype']){
+                                 $("#id_disk_type").val(d['disktype']);
                             }
                             
-                            if(rootpath){
-                                $("#id_rootpath").val(rootpath);
+                            // root path text box
+                            if(d['rootpath']){
+                                $("#id_rootpath").val(d['rootpath']);
                             } else {
                                 $("#id_rootpath").val('/');
                             }
-
-                            if(data['serialconsole']){
+                            
+                            // enable serial console checkbox
+                            if(d['serialconsole']){
                                 $("#id_serialconsole").attr('checked', true);
                             }
                             
-                            if(vcpus){
-                                $("#id_vcpus").val(vcpus);
+                            // virtual CPUs text box
+                            if(d['vcpus']){
+                                $("#id_vcpus").val(d['vcpus']);
                             }
                             
-                            if(imagepath){
+                            // image path text box
+                            if(d['imagepath']){
                                 $("#id_imagepath").val(imagepath);
                             }
                         });
