@@ -12,19 +12,15 @@ Ganeti compatibility:
     1.x   - unsupported
 
 Browser compatibility:
-    * Mozilla Firefox 4.x
+    * Mozilla Firefox 3.x
     * Chrome / Chromium
 
-The VNC console requires websocket support
-
-    * Mozilla Firefox
-    * Chrome / Chromium
-
-The VNC console requires the Java browser plugin to be installed and working.
+The VNC console requires websocket support and HTML5 support in the browser.
 
 Project page: http://code.osuosl.org/projects/ganeti-webmgr
 Mailing List: http://groups.google.com/group/ganeti-webmgr
 IRC:          #ganeti-webmgr on freenode.net
+Twitter:      http://twitter.com/ganetiwebmgr
 
 
 ================================================================================
@@ -34,8 +30,10 @@ IRC:          #ganeti-webmgr on freenode.net
 1.  Install Dependencies
     * Django >= 1.2
     * django-registration
+    * South >=0.7
     * object_permissions (packaged with releases)
     * sqlite3, mysql, or postgresql
+    * twisted, twisted-web (deps for twisted-vncauthproxy)
 
 2. Deploy this code somewhere (i.e. /var/lib/django/ganeti_webmgr)
 3. Copy settings.py.dist to settings.py
@@ -61,11 +59,15 @@ IRC:          #ganeti-webmgr on freenode.net
  SITE_NAME = 'Ganeti Web Manager'
  SITE_DOMAIN = 'localhost:8000'
 
-6. Initialize the databse
+6. Initialize the database
 
     ./manage.py syncdb
 
-7. run the server
+7. South migrations (0.5 only)
+
+    ./manage.py migrate
+
+8. run the server
 
     Development:
 
@@ -230,6 +232,60 @@ the object is initialized.
 
 Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/Cache_System
 
+================================================================================
+ VNC 
+================================================================================
+
+Ganeti Web Manager provides an in browser console using noVNC [1], an HTML5
+client.  noVNC requires WebSockets to function. Support for older browsers is
+provided through a flash applet that is used transparently in the absence of
+WebSockets.
+
+[1] https://github.com/kanaka/noVNC
+
+Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/VNC
+
+================================================================================
+ VNC AuthProxy
+================================================================================
+
+VNC Auth proxy [1] is required for the console tab to function. VNC servers do
+not speak websockets and our proxy allows your ganeti cluster to sit behind a
+firewall, VPN, or NAT.
+
+Enabling in settings.py
+-----------------------
+
+Set the host and port that the proxy will be running at with the VNC_PROXY
+setting. For development this is typically "localhost:8888" but for production
+you would use the name of the server its running on. See the instructions in
+settings.py for more details.
+
+Starting the Daemon
+-------------------
+
+Twisted VNC Authproxy is started with twistd, the twisted daemon. Eventually we
+will include init.d scripts for better managing the daemon. You may want to open
+port 8888 in your firewall for production systems.
+
+    twistd -y proxy.tac --pidfile=vncauthproxy.pid
+
+Starting Flash Policy Server
+----------------------------
+
+Browsers that do not support WebSockets natively are supported through the use
+of a flash applet. Flash applets that make use of sockets must retrieve a policy
+file from the server they are connecting to. Twisted VNCAuthProxy includes a
+policy server. It must be run separately since it requires a root port. You may
+want to open port 843 in your firewall for production systems.
+
+Start the policy server with twistd
+
+    twistd -y policy.tac
+
+[1] http://code.osuosl.org/projects/twisted-vncauthproxy
+
+Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/VNC#VNC-Authproxy
 
 ================================================================================
  SSH Keys
