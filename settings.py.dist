@@ -5,6 +5,14 @@ import os.path
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
+# XXX - Django sets DEBUG to False when running unittests.  They want to ensure
+# that you test as if it were a production environment.  Unfortunately we have
+# some models and other settings used only for testing.  We use the TESTING flag
+# to enable or disable these items.
+#
+# If you run the unittests without this set to TRUE, you will get many errors!
+TESTING = False
+
 ADMINS = (
     # ('Your Name', 'your_email@domain.com'),
 )
@@ -107,6 +115,7 @@ INSTALLED_APPS = (
     'object_permissions',
     'ganeti',
     'logs',
+    'south'
 )
 
 AUTH_PROFILE_MODULE = 'ganeti.Profile'
@@ -151,7 +160,7 @@ PERIODIC_CACHE_REFRESH = 15
 #  $ python vncauthproxy.py --websockets
 # If you want to use encryption, then:
 #  $ python vncauthproxy.py --websockets --cert=FILE.pem
-VNC_PROXY=False
+VNC_PROXY='localhost:8888'
 
 
 # API Key for authenticating scripts that pull information from ganeti, such as
