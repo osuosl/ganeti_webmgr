@@ -50,8 +50,6 @@ from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine, \
 from ganeti.views import render_403
 from ganeti.fields import DataVolumeField
 
-empty_field = (u'', u'---------')
-
 
 @login_required
 def delete(request, cluster_slug, instance):
@@ -794,6 +792,7 @@ class NewVirtualMachineForm(forms.ModelForm):
     Virtual Machine Creation / Edit form
     """
     FQDN_RE = r'(?=^.{1,254}$)(^(?:(?!\d+\.|-)[a-zA-Z0-9_\-]{1,63}(?<!-)\.?)+(?:[a-zA-Z]{2,})$)'
+    empty_field = (u'', u'---------')
 
     templates = [
         (u'', u'---------'),
@@ -873,8 +872,8 @@ class NewVirtualMachineForm(forms.ModelForm):
             oslist = cluster_os_list(cluster)
             nodelist = cluster.nodes()
             nodes = zip(nodelist, nodelist)
-            nodes.insert(0, empty_field)
-            oslist.insert(0, empty_field)
+            nodes.insert(0, self.empty_field)
+            oslist.insert(0, self.empty_field)
             self.fields['pnode'].choices = nodes
             self.fields['snode'].choices = nodes
             self.fields['os'].choices = oslist
