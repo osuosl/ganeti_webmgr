@@ -733,7 +733,6 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
     
         user = User(id=52, username='modifier')
         user.set_password('secret2')
-        user.grant('modify', vm)
         user.save()
 
         ## GET
@@ -742,6 +741,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(302, response.status_code)
 
         # User with Modify Permissions
+        user.grant('modify', vm)
         self.assertTrue(c.login(username=user.username, password='secret2'))
         self.assertFalse(user.is_superuser)
         self.assertTrue(user.has_perm('modify', vm))
@@ -755,7 +755,6 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
 
         # User with Admin Permissions
         user.grant('admin', vm)
-        user.save()
         self.assertTrue(c.login(username=user.username, password='secret2'))
         self.assertFalse(user.is_superuser)
         response = c.get(url)
@@ -780,24 +779,76 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         ## POST
         data = dict(vcpus=2,
             ram=512,
-            disktype='paravirtual',
+            disk_type='paravirtual',
             bootorder='disk',
-            nictype='br0',
-            niclink='paravirtual',
+            nictype='paravirtual',
+            niclink='br0',
             rootpath='/dev/vda1',
             kernelpath='/boot/vmlinuz-2.32.6-27-generic',
             serialconsole=True,
             imagepath='')
+        
+        # Required Values
+        user.grant('modify', vm)
+        self.assertTrue(c.login(username=user.username, password='secret2'))
+        for property in ['vcpus', 'ram', 'disk_type', 'bootorder', 'nictype', \
+            'rootpath']:
+            data_ = data.copy()
+            del data_[property]
+            self.assertFalse(user.is_superuser)
+            response = c.post(url, data_)
+            self.assertEqual(200, response.status_code)
+            self.assertEqual('text/html; charset=utf-8', response['content-type'])
+            self.assertTemplateUsed(response, 'virtual_machine/edit.html')
+        c.logout()
+        user.revoke_all(vm)
+    
 
         # Anonymous User
         response = c.post(url, data)
         self.assertEqual(302, response.status_code)
 
-        # User with Modify Permissions
-        self.fail("Test Not Fully Implemented")  
         # Superuser
-        # User with Admin Permissions
+        user.is_superuser = True
+        user.save()
+        self.assertTrue(c.login(username=user.username, password='secret2'))
+        self.assertTrue(user.is_superuser)
+        response = c.post(url, data)
+        self.assertEqual(302, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        c.logout()
+        user.is_superuser = False
+        user.save()
+
+        # User without Permissions
+        self.assertTrue(c.login(username=user.username, password='secret2'))
+        self.assertFalse(user.is_superuser)
+        response = c.post(url, data)
+        self.assertEqual(403, response.status_code)
+        self.assertTrue(response.context['message'])
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, '403.html')
+        c.logout()
         
+        # User with Modify Permissions
+        user.grant('modify', vm)
+        self.assertTrue(c.login(username=user.username, password='secret2'))
+        self.assertFalse(user.is_superuser)
+        response = c.post(url, data)
+        self.assertEqual(302, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        user.revoke_all(vm)
+        c.logout()
+
+        # User with Admin Permissions
+        user.grant('admin', vm)
+        self.assertTrue(c.login(username=user.username, password='secret2'))
+        self.assertFalse(user.is_superuser)
+        response = c.post(url, data)
+        self.assertEqual(302, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        user.revoke_all(vm)
+        c.logout()        
 
     def test_view_create_quota_first_vm(self):
         # XXX seperated from test_view_create_data since it was polluting the environment for later tests
