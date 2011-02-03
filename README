@@ -300,6 +300,17 @@ exported correctly if you sudo up to root. To fix it type:
 
 Try executing twisted again and it should work.
 
+Possible issues
+---------------
+
+You may encounter an issue where twisted fails to start and gives you error.
+This is usually caused by the environment variable PYTHONPATH not being
+exported correctly if you sudo up to root. To fix it type:
+
+    export PYTHONPATH="."
+
+Try executing twisted again and it should work.
+
 [1] http://code.osuosl.org/projects/twisted-vncauthproxy
 
 Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/VNC#VNC-Authproxy
