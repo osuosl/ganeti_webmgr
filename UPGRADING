@@ -1,0 +1,55 @@
+===============================================================================
+ Upgrading Ganeti Web Manager
+===============================================================================
+
+This quick guide will walk you through upgrading Ganeti Web Manager. A more
+detailed upgrade guide can be found on our wiki [1]. This guide is intended to
+give you a quick summary of how to upgrade you GWM.
+
+Our upgrade process uses Python-Django-South [2] a database migration tool that
+will update your database.
+
+The basic process goes as follows:
+
+ 1. Download the latest code
+ 2. Save a copy of settings.py
+ 3. Deploy code to your existing directory
+ 4. Copy settings.py back into the directory
+ 5. Follow the guide for your version.
+
+[1] http://code.osuosl.org/projects/ganeti-webmgr/wiki/Upgrading
+[2] http://south.aeracode.org/docs/
+
+===============================================================================
+ Upgrading From Version 0.4 
+===============================================================================
+
+If you are upgrading from version 0.4 you will be required to convert your
+installation to use South. Version 0.4 did not track the database with South, so
+South must be informed that your installation is already partially migrated.
+
+ 1. Install python-django-south [1].
+ 2. Add "south" to the list of INSTALLED_APPS inside settings.py
+ 3. Make sure you add any new settings to settings.py that are listed in the
+    Settings Changes section [2]. 
+ 5. Synchronize the database with:
+        ./manage.py syncdb
+ 6. Convert the ganeti app to use South for future migrations:
+        ./manage.py migrate ganeti 0001 --fake
+ 7. Convert the logs app to use South for future migrations:
+        ./manage.py migrate logs 0001 --fake
+ 8. Run South migration:
+        ./manage.py migrate
+
+[1] http://south.aeracode.org/docs/installation.html
+[2] http://code.osuosl.org/projects/ganeti-webmgr/wiki/Upgrading#Settings-Changes
+
+===============================================================================
+ Upgrading from >=0.5
+===============================================================================
+
+ 1. Run South migration.
+ 2. Update settings.py following the guide on the wiki [1].
+        ./manage.py migrate
+
+[1] http://code.osuosl.org/projects/ganeti-webmgr/wiki/Upgrading#Settings-Changes
