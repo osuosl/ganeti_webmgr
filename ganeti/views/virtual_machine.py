@@ -576,11 +576,9 @@ def modify(request, cluster_slug, instance):
             data = form.cleaned_data
             vcpus = data['vcpus']
             ram = data['ram']
-            #disksize = data['disk_size']
             disktype = data['disk_type']
             bootorder = data['bootorder']
             nictype = data['nictype']
-            #nicmode = data['nicmode']
             niclink = data['niclink']
             rootpath = data['rootpath']
             kernelpath = data['kernelpath']
@@ -607,30 +605,6 @@ def modify(request, cluster_slug, instance):
             
             return HttpResponseRedirect( \
             reverse('instance-detail', args=[cluster.slug, vm.hostname]))
-            
-            """
-            if data['cdrom_type'] == 'none':
-                data['cdrom_image_path'] = 'none'
-            elif data['cdrom_image_path'] != vm.hvparams['cdrom_image_path']:
-                # This should be an http URL
-                if not (data['cdrom_image_path'].startswith('http://') or
-                        data['cdrom_image_path'] == 'none'):
-                    # Remove this, we don't want them to be able to read local files
-                    del data['cdrom_image_path']
-            vm.set_params(**data)
-            sleep(1)
-            return HttpResponseRedirect(request.path)
-            
-            else:
-                if vm.info:
-                    if vm.info['hvparams']['cdrom_image_path']:
-                        vm.info['hvparams']['cdrom_type'] = 'iso'
-                    else:
-                        vm.info['hvparams']['cdrom_type'] = 'none'
-                    form = EditVirtualMachineForm(vm.info['hvparams'])
-                else:
-                    form = None
-            """
 
     elif request.method == 'GET':              
         # Need to set initial values from vm.info as these are not saved
@@ -1079,52 +1053,6 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
         #   instance.
         for field in self.exclude:
             del self.fields[field]
-
-class InstanceConfigForm(forms.Form):
-    nic_type = forms.ChoiceField(label="Network adapter model",
-                                 choices=(('paravirtual', 'Paravirtualized'),
-                                          ('rtl8139', 'Realtek 8139+'),
-                                          ('e1000', 'Intel PRO/1000'),
-                                          ('ne2k_pci', 'NE2000 PCI')))
-
-    disk_type = forms.ChoiceField(label="Hard disk type",
-                                  choices=(('paravirtual', 'Paravirtualized'),
-                                           ('scsi', 'SCSI'),
-                                           ('ide', 'IDE')))
-
-    boot_order = forms.ChoiceField(label="Boot device",
-                                   choices=(('disk', 'Hard disk'),
-                                            ('cdrom', 'CDROM')))
-
-    cdrom_type = forms.ChoiceField(label="CD-ROM Drive",
-                                   choices=(('none', 'Disabled'),
-                                            ('iso', 'ISO Image over HTTP (see below)')),
-                                   widget=forms.widgets.RadioSelect())
-
-    cdrom_image_path = forms.CharField(required=False, label="ISO Image URL (http)")
-    use_localtime = forms.BooleanField(label="Hardware clock uses local time instead of UTC", required=False)
-
-    def clean_cdrom_image_path(self):
-        data = self.cleaned_data['cdrom_image_path']
-        if data:
-            if not (data == 'none' or data.startswith('http://')):
-                raise forms.ValidationError('Only HTTP URLs are allowed')
-
-            elif data != 'none':
-                # Check if the image is there
-                oldtimeout = socket.getdefaulttimeout()
-                socket.setdefaulttimeout(5)
-                try:
-                    print "Trying to open"
-                    urllib2.urlopen(data)
-                except ValueError:
-                    raise forms.ValidationError('%s is not a valid URL' % data)
-                except: # urllib2 HTTP errors
-                    raise forms.ValidationError('Invalid URL')
-                finally:
-                    socket.setdefaulttimeout(oldtimeout)
-        return data
-
 
 def recv_user_add(sender, editor, user, obj, **kwargs):
     """
