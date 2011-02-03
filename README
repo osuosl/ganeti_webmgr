@@ -15,7 +15,8 @@ Browser compatibility:
     * Mozilla Firefox >= 3.x
     * Chrome / Chromium
 
-The VNC console requires websocket support and HTML5 support in the browser.
+The VNC console requires websockets or flash support and HTML5 support in the
+browser.
 
 Project page: http://code.osuosl.org/projects/ganeti-webmgr
 Mailing List: http://groups.google.com/group/ganeti-webmgr
@@ -273,7 +274,7 @@ Twisted VNC Authproxy is started with twistd, the twisted daemon. Eventually we
 will include init.d scripts for better managing the daemon. You may want to open
 port 8888 in your firewall for production systems.
 
-    twistd -y proxy.tac --pidfile=vncauthproxy.pid
+    twistd --pidfile=/tmp/proxy.pid -ny proxy.tac 
 
 Starting Flash Policy Server
 ----------------------------
@@ -286,7 +287,7 @@ want to open port 843 in your firewall for production systems.
 
 Start the policy server with twistd
 
-    twistd -y policy.tac
+    sudo twistd --pidfile=/tmp/policy.pid -ny policy.tac
 
 Possible issues
 ---------------
