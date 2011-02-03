@@ -115,6 +115,7 @@ INSTALLED_APPS = (
     'object_permissions',
     'ganeti',
     'logs',
+    'south'
 )
 
 AUTH_PROFILE_MODULE = 'ganeti.Profile'
@@ -159,7 +160,7 @@ PERIODIC_CACHE_REFRESH = 15
 #  $ python vncauthproxy.py --websockets
 # If you want to use encryption, then:
 #  $ python vncauthproxy.py --websockets --cert=FILE.pem
-VNC_PROXY=False
+VNC_PROXY='localhost:8888'
 
 
 # API Key for authenticating scripts that pull information from ganeti, such as

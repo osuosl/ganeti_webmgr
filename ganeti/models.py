@@ -48,7 +48,7 @@ from object_permissions.registration import register
 from object_permissions import signals as op_signals
 
 from ganeti import constants, management
-from ganeti.fields import PreciseDateTimeField
+from ganeti.fields import PreciseDateTimeField, SumIf
 from ganeti import permissions
 from util import client
 from util.client import GanetiApiError
@@ -992,14 +992,21 @@ class ClusterUser(models.Model):
         #       the default order_by field is also added to the group_by clause
         base = self.virtual_machines.all().order_by()
 
+        # XXX - use a custom aggregate for ram and vcpu count when filtering by
+        # running.  this allows us to execute a single query.
         if only_running:
-            base = base.filter(status="running")
+            sum_ram = SumIf('ram', condition='status="running"')
+            sum_vcpus = SumIf('virtual_cpus', condition='status="running"')
+        else:
+            sum_ram = Sum('ram')
+            sum_vcpus = Sum('virtual_cpus')
+        
         base = base.exclude(ram=-1, disk_size=-1, virtual_cpus=-1)
         
         if cluster:
             base = base.filter(cluster=cluster)
-            result = base.aggregate(ram=Sum('ram'), disk=Sum('disk_size'), \
-                                  virtual_cpus=Sum('virtual_cpus'))
+            result = base.aggregate(ram=sum_ram, disk=Sum('disk_size'), \
+                                  virtual_cpus=sum_vcpus)
             
             # repack with zeros instead of Nones
             if result['disk'] is None:
@@ -1011,9 +1018,9 @@ class ClusterUser(models.Model):
             return result
         
         else:
-            base = base.values('cluster').annotate(uram=Sum('ram'), \
+            base = base.values('cluster').annotate(uram=sum_ram, \
                                             udisk=Sum('disk_size'), \
-                                            uvirtual_cpus=Sum('virtual_cpus'))
+                                            uvirtual_cpus=sum_vcpus)
             
             # repack as dictionary
             result = {}
