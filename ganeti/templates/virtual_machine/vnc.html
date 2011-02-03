@@ -1,14 +1,37 @@
-<applet
-    archive="{{MEDIA_URL}}/javavnc/VncViewer.jar"
-    code="vncviewer.class"
-    width="800"
-    height="600"
->
-    <param name=HOST value="{{ host }}">
-    <param name=PORT value="{{ port }}">
-    <param name="Scaling factor" value="auto">
-    <!--
-        <param name=PASSWORD value="{{ password }}">
-        <param name="Open new window" value="yes">
-    -->
-</applet>
+    <script type="text/javascript">
+        var host, port, password;
+
+        function show_errors() {
+            if (host===false || port===false || password===false) {
+                $("#vnc_errors").html("Probably your proxy is not running or some errors occured. Try again.");
+                $("#vnc_errors").show();
+                return false;
+            }
+            return true;
+        }
+
+        function start() {
+            $("#vnc_errors").hide();
+
+            url1 = "{% url instance-vnc-proxy cluster.slug instance.hostname %}";
+            $.ajax({
+                "async": false,
+                "url": url1,
+                "dataType": "json",
+                "success": function(data, s, x){
+                    host = data[0];
+                    port = data[1];
+                    password = data[2];
+                }
+            });
+            if (!show_errors()) return false;
+
+            url2 = "{% url instance-vnc-applet cluster.slug instance.hostname %}" + "/" + host + "/" + port + "/" + password + "/";
+            $("#applet").load( url2 );
+
+            return false;
+        }
+    </script>
+
+    <input type="button" id="connect" value="Connect" onclick="start()" />
+    <div id="applet">&nbsp;</div>

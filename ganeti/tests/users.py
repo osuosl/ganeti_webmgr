@@ -125,10 +125,9 @@ class TestUsersViews(TestCase):
         
         data = {
             'username':test_user.username,
-            'password':test_user.password,
-            'first_name':'John',
-            'last_name':'Williams',
             'email':'test@example.org',
+            'new_password1':'',
+            'new_password2':''
         }
         
         # GET - Anonymous user
@@ -146,7 +145,7 @@ class TestUsersViews(TestCase):
         self.assertTrue(c.login(username=superuser.username, password='sudome'))
         response = c.get(url, follow=True)
         self.assertEqual(200, response.status_code)
-        self.assertContains(response, test_user.password)
+        #self.assertContains(response, test_user.password)
         self.assertContains(response, test_user.username)
         self.assertTemplateUsed(response, 'users/edit.html')
         c.logout()
@@ -172,9 +171,41 @@ class TestUsersViews(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'users/list.html')
         usercheck = User.objects.get(id=test_user.id)
-        self.assertEqual(usercheck.first_name, 'John')
-        self.assertEqual(usercheck.last_name, 'Williams')
         self.assertEqual(usercheck.email, 'test@example.org')
+        self.assertTrue(usercheck.check_password('testpassword'))
+        
+        data['new_password1'] = 'ahahaha'
+        data['new_password2'] = ''
+        response = c.post(url, data, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'users/edit.html')
+        usercheck = User.objects.get(id=test_user.id)
+        self.assertTrue(usercheck.check_password('testpassword'))
+
+        data['new_password1'] = ''
+        data['new_password2'] = 'ahahahaha'
+        response = c.post(url, data, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'users/edit.html')
+        usercheck = User.objects.get(id=test_user.id)
+        self.assertTrue(usercheck.check_password('testpassword'))
+        
+        data['new_password1'] = 'oeudoeuid'
+        data['new_password2'] = 'uidhp'
+        response = c.post(url, data, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'users/edit.html')
+        usercheck = User.objects.get(id=test_user.id)
+        self.assertTrue(usercheck.check_password('testpassword'))
+
+        data['new_password1'] = 'passwordshouldchange'
+        data['new_password2'] = 'passwordshouldchange'
+        response = c.post(url, data, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'users/list.html')
+        usercheck = User.objects.get(id=test_user.id)
+        self.assertTrue(usercheck.check_password('passwordshouldchange'))
+
         c.logout()
     
     def test_view_delete(self):

@@ -1,16 +1,22 @@
-{% extends "base.html" %}
+{% extends "menu_base.html" %}
 {% block head %}
     <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.multi_checkbox_selector.js"></script>
+    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.tablesorter.min.js"></script>
     <script type="text/javascript">
-        $(document).ready(function() {
-        	check_box_selector();
+    $(document).ready(function() {
+        check_box_selector();
+        $("#orphanlist").tablesorter({
+            headers: {
+                0: { sorter: 'false' },
+            }
         });
+    });
     </script>
 {% endblock %}
 {% block title %}Orphan VMs{% endblock %}
 
 {% block content %}
-    <h1>Missing Virtual Machines</h1>
+    <h1><span class="breadcrumb">Admin</span> : Missing Virtual Machines</h1>
     
     <p class="info">
         Missing virtual machines are those that exist in the database, but there
@@ -19,14 +25,23 @@
     </p>
     
     <form action="{% url import-missing %}" method="post">
-    {{form.errors}}
-    <input type="submit" value="Delete Selected" {%if not vms%}disabled{%endif%}>
-    <ul id="orphans">
-        {% for vm in vms %}
-            <li><input type="checkbox" name="virtual_machines" value="{{vm.0}}">{{vm.1}}</li>
-        {% empty %}
-            <p>All virtual machines are synchronized</p>
-        {% endfor %}
-    </ul>
+        {{form.errors}}
+        <input type="submit" value="Delete Selected" {%if not vms%}disabled{%endif%}>
+        <table id="orphanlist" class="sorted">
+        <thead>
+            <tr>
+                <th></th>
+                <th>Cluster</th>
+                <th>Hostname</th>
+            </tr>
+        </thead>
+        <tbody id="orphans">
+                {% for vm in vms %}
+                    <tr><td><input type="checkbox" name="virtual_machines" value="{{vm.0}}" /></td><td>{{vm.1}}</td><td>{{vm.2}}</td></tr>
+                {% empty %}
+                    <tr><td colspan="3">All virtual machines are synchronized.</td></tr>
+                {% endfor %}
+        </tbody>
+        </table>
     </form>
 {% endblock %}

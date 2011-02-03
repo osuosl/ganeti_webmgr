@@ -131,8 +131,35 @@ NODES_BULK = [
     'sinst_list': [],
     'sip': '192.168.16.136',
     'tags': [],
-    'uuid': '1fee760b-b240-4d7a-a514-5c9441877a01'}
+    'uuid': '1fee760b-b240-4d7a-a514-5c9441877a01'},
+    {
+    "cnodes": None,
+    "csockets": None,
+    "ctime": 1272388723.7258999,
+    "ctotal": None,
+    "dfree": None,
+    "drained": False,
+    "dtotal": None,
+    "master_candidate": False,
+    "mfree": None,
+    "mnode": None,
+    "mtime": 1293527598.306725,
+    "mtotal": None,
+    "name": "node3.osuosl.org",
+    "offline": True,
+    "pinst_cnt": 0,
+    "pinst_list": [],
+    "pip": "10.192.0.179",
+    "role": "O",
+    "serial_no": 2,
+    "sinst_cnt": 0,
+    "sinst_list": [],
+    "sip": "192.168.166.179",
+    "tags": [],
+    "uuid": "5b1001e7-2595-47d4-a1ae-5a6da7b461ca"}
 ]
+
+
 
 NODE = {'cnodes': 1,
     'csockets': 1,
@@ -262,7 +289,17 @@ JOB_ERROR = {'end_ts': [1291836084, 802444],
  'start_ts': [1291836084, 673097],
  'status': 'error',
  'summary': ['INSTANCE_REBOOT(gimager.osuosl.bak)']}
-
+JOB_DELETE_SUCCESS = {'status': 'success',
+    'ops': [{'dry_run': False,
+    'instance_name': 'test.gwm.osuosl.org',
+    'debug_level': 0,
+    'OP_ID': 'OP_INSTANCE_REMOVE',
+    'ignore_failures': False, 'shutdown_timeout': 120}],
+    'end_ts': [1295224140, 247101], 'start_ts': [1295224139, 507156],
+    'summary': ['INSTANCE_REMOVE(kennym4.gwm.osuosl.org)'],
+    'received_ts': [1295224139, 489597], 'opresult': [None],
+    'opstatus': ['success'],
+    'oplog': [[]], 'id': '17050'}
 
 JOB_LOG = {'end_ts': [1292007990, 759365],
  'id': '121061',
@@ -451,6 +488,7 @@ class RapiProxy(client.GanetiRapiClient):
         CallProxy.patch(instance, 'StartupInstance', False, 1)
         CallProxy.patch(instance, 'ShutdownInstance', False, 1)
         CallProxy.patch(instance, 'RebootInstance', False, 1)
+        CallProxy.patch(instance, 'ReinstallInstance', False, 1)
         CallProxy.patch(instance, 'AddInstanceTags', False)
         CallProxy.patch(instance, 'DeleteInstanceTags', False)
         CallProxy.patch(instance, 'CreateInstance', False, 1)
@@ -465,7 +503,8 @@ class RapiProxy(client.GanetiRapiClient):
         if key in ['GetInstances','GetInstance','GetNodes','GetNode', \
                    'GetInfo', 'StartupInstance', 'ShutdownInstance', \
                    'RebootInstance', 'AddInstanceTags','DeleteInstanceTags', \
-                   'GetOperatingSystems', 'GetJobStatus', 'CreateInstance'] \
+                   'GetOperatingSystems', 'GetJobStatus', 'CreateInstance', \
+                   'ReinstallInstance' ] \
                     and self.error:
             return self.fail
         return super(RapiProxy, self).__getattribute__(key)

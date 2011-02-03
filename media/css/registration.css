@@ -1,0 +1,38 @@
+/* registration.css */
+#body_wrapper {
+    background: url(/media/images/background_no_menu.png) repeat-y center #eee !important;
+}
+#content {float:none; width:699px; margin:0 auto;}
+
+
+/* Login Form */
+#login {margin: 3em auto 0em auto; width: 40%;}
+#login fieldset {
+    background: #eeeeee;
+    border:1px #dddddd solid;
+    margin-bottom:10px;
+    padding:1em;
+    -moz-border-radius:5px;
+    -webkit-border-radius:5px;
+}
+#login fieldset h2 {margin-bottom:5px;}
+#login fieldset p {padding-bottom:1.5ex;}
+#login p label {width: 5.5em;}
+#login input.submit {margin-left: 6em;}
+
+/* Registration Form */
+#registration {margin: 2em auto 0em auto; width:50%;}
+#registration p label {width:10.5em;}
+#registration input {width:16em;}
+#registration input.submit {margin-left: 11em; width:6em;}
+
+/* Password Reset Request Form */
+#passwordreset {margin: 2em auto 0em auto; width:50%;}
+#passwordreset p label {width:7.5em;}
+#passwordreset input {width:18em;}
+#passwordreset input.submit {margin-left: 8em; width:6em;}
+
+/* Password Reset Completion Form */
+#passwordreset2 {margin: 2em auto 0em auto; width:53%;}
+#passwordreset2 p label {width:14.5em;}
+#passwordreset2 input.submit {margin-left: 15em; width:6em;}

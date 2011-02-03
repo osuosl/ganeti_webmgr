@@ -21,20 +21,25 @@ import json
 import socket
 import urllib2
 
+# XXX Sleep is used current in 3 places because ganeti takes a few seconds to process jobs.
+#  Information on whether or not an operation succeeded is gathered from ganeti in this aspect
+#  thus the extra 2 second wait. This should go away once logging has been fully implemented so
+#  a user of the system can no if their job succeeded or failed.
 from time import sleep
 
 from django import forms
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
+from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.http import HttpResponse, HttpResponseRedirect, \
     HttpResponseNotAllowed, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
+from django.conf import settings
 
 from object_permissions.views.permissions import view_users, view_permissions
 from object_permissions import get_users_any
+from object_permissions import signals as op_signals
 
 from logs.models import LogItem
 log_action = LogItem.objects.log_action
@@ -43,6 +48,7 @@ from util.client import GanetiApiError
 from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine, \
         Job, SSHKey
 from ganeti.views import render_403
+from ganeti.fields import DataVolumeField
 
 empty_field = (u'', u'---------')
 
@@ -65,52 +71,106 @@ def delete(request, cluster_slug, instance):
         user.has_perm("admin", instance.cluster)
         ):
         return render_403(request, 'You do not have sufficient privileges')
-
+    
     if request.method == 'GET':
         return render_to_response("virtual_machine/delete.html",
             {'vm': instance},
             context_instance=RequestContext(request),
         )
-      
-    elif request.method == 'DELETE':
-        # Delete instance
-        jobid = instance.rapi.DeleteInstance(instance.hostname)
-        sleep(2)
-        jobstatus = instance.rapi.GetJobStatus(jobid)
-        
-        instance.delete()
-        
-        return HttpResponse('1', mimetype='application/json')
     
-    return HttpResponseNotAllowed(["GET","DELETE"])
+    elif request.method == 'POST':
+        # start deletion job and mark the VirtualMachine as pending_delete and
+        # disable the cache for this VM.
+        job_id = instance.rapi.DeleteInstance(instance.hostname)
+        job = Job.objects.create(job_id=job_id, obj=instance, cluster_id=instance.cluster_id)
+        VirtualMachine.objects.filter(id=instance.id) \
+            .update(last_job=job, ignore_cache=True, pending_delete=True)
+        
+        return HttpResponseRedirect( \
+            reverse('instance-detail', args=[cluster_slug, instance.hostname]))
+
+    return HttpResponseNotAllowed(["GET","POST"])
 
 
 @login_required
-def vnc(request, cluster_slug, instance):
-    instance = get_object_or_404(VirtualMachine, hostname=instance, \
-                                 cluster__slug=cluster_slug)
+def reinstall(request, cluster_slug, instance):
+    """
+    Reinstall a VM.
+    """
 
     user = request.user
-    if not (user.is_superuser or user.has_perm('admin', instance) or \
-        user.has_perm('admin', instance.cluster)):
-        return render_403(request, 'You do not have permission to vnc on this')
+    instance = get_object_or_404(VirtualMachine, cluster__slug=cluster_slug,
+        hostname=instance)
 
-    if settings.VNC_PROXY:
-        host = 'localhost'
-        port, password = instance.setup_vnc_forwarding()
+    # Check permissions.
+    # XXX Reinstalling is somewhat similar to deleting in that you destroy data,
+    # so use that for now.
+    if not (
+        user.is_superuser or
+        user.has_any_perms(instance, ["remove", "admin"]) or
+        user.has_perm("admin", instance.cluster)
+        ):
+        return render_403(request, 'You do not have sufficient privileges')
 
-    else:
-        host = instance.info['pnode']
-        port = instance.info['network_port']
-        password = ''
+    if request.method == 'GET':
+        return render_to_response("virtual_machine/reinstall.html",
+            {'vm': instance, 'oschoices': cluster_os_list(instance.cluster),
+             'current_os': instance.operating_system, 'submitted': False},
+            context_instance=RequestContext(request),
+        )
+      
+    elif request.method == 'POST':
+        # Reinstall instance
+        if "os" in request.POST:
+            os = request.POST["os"]
+        else:
+            os = instance.operating_system
 
-    return render_to_response("virtual_machine/vnc.html",
-                              {'instance': instance,
-                               'host': host,
-                               'port': port,
-                               'password': password},
+        # XXX no_startup=True prevents quota circumventions. possible future solution would be a checkbox
+        # asking whether they want to start up, and check quota here if they do (would also involve
+        # checking whether this VM is already running and subtracting that)
+        
+        job_id = instance.rapi.ReinstallInstance(instance.hostname, os=os, no_startup=True)
+        job = Job.objects.create(job_id=job_id, obj=instance, cluster=instance.cluster)
+        VirtualMachine.objects.filter(id=instance.id).update(last_job=job, ignore_cache=True)
+        
+        return HttpResponseRedirect(
+            reverse('instance-detail', args=[instance.cluster.slug, instance.hostname]))
+    
+    return HttpResponseNotAllowed(["GET","POST"])
+
+
+@login_required
+def novnc(request, cluster_slug, instance):
+    vm = get_object_or_404(VirtualMachine, hostname=instance, \
+                           cluster__slug=cluster_slug)
+    user = request.user
+    if not (user.is_superuser \
+        or user.has_any_perms(vm, ['admin', 'power']) \
+        or user.has_perm('admin', vm.cluster)):
+            return HttpResponseForbidden('You do not have permission to vnc on this')
+
+    return render_to_response("virtual_machine/novnc.html",
+                              {'cluster_slug': cluster_slug,
+                               'instance': vm,
+                               },
         context_instance=RequestContext(request),
     )
+
+
+@login_required
+def vnc_proxy(request, cluster_slug, instance):
+    vm = get_object_or_404(VirtualMachine, hostname=instance, \
+                                 cluster__slug=cluster_slug)
+    user = request.user
+    if not (user.is_superuser \
+        or user.has_any_perms(vm, ['admin', 'power']) \
+        or user.has_perm('admin', vm.cluster)):
+            return HttpResponseForbidden('You do not have permission to vnc on this')
+    
+    result = json.dumps(vm.setup_vnc_forwarding())
+    
+    return HttpResponse(result, mimetype="application/json")
 
 
 @login_required
@@ -145,6 +205,21 @@ def startup(request, cluster_slug, instance):
     if not (user.is_superuser or user.has_any_perms(vm, ['admin','power']) or \
         user.has_perm('admin', vm.cluster)):
             return render_403(request, 'You do not have permission to start up this virtual machine')
+
+    # superusers bypass quota checks
+    if not user.is_superuser and vm.owner:
+        # check quota
+        quota = vm.cluster.get_quota(vm.owner)
+        if any(quota.values()):
+            used = vm.owner.used_resources(vm.cluster, only_running=True)
+            
+            if quota['ram'] is not None and (used['ram'] + vm.ram) > quota['ram']:
+                msg = 'Owner does not have enough RAM remaining on this cluster to start the virtual machine.'
+                return HttpResponse(json.dumps([0, msg]), mimetype='application/json')
+            
+            if quota['virtual_cpus'] and (used['virtual_cpus'] + vm.virtual_cpus) > quota['virtual_cpus']:
+                msg = 'Owner does not have enough Virtual CPUs remaining on this cluster to start the virtual machine.'
+                return HttpResponse(json.dumps([0, msg]), mimetype='application/json')
 
     if request.method == 'POST':
         try:
@@ -187,7 +262,6 @@ def ssh_keys(request, cluster_slug, instance, api_key):
     """
     Show all ssh keys which belong to users, who are specified vm's admin
     """
-    import settings
     if settings.WEB_MGR_API_KEY != api_key:
         return HttpResponseForbidden("You're not allowed to view keys.")
 
@@ -201,16 +275,50 @@ def ssh_keys(request, cluster_slug, instance, api_key):
     return HttpResponse(json.dumps(keys_list), mimetype="application/json")
 
 
+def render_vms(request, query):
+    """
+    Helper function for paginating a virtual machine query
+    """
+    GET = request.GET
+    if 'order_by' in GET:
+        query = query.order_by(GET['order_by'])
+    count = GET['count'] if 'count' in GET else settings.ITEMS_PER_PAGE
+    paginator = Paginator(query, count)
+    page = request.GET.get('page', 1)
+
+    try:
+        vms = paginator.page(page)
+    except (EmptyPage, InvalidPage):
+        vms = paginator.page(paginator.num_pages)
+
+    return vms
+
+
 @login_required
 def list_(request):
+    """
+    View for displaying a list of VirtualMachines
+    """
     user = request.user
+
+    # there are 3 cases
+    #1) user is superuser
     if user.is_superuser:
         vms = VirtualMachine.objects.all()
         can_create = True
+
+    #2) user has any perms on any VM
+    #3) user belongs to the group which has perms on any VM
     else:
-        vms = user.get_objects_any_perms(VirtualMachine, ['admin', 'power','remove'])
-        can_create = user.has_any_perms(Cluster, ['create_vm'])
-    
+        vms = user.get_objects_any_perms(VirtualMachine, groups=True, \
+                                        cluster=['admin'])
+        can_create = user.has_any_perms(Cluster, ['create_vm', ])
+
+    vms = vms.select_related()
+
+    # paginate, sort
+    vms = render_vms(request, vms)
+
     return render_to_response('virtual_machine/list.html', {
         'vms':vms,
         'can_create':can_create,
@@ -220,13 +328,54 @@ def list_(request):
 
 
 @login_required
+def vm_table(request, cluster_slug=None):
+    """
+    View for displaying the virtual machine table.  This is used for ajax calls
+    to reload the table.   Usually because of a page or sort change.
+    """
+    user = request.user
+
+    # there are 3 cases
+    #1) user is superuser
+    if user.is_superuser:
+        vms = VirtualMachine.objects.all()
+        can_create = True
+
+    #2) user has any perms on any VM
+    #3) user belongs to the group which has perms on any VM
+    else:
+        vms = user.get_objects_any_perms(VirtualMachine, groups=True, cluster=['admin'])
+        can_create = user.has_any_perms(Cluster, ['create_vm'])
+
+    if cluster_slug:
+        cluster = Cluster.objects.get(slug=cluster_slug)
+        vms = vms.filter(cluster=cluster)
+    else:
+        cluster = None
+
+    vms = render_vms(request, vms)
+
+    return render_to_response('virtual_machine/inner_table.html', {
+        'vms':vms,
+        'can_create':can_create,
+        'cluster':cluster
+       },
+        context_instance=RequestContext(request),
+    )
+
+
+@login_required
 def detail(request, cluster_slug, instance):
+    """
+    Display details of virtual machine.
+    """
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
 
     user = request.user
-    admin = user.is_superuser or user.has_perm('admin', vm) \
-        or user.has_perm('admin', cluster)
+    cluster_admin = user.is_superuser or user.has_perm('admin', cluster)
+    admin = cluster_admin or user.has_perm('admin', vm) \
+    
     if admin:
         remove = True
         power = True
@@ -236,6 +385,7 @@ def detail(request, cluster_slug, instance):
     
     if not (admin or power or remove):
         return render_403(request, 'You do not have permission to view this cluster\'s details')
+        
     #TODO Update to use part of the NewVirtualMachineForm in 0.5 release
     """
     if request.method == 'POST':
@@ -251,7 +401,6 @@ def detail(request, cluster_slug, instance):
                     # Remove this, we don't want them to be able to read local files
                     del data['cdrom_image_path']
             vm.set_params(**data)
-            sleep(1)
             return HttpResponseRedirect(request.path)
 
     else:
@@ -264,13 +413,19 @@ def detail(request, cluster_slug, instance):
         else:
             form = None
     """
-    return render_to_response("virtual_machine/detail.html", {
+    if vm.pending_delete:
+        template = 'virtual_machine/delete_status.html' 
+    else:
+        template = 'virtual_machine/detail.html'
+    
+    return render_to_response(template, {
         'cluster': cluster,
         'instance': vm,
         #'configform': form,
         'admin':admin,
+        'cluster_admin':cluster_admin,
         'remove':remove,
-        'power':power
+        'power':power,
         },
         context_instance=RequestContext(request),
     )
@@ -298,23 +453,16 @@ def permissions(request, cluster_slug, instance, user_id=None, group_id=None):
     """
     Update a users permissions.
     """
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    vm = get_object_or_404(VirtualMachine, hostname=instance)
+    vm = get_object_or_404(VirtualMachine, hostname=instance, \
+                           cluster__slug=cluster_slug)
 
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', vm) or \
-        user.has_perm('admin', cluster)):
+        user.has_perm('admin', vm.cluster)):
         return render_403(request, "You do not have sufficient privileges")
 
-    url = reverse('vm-permissions', args=[cluster.slug, vm.hostname])
-    response, modified = view_permissions(request, vm, url, user_id, group_id)
-    
-    # log changes if any.
-    if modified:
-        # log information about creating the machine
-        log_action(user, vm, "modified permissions")
-    
-    return response
+    url = reverse('vm-permissions', args=[cluster_slug, vm.hostname])
+    return view_permissions(request, vm, url, user_id, group_id)
 
 
 @login_required
@@ -338,6 +486,7 @@ def create(request, cluster_slug=None):
         form = NewVirtualMachineForm(user, None, request.POST)
         if form.is_valid():
             data = form.cleaned_data
+            start = data['start']
             owner = data['owner']
             cluster = data['cluster']
             hostname = data['hostname']
@@ -380,10 +529,18 @@ def create(request, cluster_slug=None):
                 snode = data['snode']
 
             try:
+                # XXX attempt to load the virtual machine.  This ensure that if
+                # there was a previous vm with the same hostname, but had not
+                # successfully been deleted, then it will be deleted now
+                try:
+                    VirtualMachine.objects.get(cluster=cluster, hostname=hostname)
+                except VirtualMachine.DoesNotExist:
+                    pass
+                
                 job_id = cluster.rapi.CreateInstance('create', hostname,
                         disk_template,
                         [{"size": disk_size, }],[{'mode':nicmode, 'link':niclink, }],
-                        os=os, vcpus=vcpus,
+                        start=start, os=os, vcpus=vcpus,
                         pnode=pnode, snode=snode,
                         name_check=name_check, ip_check=name_check,
                         iallocator=iallocator_hostname,
@@ -395,17 +552,7 @@ def create(request, cluster_slug=None):
                             'disk_type':disktype,\
                             'cdrom_image_path':imagepath},
                         beparams={"memory": ram})
-
-
-                # Wait for job to process as the error will not happen
-                #  right away
-                sleep(2)
-                jobstatus = cluster.rapi.GetJobStatus(job_id)
-
-                # raise an exception if there was an error in the job
-                if jobstatus["status"] == 'error':
-                    raise GanetiApiError(jobstatus["opresult"])
-
+                
                 vm = VirtualMachine(cluster=cluster, owner=owner,
                                     hostname=hostname, disk_size=disk_size,
                                     ram=ram, virtual_cpus=vcpus)
@@ -628,9 +775,12 @@ class NewVirtualMachineForm(forms.Form):
     ]
     bootchoices = [
         ('disk', 'Hard Disk'),
-        ('cdrom', 'CD-ROM')
+        ('cdrom', 'CD-ROM'),
+        ('network', 'Network'),
     ]
 
+    start = forms.BooleanField(label='Start up after creation',
+                               initial=True, required=False)
     owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label='Owner')
     cluster = forms.ModelChoiceField(queryset=Cluster.objects.none(), label='Cluster')
     hostname = forms.RegexField(label='Instance Name', regex=FQDN_RE,
@@ -650,8 +800,8 @@ class NewVirtualMachineForm(forms.Form):
     os = forms.ChoiceField(label='Operating System', choices=[empty_field])
     # BEPARAMS
     vcpus = forms.IntegerField(label='Virtual CPUs', min_value=1)
-    ram = forms.IntegerField(label='Memory (MB)', min_value=100)
-    disk_size = forms.IntegerField(label='Disk Size (MB)', min_value=100)
+    ram = DataVolumeField(label='Memory', min_value=100)
+    disk_size = DataVolumeField(label='Disk Size', min_value=100)
     disk_type = forms.ChoiceField(label='Disk Type', choices=disktypes)
     nicmode = forms.ChoiceField(label='NIC Mode', choices=nicmodes)
     niclink = forms.CharField(label='NIC Link', required=False)
@@ -771,30 +921,28 @@ class NewVirtualMachineForm(forms.Form):
                     msg = u"Owner does not have permissions for this cluster."
 
                 # check quota
+                start = data['start']
                 quota = cluster.get_quota(owner)
                 if quota.values():
-                    used = owner.used_resources
-                    if used['ram']:
-                        ram = used['ram'] + data.get('ram', 0)
-                        if ram > quota['ram']:
+                    used = owner.used_resources(cluster, only_running=True)
+                    
+                    if start and quota['ram'] is not None and \
+                        (used['ram'] + data['ram']) > quota['ram']:
                             del data['ram']
-                            q_msg = u"Owner does not have enough ram remaining on this cluster."
+                            q_msg = u"Owner does not have enough ram remaining on this cluster. You may choose to not automatically start the instance or reduce the amount of ram."
                             self._errors["ram"] = self.error_class([q_msg])
-
-                    if used['disk']:
-                        disk = used['disk'] + data.get('disk_size', 0)
-                        if disk > quota['disk']:
-                           del data['disk_size']
-                           q_msg = u"Owner does not have enough diskspace remaining on this cluster."
-                           self._errors["disk_size"] = self.error_class([q_msg])
-
-                    if used['virtual_cpus']:
-                        vcpus = used['virtual_cpus'] + data.get('vcpus', 0)
-                        if vcpus > quota['virtual_cpus']:
-                           del data['vcpus']
-                           q_msg = u"Owner does not have enough virtual cpus remaining on this cluster."
-                           self._errors["vcpus"] = self.error_class([q_msg])
-
+                    
+                    if quota['disk'] and used['disk'] + data['disk_size'] > quota['disk']:
+                        del data['disk_size']
+                        q_msg = u"Owner does not have enough diskspace remaining on this cluster."
+                        self._errors["disk_size"] = self.error_class([q_msg])
+                    
+                    if start and quota['virtual_cpus'] is not None and \
+                        (used['virtual_cpus'] + data['vcpus']) > quota['virtual_cpus']:
+                            del data['vcpus']
+                            q_msg = u"Owner does not have enough virtual cpus remaining on this cluster. You may choose to not automatically start the instance or reduce the amount of virtual cpus."
+                            self._errors["vcpus"] = self.error_class([q_msg])
+            
             if msg:
                 self._errors["owner"] = self.error_class([msg])
                 del data['owner']
@@ -884,12 +1032,37 @@ class InstanceConfigForm(forms.Form):
                 socket.setdefaulttimeout(5)
                 try:
                     print "Trying to open"
-                    response = urllib2.urlopen(data)
-                    socket.setdefaulttimeout(oldtimeout)
+                    urllib2.urlopen(data)
                 except ValueError:
-                    socket.setdefaulttimeout(oldtimeout)
                     raise forms.ValidationError('%s is not a valid URL' % data)
                 except: # urllib2 HTTP errors
-                    socket.setdefaulttimeout(oldtimeout)
                     raise forms.ValidationError('Invalid URL')
+                finally:
+                    socket.setdefaulttimeout(oldtimeout)
         return data
+
+
+def recv_user_add(sender, editor, user, obj, **kwargs):
+    """
+    receiver for object_permissions.signals.view_add_user, Logs action
+    """
+    log_action(editor, obj, "added user")
+
+
+def recv_user_remove(sender, editor, user, obj, **kwargs):
+    """
+    receiver for object_permissions.signals.view_remove_user, Logs action
+    """
+    log_action(editor, obj, "removed user")
+
+
+def recv_perm_edit(sender, editor, user, obj, **kwargs):
+    """
+    receiver for object_permissions.signals.view_edit_user, Logs action
+    """
+    log_action(editor, obj, "modified permissions")
+
+
+op_signals.view_add_user.connect(recv_user_add, sender=VirtualMachine)
+op_signals.view_remove_user.connect(recv_user_remove, sender=VirtualMachine)
+op_signals.view_edit_user.connect(recv_perm_edit, sender=VirtualMachine)

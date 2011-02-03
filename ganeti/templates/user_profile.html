@@ -1,13 +1,25 @@
-{% extends "base.html" %}
+{% extends "menu_base.html" %}
 {% load webmgr_tags %}
 
 {% block title %}User Profile{% endblock %}
 
 {% block head %}
     {% include "ssh_keys/header.html" %}
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        // Fade out info message after 5 seconds
+        $('.fadeout').delay(5000).fadeOut();
+    });
+</script>
 {% endblock %}
 
 {% block content %}
+    <div id="messages">
+    {% for message in messages %}
+        <li class="fadeout">{{ message }}</li>
+    {% endfor %}
+    </div>
     <h1>Profile information for {{user.username}}</h1>
     <fieldset id="uprofile">
         <form action="{% url profile %}" method="post">

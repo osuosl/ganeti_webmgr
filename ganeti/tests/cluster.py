@@ -33,6 +33,7 @@ from ganeti import models
 Cluster = models.Cluster
 VirtualMachine = models.VirtualMachine
 Quota = models.Quota
+Job = models.Job
 
 
 __all__ = ('TestClusterViews', 'TestClusterModel')
@@ -207,101 +208,12 @@ class TestClusterModel(TestCase):
         
         self.assertEqual([u'does.not.exist.org'], cluster.missing_in_ganeti)
 
-    def test_sync_virtual_machines_in_edit_view(self):
-        '''
-        Test if sync_virtual_machines is run after editing a cluster
-        for the second time
-        '''
-        #configuring stuff needed to test edit view
-        user = User(id=2, username='tester0')
-        user.set_password('secret')
-        user.save()
-        cluster = Cluster(hostname='test.osuosl.test', slug='OSL_TEST')
-        cluster.save()
-        url = '/cluster/%s/edit/' % cluster.slug
-
-        dict_ = globals()
-        dict_['user'] = user
-        dict_['cluster'] = cluster
-        dict_['c'] = Client()
-
-        cluster.virtual_machines.all().delete()
-
-        #run view_edit test
-        response = c.get(url, follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'registration/login.html')
-        
-        self.assert_(c.login(username=user.username, password='secret'))
-        response = c.get(url)
-        self.assertEqual(403, response.status_code)
-        
-        user.grant('admin', cluster)
-        response = c.get(url)
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/edit.html')
-        self.assertEqual(cluster, response.context['cluster'])
-        user.revoke('admin', cluster)
-
-        user.is_superuser = True
-        user.save()
-        response = c.get(url)
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/edit.html')
-        
-        data = dict(hostname='new-host-1.hostname',
-                    slug='new-host-1',
-                    port=5080,
-                    description='testing editing clusters',
-                    username='tester',
-                    password = 'secret',
-                    confirm_password = 'secret',
-                    virtual_cpus=1,
-                    disk=2,
-                    ram=3
-                    )
-        
-        data_ = data.copy()
-        response = c.post(url, data, follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/detail.html')
-        cluster = response.context['cluster']
-        del data_['confirm_password']
-        for k, v in data_.items():
-            self.assertEqual(v, getattr(cluster, k))
-
-        self.assert_(cluster.virtual_machines.all().exists())
-
-        cluster.virtual_machines.all().delete()
-        
-        #run view_edit again..
-        url = '/cluster/%s/edit/' % cluster.slug
-        response = c.get(url)
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/edit.html')
-        
-        data_ = data.copy()
-        response = c.post(url, data, follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/detail.html')
-        cluster = response.context['cluster']
-        del data_['confirm_password']
-        for k, v in data_.items():
-            self.assertEqual(v, getattr(cluster, k))
-
-        #test success
-        self.assert_(cluster.virtual_machines.all().exists())
-
 
 class TestClusterViews(TestCase):
     
     def setUp(self):
         self.tearDown()
+        models.client.GanetiRapiClient = RapiProxy
         
         User(id=1, username='anonymous').save()
         settings.ANONYMOUS_USER_ID=1
@@ -363,6 +275,66 @@ class TestClusterViews(TestCase):
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, template)
 
+    def validate_get_configurable(self, url, args, template=False,
+            mimetype=False, status=False, perms=[]):
+        """
+        More configurable version of validate_get.
+        Additional arguments (only if set) affects only authorized user test.
+
+        @template: used template
+        @mimetype: returned mimetype
+        @status:   returned Http status code
+        @perms:    set of perms granted on authorized user
+
+        @return    response content
+        """
+        # anonymous user
+        response = c.get(url % args, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'registration/login.html')
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.get(url % args)
+        self.assertEqual(403, response.status_code)
+        
+        # nonexisent cluster
+        if args:
+            response = c.get(url % "DOES_NOT_EXIST")
+            self.assertEqual(404, response.status_code)
+        
+        result = []
+
+        # authorized user (perm)
+        if perms:
+            for perm in perms:
+                grant(user, perm, cluster)
+        response = c.get(url % args)
+        if status:
+            self.assertEqual(status, response.status_code)
+        if mimetype:
+            self.assertEqual(mimetype, response['content-type'])
+        if template:
+            self.assertTemplateUsed(response, template)
+
+        result.append(response)
+        
+        # authorized user (superuser)
+        user.revoke_all(cluster)
+        user.is_superuser = True
+        user.save()
+        response = c.get(url % args)
+        if status:
+            self.assertEqual(200, response.status_code)
+        if mimetype:
+            self.assertEqual(mimetype, response['content-type'])
+        if template:
+            self.assertTemplateUsed(response, template)
+
+        result.append(response)
+
+        return result
+
     def test_view_list(self):
         """
         Tests displaying the list of clusters
@@ -406,8 +378,8 @@ class TestClusterViews(TestCase):
         self.assertTemplateUsed(response, 'cluster/list.html')
         clusters = response.context['cluster_list']
         self.assert_(cluster in clusters)
-        self.assert_(cluster1 in clusters)
-        self.assertEqual(2, len(clusters))
+        self.assert_(cluster1 not in clusters)
+        self.assertEqual(1, len(clusters))
         
         # authorized (superuser)
         self.assert_(c.login(username=user2.username, password='secret'))
@@ -421,7 +393,7 @@ class TestClusterViews(TestCase):
         self.assert_(cluster2 in clusters)
         self.assert_(cluster3 in clusters)
         self.assertEqual(4, len(clusters))
-    
+
     def test_view_add(self):
         """
         Tests adding a new cluster
@@ -452,7 +424,6 @@ class TestClusterViews(TestCase):
                     description='testing editing clusters',
                     username='tester',
                     password = 'secret',
-                    confirm_password = 'secret',
                     virtual_cpus=1,
                     disk=2,
                     ram=3
@@ -478,7 +449,6 @@ class TestClusterViews(TestCase):
             self.assertEquals('text/html; charset=utf-8', response['content-type'])
             self.assertTemplateUsed(response, 'cluster/detail.html')
             cluster = response.context['cluster']
-            del data_['confirm_password']
             for k, v in data_.items():
                 self.assertEqual(v, getattr(cluster, k))
             Cluster.objects.all().delete()
@@ -498,7 +468,6 @@ class TestClusterViews(TestCase):
         data_ = data.copy()
         del data_['username']
         del data_['password']
-        del data_['confirm_password']
         response = c.post(url, data_, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
@@ -509,7 +478,7 @@ class TestClusterViews(TestCase):
         Cluster.objects.all().delete()
         
         #test username/password/confirm_password relationships
-        relation = ['username', 'password', 'confirm_password']
+        relation = ['username', 'password']
         for property in relation:
             data_ = data.copy()
             del data_[property]
@@ -517,30 +486,6 @@ class TestClusterViews(TestCase):
             self.assertEqual(200, response.status_code)
             self.assertEquals('text/html; charset=utf-8', response['content-type'])
             self.assertTemplateUsed(response, 'cluster/edit.html')
-        
-        data_ = data.copy()
-        del data_['password']
-        del data_['confirm_password']
-        response = c.post(url, data_, follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/edit.html')
-        
-        data_ = data.copy()
-        del data_['username']
-        del data_['confirm_password']
-        response = c.post(url, data_, follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/edit.html')
-        
-        data_ = data.copy()
-        del data_['password']
-        del data_['username']
-        response = c.post(url, data_, follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/edit.html')
         
         # test unique fields
         response = c.post(url, data)
@@ -585,7 +530,7 @@ class TestClusterViews(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'cluster/edit.html')
-	self.assertEqual(None, cluster.info)
+        self.assertEqual(None, cluster.info)
         
         data = dict(hostname='new-host-1.hostname',
                     slug='new-host-1',
@@ -750,7 +695,7 @@ class TestClusterViews(TestCase):
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'permissions/form.html')
+        self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
         
         # valid GET authorized user (superuser)
         user.revoke('admin', cluster)
@@ -758,7 +703,7 @@ class TestClusterViews(TestCase):
         user.save()
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'permissions/form.html')
+        self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
         
         # no user or group
         data = {'permissions':['admin']}
@@ -843,7 +788,7 @@ class TestClusterViews(TestCase):
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'permissions/form.html')
+        self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
         
         # valid GET authorized user (superuser)
         user.revoke('admin', cluster)
@@ -851,7 +796,7 @@ class TestClusterViews(TestCase):
         user.save()
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'permissions/form.html')
+        self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
         
         # invalid user
         response = c.get(url % (cluster.slug, -1))
@@ -880,6 +825,13 @@ class TestClusterViews(TestCase):
         self.assert_(user1.has_perm('admin', cluster))
         self.assertFalse(user1.has_perm('create_vm', cluster))
         
+        # add quota to the user
+        user_quota = {'default':0, 'ram':51, 'virtual_cpus':10, 'disk':3000}
+        quota = Quota(cluster=cluster, user=user1.get_profile())
+        quota.__dict__.update(user_quota)
+        quota.save()
+        self.assertEqual(user_quota, cluster.get_quota(user1.get_profile()))
+        
         # valid POST user has no permissions left
         data = {'permissions':[], 'user':user1.id}
         response = c.post(url_post % args_post, data)
@@ -887,6 +839,23 @@ class TestClusterViews(TestCase):
         self.assertEquals('application/json', response['content-type'])
         self.assertEqual([], get_user_perms(user, cluster))
         self.assertEqual('1', response.content)
+        
+        # quota should be deleted (and showing default)
+        self.assertEqual(1, cluster.get_quota(user1.get_profile())['default'])
+        self.assertFalse(user1.get_profile().quotas.all().exists())
+        
+        # no permissions specified - user with no quota
+        user1.grant('create_vm', cluster)
+        cluster.set_quota(user1.get_profile(), None)
+        data = {'permissions':[], 'user':user1.id}
+        response = c.post(url % args, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        self.assertNotEqual('0', response.content)
+        
+        # quota should be deleted (and showing default)
+        self.assertEqual(1, cluster.get_quota(user1.get_profile())['default'])
+        self.assertFalse(user1.get_profile().quotas.all().exists())
 
     def test_view_group_permissions(self):
         """
@@ -916,7 +885,7 @@ class TestClusterViews(TestCase):
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'permissions/form.html')
+        self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
         
         # valid GET authorized user (superuser)
         user.revoke('admin', cluster)
@@ -924,7 +893,7 @@ class TestClusterViews(TestCase):
         user.save()
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'permissions/form.html')
+        self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
         
         # invalid group
         response = c.get(url % (cluster.slug, 0))
@@ -950,6 +919,13 @@ class TestClusterViews(TestCase):
         self.assertTemplateUsed(response, 'cluster/group_row.html')
         self.assertEqual(['admin'], group.get_perms(cluster))
         
+        # add quota to the group
+        user_quota = {'default':0, 'ram':51, 'virtual_cpus':10, 'disk':3000}
+        quota = Quota(cluster=cluster, user=group.organization)
+        quota.__dict__.update(user_quota)
+        quota.save()
+        self.assertEqual(user_quota, cluster.get_quota(group.organization))
+        
         # valid POST group has no permissions left
         data = {'permissions':[], 'group':group.id}
         response = c.post(url_post % args_post, data)
@@ -957,6 +933,23 @@ class TestClusterViews(TestCase):
         self.assertEquals('application/json', response['content-type'])
         self.assertEqual([], group.get_perms(cluster))
         self.assertEqual('1', response.content)
+        
+        # quota should be deleted (and showing default)
+        self.assertEqual(1, cluster.get_quota(group.organization)['default'])
+        self.assertFalse(group.organization.quotas.all().exists())
+        
+        # no permissions specified - user with no quota
+        group.grant('create_vm', cluster)
+        cluster.set_quota(group.organization, None)
+        data = {'permissions':[], 'group':group.id}
+        response = c.post(url % args, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        self.assertNotEqual('0', response.content)
+        
+        # quota should be deleted (and showing default)
+        self.assertEqual(1, cluster.get_quota(group.organization)['default'])
+        self.assertFalse(group.organization.quotas.all().exists())
     
     def validate_quota(self, cluster_user, template):
         """
@@ -1133,3 +1126,38 @@ class TestClusterViews(TestCase):
         self.assertEqual('application/json', response['content-type'])
         self.assertEqual('1', response.content)
         self.assertFalse(query.exists())
+
+    def test_sync_virtual_machines_in_edit_view(self):
+        """
+        Test if sync_virtual_machines is run after editing a cluster
+        for the second time
+        """
+        #configuring stuff needed to test edit view
+        user.is_superuser = True
+        user.save()
+        self.assert_(c.login(username=user.username, password='secret'))
+        cluster.virtual_machines.all().delete()
+        url = '/cluster/%s/edit/' % cluster.slug
+
+        data = dict(hostname='new-host-1.hostname',
+                    slug='new-host-1',
+                    port=5080,
+                    description='testing editing clusters',
+                    username='tester',
+                    password = 'secret',
+                    virtual_cpus=1,
+                    disk=2,
+                    ram=3
+                    )
+        
+        # run view once to create cluster
+        c.post(url, data, follow=True)
+        
+        # ensure there are VMs ready for sync
+        cluster.virtual_machines.all().delete()
+        
+        #run view_edit again..
+        c.post(url, data, follow=True)
+        
+        # assert that no VMs were created
+        self.assertFalse(cluster.virtual_machines.all().exists())

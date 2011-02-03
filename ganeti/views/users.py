@@ -4,6 +4,7 @@ import socket
 import json
 
 from django import forms
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm, SetPasswordForm
 from django.core.urlresolvers import reverse
@@ -13,7 +14,6 @@ from django.template import RequestContext
 
 from ganeti.models import *
 from ganeti.views import render_403
-
 
 @login_required
 def user_list(request):
@@ -50,6 +50,24 @@ def user_add(request):
 
     return render_to_response("users/edit.html", {
             'form':form,
+        },
+        context_instance=RequestContext(request),
+    )
+
+
+@login_required
+def user_detail(request, user_id=None):
+    user = request.user
+    if not user.is_superuser:
+        return render_403(request, 'Only a superuser may view a user.')
+
+    user = get_object_or_404(User, id=user_id)
+    
+    keys = SSHKey.objects.filter(user__pk=user_id).order_by("pk")
+
+    return render_to_response("users/detail.html", {
+            'user_detail':user,
+            'keyslist': keys,
         },
         context_instance=RequestContext(request),
     )
@@ -132,6 +150,8 @@ def user_profile(request):
             user.save()
             user.get_profile().save()
             form = None
+            messages.add_message(request, messages.SUCCESS,
+                                 'Saved successfully')
     
     if not form:
         
@@ -220,18 +240,37 @@ class UserEditForm(UserChangeForm):
     """
     Form to edit user, based on Auth.UserChangeForm
     """
+
+    new_password1 = forms.CharField(label='New password',
+                                    widget=forms.PasswordInput, required=False)
+    new_password2 = forms.CharField(label='Confirm password',
+                                    widget=forms.PasswordInput, required=False)
     
     class Meta(UserChangeForm.Meta):
         fields = (
             'username',
-            'first_name',
-            'last_name',
+            #'first_name',
+            #'last_name',
             'email',
-            'password',
             'is_active',
             'is_superuser',
         )
+
+    def __init__(self, *args, **kwargs):
+        super(UserEditForm, self).__init__(*args, **kwargs)
     
+    def clean_new_password2(self):
+        password2 = self.cleaned_data.get('new_password2')
+        if self.cleaned_data.get('new_password1') != password2:
+            raise forms.ValidationError("The two password fields didn't match.")
+        return password2
+
+    def save(self, commit=True):
+        password1 = self.cleaned_data.get('new_password1')
+        if password1 and self.cleaned_data.get('new_password2'):
+            self.instance.set_password(password1)
+        return super(UserEditForm, self).save(commit)
+
 
 class UserProfileForm(forms.Form):
     """

@@ -1,0 +1,221 @@
+{% extends "menu_base.html" %}
+
+{% load webmgr_tags %}
+
+{% block title %}Overview{% endblock %}
+
+{% block head %}
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.tablesorter.min.js"></script>
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
+<script type="text/javascript">
+    var PBAR_CONF = {
+        steps: 0,
+        showText: true,
+        textFormat: 'fraction',
+        // XXX there's issue, bars doesn't scale the progress to the given width
+        width: 120,
+        boxImage: '/media/images/progressbar/progressbar.gif',
+        barImage: {
+            0:  '/media/images/progressbar/progressbg_red.gif',
+            30: '/media/images/progressbar/progressbg_orange.gif',
+            50: '/media/images/progressbar/progressbg_yellow.gif',
+            75: '/media/images/progressbar/progressbg_green.gif',
+        },
+    };
+    var PBAR2_CONF = {
+        steps: 0,
+        showText: true,
+        textFormat: 'fraction',
+        width: 120,
+        boxImage: '/media/images/progressbar/progressbar.gif',
+        barImage: {
+            0: '/media/images/progressbar/progressbg_green.gif',
+            30: '/media/images/progressbar/progressbg_yellow.gif',
+            50: '/media/images/progressbar/progressbg_orange.gif',
+            75:  '/media/images/progressbar/progressbg_red.gif',
+        },
+    };
+    $(document).ready(function() {
+        $("#clusters .ram, #clusters .disk").each(function(){
+            $this = $(this);
+            if ($this.html() != 'unknown') {
+                $this.progressBar(PBAR_CONF);
+            }
+        });
+        $("#clusters").tablesorter();
+        $("#usage_summary .ram, #usage_summary .disk, #usage_summary .vcpus").progressBar(PBAR2_CONF);
+        $("#errors_list table").tablesorter();
+        
+        $("#errors_list div.clear").live("click", function(){
+            row = this.parentNode.parentNode
+            id = row.id.substring(7);
+            
+            if ($(row).hasClass('gerror')) {
+                url = "{% url error-clear %}";
+            } else if ($(row).hasClass('jerror')) {
+                url = "{% url job-clear %}";
+            }
+            
+            $.post(url, {id:id}, function(){
+                $(row).fadeOut(1000, function(){
+                    $(row).remove();
+                    if($("#errors_list tr").length==0) {
+                        $("#errors_list").remove();
+                    }
+                });
+            });
+        });
+        
+        $("#usage_summary select").change(function(){
+            
+            val = $(this).val()
+            $.get("{% url used_resources %}", {id:val}, function(html){
+                $("#usage_summary table").replaceWith(html);
+                $("#usage_summary .ram, #usage_summary .disk, #usage_summary .vcpus").progressBar(PBAR2_CONF);
+            });
+        })
+    });
+    
+</script>
+{% endblock %}
+
+{% block content %}
+<h1>Overview</h1>
+
+{% if admin %}
+<div id="cluster_summary">
+<h2>Cluster Status</h2>
+<table id="clusters" class="sorted">
+    <thead>
+        <tr>
+            <th>Cluster</th>
+            <th>Version</th>
+            <th>Memory [GiB]</th>
+            <th>Disk [GiB]</th>
+            <th>Nodes</th>
+            <th>VMs</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for cluster in cluster_list %}
+        {% with cluster.info as info %}
+        {% with cluster|cluster_nodes:1 as nodes %}
+            <tr id="cluster_{{cluster.id}}">
+                <td class="name">
+                    {% if cluster.error %}<div class="icon_error" title="Ganeti API Error: {{cluster.error}}"></div>{% endif %}
+                    <a href="{% url cluster-detail cluster.slug %}">
+                        {{ cluster.hostname|abbreviate_fqdn }}
+                    </a>
+                </td>
+                <td>{{ info.software_version }}</td>
+                <td class="ram">{% cluster_memory cluster nodes %}</td>
+                <td class="disk">{% cluster_disk cluster nodes%}</td>
+                <td title="Running/All">{% format_online_nodes cluster nodes %}</td>
+                <td title="Running/All">{% format_running_vms cluster %}</td>
+            </tr>
+        {% endwith %}
+        {% endwith %}
+    {% empty %}
+        <tr class="none"><td colspan="100%">No Clusters</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endif %}
+
+<div id="vm_summary">
+<h2>Virtual Machine Status</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Cluster</th>
+            <th>Running</th>
+            <th>Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for hostname, dict in vm_summary.items %}
+            <tr>
+                <td>{{hostname|abbreviate_fqdn}}</td>
+                <td>{{dict.running}}</td>
+                <td>{{dict.total}}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="100%" class="none">You do have access to any virtual machines</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+
+<div id="usage_summary">
+<h2>Resource Usage:
+
+<select>
+    {% for persona in personas %}
+    <option value="{{persona.clusteruser_ptr_id}}">{{persona.name}}</option>
+    {% endfor %}
+</select>
+
+</h2>
+{% include "overview/used_resources.html" %}
+</div>
+
+{% if errors %}
+<div id="errors_list">
+    <h2>Errors and Failures</h2>
+    <table>
+    {% for tuple in errors %}
+        {% with tuple.0 as is_ganeti_error %}
+        {% with tuple.1 as error %}
+            {% if is_ganeti_error %}
+                <tr class="gerror" id="gerror_{{error.pk}}">
+                    {% include "overview/object_link.html" %}
+                    <td>{{ error.msg }}</td>
+                    <td>{{ error.timestamp|date }}</td>
+                    <td><div class="clear" title="clear message"></div></td>
+                </tr>
+            {% else %}
+                <tr class="jerror" id="jerror_{{error.pk}}">
+                    {% include "overview/object_link.html" %}
+                    <td>Job #{{error.job_id}}: {{ error.current_operation|format_job_op }}</td>
+                    <td>{{ error.finished|date }}</td>
+                    <td><div class="clear" title="clear message"></div></td>
+                </tr>
+            {% endif %}
+        {% endwith %}
+        {% endwith %}
+    {% endfor %}
+    </table>
+</div>
+{% endif %}
+
+{% if orphaned or import_ready or missing %}
+<div id="administration">
+    <h2>Administration</h2>
+    <table style="width: auto;">
+    {% if orphaned %}
+        <tr>
+            <th>Orphaned VMs</th>
+            <td><a href="{% url import-orphans %}">Adopt {{ orphaned }}</a></td>
+        </tr>
+    {% endif %}
+
+    {% if import_ready %}
+        <tr>
+            <th>VMs ready to import</th>
+            <td><a href="{% url import-missing %}">Import {{ import_ready }}</a></td>
+        </tr>
+    {% endif %}
+
+    {% if missing %}
+        <tr>
+            <th>VMs missing from ganeti</th>
+            <td><a href="{% url import-missing_db %}">Remove {{ missing }}</a></td>
+        </tr>
+    {% endif %}
+    </table>
+</div>
+{% endif %}
+
+{% endblock %}

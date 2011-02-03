@@ -21,9 +21,12 @@ from ganeti.tests.cache_updater import *
 from ganeti.tests.cached_cluster_object import *
 from ganeti.tests.cluster import *
 from ganeti.tests.cluster_user import *
+from ganeti.tests.ganeti_errors import *
+from ganeti.tests.general import *
 from ganeti.tests.importing import *
 from ganeti.tests.job import *
 from ganeti.tests.rapi_cache import *
 from ganeti.tests.ssh_keys import *
 from ganeti.tests.users import *
 from ganeti.tests.virtual_machine import *
+from ganeti.tests.fields import *

@@ -1,0 +1,63 @@
+{% extends "menu_base.html" %}
+
+{% block title %}
+    {% if username %}Edit User{% else %}Add User{% endif %}
+{% endblock %}
+
+{% block head %}
+    <link href="{{MEDIA_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
+    <style>
+    .ui-widget-header {background:none; border-width:0 0 1px 0; -moz-border-radius:0px;}
+    .ui-widget-content {border:0;}
+    #detail h3 {margin-top:30px;}
+    </style>
+    <script src="{{MEDIA_URL}}/js/jquery-ui.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            console.log($('#tabs'));
+            $('#tabs').tabs({
+                spinner: false,
+                cache: true,
+                select: function(event, ui) {
+                    window.location.hash = ui.tab.hash;
+                },
+                ajaxOptions: {
+                    error: function(xhr, status, index, anchor) {
+                        $(anchor.hash).html("Couldn't load this tab. We'll try to fix this as soon as possible.");
+                    }
+                }
+            });
+        });
+    </script>
+    {% include "ssh_keys/header.html" %}
+    
+    
+{% endblock %}
+
+{% block content %}
+<h1><a class="breadcrumb" href="{%url user-list %}">Users</a> : {{ user_detail.username }}</h1>
+<div id="tabs">
+    <ul>
+        <li><a href="#detail"><span>Detail</span></a></li>
+        <li><a title="permissions" href="{% url user-all-permissions user_detail.pk %}"><span>Permissions</span></a></li>
+        <li><a title="usage" href="{% url used_resources %}?id={{user_detail.get_profile.pk}}"><span>Resource Usage</span></a></li>
+        {% block tabs %}{% endblock tabs %}
+    </ul>
+    <div id="detail">
+        <ul id="actions">
+            <li><a class="button edit" title="edit user" href="{% url user-edit user_detail.pk %}">Edit</a></li>
+        </ul>
+        
+        <table>
+        <tr><th>Email:</th><td>{{user_detail.email}}</td></tr>
+        <tr><th>Join Date:</th><td>{{user_detail.date_joined|date}}</td></tr>
+        <tr><th>Last Login:</th><td>{{user_detail.last_login|date}}</td></tr>
+        <tr><th>Active:</th><td>{{user_detail.is_active}}</td></tr>
+        <tr><th>Admin:</th><td>{{user_detail.is_superuser}}</td></tr>
+        </table>
+        
+        <h3>SSH keys</h3>
+        {% include "ssh_keys/list.html" %}
+    </div>
+</div>
+{% endblock %}

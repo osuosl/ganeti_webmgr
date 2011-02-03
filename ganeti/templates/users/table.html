@@ -2,23 +2,18 @@
     <tr>
         <th>Username</th>
         <th>Email</th>
-        <th>Real Name</th>
         <th>Active</th>
         <th>Join Date</th>
         <th>Last Login</th>
         <th></th>
-        <th></th>
-        <th></th>
     </tr>
     {% for user in userlist %}
     <tr>
-        <td name="username">{{ user.username }}</td>
+        <td name="username"><a href="{% url user-detail user.pk %}">{{ user.username }}</a></td>
         <td>{{ user.email }}</td>
-        <td>{{ user.first_name}} {{ user.last_name }}</td>
         <td>{{ user.is_active }}</td>
         <td>{{ user.date_joined|date }}</td>
         <td>{{ user.last_login|date }}</td>
-        <td><a href="{% url user-edit user.id %}"><div class="edit"></div></a></td>
         <td><a href="{% url user-edit user.id %}" class="delete_user"><div class="delete"></div></a></td>
     </tr>
     {% endfor %}

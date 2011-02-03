@@ -1,10 +1,12 @@
 from datetime import datetime
 from decimal import Decimal
 import time
+import re
 
 from django.core.exceptions import ValidationError
 from django.db.models.fields import DecimalField
 from django.db import models
+from django.forms.fields import CharField
 
 class PreciseDateTimeField(DecimalField):
     """
@@ -83,3 +85,81 @@ class PreciseDateTimeField(DecimalField):
             return 'numeric(%s, %s)' % (self.max_digits, self.decimal_places)
         elif  engine == 'django.db.backends.sqlite3':
             return 'character'
+
+class DataVolumeField(CharField):
+    min_value = None
+    max_value = None
+    required = True
+
+    def __init__(self, min_value=None, max_value=None, required=True, **kwargs):
+        super(DataVolumeField, self).__init__(**kwargs)
+        self.min_value = min_value
+        self.max_value = max_value
+        self.required = required
+
+    def validate(self, value):
+        if value == None and not self.required:
+            return
+        if self.min_value != None and value < self.min_value:
+            raise ValidationError('Must be at least ' + str(self.min_value))
+        if self.max_value != None and value > self.max_value:
+            raise ValidationError('Must be at less than ' + str(self.min_value))
+
+    # this gets called before validate
+    def to_python(self, value):
+        """
+        Turn a bytecount into an integer, in megabytes.
+
+        XXX looks like it's actually mebibytes
+        XXX this should handle the SI base2 versions as well (MiB, GiB, etc.)
+        XXX should round up to the next megabyte?
+        """
+
+        if value is None:
+            # XXX is this the right thing?
+            return None
+
+        value = value.upper().strip()
+
+        if len(value) == 0:
+            if self.required:
+                raise ValidationError('Empty.')
+            else:
+                return None
+
+        matches = re.match(r'([0-9]+(?:\.[0-9]+)?)\s*(M|G|T|MB|GB|TB)?$', value)
+        if matches == None:
+            raise ValidationError('Invalid format.')
+
+        multiplier = 1.
+        unit = matches.group(2)
+        if unit != None:
+            unit = unit[0]
+            if unit == 'M':
+                multiplier = 1.
+            elif unit == 'G':
+                multiplier = 1024.
+            elif unit == 'T':
+                multiplier = 1024. * 1024.
+
+        intvalue = int(float(matches.group(1)) * multiplier)
+        return intvalue
+
+
+# Field rule used by South for database migrations
+from south.modelsinspector import add_introspection_rules
+add_introspection_rules([], ["^ganeti\.fields\.PreciseDateTimeField"])
+
+
+class SQLSumIf(models.sql.aggregates.Aggregate):
+    is_ordinal = True
+    sql_function = 'SUM'
+    sql_template= '%(function)s(CASE %(condition)s WHEN 1 THEN %(field)s ELSE NULL END)'
+
+
+class SumIf(models.Aggregate):
+    name = 'SUM'
+
+    def add_to_query(self, query, alias, col, source, is_summary):
+        aggregate = SQLSumIf(col, source=source, is_summary=is_summary, **self.extra)
+        query.aggregates[alias] = aggregate 

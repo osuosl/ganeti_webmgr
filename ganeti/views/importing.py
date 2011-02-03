@@ -24,6 +24,7 @@ from django.template import RequestContext
 
 from ganeti.models import VirtualMachine, Cluster, ClusterUser
 from ganeti.views import render_403
+from ganeti.views.general import update_vm_counts
 
 
 class VirtualMachineForm(forms.Form):
@@ -64,12 +65,13 @@ def orphans(request):
         if not clusters:
             return render_403(request, 'You do not have sufficient privileges')
     
-    vms = VirtualMachine.objects.filter(owner=None, cluster__in=clusters) \
-                                            .values_list('id','hostname')
-    vms = list(vms)
-    vmcount = VirtualMachine.objects.count()
+    vms_with_cluster = VirtualMachine.objects.filter(owner=None, cluster__in=clusters) \
+                          .order_by('hostname').values_list('id','hostname','cluster')
     
     if request.method == 'POST':
+        # strip cluster from vms
+        vms = [(i[0], i[1]) for i in vms_with_cluster]
+        
         # process updates if this was a form submission
         form = OrphanForm(vms, request.POST)
         if form.is_valid():
@@ -81,17 +83,30 @@ def orphans(request):
             # update the owner and save the vm.  This isn't the most efficient
             # way of updating the VMs but we would otherwise need to group them
             # by cluster
+            orphaned = {}
             for id in vm_ids:
                 vm = VirtualMachine.objects.get(id=id)
                 vm.owner = owner
                 vm.save()
+                if vm.cluster_id in orphaned.keys():
+                    orphaned[vm.cluster_id] += 1
+                else:
+                    orphaned[vm.cluster_id] = 1
+            update_vm_counts(key='orphaned', data=orphaned)
             
             # remove updated vms from the list
-            vms = filter(lambda x: unicode(x[0]) not in vm_ids, vms)
-    
+            vms_with_cluster = [i for i in vms_with_cluster
+                if unicode(i[0]) not in vm_ids]
+
     else:
-        form = ImportForm(vms)
-    
+        # strip cluster from vms
+        form = ImportForm([(i[0], i[1]) for i in vms_with_cluster])
+
+    clusterdict = {}
+    for i in clusters:
+        clusterdict[i.id] = i.hostname
+    vms = [ (i[0], clusterdict[i[2]], i[1]) for i in vms_with_cluster ]
+
     return render_to_response("importing/orphans.html", {
         'vms': vms,
         'form':form,
@@ -112,11 +127,11 @@ def missing_ganeti(request):
         clusters = user.get_objects_any_perms(Cluster, ['admin'])
         if not clusters:
             return render_403(request, 'You do not have sufficient privileges')
-    
+
     vms = []
     for cluster in clusters:
-        vms.extend(cluster.missing_in_ganeti)
-    vms = zip(vms, vms)
+        for vm in cluster.missing_in_ganeti:
+            vms.append((vm, vm))
     
     if request.method == 'POST':
         # process updates if this was a form submission
@@ -125,14 +140,38 @@ def missing_ganeti(request):
             # update all selected VirtualMachines
             data = form.cleaned_data
             vm_ids = data['virtual_machines']
-            VirtualMachine.objects.filter(hostname__in=vm_ids).delete()
+            q = VirtualMachine.objects.filter(hostname__in=vm_ids)
+
+            missing = {}
+            for i in q:
+                if i.cluster in missing.keys():
+                    missing[ i.cluster_id ] += 1
+                else:
+                    missing[ i.cluster_id ] = 1
+            update_vm_counts(key='missing', data=missing)
+
+            q.delete()
             
             # remove updated vms from the list
             vms = filter(lambda x: unicode(x[0]) not in vm_ids, vms)
     
     else:
         form = VirtualMachineForm(vms)
-    
+
+    vms = {}
+    for cluster in clusters:
+        for vm in cluster.missing_in_ganeti:
+            vms[vm] = (cluster.hostname, vm)
+
+    vmhostnames = vms.keys()
+    vmhostnames.sort()
+
+    vms_tuplelist = []
+    for i in vmhostnames:
+        vms_tuplelist.append((i, vms[i][0], vms[i][1]))
+
+    vms = vms_tuplelist
+        
     return render_to_response("importing/missing.html", {
         'vms': vms,
         'form':form,
@@ -168,11 +207,18 @@ def missing_db(request):
             owner = data['owner']
             vm_ids = data['virtual_machines']
             
+            import_ready = {}
             # create missing VMs
             for vm in vm_ids:
                 cluster_id, host = vm.split(':')
                 cluster = Cluster.objects.get(id=cluster_id)
                 VirtualMachine(hostname=host, cluster=cluster, owner=owner).save()
+
+                if cluster.hostname in import_ready.keys():
+                    import_ready[cluster.pk] += 1
+                else:
+                    import_ready[cluster.pk] = 1
+            update_vm_counts(key='import_ready', data=import_ready)
             
             # remove created vms from the list
             vms = filter(lambda x: unicode(x[0]) not in vm_ids, vms)
@@ -180,6 +226,19 @@ def missing_db(request):
     else:
         form = ImportForm(vms)
     
+    vms = {}
+    for cluster in clusters:
+        for hostname in cluster.missing_in_db:
+            vms[hostname] = ('%s:%s' % (cluster.id, hostname), cluster.hostname, hostname)
+    vmhostnames = vms.keys()
+    vmhostnames.sort()
+
+    vms_tuplelist = []
+    for i in vmhostnames:
+        vms_tuplelist.append(vms[i])
+
+    vms = vms_tuplelist
+
     return render_to_response("importing/missing_db.html", {
         'vms': vms,
         'form':form,

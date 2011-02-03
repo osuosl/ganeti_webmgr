@@ -16,18 +16,30 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-
 from django.conf.urls.defaults import patterns, url
 
 cluster_slug = '(?P<cluster_slug>[-_A-Za-z0-9]+)'
 cluster = 'cluster/%s' % cluster_slug
 instance = '/(?P<instance>[^/]+)'
 
+# General
+urlpatterns = patterns('ganeti.views.general',
+    #   Index page - it's status page
+    url(r'^$', 'overview', name="index"),
+    #   Status page
+    url(r'^overview/?$', 'overview', name="overview"),
+    url(r'^used_resources/?$', 'used_resources', name="used_resources"),
+    
+    # clear errors
+    url(r'^error/clear/?$', 'clear_ganeti_error', name="error-clear")
+)
+
 # Users
-urlpatterns = patterns('ganeti.views.users',
+urlpatterns += patterns('ganeti.views.users',
     url(r'^accounts/profile/?', 'user_profile', name="profile"),
     url(r'^users/?$', 'user_list', name="user-list"),
     url(r'^users/add$', 'user_add', name="user-create"),
+    url(r'^user/(?P<user_id>\d+)/?$', 'user_detail', name="user-detail"),
     url(r'^user/(?P<user_id>\d+)/edit/?$', 'user_edit', name="user-edit"),
     url(r'^user/(?P<user_id>\d+)/password/?$', 'user_password', name="user-password"),
 
@@ -39,11 +51,17 @@ urlpatterns = patterns('ganeti.views.users',
     url(r'^keys/delete/(?P<key_id>\d+)/?$', 'key_delete', name="key-delete"),
 )
 
+#Groups
+urlpatterns += patterns('object_permissions.views.groups',
+    url(r'^group/(?P<id>\d+)/?$', 'detail',
+            {'template':'ganeti/group/detail.html'},
+            name="usergroup-detail"),
+)
+
 # Clusters
 urlpatterns += patterns('ganeti.views.cluster',
-    url(r'^$', 'list_', name="cluster-overview"),
     #   List
-    url(r'^clusters/$', 'list_', name="cluster-list"),
+    url(r'^clusters/?$', 'list_', name="cluster-list"),
     #   Add
     url(r'^cluster/add/?$', 'edit', name="cluster-create"),
     #   Detail
@@ -72,6 +90,10 @@ urlpatterns += patterns('ganeti.views.virtual_machine',
     url(r'^vm/add/options/$', 'cluster_options', name="instance-create-cluster-options"),
     url(r'^vm/add/defaults/$', 'cluster_defaults', name="instance-create-cluster-defaults"),
     url(r'^vm/add/%s/?$' % cluster_slug, 'create', name="instance-create"),
+
+    #  VM Table
+    url(r'^vm/table/$', 'vm_table', name="virtualmachine-table"),
+    url(r'^%s/vm/table/?$' % cluster, 'vm_table', name="cluster-virtualmachine-table"),
     
     #  Detail
     url(r'^%s/?$' % vm_prefix, 'detail', name="instance-detail"),
@@ -80,14 +102,18 @@ urlpatterns += patterns('ganeti.views.virtual_machine',
     url(r'^%s/permissions/user/(?P<user_id>\d+)/?$' % vm_prefix, 'permissions', name="vm-permissions-user"),
     url(r'^%s/permissions/group/(?P<group_id>\d+)/?$' % vm_prefix, 'permissions', name="vm-permissions-user"),
     
-    #  Start, Stop, Reboot
-    url(r'^%s/vnc/?$' % vm_prefix, 'vnc', name="instance-vnc"),
+    #  Start, Stop, Reboot, VNC
+    url(r'^%s/vnc/?$' % vm_prefix, 'novnc', name="instance-vnc"),
+    url(r'^%s/vnc_proxy/?$' % vm_prefix, 'vnc_proxy', name="instance-vnc-proxy"),
     url(r'^%s/shutdown/?$' % vm_prefix, 'shutdown', name="instance-shutdown"),
     url(r'^%s/startup/?$' % vm_prefix, 'startup', name="instance-startup"),
     url(r'^%s/reboot/?$' % vm_prefix, 'reboot', name="instance-reboot"),
 
     # Delete
     url(r"^%s/delete/?$" % vm_prefix, "delete", name="instance-delete"),
+
+    # Reinstall
+    url(r"^%s/reinstall/?$" % vm_prefix, "reinstall", name="instance-reinstall"),
 
     # SSH Keys
     url(r'^%s/keys/(?P<api_key>\w+)/?$' % vm_prefix, "ssh_keys", name="instance-keys"),
@@ -104,4 +130,5 @@ urlpatterns += patterns('ganeti.views.importing',
 # Jobs
 urlpatterns += patterns('ganeti.views.jobs',
     url(r'^%s/job/(?P<job_id>\d+)/status' % cluster, 'status', name='job-status'),
+    url(r'^job/clear/?', 'clear', name='job-clear'),
 )

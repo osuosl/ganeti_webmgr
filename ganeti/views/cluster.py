@@ -18,29 +18,25 @@
 
 
 import json
-import os
-import socket
-import urllib2
 
 from django import forms
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.template.defaultfilters import slugify
 
-from object_permissions import get_model_perms, get_user_perms, grant, revoke, \
-    get_users, get_groups, get_group_perms
 from object_permissions.views.permissions import view_users, view_permissions
+from object_permissions import signals as op_signals
 
 from logs.models import LogItem
 log_action = LogItem.objects.log_action
 
-from ganeti.models import *
-from ganeti.views import render_403, render_404
-from util.portforwarder import forward_port
+from ganeti.models import Cluster, ClusterUser, Profile, VirtualMachine
+from ganeti.views import render_403, render_404, virtual_machine
+from ganeti.fields import DataVolumeField
 
 # Regex for a resolvable hostname
 FQDN_RE = r'^[\w]+(\.[\w]+)*$'
@@ -93,12 +89,10 @@ def virtual_machines(request, cluster_slug):
     admin = True if user.is_superuser else user.has_perm('admin', cluster)
     if not admin:
         return render_403(request, "You do not have sufficient privileges")
-    
-    if admin:
-        vms = cluster.virtual_machines.all()
-    else:
-        vms = user.filter_on_perms(['admin'], VirtualMachine, cluster=cluster)
-    
+
+    vms = cluster.virtual_machines.select_related().all()
+    vms = virtual_machine.render_vms(request, vms)
+
     return render_to_response("virtual_machine/table.html", \
                 {'cluster': cluster, 'vms':vms}, \
                 context_instance=RequestContext(request))
@@ -124,7 +118,8 @@ def edit(request, cluster_slug=None):
             cluster = form.save()
             # TODO Create post signal to import
             #   virtual machines on edit of cluster
-            cluster.sync_virtual_machines()
+            if cluster.info == None:
+                cluster.sync_virtual_machines()
             return HttpResponseRedirect(reverse('cluster-detail', \
                                                 args=[cluster.slug]))
     
@@ -152,7 +147,7 @@ def list_(request):
     if user.is_superuser:
         cluster_list = Cluster.objects.all()
     else:
-        cluster_list = user.get_objects_any_perms(Cluster, ['admin', 'create_vm'])
+        cluster_list = user.get_objects_all_perms(Cluster, ['admin',])
     return render_to_response("cluster/list.html", {
         'cluster_list': cluster_list,
         'user': request.user,
@@ -179,7 +174,8 @@ def users(request, cluster_slug):
 @login_required
 def permissions(request, cluster_slug, user_id=None, group_id=None):
     """
-    Update a users permissions.
+    Update a users permissions. This wraps object_permissions.view_permissions()
+    with our custom permissions checks.
     """
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     user = request.user
@@ -187,16 +183,35 @@ def permissions(request, cluster_slug, user_id=None, group_id=None):
         return render_403(request, "You do not have sufficient privileges")
 
     url = reverse('cluster-permissions', args=[cluster.slug])
-    response, modified = view_permissions(request, cluster, url, user_id, group_id,
+    return view_permissions(request, cluster, url, user_id, group_id,
                             user_template='cluster/user_row.html',
                             group_template='cluster/group_row.html')
-    
-    # log changes if any.
-    if modified:
-        # log information about creating the machine
-        log_action(user, cluster, "modified permissions")
-    
-    return response
+
+
+def user_added(sender, editor, user, obj, **kwargs):
+    """
+    receiver for object_permissions.signals.view_add_user, Logs action
+    """
+    log_action(editor, obj, "added user")
+
+
+def user_removed(sender, editor, user, obj, **kwargs):
+    """
+    receiver for object_permissions.signals.view_add_user, Logs action
+    """
+    log_action(editor, obj, "removed user")
+
+
+def user_edited(sender, editor, user, obj, **kwargs):
+    """
+    receiver for object_permissions.signals.view_add_user, Logs action
+    """
+    log_action(editor, obj, "modified permissions")
+
+
+op_signals.view_add_user.connect(user_added, sender=Cluster)
+op_signals.view_remove_user.connect(user_removed, sender=Cluster)
+op_signals.view_edit_user.connect(user_edited, sender=Cluster)
 
 
 class QuotaForm(forms.Form):
@@ -207,14 +222,11 @@ class QuotaForm(forms.Form):
     
     user = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), \
                                   widget=forms.HiddenInput)
-    ram = forms.IntegerField(label='Memory (MB)', required=False, min_value=0, \
-                             widget=input)
+    ram = DataVolumeField(label='Memory', required=False, min_value=0)
     virtual_cpus = forms.IntegerField(label='Virtual CPUs', required=False, \
                                     min_value=0, widget=input)
-    disk = forms.IntegerField(label='Disk Space (MB)', required=False, \
-                              min_value=0, widget=input)
+    disk = DataVolumeField(label='Disk Space', required=False, min_value=0)
     delete = forms.BooleanField(required=False, widget=forms.HiddenInput)
-
 
 @login_required
 def quota(request, cluster_slug, user_id):
@@ -275,15 +287,14 @@ def quota(request, cluster_slug, user_id):
 
 
 class EditClusterForm(forms.ModelForm):
-    confirm_password = forms.CharField(required=False, widget=forms.PasswordInput)
     class Meta:
         model = Cluster
         widgets = {
             'password' : forms.PasswordInput(),
-            'confirm_password' : forms.PasswordInput(),
         }
         
-    
+    ram = DataVolumeField(label='Memory', required=False, min_value=0)
+    disk = DataVolumeField(label='Disk Space', required=False, min_value=0)    
     
     def clean(self):
         self.cleaned_data = super(EditClusterForm, self).clean()
@@ -291,7 +302,6 @@ class EditClusterForm(forms.ModelForm):
         host = data.get('hostname', None)
         user = data.get('username', None)
         new = data.get('password', None)
-        confirm = data.get('confirm_password', None)
         
         # Automatically set the slug on cluster creation
         if not host:
@@ -304,18 +314,7 @@ class EditClusterForm(forms.ModelForm):
                 msg = 'Enter a password'
                 self._errors['password'] = self.error_class([msg])
             
-            if not confirm:
-                if 'confirm_password' in data: del data['confirm_password']
-                msg = 'Confirm new password'
-                self._errors['confirm_password'] = self.error_class([msg])
-            
-            if new and confirm and new != confirm:
-                del data['password']
-                del data['confirm_password']
-                msg = 'Passwords do not match'
-                self._errors['password'] = self.error_class([msg])
-                
-        elif new or confirm:
+        elif new:
             msg = 'Enter a username'
             self._errors['username'] = self.error_class([msg])
             
@@ -323,21 +322,42 @@ class EditClusterForm(forms.ModelForm):
                 if 'password' in data: del data['password']
                 msg = 'Enter a password'
                 self._errors['password'] = self.error_class([msg])
-                
-            if not confirm:
-                if 'confirm_password' in data: del data['confirm_password']
-                msg = 'Confirm new password'
-                self._errors['confirm_password'] = self.error_class([msg])
-            
-            if new and confirm and new != confirm:
-                del data['password']
-                del data['confirm_password']
-                msg = 'Passwords do not match'
-                self._errors['password'] = self.error_class([msg])
-            
-                
+
         if 'hostname' in data and data['hostname'] and 'slug' not in data:
             data['slug'] = slugify(data['hostname'].split('.')[0])
             del self._errors['slug']
         
         return data
+
+
+def recv_user_add(sender, editor, user, obj, **kwargs):
+    """
+    receiver for object_permissions.signals.view_add_user, Logs action
+    """
+    log_action(editor, obj, "added user")
+
+
+def recv_user_remove(sender, editor, user, obj, **kwargs):
+    """
+    receiver for object_permissions.signals.view_remove_user, Logs action
+    """
+    log_action(editor, obj, "removed user")
+    
+    # remove custom quota user may have had.
+    if isinstance(user, (User,)):
+        cluster_user = user.get_profile()
+    else:
+        cluster_user = user.organization
+    cluster_user.quotas.filter(cluster=obj).delete()
+
+
+def recv_perm_edit(sender, editor, user, obj, **kwargs):
+    """
+    receiver for object_permissions.signals.view_edit_user, Logs action
+    """
+    log_action(editor, obj, "modified permissions")
+
+
+op_signals.view_add_user.connect(recv_user_add, sender=Cluster)
+op_signals.view_remove_user.connect(recv_user_remove, sender=Cluster)
+op_signals.view_edit_user.connect(recv_perm_edit, sender=Cluster)

@@ -33,20 +33,23 @@ VirtualMachine = models.VirtualMachine
 Job = models.Job
 
 
-class TestJobModel(TestCase, VirtualMachineTestCaseMixin):
+class TestJobMixin(VirtualMachineTestCaseMixin):
 
     def setUp(self):
         self.tearDown()
         models.client.GanetiRapiClient = RapiProxy
         
-        dict_ = globals()
-        dict_['vm'], dict_['cluster'] = self.create_virtual_machine()
+        d = globals()
+        d['vm'], d['cluster'] = self.create_virtual_machine()
     
     def tearDown(self):
         VirtualMachine.objects.all().delete()
         Cluster.objects.all().delete()
         Job.objects.all().delete()
-    
+
+
+class TestJobModel(TestJobMixin, TestCase):
+
     def test_trivial(self):
         """
         Test instantiating a Job
@@ -169,3 +172,91 @@ class TestJobModel(TestCase, VirtualMachineTestCaseMixin):
         job.load_info()
         self.assertFalse(job.ignore_cache)
         job._refresh.assertNotCalled(self)
+
+
+class TestJobViews(TestJobMixin, TestCase):
+
+    def setUp(self):
+        super(TestJobViews, self).setUp()
+        
+        user = User(id=2, username='tester0')
+        user.set_password('secret')
+        user.save()
+        
+        d = globals()
+        d['user'] = user
+        d['c'] = Client()
+    
+    def tearDown(self):
+        super(TestJobViews, self).tearDown()
+        User.objects.all().delete()
+    
+    def test_clear_job(self):
+        
+        url = '/job/clear/'
+        
+        c_error = Job.objects.create(cluster=cluster, obj=cluster, job_id=1)
+        c_error.info = JOB_ERROR
+        c_error.save()
+        c_error = Job.objects.get(pk=c_error.pk)
+        self.assertFalse(c_error.cleared)
+        
+        vm_error = Job.objects.create(cluster=cluster, obj=vm, job_id=1)
+        vm_error.info = JOB_ERROR
+        vm_error.save()
+        vm_error = Job.objects.get(pk=vm_error.pk)
+        self.assertFalse(vm_error.cleared)
+        
+        # anonymous user
+        response = c.post(url, {'id':vm_error.id}, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'registration/login.html')
+        vm_error = Job.objects.get(pk=vm_error.pk)
+        self.assertFalse(vm_error.cleared)
+        
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.post(url, {'id':vm_error.id})
+        self.assertEqual(403, response.status_code)
+        vm_error = Job.objects.get(pk=vm_error.pk)
+        self.assertFalse(vm_error.cleared)
+        
+        # nonexisent error
+        response = c.post(url, {'id':-1})
+        self.assertEqual(404, response.status_code)
+        
+        # authorized for cluster (cluster admin)
+        user.grant('admin', cluster)
+        response = c.post(url, {'id':c_error.id})
+        self.assertEqual(200, response.status_code)
+        c_error = Job.objects.get(pk=c_error.pk)
+        self.assert_(c_error.cleared)
+        Job.objects.all().update(cleared=False)
+        
+        # authorized for vm (cluster admin)
+        response = c.post(url, {'id':vm_error.id})
+        self.assertEqual(200, response.status_code)
+        vm_error = Job.objects.get(pk=vm_error.pk)
+        self.assert_(vm_error.cleared)
+        Job.objects.all().update(cleared=False)
+        user.revoke_all(cluster)
+        
+        # authorized for vm (vm owner)
+        vm.owner = user.get_profile()
+        vm.save()
+        response = c.post(url, {'id':vm_error.id})
+        self.assertEqual(200, response.status_code)
+        vm_error = Job.objects.get(pk=vm_error.pk)
+        self.assert_(vm_error.cleared)
+        Job.objects.all().update(cleared=False)
+        vm.owner = None
+        vm.save()
+        
+        # authorized for vm (superuser)
+        user.is_superuser = True
+        user.save()
+        response = c.post(url, {'id':vm_error.id})
+        self.assertEqual(200, response.status_code)
+        vm_error = Job.objects.get(pk=vm_error.pk)
+        self.assert_(vm_error.cleared)
+        Job.objects.all().update(cleared=False)
