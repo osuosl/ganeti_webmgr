@@ -139,6 +139,8 @@
             var curSelection =          $("#id_snode option:selected").index();
             var iallocator =            $("#id_iallocator");
             var iallocator_hostname =   $("#id_iallocator_hostname");
+            var bootOrder =             $("#id_bootorder");
+            var imagePath =             $("#id_imagepath");
             var using_str =             ' Using: ';
             var blankOptStr =           '---------';
 
@@ -156,13 +158,17 @@
                             using_str+iallocator_hostname.val() +
                             "</span>");
                 _iallocatorDisable();
-             
+            
+                // hide CD-ROM Image Path stuffs by default
+                _imagePathHide();
+
                 // setup form element change hooks
                 _initChangeHooks();
 
                 // fire off some initial changes
                 iallocator.change();
                 disk_template.change();
+                bootOrder.change();
                 
                 // process the owner dropdown, i.e., if it only has a single
                 // option, select it, and make the dropdown read-only
@@ -171,6 +177,21 @@
             
             function _initChangeHooks(){
                 /* setup change hooks for the form elements */
+
+                // boot device change
+                bootOrder.change(function(){
+                    /* 
+                    Only show image path stuffs if CD-ROM is selected in
+                    the boot order dropdown.
+                    */
+                    var dropdown = $(this);
+                    var id = $(this).children("option:selected").val();
+                    if(id == 'cdrom'){
+                        _imagePathShow();
+                    } else {
+                        _imagePathHide();
+                    }
+                });
 
                 // iallocator change
                 iallocator.change(function() {
@@ -204,7 +225,6 @@
 
                 // owner change
                 owner.change(function() {
-
                     var dropdown = $(this);
                     var id = $(this).children("option:selected").val();
 
@@ -231,18 +251,16 @@
 
                 // cluster change
                 cluster.change(function() {
-
-                    var pnode   = $("#id_pnode");
-                    var snode = $("#id_snode");
-                    var oslist = $("#id_os");
-                    var dropdown = $(this);
+                    var pnode       = $("#id_pnode");
+                    var snode       = $("#id_snode");
+                    var oslist      = $("#id_os");
+                    var dropdown    = $(this);
                     var id = $(this).children("option:selected").val();
                     
                     if( id != '' ) {
-                        
                         // JSON update oslist, pnode, and snode when cluster 
                         // changes
-                        $.getJSON(url_options, {'cluster_id':id}, 
+                        $.getJSON(url_options, {'cluster_id':id},
                                 function(data){
                             pnode.children().not(':first').remove();
                             snode.children().not(':first').remove();
@@ -255,10 +273,8 @@
                                         pnode.append(child);
                                         snode.append(child2);
 
-                                        dropdownToLabel(pnode, 
-                                                blankOptStr);
-                                        dropdownToLabel(snode, 
-                                                blankOptStr);
+                                        dropdownToLabel(pnode, blankOptStr);
+                                        dropdownToLabel(snode, blankOptStr);
                                     }
                                     else if (i == 'os') {
                                         child = _newOptGroup(value[0], 
@@ -272,44 +288,32 @@
                             });
                         });
 
-                        $.getJSON(url_defaults, {'cluster_id':id}, 
-                                function(data) {
+                        $.getJSON(url_defaults, {'cluster_id':id}, function(d){
+                            /* fill default options */
 
-                            var bootorder = data['bootorder'];
-                            var iallocator_default = data['iallocator'];
-                            var hypervisors = data['hypervisors'];
-                            var vcpus = data['vcpus'];
-                            var rootpath = data['rootpath'];
-                            var ram = data['ram'];
-                            var disktype = data['disktype'];
-                            var kernelpath = data['kernelpath'];
-                            var nicmode = data['nicmode'];
-                            var niclink = data['niclink'];
-                            var nictype = data['nictype'];
-                            var imagepath = data['imagepath'];
-                            
-                            if(bootorder) {
+                            // boot device dropdown
+                            if(d['bootorder']) {
                                 $("#id_bootorder :selected").removeAttr(
                                         'selected');
-                                $("#id_bootorder [value="+bootorder+"]").attr(
-                                        'selected','selected');
+                                $("#id_bootorder [value="+d['bootorder']
+                                        +"]").attr('selected','selected');
                             }
                             
-                            if(hypervisors) {
+                            // hypervisors
+                            if(d['hypervisors']) {
                                 //list - do nothing for now.
                             }
 
-                            // otherwise, iallocator data isn't empty, show the
-                            // checkbox and check it.
-                            if(iallocator_default != "" && 
-                                    iallocator_default != undefined){
+                            // iallocator checkbox
+                            if(d['iallocator'] != "" && 
+                                    d['iallocator'] != undefined){
                                 if(!iallocator_hostname.attr('value')) {
                                     iallocator_hostname.attr('value',
-                                            iallocator_default);
+                                            d['iallocator']);
                                     if(iallocator.siblings("span").length 
                                             == 0){
                                         iallocator.after("<span>" + using_str +
-                                                iallocator_default + 
+                                                d['iallocator'] + 
                                                 "</span>");
                                     }
                                 }
@@ -324,56 +328,66 @@
                                 _iallocatorDisable();
                             }
 
-                            if(kernelpath){
-                                $("#id_kernelpath").val(kernelpath);
+                            // kernel path text box
+                            if(d['kernelpath']){
+                                $("#id_kernelpath").val(d['kernelpath']);
                             } else {
                                 $("#id_kernelpath").val('');
                             }
 
-                            if(nicmode) {
+                            // nic mode dropdown
+                            if(d['nicmode']) {
                                 $("#id_nicmode :selected").removeAttr(
                                         'selected');
-                                $("#id_nicmode [value="+nicmode+"]").attr(
+                                $("#id_nicmode [value="+d['nicmode']+"]").attr(
                                         'selected','selected');
                             } else { 
                                 $("#id_nicmode :first-child").attr('selected', 
                                         'selected');
                             }
 
-                            if(niclink){
-                                $("#id_niclink").val(niclink);
+                            // nic link text box
+                            if(d['niclink']){
+                                $("#id_niclink").val(d['niclink']);
                             }
                             
-                            if(nictype) {
+                            // nic type dropdown
+                            if(d['nictype']) {
                                 $("#id_nictype :selected").removeAttr(
                                         'selected');
-                                $("#id_nictype [value="+nictype+"]").attr(
+                                $("#id_nictype [value="+d['nictype']+"]").attr(
                                         'selected','selected');
                             }
 
-                            if(ram){
-                                $("#id_ram").val(ram);
+                            // memory text box
+                            if(d['ram']){
+                                $("#id_ram").val(d['ram']);
                             }
 
-                            if(disktype){
-                                 $("#id_disk_type").val(disktype);
+                            // disk type dropdown
+                            if(d['disktype']){
+                                 $("#id_disk_type").val(d['disktype']);
                             }
                             
-                            if(rootpath){
-                                $("#id_rootpath").val(rootpath);
+                            // root path text box
+                            if(d['rootpath']){
+                                $("#id_rootpath").val(d['rootpath']);
                             } else {
                                 $("#id_rootpath").val('/');
                             }
-
-                            if(data['serialconsole']){
+                            
+                            // enable serial console checkbox
+                            if(d['serialconsole']){
                                 $("#id_serialconsole").attr('checked', true);
                             }
                             
-                            if(vcpus){
-                                $("#id_vcpus").val(vcpus);
+                            // virtual CPUs text box
+                            if(d['vcpus']){
+                                $("#id_vcpus").val(d['vcpus']);
                             }
                             
-                            if(imagepath){
+                            // image path text box
+                            if(d['imagepath']){
                                 $("#id_imagepath").val(imagepath);
                             }
                         });
@@ -384,6 +398,16 @@
             // ----------------
             // private helpers
             // ----------------
+            function _imagePathHide(){
+                imagePath.hide();
+                imagePath.siblings().hide();
+            }
+
+            function _imagePathShow(){
+                imagePath.show();
+                imagePath.siblings().show();
+            }
+
             function _iallocatorDisable(){
                 /* Disable and hide all of the iallocator stuffs */
                 iallocator.hide();
@@ -467,10 +491,12 @@
             <p>
             The owner indicates who this virtual machine belongs to. Resources
             used by the virtual machine will be deducted from the owner's
-            quota.</p>
+            quota.
+            </p>
             <p>
             An owner may be a user or a group.  If you are a member of a group
-            you may create a virtual machine on behalf of that group.</p>
+            you may create a virtual machine on behalf of that group.
+            </p>
             <p>
             If your user does not directly have access/permission to a cluster,
             it will not have permission to own a virtual machine directly.
@@ -491,46 +517,68 @@
             <p>
             Uncheck this if you don't want the instance to automatically start
             after creation. If you do so, you can start it manually on the
-            virtual machine detail page.</p>
+            virtual machine detail page.
+            </p>
         </div>
         <div id="help-name_check">
             <p>
             Check the virtual machine DNS name via the resolver <i>(e.g. in DNS
             or /etc/hosts, depending on your setup)</i>. Since the name check
             is used to compute the IP address this also enables/disables IP
-            checks <i>(e.g.  if the IP is pingable)</i>.</p>
+            checks <i>(e.g.  if the IP is pingable)</i>.
+            </p>
             <p>
             This is useful for setups that deploy virtual machines using
-            dynamic DNS and thus the name is not resolvable yet.</p>
+            dynamic DNS and thus the name is not resolvable yet.
+            </p>
             <p>
             <b>Use with caution!</b> If left unchecked you may run into name/ip
-            collisions.</p>
+            collisions.
+            </p>
         </div>
         <div id="help-iallocator">
-            <p>Automatically select primary and secondary node to allocate disks on.</p>
             <p>
-            When selected it will use the cluster default <a href="http://docs.ganeti.org/ganeti/current/html/iallocator.html">iallocator</a>
-            (if set by the cluster). The iallocator being used will be displayed
-            after the checkbox.</p>
+            Automatically select primary and secondary node to allocate disks
+            on.
+            </p>
+            <p>
+            When selected it will use the cluster default 
+            <a href="http://docs.ganeti.org/ganeti/current/html/iallocator.html">
+            iallocator</a> (if set by the cluster). The iallocator being used
+            will be displayed after the checkbox.
+            </p>
         </div>
         <div id="help-disk_template">
-            <p>Disk layout template for the virtual machine on the cluster node.</p>
+            <p>
+            Disk layout template for the virtual machine on the cluster node.
+            </p>
             <p>The available choices are:</p>
             <ul>
-                <li><b>plain</b> - Disk devices will be logical volumes <i>(e.g.  LVM)</i></li>
-                <li><b>drbd</b> - Disk devices will be <a href="http://www.drbd.org/">DRBD</a>
-                (version 8.x) on top of LVM volumes</li>
-                <li><b>file</b> - Disk devices will be regular files
-                <i>(e.g.  qcow2)</i></li>
-                <li><b>diskless</b> - This creates a virtual machine with no
-                disks. Its useful for testing only (or other special
-                cases).</li>
+                <li>
+                    <b>plain</b> - Disk devices will be logical volumes <i>
+                    (e.g.  LVM)</i>
+                </li>
+                <li>
+                    <b>drbd</b> - Disk devices will be 
+                    <a href="http://www.drbd.org/">DRBD</a> (version 8.x) on 
+                    top of LVM volumes
+                </li>
+                <li>
+                    <b>file</b> - Disk devices will be regular files
+                    <i>(e.g.  qcow2)</i>
+                </li>
+                <li>
+                    <b>diskless</b> - This creates a virtual machine with no
+                    disks. Its useful for testing only (or other special
+                    cases).
+                </li>
             </ul>
             <p>
-            If drbd is selected, then a primary and secondary node will need to
-            be chosen unless automatic allocation has been selection. DRBD will
-            allow the virtual machine to use live migration and failover in case
-            one of the nodes goes offline.</p>
+                If drbd is selected, then a primary and secondary node will
+                need to be chosen unless automatic allocation has been 
+                selection. DRBD will allow the virtual machine to use live 
+                migration and failover in case one of the nodes goes offline.
+            </p>
         </div>
         <div id="help-pnode">
             The primary node to use for the virtual machine (in case automatic
@@ -538,45 +586,54 @@
         </div>
         <div id="help-snode">
             <p>
-            The secondary node to use for the virtual machine (in case
-            automatic allocation is not used).</p>
-            <p>This is only required when using the drbd disk template.</p>
+                The secondary node to use for the virtual machine (in case
+                automatic allocation is not used).
+            </p>
+            <p>
+                This is only required when using the drbd disk template.
+            </p>
         </div>
         <div id="help-os">
             <p>
-            Operating system to install on the virtual machine. Your choices are
-            limited to the images configured on the cluster.</p>
+                Operating system to install on the virtual machine. Your
+                choices are limited to the images configured on the cluster.
+            </p>
             <p>
-            The text in <b>bold</b> signifies the Ganeti Operating
-            System Type which may be called debootstrap, image, or some other
-            type. The text that is selectable is the operating system (or
-            os-type variant) that the cluster has access to.</p>
+                The text in <b>bold</b> signifies the Ganeti Operating
+                System Type which may be called debootstrap, image, or some
+                other type. The text that is selectable is the operating system
+                (or os-type variant) that the cluster has access to.
+            </p>
         </div>
 
         <div id="help-vcpus">
-            <p>
-            Number of virtual cpus to allocate to this virtual machine.<p>
+            <p>Number of virtual cpus to allocate to this virtual machine.<p>
             <p><b><i>This will be deducted from the owner's quota.</i></b></p>
         </div>
         <div id="help-ram">
             <p>
-            Amount of ram to allocate to this virtual machine.
-            If no units are given, megabytes is assumed.</p>
+                Amount of ram to allocate to this virtual machine. If no units
+                are given, megabytes is assumed.
+            </p>
             <p><b><i>This will be deducted from the owner's quota.</i></b></p>
         </div>
         <div id="help-disk_size">
             <p>
-            Size of the system disk to allocate to this virtual machine.
-            If no units are given, megabytes is assumed.</p>
+                Size of the system disk to allocate to this virtual machine. If
+                no units are given, megabytes is assumed.
+            </p>
             <p><b><i>This will be deducted from the owner's quota.</i></b></p>
         </div>
         <div id="help-disk_type">
             <p>
-            This parameter determines the way the disks are presented to the
-            virtual machine. The possible options are:</p>
+                This parameter determines the way the disks are presented to
+                the virtual machine. The possible options are:
+            </p>
             <ul>
                 <li><b>paravirtual</b> - (HVM &amp; KVM)</li>
-                <li><b>ioemu</b> - (default for HVM &amp; KVM) (HVM &amp; KVM)</li>
+                <li>
+                    <b>ioemu</b> - (default for HVM &amp; KVM) (HVM &amp; KVM)
+                </li>
                 <li><b>ide</b> - (HVM &amp; KVM)</li>
                 <li><b>scsi</b> - (KVM)</li>
                 <li><b>sd</b> - (KVM)</li>
@@ -587,30 +644,40 @@
         </div>
         <div id="help-nicmode">
             <p>
-            This option specifies how the virtual machine connects to the
-            network. More information on this can be found in the <a
-            href="http://docs.ganeti.org/ganeti/current/html/install.html#configuring-the-network">Ganeti tutorial documentation</a>.</p>
+                This option specifies how the virtual machine connects to the
+                network. More information on this can be found in the <a
+                href="http://docs.ganeti.org/ganeti/current/html/install.html#configuring-the-network">
+                Ganeti tutorial documentation</a>.
+            </p>
             <p>When in doubt, choose <b>bridged</b>.</p>
             <ul>
-                <li><b>bridged</b> - The virtual machine's network interface will be
-                attached to a software bridge running on the node.</li>
-                <li><b>routed</b> - The virtual machine's network interface will be
-                routed</li>
+                <li>
+                    <b>bridged</b> - The virtual machine's network interface
+                    will be attached to a software bridge running on the node.
+                </li>
+                <li><b>routed</b> - The virtual machine's network interface
+                    will be routed
+                </li>
             </ul>
         </div>
         <div id="help-niclink">
             <p>
-            In <b>bridged</b> mode, it specifies the bridge interface to attach this
-            NIC to on the node <i>(e.g. br0)</i>.</p>
+                In <b>bridged</b> mode, it specifies the bridge interface to
+                attach this NIC to on the node <i>(e.g. br0)</i>.
+            </p>
             <p>
-            In <b>routed</b> mode it's intended to differentiate between different
-            routing tables/virtual machine groups (but the meaning is dependant
-            on the network script, see <a href="http://docs.ganeti.org/ganeti/current/man/gnt-cluster.html">gnt-cluster(8)</a> for more details.</p>
+                In <b>routed</b> mode it's intended to differentiate between 
+                different routing tables/virtual machine groups (but the 
+                meaning is dependant on the network script, see 
+                <a href="http://docs.ganeti.org/ganeti/current/man/gnt-cluster.html">
+                gnt-cluster(8)</a> for more details.
+            </p>
         </div>
         <div id="help-nictype">
             <p>
-            This parameter determines the way the network cards are presented to
-            the virtual machine. The possible options are:</p>
+                This parameter determines the way the network cards are 
+                presented to the virtual machine. The possible options are:
+            </p>
             <ul>
                 <li><b>rtl8139</b> - (default for Xen HVM) (HVM &amp; KVM)</li>
                 <li><b>ne2k_isa</b> - (HVM &amp; KVM)</li>
@@ -626,43 +693,46 @@
         </div>
 
         <div id="help-kernelpath">
-           <p>
-           This option specifies the path (on the node) to the kernel to boot
-           the virtual machine with. Xen PVM instances always require this,
-           while for KVM if this option is empty, it will cause the machine to
-           load the kernel from its disks.</p>
-           <p>Valid for the Xen PVM and KVM hypervisors.</p>
+            <p>
+                This option specifies the path (on the node) to the kernel to 
+                boot the virtual machine with. Xen PVM instances always require
+                this, while for KVM if this option is empty, it will cause the
+                machine to load the kernel from its disks.
+            </p>
+            <p>Valid for the Xen PVM and KVM hypervisors.</p>
         </div>
         <div id="help-rootpath">
             <p>
-            This option specifies the name of the root device. This is always
-            needed for Xen PVM, while for KVM it is only used if the
-            kernel_path option is also specified.</p>
+                This option specifies the name of the root device. This is 
+                always needed for Xen PVM, while for KVM it is only used if the
+                kernel_path option is also specified.
+            </p>
             <p>Valid for the Xen PVM and KVM hypervisors.</p>
         </div>
         <div id="help-serialconsole">
-           <p>
-           This boolean option specifies whether to emulate a serial console
-           for the instance.</p>
-           <p>Valid for the KVM hypervisor.</p>
+            <p>
+                This boolean option specifies whether to emulate a serial
+                console for the instance.
+            </p>
+            <p>Valid for the KVM hypervisor.</p>
         </div>
         <div id="help-bootorder">
             <p>Value denoting boot order for the virtual machine.</p>
             <ul>
                 <li><b>Hard Disk</b> - boot from the first disk device</li>
-                <li><b>CD-ROM</b> - boot from the cdrom (requires CD Image path
-                being set)</li>
+                <li>
+                    <b>CD-ROM</b> - boot from the cdrom (requires CD Image path
+                    being set)
+                </li>
             </ul>
             <p>Valid for the Xen HVM and KVM hypervisors.</p>
         </div>
         <div id="help-imagepath">
-           <p>
-           The path to a CDROM image on the node to attach to the virtual
-           machine.</p>
-           <p>Valid for the Xen HVM and KVM hypervisors.</p>
+            <p>
+               The path to a CDROM image on the node to attach to the virtual
+               machine.
+            </p>
+            <p>Valid for the Xen HVM and KVM hypervisors.</p>
         </div>
-
-
     </div>
-
 {% endblock %}

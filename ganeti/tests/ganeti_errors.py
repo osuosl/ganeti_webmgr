@@ -27,8 +27,6 @@ from ganeti.tests.rapi_proxy import RapiProxy
 from django.contrib.auth.models import User, Group
 from ganeti import models
 
-models.client.GanetiRapiClient = RapiProxy
-
 VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
 GanetiError = models.GanetiError
@@ -43,6 +41,7 @@ class TestGanetiErrorBase():
     
     def setUp(self):
         self.tearDown()
+        models.client.GanetiRapiClient = RapiProxy
     
     def create_model(self, class_, *args, **kwargs):
         """
