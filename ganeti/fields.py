@@ -149,3 +149,17 @@ class DataVolumeField(CharField):
 # Field rule used by South for database migrations
 from south.modelsinspector import add_introspection_rules
 add_introspection_rules([], ["^ganeti\.fields\.PreciseDateTimeField"])
+
+
+class SQLSumIf(models.sql.aggregates.Aggregate):
+    is_ordinal = True
+    sql_function = 'SUM'
+    sql_template= '%(function)s(CASE %(condition)s WHEN 1 THEN %(field)s ELSE NULL END)'
+
+
+class SumIf(models.Aggregate):
+    name = 'SUM'
+
+    def add_to_query(self, query, alias, col, source, is_summary):
+        aggregate = SQLSumIf(col, source=source, is_summary=is_summary, **self.extra)
+        query.aggregates[alias] = aggregate 

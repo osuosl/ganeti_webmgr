@@ -167,7 +167,7 @@ class TestClusterUser(TestCase):
         self.assert_(c1.id in result.keys())
         self.assert_(c2.id in result.keys())
         self.assert_(c3.id in result.keys())
-        self.assertEqual(result[c1.id]["disk"], 6)
+        self.assertEqual(result[c1.id]["disk"], 12)
         self.assertEqual(result[c1.id]["ram"], 1)
         self.assertEqual(result[c1.id]["virtual_cpus"], 3)
         self.assertEqual(result[c1.id], result[c3.id])
@@ -180,6 +180,6 @@ class TestClusterUser(TestCase):
         
         # single cluster - only running VMs
         result = owner.used_resources(cluster=c1, only_running=True)
-        self.assertEqual(result["disk"], 6)
+        self.assertEqual(result["disk"], 12)
         self.assertEqual(result["ram"], 1)
         self.assertEqual(result["virtual_cpus"], 3)
