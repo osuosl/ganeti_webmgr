@@ -34,7 +34,6 @@ if not os.environ.has_key('DJANGO_SETTINGS_MODULE'):
 
 
 from django.conf import settings
-import compat
 from ganeti.models import Cluster, VirtualMachine
 
 
