@@ -75,12 +75,9 @@ class TestNodeModel(TestCase, NodeTestCaseMixin):
         node.delete()
         
         # Multiple
-        node = Node.objects.create(cluster=cluster, hostname=node_hostname,
-                    ram=512, disk=5120)
+        node = Node.objects.create(cluster=cluster, hostname=node_hostname)
         self.assertTrue(node.id)
         self.assertEqual('node.test.org', node.hostname)
-        self.assertEqual(512, node.ram)
-        self.assertEqual(5120, node.disk)
         self.assertFalse(node.error)
         
         # test unique constraints
@@ -139,10 +136,6 @@ class TestNodeModel(TestCase, NodeTestCaseMixin):
         
         self.assertEqual(node.ctime, datetime.fromtimestamp(1285799513.4741000))
         self.assertEqual(node.mtime, datetime.fromtimestamp(1285883187.8692000))
-        self.assertEqual(node.ram, 1111)
-        self.assertEqual(node.disk, 2222)
-        self.assertEqual(node.ram_total, 9999)
-        self.assertEqual(node.disk_total, 6666)
         self.assertFalse(node.offline)
 
 
