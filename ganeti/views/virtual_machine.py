@@ -378,7 +378,7 @@ def detail(request, cluster_slug, instance):
     
     if not (admin or power or remove):
         return render_403(request, 'You do not have permission to view this cluster\'s details')
-	
+    
     if vm.pending_delete:
         template = 'virtual_machine/delete_status.html' 
     else:
@@ -674,8 +674,8 @@ def cluster_options(request):
         this cluster')
 
     oslist = cluster_os_list(cluster)
-    content = json.dumps({'nodes':cluster.nodes(), \
-                          'os':oslist})
+    nodes = [str(h) for h in cluster.nodes.values_list('hostname', flat=True)]
+    content = json.dumps({'nodes':nodes, 'os':oslist})
     return HttpResponse(content, mimetype='application/json')
 
 

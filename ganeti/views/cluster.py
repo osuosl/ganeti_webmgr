@@ -73,7 +73,7 @@ def nodes(request, cluster_slug):
         return render_403(request, "You do not have sufficient privileges")
     
     return render_to_response("node/table.html", \
-                        {'cluster': cluster, 'nodes':cluster.nodes(True)}, \
+                        {'cluster': cluster, 'nodes':cluster.nodes.all()}, \
         context_instance=RequestContext(request),
     )
 
@@ -119,6 +119,7 @@ def edit(request, cluster_slug=None):
             # TODO Create post signal to import
             #   virtual machines on edit of cluster
             if cluster.info == None:
+                cluster.sync_nodes()
                 cluster.sync_virtual_machines()
             return HttpResponseRedirect(reverse('cluster-detail', \
                                                 args=[cluster.slug]))

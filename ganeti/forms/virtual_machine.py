@@ -106,7 +106,7 @@ class NewVirtualMachineForm(forms.ModelForm):
         if cluster is not None:
             # set choices based on selected cluster if given
             oslist = cluster_os_list(cluster)
-            nodelist = cluster.nodes()
+            nodelist = [str(h) for h in cluster.nodes.values_list('hostname', flat=True)]
             nodes = zip(nodelist, nodelist)
             nodes.insert(0, self.empty_field)
             oslist.insert(0, self.empty_field)

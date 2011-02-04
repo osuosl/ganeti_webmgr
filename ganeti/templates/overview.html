@@ -100,7 +100,6 @@
     <tbody>
     {% for cluster in cluster_list %}
         {% with cluster.info as info %}
-        {% with cluster|cluster_nodes:1 as nodes %}
             <tr id="cluster_{{cluster.id}}">
                 <td class="name">
                     {% if cluster.error %}<div class="icon_error" title="Ganeti API Error: {{cluster.error}}"></div>{% endif %}
@@ -109,12 +108,11 @@
                     </a>
                 </td>
                 <td>{{ info.software_version }}</td>
-                <td class="ram">{% cluster_memory cluster nodes %}</td>
-                <td class="disk">{% cluster_disk cluster nodes%}</td>
-                <td title="Running/All">{% format_online_nodes cluster nodes %}</td>
+                <td class="ram">{% cluster_memory cluster %}</td>
+                <td class="disk">{% cluster_disk cluster %}</td>
+                <td title="Running/All">{% format_online_nodes cluster %}</td>
                 <td title="Running/All">{% format_running_vms cluster %}</td>
             </tr>
-        {% endwith %}
         {% endwith %}
     {% empty %}
         <tr class="none"><td colspan="100%">No Clusters</td></tr>

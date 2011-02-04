@@ -21,6 +21,7 @@ import re
 import json as json_lib
 
 from django import template
+from django.db.models import Count
 from django.template import Library, Node, TemplateSyntaxError
 from django.template.defaultfilters import stringfilter
 from django.utils.safestring import mark_safe
@@ -144,14 +145,6 @@ def quota(cluster_user, cluster):
 
 
 @register.filter
-def cluster_nodes(cluster, bulk=False):
-    """
-    Helper tag for passing parameter to cluster.nodes()
-    """
-    return cluster.nodes(bulk)
-
-
-@register.filter
 def cluster_admin(user):
     """
     Returns whether the user has admin permission on any Cluster
@@ -197,7 +190,7 @@ def node_memory(node):
     """
     Pretty-print a memory quantity, in GiB, with significant figures.
     """
-    return format_part_total(node["mfree"], node["mtotal"])
+    return format_part_total(node.ram, node.ram_total)
 
 
 @register.simple_tag
@@ -205,24 +198,18 @@ def node_disk(node):
     """
     Pretty-print a disk quantity, in GiB, with significant figures.
     """
-    return format_part_total(node["dfree"], node["dtotal"])
+    return format_part_total(node.disk, node.disk_total)
 
 
 @register.simple_tag
-def cluster_memory(cluster, nodes=None):
+def cluster_memory(cluster):
     """
     Pretty-print a memory quantity of the whole cluster [GiB]
     """
-    nodes = nodes if nodes else cluster.nodes(True)
-    mfree, mtotal = 0, 0
-    for i in nodes:
-        if isinstance(i, str):
-            continue
-        if i["mfree"]:
-            mfree += i["mfree"]
-        if i["mtotal"]:
-            mtotal += i["mtotal"]
-    return format_part_total(mfree, mtotal)
+    d = cluster.available_ram
+    free = d['free']
+    total = d['total']
+    return format_part_total(free, total)
 
 
 @register.simple_tag
@@ -230,16 +217,10 @@ def cluster_disk(cluster, nodes=None):
     """
     Pretty-print a memory quantity of the whole cluster [GiB]
     """
-    nodes = nodes if nodes else cluster.nodes(True) 
-    dfree, dtotal = 0, 0
-    for i in nodes:
-        if isinstance(i, str):
-            continue
-        if i["dfree"]:
-            dfree += i["dfree"]
-        if i["dtotal"]:
-            dtotal += i["dtotal"]
-    return format_part_total(dfree, dtotal)
+    d = cluster.available_disk
+    free = d['free']
+    total = d['total']
+    return format_part_total(free, total)
 
 
 @register.simple_tag
@@ -252,18 +233,18 @@ def format_running_vms(cluster):
 
 
 @register.simple_tag
-def format_online_nodes(cluster, nodes=None):
+def format_online_nodes(cluster):
     """
     Return number of nodes that are online and number of all nodes
     """
-    n = 0
-    nodes = nodes if nodes else cluster.nodes(True)
-    for i in nodes:
-        if isinstance(i, str):
-            continue
-        if not i['offline']:
-            n += 1
-    return "%d/%d" % (n, len(nodes))
+    annotation = cluster.nodes.values('offline').annotate(count=Count('pk'))
+    offline = online = 0
+    for values in annotation:
+        if values['offline']:
+            offline = values['count']
+        else:
+            online = values['count']
+    return "%d/%d" % (online, offline+online)
 
 
 @register.filter
