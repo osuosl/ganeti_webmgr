@@ -192,21 +192,21 @@ def user_added(sender, editor, user, obj, **kwargs):
     """
     receiver for object_permissions.signals.view_add_user, Logs action
     """
-    log_action(editor, obj, "added user")
+    log_action('ADD', editor, obj)
 
 
 def user_removed(sender, editor, user, obj, **kwargs):
     """
     receiver for object_permissions.signals.view_add_user, Logs action
     """
-    log_action(editor, obj, "removed user")
+    log_action('DELETE', editor, obj)
 
 
 def user_edited(sender, editor, user, obj, **kwargs):
     """
     receiver for object_permissions.signals.view_add_user, Logs action
     """
-    log_action(editor, obj, "modified permissions")
+    log_action('EDIT', editor, obj)
 
 
 op_signals.view_add_user.connect(user_added, sender=Cluster)

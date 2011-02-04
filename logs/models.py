@@ -24,6 +24,42 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import GenericForeignKey
 from django.utils.encoding import force_unicode
+from django.template.loader import get_template
+
+class LogActionManager(models.Manager):
+    _cache = {}
+    
+    def register(self, key, template):
+        """
+        Registers and caches an LogAction type
+        
+        @param key : Key identifying log action
+        @param template : template associated with key
+        """
+        try:
+            action = self._cache[self.db][key]
+        except KeyError:
+            action, new = LogAction.objects.get_or_create(name=key, \
+            template=template)
+            # load into cache
+            self._cache.setdefault(self.db, {})[key] = action
+            #self._template_cache.setdefault(self.db, {})[template] =
+        
+        return action
+        
+    def get_from_cache(self, key):
+        """
+        Attempts to retrieve the LogAction from cache, if it fails, loads
+        the action into the cache.
+        
+        @param key : key passed to LogAction.objects.get
+        """
+        try:
+            action = self._cache[self.db][key]
+        except KeyError:
+            action = LogAction.objects.get(name=key)
+            self._cache.setdefault(self.db, {})[key]=action
+        return action
 
 
 class LogAction(models.Model):
@@ -32,11 +68,15 @@ class LogAction(models.Model):
 
     @param name           string  verb (for example: add)
     """
+    
     name = models.CharField(max_length=128, unique=True) #add, delete
+    template = models.CharField(max_length=128, unique=True) #template to load
+    objects = LogActionManager()
+        
 
 
 class LogItemManager(models.Manager):
-
+    
     # Cache to avoid re-looking up LogAction objects all over the place
     _cache = {}
 
@@ -47,7 +87,7 @@ class LogItemManager(models.Manager):
         """
         self.__class__._cache.clear()
 
-    def log_action(self, user, affected_object, key, log_message=None):
+    def log_action(self, key, user, object1, object2=None,  object3=None):
         """
         Creates new log entry
 
@@ -60,28 +100,17 @@ class LogItemManager(models.Manager):
         #from django.utils.encoding import smart_unicode
         # Uncomment below:
         #key = smart_unicode(key)
-
-        try:
-            action = self._cache[self.db][key]
-        except KeyError:
-            # get if exists
-            # or create otherwise
-            action, created = LogAction.objects.get_or_create(
-                name = key,
-            )
-            # load into cache
-            self._cache.setdefault(self.db, {})[key] = action
-
-        # now action is LogAction object
+        
+        action = LogAction.objects.get_from_cache(key)
+        
         m = self.model(
             id = None,
             action = action,
             timestamp = None,
             user = user,
-            object_type = ContentType.objects.get_for_model(affected_object),
-            object_id = affected_object.pk,
-            object_repr = force_unicode(affected_object),
-            log_message = log_message,
+            object1 = object1,
+            object2 = object2,
+            object3 = object3,
         )
         m.save()
         return m.id # occasionally someone needs this
@@ -94,43 +123,46 @@ class LogItem(models.Model):
     action = models.ForeignKey(LogAction)
     timestamp = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, related_name='log_items')
-    object_type = models.ForeignKey(ContentType, related_name='log_items')
+    
+    object_type1 = models.ForeignKey(ContentType, \
+    related_name='log_items1')
+    object_id1 = models.PositiveIntegerField()
+    object1 = GenericForeignKey("object_type1", "object_id1")
+    
+    object_type2 = models.ForeignKey(ContentType, \
+    related_name='log_items2')
+    object_id2 = models.PositiveIntegerField()
+    object2 = GenericForeignKey("object_type2", "object_id2")
+    
+    object_type3 = models.ForeignKey(ContentType, \
+    related_name='log_items3')
+    object_id3 = models.PositiveIntegerField()
+    object3 = GenericForeignKey("object_type3", "object_id3")
 
-    object_id = models.PositiveIntegerField()
-    object_repr = models.CharField(max_length=128, blank=True, null=True)
-    affected_object = GenericForeignKey("object_type", "object_id")
-
-    log_message = models.TextField(blank=True, null=True)
+    #log_message = models.TextField(blank=True, null=True)
 
     objects = LogItemManager()
 
     class Meta:
         ordering = ("timestamp", )
-
-    def __repr__(self):
+    
+    def __render__(self):
         """
-        Returns single line log entry containing informations like:
+        Renders single line log entry containing informations like:
         - date and extensive time
         - user who performed an action
         - action itself
         - object affected by the action
         """
-        # this format:
-        #[2010-11-30 14:12:31] user piotr changed user "piotr": root=True, abc=True
-        #[2010-11-30 14:12:31] user piotr deleted virtual machine "testfarm1"
-        msg = ""
-        if self.log_message:
-            msg = ": %s" % self.log_message
+        
+        template = get_template(LogAction.get_from_cache(action).template)
+        template.render({"log_item": self})
 
-        format = "[%(timestamp)s] user %(user)s %(action)s" \
-               + " %(object_type)s \"%(object_repr)s\"%(msg)s"
+        return template
 
-        fields = dict(
-            timestamp = self.timestamp,
-            user = self.user,
-            action = self.action.name,
-            object_type = self.object_type.name,
-            object_repr = self.object_repr,
-            msg = msg,
-        )
-        return format % fields
+
+#Most common log types, registered by default for convenience
+LogAction.objects.register('EDIT', 'logs/edit.html')
+LogAction.objects.register('ADD', 'logs/add.html')
+LogAction.objects.register('DELETE', 'logs/delete.html')
+    
