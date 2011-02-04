@@ -115,6 +115,9 @@ urlpatterns += patterns('ganeti.views.virtual_machine',
     # Reinstall
     url(r"^%s/reinstall/?$" % vm_prefix, "reinstall", name="instance-reinstall"),
 
+    # Edit / Modify
+    url(r"^%s/edit/?$" % vm_prefix, "modify", name="instance-modify"),
+
     # SSH Keys
     url(r'^%s/keys/(?P<api_key>\w+)/?$' % vm_prefix, "ssh_keys", name="instance-keys"),
 )

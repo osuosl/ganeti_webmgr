@@ -1,0 +1,26 @@
+{% extends "menu_base.html" %}
+{% load webmgr_tags %}
+{% block content %}
+<h1>Edit {{ instance.hostname }}</h1>
+<fieldset>
+    <form id="vmeditform" method="post">
+        <fieldset>
+            <legend>General Parameters</legend>
+            {% vmfield form.vcpus %}
+            {% vmfield form.ram %}
+            {% vmfield form.disk_type %}
+            {% vmfield form.niclink %}
+            {% vmfield form.nictype %}
+        </fieldset>
+        <fieldset>
+            <legend>Hypervisor Parameters</legend>
+            {% vmfield form.kernelpath %}
+            {% vmfield form.rootpath %}
+            {% vmfield form.serialconsole %}
+            {% vmfield form.bootorder %}
+            {% vmfield form.imagepath %}
+        </fieldset>
+        <input class="submit" type="submit" value="Save" />
+    </form>
+</fieldset>
+{% endblock %}

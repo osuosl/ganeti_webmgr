@@ -501,6 +501,7 @@ class RapiProxy(client.GanetiRapiClient):
         CallProxy.patch(instance, 'DeleteInstanceTags', False)
         CallProxy.patch(instance, 'CreateInstance', False, 1)
         CallProxy.patch(instance, 'DeleteInstance', False, 1)
+        CallProxy.patch(instance, 'ModifyInstance', False, 1)
         
         return instance
     
