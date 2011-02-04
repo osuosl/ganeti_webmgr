@@ -36,7 +36,7 @@ from django.utils.translation import ugettext_lazy as _
 import re
 
 from django.db import models
-from django.db.models import Sum
+from django.db.models import Q, Sum
 from django.db.models.query import QuerySet
 from django.db.models.signals import post_save, post_syncdb
 from django.db.utils import DatabaseError
@@ -668,6 +668,35 @@ class Node(CachedClusterObject):
         data['offline'] = info['offline']
         
         return data
+    
+    @property
+    def ram(self):
+        """ returns dict of free and total ram """
+        values = VirtualMachine.objects \
+            .filter(Q(primary_node=self) | Q(secondary_node=self))\
+            .exclude(ram=-1).order_by() \
+            .values('status').annotate(ram_=Sum('ram'))
+        total = running = 0
+        for dict_ in values:
+            if dict_['status'] == 'running':
+                running = dict_['ram_']
+            total += dict_['ram_']
+        return {'total':total, 'free':total - running}
+    
+    @property
+    def disk(self):
+        """ returns dict of free and total disk space """
+        values = VirtualMachine.objects \
+            .filter(Q(primary_node=self) | Q(secondary_node=self))\
+            .exclude(ram=-1).order_by() \
+            .values('status').annotate(disk_size_=Sum('disk_size'))
+        total = running = 0
+        for dict_ in values:
+            if dict_['status'] == 'running':
+                running = dict_['disk_size_']
+            total += dict_['disk_size_']
+        return {'total':total, 'free':total - running}
+    
     
     def __repr__(self):
         return "<Node: '%s'>" % self.hostname

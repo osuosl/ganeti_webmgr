@@ -137,6 +137,18 @@ class TestNodeModel(TestCase, NodeTestCaseMixin):
         self.assertEqual(node.ctime, datetime.fromtimestamp(1285799513.4741000))
         self.assertEqual(node.mtime, datetime.fromtimestamp(1285883187.8692000))
         self.assertFalse(node.offline)
+    
+    def test_ram(self):
+        """
+        Tests the Node.ram property
+        """
+        raise NotImplementedError
+    
+    def test_disk(self):
+        """
+        Tests the Node.ram property
+        """
+        raise NotImplementedError
 
 
 class TestNodeViews(TestCase, NodeTestCaseMixin):

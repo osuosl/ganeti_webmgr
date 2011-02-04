@@ -190,7 +190,8 @@ def node_memory(node):
     """
     Pretty-print a memory quantity, in GiB, with significant figures.
     """
-    return format_part_total(node.ram, node.ram_total)
+    ram = node.ram
+    return format_part_total(ram['free'], ram['total'])
 
 
 @register.simple_tag
@@ -198,7 +199,8 @@ def node_disk(node):
     """
     Pretty-print a disk quantity, in GiB, with significant figures.
     """
-    return format_part_total(node.disk, node.disk_total)
+    disk = node.disk
+    return format_part_total(disk['free'], disk['total'])
 
 
 @register.simple_tag
