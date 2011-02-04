@@ -238,34 +238,33 @@ class TestClusterModel(TestCase):
         """
         Tests that the available_ram property returns the correct values
         """
-        cluster = Cluster.objects.create(hostname='ganeti.osuosl.test')
+        c = Cluster.objects.create(hostname='ganeti.osuosl.test')
         
-        Node.objects.create(cluster=cluster, hostname='foo', ram=123, ram_total=678)
-        Node.objects.create(cluster=cluster, hostname='bar', ram=456, ram_total=989)
-        Node.objects.create(cluster=cluster, hostname='xoo')
-        Node.objects.create(cluster=cluster, hostname='xar', ram=111)
-        Node.objects.create(cluster=cluster, hostname='boo', ram_total=111)
+        VirtualMachine.objects.create(cluster=c, hostname='foo', ram=123, status='running')
+        VirtualMachine.objects.create(cluster=c, hostname='bar', ram=456, status='running')
+        VirtualMachine.objects.create(cluster=c, hostname='xoo', ram=789, status='admin_down')
+        VirtualMachine.objects.create(cluster=c, hostname='xar', ram=234, status='stopped')
+        VirtualMachine.objects.create(cluster=c, hostname='boo', status='running')
         
-        ram = cluster.available_ram
-        self.assertEqual(579, ram['free'])
-        self.assertEqual(1667, ram['total'])
+        ram = c.available_ram
+        self.assertEqual(1023, ram['free'])
+        self.assertEqual(1602, ram['total'])
     
     def test_available_disk(self):
         """
         Tests that the available_disk property returns the correct values
         """
-        cluster = Cluster.objects.create(hostname='ganeti.osuosl.test')
-        cluster.sync_nodes()
+        c = Cluster.objects.create(hostname='ganeti.osuosl.test')
         
-        Node.objects.create(cluster=cluster, hostname='foo', disk=123, disk_total=678)
-        Node.objects.create(cluster=cluster, hostname='bar', disk=456, disk_total=989)
-        Node.objects.create(cluster=cluster, hostname='xoo')
-        Node.objects.create(cluster=cluster, hostname='xar', disk=111)
-        Node.objects.create(cluster=cluster, hostname='boo', disk_total=111)
+        VirtualMachine.objects.create(cluster=c, hostname='foo', disk_size=123, status='running')
+        VirtualMachine.objects.create(cluster=c, hostname='bar', disk_size=456, status='running')
+        VirtualMachine.objects.create(cluster=c, hostname='xoo', disk_size=789, status='admin_down')
+        VirtualMachine.objects.create(cluster=c, hostname='xar', disk_size=234, status='stopped')
+        VirtualMachine.objects.create(cluster=c, hostname='boo', status='running')
         
-        disk = cluster.available_disk
-        self.assertEqual(579, disk['free'])
-        self.assertEqual(1667, disk['total'])
+        disk = c.available_disk
+        self.assertEqual(1023, disk['free'])
+        self.assertEqual(1602, disk['total'])
     
 
 class TestClusterViews(TestCase):

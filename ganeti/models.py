@@ -821,14 +821,26 @@ class Cluster(CachedClusterObject):
     @property
     def available_ram(self):
         """ returns dict of free and total ram """
-        return self.nodes.exclude(Q(ram=-1) | Q(ram_total=-1)) \
-            .aggregate(free=Sum('ram'), total=Sum('ram_total'))
+        values = self.virtual_machines.exclude(ram=-1).order_by() \
+            .values('status').annotate(ram_=Sum('ram'))
+        total = running = 0
+        for dict_ in values:
+            if dict_['status'] == 'running':
+                running = dict_['ram_']
+            total += dict_['ram_']
+        return {'total':total, 'free':total - running}
     
     @property
     def available_disk(self):
         """ returns dict of free and total disk space """
-        return self.nodes.exclude(Q(disk=-1) | Q(disk_total=-1)) \
-            .aggregate(free=Sum('disk'), total=Sum('disk_total'))
+        values = self.virtual_machines.exclude(disk_size=-1).order_by() \
+            .values('status').annotate(disk_size_=Sum('disk_size'))
+        total = running = 0
+        for dict_ in values:
+            if dict_['status'] == 'running':
+                running = dict_['disk_size_']
+            total += dict_['disk_size_']
+        return {'total':total, 'free':total - running}
 
     def _refresh(self):
         return self.rapi.GetInfo()
