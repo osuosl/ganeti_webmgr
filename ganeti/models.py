@@ -210,7 +210,10 @@ class CachedClusterObject(models.Model):
         try:
             info_ = self._refresh()
             if info_:
-                mtime = datetime.fromtimestamp(info_['mtime'])
+                if info_['mtime']:
+                    mtime = datetime.fromtimestamp(info_['mtime'])
+                else:
+                    mtime = None
                 self.cached = datetime.now()
             else:
                 # no info retrieved, use current mtime
@@ -273,6 +276,9 @@ class CachedClusterObject(models.Model):
 
         This method is specific to the child object.
         """
+        # mtime is sometimes None if object has never been modified
+        if info['mtime'] is None:
+            return {'mtime': None}
         return {'mtime': datetime.fromtimestamp(info['mtime'])}
 
     def save(self, *args, **kwargs):
