@@ -32,7 +32,9 @@ from object_permissions import grant, get_user_perms
 from util import client
 from ganeti.tests.rapi_proxy import RapiProxy, INSTANCE, INFO, JOB, JOB_RUNNING, JOB_DELETE_SUCCESS
 from ganeti import models, constants 
-from ganeti.views.virtual_machine import os_prettify, NewVirtualMachineForm
+from ganeti.forms.virtual_machine import NewVirtualMachineForm
+from ganeti.utilities import os_prettify
+
 VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
 ClusterUser = models.ClusterUser
