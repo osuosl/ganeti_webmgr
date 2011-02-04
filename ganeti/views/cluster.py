@@ -119,6 +119,7 @@ def edit(request, cluster_slug=None):
             # TODO Create post signal to import
             #   virtual machines on edit of cluster
             if cluster.info == None:
+                cluster.sync_nodes()
                 cluster.sync_virtual_machines()
             return HttpResponseRedirect(reverse('cluster-detail', \
                                                 args=[cluster.slug]))
