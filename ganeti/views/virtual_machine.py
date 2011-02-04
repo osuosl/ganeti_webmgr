@@ -674,7 +674,7 @@ def cluster_options(request):
         this cluster')
 
     oslist = cluster_os_list(cluster)
-    nodes = cluster.nodes.all().values_list('hostname', flat=True)
+    nodes = [str(h) for h in cluster.nodes.values_list('hostname', flat=True)]
     content = json.dumps({'nodes':nodes, 'os':oslist})
     return HttpResponse(content, mimetype='application/json')
 

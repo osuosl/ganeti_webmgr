@@ -1403,7 +1403,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/json', response['content-type'])
         content = json.loads(response.content)
-        self.assertEqual(['gtest1.osuosl.bak', 'gtest2.osuosl.bak'], content['nodes'])
+        self.assertEqual(['gtest1.osuosl.bak', 'gtest2.osuosl.bak', 'gtest2.osuosl.bak'], content['nodes'])
         self.assertEqual(content["os"],
             [[u'Image',
                 [[u'image+debian-osgeo', u'Debian Osgeo'],
@@ -1418,7 +1418,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/json', response['content-type'])
         content = json.loads(response.content)
-        self.assertEqual(['gtest1.osuosl.bak', 'gtest2.osuosl.bak'], content['nodes'])
+        
+        self.assertEqual(['gtest1.osuosl.bak', 'gtest2.osuosl.bak', 'gtest2.osuosl.bak'], content['nodes'])
         self.assertEqual(content["os"],
             [[u'Image',
                 [[u'image+debian-osgeo', u'Debian Osgeo'],
@@ -1434,7 +1435,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/json', response['content-type'])
         content = json.loads(response.content)
-        self.assertEqual(['gtest1.osuosl.bak', 'gtest2.osuosl.bak'], content['nodes'])
+        self.assertEqual(['gtest1.osuosl.bak', 'gtest2.osuosl.bak', 'gtest3.osuosl.bak'], content['nodes'])
         self.assertEqual(content["os"],
             [[u'Image',
                 [[u'image+debian-osgeo', u'Debian Osgeo'],
