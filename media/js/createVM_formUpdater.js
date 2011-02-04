@@ -26,12 +26,15 @@ function formUpdater(url_choices, url_options, url_defaults){
         /* initialize the live form updator */
 
         // disable the iallocator stuff by default
-        if(!iallocator_hostname.attr('value'))
+        if(!iallocator_hostname.attr('value')){
             iallocator.attr('readonly', 'readonly');
-        else
-            iallocator.after("<span>" +
-                    using_str+iallocator_hostname.val() +
-                    "</span>");
+        } else{
+            iallocator.after(
+                "<span>" + 
+                    using_str + iallocator_hostname.val() +
+                "</span>"
+            );
+        }
         _iallocatorDisable();
     
         // hide CD-ROM Image Path stuffs by default
@@ -45,8 +48,8 @@ function formUpdater(url_choices, url_options, url_defaults){
         disk_template.change();
         bootOrder.change();
         
-        // process the owner dropdown, i.e., if it only has a single
-        // option, select it, and make the dropdown read-only
+        // process the owner dropdown, i.e., if it only has a single option, 
+        // select it, and make the dropdown read-only
         dropdownToLabel(owner, blankOptStr);
     }
     
@@ -56,8 +59,8 @@ function formUpdater(url_choices, url_options, url_defaults){
         // boot device change
         bootOrder.change(function(){
             /* 
-            Only show image path stuffs if CD-ROM is selected in
-            the boot order dropdown.
+            Only show image path stuffs if CD-ROM is selected in the boot 
+            order dropdown.
             */
             var dropdown = $(this);
             var id = $(this).children("option:selected").val();
@@ -105,8 +108,7 @@ function formUpdater(url_choices, url_options, url_defaults){
 
             if(id != '') {
                 // JSON update the cluster when the owner changes
-                $.getJSON(url_choices, {'clusteruser_id':id}, 
-                        function(data){
+                $.getJSON(url_choices, {'clusteruser_id':id}, function(data){
                     cluster.children().not(':first').remove();
                     $.each(data, function(i, item) {
                         child = $("<option> </option>");
@@ -133,10 +135,8 @@ function formUpdater(url_choices, url_options, url_defaults){
             var id = $(this).children("option:selected").val();
             
             if( id != '' ) {
-                // JSON update oslist, pnode, and snode when cluster 
-                // changes
-                $.getJSON(url_options, {'cluster_id':id},
-                        function(data){
+                // JSON update oslist, pnode, and snode when cluster changes
+                $.getJSON(url_options, {'cluster_id':id}, function(data){
                     pnode.children().not(':first').remove();
                     snode.children().not(':first').remove();
                     oslist.children().not(':first').remove();
@@ -168,10 +168,9 @@ function formUpdater(url_choices, url_options, url_defaults){
 
                     // boot device dropdown
                     if(d['bootorder']) {
-                        $("#id_bootorder :selected").removeAttr(
-                                'selected');
-                        $("#id_bootorder [value="+d['bootorder']
-                                +"]").attr('selected','selected');
+                        $("#id_bootorder :selected").removeAttr('selected');
+                        $("#id_bootorder [value=" + d['bootorder'] + "]")
+                            .attr('selected','selected');
                     }
                     
                     // hypervisors
@@ -180,16 +179,15 @@ function formUpdater(url_choices, url_options, url_defaults){
                     }
 
                     // iallocator checkbox
-                    if(d['iallocator'] != "" && 
-                            d['iallocator'] != undefined){
+                    if(d['iallocator'] != "" && d['iallocator'] != undefined){
                         if(!iallocator_hostname.attr('value')) {
-                            iallocator_hostname.attr('value',
-                                    d['iallocator']);
-                            if(iallocator.siblings("span").length 
-                                    == 0){
-                                iallocator.after("<span>" + using_str +
+                            iallocator_hostname.attr('value', d['iallocator']);
+                            if(iallocator.siblings("span").length == 0){
+                                iallocator.after(
+                                    "<span>" + using_str +
                                         d['iallocator'] + 
-                                        "</span>");
+                                    "</span>"
+                                );
                             }
                         }
                         // Check iallocator checkbox
@@ -212,13 +210,12 @@ function formUpdater(url_choices, url_options, url_defaults){
 
                     // nic mode dropdown
                     if(d['nicmode']) {
-                        $("#id_nicmode :selected").removeAttr(
-                                'selected');
-                        $("#id_nicmode [value="+d['nicmode']+"]").attr(
-                                'selected','selected');
+                        $("#id_nicmode :selected").removeAttr('selected');
+                        $("#id_nicmode [value=" + d['nicmode'] + "]")
+                            .attr('selected','selected');
                     } else { 
-                        $("#id_nicmode :first-child").attr('selected', 
-                                'selected');
+                        $("#id_nicmode :first-child")
+                            .attr('selected', 'selected');
                     }
 
                     // nic link text box
@@ -228,10 +225,9 @@ function formUpdater(url_choices, url_options, url_defaults){
                     
                     // nic type dropdown
                     if(d['nictype']) {
-                        $("#id_nictype :selected").removeAttr(
-                                'selected');
-                        $("#id_nictype [value="+d['nictype']+"]").attr(
-                                'selected','selected');
+                        $("#id_nictype :selected").removeAttr('selected');
+                        $("#id_nictype [value=" + d['nictype'] + "]")
+                            .attr('selected','selected');
                     }
 
                     // memory text box
