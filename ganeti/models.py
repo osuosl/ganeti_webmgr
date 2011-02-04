@@ -642,12 +642,6 @@ class Node(CachedClusterObject):
     cluster_hash = models.CharField(max_length=40, editable=False)
     offline = models.BooleanField()
     
-    # resources
-    disk = models.IntegerField(default=-1)
-    disk_total = models.IntegerField(default=-1)
-    ram = models.IntegerField(default=-1)
-    ram_total = models.IntegerField(default=-1)
-    
     def _refresh(self):
         """ returns node info from the ganeti server """
         return self.rapi.GetNode(self.hostname)
@@ -671,12 +665,6 @@ class Node(CachedClusterObject):
         are stored in the database
         """
         data = super(Node, cls).parse_persistent_info(info)
-        
-        # Parse resource properties
-        data['ram'] = info['mfree']
-        data['ram_total'] = info['mtotal']
-        data['disk'] = info['dfree']
-        data['disk_total'] = info['dtotal']
         data['offline'] = info['offline']
         
         return data
