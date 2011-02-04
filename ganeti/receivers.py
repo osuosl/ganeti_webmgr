@@ -1,5 +1,7 @@
 from object_permissions import signals as op_signals
 
+from logs.models import LogItem
+log_action = LogItem.objects.log_action
 
 def op_user_add(sender, user, obj, **kwargs):
     """
