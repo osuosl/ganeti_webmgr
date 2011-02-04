@@ -237,14 +237,14 @@ def format_online_nodes(cluster):
     """
     Return number of nodes that are online and number of all nodes
     """
-    annotation = cluster.nodes.values('offline').annotate(Count('pk'))
-    if annotation:
-        online = annotation[True]
-        total = online + annotation[False]
-    else:
-        online = 0
-        total = 0
-    return "%d/%d" % (online, total)
+    annotation = cluster.nodes.values('offline').annotate(count=Count('pk'))
+    offline = online = 0
+    for values in annotation:
+        if values['offline']:
+            offline = values['count']
+        else:
+            online = values['count']
+    return "%d/%d" % (online, offline+online)
 
 
 @register.filter
