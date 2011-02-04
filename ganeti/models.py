@@ -434,6 +434,11 @@ class VirtualMachine(CachedClusterObject):
     operating_system = models.CharField(max_length=128)
     status = models.CharField(max_length=10)
     
+    # node relations
+    primary_node = models.ForeignKey('Node', null=True, related_name='primary_vms')
+    secondary_node = models.ForeignKey('Node', null=True, \
+                                        related_name='secondary_vms')
+    
     # The last job reference indicates that there is at least one pending job
     # for this virtual machine.  There may be more than one job, and that can
     # never be prevented.  This just indicates that job(s) are pending and the
@@ -505,6 +510,28 @@ class VirtualMachine(CachedClusterObject):
         data['disk_size'] = disk_size
         data['operating_system'] = info['os']
         data['status'] = info['status']
+        
+        primary = info['pnode']
+        if primary:
+            try:
+                data['primary_node'] = Node.objects.get(hostname=primary)
+            except Node.DoesNotExist:
+                # node is not created yet.  fail silently
+                data['primary_node'] = None
+        else:
+            data['primary_node'] = None
+        
+        secondary = info['snodes']
+        if len(secondary):
+            secondary = secondary[0]
+            try:
+                data['secondary_node'] = Node.objects.get(hostname=secondary)
+            except Node.DoesNotExist:
+                # node is not created yet.  fail silently
+                pass
+            data['secondary_node'] = None
+        else:
+            data['secondary_node'] = None
         
         return data
 
