@@ -36,7 +36,7 @@ from django.utils.translation import ugettext_lazy as _
 import re
 
 from django.db import models
-from django.db.models import Sum, F, Q
+from django.db.models import Sum
 from django.db.models.query import QuerySet
 from django.db.models.signals import post_save, post_syncdb
 from django.db.utils import DatabaseError
