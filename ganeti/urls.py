@@ -81,7 +81,7 @@ urlpatterns += patterns('ganeti.views.cluster',
 
 
 # Nodes
-node_prefix = '%s%s' %  (cluster, host)
+node_prefix = 'node/%s%s' %  (cluster, host)
 urlpatterns += patterns('ganeti.views.node',
     # Detail
     url(r'^%s/?$' % node_prefix, 'detail', name="node-detail"),
