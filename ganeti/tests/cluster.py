@@ -239,12 +239,15 @@ class TestClusterModel(TestCase):
         Tests that the available_ram property returns the correct values
         """
         c = Cluster.objects.create(hostname='ganeti.osuosl.test')
+        c2 = Cluster.objects.create(hostname='ganeti2.osuosl.test', slug='argh')
         
         VirtualMachine.objects.create(cluster=c, hostname='foo', ram=123, status='running')
         VirtualMachine.objects.create(cluster=c, hostname='bar', ram=456, status='running')
         VirtualMachine.objects.create(cluster=c, hostname='xoo', ram=789, status='admin_down')
         VirtualMachine.objects.create(cluster=c, hostname='xar', ram=234, status='stopped')
         VirtualMachine.objects.create(cluster=c, hostname='boo', status='running')
+        VirtualMachine.objects.create(cluster=c2, hostname='gar', ram=888, status='running')
+        VirtualMachine.objects.create(cluster=c2, hostname='yoo', ram=999, status='admin_down')
         
         ram = c.available_ram
         self.assertEqual(1023, ram['free'])
@@ -255,12 +258,15 @@ class TestClusterModel(TestCase):
         Tests that the available_disk property returns the correct values
         """
         c = Cluster.objects.create(hostname='ganeti.osuosl.test')
+        c2 = Cluster.objects.create(hostname='ganeti2.osuosl.test', slug='argh')
         
         VirtualMachine.objects.create(cluster=c, hostname='foo', disk_size=123, status='running')
         VirtualMachine.objects.create(cluster=c, hostname='bar', disk_size=456, status='running')
         VirtualMachine.objects.create(cluster=c, hostname='xoo', disk_size=789, status='admin_down')
         VirtualMachine.objects.create(cluster=c, hostname='xar', disk_size=234, status='stopped')
         VirtualMachine.objects.create(cluster=c, hostname='boo', status='running')
+        VirtualMachine.objects.create(cluster=c2, hostname='gar', disk_size=888, status='running')
+        VirtualMachine.objects.create(cluster=c2, hostname='yoo', disk_size=999, status='admin_down')
         
         disk = c.available_disk
         self.assertEqual(1023, disk['free'])
