@@ -21,7 +21,7 @@ from django.conf.urls.defaults import patterns, url
 cluster_slug = '(?P<cluster_slug>[-_A-Za-z0-9]+)'
 cluster = 'cluster/%s' % cluster_slug
 instance = '/(?P<instance>[^/]+)'
-host = '/(?P<host>[^/]+)'
+host = '(?P<host>[^/]+)'
 
 # General
 urlpatterns = patterns('ganeti.views.general',
@@ -81,7 +81,7 @@ urlpatterns += patterns('ganeti.views.cluster',
 
 
 # Nodes
-node_prefix = 'node/%s%s' %  (cluster, host)
+node_prefix = 'cluster/%s/node/%s' %  (cluster_slug, host)
 urlpatterns += patterns('ganeti.views.node',
     # Detail
     url(r'^%s/?$' % node_prefix, 'detail', name="node-detail"),

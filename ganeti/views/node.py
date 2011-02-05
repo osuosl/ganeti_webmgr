@@ -33,6 +33,7 @@ from ganeti.views import render_403, render_404
 from ganeti.views.virtual_machine import render_vms
 
 
+@login_required
 def detail(request, cluster_slug, host):
     """
     Renders a detail view for a Node
@@ -42,13 +43,15 @@ def detail(request, cluster_slug, host):
     
     user = request.user
     admin = True if user.is_superuser else user.has_perm('admin', cluster)
-    if not admin:
+    modify = True if admin else user.has_perm('migrate', cluster)
+    if not (admin or modify):
         return render_403(request, "You do not have sufficient privileges")
     
     return render_to_response("node/detail.html", {
         'cluster':cluster,
         'node':node, 
-        'admin':admin
+        'admin':admin,
+        'modify':modify,
         },
         context_instance=RequestContext(request),
     )

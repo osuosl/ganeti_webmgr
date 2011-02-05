@@ -17,10 +17,13 @@
 
 from datetime import datetime
 
+from django.contrib.auth.models import User
 from django.db.utils import IntegrityError
 from django.test import TestCase
 from django.test.client import Client
 
+from django_test_tools.users import UserTestMixin
+from django_test_tools.views import ViewTestMixin
 
 from util import client
 from ganeti.tests.rapi_proxy import RapiProxy, NODE
@@ -179,6 +182,36 @@ class TestNodeModel(TestCase, NodeTestCaseMixin):
         self.assertEqual(1602, disk['total'])
 
 
-class TestNodeViews(TestCase, NodeTestCaseMixin):
-    pass
+class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
+    
+    def setUp(self):
+        self.tearDown()
+        models.client.GanetiRapiClient = RapiProxy
+        
+        node, cluster = self.create_node()
+        
+        d = globals()
+        d['cluster'] = cluster
+        d['node'] = node
+        
+        self.create_standard_users(d)
+        self.create_users(['user_migrate', 'user_admin'], d)
+        
+        user_migrate.grant('migrate', cluster)
+        user_admin.grant('admin', cluster)
+
+    def tearDown(self):
+        VirtualMachine.objects.all().delete()
+        Node.objects.all().delete()
+        Cluster.objects.all().delete()
+        User.objects.all().delete()
+    
+    def test_detail(self):
+        args = (cluster.slug, node.hostname)
+        url = '/cluster/%s/node/%s/'
+        users = [superuser, user_migrate, user_admin]
+        
+        self._test_standard_fails(url, args)
+        self._test_successful_access(url, args, users, 'node/detail.html')
+    
     
