@@ -1,28 +1,66 @@
 {% extends "menu_base.html" %}
+{% load webmgr_tags %}
 
 {% block head %}
-<script
+    <link href="{{MEDIA_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
+    <script src="{{MEDIA_URL}}/js/jquery-ui.min.js"></script>
+    <script src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
+
+    <script type="text/javascript">
+        var PBAR_CONF = {
+            steps: 0,
+            showText: true,
+            textFormat: 'fraction',
+            boxImage: '/media/images/progressbar/progressbar.gif',
+            barImage: {
+                0:  '/media/images/progressbar/progressbg_red.gif',
+                30: '/media/images/progressbar/progressbg_orange.gif',
+                50: '/media/images/progressbar/progressbg_yellow.gif',
+                75: '/media/images/progressbar/progressbg_green.gif',
+            }
+        };
+        
+        $(document).ready(function() {
+            $('#tabs').tabs({
+                spinner: false,
+                select: function(event, ui) {
+                    window.location.hash = ui.tab.hash;
+                    var tabID = ui.panel;
+                                       if (tabID.id != "overview") {
+                                               $(tabID).html("<div class='spinner'><br/>Loading...<br/><br/><img src='{{MEDIA_URL}}/images/ajax-loader.gif'></div>");
+                                       }
+                 },
+                ajaxOptions: {
+                    error: function(xhr, status, index, anchor) {
+                        $(anchor.hash).html("Couldn't load this tab. We'll try to fix this as soon as possible.");
+                    }
+                }
+            });
+            
+            $(".ram, .disk").progressBar(PBAR_CONF);
+        });
+    </script>
 {% endblock %}
 
 {% block content %}
-<h1><a class="breadcrumb" href="{% url cluster-detail node.cluster.slug %}"></a>
+<h1><a class="breadcrumb" href="{% url cluster-detail cluster.slug %}">{{cluster.hostname}}</a>
 : {{node.hostname}}</h1>
 
 <div id="tabs">
     <ul>
         <li><a href="#detail"><span>Detail</span></a></li>
         <li><a title="Virtual Machines that this is a primary node for"
-               href="{% url node-primary node.pk %}"><span>Primary</span></a></li>
+               href="{% url node-primary-vms cluster.slug node.hostname %}"><span>Primary</span></a></li>
         <li><a title="Virtual Machines that this is a secondary node for"
-               href="{% url node-secondary node.pk %}"><span>Secondary</span></a></li>
+               href="{% url node-secondary-vms cluster.slug node.hostname %}"><span>Secondary</span></a></li>
     </ul>
     <div id="detail">
         <ul id="actions">
-            <li><a class="button" title="modifies the role of this node" href="{% url node-role %}">Change Role</a></li>
-            <li><a class="button" title="migrates all primary instances of this node" href="{% url node-migrate %}">Migrate</a></li>
-            <li><a class="button" title="migrates all secondary instances off this node" href="{% url node-evacuate %}">Evacuate</a></li>
+            <li><a class="button" title="modifies the role of this node" href="{% url node-role cluster.slug node.hostname %}">Change Role</a></li>
+            <li><a class="button" title="migrates all primary instances of this node" href="{% url node-migrate cluster.slug node.hostname %}">Migrate</a></li>
+            <li><a class="button" title="migrates all secondary instances off this node" href="{% url node-evacuate cluster.slug node.hostname %}">Evacuate</a></li>
         </ul>
-        <table id="nodes" class="sorted">
+        <table id="nodes">
             <tr><th>status</th><td class="status">
                 {% if node.info.offline %}
                     <div class="icon_stopped" title="Offline"></div>
@@ -33,11 +71,11 @@
             </tr>
             <tr><th>Primary IP</th><td>{{node.info.pip}}</td></tr>
             <tr><th>Secondary IP</th><td>{{node.info.sip}}</td></tr>
-            <tr><th>Role</th><td>{{node.info.role|node_role}}</td></tr>
+            <tr><th>Role</th><td>{{node.info.role}}</td></tr>
             <tr><th>Master Candidate</th><td>{{node.info.master_candidate}}</td></tr>
             <tr><th>Drained</th><td>{{node.info.drained}}</td></tr>
-            <tr><th>Ram</th><td>{% node_memory node %}</td></tr>
-            <tr><th>Disk</th><td>{% node_disk node %}</td>
+            <tr><th>Ram</th><td class="ram">{% node_memory node %}</td></tr>
+            <tr><th>Disk</th><td class="disk">{% node_disk node %}</td>
             <tr>
                 <th>Virtual Machines</th>
                 <td>{{ node.info.pinst_cnt }} / {{ node.info.sinst_cnt }}</td>
