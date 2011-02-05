@@ -25,6 +25,7 @@ from django.test.client import Client
 from util import client
 from ganeti.tests.rapi_proxy import RapiProxy, NODE
 from ganeti import models
+VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
 Node = models.Node
 
@@ -50,6 +51,7 @@ class TestNodeModel(TestCase, NodeTestCaseMixin):
         models.client.GanetiRapiClient = RapiProxy
 
     def tearDown(self):
+        VirtualMachine.objects.all().delete()
         Node.objects.all().delete()
         Cluster.objects.all().delete()
     
@@ -142,13 +144,39 @@ class TestNodeModel(TestCase, NodeTestCaseMixin):
         """
         Tests the Node.ram property
         """
-        raise NotImplementedError
+        node, c = self.create_node()
+        node2, c = self.create_node(cluster=c, hostname='two')
+        
+        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='foo', ram=123, status='running')
+        VirtualMachine.objects.create(cluster=c, secondary_node=node, hostname='bar', ram=456, status='running')
+        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='xoo', ram=789, status='admin_down')
+        VirtualMachine.objects.create(cluster=c, secondary_node=node, hostname='xar', ram=234, status='stopped')
+        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='boo', status='running')
+        VirtualMachine.objects.create(cluster=c, primary_node=node2, hostname='gar', ram=888, status='running')
+        VirtualMachine.objects.create(cluster=c, primary_node=node2, hostname='yoo', ram=999, status='admin_down')
+        
+        ram = node.ram
+        self.assertEqual(1023, ram['free'])
+        self.assertEqual(1602, ram['total'])
     
     def test_disk(self):
         """
         Tests the Node.ram property
         """
-        raise NotImplementedError
+        node, c = self.create_node()
+        node2, c = self.create_node(cluster=c, hostname='two')
+        
+        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='foo', disk_size=123, status='running')
+        VirtualMachine.objects.create(cluster=c, secondary_node=node, hostname='bar', disk_size=456, status='running')
+        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='xoo', disk_size=789, status='admin_down')
+        VirtualMachine.objects.create(cluster=c, secondary_node=node, hostname='xar', disk_size=234, status='stopped')
+        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='boo', status='running')
+        VirtualMachine.objects.create(cluster=c, primary_node=node2, hostname='gar', disk_size=888, status='running')
+        VirtualMachine.objects.create(cluster=c, primary_node=node2, hostname='yoo', disk_size=999, status='admin_down')
+        
+        disk = node.disk
+        self.assertEqual(1023, disk['free'])
+        self.assertEqual(1602, disk['total'])
 
 
 class TestNodeViews(TestCase, NodeTestCaseMixin):

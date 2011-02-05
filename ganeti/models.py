@@ -676,6 +676,7 @@ class Node(CachedClusterObject):
             .filter(Q(primary_node=self) | Q(secondary_node=self))\
             .exclude(ram=-1).order_by() \
             .values('status').annotate(ram_=Sum('ram'))
+        
         total = running = 0
         for dict_ in values:
             if dict_['status'] == 'running':
@@ -688,9 +689,10 @@ class Node(CachedClusterObject):
         """ returns dict of free and total disk space """
         values = VirtualMachine.objects \
             .filter(Q(primary_node=self) | Q(secondary_node=self))\
-            .exclude(ram=-1).order_by() \
+            .exclude(disk_size=-1).order_by() \
             .values('status').annotate(disk_size_=Sum('disk_size'))
         total = running = 0
+        
         for dict_ in values:
             if dict_['status'] == 'running':
                 running = dict_['disk_size_']
