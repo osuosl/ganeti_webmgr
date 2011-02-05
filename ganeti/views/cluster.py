@@ -55,9 +55,8 @@ def detail(request, cluster_slug):
         return render_403(request, "You do not have sufficient privileges")
     
     return render_to_response("cluster/detail.html", {
-        'cluster': cluster,
-        'user': request.user,
-        'admin' : admin
+        'cluster':cluster,
+        'admin':admin
         },
         context_instance=RequestContext(request),
     )
