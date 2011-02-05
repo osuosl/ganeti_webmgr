@@ -57,6 +57,7 @@ def detail(request, cluster_slug, host):
     )
 
 
+@login_required
 def primary(request, cluster_slug, host):
     """
     Renders a list of primary VirtualMachines on the given node
@@ -65,8 +66,7 @@ def primary(request, cluster_slug, host):
     node = get_object_or_404(Node, hostname=host)
     
     user = request.user
-    admin = True if user.is_superuser else user.has_perm('admin', cluster)
-    if not admin:
+    if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
         return render_403(request, "You do not have sufficient privileges")
 
     vms = node.primary_vms.all()
@@ -76,17 +76,17 @@ def primary(request, cluster_slug, host):
                 {'node': node, 'vms':vms}, \
                 context_instance=RequestContext(request))
 
- 
+
+@login_required
 def secondary(request, cluster_slug, host):
     """
     Renders a list of secondary VirtualMachines on the given node
     """
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    node = get_object_or_404(Node, hostname=hsot, slug=cluster_slug)
+    node = get_object_or_404(Node, hostname=host)
     
     user = request.user
-    admin = True if user.is_superuser else user.has_perm('admin', cluster)
-    if not admin:
+    if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
         return render_403(request, "You do not have sufficient privileges")
 
     vms = node.secondary_vms.all()
@@ -97,6 +97,7 @@ def secondary(request, cluster_slug, host):
                 context_instance=RequestContext(request))
 
 
+@login_required
 def role(request, cluster_slug, host):
     """
     view used for setting node role
@@ -104,6 +105,7 @@ def role(request, cluster_slug, host):
     pass
 
 
+@login_required
 def migrate(request, cluster_slug, host):
     """
     view used for initiating a Node Migrate job
@@ -111,6 +113,7 @@ def migrate(request, cluster_slug, host):
     pass
 
 
+@login_required
 def evacuate(request, cluster_slug, host):
     """
     view used for initiating a node evacuate job

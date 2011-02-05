@@ -87,13 +87,13 @@ urlpatterns += patterns('ganeti.views.node',
     url(r'^%s/?$' % node_prefix, 'detail', name="node-detail"),
     
     # Primary and secondary Virtual machines
-    url(r'^%s/?$' % node_prefix, 'primary', name="node-primary-vms"),
-    url(r'^%s/?$' % node_prefix, 'secondary', name="node-secondary-vms"),
+    url(r'^%s/primary/?$' % node_prefix, 'primary', name="node-primary-vms"),
+    url(r'^%s/secondary/?$' % node_prefix, 'secondary', name="node-secondary-vms"),
     
     # Node actions
-    url(r'^%s/?$' % node_prefix, 'role', name="node-role"),
-    url(r'^%s/?$' % node_prefix, 'migrate', name="node-migrate"),
-    url(r'^%s/?$' % node_prefix, 'evacuate', name="node-evacuate"),
+    url(r'^%s/role/?$' % node_prefix, 'role', name="node-role"),
+    url(r'^%s/migrate/?$' % node_prefix, 'migrate', name="node-migrate"),
+    url(r'^%s/evacuate/?$' % node_prefix, 'evacuate', name="node-evacuate"),
 )
 
 

@@ -210,8 +210,19 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
         args = (cluster.slug, node.hostname)
         url = '/cluster/%s/node/%s/'
         users = [superuser, user_migrate, user_admin]
-        
         self._test_standard_fails(url, args)
         self._test_successful_access(url, args, users, 'node/detail.html')
     
+    def test_primary_vms(self):
+        args = (cluster.slug, node.hostname)
+        url = '/cluster/%s/node/%s/primary'
+        users = [superuser, user_migrate, user_admin]
+        self._test_standard_fails(url, args)
+        self._test_successful_access(url, args, users, 'virtual_machine/table.html')
     
+    def test_secondary_vms(self):
+        args = (cluster.slug, node.hostname)
+        url = '/cluster/%s/node/%s/secondary'
+        users = [superuser, user_migrate, user_admin]
+        self._test_standard_fails(url, args)
+        self._test_successful_access(url, args, users, 'virtual_machine/table.html')
