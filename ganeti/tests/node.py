@@ -226,3 +226,45 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
         users = [superuser, user_migrate, user_admin]
         self._test_standard_fails(url, args)
         self._test_successful_access(url, args, users, 'virtual_machine/table.html')
+    
+    def test_role(self):
+        args = (cluster.slug, node.hostname)
+        url = '/cluster/%s/node/%s/role'
+        users = [superuser, user_migrate, user_admin]
+        self._test_standard_fails(url, args)
+        self._test_successful_access(url, args, users, 'node/role.html')
+        
+        # test posts
+        data = {'role':'master'}
+        self._test_successful_access(url, args, users, method='post', data=data)
+        
+        #test error
+        def test(user, response):
+            self.assertNotEqual('1', response.content)
+        self._test_successful_access(url, args, [superuser], method='post', \
+                mime='application/json', data={}, tests=test)
+    
+    def test_migrate(self):
+        args = (cluster.slug, node.hostname)
+        url = '/cluster/%s/node/%s/migrate'
+        users = [superuser, user_migrate, user_admin]
+        self._test_standard_fails(url, args)
+        self._test_successful_access(url, args, users, 'node/migrate.html')
+        
+        #test posts
+        data = {'live':True}
+        self._test_successful_access(url, args, users, method='post', data=data)
+        
+        #test error
+        def test(user, response):
+            self.assertNotEqual('1', response.content)
+        self._test_successful_access(url, args, [superuser], method='post', \
+                mime='application/json', data={}, tests=test)
+    
+    
+    def test_evacuate(self):
+        args = (cluster.slug, node.hostname)
+        url = '/cluster/%s/node/%s/evacuate'
+        users = [superuser, user_migrate, user_admin]
+        self._test_standard_fails(url, args, method='post')
+        self._test_successful_access(url, args, users, method='post')

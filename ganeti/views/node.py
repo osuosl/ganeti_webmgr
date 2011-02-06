@@ -21,7 +21,8 @@ import json
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, HttpResponseRedirect
+from django import forms
+from django.http import HttpResponse, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
@@ -97,12 +98,64 @@ def secondary(request, cluster_slug, host):
                 context_instance=RequestContext(request))
 
 
+class RoleForm(forms.Form):
+    """
+    Form for editing roles
+    """
+    ROLE_CHOICES = (
+        ('master','Master'),
+        ('master-candidate','Master Candidate'),
+        ('regular','Regular'),
+        ('drained','Drained'),
+        ('offline','Offline'),
+    )
+    
+    # map of role codes to form fields
+    ROLE_MAP = {
+        'M':'master',
+        'C':'master-candidate',
+        'R':'regular',
+        'D':'drained',
+        'O':'offline',
+    }
+    
+    role = forms.ChoiceField(choices=ROLE_CHOICES)
+
+
 @login_required
 def role(request, cluster_slug, host):
     """
     view used for setting node role
     """
-    pass
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    node = get_object_or_404(Node, hostname=host)
+    
+    user = request.user
+    if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
+        return render_403(request, "You do not have sufficient privileges")
+    
+    if request.method == 'POST':
+        form = RoleForm(request.POST)
+        if form.is_valid():
+            node.set_role(form.cleaned_data['role'])
+            return HttpResponse('1')
+        
+        # error in form return ajax response
+        content = json.dumps(form.errors)
+        return HttpResponse(content, mimetype='application/json')
+        
+    else:
+        data = {'role':RoleForm.ROLE_MAP[node.role]}
+        form = RoleForm()
+    
+    return render_to_response('node/role.html', \
+        {'form':form, 'node':node, 'cluster':cluster}, \
+        context_instance=RequestContext(request))
+
+
+class MigrateForm(forms.Form):
+    """ Form used for changing role """
+    live = forms.BooleanField(initial=True)
 
 
 @login_required
@@ -110,7 +163,29 @@ def migrate(request, cluster_slug, host):
     """
     view used for initiating a Node Migrate job
     """
-    pass
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    node = get_object_or_404(Node, hostname=host)
+    
+    user = request.user
+    if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
+        return render_403(request, "You do not have sufficient privileges")
+    
+    if request.method == 'POST':
+        form = MigrateForm(request.POST)
+        if form.is_valid():
+            node.migrate(form.cleaned_data['live'])
+            return HttpResponse('1')
+        
+        # error in form return ajax response
+        content = json.dumps(form.errors)
+        return HttpResponse(content, mimetype='application/json')
+        
+    else:
+        form = MigrateForm()
+    
+    return render_to_response('node/migrate.html', \
+        {'form':form, 'node':node, 'cluster':cluster}, \
+        context_instance=RequestContext(request))
 
 
 @login_required
@@ -118,4 +193,15 @@ def evacuate(request, cluster_slug, host):
     """
     view used for initiating a node evacuate job
     """
-    pass
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    node = get_object_or_404(Node, hostname=host)
+    
+    user = request.user
+    if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
+        return render_403(request, "You do not have sufficient privileges")
+    
+    if request.method == 'POST':
+        job = node.evacuate()
+        return HttpResponse(str(job.pk))
+    
+    return HttpResponseNotAllowed(['POST'])

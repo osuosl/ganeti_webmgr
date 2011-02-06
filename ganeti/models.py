@@ -443,7 +443,7 @@ class VirtualMachine(CachedClusterObject):
     # for this virtual machine.  There may be more than one job, and that can
     # never be prevented.  This just indicates that job(s) are pending and the
     # job related code should be run (status, cleanup, etc).
-    last_job = models.ForeignKey(Job, null=True)
+    last_job = models.ForeignKey('Job', null=True)
     
     # deleted flag indicates a VM is being deleted, but the job has not
     # completed yet.  VMs that have pending_delete are still displayed in lists
@@ -637,10 +637,25 @@ class Node(CachedClusterObject):
     Attributes that need to be searchable should be stored as model fields.  All
     other attributes will be stored within VirtualMachine.info.
     """
+    ROLE_CHOICES = (
+        ('M','Master'),
+        ('C','Master Candidate'),
+        ('R','Regular'),
+        ('D','Drained'),
+        ('O','Offline'),
+    )
+    
     cluster = models.ForeignKey('Cluster', related_name='nodes')
     hostname = models.CharField(max_length=128, unique=True)
     cluster_hash = models.CharField(max_length=40, editable=False)
     offline = models.BooleanField()
+    role = models.CharField(max_length=1, choices=ROLE_CHOICES)
+    
+    # The last job reference indicates that there is at least one pending job
+    # for this virtual machine.  There may be more than one job, and that can
+    # never be prevented.  This just indicates that job(s) are pending and the
+    # job related code should be run (status, cleanup, etc).
+    last_job = models.ForeignKey('Job', null=True)
     
     def _refresh(self):
         """ returns node info from the ganeti server """
@@ -666,7 +681,7 @@ class Node(CachedClusterObject):
         """
         data = super(Node, cls).parse_persistent_info(info)
         data['offline'] = info['offline']
-        
+        data['role'] = info['role']
         return data
     
     @property
@@ -699,6 +714,40 @@ class Node(CachedClusterObject):
             total += dict_['disk_size_']
         return {'total':total, 'free':total - running}
     
+    def set_role(self, role):
+        """
+        Sets the role for this node
+        
+        @param role - one of the following choices:
+            * master
+            * master-candidate
+            * regular
+            * drained
+            * offline
+        """
+        self.rapi.SetNodeRole(self.hostname, role)
+    
+    def evacuate(self):
+        """
+        migrates all secondary instances off this node
+        """
+        id = self.rapi.EvacuateNode(self.hostname)
+        job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
+        self.last_job = job
+        Node.objects.filter(pk=self.pk) \
+            .update(ignore_cache=True, last_job=job)
+        return job
+    
+    def migrate(self, live):
+        """
+        migrates all primary instances off this node
+        """
+        id = self.rapi.MigrateNode(self.hostname, live)
+        job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
+        self.last_job = job
+        Node.objects.filter(pk=self.pk) \
+            .update(ignore_cache=True, last_job=job)
+        return job
     
     def __repr__(self):
         return "<Node: '%s'>" % self.hostname
