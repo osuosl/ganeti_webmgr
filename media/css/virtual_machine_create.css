@@ -23,9 +23,15 @@ fieldset {margin-top:10px;}
 }
 
 .singleOptionDropdownLabel{
-    color:gray;
-    font-weight:bold;
     cursor:default;
+    color:#aaa;
+    padding: 2px 5px;
+    background: -moz-linear-gradient(top, #FFFFFF, #EFEFEF);
+    background: -webkit-gradient(linear, 
+        left top, left bottom, from(#FFFFFF), to(#EFEFEF));
+    border: 1px solid #aaa;
+    -moz-border-radius:3px;
+    border-radius:3px;
 }
 
 #help div {margin:0 10px 0 10px; min-height:200px;}

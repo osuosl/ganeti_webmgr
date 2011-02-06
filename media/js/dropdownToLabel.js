@@ -43,9 +43,9 @@ function dropdownToLabel(dropdown, ignoreOpt){
         // dropdown) make the label
         if(processedOpElems.length == 0){
             dropdown.parent().append(
-                "<div class='"+PROCESSED_OP_ID+" disabledText'>" + 
+                "<span class='"+PROCESSED_OP_ID+" disabledText'>" + 
                     $(opts).text() + 
-                "</div>");
+                "</span>");
         }
 
     // otherwise, replace the processed option, if it exists, with a label
