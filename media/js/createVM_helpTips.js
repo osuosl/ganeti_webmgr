@@ -1,5 +1,5 @@
 function initHelpTips(){
-    /* initialize the help tips for each item */
+    /* initialize the help tips for each item on the create VM template */
     
     $('#virtualmachineform input, #virtualmachineform select')
             .live('focus', function(){
