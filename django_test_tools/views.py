@@ -89,9 +89,12 @@ class ViewTestMixin():
         
         @param url - url to test
         @param args - args for the url string
-        @users users - list of users, all of which must result in 403
-        @parms tests - a function that executes additional tests
+        @param users - list of users, all of which must result in 403
+        @param template - if given, template that responses should use
+        @param mime - if given, mime for response
+        @param tests - a function that executes additional tests
         on the responses from the client
+        @param setup - call setup before each iteration
         @param data - dictionary of data to be passed to the request
         @param method - http method to be used
         @param follow - follow http redirect
@@ -110,6 +113,8 @@ class ViewTestMixin():
             self.assertEqual(mime, response['content-type'])
             if template is not None:
                 self.assertTemplateUsed(response, template)
+            if mime is not None:
+                self.assertEqual(response['content-type'], mime)
             
             if tests is not None:
                 tests(user, response)
