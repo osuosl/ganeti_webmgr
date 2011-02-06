@@ -58,7 +58,7 @@ h1 a.breadcrumb:hover {text-decoration:underline;}
     background-image: url(/media/images/bg.gif);
     background-repeat: no-repeat;
     background-position: center right;
-    border-left: 1px solid #ddd;
+    border: 1px solid #ddd;
     padding-right: 15px;
     cursor: s-resize;
 }

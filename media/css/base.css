@@ -100,15 +100,16 @@ form input.submit{margin-left:12.5em;}
     width: 817px;
 }
 #content h1 {margin:10px 0 10px 0;}
-#content table {margin-top:15px;  width:100%; border: 1px solid #dddddd;}
-#content th {background:#eeeeee; border-bottom:1px solid #dddddd !important;}
+#content table {margin-top:15px;  width:100%;}
+#content th {background:#eeeeee; border:1px solid #dddddd !important;}
 #content td.actions {width:16px;}
+#content tr {border-right:0;}
 #content tr.group_row {margin:auto;}
 #content tr.none td {border-bottom: 1px solid white; font-style:italic;}
 #content td.error {padding-right:0 !important; width:16px;}
-#content td {border-left:1px solid white; border-right: 1px solid white;}
 #content td, #content th, #content td a {
-    border-bottom:1px solid #EEEEEE;
+    border-bottom:1px solid #eee;
+    border-top:1px solid #eee;
     font-family:"Lucida Grande",Verdana,Arial,sans-serif;
     font-size:12px;
     line-height:14px;
