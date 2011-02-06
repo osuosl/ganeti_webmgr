@@ -35,7 +35,8 @@ from logs.models import LogItem
 log_action = LogItem.objects.log_action
 
 from ganeti.models import Cluster, ClusterUser, Profile, VirtualMachine
-from ganeti.views import render_403, render_404, virtual_machine
+from ganeti.views import render_403, render_404
+from ganeti.views.virtual_machine import render_vms
 from ganeti.fields import DataVolumeField
 
 # Regex for a resolvable hostname
@@ -54,9 +55,8 @@ def detail(request, cluster_slug):
         return render_403(request, "You do not have sufficient privileges")
     
     return render_to_response("cluster/detail.html", {
-        'cluster': cluster,
-        'user': request.user,
-        'admin' : admin
+        'cluster':cluster,
+        'admin':admin
         },
         context_instance=RequestContext(request),
     )
@@ -73,7 +73,7 @@ def nodes(request, cluster_slug):
         return render_403(request, "You do not have sufficient privileges")
     
     return render_to_response("node/table.html", \
-                        {'cluster': cluster, 'nodes':cluster.nodes(True)}, \
+                        {'cluster': cluster, 'nodes':cluster.nodes.all()}, \
         context_instance=RequestContext(request),
     )
 
@@ -90,8 +90,8 @@ def virtual_machines(request, cluster_slug):
     if not admin:
         return render_403(request, "You do not have sufficient privileges")
 
-    vms = cluster.virtual_machines.select_related().all()
-    vms = virtual_machine.render_vms(request, vms)
+    vms = cluster.virtual_machines.select_related('cluster').all()
+    vms = render_vms(request, vms)
 
     return render_to_response("virtual_machine/table.html", \
                 {'cluster': cluster, 'vms':vms}, \
@@ -119,6 +119,7 @@ def edit(request, cluster_slug=None):
             # TODO Create post signal to import
             #   virtual machines on edit of cluster
             if cluster.info == None:
+                cluster.sync_nodes()
                 cluster.sync_virtual_machines()
             return HttpResponseRedirect(reverse('cluster-detail', \
                                                 args=[cluster.slug]))

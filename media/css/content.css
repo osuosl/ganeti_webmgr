@@ -58,7 +58,7 @@ h1 a.breadcrumb:hover {text-decoration:underline;}
     background-image: url(/media/images/bg.gif);
     background-repeat: no-repeat;
     background-position: center right;
-    border-left: 1px solid #ddd;
+    border: 1px solid #ddd;
     padding-right: 15px;
     cursor: s-resize;
 }
@@ -82,6 +82,15 @@ h1 a.breadcrumb:hover {text-decoration:underline;}
     -moz-border-radius:0 !important;
     -webkit-border-radius:0 !important;
 }
+.ui-widget-header {
+    background:none !important;
+    border-radius:0 !important;
+    border-width:0 0 1px 0 !important;
+    -moz-border-radius:0px !important;
+    -webkit-border-radius:0 !important;
+}
+.ui-widget-content {border:0 !important;}
+
 
 
 /**

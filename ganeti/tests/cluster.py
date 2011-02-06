@@ -32,6 +32,7 @@ from ganeti.tests.rapi_proxy import RapiProxy, INFO, NODES, NODES_BULK
 from ganeti import models
 Cluster = models.Cluster
 VirtualMachine = models.VirtualMachine
+Node = models.Node
 Quota = models.Quota
 Job = models.Job
 
@@ -46,9 +47,11 @@ class TestClusterModel(TestCase):
         self.tearDown()
     
     def tearDown(self):
-        Cluster.objects.all().delete()
         User.objects.all().delete()
         Quota.objects.all().delete()
+        VirtualMachine.objects.all().delete()
+        Node.objects.all().delete()
+        Cluster.objects.all().delete()
 
     def test_trivial(self):
         """
@@ -179,6 +182,29 @@ class TestClusterModel(TestCase):
         
         cluster.sync_virtual_machines(True)
         self.assertFalse(VirtualMachine.objects.filter(cluster=cluster, hostname=vm_removed.hostname), 'vm not present in ganeti was not removed from db')
+    
+    def test_sync_nodes(self):
+        """
+        Tests synchronizing cached Nodes (stored in db) with info
+        the ganeti cluster is storing
+        
+        Verifies:
+            * Node no longer in ganeti are deleted
+            * Nodes missing from the database are added
+        """
+        cluster = Cluster.objects.create(hostname='ganeti.osuosl.test')
+        node_missing = 'gtest1.osuosl.bak'
+        node_current = Node.objects.create(cluster=cluster, hostname='gtest2.osuosl.bak')
+        node_removed = Node.objects.create(cluster=cluster, hostname='does.not.exist.org')
+        
+        cluster.sync_nodes()
+        self.assert_(Node.objects.get(cluster=cluster, hostname=node_missing), 'missing node was not created')
+        self.assert_(Node.objects.get(cluster=cluster, hostname=node_current.hostname), 'previously existing node was not created')
+        self.assert_(Node.objects.filter(cluster=cluster, hostname=node_removed.hostname), 'node not present in ganeti was not removed from db, even though remove flag was false')
+        
+        cluster.sync_nodes(True)
+        self.assertFalse(Node.objects.filter(cluster=cluster, hostname=node_removed.hostname), 'node not present in ganeti was not removed from db')
+
 
     def test_missing_in_database(self):
         """
@@ -208,6 +234,44 @@ class TestClusterModel(TestCase):
         
         self.assertEqual([u'does.not.exist.org'], cluster.missing_in_ganeti)
 
+    def test_available_ram(self):
+        """
+        Tests that the available_ram property returns the correct values
+        """
+        c = Cluster.objects.create(hostname='ganeti.osuosl.test')
+        c2 = Cluster.objects.create(hostname='ganeti2.osuosl.test', slug='argh')
+        
+        VirtualMachine.objects.create(cluster=c, hostname='foo', ram=123, status='running')
+        VirtualMachine.objects.create(cluster=c, hostname='bar', ram=456, status='running')
+        VirtualMachine.objects.create(cluster=c, hostname='xoo', ram=789, status='admin_down')
+        VirtualMachine.objects.create(cluster=c, hostname='xar', ram=234, status='stopped')
+        VirtualMachine.objects.create(cluster=c, hostname='boo', status='running')
+        VirtualMachine.objects.create(cluster=c2, hostname='gar', ram=888, status='running')
+        VirtualMachine.objects.create(cluster=c2, hostname='yoo', ram=999, status='admin_down')
+        
+        ram = c.available_ram
+        self.assertEqual(1023, ram['free'])
+        self.assertEqual(1602, ram['total'])
+    
+    def test_available_disk(self):
+        """
+        Tests that the available_disk property returns the correct values
+        """
+        c = Cluster.objects.create(hostname='ganeti.osuosl.test')
+        c2 = Cluster.objects.create(hostname='ganeti2.osuosl.test', slug='argh')
+        
+        VirtualMachine.objects.create(cluster=c, hostname='foo', disk_size=123, status='running')
+        VirtualMachine.objects.create(cluster=c, hostname='bar', disk_size=456, status='running')
+        VirtualMachine.objects.create(cluster=c, hostname='xoo', disk_size=789, status='admin_down')
+        VirtualMachine.objects.create(cluster=c, hostname='xar', disk_size=234, status='stopped')
+        VirtualMachine.objects.create(cluster=c, hostname='boo', status='running')
+        VirtualMachine.objects.create(cluster=c2, hostname='gar', disk_size=888, status='running')
+        VirtualMachine.objects.create(cluster=c2, hostname='yoo', disk_size=999, status='admin_down')
+        
+        disk = c.available_disk
+        self.assertEqual(1023, disk['free'])
+        self.assertEqual(1602, disk['total'])
+    
 
 class TestClusterViews(TestCase):
     

@@ -21,6 +21,7 @@ from django.conf.urls.defaults import patterns, url
 cluster_slug = '(?P<cluster_slug>[-_A-Za-z0-9]+)'
 cluster = 'cluster/%s' % cluster_slug
 instance = '/(?P<instance>[^/]+)'
+host = '(?P<host>[^/]+)'
 
 # General
 urlpatterns = patterns('ganeti.views.general',
@@ -76,6 +77,23 @@ urlpatterns += patterns('ganeti.views.cluster',
     url(r'^%s/permissions/?$' % cluster, 'permissions', name="cluster-permissions"),
     url(r'^%s/permissions/user/(?P<user_id>\d+)/?$' % cluster, 'permissions', name="cluster-permissions-user"),
     url(r'^%s/permissions/group/(?P<group_id>\d+)/?$' % cluster, 'permissions', name="cluster-permissions-group"),
+)
+
+
+# Nodes
+node_prefix = 'cluster/%s/node/%s' %  (cluster_slug, host)
+urlpatterns += patterns('ganeti.views.node',
+    # Detail
+    url(r'^%s/?$' % node_prefix, 'detail', name="node-detail"),
+    
+    # Primary and secondary Virtual machines
+    url(r'^%s/primary/?$' % node_prefix, 'primary', name="node-primary-vms"),
+    url(r'^%s/secondary/?$' % node_prefix, 'secondary', name="node-secondary-vms"),
+    
+    # Node actions
+    url(r'^%s/role/?$' % node_prefix, 'role', name="node-role"),
+    url(r'^%s/migrate/?$' % node_prefix, 'migrate', name="node-migrate"),
+    url(r'^%s/evacuate/?$' % node_prefix, 'evacuate', name="node-evacuate"),
 )
 
 

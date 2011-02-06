@@ -18,7 +18,7 @@
 
 
 
-from ganeti.tests.call_proxy import CallProxy
+from ganeti.tests.call_proxy import CallProxy, ResponseMap
 from util import client
 
 
@@ -82,7 +82,7 @@ INSTANCE = {'admin_state': False,
     'tags': [],
     'uuid': '27bac3d3-f634-4dee-aa60-ed2eeb5f2287'}
 
-NODES = ['gtest1.osuosl.bak', 'gtest2.osuosl.bak']
+NODES = ['gtest1.osuosl.bak', 'gtest2.osuosl.bak','gtest3.osuosl.bak']
 NODES_BULK = [
     {'cnodes': 1,
     'csockets': 1,
@@ -145,7 +145,7 @@ NODES_BULK = [
     "mnode": None,
     "mtime": 1293527598.306725,
     "mtotal": None,
-    "name": "node3.osuosl.org",
+    "name": "gtest3.osuosl.bak",
     "offline": True,
     "pinst_cnt": 0,
     "pinst_list": [],
@@ -163,16 +163,16 @@ NODES_BULK = [
 
 NODE = {'cnodes': 1,
     'csockets': 1,
-    'ctime': None,
+    'ctime': 1285799513.4741000,
     'ctotal': 2,
-    'dfree': 56092,
+    'dfree': 2222,
     'drained': False,
-    'dtotal': 66460,
+    'dtotal': 6666,
     'master_candidate': True,
-    'mfree': 1187,
+    'mfree': 1111,
     'mnode': 586,
-    'mtime': None,
-    'mtotal': 1997,
+    'mtime': 1285883187.8692000,
+    'mtotal': 9999,
     'name': 'gtest1.osuosl.bak',
     'offline': False,
     'pinst_cnt': 2,
@@ -467,6 +467,14 @@ INSTANCES_BULK = [{'admin_state': False,
     'uuid': '27bac3d3-f634-4dee-aa60-ed2eeb5f2287'}
 ]
 
+# map nodes response for bulk argument
+NODES_MAP = ResponseMap([
+    (((),{}),NODES),
+    (((False,),{}),NODES),
+    (((),{'bulk':False}),NODES),
+    (((True,),{}),NODES_BULK),
+    (((),{'bulk':True}),NODES_BULK),
+])
 
 class RapiProxy(client.GanetiRapiClient):
     """
@@ -480,7 +488,7 @@ class RapiProxy(client.GanetiRapiClient):
         instance.__init__(*args, **kwargs)
         CallProxy.patch(instance, 'GetInstances', False, INSTANCES)
         CallProxy.patch(instance, 'GetInstance', False, INSTANCE)
-        CallProxy.patch(instance, 'GetNodes', False, NODES)
+        CallProxy.patch(instance, 'GetNodes', False, NODES_MAP)
         CallProxy.patch(instance, 'GetNode', False, NODE)
         CallProxy.patch(instance, 'GetInfo', False, INFO)
         CallProxy.patch(instance, 'GetOperatingSystems', False, OPERATING_SYSTEMS)
@@ -494,6 +502,10 @@ class RapiProxy(client.GanetiRapiClient):
         CallProxy.patch(instance, 'CreateInstance', False, 1)
         CallProxy.patch(instance, 'DeleteInstance', False, 1)
         CallProxy.patch(instance, 'ModifyInstance', False, 1)
+        
+        CallProxy.patch(instance, 'SetNodeRole', False, 1)
+        CallProxy.patch(instance, 'EvacuateNode', False, 1)
+        CallProxy.patch(instance, 'MigrateNode', False, 1)
         
         return instance
     
