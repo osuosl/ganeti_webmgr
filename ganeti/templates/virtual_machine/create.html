@@ -6,17 +6,12 @@
 {% block head %}
     <link rel="stylesheet" type="text/css"
             href="{{MEDIA_URL}}/css/virtual_machine_create.css"/>
-    <style>
-        /* single option dropdown label style */  
-        .singleOptionDropdownLabel{
-            color:gray;
-            font-weight:bold;
-            cursor:default;
-        }
-    </style>
+
+    <!-- javascript includes -->
     <script src="{{MEDIA_URL}}/js/jquery.js"></script>
     <script src="{{MEDIA_URL}}/js/dropdownToLabel.js"></script>
     <script src="{{MEDIA_URL}}/js/createVM_formUpdater.js"></script>
+    <script src="{{MEDIA_URL}}/js/createVM_helpTips.js"></script>
     <script type="text/javascript">
         
         // -------
@@ -36,29 +31,6 @@
             initHelpTips();
         });
 
-        // ----------
-        // help tips
-        // ----------
-        function initHelpTips(){
-            /* initialize the help tips for each item */
-            $('#virtualmachineform input, #virtualmachineform select')
-                .live('focus', function(){
-                    name = this.name;
-                    label = $(this).prev('label').html()
-                    $content = $('#help-'+name);
-                    
-                    if($content.length != 0){
-                        $('#help')
-                            .show();
-                        $('#help div')
-                            .empty()
-                            .html($content.html());
-                        $('#help h3')
-                            .empty()
-                            .html(label);
-                    }
-                });
-        }
     </script>
 {% endblock %}
 

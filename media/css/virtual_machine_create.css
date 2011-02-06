@@ -22,8 +22,15 @@ fieldset {margin-top:10px;}
     -moz-border-radius-topleft:5px;
 }
 
+.singleOptionDropdownLabel{
+    color:gray;
+    font-weight:bold;
+    cursor:default;
+}
+
 #help div {margin:0 10px 0 10px; min-height:200px;}
 #help div p {margin: 0 0 10px 0;}
 #help div ul {margin:10px 0 10px 30px;}
 #help div li {list-style:disc; }
 #help-contents {display:none}
+
