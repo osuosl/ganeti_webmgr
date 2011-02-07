@@ -1,0 +1,8 @@
+{% comment  %} Form for setting node role {% endcomment %}
+<form class="ajax_form" method="post" action="{% url node-role cluster.slug node.hostname %}">
+    <ul id="errors"></ul>
+    <table>
+    {{form}}
+    </table>
+    <input type="submit" class="submit" value="Save"/>
+</form>
