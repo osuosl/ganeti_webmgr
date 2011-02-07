@@ -18,7 +18,6 @@
 
 import json
 
-from django import forms
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
@@ -41,7 +40,7 @@ from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine, \
 from ganeti.views import render_403
 from ganeti.forms.virtual_machine import NewVirtualMachineForm, \
     ModifyVirtualMachineForm
-from ganeti.utilities import cluster_default_info, cluster_os_list, os_prettify
+from ganeti.utilities import cluster_default_info, cluster_os_list
 
 
 @login_required
