@@ -1403,7 +1403,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/json', response['content-type'])
         content = json.loads(response.content)
-        self.assertEqual(['gtest1.osuosl.bak', 'gtest2.osuosl.bak', 'gtest2.osuosl.bak'], content['nodes'])
+        self.assertEqual([u'gtest1.osuosl.bak', u'gtest2.osuosl.bak', u'gtest3.osuosl.bak'], content['nodes'])
         self.assertEqual(content["os"],
             [[u'Image',
                 [[u'image+debian-osgeo', u'Debian Osgeo'],
@@ -1419,7 +1419,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual('application/json', response['content-type'])
         content = json.loads(response.content)
         
-        self.assertEqual(['gtest1.osuosl.bak', 'gtest2.osuosl.bak', 'gtest2.osuosl.bak'], content['nodes'])
+        self.assertEqual([u'gtest1.osuosl.bak', u'gtest2.osuosl.bak', u'gtest3.osuosl.bak'], content['nodes'])
         self.assertEqual(content["os"],
             [[u'Image',
                 [[u'image+debian-osgeo', u'Debian Osgeo'],
@@ -1435,7 +1435,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/json', response['content-type'])
         content = json.loads(response.content)
-        self.assertEqual(['gtest1.osuosl.bak', 'gtest2.osuosl.bak', 'gtest3.osuosl.bak'], content['nodes'])
+        self.assertEqual([u'gtest1.osuosl.bak', u'gtest2.osuosl.bak', u'gtest3.osuosl.bak'], content['nodes'])
         self.assertEqual(content["os"],
             [[u'Image',
                 [[u'image+debian-osgeo', u'Debian Osgeo'],
@@ -2044,7 +2044,7 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         cluster1.save()
         cluster2.save()
         cluster3.save()
-        
+        cluster0.sync_nodes()
         cluster0.info = INFO
         
         user = User(id=67, username='tester0')
@@ -2122,8 +2122,8 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         
         # cluster provided
         form = NewVirtualMachineForm(user, cluster0)
-        self.assertEqual([(u'', u'---------'), ('gtest1.osuosl.bak', 'gtest1.osuosl.bak'), ('gtest2.osuosl.bak', 'gtest2.osuosl.bak')], form.fields['pnode'].choices)
-        self.assertEqual([(u'', u'---------'), ('gtest1.osuosl.bak', 'gtest1.osuosl.bak'), ('gtest2.osuosl.bak', 'gtest2.osuosl.bak')], form.fields['snode'].choices)
+        self.assertEqual([(u'', u'---------'), (u'gtest1.osuosl.bak', u'gtest1.osuosl.bak'), (u'gtest2.osuosl.bak', u'gtest2.osuosl.bak'), (u'gtest3.osuosl.bak', u'gtest3.osuosl.bak')], form.fields['pnode'].choices)
+        self.assertEqual([(u'', u'---------'), (u'gtest1.osuosl.bak', u'gtest1.osuosl.bak'), (u'gtest2.osuosl.bak', u'gtest2.osuosl.bak'), (u'gtest3.osuosl.bak', u'gtest3.osuosl.bak')], form.fields['snode'].choices)
         self.assertEqual(form.fields['os'].choices,
             [
                 (u'', u'---------'),
@@ -2136,8 +2136,8 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         
         # cluster from initial data
         form = NewVirtualMachineForm(user, None, {'cluster':cluster0.id})
-        self.assertEqual([(u'', u'---------'), ('gtest1.osuosl.bak', 'gtest1.osuosl.bak'), ('gtest2.osuosl.bak', 'gtest2.osuosl.bak')], form.fields['pnode'].choices)
-        self.assertEqual([(u'', u'---------'), ('gtest1.osuosl.bak', 'gtest1.osuosl.bak'), ('gtest2.osuosl.bak', 'gtest2.osuosl.bak')], form.fields['snode'].choices)
+        self.assertEqual([(u'', u'---------'), (u'gtest1.osuosl.bak', u'gtest1.osuosl.bak'), (u'gtest2.osuosl.bak', u'gtest2.osuosl.bak'), (u'gtest3.osuosl.bak', u'gtest3.osuosl.bak')], form.fields['pnode'].choices)
+        self.assertEqual([(u'', u'---------'), (u'gtest1.osuosl.bak', u'gtest1.osuosl.bak'), (u'gtest2.osuosl.bak', u'gtest2.osuosl.bak'), (u'gtest3.osuosl.bak', u'gtest3.osuosl.bak')], form.fields['snode'].choices)
         self.assertEqual(form.fields['os'].choices,
             [
                 (u'', u'---------'),
@@ -2150,8 +2150,8 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         
         # cluster from initial data
         form = NewVirtualMachineForm(user, cluster0, {'cluster':cluster0.id})
-        self.assertEqual([(u'', u'---------'), ('gtest1.osuosl.bak', 'gtest1.osuosl.bak'), ('gtest2.osuosl.bak', 'gtest2.osuosl.bak')], form.fields['pnode'].choices)
-        self.assertEqual([(u'', u'---------'), ('gtest1.osuosl.bak', 'gtest1.osuosl.bak'), ('gtest2.osuosl.bak', 'gtest2.osuosl.bak')], form.fields['snode'].choices)
+        self.assertEqual([(u'', u'---------'), (u'gtest1.osuosl.bak', u'gtest1.osuosl.bak'), (u'gtest2.osuosl.bak', u'gtest2.osuosl.bak'), (u'gtest3.osuosl.bak', u'gtest3.osuosl.bak')], form.fields['pnode'].choices)
+        self.assertEqual([(u'', u'---------'), (u'gtest1.osuosl.bak', u'gtest1.osuosl.bak'), (u'gtest2.osuosl.bak', u'gtest2.osuosl.bak'), (u'gtest3.osuosl.bak', u'gtest3.osuosl.bak')], form.fields['snode'].choices)
         self.assertEqual(form.fields['os'].choices,
             [
                 (u'', u'---------'),
