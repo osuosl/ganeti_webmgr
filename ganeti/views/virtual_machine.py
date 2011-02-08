@@ -23,7 +23,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.http import HttpResponse, HttpResponseRedirect, \
-    HttpResponseNotAllowed, HttpResponseForbidden
+    HttpResponseNotAllowed, HttpResponseForbidden, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.conf import settings
@@ -40,8 +40,9 @@ from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine, \
         Job, SSHKey
 from ganeti.views import render_403
 from ganeti.forms.virtual_machine import NewVirtualMachineForm, \
-    ModifyVirtualMachineForm
-from ganeti.utilities import cluster_default_info, cluster_os_list, os_prettify
+    ModifyVirtualMachineForm, ModifyConfirmForm
+from ganeti.utilities import cluster_default_info, cluster_os_list, \
+    os_prettify, compare
 
 
 @login_required
@@ -575,32 +576,56 @@ def modify(request, cluster_slug, instance):
             kernelpath = data['kernelpath']
             serialconsole = data['serialconsole']
             imagepath = data['imagepath']
-            
-            job_id = cluster.rapi.ModifyInstance(instance, \
-                        nics=[(0, {'link':niclink, }),],
-                        hvparams={'kernel_path': kernelpath, \
-                            'root_path': rootpath, \
-                            'serial_console':serialconsole, \
-                            'boot_order':bootorder, \
-                            'nic_type':nictype, \
-                            'disk_type':disktype,\
-                            'cdrom_image_path':imagepath},
-                        beparams={'vcpus':vcpus,'memory': ram})
-            
-            job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
-            VirtualMachine.objects.filter(id=vm.id).update(last_job=job, \
-                                                           ignore_cache=True)
+                        
+            info = vm.info
+            hvparams = info['hvparams']
 
-            # log information about modifying this instance
-            log_action(user, vm, "modified")
+            old_set = (
+                hvparams['cdrom_image_path'],
+                '', # template_name
+                info['beparams']['memory'],
+                hvparams['nic_type'],
+                hvparams['root_path'],
+                info['beparams']['vcpus'],
+                hvparams['serial_console'],
+                info['nic.links'][0],
+                hvparams['boot_order'],
+                hvparams['kernel_path'],
+                hvparams['disk_type'],
+            )
             
+            new_set = (
+                imagepath,
+                '', #template_name
+                ram,
+                nictype,
+                rootpath,
+                vcpus,
+                serialconsole,
+                niclink,
+                bootorder,
+                kernelpath,
+                disktype,
+            )
+
+            keys = data.keys()
+            instance_diff = []
+            for i in range(len(old_set)):
+                diff = compare(old_set[i], new_set[i])
+                if diff != "":
+                    instance_diff.append("%s: %s" % (keys[i],diff))
+            if not instance_diff:
+                instance_diff.append("Nothing changed.")
+    
+            request.session['instance_diff'] = instance_diff
+            request.session['rapi_dict'] = new_set
+
             return HttpResponseRedirect( \
-            reverse('instance-detail', args=[cluster.slug, vm.hostname]))
+            reverse('instance-modify-confirm', args=[cluster.slug, vm.hostname]))
 
     elif request.method == 'GET':              
         # Need to set initial values from vm.info as these are not saved
         #  per the vm model.
-        # initial = vm.info
         if vm.info and 'hvparams' in vm.info:
             info = vm.info
             initial = {}
@@ -610,11 +635,11 @@ def modify(request, cluster_slug, instance):
             #  ints.
             initial['vcpus'] = info['beparams']['vcpus']
             initial['ram'] = str(info['beparams']['memory'])
-            initial['disk_size'] = str(info['disk.sizes'][0])
+            #initial['disk_size'] = str(info['disk.sizes'][0])
             initial['disk_type'] = hvparams['disk_type']
             initial['bootorder'] = hvparams['boot_order']
             initial['nictype'] = hvparams['nic_type']
-            initial['nicmode'] = info['nic.modes'][0]
+            #initial['nicmode'] = info['nic.modes'][0]
             initial['niclink'] = info['nic.links'][0]
             initial['rootpath'] = hvparams['root_path']
             initial['kernelpath'] = hvparams['kernel_path']
@@ -630,6 +655,70 @@ def modify(request, cluster_slug, instance):
         context_instance=RequestContext(request),
     )
 
+
+@login_required
+def modify_confirm(request, cluster_slug, instance):
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
+
+    user = request.user
+    if not (user.is_superuser or user.has_perm('admin', vm) \
+        or user.has_perm('modify', vm)):
+        return render_403(request, 'You do not have permissions to edit \
+            this virtual machine')
+
+    if request.method == "POST":
+        form = ModifyConfirmForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            rapi_dict = request.session['rapi_dict']
+            if 'edit' in request.POST:
+                return HttpResponseRedirect( \
+                    reverse("instance-modify", \
+                    args=[cluster.slug, vm.hostname]))
+            elif 'reboot' in request.POST:
+                # Modify Instance rapi call
+                job_id = cluster.rapi.ModifyInstance(instance,
+                    nics=[(0, {'link':rapi_dict[7], }),], \
+                    hvparams={'kernel_path': rapi_dict[9], \
+                        'root_path': rapi_dict[4], \
+                        'serial_console':rapi_dict[6], \
+                        'boot_order':rapi_dict[8], \
+                        'nic_type':rapi_dict[3], \
+                        'disk_type':rapi_dict[10],\
+                        'cdrom_image_path':rapi_dict[0]},
+                    beparams={'vcpus':rapi_dict[5],'memory': rapi_dict[2]}
+                )
+                # Create job and update message on virtual machine detail page
+                job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
+                VirtualMachine.objects.filter(id=vm.id).update(last_job=job, \
+                                                           ignore_cache=True)
+                # log information about modifying this instance
+                log_action(user, vm, "modified")
+            elif 'wait' in request.POST:
+                # TODO Log action that VM needs to be restarted for changes
+                #  to take effect
+                pass
+
+            # Redirect to instance-detail
+            return HttpResponseRedirect( \
+                reverse("instance-detail", args=[cluster.slug, vm.hostname]))
+
+    if request.method == "GET":
+        form = ModifyConfirmForm()
+        session = request.session
+        if not ('rapi_dict' in session and 'instance_diff' in session):  
+            return HttpResponseBadRequest('Incorrect Session Data')
+        instance_diff = session['instance_diff']
+
+    return render_to_response('virtual_machine/edit_confirm.html', {
+        'cluster': cluster,
+        'form': form,
+        'instance': vm,
+        'instance_diff': instance_diff,
+        },
+        context_instance=RequestContext(request),
+    )
 
 @login_required
 def cluster_choices(request):

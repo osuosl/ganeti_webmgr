@@ -949,6 +949,7 @@ class VirtualMachineTemplate(models.Model):
     Virtual Machine Template holds all the values for the create virtual machine
       form so that they can automatically be used or edited by a user.
     """
+    template_name = models.CharField(max_length=255, null=True, blank=True)
     cluster = models.ForeignKey('Cluster')
     start = models.BooleanField(verbose_name='Start up After Creation', \
                 default=True)
@@ -987,7 +988,7 @@ class VirtualMachineTemplate(models.Model):
                 blank=True, max_length=512)
 
     def __unicode__(self):
-        return self.templatename
+        return self.template_name
 
 
 if settings.TESTING:

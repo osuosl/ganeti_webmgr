@@ -288,3 +288,7 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
         #   instance.
         for field in self.exclude:
             del self.fields[field]
+
+
+class ModifyConfirmForm(forms.Form):
+    pass
