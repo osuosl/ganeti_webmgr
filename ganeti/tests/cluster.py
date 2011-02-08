@@ -770,35 +770,35 @@ class TestClusterViews(TestCase):
         self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
         
         # no user or group
-        data = {'permissions':['admin']}
+        data = {'permissions':['admin'], 'obj':cluster.pk}
         response = c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
         
         # both user and group
-        data = {'permissions':['admin'], 'group':group.id, 'user':user1.id}
+        data = {'permissions':['admin'], 'group':group.id, 'user':user1.id, 'cluster':cluster.pk}
         response = c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
         
         # no permissions specified - user
-        data = {'permissions':[], 'user':user1.id}
+        data = {'permissions':[], 'user':user1.id, 'obj':cluster.pk}
         response = c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
         
         # no permissions specified - group
-        data = {'permissions':[], 'group':group.id}
+        data = {'permissions':[], 'group':group.id, 'obj':cluster.pk}
         response = c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         
         # valid POST user has permissions
         user1.grant('create_vm', cluster)
-        data = {'permissions':['admin'], 'user':user1.id}
+        data = {'permissions':['admin'], 'user':user1.id, 'obj':cluster.pk}
         response = c.post(url % args, data)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'cluster/user_row.html')
@@ -807,7 +807,7 @@ class TestClusterViews(TestCase):
         
         # valid POST group has permissions
         group.grant('create_vm', cluster)
-        data = {'permissions':['admin'], 'group':group.id}
+        data = {'permissions':['admin'], 'group':group.id, 'obj':cluster.pk}
         response = c.post(url % args, data)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'cluster/group_row.html')
@@ -868,21 +868,21 @@ class TestClusterViews(TestCase):
         
         # invalid user (POST)
         user1.grant('create_vm', cluster)
-        data = {'permissions':['admin'], 'user':-1}
+        data = {'permissions':['admin'], 'user':-1, 'obj':cluster.pk}
         response = c.post(url_post % args_post, data)
         self.assertEquals('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
         
         # no user (POST)
         user1.grant('create_vm', cluster)
-        data = {'permissions':['admin']}
+        data = {'permissions':['admin'], 'obj':cluster.pk}
         response = c.post(url_post % args_post, data)
         self.assertEquals('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
         
         # valid POST user has permissions
         user1.grant('create_vm', cluster)
-        data = {'permissions':['admin'], 'user':user1.id}
+        data = {'permissions':['admin'], 'user':user1.id, 'obj':cluster.pk}
         response = c.post(url_post % args_post, data)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'cluster/user_row.html')
@@ -897,12 +897,12 @@ class TestClusterViews(TestCase):
         self.assertEqual(user_quota, cluster.get_quota(user1.get_profile()))
         
         # valid POST user has no permissions left
-        data = {'permissions':[], 'user':user1.id}
+        data = {'permissions':[], 'user':user1.id, 'obj':cluster.pk}
         response = c.post(url_post % args_post, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertEqual([], get_user_perms(user, cluster))
-        self.assertEqual('1', response.content)
+        self.assertEqual('"user_3"', response.content)
         
         # quota should be deleted (and showing default)
         self.assertEqual(1, cluster.get_quota(user1.get_profile())['default'])
@@ -911,7 +911,7 @@ class TestClusterViews(TestCase):
         # no permissions specified - user with no quota
         user1.grant('create_vm', cluster)
         cluster.set_quota(user1.get_profile(), None)
-        data = {'permissions':[], 'user':user1.id}
+        data = {'permissions':[], 'user':user1.id, 'obj':cluster.pk}
         response = c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
@@ -964,20 +964,20 @@ class TestClusterViews(TestCase):
         self.assertEqual(404, response.status_code)
         
         # invalid group (POST)
-        data = {'permissions':['admin'], 'group':-1}
+        data = {'permissions':['admin'], 'group':-1, 'obj':cluster.pk}
         response = c.post(url_post % args_post, data)
         self.assertEquals('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
         
         # no group (POST)
-        data = {'permissions':['admin']}
+        data = {'permissions':['admin'], 'obj':cluster.pk}
         response = c.post(url_post % args_post, data)
         self.assertEquals('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
         
         # valid POST group has permissions
         group.grant('create_vm', cluster)
-        data = {'permissions':['admin'], 'group':group.id}
+        data = {'permissions':['admin'], 'group':group.id, 'obj':cluster.pk}
         response = c.post(url_post % args_post, data)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'cluster/group_row.html')
@@ -991,12 +991,12 @@ class TestClusterViews(TestCase):
         self.assertEqual(user_quota, cluster.get_quota(group.organization))
         
         # valid POST group has no permissions left
-        data = {'permissions':[], 'group':group.id}
+        data = {'permissions':[], 'group':group.id, 'obj':cluster.pk}
         response = c.post(url_post % args_post, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertEqual([], group.get_perms(cluster))
-        self.assertEqual('1', response.content)
+        self.assertEqual('"group_1"', response.content)
         
         # quota should be deleted (and showing default)
         self.assertEqual(1, cluster.get_quota(group.organization)['default'])
@@ -1005,7 +1005,7 @@ class TestClusterViews(TestCase):
         # no permissions specified - user with no quota
         group.grant('create_vm', cluster)
         cluster.set_quota(group.organization, None)
-        data = {'permissions':[], 'group':group.id}
+        data = {'permissions':[], 'group':group.id, 'obj':cluster.pk}
         response = c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
