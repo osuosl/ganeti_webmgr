@@ -50,7 +50,7 @@ function formUpdater(url_choices, url_options, url_defaults){
         
         // process the owner dropdown, i.e., if it only has a single option, 
         // select it, and make the dropdown read-only
-        dropdownToLabel(owner, blankOptStr);
+        disableSingletonDropdown(owner, blankOptStr);
     }
     
     function _initChangeHooks(){
@@ -118,7 +118,7 @@ function formUpdater(url_choices, url_options, url_defaults){
                     });
 
                     // process dropdown if it's a singleton
-                    dropdownToLabel(cluster, blankOptStr);
+                    disableSingletonDropdown(cluster, blankOptStr);
 
                     // trigger a change in the cluster
                     cluster.change();
@@ -148,15 +148,15 @@ function formUpdater(url_choices, url_options, url_defaults){
                                 pnode.append(child);
                                 snode.append(child2);
 
-                                dropdownToLabel(pnode, blankOptStr);
-                                dropdownToLabel(snode, blankOptStr);
+                                disableSingletonDropdown(pnode, blankOptStr);
+                                disableSingletonDropdown(snode, blankOptStr);
                             }
                             else if (i == 'os') {
                                 child = _newOptGroup(value[0], 
                                         value[1]);
                                 oslist.append(child);
 
-                                dropdownToLabel(oslist,
+                                disableSingletonDropdown(oslist,
                                         blankOptStr);
                             }
                         });
