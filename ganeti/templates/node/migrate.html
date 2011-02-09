@@ -1,8 +1,8 @@
 {% comment  %} Form for migrating primary virtual machines off a node {% endcomment %}
-<form class="ajax_form" method="post" action="{% url node-migrate cluster.slug node.hostname %}">
+<form class="ajax_form node_migrate_form" method="post" action="{% url node-migrate cluster.slug node.hostname %}">
     <ul id="errors"></ul>
     <table>
     {{form}}
     </table>
-    <input type="submit" class="submit" value="Save"/>
+    <input type="submit" class="submit" value="Migrate"/>
 </form>
