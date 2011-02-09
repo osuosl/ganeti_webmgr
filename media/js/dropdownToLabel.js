@@ -1,4 +1,49 @@
 function dropdownToLabel(dropdown, ignoreOpt){
+    var optElems = dropdown.find('option');
+    var opts = [];
+    var PROCESSED_OP_ID = 'singleOptionDropdown';
+    var processedOpElems = dropdown.siblings().filter('.'+PROCESSED_OP_ID);
+
+    // create a new list of options sans any "blanks", if specified
+    if(ignoreOpt != undefined){
+        optElems.each(function(i, opt){
+            if($(opt).text() != ignoreOpt)
+                opts.push(opt);
+            });
+
+    // otherwise, just use the options as is
+    } else {
+        opts = optElems;
+    }
+
+    // if there's only one option, not including "blank" options (if specified)
+    // select it, hide the dropdown, and replace it with a disabled dropdown of
+    // the same option.
+    if(opts.length == 1){
+        $(opts).attr('selected', 'selected');
+        dropdown.hide();
+        dropdown.change();
+
+        // if there're no processed options (disabled dropdown versions) make
+        // the disabled dropdown
+        if(processedOpElems.length == 0){
+            dropdown.parent().append(
+                "<select class='"+PROCESSED_OP_ID+"' disabled='disabled'>"+
+                    "<option selected='selected'>"+
+                        $(opts).text()+
+                    "</option>"+
+                "</select>"
+            );
+        }
+
+    // otherwise show the original dropdown
+    } else {
+        dropdown.show();
+        processedOpElems.remove();
+    }
+}
+
+function _dropdownToLabel(dropdown, ignoreOpt){
     /*
     Conditionally convert dropdowns to labels. 
     
