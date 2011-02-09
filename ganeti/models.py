@@ -348,8 +348,7 @@ class Job(CachedClusterObject):
         """
         Parse status and turn off cache bypass flag if job has finished
         """
-        data = {}
-        data['status'] = info['status']
+        data = {'status': info['status']}
         if data['status'] in ('error','success'):
             data['ignore_cache'] = False
         if info['end_ts']:
@@ -388,7 +387,7 @@ class Job(CachedClusterObject):
         for i in range(len(info['opstatus'])):
             if info['opstatus'][i] != 'success':
                 index = i
-                break;
+                break
         return info['ops'][index]['OP_ID']
 
 
