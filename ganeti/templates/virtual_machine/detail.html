@@ -58,19 +58,19 @@
         {% if admin %}
             {% ifnotequal instance.info.status "running" %}
                 vnc_tab_index = 2;
-                $('#tabs').tabs("option", "disabled", [vnc_tab_index])
+                $('#tabs').tabs("option", "disabled", [vnc_tab_index]);
             {% endifnotequal %}
         {% endif %}
-        //$("#actions a").not('.delete, .reinstall').click(function() {return false;});
-        $("#actions a.power").live("click", function() {
+        
+        $("#actions a.power").live("click", function(event) {
+            event.preventDefault();
             if (actions_enabled) {
-                if ((this.className == 'button shutdown' || this.className == 'button reboot')
-                    && !(confirm('Are you sure you want to ' + this.title + '?'))) {
+                if ((this.className == 'button shutdown' || this.className == 'button reboot') &&
+                        !confirm('Are you sure you want to ' + this.title + '?')) {
                     return false;
                 }
                 $.post(this.href, action_response);
             }
-            return false;
         });
         
         {% if instance.last_job_id %}
@@ -94,7 +94,7 @@
             actions_enabled = true;
             $('#actions a').removeClass('disabled');
         } else {
-            poll_job_status(result['id'], job_complete)
+            poll_job_status(result['id'], job_complete);
             display_job(result);
         }
     }
@@ -103,7 +103,7 @@
     when a quota limit has been encountered on startup */
     function display_ganeti_error(msg) {
         $("#messages").empty();
-        html = "<li class='error'>Error:<p>" + msg + "</p></li>";
+        var html = "<li class='error'>Error:<p>" + msg + "</p></li>";
         $("#messages").append(html);
     }
 </script>
@@ -124,7 +124,7 @@
 
 <ul id="messages"></ul>
 <div id="tabs">
-    <ul id="tabs">
+    <ul>
         <li><a href="#overview"><span>Overview</span></a></li>
         {% if admin %}
             <li><a title="users" href="{% url vm-users cluster.slug instance.hostname %}"><span>Users</span></a></li>
