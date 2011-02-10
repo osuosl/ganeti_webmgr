@@ -25,7 +25,7 @@ from ganeti.utilities import cluster_default_info, cluster_os_list
 
 class NewVirtualMachineForm(forms.ModelForm):
     """
-    Virtual Machine Creation / Edit form
+    Virtual Machine Creation form
     """
     FQDN_RE = r'(?=^.{1,254}$)(^(?:(?!\d+\.|-)[a-zA-Z0-9_\-]{1,63}(?<!-)\.?)+(?:[a-zA-Z]{2,})$)'
     empty_field = (u'', u'---------')
@@ -276,7 +276,7 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
 
     exclude = ('start', 'owner', 'cluster', 'hostname', 'name_check',
         'iallocator', 'iallocator_hostname', 'disk_template', 'pnode', 'snode',\
-        'os', 'disk_size', 'nicmode')
+        'os', 'disk_size', 'nicmode', 'template_name')
 
     class Meta:
         model = VirtualMachineTemplate

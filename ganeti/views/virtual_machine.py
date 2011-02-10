@@ -581,34 +581,33 @@ def modify(request, cluster_slug, instance):
             hvparams = info['hvparams']
 
             old_set = (
-                hvparams['cdrom_image_path'],
-                '', # template_name
-                info['beparams']['memory'],
-                hvparams['nic_type'],
-                hvparams['root_path'],
-                info['beparams']['vcpus'],
-                hvparams['serial_console'],
-                info['nic.links'][0],
                 hvparams['boot_order'],
-                hvparams['kernel_path'],
                 hvparams['disk_type'],
+                hvparams['cdrom_image_path'],
+                hvparams['kernel_path'],
+                info['nic.links'][0],
+                hvparams['nic_type'],
+                info['beparams']['memory'],
+                hvparams['root_path'],
+                hvparams['serial_console'],
+                info['beparams']['vcpus'],
             )
             
             new_set = (
-                imagepath,
-                '', #template_name
-                ram,
-                nictype,
-                rootpath,
-                vcpus,
-                serialconsole,
-                niclink,
                 bootorder,
-                kernelpath,
                 disktype,
+                imagepath,
+                kernelpath,
+                niclink,
+                nictype,
+                ram,
+                rootpath,
+                serialconsole,
+                vcpus,
             )
 
             keys = data.keys()
+            keys.sort()
             instance_diff = []
             for i in range(len(old_set)):
                 diff = compare(old_set[i], new_set[i])

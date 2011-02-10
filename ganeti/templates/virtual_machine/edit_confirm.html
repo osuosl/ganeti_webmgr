@@ -3,9 +3,11 @@
 {% block content %}
 <h1>Confirm Edit</h1>
 <ul id="messages">
-{% for item in instance_diff %}
-    <li><p>{{ item }}</p></li>
-{% endfor %}
+    <li><p>
+    {% for item in instance_diff %}
+        {{ item }}<br />
+    {% endfor %}
+    </p></li>
 <ul>    
 <div class="info">
     <p><b>Note:</b> In order for your changes to the instance to take effect, you must 
