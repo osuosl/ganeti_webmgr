@@ -1,0 +1,21 @@
+{% extends "menu_base.html" %}
+
+{% block content %}
+<h1>Confirm Edit</h1>
+<ul id="messages">
+    <li><p>
+    {% for item in instance_diff %}
+        {{ item }}<br />
+    {% endfor %}
+    </p></li>
+<ul>    
+<div class="info">
+    <p><b>Note:</b> In order for your changes to the instance to take effect, you must 
+    first reboot the instance.</p>
+</div>
+<form method="post">
+    <input type="submit" name="edit" value="Edit">
+    <input type="submit" name="reboot" value="Reboot">
+    <input type="submit" name="wait" value="Wait">
+</form>
+{% endblock %}
