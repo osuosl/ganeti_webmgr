@@ -28,6 +28,7 @@ from django.test import TestCase
 from django.test.client import Client
 
 from django_test_tools.views import ViewTestMixin
+from django_test_tools.users import UserTestMixin
 from object_permissions import grant, get_user_perms
 
 from util import client
@@ -330,7 +331,7 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         self.assert_(vm.deleted)
         self.assertFalse(VirtualMachine.objects.filter(pk=vm.pk).exists())
     
-class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMixin):
+class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMixin, UserTestMixin):
     """
     Tests for views showing virtual machines
     """
@@ -339,21 +340,25 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         self.tearDown()
         models.client.GanetiRapiClient = RapiProxy
         vm, cluster = self.create_virtual_machine()
-        
-        user = User(id=69, username='tester0')
-        user.set_password('secret')
-        user.save()
-        user1 = User(id=88, username='tester1')
-        user1.set_password('secret')
-        user1.save()
+
+        g = globals()
+        self.create_standard_users(g)
+        self.create_users([
+              ('user',{'id':69}),
+              ('user1',{'id':88}),
+              ('vm_admin',{'id':77}),
+              ('cluster_admin',{'id':99}),
+        ], g)
+
+        vm_admin.grant('admin', vm)
+        cluster_admin.grant('admin', cluster)
+
         group = Group(id=42, name='testing_group')
         group.save()
-        
-        g = globals()
+
+        g['users'] = [superuser, vm_admin]
         g['vm'] = vm
         g['cluster'] = cluster
-        g['user'] = user
-        g['user1'] = user1
         g['c'] = Client()
         g['group'] = group
 
@@ -366,40 +371,9 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         Cluster.objects.all().delete()
     
     def validate_get(self, url, args, template):
-        # anonymous user
-        response = c.get(url % args, follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'registration/login.html')
-        
-        # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
-        response = c.get(url % args)
-        self.assertEqual(403, response.status_code)
-        
-        # nonexisent cluster
-        response = c.get(url % ("DOES_NOT_EXIST", vm.id))
-        self.assertEqual(404, response.status_code)
-        
-        # nonexisent vm
-        response = c.get(url % (cluster.slug, vm.id))
-        self.assertEqual(404, response.status_code)
-        
-        # authorized user (perm)
-        grant(user, 'admin', vm)
-        response = c.get(url % args)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, template)
-        
-        # authorized user (superuser)
-        user.revoke('admin', vm)
-        user.is_superuser = True
-        user.save()
-        response = c.get(url % args)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, template)
-
+        self.assert_standard_fails(url, args)
+        self.assert_200(url, args, [superuser, vm_admin], template=template)
+    
     def validate_get_configurable(self, url, args, template=False,
             mimetype=False, status=False, perms=[]):
         """
@@ -413,48 +387,13 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
 
         @return    response content
         """
-        # anonymous user
-        response = c.get(url % args, follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'registration/login.html')
-        
-        # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
-        response = c.get(url % args)
-        self.assertEqual(403, response.status_code)
-        
-        # nonexisent cluster
-        response = c.get(url % ("DOES_NOT_EXIST", vm.id))
-        self.assertEqual(404, response.status_code)
-        
-        # nonexisent vm
-        response = c.get(url % (cluster.slug, vm.id))
-        self.assertEqual(404, response.status_code)
+        self.assert_standard_fails(url, args)
         
         # authorized user (perm)
         if perms:
-            for perm in perms:
-                grant(user, perm, vm)
-        response = c.get(url % args)
-        if status:
-            self.assertEqual(status, response.status_code)
-        if mimetype:
-            self.assertEqual(mimetype, response['content-type'])
-        if template:
-            self.assertTemplateUsed(response, template)
-        
-        # authorized user (superuser)
-        user.revoke_all(vm)
-        user.is_superuser = True
-        user.save()
-        response = c.get(url % args)
-        if status:
-            self.assertEqual(200, response.status_code)
-        if mimetype:
-            self.assertEqual(mimetype, response['content-type'])
-        if template:
-            self.assertTemplateUsed(response, template)
-        return response
+            user.set_perms(vm, perms)
+        self.assert_200(url, args, [superuser, user], mime=mimetype, template=template)
+
     
     def test_view_list(self):
         """
