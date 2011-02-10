@@ -469,25 +469,26 @@ class VirtualMachine(CachedClusterObject):
         if info_:
             found = False
             remove = []
-            for tag in info_['tags']:
-                # Update owner Tag. Make sure the tag is set to the owner
-                #  that is set in webmgr.
-                if tag.startswith(constants.OWNER_TAG):
-                    id = int(tag[len(constants.OWNER_TAG):])
-                    # Since there is no 'update tag' delete old tag and
-                    #  replace with tag containing correct owner id.
-                    if id == self.owner_id:
-                        found = True
-                    else:
-                        remove.append(tag)
-            if remove:
-                self.rapi.DeleteInstanceTags(self.hostname, remove)
-                for tag in remove:
-                    info_['tags'].remove(tag)
-            if self.owner_id and not found:
-                tag = '%s%s' % (constants.OWNER_TAG, self.owner_id)
-                self.rapi.AddInstanceTags(self.hostname, [tag])
-                self.info['tags'].append(tag)
+            if self.cluster.username:
+                for tag in info_['tags']:
+                    # Update owner Tag. Make sure the tag is set to the owner
+                    #  that is set in webmgr.
+                    if tag.startswith(constants.OWNER_TAG):
+                        id = int(tag[len(constants.OWNER_TAG):])
+                        # Since there is no 'update tag' delete old tag and
+                        #  replace with tag containing correct owner id.
+                        if id == self.owner_id:
+                            found = True
+                        else:
+                            remove.append(tag)
+                if remove:
+                    self.rapi.DeleteInstanceTags(self.hostname, remove)
+                    for tag in remove:
+                        info_['tags'].remove(tag)
+                if self.owner_id and not found:
+                    tag = '%s%s' % (constants.OWNER_TAG, self.owner_id)
+                    self.rapi.AddInstanceTags(self.hostname, [tag])
+                    self.info['tags'].append(tag)
         
         super(VirtualMachine, self).save(*args, **kwargs)
 
