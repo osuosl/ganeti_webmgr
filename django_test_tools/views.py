@@ -29,35 +29,19 @@ class ViewTestMixin():
     as needed for the specific test.
     """
 
-    def assert_standard_fails(self, url, args, data=dict(), method='get', login_required=True, authorized=True):
+    def assert_404(self, url, args, data=dict(), method='get'):
         """
-        tests that a view will react to the following account types:
-            * unauthenticated - redirect to login
-            * no permissions - 403
-            * any invalid args - 404
-        
+        Verifies that invalid url args will result in 404
+
         @param url - url to test
         @param args - args for the url string
         @param data - dictionary of data to be passed to the request
         @param method - http method to be used
         """
         c = Client()
-        unauthorized = UserTestMixin.create_user('unauthorized')
         superuser = UserTestMixin.create_user('superuser', is_superuser=True)
         method = getattr(c, method)
 
-        # unauthenticated
-        if login_required:
-            response = method(url % args, data, follow=True)
-            self.assertEqual(200, response.status_code)
-            self.assertTemplateUsed(response, 'registration/login.html')
-        
-        # unauthorized
-        if authorized:
-            self.assertTrue(c.login(username=unauthorized.username, password='secret'))
-            response = method(url % args, data)
-            self.assertEqual(403, response.status_code)
-        
         # test 404s - replace each argument one at a time with a nonexistent value
         self.assertTrue(c.login(username=superuser.username, password='secret'))
         for i in range(len(args)):
@@ -65,6 +49,47 @@ class ViewTestMixin():
             temp_args[i] = 'DOES.NOT.EXIST.WILL.FAIL'
             response = method(url % tuple(temp_args), data)
             self.assertEqual(404, response.status_code)
+
+    def assert_401(self, url, args, data=dict(), method='get'):
+        """
+        Asserts that an anonymous user will be required to login
+
+        @param url - url to test
+        @param args - args for the url string
+        @param data - dictionary of data to be passed to the request
+        @param method - http method to be used
+        """
+        c = Client()
+        method = getattr(c, method)
+        response = method(url % args, data, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'registration/login.html')
+
+    def assert_standard_fails(self, url, args, data=dict(), method='get', login_required=True, authorized=True):
+        """
+        shortcut function for running standard tests:
+            * assert_404
+            * assert_401 for anonymous user
+            * assert_403 for a user with no permissions
+        
+        @param url - url to test
+        @param args - args for the url string
+        @param data - dictionary of data to be passed to the request
+        @param method - http method to be used
+        @param login_required - run assert_401 test, default=True
+        @param authorized - run assert_403 test for unauthorized user, default=True
+        """
+        # unauthenticated
+        if login_required:
+            self.assert_401(url, args, data, method)
+        
+        # unauthorized
+        if authorized:
+            unauthorized = UserTestMixin.create_user('unauthorized')
+            self.assert_403(url, args, [unauthorized], data, method)
+
+        # test 404s - replace each argument one at a time with a nonexistent value
+        self.assert_404(url, args)
 
     def assert_403(self, url, args, users, data=dict(), method='get'):
         """
