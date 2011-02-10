@@ -16,11 +16,11 @@
 # USA.
 
 from datetime import datetime
+import json
 
 from django.contrib.auth.models import User
 from django.db.utils import IntegrityError
 from django.test import TestCase
-from django.test.client import Client
 
 from django_test_tools.users import UserTestMixin
 from django_test_tools.views import ViewTestMixin
@@ -28,6 +28,8 @@ from django_test_tools.views import ViewTestMixin
 from util import client
 from ganeti.tests.rapi_proxy import RapiProxy, NODE
 from ganeti import models
+from util.client import GanetiApiError
+
 VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
 Node = models.Node
@@ -235,15 +237,27 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
         self._test_successful_access(url, args, users, 'node/role.html')
         
         # test posts
-        data = {'role':'master'}
-        self._test_successful_access(url, args, users, method='post', data=data)
-        
-        #test error
         def test(user, response):
-            self.assertNotEqual('1', response.content)
+            data = json.loads(response.content);
+            self.assertTrue('opstatus' in data)
+        data = {'role':'master'}
+        self._test_successful_access(url, args, users, method='post', data=data, mime='application/json', tests=test)
+        
+        #test form error
+        def test(user, response):
+            data = json.loads(response.content);
+            self.assertFalse('opstatus' in data)
         self._test_successful_access(url, args, [superuser], method='post', \
                 mime='application/json', data={}, tests=test)
-    
+
+        #test ganeti error
+        def test(user, response):
+            data = json.loads(response.content);
+            self.assertFalse('opstatus' in data)
+        node.rapi.SetNodeRole.error = GanetiApiError("Testing Error")
+        self._test_successful_access(url, args, [superuser], method='post', mime='application/json', data=data, tests=test)
+        node.rapi.SetNodeRole.error = None
+
     def test_migrate(self):
         args = (cluster.slug, node.hostname)
         url = '/cluster/%s/node/%s/migrate'
@@ -252,14 +266,26 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
         self._test_successful_access(url, args, users, 'node/migrate.html')
         
         #test posts
-        data = {'live':True}
-        self._test_successful_access(url, args, users, method='post', data=data)
-        
-        #test error
         def test(user, response):
-            self.assertNotEqual('1', response.content)
+            data = json.loads(response.content);
+            self.assertTrue('opstatus' in data)
+        data = {'live':True}
+        self._test_successful_access(url, args, users, method='post', data=data, mime='application/json', tests=test)
+        
+        #test form error
+        def test(user, response):
+            data = json.loads(response.content);
+            self.assertFalse('opstatus' in data)
         self._test_successful_access(url, args, [superuser], method='post', \
                 mime='application/json', data={}, tests=test)
+
+        #test ganeti error
+        def test(user, response):
+            data = json.loads(response.content);
+            self.assertFalse('opstatus' in data)
+        node.rapi.MigrateNode.error = GanetiApiError("Testing Error")
+        self._test_successful_access(url, args, [superuser], method='post', mime='application/json', data=data, tests=test)
+        node.rapi.MigrateNode.error = None
     
     
     def test_evacuate(self):
@@ -267,4 +293,12 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
         url = '/cluster/%s/node/%s/evacuate'
         users = [superuser, user_migrate, user_admin]
         self._test_standard_fails(url, args, method='post')
-        self._test_successful_access(url, args, users, method='post')
+        self._test_successful_access(url, args, users, method='post', mime="application/json")
+
+        # Test GanetiError
+        def test(user, response):
+            data = json.loads(response.content);
+            self.assertFalse('opstatus' in data)
+        node.rapi.EvacuateNode.error = GanetiApiError("Testing Error")
+        self._test_successful_access(url, args, [superuser], method='post', mime='application/json', tests=test)
+        node.rapi.EvacuateNode.error = None

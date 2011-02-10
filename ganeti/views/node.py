@@ -19,18 +19,18 @@
 import json
 
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
-from django.core.urlresolvers import reverse
 from django import forms
 from django.http import HttpResponse, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
 from logs.models import LogItem
+from util.client import GanetiApiError
+
 log_action = LogItem.objects.log_action
 
 from ganeti.models import Node, Cluster
-from ganeti.views import render_403, render_404
+from ganeti.views import render_403
 from ganeti.views.virtual_machine import render_vms
 
 
@@ -137,16 +137,24 @@ def role(request, cluster_slug, host):
     if request.method == 'POST':
         form = RoleForm(request.POST)
         if form.is_valid():
-            node.set_role(form.cleaned_data['role'])
-            return HttpResponse('1')
-        
-        # error in form return ajax response
-        content = json.dumps(form.errors)
+            try:
+                job = node.set_role(form.cleaned_data['role'])
+                job.load_info()
+                msg = job.info
+
+                # log information
+                log_action(user, node, "changed role")
+                return HttpResponse(json.dumps(msg), mimetype='application/json')
+            except GanetiApiError, e:
+                content = json.dumps({'__all__':[str(e)]})
+        else:
+            # error in form return ajax response
+            content = json.dumps(form.errors)
         return HttpResponse(content, mimetype='application/json')
         
     else:
         data = {'role':RoleForm.ROLE_MAP[node.role]}
-        form = RoleForm()
+        form = RoleForm(data)
     
     return render_to_response('node/role.html', \
         {'form':form, 'node':node, 'cluster':cluster}, \
@@ -173,11 +181,20 @@ def migrate(request, cluster_slug, host):
     if request.method == 'POST':
         form = MigrateForm(request.POST)
         if form.is_valid():
-            node.migrate(form.cleaned_data['live'])
-            return HttpResponse('1')
-        
-        # error in form return ajax response
-        content = json.dumps(form.errors)
+            try:
+                job = node.migrate(form.cleaned_data['live'])
+                job.load_info()
+                msg = job.info
+
+                # log information
+                log_action(user, node, "evacuated")
+
+                return HttpResponse(json.dumps(msg), mimetype='application/json')
+            except GanetiApiError, e:
+                content = json.dumps({'__all__':[str(e)]})
+        else:
+            # error in form return ajax response
+            content = json.dumps(form.errors)
         return HttpResponse(content, mimetype='application/json')
         
     else:
@@ -201,7 +218,15 @@ def evacuate(request, cluster_slug, host):
         return render_403(request, "You do not have sufficient privileges")
     
     if request.method == 'POST':
-        job = node.evacuate()
-        return HttpResponse(str(job.pk))
+        try:
+            job = node.evacuate()
+            job.load_info()
+            msg = job.info
+
+            # log information
+            log_action(user, node, "evacuated")
+        except GanetiApiError, e:
+            msg = [0, str(e)]
+        return HttpResponse(json.dumps(msg), mimetype='application/json')
     
     return HttpResponseNotAllowed(['POST'])

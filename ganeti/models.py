@@ -348,8 +348,7 @@ class Job(CachedClusterObject):
         """
         Parse status and turn off cache bypass flag if job has finished
         """
-        data = {}
-        data['status'] = info['status']
+        data = {'status': info['status']}
         if data['status'] in ('error','success'):
             data['ignore_cache'] = False
         if info['end_ts']:
@@ -388,7 +387,7 @@ class Job(CachedClusterObject):
         for i in range(len(info['opstatus'])):
             if info['opstatus'][i] != 'success':
                 index = i
-                break;
+                break
         return info['ops'][index]['OP_ID']
 
 
@@ -725,8 +724,12 @@ class Node(CachedClusterObject):
             * drained
             * offline
         """
-        self.rapi.SetNodeRole(self.hostname, role)
-    
+        id = self.rapi.SetNodeRole(self.hostname, role)
+        job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
+        self.last_job = job
+        Node.objects.filter(pk=self.pk).update(ignore_cache=True, last_job=job)
+        return job
+
     def evacuate(self):
         """
         migrates all secondary instances off this node
@@ -745,8 +748,7 @@ class Node(CachedClusterObject):
         id = self.rapi.MigrateNode(self.hostname, live)
         job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
         self.last_job = job
-        Node.objects.filter(pk=self.pk) \
-            .update(ignore_cache=True, last_job=job)
+        Node.objects.filter(pk=self.pk).update(ignore_cache=True, last_job=job)
         return job
     
     def __repr__(self):
@@ -1137,7 +1139,7 @@ class GanetiError(models.Model):
         ordering = ("-timestamp", "code", "msg")
 
     def __repr__(self):
-        return "<GanetiError '%s'>" % (self.msg)
+        return "<GanetiError '%s'>" % self.msg
 
     def __unicode__(self):
         base = "[%s] %s" % (self.timestamp, self.msg)

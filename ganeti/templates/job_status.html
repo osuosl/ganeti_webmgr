@@ -1,5 +1,8 @@
 <script type="text/javascript">
+    /** @namespace data.opresult */
+
     var checkInterval;
+    var actions_enabled;
     
     // poll for job status, first poll is delayed by 3000ms
     function poll_job_status(job_id, callback) {
@@ -11,59 +14,58 @@
     // get job status
     function get_job_status(job_id, callback) {
         $.ajax({
-                url: "{% url cluster-detail cluster.slug %}/job/"+job_id+"/status/",
-                success: function(data) {
-                    if (data.status == 'success'){
-                            $("#messages").empty();
-                        clearInterval(checkInterval);
-                        if (callback!=undefined){
-                            callback();
-                        }
-                    }
-                    
-                    display_job(data);
-                    if (data.status == 'error'){
-                        if (checkInterval != undefined){
-                            clearInterval(checkInterval);
-                            checkInterval = undefined;
-                        }
+            url: "{% url cluster-detail cluster.slug %}/job/"+job_id+"/status/",
+            success: function(data) {
+                if (data.status == 'success'){
+                        $("#messages").empty();
+                    clearInterval(checkInterval);
+                    if (callback!=undefined){
+                        callback();
                     }
                 }
+
+                display_job(data);
+                if (data.status == 'error'){
+                    if (checkInterval != undefined){
+                        clearInterval(checkInterval);
+                        checkInterval = undefined;
+                    }
+                }
+            }
         });
     }
-    
+
     function display_job(data) {
         // get the sub operation that is either running or errored
-        for (i=0; i<data['opstatus'].length; ++i) {
-            if (data['opstatus'][i] != 'success') {
-                sub_op = i;
+        for (var sub_op=0; i<data['opstatus'].length; ++sub_op) {
+            if (data['opstatus'][sub_op] != 'success') {
                 break;
             }
         }
-        
+
         if (data.status == 'error') {
             $("#messages").empty();
             var reason = data.opresult[sub_op][1][0];
-            html = $("<li class='error'>"+data.status+":<br>"+reason+"</li>");
+            var html = $("<li class='error'>"+data.status+":<br>"+reason+"</li>");
             $("#messages").append(html);
             actions_enabled = true;
         } else {
             $("#messages").empty();
             sub_op = 0;
-            
-            op = format_op(data['ops'][sub_op]['OP_ID']);
+
+            var op = format_op(data['ops'][sub_op]['OP_ID']);
             html = $("<li><h3>"+op+"</h3></li>");
-            $("#messages").append(html)
-            
+            $("#messages").append(html);
+
             // append log messages that are not already displayed
-            current_log_count = $("#log ul li").length;
+            var current_log_count = $("#log ul li").length;
             if (data['oplog'][0].length != 0) {
                 if ($('#log').length==0){
                     html.append("<pre id='log'><ul></ul></pre>");
                 }
-                
-                log = data['oplog'][0];
-                for (i=current_log_count; i<log.length; i++) {
+
+                var log = data['oplog'][0];
+                for (var i=current_log_count; i<log.length; i++) {
                     $("#log ul")
                         .append("<li>"+log[i][3]+"</li>");
                 }
@@ -78,7 +80,7 @@
     }
     
     function cap_first(str) {
-        new_str = '';
+        var new_str = '';
         str = str.split(' ');
         for(var i=0; i < str.length; i++) {
                 new_str += str[i].substring(0,1).toUpperCase() +
