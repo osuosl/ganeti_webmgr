@@ -77,6 +77,9 @@ urlpatterns += patterns('ganeti.views.cluster',
     url(r'^%s/permissions/?$' % cluster, 'permissions', name="cluster-permissions"),
     url(r'^%s/permissions/user/(?P<user_id>\d+)/?$' % cluster, 'permissions', name="cluster-permissions-user"),
     url(r'^%s/permissions/group/(?P<group_id>\d+)/?$' % cluster, 'permissions', name="cluster-permissions-group"),
+
+    #ssh_keys
+    url(r'^%s/keys/(?P<api_key>\w+)/?$' % cluster, "ssh_keys", name="cluster-keys"),
 )
 
 

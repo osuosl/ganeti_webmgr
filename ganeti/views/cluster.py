@@ -20,21 +20,23 @@
 import json
 
 from django import forms
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.template.defaultfilters import slugify
 
+from object_permissions import get_users_any
 from object_permissions.views.permissions import view_users, view_permissions
 from object_permissions import signals as op_signals
 
 from logs.models import LogItem
 log_action = LogItem.objects.log_action
 
-from ganeti.models import Cluster, ClusterUser, Profile, VirtualMachine
+from ganeti.models import Cluster, ClusterUser, Profile, VirtualMachine, SSHKey
 from ganeti.views import render_403, render_404
 from ganeti.views.virtual_machine import render_vms
 from ganeti.fields import DataVolumeField
@@ -187,6 +189,25 @@ def permissions(request, cluster_slug, user_id=None, group_id=None):
     return view_permissions(request, cluster, url, user_id, group_id,
                             user_template='cluster/user_row.html',
                             group_template='cluster/group_row.html')
+
+
+def ssh_keys(request, cluster_slug, api_key):
+    """
+    Show all ssh keys which belong to users, who have any perms on the cluster
+    """
+    if settings.WEB_MGR_API_KEY != api_key:
+        return HttpResponseForbidden("You're not allowed to view keys.")
+    
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+
+    users = set(get_users_any(cluster).values_list("id", flat=True))
+    for vm in cluster.virtual_machines.all():
+        users = users.union(set(get_users_any(vm).values_list('id', flat=True)))
+
+    keys = SSHKey.objects.filter(user__in=users).values_list('key','user__username').order_by('user__username')
+
+    keys_list = list(keys)
+    return HttpResponse(json.dumps(keys_list), mimetype="application/json")
 
 
 def user_added(sender, editor, user, obj, **kwargs):

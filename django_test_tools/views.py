@@ -29,7 +29,7 @@ class ViewTestMixin():
     as needed for the specific test.
     """
 
-    def _test_standard_fails(self, url, args, data={}, method='get'):
+    def _test_standard_fails(self, url, args, data={}, method='get', login_required=True, authorized=True):
         """
         tests that a view will react to the following account types:
             * unauthenticated - redirect to login
@@ -46,14 +46,16 @@ class ViewTestMixin():
         superuser = UserTestMixin.create_user('superuser', is_superuser=True)
         
         # unauthenticated
-        response = c.get(url % args, data, follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'registration/login.html')
+        if login_required:
+            response = c.get(url % args, data, follow=True)
+            self.assertEqual(200, response.status_code)
+            self.assertTemplateUsed(response, 'registration/login.html')
         
         # unauthorized
-        self.assert_(c.login(username=unauthorized.username, password='secret'))
-        response = c.get(url % args, data)
-        self.assertEqual(403, response.status_code)
+        if authorized:
+            self.assert_(c.login(username=unauthorized.username, password='secret'))
+            response = c.get(url % args, data)
+            self.assertEqual(403, response.status_code)
         
         # test 404s - replace each argument one at a time with a nonexistent value
         self.assert_(c.login(username=superuser.username, password='secret'))
