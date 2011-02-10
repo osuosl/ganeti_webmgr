@@ -377,7 +377,7 @@ def detail(request, cluster_slug, instance):
         power = user.has_perm('power', vm)
         modify = user.has_perm('modify', vm)
     
-    if not (admin or power or remove):
+    if not (admin or power or remove or modify):
         return render_403(request, 'You do not have permission to view this cluster\'s details')
     
     if vm.pending_delete:
@@ -681,6 +681,13 @@ def modify_confirm(request, cluster_slug, instance):
                                                            ignore_cache=True)
                 # log information about modifying this instance
                 log_action(user, vm, "modified")
+                if not (user.is_superuser or user.has_perm('power', vm)):
+                    return render_403(request, "Sorry, but you do not have permission to reboot \
+                    this machine.")
+                else:
+                    # Reboot the vm
+                    vm.reboot()
+                    log_action(user, vm, "rebooted")
             elif 'wait' in request.POST:
                 # TODO Log action that VM needs to be restarted for changes
                 #  to take effect
