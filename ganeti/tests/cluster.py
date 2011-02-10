@@ -22,11 +22,13 @@ from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from django.contrib.auth.models import User, Group
+from django.core.urlresolvers import reverse
 from django.test import TestCase
 from django.test.client import Client
+from django_test_tools.views import ViewTestMixin
+from ganeti.models import SSHKey
 
 from object_permissions import *
-
 
 from ganeti.tests.rapi_proxy import RapiProxy, INFO, NODES, NODES_BULK
 from ganeti import models
@@ -273,7 +275,7 @@ class TestClusterModel(TestCase):
         self.assertEqual(1602, disk['total'])
     
 
-class TestClusterViews(TestCase):
+class TestClusterViews(TestCase, ViewTestMixin):
     
     def setUp(self):
         self.tearDown()
@@ -303,6 +305,7 @@ class TestClusterViews(TestCase):
         dict_['c'] = Client()
 
     def tearDown(self):
+        VirtualMachine.objects.all().delete()
         Quota.objects.all().delete()
         Cluster.objects.all().delete()
         Group.objects.all().delete()
@@ -1225,3 +1228,45 @@ class TestClusterViews(TestCase):
         
         # assert that no VMs were created
         self.assertFalse(cluster.virtual_machines.all().exists())
+    
+    def test_view_ssh_keys(self):
+        """
+        Test getting SSH keys belonging to users, who have admin permission on
+        specified cluster
+        """
+        vm = VirtualMachine.objects.create(cluster=cluster, hostname='vm1.osuosl.bak')
+
+        # add some keys
+        SSHKey.objects.create(key="ssh-rsa test test@test", user=user)
+        SSHKey.objects.create(key="ssh-dsa test asd@asd", user=user)
+        SSHKey.objects.create(key="ssh-dsa test foo@bar", user=user1)
+
+        # get API key
+        import settings, json
+        key = settings.WEB_MGR_API_KEY
+
+        url = '/cluster/%s/keys/%s/'
+        args = (cluster.slug, key)
+
+        self._test_standard_fails(url, args, login_required=False, authorized=False)
+
+        # cluster without users who have admin perms
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code )
+        self.assertEquals("application/json", response["content-type"])
+        self.assertEqual(len(json.loads(response.content)), 0 )
+        self.assertNotContains(response, "test@test")
+        self.assertNotContains(response, "asd@asd")
+
+        # vm with users who have admin perms
+        # grant admin permission to first user
+        user.grant("admin", vm)
+        user1.grant("admin", cluster)
+
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code )
+        self.assertEquals("application/json", response["content-type"])
+        self.assertEqual(len(json.loads(response.content)), 3 )
+        self.assertContains(response, "test@test", count=1)
+        self.assertContains(response, "asd@asd", count=1)
+        self.assertContains(response, "foo@bar", count=1)
