@@ -103,3 +103,22 @@ def os_prettify(oses):
 
     return l
 
+
+def compare(x, y):
+    """
+    Using the python cmp function, returns a string detailing the change in
+        difference
+    """
+    i = cmp(x,y)
+    if isinstance(x, basestring) and i != 0:
+        if x == "":
+            return "set to %s" % (y)
+        elif y == "":
+            return "removed"
+        return "changed from %s to %s" % (x, y)
+    if i == -1:
+        return "increased from %s to %s" % (x, y)
+    elif i == 1:
+        return "decreased to %s from %s" % (y, x)
+    else:
+        return ""
