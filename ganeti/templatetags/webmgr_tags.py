@@ -102,6 +102,14 @@ def ssh_keypart_truncate(value, count):
         return value
 
 
+@register.filter
+def is_drbd(vm):
+    """ simple filter for returning true of false if a virtual machine
+    has DRBD for disklayout
+    """
+    return 'drbd' == vm.info['disk_template']
+
+
 """
 These filters were taken from Russel Haering's GanetiWeb project
 """

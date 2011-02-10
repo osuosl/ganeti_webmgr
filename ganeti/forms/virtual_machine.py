@@ -292,3 +292,13 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
 
 class ModifyConfirmForm(forms.Form):
     pass
+
+
+class MigrateForm(forms.Form):
+    """ Form used for migrating a Virtual Machine """
+    MODE_CHOICES = (
+        ('live','Live'),
+        ('non-live','Non-Live'),
+    )
+
+    mode = forms.ChoiceField(choices=MODE_CHOICES)

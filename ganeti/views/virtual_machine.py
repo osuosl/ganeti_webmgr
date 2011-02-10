@@ -39,7 +39,7 @@ from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine, \
         Job, SSHKey
 from ganeti.views import render_403
 from ganeti.forms.virtual_machine import NewVirtualMachineForm, \
-    ModifyVirtualMachineForm, ModifyConfirmForm
+    ModifyVirtualMachineForm, ModifyConfirmForm, MigrateForm
 from ganeti.utilities import cluster_default_info, cluster_os_list, \
     compare
 
@@ -183,7 +183,7 @@ def shutdown(request, cluster_slug, instance):
             # log information about stopping the machine
             log_action(user, vm, "stopped")
         except GanetiApiError, e:
-            msg = [0, str(e)]
+            msg = {'__all__':[str(e)]}
         return HttpResponse(json.dumps(msg), mimetype='application/json')
     return HttpResponseNotAllowed(['POST'])
 
@@ -221,61 +221,18 @@ def startup(request, cluster_slug, instance):
             # log information about starting up the machine
             log_action(user, vm, "started")
         except GanetiApiError, e:
-            msg = [0, str(e)]
+            msg = {'__all__':[str(e)]}
         return HttpResponse(json.dumps(msg), mimetype='application/json')
     return HttpResponseNotAllowed(['POST'])
 
 
 @login_required
-def startup(request, cluster_slug, instance):
-    vm = get_object_or_404(VirtualMachine, hostname=instance, \
-                           cluster__slug=cluster_slug)
-    user = request.user
-    if not (user.is_superuser or user.has_any_perms(vm, ['admin','power']) or \
-        user.has_perm('admin', vm.cluster)):
-            return render_403(request, 'You do not have permission to start up this virtual machine')
-
-    # superusers bypass quota checks
-    if not user.is_superuser and vm.owner:
-        # check quota
-        quota = vm.cluster.get_quota(vm.owner)
-        if any(quota.values()):
-            used = vm.owner.used_resources(vm.cluster, only_running=True)
-
-            if quota['ram'] is not None and (used['ram'] + vm.ram) > quota['ram']:
-                msg = 'Owner does not have enough RAM remaining on this cluster to start the virtual machine.'
-                return HttpResponse(json.dumps([0, msg]), mimetype='application/json')
-
-            if quota['virtual_cpus'] and (used['virtual_cpus'] + vm.virtual_cpus) > quota['virtual_cpus']:
-                msg = 'Owner does not have enough Virtual CPUs remaining on this cluster to start the virtual machine.'
-                return HttpResponse(json.dumps([0, msg]), mimetype='application/json')
-
-    if request.method == 'POST':
-        try:
-            job = vm.startup()
-            job.load_info()
-            msg = job.info
-
-            # log information about starting up the machine
-            log_action(user, vm, "started")
-        except GanetiApiError, e:
-            msg = [0, str(e)]
-        return HttpResponse(json.dumps(msg), mimetype='application/json')
-    return HttpResponseNotAllowed(['POST'])
-
-
-class MigrateForm(forms.Form):
-    """ Form used for changing role """
-    live = forms.BooleanField(initial=True)
-
-
-@login_required
-def migrate(request, cluster_slug, host):
+def migrate(request, cluster_slug, instance):
     """
     view used for initiating a Node Migrate job
     """
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    vm = get_object_or_404(VirtualMachine, hostname=host)
+    vm = get_object_or_404(VirtualMachine, hostname=instance)
 
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
@@ -285,7 +242,7 @@ def migrate(request, cluster_slug, host):
         form = MigrateForm(request.POST)
         if form.is_valid():
             try:
-                job = vm.migrate(form.cleaned_data['live'])
+                job = vm.migrate(form.cleaned_data['mode'])
                 job.load_info()
                 msg = job.info
 
@@ -303,7 +260,7 @@ def migrate(request, cluster_slug, host):
     else:
         form = MigrateForm()
 
-    return render_to_response('vm/migrate.html', \
+    return render_to_response('virtual_machine/migrate.html', \
         {'form':form, 'vm':vm, 'cluster':cluster}, \
         context_instance=RequestContext(request))
 
@@ -326,7 +283,7 @@ def reboot(request, cluster_slug, instance):
             # log information about restarting the machine
             log_action(user, vm, "restarted")
         except GanetiApiError, e:
-            msg = [0, str(e)]
+            msg = {'__all__':[str(e)]}
         return HttpResponse(json.dumps(msg), mimetype='application/json')
     return HttpResponseNotAllowed(['POST'])
 
@@ -453,10 +410,12 @@ def detail(request, cluster_slug, instance):
         remove = True
         power = True
         modify = True
+        migrate = True
     else:
         remove = user.has_perm('remove', vm)
         power = user.has_perm('power', vm)
         modify = user.has_perm('modify', vm)
+        migrate = user.has_perm('migrate', cluster)
     
     if not (admin or power or remove or modify):
         return render_403(request, 'You do not have permission to view this cluster\'s details')
@@ -474,6 +433,7 @@ def detail(request, cluster_slug, instance):
         'remove':remove,
         'power':power,
         'modify':modify,
+        'migrate':migrate,
         },
         context_instance=RequestContext(request),
     )

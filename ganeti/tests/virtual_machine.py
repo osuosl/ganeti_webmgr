@@ -347,11 +347,14 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
               ('user',{'id':69}),
               ('user1',{'id':88}),
               ('vm_admin',{'id':77}),
+              ('cluster_migrate',{'id':78}),
               ('cluster_admin',{'id':99}),
         ], g)
 
         vm_admin.grant('admin', vm)
+        cluster_migrate.grant('migrate', cluster)
         cluster_admin.grant('admin', cluster)
+        
 
         group = Group(id=42, name='testing_group')
         group.save()
@@ -374,15 +377,13 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         self.assert_standard_fails(url, args)
         self.assert_200(url, args, [superuser, vm_admin], template=template)
     
-    def validate_get_configurable(self, url, args, template=False,
-            mimetype=False, status=False, perms=[]):
+    def validate_get_configurable(self, url, args, template=None, mimetype=False, perms=[]):
         """
         More configurable version of validate_get.
         Additional arguments (only if set) affects only authorized user test.
 
         @template: used template
         @mimetype: returned mimetype
-        @status:   returned Http status code
         @perms:    set of perms granted on authorized user
 
         @return    response content
@@ -391,7 +392,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         
         # authorized user (perm)
         if perms:
-            user.set_perms(vm, perms)
+            user.set_perms(perms, vm)
         self.assert_200(url, args, [superuser, user], mime=mimetype, template=template)
 
     
@@ -460,13 +461,13 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         self.assert_standard_fails(url, args)
         self.assert_200(url, args, [superuser, vm_admin, cluster_admin], template='virtual_machine/detail.html')
     
-    def validate_post_only_url(self, url, args=None):
+    def validate_post_only_url(self, url, args=None, data=dict(), users=None, get_allowed=False):
         """
         generic function for testing urls that post with no data
         """
         vm = globals()['vm']
         args = args if args else (cluster.slug, vm.hostname)
-        
+        users = users if users else [superuser, vm_admin, cluster_admin]
         self.assert_standard_fails(url, args)
 
         def tests(user, response):
@@ -475,23 +476,24 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
             VirtualMachine.objects.all().update(last_job=None)
             Job.objects.all().delete()
 
-        self.assert_200(url, args, [superuser, vm_admin, cluster_admin], mime='application/json', method='post')
-        self.assert_200(url, args, [superuser], mime='application/json', method='post')
+        self.assert_200(url, args, users, data=data, tests=tests, \
+                        mime='application/json', method='post')
 
         # error while issuing reboot command
         def tests(user, response):
-            code, text = json.loads(response.content)
+            content = json.loads(response.content)
+            text = content['__all__'][0]
             self.assertEqual(msg, text)
-            self.assertEqual(0, code)
             vm.rapi.error = None
         msg = "SIMULATING_AN_ERROR"
         vm.rapi.error = client.GanetiApiError(msg)
-        self.assert_200(url, args, [superuser], mime='application/json', method='post', tests=tests)
+        self.assert_200(url, args, [superuser], data=data, mime='application/json', method='post', tests=tests)
 
         # invalid method
-        self.assertTrue(c.login(username=superuser.username, password='secret'))
-        response = c.get(url % args)
-        self.assertEqual(405, response.status_code)
+        if not get_allowed:
+            self.assertTrue(c.login(username=superuser.username, password='secret'))
+            response = c.get(url % args, data)
+            self.assertEqual(405, response.status_code)
     
     def test_view_startup(self):
         """
@@ -547,7 +549,18 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         """
         Tests migrating a virtual machine
         """
-        pass
+        url = '/cluster/%s/%s/migrate'
+        args = (cluster.slug, vm.hostname)
+        template='virtual_machine/migrate.html'
+        authorized = [superuser, cluster_admin, cluster_migrate]
+
+        # get
+        self.assert_standard_fails(url, args)
+        self.assert_200(url, args, authorized, template=template)
+
+        # post
+        data = {'mode':'live'}
+        self.validate_post_only_url(url, args, data, users=authorized, get_allowed=True)
         
     def test_view_ssh_keys(self):
         """
@@ -1602,8 +1615,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         """
         url = "/cluster/%s/%s/vnc_proxy/"
         args = (cluster.slug, vm.hostname)
-        response = self.validate_get_configurable(url, args, False,
-            "application/json", 200, ["admin",])
+        response = self.validate_get_configurable(url, args, False, "application/json", ["admin",])
         if settings.VNC_PROXY:
             self.assertEqual(json.loads(response), (False, False, False))
         else:
