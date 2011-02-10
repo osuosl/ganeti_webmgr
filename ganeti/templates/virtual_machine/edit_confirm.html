@@ -2,11 +2,15 @@
 
 {% block content %}
 <h1>Confirm Edit</h1>
-<ul>
+<ul id="messages">
 {% for item in instance_diff %}
-    <li>{{ item }}</li>
+    <li><p>{{ item }}</p></li>
 {% endfor %}
 <ul>    
+<div class="info">
+    <p><b>Note:</b> In order for your changes to the instance to take effect, you must 
+    first reboot the instance.</p>
+</div>
 <form method="post">
     <input type="submit" name="edit" value="Edit">
     <input type="submit" name="reboot" value="Reboot">
