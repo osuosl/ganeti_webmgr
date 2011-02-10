@@ -29,7 +29,7 @@ class ViewTestMixin():
     as needed for the specific test.
     """
 
-    def _test_standard_fails(self, url, args, data={}, method='get', login_required=True, authorized=True):
+    def assert_standard_fails(self, url, args, data=dict(), method='get', login_required=True, authorized=True):
         """
         tests that a view will react to the following account types:
             * unauthenticated - redirect to login
@@ -44,28 +44,29 @@ class ViewTestMixin():
         c = Client()
         unauthorized = UserTestMixin.create_user('unauthorized')
         superuser = UserTestMixin.create_user('superuser', is_superuser=True)
-        
+        method = getattr(c, method)
+
         # unauthenticated
         if login_required:
-            response = c.get(url % args, data, follow=True)
+            response = method(url % args, data, follow=True)
             self.assertEqual(200, response.status_code)
             self.assertTemplateUsed(response, 'registration/login.html')
         
         # unauthorized
         if authorized:
-            self.assert_(c.login(username=unauthorized.username, password='secret'))
-            response = c.get(url % args, data)
+            self.assertTrue(c.login(username=unauthorized.username, password='secret'))
+            response = method(url % args, data)
             self.assertEqual(403, response.status_code)
         
         # test 404s - replace each argument one at a time with a nonexistent value
-        self.assert_(c.login(username=superuser.username, password='secret'))
+        self.assertTrue(c.login(username=superuser.username, password='secret'))
         for i in range(len(args)):
             temp_args = [arg for arg in args]
             temp_args[i] = 'DOES.NOT.EXIST.WILL.FAIL'
-            response = c.get(url % tuple(temp_args), data)
+            response = method(url % tuple(temp_args), data)
             self.assertEqual(404, response.status_code)
 
-    def _test_failed_access(self, url, args, users, data={}, method='get'):
+    def assert_403(self, url, args, users, data=dict(), method='get'):
         """
         all users given to this function must fail access
         
@@ -79,12 +80,12 @@ class ViewTestMixin():
         client_method = getattr(c, method)
         
         for user in users:
-            self.assert_(c.login(username=user.username, password='secret'))
+            self.assertTrue(c.login(username=user.username, password='secret'))
             response = client_method(url % args, data)
             self.assertEqual(403, response.status_code)
 
-    def _test_successful_access(self, url, args, users, template=None, \
-            mime=None, tests=None, setup=False, data={}, method='get',
+    def assert_200(self, url, args, users, template=None, \
+            mime=None, tests=None, setup=False, data=dict(), method='get',
             follow=False):
         """
         all users given to this function must fail access
@@ -109,8 +110,8 @@ class ViewTestMixin():
             if setup:
                 self.setUp()
             
-            self.assert_(c.login(username=user.username, password='secret'))
-            response = client_method(url % args, data)
+            self.assertTrue(c.login(username=user.username, password='secret'))
+            response = client_method(url % args, data, follow=follow)
             self.assertEqual(200, response.status_code, 'user unauthorized: %s' % user.username )
             self.assertEqual(mime, response['content-type'])
             if template is not None:

@@ -1248,7 +1248,7 @@ class TestClusterViews(TestCase, ViewTestMixin):
         url = '/cluster/%s/keys/%s/'
         args = (cluster.slug, key)
 
-        self._test_standard_fails(url, args, login_required=False, authorized=False)
+        self.assert_standard_fails(url, args, login_required=False, authorized=False)
 
         # cluster without users who have admin perms
         response = c.get(url % args)
