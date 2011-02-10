@@ -566,53 +566,40 @@ def modify(request, cluster_slug, instance):
         form = ModifyVirtualMachineForm(user, None, request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            vcpus = data['vcpus']
-            ram = data['ram']
-            disktype = data['disk_type']
-            bootorder = data['bootorder']
-            nictype = data['nictype']
-            niclink = data['niclink']
-            rootpath = data['rootpath']
-            kernelpath = data['kernelpath']
-            serialconsole = data['serialconsole']
-            imagepath = data['imagepath']
-                        
             info = vm.info
             hvparams = info['hvparams']
 
-            old_set = (
-                hvparams['boot_order'],
-                hvparams['disk_type'],
-                hvparams['cdrom_image_path'],
-                hvparams['kernel_path'],
-                info['nic.links'][0],
-                hvparams['nic_type'],
-                info['beparams']['memory'],
-                hvparams['root_path'],
-                hvparams['serial_console'],
-                info['beparams']['vcpus'],
+            old_set = dict(
+                bootorder=hvparams['boot_order'],
+                disktype=hvparams['disk_type'],
+                imagepath=hvparams['cdrom_image_path'],
+                kernelpath=hvparams['kernel_path'],
+                niclink=info['nic.links'][0],
+                nictype=hvparams['nic_type'],
+                ram=info['beparams']['memory'],
+                rootpath=hvparams['root_path'],
+                serialconsole=hvparams['serial_console'],
+                vcpus=info['beparams']['vcpus'],
             )
             
-            new_set = (
-                bootorder,
-                disktype,
-                imagepath,
-                kernelpath,
-                niclink,
-                nictype,
-                ram,
-                rootpath,
-                serialconsole,
-                vcpus,
+            new_set = dict(
+                bootorder=data['bootorder'],
+                disktype=data['disk_type'],
+                imagepath=data['imagepath'],
+                kernelpath=data['kernelpath'],
+                niclink=data['niclink'],
+                nictype=data['nictype'],
+                ram=data['ram'],
+                rootpath=data['rootpath'],
+                serialconsole=data['serialconsole'],
+                vcpus=data['vcpus'],
             )
 
-            keys = data.keys()
-            keys.sort()
             instance_diff = []
-            for i in range(len(old_set)):
-                diff = compare(old_set[i], new_set[i])
+            for key in old_set.keys():
+                diff = compare(old_set[key], new_set[key])
                 if diff != "":
-                    instance_diff.append("%s: %s" % (keys[i],diff))
+                    instance_diff.append("%s: %s" % (key,diff))
             if not instance_diff:
                 instance_diff.append("Nothing changed.")
     
@@ -678,15 +665,15 @@ def modify_confirm(request, cluster_slug, instance):
             elif 'reboot' in request.POST:
                 # Modify Instance rapi call
                 job_id = cluster.rapi.ModifyInstance(instance,
-                    nics=[(0, {'link':rapi_dict[7], }),], \
-                    hvparams={'kernel_path': rapi_dict[9], \
-                        'root_path': rapi_dict[4], \
-                        'serial_console':rapi_dict[6], \
-                        'boot_order':rapi_dict[8], \
-                        'nic_type':rapi_dict[3], \
-                        'disk_type':rapi_dict[10],\
-                        'cdrom_image_path':rapi_dict[0]},
-                    beparams={'vcpus':rapi_dict[5],'memory': rapi_dict[2]}
+                    nics=[(0, {'link':rapi_dict['niclink'], }),], \
+                    hvparams={'kernel_path': rapi_dict['kernelpath'], \
+                        'root_path': rapi_dict['rootpath'], \
+                        'serial_console':rapi_dict['serialconsole'], \
+                        'boot_order':rapi_dict['bootorder'], \
+                        'nic_type':rapi_dict['nictype'], \
+                        'disk_type':rapi_dict['disktype'], \
+                        'cdrom_image_path':rapi_dict['imagepath']}, \
+                    beparams={'vcpus':rapi_dict['vcpus'],'memory': rapi_dict['ram']}
                 )
                 # Create job and update message on virtual machine detail page
                 job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
