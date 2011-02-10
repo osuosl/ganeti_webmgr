@@ -600,6 +600,18 @@ class VirtualMachine(CachedClusterObject):
             .update(last_job=job, ignore_cache=True)
         return job
 
+    def migrate(self, mode='live', cleanup=True):
+        """
+        Migrates this VirtualMachine to another node.  only works if the disk
+        type is DRDB
+        """
+        id = self.rapi.MigrateInstance(self.hostname, mode, cleanup)
+        job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
+        self.last_job = job
+        VirtualMachine.objects.filter(pk=self.id) \
+            .update(last_job=job, ignore_cache=True)
+        return job
+
     def setup_vnc_forwarding(self, sport=''):
         password = ''
         info_ = self.info
@@ -756,6 +768,7 @@ class Node(CachedClusterObject):
 
     def __unicode__(self):
         return self.hostname
+
 
 class Cluster(CachedClusterObject):
     """

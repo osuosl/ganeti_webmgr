@@ -187,7 +187,7 @@ def migrate(request, cluster_slug, host):
                 msg = job.info
 
                 # log information
-                log_action(user, node, "evacuated")
+                log_action(user, node, "migrated")
 
                 return HttpResponse(json.dumps(msg), mimetype='application/json')
             except GanetiApiError, e:

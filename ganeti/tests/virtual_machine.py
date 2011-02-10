@@ -27,6 +27,7 @@ from django.db.utils import IntegrityError
 from django.test import TestCase
 from django.test.client import Client
 
+from django_test_tools.views import ViewTestMixin
 from object_permissions import grant, get_user_perms
 
 from util import client
@@ -116,7 +117,7 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         self.assertRaises(IntegrityError, vm.save)
         
         # Remove cluster
-        Cluster.objects.all().delete();
+        Cluster.objects.all().delete()
     
     def test_save(self):
         """
@@ -329,7 +330,7 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         self.assert_(vm.deleted)
         self.assertFalse(VirtualMachine.objects.filter(pk=vm.pk).exists())
     
-class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
+class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMixin):
     """
     Tests for views showing virtual machines
     """
@@ -682,6 +683,12 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         """
         self.validate_post_only_url('/cluster/%s/%s/reboot')
 
+    def test_view_migrate(self):
+        """
+        Tests migrating a virtual machine
+        """
+        pass
+        
     def test_view_ssh_keys(self):
         """
         Test getting SSH keys belonging to users, who have admin permission on

@@ -227,6 +227,88 @@ def startup(request, cluster_slug, instance):
 
 
 @login_required
+def startup(request, cluster_slug, instance):
+    vm = get_object_or_404(VirtualMachine, hostname=instance, \
+                           cluster__slug=cluster_slug)
+    user = request.user
+    if not (user.is_superuser or user.has_any_perms(vm, ['admin','power']) or \
+        user.has_perm('admin', vm.cluster)):
+            return render_403(request, 'You do not have permission to start up this virtual machine')
+
+    # superusers bypass quota checks
+    if not user.is_superuser and vm.owner:
+        # check quota
+        quota = vm.cluster.get_quota(vm.owner)
+        if any(quota.values()):
+            used = vm.owner.used_resources(vm.cluster, only_running=True)
+
+            if quota['ram'] is not None and (used['ram'] + vm.ram) > quota['ram']:
+                msg = 'Owner does not have enough RAM remaining on this cluster to start the virtual machine.'
+                return HttpResponse(json.dumps([0, msg]), mimetype='application/json')
+
+            if quota['virtual_cpus'] and (used['virtual_cpus'] + vm.virtual_cpus) > quota['virtual_cpus']:
+                msg = 'Owner does not have enough Virtual CPUs remaining on this cluster to start the virtual machine.'
+                return HttpResponse(json.dumps([0, msg]), mimetype='application/json')
+
+    if request.method == 'POST':
+        try:
+            job = vm.startup()
+            job.load_info()
+            msg = job.info
+
+            # log information about starting up the machine
+            log_action(user, vm, "started")
+        except GanetiApiError, e:
+            msg = [0, str(e)]
+        return HttpResponse(json.dumps(msg), mimetype='application/json')
+    return HttpResponseNotAllowed(['POST'])
+
+
+class MigrateForm(forms.Form):
+    """ Form used for changing role """
+    live = forms.BooleanField(initial=True)
+
+
+@login_required
+def migrate(request, cluster_slug, host):
+    """
+    view used for initiating a Node Migrate job
+    """
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    vm = get_object_or_404(VirtualMachine, hostname=host)
+
+    user = request.user
+    if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
+        return render_403(request, "You do not have sufficient privileges")
+
+    if request.method == 'POST':
+        form = MigrateForm(request.POST)
+        if form.is_valid():
+            try:
+                job = vm.migrate(form.cleaned_data['live'])
+                job.load_info()
+                msg = job.info
+
+                # log information
+                log_action(user, vm, "migrated")
+
+                return HttpResponse(json.dumps(msg), mimetype='application/json')
+            except GanetiApiError, e:
+                content = json.dumps({'__all__':[str(e)]})
+        else:
+            # error in form return ajax response
+            content = json.dumps(form.errors)
+        return HttpResponse(content, mimetype='application/json')
+
+    else:
+        form = MigrateForm()
+
+    return render_to_response('vm/migrate.html', \
+        {'form':form, 'vm':vm, 'cluster':cluster}, \
+        context_instance=RequestContext(request))
+
+
+@login_required
 def reboot(request, cluster_slug, instance):
     vm = get_object_or_404(VirtualMachine, hostname=instance, \
                            cluster__slug=cluster_slug)
