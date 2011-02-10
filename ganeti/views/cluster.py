@@ -34,11 +34,11 @@ from object_permissions.views.permissions import view_users, view_permissions
 from object_permissions import signals as op_signals
 
 from logs.models import LogItem
-from util.client import GanetiApiError, GanetiApiError
+from util.client import GanetiApiError
 
 log_action = LogItem.objects.log_action
 
-from ganeti.models import Cluster, ClusterUser, Profile, VirtualMachine, SSHKey
+from ganeti.models import Cluster, ClusterUser, Profile, SSHKey
 from ganeti.views import render_403, render_404
 from ganeti.views.virtual_machine import render_vms
 from ganeti.fields import DataVolumeField
@@ -122,7 +122,7 @@ def edit(request, cluster_slug=None):
             cluster = form.save()
             # TODO Create post signal to import
             #   virtual machines on edit of cluster
-            if cluster.info == None:
+            if cluster.info is None:
                 try:
                     cluster.sync_nodes()
                     cluster.sync_virtual_machines()
