@@ -456,48 +456,9 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         """
         url = '/cluster/%s/%s/'
         args = (cluster.slug, vm.hostname)
-        
-        # anonymous user
-        response = c.get(url % args, follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'registration/login.html')
-        
-        # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
-        response = c.get(url % args)
-        self.assertEqual(403, response.status_code)
-        
-        # invalid cluster
-        response = c.get(url % ("DoesNotExist", vm.hostname))
-        self.assertEqual(404, response.status_code)
-        
-        # invalid vm
-        response = c.get(url % (cluster.slug, "DoesNotExist"))
-        self.assertEqual(404, response.status_code)
-        
-        # authorized (permission)
-        grant(user, 'admin', vm)
-        response = c.get(url % args)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
-        user.revoke('admin', vm)
-        
-        # authorized (cluster admin)
-        grant(user, 'admin', cluster)
-        response = c.get(url % args)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
-        user.revoke('admin', cluster)
-        
-        # authorized (superuser)
-        user.is_superuser = True
-        user.save()
-        response = c.get(url % args)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
+
+        self.assert_standard_fails(url, args)
+        self.assert_200(url, args, [superuser, vm_admin, cluster_admin], template='virtual_machine/detail.html')
     
     def validate_post_only_url(self, url, args=None):
         """
@@ -506,69 +467,29 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         vm = globals()['vm']
         args = args if args else (cluster.slug, vm.hostname)
         
-        # anonymous user
-        response = c.post(url % args, follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'registration/login.html')
-        
-        # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
-        response = c.post(url % args)
-        self.assertEqual(403, response.status_code)
-        
-        # invalid cluster
-        response = c.post(url % ("DoesNotExist", vm.hostname))
-        self.assertEqual(404, response.status_code)
-        
-        # invalid vm
-        response = c.post(url % (cluster.slug, "DoesNotExist"))
-        self.assertEqual(404, response.status_code)
-        
-        # authorized (permission)
-        grant(user, 'admin', vm)
-        response = c.post(url % args)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('application/json', response['content-type'])
-        content = json.loads(response.content)
-        self.assertEqual('1', content['id'])
-        user.revoke('admin', vm)
-        VirtualMachine.objects.all().update(last_job=None)
-        Job.objects.all().delete()
-        
-        # authorized (cluster admin)
-        grant(user, 'admin', cluster)
-        response = c.post(url % args)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('application/json', response['content-type'])
-        content = json.loads(response.content)
-        self.assertEqual('1', content['id'])
-        user.revoke('admin', cluster)
-        VirtualMachine.objects.all().update(last_job=None)
-        Job.objects.all().delete()
-        
-        # authorized (superuser)
-        user.is_superuser = True
-        user.save()
-        
-        response = c.post(url % args)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('application/json', response['content-type'])
-        self.assertEqual('1', content['id'])
-        VirtualMachine.objects.all().update(last_job=None)
-        Job.objects.all().delete()
-        
+        self.assert_standard_fails(url, args)
+
+        def tests(user, response):
+            content = json.loads(response.content)
+            self.assertEqual('1', content['id'])
+            VirtualMachine.objects.all().update(last_job=None)
+            Job.objects.all().delete()
+
+        self.assert_200(url, args, [superuser, vm_admin, cluster_admin], mime='application/json', method='post')
+        self.assert_200(url, args, [superuser], mime='application/json', method='post')
+
         # error while issuing reboot command
+        def tests(user, response):
+            code, text = json.loads(response.content)
+            self.assertEqual(msg, text)
+            self.assertEqual(0, code)
+            vm.rapi.error = None
         msg = "SIMULATING_AN_ERROR"
         vm.rapi.error = client.GanetiApiError(msg)
-        response = c.post(url % args)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('application/json', response['content-type'])
-        code, text = json.loads(response.content)
-        self.assertEqual(msg, text)
-        self.assertEqual(0, code)
-        vm.rapi.error = None
-        
+        self.assert_200(url, args, [superuser], mime='application/json', method='post', tests=tests)
+
         # invalid method
+        self.assertTrue(c.login(username=superuser.username, password='secret'))
         response = c.get(url % args)
         self.assertEqual(405, response.status_code)
     
