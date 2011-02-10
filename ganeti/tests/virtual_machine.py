@@ -54,7 +54,7 @@ __all__ = (
 
 class VirtualMachineTestCaseMixin():
     def create_virtual_machine(self, cluster=None, hostname='vm1.osuosl.bak'):
-        cluster = cluster if cluster else Cluster(hostname='test.osuosl.bak', slug='OSL_TEST')
+        cluster = cluster if cluster else Cluster(hostname='test.osuosl.bak', slug='OSL_TEST', username='foo', password='bar')
         cluster.save()
         cluster.sync_nodes()
         vm = VirtualMachine(cluster=cluster, hostname=hostname)
@@ -178,7 +178,7 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         Test changing owner
         """
         vm, cluster = self.create_virtual_machine()
-        
+
         owner0 = ClusterUser(id=74, name='owner0')
         owner1 = ClusterUser(id=21, name='owner1')
         owner0.save()
