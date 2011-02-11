@@ -202,14 +202,14 @@
     {% if import_ready %}
         <tr>
             <th>VMs ready to import</th>
-            <td><a href="{% url import-missing %}">Import {{ import_ready }}</a></td>
+            <td><a href="{% url import-missing_db %}">Import {{ import_ready }}</a></td>
         </tr>
     {% endif %}
 
     {% if missing %}
         <tr>
             <th>VMs missing from ganeti</th>
-            <td><a href="{% url import-missing_db %}">Remove {{ missing }}</a></td>
+            <td><a href="{% url import-missing %}">Remove {{ missing }}</a></td>
         </tr>
     {% endif %}
     </table>
