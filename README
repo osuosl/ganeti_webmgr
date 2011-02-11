@@ -29,6 +29,7 @@ Twitter:      http://twitter.com/ganetiwebmgr
 ================================================================================
 
 1.  Install Dependencies
+    * Python >= 2.5
     * Django >= 1.2
     * django-registration
     * South >=0.7
