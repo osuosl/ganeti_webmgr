@@ -151,6 +151,8 @@ class TestNodeModel(TestCase, NodeTestCaseMixin):
         """
         node, c = self.create_node()
         node2, c = self.create_node(cluster=c, hostname='two')
+        node.refresh()
+        node2.refresh()
         
         VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='foo', ram=123, status='running')
         VirtualMachine.objects.create(cluster=c, secondary_node=node, hostname='bar', ram=456, status='running')
@@ -161,8 +163,8 @@ class TestNodeModel(TestCase, NodeTestCaseMixin):
         VirtualMachine.objects.create(cluster=c, primary_node=node2, hostname='yoo', ram=999, status='admin_down')
         
         ram = node.ram
-        self.assertEqual(1023, ram['free'])
-        self.assertEqual(1602, ram['total'])
+        self.assertEqual(9999, ram['total'])
+        self.assertEqual(9420, ram['free'])
     
     def test_disk(self):
         """
@@ -170,7 +172,9 @@ class TestNodeModel(TestCase, NodeTestCaseMixin):
         """
         node, c = self.create_node()
         node2, c = self.create_node(cluster=c, hostname='two')
-        
+        node.refresh()
+        node2.refresh()
+
         VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='foo', disk_size=123, status='running')
         VirtualMachine.objects.create(cluster=c, secondary_node=node, hostname='bar', disk_size=456, status='running')
         VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='xoo', disk_size=789, status='admin_down')
@@ -180,8 +184,8 @@ class TestNodeModel(TestCase, NodeTestCaseMixin):
         VirtualMachine.objects.create(cluster=c, primary_node=node2, hostname='yoo', disk_size=999, status='admin_down')
         
         disk = node.disk
-        self.assertEqual(1023, disk['free'])
-        self.assertEqual(1602, disk['total'])
+        self.assertEqual(6666, disk['total'])
+        self.assertEqual(6087, disk['free'])
 
 
 class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
