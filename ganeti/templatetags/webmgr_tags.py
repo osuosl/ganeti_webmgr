@@ -169,9 +169,10 @@ def format_part_total(part, total):
     """
     Pretty-print a quantity out of a given total.
     """
-    if total < 0:
+    if total < 0 or part < 0:
         return "unknown"
-    elif total == 0:
+
+    if total > 0:
         total = float(total) / 1024
         total_decimals =  int(3 - log10(total))
     else:
