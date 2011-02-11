@@ -185,7 +185,7 @@ class TestNodeModel(TestCase, NodeTestCaseMixin):
         
         disk = node.disk
         self.assertEqual(6666, disk['total'])
-        self.assertEqual(6087, disk['free'])
+        self.assertEqual(5064, disk['free'])
 
 
 class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):

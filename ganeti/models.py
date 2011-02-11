@@ -709,10 +709,10 @@ class Node(CachedClusterObject):
             .filter(Q(primary_node=self) | Q(secondary_node=self)) \
             .filter(status='running') \
             .exclude(ram=-1).order_by() \
-            .aggregate(running=Sum('ram'))
+            .aggregate(used=Sum('ram'))
 
         total = self.ram_total
-        running = 0 if values['running'] is None else values['running']
+        running = 0 if values['used'] is None else values['used']
         free = total-running if running >= 0 and total >=0  else -1
         return {'total':total, 'free': free}
     
@@ -721,12 +721,11 @@ class Node(CachedClusterObject):
         """ returns dict of free and total disk space """
         values = VirtualMachine.objects \
             .filter(Q(primary_node=self) | Q(secondary_node=self)) \
-            .filter(status='running') \
             .exclude(disk_size=-1).order_by() \
-            .aggregate(running=Sum('disk_size'))
+            .aggregate(used=Sum('disk_size'))
 
         total = self.disk_total
-        running = 0 if 'running' not in values or values['running'] is None else values['running']
+        running = 0 if 'used' not in values or values['used'] is None else values['used']
         free = total-running if running >= 0 and total >=0  else -1
         return {'total':total, 'free': free}
     
@@ -921,26 +920,32 @@ class Cluster(CachedClusterObject):
     @property
     def available_ram(self):
         """ returns dict of free and total ram """
-        values = self.virtual_machines.exclude(ram=-1).order_by() \
-            .values('status').annotate(ram_=Sum('ram'))
-        total = running = 0
-        for dict_ in values:
-            if dict_['status'] == 'running':
-                running = dict_['ram_']
-            total += dict_['ram_']
-        return {'total':total, 'free':total - running}
-    
+        nodes = self.nodes.exclude(ram_total=-1) \
+            .aggregate(total=Sum('ram_total'))
+        total = nodes['total'] if 'total' in nodes and nodes['total'] >= 0 else 0
+        values = self.virtual_machines \
+            .filter(status='running') \
+            .exclude(disk_size=-1).order_by() \
+            .aggregate(used=Sum('ram'))
+
+        used = 0 if 'used' not in values or values['used'] is None else values['used']
+        free = total-used if total-used >= 0 else 0
+        return {'total':total, 'free':total - free}
+
     @property
     def available_disk(self):
         """ returns dict of free and total disk space """
-        values = self.virtual_machines.exclude(disk_size=-1).order_by() \
-            .values('status').annotate(disk_size_=Sum('disk_size'))
-        total = running = 0
-        for dict_ in values:
-            if dict_['status'] == 'running':
-                running = dict_['disk_size_']
-            total += dict_['disk_size_']
-        return {'total':total, 'free':total - running}
+        nodes = self.nodes.exclude(disk_total=-1) \
+            .aggregate(total=Sum('disk_total'))
+        total = nodes['total'] if 'total' in nodes and nodes['total'] >= 0 else 0
+        values = self.virtual_machines \
+            .exclude(disk_size=-1).order_by() \
+            .aggregate(used=Sum('disk_size'))
+
+        used = 0 if 'used' not in values or values['used'] is None else values['used']
+        free = total-used if total-used >= 0 else 0
+        
+        return {'total':total, 'free':free}
 
     def _refresh(self):
         return self.rapi.GetInfo()
