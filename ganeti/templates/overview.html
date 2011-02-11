@@ -15,30 +15,30 @@
         textFormat: 'fraction',
         // XXX there's issue, bars doesn't scale the progress to the given width
         width: 120,
-        boxImage: '/media/images/progressbar/progressbar.gif',
+        boxImage: '{{MEDIA_URL}}/images/progressbar/progressbar.gif',
         barImage: {
-            0:  '/media/images/progressbar/progressbg_red.gif',
-            30: '/media/images/progressbar/progressbg_orange.gif',
-            50: '/media/images/progressbar/progressbg_yellow.gif',
-            75: '/media/images/progressbar/progressbg_green.gif',
-        },
+            0:  '{{MEDIA_URL}}/images/progressbar/progressbg_red.gif',
+            30: '{{MEDIA_URL}}/images/progressbar/progressbg_orange.gif',
+            50: '{{MEDIA_URL}}/images/progressbar/progressbg_yellow.gif',
+            75: '{{MEDIA_URL}}/images/progressbar/progressbg_green.gif'
+        }
     };
     var PBAR2_CONF = {
         steps: 0,
         showText: true,
         textFormat: 'fraction',
         width: 120,
-        boxImage: '/media/images/progressbar/progressbar.gif',
+        boxImage: '{{MEDIA_URL}}/images/progressbar/progressbar.gif',
         barImage: {
-            0: '/media/images/progressbar/progressbg_green.gif',
-            30: '/media/images/progressbar/progressbg_yellow.gif',
-            50: '/media/images/progressbar/progressbg_orange.gif',
-            75:  '/media/images/progressbar/progressbg_red.gif',
-        },
+            0: '{{MEDIA_URL}}/images/progressbar/progressbg_green.gif',
+            30: '{{MEDIA_URL}}/images/progressbar/progressbg_yellow.gif',
+            50: '{{MEDIA_URL}}/images/progressbar/progressbg_orange.gif',
+            75:  '{{MEDIA_URL}}/images/progressbar/progressbg_red.gif'
+        }
     };
     $(document).ready(function() {
         $("#clusters .ram, #clusters .disk").each(function(){
-            $this = $(this);
+            var $this = $(this);
             if ($this.html() != 'unknown') {
                 $this.progressBar(PBAR_CONF);
             }
@@ -48,9 +48,10 @@
         $("#errors_list table").tablesorter();
         
         $("#errors_list div.clear").live("click", function(){
-            row = this.parentNode.parentNode
-            id = row.id.substring(7);
-            
+            var row = this.parentNode.parentNode;
+            var id = row.id.substring(7);
+            var url;
+
             if ($(row).hasClass('gerror')) {
                 url = "{% url error-clear %}";
             } else if ($(row).hasClass('jerror')) {
@@ -68,8 +69,7 @@
         });
         
         $("#usage_summary select").change(function(){
-            
-            val = $(this).val()
+            var val = $(this).val();
             $.get("{% url used_resources %}", {id:val}, function(html){
                 $("#usage_summary table").replaceWith(html);
                 $("#usage_summary .ram, #usage_summary .disk, #usage_summary .vcpus").progressBar(PBAR2_CONF);
@@ -100,7 +100,6 @@
     <tbody>
     {% for cluster in cluster_list %}
         {% with cluster.info as info %}
-        {% with cluster.nodes as nodes %}
             <tr id="cluster_{{cluster.id}}">
                 <td class="name">
                     {% if cluster.error %}<div class="icon_error" title="Ganeti API Error: {{cluster.error}}"></div>{% endif %}
@@ -114,7 +113,6 @@
                 <td title="Running/All">{% format_online_nodes cluster %}</td>
                 <td title="Running/All">{% format_running_vms cluster %}</td>
             </tr>
-        {% endwith %}
         {% endwith %}
     {% empty %}
         <tr class="none"><td colspan="100%">No Clusters</td></tr>
@@ -158,7 +156,7 @@
 </select>
 
 </h2>
-{% include "overview/used_resources.html" %}
+{% include "overview/used_resources_data.html" %}
 </div>
 
 {% if errors %}
@@ -204,18 +202,17 @@
     {% if import_ready %}
         <tr>
             <th>VMs ready to import</th>
-            <td><a href="{% url import-missing %}">Import {{ import_ready }}</a></td>
+            <td><a href="{% url import-missing_db %}">Import {{ import_ready }}</a></td>
         </tr>
     {% endif %}
 
     {% if missing %}
         <tr>
             <th>VMs missing from ganeti</th>
-            <td><a href="{% url import-missing_db %}">Remove {{ missing }}</a></td>
+            <td><a href="{% url import-missing %}">Remove {{ missing }}</a></td>
         </tr>
     {% endif %}
     </table>
-
 </div>
 {% endif %}
 

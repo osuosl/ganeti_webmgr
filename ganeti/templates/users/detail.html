@@ -7,14 +7,11 @@
 {% block head %}
     <link href="{{MEDIA_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
     <style>
-    .ui-widget-header {background:none; border-width:0 0 1px 0; -moz-border-radius:0px;}
-    .ui-widget-content {border:0;}
     #detail h3 {margin-top:30px;}
     </style>
     <script src="{{MEDIA_URL}}/js/jquery-ui.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
-            console.log($('#tabs'));
             $('#tabs').tabs({
                 spinner: false,
                 cache: true,
@@ -35,7 +32,7 @@
 {% endblock %}
 
 {% block content %}
-<h2>Users > {{ user_detail.username }}</h2>
+<h1><a class="breadcrumb" href="{%url user-list %}">Users</a> : {{ user_detail.username }}</h1>
 <div id="tabs">
     <ul>
         <li><a href="#detail"><span>Detail</span></a></li>

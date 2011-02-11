@@ -21,6 +21,7 @@ import re
 import json as json_lib
 
 from django import template
+from django.db.models import Count
 from django.template import Library, Node, TemplateSyntaxError
 from django.template.defaultfilters import stringfilter
 from django.utils.safestring import mark_safe
@@ -101,6 +102,14 @@ def ssh_keypart_truncate(value, count):
         return value
 
 
+@register.filter
+def is_drbd(vm):
+    """ simple filter for returning true of false if a virtual machine
+    has DRBD for disklayout
+    """
+    return 'drbd' == vm.info['disk_template']
+
+
 """
 These filters were taken from Russel Haering's GanetiWeb project
 """
@@ -144,14 +153,6 @@ def quota(cluster_user, cluster):
 
 
 @register.filter
-def cluster_nodes(cluster, bulk=False):
-    """
-    Helper tag for passing parameter to cluster.nodes()
-    """
-    return cluster.nodes(bulk)
-
-
-@register.filter
 def cluster_admin(user):
     """
     Returns whether the user has admin permission on any Cluster
@@ -168,12 +169,24 @@ def format_part_total(part, total):
     """
     Pretty-print a quantity out of a given total.
     """
-    if not (part or total):
+    if total < 0 or part < 0:
         return "unknown"
-    total = float(total) / 1024
-    part = float(part) / 1024
+
+    if total > 0:
+        total = float(total) / 1024
+        total_decimals =  int(3 - log10(total))
+    else:
+        total_decimals = 0
+    
+    if part > 0:
+        part = float(part) / 1024
+        part_decimals =  int(3 - log10(part))
+    else:
+        part = 0
+        part_decimals = 0
+    
     return "%.*f / %.*f" % (
-        int(3 - log10(part)), part, int(3 - log10(total)), total)
+        part_decimals, part, total_decimals, total)
 
 
 @register.simple_tag
@@ -197,7 +210,8 @@ def node_memory(node):
     """
     Pretty-print a memory quantity, in GiB, with significant figures.
     """
-    return format_part_total(node["mfree"], node["mtotal"])
+    ram = node.ram
+    return format_part_total(ram['free'], ram['total'])
 
 
 @register.simple_tag
@@ -205,7 +219,8 @@ def node_disk(node):
     """
     Pretty-print a disk quantity, in GiB, with significant figures.
     """
-    return format_part_total(node["dfree"], node["dtotal"])
+    disk = node.disk
+    return format_part_total(disk['free'], disk['total'])
 
 
 @register.simple_tag
@@ -213,29 +228,21 @@ def cluster_memory(cluster):
     """
     Pretty-print a memory quantity of the whole cluster [GiB]
     """
-    nodes = cluster_nodes(cluster, True)
-    mfree, mtotal = 0, 0
-    for i in nodes:
-        if isinstance(i, str):
-            continue
-        mfree += i["mfree"]
-        mtotal += i["mtotal"]
-    return format_part_total(mfree, mtotal)
+    d = cluster.available_ram
+    free = d['free']
+    total = d['total']
+    return format_part_total(free, total)
 
 
 @register.simple_tag
-def cluster_disk(cluster):
+def cluster_disk(cluster, nodes=None):
     """
     Pretty-print a memory quantity of the whole cluster [GiB]
     """
-    nodes = cluster_nodes(cluster, True)
-    dfree, dtotal = 0, 0
-    for i in nodes:
-        if isinstance(i, str):
-            continue
-        dfree += i["dfree"]
-        dtotal += i["dtotal"]
-    return format_part_total(dfree, dtotal)
+    d = cluster.available_disk
+    free = d['free']
+    total = d['total']
+    return format_part_total(free, total)
 
 
 @register.simple_tag
@@ -252,14 +259,14 @@ def format_online_nodes(cluster):
     """
     Return number of nodes that are online and number of all nodes
     """
-    n = 0
-    nodes = cluster.nodes(True)
-    for i in nodes:
-        if isinstance(i, str):
-            continue
-        if not i['offline']:
-            n += 1
-    return "%d/%d" % (n, len(nodes))
+    annotation = cluster.nodes.values('offline').annotate(count=Count('pk'))
+    offline = online = 0
+    for values in annotation:
+        if values['offline']:
+            offline = values['count']
+        else:
+            online = values['count']
+    return "%d/%d" % (online, offline+online)
 
 
 @register.filter

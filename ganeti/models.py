@@ -31,12 +31,12 @@ from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import GenericForeignKey
 
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, MinValueValidator
 from django.utils.translation import ugettext_lazy as _
 import re
 
 from django.db import models
-from django.db.models import Sum, F, Q
+from django.db.models import Q, Sum
 from django.db.models.query import QuerySet
 from django.db.models.signals import post_save, post_syncdb
 from django.db.utils import DatabaseError
@@ -48,7 +48,7 @@ from object_permissions.registration import register
 from object_permissions import signals as op_signals
 
 from ganeti import constants, management
-from ganeti.fields import PreciseDateTimeField
+from ganeti.fields import PreciseDateTimeField, SumIf
 from ganeti import permissions
 from util import client
 from util.client import GanetiApiError
@@ -210,7 +210,10 @@ class CachedClusterObject(models.Model):
         try:
             info_ = self._refresh()
             if info_:
-                mtime = datetime.fromtimestamp(info_['mtime'])
+                if info_['mtime']:
+                    mtime = datetime.fromtimestamp(info_['mtime'])
+                else:
+                    mtime = None
                 self.cached = datetime.now()
             else:
                 # no info retrieved, use current mtime
@@ -273,6 +276,9 @@ class CachedClusterObject(models.Model):
 
         This method is specific to the child object.
         """
+        # mtime is sometimes None if object has never been modified
+        if info['mtime'] is None:
+            return {'mtime': None}
         return {'mtime': datetime.fromtimestamp(info['mtime'])}
 
     def save(self, *args, **kwargs):
@@ -342,8 +348,7 @@ class Job(CachedClusterObject):
         """
         Parse status and turn off cache bypass flag if job has finished
         """
-        data = {}
-        data['status'] = info['status']
+        data = {'status': info['status']}
         if data['status'] in ('error','success'):
             data['ignore_cache'] = False
         if info['end_ts']:
@@ -382,7 +387,7 @@ class Job(CachedClusterObject):
         for i in range(len(info['opstatus'])):
             if info['opstatus'][i] != 'success':
                 index = i
-                break;
+                break
         return info['ops'][index]['OP_ID']
 
 
@@ -428,11 +433,16 @@ class VirtualMachine(CachedClusterObject):
     operating_system = models.CharField(max_length=128)
     status = models.CharField(max_length=10)
     
+    # node relations
+    primary_node = models.ForeignKey('Node', null=True, related_name='primary_vms')
+    secondary_node = models.ForeignKey('Node', null=True, \
+                                        related_name='secondary_vms')
+    
     # The last job reference indicates that there is at least one pending job
     # for this virtual machine.  There may be more than one job, and that can
     # never be prevented.  This just indicates that job(s) are pending and the
     # job related code should be run (status, cleanup, etc).
-    last_job = models.ForeignKey(Job, null=True)
+    last_job = models.ForeignKey('Job', null=True)
     
     # deleted flag indicates a VM is being deleted, but the job has not
     # completed yet.  VMs that have pending_delete are still displayed in lists
@@ -459,26 +469,27 @@ class VirtualMachine(CachedClusterObject):
         if info_:
             found = False
             remove = []
-            for tag in info_['tags']:
-                # Update owner Tag. Make sure the tag is set to the owner
-                #  that is set in webmgr.
-                if tag.startswith(constants.OWNER_TAG):
-                    id = int(tag[len(constants.OWNER_TAG):])
-                    # Since there is no 'update tag' delete old tag and
-                    #  replace with tag containing correct owner id.
-                    if id == self.owner_id:
-                        found = True
-                    else:
-                        remove.append(tag)
-            if remove:
-                self.rapi.DeleteInstanceTags(self.hostname, remove)
-                for tag in remove:
-                    info_['tags'].remove(tag)
-            if self.owner_id and not found:
-                tag = '%s%s' % (constants.OWNER_TAG, self.owner_id)
-                self.rapi.AddInstanceTags(self.hostname, [tag])
-                self.info['tags'].append(tag)
-
+            if self.cluster.username:
+                for tag in info_['tags']:
+                    # Update owner Tag. Make sure the tag is set to the owner
+                    #  that is set in webmgr.
+                    if tag.startswith(constants.OWNER_TAG):
+                        id = int(tag[len(constants.OWNER_TAG):])
+                        # Since there is no 'update tag' delete old tag and
+                        #  replace with tag containing correct owner id.
+                        if id == self.owner_id:
+                            found = True
+                        else:
+                            remove.append(tag)
+                if remove:
+                    self.rapi.DeleteInstanceTags(self.hostname, remove)
+                    for tag in remove:
+                        info_['tags'].remove(tag)
+                if self.owner_id and not found:
+                    tag = '%s%s' % (constants.OWNER_TAG, self.owner_id)
+                    self.rapi.AddInstanceTags(self.hostname, [tag])
+                    self.info['tags'].append(tag)
+        
         super(VirtualMachine, self).save(*args, **kwargs)
 
     @classmethod
@@ -499,6 +510,28 @@ class VirtualMachine(CachedClusterObject):
         data['disk_size'] = disk_size
         data['operating_system'] = info['os']
         data['status'] = info['status']
+        
+        primary = info['pnode']
+        if primary:
+            try:
+                data['primary_node'] = Node.objects.get(hostname=primary)
+            except Node.DoesNotExist:
+                # node is not created yet.  fail silently
+                data['primary_node'] = None
+        else:
+            data['primary_node'] = None
+        
+        secondary = info['snodes']
+        if len(secondary):
+            secondary = secondary[0]
+            try:
+                data['secondary_node'] = Node.objects.get(hostname=secondary)
+            except Node.DoesNotExist:
+                # node is not created yet.  fail silently
+                pass
+            data['secondary_node'] = None
+        else:
+            data['secondary_node'] = None
         
         return data
 
@@ -568,6 +601,18 @@ class VirtualMachine(CachedClusterObject):
             .update(last_job=job, ignore_cache=True)
         return job
 
+    def migrate(self, mode='live', cleanup=True):
+        """
+        Migrates this VirtualMachine to another node.  only works if the disk
+        type is DRDB
+        """
+        id = self.rapi.MigrateInstance(self.hostname, mode, cleanup)
+        job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
+        self.last_job = job
+        VirtualMachine.objects.filter(pk=self.id) \
+            .update(last_job=job, ignore_cache=True)
+        return job
+
     def setup_vnc_forwarding(self, sport=''):
         password = ''
         info_ = self.info
@@ -589,6 +634,141 @@ class VirtualMachine(CachedClusterObject):
 
     def __repr__(self):
         return "<VirtualMachine: '%s'>" % self.hostname
+
+    def __unicode__(self):
+        return self.hostname
+
+
+class Node(CachedClusterObject):
+    """
+    The Node model represents nodes within a Ganeti cluster.  The
+    majority of properties are a cache for data stored in the cluster.  All data
+    retrieved via the RAPI is stored in VirtualMachine.info, and serialized
+    automatically into VirtualMachine.serialized_info.
+
+    Attributes that need to be searchable should be stored as model fields.  All
+    other attributes will be stored within VirtualMachine.info.
+    """
+    ROLE_CHOICES = (
+        ('M','Master'),
+        ('C','Master Candidate'),
+        ('R','Regular'),
+        ('D','Drained'),
+        ('O','Offline'),
+    )
+    
+    cluster = models.ForeignKey('Cluster', related_name='nodes')
+    hostname = models.CharField(max_length=128, unique=True)
+    cluster_hash = models.CharField(max_length=40, editable=False)
+    offline = models.BooleanField()
+    role = models.CharField(max_length=1, choices=ROLE_CHOICES)
+    ram_total = models.IntegerField(default=-1)
+    disk_total = models.IntegerField(default=-1)
+
+    # The last job reference indicates that there is at least one pending job
+    # for this virtual machine.  There may be more than one job, and that can
+    # never be prevented.  This just indicates that job(s) are pending and the
+    # job related code should be run (status, cleanup, etc).
+    last_job = models.ForeignKey('Job', null=True)
+    
+    def _refresh(self):
+        """ returns node info from the ganeti server """
+        return self.rapi.GetNode(self.hostname)
+    
+    def save(self, *args, **kwargs):
+        """
+        sets the cluster_hash for newly saved instances
+        """
+        if self.id is None:
+            self.cluster_hash = self.cluster.hash
+        super(Node, self).save(*args, **kwargs)
+    
+    @property
+    def rapi(self):
+        return get_rapi(self.cluster_hash, self.cluster_id)
+    
+    @classmethod
+    def parse_persistent_info(cls, info):
+        """
+        Loads all values from cached info, included persistent properties that
+        are stored in the database
+        """
+        data = super(Node, cls).parse_persistent_info(info)
+
+        # Parse resource properties
+        data['ram_total'] = info['mtotal']
+        data['disk_total'] = info['dtotal']
+        data['offline'] = info['offline']
+        data['role'] = info['role']
+        return data
+    
+    @property
+    def ram(self):
+        """ returns dict of free and total ram """
+        values = VirtualMachine.objects \
+            .filter(Q(primary_node=self) | Q(secondary_node=self)) \
+            .filter(status='running') \
+            .exclude(ram=-1).order_by() \
+            .aggregate(used=Sum('ram'))
+
+        total = self.ram_total
+        running = 0 if values['used'] is None else values['used']
+        free = total-running if running >= 0 and total >=0  else -1
+        return {'total':total, 'free': free}
+    
+    @property
+    def disk(self):
+        """ returns dict of free and total disk space """
+        values = VirtualMachine.objects \
+            .filter(Q(primary_node=self) | Q(secondary_node=self)) \
+            .exclude(disk_size=-1).order_by() \
+            .aggregate(used=Sum('disk_size'))
+
+        total = self.disk_total
+        running = 0 if 'used' not in values or values['used'] is None else values['used']
+        free = total-running if running >= 0 and total >=0  else -1
+        return {'total':total, 'free': free}
+    
+    def set_role(self, role):
+        """
+        Sets the role for this node
+        
+        @param role - one of the following choices:
+            * master
+            * master-candidate
+            * regular
+            * drained
+            * offline
+        """
+        id = self.rapi.SetNodeRole(self.hostname, role)
+        job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
+        self.last_job = job
+        Node.objects.filter(pk=self.pk).update(ignore_cache=True, last_job=job)
+        return job
+
+    def evacuate(self):
+        """
+        migrates all secondary instances off this node
+        """
+        id = self.rapi.EvacuateNode(self.hostname)
+        job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
+        self.last_job = job
+        Node.objects.filter(pk=self.pk) \
+            .update(ignore_cache=True, last_job=job)
+        return job
+    
+    def migrate(self, live):
+        """
+        migrates all primary instances off this node
+        """
+        id = self.rapi.MigrateNode(self.hostname, live)
+        job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
+        self.last_job = job
+        Node.objects.filter(pk=self.pk).update(ignore_cache=True, last_job=job)
+        return job
+    
+    def __repr__(self):
+        return "<Node: '%s'>" % self.hostname
 
     def __unicode__(self):
         return self.hostname
@@ -697,6 +877,26 @@ class Cluster(CachedClusterObject):
                 self.virtual_machines \
                     .filter(hostname__in=missing_ganeti).delete()
 
+    def sync_nodes(self, remove=False):
+        """
+        Synchronizes the Nodes in the database with the information
+        this ganeti cluster has:
+            * Nodes no longer in ganeti are deleted
+            * Nodes missing from the database are added
+        """
+        ganeti = self.rapi.GetNodes()
+        db = self.nodes.all().values_list('hostname', flat=True)
+        
+        # add Nodes missing from the database
+        for hostname in filter(lambda x: unicode(x) not in db, ganeti):
+            Node(cluster=self, hostname=hostname).save()
+        
+        # deletes Nodes that are no longer in ganeti
+        if remove:
+            missing_ganeti = filter(lambda x: str(x) not in ganeti, db)
+            if missing_ganeti:
+                self.nodes.filter(hostname__in=missing_ganeti).delete()
+
     @property
     def missing_in_ganeti(self):
         """
@@ -717,28 +917,39 @@ class Cluster(CachedClusterObject):
         db = self.virtual_machines.all().values_list('hostname', flat=True)
         return filter(lambda x: unicode(x) not in db, ganeti)
 
+    @property
+    def available_ram(self):
+        """ returns dict of free and total ram """
+        nodes = self.nodes.exclude(ram_total=-1) \
+            .aggregate(total=Sum('ram_total'))
+        total = nodes['total'] if 'total' in nodes and nodes['total'] >= 0 else 0
+        values = self.virtual_machines \
+            .filter(status='running') \
+            .exclude(disk_size=-1).order_by() \
+            .aggregate(used=Sum('ram'))
+
+        used = 0 if 'used' not in values or values['used'] is None else values['used']
+        free = total-used if total-used >= 0 else 0
+        return {'total':total, 'free':total - free}
+
+    @property
+    def available_disk(self):
+        """ returns dict of free and total disk space """
+        nodes = self.nodes.exclude(disk_total=-1) \
+            .aggregate(total=Sum('disk_total'))
+        total = nodes['total'] if 'total' in nodes and nodes['total'] >= 0 else 0
+        values = self.virtual_machines \
+            .exclude(disk_size=-1).order_by() \
+            .aggregate(used=Sum('disk_size'))
+
+        used = 0 if 'used' not in values or values['used'] is None else values['used']
+        free = total-used if total-used >= 0 else 0
+        
+        return {'total':total, 'free':free}
+
     def _refresh(self):
         return self.rapi.GetInfo()
-
-    def nodes(self, bulk=False):
-        """Gets all Cluster Nodes
-
-        Calls the rapi client for the nodes of the cluster.
-        """
-        try:
-            return self.rapi.GetNodes(bulk=bulk)
-        except GanetiApiError:
-            return []
-
-    def node(self, node):
-        """Get a single Node
-        Calls the rapi client for a specific cluster node.
-        """
-        try:
-            return self.rapi.GetNode(node)
-        except GanetiApiError:
-            return None
-
+    
     def instances(self, bulk=False):
         """Gets all VMs which reside under the Cluster
         Calls the rapi client for all instances.
@@ -758,7 +969,54 @@ class Cluster(CachedClusterObject):
             return None
 
 
-if settings.DEBUG or True:
+class VirtualMachineTemplate(models.Model):
+    """
+    Virtual Machine Template holds all the values for the create virtual machine
+      form so that they can automatically be used or edited by a user.
+    """
+    template_name = models.CharField(max_length=255, null=True, blank=True)
+    cluster = models.ForeignKey('Cluster')
+    start = models.BooleanField(verbose_name='Start up After Creation', \
+                default=True)
+    name_check = models.BooleanField(verbose_name='DNS Name Check', \
+                default=True)
+    iallocator = models.BooleanField(verbose_name='Automatic Allocation', \
+                default=False)
+    iallocator_hostname = models.CharField(null=True, blank=True, \
+                max_length=255)
+    disk_template = models.CharField(max_length=16)
+    pnode = models.CharField(verbose_name='Primary Node', max_length=255, \
+                null=True, blank=True)
+    snode = models.CharField(verbose_name='Secondary Node', max_length=255, \
+                null=True, blank=True)
+    os = models.CharField(verbose_name='Operating System', max_length=255)
+    # BEPARAMS
+    vcpus = models.IntegerField(verbose_name='Virtual CPUs', \
+                validators=[MinValueValidator(1)])
+    ram = models.IntegerField(verbose_name='Memory', \
+                validators=[MinValueValidator(100)])
+    disk_size = models.IntegerField(verbose_name='Disk Size', \
+                validators=[MinValueValidator(100)])
+    disk_type = models.CharField(verbose_name='Disk Type', max_length=255)
+    nicmode = models.CharField(verbose_name='NIC Mode', max_length=255)
+    niclink = models.CharField(verbose_name='NIC Link', max_length=255, \
+                null=True, blank=True)
+    nictype = models.CharField(verbose_name='NIC Type', max_length=255)
+    # HVPARAMS
+    kernelpath = models.CharField(verbose_name='Kernel Path', null=True, \
+                blank=True, max_length=255)
+    rootpath = models.CharField(verbose_name='Root Path', default='/', \
+                max_length=255)
+    serialconsole = models.BooleanField(verbose_name='Enable Serial Console')
+    bootorder = models.CharField(verbose_name='Boot Device', max_length=255)
+    imagepath = models.CharField(verbose_name='CD-ROM Image Path', null=True, \
+                blank=True, max_length=512)
+
+    def __unicode__(self):
+        return self.template_name
+
+
+if settings.TESTING:
     # XXX - if in debug mode create a model for testing cached cluster objects
     class TestModel(CachedClusterObject):
         """ simple implementation of a cached model that has been instrumented """
@@ -905,7 +1163,7 @@ class GanetiError(models.Model):
         ordering = ("-timestamp", "code", "msg")
 
     def __repr__(self):
-        return "<GanetiError '%s'>" % (self.msg)
+        return "<GanetiError '%s'>" % self.msg
 
     def __unicode__(self):
         base = "[%s] %s" % (self.timestamp, self.msg)
@@ -946,14 +1204,21 @@ class ClusterUser(models.Model):
         #       the default order_by field is also added to the group_by clause
         base = self.virtual_machines.all().order_by()
 
+        # XXX - use a custom aggregate for ram and vcpu count when filtering by
+        # running.  this allows us to execute a single query.
         if only_running:
-            base = base.filter(status="running")
+            sum_ram = SumIf('ram', condition='status="running"')
+            sum_vcpus = SumIf('virtual_cpus', condition='status="running"')
+        else:
+            sum_ram = Sum('ram')
+            sum_vcpus = Sum('virtual_cpus')
+        
         base = base.exclude(ram=-1, disk_size=-1, virtual_cpus=-1)
         
         if cluster:
             base = base.filter(cluster=cluster)
-            result = base.aggregate(ram=Sum('ram'), disk=Sum('disk_size'), \
-                                  virtual_cpus=Sum('virtual_cpus'))
+            result = base.aggregate(ram=sum_ram, disk=Sum('disk_size'), \
+                                  virtual_cpus=sum_vcpus)
             
             # repack with zeros instead of Nones
             if result['disk'] is None:
@@ -965,9 +1230,9 @@ class ClusterUser(models.Model):
             return result
         
         else:
-            base = base.values('cluster').annotate(uram=Sum('ram'), \
+            base = base.values('cluster').annotate(uram=sum_ram, \
                                             udisk=Sum('disk_size'), \
-                                            uvirtual_cpus=Sum('virtual_cpus'))
+                                            uvirtual_cpus=sum_vcpus)
             
             # repack as dictionary
             result = {}
@@ -1068,10 +1333,11 @@ def create_profile(sender, instance, **kwargs):
 
 def update_cluster_hash(sender, instance, **kwargs):
     """
-    Updates the Cluster hash for all of it's VirtualMachines
+    Updates the Cluster hash for all of it's VirtualMachines, Nodes, and Jobs
     """
     instance.virtual_machines.all().update(cluster_hash=instance.hash)
     instance.jobs.all().update(cluster_hash=instance.hash)
+    instance.nodes.all().update(cluster_hash=instance.hash)
 
 
 def update_organization(sender, instance, **kwargs):

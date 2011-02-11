@@ -3,11 +3,6 @@
 
 {% block head %}
     <link href="{{MEDIA_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
-    <style>
-    .ui-widget-header {background:none; border-width:0 0 1px 0; -moz-border-radius:0px;}
-    .ui-widget-content {border:0;}
-    </style>
-    
     <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
     <script src="{{MEDIA_URL}}/js/jquery-ui.min.js"></script>
     <script src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
@@ -62,7 +57,7 @@
 {% endblock %}
 
 {% block content %}
-<h1>Cluster: {{ cluster.hostname }}</h1>
+<h1><a class="breadcrumb" href="{% url cluster-list %}">Cluster</a> : {{ cluster.hostname }}</h1>
 
 <ul id="messages">
     {%if cluster.error%}<li class="error">Error in Ganeti API:<p>{{cluster.error}}</p></li>{%endif%}

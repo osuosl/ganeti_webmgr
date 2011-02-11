@@ -5,17 +5,6 @@
 {% block head %}
 <link href="{{MEDIA_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
 <style>
-
-
-h1 a, h1 .cluster {
-    color:#C16328 !important;
-    font-size:inherit;
-}
-h1 a:hover {text-decoration:underline;}
-
-.ui-widget-header {background:none; border-width:0 0 1px 0; -moz-border-radius:0px;}
-.ui-widget-content {border:0;}
-
 .spinner_small {
     display:block;
     margin:10px auto 0 auto;
@@ -55,6 +44,7 @@ h1 a:hover {text-decoration:underline;}
 </style>
 <script src="{{MEDIA_URL}}/js/jquery-ui.min.js"></script>
 <script src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.form.js"></script>
 <script type="text/javascript">
     var actions_enabled = true;
 
@@ -69,21 +59,49 @@ h1 a:hover {text-decoration:underline;}
         {% if admin %}
             {% ifnotequal instance.info.status "running" %}
                 vnc_tab_index = 2;
-                $('#tabs').tabs("option", "disabled", [vnc_tab_index])
+                $('#tabs').tabs("option", "disabled", [vnc_tab_index]);
             {% endifnotequal %}
         {% endif %}
-        //$("#actions a").not('.delete, .reinstall').click(function() {return false;});
-        $("#actions a.power").live("click", function() {
+        
+        $("#actions a.power").live("click", function(event) {
+            event.preventDefault();
             if (actions_enabled) {
-                if ((this.className == 'button shutdown' || this.className == 'button reboot')
-                    && !(confirm('Are you sure you want to ' + this.title + '?'))) {
+                if ((this.className == 'button shutdown' || this.className == 'button reboot') &&
+                        !confirm('Are you sure you want to ' + this.title + '?')) {
                     return false;
                 }
                 $.post(this.href, action_response);
             }
-            return false;
         });
-        
+
+        $(".migrate").click(function(event){
+            event.preventDefault();
+            if (actions_enabled) {
+                $('.qtip').qtip('destroy');
+                var $this = $(this);
+
+                $(this).qtip({
+                    content: {
+                       url: this.href,
+                       title: {text:"Migrate", button:"close"}
+                    },
+                    position: {  corner:{target:'center', tooltip:'center'}},
+                    style: {name: 'dark', border:{radius:5}, width:400, background:'#eeeeee'},
+                    show: {when:false, ready:true},
+                    hide: {fixed: true, when:false},
+                    api:{onShow:function(){
+                        $(".ajax_form input[type!=hidden], .ajax_form select").first().focus();
+                    }}
+                });
+            }
+        });
+
+        $(".vm_migrate_form").live("submit", function(event){
+            event.preventDefault();
+            $("#errors").empty();
+            $(this).ajaxSubmit({success: vm_form_response});
+        });
+
         {% if instance.last_job_id %}
             {# there is a running job, display it and poll for status #}
             get_job_status({{instance.last_job.job_id}});
@@ -101,12 +119,26 @@ h1 a:hover {text-decoration:underline;}
 
     function action_response(result) {
         if (result.ops == undefined) {
-            display_ganeti_error(result[1]);
+            display_ganeti_error(result['__all__'][0]);
             actions_enabled = true;
             $('#actions a').removeClass('disabled');
         } else {
-            poll_job_status(result['id'], job_complete)
+            poll_job_status(result['id'], job_complete);
             display_job(result);
+        }
+    }
+
+    function vm_form_response(responseText, statusText, xhr, $form) {
+        if (responseText["opstatus"] == undefined) {
+            // no opstatus, must be an error
+            // parse errors
+            for (var key in responseText) {
+                $("#errors").append("<li>"+ responseText[key] +"</li>");
+            }
+        } else {
+            $('.qtip').qtip("hide");
+            poll_job_status(responseText['id'], job_complete);
+            display_job(responseText);
         }
     }
 
@@ -114,7 +146,7 @@ h1 a:hover {text-decoration:underline;}
     when a quota limit has been encountered on startup */
     function display_ganeti_error(msg) {
         $("#messages").empty();
-        html = "<li class='error'>Error:<p>" + msg + "</p></li>";
+        var html = "<li class='error'>Error:<p>" + msg + "</p></li>";
         $("#messages").append(html);
     }
 </script>
@@ -126,20 +158,17 @@ h1 a:hover {text-decoration:underline;}
 {% block content %}
 <h1>
     {% if cluster_admin %}
-    <a href="{% url cluster-detail cluster.slug %}#virtual_machines">{{cluster.hostname|abbreviate_fqdn}}</a>
+    <a class="breadcrumb" href="{% url cluster-detail cluster.slug %}#virtual_machines">{{cluster.hostname|abbreviate_fqdn}}</a>
     {% else %}
-    <span class="cluster">{{cluster.hostname|abbreviate_fqdn}}</span>
+    <span class="breadcrumb">{{cluster.hostname|abbreviate_fqdn}}</span>
     {% endif %}
     : {{ instance.hostname }}
 </h1>
 
 <ul id="messages"></ul>
 <div id="tabs">
-    <ul id="tabs">
+    <ul>
         <li><a href="#overview"><span>Overview</span></a></li>
-        {% comment %}
-        <li><a href="#configuration"><span>Configuration</span></a></li>
-        {% endcomment %}
         {% if admin %}
             <li><a title="users" href="{% url vm-users cluster.slug instance.hostname %}"><span>Users</span></a></li>
         {%endif%}
@@ -149,10 +178,18 @@ h1 a:hover {text-decoration:underline;}
     </ul>
     <div id="overview" class="tab_content">
         <ul id="actions">
-            {% with cluster.username as username %}
+            {% with instance.cluster.username as username %}
+                {% if modify and username %}            
+                    <li><a class="button edit" href="{% url instance-modify cluster.slug instance.hostname %}">Edit</a></li>
+                {% endif %}
                 {% if remove and username %}
                     <li><a class="button delete" href="{% url instance-delete cluster.slug instance.hostname %}">Delete</a></li>
                     <li><a class="button reinstall" href="{% url instance-reinstall cluster.slug instance.hostname %}">Reinstall</a></li>
+                {% endif %}
+                {% if admin or migrate %}
+                    {% if instance|is_drbd %}
+                    <li><a class="button migrate" href="{% url instance-migrate cluster.slug instance.hostname %}">Migrate</a></li>
+                    {% endif %}
                 {% endif %}
                 {% if admin or power and username %}
                     {% ifequal instance.info.status "running" %}
@@ -180,22 +217,5 @@ h1 a:hover {text-decoration:underline;}
             {% endwith %}
         </table>
     </div>
-    {% comment %}
-    <div id="configuration">
-        {% if configform %}
-        <form method="post" align="center">
-        <table>
-        {{ configform.as_table }}
-        </table>
-        <input type="Submit" value="Update" />
-        </form>
-        {% else %}
-        <div style="width:35%;margin:0 auto;">
-            <div class="icon_error"></div>
-            <p>Configuration Form could not be loaded.</p>
-        </div>
-        {% endif %}
-    </div>
-    {% endcomment %}
 </div>
 {% endblock %}
