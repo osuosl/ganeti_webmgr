@@ -662,7 +662,9 @@ class Node(CachedClusterObject):
     cluster_hash = models.CharField(max_length=40, editable=False)
     offline = models.BooleanField()
     role = models.CharField(max_length=1, choices=ROLE_CHOICES)
-    
+    ram_total = models.IntegerField(default=-1)
+    disk_total = models.IntegerField(default=-1)
+
     # The last job reference indicates that there is at least one pending job
     # for this virtual machine.  There may be more than one job, and that can
     # never be prevented.  This just indicates that job(s) are pending and the
@@ -692,6 +694,10 @@ class Node(CachedClusterObject):
         are stored in the database
         """
         data = super(Node, cls).parse_persistent_info(info)
+
+        # Parse resource properties
+        data['ram_total'] = info['mtotal']
+        data['disk_total'] = info['dtotal']
         data['offline'] = info['offline']
         data['role'] = info['role']
         return data
@@ -700,31 +706,29 @@ class Node(CachedClusterObject):
     def ram(self):
         """ returns dict of free and total ram """
         values = VirtualMachine.objects \
-            .filter(Q(primary_node=self) | Q(secondary_node=self))\
+            .filter(Q(primary_node=self) | Q(secondary_node=self)) \
+            .filter(status='running') \
             .exclude(ram=-1).order_by() \
-            .values('status').annotate(ram_=Sum('ram'))
-        
-        total = running = 0
-        for dict_ in values:
-            if dict_['status'] == 'running':
-                running = dict_['ram_']
-            total += dict_['ram_']
-        return {'total':total, 'free':total - running}
+            .aggregate(running=Sum('ram'))
+
+        total = self.ram_total
+        running = 0 if values['running'] is None else values['running']
+        free = total-running if running >= 0 and total >=0  else -1
+        return {'total':total, 'free': free}
     
     @property
     def disk(self):
         """ returns dict of free and total disk space """
         values = VirtualMachine.objects \
-            .filter(Q(primary_node=self) | Q(secondary_node=self))\
+            .filter(Q(primary_node=self) | Q(secondary_node=self)) \
+            .filter(status='running') \
             .exclude(disk_size=-1).order_by() \
-            .values('status').annotate(disk_size_=Sum('disk_size'))
-        total = running = 0
-        
-        for dict_ in values:
-            if dict_['status'] == 'running':
-                running = dict_['disk_size_']
-            total += dict_['disk_size_']
-        return {'total':total, 'free':total - running}
+            .aggregate(running=Sum('disk_size'))
+
+        total = self.disk_total
+        running = 0 if 'running' not in values or values['running'] is None else values['running']
+        free = total-running if running >= 0 and total >=0  else -1
+        return {'total':total, 'free': free}
     
     def set_role(self, role):
         """
