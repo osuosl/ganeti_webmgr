@@ -1,7 +1,6 @@
-{% extends "base.html" %}
+{% load log_tags  %}
 
-{% block_content %}
+[{{log_item.timestamp|date}}] {{log_item.user}} edited {{log_item.object1}}: {{class_name(log_item.object1)}}
 
 
 
-{% endblock %}

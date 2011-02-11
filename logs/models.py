@@ -1,5 +1,4 @@
 # Copyright (C) 2010 Oregon State University et al.
-# Copyright (C) 2010 Greek Research and Technology Network
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -24,12 +23,23 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import GenericForeignKey
 from django.utils.encoding import force_unicode
+from django.db.utils import DatabaseError
 from django.template.loader import get_template
+
+_DELAYED = []
 
 class LogActionManager(models.Manager):
     _cache = {}
     
     def register(self, key, template):
+        try:
+            return LogAction.objects._register(key, template)
+        except DatabaseError:
+            # there was an error, likely due to a missing table.  Delay this
+            # registration.
+            _DELAYED.append((key, template))
+        
+    def _register(self, key, template):
         """
         Registers and caches an LogAction type
         
@@ -46,7 +56,24 @@ class LogActionManager(models.Manager):
             #self._template_cache.setdefault(self.db, {})[template] =
         
         return action
+    
+    def _register_delayed(**kwargs):
+        """
+        Register all permissions that were delayed waiting for database tables to
+        be created.
         
+        Don't call this from outside code.
+        """
+        try:
+            for args in _DELAYED:
+                LogAction.objects._register(*args)
+            models.signals.post_syncdb.disconnect(LogAction.objects._register_delayed)
+        except DatabaseError:
+            # still waiting for models in other apps to be created
+            pass
+    
+    models.signals.post_syncdb.connect(_register_delayed)
+    
     def get_from_cache(self, key):
         """
         Attempts to retrieve the LogAction from cache, if it fails, loads
@@ -72,7 +99,6 @@ class LogAction(models.Model):
     name = models.CharField(max_length=128, unique=True) #add, delete
     template = models.CharField(max_length=128, unique=True) #template to load
     objects = LogActionManager()
-        
 
 
 class LogItemManager(models.Manager):
@@ -110,7 +136,7 @@ class LogItemManager(models.Manager):
             user = user,
             object1 = object1,
             object2 = object2,
-            object3 = object3,
+            object3 = object3
         )
         m.save()
         return m.id # occasionally someone needs this
@@ -125,18 +151,18 @@ class LogItem(models.Model):
     user = models.ForeignKey(User, related_name='log_items')
     
     object_type1 = models.ForeignKey(ContentType, \
-    related_name='log_items1')
-    object_id1 = models.PositiveIntegerField()
+    related_name='log_items1', null=True)
+    object_id1 = models.PositiveIntegerField(null=True)
     object1 = GenericForeignKey("object_type1", "object_id1")
     
     object_type2 = models.ForeignKey(ContentType, \
-    related_name='log_items2')
-    object_id2 = models.PositiveIntegerField()
+    related_name='log_items2', null=True)
+    object_id2 = models.PositiveIntegerField(null=True)
     object2 = GenericForeignKey("object_type2", "object_id2")
     
     object_type3 = models.ForeignKey(ContentType, \
-    related_name='log_items3')
-    object_id3 = models.PositiveIntegerField()
+    related_name='log_items3', null=True)
+    object_id3 = models.PositiveIntegerField(null=True)
     object3 = GenericForeignKey("object_type3", "object_id3")
 
     #log_message = models.TextField(blank=True, null=True)
@@ -146,7 +172,7 @@ class LogItem(models.Model):
     class Meta:
         ordering = ("timestamp", )
     
-    def __render__(self):
+    def __repr__(self):
         """
         Renders single line log entry containing informations like:
         - date and extensive time

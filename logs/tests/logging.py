@@ -33,11 +33,17 @@ class LoggingTest(TestCase):
     def setUp(self):
         self.tearDown()
 
-        user = User(username="testing")
-        user.save()
+        user1 = User(username="Mod")
+        user1.save()
+        
+        user2 = User(username="Joe User")
+        user2.save()
 
         dict_ = globals()
-        dict_["user"] = user
+        dict_["user1"] = user1
+        
+        #dict_ = globals()
+        dict_["user2"] = user2
 
     def tearDown(self):
         User.objects.all().delete()
@@ -53,16 +59,20 @@ class LoggingTest(TestCase):
         Verifies:
             * LogItem, LogAction are created/deleted properly
         """
-        act1 = LogAction(name="created")
+        act1 = LogAction.objects.register('test', 'logs/test.html')
         act1.save()
         self.assertEqual(len(LogAction.objects.all()), 1)
 
-        pk1 = LogItem.objects.log_action(user, user, "created",
-                                         log_message = "started test #1")
-        pk2 = LogItem.objects.log_action(user, user, "deleted")
+        pk1 = LogItem.objects.log_action("EDIT", user1, user2,)
+        pk2 = LogItem.objects.log_action("DELETE", user1, user2,)
 
         self.assertEqual(len(LogItem.objects.all()), 2)
         self.assertEqual(len(LogAction.objects.all()), 2)
+        
+        pk3 = LogItem.objects.log_action("test", user1, user2,)
+        
+        self.assertEqual(len(LogItem.objects.all()), 3)
+        self.assertEqual(len(LogAction.objects.all()), 3)
 
     def test_log_representation(self):
         """
@@ -71,14 +81,13 @@ class LoggingTest(TestCase):
         Verifies:
             * LogItem is represented properly
         """
-        pk1 = LogItem.objects.log_action(user, user, "created",
-                                         log_message = "started test #1")
-        pk2 = LogItem.objects.log_action(user, user, "deleted")
+        pk1 = LogItem.objects.log_action("EDIT", user1, user2,)
+        #pk2 = LogItem.objects.log_action(user, user, "deleted")
         item1 = LogItem.objects.get( pk=pk1 )
-        item2 = LogItem.objects.get( pk=pk2 )
+        #item2 = LogItem.objects.get( pk=pk2 )
 
         self.assertEqual(repr(item1),
-            "[%s] user testing created user \"testing\": started test #1" % item1.timestamp,
+            'logs/edit.html',
         )
         self.assertEqual(repr(item2),
             "[%s] user testing deleted user \"testing\"" % item2.timestamp,
@@ -103,14 +112,14 @@ class LoggingTest(TestCase):
         state = deepcopy(cache)
         self.assertEqual(state, {})
 
-        LogItem.objects.log_action(user, user, "created")
+        pk2 = LogItem.objects.log_action("ADD", user1, user2,)
         self.assertNotEqual(state, cache)
 
         # state should contain 1 LogAction
         state = deepcopy(cache)
         self.assertEqual(len(state[curr_db]), 1)
 
-        LogItem.objects.log_action(user, user, "deleted")
+        pk2 = LogItem.objects.log_action("DELETE", user1, user2,)
 
         # state should still contain 1 LogAction
         # but cache should contain 2 LogActions
@@ -119,7 +128,7 @@ class LoggingTest(TestCase):
 
         # caching: state should be the same as cache
         state = deepcopy(cache)
-        LogItem.objects.log_action(user, user, "deleted")
+        pk2 = LogItem.objects.log_action("DELETE", user1, user2,)
         self.assertEqual(state, cache)
 
 
