@@ -700,10 +700,11 @@ def modify_confirm(request, cluster_slug, instance):
             data = form.cleaned_data
             rapi_dict = request.session['rapi_dict']
             if 'edit' in request.POST:
+                # TODO find way to pass form data back to ModifyForm
                 return HttpResponseRedirect( \
                     reverse("instance-modify", \
                     args=[cluster.slug, vm.hostname]))
-            elif 'reboot' in request.POST:
+            elif 'reboot' in request.POST and vm.info.status == 'running':
                 # Modify Instance rapi call
                 job_id = cluster.rapi.ModifyInstance(instance,
                     nics=[(0, {'link':rapi_dict['niclink'], }),], \
@@ -729,11 +730,13 @@ def modify_confirm(request, cluster_slug, instance):
                     # Reboot the vm
                     vm.reboot()
                     log_action(user, vm, "rebooted")
-            elif 'wait' in request.POST:
+            elif 'save' in request.POST:
                 # TODO Log action that VM needs to be restarted for changes
                 #  to take effect
                 pass
 
+            del request.session['instance_diff']
+            del request.session['rapi_dict']
             # Redirect to instance-detail
             return HttpResponseRedirect( \
                 reverse("instance-detail", args=[cluster.slug, vm.hostname]))

@@ -14,9 +14,11 @@
     first reboot the instance.</p>
 </div>
 <form method="post">
-    <input type="submit" name="save" value="Save">
     <input type="submit" name="edit" value="Edit">
+{% ifequal instance.info.status "running" %}
     <input type="submit" name="reboot" value="Reboot">
+{% endifequal %}
+    <input type="submit" name="save" value="Save">
     <input type="submit" name="cancel" value="Cancel">
 </form>
 {% endblock %}
