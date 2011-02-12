@@ -704,7 +704,7 @@ def modify_confirm(request, cluster_slug, instance):
                 return HttpResponseRedirect( \
                     reverse("instance-modify", \
                     args=[cluster.slug, vm.hostname]))
-            elif 'reboot' in request.POST and vm.info.status == 'running':
+            elif 'reboot' in request.POST or 'save' in request.POST:
                 # Modify Instance rapi call
                 job_id = cluster.rapi.ModifyInstance(instance,
                     nics=[(0, {'link':rapi_dict['niclink'], }),], \
@@ -723,17 +723,14 @@ def modify_confirm(request, cluster_slug, instance):
                                                            ignore_cache=True)
                 # log information about modifying this instance
                 log_action(user, vm, "modified")
-                if not (user.is_superuser or user.has_perm('power', vm)):
-                    return render_403(request, "Sorry, but you do not have permission to reboot \
-                    this machine.")
-                else:
-                    # Reboot the vm
-                    vm.reboot()
-                    log_action(user, vm, "rebooted")
-            elif 'save' in request.POST:
-                # TODO Log action that VM needs to be restarted for changes
-                #  to take effect
-                pass
+                if 'reboot' in request.POST and vm.info['status'] == 'running':
+                    if not (user.is_superuser or user.has_perm('power', vm)):
+                        return render_403(request, "Sorry, but you do not have permission to reboot \
+                        this machine.")
+                    else:
+                        # Reboot the vm
+                        vm.reboot()
+                        log_action(user, vm, "rebooted")
 
             del request.session['instance_diff']
             del request.session['rapi_dict']

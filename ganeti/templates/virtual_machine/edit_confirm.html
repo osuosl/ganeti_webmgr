@@ -8,17 +8,24 @@
         {{ item }}<br />
     {% endfor %}
     </p></li>
-<ul>    
+<ul>
+{% with instance.info.status as status %}
 <div class="info">
-    <p><b>Note:</b> In order for your changes to the instance to take effect, you must 
-    first reboot the instance.</p>
+    <p><b>Note:</b> Rebooting must be done through Ganeti or Ganeti Web Manager. Your changes will
+    not take effect if you reboot from within the instance.</p>
+{% ifequal status "running" %}
+    <br />
+    <p><b style="color:red;">Warning:</b> In order for your changes to the instance to take effect, you must 
+    first reboot the instance. Either click reboot, or click save and reboot at a later time.</p>
+{% endifequal %}
 </div>
 <form method="post">
     <input type="submit" name="edit" value="Edit">
-{% ifequal instance.info.status "running" %}
+{% ifequal status "running" %}
     <input type="submit" name="reboot" value="Reboot">
 {% endifequal %}
     <input type="submit" name="save" value="Save">
     <input type="submit" name="cancel" value="Cancel">
 </form>
+{% endwith %}
 {% endblock %}
