@@ -30,7 +30,7 @@ class UserTestMixin():
         user.save()
         return user
 
-    def create_users(self, users, context={}):
+    def create_users(self, users, context=dict()):
         """
         Creates a list of users.
         
@@ -43,7 +43,7 @@ class UserTestMixin():
             context[name] = self.create_user(name, **kwargs)
         return context
 
-    def create_standard_users(self, context={}):
+    def create_standard_users(self, context=dict()):
         """
         Create commonly used users.  unauthorized and superuser
         """

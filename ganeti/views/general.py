@@ -276,7 +276,7 @@ def used_resources(request):
     resources = get_used_resources(cu)
     return render_to_response("overview/used_resources.html", {
         'resources':resources
-    })
+    }, context_instance=RequestContext(request))
     
 
 @login_required

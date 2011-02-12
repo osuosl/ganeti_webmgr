@@ -34,9 +34,11 @@ from object_permissions.views.permissions import view_users, view_permissions
 from object_permissions import signals as op_signals
 
 from logs.models import LogItem
+from util.client import GanetiApiError
+
 log_action = LogItem.objects.log_action
 
-from ganeti.models import Cluster, ClusterUser, Profile, VirtualMachine, SSHKey
+from ganeti.models import Cluster, ClusterUser, Profile, SSHKey
 from ganeti.views import render_403, render_404
 from ganeti.views.virtual_machine import render_vms
 from ganeti.fields import DataVolumeField
@@ -120,9 +122,15 @@ def edit(request, cluster_slug=None):
             cluster = form.save()
             # TODO Create post signal to import
             #   virtual machines on edit of cluster
-            if cluster.info == None:
-                cluster.sync_nodes()
-                cluster.sync_virtual_machines()
+            if cluster.info is None:
+                try:
+                    cluster.sync_nodes()
+                    cluster.sync_virtual_machines()
+                except GanetiApiError:
+                    # ganeti errors here are silently discarded.  It's
+                    # valid to enter bad info.  A user might be adding
+                    # info for an offline cluster.
+                    pass
             return HttpResponseRedirect(reverse('cluster-detail', \
                                                 args=[cluster.slug]))
     
@@ -316,7 +324,7 @@ class EditClusterForm(forms.ModelForm):
         }
         
     ram = DataVolumeField(label='Memory', required=False, min_value=0)
-    disk = DataVolumeField(label='Disk Space', required=False, min_value=0)    
+    disk = DataVolumeField(label='Disk Space', required=False, min_value=0)
     
     def clean(self):
         self.cleaned_data = super(EditClusterForm, self).clean()

@@ -102,6 +102,14 @@ def ssh_keypart_truncate(value, count):
         return value
 
 
+@register.filter
+def is_drbd(vm):
+    """ simple filter for returning true of false if a virtual machine
+    has DRBD for disklayout
+    """
+    return 'drbd' == vm.info['disk_template']
+
+
 """
 These filters were taken from Russel Haering's GanetiWeb project
 """
@@ -161,12 +169,24 @@ def format_part_total(part, total):
     """
     Pretty-print a quantity out of a given total.
     """
-    if not (part or total):
+    if total < 0 or part < 0:
         return "unknown"
-    total = float(total) / 1024
-    part = float(part) / 1024
+
+    if total > 0:
+        total = float(total) / 1024
+        total_decimals =  int(3 - log10(total))
+    else:
+        total_decimals = 0
+    
+    if part > 0:
+        part = float(part) / 1024
+        part_decimals =  int(3 - log10(part))
+    else:
+        part = 0
+        part_decimals = 0
+    
     return "%.*f / %.*f" % (
-        int(3 - log10(part)), part, int(3 - log10(total)), total)
+        part_decimals, part, total_decimals, total)
 
 
 @register.simple_tag

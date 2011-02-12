@@ -242,18 +242,29 @@ class TestClusterModel(TestCase):
         """
         c = Cluster.objects.create(hostname='ganeti.osuosl.test')
         c2 = Cluster.objects.create(hostname='ganeti2.osuosl.test', slug='argh')
-        
-        VirtualMachine.objects.create(cluster=c, hostname='foo', ram=123, status='running')
-        VirtualMachine.objects.create(cluster=c, hostname='bar', ram=456, status='running')
-        VirtualMachine.objects.create(cluster=c, hostname='xoo', ram=789, status='admin_down')
-        VirtualMachine.objects.create(cluster=c, hostname='xar', ram=234, status='stopped')
-        VirtualMachine.objects.create(cluster=c, hostname='boo', status='running')
-        VirtualMachine.objects.create(cluster=c2, hostname='gar', ram=888, status='running')
-        VirtualMachine.objects.create(cluster=c2, hostname='yoo', ram=999, status='admin_down')
-        
+        node = Node.objects.create(cluster=c, hostname='node.osuosl.test')
+        node1 = Node.objects.create(cluster=c2, hostname='node1.osuosl.test')
+
+        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='foo', ram=123, status='running')
+        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='bar', ram=456, status='running')
+        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='xoo', ram=789, status='admin_down')
+        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='xar', ram=234, status='stopped')
+        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='boo', status='running')
+        VirtualMachine.objects.create(cluster=c2, primary_node=node1, hostname='gar', ram=888, status='running')
+        VirtualMachine.objects.create(cluster=c2, primary_node=node1, hostname='yoo', ram=999, status='admin_down')
+
+        # test with no nodes, should result in zeros since nodes info isn't cached yet
         ram = c.available_ram
-        self.assertEqual(1023, ram['free'])
-        self.assertEqual(1602, ram['total'])
+        self.assertEqual(0, ram['free'])
+        self.assertEqual(0, ram['total'])
+
+        # force refresh of nodes and rerun test for real values
+        node.refresh()
+        node1.refresh()
+        ram = c.available_ram
+        self.assertEqual(9999, ram['total'])
+        self.assertEqual(0, ram['free'])
+
     
     def test_available_disk(self):
         """
@@ -261,18 +272,28 @@ class TestClusterModel(TestCase):
         """
         c = Cluster.objects.create(hostname='ganeti.osuosl.test')
         c2 = Cluster.objects.create(hostname='ganeti2.osuosl.test', slug='argh')
+        node = Node.objects.create(cluster=c, hostname='node.osuosl.test')
+        node1 = Node.objects.create(cluster=c2, hostname='node1.osuosl.test')
         
-        VirtualMachine.objects.create(cluster=c, hostname='foo', disk_size=123, status='running')
-        VirtualMachine.objects.create(cluster=c, hostname='bar', disk_size=456, status='running')
-        VirtualMachine.objects.create(cluster=c, hostname='xoo', disk_size=789, status='admin_down')
-        VirtualMachine.objects.create(cluster=c, hostname='xar', disk_size=234, status='stopped')
-        VirtualMachine.objects.create(cluster=c, hostname='boo', status='running')
-        VirtualMachine.objects.create(cluster=c2, hostname='gar', disk_size=888, status='running')
-        VirtualMachine.objects.create(cluster=c2, hostname='yoo', disk_size=999, status='admin_down')
-        
+        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='foo', disk_size=123, status='running')
+        VirtualMachine.objects.create(cluster=c, primary_node=node,hostname='bar', disk_size=456, status='running')
+        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='xoo', disk_size=789, status='admin_down')
+        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='xar', disk_size=234, status='stopped')
+        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='boo', status='running')
+        VirtualMachine.objects.create(cluster=c2, primary_node=node1, hostname='gar', disk_size=888, status='running')
+        VirtualMachine.objects.create(cluster=c2, primary_node=node1, hostname='yoo', disk_size=999, status='admin_down')
+
+        # test with no nodes, should result in zeros since nodes info isn't cached yet
         disk = c.available_disk
-        self.assertEqual(1023, disk['free'])
-        self.assertEqual(1602, disk['total'])
+        self.assertEqual(0, disk['free'])
+        self.assertEqual(0, disk['total'])
+
+        # force refresh of nodes and rerun test for real values
+        node.refresh()
+        node1.refresh()
+        disk = c.available_disk
+        self.assertEqual(6666, disk['total'])
+        self.assertEqual(5064, disk['free'])
     
 
 class TestClusterViews(TestCase, ViewTestMixin):
@@ -1248,7 +1269,7 @@ class TestClusterViews(TestCase, ViewTestMixin):
         url = '/cluster/%s/keys/%s/'
         args = (cluster.slug, key)
 
-        self._test_standard_fails(url, args, login_required=False, authorized=False)
+        self.assert_standard_fails(url, args, login_required=False, authorized=False)
 
         # cluster without users who have admin perms
         response = c.get(url % args)

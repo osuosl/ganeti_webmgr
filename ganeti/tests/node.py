@@ -151,6 +151,8 @@ class TestNodeModel(TestCase, NodeTestCaseMixin):
         """
         node, c = self.create_node()
         node2, c = self.create_node(cluster=c, hostname='two')
+        node.refresh()
+        node2.refresh()
         
         VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='foo', ram=123, status='running')
         VirtualMachine.objects.create(cluster=c, secondary_node=node, hostname='bar', ram=456, status='running')
@@ -161,8 +163,8 @@ class TestNodeModel(TestCase, NodeTestCaseMixin):
         VirtualMachine.objects.create(cluster=c, primary_node=node2, hostname='yoo', ram=999, status='admin_down')
         
         ram = node.ram
-        self.assertEqual(1023, ram['free'])
-        self.assertEqual(1602, ram['total'])
+        self.assertEqual(9999, ram['total'])
+        self.assertEqual(9420, ram['free'])
     
     def test_disk(self):
         """
@@ -170,7 +172,9 @@ class TestNodeModel(TestCase, NodeTestCaseMixin):
         """
         node, c = self.create_node()
         node2, c = self.create_node(cluster=c, hostname='two')
-        
+        node.refresh()
+        node2.refresh()
+
         VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='foo', disk_size=123, status='running')
         VirtualMachine.objects.create(cluster=c, secondary_node=node, hostname='bar', disk_size=456, status='running')
         VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='xoo', disk_size=789, status='admin_down')
@@ -180,8 +184,8 @@ class TestNodeModel(TestCase, NodeTestCaseMixin):
         VirtualMachine.objects.create(cluster=c, primary_node=node2, hostname='yoo', disk_size=999, status='admin_down')
         
         disk = node.disk
-        self.assertEqual(1023, disk['free'])
-        self.assertEqual(1602, disk['total'])
+        self.assertEqual(6666, disk['total'])
+        self.assertEqual(5064, disk['free'])
 
 
 class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
@@ -212,42 +216,42 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
         args = (cluster.slug, node.hostname)
         url = '/cluster/%s/node/%s/'
         users = [superuser, user_migrate, user_admin]
-        self._test_standard_fails(url, args)
-        self._test_successful_access(url, args, users, 'node/detail.html')
+        self.assert_standard_fails(url, args)
+        self.assert_200(url, args, users, 'node/detail.html')
     
     def test_primary_vms(self):
         args = (cluster.slug, node.hostname)
         url = '/cluster/%s/node/%s/primary'
         users = [superuser, user_migrate, user_admin]
-        self._test_standard_fails(url, args)
-        self._test_successful_access(url, args, users, 'virtual_machine/table.html')
+        self.assert_standard_fails(url, args)
+        self.assert_200(url, args, users, 'virtual_machine/table.html')
     
     def test_secondary_vms(self):
         args = (cluster.slug, node.hostname)
         url = '/cluster/%s/node/%s/secondary'
         users = [superuser, user_migrate, user_admin]
-        self._test_standard_fails(url, args)
-        self._test_successful_access(url, args, users, 'virtual_machine/table.html')
+        self.assert_standard_fails(url, args)
+        self.assert_200(url, args, users, 'virtual_machine/table.html')
     
     def test_role(self):
         args = (cluster.slug, node.hostname)
         url = '/cluster/%s/node/%s/role'
         users = [superuser, user_migrate, user_admin]
-        self._test_standard_fails(url, args)
-        self._test_successful_access(url, args, users, 'node/role.html')
+        self.assert_standard_fails(url, args)
+        self.assert_200(url, args, users, 'node/role.html')
         
         # test posts
         def test(user, response):
             data = json.loads(response.content);
             self.assertTrue('opstatus' in data)
         data = {'role':'master'}
-        self._test_successful_access(url, args, users, method='post', data=data, mime='application/json', tests=test)
+        self.assert_200(url, args, users, method='post', data=data, mime='application/json', tests=test)
         
         #test form error
         def test(user, response):
             data = json.loads(response.content);
             self.assertFalse('opstatus' in data)
-        self._test_successful_access(url, args, [superuser], method='post', \
+        self.assert_200(url, args, [superuser], method='post', \
                 mime='application/json', data={}, tests=test)
 
         #test ganeti error
@@ -255,28 +259,28 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
             data = json.loads(response.content);
             self.assertFalse('opstatus' in data)
         node.rapi.SetNodeRole.error = GanetiApiError("Testing Error")
-        self._test_successful_access(url, args, [superuser], method='post', mime='application/json', data=data, tests=test)
+        self.assert_200(url, args, [superuser], method='post', mime='application/json', data=data, tests=test)
         node.rapi.SetNodeRole.error = None
 
     def test_migrate(self):
         args = (cluster.slug, node.hostname)
         url = '/cluster/%s/node/%s/migrate'
         users = [superuser, user_migrate, user_admin]
-        self._test_standard_fails(url, args)
-        self._test_successful_access(url, args, users, 'node/migrate.html')
+        self.assert_standard_fails(url, args)
+        self.assert_200(url, args, users, 'node/migrate.html')
         
         #test posts
         def test(user, response):
             data = json.loads(response.content);
             self.assertTrue('opstatus' in data)
         data = {'live':True}
-        self._test_successful_access(url, args, users, method='post', data=data, mime='application/json', tests=test)
+        self.assert_200(url, args, users, method='post', data=data, mime='application/json', tests=test)
         
         #test form error
         def test(user, response):
             data = json.loads(response.content);
             self.assertFalse('opstatus' in data)
-        self._test_successful_access(url, args, [superuser], method='post', \
+        self.assert_200(url, args, [superuser], method='post', \
                 mime='application/json', data={}, tests=test)
 
         #test ganeti error
@@ -284,7 +288,7 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
             data = json.loads(response.content);
             self.assertFalse('opstatus' in data)
         node.rapi.MigrateNode.error = GanetiApiError("Testing Error")
-        self._test_successful_access(url, args, [superuser], method='post', mime='application/json', data=data, tests=test)
+        self.assert_200(url, args, [superuser], method='post', mime='application/json', data=data, tests=test)
         node.rapi.MigrateNode.error = None
     
     
@@ -292,13 +296,13 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
         args = (cluster.slug, node.hostname)
         url = '/cluster/%s/node/%s/evacuate'
         users = [superuser, user_migrate, user_admin]
-        self._test_standard_fails(url, args, method='post')
-        self._test_successful_access(url, args, users, method='post', mime="application/json")
+        self.assert_standard_fails(url, args, method='post')
+        self.assert_200(url, args, users, method='post', mime="application/json")
 
         # Test GanetiError
         def test(user, response):
             data = json.loads(response.content);
             self.assertFalse('opstatus' in data)
         node.rapi.EvacuateNode.error = GanetiApiError("Testing Error")
-        self._test_successful_access(url, args, [superuser], method='post', mime='application/json', tests=test)
+        self.assert_200(url, args, [superuser], method='post', mime='application/json', tests=test)
         node.rapi.EvacuateNode.error = None

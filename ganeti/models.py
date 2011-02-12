@@ -469,25 +469,26 @@ class VirtualMachine(CachedClusterObject):
         if info_:
             found = False
             remove = []
-            for tag in info_['tags']:
-                # Update owner Tag. Make sure the tag is set to the owner
-                #  that is set in webmgr.
-                if tag.startswith(constants.OWNER_TAG):
-                    id = int(tag[len(constants.OWNER_TAG):])
-                    # Since there is no 'update tag' delete old tag and
-                    #  replace with tag containing correct owner id.
-                    if id == self.owner_id:
-                        found = True
-                    else:
-                        remove.append(tag)
-            if remove:
-                self.rapi.DeleteInstanceTags(self.hostname, remove)
-                for tag in remove:
-                    info_['tags'].remove(tag)
-            if self.owner_id and not found:
-                tag = '%s%s' % (constants.OWNER_TAG, self.owner_id)
-                self.rapi.AddInstanceTags(self.hostname, [tag])
-                self.info['tags'].append(tag)
+            if self.cluster.username:
+                for tag in info_['tags']:
+                    # Update owner Tag. Make sure the tag is set to the owner
+                    #  that is set in webmgr.
+                    if tag.startswith(constants.OWNER_TAG):
+                        id = int(tag[len(constants.OWNER_TAG):])
+                        # Since there is no 'update tag' delete old tag and
+                        #  replace with tag containing correct owner id.
+                        if id == self.owner_id:
+                            found = True
+                        else:
+                            remove.append(tag)
+                if remove:
+                    self.rapi.DeleteInstanceTags(self.hostname, remove)
+                    for tag in remove:
+                        info_['tags'].remove(tag)
+                if self.owner_id and not found:
+                    tag = '%s%s' % (constants.OWNER_TAG, self.owner_id)
+                    self.rapi.AddInstanceTags(self.hostname, [tag])
+                    self.info['tags'].append(tag)
         
         super(VirtualMachine, self).save(*args, **kwargs)
 
@@ -600,6 +601,18 @@ class VirtualMachine(CachedClusterObject):
             .update(last_job=job, ignore_cache=True)
         return job
 
+    def migrate(self, mode='live', cleanup=True):
+        """
+        Migrates this VirtualMachine to another node.  only works if the disk
+        type is DRDB
+        """
+        id = self.rapi.MigrateInstance(self.hostname, mode, cleanup)
+        job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
+        self.last_job = job
+        VirtualMachine.objects.filter(pk=self.id) \
+            .update(last_job=job, ignore_cache=True)
+        return job
+
     def setup_vnc_forwarding(self, sport=''):
         password = ''
         info_ = self.info
@@ -649,7 +662,9 @@ class Node(CachedClusterObject):
     cluster_hash = models.CharField(max_length=40, editable=False)
     offline = models.BooleanField()
     role = models.CharField(max_length=1, choices=ROLE_CHOICES)
-    
+    ram_total = models.IntegerField(default=-1)
+    disk_total = models.IntegerField(default=-1)
+
     # The last job reference indicates that there is at least one pending job
     # for this virtual machine.  There may be more than one job, and that can
     # never be prevented.  This just indicates that job(s) are pending and the
@@ -679,6 +694,10 @@ class Node(CachedClusterObject):
         are stored in the database
         """
         data = super(Node, cls).parse_persistent_info(info)
+
+        # Parse resource properties
+        data['ram_total'] = info['mtotal']
+        data['disk_total'] = info['dtotal']
         data['offline'] = info['offline']
         data['role'] = info['role']
         return data
@@ -687,31 +706,28 @@ class Node(CachedClusterObject):
     def ram(self):
         """ returns dict of free and total ram """
         values = VirtualMachine.objects \
-            .filter(Q(primary_node=self) | Q(secondary_node=self))\
+            .filter(Q(primary_node=self) | Q(secondary_node=self)) \
+            .filter(status='running') \
             .exclude(ram=-1).order_by() \
-            .values('status').annotate(ram_=Sum('ram'))
-        
-        total = running = 0
-        for dict_ in values:
-            if dict_['status'] == 'running':
-                running = dict_['ram_']
-            total += dict_['ram_']
-        return {'total':total, 'free':total - running}
+            .aggregate(used=Sum('ram'))
+
+        total = self.ram_total
+        running = 0 if values['used'] is None else values['used']
+        free = total-running if running >= 0 and total >=0  else -1
+        return {'total':total, 'free': free}
     
     @property
     def disk(self):
         """ returns dict of free and total disk space """
         values = VirtualMachine.objects \
-            .filter(Q(primary_node=self) | Q(secondary_node=self))\
+            .filter(Q(primary_node=self) | Q(secondary_node=self)) \
             .exclude(disk_size=-1).order_by() \
-            .values('status').annotate(disk_size_=Sum('disk_size'))
-        total = running = 0
-        
-        for dict_ in values:
-            if dict_['status'] == 'running':
-                running = dict_['disk_size_']
-            total += dict_['disk_size_']
-        return {'total':total, 'free':total - running}
+            .aggregate(used=Sum('disk_size'))
+
+        total = self.disk_total
+        running = 0 if 'used' not in values or values['used'] is None else values['used']
+        free = total-running if running >= 0 and total >=0  else -1
+        return {'total':total, 'free': free}
     
     def set_role(self, role):
         """
@@ -756,6 +772,7 @@ class Node(CachedClusterObject):
 
     def __unicode__(self):
         return self.hostname
+
 
 class Cluster(CachedClusterObject):
     """
@@ -903,26 +920,32 @@ class Cluster(CachedClusterObject):
     @property
     def available_ram(self):
         """ returns dict of free and total ram """
-        values = self.virtual_machines.exclude(ram=-1).order_by() \
-            .values('status').annotate(ram_=Sum('ram'))
-        total = running = 0
-        for dict_ in values:
-            if dict_['status'] == 'running':
-                running = dict_['ram_']
-            total += dict_['ram_']
-        return {'total':total, 'free':total - running}
-    
+        nodes = self.nodes.exclude(ram_total=-1) \
+            .aggregate(total=Sum('ram_total'))
+        total = nodes['total'] if 'total' in nodes and nodes['total'] >= 0 else 0
+        values = self.virtual_machines \
+            .filter(status='running') \
+            .exclude(disk_size=-1).order_by() \
+            .aggregate(used=Sum('ram'))
+
+        used = 0 if 'used' not in values or values['used'] is None else values['used']
+        free = total-used if total-used >= 0 else 0
+        return {'total':total, 'free':total - free}
+
     @property
     def available_disk(self):
         """ returns dict of free and total disk space """
-        values = self.virtual_machines.exclude(disk_size=-1).order_by() \
-            .values('status').annotate(disk_size_=Sum('disk_size'))
-        total = running = 0
-        for dict_ in values:
-            if dict_['status'] == 'running':
-                running = dict_['disk_size_']
-            total += dict_['disk_size_']
-        return {'total':total, 'free':total - running}
+        nodes = self.nodes.exclude(disk_total=-1) \
+            .aggregate(total=Sum('disk_total'))
+        total = nodes['total'] if 'total' in nodes and nodes['total'] >= 0 else 0
+        values = self.virtual_machines \
+            .exclude(disk_size=-1).order_by() \
+            .aggregate(used=Sum('disk_size'))
+
+        used = 0 if 'used' not in values or values['used'] is None else values['used']
+        free = total-used if total-used >= 0 else 0
+        
+        return {'total':total, 'free':free}
 
     def _refresh(self):
         return self.rapi.GetInfo()

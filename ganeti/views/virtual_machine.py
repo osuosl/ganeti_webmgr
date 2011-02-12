@@ -39,7 +39,7 @@ from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine, \
         Job, SSHKey
 from ganeti.views import render_403
 from ganeti.forms.virtual_machine import NewVirtualMachineForm, \
-    ModifyVirtualMachineForm, ModifyConfirmForm
+    ModifyVirtualMachineForm, ModifyConfirmForm, MigrateForm
 from ganeti.utilities import cluster_default_info, cluster_os_list, \
     compare
 
@@ -183,7 +183,7 @@ def shutdown(request, cluster_slug, instance):
             # log information about stopping the machine
             log_action(user, vm, "stopped")
         except GanetiApiError, e:
-            msg = [0, str(e)]
+            msg = {'__all__':[str(e)]}
         return HttpResponse(json.dumps(msg), mimetype='application/json')
     return HttpResponseNotAllowed(['POST'])
 
@@ -221,9 +221,48 @@ def startup(request, cluster_slug, instance):
             # log information about starting up the machine
             log_action(user, vm, "started")
         except GanetiApiError, e:
-            msg = [0, str(e)]
+            msg = {'__all__':[str(e)]}
         return HttpResponse(json.dumps(msg), mimetype='application/json')
     return HttpResponseNotAllowed(['POST'])
+
+
+@login_required
+def migrate(request, cluster_slug, instance):
+    """
+    view used for initiating a Node Migrate job
+    """
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    vm = get_object_or_404(VirtualMachine, hostname=instance)
+
+    user = request.user
+    if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
+        return render_403(request, "You do not have sufficient privileges")
+
+    if request.method == 'POST':
+        form = MigrateForm(request.POST)
+        if form.is_valid():
+            try:
+                job = vm.migrate(form.cleaned_data['mode'])
+                job.load_info()
+                msg = job.info
+
+                # log information
+                log_action(user, vm, "migrated")
+
+                return HttpResponse(json.dumps(msg), mimetype='application/json')
+            except GanetiApiError, e:
+                content = json.dumps({'__all__':[str(e)]})
+        else:
+            # error in form return ajax response
+            content = json.dumps(form.errors)
+        return HttpResponse(content, mimetype='application/json')
+
+    else:
+        form = MigrateForm()
+
+    return render_to_response('virtual_machine/migrate.html', \
+        {'form':form, 'vm':vm, 'cluster':cluster}, \
+        context_instance=RequestContext(request))
 
 
 @login_required
@@ -244,7 +283,7 @@ def reboot(request, cluster_slug, instance):
             # log information about restarting the machine
             log_action(user, vm, "restarted")
         except GanetiApiError, e:
-            msg = [0, str(e)]
+            msg = {'__all__':[str(e)]}
         return HttpResponse(json.dumps(msg), mimetype='application/json')
     return HttpResponseNotAllowed(['POST'])
 
@@ -371,10 +410,12 @@ def detail(request, cluster_slug, instance):
         remove = True
         power = True
         modify = True
+        migrate = True
     else:
         remove = user.has_perm('remove', vm)
         power = user.has_perm('power', vm)
         modify = user.has_perm('modify', vm)
+        migrate = user.has_perm('migrate', cluster)
     
     if not (admin or power or remove or modify):
         return render_403(request, 'You do not have permission to view this cluster\'s details')
@@ -392,6 +433,7 @@ def detail(request, cluster_slug, instance):
         'remove':remove,
         'power':power,
         'modify':modify,
+        'migrate':migrate,
         },
         context_instance=RequestContext(request),
     )

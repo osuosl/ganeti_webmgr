@@ -180,7 +180,7 @@ class TestGeneralViews(TestCase):
         
         url = "/used_resources/"
         args = {}
-        template = "overview/used_resources.html"
+        template = "overview/used_resources_data.html"
         mimetype = "text/html; charset=utf-8"
 
         # anonymous user

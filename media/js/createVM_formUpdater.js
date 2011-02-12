@@ -163,105 +163,108 @@ function formUpdater(url_choices, url_options, url_defaults){
                     });
                 });
 
-                $.getJSON(url_defaults, {'cluster_id':id}, function(d){
-                    /* fill default options */
+                // only load the defaults if errors are not present 
+                if($(".errorlist").length == 0){
+                    $.getJSON(url_defaults, {'cluster_id':id}, function(d){
+                        /* fill default options */
 
-                    // boot device dropdown
-                    if(d['bootorder']) {
-                        $("#id_bootorder :selected").removeAttr('selected');
-                        $("#id_bootorder [value=" + d['bootorder'] + "]")
-                            .attr('selected','selected');
-                    }
-                    
-                    // hypervisors
-                    if(d['hypervisors']) {
-                        //list - do nothing for now.
-                    }
-
-                    // iallocator checkbox
-                    if(d['iallocator'] != "" && d['iallocator'] != undefined){
-                        if(!iallocator_hostname.attr('value')) {
-                            iallocator_hostname.attr('value', d['iallocator']);
-                            if(iallocator.siblings("span").length == 0){
-                                iallocator.after(
-                                    "<span>" + using_str +
-                                        d['iallocator'] + 
-                                    "</span>"
-                                );
-                            }
+                        // boot device dropdown
+                        if(d['bootorder']) {
+                            $("#id_bootorder :selected").removeAttr('selected');
+                            $("#id_bootorder [value=" + d['bootorder'] + "]")
+                                .attr('selected','selected');
                         }
-                        // Check iallocator checkbox
-                        iallocator.show();
-                        iallocator.siblings().show();
-                        iallocator.removeAttr('disabled');
-                        iallocator.removeAttr('readonly');
-                        iallocator.attr('checked', 'true');
-                        iallocator.change();
-                    } else {
-                        _iallocatorDisable();
-                    }
+                        
+                        // hypervisors
+                        if(d['hypervisors']) {
+                            //list - do nothing for now.
+                        }
 
-                    // kernel path text box
-                    if(d['kernelpath']){
-                        $("#id_kernelpath").val(d['kernelpath']);
-                    } else {
-                        $("#id_kernelpath").val('');
-                    }
+                        // iallocator checkbox
+                        if(d['iallocator'] != "" && d['iallocator'] != undefined){
+                            if(!iallocator_hostname.attr('value')) {
+                                iallocator_hostname.attr('value', d['iallocator']);
+                                if(iallocator.siblings("span").length == 0){
+                                    iallocator.after(
+                                        "<span>" + using_str +
+                                            d['iallocator'] + 
+                                        "</span>"
+                                    );
+                                }
+                            }
+                            // Check iallocator checkbox
+                            iallocator.show();
+                            iallocator.siblings().show();
+                            iallocator.removeAttr('disabled');
+                            iallocator.removeAttr('readonly');
+                            iallocator.attr('checked', 'true');
+                            iallocator.change();
+                        } else {
+                            _iallocatorDisable();
+                        }
 
-                    // nic mode dropdown
-                    if(d['nicmode']) {
-                        $("#id_nicmode :selected").removeAttr('selected');
-                        $("#id_nicmode [value=" + d['nicmode'] + "]")
-                            .attr('selected','selected');
-                    } else { 
-                        $("#id_nicmode :first-child")
-                            .attr('selected', 'selected');
-                    }
+                        // kernel path text box
+                        if(d['kernelpath']){
+                            $("#id_kernelpath").val(d['kernelpath']);
+                        } else {
+                            $("#id_kernelpath").val('');
+                        }
 
-                    // nic link text box
-                    if(d['niclink']){
-                        $("#id_niclink").val(d['niclink']);
-                    }
-                    
-                    // nic type dropdown
-                    if(d['nictype']) {
-                        $("#id_nictype :selected").removeAttr('selected');
-                        $("#id_nictype [value=" + d['nictype'] + "]")
-                            .attr('selected','selected');
-                    }
+                        // nic mode dropdown
+                        if(d['nicmode']) {
+                            $("#id_nicmode :selected").removeAttr('selected');
+                            $("#id_nicmode [value=" + d['nicmode'] + "]")
+                                .attr('selected','selected');
+                        } else { 
+                            $("#id_nicmode :first-child")
+                                .attr('selected', 'selected');
+                        }
 
-                    // memory text box
-                    if(d['ram']){
-                        $("#id_ram").val(d['ram']);
-                    }
+                        // nic link text box
+                        if(d['niclink']){
+                            $("#id_niclink").val(d['niclink']);
+                        }
+                        
+                        // nic type dropdown
+                        if(d['nictype']) {
+                            $("#id_nictype :selected").removeAttr('selected');
+                            $("#id_nictype [value=" + d['nictype'] + "]")
+                                .attr('selected','selected');
+                        }
 
-                    // disk type dropdown
-                    if(d['disktype']){
-                         $("#id_disk_type").val(d['disktype']);
-                    }
-                    
-                    // root path text box
-                    if(d['rootpath']){
-                        $("#id_rootpath").val(d['rootpath']);
-                    } else {
-                        $("#id_rootpath").val('/');
-                    }
-                    
-                    // enable serial console checkbox
-                    if(d['serialconsole']){
-                        $("#id_serialconsole").attr('checked', true);
-                    }
-                    
-                    // virtual CPUs text box
-                    if(d['vcpus']){
-                        $("#id_vcpus").val(d['vcpus']);
-                    }
-                    
-                    // image path text box
-                    if(d['imagepath']){
-                        $("#id_imagepath").val(imagepath);
-                    }
-                });
+                        // memory text box
+                        if(d['ram']){
+                            $("#id_ram").val(d['ram']);
+                        }
+
+                        // disk type dropdown
+                        if(d['disktype']){
+                             $("#id_disk_type").val(d['disktype']);
+                        }
+                        
+                        // root path text box
+                        if(d['rootpath']){
+                            $("#id_rootpath").val(d['rootpath']);
+                        } else {
+                            $("#id_rootpath").val('/');
+                        }
+                        
+                        // enable serial console checkbox
+                        if(d['serialconsole']){
+                            $("#id_serialconsole").attr('checked', true);
+                        }
+                        
+                        // virtual CPUs text box
+                        if(d['vcpus']){
+                            $("#id_vcpus").val(d['vcpus']);
+                        }
+                        
+                        // image path text box
+                        if(d['imagepath']){
+                            $("#id_imagepath").val(imagepath);
+                        }
+                    });
+                }
             }
         });
     }
