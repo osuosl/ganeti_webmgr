@@ -650,7 +650,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         user.revoke_all(vm)
         c.logout()
 
-         # Superuser
+        # Superuser
         user.is_superuser = True
         user.save()
         self.assertTrue(c.login(username=user.username, password='secret2'))
@@ -735,6 +735,165 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         user.revoke_all(vm)
         c.logout()        
+
+    def test_view_modify_confirm(self):
+        """
+        Test confirm page for modifying an instance
+        """
+        vm = globals()['vm']
+        args = (cluster.slug, vm.hostname)
+        url = '/cluster/%s/%s/edit/confirm' % args
+    
+        user = User(id=52, username='modifier')
+        user.set_password('secret2')
+        user.save()
+
+        rapi_dict = dict(vcpus=2,
+            ram=512,
+            disktype='paravirtual',
+            bootorder='disk',
+            nictype='paravirtual',
+            niclink='br0',
+            rootpath='/dev/vda1',
+            kernelpath='/boot/vmlinuz-2.32.6-27-generic',
+            serialconsole=True,
+            imagepath='')
+
+        ## SESSION VARIABLES
+        # Make sure session variables are set
+        user.is_superuser = True
+        user.save()
+        self.assertTrue(c.login(username=user.username, password='secret2'))
+        session = c.session
+        # instance_diff
+        self.assertTrue(user.is_superuser)
+        response = c.get(url)
+        self.assertEqual(400, response.status_code)
+        # rapi_dict
+        response = c.get(url)
+        self.assertEqual(400, response.status_code)
+        session['rapi_dict'] = rapi_dict
+        # both set, check get
+        session.save()
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/edit_confirm.html')
+
+        user.revoke_all(vm)
+        user.is_superuser = False
+        user.save()
+        c.logout()
+
+        ## GET
+        # Anonymous User
+        response = c.get(url)
+        self.assertEqual(302, response.status_code)
+
+        # User with Modify Permissions
+        user.grant('modify', vm)
+        self.assertFalse(user.is_superuser)
+        self.assertTrue(c.login(username=user.username, password='secret2'))
+        session = c.session
+        session['rapi_dict'] = rapi_dict
+        session.save()
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/edit_confirm.html')
+        user.revoke_all(vm)
+        c.logout()
+
+        # User with Admin Permissions
+        user.grant('admin', vm)
+        self.assertFalse(user.is_superuser)
+        self.assertTrue(c.login(username=user.username, password='secret2'))
+        session = c.session
+        session['rapi_dict'] = rapi_dict
+        session.save()
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/edit_confirm.html')
+        user.revoke_all(vm)
+        c.logout()
+
+        # Superuser
+        user.is_superuser = True
+        user.save()
+        self.assertTrue(c.login(username=user.username, password='secret2'))
+        session = c.session
+        session['rapi_dict'] = rapi_dict
+        session.save()
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/edit_confirm.html')
+        c.logout()
+        user.is_superuser = False
+        user.save()
+
+        ## POST
+        data = {}
+        # Anonymous User
+        response = c.post(url, data)
+        self.assertEqual(302, response.status_code)
+
+        for i in ('cancel', 'edit', 'save', 'reboot'):
+            data[i] = True
+
+            # Superuser
+            user.is_superuser = True
+            user.save()
+            self.assertTrue(c.login(username=user.username, password='secret2'))
+            session = c.session
+            session['rapi_dict'] = rapi_dict
+            session.save()
+            self.assertTrue(user.is_superuser)
+            response = c.post(url, data)
+            self.assertEqual(302, response.status_code)
+            self.assertEqual('text/html; charset=utf-8', response['content-type'])
+            c.logout()
+            user.is_superuser = False
+            user.save()
+
+            # User without Permissions
+            self.assertTrue(c.login(username=user.username, password='secret2'))
+            self.assertFalse(user.is_superuser)
+            response = c.post(url, data)
+            self.assertEqual(403, response.status_code)
+            self.assertTrue(response.context['message'])
+            self.assertEqual('text/html; charset=utf-8', response['content-type'])
+            self.assertTemplateUsed(response, '403.html')
+            c.logout()
+            
+            # User with Modify Permissions
+            user.grant('modify', vm)
+            self.assertTrue(c.login(username=user.username, password='secret2'))
+            session = c.session
+            session['rapi_dict'] = rapi_dict
+            session.save()
+            self.assertFalse(user.is_superuser)
+            response = c.post(url, data)
+            self.assertEqual(302, response.status_code)
+            self.assertEqual('text/html; charset=utf-8', response['content-type'])
+            user.revoke_all(vm)
+            c.logout()
+
+            # User with Admin Permissions
+            user.grant('admin', vm)
+            self.assertTrue(c.login(username=user.username, password='secret2'))
+            session = c.session
+            session['rapi_dict'] = rapi_dict
+            session.save()
+            self.assertFalse(user.is_superuser)
+            response = c.post(url, data)
+            self.assertEqual(302, response.status_code)
+            self.assertEqual('text/html; charset=utf-8', response['content-type'])
+            user.revoke_all(vm)
+            c.logout()
+
+            del data[i]
 
     def test_view_create_quota_first_vm(self):
         # XXX seperated from test_view_create_data since it was polluting the environment for later tests
