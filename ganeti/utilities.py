@@ -119,6 +119,6 @@ def compare(x, y):
     if i == -1:
         return "increased from %s to %s" % (x, y)
     elif i == 1:
-        return "decreased to %s from %s" % (y, x)
+        return "decreased from %s to %s" % (x, y)
     else:
         return ""

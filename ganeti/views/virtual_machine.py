@@ -640,7 +640,7 @@ def modify(request, cluster_slug, instance):
             for key in old_set.keys():
                 diff = compare(old_set[key], new_set[key])
                 if diff != "":
-                    instance_diff.append("%s: %s" % (key,diff))
+                    instance_diff.append("%s %s." % (key.capitalize(),diff))
             if not instance_diff:
                 instance_diff.append("Nothing changed.")
     
