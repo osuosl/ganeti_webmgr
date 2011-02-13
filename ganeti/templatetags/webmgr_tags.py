@@ -44,7 +44,13 @@ def vmfield(field):
 def class_name(obj):
     """ returns the modelname of the objects class """
     return obj.__class__.__name__
-    
+
+
+@register.filter
+def index(obj, index):
+    """ returns index of given object """
+    return obj[index]
+
 
 @register.filter
 @stringfilter
