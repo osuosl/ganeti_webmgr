@@ -698,7 +698,7 @@ def modify_confirm(request, cluster_slug, instance):
         form = ModifyConfirmForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            rapi_dict = request.session['rapi_dict']
+            rapi_dict = request.session.get('rapi_dict', {})
             if 'edit' in request.POST:
                 # TODO find way to pass form data back to ModifyForm
                 return HttpResponseRedirect( \
@@ -732,8 +732,11 @@ def modify_confirm(request, cluster_slug, instance):
                         vm.reboot()
                         log_action(user, vm, "rebooted")
 
-            del request.session['instance_diff']
-            del request.session['rapi_dict']
+            # Remove session variables.
+            if 'rapi_dict' in request.session:
+                del request.session['rapi_dict']
+            if 'instance_diff' in request.session: 
+                del request.session['instance_diff']
             # Redirect to instance-detail
             return HttpResponseRedirect( \
                 reverse("instance-detail", args=[cluster.slug, vm.hostname]))
@@ -741,9 +744,9 @@ def modify_confirm(request, cluster_slug, instance):
     if request.method == "GET":
         form = ModifyConfirmForm()
         session = request.session
-        if not ('rapi_dict' in session and 'instance_diff' in session):  
+        if not 'rapi_dict' in session:  
             return HttpResponseBadRequest('Incorrect Session Data')
-        instance_diff = session['instance_diff']
+        instance_diff = session.get('instance_diff', 'Instance Diff was not set.')
 
     return render_to_response('virtual_machine/edit_confirm.html', {
         'cluster': cluster,
