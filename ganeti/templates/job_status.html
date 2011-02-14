@@ -37,7 +37,7 @@
 
     function display_job(data) {
         // get the sub operation that is either running or errored
-        for (var sub_op=0; i<data['opstatus'].length; ++sub_op) {
+        for (var sub_op=0; sub_op<data['opstatus'].length; ++sub_op) {
             if (data['opstatus'][sub_op] != 'success') {
                 break;
             }
@@ -51,20 +51,18 @@
             actions_enabled = true;
         } else {
             $("#messages").empty();
-            sub_op = 0;
-
             var op = format_op(data['ops'][sub_op]['OP_ID']);
             html = $("<li><h3>"+op+"</h3></li>");
             $("#messages").append(html);
 
             // append log messages that are not already displayed
             var current_log_count = $("#log ul li").length;
-            if (data['oplog'][0].length != 0) {
+            if (data['oplog'][sub_op].length != 0) {
                 if ($('#log').length==0){
                     html.append("<pre id='log'><ul></ul></pre>");
                 }
 
-                var log = data['oplog'][0];
+                var log = data['oplog'][sub_op];
                 for (var i=current_log_count; i<log.length; i++) {
                     $("#log ul")
                         .append("<li>"+log[i][3]+"</li>");

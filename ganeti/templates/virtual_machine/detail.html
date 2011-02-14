@@ -202,20 +202,73 @@
             {% endwith %}
         </ul>
 
+        {% with instance.info as info %}
         <table class="overview">
-            {% with instance.info as info %}
             <tr><td>Owner</td><td>{{ instance.owner.name }}</td></tr>
-            <tr><td>Status</td><td>{{ info.oper_state|yesno:"Running,Stopped" }}</td></tr>
-            <tr><td>Autostart</td><td>{{ info.admin_state }}</td></tr>
-            <tr><td>UUID</td><td>{{ info.uuid }}</td></tr>
-            <tr><td>Primary node</td><td>{{ info.pnode }}</td></tr>
-            <tr><td>Failover node</td><td>{{ info.snodes|join:", " }}</td></tr>
             <tr><td>Created on</td><td>{{ instance.ctime|date }}</td></tr>
             <tr><td>Last modified</td><td>{{ instance.mtime|date }}</td></tr>
+            <tr><td>Status</td><td>{{ info.oper_state|yesno:"Running,Stopped" }}</td></tr>
+            <tr><td>Primary node</td><td>{{ info.pnode }}</td></tr>
+            <tr><td>Failover node</td><td>{{ info.snodes|join:", " }}</td></tr>
+            <tr><td>Operating System</td><td>{{ instance.operating_system|render_os }}</td></tr>
+            <tr><td>Autostart</td><td>{{ info.admin_state }}</td></tr>
+        </table>
+
+        <table>
+            <tr><th colspan="100%">Hypervisor</th></tr>
+            <tr><td>ACPI</td><td>{{ info.hvparams.acpi }}</td></tr>
+            <tr><td>Boot Order</td><td>{{ info.hvparams.boot_order }}</td></tr>
+            <tr><td>CDROM Image Path</td><td>{{ info.hvparams.cdrom_image_path }}</td></tr>
+            <tr><td>Disk Cache</td><td>{{ info.hvparams.disk_cache }}</td></tr>
+            <tr><td>initrd Path</td><td>{{ info.hvparams.initrd_path }}</td></tr>
+            <tr><td>Kernel Args</td><td>{{ info.hvparams.kernel_args }}</td></tr>
+            <tr><td>Kernel Path</td><td>{{ info.hvparams.kernel_path }}</td></tr>
+            <tr><td>KVM Flag</td><td>{{ info.hvparams.kvm_flag }}</td></tr>
+            <tr><td>Mem Path</td><td>{{ info.hvparams.mem_path }}</td></tr>
+            <tr><td>Migration Downtime</td><td>{{ info.hvparams.migration_downtime }}</td></tr>
+            <tr><td>Nic Type</td><td>{{ info.hvparams.nic_type }}</td></tr>
+            <tr><td>Root Path</td><td>{{ info.hvparams.root_path }}</td></tr>
+            <tr><td>Security Domain</td><td>{{ info.hvparams.security_domain }}</td></tr>
+            <tr><td>Security Model</td><td>{{ info.hvparams.security_model }}</td></tr>
+            <tr><td>Serial Console</td><td>{{ info.hvparams.serial_console }}</td></tr>
+            <tr><td>USB Mouse</td><td>{{ info.hvparams.usb_mouse }}</td></tr>
+            <tr><td>Use Chroot</td><td>{{ info.hvparams.use_chroot }}</td></tr>
+            <tr><td>Use Localtime</td><td>{{ info.hvparams.use_localtime }}</td></tr>
+            <tr><td>VNC Bind Address</td><td>{{ info.hvparams.vnc_bind_address }}</td></tr>
+            <tr><td>VNC Password File</td><td>{{ info.hvparams.vnc_password_file }}</td></tr>
+            <tr><td>VNC TLS</td><td>{{ info.hvparams.vnc_tls }}</td></tr>
+            <tr><td>VNC x509 Path</td><td>{{ info.hvparams.vnc_x509_path }}</td></tr>
+            <tr><td>VNC x509 Verify</td><td>{{ info.hvparams.vnc_x509_verify }}</td></tr>
+        </table>
+
+        <table>
+            <tr><th colspan="100%">Hardware</th></tr>
+            <tr><td>VCPUs</td><td>{{ instance.virtual_cpus }}</td></tr>
+            <tr><td>Memory</td><td>{{ instance.ram }}</td></tr>
             <tr><td>NIC type</td><td>{{ info.hvparams.nic_type }}</td></tr>
             <tr><td>Disk type</td><td>{{ info.hvparams.disk_type }}</td></tr>
-            {% endwith %}
         </table>
+
+        <table>
+            <tr>
+                <th>Nic</th>
+                <th>Mac</th>
+                <th>IP</th>
+                <th>Mode</th>
+                <th>Link</th>
+            </tr>
+            {% for mac in info|index:'nic.macs' %}
+                <tr>
+                    <td>nic/{{ forloop.counter0 }}</td>
+                    <td>{{ mac }}</td>
+                    <td>{{ info|index:'nic.ips'|index:forloop.counter0 }}</td>
+                    <td>{{ info|index:'nic.modes'|index:forloop.counter0 }}</td>
+                    <td>{{ info|index:'nic.links'|index:forloop.counter0 }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+
+        {% endwith %}
     </div>
 </div>
 {% endblock %}

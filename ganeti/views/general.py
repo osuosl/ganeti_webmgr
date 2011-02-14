@@ -17,11 +17,9 @@
 # USA.
 
 from django.contrib.auth.decorators import login_required
-from django.contrib.contenttypes.models import ContentType
-from django.core.urlresolvers import reverse
 from django.core.cache import cache
-from django.db.models import Q, Count, Sum
-from django.http import HttpResponseRedirect, HttpResponse
+from django.db.models import Q, Count
+from django.http import HttpResponse
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.contrib.contenttypes.models import ContentType
@@ -266,9 +264,6 @@ def used_resources(request):
                 .exists():
                 return render_403(request, 'You are not authorized to view this page')
         else:
-            q = Organization.objects.filter(clusteruser_ptr=cu.pk, \
-                                               group__user=user)
-            g = Organization.objects.filter(clusteruser_ptr=cu.pk)[0].group
             if not Organization.objects.filter(clusteruser_ptr=cu.pk, \
                                                group__user=user).exists():
                 return render_403(request, 'You are not authorized to view this page')
