@@ -57,7 +57,6 @@ class NewVirtualMachineForm(forms.ModelForm):
     disktypes = [
         (u'', u'---------'),
         (u'paravirtual',u'paravirtual'),
-        (u'ioemu',u'ioemu'),
         (u'ide',u'ide'),
         (u'scsi',u'scsi'),
         (u'sd',u'sd'),
