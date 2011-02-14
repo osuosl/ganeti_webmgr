@@ -15,6 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
+from datetime import datetime
 
 from math import log10
 import re
@@ -24,7 +25,7 @@ from django import template
 from django.db.models import Count
 from django.template import Library, Node, TemplateSyntaxError
 from django.template.defaultfilters import stringfilter
-from django.utils.safestring import mark_safe
+from django.utils.safestring import mark_safe, SafeString
 
 from ganeti.models import Cluster
 
@@ -61,6 +62,12 @@ def truncate(value, count):
     if count < len(value):
         return value[:count] + " ..."
     return value
+
+
+@register.filter
+def timestamp(int):
+    """ converts a timestamp to a date """
+    return datetime.fromtimestamp(int)
 
 
 @register.filter
@@ -169,6 +176,13 @@ def cluster_admin(user):
 @register.filter
 def format_job_op(op):
     return op[3:].replace("_", " ").title()
+
+
+@register.filter
+def format_job_log(log):
+    """ formats a ganeti job log for display on an html page """
+    formatted = log.replace('\n','<br/>')
+    return SafeString(formatted)
 
 
 def format_part_total(part, total):
