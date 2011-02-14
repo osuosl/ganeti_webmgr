@@ -50,7 +50,8 @@ def class_name(obj):
 @register.filter
 def index(obj, index):
     """ returns index of given object """
-    return obj[index]
+    if obj:
+        return obj[index]
 
 
 @register.filter
@@ -121,6 +122,16 @@ def is_drbd(vm):
     has DRBD for disklayout
     """
     return 'drbd' == vm.info['disk_template']
+
+
+@register.filter
+def checkmark(bool):
+    """ converts a boolean into a checkmark if it is true """
+    if bool:
+        str_  = '<div class="check icon"></div>'
+    else:
+        str_ = '<div class="xmark icon"></div>'
+    return SafeString(str_)
 
 
 """
