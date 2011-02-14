@@ -226,7 +226,7 @@
             <tr><th>Failover node</th><td>
                 {% if cluster_admin %}
                     {% for host in info.snodes %}
-                        <a href="{% url node-detail cluster.slug host %}">{{ info.host }}</a>
+                        <a href="{% url node-detail cluster.slug host %}">{{ host }}</a>
                         {% if not forloop.last %}, {% endif %}
                     {% endfor %}
                 {% else %}
