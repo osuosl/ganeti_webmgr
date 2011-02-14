@@ -29,6 +29,7 @@
 </div>
 {% endifequal %}
 <form method="post">
+    {{ form.as_p }}
     <input type="submit" name="edit" value="Edit">
 {% ifequal status "running" %}
     <input type="submit" name="reboot" value="Reboot">
