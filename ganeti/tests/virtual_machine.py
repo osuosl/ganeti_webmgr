@@ -748,9 +748,9 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         user.set_password('secret2')
         user.save()
 
-        rapi_dict = dict(vcpus=2,
+        edit_form = dict(vcpus=2,
             ram=512,
-            disktype='paravirtual',
+            disk_type='paravirtual',
             bootorder='disk',
             nictype='paravirtual',
             niclink='br0',
@@ -765,15 +765,10 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         user.save()
         self.assertTrue(c.login(username=user.username, password='secret2'))
         session = c.session
-        # instance_diff
-        self.assertTrue(user.is_superuser)
+        # edit_form 
         response = c.get(url)
         self.assertEqual(400, response.status_code)
-        # rapi_dict
-        response = c.get(url)
-        self.assertEqual(400, response.status_code)
-        session['rapi_dict'] = rapi_dict
-        # both set, check get
+        session['edit_form'] = edit_form
         session.save()
         response = c.get(url)
         self.assertEqual(200, response.status_code)
@@ -795,7 +790,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         self.assertFalse(user.is_superuser)
         self.assertTrue(c.login(username=user.username, password='secret2'))
         session = c.session
-        session['rapi_dict'] = rapi_dict
+        session['edit_form'] = edit_form
         session.save()
         response = c.get(url)
         self.assertEqual(200, response.status_code)
@@ -809,7 +804,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         self.assertFalse(user.is_superuser)
         self.assertTrue(c.login(username=user.username, password='secret2'))
         session = c.session
-        session['rapi_dict'] = rapi_dict
+        session['edit_form'] = edit_form
         session.save()
         response = c.get(url)
         self.assertEqual(200, response.status_code)
@@ -823,7 +818,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         user.save()
         self.assertTrue(c.login(username=user.username, password='secret2'))
         session = c.session
-        session['rapi_dict'] = rapi_dict
+        session['edit_form'] = edit_form
         session.save()
         response = c.get(url)
         self.assertEqual(200, response.status_code)
@@ -834,7 +829,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         user.save()
 
         ## POST
-        data = {}
+        data = {'rapi_dict':json.dumps(edit_form)}
         # Anonymous User
         response = c.post(url, data)
         self.assertEqual(302, response.status_code)
@@ -847,7 +842,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
             user.save()
             self.assertTrue(c.login(username=user.username, password='secret2'))
             session = c.session
-            session['rapi_dict'] = rapi_dict
+            session['edit_form'] = edit_form
             session.save()
             self.assertTrue(user.is_superuser)
             response = c.post(url, data)
@@ -871,7 +866,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
             user.grant('modify', vm)
             self.assertTrue(c.login(username=user.username, password='secret2'))
             session = c.session
-            session['rapi_dict'] = rapi_dict
+            session['edit_form'] = edit_form
             session.save()
             self.assertFalse(user.is_superuser)
             response = c.post(url, data)
@@ -884,7 +879,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
             user.grant('admin', vm)
             self.assertTrue(c.login(username=user.username, password='secret2'))
             session = c.session
-            session['rapi_dict'] = rapi_dict
+            session['edit_form'] = edit_form
             session.save()
             self.assertFalse(user.is_superuser)
             response = c.post(url, data)

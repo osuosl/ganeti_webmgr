@@ -677,7 +677,7 @@ def modify_confirm(request, cluster_slug, instance):
                         'serial_console':rapi_dict['serialconsole'], \
                         'boot_order':rapi_dict['bootorder'], \
                         'nic_type':rapi_dict['nictype'], \
-                        'disk_type':rapi_dict['disktype'], \
+                        'disk_type':rapi_dict['disk_type'], \
                         'cdrom_image_path':rapi_dict['imagepath']}, \
                     beparams={'vcpus':rapi_dict['vcpus'],'memory': rapi_dict['ram']}
                 )
@@ -716,7 +716,7 @@ def modify_confirm(request, cluster_slug, instance):
 
         old_set = dict(
             bootorder=hvparams['boot_order'],
-            disktype=hvparams['disk_type'],
+            disk_type=hvparams['disk_type'],
             imagepath=hvparams['cdrom_image_path'],
             kernelpath=hvparams['kernel_path'],
             niclink=info['nic.links'][0],
@@ -729,7 +729,7 @@ def modify_confirm(request, cluster_slug, instance):
         
         new_set = dict(
             bootorder=data['bootorder'],
-            disktype=data['disk_type'],
+            disk_type=data['disk_type'],
             imagepath=data['imagepath'],
             kernelpath=data['kernelpath'],
             niclink=data['niclink'],
