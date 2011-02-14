@@ -63,6 +63,15 @@ form table, form table td, form table td {border:0 !important;}
 form p label {width:12em;}
 form input.submit{margin-left:12.5em;}
 
+pre {
+    background-color:#eee;
+    border: 1px solid #ddd;
+    font-family:monospace;
+    font-size:10px;
+    overflow:scroll;
+    padding:5px;
+}
+
 #body_wrapper {
     min-height: 100%; /* Sticky footer */
     width:979px;
