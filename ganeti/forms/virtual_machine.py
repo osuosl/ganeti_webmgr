@@ -253,7 +253,6 @@ class NewVirtualMachineForm(forms.ModelForm):
                 self._errors["imagepath"] = self.error_class([msg])
 
                 del data["imagepath"]
-                del data["bootorder"]
 
         if iallocator:
             # If iallocator is checked,
