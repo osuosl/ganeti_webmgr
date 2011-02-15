@@ -5,6 +5,10 @@
 {% block head %}
 <link href="{{MEDIA_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
 <style>
+#content h3 {
+    margin-top:25px;
+}
+
 .spinner_small {
     display:block;
     margin:10px auto 0 auto;
@@ -34,6 +38,8 @@
     padding:0;
 }
 
+
+
 #messages h3 {
     background: url({{MEDIA_URL}}/images/ajax-loader_arrows.gif) 5px 5px no-repeat;
     background-color:#C2E192;
@@ -41,6 +47,8 @@
     margin:0;
     text-align:left;
 }
+
+#content table {margin-top:5px;}
 </style>
 <script src="{{MEDIA_URL}}/js/jquery-ui.min.js"></script>
 <script src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
@@ -202,20 +210,104 @@
             {% endwith %}
         </ul>
 
-        <table class="overview">
-            {% with instance.info as info %}
-            <tr><td>Owner</td><td>{{ instance.owner.name }}</td></tr>
-            <tr><td>Status</td><td>{{ info.oper_state|yesno:"Running,Stopped" }}</td></tr>
-            <tr><td>Autostart</td><td>{{ info.admin_state }}</td></tr>
-            <tr><td>UUID</td><td>{{ info.uuid }}</td></tr>
-            <tr><td>Primary node</td><td>{{ info.pnode }}</td></tr>
-            <tr><td>Failover node</td><td>{{ info.snodes|join:", " }}</td></tr>
-            <tr><td>Created on</td><td>{{ instance.ctime|date }}</td></tr>
-            <tr><td>Last modified</td><td>{{ instance.mtime|date }}</td></tr>
-            <tr><td>NIC type</td><td>{{ info.hvparams.nic_type }}</td></tr>
-            <tr><td>Disk type</td><td>{{ info.hvparams.disk_type }}</td></tr>
-            {% endwith %}
+        {% with instance.info as info %}
+        <table class="overview horizontal">
+            <tr><th>Owner</th><td>{{ instance.owner.name }}</td></tr>
+            <tr><th>Created on</th><td>{{ instance.ctime|date }}</td></tr>
+            <tr><th>Last modified</th><td>{{ instance.mtime|date }}</td></tr>
+            <tr><th>Status</th><td>{{ info.oper_state|yesno:"Running,Stopped" }}</td></tr>
+            <tr><th>Primary node</th><td>
+                {% if cluster_admin %}
+                    <a href="{% url node-detail cluster.slug info.pnode %}">{{ info.pnode }}</a>
+                {% else %}
+                    {{ info.pnode }}
+                {% endif %}
+            </td></tr>
+            <tr><th>Failover node</th><td>
+                {% if cluster_admin %}
+                    {% for host in info.snodes %}
+                        <a href="{% url node-detail cluster.slug host %}">{{ host }}</a>
+                        {% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                {% else %}
+                    {{ info.snodes|join:", " }}
+                {% endif %}
+            </td></tr>
+            <tr><th>Operating System</th><td>{{ instance.operating_system|render_os }}</td></tr>
+            <tr><th>Autostart</th><td>{{ info.admin_state|checkmark }}</td></tr>
         </table>
+
+        <h3>Hardware</h3>
+        <table class="horizontal">
+            <tr><th>VCPUs</th><td>{{ instance.virtual_cpus }}</td></tr>
+            <tr><th>Memory</th><td>{{ instance.ram|render_storage }}</td></tr>
+            <tr><th>NIC type</th><td>{{ info.hvparams.nic_type }}</td></tr>
+        </table>
+
+        <h3>Disks</h3>
+        <table>
+            <tr>
+                <th>Disk</th>
+                <th>Type</th>
+                <th>Size</th>
+            </tr>
+            {% for size in  info|index:"disk.sizes" %}
+                <tr>
+                    <td>disk/{{ forloop.counter0 }}</td>
+                    <td>{{ info.hvparams.disk_type }}</td>
+                    <td>{{ size|render_storage }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+
+        <h3>Network Devices</h3>
+        <table>
+            <tr>
+                <th>Nic</th>
+                <th>Mac</th>
+                <th>IP</th>
+                <th>Mode</th>
+                <th>Link</th>
+            </tr>
+            {% for mac in info|index:'nic.macs' %}
+                <tr>
+                    <td>nic/{{ forloop.counter0 }}</td>
+                    <td>{{ mac }}</td>
+                    <td>{{ info|index:'nic.ips'|index:forloop.counter0 }}</td>
+                    <td>{{ info|index:'nic.modes'|index:forloop.counter0 }}</td>
+                    <td>{{ info|index:'nic.links'|index:forloop.counter0 }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+
+        <h3>Hypervisor</h3>
+        <table class="horizontal">
+            <tr><th>ACPI</th><td>{{ info.hvparams.acpi|checkmark }}</td></tr>
+            <tr><th>Boot Order</th><td>{{ info.hvparams.boot_order }}</td></tr>
+            <tr><th>CDROM Image Path</th><td>{{ info.hvparams.cdrom_image_path }}</td></tr>
+            <tr><th>Disk Cache</th><td>{{ info.hvparams.disk_cache }}</td></tr>
+            <tr><th>initrd Path</th><td>{{ info.hvparams.initrd_path }}</td></tr>
+            <tr><th>Kernel Args</th><td>{{ info.hvparams.kernel_args }}</td></tr>
+            <tr><th>Kernel Path</th><td>{{ info.hvparams.kernel_path }}</td></tr>
+            <tr><th>KVM Flag</th><td>{{ info.hvparams.kvm_flag }}</td></tr>
+            <tr><th>Mem Path</th><td>{{ info.hvparams.mem_path }}</td></tr>
+            <tr><th>Migration Downtime</th><td>{{ info.hvparams.migration_downtime }}</td></tr>
+            <tr><th>Nic Type</th><td>{{ info.hvparams.nic_type }}</td></tr>
+            <tr><th>Root Path</th><td>{{ info.hvparams.root_path }}</td></tr>
+            <tr><th>Security Domain</th><td>{{ info.hvparams.security_domain }}</td></tr>
+            <tr><th>Security Model</th><td>{{ info.hvparams.security_model }}</td></tr>
+            <tr><th>Serial Console</th><td>{{ info.hvparams.serial_console|checkmark }}</td></tr>
+            <tr><th>USB Mouse</th><td>{{ info.hvparams.usb_mouse }}</td></tr>
+            <tr><th>Use Chroot</th><td>{{ info.hvparams.use_chroot|checkmark }}</td></tr>
+            <tr><th>Use Localtime</th><td>{{ info.hvparams.use_localtime|checkmark }}</td></tr>
+            <tr><th>VNC Bind Address</th><td>{{ info.hvparams.vnc_bind_address }}</td></tr>
+            <tr><th>VNC Password File</th><td>{{ info.hvparams.vnc_password_file }}</td></tr>
+            <tr><th>VNC TLS</th><td>{{ info.hvparams.vnc_tls|checkmark }}</td></tr>
+            <tr><th>VNC x509 Path</th><td>{{ info.hvparams.vnc_x509_path }}</td></tr>
+            <tr><th>VNC x509 Verify</th><td>{{ info.hvparams.vnc_x509_verify|checkmark }}</td></tr>
+        </table>
+
+        {% endwith %}
     </div>
 </div>
 {% endblock %}

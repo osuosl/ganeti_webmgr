@@ -91,6 +91,8 @@
             {% endif %}
             </td></tr>
             <tr><td>Last modified</td><td >{{ cluster.mtime|date }}</td></tr>
+            <tr><td>Virtual Machines</td><td>{{ cluster.virtual_machines.count }}</td></tr>
+            <tr><td>Nodes</td><td>{{ cluster.nodes.count }}</td></tr>
             {% endwith %}
         </table>
     </div>

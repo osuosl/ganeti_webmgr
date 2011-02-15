@@ -176,7 +176,7 @@
             {% else %}
                 <tr class="jerror" id="jerror_{{error.pk}}">
                     {% include "overview/object_link.html" %}
-                    <td>Job #{{error.job_id}}: {{ error.current_operation|format_job_op }}</td>
+                    <td><a href="{% url job-detail error.cluster.slug error.job_id %}">Job #{{error.job_id}}: {{ error.current_operation|format_job_op }}</td>
                     <td>{{ error.finished|date }}</td>
                     <td><div class="clear" title="clear message"></div></td>
                 </tr>
