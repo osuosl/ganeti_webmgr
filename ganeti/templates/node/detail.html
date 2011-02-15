@@ -154,7 +154,7 @@
             </tr>
             <tr><th>Primary IP</th><td>{{node.info.pip}}</td></tr>
             <tr><th>Secondary IP</th><td>{{node.info.sip}}</td></tr>
-            <tr><th>Role</th><td>{{node.info.role}}</td></tr>
+            <tr><th>Role</th><td>{{node.info.role|node_role}}</td></tr>
             <tr><th>Master Candidate</th><td>{{node.info.master_candidate|checkmark}}</td></tr>
             <tr><th>Drained</th><td>{{node.info.drained|checkmark}}</td></tr>
             <tr><th>Ram</th><td class="ram">{% node_memory node %}</td></tr>
