@@ -25,6 +25,7 @@ from django.contrib.contenttypes.generic import GenericForeignKey
 from django.utils.encoding import force_unicode
 from django.db.utils import DatabaseError
 from django.template.loader import get_template
+from django.template import Context
 
 _DELAYED = []
 
@@ -48,12 +49,12 @@ class LogActionManager(models.Manager):
         """
         try:
             action = self._cache[self.db][key]
+            action.save()
         except KeyError:
             action, new = LogAction.objects.get_or_create(name=key, \
             template=template)
-            # load into cache
             self._cache.setdefault(self.db, {})[key] = action
-            #self._template_cache.setdefault(self.db, {})[template] =
+            action.save()
         
         return action
     
@@ -84,7 +85,7 @@ class LogActionManager(models.Manager):
         try:
             action = self._cache[self.db][key]
         except KeyError:
-            action = LogAction.objects.get(name=key)
+            action = LogAction.objects.get(pk=key)
             self._cache.setdefault(self.db, {})[key]=action
         return action
 
@@ -99,6 +100,9 @@ class LogAction(models.Model):
     name = models.CharField(max_length=128, unique=True) #add, delete
     template = models.CharField(max_length=128, unique=True) #template to load
     objects = LogActionManager()
+    
+    def __str__(self):
+        return 'LogAction object with id: %s Name: %s Template: %s \n'%(self.id, self.name, self.template)
 
 
 class LogItemManager(models.Manager):
@@ -126,18 +130,22 @@ class LogItemManager(models.Manager):
         #from django.utils.encoding import smart_unicode
         # Uncomment below:
         #key = smart_unicode(key)
-        
+        dict = {}
         action = LogAction.objects.get_from_cache(key)
         
-        m = self.model(
-            id = None,
-            action = action,
-            timestamp = None,
-            user = user,
-            object1 = object1,
-            object2 = object2,
-            object3 = object3
-        )
+        dict['action'] = action
+        dict['id'] = None
+        dict['timestamp'] = None
+        dict['user'] = user
+        dict['object1'] = object1
+        
+        if object2 != None:
+            dict['object2'] = object2
+        
+        if object3 != None:
+            dict['object3'] = object3
+        
+        m = self.model(**dict)
         m.save()
         return m.id # occasionally someone needs this
 
@@ -147,7 +155,8 @@ class LogItem(models.Model):
     Single entry in log
     """
     action = models.ForeignKey(LogAction)
-    timestamp = models.DateTimeField(auto_now_add=True)
+    #action = models.CharField(max_length=128)
+    timestamp = models.DateTimeField(auto_now_add=True, )
     user = models.ForeignKey(User, related_name='log_items')
     
     object_type1 = models.ForeignKey(ContentType, \
@@ -172,17 +181,35 @@ class LogItem(models.Model):
     class Meta:
         ordering = ("timestamp", )
     
-    def __repr__(self):
+    def to_template(self):
         """
-        Renders single line log entry containing informations like:
+        Renders single line log entry containing information like:
         - date and extensive time
         - user who performed an action
         - action itself
         - object affected by the action
         """
+
+        template = get_template(self.action.template)
+        template.render(Context({"log_item": self}))
+
+        return template
         
-        template = get_template(LogAction.get_from_cache(action).template)
-        template.render({"log_item": self})
+    def __str__(self):
+        return 'time: %s user: %s object_type1: %s'%(self.timestamp, self.user, self.object_type1)
+    
+    def __repr__(self):
+        """
+        Renders single line log entry to a string, 
+        containing information like:
+        - date and extensive time
+        - user who performed an action
+        - action itself
+        - object affected by the action
+        """
+
+        template = get_template(self.action.template)
+        template = str(template.render(Context({"log_item": self})))
 
         return template
 
@@ -191,4 +218,3 @@ class LogItem(models.Model):
 LogAction.objects.register('EDIT', 'logs/edit.html')
 LogAction.objects.register('ADD', 'logs/add.html')
 LogAction.objects.register('DELETE', 'logs/delete.html')
-    

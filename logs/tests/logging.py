@@ -44,6 +44,11 @@ class LoggingTest(TestCase):
         
         #dict_ = globals()
         dict_["user2"] = user2
+        
+        LogAction.objects.register('EDIT', 'logs/edit.html')
+        LogAction.objects.register('ADD', 'logs/add.html')
+        LogAction.objects.register('DELETE', 'logs/delete.html')
+    
 
     def tearDown(self):
         User.objects.all().delete()
@@ -59,20 +64,23 @@ class LoggingTest(TestCase):
         Verifies:
             * LogItem, LogAction are created/deleted properly
         """
+        
+        self.assertEqual(len(LogItem.objects.all()), 0)
+        self.assertEqual(len(LogAction.objects.all()), 3)
+        
         act1 = LogAction.objects.register('test', 'logs/test.html')
         act1.save()
-        self.assertEqual(len(LogAction.objects.all()), 1)
-
+        
         pk1 = LogItem.objects.log_action("EDIT", user1, user2,)
         pk2 = LogItem.objects.log_action("DELETE", user1, user2,)
 
         self.assertEqual(len(LogItem.objects.all()), 2)
-        self.assertEqual(len(LogAction.objects.all()), 2)
+        self.assertEqual(len(LogAction.objects.all()), 4)
         
         pk3 = LogItem.objects.log_action("test", user1, user2,)
         
         self.assertEqual(len(LogItem.objects.all()), 3)
-        self.assertEqual(len(LogAction.objects.all()), 3)
+        self.assertEqual(len(LogAction.objects.all()), 4)
 
     def test_log_representation(self):
         """
@@ -81,16 +89,20 @@ class LoggingTest(TestCase):
         Verifies:
             * LogItem is represented properly
         """
-        pk1 = LogItem.objects.log_action("EDIT", user1, user2,)
-        #pk2 = LogItem.objects.log_action(user, user, "deleted")
+        
+        pk1 = LogItem.objects.log_action('EDIT', user1, user2,)
+        pk2 = LogItem.objects.log_action('DELETE', user1, user2,)
         item1 = LogItem.objects.get( pk=pk1 )
-        #item2 = LogItem.objects.get( pk=pk2 )
+        item2 = LogItem.objects.get( pk=pk2 )
+        
+        print repr(item1)
 
-        self.assertEqual(repr(item1),
-            'logs/edit.html',
+        
+        self.assertEqual(repr(item1), \
+            '\n\n[%s] %s edited %s %s \n\n\n\n'%(item1.timestamp, item1.user, item1.object_type1, item1.object1), \
         )
-        self.assertEqual(repr(item2),
-            "[%s] user testing deleted user \"testing\"" % item2.timestamp,
+        self.assertEqual(repr(item2), \
+            "[%s] user testing deleted user Joe User" % item2.timestamp, \
         )
 
     def test_caching(self):

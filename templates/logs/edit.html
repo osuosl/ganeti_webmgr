@@ -1,6 +1,6 @@
 {% load log_tags  %}
 
-[{{log_item.timestamp|date}}] {{log_item.user}} edited {{log_item.object1}}: {{class_name(log_item.object1)}}
+[{{log_item.timestamp|date}}] {{log_item.user}} edited {{log_item.object_type1}} {{log_item.object1}} 
 
 
 
