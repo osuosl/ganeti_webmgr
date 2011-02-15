@@ -2,20 +2,24 @@
 
 {% block head %}
 <style>
-#vm_summary h2 { margin-top:20px; }
-#vm_summary table, #vm_summary h2, #vm_summary tbody { margin:auto;width:80%; }
+div.info {float:left;width:390px;margin:0px;}
+#vm_summary {width:390px;float:left;margin-right:10px;}
+#vm_summary h2 {margin-top:0px;}
+#vm_summary h2 a {color:white;}
+form {float:left;clear:left;}
+form input.submit {margin:1em .5em 0px 0px;}
 </style>
 {% endblock %}
 {% block content %}
 <h1>Confirm Changes</h1>
 <div id="vm_summary">
     <table>
-        <h2>{{ instance.hostname }}</h2>
-        <tbody>
-        {% for item in instance_diff %}
-            <tr><td>{{ item }}</td></tr>
+        <h2><a href="{% url instance-detail cluster.slug instance.hostname %}">{{ instance.hostname }}</a></h2>
+        {% for k, v in instance_diff.items %}
+            <tr><th>{{ k|capfirst }}</th><td>{{ v|capfirst }}</td></tr>
+        {% empty %}
+            <tr><td>Nothing changed.</td></tr>
         {% endfor %}
-        </tbody>
     </table>
 </div>
 {% with instance.info.status as status %}
@@ -30,12 +34,12 @@
 {% endifequal %}
 <form method="post">
     {{ form.as_p }}
-    <input type="submit" name="edit" value="Edit">
+    <input class="submit" type="submit" name="edit" value="Edit">
 {% ifequal status "running" %}
-    <input type="submit" name="reboot" value="Reboot">
+    <input class="submit" type="submit" name="reboot" value="Reboot">
 {% endifequal %}
-    <input type="submit" name="save" value="Save">
-    <input type="submit" name="cancel" value="Cancel">
+    <input class="submit" type="submit" name="save" value="Save">
+    <input class="submit" type="submit" name="cancel" value="Cancel">
 </form>
 {% endwith %}
 {% endblock %}

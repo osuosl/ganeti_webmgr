@@ -41,6 +41,7 @@ from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine, \
 from ganeti.views import render_403
 from ganeti.forms.virtual_machine import NewVirtualMachineForm, \
     ModifyVirtualMachineForm, ModifyConfirmForm, MigrateForm
+from ganeti.templatetags.webmgr_tags import render_storage
 from ganeti.utilities import cluster_default_info, cluster_os_list, \
     compare
 
@@ -740,13 +741,15 @@ def modify_confirm(request, cluster_slug, instance):
             vcpus=data['vcpus'],
         )
 
-        instance_diff = []
+        instance_diff = {}
         for key in old_set.keys():
-            diff = compare(old_set[key], new_set[key])
+            if key == 'ram':
+                diff = compare(render_storage(old_set[key]), \
+                    render_storage(new_set[key]))
+            else:
+                diff = compare(old_set[key], new_set[key])
             if diff != "":
-                instance_diff.append("%s %s." % (key.capitalize(),diff))
-        if not instance_diff:
-            instance_diff.append("Nothing changed.")
+                instance_diff[key] = diff
 
         form.fields['rapi_dict'] = CharField(widget=HiddenInput, \
             initial=json.dumps(new_set)) 
