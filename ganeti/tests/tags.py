@@ -1,3 +1,4 @@
+# vim: set fileencoding=utf8 :
 import unittest
 
 from ganeti.templatetags import webmgr_tags as tags
@@ -11,7 +12,7 @@ class TestFilters(unittest.TestCase):
         self.assertEqual(tags.truncate("test", 4), "test")
 
     def test_truncate_length(self):
-        self.assertEqual(tags.truncate("testing", 6), "tes...")
+        self.assertEqual(tags.truncate("testing", 6), u"testi…")
 
     def test_abbreviate_fqdn(self):
         self.assertEqual(tags.abbreviate_fqdn("subdomain.example.com"),
