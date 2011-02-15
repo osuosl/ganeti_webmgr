@@ -237,33 +237,6 @@
             <tr><th>Autostart</th><td>{{ info.admin_state|checkmark }}</td></tr>
         </table>
 
-        <h3>Hypervisor</h3>
-        <table class="horizontal">
-            <tr><th>ACPI</th><td>{{ info.hvparams.acpi|checkmark }}</td></tr>
-            <tr><th>Boot Order</th><td>{{ info.hvparams.boot_order }}</td></tr>
-            <tr><th>CDROM Image Path</th><td>{{ info.hvparams.cdrom_image_path }}</td></tr>
-            <tr><th>Disk Cache</th><td>{{ info.hvparams.disk_cache }}</td></tr>
-            <tr><th>initrd Path</th><td>{{ info.hvparams.initrd_path }}</td></tr>
-            <tr><th>Kernel Args</th><td>{{ info.hvparams.kernel_args }}</td></tr>
-            <tr><th>Kernel Path</th><td>{{ info.hvparams.kernel_path }}</td></tr>
-            <tr><th>KVM Flag</th><td>{{ info.hvparams.kvm_flag }}</td></tr>
-            <tr><th>Mem Path</th><td>{{ info.hvparams.mem_path }}</td></tr>
-            <tr><th>Migration Downtime</th><td>{{ info.hvparams.migration_downtime }}</td></tr>
-            <tr><th>Nic Type</th><td>{{ info.hvparams.nic_type }}</td></tr>
-            <tr><th>Root Path</th><td>{{ info.hvparams.root_path }}</td></tr>
-            <tr><th>Security Domain</th><td>{{ info.hvparams.security_domain }}</td></tr>
-            <tr><th>Security Model</th><td>{{ info.hvparams.security_model }}</td></tr>
-            <tr><th>Serial Console</th><td>{{ info.hvparams.serial_console|checkmark }}</td></tr>
-            <tr><th>USB Mouse</th><td>{{ info.hvparams.usb_mouse }}</td></tr>
-            <tr><th>Use Chroot</th><td>{{ info.hvparams.use_chroot|checkmark }}</td></tr>
-            <tr><th>Use Localtime</th><td>{{ info.hvparams.use_localtime|checkmark }}</td></tr>
-            <tr><th>VNC Bind Address</th><td>{{ info.hvparams.vnc_bind_address }}</td></tr>
-            <tr><th>VNC Password File</th><td>{{ info.hvparams.vnc_password_file }}</td></tr>
-            <tr><th>VNC TLS</th><td>{{ info.hvparams.vnc_tls|checkmark }}</td></tr>
-            <tr><th>VNC x509 Path</th><td>{{ info.hvparams.vnc_x509_path }}</td></tr>
-            <tr><th>VNC x509 Verify</th><td>{{ info.hvparams.vnc_x509_verify|checkmark }}</td></tr>
-        </table>
-
         <h3>Hardware</h3>
         <table class="horizontal">
             <tr><th>VCPUs</th><td>{{ instance.virtual_cpus }}</td></tr>
@@ -305,6 +278,33 @@
                     <td>{{ info|index:'nic.links'|index:forloop.counter0 }}</td>
                 </tr>
             {% endfor %}
+        </table>
+
+        <h3>Hypervisor</h3>
+        <table class="horizontal">
+            <tr><th>ACPI</th><td>{{ info.hvparams.acpi|checkmark }}</td></tr>
+            <tr><th>Boot Order</th><td>{{ info.hvparams.boot_order }}</td></tr>
+            <tr><th>CDROM Image Path</th><td>{{ info.hvparams.cdrom_image_path }}</td></tr>
+            <tr><th>Disk Cache</th><td>{{ info.hvparams.disk_cache }}</td></tr>
+            <tr><th>initrd Path</th><td>{{ info.hvparams.initrd_path }}</td></tr>
+            <tr><th>Kernel Args</th><td>{{ info.hvparams.kernel_args }}</td></tr>
+            <tr><th>Kernel Path</th><td>{{ info.hvparams.kernel_path }}</td></tr>
+            <tr><th>KVM Flag</th><td>{{ info.hvparams.kvm_flag }}</td></tr>
+            <tr><th>Mem Path</th><td>{{ info.hvparams.mem_path }}</td></tr>
+            <tr><th>Migration Downtime</th><td>{{ info.hvparams.migration_downtime }}</td></tr>
+            <tr><th>Nic Type</th><td>{{ info.hvparams.nic_type }}</td></tr>
+            <tr><th>Root Path</th><td>{{ info.hvparams.root_path }}</td></tr>
+            <tr><th>Security Domain</th><td>{{ info.hvparams.security_domain }}</td></tr>
+            <tr><th>Security Model</th><td>{{ info.hvparams.security_model }}</td></tr>
+            <tr><th>Serial Console</th><td>{{ info.hvparams.serial_console|checkmark }}</td></tr>
+            <tr><th>USB Mouse</th><td>{{ info.hvparams.usb_mouse }}</td></tr>
+            <tr><th>Use Chroot</th><td>{{ info.hvparams.use_chroot|checkmark }}</td></tr>
+            <tr><th>Use Localtime</th><td>{{ info.hvparams.use_localtime|checkmark }}</td></tr>
+            <tr><th>VNC Bind Address</th><td>{{ info.hvparams.vnc_bind_address }}</td></tr>
+            <tr><th>VNC Password File</th><td>{{ info.hvparams.vnc_password_file }}</td></tr>
+            <tr><th>VNC TLS</th><td>{{ info.hvparams.vnc_tls|checkmark }}</td></tr>
+            <tr><th>VNC x509 Path</th><td>{{ info.hvparams.vnc_x509_path }}</td></tr>
+            <tr><th>VNC x509 Verify</th><td>{{ info.hvparams.vnc_x509_verify|checkmark }}</td></tr>
         </table>
 
         {% endwith %}
