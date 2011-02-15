@@ -1,3 +1,5 @@
+# vim: set fileencoding=utf8 :
+
 # Copyright (C) 2010 Oregon State University et al.
 # Copyright (C) 2010 Greek Research and Technology Network
 #
@@ -15,6 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
+from datetime import datetime
 
 from math import log10
 import re
@@ -24,7 +27,7 @@ from django import template
 from django.db.models import Count
 from django.template import Library, Node, TemplateSyntaxError
 from django.template.defaultfilters import stringfilter
-from django.utils.safestring import mark_safe
+from django.utils.safestring import mark_safe, SafeString
 
 from ganeti.models import Cluster
 
@@ -44,17 +47,35 @@ def vmfield(field):
 def class_name(obj):
     """ returns the modelname of the objects class """
     return obj.__class__.__name__
-    
+
+
+@register.filter
+def index(obj, index):
+    """ returns index of given object """
+    if obj:
+        return obj[index]
+
 
 @register.filter
 @stringfilter
 def truncate(value, count):
     """
-    Truncates value after specified number of chars
+    Truncates a string to be a certain length.
+
+    If the string is shorter than the specified length, it will returned
+    as-is.
     """
-    if count < len(value):
-        return value[:count] + " ..."
+
+    if len(value) > count:
+        return value[:count - 1] + u"…"
+
     return value
+
+
+@register.filter
+def timestamp(int):
+    """ converts a timestamp to a date """
+    return datetime.fromtimestamp(int)
 
 
 @register.filter
@@ -110,6 +131,16 @@ def is_drbd(vm):
     return 'drbd' == vm.info['disk_template']
 
 
+@register.filter
+def checkmark(bool):
+    """ converts a boolean into a checkmark if it is true """
+    if bool:
+        str_  = '<div class="check icon"></div>'
+    else:
+        str_ = '<div class="xmark icon"></div>'
+    return SafeString(str_)
+
+
 """
 These filters were taken from Russel Haering's GanetiWeb project
 """
@@ -163,6 +194,13 @@ def cluster_admin(user):
 @register.filter
 def format_job_op(op):
     return op[3:].replace("_", " ").title()
+
+
+@register.filter
+def format_job_log(log):
+    """ formats a ganeti job log for display on an html page """
+    formatted = log.replace('\n','<br/>')
+    return SafeString(formatted)
 
 
 def format_part_total(part, total):
