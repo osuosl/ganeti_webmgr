@@ -1,3 +1,5 @@
+# vim: set fileencoding=utf8 :
+
 # Copyright (C) 2010 Oregon State University et al.
 # Copyright (C) 2010 Greek Research and Technology Network
 #
@@ -58,10 +60,15 @@ def index(obj, index):
 @stringfilter
 def truncate(value, count):
     """
-    Truncates value after specified number of chars
+    Truncates a string to be a certain length.
+
+    If the string is shorter than the specified length, it will returned
+    as-is.
     """
-    if count < len(value):
-        return value[:count] + " ..."
+
+    if len(value) > count:
+        return value[:count - 1] + u"…"
+
     return value
 
 
