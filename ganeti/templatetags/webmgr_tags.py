@@ -23,13 +23,13 @@ from math import log10
 import re
 import json as json_lib
 
-from django import template
 from django.db.models import Count
 from django.template import Library, Node, TemplateSyntaxError
 from django.template.defaultfilters import stringfilter
 from django.utils.safestring import mark_safe, SafeString
 
 from ganeti.models import Cluster
+from ganeti.models import Node as GanetiNode
 
 
 register = Library()
@@ -141,6 +141,13 @@ def checkmark(bool):
     return SafeString(str_)
 
 
+@register.filter
+@stringfilter
+def node_role(code):
+    """ renders full role name from role code """
+    return GanetiNode.NODE_ROLE_MAP[str(code)]
+
+
 """
 These filters were taken from Russel Haering's GanetiWeb project
 """
@@ -167,10 +174,10 @@ def render_instance_status(status):
 def render_storage(value):
     amount = float(value)
     if amount >= 1024:
-        amount = amount / 1024.0
+        amount /= 1024.0
         if amount >= 1024:
             return "%.2f TiB" % (amount/1024)
-        return "%.2f GiB" % (amount)
+        return "%.2f GiB" % amount
     else:
         return "%d MiB" % int(amount)
 
