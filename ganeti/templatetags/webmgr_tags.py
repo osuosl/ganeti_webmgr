@@ -26,7 +26,7 @@ import json as json_lib
 from django.db.models import Count
 from django.template import Library, Node, TemplateSyntaxError
 from django.template.defaultfilters import stringfilter
-from django.utils.safestring import mark_safe, SafeString
+from django.utils.safestring import mark_safe
 
 from ganeti.models import Cluster
 from ganeti.models import Node as GanetiNode
@@ -138,7 +138,7 @@ def checkmark(bool):
         str_  = '<div class="check icon"></div>'
     else:
         str_ = '<div class="xmark icon"></div>'
-    return SafeString(str_)
+    return mark_safe(str_)
 
 
 @register.filter
@@ -217,7 +217,7 @@ def format_job_op(op):
 def format_job_log(log):
     """ formats a ganeti job log for display on an html page """
     formatted = log.replace('\n','<br/>')
-    return SafeString(formatted)
+    return mark_safe(formatted)
 
 
 def format_part_total(part, total):
