@@ -12,10 +12,8 @@
     }
 </style>
 
-<script type="text/javascript"
-        src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
-<script type="text/javascript" 
-        src="{{MEDIA_URL}}/js/jquery.tablesorter.min.js"></script>
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.tablesorter.min.js"></script>
 <script type="text/javascript">
     function ajax_get_update() {
         {% if cluster %}
@@ -88,25 +86,14 @@
 {% endblock %}
 
 {% if cluster %}
-    <a class="button add" href="{% url instance-create cluster.slug %}">
-        Add Virtual Machine
-    </a>
+    <a class="button add" href="{% url instance-create cluster.slug %}">Add Virtual Machine</a>
 {% else %}
     {% if can_create %}
-    <a class="button add" href="{% url instance-create %}">
-        Add Virtual Machine
-    </a>
+    <a class="button add" href="{% url instance-create %}">Add Virtual Machine</a>
     {% endif %}
 {% endif %}
 
 <div id="vm-wrapper">
-    {% include "virtual_machine/inner_table.html" %}
+{% include "virtual_machine/inner_table.html" %}
 </div>
-
-<div class="spinner" >
-    <br/>
-    Loading...
-    <br/>
-    <br/>
-    <img src='{{ MEDIA_URL }}/images/ajax-loader.gif'>
-</div>
+<div class="spinner" ><br/>Loading...<br/><br/><img src='{{ MEDIA_URL }}/images/ajax-loader.gif'></div>
