@@ -276,6 +276,44 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
         'iallocator', 'iallocator_hostname', 'disk_template', 'pnode', 'snode',\
         'os', 'disk_size', 'nicmode', 'template_name')
 
+    disk_caches = [
+        (u'default',u'Default'),
+        (u'writethrough',u'Writethrough'),
+        (u'writeback',u'Writeback'),
+    ]
+    security_models = [
+        (u'none',u'None'),
+        (u'user',u'User'),
+        (u'pool',u'Pool'),
+    ]
+    usb_mice = [
+        (u'mouse',u'Mouse'),
+        (u'tablet',u'Tablet'),
+    ]
+
+    acpi = forms.BooleanField(label='ACPI', required=False)
+    disk_cache = forms.ChoiceField(label='Disk Cache', required=False, \
+        choices=disk_caches)
+    initrd_path = forms.CharField(label='initrd Path', required=False)
+    kernel_args = forms.CharField(label='Kernel Args', required=False)
+    kvm_flag = forms.BooleanField(label='KVM Flag', required=False)
+    mem_path = forms.CharField(label='Mem Path', required=False)
+    migration_downtime = forms.IntegerField(label='Migration Downtime', \
+        required=False)
+    security_model = forms.ChoiceField(label='Security Model', \
+        required=False, choices=security_models)
+    security_domain = forms.CharField(label='Security Domain', required=False)
+    usb_mouse = forms.ChoiceField(label='USB Mouse', required=False, \
+        choices=usb_mice)
+    use_chroot = forms.BooleanField(label='Use Chroot', required=False)
+    use_localtime = forms.BooleanField(label='Use Localtime', required=False)
+    vnc_bind_address = forms.IPAddressField(label='VNC Bind Address', \
+        required=False)
+    vnc_tls = forms.BooleanField(label='VNC TLS', required=False)
+    vnc_x509_path = forms.CharField(label='VNC x509 Path', required=False)
+    vnc_x509_verify = forms.BooleanField(label='VNC x509 Verify', \
+        required=False)
+
     class Meta:
         model = VirtualMachineTemplate
 
@@ -299,4 +337,4 @@ class MigrateForm(forms.Form):
         ('non-live','Non-Live'),
     )
 
-    mode = forms.ChoiceField(choices=MODE_CHOICES)
+    mode = forms.ChoiceField(choices=MODE_CHOICES) 
