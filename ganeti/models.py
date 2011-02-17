@@ -995,23 +995,23 @@ class VirtualMachineTemplate(models.Model):
     # BEPARAMS
     vcpus = models.IntegerField(verbose_name='Virtual CPUs', \
                 validators=[MinValueValidator(1)])
-    ram = models.IntegerField(verbose_name='Memory', \
+    memory = models.IntegerField(verbose_name='Memory', \
                 validators=[MinValueValidator(100)])
     disk_size = models.IntegerField(verbose_name='Disk Size', \
                 validators=[MinValueValidator(100)])
     disk_type = models.CharField(verbose_name='Disk Type', max_length=255)
-    nicmode = models.CharField(verbose_name='NIC Mode', max_length=255)
-    niclink = models.CharField(verbose_name='NIC Link', max_length=255, \
+    nic_mode = models.CharField(verbose_name='NIC Mode', max_length=255)
+    nic_link = models.CharField(verbose_name='NIC Link', max_length=255, \
                 null=True, blank=True)
-    nictype = models.CharField(verbose_name='NIC Type', max_length=255)
+    nic_type = models.CharField(verbose_name='NIC Type', max_length=255)
     # HVPARAMS
-    kernelpath = models.CharField(verbose_name='Kernel Path', null=True, \
+    kernel_path = models.CharField(verbose_name='Kernel Path', null=True, \
                 blank=True, max_length=255)
-    rootpath = models.CharField(verbose_name='Root Path', default='/', \
+    root_path = models.CharField(verbose_name='Root Path', default='/', \
                 max_length=255)
-    serialconsole = models.BooleanField(verbose_name='Enable Serial Console')
-    bootorder = models.CharField(verbose_name='Boot Device', max_length=255)
-    imagepath = models.CharField(verbose_name='CD-ROM Image Path', null=True, \
+    serial_console = models.BooleanField(verbose_name='Enable Serial Console')
+    boot_order = models.CharField(verbose_name='Boot Device', max_length=255)
+    cdrom_image_path = models.CharField(verbose_name='CD-ROM Image Path', null=True, \
                 blank=True, max_length=512)
 
     def __unicode__(self):

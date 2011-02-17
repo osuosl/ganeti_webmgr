@@ -515,18 +515,18 @@ def create(request, cluster_slug=None):
             # BEPARAMS
             vcpus = data['vcpus']
             disk_size = data['disk_size']
-            ram = data['ram']
-            nicmode = data['nicmode']
-            niclink = data['niclink']
-            nictype = data['nictype']
+            memory = data['memory']
+            nic_mode = data['nic_mode']
+            nic_link = data['nic_link']
+            nic_type = data['nic_type']
             # HVPARAMS
             disktype = data['disk_type']
 
-            kernelpath = data['kernelpath']
-            rootpath = data['rootpath']
-            serialconsole = data['serialconsole']
-            bootorder = data['bootorder']
-            imagepath = data['imagepath']
+            kernel_path = data['kernel_path']
+            root_path = data['root_path']
+            serial_console = data['serial_console']
+            boot_order = data['boot_order']
+            cdrom_image_path = data['cdrom_image_path']
 
             # If iallocator was not checked do not pass in the iallocator
             #  name. If iallocator was checked don't pass snode,pnode.
@@ -549,23 +549,23 @@ def create(request, cluster_slug=None):
                 
                 job_id = cluster.rapi.CreateInstance('create', hostname,
                         disk_template,
-                        [{"size": disk_size, }],[{'mode':nicmode, 'link':niclink, }],
+                        [{"size": disk_size, }],[{'mode':nic_mode, 'link':nic_link, }],
                         start=start, os=os, vcpus=vcpus,
                         pnode=pnode, snode=snode,
                         name_check=name_check, ip_check=name_check,
                         iallocator=iallocator_hostname,
-                        hvparams={'kernel_path': kernelpath, \
-                            'root_path': rootpath, \
-                            'serial_console':serialconsole, \
-                            'boot_order':bootorder, \
-                            'nic_type':nictype, \
+                        hvparams={'kernel_path': kernel_path, \
+                            'root_path': root_path, \
+                            'serial_console':serial_console, \
+                            'boot_order':boot_order, \
+                            'nic_type':nic_type, \
                             'disk_type':disktype,\
-                            'cdrom_image_path':imagepath},
-                        beparams={"memory": ram})
+                            'cdrom_image_path':cdrom_image_path},
+                        beparams={"memory": memory})
                 
                 vm = VirtualMachine(cluster=cluster, owner=owner,
                                     hostname=hostname, disk_size=disk_size,
-                                    ram=ram, virtual_cpus=vcpus)
+                                    ram=memory, virtual_cpus=vcpus)
                 vm.ignore_cache = True
                 vm.save()
                 job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
@@ -629,15 +629,15 @@ def modify(request, cluster_slug, instance):
                 #  from ganeti as an int and the DataVolumeField does not like
                 #  ints.
                 initial['vcpus'] = info['beparams']['vcpus']
-                initial['ram'] = str(info['beparams']['memory'])
+                initial['memory'] = str(info['beparams']['memory'])
                 initial['disk_type'] = hvparams['disk_type']
-                initial['bootorder'] = hvparams['boot_order']
-                initial['nictype'] = hvparams['nic_type']
-                initial['niclink'] = info['nic.links'][0]
-                initial['rootpath'] = hvparams['root_path']
-                initial['kernelpath'] = hvparams['kernel_path']
-                initial['serialconsole'] = hvparams['serial_console']
-                initial['imagepath'] = hvparams['cdrom_image_path']
+                initial['boot_order'] = hvparams['boot_order']
+                initial['nic_type'] = hvparams['nic_type']
+                initial['nic_link'] = info['nic.links'][0]
+                initial['root_path'] = hvparams['root_path']
+                initial['kernel_path'] = hvparams['kernel_path']
+                initial['serial_console'] = hvparams['serial_console']
+                initial['cdrom_image_path'] = hvparams['cdrom_image_path']
             form = ModifyVirtualMachineForm(user, cluster, initial=initial)
 
     return render_to_response("virtual_machine/edit.html", {
@@ -672,15 +672,15 @@ def modify_confirm(request, cluster_slug, instance):
                 # Modify Instance rapi call
                 rapi_dict = json.loads(data['rapi_dict'])
                 job_id = cluster.rapi.ModifyInstance(instance,
-                    nics=[(0, {'link':rapi_dict['niclink'], }),], \
-                    hvparams={'kernel_path': rapi_dict['kernelpath'], \
-                        'root_path': rapi_dict['rootpath'], \
-                        'serial_console':rapi_dict['serialconsole'], \
-                        'boot_order':rapi_dict['bootorder'], \
-                        'nic_type':rapi_dict['nictype'], \
+                    nics=[(0, {'link':rapi_dict['nic_link'], }),], \
+                    hvparams={'kernel_path': rapi_dict['kernel_path'], \
+                        'root_path': rapi_dict['root_path'], \
+                        'serial_console':rapi_dict['serial_console'], \
+                        'boot_order':rapi_dict['boot_order'], \
+                        'nic_type':rapi_dict['nic_type'], \
                         'disk_type':rapi_dict['disk_type'], \
-                        'cdrom_image_path':rapi_dict['imagepath']}, \
-                    beparams={'vcpus':rapi_dict['vcpus'],'memory': rapi_dict['ram']}
+                        'cdrom_image_path':rapi_dict['cdrom_image_path']}, \
+                    beparams={'vcpus':rapi_dict['vcpus'],'memory': rapi_dict['memory']}
                 )
                 # Create job and update message on virtual machine detail page
                 job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
@@ -716,34 +716,34 @@ def modify_confirm(request, cluster_slug, instance):
         hvparams = info['hvparams']
 
         old_set = dict(
-            bootorder=hvparams['boot_order'],
+            boot_order=hvparams['boot_order'],
             disk_type=hvparams['disk_type'],
-            imagepath=hvparams['cdrom_image_path'],
-            kernelpath=hvparams['kernel_path'],
-            niclink=info['nic.links'][0],
-            nictype=hvparams['nic_type'],
-            ram=info['beparams']['memory'],
-            rootpath=hvparams['root_path'],
-            serialconsole=hvparams['serial_console'],
+            cdrom_image_path=hvparams['cdrom_image_path'],
+            kernel_path=hvparams['kernel_path'],
+            nic_link=info['nic.links'][0],
+            nic_type=hvparams['nic_type'],
+            memory=info['beparams']['memory'],
+            root_path=hvparams['root_path'],
+            serial_console=hvparams['serial_console'],
             vcpus=info['beparams']['vcpus'],
         )
         
         new_set = dict(
-            bootorder=data['bootorder'],
+            boot_order=data['boot_order'],
             disk_type=data['disk_type'],
-            imagepath=data['imagepath'],
-            kernelpath=data['kernelpath'],
-            niclink=data['niclink'],
-            nictype=data['nictype'],
-            ram=data['ram'],
-            rootpath=data['rootpath'],
-            serialconsole=data['serialconsole'],
+            cdrom_image_path=data['cdrom_image_path'],
+            kernel_path=data['kernel_path'],
+            nic_link=data['nic_link'],
+            nic_type=data['nic_type'],
+            memory=data['memory'],
+            root_path=data['root_path'],
+            serial_console=data['serial_console'],
             vcpus=data['vcpus'],
         )
 
         instance_diff = {}
         for key in old_set.keys():
-            if key == 'ram':
+            if key == 'memory':
                 diff = compare(render_storage(old_set[key]), \
                     render_storage(new_set[key]))
             else:
