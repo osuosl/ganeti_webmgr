@@ -26,3 +26,8 @@ class TestFilters(unittest.TestCase):
 
     def test_mult_strings(self):
         self.assertEqual(tags.mult("-3", "6"), -18)
+
+    def test_render_storage(self):
+        self.assertEqual(tags.render_storage(1), "1 MiB")
+        self.assertEqual(tags.render_storage(1025), "1.00 GiB")
+        self.assertEqual(tags.render_storage(1049600), "1.0010 TiB")

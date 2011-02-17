@@ -172,14 +172,24 @@ def render_instance_status(status):
 @register.filter
 @stringfilter
 def render_storage(value):
+    """
+    Render an amount of storage.
+
+    The value should be in mibibytes.
+    """
+
     amount = float(value)
+
     if amount >= 1024:
-        amount /= 1024.0
+        amount /= 1024
+
         if amount >= 1024:
-            return "%.2f TiB" % (amount/1024)
+            amount /= 1024
+            return "%.4f TiB" % amount
+
         return "%.2f GiB" % amount
     else:
-        return "%d MiB" % int(amount)
+        return "%d MiB" % amount
 
 
 @register.filter
