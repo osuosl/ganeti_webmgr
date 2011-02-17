@@ -678,10 +678,13 @@ def modify_confirm(request, cluster_slug, instance):
                     reverse("instance-modify", \
                     args=[cluster.slug, vm.hostname]))
             elif 'reboot' in request.POST or 'save' in request.POST:
-                # Modify Instance rapi call
                 rapi_dict = json.loads(data['rapi_dict'])
+                niclink = rapi_dict.pop('niclink')
+                vcpus = rapi_dict.pop('vcpus')
+                memory = rapi_dict.pop('ram')
+                # Modify Instance rapi call
                 job_id = cluster.rapi.ModifyInstance(instance,
-                    nics=[(0, {'link':rapi_dict['niclink'], }),], \
+                    nics=[(0, {'link':niclink, }),], \
                     hvparams={'kernel_path': rapi_dict['kernelpath'], \
                         'root_path': rapi_dict['rootpath'], \
                         'serial_console':rapi_dict['serialconsole'], \
@@ -689,7 +692,7 @@ def modify_confirm(request, cluster_slug, instance):
                         'nic_type':rapi_dict['nictype'], \
                         'disk_type':rapi_dict['disk_type'], \
                         'cdrom_image_path':rapi_dict['imagepath']}, \
-                    beparams={'vcpus':rapi_dict['vcpus'],'memory': rapi_dict['ram']}
+                    beparams={'vcpus':vcpus,'memory':memory}
                 )
                 # Create job and update message on virtual machine detail page
                 job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
