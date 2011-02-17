@@ -286,7 +286,13 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
         (u'user',u'User'),
         (u'pool',u'Pool'),
     ]
+    kvm_flags = [
+        (u'', u'---------'),
+        (u'enabled', u'Enabled'),
+        (u'disabled', u'Disabled'),
+    ]
     usb_mice = [
+        (u'', u'---------'),
         (u'mouse',u'Mouse'),
         (u'tablet',u'Tablet'),
     ]
@@ -296,7 +302,8 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
         choices=disk_caches)
     initrd_path = forms.CharField(label='initrd Path', required=False)
     kernel_args = forms.CharField(label='Kernel Args', required=False)
-    kvm_flag = forms.BooleanField(label='KVM Flag', required=False)
+    kvm_flag = forms.ChoiceField(label='KVM Flag', required=False, \
+        choices=kvm_flags)
     mem_path = forms.CharField(label='Mem Path', required=False)
     migration_downtime = forms.IntegerField(label='Migration Downtime', \
         required=False)

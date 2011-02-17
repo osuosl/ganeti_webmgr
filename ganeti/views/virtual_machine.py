@@ -628,9 +628,15 @@ def modify(request, cluster_slug, instance):
                 # XXX Convert ram string since it comes out
                 #  from ganeti as an int and the DataVolumeField does not like
                 #  ints.
+                fields = ('acpi', 'disk_cache', 'initrd_path', 'kernel_args', \
+                    'kvm_flag', 'mem_path', 'migration_downtime', \
+                    'security_domain', 'security_model', 'usb_mouse', \
+                    'use_chroot', 'use_localtime', 'vnc_bind_address', \
+                    'vnc_tls', 'vnc_x509_path', 'vnc_x509_verify', \
+                    'disk_type',
+                )
                 initial['vcpus'] = info['beparams']['vcpus']
                 initial['ram'] = str(info['beparams']['memory'])
-                initial['disk_type'] = hvparams['disk_type']
                 initial['bootorder'] = hvparams['boot_order']
                 initial['nictype'] = hvparams['nic_type']
                 initial['niclink'] = info['nic.links'][0]
@@ -638,6 +644,9 @@ def modify(request, cluster_slug, instance):
                 initial['kernelpath'] = hvparams['kernel_path']
                 initial['serialconsole'] = hvparams['serial_console']
                 initial['imagepath'] = hvparams['cdrom_image_path']
+                for field in fields:
+                    initial[field] = hvparams[field]
+
             form = ModifyVirtualMachineForm(user, cluster, initial=initial)
 
     return render_to_response("virtual_machine/edit.html", {
@@ -717,7 +726,6 @@ def modify_confirm(request, cluster_slug, instance):
 
         old_set = dict(
             bootorder=hvparams['boot_order'],
-            disk_type=hvparams['disk_type'],
             imagepath=hvparams['cdrom_image_path'],
             kernelpath=hvparams['kernel_path'],
             niclink=info['nic.links'][0],
@@ -727,32 +735,28 @@ def modify_confirm(request, cluster_slug, instance):
             serialconsole=hvparams['serial_console'],
             vcpus=info['beparams']['vcpus'],
         )
-        
-        new_set = dict(
-            bootorder=data['bootorder'],
-            disk_type=data['disk_type'],
-            imagepath=data['imagepath'],
-            kernelpath=data['kernelpath'],
-            niclink=data['niclink'],
-            nictype=data['nictype'],
-            ram=data['ram'],
-            rootpath=data['rootpath'],
-            serialconsole=data['serialconsole'],
-            vcpus=data['vcpus'],
-        )
+
+        # Add hvparams that do not have changed field names
+        #  to the old_set
+        for key, value in hvparams.items():
+            old_set[key] = value
 
         instance_diff = {}
-        for key in old_set.keys():
+        for key in data.keys():
             if key == 'ram':
                 diff = compare(render_storage(old_set[key]), \
-                    render_storage(new_set[key]))
+                    render_storage(data[key]))
+            elif key not in old_set.keys():
+                diff = ""
+                instance_diff[key] = 'Key missing'
             else:
-                diff = compare(old_set[key], new_set[key])
+                diff = compare(old_set[key], data[key])
+
             if diff != "":
                 instance_diff[key] = diff
-
+        # Repopulate form with changed values
         form.fields['rapi_dict'] = CharField(widget=HiddenInput, \
-            initial=json.dumps(new_set)) 
+            initial=json.dumps(data)) 
 
     return render_to_response('virtual_machine/edit_confirm.html', {
         'cluster': cluster,
