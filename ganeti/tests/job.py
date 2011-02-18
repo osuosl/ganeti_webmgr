@@ -231,7 +231,6 @@ class TestJobViews(TestJobMixin, TestCase, UserTestMixin, ViewTestMixin):
         # authorized for vm
         def tests(user, response):
             error = Job.objects.get(pk=vm_error.pk)
-            print user.get_profile().pk
             self.assertTrue(error.cleared, 'error was not marked cleared')
             Job.objects.all().update(cleared=False)
         self.assert_200(url, args, users=[superuser, cluster_admin, vm_admin, vm_owner], \
