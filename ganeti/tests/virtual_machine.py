@@ -75,13 +75,17 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         User.objects.all().delete()
         Group.objects.all().delete()
         ClusterUser.objects.all().delete()
-    
+
     def test_trivial(self):
         """
-        Test instantiating a VirtualMachine
+        Test the test case's setUp().
         """
+
+        pass
+
+    def test_instantiate(self):
         VirtualMachine()
-    
+
     def test_non_trivial(self):
         """
         Test instantiating a VirtualMachine with extra parameters
@@ -115,10 +119,7 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         # test unique constraints
         vm = VirtualMachine(cluster=cluster, hostname=vm_hostname)
         self.assertRaises(IntegrityError, vm.save)
-        
-        # Remove cluster
-        Cluster.objects.all().delete()
-    
+
     def test_save(self):
         """
         Test saving a VirtualMachine
