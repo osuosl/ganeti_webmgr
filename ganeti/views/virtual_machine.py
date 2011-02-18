@@ -496,47 +496,38 @@ def create(request, cluster_slug=None):
         form = NewVirtualMachineForm(user, None, request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            start = data['start']
-            owner = data['owner']
-            cluster = data['cluster']
-            hostname = data['hostname']
-            disk_template = data['disk_template']
+            start = data.pop('start')
+            owner = data.pop('owner')
+            cluster = data.pop('cluster')
+            hostname = data.pop('hostname')
+            disk_template = data.pop('disk_template')
             # Default to not pass in pnode and snode
             #  since these will be set if the form is correct
             pnode = None
             snode = None
-            os = data['os']
-            name_check = data['name_check']
-            iallocator = data['iallocator']
+            os = data.pop('os')
+            name_check = data.pop('name_check')
+            iallocator = data.pop('iallocator')
             # Hidden fields
             iallocator_hostname = None
             if 'iallocator_hostname' in data:
-                iallocator_hostname = data['iallocator_hostname']
+                iallocator_hostname = data.pop('iallocator_hostname')
             # BEPARAMS
-            vcpus = data['vcpus']
-            disk_size = data['disk_size']
-            memory = data['memory']
-            nic_mode = data['nic_mode']
-            nic_link = data['nic_link']
-            nic_type = data['nic_type']
-            # HVPARAMS
-            disktype = data['disk_type']
-
-            kernel_path = data['kernel_path']
-            root_path = data['root_path']
-            serial_console = data['serial_console']
-            boot_order = data['boot_order']
-            cdrom_image_path = data['cdrom_image_path']
-
+            vcpus = data.pop('vcpus')
+            disk_size = data.pop('disk_size')
+            memory = data.pop('memory')
+            nic_mode = data.pop('nic_mode')
+            nic_link = data.pop('nic_link')
+            nic_type = data.pop('nic_type')
             # If iallocator was not checked do not pass in the iallocator
             #  name. If iallocator was checked don't pass snode,pnode.
             if not iallocator:
                 iallocator_hostname = None
-                pnode = data['pnode']
+                pnode = data.pop('pnode')
 
             # If drbd is being used assign the secondary node
             if disk_template == 'drbd' and pnode is not None:
-                snode = data['snode']
+                snode = data.pop('snode')
 
             try:
                 # XXX attempt to load the virtual machine.  This ensure that if
@@ -554,13 +545,7 @@ def create(request, cluster_slug=None):
                         pnode=pnode, snode=snode,
                         name_check=name_check, ip_check=name_check,
                         iallocator=iallocator_hostname,
-                        hvparams={'kernel_path': kernel_path, \
-                            'root_path': root_path, \
-                            'serial_console':serial_console, \
-                            'boot_order':boot_order, \
-                            'nic_type':nic_type, \
-                            'disk_type':disktype,\
-                            'cdrom_image_path':cdrom_image_path},
+                        hvparams=data,
                         beparams={"memory": memory})
                 
                 vm = VirtualMachine(cluster=cluster, owner=owner,
@@ -628,22 +613,17 @@ def modify(request, cluster_slug, instance):
                 # XXX Convert ram string since it comes out
                 #  from ganeti as an int and the DataVolumeField does not like
                 #  ints.
+                initial['vcpus'] = info['beparams']['vcpus']
+                initial['memory'] = str(info['beparams']['memory'])
+                initial['nic_link'] = info['nic.links'][0]
                 fields = ('acpi', 'disk_cache', 'initrd_path', 'kernel_args', \
                     'kvm_flag', 'mem_path', 'migration_downtime', \
                     'security_domain', 'security_model', 'usb_mouse', \
                     'use_chroot', 'use_localtime', 'vnc_bind_address', \
                     'vnc_tls', 'vnc_x509_path', 'vnc_x509_verify', \
-                    'disk_type',
+                    'disk_type', 'boot_order', 'nic_type', 'root_path', \
+                    'kernel_path', 'serial_console', 'cdrom_image_path',
                 )
-                initial['vcpus'] = info['beparams']['vcpus']
-                initial['ram'] = str(info['beparams']['memory'])
-                initial['boot_order'] = hvparams['boot_order']
-                initial['nic_type'] = hvparams['nic_type']
-                initial['nic_link'] = info['nic.links'][0]
-                initial['root_path'] = hvparams['root_path']
-                initial['kernel_path'] = hvparams['kernel_path']
-                initial['serial_console'] = hvparams['serial_console']
-                initial['cdrom_image_path'] = hvparams['cdrom_image_path']
                 for field in fields:
                     initial[field] = hvparams[field]
 
@@ -685,13 +665,7 @@ def modify_confirm(request, cluster_slug, instance):
                 # Modify Instance rapi call
                 job_id = cluster.rapi.ModifyInstance(instance,
                     nics=[(0, {'link':niclink, }),], \
-                    hvparams={'kernel_path': rapi_dict['kernel_path'], \
-                        'root_path': rapi_dict['root_path'], \
-                        'serial_console':rapi_dict['serial_console'], \
-                        'boot_order':rapi_dict['boot_order'], \
-                        'nic_type':rapi_dict['nic_type'], \
-                        'disk_type':rapi_dict['disk_type'], \
-                        'cdrom_image_path':rapi_dict['cdrom_image_path']}, \
+                    hvparams=rapi_dict, \
                     beparams={'vcpus':vcpus,'memory':memory}
                 )
                 # Create job and update message on virtual machine detail page
@@ -728,21 +702,12 @@ def modify_confirm(request, cluster_slug, instance):
         hvparams = info['hvparams']
 
         old_set = dict(
-            boot_order=hvparams['boot_order'],
-            cdrom_image_path=hvparams['cdrom_image_path'],
-            kernel_path=hvparams['kernel_path'],
             nic_link=info['nic.links'][0],
-            nic_type=hvparams['nic_type'],
             memory=info['beparams']['memory'],
-            root_path=hvparams['root_path'],
-            serial_console=hvparams['serial_console'],
             vcpus=info['beparams']['vcpus'],
         )
-
-        # Add hvparams that do not have changed field names
-        #  to the old_set
-        for key, value in hvparams.items():
-            old_set[key] = value
+        # Add hvparams to the old_set
+        old_set.update(hvparams)
 
         instance_diff = {}
         for key in data.keys():
