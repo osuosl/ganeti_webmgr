@@ -449,7 +449,11 @@ class VirtualMachine(CachedClusterObject):
     # and counted in quotas, but only so status can be checked.
     pending_delete = models.BooleanField(default=False)
     deleted = False
-    
+
+    # Template temporarily stores parameters used to create this virtual machine
+    # This template is used to recreate the values entered into the form.
+    template = models.ForeignKey("VirtualMachineTemplate", null=True)
+
     class Meta:
         ordering = ["hostname", ]
         unique_together = (("cluster", "hostname"),)
@@ -556,15 +560,22 @@ class VirtualMachine(CachedClusterObject):
             
             if status == 'success':
                 self.last_job = None
-                # if the job was a deletion, then delete this vm
+                # job cleanups
+                #   - if the job was a deletion, then delete this vm
+                #   - if the job was creation, then delete temporary template
                 # XXX return a None to prevent refresh() from trying to update
                 #     the cache setting for this VM
                 # XXX delete may have multiple ops in it, but delete is always
                 #     the last command run.
-                if data['ops'][-1]['OP_ID'] == 'OP_INSTANCE_REMOVE':
+                op_id = data['ops'][-1]['OP_ID']
+                if op_id == 'OP_INSTANCE_REMOVE':
                     self.delete()
                     self.deleted = True
                     return None
+                elif op_id == 'OP_INSTANCE_CREATE':
+                    VirtualMachinTemplate.objects.filter(pk=self.template_id) \
+                        .delete()
+                    return dict(ignore_cache=False, last_job=None, template=None)
                 
                 return dict(ignore_cache=False, last_job=None)
             
@@ -977,7 +988,7 @@ class VirtualMachineTemplate(models.Model):
       form so that they can automatically be used or edited by a user.
     """
     template_name = models.CharField(max_length=255, null=True, blank=True)
-    cluster = models.ForeignKey('Cluster')
+    cluster = models.ForeignKey('Cluster', null=True)
     start = models.BooleanField(verbose_name='Start up After Creation', \
                 default=True)
     name_check = models.BooleanField(verbose_name='DNS Name Check', \
@@ -994,23 +1005,23 @@ class VirtualMachineTemplate(models.Model):
     os = models.CharField(verbose_name='Operating System', max_length=255)
     # BEPARAMS
     vcpus = models.IntegerField(verbose_name='Virtual CPUs', \
-                validators=[MinValueValidator(1)])
-    ram = models.IntegerField(verbose_name='Memory', \
+                validators=[MinValueValidator(1)], null=True)
+    ram = models.IntegerField(verbose_name='Memory', null=True, \
                 validators=[MinValueValidator(100)])
-    disk_size = models.IntegerField(verbose_name='Disk Size', \
+    disk_size = models.IntegerField(verbose_name='Disk Size', null=True, \
                 validators=[MinValueValidator(100)])
-    disk_type = models.CharField(verbose_name='Disk Type', max_length=255)
-    nicmode = models.CharField(verbose_name='NIC Mode', max_length=255)
+    disk_type = models.CharField(verbose_name='Disk Type', max_length=255, null=True)
+    nicmode = models.CharField(verbose_name='NIC Mode', max_length=255, null=True)
     niclink = models.CharField(verbose_name='NIC Link', max_length=255, \
                 null=True, blank=True)
-    nictype = models.CharField(verbose_name='NIC Type', max_length=255)
+    nictype = models.CharField(verbose_name='NIC Type', max_length=255, null=True)
     # HVPARAMS
     kernelpath = models.CharField(verbose_name='Kernel Path', null=True, \
                 blank=True, max_length=255)
     rootpath = models.CharField(verbose_name='Root Path', default='/', \
-                max_length=255)
-    serialconsole = models.BooleanField(verbose_name='Enable Serial Console')
-    bootorder = models.CharField(verbose_name='Boot Device', max_length=255)
+                null=True, max_length=255)
+    serialconsole = models.NullBooleanField(verbose_name='Enable Serial Console', null=True)
+    bootorder = models.CharField(verbose_name='Boot Device', max_length=255, null=True)
     imagepath = models.CharField(verbose_name='CD-ROM Image Path', null=True, \
                 blank=True, max_length=512)
 
