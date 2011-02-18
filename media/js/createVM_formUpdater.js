@@ -8,14 +8,14 @@ function formUpdater(url_choices, url_options, url_defaults){
     var owner =                 $("#id_owner");
     var snode =                 $("#id_snode").parent();
     var pnode =                 $("#id_pnode").parent();
-    var niclink =               $("#id_niclink").parent();
+    var niclink =               $("#id_nic_link").parent();
     var disk_template =         $("#id_disk_template");
-    var nicmode =               $("#id_nicmode");
+    var nicmode =               $("#id_nic_mode");
     var curSelection =          $("#id_snode option:selected").index();
     var iallocator =            $("#id_iallocator");
     var iallocator_hostname =   $("#id_iallocator_hostname");
-    var bootOrder =             $("#id_bootorder");
-    var imagePath =             $("#id_imagepath");
+    var bootOrder =             $("#id_boot_order");
+    var imagePath =             $("#id_cdrom_image_path");
     var using_str =             ' Using: ';
     var blankOptStr =           '---------';
 
@@ -169,9 +169,9 @@ function formUpdater(url_choices, url_options, url_defaults){
                         /* fill default options */
 
                         // boot device dropdown
-                        if(d['bootorder']) {
-                            $("#id_bootorder :selected").removeAttr('selected');
-                            $("#id_bootorder [value=" + d['bootorder'] + "]")
+                        if(d['boot_order']) {
+                            $("#id_boot_order :selected").removeAttr('selected');
+                            $("#id_boot_order [value=" + d['boot_order'] + "]")
                                 .attr('selected','selected');
                         }
                         
@@ -204,54 +204,54 @@ function formUpdater(url_choices, url_options, url_defaults){
                         }
 
                         // kernel path text box
-                        if(d['kernelpath']){
-                            $("#id_kernelpath").val(d['kernelpath']);
+                        if(d['kernel_path']){
+                            $("#id_kernel_path").val(d['kernel_path']);
                         } else {
-                            $("#id_kernelpath").val('');
+                            $("#id_kernel_path").val('');
                         }
 
                         // nic mode dropdown
-                        if(d['nicmode']) {
-                            $("#id_nicmode :selected").removeAttr('selected');
-                            $("#id_nicmode [value=" + d['nicmode'] + "]")
+                        if(d['nic_mode']) {
+                            $("#id_nic_mode :selected").removeAttr('selected');
+                            $("#id_nic_mode [value=" + d['nic_mode'] + "]")
                                 .attr('selected','selected');
                         } else { 
-                            $("#id_nicmode :first-child")
+                            $("#id_nic_mode :first-child")
                                 .attr('selected', 'selected');
                         }
 
                         // nic link text box
-                        if(d['niclink']){
-                            $("#id_niclink").val(d['niclink']);
+                        if(d['nic_link']){
+                            $("#id_nic_link").val(d['nic_link']);
                         }
                         
                         // nic type dropdown
-                        if(d['nictype']) {
-                            $("#id_nictype :selected").removeAttr('selected');
-                            $("#id_nictype [value=" + d['nictype'] + "]")
+                        if(d['nic_type']) {
+                            $("#id_nic_type :selected").removeAttr('selected');
+                            $("#id_nic_type [value=" + d['nic_type'] + "]")
                                 .attr('selected','selected');
                         }
 
                         // memory text box
-                        if(d['ram']){
-                            $("#id_ram").val(d['ram']);
+                        if(d['memory']){
+                            $("#id_memory").val(d['memory']);
                         }
 
                         // disk type dropdown
-                        if(d['disktype']){
-                             $("#id_disk_type").val(d['disktype']);
+                        if(d['disk_type']){
+                             $("#id_disk_type").val(d['disk_type']);
                         }
                         
                         // root path text box
-                        if(d['rootpath']){
-                            $("#id_rootpath").val(d['rootpath']);
+                        if(d['root_path']){
+                            $("#id_root_path").val(d['root_path']);
                         } else {
-                            $("#id_rootpath").val('/');
+                            $("#id_root_path").val('/');
                         }
                         
                         // enable serial console checkbox
-                        if(d['serialconsole']){
-                            $("#id_serialconsole").attr('checked', true);
+                        if(d['serial_console']){
+                            $("#id_serial_console").attr('checked', true);
                         }
                         
                         // virtual CPUs text box
@@ -260,8 +260,8 @@ function formUpdater(url_choices, url_options, url_defaults){
                         }
                         
                         // image path text box
-                        if(d['imagepath']){
-                            $("#id_imagepath").val(imagepath);
+                        if(d['cdrom_image_path']){
+                            $("#id_cdrom_image_path").val(d['cdrom_image_path']);
                         }
                     });
                 }
