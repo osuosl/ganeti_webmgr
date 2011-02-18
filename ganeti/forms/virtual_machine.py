@@ -81,12 +81,12 @@ class NewVirtualMachineForm(forms.ModelForm):
     os = forms.ChoiceField(label='Operating System', choices=[empty_field])
     disk_template = forms.ChoiceField(label='Disk Template', \
                                       choices=templates)
-    ram = DataVolumeField(label='Memory', min_value=100)
+    memory = DataVolumeField(label='Memory', min_value=100)
     disk_size = DataVolumeField(label='Disk Size', min_value=100)
     disk_type = forms.ChoiceField(label='Disk Type', choices=disktypes)
-    nicmode = forms.ChoiceField(label='NIC Mode', choices=nicmodes)
-    nictype = forms.ChoiceField(label='NIC Type', choices=nictypes)
-    bootorder = forms.ChoiceField(label='Boot Device', choices=bootchoices)
+    nic_mode = forms.ChoiceField(label='NIC Mode', choices=nicmodes)
+    nic_type = forms.ChoiceField(label='NIC Type', choices=nictypes)
+    boot_order = forms.ChoiceField(label='Boot Device', choices=bootchoices)
 
     class Meta:
         model = VirtualMachineTemplate
@@ -121,12 +121,12 @@ class NewVirtualMachineForm(forms.ModelForm):
                                         required=False, \
                                         widget = forms.HiddenInput())
             self.fields['vcpus'].initial = defaults['vcpus']
-            self.fields['ram'].initial = defaults['ram']
-            self.fields['disk_type'].initial = defaults['disktype']
-            self.fields['rootpath'].initial = defaults['rootpath']
-            self.fields['kernelpath'].initial = defaults['kernelpath']
-            self.fields['serialconsole'].initial = defaults['serialconsole']
-            self.fields['niclink'].initial = defaults['niclink']
+            self.fields['memory'].initial = defaults['memory']
+            self.fields['disk_type'].initial = defaults['disk_type']
+            self.fields['root_path'].initial = defaults['root_path']
+            self.fields['kernel_path'].initial = defaults['kernel_path']
+            self.fields['serial_console'].initial = defaults['serial_console']
+            self.fields['nic_link'].initial = defaults['nic_link']
 
         # set cluster choices based on the given owner
         if initial and 'owner' in initial and initial['owner']:
@@ -202,8 +202,8 @@ class NewVirtualMachineForm(forms.ModelForm):
                     used = owner.used_resources(cluster, only_running=True)
                     
                     if start and quota['ram'] is not None and \
-                        (used['ram'] + data['ram']) > quota['ram']:
-                            del data['ram']
+                        (used['ram'] + data['memory']) > quota['ram']:
+                            del data['memory']
                             q_msg = u"Owner does not have enough ram remaining on this cluster. You may choose to not automatically start the instance or reduce the amount of ram."
                             self._errors["ram"] = self.error_class([q_msg])
                     
@@ -274,7 +274,7 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
 
     exclude = ('start', 'owner', 'cluster', 'hostname', 'name_check',
         'iallocator', 'iallocator_hostname', 'disk_template', 'pnode', 'snode',\
-        'os', 'disk_size', 'nicmode', 'template_name')
+        'os', 'disk_size', 'nic_mode', 'template_name')
 
     disk_caches = [
         (u'default',u'Default'),
