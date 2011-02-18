@@ -1,18 +1,16 @@
-import urllib2
-import os
-import socket
 import json
 
 from django import forms
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm, SetPasswordForm
+from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
-from ganeti.models import *
+from ganeti.models import SSHKey
 from ganeti.views import render_403
 
 @login_required
@@ -219,7 +217,6 @@ def key_delete(request, key_id):
     user = request.user
     key_edit = get_object_or_404(SSHKey, pk=key_id)
 
-    user_id = key_edit.user.pk
     if not (user.is_superuser or key_edit.user==user):
         return HttpResponseForbidden('Only superuser or owner can delete user\'s SSH key.')
 
