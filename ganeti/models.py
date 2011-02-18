@@ -339,7 +339,7 @@ class Job(CachedClusterObject):
         Load info for class.  This will load from ganeti if ignore_cache==True,
         otherwise this will always load from the cache.
         """
-        if self.id and self.ignore_cache:
+        if self.id and (self.ignore_cache or self.info is None):
             self.info = self._refresh()
             self.save()
     
@@ -365,8 +365,7 @@ class Job(CachedClusterObject):
     
     def save(self, *args, **kwargs):
         """
-        sets the cluster_hash for newly saved instances and writes the owner tag
-        to ganeti
+        sets the cluster_hash for newly saved instances
         """
         if self.id is None or self.cluster_hash == '':
             self.cluster_hash = self.cluster.hash
