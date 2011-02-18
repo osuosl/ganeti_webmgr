@@ -1768,7 +1768,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         """
         url = "/cluster/%s/%s/vnc_proxy/"
         args = (cluster.slug, vm.hostname)
-        response = self.validate_get_configurable(url, args, False, "application/json", ["admin",])
+        response = self.validate_get_configurable(url, args, None,
+            "application/json", ["admin",])
 
     def test_view_users(self):
         """
