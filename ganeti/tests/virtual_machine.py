@@ -65,7 +65,6 @@ class VirtualMachineTestCaseMixin():
 class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
 
     def setUp(self):
-        self.tearDown()
         models.client.GanetiRapiClient = RapiProxy
 
     def tearDown(self):
@@ -76,13 +75,17 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         User.objects.all().delete()
         Group.objects.all().delete()
         ClusterUser.objects.all().delete()
-    
+
     def test_trivial(self):
         """
-        Test instantiating a VirtualMachine
+        Test the test case's setUp().
         """
+
+        pass
+
+    def test_instantiate(self):
         VirtualMachine()
-    
+
     def test_non_trivial(self):
         """
         Test instantiating a VirtualMachine with extra parameters
@@ -116,10 +119,7 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         # test unique constraints
         vm = VirtualMachine(cluster=cluster, hostname=vm_hostname)
         self.assertRaises(IntegrityError, vm.save)
-        
-        # Remove cluster
-        Cluster.objects.all().delete()
-    
+
     def test_save(self):
         """
         Test saving a VirtualMachine
@@ -337,7 +337,6 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
     """
     
     def setUp(self):
-        self.tearDown()
         models.client.GanetiRapiClient = RapiProxy
         vm, cluster = self.create_virtual_machine()
 
@@ -1770,17 +1769,9 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         """
         url = "/cluster/%s/%s/vnc_proxy/"
         args = (cluster.slug, vm.hostname)
-        response = self.validate_get_configurable(url, args, False, "application/json", ["admin",])
-        if settings.VNC_PROXY:
-            self.assertEqual(json.loads(response), (False, False, False))
-        else:
-            # NOTE: cannot test with not-real VM
-            #info_ = vm.info
-            #host = info_["pnode"]
-            #port = info_["network_port"]
-            #password = ""
-            self.assertNotEqual(json.loads(response), (False, False, False))
-    
+        response = self.validate_get_configurable(url, args, None,
+            "application/json", ["admin",])
+
     def test_view_users(self):
         """
         Tests view for cluster users:

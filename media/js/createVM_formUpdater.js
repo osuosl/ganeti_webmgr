@@ -93,7 +93,15 @@ function formUpdater(url_choices, url_options, url_defaults){
         disk_template.change(function() {
             if(!iallocator.is(':checked') || 
                     iallocator.attr('readonly')) {
-                if( disk_template.val() == 'drbd'){
+                
+                var nrClusterOpts = 0;
+                cluster.find('option').each(function(i){
+                    if($(this).val() != ''){
+                        nrClusterOpts++;
+                    }
+                });
+
+                if(disk_template.val() == 'drbd' && nrClusterOpts > 1){
                     snode.show();
                 } else {
                     snode.hide();
