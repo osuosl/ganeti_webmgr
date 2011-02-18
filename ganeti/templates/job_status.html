@@ -51,8 +51,9 @@
             actions_enabled = true;
         } else {
             $("#messages").empty();
+            
             var op = format_op(data['ops'][sub_op]['OP_ID']);
-            html = $("<li><h3>"+op+"</h3></li>");
+            html = $("<li class='job'><h3>"+op+"</h3></li>");
             $("#messages").append(html);
 
             // append log messages that are not already displayed

@@ -271,6 +271,9 @@ div.clear:hover {background:url(/media/images/icons/cancel.png) no-repeat !impor
 .spinner image {display:block; margin:0 auto; width:32px;}
 
 
+/**
+ * Messages
+ **/
 #messages li {
     background-color:#c2e192;
     border: 2px solid #124612;
@@ -284,6 +287,44 @@ div.clear:hover {background:url(/media/images/icons/cancel.png) no-repeat !impor
 }
 #messages li.error {background-color:#ee9c98; border-color: #c83737; color:#550000;}
 #messages li p {font-size:12px; font-weight:normal;}
+
+
+/**
+ * Job Status Queue and Log
+ **/
+#log {
+    display:block;
+    border-top:1px solid #124612;
+    margin:0;
+    padding: 10px;
+    overflow:auto;
+}
+
+#log li {
+    border:0;
+    background-color:inherit;
+    color:black;
+    font: 12px monospace;
+    margin:0;
+    padding:1px 0;
+    text-align:left;
+}
+
+#messages li.job {
+    background-color:#eee;
+    border-width:1px;
+    padding:0;
+}
+
+#messages li.job h3 {
+    background: url(/media/images/ajax-loader_arrows.gif) 5px 5px no-repeat;
+    background-color:#C2E192;
+    padding: 5px 0 5px 25px;
+    margin:0;
+    text-align:left;
+}
+
+
 
 .ajax_form .submit {margin:10px auto 0 auto; width:6em;}
 .ajax_form ul#errors li {
