@@ -1770,16 +1770,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         url = "/cluster/%s/%s/vnc_proxy/"
         args = (cluster.slug, vm.hostname)
         response = self.validate_get_configurable(url, args, False, "application/json", ["admin",])
-        if settings.VNC_PROXY:
-            self.assertEqual(json.loads(response), (False, False, False))
-        else:
-            # NOTE: cannot test with not-real VM
-            #info_ = vm.info
-            #host = info_["pnode"]
-            #port = info_["network_port"]
-            #password = ""
-            self.assertNotEqual(json.loads(response), (False, False, False))
-    
+
     def test_view_users(self):
         """
         Tests view for cluster users:
