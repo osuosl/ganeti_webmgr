@@ -37,7 +37,7 @@ log_action = LogItem.objects.log_action
 
 from util.client import GanetiApiError
 from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine, \
-        Job, SSHKey
+        Job, SSHKey, VirtualMachineTemplate
 from ganeti.views import render_403
 from ganeti.forms.virtual_machine import NewVirtualMachineForm, \
     ModifyVirtualMachineForm, ModifyConfirmForm, MigrateForm
@@ -423,7 +423,9 @@ def detail(request, cluster_slug, instance):
         return render_403(request, 'You do not have permission to view this cluster\'s details')
     
     if vm.pending_delete:
-        template = 'virtual_machine/delete_status.html' 
+        template = 'virtual_machine/delete_status.html'
+    elif vm.template_id:
+        template = 'virtual_machine/create_status.html'
     else:
         template = 'virtual_machine/detail.html'
     
@@ -562,14 +564,25 @@ def create(request, cluster_slug=None):
                             'disk_type':disktype,\
                             'cdrom_image_path':imagepath},
                         beparams={"memory": ram})
-                
+
+                # save temporary template
+                # XXX copy each property in data.  avoids errors from properties
+                # that don't exist on the model
+                vm_template = VirtualMachineTemplate()
+                for k,v in data.items():
+                    setattr(vm_template, 'k', v)
+                vm_template.save()
+
                 vm = VirtualMachine(cluster=cluster, owner=owner,
                                     hostname=hostname, disk_size=disk_size,
-                                    ram=ram, virtual_cpus=vcpus)
+                                    ram=ram, virtual_cpus=vcpus,
+                                    template=vm_template)
                 vm.ignore_cache = True
                 vm.save()
                 job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
                 VirtualMachine.objects.filter(id=vm.id).update(last_job=job)
+
+
 
                 # log information about creating the machine
                 log_action(user, vm, "created")
