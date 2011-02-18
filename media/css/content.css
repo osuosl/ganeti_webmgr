@@ -214,9 +214,9 @@ div.delete.disabled, a.delete.disabled{background:url(/media/images/icons/delete
 .startup.disabled {background:url(/media/images/icons/add-disabled.png) no-repeat;}
 .encrypt.enabled {background:url(/media/images/icons/lock.png) no-repeat;}
 .connect.enabled {background:url(/media/images/icons/disconnect.png) no-repeat;}
-.migrate.disabled {background:url(/media/images/icons/arrow_out.png) no-repeat;}
-.evacuate.disabled {background:url(/media/images/icons/arrow_out.png) no-repeat;}
-.modify.disabled {background:url(/media/images/icons/disconnect.png) no-repeat;}
+.migrate.disabled {background:url(/media/images/icons/arrow_out-disabled.png) no-repeat;}
+.evacuate.disabled {background:url(/media/images/icons/arrow_out-disabled.png) no-repeat;}
+.modify.disabled {background:url(/media/images/icons/edit-disabled.png) no-repeat;}
 
 .icon {
     background-repeat:no-repeat;
