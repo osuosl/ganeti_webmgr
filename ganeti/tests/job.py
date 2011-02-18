@@ -239,4 +239,16 @@ class TestJobViews(TestJobMixin, TestCase, UserTestMixin, ViewTestMixin):
         
 
     def test_job_detail(self):
-        pass
+        """
+        tests viewing job detail
+        """
+
+        c_error = Job.objects.create(cluster=cluster, obj=cluster, job_id=1)
+        c_error.info = JOB_ERROR
+        c_error.save()
+
+        url = '/cluster/%s/job/%s/detail/'
+        args = (cluster.slug, c_error.job_id)
+
+        self.assert_standard_fails(url, args, authorized=False)
+        self.assert_200(url, args, users=[superuser, cluster_admin], template='job/detail.html')
