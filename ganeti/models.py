@@ -573,10 +573,17 @@ class VirtualMachine(CachedClusterObject):
                     self.deleted = True
                     return None
                 elif op_id == 'OP_INSTANCE_CREATE':
-                    VirtualMachinTemplate.objects.filter(pk=self.template_id) \
+                    # XXX must update before deleting the template to maintain
+                    # referential integrity.  as a consequence return no other
+                    # updates.
+                    VirtualMachine.objects.filter(pk=self.pk) \
+                        .update(ignore_cache=False, last_job=None, template=None)
+
+                    VirtualMachineTemplate.objects.filter(pk=self.template_id) \
                         .delete()
-                    return dict(ignore_cache=False, last_job=None, template=None)
-                
+                    self.template=None
+                    return dict()
+
                 return dict(ignore_cache=False, last_job=None)
             
             elif status == 'error':
@@ -1025,8 +1032,11 @@ class VirtualMachineTemplate(models.Model):
     imagepath = models.CharField(verbose_name='CD-ROM Image Path', null=True, \
                 blank=True, max_length=512)
 
-    def __unicode__(self):
-        return self.template_name
+    def __str__(self):
+        if self.template_name is None:
+            return 'unnamed'
+        else:
+            return self.template_name
 
 
 if settings.TESTING:
