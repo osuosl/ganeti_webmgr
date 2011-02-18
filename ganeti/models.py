@@ -703,7 +703,33 @@ class Node(CachedClusterObject):
         data['offline'] = info['offline']
         data['role'] = info['role']
         return data
-    
+
+    def check_job_status(self):
+        """
+        if the cache bypass is enabled then check the status of the last job
+        when the job is complete we can reenable the cache.
+
+        @returns - dictionary of values that were updates
+        """
+        if self.last_job_id:
+            (job_id,) = Job.objects.filter(pk=self.last_job_id)\
+                            .values_list('job_id', flat=True)
+            data = self.rapi.GetJobStatus(job_id)
+            status = data['status']
+
+            if status in ('success', 'error'):
+                finished = Job.parse_end_timestamp(data)
+                Job.objects.filter(pk=self.last_job_id) \
+                    .update(status=status, ignore_cache=False, finished=finished)
+                self.ignore_cache = False
+
+            if status == 'success':
+                self.last_job = None
+                return dict(ignore_cache=False, last_job=None)
+
+            elif status == 'error':
+                return dict(ignore_cache=False)
+
     @property
     def ram(self):
         """ returns dict of free and total ram """
