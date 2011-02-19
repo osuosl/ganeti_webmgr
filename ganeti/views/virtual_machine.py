@@ -183,7 +183,7 @@ def shutdown(request, cluster_slug, instance):
             msg = job.info
             
             # log information about stopping the machine
-            log_action(user, vm, "stopped")
+            log_action('VM_STOP', user, vm)
         except GanetiApiError, e:
             msg = {'__all__':[str(e)]}
         return HttpResponse(json.dumps(msg), mimetype='application/json')
@@ -221,7 +221,7 @@ def startup(request, cluster_slug, instance):
             msg = job.info
             
             # log information about starting up the machine
-            log_action(user, vm, "started")
+            log_action('VM_START', user, vm)
         except GanetiApiError, e:
             msg = {'__all__':[str(e)]}
         return HttpResponse(json.dumps(msg), mimetype='application/json')
@@ -249,7 +249,7 @@ def migrate(request, cluster_slug, instance):
                 msg = job.info
 
                 # log information
-                log_action(user, vm, "migrated")
+                log_action('VM_MIGRATE', user, vm)
 
                 return HttpResponse(json.dumps(msg), mimetype='application/json')
             except GanetiApiError, e:
@@ -283,7 +283,7 @@ def reboot(request, cluster_slug, instance):
             msg = job.info
             
             # log information about restarting the machine
-            log_action(user, vm, "restarted")
+            log_action('VM_RESTART', user, vm)
         except GanetiApiError, e:
             msg = {'__all__':[str(e)]}
         return HttpResponse(json.dumps(msg), mimetype='application/json')
@@ -572,7 +572,7 @@ def create(request, cluster_slug=None):
                 VirtualMachine.objects.filter(id=vm.id).update(last_job=job)
 
                 # log information about creating the machine
-                log_action(user, vm, "created")
+                log_action('CREATE', user, vm)
 
                 # grant admin permissions to the owner
                 data['grantee'].grant('admin', vm)
@@ -687,7 +687,7 @@ def modify_confirm(request, cluster_slug, instance):
                 VirtualMachine.objects.filter(id=vm.id).update(last_job=job, \
                                                            ignore_cache=True)
                 # log information about modifying this instance
-                log_action(user, vm, "modified")
+                log_action('EDIT', user, vm)
                 if 'reboot' in request.POST and vm.info['status'] == 'running':
                     if not (user.is_superuser or user.has_perm('power', vm)):
                         return render_403(request, "Sorry, but you do not have permission to reboot \
@@ -695,7 +695,7 @@ def modify_confirm(request, cluster_slug, instance):
                     else:
                         # Reboot the vm
                         vm.reboot()
-                        log_action(user, vm, "rebooted")
+                        log_action('VM_REBOOT', user, vm)
 
             # Remove session variables.
             if 'edit_form' in request.session:
@@ -833,21 +833,21 @@ def recv_user_add(sender, editor, user, obj, **kwargs):
     """
     receiver for object_permissions.signals.view_add_user, Logs action
     """
-    log_action(editor, obj, "added user")
+    log_action('ADD_USER', editor, obj)
 
 
 def recv_user_remove(sender, editor, user, obj, **kwargs):
     """
     receiver for object_permissions.signals.view_remove_user, Logs action
     """
-    log_action(editor, obj, "removed user")
+    log_action('REMOVE_USER', editor, obj)
 
 
 def recv_perm_edit(sender, editor, user, obj, **kwargs):
     """
     receiver for object_permissions.signals.view_edit_user, Logs action
     """
-    log_action(editor, obj, "modified permissions")
+    log_action('MODIFY_PERMS', editor, obj)
 
 
 op_signals.view_add_user.connect(recv_user_add, sender=VirtualMachine)

@@ -143,7 +143,7 @@ def role(request, cluster_slug, host):
                 msg = job.info
 
                 # log information
-                log_action(user, node, "changed role")
+                log_action('NODE_ROLE_CHANGE', user, node)
                 return HttpResponse(json.dumps(msg), mimetype='application/json')
             except GanetiApiError, e:
                 content = json.dumps({'__all__':[str(e)]})
@@ -187,7 +187,7 @@ def migrate(request, cluster_slug, host):
                 msg = job.info
 
                 # log information
-                log_action(user, node, "migrated")
+                log_action('NODE_MIGRATE', user, node)
 
                 return HttpResponse(json.dumps(msg), mimetype='application/json')
             except GanetiApiError, e:
@@ -224,7 +224,7 @@ def evacuate(request, cluster_slug, host):
             msg = job.info
 
             # log information
-            log_action(user, node, "evacuated")
+            log_action('NODE_EVACUATE', user, node)
         except GanetiApiError, e:
             msg = [0, str(e)]
         return HttpResponse(json.dumps(msg), mimetype='application/json')
