@@ -50,6 +50,7 @@ def detail(request, cluster_slug, host):
     
     return render_to_response("node/detail.html", {
         'cluster':cluster,
+        'node_count':cluster.nodes.all().count(),
         'node':node, 
         'admin':admin,
         'modify':modify,
