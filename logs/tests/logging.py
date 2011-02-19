@@ -17,6 +17,7 @@
 # USA.
 
 from datetime import datetime
+from django.test.client import Client
 
 from django.contrib.auth.models import User
 from django.test import TestCase
@@ -25,7 +26,7 @@ from ganeti.models import Profile
 from logs.models import LogItem, LogAction
 
 
-class LogActionTest(TestCase):
+class TestLogActionModel(TestCase):
 
     def setUp(self):
         self.tearDown()
@@ -77,7 +78,7 @@ class LogActionTest(TestCase):
         self.assertEqual(action.template, 'test/new/template.html')
 
 
-class LoggingTest(TestCase):
+class TestLogItemModel(TestCase):
     def setUp(self):
         self.tearDown()
 
@@ -141,5 +142,108 @@ class LoggingTest(TestCase):
         item1.timestamp = timestamp
         item2.timestamp = timestamp
 
-        self.assertEqual('[29/09/2010 15:31] Mod edited user Joe User', repr(item1))
-        self.assertEqual('[29/09/2010 15:31] Mod deleted user Joe User', repr(item2))
+        self.assertEqual('[29/09/2010 15:31] Mod edited user Joe User', str(item1))
+        self.assertEqual('[29/09/2010 15:31] Mod deleted user Joe User', str(item2))
+
+
+class TestObjectLogViews(TestCase):
+
+    def setUp(self):
+        self.tearDown()
+
+        superuser = User(username='superuser', is_superuser=True)
+        unauthorized = User(username='unauthorized')
+        superuser.set_password('secret')
+        unauthorized.set_password('secret')
+        superuser.save()
+        unauthorized.save()
+        self.superuser = superuser
+        self.unauthorized = unauthorized
+
+        # create some sample logitems
+        # superuser editing user
+        log = LogItem.objects.log_action
+        log('CREATE', superuser, unauthorized)
+        log('EDIT', superuser, unauthorized)
+        log('DELETE', superuser, unauthorized)
+        log('EDIT', superuser, unauthorized)
+
+        # logitems with user in additional fields
+        log('EDIT', superuser, superuser, unauthorized)
+        log('EDIT', superuser, superuser, superuser, unauthorized)
+
+        # user editing self
+        log('EDIT', unauthorized, unauthorized)
+        log('EDIT', unauthorized, unauthorized)
+
+    def tearDown(self):
+        User.objects.all().delete()
+        LogItem.objects.all().delete()
+
+
+    def test_list_for_user(self):
+        """ tests list_for_user and list_for_object """
+
+        c = Client()
+        superuser = self.superuser
+        unauthorized = self.unauthorized
+        url = '/user/%s/object_log/'
+        args = (unauthorized.pk, )
+
+        # anonymous user
+        response = c.get(url % args, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'registration/login.html')
+
+        # unauthorized user
+        self.assert_(c.login(username=unauthorized.username, password='secret'))
+        response = c.get(url % args)
+        self.assertEqual(403, response.status_code)
+
+        # superuser - unknown user
+        self.assert_(c.login(username=superuser.username, password='secret'))
+        response = c.get(url % -1)
+        self.assertEqual(404, response.status_code)
+
+        # superuser - checking self
+        response = c.get(url % superuser.pk )
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(2, response.context['log'].count(), response.content)
+
+        # superuser - checking other user
+        response = c.get(url % args )
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(8, response.context['log'].count())
+
+    def test_list_user_actions(self):
+        """ tests list_for_user and list_for_object """
+        c = Client()
+        superuser = self.superuser
+        unauthorized = self.unauthorized
+        url = '/user/%s/actions'
+        args = (unauthorized.pk, )
+
+        # anonymous user
+        response = c.get(url % args, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'registration/login.html')
+
+        # unauthorized user
+        self.assert_(c.login(username=unauthorized.username, password='secret'))
+        response = c.get(url % args)
+        self.assertEqual(403, response.status_code)
+
+        # superuser - unknown user
+        self.assert_(c.login(username=superuser.username, password='secret'))
+        response = c.get(url % -1)
+        self.assertEqual(404, response.status_code)
+
+        # superuser - checking self
+        response = c.get(url % superuser.pk )
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(6, response.context['log'].count())
+
+        # superuser - checking other user
+        response = c.get(url % args )
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(2, response.context['log'].count())

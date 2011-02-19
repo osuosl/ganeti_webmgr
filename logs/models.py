@@ -144,7 +144,7 @@ class LogItemManager(models.Manager):
         
         if object3 != None:
             dict['object3'] = object3
-        
+
         m = self.model(**dict)
         m.save()
         return m
@@ -195,10 +195,10 @@ class LogItem(models.Model):
 
         return template
         
-    def __str__(self):
+    def __repr__(self):
         return 'time: %s user: %s object_type1: %s'%(self.timestamp, self.user, self.object_type1)
     
-    def __repr__(self):
+    def __str__(self):
         """
         Renders single line log entry to a string, 
         containing information like:

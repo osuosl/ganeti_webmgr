@@ -1,0 +1,7 @@
+<ul class="object_log">
+{% for item in log %}
+    <li>{{ item|safe }}</li>
+{% empty %}
+    <li class="none">- empty -</li>
+{% endfor %}
+</ul>
