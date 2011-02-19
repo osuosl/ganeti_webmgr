@@ -273,7 +273,7 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
         def test(user, response):
             data = json.loads(response.content);
             self.assertTrue('opstatus' in data)
-        data = {'live':True}
+        data = {'mode':'live'}
         self.assert_200(url, args, users, method='post', data=data, mime='application/json', tests=test)
         
         #test form error

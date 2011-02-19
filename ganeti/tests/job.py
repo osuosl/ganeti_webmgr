@@ -22,6 +22,9 @@ from django.contrib.auth.models import User, Group
 from django.test import TestCase
 from django.test.client import Client
 
+from django_test_tools.views import ViewTestMixin
+from django_test_tools.users import UserTestMixin
+
 from ganeti.tests.call_proxy import CallProxy
 from ganeti.tests.rapi_proxy import RapiProxy, JOB, JOB_RUNNING, JOB_ERROR
 from ganeti import models
@@ -174,17 +177,21 @@ class TestJobModel(TestJobMixin, TestCase):
         job._refresh.assertNotCalled(self)
 
 
-class TestJobViews(TestJobMixin, TestCase):
+class TestJobViews(TestJobMixin, TestCase, UserTestMixin, ViewTestMixin):
 
     def setUp(self):
         super(TestJobViews, self).setUp()
         
-        user = User(id=2, username='tester0')
-        user.set_password('secret')
-        user.save()
-        
         d = globals()
-        d['user'] = user
+        self.create_standard_users(d)
+        self.create_users(['user', 'vm_owner', 'cluster_admin', 'vm_admin'], d)
+
+        # additional perms
+        cluster_admin.grant('admin', cluster)
+        vm_admin.grant('admin', vm)
+        vm.owner = vm_owner.get_profile()
+        vm.save()
+
         d['c'] = Client()
     
     def tearDown(self):
@@ -194,6 +201,7 @@ class TestJobViews(TestJobMixin, TestCase):
     def test_clear_job(self):
         
         url = '/job/clear/'
+        args = ()
         
         c_error = Job.objects.create(cluster=cluster, obj=cluster, job_id=1)
         c_error.info = JOB_ERROR
@@ -206,57 +214,40 @@ class TestJobViews(TestJobMixin, TestCase):
         vm_error.save()
         vm_error = Job.objects.get(pk=vm_error.pk)
         self.assertFalse(vm_error.cleared)
+
+        self.assert_standard_fails(url, args, data={'id':vm_error.id}, method='post')
         
-        # anonymous user
-        response = c.post(url, {'id':vm_error.id}, follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'registration/login.html')
-        vm_error = Job.objects.get(pk=vm_error.pk)
-        self.assertFalse(vm_error.cleared)
+        # authorized for cluster
+        def tests(user, response):
+            error = Job.objects.get(pk=c_error.pk)
+            self.assertTrue(error.cleared)
+            Job.objects.all().update(cleared=False)
+        self.assert_200(url, args, users=[superuser, cluster_admin], data={'id':c_error.pk}, tests=tests, \
+                        method='post', mime='application/json')
+
+        # not authorized for cluster
+        self.assert_403(url, args, users=[vm_admin, vm_owner], data={'id':c_error.pk}, method='post')
+
+        # authorized for vm
+        def tests(user, response):
+            error = Job.objects.get(pk=vm_error.pk)
+            self.assertTrue(error.cleared, 'error was not marked cleared')
+            Job.objects.all().update(cleared=False)
+        self.assert_200(url, args, users=[superuser, cluster_admin, vm_admin, vm_owner], \
+                        data={'id':vm_error.id}, tests=tests, method='post', mime='application/json')
         
-        # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
-        response = c.post(url, {'id':vm_error.id})
-        self.assertEqual(403, response.status_code)
-        vm_error = Job.objects.get(pk=vm_error.pk)
-        self.assertFalse(vm_error.cleared)
-        
-        # nonexisent error
-        response = c.post(url, {'id':-1})
-        self.assertEqual(404, response.status_code)
-        
-        # authorized for cluster (cluster admin)
-        user.grant('admin', cluster)
-        response = c.post(url, {'id':c_error.id})
-        self.assertEqual(200, response.status_code)
-        c_error = Job.objects.get(pk=c_error.pk)
-        self.assert_(c_error.cleared)
-        Job.objects.all().update(cleared=False)
-        
-        # authorized for vm (cluster admin)
-        response = c.post(url, {'id':vm_error.id})
-        self.assertEqual(200, response.status_code)
-        vm_error = Job.objects.get(pk=vm_error.pk)
-        self.assert_(vm_error.cleared)
-        Job.objects.all().update(cleared=False)
-        user.revoke_all(cluster)
-        
-        # authorized for vm (vm owner)
-        vm.owner = user.get_profile()
-        vm.save()
-        response = c.post(url, {'id':vm_error.id})
-        self.assertEqual(200, response.status_code)
-        vm_error = Job.objects.get(pk=vm_error.pk)
-        self.assert_(vm_error.cleared)
-        Job.objects.all().update(cleared=False)
-        vm.owner = None
-        vm.save()
-        
-        # authorized for vm (superuser)
-        user.is_superuser = True
-        user.save()
-        response = c.post(url, {'id':vm_error.id})
-        self.assertEqual(200, response.status_code)
-        vm_error = Job.objects.get(pk=vm_error.pk)
-        self.assert_(vm_error.cleared)
-        Job.objects.all().update(cleared=False)
+
+    def test_job_detail(self):
+        """
+        tests viewing job detail
+        """
+
+        c_error = Job.objects.create(cluster=cluster, obj=cluster, job_id=1)
+        c_error.info = JOB_ERROR
+        c_error.save()
+
+        url = '/cluster/%s/job/%s/detail/'
+        args = (cluster.slug, c_error.job_id)
+
+        self.assert_standard_fails(url, args, authorized=False)
+        self.assert_200(url, args, users=[superuser, cluster_admin], template='job/detail.html')

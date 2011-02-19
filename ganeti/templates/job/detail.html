@@ -1,0 +1,55 @@
+{% extends "menu_base.html" %}
+{% load webmgr_tags %}
+
+{% block head %}
+
+{% endblock %}
+
+{% block content %}
+
+<h1>
+    {% if cluster_admin %}
+    <a class="breadcrumb" href="{% url cluster-detail job.cluster.slug %}#virtual_machines">{{job.cluster.hostname|abbreviate_fqdn}}</a>
+    {% else %}
+    <span class="breadcrumb">{{job.cluster.hostname|abbreviate_fqdn}}</span>
+    {% endif %}
+    : <span class="breadcrumb">Jobs</span>
+    : {{ job.job_id }}
+</h1>
+
+
+    {% with job.info as info %}
+
+    <table>
+        <tr><th colspan="100%">Overview</th></tr>
+        <tr><td>Status</td><td>{{ job.status }}</td></tr>
+        <tr><td>{{ job.obj|class_name }}</td>
+            {% with job as error %}
+                {% include "overview/object_link.html" %}
+            {% endwith %}
+        </tr>
+        <tr><td>Completed</td><td>{{ job.finished|date }}</td></tr>
+    </table>
+
+    {% for op in info.ops %}
+
+        <table>
+            <tr><th colspan="100%">{{op.OP_ID|format_job_op}}</th></tr>
+            <tr><td>Status:</td><td>{{ info.opstatus|index:forloop.counter0 }}</td></tr>
+            <tr><td>Started:</td><td>{{ info.start_ts|index:forloop.counter0|timestamp|date }}</td></tr>
+            <tr><td>Finished:</td><td>{{ info.end_ts|index:forloop.counter0|timestamp|date }}</td></tr>
+        </table>
+
+        {% with info.opresult|index:forloop.counter0 as job_result %}
+            {% if job_result %}
+                <pre>{{ job_result.1.0|format_job_log }}</pre>
+            {% endif %}
+        {% endwith %}
+
+        
+
+    {% endfor %}
+
+    {% endwith %}
+
+{% endblock %}

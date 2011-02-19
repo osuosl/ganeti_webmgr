@@ -339,7 +339,7 @@ class Job(CachedClusterObject):
         Load info for class.  This will load from ganeti if ignore_cache==True,
         otherwise this will always load from the cache.
         """
-        if self.id and self.ignore_cache:
+        if self.id and (self.ignore_cache or self.info is None):
             self.info = self._refresh()
             self.save()
     
@@ -365,8 +365,7 @@ class Job(CachedClusterObject):
     
     def save(self, *args, **kwargs):
         """
-        sets the cluster_hash for newly saved instances and writes the owner tag
-        to ganeti
+        sets the cluster_hash for newly saved instances
         """
         if self.id is None or self.cluster_hash == '':
             self.cluster_hash = self.cluster.hash
@@ -703,7 +702,33 @@ class Node(CachedClusterObject):
         data['offline'] = info['offline']
         data['role'] = info['role']
         return data
-    
+
+    def check_job_status(self):
+        """
+        if the cache bypass is enabled then check the status of the last job
+        when the job is complete we can reenable the cache.
+
+        @returns - dictionary of values that were updates
+        """
+        if self.last_job_id:
+            (job_id,) = Job.objects.filter(pk=self.last_job_id)\
+                            .values_list('job_id', flat=True)
+            data = self.rapi.GetJobStatus(job_id)
+            status = data['status']
+
+            if status in ('success', 'error'):
+                finished = Job.parse_end_timestamp(data)
+                Job.objects.filter(pk=self.last_job_id) \
+                    .update(status=status, ignore_cache=False, finished=finished)
+                self.ignore_cache = False
+
+            if status == 'success':
+                self.last_job = None
+                return dict(ignore_cache=False, last_job=None)
+
+            elif status == 'error':
+                return dict(ignore_cache=False)
+
     @property
     def ram(self):
         """ returns dict of free and total ram """
@@ -759,11 +784,11 @@ class Node(CachedClusterObject):
             .update(ignore_cache=True, last_job=job)
         return job
     
-    def migrate(self, live):
+    def migrate(self, mode=None):
         """
         migrates all primary instances off this node
         """
-        id = self.rapi.MigrateNode(self.hostname, live)
+        id = self.rapi.MigrateNode(self.hostname, mode)
         job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
         self.last_job = job
         Node.objects.filter(pk=self.pk).update(ignore_cache=True, last_job=job)
@@ -927,12 +952,12 @@ class Cluster(CachedClusterObject):
         total = nodes['total'] if 'total' in nodes and nodes['total'] >= 0 else 0
         values = self.virtual_machines \
             .filter(status='running') \
-            .exclude(disk_size=-1).order_by() \
+            .exclude(ram=-1).order_by() \
             .aggregate(used=Sum('ram'))
 
         used = 0 if 'used' not in values or values['used'] is None else values['used']
         free = total-used if total-used >= 0 else 0
-        return {'total':total, 'free':total - free}
+        return {'total':total, 'free':free}
 
     @property
     def available_disk(self):

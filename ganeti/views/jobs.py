@@ -46,8 +46,9 @@ def clear(request):
             return render_403(request, "You do not have sufficient privileges")
         elif isinstance(obj, (VirtualMachine,)):
             # object is a virtual machine, check perms on VM and on Cluster
-            if not (obj.owner_id == user.get_profile().pk or \
-                user.has_perm('admin', obj.cluster)):
+            if not (obj.owner_id == user.get_profile().pk  \
+                or user.has_perm('admin', obj) \
+                or user.has_perm('admin', obj.cluster)):
                     return render_403(request, "You do not have sufficient privileges")
     
     # clear the error
