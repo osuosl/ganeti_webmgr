@@ -1,3 +1,3 @@
-<td class="timestamp"">{{log_item.timestamp|date}}</td>
+<td class="timestamp">{{log_item.timestamp|date}}</td>
 <td><a href="{% url user-detail log_item.user.pk %}">{{log_item.user}}</a>
 stopped virtual machine <a href="{% url instance-detail log_item.object1.cluster.slug log_item.object1.hostname %}">{{log_item.object1}}</a></td>
