@@ -218,32 +218,6 @@ def ssh_keys(request, cluster_slug, api_key):
     return HttpResponse(json.dumps(keys_list), mimetype="application/json")
 
 
-def user_added(sender, editor, user, obj, **kwargs):
-    """
-    receiver for object_permissions.signals.view_add_user, Logs action
-    """
-    log_action('ADD', editor, obj)
-
-
-def user_removed(sender, editor, user, obj, **kwargs):
-    """
-    receiver for object_permissions.signals.view_add_user, Logs action
-    """
-    log_action('DELETE', editor, obj)
-
-
-def user_edited(sender, editor, user, obj, **kwargs):
-    """
-    receiver for object_permissions.signals.view_add_user, Logs action
-    """
-    log_action('EDIT', editor, obj)
-
-
-op_signals.view_add_user.connect(user_added, sender=Cluster)
-op_signals.view_remove_user.connect(user_removed, sender=Cluster)
-op_signals.view_edit_user.connect(user_edited, sender=Cluster)
-
-
 class QuotaForm(forms.Form):
     """
     Form for editing user quota on a cluster
