@@ -952,12 +952,12 @@ class Cluster(CachedClusterObject):
         total = nodes['total'] if 'total' in nodes and nodes['total'] >= 0 else 0
         values = self.virtual_machines \
             .filter(status='running') \
-            .exclude(disk_size=-1).order_by() \
+            .exclude(ram=-1).order_by() \
             .aggregate(used=Sum('ram'))
 
         used = 0 if 'used' not in values or values['used'] is None else values['used']
         free = total-used if total-used >= 0 else 0
-        return {'total':total, 'free':total - free}
+        return {'total':total, 'free':free}
 
     @property
     def available_disk(self):
