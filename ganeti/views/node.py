@@ -163,8 +163,14 @@ def role(request, cluster_slug, host):
 
 
 class MigrateForm(forms.Form):
-    """ Form used for changing role """
-    live = forms.BooleanField(initial=True)
+    """ Form used for migrating primary Virtual Machines off a Node """
+    MODE_CHOICES = (
+        ('live','Live'),
+        ('non-live','Non-Live'),
+    )
+
+    mode = forms.ChoiceField(choices=MODE_CHOICES)
+
 
 
 @login_required
@@ -183,7 +189,7 @@ def migrate(request, cluster_slug, host):
         form = MigrateForm(request.POST)
         if form.is_valid():
             try:
-                job = node.migrate(form.cleaned_data['live'])
+                job = node.migrate(form.cleaned_data['mode'])
                 job.load_info()
                 msg = job.info
 

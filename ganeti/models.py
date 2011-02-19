@@ -784,11 +784,11 @@ class Node(CachedClusterObject):
             .update(ignore_cache=True, last_job=job)
         return job
     
-    def migrate(self, live):
+    def migrate(self, mode=None):
         """
         migrates all primary instances off this node
         """
-        id = self.rapi.MigrateNode(self.hostname, live)
+        id = self.rapi.MigrateNode(self.hostname, mode)
         job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
         self.last_job = job
         Node.objects.filter(pk=self.pk).update(ignore_cache=True, last_job=job)
