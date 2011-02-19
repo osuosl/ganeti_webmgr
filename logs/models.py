@@ -73,6 +73,8 @@ class LogActionManager(models.Manager):
             # still waiting for models in other apps to be created
             pass
 
+    models.signals.post_syncdb.connect(_register_delayed)
+
     def get_from_cache(self, key):
         """
         Attempts to retrieve the LogAction from cache, if it fails, loads
@@ -86,8 +88,6 @@ class LogActionManager(models.Manager):
             action = LogAction.objects.get(name=key)
             self._cache.setdefault(self.db, {})[key]=action
         return action
-
-models.signals.post_syncdb.connect(LogActionManager._register_delayed)
 
 
 class LogAction(models.Model):
@@ -216,5 +216,5 @@ class LogItem(models.Model):
 
 #Most common log types, registered by default for convenience
 LogAction.objects.register('EDIT', 'object_log/edit.html')
-LogAction.objects.register('ADD', 'object_log/add.html')
+LogAction.objects.register('CREATE', 'object_log/add.html')
 LogAction.objects.register('DELETE', 'object_log/delete.html')
