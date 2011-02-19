@@ -833,21 +833,21 @@ def recv_user_add(sender, editor, user, obj, **kwargs):
     """
     receiver for object_permissions.signals.view_add_user, Logs action
     """
-    log_action('ADD_USER', editor, obj)
+    log_action('ADD_USER', editor, obj, user)
 
 
 def recv_user_remove(sender, editor, user, obj, **kwargs):
     """
     receiver for object_permissions.signals.view_remove_user, Logs action
     """
-    log_action('REMOVE_USER', editor, obj)
+    log_action('REMOVE_USER', editor, obj, user)
 
 
 def recv_perm_edit(sender, editor, user, obj, **kwargs):
     """
     receiver for object_permissions.signals.view_edit_user, Logs action
     """
-    log_action('MODIFY_PERMS', editor, obj)
+    log_action('MODIFY_PERMS', editor, obj, user)
 
 
 op_signals.view_add_user.connect(recv_user_add, sender=VirtualMachine)
