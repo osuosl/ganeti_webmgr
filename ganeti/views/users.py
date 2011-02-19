@@ -1,6 +1,3 @@
-import urllib2
-import os
-import socket
 import json
 
 from django import forms
