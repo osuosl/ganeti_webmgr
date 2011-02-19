@@ -70,6 +70,12 @@ class LogActionTest(TestCase):
         self.assertTrue(cached_action is not None)
         self.assertEquals(id(action), id(cached_action))
 
+        # test that re-register updates cache
+        LogAction.objects.register('testing', 'test/new/template.html')
+        cached_action = LogAction.objects.get_from_cache('testing')
+        self.assertEquals(id(action), id(cached_action))
+        self.assertEqual(action.template, 'test/new/template.html')
+
 
 class LoggingTest(TestCase):
     def setUp(self):
