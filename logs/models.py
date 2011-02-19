@@ -18,27 +18,26 @@
 
 from django.db import models
 
-#from ganeti.models import Profile
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import GenericForeignKey
-from django.utils.encoding import force_unicode
 from django.db.utils import DatabaseError
 from django.template.loader import get_template
 from django.template import Context
 
-_DELAYED = []
+
 
 class LogActionManager(models.Manager):
     _cache = {}
-    
+    _DELAYED = []
+
     def register(self, key, template):
         try:
             return LogAction.objects._register(key, template)
         except DatabaseError:
             # there was an error, likely due to a missing table.  Delay this
             # registration.
-            _DELAYED.append((key, template))
+            self._DELAYED.append((key, template))
         
     def _register(self, key, template):
         """
@@ -48,9 +47,10 @@ class LogActionManager(models.Manager):
         @param template : template associated with key
         """
         try:
-            action = self._cache[self.db][key]
+            action = self.get_from_cache(key)
+            action.template = template
             action.save()
-        except KeyError:
+        except LogAction.DoesNotExist:
             action, new = LogAction.objects.get_or_create(name=key, \
             template=template)
             self._cache.setdefault(self.db, {})[key] = action
@@ -66,15 +66,13 @@ class LogActionManager(models.Manager):
         Don't call this from outside code.
         """
         try:
-            for args in _DELAYED:
+            for args in LogActionManager._DELAYED:
                 LogAction.objects._register(*args)
-            models.signals.post_syncdb.disconnect(LogAction.objects._register_delayed)
+            models.signals.post_syncdb.disconnect(LogActionManager._register_delayed)
         except DatabaseError:
             # still waiting for models in other apps to be created
             pass
-    
-    models.signals.post_syncdb.connect(_register_delayed)
-    
+
     def get_from_cache(self, key):
         """
         Attempts to retrieve the LogAction from cache, if it fails, loads
@@ -85,9 +83,11 @@ class LogActionManager(models.Manager):
         try:
             action = self._cache[self.db][key]
         except KeyError:
-            action = LogAction.objects.get(pk=key)
+            action = LogAction.objects.get(name=key)
             self._cache.setdefault(self.db, {})[key]=action
         return action
+
+models.signals.post_syncdb.connect(LogActionManager._register_delayed)
 
 
 class LogAction(models.Model):
@@ -103,7 +103,7 @@ class LogAction(models.Model):
     
     def __str__(self):
         return 'LogAction object with id: %s Name: %s Template: %s \n'%(self.id, self.name, self.template)
-
+    
 
 class LogItemManager(models.Manager):
     
@@ -147,7 +147,7 @@ class LogItemManager(models.Manager):
         
         m = self.model(**dict)
         m.save()
-        return m.id # occasionally someone needs this
+        return m
 
 
 class LogItem(models.Model):
@@ -215,6 +215,6 @@ class LogItem(models.Model):
 
 
 #Most common log types, registered by default for convenience
-LogAction.objects.register('EDIT', 'logs/edit.html')
-LogAction.objects.register('ADD', 'logs/add.html')
-LogAction.objects.register('DELETE', 'logs/delete.html')
+LogAction.objects.register('EDIT', 'object_log/edit.html')
+LogAction.objects.register('ADD', 'object_log/add.html')
+LogAction.objects.register('DELETE', 'object_log/delete.html')

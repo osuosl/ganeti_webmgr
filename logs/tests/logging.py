@@ -16,17 +16,59 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
+from datetime import datetime
 
 from django.contrib.auth.models import User
 from django.test import TestCase
-from django.contrib.contenttypes.models import ContentType
-from django.utils.encoding import force_unicode
-
-from django.conf import settings
-from django import db
 
 from ganeti.models import Profile
 from logs.models import LogItem, LogAction
+
+
+class LogActionTest(TestCase):
+
+    def setUp(self):
+        self.tearDown()
+
+    def tearDown(self):
+        LogAction.objects.all().delete()
+
+    def test_trivial(self):
+        LogAction()
+    
+    def test_log_action_register(self):
+        """
+        tests registering a log action
+        """
+        LogAction.objects.register('testing', 'test/template.html')
+        action = LogAction.objects.get(name='testing')
+        self.assertEqual(action.template, 'test/template.html')
+
+    def test_log_action_multiple_register(self):
+        """
+        Tests re-registering a log action:
+
+        verifies that template can be changed.
+        """
+        LogAction.objects.register('testing', 'test/template.html')
+        LogAction.objects.register('testing', 'test/new/template.html')
+        action = LogAction.objects.get(name='testing')
+        self.assertEqual(action.template, 'test/new/template.html')
+
+    def test_get_from_cache(self):
+        """
+        Tests retrieving cached template
+        """
+        LogAction.objects.register('testing', 'test/template.html')
+
+        # test that object is loaded
+        action = LogAction.objects.get_from_cache('testing')
+        self.assertTrue(action is not None)
+
+        # test that object is cached
+        cached_action = LogAction.objects.get_from_cache('testing')
+        self.assertTrue(cached_action is not None)
+        self.assertEquals(id(action), id(cached_action))
 
 
 class LoggingTest(TestCase):
@@ -44,11 +86,11 @@ class LoggingTest(TestCase):
         
         #dict_ = globals()
         dict_["user2"] = user2
-        
-        LogAction.objects.register('EDIT', 'logs/edit.html')
-        LogAction.objects.register('ADD', 'logs/add.html')
-        LogAction.objects.register('DELETE', 'logs/delete.html')
-    
+
+        # register the defaults again just incase the user edits them
+        LogAction.objects.register('EDIT', 'object_log/edit.html')
+        LogAction.objects.register('ADD', 'object_log/add.html')
+        LogAction.objects.register('DELETE', 'object_log/delete.html')
 
     def tearDown(self):
         User.objects.all().delete()
@@ -67,20 +109,15 @@ class LoggingTest(TestCase):
         
         self.assertEqual(len(LogItem.objects.all()), 0)
         self.assertEqual(len(LogAction.objects.all()), 3)
-        
-        act1 = LogAction.objects.register('test', 'logs/test.html')
-        act1.save()
-        
-        pk1 = LogItem.objects.log_action("EDIT", user1, user2,)
-        pk2 = LogItem.objects.log_action("DELETE", user1, user2,)
-
+                
+        log_item = LogItem.objects.log_action("EDIT", user1, user2,)
+        self.assertTrue(log_item is not None)
+        LogItem.objects.log_action("DELETE", user1, user2,)
         self.assertEqual(len(LogItem.objects.all()), 2)
-        self.assertEqual(len(LogAction.objects.all()), 4)
         
-        pk3 = LogItem.objects.log_action("test", user1, user2,)
-        
+        LogItem.objects.log_action("EDIT", user1, user2,)
         self.assertEqual(len(LogItem.objects.all()), 3)
-        self.assertEqual(len(LogAction.objects.all()), 4)
+
 
     def test_log_representation(self):
         """
@@ -89,62 +126,14 @@ class LoggingTest(TestCase):
         Verifies:
             * LogItem is represented properly
         """
-        
-        pk1 = LogItem.objects.log_action('EDIT', user1, user2,)
-        pk2 = LogItem.objects.log_action('DELETE', user1, user2,)
-        item1 = LogItem.objects.get( pk=pk1 )
-        item2 = LogItem.objects.get( pk=pk2 )
-        
-        print repr(item1)
 
-        
-        self.assertEqual(repr(item1), \
-            '\n\n[%s] %s edited %s %s \n\n\n\n'%(item1.timestamp, item1.user, item1.object_type1, item1.object1), \
-        )
-        self.assertEqual(repr(item2), \
-            "[%s] user testing deleted user Joe User" % item2.timestamp, \
-        )
+        item1 = LogItem.objects.log_action('EDIT', user1, user2,)
+        item2 = LogItem.objects.log_action('DELETE', user1, user2,)
 
-    def test_caching(self):
-        """
-        Test LogAction caching. Test based on ContentType doctest.
+        # XXX manually set timestamp so we can check the output consistently
+        timestamp = datetime.fromtimestamp(1285799513.4741000)
+        item1.timestamp = timestamp
+        item2.timestamp = timestamp
 
-        Verifies:
-            * LogAction properly uses its cache system
-        """
-        # useful references and tools
-        cache = LogItem.objects._cache
-        curr_db = LogItem.objects.db
-        from copy import deepcopy
-
-        # clear cache
-        LogItem.objects.clear_cache()
-
-        # state should be empty
-        state = deepcopy(cache)
-        self.assertEqual(state, {})
-
-        pk2 = LogItem.objects.log_action("ADD", user1, user2,)
-        self.assertNotEqual(state, cache)
-
-        # state should contain 1 LogAction
-        state = deepcopy(cache)
-        self.assertEqual(len(state[curr_db]), 1)
-
-        pk2 = LogItem.objects.log_action("DELETE", user1, user2,)
-
-        # state should still contain 1 LogAction
-        # but cache should contain 2 LogActions
-        self.assertEqual(len(state[curr_db]), 1)
-        self.assertNotEqual(state, cache)
-
-        # caching: state should be the same as cache
-        state = deepcopy(cache)
-        pk2 = LogItem.objects.log_action("DELETE", user1, user2,)
-        self.assertEqual(state, cache)
-
-
-        # both state and cache should be empty
-        LogItem.objects.clear_cache()
-        state = dict()
-        self.assertEqual(state, cache)
+        self.assertEqual('[29/09/2010 15:31] Mod edited user Joe User', repr(item1))
+        self.assertEqual('[29/09/2010 15:31] Mod deleted user Joe User', repr(item2))
