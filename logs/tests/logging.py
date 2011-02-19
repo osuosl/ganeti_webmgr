@@ -19,7 +19,7 @@
 from datetime import datetime
 from django.test.client import Client
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.test import TestCase
 
 from ganeti.models import Profile
@@ -160,6 +160,9 @@ class TestObjectLogViews(TestCase):
         self.superuser = superuser
         self.unauthorized = unauthorized
 
+        group = Group.objects.create(name='test')
+        self.group = group
+
         # create some sample logitems
         # superuser editing user
         log = LogItem.objects.log_action
@@ -176,8 +179,11 @@ class TestObjectLogViews(TestCase):
         log('EDIT', unauthorized, unauthorized)
         log('EDIT', unauthorized, unauthorized)
 
+
+
     def tearDown(self):
         User.objects.all().delete()
+        Group.objects.all().delete()
         LogItem.objects.all().delete()
 
 
@@ -247,3 +253,33 @@ class TestObjectLogViews(TestCase):
         response = c.get(url % args )
         self.assertEqual(200, response.status_code)
         self.assertEqual(2, response.context['log'].count())
+
+    def test_list_group_actions(self):
+        """ tests list_for_group """
+        c = Client()
+        superuser = self.superuser
+        unauthorized = self.unauthorized
+        url = '/group/%s/object_log'
+        args = (self.group.pk, )
+
+        LogItem.objects.log_action('EDIT', superuser, self.group)
+
+        # anonymous user
+        response = c.get(url % args, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'registration/login.html')
+
+        # unauthorized user
+        self.assert_(c.login(username=unauthorized.username, password='secret'))
+        response = c.get(url % args)
+        self.assertEqual(403, response.status_code)
+
+        # superuser - unknown user
+        self.assert_(c.login(username=superuser.username, password='secret'))
+        response = c.get(url % -1)
+        self.assertEqual(404, response.status_code)
+
+        # superuser - checking self
+        response = c.get(url % args )
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(1, response.context['log'].count())

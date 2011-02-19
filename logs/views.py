@@ -1,4 +1,4 @@
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
@@ -45,6 +45,20 @@ def list_for_user(request, pk):
 
     user = get_object_or_404(User, pk=pk)
     return list_for_object(request, user)
+
+
+@login_required
+def list_for_group(request, pk):
+    """
+    Provided view for listing actions performed on a group.
+
+    This may only be used by superusers
+    """
+    if not request.user.is_superuser:
+        return HttpResponseForbidden('You are not authorized to view this page')
+
+    group = get_object_or_404(Group, pk=pk)
+    return list_for_object(request, group)
 
 
 @login_required
