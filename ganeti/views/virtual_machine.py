@@ -422,7 +422,6 @@ def detail(request, cluster_slug, instance):
     if not (admin or power or remove or modify):
         return render_403(request, 'You do not have permission to view this cluster\'s details')
 
-
     # check job for pending jobs that should be rendered with a different
     # detail template.  This allows us to reduce the chance that users will do
     # something strange like rebooting a VM that is being deleted or is not
