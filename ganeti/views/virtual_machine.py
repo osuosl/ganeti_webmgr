@@ -498,6 +498,7 @@ def create(request, cluster_slug=None):
             data = form.cleaned_data
             start = data.pop('start')
             owner = data.pop('owner')
+            grantee = data.pop('grantee')
             cluster = data.pop('cluster')
             hostname = data.pop('hostname')
             disk_template = data.pop('disk_template')
@@ -529,6 +530,13 @@ def create(request, cluster_slug=None):
             if disk_template == 'drbd' and pnode is not None:
                 snode = data.pop('snode')
 
+            # Create dictionary of only parameters supposed to be in hvparams
+            hvparams = dict()
+            hvparam_fields = ('kernel_path', 'root_path', 'serial_console', \
+                'boot_order', 'disk_type', 'cdrom_image_path',)
+            for field in hvparam_fields:
+                hvparams[field] = data[field]
+
             try:
                 # XXX attempt to load the virtual machine.  This ensure that if
                 # there was a previous vm with the same hostname, but had not
@@ -545,7 +553,7 @@ def create(request, cluster_slug=None):
                         pnode=pnode, snode=snode,
                         name_check=name_check, ip_check=name_check,
                         iallocator=iallocator_hostname,
-                        hvparams=data,
+                        hvparams=hvparams,
                         beparams={"memory": memory})
                 
                 vm = VirtualMachine(cluster=cluster, owner=owner,
@@ -560,7 +568,7 @@ def create(request, cluster_slug=None):
                 log_action(user, vm, "created")
 
                 # grant admin permissions to the owner
-                data['grantee'].grant('admin', vm)
+                grantee.grant('admin', vm)
 
                 return HttpResponseRedirect( \
                 reverse('instance-detail', args=[cluster.slug, vm.hostname]))

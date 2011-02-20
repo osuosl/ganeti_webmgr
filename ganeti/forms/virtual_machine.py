@@ -90,6 +90,7 @@ class NewVirtualMachineForm(forms.ModelForm):
 
     class Meta:
         model = VirtualMachineTemplate
+        exclude = ('template_name')
 
     def __init__(self, user, cluster=None, initial=None, *args, **kwargs):
         self.user = user
