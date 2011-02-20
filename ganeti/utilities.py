@@ -116,6 +116,11 @@ def compare(x, y):
         elif y == "":
             return "removed"
         return "changed from %s to %s" % (x, y)
+    elif isinstance(x, bool) and i != 0:
+        if y:
+            return "enabled"
+        else:
+            return "disabled"
     if i == -1:
         return "increased from %s to %s" % (x, y)
     elif i == 1:
