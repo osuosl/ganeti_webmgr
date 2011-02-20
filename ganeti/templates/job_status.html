@@ -44,31 +44,30 @@
             sub_op++;
         }
 
+        $("#messages").empty();
+
+        var op = format_op(data['ops'][sub_op]['OP_ID']);
+        var html = $("<li class='job'><h3>"+op+"</h3></li>");
+        $("#messages").append(html);
+
         if (data.status == 'error') {
-            $("#messages").empty();
+            html.addClass('error');
             var reason = data.opresult[sub_op][1][0];
-            var html = $("<li class='error'>"+data.status+":<br>"+reason+"</li>");
-            $("#messages").append(html);
+            html.children('h3').append("<p>" + reason + "</p>");
             actions_enabled = true;
-        } else {
-            $("#messages").empty();
-            
-            var op = format_op(data['ops'][sub_op]['OP_ID']);
-            html = $("<li class='job'><h3>"+op+"</h3></li>");
-            $("#messages").append(html);
+        }
 
-            // append log messages that are not already displayed
-            var current_log_count = $("#log ul li").length;
-            if (data['oplog'][sub_op].length != 0) {
-                if ($('#log').length==0){
-                    html.append("<pre id='log'><ul></ul></pre>");
-                }
+        // append log messages that are not already displayed
+        var current_log_count = $("#log ul li").length;
+        if (data['oplog'][sub_op].length != 0) {
+            if ($('#log').length==0){
+                html.append("<pre id='log'><ul></ul></pre>");
+            }
 
-                var log = data['oplog'][sub_op];
-                for (var i=current_log_count; i<log.length; i++) {
-                    $("#log ul")
-                        .append("<li>"+log[i][3]+"</li>");
-                }
+            var log = data['oplog'][sub_op];
+            for (var i=current_log_count; i<log.length; i++) {
+                $("#log ul")
+                    .append("<li>"+log[i][3]+"</li>");
             }
         }
     }

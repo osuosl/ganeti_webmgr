@@ -276,7 +276,7 @@ div.clear:hover {background:url(/media/images/icons/cancel.png) no-repeat !impor
  **/
 #messages li {
     background-color:#c2e192;
-    border: 2px solid #124612;
+    border: 1px solid #124612;
     color:#124612;
     font-weight:bold;
     font-size:110%;
@@ -285,7 +285,7 @@ div.clear:hover {background:url(/media/images/icons/cancel.png) no-repeat !impor
     text-align:center;
     width:700px;
 }
-#messages li.error {background-color:#ee9c98; border-color: #c83737; color:#550000;}
+#messages li.error {background-color:#ee9c98; border-color: #550000; color:#550000;}
 #messages li p {font-size:12px; font-weight:normal;}
 
 
@@ -317,13 +317,12 @@ div.clear:hover {background:url(/media/images/icons/cancel.png) no-repeat !impor
 }
 
 #messages li.job h3 {
-    background: url(/media/images/ajax-loader_arrows.gif) 5px 5px no-repeat;
-    background-color:#C2E192;
+    background: #C2E192 url(/media/images/ajax-loader_arrows.gif) no-repeat 5px 5px;
     padding: 5px 0 5px 25px;
     margin:0;
     text-align:left;
 }
-
+#messages li.job.error h3 {background: #ee9c98;}
 
 
 .ajax_form .submit {margin:10px auto 0 auto; width:6em;}
