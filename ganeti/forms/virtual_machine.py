@@ -308,6 +308,7 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
     mem_path = forms.CharField(label='Mem Path', required=False)
     migration_downtime = forms.IntegerField(label='Migration Downtime', \
         required=False)
+    nic_mac = forms.CharField(label='NIC Mac', required=False)
     security_model = forms.ChoiceField(label='Security Model', \
         required=False, choices=security_models)
     security_domain = forms.CharField(label='Security Domain', required=False)

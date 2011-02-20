@@ -624,6 +624,7 @@ def modify(request, cluster_slug, instance):
                 initial['vcpus'] = info['beparams']['vcpus']
                 initial['memory'] = str(info['beparams']['memory'])
                 initial['nic_link'] = info['nic.links'][0]
+                initial['nic_mac'] = info['nic.macs'][0]
                 fields = ('acpi', 'disk_cache', 'initrd_path', 'kernel_args', \
                     'kvm_flag', 'mem_path', 'migration_downtime', \
                     'security_domain', 'security_model', 'usb_mouse', \
@@ -668,11 +669,12 @@ def modify_confirm(request, cluster_slug, instance):
             elif 'reboot' in request.POST or 'save' in request.POST:
                 rapi_dict = json.loads(data['rapi_dict'])
                 niclink = rapi_dict.pop('nic_link')
+                nicmac = rapi_dict.pop('nic_mac')
                 vcpus = rapi_dict.pop('vcpus')
                 memory = rapi_dict.pop('memory')
                 # Modify Instance rapi call
                 job_id = cluster.rapi.ModifyInstance(instance,
-                    nics=[(0, {'link':niclink, }),], \
+                    nics=[(0, {'link':niclink, 'mac':nicmac,}),], \
                     hvparams=rapi_dict, \
                     beparams={'vcpus':vcpus,'memory':memory}
                 )
@@ -711,6 +713,7 @@ def modify_confirm(request, cluster_slug, instance):
 
         old_set = dict(
             nic_link=info['nic.links'][0],
+            nic_mac=info['nic.macs'][0],
             memory=info['beparams']['memory'],
             vcpus=info['beparams']['vcpus'],
         )
