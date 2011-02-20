@@ -128,7 +128,10 @@ def reinstall(request, cluster_slug, instance):
         job_id = instance.rapi.ReinstallInstance(instance.hostname, os=os, no_startup=True)
         job = Job.objects.create(job_id=job_id, obj=instance, cluster=instance.cluster)
         VirtualMachine.objects.filter(id=instance.id).update(last_job=job, ignore_cache=True)
-        
+
+        # log information
+        log_action('VM_REINSTALL', user, instance)
+
         return HttpResponseRedirect(
             reverse('instance-detail', args=[instance.cluster.slug, instance.hostname]))
     
