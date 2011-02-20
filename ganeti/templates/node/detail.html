@@ -2,10 +2,15 @@
 {% load webmgr_tags %}
 
 {% block head %}
-    <link href="{{MEDIA_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
-    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-ui.min.js"></script>
-    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.form.js"></script>
-    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
+    <!-- "import" the CSS and javascript for this template -->
+    <link href="{{MEDIA_URL}}/css/jquery-ui.css" rel="stylesheet" 
+            type="text/css"/>
+    <script type="text/javascript"
+            src="{{MEDIA_URL}}/js/jquery-ui.min.js"></script>
+    <script type="text/javascript"
+            src="{{MEDIA_URL}}/js/jquery.form.js"></script>
+    <script type="text/javascript" 
+            src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
 
     {% include "job_status.html" %}
 
@@ -127,23 +132,59 @@
 {% endblock %}
 
 {% block content %}
-<h1><a class="breadcrumb" href="{% url cluster-detail cluster.slug %}">{{cluster.hostname}}</a>
-: {{node.hostname}}</h1>
+<h1>
+    <a class="breadcrumb" href="{% url cluster-detail cluster.slug %}">
+        {{cluster.hostname}}
+    </a>
+    : {{node.hostname}}
+</h1>
 
 <ul id="messages"></ul>
 <div id="tabs">
     <ul>
         <li><a href="#detail"><span>Detail</span></a></li>
-        <li><a title="primary" href="{% url node-primary-vms cluster.slug node.hostname %}"><span>Primary</span></a></li>
-        <li><a title="secondary" href="{% url node-secondary-vms cluster.slug node.hostname %}"><span>Secondary</span></a></li>
-        <li><a title="log" href="{% url node-object_log cluster.slug node.hostname %}"><span>Log</span></a></li>
+        <li>
+            <a title="primary"
+                    href="{% url node-primary-vms cluster.slug node.hostname %}">
+                <span>Primary</span>
+            </a>
+        </li>
+        <li>
+            <a title="secondary" 
+                    href="{% url node-secondary-vms cluster.slug node.hostname %}">
+                <span>Secondary</span>
+            </a>
+        </li>
+        <li>
+            <a title="log"
+                    href="{% url node-object_log cluster.slug node.hostname %}">
+                <span>Log</span>
+            </a>
+        </li>
     </ul>
     <div id="detail">
         <ul id="actions">
             {% if node_count > 1 %}
-            <li><a class="button modify" title="modifies the role of this node" href="{% url node-role cluster.slug node.hostname %}">Change Role</a></li>
-            <li><a class="button migrate" title="migrates all primary instances of this node" href="{% url node-migrate cluster.slug node.hostname %}">Migrate</a></li>
-            <li><a class="button evacuate" title="migrates all secondary instances off this node" href="{% url node-evacuate cluster.slug node.hostname %}">Evacuate</a></li>
+            <li>
+                <a class="button modify" title="modifies the role of this node"
+                        href="{% url node-role cluster.slug node.hostname %}">
+                    Change Role
+                </a>
+            </li>
+            <li>
+                <a class="button migrate" 
+                        title="migrates all primary instances of this node" 
+                        href="{% url node-migrate cluster.slug node.hostname %}">
+                    Migrate
+                </a>
+            </li>
+            <li>
+                <a class="button evacuate"
+                        title="migrates all secondary instances off this node"
+                        href="{% url node-evacuate cluster.slug node.hostname %}">
+                    Evacuate
+                </a>
+            </li>
             {% endif %}
         </ul>
         <table id="nodes" class="overview horizontal">
@@ -158,7 +199,10 @@
             <tr><th>Primary IP</th><td>{{node.info.pip}}</td></tr>
             <tr><th>Secondary IP</th><td>{{node.info.sip}}</td></tr>
             <tr><th>Role</th><td>{{node.info.role|node_role}}</td></tr>
-            <tr><th>Master Candidate</th><td>{{node.info.master_candidate|checkmark}}</td></tr>
+            <tr>
+                <th>Master Candidate</th>
+                <td>{{node.info.master_candidate|checkmark}}</td>
+            </tr>
             <tr><th>Drained</th><td>{{node.info.drained|checkmark}}</td></tr>
             <tr><th>Ram</th><td class="ram">{% node_memory node %}</td></tr>
             <tr><th>Disk</th><td class="disk">{% node_disk node %}</td>
