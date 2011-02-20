@@ -132,6 +132,9 @@ def edit(request, cluster_slug=None):
                     # valid to enter bad info.  A user might be adding
                     # info for an offline cluster.
                     pass
+
+            log_action('EDIT', user, cluster)
+
             return HttpResponseRedirect(reverse('cluster-detail', \
                                                 args=[cluster.slug]))
     
