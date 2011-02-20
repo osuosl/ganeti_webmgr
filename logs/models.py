@@ -181,19 +181,11 @@ class LogItem(models.Model):
     class Meta:
         ordering = ("timestamp", )
     
-    def to_template(self):
+    def get_template(self):
         """
-        Renders single line log entry containing information like:
-        - date and extensive time
-        - user who performed an action
-        - action itself
-        - object affected by the action
+        retrieves template for this log item
         """
-
-        template = get_template(self.action.template)
-        template.render(Context({"log_item": self}))
-
-        return template
+        return get_template(self.action.template)
         
     def __repr__(self):
         return 'time: %s user: %s object_type1: %s'%(self.timestamp, self.user, self.object_type1)
