@@ -210,3 +210,4 @@ def create_defaults():
     LogAction.objects.register('EDIT', 'object_log/edit.html')
     LogAction.objects.register('CREATE', 'object_log/add.html')
     LogAction.objects.register('DELETE', 'object_log/delete.html')
+create_defaults()
