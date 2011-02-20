@@ -421,10 +421,15 @@ def detail(request, cluster_slug, instance):
     
     if not (admin or power or remove or modify):
         return render_403(request, 'You do not have permission to view this cluster\'s details')
-    
+
+
+    # check job for pending jobs that should be rendered with a different
+    # detail template.  This allows us to reduce the chance that users will do
+    # something strange like rebooting a VM that is being deleted or is not
+    # fully created yet.
     if vm.pending_delete:
         template = 'virtual_machine/delete_status.html'
-    elif vm.template_id:
+    elif vm.template and vm.info is None:
         template = 'virtual_machine/create_status.html'
     else:
         template = 'virtual_machine/detail.html'
