@@ -34,6 +34,7 @@ from object_permissions.views.permissions import view_users, view_permissions
 from object_permissions import signals as op_signals
 
 from logs.models import LogItem
+from logs.views import list_for_object
 from util.client import GanetiApiError
 
 log_action = LogItem.objects.log_action
@@ -332,6 +333,16 @@ class EditClusterForm(forms.ModelForm):
             del self._errors['slug']
         
         return data
+
+
+@login_required
+def object_log(request, cluster_slug):
+    """ displays object log for this cluster """
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    user = request.user
+    if not (user.is_superuser or user.has_perm('admin', cluster)):
+        return render_403(request, "You do not have sufficient privileges")
+    return list_for_object(request, cluster)
 
 
 def recv_user_add(sender, editor, user, obj, **kwargs):

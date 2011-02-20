@@ -1779,7 +1779,20 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
             #port = info_["network_port"]
             #password = ""
             self.assertNotEqual(json.loads(response), (False, False, False))
-    
+
+    def test_view_object_log(self):
+        """
+        Tests view for object log:
+
+        Verifies:
+            * lack of permissions returns 403
+            * nonexistent Cluster returns 404
+            * nonexistent VirtualMachine returns 404
+        """
+        url = "/cluster/%s/%s/object_log/"
+        args = (cluster.slug, vm.hostname)
+        self.validate_get(url, args, 'object_log/log.html')
+
     def test_view_users(self):
         """
         Tests view for cluster users:

@@ -139,6 +139,7 @@
         <li><a href="#detail"><span>Detail</span></a></li>
         <li><a title="primary" href="{% url node-primary-vms cluster.slug node.hostname %}"><span>Primary</span></a></li>
         <li><a title="secondary" href="{% url node-secondary-vms cluster.slug node.hostname %}"><span>Secondary</span></a></li>
+        <li><a title="log" href="{% url node-object_log cluster.slug node.hostname %}"><span>Log</span></a></li>
     </ul>
     <div id="detail">
         <ul id="actions">

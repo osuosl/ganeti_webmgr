@@ -28,6 +28,8 @@ from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.conf import settings
 
+from logs.views import list_for_object
+
 from object_permissions.views.permissions import view_users, view_permissions
 from object_permissions import get_users_any
 from object_permissions import signals as op_signals
@@ -473,6 +475,22 @@ def permissions(request, cluster_slug, instance, user_id=None, group_id=None):
 
     url = reverse('vm-permissions', args=[cluster_slug, vm.hostname])
     return view_permissions(request, vm, url, user_id, group_id)
+
+
+@login_required
+def object_log(request, cluster_slug, instance):
+    """
+    Display all of the Users of a VirtualMachine
+    """
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    vm = get_object_or_404(VirtualMachine, hostname=instance)
+
+    user = request.user
+    if not (user.is_superuser or user.has_perm('admin', vm) or \
+        user.has_perm('admin', cluster)):
+        return render_403(request, "You do not have sufficient privileges")
+
+    return list_for_object(request, vm)
 
 
 @login_required

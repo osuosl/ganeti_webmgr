@@ -25,6 +25,7 @@ from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
 from logs.models import LogItem
+from logs.views import list_for_object
 from util.client import GanetiApiError
 
 log_action = LogItem.objects.log_action
@@ -96,6 +97,20 @@ def secondary(request, cluster_slug, host):
     return render_to_response("virtual_machine/table.html", \
                 {'node': node, 'vms':vms}, \
                 context_instance=RequestContext(request))
+
+@login_required
+def object_log(request, cluster_slug, host):
+    """
+    Display object log for this node
+    """
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    node = get_object_or_404(Node, hostname=host)
+
+    user = request.user
+    if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
+        return render_403(request, "You do not have sufficient privileges")
+
+    return list_for_object(request, node)
 
 
 class RoleForm(forms.Form):
