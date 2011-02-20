@@ -66,8 +66,7 @@
 		});
         {% if admin %}
             {% ifnotequal instance.info.status "running" %}
-                vnc_tab_index = 2;
-                $('#tabs').tabs("option", "disabled", [vnc_tab_index]);
+                $('#tabs .ui-tabs-nav a[title=console]').parent().addClass('ui-state-disabled');
             {% endifnotequal %}
         {% endif %}
         
