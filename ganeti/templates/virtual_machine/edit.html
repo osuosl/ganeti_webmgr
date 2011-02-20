@@ -4,6 +4,7 @@
 <h1>Edit {{ instance.hostname }}</h1>
 <fieldset>
     <form id="vmeditform" method="post">
+        {% vmfield form.os %}
         <fieldset>
             <legend>General Parameters</legend>
             {% vmfield form.vcpus %}

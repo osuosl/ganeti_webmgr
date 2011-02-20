@@ -43,7 +43,7 @@ from ganeti.forms.virtual_machine import NewVirtualMachineForm, \
     ModifyVirtualMachineForm, ModifyConfirmForm, MigrateForm
 from ganeti.templatetags.webmgr_tags import render_storage
 from ganeti.utilities import cluster_default_info, cluster_os_list, \
-    compare
+    compare, os_prettify
 
 
 @login_required
@@ -600,6 +600,7 @@ def modify(request, cluster_slug, instance):
 
     if request.method == 'POST':
         form = ModifyVirtualMachineForm(user, None, request.POST)
+        form.fields['os'].choices = request.session['os_list']
         if form.is_valid():
             data = form.cleaned_data
             request.session['edit_form'] = data
@@ -625,6 +626,7 @@ def modify(request, cluster_slug, instance):
                 initial['memory'] = str(info['beparams']['memory'])
                 initial['nic_link'] = info['nic.links'][0]
                 initial['nic_mac'] = info['nic.macs'][0]
+                initial['os'] = info['os']
                 fields = ('acpi', 'disk_cache', 'initrd_path', 'kernel_args', \
                     'kvm_flag', 'mem_path', 'migration_downtime', \
                     'security_domain', 'security_model', 'usb_mouse', \
@@ -637,6 +639,13 @@ def modify(request, cluster_slug, instance):
                     initial[field] = hvparams[field]
 
             form = ModifyVirtualMachineForm(user, cluster, initial=initial)
+            
+            # Get the list of oses from the cluster
+            os_list = cluster_os_list(cluster)
+
+            # Set os_list for cluster in session
+            request.session['os_list'] = os_list
+            form.fields['os'].choices = os_list
 
     return render_to_response("virtual_machine/edit.html", {
         'cluster': cluster,
@@ -672,9 +681,11 @@ def modify_confirm(request, cluster_slug, instance):
                 nicmac = rapi_dict.pop('nic_mac')
                 vcpus = rapi_dict.pop('vcpus')
                 memory = rapi_dict.pop('memory')
+                os = rapi_dict.pop('os')
                 # Modify Instance rapi call
                 job_id = cluster.rapi.ModifyInstance(instance,
                     nics=[(0, {'link':niclink, 'mac':nicmac,}),], \
+                    os_name=os, \
                     hvparams=rapi_dict, \
                     beparams={'vcpus':vcpus,'memory':memory}
                 )
@@ -696,6 +707,8 @@ def modify_confirm(request, cluster_slug, instance):
             # Remove session variables.
             if 'edit_form' in request.session:
                 del request.session['edit_form']
+            if 'os_list' in request.session:
+                del request.session['os_list']
             # Redirect to instance-detail
             return HttpResponseRedirect( \
                 reverse("instance-detail", args=[cluster.slug, vm.hostname]))
@@ -716,6 +729,7 @@ def modify_confirm(request, cluster_slug, instance):
             nic_mac=info['nic.macs'][0],
             memory=info['beparams']['memory'],
             vcpus=info['beparams']['vcpus'],
+            os=info['os'],
         )
         # Add hvparams to the old_set
         old_set.update(hvparams)
@@ -725,6 +739,9 @@ def modify_confirm(request, cluster_slug, instance):
             if key == 'memory':
                 diff = compare(render_storage(old_set[key]), \
                     render_storage(data[key]))
+            elif key == 'os':
+                oses = os_prettify([old_set[key], data[key]])[0][1]
+                diff = compare(oses[0][1], oses[1][1])
             elif key not in old_set.keys():
                 diff = ""
                 instance_diff[key] = 'Key missing'

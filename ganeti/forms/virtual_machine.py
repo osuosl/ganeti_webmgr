@@ -275,7 +275,7 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
 
     exclude = ('start', 'owner', 'cluster', 'hostname', 'name_check',
         'iallocator', 'iallocator_hostname', 'disk_template', 'pnode', 'snode',\
-        'os', 'disk_size', 'nic_mode', 'template_name')
+        'disk_size', 'nic_mode', 'template_name')
 
     disk_caches = [
         (u'default',u'Default'),
