@@ -183,21 +183,14 @@ class LogItem(models.Model):
     
     def to_template(self):
         """
-        Renders single line log entry containing information like:
-        - date and extensive time
-        - user who performed an action
-        - action itself
-        - object affected by the action
+        returns template
         """
+        action = LogAction.objects.get_from_cache(self.action_id)
+        return get_template(action)
 
-        template = get_template(self.action.template)
-        template.render(Context({"log_item": self}))
-
-        return template
-        
     def __repr__(self):
         return 'time: %s user: %s object_type1: %s'%(self.timestamp, self.user, self.object_type1)
-    
+
     def __str__(self):
         """
         Renders single line log entry to a string, 
@@ -207,14 +200,15 @@ class LogItem(models.Model):
         - action itself
         - object affected by the action
         """
-
-        template = get_template(self.action.template)
-        template = str(template.render(Context({"log_item": self})))
-
-        return template
+        action = LogAction.objects.get_from_cache(self.action_id)
+        template = get_template(action)
+        return template.render(Context({"log_item": self}))
 
 
 #Most common log types, registered by default for convenience
-LogAction.objects.register('EDIT', 'object_log/edit.html')
-LogAction.objects.register('CREATE', 'object_log/add.html')
-LogAction.objects.register('DELETE', 'object_log/delete.html')
+
+def register_defaults():
+    LogAction.objects.register('EDIT', 'object_log/edit.html')
+    LogAction.objects.register('CREATE', 'object_log/create.html')
+    LogAction.objects.register('DELETE', 'object_log/delete.html')
+register_defaults()
