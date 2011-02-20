@@ -415,13 +415,15 @@ def detail(request, cluster_slug, instance):
         power = True
         modify = True
         migrate = True
+        tags = True
     else:
         remove = user.has_perm('remove', vm)
         power = user.has_perm('power', vm)
         modify = user.has_perm('modify', vm)
+        tags = user.has_perm('tags', vm)
         migrate = user.has_perm('migrate', cluster)
     
-    if not (admin or power or remove or modify):
+    if not (admin or power or remove or modify or tags):
         return render_403(request, 'You do not have permission to view this cluster\'s details')
     
     if vm.pending_delete:
