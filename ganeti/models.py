@@ -389,6 +389,12 @@ class Job(CachedClusterObject):
                 break
         return info['ops'][index]['OP_ID']
 
+    @property
+    def operation(self):
+        """
+        Returns the last operation, which is generally the primary operation.
+        """
+        return self.info['ops'][-1]['OP_ID']
 
     def __repr__(self):
         return "<Job: '%s'>" % self.id
