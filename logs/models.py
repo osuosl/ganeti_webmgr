@@ -97,12 +97,12 @@ class LogAction(models.Model):
     @param name           string  verb (for example: add)
     """
     
-    name = models.CharField(max_length=128, unique=True) #add, delete
-    template = models.CharField(max_length=128, unique=True) #template to load
+    name = models.CharField(max_length=128, unique=True, primary_key=True)
+    template = models.CharField(max_length=128, unique=True)
     objects = LogActionManager()
     
     def __str__(self):
-        return 'LogAction object with id: %s Name: %s Template: %s \n'%(self.id, self.name, self.template)
+        return 'LogAction: %s Template: %s \n'%(self.name, self.template)
     
 
 class LogItemManager(models.Manager):
@@ -185,7 +185,8 @@ class LogItem(models.Model):
         """
         retrieves template for this log item
         """
-        return get_template(self.action.template)
+        action = LogAction.objects.get_from_cache(self.action_id)
+        return get_template(action.template)
         
     def __repr__(self):
         return 'time: %s user: %s object_type1: %s'%(self.timestamp, self.user, self.object_type1)
@@ -199,14 +200,13 @@ class LogItem(models.Model):
         - action itself
         - object affected by the action
         """
-
-        template = get_template(self.action.template)
-        template = str(template.render(Context({"log_item": self})))
-
-        return template
+        action = LogAction.objects.get_from_cache(self.action_id)
+        template = get_template(action.template)
+        return template.render(Context({"log_item": self}))
 
 
 #Most common log types, registered by default for convenience
-LogAction.objects.register('EDIT', 'object_log/edit.html')
-LogAction.objects.register('CREATE', 'object_log/add.html')
-LogAction.objects.register('DELETE', 'object_log/delete.html')
+def create_defaults():
+    LogAction.objects.register('EDIT', 'object_log/edit.html')
+    LogAction.objects.register('CREATE', 'object_log/add.html')
+    LogAction.objects.register('DELETE', 'object_log/delete.html')

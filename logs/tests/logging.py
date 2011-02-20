@@ -23,7 +23,7 @@ from django.contrib.auth.models import User, Group
 from django.test import TestCase
 
 from ganeti.models import Profile
-from logs.models import LogItem, LogAction
+from logs.models import LogItem, LogAction, create_defaults, create_defaults
 
 
 class TestLogActionModel(TestCase):
@@ -33,6 +33,7 @@ class TestLogActionModel(TestCase):
 
     def tearDown(self):
         LogAction.objects.all().delete()
+        create_defaults()
 
     def test_trivial(self):
         LogAction()
@@ -94,16 +95,12 @@ class TestLogItemModel(TestCase):
         #dict_ = globals()
         dict_["user2"] = user2
 
-        # register the defaults again just incase the user edits them
-        LogAction.objects.register('EDIT', 'object_log/edit.html')
-        LogAction.objects.register('ADD', 'object_log/add.html')
-        LogAction.objects.register('DELETE', 'object_log/delete.html')
+        create_defaults()
 
     def tearDown(self):
         User.objects.all().delete()
         Profile.objects.all().delete()
         LogItem.objects.all().delete()
-        LogAction.objects.all().delete()
         LogItem.objects.clear_cache()
 
     def test_log_creation(self):
@@ -150,6 +147,7 @@ class TestObjectLogViews(TestCase):
 
     def setUp(self):
         self.tearDown()
+        create_defaults()
 
         superuser = User(username='superuser', is_superuser=True)
         unauthorized = User(username='unauthorized')
