@@ -142,8 +142,8 @@ class TestLogItemModel(TestCase):
         item1.timestamp = timestamp
         item2.timestamp = timestamp
 
-        self.assertEqual('[29/09/2010 15:31] Mod edited user Joe User', str(item1))
-        self.assertEqual('[29/09/2010 15:31] Mod deleted user Joe User', str(item2))
+        self.assertEqual('<td class="timestamp">29/09/2010 15:31</td><td>Mod edited user Joe User</td>', str(item1))
+        self.assertEqual('<td class="timestamp">29/09/2010 15:31</td><td>Mod deleted user Joe User</td>', str(item2))
 
 
 class TestObjectLogViews(TestCase):
