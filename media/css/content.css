@@ -337,3 +337,7 @@ tr.group td.name {background:url(/media/images/icons/group.png) no-repeat 0 4px;
 
 /* No VNC tab */
 #encrypt_check {display:none;}
+
+/* object log */
+.object_log .timestamp {width:9em;}
+.object_log td {text-align:left !important;}
