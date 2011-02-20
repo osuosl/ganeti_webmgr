@@ -25,10 +25,9 @@ from django.conf.urls.defaults import *
 #admin.autodiscover()
 
 urlpatterns = patterns('',
-    # Example:
     (r'^', include('ganeti.urls')),
     (r'^', include('object_permissions.urls')),
-    
+    (r'^', include('logs.urls')),
 
     # user management
     # account/activate/<key>/ - Activate a user
@@ -48,9 +47,7 @@ urlpatterns = patterns('',
                         {'next_page':'/'}, name="logout"),
     (r'^accounts/', include('registration.urls')),
 
-    # Uncomment the next line to enable the admin:
-    #(r'^admin/', include(admin.site.urls)),
-    
+
     (r'^500/$', 'django.views.generic.simple.direct_to_template', {'template':"500.html"})
 )
 

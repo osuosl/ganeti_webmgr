@@ -1,0 +1,4 @@
+<td class="timestamp">{{log_item.timestamp|date}}</td>
+<td><a href="{% url user-detail log_item.user.pk %}">{{log_item.user}}</a>
+modified permissions for user <a href="{% url user-detail log_item.object2.pk %}">{{log_item.object2}}</a>
+    on {{log_item.object_type1}} {{log_item.object1}}</td>
