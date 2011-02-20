@@ -38,7 +38,8 @@
                 },
                 ajaxOptions: {
                     error: function(xhr, status, index, anchor) {
-                        $(anchor.hash).html("Couldn't load this tab. We'll try to fix this as soon as possible.");
+                        $(anchor.hash).html("Couldn't load this tab. We'll " +
+                                "try to fix this as soon as possible.");
                     }
                 }
             });
@@ -50,25 +51,37 @@
                 if (actions_enabled) {
                     $('.qtip').qtip('destroy');
                     var $this = $(this);
-                    var title = ($this.hasClass("modify")) ? "Modify Role" : "Migrate Primary Virtual Machines";
+                    var title = ($this.hasClass("modify")) ? "Modify Role" : 
+                            "Migrate Primary Virtual Machines";
 
                     $(this).qtip({
                         content: {
                            url: this.href,
                            title: {text:title, button:"close"}
                         },
-                        position: {  corner:{target:'center', tooltip:'center'}},
-                        style: {name: 'dark', border:{radius:5}, width:400, background:'#eeeeee'},
+                        position: {
+                            corner:{
+                                target:'center', tooltip:'center'
+                            }
+                        },
+                        style: {
+                            name: 'dark', 
+                            border:{radius:5}, 
+                            width:400, 
+                            background:'#eeeeee'
+                        },
                         show: {when:false, ready:true},
                         hide: {fixed: true, when:false},
                         api:{onShow:function(){
-                            $(".ajax_form input[type!=hidden], .ajax_form select").first().focus();
+                            $(".ajax_form input[type!=hidden], " +
+                                    ".ajax_form select").first().focus();
                         }}
                     });
                 }
             });
 
-            $(".node_role_form, .node_migrate_form").live("submit", function(event){
+            $(".node_role_form, .node_migrate_form").live("submit",
+                    function(event){
                 event.preventDefault();
                 $("#errors").empty();
                 $(this).ajaxSubmit({success: node_form_response});
@@ -76,8 +89,9 @@
 
             $(".evacuate").click(function(event){
                 event.preventDefault();
-                if (actions_enabled) {
-                    if (confirm("Are you sure you want to migrate all secondary virtual machines off this node?")) {
+                if(actions_enabled) {
+                    if(confirm("Are you sure you want to migrate all " +
+                            "secondary virtual machines off this node?")){
                         $.post(this.href, node_action_response);
                     }
                 }
