@@ -264,7 +264,7 @@ class TestClusterModel(TestCase):
         node1.refresh()
         ram = c.available_ram
         self.assertEqual(9999, ram['total'])
-        self.assertEqual(0, ram['free'])
+        self.assertEqual(9420, ram['free'])
 
     
     def test_available_disk(self):

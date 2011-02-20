@@ -27,12 +27,9 @@
         $(document).ready(function() {
             $('#tabs').tabs({
                 spinner: false,
+                cache: true,
                 select: function(event, ui) {
                     window.location.hash = ui.tab.hash;
-                    var tabID = ui.panel;
-                   if (tabID.id != "overview") {
-                           $(tabID).html("<div class='spinner'><br/>Loading...<br/><br/><img src='{{MEDIA_URL}}/images/ajax-loader.gif'></div>");
-                   }
                 },
                 ajaxOptions: {
                     error: function(xhr, status, index, anchor) {
@@ -143,11 +140,13 @@
     </ul>
     <div id="detail">
         <ul id="actions">
+            {% if node_count > 1 %}
             <li><a class="button modify" title="modifies the role of this node" href="{% url node-role cluster.slug node.hostname %}">Change Role</a></li>
             <li><a class="button migrate" title="migrates all primary instances of this node" href="{% url node-migrate cluster.slug node.hostname %}">Migrate</a></li>
             <li><a class="button evacuate" title="migrates all secondary instances off this node" href="{% url node-evacuate cluster.slug node.hostname %}">Evacuate</a></li>
+            {% endif %}
         </ul>
-        <table id="nodes" class="overview">
+        <table id="nodes" class="overview horizontal">
             <tr><th>status</th><td class="status">
                 {% if node.info.offline %}
                     <div class="icon_stopped" title="Offline"></div>
@@ -158,9 +157,9 @@
             </tr>
             <tr><th>Primary IP</th><td>{{node.info.pip}}</td></tr>
             <tr><th>Secondary IP</th><td>{{node.info.sip}}</td></tr>
-            <tr><th>Role</th><td>{{node.info.role}}</td></tr>
-            <tr><th>Master Candidate</th><td>{{node.info.master_candidate}}</td></tr>
-            <tr><th>Drained</th><td>{{node.info.drained}}</td></tr>
+            <tr><th>Role</th><td>{{node.info.role|node_role}}</td></tr>
+            <tr><th>Master Candidate</th><td>{{node.info.master_candidate|checkmark}}</td></tr>
+            <tr><th>Drained</th><td>{{node.info.drained|checkmark}}</td></tr>
             <tr><th>Ram</th><td class="ram">{% node_memory node %}</td></tr>
             <tr><th>Disk</th><td class="disk">{% node_disk node %}</td>
             <tr>

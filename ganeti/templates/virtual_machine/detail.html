@@ -212,6 +212,7 @@
         </ul>
 
         {% with instance.info as info %}
+        {% if info %}
         <table class="overview horizontal">
             <tr><th>Owner</th><td>{{ instance.owner.name }}</td></tr>
             <tr><th>Created on</th><td>{{ instance.ctime|date }}</td></tr>
@@ -308,6 +309,7 @@
             <tr><th>VNC x509 Verify</th><td>{{ info.hvparams.vnc_x509_verify|checkmark }}</td></tr>
         </table>
 
+        {% endif %}
         {% endwith %}
     </div>
 </div>
