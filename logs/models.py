@@ -96,13 +96,12 @@ class LogAction(models.Model):
 
     @param name           string  verb (for example: add)
     """
-    
-    name = models.CharField(max_length=128, unique=True) #add, delete
+    name = models.CharField(max_length=128, unique=True, primary_key=True)
     template = models.CharField(max_length=128, unique=True) #template to load
     objects = LogActionManager()
     
     def __str__(self):
-        return 'LogAction object with id: %s Name: %s Template: %s \n'%(self.id, self.name, self.template)
+        return 'LogAction: %s Template: %s'%(self.name, self.template)
     
 
 class LogItemManager(models.Manager):
