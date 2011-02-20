@@ -175,7 +175,8 @@ function formUpdater(url_choices, url_options, url_defaults){
 
                         // boot device dropdown
                         if(d['bootorder']) {
-                            $("#id_bootorder :selected").removeAttr('selected');
+                            $("#id_bootorder :selected").removeAttr(
+                                    'selected');
                             $("#id_bootorder [value=" + d['bootorder'] + "]")
                                 .attr('selected','selected');
                         }
@@ -186,9 +187,11 @@ function formUpdater(url_choices, url_options, url_defaults){
                         }
 
                         // iallocator checkbox
-                        if(d['iallocator'] != "" && d['iallocator'] != undefined){
+                        if(d['iallocator'] != "" && 
+                                d['iallocator'] != undefined){
                             if(!iallocator_hostname.attr('value')) {
-                                iallocator_hostname.attr('value', d['iallocator']);
+                                iallocator_hostname.attr('value',
+                                        d['iallocator']);
                                 if(iallocator.siblings("span").length == 0){
                                     iallocator.after(
                                         "<span>" + using_str +
