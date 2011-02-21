@@ -678,15 +678,17 @@ def modify_confirm(request, cluster_slug, instance):
             elif 'reboot' in request.POST or 'save' in request.POST:
                 rapi_dict = json.loads(data['rapi_dict'])
                 niclink = rapi_dict.pop('nic_link')
-                nicmac = rapi_dict.pop('nic_mac')
+                nicmac = rapi_dict.pop('nic_mac', None)
                 vcpus = rapi_dict.pop('vcpus')
                 memory = rapi_dict.pop('memory')
                 os = rapi_dict.pop('os')
                 # Modify Instance rapi call
-                job_id = cluster.rapi.ModifyInstance(instance,
-                    nics=[(0, {'link':niclink, 'mac':nicmac,}),], \
-                    os_name=os, \
-                    hvparams=rapi_dict, \
+                if nicmac is None:
+                    nics=[(0, {'link':niclink,}),] 
+                else:
+                    nics=[(0, {'link':niclink, 'mac':nicmac,}),]
+                job_id = cluster.rapi.ModifyInstance(instance, \
+                    nics=nics, os_name=os, hvparams=rapi_dict, \
                     beparams={'vcpus':vcpus,'memory':memory}
                 )
                 # Create job and update message on virtual machine detail page
@@ -752,6 +754,10 @@ def modify_confirm(request, cluster_slug, instance):
             if diff != "":
                 label = fields[key].label
                 instance_diff[label] = diff
+
+        # Remove NIC MAC from data if it does not change
+        if fields['nic_mac'].label not in instance_diff:
+            del data['nic_mac']
         # Repopulate form with changed values
         form.fields['rapi_dict'] = CharField(widget=HiddenInput, \
             initial=json.dumps(data)) 
