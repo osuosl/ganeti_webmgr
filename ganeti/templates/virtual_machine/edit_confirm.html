@@ -16,7 +16,7 @@ form input.submit {margin:1em .5em 0px 0px;}
     <table>
         <h2><a href="{% url instance-detail cluster.slug instance.hostname %}">{{ instance.hostname }}</a></h2>
         {% for k, v in instance_diff.items %}
-            <tr><th>{{ k|capfirst }}</th><td>{{ v|capfirst }}</td></tr>
+            <tr><th>{{ k }}</th><td>{{ v|capfirst }}</td></tr>
         {% empty %}
             <tr><td>Nothing changed.</td></tr>
         {% endfor %}

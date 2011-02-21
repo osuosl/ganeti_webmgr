@@ -735,6 +735,7 @@ def modify_confirm(request, cluster_slug, instance):
         old_set.update(hvparams)
 
         instance_diff = {}
+        fields = ModifyVirtualMachineForm(user, None).fields
         for key in data.keys():
             if key == 'memory':
                 diff = compare(render_storage(old_set[key]), \
@@ -749,7 +750,8 @@ def modify_confirm(request, cluster_slug, instance):
                 diff = compare(old_set[key], data[key])
 
             if diff != "":
-                instance_diff[key] = diff
+                label = fields[key].label
+                instance_diff[label] = diff
         # Repopulate form with changed values
         form.fields['rapi_dict'] = CharField(widget=HiddenInput, \
             initial=json.dumps(data)) 
