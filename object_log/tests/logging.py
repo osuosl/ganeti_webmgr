@@ -23,7 +23,7 @@ from django.contrib.auth.models import User, Group
 from django.test import TestCase
 
 from ganeti.models import Profile
-from logs.models import LogItem, LogAction, create_defaults, create_defaults
+from object_log.models import LogItem, LogAction, create_defaults, create_defaults
 
 
 class TestLogActionModel(TestCase):

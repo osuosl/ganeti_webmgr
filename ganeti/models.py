@@ -41,7 +41,7 @@ from django.db.models.query import QuerySet
 from django.db.models.signals import post_save, post_syncdb
 from django.db.utils import DatabaseError
 
-from logs.models import LogItem, LogAction
+from object_log.models import LogItem, LogAction
 log_action = LogItem.objects.log_action
 
 from object_permissions.registration import register

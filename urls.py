@@ -27,7 +27,7 @@ from django.conf.urls.defaults import *
 urlpatterns = patterns('',
     (r'^', include('ganeti.urls')),
     (r'^', include('object_permissions.urls')),
-    (r'^', include('logs.urls')),
+    (r'^', include('object_log.urls')),
 
     # user management
     # account/activate/<key>/ - Activate a user

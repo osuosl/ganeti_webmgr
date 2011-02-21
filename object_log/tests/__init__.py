@@ -17,4 +17,4 @@
 # USA.
 
 
-from logs.tests.logging import *
+from object_log.tests.logging import *
