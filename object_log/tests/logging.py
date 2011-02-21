@@ -111,7 +111,6 @@ class TestLogItemModel(TestCase):
         """
         
         self.assertEqual(len(LogItem.objects.all()), 0)
-        self.assertEqual(len(LogAction.objects.all()), 3)
                 
         log_item = LogItem.objects.log_action("EDIT", user1, user2,)
         self.assertTrue(log_item is not None)
