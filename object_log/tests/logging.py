@@ -101,7 +101,6 @@ class TestLogItemModel(TestCase):
         User.objects.all().delete()
         Profile.objects.all().delete()
         LogItem.objects.all().delete()
-        LogItem.objects.clear_cache()
 
     def test_log_creation(self):
         """

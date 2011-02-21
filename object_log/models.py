@@ -106,16 +106,6 @@ class LogAction(models.Model):
     
 
 class LogItemManager(models.Manager):
-    
-    # Cache to avoid re-looking up LogAction objects all over the place
-    _cache = {}
-
-    # XXX: it doesn't refresh when any LogAction is changed or removed
-    def clear_cache(self):
-        """
-        Clears out all LogAction cached objects
-        """
-        self.__class__._cache.clear()
 
     def log_action(self, key, user, object1, object2=None,  object3=None):
         """
