@@ -130,7 +130,7 @@ def reinstall(request, cluster_slug, instance):
         VirtualMachine.objects.filter(id=instance.id).update(last_job=job, ignore_cache=True)
 
         # log information
-        log_action('VM_REINSTALL', user, instance)
+        log_action('VM_REINSTALL', user, instance, job)
 
         return HttpResponseRedirect(
             reverse('instance-detail', args=[instance.cluster.slug, instance.hostname]))
@@ -188,7 +188,7 @@ def shutdown(request, cluster_slug, instance):
             msg = job.info
             
             # log information about stopping the machine
-            log_action('VM_STOP', user, vm)
+            log_action('VM_STOP', user, vm, job)
         except GanetiApiError, e:
             msg = {'__all__':[str(e)]}
         return HttpResponse(json.dumps(msg), mimetype='application/json')
@@ -226,7 +226,7 @@ def startup(request, cluster_slug, instance):
             msg = job.info
             
             # log information about starting up the machine
-            log_action('VM_START', user, vm)
+            log_action('VM_START', user, vm, job)
         except GanetiApiError, e:
             msg = {'__all__':[str(e)]}
         return HttpResponse(json.dumps(msg), mimetype='application/json')
@@ -254,7 +254,7 @@ def migrate(request, cluster_slug, instance):
                 msg = job.info
 
                 # log information
-                log_action('VM_MIGRATE', user, vm)
+                log_action('VM_MIGRATE', user, vm, job)
 
                 return HttpResponse(json.dumps(msg), mimetype='application/json')
             except GanetiApiError, e:
@@ -288,7 +288,7 @@ def reboot(request, cluster_slug, instance):
             msg = job.info
             
             # log information about restarting the machine
-            log_action('VM_RESTART', user, vm)
+            log_action('VM_RESTART', user, vm, job)
         except GanetiApiError, e:
             msg = {'__all__':[str(e)]}
         return HttpResponse(json.dumps(msg), mimetype='application/json')
@@ -817,7 +817,7 @@ def rename(request, cluster_slug, instance):
                     .update(hostname=hostname, last_job=job, ignore_cache=True)
 
                 # log information about creating the machine
-                log_action('VM_RENAME', user, vm)
+                log_action('VM_RENAME', user, vm, job)
 
                 return HttpResponseRedirect( \
                 reverse('instance-detail', args=[cluster.slug, hostname]))
