@@ -41,7 +41,7 @@ from django.db.models.query import QuerySet
 from django.db.models.signals import post_save, post_syncdb
 from django.db.utils import DatabaseError
 
-from logs.models import LogItem
+from logs.models import LogItem, LogAction
 log_action = LogItem.objects.log_action
 
 from object_permissions.registration import register
@@ -784,11 +784,11 @@ class Node(CachedClusterObject):
             .update(ignore_cache=True, last_job=job)
         return job
     
-    def migrate(self, live):
+    def migrate(self, mode=None):
         """
         migrates all primary instances off this node
         """
-        id = self.rapi.MigrateNode(self.hostname, live)
+        id = self.rapi.MigrateNode(self.hostname, mode)
         job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
         self.last_job = job
         Node.objects.filter(pk=self.pk).update(ignore_cache=True, last_job=job)
@@ -952,12 +952,12 @@ class Cluster(CachedClusterObject):
         total = nodes['total'] if 'total' in nodes and nodes['total'] >= 0 else 0
         values = self.virtual_machines \
             .filter(status='running') \
-            .exclude(disk_size=-1).order_by() \
+            .exclude(ram=-1).order_by() \
             .aggregate(used=Sum('ram'))
 
         used = 0 if 'used' not in values or values['used'] is None else values['used']
         free = total-used if total-used >= 0 else 0
-        return {'total':total, 'free':total - free}
+        return {'total':total, 'free':free}
 
     @property
     def available_disk(self):
@@ -1417,11 +1417,11 @@ post_syncdb.connect(regenerate_cu_children)
 
 def log_group_create(sender, editor, **kwargs):
     """ log group creation signal """
-    log_action(editor, sender, 'created')
+    log_action('CREATE', editor, sender)
 
 def log_group_edit(sender, editor, **kwargs):
     """ log group edit signal """
-    log_action(editor, sender, 'edited')
+    log_action('EDIT', editor, sender)
 
 op_signals.view_group_created.connect(log_group_create)
 op_signals.view_group_edited.connect(log_group_edit)
@@ -1433,3 +1433,22 @@ op_signals.view_group_edited.connect(log_group_edit)
 # You *must* syncdb after you change these.
 register(permissions.CLUSTER_PARAMS, Cluster)
 register(permissions.VIRTUAL_MACHINE_PARAMS, VirtualMachine)
+
+
+# Register LogActions used within the Ganeti App
+LogAction.objects.register('VM_RESTART','ganeti/object_log/vm_reboot.html')
+LogAction.objects.register('VM_START','ganeti/object_log/vm_start.html')
+LogAction.objects.register('VM_STOP','ganeti/object_log/vm_stop.html')
+LogAction.objects.register('VM_MIGRATE','ganeti/object_log/vm_migrate.html')
+LogAction.objects.register('VM_REINSTALL','ganeti/object_log/vm_reinstall.html')
+LogAction.objects.register('VM_MODIFY','ganeti/object_log/vm_modify.html')
+LogAction.objects.register('VM_RENAME','ganeti/object_log/vm_rename.html')
+
+LogAction.objects.register('NODE_EVACUATE','ganeti/object_log/node_evacuate.html')
+LogAction.objects.register('NODE_MIGRATE','ganeti/object_log/node_migrate.html')
+LogAction.objects.register('NODE_ROLE_CHANGE','ganeti/object_log/node_role_change.html')
+
+# add log actions for permission actions here
+LogAction.objects.register('ADD_USER', 'ganeti/object_log/permissions/add_user.html')
+LogAction.objects.register('REMOVE_USER', 'ganeti/object_log/permissions/remove_user.html')
+LogAction.objects.register('MODIFY_PERMS', 'ganeti/object_log/permissions/modify_perms.html')

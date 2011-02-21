@@ -1,5 +1,4 @@
 # Copyright (C) 2010 Oregon State University et al.
-# Copyright (C) 2010 Greek Research and Technology Network
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -19,11 +18,76 @@
 
 from django.db import models
 
-#from ganeti.models import Profile
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import GenericForeignKey
-from django.utils.encoding import force_unicode
+from django.db.utils import DatabaseError
+from django.template.loader import get_template
+from django.template import Context
+
+
+
+class LogActionManager(models.Manager):
+    _cache = {}
+    _DELAYED = []
+
+    def register(self, key, template):
+        try:
+            return LogAction.objects._register(key, template)
+        except DatabaseError:
+            # there was an error, likely due to a missing table.  Delay this
+            # registration.
+            self._DELAYED.append((key, template))
+        
+    def _register(self, key, template):
+        """
+        Registers and caches an LogAction type
+        
+        @param key : Key identifying log action
+        @param template : template associated with key
+        """
+        try:
+            action = self.get_from_cache(key)
+            action.template = template
+            action.save()
+        except LogAction.DoesNotExist:
+            action, new = LogAction.objects.get_or_create(name=key, \
+            template=template)
+            self._cache.setdefault(self.db, {})[key] = action
+            action.save()
+        
+        return action
+    
+    def _register_delayed(**kwargs):
+        """
+        Register all permissions that were delayed waiting for database tables to
+        be created.
+        
+        Don't call this from outside code.
+        """
+        try:
+            for args in LogActionManager._DELAYED:
+                LogAction.objects._register(*args)
+            models.signals.post_syncdb.disconnect(LogActionManager._register_delayed)
+        except DatabaseError:
+            # still waiting for models in other apps to be created
+            pass
+
+    models.signals.post_syncdb.connect(_register_delayed)
+
+    def get_from_cache(self, key):
+        """
+        Attempts to retrieve the LogAction from cache, if it fails, loads
+        the action into the cache.
+        
+        @param key : key passed to LogAction.objects.get
+        """
+        try:
+            action = self._cache[self.db][key]
+        except KeyError:
+            action = LogAction.objects.get(name=key)
+            self._cache.setdefault(self.db, {})[key]=action
+        return action
 
 
 class LogAction(models.Model):
@@ -32,11 +96,17 @@ class LogAction(models.Model):
 
     @param name           string  verb (for example: add)
     """
-    name = models.CharField(max_length=128, unique=True) #add, delete
-
+    
+    name = models.CharField(max_length=128, unique=True, primary_key=True)
+    template = models.CharField(max_length=128, unique=True)
+    objects = LogActionManager()
+    
+    def __str__(self):
+        return 'LogAction: %s Template: %s \n'%(self.name, self.template)
+    
 
 class LogItemManager(models.Manager):
-
+    
     # Cache to avoid re-looking up LogAction objects all over the place
     _cache = {}
 
@@ -47,7 +117,7 @@ class LogItemManager(models.Manager):
         """
         self.__class__._cache.clear()
 
-    def log_action(self, user, affected_object, key, log_message=None):
+    def log_action(self, key, user, object1, object2=None,  object3=None):
         """
         Creates new log entry
 
@@ -60,31 +130,24 @@ class LogItemManager(models.Manager):
         #from django.utils.encoding import smart_unicode
         # Uncomment below:
         #key = smart_unicode(key)
+        dict = {}
+        action = LogAction.objects.get_from_cache(key)
+        
+        dict['action'] = action
+        dict['id'] = None
+        dict['timestamp'] = None
+        dict['user'] = user
+        dict['object1'] = object1
+        
+        if object2 != None:
+            dict['object2'] = object2
+        
+        if object3 != None:
+            dict['object3'] = object3
 
-        try:
-            action = self._cache[self.db][key]
-        except KeyError:
-            # get if exists
-            # or create otherwise
-            action, created = LogAction.objects.get_or_create(
-                name = key,
-            )
-            # load into cache
-            self._cache.setdefault(self.db, {})[key] = action
-
-        # now action is LogAction object
-        m = self.model(
-            id = None,
-            action = action,
-            timestamp = None,
-            user = user,
-            object_type = ContentType.objects.get_for_model(affected_object),
-            object_id = affected_object.pk,
-            object_repr = force_unicode(affected_object),
-            log_message = log_message,
-        )
+        m = self.model(**dict)
         m.save()
-        return m.id # occasionally someone needs this
+        return m
 
 
 class LogItem(models.Model):
@@ -92,45 +155,59 @@ class LogItem(models.Model):
     Single entry in log
     """
     action = models.ForeignKey(LogAction)
-    timestamp = models.DateTimeField(auto_now_add=True)
+    #action = models.CharField(max_length=128)
+    timestamp = models.DateTimeField(auto_now_add=True, )
     user = models.ForeignKey(User, related_name='log_items')
-    object_type = models.ForeignKey(ContentType, related_name='log_items')
+    
+    object_type1 = models.ForeignKey(ContentType, \
+    related_name='log_items1', null=True)
+    object_id1 = models.PositiveIntegerField(null=True)
+    object1 = GenericForeignKey("object_type1", "object_id1")
+    
+    object_type2 = models.ForeignKey(ContentType, \
+    related_name='log_items2', null=True)
+    object_id2 = models.PositiveIntegerField(null=True)
+    object2 = GenericForeignKey("object_type2", "object_id2")
+    
+    object_type3 = models.ForeignKey(ContentType, \
+    related_name='log_items3', null=True)
+    object_id3 = models.PositiveIntegerField(null=True)
+    object3 = GenericForeignKey("object_type3", "object_id3")
 
-    object_id = models.PositiveIntegerField()
-    object_repr = models.CharField(max_length=128, blank=True, null=True)
-    affected_object = GenericForeignKey("object_type", "object_id")
-
-    log_message = models.TextField(blank=True, null=True)
+    #log_message = models.TextField(blank=True, null=True)
 
     objects = LogItemManager()
 
     class Meta:
         ordering = ("timestamp", )
-
-    def __repr__(self):
+    
+    def get_template(self):
         """
-        Returns single line log entry containing informations like:
+        retrieves template for this log item
+        """
+        action = LogAction.objects.get_from_cache(self.action_id)
+        return get_template(action.template)
+        
+    def __repr__(self):
+        return 'time: %s user: %s object_type1: %s'%(self.timestamp, self.user, self.object_type1)
+    
+    def __str__(self):
+        """
+        Renders single line log entry to a string, 
+        containing information like:
         - date and extensive time
         - user who performed an action
         - action itself
         - object affected by the action
         """
-        # this format:
-        #[2010-11-30 14:12:31] user piotr changed user "piotr": root=True, abc=True
-        #[2010-11-30 14:12:31] user piotr deleted virtual machine "testfarm1"
-        msg = ""
-        if self.log_message:
-            msg = ": %s" % self.log_message
+        action = LogAction.objects.get_from_cache(self.action_id)
+        template = get_template(action.template)
+        return template.render(Context({"log_item": self}))
 
-        format = "[%(timestamp)s] user %(user)s %(action)s" \
-               + " %(object_type)s \"%(object_repr)s\"%(msg)s"
 
-        fields = dict(
-            timestamp = self.timestamp,
-            user = self.user,
-            action = self.action.name,
-            object_type = self.object_type.name,
-            object_repr = self.object_repr,
-            msg = msg,
-        )
-        return format % fields
+#Most common log types, registered by default for convenience
+def create_defaults():
+    LogAction.objects.register('EDIT', 'object_log/edit.html')
+    LogAction.objects.register('CREATE', 'object_log/add.html')
+    LogAction.objects.register('DELETE', 'object_log/delete.html')
+create_defaults()

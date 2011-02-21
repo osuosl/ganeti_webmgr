@@ -503,6 +503,7 @@ class RapiProxy(client.GanetiRapiClient):
         CallProxy.patch(instance, 'DeleteInstance', False, 1)
         CallProxy.patch(instance, 'ModifyInstance', False, 1)
         CallProxy.patch(instance, 'MigrateInstance', False, 1)
+        CallProxy.patch(instance, 'RenameInstance', False, 1)
 
         CallProxy.patch(instance, 'SetNodeRole', False, 1)
         CallProxy.patch(instance, 'EvacuateNode', False, 1)

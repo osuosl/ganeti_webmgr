@@ -337,6 +337,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
     """
     
     def setUp(self):
+        self.tearDown()
+
         models.client.GanetiRapiClient = RapiProxy
         vm, cluster = self.create_virtual_machine()
 
@@ -346,11 +348,13 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
               ('user',{'id':69}),
               ('user1',{'id':88}),
               ('vm_admin',{'id':77}),
+              ('vm_modify',{'id':75}),
               ('cluster_migrate',{'id':78}),
               ('cluster_admin',{'id':99}),
         ], g)
 
         vm_admin.grant('admin', vm)
+        vm_modify.grant('modify', vm)
         cluster_migrate.grant('migrate', cluster)
         cluster_admin.grant('admin', cluster)
         
@@ -1771,6 +1775,19 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         response = self.validate_get_configurable(url, args, None,
             "application/json", ["admin",])
 
+    def test_view_object_log(self):
+        """
+        Tests view for object log:
+
+        Verifies:
+            * lack of permissions returns 403
+            * nonexistent Cluster returns 404
+            * nonexistent VirtualMachine returns 404
+        """
+        url = "/cluster/%s/%s/object_log/"
+        args = (cluster.slug, vm.hostname)
+        self.validate_get(url, args, 'object_log/log.html')
+
     def test_view_users(self):
         """
         Tests view for cluster users:
@@ -2054,6 +2071,40 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         self.assertEqual([], group.get_perms(vm))
         self.assertEqual('"group_42"', response.content)
 
+    def test_view_rename(self):
+        """ tests renaming a VirtualMachine """
+        url = "/cluster/%s/%s/rename/"
+        args = (cluster.slug, vm.hostname)
+        template = 'virtual_machine/rename.html'
+        template_success = 'virtual_machine/detail.html'
+        users =[superuser, cluster_admin, vm_admin, vm_modify]
+        denied = [cluster_migrate]
+
+        # test GET requests
+        self.assert_standard_fails(url, args)
+        self.assert_200(url, args, users, template=template)
+        self.assert_403(url, args, denied)
+
+        # test POST
+        def tests(user, response):
+            updated_vm = VirtualMachine.objects.get(pk=vm.pk)
+            self.assertEqual('foo.arg.different', updated_vm.hostname)
+            vm.save()
+            
+        data = {'hostname':'foo.arg.different', 'ip_check':False, 'name_check':False}
+        self.assert_standard_fails(url, args, data, method='post')
+        self.assert_200(url, args, users, template_success, data=data, follow=True, method="post", tests=tests)
+        self.assert_403(url, args, denied, data=data, method="post")
+
+        # test form errors
+        def tests(user, response):
+            updated_vm = VirtualMachine.objects.get(pk=vm.pk)
+            self.assertEqual(vm.hostname, updated_vm.hostname)
+        errors = ({'hostname':vm.hostname},)
+
+        self.assert_view_missing_fields(url, args, data, fields=['hostname'], template=template, tests=tests)
+        self.assert_view_values(url, args, data, errors, template, tests=tests)
+
 
 class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
     
@@ -2311,6 +2362,7 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
                 (user1.profile.id, u'tester1'),
                 (group.organization.id, u'testing_group'),
             ], list(form.fields['owner'].choices))
+
 
 class TestVirtualMachineHelpers(TestCase):
 
