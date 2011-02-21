@@ -138,7 +138,6 @@ class ViewTestMixin():
             self.assertTrue(c.login(username=user.username, password='secret'))
             response = client_method(url % args, data, follow=follow)
             self.assertEqual(200, response.status_code, 'user unauthorized: %s' % user.username )
-            self.assertEqual(mime, response['content-type'])
             if template is not None:
                 self.assertTemplateUsed(response, template)
             if mime is not None:
@@ -146,3 +145,78 @@ class ViewTestMixin():
             
             if tests is not None:
                 tests(user, response)
+
+    def assert_view_missing_fields(self, url, args, data, fields=None, \
+                   template=None, mime=None, tests=None, method='post'):
+        """
+        Tests fields that should raise an error in a view, usually from form
+        validation
+
+        @param url - url to test
+        @param args - args for the url string
+        @param data - dictionary of data to be passed to the request
+        @param fields - list of field keys that are required
+        @param template - if given, template that responses should use
+        @param mime - if given, mime for response
+        @param tests - a function that executes additional tests
+        on the responses from the client
+        @param method - http method to be used
+        """
+        fields = data.keys if fields is None else fields
+        mime = mime if mime else 'text/html; charset=utf-8'
+        c = Client()
+        client_method = getattr(c, method)
+        superuser = UserTestMixin.create_user('superuser', is_superuser=True)
+
+        self.assertTrue(c.login(username=superuser.username, password='secret'))
+
+        # check required fields
+        for name in fields:
+            data_ = data.copy()
+            del data_[name]
+
+            response = client_method(url%args, data_)
+            self.assertEqual(200, response.status_code )
+            if template is not None:
+                self.assertTemplateUsed(response, template)
+            if mime is not None:
+                self.assertEqual(response['content-type'], mime)
+            if tests is not None:
+                tests(superuser, response)
+
+    def assert_view_values(self, url, args, data, fields, \
+                   template=None, mime=None, tests=None, method='post'):
+        """
+        Tests fields that should raise an error for a specific type of invalid
+        data is sent.  This is used for blackbox testing form validation via
+        the view it is used in.
+
+        @param url - url to test
+        @param args - args for the url string
+        @param data - dictionary of data to be passed to the request
+        @param fields - list of dictionaries of invalid data combinations
+        @param template - if given, template that responses should use
+        @param mime - if given, mime for response
+        @param tests - a function that executes additional tests
+        on the responses from the client
+        @param method - http method to be used
+        """
+        mime = mime if mime else 'text/html; charset=utf-8'
+        c = Client()
+        client_method = getattr(c, method)
+        superuser = UserTestMixin.create_user('superuser', is_superuser=True)
+
+        self.assertTrue(c.login(username=superuser.username, password='secret'))
+
+        # check required fields
+        for values in fields:
+            data_ = data.copy()
+            data_.update(values)
+            response = client_method(url%args, data_)
+            self.assertEqual(200, response.status_code )
+            if template is not None:
+                self.assertTemplateUsed(response, template)
+            if mime is not None:
+                self.assertEqual(response['content-type'], mime)
+            if tests is not None:
+                tests(superuser, response)

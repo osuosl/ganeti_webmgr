@@ -136,6 +136,11 @@ h1 a.breadcrumb:hover {text-decoration:underline;}
     padding-left: 25px;
     background:url(/media/images/icons/vm.png) no-repeat 4px 4px;
 }
+#errors_list td.Node {
+    padding-left: 25px;
+    background:url(/media/images/icons/node.png) no-repeat 4px 4px;
+}
+
 
 /*   User Profile   */
 #uprofile {margin: 0em auto 0em 0em; width: 50%;}
@@ -214,9 +219,9 @@ div.delete.disabled, a.delete.disabled{background:url(/media/images/icons/delete
 .startup.disabled {background:url(/media/images/icons/add-disabled.png) no-repeat;}
 .encrypt.enabled {background:url(/media/images/icons/lock.png) no-repeat;}
 .connect.enabled {background:url(/media/images/icons/disconnect.png) no-repeat;}
-.migrate.disabled {background:url(/media/images/icons/arrow_out.png) no-repeat;}
-.evacuate.disabled {background:url(/media/images/icons/arrow_out.png) no-repeat;}
-.modify.disabled {background:url(/media/images/icons/disconnect.png) no-repeat;}
+.migrate.disabled {background:url(/media/images/icons/arrow_out-disabled.png) no-repeat;}
+.evacuate.disabled {background:url(/media/images/icons/arrow_out-disabled.png) no-repeat;}
+.modify.disabled {background:url(/media/images/icons/edit-disabled.png) no-repeat;}
 
 .icon {
     background-repeat:no-repeat;
@@ -337,3 +342,7 @@ tr.group td.name {background:url(/media/images/icons/group.png) no-repeat 0 4px;
 
 /* No VNC tab */
 #encrypt_check {display:none;}
+
+/* object log */
+.object_log .timestamp {width:9em;}
+.object_log td {text-align:left !important;}

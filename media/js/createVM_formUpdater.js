@@ -18,6 +18,7 @@ function formUpdater(url_choices, url_options, url_defaults){
     var imagePath =             $("#id_imagepath");
     var using_str =             ' Using: ';
     var blankOptStr =           '---------';
+    var nodes =                 null; // nodes available
 
     // ------------
     // init stuffs
@@ -93,15 +94,8 @@ function formUpdater(url_choices, url_options, url_defaults){
         disk_template.change(function() {
             if(!iallocator.is(':checked') || 
                     iallocator.attr('readonly')) {
-                
-                var nrClusterOpts = 0;
-                cluster.find('option').each(function(i){
-                    if($(this).val() != ''){
-                        nrClusterOpts++;
-                    }
-                });
 
-                if(disk_template.val() == 'drbd' && nrClusterOpts > 1){
+                if(disk_template.val() == 'drbd' && nodes && nodes.length > 1){
                     snode.show();
                 } else {
                     snode.hide();
@@ -169,6 +163,9 @@ function formUpdater(url_choices, url_options, url_defaults){
                             }
                         });
                     });
+
+                    // make nodes publically available
+                    nodes = data['nodes'];
                 });
 
                 // only load the defaults if errors are not present 
@@ -178,7 +175,8 @@ function formUpdater(url_choices, url_options, url_defaults){
 
                         // boot device dropdown
                         if(d['bootorder']) {
-                            $("#id_bootorder :selected").removeAttr('selected');
+                            $("#id_bootorder :selected").removeAttr(
+                                    'selected');
                             $("#id_bootorder [value=" + d['bootorder'] + "]")
                                 .attr('selected','selected');
                         }
@@ -189,9 +187,11 @@ function formUpdater(url_choices, url_options, url_defaults){
                         }
 
                         // iallocator checkbox
-                        if(d['iallocator'] != "" && d['iallocator'] != undefined){
+                        if(d['iallocator'] != "" && 
+                                d['iallocator'] != undefined){
                             if(!iallocator_hostname.attr('value')) {
-                                iallocator_hostname.attr('value', d['iallocator']);
+                                iallocator_hostname.attr('value',
+                                        d['iallocator']);
                                 if(iallocator.siblings("span").length == 0){
                                     iallocator.after(
                                         "<span>" + using_str +

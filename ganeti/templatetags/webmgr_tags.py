@@ -22,6 +22,7 @@ from datetime import datetime
 from math import log10
 import re
 import json as json_lib
+from django.contrib.sites.models import Site
 
 from django.db.models import Count
 from django.template import Library, Node, TemplateSyntaxError
@@ -146,6 +147,12 @@ def checkmark(bool):
 def node_role(code):
     """ renders full role name from role code """
     return GanetiNode.NODE_ROLE_MAP[str(code)]
+
+
+@register.simple_tag
+def current_domain():
+    """ returns the domain of the current Site """
+    return Site.objects.get_current().domain
 
 
 """

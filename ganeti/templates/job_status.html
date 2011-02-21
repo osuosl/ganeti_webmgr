@@ -37,10 +37,11 @@
 
     function display_job(data) {
         // get the sub operation that is either running or errored
-        for (var sub_op=0; sub_op<data['opstatus'].length; ++sub_op) {
+        for (var sub_op=0; sub_op<data['opstatus'].length-1;) {
             if (data['opstatus'][sub_op] != 'success') {
                 break;
             }
+            sub_op++;
         }
 
         if (data.status == 'error') {

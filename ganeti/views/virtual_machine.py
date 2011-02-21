@@ -28,11 +28,13 @@ from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.conf import settings
 
+from object_log.views import list_for_object
+
 from object_permissions.views.permissions import view_users, view_permissions
 from object_permissions import get_users_any
 from object_permissions import signals as op_signals
 
-from logs.models import LogItem
+from object_log.models import LogItem
 log_action = LogItem.objects.log_action
 
 from util.client import GanetiApiError
@@ -40,7 +42,7 @@ from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine, \
         Job, SSHKey
 from ganeti.views import render_403
 from ganeti.forms.virtual_machine import NewVirtualMachineForm, \
-    ModifyVirtualMachineForm, ModifyConfirmForm, MigrateForm
+    ModifyVirtualMachineForm, ModifyConfirmForm, MigrateForm, RenameForm
 from ganeti.templatetags.webmgr_tags import render_storage
 from ganeti.utilities import cluster_default_info, cluster_os_list, \
     compare
@@ -126,7 +128,10 @@ def reinstall(request, cluster_slug, instance):
         job_id = instance.rapi.ReinstallInstance(instance.hostname, os=os, no_startup=True)
         job = Job.objects.create(job_id=job_id, obj=instance, cluster=instance.cluster)
         VirtualMachine.objects.filter(id=instance.id).update(last_job=job, ignore_cache=True)
-        
+
+        # log information
+        log_action('VM_REINSTALL', user, instance, job)
+
         return HttpResponseRedirect(
             reverse('instance-detail', args=[instance.cluster.slug, instance.hostname]))
     
@@ -183,7 +188,7 @@ def shutdown(request, cluster_slug, instance):
             msg = job.info
             
             # log information about stopping the machine
-            log_action(user, vm, "stopped")
+            log_action('VM_STOP', user, vm, job)
         except GanetiApiError, e:
             msg = {'__all__':[str(e)]}
         return HttpResponse(json.dumps(msg), mimetype='application/json')
@@ -221,7 +226,7 @@ def startup(request, cluster_slug, instance):
             msg = job.info
             
             # log information about starting up the machine
-            log_action(user, vm, "started")
+            log_action('VM_START', user, vm, job)
         except GanetiApiError, e:
             msg = {'__all__':[str(e)]}
         return HttpResponse(json.dumps(msg), mimetype='application/json')
@@ -249,7 +254,7 @@ def migrate(request, cluster_slug, instance):
                 msg = job.info
 
                 # log information
-                log_action(user, vm, "migrated")
+                log_action('VM_MIGRATE', user, vm, job)
 
                 return HttpResponse(json.dumps(msg), mimetype='application/json')
             except GanetiApiError, e:
@@ -283,7 +288,7 @@ def reboot(request, cluster_slug, instance):
             msg = job.info
             
             # log information about restarting the machine
-            log_action(user, vm, "restarted")
+            log_action('VM_RESTART', user, vm, job)
         except GanetiApiError, e:
             msg = {'__all__':[str(e)]}
         return HttpResponse(json.dumps(msg), mimetype='application/json')
@@ -413,13 +418,15 @@ def detail(request, cluster_slug, instance):
         power = True
         modify = True
         migrate = True
+        tags = True
     else:
         remove = user.has_perm('remove', vm)
         power = user.has_perm('power', vm)
         modify = user.has_perm('modify', vm)
+        tags = user.has_perm('tags', vm)
         migrate = user.has_perm('migrate', cluster)
     
-    if not (admin or power or remove or modify):
+    if not (admin or power or remove or modify or tags):
         return render_403(request, 'You do not have permission to view this cluster\'s details')
     
     if vm.pending_delete:
@@ -473,6 +480,22 @@ def permissions(request, cluster_slug, instance, user_id=None, group_id=None):
 
     url = reverse('vm-permissions', args=[cluster_slug, vm.hostname])
     return view_permissions(request, vm, url, user_id, group_id)
+
+
+@login_required
+def object_log(request, cluster_slug, instance):
+    """
+    Display all of the Users of a VirtualMachine
+    """
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    vm = get_object_or_404(VirtualMachine, hostname=instance)
+
+    user = request.user
+    if not (user.is_superuser or user.has_perm('admin', vm) or \
+        user.has_perm('admin', cluster)):
+        return render_403(request, "You do not have sufficient privileges")
+
+    return list_for_object(request, vm)
 
 
 @login_required
@@ -572,7 +595,7 @@ def create(request, cluster_slug=None):
                 VirtualMachine.objects.filter(id=vm.id).update(last_job=job)
 
                 # log information about creating the machine
-                log_action(user, vm, "created")
+                log_action('CREATE', user, vm)
 
                 # grant admin permissions to the owner
                 data['grantee'].grant('admin', vm)
@@ -687,7 +710,7 @@ def modify_confirm(request, cluster_slug, instance):
                 VirtualMachine.objects.filter(id=vm.id).update(last_job=job, \
                                                            ignore_cache=True)
                 # log information about modifying this instance
-                log_action(user, vm, "modified")
+                log_action('EDIT', user, vm)
                 if 'reboot' in request.POST and vm.info['status'] == 'running':
                     if not (user.is_superuser or user.has_perm('power', vm)):
                         return render_403(request, "Sorry, but you do not have permission to reboot \
@@ -695,7 +718,7 @@ def modify_confirm(request, cluster_slug, instance):
                     else:
                         # Reboot the vm
                         vm.reboot()
-                        log_action(user, vm, "rebooted")
+                        log_action('VM_REBOOT', user, vm)
 
             # Remove session variables.
             if 'edit_form' in request.session:
@@ -759,6 +782,57 @@ def modify_confirm(request, cluster_slug, instance):
         'form': form,
         'instance': vm,
         'instance_diff': instance_diff,
+        },
+        context_instance=RequestContext(request),
+    )
+
+
+@login_required
+def rename(request, cluster_slug, instance):
+    """
+    Rename an existing instance
+    """
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
+
+    user = request.user
+    if not (user.is_superuser or user.has_any_perms(vm, ['admin','modify']) \
+        or user.has_perm('admin', cluster)):
+        return render_403(request, 'You do not have permissions to edit \
+            this virtual machine')
+
+    if request.method == 'POST':
+        form = RenameForm(vm, request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            hostname = data['hostname']
+            ip_check = data['ip_check']
+            name_check = data['name_check']
+
+            try:
+                job_id = vm.rapi.RenameInstance(vm.hostname, hostname, \
+                                                ip_check, name_check)
+                job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
+                VirtualMachine.objects.filter(pk=vm.pk) \
+                    .update(hostname=hostname, last_job=job, ignore_cache=True)
+
+                # log information about creating the machine
+                log_action('VM_RENAME', user, vm, job)
+
+                return HttpResponseRedirect( \
+                reverse('instance-detail', args=[cluster.slug, hostname]))
+
+            except GanetiApiError, e:
+                msg = 'Error renaming virtual machine: %s' % e
+                form._errors["cluster"] = form.error_class([msg])
+
+    elif request.method == 'GET':
+        form = RenameForm(vm)
+
+    return render_to_response('virtual_machine/rename.html', {
+        'cluster': cluster,
+        'vm': vm,
+        'form': form
         },
         context_instance=RequestContext(request),
     )
@@ -833,21 +907,21 @@ def recv_user_add(sender, editor, user, obj, **kwargs):
     """
     receiver for object_permissions.signals.view_add_user, Logs action
     """
-    log_action(editor, obj, "added user")
+    log_action('ADD_USER', editor, obj, user)
 
 
 def recv_user_remove(sender, editor, user, obj, **kwargs):
     """
     receiver for object_permissions.signals.view_remove_user, Logs action
     """
-    log_action(editor, obj, "removed user")
+    log_action('REMOVE_USER', editor, obj, user)
 
 
 def recv_perm_edit(sender, editor, user, obj, **kwargs):
     """
     receiver for object_permissions.signals.view_edit_user, Logs action
     """
-    log_action(editor, obj, "modified permissions")
+    log_action('MODIFY_PERMS', editor, obj, user)
 
 
 op_signals.view_add_user.connect(recv_user_add, sender=VirtualMachine)

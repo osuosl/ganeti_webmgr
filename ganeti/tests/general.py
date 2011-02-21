@@ -16,7 +16,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.core.cache import cache
@@ -26,7 +25,7 @@ from django.test.client import Client
 from object_permissions import *
 
 
-from ganeti.tests.rapi_proxy import RapiProxy, INFO, NODES, NODES_BULK
+from ganeti.tests.rapi_proxy import RapiProxy, JOB_ERROR
 from ganeti import models
 Cluster = models.Cluster
 VirtualMachine = models.VirtualMachine
@@ -104,6 +103,7 @@ class TestGeneralViews(TestCase):
         job1 = Job(job_id=1234, obj=vm1, cluster=cluster1,
                 finished="2011-01-05 21:59", status="error")
         job1.save()
+        job.rapi.GetJobStatus.response = JOB_ERROR
 
         url = "/"
         args = []
