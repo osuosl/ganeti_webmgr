@@ -232,7 +232,14 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
         users = [superuser, user_migrate, user_admin]
         self.assert_standard_fails(url, args)
         self.assert_200(url, args, users, 'virtual_machine/table.html')
-    
+
+    def test_object_log(self):
+        args = (cluster.slug, node.hostname)
+        url = '/cluster/%s/node/%s/object_log'
+        users = [superuser, user_migrate, user_admin]
+        self.assert_standard_fails(url, args)
+        self.assert_200(url, args, users)
+
     def test_role(self):
         args = (cluster.slug, node.hostname)
         url = '/cluster/%s/node/%s/role'
@@ -273,7 +280,7 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
         def test(user, response):
             data = json.loads(response.content);
             self.assertTrue('opstatus' in data)
-        data = {'live':True}
+        data = {'mode':'live'}
         self.assert_200(url, args, users, method='post', data=data, mime='application/json', tests=test)
         
         #test form error

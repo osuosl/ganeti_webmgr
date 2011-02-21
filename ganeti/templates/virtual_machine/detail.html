@@ -24,8 +24,7 @@
 		});
         {% if admin %}
             {% ifnotequal instance.info.status "running" %}
-                vnc_tab_index = 2;
-                $('#tabs').tabs("option", "disabled", [vnc_tab_index]);
+                $('#tabs .ui-tabs-nav a[title=console]').parent().addClass('ui-state-disabled');
             {% endifnotequal %}
         {% endif %}
         
@@ -138,6 +137,7 @@
         <li><a href="#overview"><span>Overview</span></a></li>
         {% if admin %}
             <li><a title="users" href="{% url vm-users cluster.slug instance.hostname %}"><span>Users</span></a></li>
+            <li><a title="log" href="{% url vm-object_log cluster.slug instance.hostname %}"><span>Log</span></a></li>
         {%endif%}
 	{% if admin or power %}
 	    <li><a title="console" href="{% url instance-vnc cluster.slug instance.hostname %}"><span>Console</span></a></li>
@@ -148,6 +148,7 @@
             {% with instance.cluster.username as username %}
                 {% if modify and username %}            
                     <li><a class="button edit" href="{% url instance-modify cluster.slug instance.hostname %}">Edit</a></li>
+                    <li><a class="button edit" href="{% url instance-rename cluster.slug instance.hostname %}">Rename</a></li>
                 {% endif %}
                 {% if remove and username %}
                     <li><a class="button delete" href="{% url instance-delete cluster.slug instance.hostname %}">Delete</a></li>
