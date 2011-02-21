@@ -7,7 +7,7 @@
     #content td.actions a, #content td.actions {
         padding:5px 0 0 0;
     }
-    .vm-wrapper {
+    #vm-wrapper {
         margin-top: 40px;
     }
 </style>
@@ -27,8 +27,8 @@
             $results = $(results);
             tbody = $results.children("tbody");
             pagination = $results[2];
-            $('.vm-wrapper .pagination').replaceWith(pagination);
-            $('.vmlist tbody').replaceWith(tbody);
+            $('#vm-wrapper .pagination').replaceWith(pagination);
+            $('#vmlist tbody').replaceWith(tbody);
         }, "html");
     }
 
@@ -53,7 +53,7 @@
             ajax_get_update();
         });
         
-        $('.vmlist th').live("click", function(){
+        $('#vmlist th').live("click", function(){
             $this = $(this)
             field = $this.html();
             order_by = $this.attr("order_by");
@@ -62,7 +62,7 @@
                         .removeClass("ascending");
                 order_by = "-" + order_by;
             } else {
-                $('.vmlist th').removeClass('ascending')
+                $('#vmlist th').removeClass('ascending')
                     .removeClass('descending');
                 $this.addClass("ascending");
             }
@@ -76,8 +76,8 @@
             .hide()
             .ajaxStart(function() {
                 $(this).show();
-                $('.vmlist tr td').hide();
-                $('.vm-wrapper .pagination').hide();
+                $('#vmlist tr td').hide();
+                $('#vm-wrapper .pagination').hide();
             })
             .ajaxStop(function() {
                 $(this).hide()
@@ -99,7 +99,7 @@
     {% endif %}
 {% endif %}
 
-<div class="vm-wrapper">
+<div id="vm-wrapper">
 {% include "virtual_machine/inner_table.html" %}
 </div>
 <div class="spinner" >
