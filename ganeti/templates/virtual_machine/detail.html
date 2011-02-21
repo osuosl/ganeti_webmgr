@@ -189,6 +189,7 @@
             {% with instance.cluster.username as username %}
                 {% if modify and username %}            
                     <li><a class="button edit" href="{% url instance-modify cluster.slug instance.hostname %}">Edit</a></li>
+                    <li><a class="button edit" href="{% url instance-rename cluster.slug instance.hostname %}">Rename</a></li>
                 {% endif %}
                 {% if remove and username %}
                     <li><a class="button delete" href="{% url instance-delete cluster.slug instance.hostname %}">Delete</a></li>

@@ -42,7 +42,7 @@ from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine, \
         Job, SSHKey
 from ganeti.views import render_403
 from ganeti.forms.virtual_machine import NewVirtualMachineForm, \
-    ModifyVirtualMachineForm, ModifyConfirmForm, MigrateForm
+    ModifyVirtualMachineForm, ModifyConfirmForm, MigrateForm, RenameForm
 from ganeti.templatetags.webmgr_tags import render_storage
 from ganeti.utilities import cluster_default_info, cluster_os_list, \
     compare
@@ -782,6 +782,57 @@ def modify_confirm(request, cluster_slug, instance):
         'form': form,
         'instance': vm,
         'instance_diff': instance_diff,
+        },
+        context_instance=RequestContext(request),
+    )
+
+
+@login_required
+def rename(request, cluster_slug, instance):
+    """
+    Rename an existing instance
+    """
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
+
+    user = request.user
+    if not (user.is_superuser or user.has_any_perms(vm, ['admin','modify']) \
+        or user.has_perm('admin', cluster)):
+        return render_403(request, 'You do not have permissions to edit \
+            this virtual machine')
+
+    if request.method == 'POST':
+        form = RenameForm(vm, request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            hostname = data['hostname']
+            ip_check = data['ip_check']
+            name_check = data['name_check']
+
+            try:
+                job_id = vm.rapi.RenameInstance(vm.hostname, hostname, \
+                                                ip_check, name_check)
+                job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
+                VirtualMachine.objects.filter(pk=vm.pk) \
+                    .update(hostname=hostname, last_job=job, ignore_cache=True)
+
+                # log information about creating the machine
+                log_action('VM_RENAME', user, vm)
+
+                return HttpResponseRedirect( \
+                reverse('instance-detail', args=[cluster.slug, hostname]))
+
+            except GanetiApiError, e:
+                msg = 'Error renaming virtual machine: %s' % e
+                form._errors["cluster"] = form.error_class([msg])
+
+    elif request.method == 'GET':
+        form = RenameForm(vm)
+
+    return render_to_response('virtual_machine/rename.html', {
+        'cluster': cluster,
+        'vm': vm,
+        'form': form
         },
         context_instance=RequestContext(request),
     )
