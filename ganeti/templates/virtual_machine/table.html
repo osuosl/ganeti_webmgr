@@ -7,7 +7,7 @@
     #content td.actions a, #content td.actions {
         padding:5px 0 0 0;
     }
-    #vm-wrapper {
+    .vm-wrapper {
         margin-top: 40px;
     }
 </style>
@@ -25,7 +25,7 @@
             $results = $(results);
             tbody = $results.children("tbody");
             pagination = $results[2];
-            $('#vm-wrapper .pagination').replaceWith(pagination);
+            $('.vm-wrapper .pagination').replaceWith(pagination);
             $('#vmlist tbody').replaceWith(tbody);
         }, "html");
     }
@@ -33,7 +33,14 @@
     var FETCH_ARGS = {page:1};
     var current_order_by = null;
 
-    $(document).ready(function(){
+    // -------
+    // "main"
+    // -------
+    $(function(){
+
+        console.log("Yes, this actually runs when this sub-template loads.");
+        
+        console.log($(".vm-wrapper").parent());
 
         // --[pagination click handling---------------------------------------
         $('.pagination .previous').live('click', function(e) {
@@ -76,14 +83,15 @@
         // hide the loading spinny thing
         $('.spinner')
             .hide()
-            .ajaxStart(function() {
+            .ajaxStart(function(){
                 $(this).show();
                 $('#vmlist tr td').hide();
-                $('#vm-wrapper .pagination').hide();
+                $('.vm-wrapper .pagination').hide();
             })
-            .ajaxStop(function() {
+            .ajaxStop(function(){
                 $(this).hide()
             });
+
     });
 
 </script>
@@ -101,7 +109,7 @@
     {% endif %}
 {% endif %}
 
-<div id="vm-wrapper">
+<div class="vm-wrapper">
     {% include "virtual_machine/inner_table.html" %}
 </div>
 
