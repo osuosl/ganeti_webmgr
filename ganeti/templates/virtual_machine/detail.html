@@ -12,9 +12,7 @@
 <script src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.form.js"></script>
 <script type="text/javascript">
-    var actions_enabled = true;
-
-    $(document).ready(function() {
+     $(document).ready(function() {
         $('#tabs').tabs({ 
             spinner: false,
             cache: true,
@@ -31,7 +29,7 @@
         
         $("#actions a.power").live("click", function(event) {
             event.preventDefault();
-            if(actions_enabled) {
+            if(!$(this).hasClass('disabled')) {
                 if((this.className == 'button shutdown' || 
                         this.className == 'button reboot') &&
                         !confirm('Are you sure you want to ' 
@@ -42,11 +40,16 @@
             }
         });
 
+        // disable buttons that are actually links to other pages
+        $("#actions .edit, #actions .delete").live("click", function(event) {
+            return !$(this).hasClass('disabled');
+        });
+
         $(".migrate").click(function(event){
             event.preventDefault();
-            if(actions_enabled) {
+            var $this = $(this);
+            if(!$this.hasClass('disabled')) {
                 $('.qtip').qtip('destroy');
-                var $this = $(this);
 
                 $(this).qtip({
                     content: {
@@ -93,7 +96,6 @@
     function action_response(result) {
         if(result.ops == undefined) {
             display_ganeti_error(result['__all__'][0]);
-            actions_enabled = true;
             $('#actions a').removeClass('disabled');
         } else {
             poll_job_status(result['id'], job_complete);
