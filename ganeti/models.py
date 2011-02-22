@@ -1044,23 +1044,27 @@ class VirtualMachineTemplate(models.Model):
     os = models.CharField(verbose_name='Operating System', max_length=255)
     # BEPARAMS
     vcpus = models.IntegerField(verbose_name='Virtual CPUs', \
-                validators=[MinValueValidator(1)])
+                validators=[MinValueValidator(1)], null=True, blank=True)
     memory = models.IntegerField(verbose_name='Memory', \
-                validators=[MinValueValidator(100)])
+                validators=[MinValueValidator(100)],null=True, blank=True)
     disk_size = models.IntegerField(verbose_name='Disk Size', null=True, \
-                validators=[MinValueValidator(100)])
-    disk_type = models.CharField(verbose_name='Disk Type', max_length=255)
-    nic_mode = models.CharField(verbose_name='NIC Mode', max_length=255)
+                validators=[MinValueValidator(100)], blank=True)
+    disk_type = models.CharField(verbose_name='Disk Type', max_length=255, \
+                                 null=True, blank=True)
+    nic_mode = models.CharField(verbose_name='NIC Mode', max_length=255, \
+                                null=True, blank=True)
     nic_link = models.CharField(verbose_name='NIC Link', max_length=255, \
                 null=True, blank=True)
-    nic_type = models.CharField(verbose_name='NIC Type', max_length=255)
+    nic_type = models.CharField(verbose_name='NIC Type', max_length=255, \
+                                null=True, blank=True)
     # HVPARAMS
     kernel_path = models.CharField(verbose_name='Kernel Path', null=True, \
                 blank=True, max_length=255)
     root_path = models.CharField(verbose_name='Root Path', default='/', \
-                max_length=255)
+                max_length=255, null=True, blank=True)
     serial_console = models.BooleanField(verbose_name='Enable Serial Console')
-    boot_order = models.CharField(verbose_name='Boot Device', max_length=255)
+    boot_order = models.CharField(verbose_name='Boot Device', max_length=255, \
+                                  null=True, blank=True)
     cdrom_image_path = models.CharField(verbose_name='CD-ROM Image Path', null=True, \
                 blank=True, max_length=512)
 
