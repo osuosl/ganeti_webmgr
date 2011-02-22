@@ -55,7 +55,7 @@
             if ($(row).hasClass('gerror')) {
                 url = "{% url error-clear %}";
             } else if ($(row).hasClass('jerror')) {
-                url = "{% url job-clear %}";
+                url = this.href
             }
             
             $.post(url, {id:id}, function(){
@@ -178,7 +178,7 @@
                     {% include "overview/object_link.html" %}
                     <td><a href="{% url job-detail error.cluster.slug error.job_id %}">Job #{{error.job_id}}: {{ error.current_operation|format_job_op }}</td>
                     <td>{{ error.finished|date }}</td>
-                    <td><div class="clear" title="clear message"></div></td>
+                    <td><a class="clear" title="clear message" href="{% url job-clear error.cluster.slug error.job_id %}"></a></td>
                 </tr>
             {% endif %}
         {% endwith %}
