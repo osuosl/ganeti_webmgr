@@ -288,7 +288,7 @@ def reboot(request, cluster_slug, instance):
             msg = job.info
             
             # log information about restarting the machine
-            log_action('VM_RESTART', user, vm, job)
+            log_action('VM_REBOOT', user, vm, job)
         except GanetiApiError, e:
             msg = {'__all__':[str(e)]}
         return HttpResponse(json.dumps(msg), mimetype='application/json')

@@ -1436,7 +1436,7 @@ register(permissions.VIRTUAL_MACHINE_PARAMS, VirtualMachine)
 
 
 # Register LogActions used within the Ganeti App
-LogAction.objects.register('VM_RESTART','ganeti/object_log/vm_reboot.html')
+LogAction.objects.register('VM_REBOOT','ganeti/object_log/vm_reboot.html')
 LogAction.objects.register('VM_START','ganeti/object_log/vm_start.html')
 LogAction.objects.register('VM_STOP','ganeti/object_log/vm_stop.html')
 LogAction.objects.register('VM_MIGRATE','ganeti/object_log/vm_migrate.html')
