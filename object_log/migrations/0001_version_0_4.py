@@ -13,7 +13,7 @@ class Migration(SchemaMigration):
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('name', self.gf('django.db.models.fields.CharField')(unique=True, max_length=128)),
         ))
-        db.send_create_signal('logs', ['LogAction'])
+        db.send_create_signal('object_log', ['LogAction'])
 
         # Adding model 'LogItem'
         db.create_table('logs_logitem', (
@@ -22,11 +22,11 @@ class Migration(SchemaMigration):
             ('object_type', self.gf('django.db.models.fields.related.ForeignKey')(related_name='log_items', to=orm['contenttypes.ContentType'])),
             ('object_id', self.gf('django.db.models.fields.PositiveIntegerField')()),
             ('user', self.gf('django.db.models.fields.related.ForeignKey')(related_name='log_items', to=orm['auth.User'])),
-            ('action', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['logs.LogAction'])),
+            ('action', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['object_log.LogAction'])),
             ('log_message', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
         ))
-        db.send_create_signal('logs', ['LogItem'])
+        db.send_create_signal('object_log', ['LogItem'])
     
     
     def backwards(self, orm):
@@ -75,14 +75,14 @@ class Migration(SchemaMigration):
             'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
         },
-        'logs.logaction': {
+        'object_log.logaction': {
             'Meta': {'object_name': 'LogAction'},
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '128'})
         },
-        'logs.logitem': {
+        'object_log.logitem': {
             'Meta': {'object_name': 'LogItem'},
-            'action': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['logs.LogAction']"}),
+            'action': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['object_log.LogAction']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'log_message': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'object_id': ('django.db.models.fields.PositiveIntegerField', [], {}),
@@ -93,4 +93,4 @@ class Migration(SchemaMigration):
         }
     }
     
-    complete_apps = ['logs']
+    complete_apps = ['object_log']

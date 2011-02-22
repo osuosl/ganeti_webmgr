@@ -51,7 +51,14 @@ def clear(request):
                 or user.has_perm('admin', obj.cluster)):
                     return render_403(request, "You do not have sufficient privileges")
     
-    # clear the error
+    # clear the error.
     Job.objects.filter(pk=job.pk).update(cleared=True)
+
+    # clear the job from the object, but only if it is the last job. It's
+    # possible another job was started after this job, and the error message
+    # just wasn't cleared.
+    ObjectModel = job.obj.__class__
+    ObjectModel.objects.filter(pk=job.object_id, last_job=job) \
+        .update(last_job=None, ignore_cache=False)
     
     return HttpResponse('1', mimetype='application/json')

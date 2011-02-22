@@ -6,7 +6,7 @@ from django.template.context import RequestContext
 from django.db.models.query_utils import Q
 from django.shortcuts import render_to_response, get_object_or_404
 
-from logs.models import LogItem
+from object_log.models import LogItem
 
 
 def list_for_object(request, obj):

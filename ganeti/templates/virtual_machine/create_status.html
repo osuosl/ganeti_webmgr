@@ -1,0 +1,54 @@
+{% extends "menu_base.html" %}
+{% load webmgr_tags %}
+
+{% block title %} Virtual Machine {{ instance.hostname }}{% endblock %}
+
+{% block head %}
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            job_id = '{{instance.last_job.job_id}}';
+            if (job_id == '') {
+                {# job was finished before we loaded the page #}
+                job_complete();
+            } else {
+                poll_job_status(job_id, job_complete, job_error);
+            }
+        });
+
+        function job_complete() {
+            window.location.reload();
+        }
+
+        function job_error() {
+
+            $("#vm_edit").show();
+        }
+    </script>
+{% endblock %}
+
+{% block content %}
+    <h1>
+        {% if cluster_admin %}
+        <a class="breadcrumb" href="{% url cluster-detail cluster.slug %}#virtual_machines">{{cluster.hostname|abbreviate_fqdn}}</a>
+        {% else %}
+        <span class="breadcrumb">{{cluster.hostname|abbreviate_fqdn}}</span>
+        {% endif %}
+        : <span class="breadcrumb">creating</span>
+        : {{ instance.hostname }}
+    </h1>
+
+    {% include "job_status.html" %}
+
+    <ul id="messages"></ul>
+
+    <div id="vm_edit" style="display:none;">
+        Install has failed:
+        <ul>
+            <li></li><a href="{% url instance-create-template instance.template_id %}">Edit</a></li>
+        </ul>
+    </div>
+
+
+
+{% endblock %}

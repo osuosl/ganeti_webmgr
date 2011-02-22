@@ -118,6 +118,8 @@ urlpatterns += patterns('ganeti.views.virtual_machine',
     url(r'^vm/add/defaults/$', 'cluster_defaults', name="instance-create-cluster-defaults"),
     url(r'^vm/add/%s/?$' % cluster_slug, 'create', name="instance-create"),
 
+    url(r'^vm/add/template/(?P<pk>\d+)/?$', 'load_template', name="instance-create-template"),
+
     #  VM Table
     url(r'^vm/table/$', 'vm_table', name="virtualmachine-table"),
     url(r'^%s/vm/table/?$' % cluster, 'vm_table', name="cluster-virtualmachine-table"),
@@ -146,6 +148,7 @@ urlpatterns += patterns('ganeti.views.virtual_machine',
     # Edit / Modify
     url(r"^%s/edit/?$" % vm_prefix, "modify", name="instance-modify"),
     url(r'^%s/edit/confirm/?$' % vm_prefix, "modify_confirm", name="instance-modify-confirm"),
+    url(r"^%s/rename/?$" % vm_prefix, "rename", name="instance-rename"),
 
     # SSH Keys
     url(r'^%s/keys/(?P<api_key>\w+)/?$' % vm_prefix, "ssh_keys", name="instance-keys"),

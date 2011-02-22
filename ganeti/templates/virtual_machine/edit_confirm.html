@@ -16,7 +16,7 @@ form input.submit {margin:1em .5em 0px 0px;}
     <table>
         <h2><a href="{% url instance-detail cluster.slug instance.hostname %}">{{ instance.hostname }}</a></h2>
         {% for k, v in instance_diff.items %}
-            <tr><th>{{ k|capfirst }}</th><td>{{ v|capfirst }}</td></tr>
+            <tr><th>{{ k }}</th><td>{{ v|capfirst }}</td></tr>
         {% empty %}
             <tr><td>Nothing changed.</td></tr>
         {% endfor %}
@@ -36,7 +36,9 @@ form input.submit {margin:1em .5em 0px 0px;}
     {{ form.as_p }}
     <input class="submit" type="submit" name="edit" value="Edit">
 {% ifequal status "running" %}
+    {% if power %}
     <input class="submit" type="submit" name="reboot" value="Reboot">
+    {% endif %}
 {% endifequal %}
     <input class="submit" type="submit" name="save" value="Save">
     <input class="submit" type="submit" name="cancel" value="Cancel">

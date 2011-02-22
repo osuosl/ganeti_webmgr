@@ -24,8 +24,8 @@ from django.http import HttpResponse, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
-from logs.models import LogItem
-from logs.views import list_for_object
+from object_log.models import LogItem
+from object_log.views import list_for_object
 from util.client import GanetiApiError
 
 log_action = LogItem.objects.log_action
@@ -136,6 +136,7 @@ class RoleForm(forms.Form):
     }
     
     role = forms.ChoiceField(choices=ROLE_CHOICES)
+    force = forms.BooleanField(initial=False, required=False)
 
 
 @login_required
@@ -159,7 +160,7 @@ def role(request, cluster_slug, host):
                 msg = job.info
 
                 # log information
-                log_action('NODE_ROLE_CHANGE', user, node)
+                log_action('NODE_ROLE_CHANGE', user, node, job)
                 return HttpResponse(json.dumps(msg), mimetype='application/json')
             except GanetiApiError, e:
                 content = json.dumps({'__all__':[str(e)]})
@@ -209,7 +210,7 @@ def migrate(request, cluster_slug, host):
                 msg = job.info
 
                 # log information
-                log_action('NODE_MIGRATE', user, node)
+                log_action('NODE_MIGRATE', user, node, job)
 
                 return HttpResponse(json.dumps(msg), mimetype='application/json')
             except GanetiApiError, e:
@@ -246,7 +247,7 @@ def evacuate(request, cluster_slug, host):
             msg = job.info
 
             # log information
-            log_action('NODE_EVACUATE', user, node)
+            log_action('NODE_EVACUATE', user, node, job)
         except GanetiApiError, e:
             msg = [0, str(e)]
         return HttpResponse(json.dumps(msg), mimetype='application/json')

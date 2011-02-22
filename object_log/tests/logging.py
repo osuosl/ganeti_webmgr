@@ -23,7 +23,7 @@ from django.contrib.auth.models import User, Group
 from django.test import TestCase
 
 from ganeti.models import Profile
-from logs.models import LogItem, LogAction, create_defaults, create_defaults
+from object_log.models import LogItem, LogAction, create_defaults, create_defaults
 
 
 class TestLogActionModel(TestCase):
@@ -101,7 +101,6 @@ class TestLogItemModel(TestCase):
         User.objects.all().delete()
         Profile.objects.all().delete()
         LogItem.objects.all().delete()
-        LogItem.objects.clear_cache()
 
     def test_log_creation(self):
         """
@@ -112,7 +111,6 @@ class TestLogItemModel(TestCase):
         """
         
         self.assertEqual(len(LogItem.objects.all()), 0)
-        self.assertEqual(len(LogAction.objects.all()), 3)
                 
         log_item = LogItem.objects.log_action("EDIT", user1, user2,)
         self.assertTrue(log_item is not None)
