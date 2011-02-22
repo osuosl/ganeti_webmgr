@@ -32,10 +32,11 @@ from django_test_tools.users import UserTestMixin
 from object_permissions import grant, get_user_perms
 
 from util import client
-from ganeti.tests.rapi_proxy import RapiProxy, INSTANCE, INFO, JOB, JOB_RUNNING, JOB_DELETE_SUCCESS
+from ganeti.tests.rapi_proxy import RapiProxy, INSTANCE, INFO, JOB, \
+    JOB_RUNNING, JOB_DELETE_SUCCESS, OPERATING_SYSTEMS
 from ganeti import models, constants 
 from ganeti.forms.virtual_machine import NewVirtualMachineForm
-from ganeti.utilities import os_prettify
+from ganeti.utilities import os_prettify, cluster_os_list
 
 VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
@@ -662,6 +663,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         user.save()
 
         ## POST
+        os_list = cluster_os_list(cluster)
         data = dict(vcpus=2,
             acpi=True,
             disk_cache='default',
@@ -680,10 +682,12 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
             vnc_x509_path='',
             vnc_x509_verify=False,
             memory=512,
+            os='image+debian-osgeo',
             disk_type='paravirtual',
             boot_order='disk',
             nic_type='paravirtual',
             nic_link='br0',
+            nic_mac='aa:bb:00:00:33:d2',
             root_path='/dev/vda1',
             kernel_path='/boot/vmlinuz-2.32.6-27-generic',
             serial_console=True,
@@ -692,10 +696,13 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         # Required Values
         user.grant('modify', vm)
         self.assertTrue(c.login(username=user.username, password='secret2'))
+        session = c.session
         for property in ['vcpus', 'memory', 'disk_type', 'boot_order', 'nic_type', \
             'root_path']:
             data_ = data.copy()
             del data_[property]
+            session['os_list'] = os_list
+            session.save()
             self.assertFalse(user.is_superuser)
             response = c.post(url, data_)
             self.assertEqual(200, response.status_code)
@@ -714,6 +721,9 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         user.save()
         self.assertTrue(c.login(username=user.username, password='secret2'))
         self.assertTrue(user.is_superuser)
+        session = c.session
+        session['os_list'] = os_list
+        session.save()
         response = c.post(url, data)
         self.assertEqual(302, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
@@ -724,6 +734,9 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         # User without Permissions
         self.assertTrue(c.login(username=user.username, password='secret2'))
         self.assertFalse(user.is_superuser)
+        session = c.session
+        session['os_list'] = os_list
+        session.save()
         response = c.post(url, data)
         self.assertEqual(403, response.status_code)
         self.assertTrue(response.context['message'])
@@ -735,6 +748,9 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         user.grant('modify', vm)
         self.assertTrue(c.login(username=user.username, password='secret2'))
         self.assertFalse(user.is_superuser)
+        session = c.session
+        session['os_list'] = os_list
+        session.save()
         response = c.post(url, data)
         self.assertEqual(302, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
@@ -745,6 +761,9 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         user.grant('admin', vm)
         self.assertTrue(c.login(username=user.username, password='secret2'))
         self.assertFalse(user.is_superuser)
+        session = c.session
+        session['os_list'] = os_list
+        session.save()
         response = c.post(url, data)
         self.assertEqual(302, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
@@ -762,7 +781,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         user = User(id=52, username='modifier')
         user.set_password('secret2')
         user.save()
-
+        
+        os_list = cluster_os_list(cluster)
         edit_form = dict(vcpus=2,
             acpi=True,
             disk_cache='default',
@@ -781,10 +801,12 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
             vnc_x509_path='',
             vnc_x509_verify=False,
             memory=512,
+            os='image+debian-osgeo',
             disk_type='paravirtual',
             boot_order='disk',
             nic_type='paravirtual',
             nic_link='br0',
+            nic_mac='aa:bb:00:00:33:d2',
             root_path='/dev/vda1',
             kernel_path='/boot/vmlinuz-2.32.6-27-generic',
             serial_console=True,
@@ -805,7 +827,9 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'virtual_machine/edit_confirm.html')
-
+        
+        #session['os_list'] = os_list
+        #session.save()
         user.revoke_all(vm)
         user.is_superuser = False
         user.save()
@@ -822,6 +846,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         self.assertTrue(c.login(username=user.username, password='secret2'))
         session = c.session
         session['edit_form'] = edit_form
+        session['os_list'] = os_list
         session.save()
         response = c.get(url)
         self.assertEqual(200, response.status_code)
@@ -836,6 +861,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         self.assertTrue(c.login(username=user.username, password='secret2'))
         session = c.session
         session['edit_form'] = edit_form
+        session['os_list'] = os_list
         session.save()
         response = c.get(url)
         self.assertEqual(200, response.status_code)
@@ -850,6 +876,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         self.assertTrue(c.login(username=user.username, password='secret2'))
         session = c.session
         session['edit_form'] = edit_form
+        session['os_list'] = os_list
         session.save()
         response = c.get(url)
         self.assertEqual(200, response.status_code)
@@ -874,6 +901,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
             self.assertTrue(c.login(username=user.username, password='secret2'))
             session = c.session
             session['edit_form'] = edit_form
+            session['os_list'] = os_list
             session.save()
             self.assertTrue(user.is_superuser)
             response = c.post(url, data)
@@ -898,6 +926,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
             self.assertTrue(c.login(username=user.username, password='secret2'))
             session = c.session
             session['edit_form'] = edit_form
+            session['os_list'] = os_list
             session.save()
             self.assertFalse(user.is_superuser)
             response = c.post(url, data)
@@ -911,6 +940,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
             self.assertTrue(c.login(username=user.username, password='secret2'))
             session = c.session
             session['edit_form'] = edit_form
+            session['os_list'] = os_list
             session.save()
             self.assertFalse(user.is_superuser)
             response = c.post(url, data)
