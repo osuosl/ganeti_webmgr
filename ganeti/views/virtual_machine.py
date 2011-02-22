@@ -593,8 +593,8 @@ def modify(request, cluster_slug, instance):
     vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
 
     user = request.user
-    if not (user.is_superuser or user.has_perm('admin', vm) \
-        or user.has_perm('modify', vm)):
+    if not (user.is_superuser or user.has_any_perms(vm, ['admin','modify']) \
+        or user.has_perm('admin', cluser)):
         return render_403(request, 'You do not have permissions to edit \
             this virtual machine')
 
