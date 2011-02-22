@@ -356,7 +356,7 @@ class RenameForm(forms.Form):
                             error_messages={
                                 'invalid': 'Instance name must be resolvable',
                             },
-                            max_length=255)
+                            max_length=255, required=True)
     ip_check = forms.BooleanField(initial=True, required=False, label='IP Check')
     name_check = forms.BooleanField(initial=True, required=False, label='DNS Name Check')
 
@@ -366,5 +366,7 @@ class RenameForm(forms.Form):
 
     def clean_hostname(self):
         data = self.cleaned_data
-        if 'hostname' in data and self.vm.hostname == data['hostname']:
+        hostname = data.get('hostname', None)
+        if hostname and hostname == self.vm.hostname:
             raise forms.ValidationError("The new hostname must be different than the current hostname")
+        return hostname
