@@ -840,12 +840,19 @@ class Cluster(CachedClusterObject):
     username = models.CharField(max_length=128, blank=True, null=True)
     password = models.CharField(max_length=128, blank=True, null=True)
     hash = models.CharField(max_length=40, editable=False)
-
+    
     # quota properties
     virtual_cpus = models.IntegerField(null=True, blank=True)
     disk = models.IntegerField(null=True, blank=True)
     ram = models.IntegerField(null=True, blank=True)
 
+    # The last job reference indicates that there is at least one pending job
+    # for this virtual machine.  There may be more than one job, and that can
+    # never be prevented.  This just indicates that job(s) are pending and the
+    # job related code should be run (status, cleanup, etc).
+    last_job = models.ForeignKey('Job', null=True, blank=True, \
+                                 related_name='cluster_last_job')
+    
     class Meta:
         ordering = ["hostname", "description"]
 
