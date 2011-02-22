@@ -80,6 +80,9 @@ urlpatterns += patterns('ganeti.views.cluster',
 
     #ssh_keys
     url(r'^%s/keys/(?P<api_key>\w+)/?$' % cluster, "ssh_keys", name="cluster-keys"),
+
+    # object log
+    url(r'^%s/object_log/?$' % cluster, 'object_log', name="cluster-object_log"),
 )
 
 
@@ -92,7 +95,10 @@ urlpatterns += patterns('ganeti.views.node',
     # Primary and secondary Virtual machines
     url(r'^%s/primary/?$' % node_prefix, 'primary', name="node-primary-vms"),
     url(r'^%s/secondary/?$' % node_prefix, 'secondary', name="node-secondary-vms"),
-    
+
+    #object log
+    url(r'^%s/object_log/?$' % node_prefix, 'object_log', name="node-object_log"),
+
     # Node actions
     url(r'^%s/role/?$' % node_prefix, 'role', name="node-role"),
     url(r'^%s/migrate/?$' % node_prefix, 'migrate', name="node-migrate"),
@@ -140,9 +146,13 @@ urlpatterns += patterns('ganeti.views.virtual_machine',
     # Edit / Modify
     url(r"^%s/edit/?$" % vm_prefix, "modify", name="instance-modify"),
     url(r'^%s/edit/confirm/?$' % vm_prefix, "modify_confirm", name="instance-modify-confirm"),
+    url(r"^%s/rename/?$" % vm_prefix, "rename", name="instance-rename"),
 
     # SSH Keys
     url(r'^%s/keys/(?P<api_key>\w+)/?$' % vm_prefix, "ssh_keys", name="instance-keys"),
+
+    # object log
+    url(r'^%s/object_log/?$' % vm_prefix, 'object_log', name="vm-object_log"),
 )
 
 

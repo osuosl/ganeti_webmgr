@@ -67,7 +67,10 @@
         <li><a href="#overview"><span>Overview</span></a></li>
         <li><a title="virtual machines" href="{% url cluster-vms cluster.slug %}"><span>Virtual Machines</span></a></li>
         <li><a title="nodes" href="{% url cluster-nodes cluster.slug %}"><span>Nodes</span></a></li>
-        {% if admin %}<li><a title="user" href="{% url cluster-users cluster.slug %}"><span>Users</span></a></li>{%endif%}
+        {% if admin %}
+            <li><a title="user" href="{% url cluster-users cluster.slug %}"><span>Users</span></a></li>
+            <li><a title="log" href="{% url cluster-object_log cluster.slug %}"><span>Log</span></a></li>
+        {%endif%}
     </ul>
     <div id="overview" class="tab_content">
         <ul id="actions">

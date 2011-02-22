@@ -33,7 +33,8 @@ from object_permissions import get_users_any
 from object_permissions.views.permissions import view_users, view_permissions
 from object_permissions import signals as op_signals
 
-from logs.models import LogItem
+from object_log.models import LogItem
+from object_log.views import list_for_object
 from util.client import GanetiApiError
 
 log_action = LogItem.objects.log_action
@@ -131,6 +132,9 @@ def edit(request, cluster_slug=None):
                     # valid to enter bad info.  A user might be adding
                     # info for an offline cluster.
                     pass
+
+            log_action('EDIT', user, cluster)
+
             return HttpResponseRedirect(reverse('cluster-detail', \
                                                 args=[cluster.slug]))
     
@@ -216,32 +220,6 @@ def ssh_keys(request, cluster_slug, api_key):
 
     keys_list = list(keys)
     return HttpResponse(json.dumps(keys_list), mimetype="application/json")
-
-
-def user_added(sender, editor, user, obj, **kwargs):
-    """
-    receiver for object_permissions.signals.view_add_user, Logs action
-    """
-    log_action(editor, obj, "added user")
-
-
-def user_removed(sender, editor, user, obj, **kwargs):
-    """
-    receiver for object_permissions.signals.view_add_user, Logs action
-    """
-    log_action(editor, obj, "removed user")
-
-
-def user_edited(sender, editor, user, obj, **kwargs):
-    """
-    receiver for object_permissions.signals.view_add_user, Logs action
-    """
-    log_action(editor, obj, "modified permissions")
-
-
-op_signals.view_add_user.connect(user_added, sender=Cluster)
-op_signals.view_remove_user.connect(user_removed, sender=Cluster)
-op_signals.view_edit_user.connect(user_edited, sender=Cluster)
 
 
 class QuotaForm(forms.Form):
@@ -360,18 +338,28 @@ class EditClusterForm(forms.ModelForm):
         return data
 
 
+@login_required
+def object_log(request, cluster_slug):
+    """ displays object log for this cluster """
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    user = request.user
+    if not (user.is_superuser or user.has_perm('admin', cluster)):
+        return render_403(request, "You do not have sufficient privileges")
+    return list_for_object(request, cluster)
+
+
 def recv_user_add(sender, editor, user, obj, **kwargs):
     """
     receiver for object_permissions.signals.view_add_user, Logs action
     """
-    log_action(editor, obj, "added user")
+    log_action('ADD_USER', editor, obj, user)
 
 
 def recv_user_remove(sender, editor, user, obj, **kwargs):
     """
     receiver for object_permissions.signals.view_remove_user, Logs action
     """
-    log_action(editor, obj, "removed user")
+    log_action('REMOVE_USER', editor, obj, user)
     
     # remove custom quota user may have had.
     if isinstance(user, (User,)):
@@ -385,7 +373,7 @@ def recv_perm_edit(sender, editor, user, obj, **kwargs):
     """
     receiver for object_permissions.signals.view_edit_user, Logs action
     """
-    log_action(editor, obj, "modified permissions")
+    log_action('MODIFY_PERMS', editor, obj, user)
 
 
 op_signals.view_add_user.connect(recv_user_add, sender=Cluster)

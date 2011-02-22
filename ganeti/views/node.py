@@ -24,7 +24,8 @@ from django.http import HttpResponse, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
-from logs.models import LogItem
+from object_log.models import LogItem
+from object_log.views import list_for_object
 from util.client import GanetiApiError
 
 log_action = LogItem.objects.log_action
@@ -98,6 +99,20 @@ def secondary(request, cluster_slug, host):
                 {'node': node, 'vms':vms}, \
                 context_instance=RequestContext(request))
 
+@login_required
+def object_log(request, cluster_slug, host):
+    """
+    Display object log for this node
+    """
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    node = get_object_or_404(Node, hostname=host)
+
+    user = request.user
+    if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
+        return render_403(request, "You do not have sufficient privileges")
+
+    return list_for_object(request, node)
+
 
 class RoleForm(forms.Form):
     """
@@ -144,7 +159,7 @@ def role(request, cluster_slug, host):
                 msg = job.info
 
                 # log information
-                log_action(user, node, "changed role")
+                log_action('NODE_ROLE_CHANGE', user, node, job)
                 return HttpResponse(json.dumps(msg), mimetype='application/json')
             except GanetiApiError, e:
                 content = json.dumps({'__all__':[str(e)]})
@@ -194,7 +209,7 @@ def migrate(request, cluster_slug, host):
                 msg = job.info
 
                 # log information
-                log_action(user, node, "migrated")
+                log_action('NODE_MIGRATE', user, node, job)
 
                 return HttpResponse(json.dumps(msg), mimetype='application/json')
             except GanetiApiError, e:
@@ -231,7 +246,7 @@ def evacuate(request, cluster_slug, host):
             msg = job.info
 
             # log information
-            log_action(user, node, "evacuated")
+            log_action('NODE_EVACUATE', user, node, job)
         except GanetiApiError, e:
             msg = [0, str(e)]
         return HttpResponse(json.dumps(msg), mimetype='application/json')

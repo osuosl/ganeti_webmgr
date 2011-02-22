@@ -23,11 +23,12 @@ from ganeti.models import Cluster, ClusterUser, Organization, \
     VirtualMachineTemplate
 from ganeti.utilities import cluster_default_info, cluster_os_list
 
+FQDN_RE = r'(?=^.{1,254}$)(^(?:(?!\d+\.|-)[a-zA-Z0-9_\-]{1,63}(?<!-)\.?)+(?:[a-zA-Z]{2,})$)'
+
 class NewVirtualMachineForm(forms.ModelForm):
     """
     Virtual Machine Creation form
     """
-    FQDN_RE = r'(?=^.{1,254}$)(^(?:(?!\d+\.|-)[a-zA-Z0-9_\-]{1,63}(?<!-)\.?)+(?:[a-zA-Z]{2,})$)'
     empty_field = (u'', u'---------')
 
     templates = [
@@ -346,4 +347,24 @@ class MigrateForm(forms.Form):
         ('non-live','Non-Live'),
     )
 
-    mode = forms.ChoiceField(choices=MODE_CHOICES) 
+    mode = forms.ChoiceField(choices=MODE_CHOICES)
+
+
+class RenameForm(forms.Form):
+    """ form used for renaming a Virtual Machine """
+    hostname = forms.RegexField(label='Instance Name', regex=FQDN_RE,
+                            error_messages={
+                                'invalid': 'Instance name must be resolvable',
+                            },
+                            max_length=255)
+    ip_check = forms.BooleanField(initial=True, required=False, label='IP Check')
+    name_check = forms.BooleanField(initial=True, required=False, label='DNS Name Check')
+
+    def __init__(self, vm, *args, **kwargs):
+        self.vm = vm
+        super(RenameForm, self).__init__(*args, **kwargs)
+
+    def clean_hostname(self):
+        data = self.cleaned_data
+        if 'hostname' in data and self.vm.hostname == data['hostname']:
+            raise forms.ValidationError("The new hostname must be different than the current hostname")
