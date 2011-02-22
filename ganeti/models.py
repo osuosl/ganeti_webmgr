@@ -625,10 +625,13 @@ class VirtualMachine(CachedClusterObject):
             .update(last_job=job, ignore_cache=True)
         return job
 
-    def migrate(self, mode='live', cleanup=True):
+    def migrate(self, mode='live', cleanup=False):
         """
         Migrates this VirtualMachine to another node.  only works if the disk
         type is DRDB
+
+        @param mode: live or non-live
+        @param cleanup: clean up a previous migration, default is False
         """
         id = self.rapi.MigrateInstance(self.hostname, mode, cleanup)
         job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)

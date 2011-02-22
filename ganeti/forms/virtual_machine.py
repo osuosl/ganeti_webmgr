@@ -348,6 +348,8 @@ class MigrateForm(forms.Form):
     )
 
     mode = forms.ChoiceField(choices=MODE_CHOICES)
+    cleanup = forms.BooleanField(initial=False, required=False,
+                                 label="Attempt recovery from failed migration")
 
 
 class RenameForm(forms.Form):
