@@ -45,7 +45,7 @@ from ganeti.forms.virtual_machine import NewVirtualMachineForm, \
     ModifyVirtualMachineForm, ModifyConfirmForm, MigrateForm, RenameForm
 from ganeti.templatetags.webmgr_tags import render_storage
 from ganeti.utilities import cluster_default_info, cluster_os_list, \
-    compare
+    compare, os_prettify
 
 
 @login_required
@@ -525,47 +525,46 @@ def create(request, cluster_slug=None):
         form = NewVirtualMachineForm(user, None, request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            start = data['start']
-            owner = data['owner']
-            cluster = data['cluster']
-            hostname = data['hostname']
-            disk_template = data['disk_template']
+            start = data.pop('start')
+            owner = data.pop('owner')
+            grantee = data.pop('grantee')
+            cluster = data.pop('cluster')
+            hostname = data.pop('hostname')
+            disk_template = data.pop('disk_template')
             # Default to not pass in pnode and snode
             #  since these will be set if the form is correct
             pnode = None
             snode = None
-            os = data['os']
-            name_check = data['name_check']
-            iallocator = data['iallocator']
+            os = data.pop('os')
+            name_check = data.pop('name_check')
+            iallocator = data.pop('iallocator')
             # Hidden fields
             iallocator_hostname = None
             if 'iallocator_hostname' in data:
-                iallocator_hostname = data['iallocator_hostname']
+                iallocator_hostname = data.pop('iallocator_hostname')
             # BEPARAMS
-            vcpus = data['vcpus']
-            disk_size = data['disk_size']
-            ram = data['ram']
-            nicmode = data['nicmode']
-            niclink = data['niclink']
-            nictype = data['nictype']
-            # HVPARAMS
-            disktype = data['disk_type']
-
-            kernelpath = data['kernelpath']
-            rootpath = data['rootpath']
-            serialconsole = data['serialconsole']
-            bootorder = data['bootorder']
-            imagepath = data['imagepath']
-
+            vcpus = data.pop('vcpus')
+            disk_size = data.pop('disk_size')
+            memory = data.pop('memory')
+            nic_mode = data.pop('nic_mode')
+            nic_link = data.pop('nic_link')
+            nic_type = data.pop('nic_type')
             # If iallocator was not checked do not pass in the iallocator
             #  name. If iallocator was checked don't pass snode,pnode.
             if not iallocator:
                 iallocator_hostname = None
-                pnode = data['pnode']
+                pnode = data.pop('pnode')
 
             # If drbd is being used assign the secondary node
             if disk_template == 'drbd' and pnode is not None:
-                snode = data['snode']
+                snode = data.pop('snode')
+
+            # Create dictionary of only parameters supposed to be in hvparams
+            hvparams = dict()
+            hvparam_fields = ('kernel_path', 'root_path', 'serial_console', \
+                'boot_order', 'disk_type', 'cdrom_image_path',)
+            for field in hvparam_fields:
+                hvparams[field] = data[field]
 
             try:
                 # XXX attempt to load the virtual machine.  This ensure that if
@@ -578,19 +577,13 @@ def create(request, cluster_slug=None):
                 
                 job_id = cluster.rapi.CreateInstance('create', hostname,
                         disk_template,
-                        [{"size": disk_size, }],[{'mode':nicmode, 'link':niclink, }],
+                        [{"size": disk_size, }],[{'mode':nic_mode, 'link':nic_link, }],
                         start=start, os=os, vcpus=vcpus,
                         pnode=pnode, snode=snode,
                         name_check=name_check, ip_check=name_check,
                         iallocator=iallocator_hostname,
-                        hvparams={'kernel_path': kernelpath, \
-                            'root_path': rootpath, \
-                            'serial_console':serialconsole, \
-                            'boot_order':bootorder, \
-                            'nic_type':nictype, \
-                            'disk_type':disktype,\
-                            'cdrom_image_path':imagepath},
-                        beparams={"memory": ram})
+                        hvparams=hvparams,
+                        beparams={"memory": memory})
 
                 # save temporary template
                 # XXX copy each property in data.  avoids errors from properties
@@ -602,20 +595,18 @@ def create(request, cluster_slug=None):
 
                 vm = VirtualMachine(cluster=cluster, owner=owner,
                                     hostname=hostname, disk_size=disk_size,
-                                    ram=ram, virtual_cpus=vcpus,
-                                    template=vm_template)
+                                    ram=memory, virtual_cpus=vcpus)
+
                 vm.ignore_cache = True
                 vm.save()
                 job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
                 VirtualMachine.objects.filter(id=vm.id).update(last_job=job)
 
-
-
                 # log information about creating the machine
                 log_action('CREATE', user, vm)
 
                 # grant admin permissions to the owner
-                data['grantee'].grant('admin', vm)
+                grantee.grant('admin', vm)
 
                 return HttpResponseRedirect( \
                 reverse('instance-detail', args=[cluster.slug, vm.hostname]))
@@ -640,13 +631,14 @@ def modify(request, cluster_slug, instance):
     vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
 
     user = request.user
-    if not (user.is_superuser or user.has_perm('admin', vm) \
-        or user.has_perm('modify', vm)):
+    if not (user.is_superuser or user.has_any_perms(vm, ['admin','modify']) \
+        or user.has_perm('admin', cluster)):
         return render_403(request, 'You do not have permissions to edit \
             this virtual machine')
 
     if request.method == 'POST':
         form = ModifyVirtualMachineForm(user, None, request.POST)
+        form.fields['os'].choices = request.session['os_list']
         if form.is_valid():
             data = form.cleaned_data
             request.session['edit_form'] = data
@@ -669,16 +661,29 @@ def modify(request, cluster_slug, instance):
                 #  from ganeti as an int and the DataVolumeField does not like
                 #  ints.
                 initial['vcpus'] = info['beparams']['vcpus']
-                initial['ram'] = str(info['beparams']['memory'])
-                initial['disk_type'] = hvparams['disk_type']
-                initial['bootorder'] = hvparams['boot_order']
-                initial['nictype'] = hvparams['nic_type']
-                initial['niclink'] = info['nic.links'][0]
-                initial['rootpath'] = hvparams['root_path']
-                initial['kernelpath'] = hvparams['kernel_path']
-                initial['serialconsole'] = hvparams['serial_console']
-                initial['imagepath'] = hvparams['cdrom_image_path']
+                initial['memory'] = str(info['beparams']['memory'])
+                initial['nic_link'] = info['nic.links'][0]
+                initial['nic_mac'] = info['nic.macs'][0]
+                initial['os'] = info['os']
+                fields = ('acpi', 'disk_cache', 'initrd_path', 'kernel_args', \
+                    'kvm_flag', 'mem_path', 'migration_downtime', \
+                    'security_domain', 'security_model', 'usb_mouse', \
+                    'use_chroot', 'use_localtime', 'vnc_bind_address', \
+                    'vnc_tls', 'vnc_x509_path', 'vnc_x509_verify', \
+                    'disk_type', 'boot_order', 'nic_type', 'root_path', \
+                    'kernel_path', 'serial_console', 'cdrom_image_path',
+                )
+                for field in fields:
+                    initial[field] = hvparams[field]
+
             form = ModifyVirtualMachineForm(user, cluster, initial=initial)
+            
+            # Get the list of oses from the cluster
+            os_list = cluster_os_list(cluster)
+
+            # Set os_list for cluster in session
+            request.session['os_list'] = os_list
+            form.fields['os'].choices = os_list
 
     return render_to_response("virtual_machine/edit.html", {
         'cluster': cluster,
@@ -695,8 +700,9 @@ def modify_confirm(request, cluster_slug, instance):
     vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
 
     user = request.user
-    if not (user.is_superuser or user.has_perm('admin', vm) \
-        or user.has_perm('modify', vm)):
+    power = user.is_superuser or user.has_any_perms(vm, ['admin','power'])
+    if not (user.is_superuser or user.has_any_perms(vm, ['admin','modify']) \
+        or user.has_perm('admin', cluster)):
         return render_403(request, 'You do not have permissions to edit \
             this virtual machine')
 
@@ -709,18 +715,20 @@ def modify_confirm(request, cluster_slug, instance):
                     reverse("instance-modify", \
                     args=[cluster.slug, vm.hostname]))
             elif 'reboot' in request.POST or 'save' in request.POST:
-                # Modify Instance rapi call
                 rapi_dict = json.loads(data['rapi_dict'])
-                job_id = cluster.rapi.ModifyInstance(instance,
-                    nics=[(0, {'link':rapi_dict['niclink'], }),], \
-                    hvparams={'kernel_path': rapi_dict['kernelpath'], \
-                        'root_path': rapi_dict['rootpath'], \
-                        'serial_console':rapi_dict['serialconsole'], \
-                        'boot_order':rapi_dict['bootorder'], \
-                        'nic_type':rapi_dict['nictype'], \
-                        'disk_type':rapi_dict['disk_type'], \
-                        'cdrom_image_path':rapi_dict['imagepath']}, \
-                    beparams={'vcpus':rapi_dict['vcpus'],'memory': rapi_dict['ram']}
+                niclink = rapi_dict.pop('nic_link')
+                nicmac = rapi_dict.pop('nic_mac', None)
+                vcpus = rapi_dict.pop('vcpus')
+                memory = rapi_dict.pop('memory')
+                os = rapi_dict.pop('os')
+                # Modify Instance rapi call
+                if nicmac is None:
+                    nics=[(0, {'link':niclink,}),] 
+                else:
+                    nics=[(0, {'link':niclink, 'mac':nicmac,}),]
+                job_id = cluster.rapi.ModifyInstance(instance, \
+                    nics=nics, os_name=os, hvparams=rapi_dict, \
+                    beparams={'vcpus':vcpus,'memory':memory}
                 )
                 # Create job and update message on virtual machine detail page
                 job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
@@ -729,17 +737,19 @@ def modify_confirm(request, cluster_slug, instance):
                 # log information about modifying this instance
                 log_action('EDIT', user, vm)
                 if 'reboot' in request.POST and vm.info['status'] == 'running':
-                    if not (user.is_superuser or user.has_perm('power', vm)):
-                        return render_403(request, "Sorry, but you do not have permission to reboot \
-                        this machine.")
-                    else:
+                    if power:
                         # Reboot the vm
                         vm.reboot()
                         log_action('VM_REBOOT', user, vm)
+                    else:
+                        return render_403(request, "Sorry, but you do not \
+                            have permission to reboot this machine.")
 
             # Remove session variables.
             if 'edit_form' in request.session:
                 del request.session['edit_form']
+            if 'os_list' in request.session:
+                del request.session['os_list']
             # Redirect to instance-detail
             return HttpResponseRedirect( \
                 reverse("instance-detail", args=[cluster.slug, vm.hostname]))
@@ -756,49 +766,47 @@ def modify_confirm(request, cluster_slug, instance):
         hvparams = info['hvparams']
 
         old_set = dict(
-            bootorder=hvparams['boot_order'],
-            disk_type=hvparams['disk_type'],
-            imagepath=hvparams['cdrom_image_path'],
-            kernelpath=hvparams['kernel_path'],
-            niclink=info['nic.links'][0],
-            nictype=hvparams['nic_type'],
-            ram=info['beparams']['memory'],
-            rootpath=hvparams['root_path'],
-            serialconsole=hvparams['serial_console'],
+            nic_link=info['nic.links'][0],
+            nic_mac=info['nic.macs'][0],
+            memory=info['beparams']['memory'],
             vcpus=info['beparams']['vcpus'],
+            os=info['os'],
         )
-        
-        new_set = dict(
-            bootorder=data['bootorder'],
-            disk_type=data['disk_type'],
-            imagepath=data['imagepath'],
-            kernelpath=data['kernelpath'],
-            niclink=data['niclink'],
-            nictype=data['nictype'],
-            ram=data['ram'],
-            rootpath=data['rootpath'],
-            serialconsole=data['serialconsole'],
-            vcpus=data['vcpus'],
-        )
+        # Add hvparams to the old_set
+        old_set.update(hvparams)
 
         instance_diff = {}
-        for key in old_set.keys():
-            if key == 'ram':
+        fields = ModifyVirtualMachineForm(user, None).fields
+        for key in data.keys():
+            if key == 'memory':
                 diff = compare(render_storage(old_set[key]), \
-                    render_storage(new_set[key]))
+                    render_storage(data[key]))
+            elif key == 'os':
+                oses = os_prettify([old_set[key], data[key]])[0][1]
+                diff = compare(oses[0][1], oses[1][1])
+            elif key not in old_set.keys():
+                diff = ""
+                instance_diff[key] = 'Key missing'
             else:
-                diff = compare(old_set[key], new_set[key])
-            if diff != "":
-                instance_diff[key] = diff
+                diff = compare(old_set[key], data[key])
 
+            if diff != "":
+                label = fields[key].label
+                instance_diff[label] = diff
+
+        # Remove NIC MAC from data if it does not change
+        if fields['nic_mac'].label not in instance_diff:
+            del data['nic_mac']
+        # Repopulate form with changed values
         form.fields['rapi_dict'] = CharField(widget=HiddenInput, \
-            initial=json.dumps(new_set)) 
+            initial=json.dumps(data)) 
 
     return render_to_response('virtual_machine/edit_confirm.html', {
         'cluster': cluster,
         'form': form,
         'instance': vm,
         'instance_diff': instance_diff,
+        'power':power,
         },
         context_instance=RequestContext(request),
     )

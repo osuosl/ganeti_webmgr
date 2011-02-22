@@ -54,20 +54,20 @@
         <fieldset>
             <legend>General Parameters</legend>
             {% vmfield form.vcpus %}
-            {% vmfield form.ram %}
+            {% vmfield form.memory %}
             {% vmfield form.disk_size %}
             {% vmfield form.disk_type %}
-            {% vmfield form.nicmode %}
-            {% vmfield form.niclink %}
-            {% vmfield form.nictype %}
+            {% vmfield form.nic_mode %}
+            {% vmfield form.nic_link %}
+            {% vmfield form.nic_type %}
         </fieldset>
         <fieldset>
             <legend>Hypervisor Parameters</legend>
-            {% vmfield form.kernelpath %}
-            {% vmfield form.rootpath %}
-            {% vmfield form.serialconsole %}
-            {% vmfield form.bootorder %}
-            {% vmfield form.imagepath %}
+            {% vmfield form.kernel_path %}
+            {% vmfield form.root_path %}
+            {% vmfield form.serial_console %}
+            {% vmfield form.boot_order %}
+            {% vmfield form.cdrom_image_path %}
         </fieldset>
         <input class="submit" type="submit" value="Create">
     </form>

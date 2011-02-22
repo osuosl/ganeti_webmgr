@@ -32,10 +32,11 @@ from django_test_tools.users import UserTestMixin
 from object_permissions import grant, get_user_perms
 
 from util import client
-from ganeti.tests.rapi_proxy import RapiProxy, INSTANCE, INFO, JOB, JOB_RUNNING, JOB_DELETE_SUCCESS
+from ganeti.tests.rapi_proxy import RapiProxy, INSTANCE, INFO, JOB, \
+    JOB_RUNNING, JOB_DELETE_SUCCESS, OPERATING_SYSTEMS
 from ganeti import models, constants 
 from ganeti.forms.virtual_machine import NewVirtualMachineForm
-from ganeti.utilities import os_prettify
+from ganeti.utilities import os_prettify, cluster_os_list
 
 VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
@@ -666,24 +667,46 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         user.save()
 
         ## POST
+        os_list = cluster_os_list(cluster)
         data = dict(vcpus=2,
-            ram=512,
+            acpi=True,
+            disk_cache='default',
+            initrd_path='',
+            kernel_args='ro',
+            kvm_flag='',
+            mem_path='',
+            migration_downtime=30,
+            security_domain='',
+            security_model='none',
+            usb_mouse='',
+            use_chroot=False,
+            use_localtime=False,
+            vnc_bind_addres='0.0.0.0',
+            vnc_tls=False,
+            vnc_x509_path='',
+            vnc_x509_verify=False,
+            memory=512,
+            os='image+debian-osgeo',
             disk_type='paravirtual',
-            bootorder='disk',
-            nictype='paravirtual',
-            niclink='br0',
-            rootpath='/dev/vda1',
-            kernelpath='/boot/vmlinuz-2.32.6-27-generic',
-            serialconsole=True,
-            imagepath='')
+            boot_order='disk',
+            nic_type='paravirtual',
+            nic_link='br0',
+            nic_mac='aa:bb:00:00:33:d2',
+            root_path='/dev/vda1',
+            kernel_path='/boot/vmlinuz-2.32.6-27-generic',
+            serial_console=True,
+            cdrom_image_path='')
         
         # Required Values
         user.grant('modify', vm)
         self.assertTrue(c.login(username=user.username, password='secret2'))
-        for property in ['vcpus', 'ram', 'disk_type', 'bootorder', 'nictype', \
-            'rootpath']:
+        session = c.session
+        for property in ['vcpus', 'memory', 'disk_type', 'boot_order', 'nic_type', \
+            'root_path']:
             data_ = data.copy()
             del data_[property]
+            session['os_list'] = os_list
+            session.save()
             self.assertFalse(user.is_superuser)
             response = c.post(url, data_)
             self.assertEqual(200, response.status_code)
@@ -702,6 +725,9 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         user.save()
         self.assertTrue(c.login(username=user.username, password='secret2'))
         self.assertTrue(user.is_superuser)
+        session = c.session
+        session['os_list'] = os_list
+        session.save()
         response = c.post(url, data)
         self.assertEqual(302, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
@@ -712,6 +738,9 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         # User without Permissions
         self.assertTrue(c.login(username=user.username, password='secret2'))
         self.assertFalse(user.is_superuser)
+        session = c.session
+        session['os_list'] = os_list
+        session.save()
         response = c.post(url, data)
         self.assertEqual(403, response.status_code)
         self.assertTrue(response.context['message'])
@@ -723,6 +752,9 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         user.grant('modify', vm)
         self.assertTrue(c.login(username=user.username, password='secret2'))
         self.assertFalse(user.is_superuser)
+        session = c.session
+        session['os_list'] = os_list
+        session.save()
         response = c.post(url, data)
         self.assertEqual(302, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
@@ -733,6 +765,9 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         user.grant('admin', vm)
         self.assertTrue(c.login(username=user.username, password='secret2'))
         self.assertFalse(user.is_superuser)
+        session = c.session
+        session['os_list'] = os_list
+        session.save()
         response = c.post(url, data)
         self.assertEqual(302, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
@@ -750,17 +785,36 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         user = User(id=52, username='modifier')
         user.set_password('secret2')
         user.save()
-
+        
+        os_list = cluster_os_list(cluster)
         edit_form = dict(vcpus=2,
-            ram=512,
+            acpi=True,
+            disk_cache='default',
+            initrd_path='',
+            kernel_args='ro',
+            kvm_flag='',
+            mem_path='',
+            migration_downtime=30,
+            security_domain='',
+            security_model='none',
+            usb_mouse='',
+            use_chroot=False,
+            use_localtime=False,
+            vnc_bind_addres='0.0.0.0',
+            vnc_tls=False,
+            vnc_x509_path='',
+            vnc_x509_verify=False,
+            memory=512,
+            os='image+debian-osgeo',
             disk_type='paravirtual',
-            bootorder='disk',
-            nictype='paravirtual',
-            niclink='br0',
-            rootpath='/dev/vda1',
-            kernelpath='/boot/vmlinuz-2.32.6-27-generic',
-            serialconsole=True,
-            imagepath='')
+            boot_order='disk',
+            nic_type='paravirtual',
+            nic_link='br0',
+            nic_mac='aa:bb:00:00:33:d2',
+            root_path='/dev/vda1',
+            kernel_path='/boot/vmlinuz-2.32.6-27-generic',
+            serial_console=True,
+            cdrom_image_path='')
 
         ## SESSION VARIABLES
         # Make sure session variables are set
@@ -777,7 +831,9 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'virtual_machine/edit_confirm.html')
-
+        
+        #session['os_list'] = os_list
+        #session.save()
         user.revoke_all(vm)
         user.is_superuser = False
         user.save()
@@ -794,6 +850,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         self.assertTrue(c.login(username=user.username, password='secret2'))
         session = c.session
         session['edit_form'] = edit_form
+        session['os_list'] = os_list
         session.save()
         response = c.get(url)
         self.assertEqual(200, response.status_code)
@@ -808,6 +865,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         self.assertTrue(c.login(username=user.username, password='secret2'))
         session = c.session
         session['edit_form'] = edit_form
+        session['os_list'] = os_list
         session.save()
         response = c.get(url)
         self.assertEqual(200, response.status_code)
@@ -822,6 +880,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         self.assertTrue(c.login(username=user.username, password='secret2'))
         session = c.session
         session['edit_form'] = edit_form
+        session['os_list'] = os_list
         session.save()
         response = c.get(url)
         self.assertEqual(200, response.status_code)
@@ -846,6 +905,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
             self.assertTrue(c.login(username=user.username, password='secret2'))
             session = c.session
             session['edit_form'] = edit_form
+            session['os_list'] = os_list
             session.save()
             self.assertTrue(user.is_superuser)
             response = c.post(url, data)
@@ -870,6 +930,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
             self.assertTrue(c.login(username=user.username, password='secret2'))
             session = c.session
             session['edit_form'] = edit_form
+            session['os_list'] = os_list
             session.save()
             self.assertFalse(user.is_superuser)
             response = c.post(url, data)
@@ -883,6 +944,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
             self.assertTrue(c.login(username=user.username, password='secret2'))
             session = c.session
             session['edit_form'] = edit_form
+            session['os_list'] = os_list
             session.save()
             self.assertFalse(user.is_superuser)
             response = c.post(url, data)
@@ -902,14 +964,14 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
                     hostname='new.vm.hostname',
                     disk_template='plain',
                     disk_size=1000,
-                    ram=256,
+                    memory=256,
                     vcpus=2,
-                    rootpath='/',
-                    nictype='paravirtual',
+                    root_path='/',
+                    nic_type='paravirtual',
                     disk_type = 'paravirtual',
-                    niclink = 'br43',
-                    nicmode='routed',
-                    bootorder='disk',
+                    nic_link = 'br43',
+                    nic_mode='routed',
+                    boot_order='disk',
                     os='image+ubuntu-lucid',
                     pnode=cluster.nodes.all()[0],
                     snode=cluster.nodes.all()[1])
@@ -929,7 +991,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         self.assertEqual(profile.used_resources(cluster), {'ram': 0, 'disk': 0, 'virtual_cpus': 0})
         cluster.set_quota(profile, dict(ram=1000, disk=2000, virtual_cpus=10))
         data_ = data.copy()
-        data_['ram'] = 2000
+        data_['memory'] = 2000
         data_['owner'] = profile.id
         response = c.post(url % '', data_)
         self.assertEqual(200, response.status_code) # 302 if vm creation succeeds
@@ -1011,14 +1073,14 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
                     hostname='new.vm.hostname',
                     disk_template='plain',
                     disk_size=1000,
-                    ram=256,
+                    memory=256,
                     vcpus=2,
-                    rootpath='/',
-                    nictype='paravirtual',
+                    root_path='/',
+                    nic_type='paravirtual',
                     disk_type = 'paravirtual',
-                    niclink = 'br43',
-                    nicmode='routed',
-                    bootorder='disk',
+                    nic_link = 'br43',
+                    nic_mode='routed',
+                    boot_order='disk',
                     os='image+ubuntu-lucid',
                     pnode=cluster.nodes.all()[0],
                     snode=cluster.nodes.all()[1])
@@ -1048,9 +1110,9 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
         
         # POST - required values
-        for property in ['cluster', 'hostname', 'disk_size', 'disk_type','nictype', 'nicmode',
+        for property in ['cluster', 'hostname', 'disk_size', 'disk_type','nic_type', 'nic_mode',
                          'vcpus', 'pnode', 'os', 'disk_template',
-                         'rootpath', 'bootorder']:
+                         'root_path', 'boot_order']:
             data_ = data.copy()
             del data_[property]
             response = c.post(url % '', data_)
@@ -1488,19 +1550,19 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         args = cluster.id        
         
         expected = dict(
-            bootorder='disk',
-            ram=512,
-            nictype='paravirtual',
-            rootpath='/dev/vda2',
+            boot_order='disk',
+            memory=512,
+            nic_type='paravirtual',
+            root_path='/dev/vda2',
             hypervisors=['kvm'],
-            serialconsole=True,
-            imagepath='',
-            disktype ='paravirtual',
-            niclink ='br42',
-            nicmode='bridged',
+            serial_console=True,
+            cdrom_image_path='',
+            disk_type ='paravirtual',
+            nic_link ='br42',
+            nic_mode='bridged',
             vcpus=2,
             iallocator='',
-            kernelpath=''
+            kernel_path=''
         )
         
         #anonymous users
@@ -2162,16 +2224,16 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
             (u'pcnet',u'pcnet'),
             (u'e1000',u'e1000'),
             (u'paravirtual',u'paravirtual'),
-            ], form.fields['nictype'].choices)
+            ], form.fields['nic_type'].choices)
         self.assertEqual([
             (u'', u'---------'),
             (u'routed', u'routed'),
             (u'bridged', u'bridged')
-            ], form.fields['nicmode'].choices)
+            ], form.fields['nic_mode'].choices)
         self.assertEqual([('disk', 'Hard Disk'),
             ('cdrom', 'CD-ROM'),
             ('network', 'Network')
-            ], form.fields['bootorder'].choices)
+            ], form.fields['boot_order'].choices)
         self.assertEqual([
             (u'', u'---------'),
             (u'plain', u'plain'),

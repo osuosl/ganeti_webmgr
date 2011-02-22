@@ -4,21 +4,39 @@
 <h1>Edit {{ instance.hostname }}</h1>
 <fieldset>
     <form id="vmeditform" method="post">
+        {% vmfield form.os %}
         <fieldset>
             <legend>General Parameters</legend>
             {% vmfield form.vcpus %}
-            {% vmfield form.ram %}
+            {% vmfield form.memory %}
             {% vmfield form.disk_type %}
-            {% vmfield form.niclink %}
-            {% vmfield form.nictype %}
+            {% vmfield form.nic_link %}
+            {% vmfield form.nic_type %}
+            {% vmfield form.nic_mac %}
         </fieldset>
         <fieldset>
             <legend>Hypervisor Parameters</legend>
-            {% vmfield form.kernelpath %}
-            {% vmfield form.rootpath %}
-            {% vmfield form.serialconsole %}
-            {% vmfield form.bootorder %}
-            {% vmfield form.imagepath %}
+            {% vmfield form.kernel_path %}
+            {% vmfield form.root_path %}
+            {% vmfield form.serial_console %}
+            {% vmfield form.boot_order %}
+            {% vmfield form.cdrom_image_path %}
+            {% vmfield form.acpi %}
+            {% vmfield form.disk_cache %}
+            {% vmfield form.initrd_path %}
+            {% vmfield form.kernel_args %}
+            {% vmfield form.kvm_flag %}
+            {% vmfield form.mem_path %}
+            {% vmfield form.migration_downtime %}
+            {% vmfield form.security_model %}
+            {% vmfield form.security_domain %}
+            {% vmfield form.usb_mouse %}
+            {% vmfield form.use_chroot %}
+            {% vmfield form.use_localtime %}
+            {% vmfield form.vnc_bind_address %}
+            {% vmfield form.vnc_tls %}
+            {% vmfield form.vnc_x509_path %}
+            {% vmfield form.vnc_x509_verify %}
         </fieldset>
         <input class="submit" type="submit" value="Continue" />
     </form>
