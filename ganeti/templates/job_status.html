@@ -55,7 +55,10 @@
         if (data.status == 'error') {
             html.addClass('error');
             var reason = data.opresult[sub_op][1][0];
-            html.children('h3').append("<p>" + reason + "</p>");
+            html.children('h3')
+                    // XXX we don't have the ID we need to clear this error
+                    //.append("<a class='clear' title='clear error' href=''></a>")
+                    .append("<p>" + reason + "</p>");
             actions_enabled = true;
         }
 
@@ -64,7 +67,7 @@
         if (data['oplog'][sub_op].length != 0) {
             var log_html = html.children('.op_log');
             if (log_html.length==0){
-                log_html = $("<pre class='op_log'><ul></ul></pre>")
+                log_html = $("<pre class='op_log'><ul></ul></pre>");
                 html.append(log_html);
             }
             var log = data['oplog'][sub_op];
@@ -90,4 +93,14 @@
         }
         return new_str;
     }
+
+    $("#messages a.clear").live("click", function(event){
+        event.preventDefault();
+        $.post(this.href, function(){
+            var error = $(this).parent().parent();
+            error.fadeOut(1000, function(){
+                error.remove();
+            });
+        });
+    });
 </script>

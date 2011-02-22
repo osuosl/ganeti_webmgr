@@ -324,7 +324,11 @@ div.clear:hover {background:url(/media/images/icons/cancel.png) no-repeat !impor
     padding:1px 0;
     text-align:left;
 }
-
+#messages a.clear {
+    background:url(/media/images/icons/cancel.png);
+    float:right;
+    margin-right:5px;
+}
 
 .ajax_form .submit {margin:10px auto 0 auto; width:6em;}
 .ajax_form ul#errors li {
