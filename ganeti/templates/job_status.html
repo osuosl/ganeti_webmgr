@@ -60,6 +60,7 @@
                     //.append("<a class='clear' title='clear error' href=''></a>")
                     .append("<p>" + reason + "</p>");
             actions_enabled = true;
+            $('#actions a').removeClass('disabled');
         }
 
         // append log messages that are not already displayed
