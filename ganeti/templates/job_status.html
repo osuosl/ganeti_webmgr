@@ -5,14 +5,14 @@
     var actions_enabled;
     
     // poll for job status, first poll is delayed by 3000ms
-    function poll_job_status(job_id, callback) {
+    function poll_job_status(job_id, callback, errback) {
         actions_enabled = false;
         $('#actions a').addClass('disabled');
-        checkInterval = setInterval(get_job_status, 3000, job_id, callback);
+        checkInterval = setInterval(get_job_status, 3000, job_id, callback, errback);
     }
     
     // get job status
-    function get_job_status(job_id, callback) {
+    function get_job_status(job_id, callback, errback) {
         $.ajax({
             url: "{% url cluster-detail cluster.slug %}/job/"+job_id+"/status/",
             success: function(data) {
@@ -22,6 +22,8 @@
                     if (callback!=undefined){
                         callback();
                     }
+                } else if (data.status == 'error' && errback != undefined) {
+                    errback();
                 }
 
                 display_job(data);
@@ -64,7 +66,6 @@
             if (log_html.length==0){
                 log_html = $("<pre class='op_log'><ul></ul></pre>")
                 html.append(log_html);
-
             }
             var log = data['oplog'][sub_op];
             for (var i=current_log_count; i<log.length; i++) {

@@ -805,6 +805,17 @@ def modify_confirm(request, cluster_slug, instance):
 
 
 @login_required
+def load_template(request, pk):
+    """ Loads a template into the create form """
+    template = get_object_or_404(VirtualMachineTemplate, pk=pk)
+    form = NewVirtualMachineForm(request.user, instance=template)
+
+    return render_to_response('virtual_machine/create.html', {'form': form},
+        context_instance=RequestContext(request),
+    )
+
+
+@login_required
 def rename(request, cluster_slug, instance):
     """
     Rename an existing instance

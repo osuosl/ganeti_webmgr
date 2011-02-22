@@ -12,12 +12,17 @@
                 {# job was finished before we loaded the page #}
                 job_complete();
             } else {
-                poll_job_status(job_id, job_complete);
+                poll_job_status(job_id, job_complete, job_error);
             }
         });
 
         function job_complete() {
             window.location.reload();
+        }
+
+        function job_error() {
+
+            $("#vm_edit").show();
         }
     </script>
 {% endblock %}
@@ -34,5 +39,16 @@
     </h1>
 
     {% include "job_status.html" %}
+
     <ul id="messages"></ul>
+
+    <div id="vm_edit" style="display:none;">
+        Install has failed:
+        <ul>
+            <li></li><a href="{% url instance-create-template instance.template_id %}">Edit</a></li>
+        </ul>
+    </div>
+
+
+
 {% endblock %}

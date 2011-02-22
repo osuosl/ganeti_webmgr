@@ -36,7 +36,7 @@
 
 {% block content %}
 <div id="virtualmachineform">
-    <form method="post">
+    <form method="post" action="{% url instance-create %}">
         <fieldset>
             <h1><span class="breadcrumb">Virtual Machine</span> : Create</h1>
             {% vmfield form.owner %}
