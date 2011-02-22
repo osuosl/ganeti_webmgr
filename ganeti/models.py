@@ -167,8 +167,9 @@ class CachedClusterObject(models.Model):
         is lazy and will only occur when saving.
         """
         self.__info = value
-        self.parse_info()
-        self.serialized_info = None
+        if value is not None:
+            self.parse_info()
+            self.serialized_info = None
 
     def load_info(self):
         """
@@ -389,6 +390,12 @@ class Job(CachedClusterObject):
                 break
         return info['ops'][index]['OP_ID']
 
+    @property
+    def operation(self):
+        """
+        Returns the last operation, which is generally the primary operation.
+        """
+        return self.info['ops'][-1]['OP_ID']
 
     def __repr__(self):
         return "<Job: '%s'>" % self.id
@@ -448,7 +455,11 @@ class VirtualMachine(CachedClusterObject):
     # and counted in quotas, but only so status can be checked.
     pending_delete = models.BooleanField(default=False)
     deleted = False
-    
+
+    # Template temporarily stores parameters used to create this virtual machine
+    # This template is used to recreate the values entered into the form.
+    template = models.ForeignKey("VirtualMachineTemplate", null=True)
+
     class Meta:
         ordering = ["hostname", ]
         unique_together = (("cluster", "hostname"),)
@@ -555,16 +566,30 @@ class VirtualMachine(CachedClusterObject):
             
             if status == 'success':
                 self.last_job = None
-                # if the job was a deletion, then delete this vm
+                # job cleanups
+                #   - if the job was a deletion, then delete this vm
+                #   - if the job was creation, then delete temporary template
                 # XXX return a None to prevent refresh() from trying to update
                 #     the cache setting for this VM
                 # XXX delete may have multiple ops in it, but delete is always
                 #     the last command run.
-                if data['ops'][-1]['OP_ID'] == 'OP_INSTANCE_REMOVE':
+                op_id = data['ops'][-1]['OP_ID']
+                if op_id == 'OP_INSTANCE_REMOVE':
                     self.delete()
                     self.deleted = True
                     return None
-                
+                elif op_id == 'OP_INSTANCE_CREATE':
+                    # XXX must update before deleting the template to maintain
+                    # referential integrity.  as a consequence return no other
+                    # updates.
+                    VirtualMachine.objects.filter(pk=self.pk) \
+                        .update(ignore_cache=False, last_job=None, template=None)
+
+                    VirtualMachineTemplate.objects.filter(pk=self.template_id) \
+                        .delete()
+                    self.template=None
+                    return dict()
+
                 return dict(ignore_cache=False, last_job=None)
             
             elif status == 'error':
@@ -1002,7 +1027,7 @@ class VirtualMachineTemplate(models.Model):
       form so that they can automatically be used or edited by a user.
     """
     template_name = models.CharField(max_length=255, null=True, blank=True)
-    cluster = models.ForeignKey('Cluster')
+    cluster = models.ForeignKey('Cluster', null=True)
     start = models.BooleanField(verbose_name='Start up After Creation', \
                 default=True)
     name_check = models.BooleanField(verbose_name='DNS Name Check', \
@@ -1022,7 +1047,7 @@ class VirtualMachineTemplate(models.Model):
                 validators=[MinValueValidator(1)])
     memory = models.IntegerField(verbose_name='Memory', \
                 validators=[MinValueValidator(100)])
-    disk_size = models.IntegerField(verbose_name='Disk Size', \
+    disk_size = models.IntegerField(verbose_name='Disk Size', null=True, \
                 validators=[MinValueValidator(100)])
     disk_type = models.CharField(verbose_name='Disk Type', max_length=255)
     nic_mode = models.CharField(verbose_name='NIC Mode', max_length=255)
@@ -1039,8 +1064,11 @@ class VirtualMachineTemplate(models.Model):
     cdrom_image_path = models.CharField(verbose_name='CD-ROM Image Path', null=True, \
                 blank=True, max_length=512)
 
-    def __unicode__(self):
-        return self.template_name
+    def __str__(self):
+        if self.template_name is None:
+            return 'unnamed'
+        else:
+            return self.template_name
 
 
 if settings.TESTING:

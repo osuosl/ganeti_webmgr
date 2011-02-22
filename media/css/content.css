@@ -10,7 +10,7 @@ h1 a.breadcrumb:hover {text-decoration:underline;}
 #user_menu {
     background-color:#C16328;
     border: 1px solid #ccc;
-    border-width:0px 1px 1px 1px;
+    border-width:0 1px 1px 1px;
     font-weight:normal;
     font-size:11px;
     height:18px;
@@ -54,10 +54,7 @@ h1 a.breadcrumb:hover {text-decoration:underline;}
 
 /* tablesorter style */
 #content table.sorted th {
-    background-color: #eeeeee;
-    background-image: url(/media/images/bg.gif);
-    background-repeat: no-repeat;
-    background-position: center right;
+    background: #eeeeee url(/media/images/bg.gif) no-repeat center right;
     border: 1px solid #ddd;
     padding-right: 15px;
     cursor: s-resize;
@@ -90,7 +87,7 @@ h1 a.breadcrumb:hover {text-decoration:underline;}
     background:none !important;
     border-radius:0 !important;
     border-width:0 0 1px 0 !important;
-    -moz-border-radius:0px !important;
+    -moz-border-radius:0 !important;
     -webkit-border-radius:0 !important;
 }
 .ui-widget-content {border:0 !important;}
@@ -143,7 +140,7 @@ h1 a.breadcrumb:hover {text-decoration:underline;}
 
 
 /*   User Profile   */
-#uprofile {margin: 0em auto 0em 0em; width: 50%;}
+#uprofile {margin: 0 auto 0 0; width: 50%;}
 #uprofile fieldset { margin-bottom:10px; padding:1em; }
 #uprofile fieldset h2 {margin-bottom:5px;}
 #uprofile fieldset p {padding-bottom:1.5ex;}
@@ -165,8 +162,8 @@ h1 a.breadcrumb:hover {text-decoration:underline;}
 #content .overview {width:75%; border-color:#eee;}
 
 /*  Orphans */
-#orphans {margin:1em 0em 0em 1em;}
-#orphans li input {margin:0ex 1ex 0ex 0ex;}
+#orphans {margin:1em 0 0 1em;}
+#orphans li input {margin:0 1ex 0 0;}
 
 #configuration {text-align: center;}
 #configuration form {margin: 0 auto 0 auto; max-width: 800px;}
@@ -276,9 +273,12 @@ div.clear:hover {background:url(/media/images/icons/cancel.png) no-repeat !impor
 .spinner image {display:block; margin:0 auto; width:32px;}
 
 
+/**
+ * Messages
+ **/
 #messages li {
     background-color:#c2e192;
-    border: 2px solid #124612;
+    border: 1px solid #124612;
     color:#124612;
     font-weight:bold;
     font-size:110%;
@@ -287,8 +287,44 @@ div.clear:hover {background:url(/media/images/icons/cancel.png) no-repeat !impor
     text-align:center;
     width:700px;
 }
-#messages li.error {background-color:#ee9c98; border-color: #c83737; color:#550000;}
+#messages li.error {background-color:#ee9c98; border-color: #550000; color:#550000;}
 #messages li p {font-size:12px; font-weight:normal;}
+
+
+/**
+ * Job Status Queue and Log
+ **/
+#messages li.job {
+    background-color:#eee;
+    border-width:1px;
+    padding:0;
+}
+
+#messages li.job h3 {
+    background: #C2E192 url(/media/images/ajax-loader_arrows.gif) no-repeat 5px 5px;
+    padding: 5px 0 5px 25px;
+    margin:0;
+    text-align:left;
+}
+#messages li.job.error h3 {background: #ee9c98;}
+#messages .op_log {
+    display:block;
+    border-top:1px solid #124612;
+    margin:0;
+    padding: 10px;
+    overflow:auto;
+}
+
+#messages .op_log  li {
+    border:0;
+    background-color:inherit;
+    color:black;
+    font: 12px monospace;
+    margin:0;
+    padding:1px 0;
+    text-align:left;
+}
+
 
 .ajax_form .submit {margin:10px auto 0 auto; width:6em;}
 .ajax_form ul#errors li {

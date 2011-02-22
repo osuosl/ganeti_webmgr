@@ -5,49 +5,7 @@
 {% block head %}
 <link href="{{MEDIA_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
 <style>
-#content h3 {
-    margin-top:25px;
-}
-
-.spinner_small {
-    display:block;
-    margin:10px auto 0 auto;
-    width:16px;
-}
-
-#log {
-    display:block;
-    border-top:1px solid #124612;
-    margin:0;
-    padding: 10px;
-    overflow:auto;
-}
-
-#log li {
-    border:0;
-    color:black;
-    font: 12px monospace;
-    margin:0;
-    padding:1px 0;
-    text-align:left;
-}
-
-#messages li {
-    background-color:#eee;
-    border-width:1px;
-    padding:0;
-}
-
-
-
-#messages h3 {
-    background: url({{MEDIA_URL}}/images/ajax-loader_arrows.gif) 5px 5px no-repeat;
-    background-color:#C2E192;
-    padding: 5px 0 5px 25px;
-    margin:0;
-    text-align:left;
-}
-
+#content h3 { margin-top:25px; }
 #content table {margin-top:5px;}
 </style>
 <script src="{{MEDIA_URL}}/js/jquery-ui.min.js"></script>
@@ -173,6 +131,7 @@
 </h1>
 
 <ul id="messages"></ul>
+
 <div id="tabs">
     <ul>
         <li><a href="#overview"><span>Overview</span></a></li>

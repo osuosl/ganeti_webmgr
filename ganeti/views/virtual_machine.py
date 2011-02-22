@@ -39,7 +39,7 @@ log_action = LogItem.objects.log_action
 
 from util.client import GanetiApiError
 from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine, \
-        Job, SSHKey
+        Job, SSHKey, VirtualMachineTemplate
 from ganeti.views import render_403
 from ganeti.forms.virtual_machine import NewVirtualMachineForm, \
     ModifyVirtualMachineForm, ModifyConfirmForm, MigrateForm, RenameForm
@@ -428,9 +428,15 @@ def detail(request, cluster_slug, instance):
     
     if not (admin or power or remove or modify or tags):
         return render_403(request, 'You do not have permission to view this cluster\'s details')
-    
+
+    # check job for pending jobs that should be rendered with a different
+    # detail template.  This allows us to reduce the chance that users will do
+    # something strange like rebooting a VM that is being deleted or is not
+    # fully created yet.
     if vm.pending_delete:
-        template = 'virtual_machine/delete_status.html' 
+        template = 'virtual_machine/delete_status.html'
+    elif vm.template and vm.info is None:
+        template = 'virtual_machine/create_status.html'
     else:
         template = 'virtual_machine/detail.html'
     
@@ -578,10 +584,19 @@ def create(request, cluster_slug=None):
                         iallocator=iallocator_hostname,
                         hvparams=hvparams,
                         beparams={"memory": memory})
-                
+
+                # save temporary template
+                # XXX copy each property in data.  avoids errors from properties
+                # that don't exist on the model
+                vm_template = VirtualMachineTemplate()
+                for k,v in data.items():
+                    setattr(vm_template, 'k', v)
+                vm_template.save()
+
                 vm = VirtualMachine(cluster=cluster, owner=owner,
                                     hostname=hostname, disk_size=disk_size,
                                     ram=memory, virtual_cpus=vcpus)
+
                 vm.ignore_cache = True
                 vm.save()
                 job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
@@ -793,6 +808,17 @@ def modify_confirm(request, cluster_slug, instance):
         'instance_diff': instance_diff,
         'power':power,
         },
+        context_instance=RequestContext(request),
+    )
+
+
+@login_required
+def load_template(request, pk):
+    """ Loads a template into the create form """
+    template = get_object_or_404(VirtualMachineTemplate, pk=pk)
+    form = NewVirtualMachineForm(request.user, instance=template)
+
+    return render_to_response('virtual_machine/create.html', {'form': form},
         context_instance=RequestContext(request),
     )
 
