@@ -294,24 +294,6 @@ div.clear:hover {background:url(/media/images/icons/cancel.png) no-repeat !impor
 /**
  * Job Status Queue and Log
  **/
-#log {
-    display:block;
-    border-top:1px solid #124612;
-    margin:0;
-    padding: 10px;
-    overflow:auto;
-}
-
-#log li {
-    border:0;
-    background-color:inherit;
-    color:black;
-    font: 12px monospace;
-    margin:0;
-    padding:1px 0;
-    text-align:left;
-}
-
 #messages li.job {
     background-color:#eee;
     border-width:1px;
@@ -325,6 +307,23 @@ div.clear:hover {background:url(/media/images/icons/cancel.png) no-repeat !impor
     text-align:left;
 }
 #messages li.job.error h3 {background: #ee9c98;}
+#messages .op_log {
+    display:block;
+    border-top:1px solid #124612;
+    margin:0;
+    padding: 10px;
+    overflow:auto;
+}
+
+#messages .op_log  li {
+    border:0;
+    background-color:inherit;
+    color:black;
+    font: 12px monospace;
+    margin:0;
+    padding:1px 0;
+    text-align:left;
+}
 
 
 .ajax_form .submit {margin:10px auto 0 auto; width:6em;}

@@ -60,13 +60,15 @@
         // append log messages that are not already displayed
         var current_log_count = $("#log ul li").length;
         if (data['oplog'][sub_op].length != 0) {
-            if ($('#log').length==0){
-                html.append("<pre id='log'><ul></ul></pre>");
-            }
+            var log_html = html.children('.op_log');
+            if (log_html.length==0){
+                log_html = $("<pre class='op_log'><ul></ul></pre>")
+                html.append(log_html);
 
+            }
             var log = data['oplog'][sub_op];
             for (var i=current_log_count; i<log.length; i++) {
-                $("#log ul")
+                log_html.children("ul")
                     .append("<li>"+log[i][3]+"</li>");
             }
         }
