@@ -435,7 +435,7 @@ def detail(request, cluster_slug, instance):
     # fully created yet.
     if vm.pending_delete:
         template = 'virtual_machine/delete_status.html'
-    elif vm.template and vm.info is None:
+    elif vm.template or vm.info is None:
         template = 'virtual_machine/create_status.html'
     else:
         template = 'virtual_machine/detail.html'
@@ -595,7 +595,8 @@ def create(request, cluster_slug=None):
 
                 vm = VirtualMachine(cluster=cluster, owner=owner,
                                     hostname=hostname, disk_size=disk_size,
-                                    ram=memory, virtual_cpus=vcpus)
+                                    ram=memory, virtual_cpus=vcpus,
+                                    template=vm_template)
 
                 vm.ignore_cache = True
                 vm.save()

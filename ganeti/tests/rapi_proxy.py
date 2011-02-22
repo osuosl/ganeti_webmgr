@@ -267,7 +267,7 @@ JOB_RUNNING = {'end_ts': [1291845036, 492131],
           'dry_run': False,
           'instance_name': 'gimager.osuosl.bak',
           'timeout': 120}],
- 'opstatus': ['success'],
+ 'opstatus': ['running'],
  'received_ts': [1291845002, 555722],
  'start_ts': [1291845002, 595336],
  'status': 'running',
@@ -493,7 +493,7 @@ class RapiProxy(client.GanetiRapiClient):
         CallProxy.patch(instance, 'GetNode', False, NODE)
         CallProxy.patch(instance, 'GetInfo', False, INFO)
         CallProxy.patch(instance, 'GetOperatingSystems', False, OPERATING_SYSTEMS)
-        CallProxy.patch(instance, 'GetJobStatus', False, JOB)
+        CallProxy.patch(instance, 'GetJobStatus', False, JOB_RUNNING)
         CallProxy.patch(instance, 'StartupInstance', False, 1)
         CallProxy.patch(instance, 'ShutdownInstance', False, 1)
         CallProxy.patch(instance, 'RebootInstance', False, 1)
