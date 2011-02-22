@@ -136,6 +136,7 @@ class RoleForm(forms.Form):
     }
     
     role = forms.ChoiceField(choices=ROLE_CHOICES)
+    force = forms.BooleanField(initial=False, required=False)
 
 
 @login_required

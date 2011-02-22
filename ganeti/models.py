@@ -784,7 +784,7 @@ class Node(CachedClusterObject):
         free = total-running if running >= 0 and total >=0  else -1
         return {'total':total, 'free': free}
     
-    def set_role(self, role):
+    def set_role(self, role, force=False):
         """
         Sets the role for this node
         
@@ -795,7 +795,7 @@ class Node(CachedClusterObject):
             * drained
             * offline
         """
-        id = self.rapi.SetNodeRole(self.hostname, role)
+        id = self.rapi.SetNodeRole(self.hostname, role, force)
         job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
         self.last_job = job
         Node.objects.filter(pk=self.pk).update(ignore_cache=True, last_job=job)
