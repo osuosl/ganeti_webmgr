@@ -12,14 +12,14 @@
     }
 </style>
 
-<script type="text/javascript"
-        src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
 <script type="text/javascript">
-    function ajax_get_update() {
+    function ajax_get_update(){
         {% if cluster %}
             url = "{% url cluster-virtualmachine-table cluster.slug %}";
+            console.log("Yeah, cluster! ("+url+")");
         {% else %}
             url = "{% url virtualmachine-table %}";
+            console.log("Yeah, NOT A cluster! ("+url+")");
         {% endif %}
         $.get(url, FETCH_ARGS, function(results) {
             $results = $(results);
@@ -33,7 +33,9 @@
     var FETCH_ARGS = {page:1};
     var current_order_by = null;
 
-    $(document).ready( function() {
+    $(document).ready(function(){
+
+        // --[pagination click handling---------------------------------------
         $('.pagination .previous').live('click', function(e) {
             e.preventDefault();
             FETCH_ARGS["page"] = FETCH_ARGS["page"] - 1;
@@ -50,7 +52,8 @@
             FETCH_ARGS["page"] =  parseInt($(this).html());
             ajax_get_update();
         });
-        
+
+        // --[table sorting]--------------------------------------------------
         $('#vmlist th').live("click", function(){
             $this = $(this)
             field = $this.html();
@@ -70,6 +73,7 @@
             ajax_get_update();
         });
         
+        // hide the loading spinny thing
         $('.spinner')
             .hide()
             .ajaxStart(function() {
@@ -98,8 +102,9 @@
 {% endif %}
 
 <div id="vm-wrapper">
-{% include "virtual_machine/inner_table.html" %}
+    {% include "virtual_machine/inner_table.html" %}
 </div>
+
 <div class="spinner" >
     <br/>
     Loading...
