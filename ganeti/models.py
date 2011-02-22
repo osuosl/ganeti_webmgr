@@ -167,8 +167,9 @@ class CachedClusterObject(models.Model):
         is lazy and will only occur when saving.
         """
         self.__info = value
-        self.parse_info()
-        self.serialized_info = None
+        if value is not None:
+            self.parse_info()
+            self.serialized_info = None
 
     def load_info(self):
         """
