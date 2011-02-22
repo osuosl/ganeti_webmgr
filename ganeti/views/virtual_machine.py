@@ -594,7 +594,7 @@ def modify(request, cluster_slug, instance):
 
     user = request.user
     if not (user.is_superuser or user.has_any_perms(vm, ['admin','modify']) \
-        or user.has_perm('admin', cluser)):
+        or user.has_perm('admin', cluster)):
         return render_403(request, 'You do not have permissions to edit \
             this virtual machine')
 
@@ -662,8 +662,9 @@ def modify_confirm(request, cluster_slug, instance):
     vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
 
     user = request.user
-    if not (user.is_superuser or user.has_perm('admin', vm) \
-        or user.has_perm('modify', vm)):
+    power = user.is_superuser or user.has_any_perms(vm, ['admin','power'])
+    if not (user.is_superuser or user.has_any_perms(vm, ['admin','modify']) \
+        or user.has_perm('admin', cluster)):
         return render_403(request, 'You do not have permissions to edit \
             this virtual machine')
 
@@ -698,13 +699,13 @@ def modify_confirm(request, cluster_slug, instance):
                 # log information about modifying this instance
                 log_action(user, vm, "modified")
                 if 'reboot' in request.POST and vm.info['status'] == 'running':
-                    if not (user.is_superuser or user.has_perm('power', vm)):
-                        return render_403(request, "Sorry, but you do not have permission to reboot \
-                        this machine.")
-                    else:
+                    if power:
                         # Reboot the vm
                         vm.reboot()
                         log_action(user, vm, "rebooted")
+                    else:
+                        return render_403(request, "Sorry, but you do not \
+                            have permission to reboot this machine.")
 
             # Remove session variables.
             if 'edit_form' in request.session:
@@ -767,6 +768,7 @@ def modify_confirm(request, cluster_slug, instance):
         'form': form,
         'instance': vm,
         'instance_diff': instance_diff,
+        'power':power,
         },
         context_instance=RequestContext(request),
     )

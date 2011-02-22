@@ -36,7 +36,9 @@ form input.submit {margin:1em .5em 0px 0px;}
     {{ form.as_p }}
     <input class="submit" type="submit" name="edit" value="Edit">
 {% ifequal status "running" %}
+    {% if power %}
     <input class="submit" type="submit" name="reboot" value="Reboot">
+    {% endif %}
 {% endifequal %}
     <input class="submit" type="submit" name="save" value="Save">
     <input class="submit" type="submit" name="cancel" value="Cancel">
