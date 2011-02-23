@@ -13,7 +13,16 @@
 </style>
 
 <script type="text/javascript">
-   
+
+    var FETCH_ARGS = {page:1};
+    var current_order_by = null;
+    
+    // Set the tableID if the template is rendered with one
+    var tableID = '';
+    if('{{tableID}}' != ''){
+        tableID = '#{{tableID}}';
+    }
+
     function ajax_get_update(){
         {% if cluster %}
             url = "{% url cluster-virtualmachine-table cluster.slug %}";
@@ -29,30 +38,21 @@
         }, "html");
     }
 
-    var FETCH_ARGS = {page:1};
-    var current_order_by = null;
-
     // -------
     // "main"
     // -------
     $(function(){
 
-        // Set the tableID if the template is rendered with one
-        var tableID = '';
-        if('{{tableID}}' != ''){
-            tableID = '{{tableID}}';
-        }
-
         console.log("Table ID: "+tableID);
             
         // --[pagination click handling---------------------------------------
-        $(tableID + ' .pagination .previous').live('click', function(e) {
+        $(tableID + ' .pagination .previous').live('click', function(e){
             e.preventDefault();
             FETCH_ARGS["page"] = FETCH_ARGS["page"] - 1;
             ajax_get_update();
         });
         
-        $(tableID + ' .pagination .next').live('click', function(e) {
+        $(tableID + ' .pagination .next').live('click', function(e){
             e.preventDefault();
             FETCH_ARGS["page"] = FETCH_ARGS["page"] + 1;
             ajax_get_update();
@@ -83,7 +83,7 @@
             ajax_get_update();
         });
         
-        // hide the loading spinny thing
+        // show/hide the spinny thing
         $(tableID + ' .spinner')
             .hide()
             .ajaxStart(function(){
