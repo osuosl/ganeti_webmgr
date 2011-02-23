@@ -701,15 +701,19 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         user.grant('modify', vm)
         self.assertTrue(c.login(username=user.username, password='secret2'))
         session = c.session
+        session['os_list'] = os_list
+        session.save()
         for property in ['vcpus', 'memory', 'disk_type', 'boot_order', 'nic_type', \
             'root_path']:
             data_ = data.copy()
             del data_[property]
-            session['os_list'] = os_list
-            session.save()
             self.assertFalse(user.is_superuser)
             response = c.post(url, data_)
-            self.assertEqual(200, response.status_code)
+            # If failure then a field that is not required by the model, but
+            #  should be required by the form, is not being required by
+            #  the form. See the ModifyVirtualMachineForm.required field.
+            self.assertNotEqual(response.context['form'][property].errors, [])
+            self.assertEqual(200, response.status_code) # 302 if success (BAD)
             self.assertEqual('text/html; charset=utf-8', response['content-type'])
             self.assertTemplateUsed(response, 'virtual_machine/edit.html')
         c.logout()
