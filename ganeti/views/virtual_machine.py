@@ -543,39 +543,39 @@ def create(request, cluster_slug=None):
         form = NewVirtualMachineForm(user, None, request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            start = data.pop('start')
-            owner = data.pop('owner')
-            grantee = data.pop('grantee')
-            cluster = data.pop('cluster')
-            hostname = data.pop('hostname')
-            disk_template = data.pop('disk_template')
+            start = data.get('start')
+            owner = data.get('owner')
+            grantee = data.get('grantee')
+            cluster = data.get('cluster')
+            hostname = data.get('hostname')
+            disk_template = data.get('disk_template')
             # Default to not pass in pnode and snode
             #  since these will be set if the form is correct
             pnode = None
             snode = None
-            os = data.pop('os')
-            name_check = data.pop('name_check')
-            iallocator = data.pop('iallocator')
+            os = data.get('os')
+            name_check = data.get('name_check')
+            iallocator = data.get('iallocator')
             # Hidden fields
             iallocator_hostname = None
             if 'iallocator_hostname' in data:
-                iallocator_hostname = data.pop('iallocator_hostname')
+                iallocator_hostname = data.get('iallocator_hostname')
             # BEPARAMS
-            vcpus = data.pop('vcpus')
-            disk_size = data.pop('disk_size')
-            memory = data.pop('memory')
-            nic_mode = data.pop('nic_mode')
-            nic_link = data.pop('nic_link')
-            nic_type = data.pop('nic_type')
+            vcpus = data.get('vcpus')
+            disk_size = data.get('disk_size')
+            memory = data.get('memory')
+            nic_mode = data.get('nic_mode')
+            nic_link = data.get('nic_link')
+            nic_type = data.get('nic_type')
             # If iallocator was not checked do not pass in the iallocator
             #  name. If iallocator was checked don't pass snode,pnode.
             if not iallocator:
                 iallocator_hostname = None
-                pnode = data.pop('pnode')
+                pnode = data.get('pnode')
 
             # If drbd is being used assign the secondary node
             if disk_template == 'drbd' and pnode is not None:
-                snode = data.pop('snode')
+                snode = data.get('snode')
 
             # Create dictionary of only parameters supposed to be in hvparams
             hvparams = dict()
@@ -608,7 +608,7 @@ def create(request, cluster_slug=None):
                 # that don't exist on the model
                 vm_template = VirtualMachineTemplate()
                 for k,v in data.items():
-                    setattr(vm_template, 'k', v)
+                    setattr(vm_template, k, v)
                 vm_template.save()
 
                 vm = VirtualMachine(cluster=cluster, owner=owner,
