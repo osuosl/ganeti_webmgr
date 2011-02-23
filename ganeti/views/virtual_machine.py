@@ -81,7 +81,7 @@ def delete(request, cluster_slug, instance):
         VirtualMachine.objects.filter(id=instance.id) \
             .update(last_job=job, ignore_cache=True, pending_delete=True)
         
-        return HttpResponseRedirect( \
+        return HttpResponseRedirect(
             reverse('instance-detail', args=[cluster_slug, instance.hostname]))
 
     return HttpResponseNotAllowed(["GET","POST"])
@@ -140,13 +140,13 @@ def reinstall(request, cluster_slug, instance):
 
 @login_required
 def novnc(request, cluster_slug, instance):
-    vm = get_object_or_404(VirtualMachine, hostname=instance, \
+    vm = get_object_or_404(VirtualMachine, hostname=instance,
                            cluster__slug=cluster_slug)
     user = request.user
-    if not (user.is_superuser \
-        or user.has_any_perms(vm, ['admin', 'power']) \
-        or user.has_perm('admin', vm.cluster)):
-            return HttpResponseForbidden('You do not have permission to vnc on this')
+    if not (user.is_superuser
+            or user.has_any_perms(vm, ['admin', 'power'])
+            or user.has_perm('admin', vm.cluster)):
+        return HttpResponseForbidden('You do not have permission to vnc on this')
 
     return render_to_response("virtual_machine/novnc.html",
                               {'cluster_slug': cluster_slug,
@@ -158,11 +158,11 @@ def novnc(request, cluster_slug, instance):
 
 @login_required
 def vnc_proxy(request, cluster_slug, instance):
-    vm = get_object_or_404(VirtualMachine, hostname=instance, \
+    vm = get_object_or_404(VirtualMachine, hostname=instance,
                                  cluster__slug=cluster_slug)
     user = request.user
-    if not (user.is_superuser \
-        or user.has_any_perms(vm, ['admin', 'power']) \
+    if not (user.is_superuser
+        or user.has_any_perms(vm, ['admin', 'power'])
         or user.has_perm('admin', vm.cluster)):
             return HttpResponseForbidden('You do not have permission to vnc on this')
     
@@ -173,11 +173,11 @@ def vnc_proxy(request, cluster_slug, instance):
 
 @login_required
 def shutdown(request, cluster_slug, instance):
-    vm = get_object_or_404(VirtualMachine, hostname=instance, \
+    vm = get_object_or_404(VirtualMachine, hostname=instance,
                            cluster__slug=cluster_slug)
     user = request.user
 
-    if not (user.is_superuser or user.has_any_perms(vm, ['admin','power']) or \
+    if not (user.is_superuser or user.has_any_perms(vm, ['admin','power']) or
         user.has_perm('admin', vm.cluster)):
         return render_403(request, 'You do not have permission to shut down this virtual machine')
 
@@ -197,10 +197,10 @@ def shutdown(request, cluster_slug, instance):
 
 @login_required
 def startup(request, cluster_slug, instance):
-    vm = get_object_or_404(VirtualMachine, hostname=instance, \
+    vm = get_object_or_404(VirtualMachine, hostname=instance,
                            cluster__slug=cluster_slug)
     user = request.user
-    if not (user.is_superuser or user.has_any_perms(vm, ['admin','power']) or \
+    if not (user.is_superuser or user.has_any_perms(vm, ['admin','power']) or
         user.has_perm('admin', vm.cluster)):
             return render_403(request, 'You do not have permission to start up this virtual machine')
 
@@ -267,17 +267,17 @@ def migrate(request, cluster_slug, instance):
     else:
         form = MigrateForm()
 
-    return render_to_response('virtual_machine/migrate.html', \
-        {'form':form, 'vm':vm, 'cluster':cluster}, \
+    return render_to_response('virtual_machine/migrate.html',
+        {'form':form, 'vm':vm, 'cluster':cluster},
         context_instance=RequestContext(request))
 
 
 @login_required
 def reboot(request, cluster_slug, instance):
-    vm = get_object_or_404(VirtualMachine, hostname=instance, \
+    vm = get_object_or_404(VirtualMachine, hostname=instance,
                            cluster__slug=cluster_slug)
     user = request.user
-    if not (user.is_superuser or user.has_any_perms(vm, ['admin','power']) or \
+    if not (user.is_superuser or user.has_any_perms(vm, ['admin','power']) or
         user.has_perm('admin', vm.cluster)):
             return render_403(request, 'You do not have permission to reboot this virtual machine')
 
@@ -302,7 +302,7 @@ def ssh_keys(request, cluster_slug, instance, api_key):
     if settings.WEB_MGR_API_KEY != api_key:
         return HttpResponseForbidden("You're not allowed to view keys.")
 
-    vm = get_object_or_404(VirtualMachine, hostname=instance, \
+    vm = get_object_or_404(VirtualMachine, hostname=instance,
                            cluster__slug=cluster_slug)
 
     users = get_users_any(vm, ["admin",]).values_list("id",flat=True)
@@ -347,7 +347,7 @@ def list_(request):
     #2) user has any perms on any VM
     #3) user belongs to the group which has perms on any VM
     else:
-        vms = user.get_objects_any_perms(VirtualMachine, groups=True, \
+        vms = user.get_objects_any_perms(VirtualMachine, groups=True,
                                         cluster=['admin'])
         can_create = user.has_any_perms(Cluster, ['create_vm', ])
 
@@ -411,7 +411,7 @@ def detail(request, cluster_slug, instance):
 
     user = request.user
     cluster_admin = user.is_superuser or user.has_perm('admin', cluster)
-    admin = cluster_admin or user.has_perm('admin', vm) \
+    admin = cluster_admin or user.has_perm('admin', vm)
     
     if admin:
         remove = True
@@ -463,7 +463,7 @@ def users(request, cluster_slug, instance):
     vm = get_object_or_404(VirtualMachine, hostname=instance)
 
     user = request.user
-    if not (user.is_superuser or user.has_perm('admin', vm) or \
+    if not (user.is_superuser or user.has_perm('admin', vm) or
         user.has_perm('admin', cluster)):
         return render_403(request, "You do not have sufficient privileges")
 
@@ -476,11 +476,11 @@ def permissions(request, cluster_slug, instance, user_id=None, group_id=None):
     """
     Update a users permissions.
     """
-    vm = get_object_or_404(VirtualMachine, hostname=instance, \
+    vm = get_object_or_404(VirtualMachine, hostname=instance,
                            cluster__slug=cluster_slug)
 
     user = request.user
-    if not (user.is_superuser or user.has_perm('admin', vm) or \
+    if not (user.is_superuser or user.has_perm('admin', vm) or
         user.has_perm('admin', vm.cluster)):
         return render_403(request, "You do not have sufficient privileges")
 
@@ -497,7 +497,7 @@ def object_log(request, cluster_slug, instance):
     vm = get_object_or_404(VirtualMachine, hostname=instance)
 
     user = request.user
-    if not (user.is_superuser or user.has_perm('admin', vm) or \
+    if not (user.is_superuser or user.has_perm('admin', vm) or
         user.has_perm('admin', cluster)):
         return render_403(request, "You do not have sufficient privileges")
 
@@ -513,8 +513,8 @@ def create(request, cluster_slug=None):
     """
     user = request.user
     if not(user.is_superuser or user.has_any_perms(Cluster, ['admin', 'create_vm'])):
-        return render_403(request, 'You do not have permission to create virtual \
-                   machines')
+        return render_403(request,
+            'You do not have permission to create virtual machines')
 
     if cluster_slug is not None:
         cluster = get_object_or_404(Cluster, slug=cluster_slug)
@@ -561,7 +561,7 @@ def create(request, cluster_slug=None):
 
             # Create dictionary of only parameters supposed to be in hvparams
             hvparams = dict()
-            hvparam_fields = ('kernel_path', 'root_path', 'serial_console', \
+            hvparam_fields = ('kernel_path', 'root_path', 'serial_console',
                 'boot_order', 'disk_type', 'cdrom_image_path',)
             for field in hvparam_fields:
                 hvparams[field] = data[field]
@@ -609,7 +609,7 @@ def create(request, cluster_slug=None):
                 # grant admin permissions to the owner
                 grantee.grant('admin', vm)
 
-                return HttpResponseRedirect( \
+                return HttpResponseRedirect(
                 reverse('instance-detail', args=[cluster.slug, vm.hostname]))
 
             except GanetiApiError, e:
@@ -632,10 +632,10 @@ def modify(request, cluster_slug, instance):
     vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
 
     user = request.user
-    if not (user.is_superuser or user.has_any_perms(vm, ['admin','modify']) \
+    if not (user.is_superuser or user.has_any_perms(vm, ['admin','modify'])
         or user.has_perm('admin', cluster)):
-        return render_403(request, 'You do not have permissions to edit \
-            this virtual machine')
+        return render_403(request,
+            'You do not have permissions to edit this virtual machine')
 
     if request.method == 'POST':
         form = ModifyVirtualMachineForm(user, None, request.POST)
@@ -644,7 +644,7 @@ def modify(request, cluster_slug, instance):
             data = form.cleaned_data
             request.session['edit_form'] = data
 
-            return HttpResponseRedirect( \
+            return HttpResponseRedirect(
             reverse('instance-modify-confirm', args=[cluster.slug, vm.hostname]))
 
     elif request.method == 'GET':              
@@ -666,12 +666,12 @@ def modify(request, cluster_slug, instance):
                 initial['nic_link'] = info['nic.links'][0]
                 initial['nic_mac'] = info['nic.macs'][0]
                 initial['os'] = info['os']
-                fields = ('acpi', 'disk_cache', 'initrd_path', 'kernel_args', \
-                    'kvm_flag', 'mem_path', 'migration_downtime', \
-                    'security_domain', 'security_model', 'usb_mouse', \
-                    'use_chroot', 'use_localtime', 'vnc_bind_address', \
-                    'vnc_tls', 'vnc_x509_path', 'vnc_x509_verify', \
-                    'disk_type', 'boot_order', 'nic_type', 'root_path', \
+                fields = ('acpi', 'disk_cache', 'initrd_path', 'kernel_args',
+                    'kvm_flag', 'mem_path', 'migration_downtime',
+                    'security_domain', 'security_model', 'usb_mouse',
+                    'use_chroot', 'use_localtime', 'vnc_bind_address',
+                    'vnc_tls', 'vnc_x509_path', 'vnc_x509_verify',
+                    'disk_type', 'boot_order', 'nic_type', 'root_path',
                     'kernel_path', 'serial_console', 'cdrom_image_path',
                 )
                 for field in fields:
@@ -702,18 +702,18 @@ def modify_confirm(request, cluster_slug, instance):
 
     user = request.user
     power = user.is_superuser or user.has_any_perms(vm, ['admin','power'])
-    if not (user.is_superuser or user.has_any_perms(vm, ['admin','modify']) \
+    if not (user.is_superuser or user.has_any_perms(vm, ['admin','modify'])
         or user.has_perm('admin', cluster)):
-        return render_403(request, 'You do not have permissions to edit \
-            this virtual machine')
+        return render_403(request,
+            'You do not have permissions to edit this virtual machine')
 
     if request.method == "POST":
         form = ModifyConfirmForm(request.POST)
         if form.is_valid():
             data = form.data
             if 'edit' in request.POST:
-                return HttpResponseRedirect( \
-                    reverse("instance-modify", \
+                return HttpResponseRedirect(
+                    reverse("instance-modify",
                     args=[cluster.slug, vm.hostname]))
             elif 'reboot' in request.POST or 'save' in request.POST:
                 rapi_dict = json.loads(data['rapi_dict'])
@@ -727,13 +727,13 @@ def modify_confirm(request, cluster_slug, instance):
                     nics=[(0, {'link':niclink,}),] 
                 else:
                     nics=[(0, {'link':niclink, 'mac':nicmac,}),]
-                job_id = cluster.rapi.ModifyInstance(instance, \
-                    nics=nics, os_name=os, hvparams=rapi_dict, \
+                job_id = cluster.rapi.ModifyInstance(instance,
+                    nics=nics, os_name=os, hvparams=rapi_dict,
                     beparams={'vcpus':vcpus,'memory':memory}
                 )
                 # Create job and update message on virtual machine detail page
                 job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
-                VirtualMachine.objects.filter(id=vm.id).update(last_job=job, \
+                VirtualMachine.objects.filter(id=vm.id).update(last_job=job,
                                                            ignore_cache=True)
                 # log information about modifying this instance
                 log_action('EDIT', user, vm)
@@ -743,8 +743,8 @@ def modify_confirm(request, cluster_slug, instance):
                         vm.reboot()
                         log_action('VM_REBOOT', user, vm)
                     else:
-                        return render_403(request, "Sorry, but you do not \
-                            have permission to reboot this machine.")
+                        return render_403(request,
+                            "Sorry, but you do not have permission to reboot this machine.")
 
             # Remove session variables.
             if 'edit_form' in request.session:
@@ -752,7 +752,7 @@ def modify_confirm(request, cluster_slug, instance):
             if 'os_list' in request.session:
                 del request.session['os_list']
             # Redirect to instance-detail
-            return HttpResponseRedirect( \
+            return HttpResponseRedirect(
                 reverse("instance-detail", args=[cluster.slug, vm.hostname]))
 
     if request.method == "GET":
@@ -780,7 +780,7 @@ def modify_confirm(request, cluster_slug, instance):
         fields = ModifyVirtualMachineForm(user, None).fields
         for key in data.keys():
             if key == 'memory':
-                diff = compare(render_storage(old_set[key]), \
+                diff = compare(render_storage(old_set[key]),
                     render_storage(data[key]))
             elif key == 'os':
                 oses = os_prettify([old_set[key], data[key]])[0][1]
@@ -799,7 +799,7 @@ def modify_confirm(request, cluster_slug, instance):
         if fields['nic_mac'].label not in instance_diff:
             del data['nic_mac']
         # Repopulate form with changed values
-        form.fields['rapi_dict'] = CharField(widget=HiddenInput, \
+        form.fields['rapi_dict'] = CharField(widget=HiddenInput,
             initial=json.dumps(data)) 
 
     return render_to_response('virtual_machine/edit_confirm.html', {
@@ -833,10 +833,10 @@ def rename(request, cluster_slug, instance):
     vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
 
     user = request.user
-    if not (user.is_superuser or user.has_any_perms(vm, ['admin','modify']) \
+    if not (user.is_superuser or user.has_any_perms(vm, ['admin','modify'])
         or user.has_perm('admin', cluster)):
-        return render_403(request, 'You do not have permissions to edit \
-            this virtual machine')
+        return render_403(request,
+            'You do not have permissions to edit this virtual machine')
 
     if request.method == 'POST':
         form = RenameForm(vm, request.POST)
@@ -847,7 +847,7 @@ def rename(request, cluster_slug, instance):
             name_check = data['name_check']
 
             try:
-                job_id = vm.rapi.RenameInstance(vm.hostname, hostname, \
+                job_id = vm.rapi.RenameInstance(vm.hostname, hostname,
                                                 ip_check, name_check)
                 job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
                 VirtualMachine.objects.filter(pk=vm.pk) \
@@ -856,7 +856,7 @@ def rename(request, cluster_slug, instance):
                 # log information about creating the machine
                 log_action('VM_RENAME', user, vm, job)
 
-                return HttpResponseRedirect( \
+                return HttpResponseRedirect(
                 reverse('instance-detail', args=[cluster.slug, hostname]))
 
             except GanetiApiError, e:
@@ -911,10 +911,10 @@ def cluster_options(request):
     cluster = get_object_or_404(Cluster, id__exact=cluster_id)
 
     user = request.user
-    if not (user.is_superuser or user.has_perm('create_vm', cluster) or \
+    if not (user.is_superuser or user.has_perm('create_vm', cluster) or
             user.has_perm('admin', cluster)):
-        return render_403(request, 'You do not have permissions to view \
-        this cluster')
+        return render_403(request,
+            'You do not have permissions to view this cluster')
 
     oslist = cluster_os_list(cluster)
     nodes = [str(h) for h in cluster.nodes.values_list('hostname', flat=True)]
@@ -932,7 +932,7 @@ def cluster_defaults(request):
     cluster = get_object_or_404(Cluster, id__exact=cluster_id)
 
     user = request.user
-    if not (user.is_superuser or user.has_perm('create_vm', cluster) or \
+    if not (user.is_superuser or user.has_perm('create_vm', cluster) or
             user.has_perm('admin', cluster)):
         return render_403(request, 'You do not have permission to view the default cluster options')
 
