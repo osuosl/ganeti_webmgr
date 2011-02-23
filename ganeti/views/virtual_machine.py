@@ -74,13 +74,22 @@ def delete(request, cluster_slug, instance):
         )
     
     elif request.method == 'POST':
+        # verify that this instance actually exists in ganeti.  If it doesn't
+        # exist it can just be deleted.
+        try:
+            instance._refresh()
+        except GanetiApiError, e:
+            if e.code == 404:
+                instance.delete()
+                return HttpResponseRedirect(reverse('virtualmachine-list'))
+
         # start deletion job and mark the VirtualMachine as pending_delete and
         # disable the cache for this VM.
         job_id = instance.rapi.DeleteInstance(instance.hostname)
         job = Job.objects.create(job_id=job_id, obj=instance, cluster_id=instance.cluster_id)
         VirtualMachine.objects.filter(id=instance.id) \
             .update(last_job=job, ignore_cache=True, pending_delete=True)
-        
+
         return HttpResponseRedirect( \
             reverse('instance-detail', args=[cluster_slug, instance.hostname]))
 
