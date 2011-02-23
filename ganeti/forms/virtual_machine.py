@@ -273,10 +273,16 @@ class NewVirtualMachineForm(forms.ModelForm):
 
 
 class ModifyVirtualMachineForm(NewVirtualMachineForm):
-
+    """
+    Simple way to modify a virtual machine instance.
+    """
+    # Fields to be excluded from parent.
     exclude = ('start', 'owner', 'cluster', 'hostname', 'name_check',
         'iallocator', 'iallocator_hostname', 'disk_template', 'pnode', 'snode',\
         'disk_size', 'nic_mode', 'template_name')
+    # Fields that should be required.
+    required = ('vcpus', 'memory', 'disk_type', 'boot_order', \
+        'nic_type', 'root_path')
 
     disk_caches = [
         (u'default',u'Default'),
@@ -334,7 +340,10 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
         #   instance.
         for field in self.exclude:
             del self.fields[field]
-
+    
+        # Make sure certain fields are required
+        for field in self.required:
+            self.fields[field].required = True
 
 class ModifyConfirmForm(forms.Form):
     pass
