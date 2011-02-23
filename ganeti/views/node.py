@@ -17,6 +17,7 @@
 # USA.
 
 import json
+from uuid import uuid4
 
 from django.contrib.auth.decorators import login_required
 from django import forms
@@ -76,7 +77,7 @@ def primary(request, cluster_slug, host):
     vms = render_vms(request, vms)
 
     return render_to_response("virtual_machine/table.html", \
-                {'node': node, 'vms':vms}, \
+                {'tableID': str(uuid4()), 'node': node, 'vms':vms}, \
                 context_instance=RequestContext(request))
 
 
@@ -96,7 +97,7 @@ def secondary(request, cluster_slug, host):
     vms = render_vms(request, vms)
 
     return render_to_response("virtual_machine/table.html", \
-                {'node': node, 'vms':vms}, \
+                {'tableID': str(uuid4()), 'node': node, 'vms':vms}, \
                 context_instance=RequestContext(request))
 
 @login_required
