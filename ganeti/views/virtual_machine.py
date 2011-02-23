@@ -66,13 +66,13 @@ def delete(request, cluster_slug, instance):
         user.has_perm("admin", instance.cluster)
         ):
         return render_403(request, 'You do not have sufficient privileges')
-    
+
     if request.method == 'GET':
         return render_to_response("virtual_machine/delete.html",
             {'vm': instance},
             context_instance=RequestContext(request),
         )
-    
+
     elif request.method == 'POST':
         # start deletion job and mark the VirtualMachine as pending_delete and
         # disable the cache for this VM.
@@ -80,7 +80,7 @@ def delete(request, cluster_slug, instance):
         job = Job.objects.create(job_id=job_id, obj=instance, cluster_id=instance.cluster_id)
         VirtualMachine.objects.filter(id=instance.id) \
             .update(last_job=job, ignore_cache=True, pending_delete=True)
-        
+
         return HttpResponseRedirect(
             reverse('instance-detail', args=[cluster_slug, instance.hostname]))
 
@@ -113,7 +113,7 @@ def reinstall(request, cluster_slug, instance):
              'current_os': instance.operating_system, 'submitted': False},
             context_instance=RequestContext(request),
         )
-      
+
     elif request.method == 'POST':
         # Reinstall instance
         if "os" in request.POST:
@@ -124,7 +124,7 @@ def reinstall(request, cluster_slug, instance):
         # XXX no_startup=True prevents quota circumventions. possible future solution would be a checkbox
         # asking whether they want to start up, and check quota here if they do (would also involve
         # checking whether this VM is already running and subtracting that)
-        
+
         job_id = instance.rapi.ReinstallInstance(instance.hostname, os=os, no_startup=True)
         job = Job.objects.create(job_id=job_id, obj=instance, cluster=instance.cluster)
         VirtualMachine.objects.filter(id=instance.id).update(last_job=job, ignore_cache=True)
@@ -134,7 +134,7 @@ def reinstall(request, cluster_slug, instance):
 
         return HttpResponseRedirect(
             reverse('instance-detail', args=[instance.cluster.slug, instance.hostname]))
-    
+
     return HttpResponseNotAllowed(["GET","POST"])
 
 
@@ -165,9 +165,9 @@ def vnc_proxy(request, cluster_slug, instance):
         or user.has_any_perms(vm, ['admin', 'power'])
         or user.has_perm('admin', vm.cluster)):
             return HttpResponseForbidden('You do not have permission to vnc on this')
-    
+
     result = json.dumps(vm.setup_vnc_forwarding())
-    
+
     return HttpResponse(result, mimetype="application/json")
 
 
@@ -186,7 +186,7 @@ def shutdown(request, cluster_slug, instance):
             job = vm.shutdown()
             job.load_info()
             msg = job.info
-            
+
             # log information about stopping the machine
             log_action('VM_STOP', user, vm, job)
         except GanetiApiError, e:
@@ -210,11 +210,11 @@ def startup(request, cluster_slug, instance):
         quota = vm.cluster.get_quota(vm.owner)
         if any(quota.values()):
             used = vm.owner.used_resources(vm.cluster, only_running=True)
-            
+
             if quota['ram'] is not None and (used['ram'] + vm.ram) > quota['ram']:
                 msg = 'Owner does not have enough RAM remaining on this cluster to start the virtual machine.'
                 return HttpResponse(json.dumps([0, msg]), mimetype='application/json')
-            
+
             if quota['virtual_cpus'] and (used['virtual_cpus'] + vm.virtual_cpus) > quota['virtual_cpus']:
                 msg = 'Owner does not have enough Virtual CPUs remaining on this cluster to start the virtual machine.'
                 return HttpResponse(json.dumps([0, msg]), mimetype='application/json')
@@ -224,7 +224,7 @@ def startup(request, cluster_slug, instance):
             job = vm.startup()
             job.load_info()
             msg = job.info
-            
+
             # log information about starting up the machine
             log_action('VM_START', user, vm, job)
         except GanetiApiError, e:
@@ -286,7 +286,7 @@ def reboot(request, cluster_slug, instance):
             job = vm.reboot()
             job.load_info()
             msg = job.info
-            
+
             # log information about restarting the machine
             log_action('VM_REBOOT', user, vm, job)
         except GanetiApiError, e:
@@ -412,7 +412,7 @@ def detail(request, cluster_slug, instance):
     user = request.user
     cluster_admin = user.is_superuser or user.has_perm('admin', cluster)
     admin = cluster_admin or user.has_perm('admin', vm)
-    
+
     if admin:
         remove = True
         power = True
@@ -425,7 +425,7 @@ def detail(request, cluster_slug, instance):
         modify = user.has_perm('modify', vm)
         tags = user.has_perm('tags', vm)
         migrate = user.has_perm('migrate', cluster)
-    
+
     if not (admin or power or remove or modify or tags):
         return render_403(request, 'You do not have permission to view this cluster\'s details')
 
@@ -439,7 +439,7 @@ def detail(request, cluster_slug, instance):
         template = 'virtual_machine/create_status.html'
     else:
         template = 'virtual_machine/detail.html'
-    
+
     return render_to_response(template, {
         'cluster': cluster,
         'instance': vm,
@@ -574,7 +574,7 @@ def create(request, cluster_slug=None):
                     VirtualMachine.objects.get(cluster=cluster, hostname=hostname)
                 except VirtualMachine.DoesNotExist:
                     pass
-                
+
                 job_id = cluster.rapi.CreateInstance('create', hostname,
                         disk_template,
                         [{"size": disk_size, }],[{'mode':nic_mode, 'link':nic_link, }],
@@ -627,7 +627,7 @@ def create(request, cluster_slug=None):
 
 
 @login_required
-def modify(request, cluster_slug, instance):     
+def modify(request, cluster_slug, instance):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
 
@@ -647,7 +647,7 @@ def modify(request, cluster_slug, instance):
             return HttpResponseRedirect(
             reverse('instance-modify-confirm', args=[cluster.slug, vm.hostname]))
 
-    elif request.method == 'GET':              
+    elif request.method == 'GET':
         if 'edit_form' in request.session:
             form = ModifyVirtualMachineForm(user, cluster, request.session['edit_form'])
             del request.session['edit_form']
@@ -678,7 +678,7 @@ def modify(request, cluster_slug, instance):
                     initial[field] = hvparams[field]
 
             form = ModifyVirtualMachineForm(user, cluster, initial=initial)
-            
+
             # Get the list of oses from the cluster
             os_list = cluster_os_list(cluster)
 
@@ -724,7 +724,7 @@ def modify_confirm(request, cluster_slug, instance):
                 os = rapi_dict.pop('os')
                 # Modify Instance rapi call
                 if nicmac is None:
-                    nics=[(0, {'link':niclink,}),] 
+                    nics=[(0, {'link':niclink,}),]
                 else:
                     nics=[(0, {'link':niclink, 'mac':nicmac,}),]
                 job_id = cluster.rapi.ModifyInstance(instance,
@@ -759,7 +759,7 @@ def modify_confirm(request, cluster_slug, instance):
         form = ModifyConfirmForm()
         session = request.session
 
-        if not 'edit_form' in request.session:  
+        if not 'edit_form' in request.session:
             return HttpResponseBadRequest('Incorrect Session Data')
 
         data = session['edit_form']
@@ -800,7 +800,7 @@ def modify_confirm(request, cluster_slug, instance):
             del data['nic_mac']
         # Repopulate form with changed values
         form.fields['rapi_dict'] = CharField(widget=HiddenInput,
-            initial=json.dumps(data)) 
+            initial=json.dumps(data))
 
     return render_to_response('virtual_machine/edit_confirm.html', {
         'cluster': cluster,
