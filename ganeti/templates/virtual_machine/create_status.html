@@ -14,6 +14,7 @@
                 {% ifequal job.status "error" %}
                     job_error();
                 {% endifequal %}
+                get_job_status('{{job.job_id}}', job_complete, job_error);
                 poll_job_status('{{job.job_id}}', job_complete, job_error);
             {% endifequal %}
         });
