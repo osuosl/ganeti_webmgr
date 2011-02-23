@@ -62,8 +62,11 @@ def clear(request, cluster_slug, job_id):
     # clear the job from the object, but only if it is the last job. It's
     # possible another job was started after this job, and the error message
     # just wasn't cleared.
-    ObjectModel = job.obj.__class__
-    ObjectModel.objects.filter(pk=job.object_id, last_job=job) \
-        .update(last_job=None, ignore_cache=False)
+    #
+    # XXX object could be none, in which case we dont need to clear its last_job
+    if obj is not None:
+        ObjectModel = obj.__class__
+        ObjectModel.objects.filter(pk=job.object_id, last_job=job)  \
+            .update(last_job=None, ignore_cache=False)
     
     return HttpResponse('1', mimetype='application/json')
