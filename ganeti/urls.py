@@ -32,7 +32,7 @@ urlpatterns = patterns('ganeti.views.general',
     url(r'^used_resources/?$', 'used_resources', name="used_resources"),
     
     # clear errors
-    url(r'^error/clear/?$', 'clear_ganeti_error', name="error-clear")
+    url(r'^error/clear/(?P<pk>\d+)/?$', 'clear_ganeti_error', name="error-clear")
 )
 
 # Users

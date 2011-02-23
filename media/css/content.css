@@ -235,7 +235,7 @@ div.delete, div.edit, div.icon_error, .icon_running, .icon_stopped, .icon_deleti
     width:16px;
 }
 
-div.clear:hover {background:url(/media/images/icons/cancel.png) no-repeat !important;}
+a.clear:hover {background:url(/media/images/icons/cancel.png) no-repeat !important;}
 .clear {cursor:pointer;}
 
 .button {
