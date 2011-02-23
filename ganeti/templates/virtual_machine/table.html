@@ -13,20 +13,19 @@
 </style>
 
 <script type="text/javascript">
+   
     function ajax_get_update(){
         {% if cluster %}
             url = "{% url cluster-virtualmachine-table cluster.slug %}";
-            console.log("Yeah, cluster! ("+url+")");
         {% else %}
             url = "{% url virtualmachine-table %}";
-            console.log("Yeah, NOT A cluster! ("+url+")");
         {% endif %}
         $.get(url, FETCH_ARGS, function(results) {
             $results = $(results);
             tbody = $results.children("tbody");
             pagination = $results[2];
-            $('.vm-wrapper .pagination').replaceWith(pagination);
-            $('#vmlist tbody').replaceWith(tbody);
+            $(tableID + ' .vm-wrapper .pagination').replaceWith(pagination);
+            $(tableID + ' .vmlist tbody').replaceWith(tbody);
         }, "html");
     }
 
@@ -38,30 +37,34 @@
     // -------
     $(function(){
 
-        console.log("Yes, this actually runs when this sub-template loads.");
-        
-        console.log($(".vm-wrapper").parent());
+        // Set the tableID if the template is rendered with one
+        var tableID = '';
+        if('{{tableID}}' != ''){
+            tableID = '{{tableID}}';
+        }
 
+        console.log("Table ID: "+tableID);
+            
         // --[pagination click handling---------------------------------------
-        $('.pagination .previous').live('click', function(e) {
+        $(tableID + ' .pagination .previous').live('click', function(e) {
             e.preventDefault();
             FETCH_ARGS["page"] = FETCH_ARGS["page"] - 1;
             ajax_get_update();
         });
         
-        $('.pagination .next').live('click', function(e) {
+        $(tableID + ' .pagination .next').live('click', function(e) {
             e.preventDefault();
             FETCH_ARGS["page"] = FETCH_ARGS["page"] + 1;
             ajax_get_update();
         });
         
-        $('.pagination .page:not(.active)').live('click', function() {
+        $(tableID + ' .pagination .page:not(.active)').live('click', function(){
             FETCH_ARGS["page"] =  parseInt($(this).html());
             ajax_get_update();
         });
 
         // --[table sorting]--------------------------------------------------
-        $('#vmlist th').live("click", function(){
+        $(tableID + ' .vmlist th').live("click", function(){
             $this = $(this)
             field = $this.html();
             order_by = $this.attr("order_by");
@@ -70,7 +73,7 @@
                         .removeClass("ascending");
                 order_by = "-" + order_by;
             } else {
-                $('#vmlist th').removeClass('ascending')
+                $(tableID + ' .vmlist th').removeClass('ascending')
                     .removeClass('descending');
                 $this.addClass("ascending");
             }
@@ -81,42 +84,43 @@
         });
         
         // hide the loading spinny thing
-        $('.spinner')
+        $(tableID + ' .spinner')
             .hide()
             .ajaxStart(function(){
                 $(this).show();
-                $('#vmlist tr td').hide();
-                $('.vm-wrapper .pagination').hide();
+                $(tableID + ' .vmlist tr td').hide();
+                $(tableID + ' .vm-wrapper .pagination').hide();
             })
             .ajaxStop(function(){
                 $(this).hide()
             });
-
     });
 
 </script>
 {% endblock %}
 
-{% if cluster %}
-    <a class="button add" href="{% url instance-create cluster.slug %}">
-        Add Virtual Machine
-    </a>
-{% else %}
-    {% if can_create %}
-    <a class="button add" href="{% url instance-create %}">
-        Add Virtual Machine
-    </a>
+<div id='{{tableID}}'>
+    {% if cluster %}
+        <a class="button add" href="{% url instance-create cluster.slug %}">
+            Add Virtual Machine
+        </a>
+    {% else %}
+        {% if can_create %}
+        <a class="button add" href="{% url instance-create %}">
+            Add Virtual Machine
+        </a>
+        {% endif %}
     {% endif %}
-{% endif %}
 
-<div class="vm-wrapper">
-    {% include "virtual_machine/inner_table.html" %}
-</div>
+    <div class="vm-wrapper">
+        {% include "virtual_machine/inner_table.html" %}
+    </div>
 
-<div class="spinner" >
-    <br/>
-    Loading...
-    <br/>
-    <br/>
-    <img src='{{ MEDIA_URL }}/images/ajax-loader.gif'>
+    <div class='spinner'>
+        <br/>
+        Loading...
+        <br/>
+        <br/>
+        <img src='{{ MEDIA_URL }}/images/ajax-loader.gif'>
+    </div>
 </div>

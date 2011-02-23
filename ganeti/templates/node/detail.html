@@ -32,7 +32,8 @@
         $(document).ready(function() {
             $('#tabs').tabs({
                 spinner: false,
-                cache: false, // no-cache b/c we want data to update
+                //cache: false, // no-cache b/c we want data to update
+                cache: true,
                 select: function(event, ui) {
                     window.location.hash = ui.tab.hash;
                 },
