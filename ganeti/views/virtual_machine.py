@@ -831,11 +831,47 @@ def modify_confirm(request, cluster_slug, instance):
     )
 
 
+def recover_failed_deploy(request, cluster_slug, instance):
+    """
+    Loads a vm that failed to deploy back into the edit form
+    """
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
+
+    user = request.user
+    if not (user.is_superuser or user.has_any_perms(vm, ['admin','modify']) \
+        or user.has_perm('admin', cluster)):
+        return render_403(request, 'You do not have permissions to edit \
+            this virtual machine')
+
+    # create initial data - load this from the template.  Not all properties
+    # can be copied directly, some need to be copied explicitly due to naming
+    # conflicts.
+    initial = {'hostname':instance}
+    initial.update(vm.template.__dict__)
+    initial['cluster'] = vm.template.cluster_id
+    initial['pnode'] = vm.template.pnode
+    form = NewVirtualMachineForm(request.user, initial=initial)
+
+    return render_to_response('virtual_machine/create.html', {'form': form},
+        context_instance=RequestContext(request),
+    )
+
+
 @login_required
 def load_template(request, pk):
     """ Loads a template into the create form """
     template = get_object_or_404(VirtualMachineTemplate, pk=pk)
-    form = NewVirtualMachineForm(request.user, instance=template)
+
+    # create initial data - load this from the template.  Not all properties
+    # can be copied directly, some need to be copied explicitly due to naming
+    # conflicts.
+    initial = {'hostname':'wtf'}
+    initial.update(template.__dict__)
+    initial['cluster'] = template.cluster_id
+    initial['pnode'] = template.pnode
+
+    form = NewVirtualMachineForm(request.user, initial=initial)
 
     return render_to_response('virtual_machine/create.html', {'form': form},
         context_instance=RequestContext(request),

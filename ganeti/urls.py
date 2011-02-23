@@ -32,7 +32,7 @@ urlpatterns = patterns('ganeti.views.general',
     url(r'^used_resources/?$', 'used_resources', name="used_resources"),
     
     # clear errors
-    url(r'^error/clear/(?P<pk>\d+)/?$', 'clear_ganeti_error', name="error-clear")
+    url(r'^error/clear/?$', 'clear_ganeti_error', name="error-clear")
 )
 
 # Users
@@ -117,6 +117,7 @@ urlpatterns += patterns('ganeti.views.virtual_machine',
     url(r'^vm/add/options/$', 'cluster_options', name="instance-create-cluster-options"),
     url(r'^vm/add/defaults/$', 'cluster_defaults', name="instance-create-cluster-defaults"),
     url(r'^vm/add/%s/?$' % cluster_slug, 'create', name="instance-create"),
+    url(r'^%s/recover/?$' % vm_prefix, 'recover_failed_deploy', name="instance-create-recover"),
 
     url(r'^vm/add/template/(?P<pk>\d+)/?$', 'load_template', name="instance-create-template"),
 

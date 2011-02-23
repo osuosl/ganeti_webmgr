@@ -46,7 +46,7 @@
 
     <div id="vm_edit" style="display:none;">
         <ul>
-            <li></li><a class="button edit" href="{% url instance-create-template instance.template_id %}">Edit</a></li>
+            <li></li><a class="button edit" href="{% url instance-create-recover cluster.slug instance.hostname %}">Edit</a></li>
             <li></li><a class="button delete" href="{% url instance-delete cluster.slug instance.hostname %}">Delete</a></li>
         </ul>
     </div>
