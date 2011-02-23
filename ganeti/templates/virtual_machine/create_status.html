@@ -7,13 +7,15 @@
 
     <script type="text/javascript">
         $(document).ready(function() {
-            job_id = '{{instance.last_job.job_id}}';
-            if (job_id == '') {
-                {# job was finished before we loaded the page #}
+            {# process job, check for already completed job #}
+            {% ifequal job.status "success" %}
                 job_complete();
-            } else {
-                poll_job_status(job_id, job_complete, job_error);
-            }
+            {% else %}
+                {% ifequal job.status "error" %}
+                    job_error();
+                {% endifequal %}
+                poll_job_status('{{job.job_id}}', job_complete, job_error);
+            {% endifequal %}
         });
 
         function job_complete() {
@@ -21,7 +23,6 @@
         }
 
         function job_error() {
-
             $("#vm_edit").show();
         }
     </script>
@@ -43,7 +44,6 @@
     <ul id="messages"></ul>
 
     <div id="vm_edit" style="display:none;">
-        Install has failed:
         <ul>
             <li></li><a class="button edit" href="{% url instance-create-template instance.template_id %}">Edit</a></li>
             <li></li><a class="button delete" href="{% url instance-delete cluster.slug instance.hostname %}">Delete</a></li>
