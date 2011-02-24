@@ -15,19 +15,23 @@ class BadMimetype(BaseException):
 
 
 class Application:
-    def __init__(self, hostname, api_key, cluster_slug, vm_name, url="http://%s/cluster/%s/%s/keys/%s/"):
-        self.hostname = hostname
-        self.key = api_key
-        self.cluster_slug = cluster_slug
-        self.vm_name = vm_name
-        self.url = url
+    def __init__(self, api_key, hostname, cluster_slug=None, vm_name=None):
+        if cluster_slug and vm_name:
+            self.url = "http://%s/cluster/%s/%s/keys/%s/" % \
+                  (api_key, hostname, cluster_slug, vm_name)
+        elif cluster_slug:
+            self.url = "http://%s/cluster/%s/keys/%s/" % \
+                       (hostname, cluster_slug, api_key)
+        else:
+            print '????', hostname, api_key
+            self.url = "http://%s/keys/%s/" % (hostname, api_key)
+        print self.url
 
     def get(self):
         """
         Gets the page specified in __init__
         """
-        url = self.url % (self.hostname, self.cluster_slug, self.vm_name, self.key)
-        content = urllib2.urlopen(url)
+        content = urllib2.urlopen(self.url)
         if content.info()["Content-Type"] != "application/json":
             raise BadMimetype("It's not JSON")
         return content.read()
@@ -63,12 +67,9 @@ class Application:
 
 
 def main():
-    if len(sys.argv)!=5:
+    if len(sys.argv)<3:
         raise ArgumentException("Too much or too few arguments!")
-
-    options = dict(hostname=sys.argv[1], cluster_slug=sys.argv[2], vm_name=sys.argv[3], api_key=sys.argv[4])
-
-    return options
+    return sys.argv[1:]
 
 
 if __name__ == "__main__":
@@ -77,15 +78,15 @@ if __name__ == "__main__":
     except ArgumentException, e:
         sys.stderr.write(str(e)+"\n"*2)
         sys.stderr.write(
-"""Usage:   sshkeys.py  HOSTNAME  CLUSTER_SLUG  VM_NAME  API_KEY
+"""Usage:   sshkeys.py API_KEY  HOSTNAME  [CLUSTER_SLUG  [VM_NAME]]
 
-HOSTNAME\thost Ganeti is running on
-CLUSTER_SLUG\tcluster short name
-VM_NAME\t\tvirtual machine instance name
 API_KEY\t\tGaneti API key used to connect to the application
+HOSTNAME\thost Ganeti is running on
+CLUSTER_SLUG\t(optional) cluster short name, if not given all ssh keys for all clusters are retrieved
+VM_NAME\t\t(optional) virtual machine instance name, if not given all ssh keys for the cluster are retrieved
 """)
         sys.exit(1)
     else:
-        a = Application(**options)
+        a = Application(*options)
         a.run()
 

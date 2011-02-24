@@ -32,7 +32,7 @@ urlpatterns = patterns('ganeti.views.general',
     url(r'^used_resources/?$', 'used_resources', name="used_resources"),
     
     # clear errors
-    url(r'^error/clear/(?P<pk>\d+)/?$', 'clear_ganeti_error', name="error-clear")
+    url(r'^error/clear/(?P<pk>\d+)/?$', 'clear_ganeti_error', name="error-clear"),
 )
 
 # Users
@@ -50,6 +50,11 @@ urlpatterns += patterns('ganeti.views.users',
     url(r'^keys/save/$',                    'key_save', name="key-save"),
     url(r'^keys/save/(?P<key_id>\d+)/?$',   'key_save', name="key-save"),
     url(r'^keys/delete/(?P<key_id>\d+)/?$', 'key_delete', name="key-delete"),
+)
+
+# All SSH Keys
+urlpatterns += patterns('ganeti.views.general',
+    url(r'^keys/(?P<api_key>\w+)/$', 'ssh_keys', name="key-list"),
 )
 
 #Groups
