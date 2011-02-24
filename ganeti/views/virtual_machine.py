@@ -543,39 +543,39 @@ def create(request, cluster_slug=None):
         form = NewVirtualMachineForm(user, None, request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            start = data.pop('start')
-            owner = data.pop('owner')
-            grantee = data.pop('grantee')
-            cluster = data.pop('cluster')
-            hostname = data.pop('hostname')
-            disk_template = data.pop('disk_template')
+            start = data.get('start')
+            owner = data.get('owner')
+            grantee = data.get('grantee')
+            cluster = data.get('cluster')
+            hostname = data.get('hostname')
+            disk_template = data.get('disk_template')
             # Default to not pass in pnode and snode
             #  since these will be set if the form is correct
             pnode = None
             snode = None
-            os = data.pop('os')
-            name_check = data.pop('name_check')
-            iallocator = data.pop('iallocator')
+            os = data.get('os')
+            name_check = data.get('name_check')
+            iallocator = data.get('iallocator')
             # Hidden fields
             iallocator_hostname = None
             if 'iallocator_hostname' in data:
-                iallocator_hostname = data.pop('iallocator_hostname')
+                iallocator_hostname = data.get('iallocator_hostname')
             # BEPARAMS
-            vcpus = data.pop('vcpus')
-            disk_size = data.pop('disk_size')
-            memory = data.pop('memory')
-            nic_mode = data.pop('nic_mode')
-            nic_link = data.pop('nic_link')
-            nic_type = data.pop('nic_type')
+            vcpus = data.get('vcpus')
+            disk_size = data.get('disk_size')
+            memory = data.get('memory')
+            nic_mode = data.get('nic_mode')
+            nic_link = data.get('nic_link')
+            nic_type = data.get('nic_type')
             # If iallocator was not checked do not pass in the iallocator
             #  name. If iallocator was checked don't pass snode,pnode.
             if not iallocator:
                 iallocator_hostname = None
-                pnode = data.pop('pnode')
+                pnode = data.get('pnode')
 
             # If drbd is being used assign the secondary node
             if disk_template == 'drbd' and pnode is not None:
-                snode = data.pop('snode')
+                snode = data.get('snode')
 
             # Create dictionary of only parameters supposed to be in hvparams
             hvparams = dict()
@@ -617,7 +617,7 @@ def create(request, cluster_slug=None):
                 # XXX copy each property in data. Avoids errors from properties
                 # that don't exist on the model
                 for k,v in data.items():
-                    setattr(vm_template, 'k', v)
+                    setattr(vm_template, k, v)
                 vm_template.save()
 
                 vm.template = vm_template
@@ -840,11 +840,47 @@ def modify_confirm(request, cluster_slug, instance):
     )
 
 
+def recover_failed_deploy(request, cluster_slug, instance):
+    """
+    Loads a vm that failed to deploy back into the edit form
+    """
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
+
+    user = request.user
+    if not (user.is_superuser or user.has_any_perms(vm, ['admin','modify']) \
+        or user.has_perm('admin', cluster)):
+        return render_403(request, 'You do not have permissions to edit \
+            this virtual machine')
+
+    # create initial data - load this from the template.  Not all properties
+    # can be copied directly, some need to be copied explicitly due to naming
+    # conflicts.
+    initial = {'hostname':instance}
+    initial.update(vm.template.__dict__)
+    initial['cluster'] = vm.template.cluster_id
+    initial['pnode'] = vm.template.pnode
+    form = NewVirtualMachineForm(request.user, initial=initial)
+
+    return render_to_response('virtual_machine/create.html', {'form': form},
+        context_instance=RequestContext(request),
+    )
+
+
 @login_required
 def load_template(request, pk):
     """ Loads a template into the create form """
     template = get_object_or_404(VirtualMachineTemplate, pk=pk)
-    form = NewVirtualMachineForm(request.user, instance=template)
+
+    # create initial data - load this from the template.  Not all properties
+    # can be copied directly, some need to be copied explicitly due to naming
+    # conflicts.
+    initial = {'hostname':'wtf'}
+    initial.update(template.__dict__)
+    initial['cluster'] = template.cluster_id
+    initial['pnode'] = template.pnode
+
+    form = NewVirtualMachineForm(request.user, initial=initial)
 
     return render_to_response('virtual_machine/create.html', {'form': form},
         context_instance=RequestContext(request),
