@@ -17,6 +17,7 @@
 # USA.
 
 import json
+from django.contrib.contenttypes.models import ContentType
 
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
@@ -74,6 +75,15 @@ def delete(request, cluster_slug, instance):
         )
 
     elif request.method == 'POST':
+        # verify that this instance actually exists in ganeti.  If it doesn't
+        # exist it can just be deleted.
+        try:
+            instance._refresh()
+        except GanetiApiError, e:
+            if e.code == 404:
+                instance.delete()
+                return HttpResponseRedirect(reverse('virtualmachine-list'))
+
         # start deletion job and mark the VirtualMachine as pending_delete and
         # disable the cache for this VM.
         job_id = instance.rapi.DeleteInstance(instance.hostname)
@@ -429,18 +439,7 @@ def detail(request, cluster_slug, instance):
     if not (admin or power or remove or modify or tags):
         return render_403(request, 'You do not have permission to view this cluster\'s details')
 
-    # check job for pending jobs that should be rendered with a different
-    # detail template.  This allows us to reduce the chance that users will do
-    # something strange like rebooting a VM that is being deleted or is not
-    # fully created yet.
-    if vm.pending_delete:
-        template = 'virtual_machine/delete_status.html'
-    elif vm.template or vm.info is None:
-        template = 'virtual_machine/create_status.html'
-    else:
-        template = 'virtual_machine/detail.html'
-
-    return render_to_response(template, {
+    context = {
         'cluster': cluster,
         'instance': vm,
         'admin':admin,
@@ -449,7 +448,26 @@ def detail(request, cluster_slug, instance):
         'power':power,
         'modify':modify,
         'migrate':migrate,
-        },
+    }
+
+    # check job for pending jobs that should be rendered with a different
+    # detail template.  This allows us to reduce the chance that users will do
+    # something strange like rebooting a VM that is being deleted or is not
+    # fully created yet.
+    if vm.pending_delete:
+        template = 'virtual_machine/delete_status.html'
+    elif vm.template or vm.info is None:
+        template = 'virtual_machine/create_status.html'
+        if vm.last_job:
+            context['job'] = vm.last_job
+        else:
+            ct = ContentType.objects.get_for_model(vm)
+            context['job'] = Job.objects.order_by('-finished') \
+                .filter(content_type=ct, object_id=vm.pk)[0]
+    else:
+        template = 'virtual_machine/detail.html'
+
+    return render_to_response(template, context,
         context_instance=RequestContext(request),
     )
 

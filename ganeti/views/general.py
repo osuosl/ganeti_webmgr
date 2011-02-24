@@ -275,12 +275,12 @@ def used_resources(request):
     
 
 @login_required
-def clear_ganeti_error(request):
+def clear_ganeti_error(request, pk):
     """
     Clear a single error message
     """
     user = request.user
-    error = get_object_or_404(GanetiError, pk=request.POST.get('id', None))
+    error = get_object_or_404(GanetiError, pk=pk)
     obj = error.obj
     
     # if not a superuser, check permissions on the object itself
