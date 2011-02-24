@@ -349,7 +349,7 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
         data = self.cleaned_data['initrd_path']
         if data != '' and \
             (not data.startswith('/') and data != 'no_initrd_path'):
-            msg = u'This field must start with a /.'
+            msg = u'This field must start with a "/".'
             self._errors['initrd_path'] = self.error_class([msg])
         return data
 
