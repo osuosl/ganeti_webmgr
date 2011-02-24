@@ -385,7 +385,7 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
 
         # Makesure if initrd_path is set, kernel_path is aswell
         if initrd_path and not kernel_path:
-            msg = u"Kernel Path must be specify along with Initrd Path."
+            msg = u"Kernel Path must be specified along with Initrd Path."
             self._errors['kernel_path'] = self.error_class([msg])
             self._errors['initrd_path'] = self.error_class([msg])
             del data['initrd_path']
