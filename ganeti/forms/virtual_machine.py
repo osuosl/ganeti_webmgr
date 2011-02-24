@@ -17,6 +17,7 @@
 # USA.
 
 from django import forms
+from django.forms import ValidationError
 
 from ganeti.fields import DataVolumeField
 from ganeti.models import Cluster, ClusterUser, Organization, \
@@ -180,12 +181,14 @@ class NewVirtualMachineForm(forms.ModelForm):
 
                 # detect vm that failed to deploy
                 if not vm.pending_delete and vm.template is not None:
-                    if vm.owner == self.owner:
+                    current_owner = vm.owner.cast()
+                    if current_owner == self.owner:
                         data['vm_recovery'] = vm
                     else:
-                        raise ("Owner cannot be changed when recovering a failed deployment")
+                        msg = "Owner cannot be changed when recovering a failed deployment"
+                        self._errors["owner"] = self.error_class([msg])
                 else:
-                    raise ("Hostname is already in use for this cluster")
+                    raise ValidationError("Hostname is already in use for this cluster")
 
             except VirtualMachine.DoesNotExist:
                 # doesn't exist, no further checks needed
@@ -465,5 +468,5 @@ class RenameForm(forms.Form):
         data = self.cleaned_data
         hostname = data.get('hostname', None)
         if hostname and hostname == self.vm.hostname:
-            raise forms.ValidationError("The new hostname must be different than the current hostname")
+            raise ValidationError("The new hostname must be different than the current hostname")
         return hostname

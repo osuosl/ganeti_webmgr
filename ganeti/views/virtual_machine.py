@@ -456,7 +456,7 @@ def detail(request, cluster_slug, instance):
     # fully created yet.
     if vm.pending_delete:
         template = 'virtual_machine/delete_status.html'
-    elif vm.template or vm.info is None:
+    elif vm.template:
         template = 'virtual_machine/create_status.html'
         if vm.last_job:
             context['job'] = vm.last_job
@@ -609,9 +609,13 @@ def create(request, cluster_slug=None):
                     vm_template = vm.template
                 else:
                     vm_template = VirtualMachineTemplate()
-                    vm = VirtualMachine(cluster=cluster, owner=owner,
-                                    hostname=hostname, disk_size=disk_size,
-                                    ram=memory, virtual_cpus=vcpus)
+                    vm = VirtualMachine(owner=owner)
+
+                vm.cluster = cluster
+                vm.hostname = hostname
+                vm.ram = memory
+                vm.virtual_cpus = vcpus
+                vm.disk_size = disk_size
 
                 # save temporary template
                 # XXX copy each property in data. Avoids errors from properties
@@ -624,7 +628,7 @@ def create(request, cluster_slug=None):
                 vm.ignore_cache = True
                 vm.save()
                 job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
-                VirtualMachine.objects.filter(id=vm.id).update(last_job=job)
+                VirtualMachine.objects.filter(pk=vm.pk).update(last_job=job)
 
                 # log information about creating the machine
                 log_action('CREATE', user, vm)
@@ -840,6 +844,7 @@ def modify_confirm(request, cluster_slug, instance):
     )
 
 
+@login_required
 def recover_failed_deploy(request, cluster_slug, instance):
     """
     Loads a vm that failed to deploy back into the edit form
@@ -853,11 +858,19 @@ def recover_failed_deploy(request, cluster_slug, instance):
         return render_403(request, 'You do not have permissions to edit \
             this virtual machine')
 
+    # if there is no template, we can't recover.  redirect back to the detail
+    # page.  its likely that this vm was already fixed
+    if not vm.template_id:
+        return HttpResponseRedirect(reverse('instance-detail', \
+                                            args=[cluster_slug, instance]))
+
     # create initial data - load this from the template.  Not all properties
     # can be copied directly, some need to be copied explicitly due to naming
     # conflicts.
     initial = {'hostname':instance}
-    initial.update(vm.template.__dict__)
+    for k,v in vm.template.__dict__.items():
+        if v is not None and v != '':
+            initial[k] = v
     initial['cluster'] = vm.template.cluster_id
     initial['pnode'] = vm.template.pnode
     form = NewVirtualMachineForm(request.user, initial=initial)
@@ -875,8 +888,10 @@ def load_template(request, pk):
     # create initial data - load this from the template.  Not all properties
     # can be copied directly, some need to be copied explicitly due to naming
     # conflicts.
-    initial = {'hostname':'wtf'}
-    initial.update(template.__dict__)
+    initial = {}
+    for k,v in vm.template.__dict__.items():
+        if v is not None and v != '':
+            initial[k] = v
     initial['cluster'] = template.cluster_id
     initial['pnode'] = template.pnode
 

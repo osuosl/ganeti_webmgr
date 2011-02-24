@@ -29,6 +29,7 @@ from django.test.client import Client
 
 from django_test_tools.views import ViewTestMixin
 from django_test_tools.users import UserTestMixin
+from ganeti.models import VirtualMachineTemplate
 from object_permissions import grant, get_user_perms
 
 from util import client
@@ -370,6 +371,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         g['group'] = group
 
     def tearDown(self):
+        VirtualMachineTemplate.objects.all().delete()
         Job.objects.all().delete()
         User.objects.all().delete()
         Group.objects.all().delete()
@@ -1393,7 +1395,86 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'virtual_machine/create.html')
-    
+
+    def test_view_create_recover(self):
+        """
+        Test the create view when recovering a failed vm
+
+        Verifies:
+            * vm can be successfully edited and created
+            * vm object is reused
+            * template object is reused
+            * can only recover a vm in the failure state
+            * owner cannot be changed (security)
+            * editing user is not granted perms (security)
+        """
+        url = '/vm/add/'
+        args = tuple()
+        fail_template = 'virtual_machine/create.html'
+        success_template = 'virtual_machine/create_status.html'
+
+        template = VirtualMachineTemplate()
+        template.save()
+
+        # create a failed vm
+        failed_vm, cluster2 = self.create_virtual_machine(cluster, 'failed.osuosl.org')
+        failed_vm.owner=user.get_profile()
+        failed_vm.template = template
+        failed_vm.save()
+
+        data = dict(cluster=cluster.id,
+                    start=True,
+                    owner=user.get_profile().id, #XXX remove this
+                    hostname=failed_vm.hostname,
+                    disk_template='plain',
+                    disk_size=1000,
+                    memory=256,
+                    vcpus=2,
+                    root_path='/',
+                    nic_type='paravirtual',
+                    disk_type = 'paravirtual',
+                    nic_link = 'br43',
+                    nic_mode='routed',
+                    boot_order='disk',
+                    os='image+ubuntu-lucid',
+                    pnode=cluster.nodes.all()[0],
+                    snode=cluster.nodes.all()[1])
+
+        errors = [
+                    {'hostname':vm.hostname}, # attempt to recover vm that hasn't failed
+                    {'hostname':failed_vm.hostname, 'owner':user1.pk} # attempt to change owner
+        ]
+        self.assert_view_values(url, args, data, errors, fail_template)
+
+        def tests(user, response):
+            created_vm = VirtualMachine.objects.get(pk=failed_vm.pk)
+            self.assertEqual(template.pk, created_vm.template_id)
+            self.assertNotEqual(None, created_vm.last_job_id)
+        users = [superuser]
+        self.assert_200(url, args, users, success_template, data=data, method='post', tests=tests, follow=True)
+
+
+    def test_view_load_recover(self):
+        """
+        Tests loading a VM that failed to deploy back into the create view
+        for editing
+        """
+        url = '/cluster/%s/%s/recover/'
+        args = (cluster.slug, vm.hostname)
+
+        # vm with no template should redirect
+        self.assert_200(url, args, [superuser], template='virtual_machine/detail.html', follow=True)
+
+        template = VirtualMachineTemplate()
+        template.save()
+        vm.template = template
+        vm.save()
+
+        self.assert_standard_fails(url, args)
+        users = [superuser, vm_admin, vm_modify, cluster_admin]
+        self.assert_200(url, args, users, template='virtual_machine/create.html')
+
+
     def test_view_cluster_choices(self):
         """
         Test retrieving list of clusters a user or usergroup has access to
