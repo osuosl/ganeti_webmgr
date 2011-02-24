@@ -563,7 +563,9 @@ class VirtualMachine(CachedClusterObject):
                 Job.objects.filter(pk=self.last_job_id) \
                     .update(status=status, ignore_cache=False, finished=finished)
                 self.ignore_cache = False
-            
+
+            op_id = data['ops'][-1]['OP_ID']
+
             if status == 'success':
                 self.last_job = None
                 # job cleanups
@@ -573,7 +575,6 @@ class VirtualMachine(CachedClusterObject):
                 #     the cache setting for this VM
                 # XXX delete may have multiple ops in it, but delete is always
                 #     the last command run.
-                op_id = data['ops'][-1]['OP_ID']
                 if op_id == 'OP_INSTANCE_REMOVE':
                     self.delete()
                     self.deleted = True
@@ -593,7 +594,22 @@ class VirtualMachine(CachedClusterObject):
                 return dict(ignore_cache=False, last_job=None)
             
             elif status == 'error':
-                return dict(ignore_cache=False)
+                if op_id == 'OP_INSTANCE_CREATE' and self.info:
+                    # create failed but vm was deployed, template is no longer
+                    # needed
+                    #
+                    # XXX must update before deleting the template to maintain
+                    # referential integrity.  as a consequence return no other
+                    # updates.
+                    VirtualMachine.objects.filter(pk=self.pk) \
+                        .update(ignore_cache=False, template=None)
+
+                    VirtualMachineTemplate.objects.filter(pk=self.template_id) \
+                        .delete()
+                    self.template=None
+                    return dict()
+                else:
+                    return dict(ignore_cache=False)
 
     def _refresh(self):
         # XXX if delete is pending then no need to refresh this object.
