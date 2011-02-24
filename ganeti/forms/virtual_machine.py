@@ -345,6 +345,47 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
         for field in self.required:
             self.fields[field].required = True
 
+    def clean_initrd_path(self):
+        data = self.cleaned_data['initrd_path']
+        if data != '' and \
+            (not data.startswith('/') and data != 'no_initrd_path'):
+            msg = u'This field must start with a /.'
+            self._errors['initrd_path'] = self.error_class([msg])
+        return data
+
+    def clean_security_domain(self):
+        data = self.cleaned_data['security_domain']
+        security_model = self.cleaned_data['security_model']
+        msg = None
+
+        if data and security_model != 'user': 
+            msg = u'This field can not be set if Security Mode \
+                is not set to User.'
+        elif security_model == 'user':
+            if not data:
+                msg = u'This field is required.'
+            elif not data[0].isalpha():
+                msg = u'This field must being with an alpha character.'
+
+        if msg:
+            self._errors['security_domain'] = self.error_class([msg])
+        return data
+
+    def clean(self):
+        data = self.cleaned_data
+        kernel_path = data.get('kernel_path')
+        initrd_path = data.get('initrd_path')
+
+        # Makesure if initrd_path is set, kernel_path is aswell
+        if initrd_path and not kernel_path:
+            msg = u"Kernel Path must be specify along with Initrd Path."
+            self._errors['kernel_path'] = self.error_class([msg])
+            self._errors['initrd_path'] = self.error_class([msg])
+            del data['initrd_path']
+
+        return data
+
+
 class ModifyConfirmForm(forms.Form):
     pass
 
