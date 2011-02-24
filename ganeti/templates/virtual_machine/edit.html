@@ -1,5 +1,16 @@
 {% extends "menu_base.html" %}
 {% load webmgr_tags %}
+
+{% block head %}
+    <script src="{{MEDIA_URL}}/js/modifyVM_formUpdater.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var formUpdate = new modifyFormUpdater();
+            formUpdate.init();
+        });
+    </script>
+{% endblock %}
+
 {% block content %}
 <h1>Edit {{ instance.hostname }}</h1>
 <fieldset>

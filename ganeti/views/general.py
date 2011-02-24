@@ -15,18 +15,23 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
+import json
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.db.models import Q, Count
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.contrib.contenttypes.models import ContentType
 
+from object_permissions import get_users_any
+
 from ganeti.models import Cluster, VirtualMachine, Job, GanetiError, \
-    ClusterUser, Profile, Organization
+    ClusterUser, Profile, Organization, SSHKey
 from ganeti.views import render_403, render_404
+
 
 
 def merge_errors(errors, jobs):
@@ -297,3 +302,23 @@ def clear_ganeti_error(request, pk):
     GanetiError.objects.filter(pk=error.pk).update(cleared=True)
     
     return HttpResponse('1', mimetype='application/json')
+
+
+def ssh_keys(request, api_key):
+    """ Lists all keys for all clusters managed by GWM """
+    """
+    Show all ssh keys which belong to users, who have any perms on the cluster
+    """
+    if settings.WEB_MGR_API_KEY != api_key:
+        return HttpResponseForbidden("You're not allowed to view keys.")
+
+    users = set()
+    for cluster in Cluster.objects.all():
+        users = users.union(set(get_users_any(cluster).values_list("id", flat=True)))
+    for vm in VirtualMachine.objects.all():
+        users = users.union(set(get_users_any(vm).values_list('id', flat=True)))
+
+    keys = SSHKey.objects.filter(user__in=users).values_list('key','user__username').order_by('user__username')
+
+    keys_list = list(keys)
+    return HttpResponse(json.dumps(keys_list), mimetype="application/json")
