@@ -232,6 +232,12 @@ class SSHKeyForm(forms.ModelForm):
         model = SSHKey
         exclude = ("user", )
 
+    def clean_key(self):
+        value = self.cleaned_data.get('key', None)
+        if value is not None:
+            value = value.replace('\n',' ')
+        return value
+
 
 class UserEditForm(UserChangeForm):
     """
