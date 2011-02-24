@@ -741,8 +741,8 @@ class Node(CachedClusterObject):
         data = super(Node, cls).parse_persistent_info(info)
 
         # Parse resource properties
-        data['ram_total'] = info['mtotal']
-        data['disk_total'] = info['dtotal']
+        data['ram_total'] = info['mtotal'] if info['mtotal'] is not None else 0
+        data['disk_total'] = info['dtotal'] if info['dtotal'] is not None else 0
         data['offline'] = info['offline']
         data['role'] = info['role']
         return data
