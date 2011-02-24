@@ -371,6 +371,13 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
             self._errors['security_domain'] = self.error_class([msg])
         return data
 
+    def clean_vnc_x509_path(self):
+        data = self.cleaned_data['vnc_x509_path']
+        if data and not data.startswith('/'):
+            msg = u'This field must start with a "/".' 
+            self._errors['vnc_x509_path'] = self.error_class([msg])
+        return data
+
     def clean(self):
         data = self.cleaned_data
         kernel_path = data.get('kernel_path')
@@ -382,6 +389,17 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
             self._errors['kernel_path'] = self.error_class([msg])
             self._errors['initrd_path'] = self.error_class([msg])
             del data['initrd_path']
+
+        vnc_tls = data.get('vnc_tls')
+        vnc_x509_path = data.get('vnc_x509_path')
+        vnc_x509_verify = data.get('vnc_x509_verify')
+    
+        if not vnc_tls and vnc_x509_path:
+            msg = u'This field can not be set without VNC TLS enabled.'
+            self._errors['vnc_x509_path'] = self.error_class([msg])
+        if vnc_x509_verify and not vnc_x509_path:
+            msg = u'This field is required.'
+            self._errors['vnc_x509_path'] = self.error_class([msg])
 
         return data
 
