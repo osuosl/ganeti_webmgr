@@ -603,19 +603,24 @@ def create(request, cluster_slug=None):
                         hvparams=hvparams,
                         beparams={"memory": memory})
 
+                # Check for a vm recovery, If it is not found then
+                if 'failed_vm' in data:
+                    vm = data['failed_vm']
+                    vm_template = vm.template
+                else:
+                    vm_template = VirtualMachineTemplate()
+                    vm = VirtualMachine(cluster=cluster, owner=owner,
+                                    hostname=hostname, disk_size=disk_size,
+                                    ram=memory, virtual_cpus=vcpus)
+
                 # save temporary template
-                # XXX copy each property in data.  avoids errors from properties
+                # XXX copy each property in data. Avoids errors from properties
                 # that don't exist on the model
-                vm_template = VirtualMachineTemplate()
                 for k,v in data.items():
                     setattr(vm_template, 'k', v)
                 vm_template.save()
 
-                vm = VirtualMachine(cluster=cluster, owner=owner,
-                                    hostname=hostname, disk_size=disk_size,
-                                    ram=memory, virtual_cpus=vcpus,
-                                    template=vm_template)
-
+                vm.template = vm_template
                 vm.ignore_cache = True
                 vm.save()
                 job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
@@ -624,8 +629,12 @@ def create(request, cluster_slug=None):
                 # log information about creating the machine
                 log_action('CREATE', user, vm)
 
-                # grant admin permissions to the owner
-                grantee.grant('admin', vm)
+                # grant admin permissions to the owner.  Only do this for new
+                # VMs.  otherwise we run the risk of granting perms to a
+                # different owner.  We should be preventing that elsewhere, but
+                # lets be extra careful since this check is cheap.
+                if not 'failed_vm' in data:
+                    grantee.grant('admin', vm)
 
                 return HttpResponseRedirect(
                 reverse('instance-detail', args=[cluster.slug, vm.hostname]))
