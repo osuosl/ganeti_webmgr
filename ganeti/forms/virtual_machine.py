@@ -20,7 +20,7 @@ from django import forms
 
 from ganeti.fields import DataVolumeField
 from ganeti.models import Cluster, ClusterUser, Organization, \
-    VirtualMachineTemplate
+    VirtualMachineTemplate, VirtualMachine
 from ganeti.utilities import cluster_default_info, cluster_os_list
 
 FQDN_RE = r'(?=^.{1,254}$)(^(?:(?!\d+\.|-)[a-zA-Z0-9_\-]{1,63}(?<!-)\.?)+(?:[a-zA-Z]{2,})$)'
@@ -165,6 +165,33 @@ class NewVirtualMachineForm(forms.ModelForm):
             else:
                 q = user.get_objects_any_perms(Cluster, ['admin','create_vm'])
             self.fields['cluster'].queryset = q
+
+    def clean_hostname(self):
+        data = self.cleaned_data
+        hostname = data.get('hostname')
+        cluster = data.get('cluster')
+        if hostname and cluster:
+            # Verify that this hostname is not in use for this cluster.  It can
+            # only be reused when recovering a VM that failed to deploy.
+            #
+            # Recoveries are only allowed when the user is the owner of the VM
+            try:
+                vm = VirtualMachine.objects.get(cluster=cluster, hostname=hostname)
+
+                # detect vm that failed to deploy
+                if not vm.pending_delete and vm.template is not None:
+                    if vm.owner == self.owner:
+                        data['vm_recovery'] = vm
+                    else:
+                        raise ("Owner cannot be changed when recovering a failed deployment")
+                else:
+                    raise ("Hostname is already in use for this cluster")
+
+            except VirtualMachine.DoesNotExist:
+                # doesn't exist, no further checks needed
+                pass
+
+        return hostname
 
     def clean(self):
         data = self.cleaned_data

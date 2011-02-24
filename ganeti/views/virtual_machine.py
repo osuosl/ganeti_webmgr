@@ -604,8 +604,8 @@ def create(request, cluster_slug=None):
                         beparams={"memory": memory})
 
                 # Check for a vm recovery, If it is not found then
-                if 'failed_vm' in data:
-                    vm = data['failed_vm']
+                if 'vm_recovery' in data:
+                    vm = data['vm_recovery']
                     vm_template = vm.template
                 else:
                     vm_template = VirtualMachineTemplate()
@@ -633,7 +633,7 @@ def create(request, cluster_slug=None):
                 # VMs.  otherwise we run the risk of granting perms to a
                 # different owner.  We should be preventing that elsewhere, but
                 # lets be extra careful since this check is cheap.
-                if not 'failed_vm' in data:
+                if not 'vm_recovery' in data:
                     grantee.grant('admin', vm)
 
                 return HttpResponseRedirect(
