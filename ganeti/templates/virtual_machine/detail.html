@@ -245,7 +245,7 @@
                     {{ info.pnode }}
                 {% endif %}
             </td></tr>
-            <tr><th>Failover node</th><td>
+            <tr><th>Secondary node</th><td>
                 {% if cluster_admin %}
                     {% for host in info.snodes %}
                         <a href="{% url node-detail cluster.slug host %}">
