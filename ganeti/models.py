@@ -1501,6 +1501,7 @@ LogAction.objects.register('VM_MIGRATE','ganeti/object_log/vm_migrate.html')
 LogAction.objects.register('VM_REINSTALL','ganeti/object_log/vm_reinstall.html')
 LogAction.objects.register('VM_MODIFY','ganeti/object_log/vm_modify.html')
 LogAction.objects.register('VM_RENAME','ganeti/object_log/vm_rename.html')
+LogAction.objects.register('VM_RECOVER','ganeti/object_log/vm_recover.html')
 
 LogAction.objects.register('NODE_EVACUATE','ganeti/object_log/node_evacuate.html')
 LogAction.objects.register('NODE_MIGRATE','ganeti/object_log/node_migrate.html')

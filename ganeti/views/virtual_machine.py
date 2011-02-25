@@ -630,15 +630,17 @@ def create(request, cluster_slug=None):
                 job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
                 VirtualMachine.objects.filter(pk=vm.pk).update(last_job=job)
 
-                # log information about creating the machine
-                log_action('CREATE', user, vm)
+
 
                 # grant admin permissions to the owner.  Only do this for new
                 # VMs.  otherwise we run the risk of granting perms to a
                 # different owner.  We should be preventing that elsewhere, but
                 # lets be extra careful since this check is cheap.
-                if not 'vm_recovery' in data:
+                if 'vm_recovery' in data:
+                    log_action('VM_RECOVER', user, vm)
+                else:
                     grantee.grant('admin', vm)
+                    log_action('CREATE', user, vm)
 
                 return HttpResponseRedirect(
                 reverse('instance-detail', args=[cluster.slug, vm.hostname]))
