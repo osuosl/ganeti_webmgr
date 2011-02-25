@@ -29,7 +29,9 @@ def list_for_object(request, obj):
     log = LogItem.objects.filter(q).distinct()
 
     return render_to_response('object_log/log.html',
-        {'log':log},
+        {'log':log,
+         'context':{'user':request.user}
+         },
         context_instance=RequestContext(request))
 
 
@@ -77,5 +79,5 @@ def list_user_actions(request, pk):
     log_items = LogItem.objects.filter(user=user)
 
     return render_to_response('object_log/log.html',
-        {'log':log_items},
+        {'log':log_items, 'context':{'user':request.user}},
         context_instance=RequestContext(request))

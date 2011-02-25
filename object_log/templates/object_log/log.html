@@ -1,6 +1,8 @@
+{% load object_log_tags %}
+
 <table class="object_log">
     {% for item in log %}
-        <tr>{{ item|safe }}</tr>
+        <tr>{{ item|render_context:context }}</tr>
     {% empty %}
         <tr class="none"><td class="none">- empty -</td></tr>
     {% endfor %}
