@@ -113,10 +113,7 @@ function formUpdater(url_choices, url_options, url_defaults){
                 $.getJSON(url_choices, {'clusteruser_id':id}, function(data){
                     cluster.children().not(':first').remove();
                     $.each(data, function(i, item) {
-                        child = $("<option> </option>");
-                        child.attr('value', item[0]);
-                        child.attr('text', item[1]);
-                        cluster.append(child);
+                        cluster.append(_newOpt(item[0], item[1]));
                     });
 
                     // process dropdown if it's a singleton
