@@ -111,10 +111,15 @@ function formUpdater(url_choices, url_options, url_defaults){
             if(id != '') {
                 // JSON update the cluster when the owner changes
                 $.getJSON(url_choices, {'clusteruser_id':id}, function(data){
+                    var oldcluster = cluster.val();
+
                     cluster.children().not(':first').remove();
                     $.each(data, function(i, item) {
                         cluster.append(_newOpt(item[0], item[1]));
                     });
+
+                    // Try to re-select the previous cluster, if possible.
+                    cluster.val(oldcluster);
 
                     // process dropdown if it's a singleton
                     disableSingletonDropdown(cluster, blankOptStr);
@@ -136,6 +141,10 @@ function formUpdater(url_choices, url_options, url_defaults){
             if( id != '' ) {
                 // JSON update oslist, pnode, and snode when cluster changes
                 $.getJSON(url_options, {'cluster_id':id}, function(data){
+                    var oldpnode = pnode.val();
+                    var oldsnode = snode.val();
+                    var oldos = oslist.val();
+
                     pnode.children().not(':first').remove();
                     snode.children().not(':first').remove();
                     oslist.children().not(':first').remove();
@@ -146,23 +155,27 @@ function formUpdater(url_choices, url_options, url_defaults){
                                 child2 = child.clone();
                                 pnode.append(child);
                                 snode.append(child2);
-
-                                disableSingletonDropdown(pnode, blankOptStr);
-                                disableSingletonDropdown(snode, blankOptStr);
                             }
                             else if (i == 'os') {
                                 child = _newOptGroup(value[0], 
                                         value[1]);
                                 oslist.append(child);
-
-                                disableSingletonDropdown(oslist,
-                                        blankOptStr);
                             }
                         });
                     });
 
                     // make nodes publically available
                     nodes = data['nodes'];
+
+                    // Restore old choices from before, if possible.
+                    pnode.val(oldpnode);
+                    snode.val(oldsnode);
+                    oslist.val(oldos);
+
+                    // And finally, do the singleton dance.
+                    disableSingletonDropdown(pnode, blankOptStr);
+                    disableSingletonDropdown(snode, blankOptStr);
+                    disableSingletonDropdown(oslist, blankOptStr);
                 });
 
                 // only load the defaults if errors are not present 
