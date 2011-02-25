@@ -1,21 +1,3 @@
-# Copyright (C) 2010 Oregon State University et al.
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
-# USA.
-
-
 from django.db import models
 
 from django.contrib.auth.models import User
@@ -24,7 +6,6 @@ from django.contrib.contenttypes.generic import GenericForeignKey
 from django.db.utils import DatabaseError
 from django.template.loader import get_template
 from django.template import Context
-
 
 
 class LogActionManager(models.Manager):
@@ -129,10 +110,10 @@ class LogItemManager(models.Manager):
         dict['user'] = user
         dict['object1'] = object1
         
-        if object2 != None:
+        if object2 is not None:
             dict['object2'] = object2
         
-        if object3 != None:
+        if object3 is not None:
             dict['object3'] = object3
 
         m = self.model(**dict)
@@ -170,14 +151,26 @@ class LogItem(models.Model):
 
     class Meta:
         ordering = ("timestamp", )
-    
-    def get_template(self):
+
+    @property
+    def template(self):
         """
         retrieves template for this log item
         """
         action = LogAction.objects.get_from_cache(self.action_id)
         return get_template(action.template)
-        
+
+    def render(self, **context):
+        """
+        render this LogItem
+
+        @param context: extra kwargs to add to the context when rendering
+        """
+        context['log_item'] = self
+        action = LogAction.objects.get_from_cache(self.action_id)
+        template = get_template(action.template)
+        return template.render(Context(context))
+
     def __repr__(self):
         return 'time: %s user: %s object_type1: %s'%(self.timestamp, self.user, self.object_type1)
     
@@ -190,9 +183,7 @@ class LogItem(models.Model):
         - action itself
         - object affected by the action
         """
-        action = LogAction.objects.get_from_cache(self.action_id)
-        template = get_template(action.template)
-        return template.render(Context({"log_item": self}))
+        return self.render()
 
 
 #Most common log types, registered by default for convenience
