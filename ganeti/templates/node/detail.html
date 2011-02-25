@@ -218,8 +218,8 @@
                 <td>{{node.info.master_candidate|checkmark}}</td>
             </tr>
             <tr><th>Drained</th><td>{{node.info.drained|checkmark}}</td></tr>
-            <tr><th>Ram</th><td class="ram">{% node_memory node %}</td></tr>
-            <tr><th>Disk</th><td class="disk">{% node_disk node %}</td>
+            <tr><th>Ram Free MiB</th><td class="ram">{% node_memory node %}</td></tr>
+            <tr><th>Disk Free MiB</th><td class="disk">{% node_disk node %}</td>
             <tr>
                 <th>Virtual Machines</th>
                 <td>{{ node.info.pinst_cnt }} / {{ node.info.sinst_cnt }}</td>
