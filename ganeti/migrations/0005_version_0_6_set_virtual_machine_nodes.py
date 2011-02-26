@@ -10,7 +10,8 @@ class Migration(DataMigration):
         """
         update all VirtualMachines to set their primary and secondary node
         """
-        for vm in orm.VirtualMachine.objects.all():
+        from ganeti.models import VirtualMachine
+        for vm in VirtualMachine.objects.all():
             # XXX set mtime to None to force a refresh
             vm.mtime = None
             vm.refresh()

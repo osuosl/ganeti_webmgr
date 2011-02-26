@@ -8,7 +8,8 @@ class Migration(DataMigration):
 
     def forwards(self, orm):
         """ do a one time import of node for each cluster """
-        for cluster in orm.Cluster.objects.all():
+        from ganeti.models import Cluster
+        for cluster in Cluster.objects.all():
             cluster.sync_nodes()
     
     def backwards(self, orm):
