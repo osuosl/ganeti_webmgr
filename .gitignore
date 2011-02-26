@@ -20,6 +20,17 @@ object_permissions
 
 # Komodo files
 *.komodo*
+*.kpf
+
+# PyCharm files
+.idea
 
 # vim swap files
 *.swp
+
+# files that might exist in dev environment
+django
+object_log
+object_permissions
+noVNC
+muddle
