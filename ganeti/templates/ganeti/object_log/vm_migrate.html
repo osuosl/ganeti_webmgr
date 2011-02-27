@@ -1,0 +1,11 @@
+<td class="timestamp">{{log_item.timestamp|date}}</td>
+<td>
+    {% if log_item.object2 %}
+        <a href="{% url job-detail log_item.object1.cluster.slug log_item.object2.job_id %}">Job #{{ log_item.object2.job_id }}</a> -
+    {% endif %}
+    {% if user.is_superuser %}
+        <a href="{% url user-detail log_item.user.pk %}">{{log_item.user}}</a>
+    {% else %}
+        {{ log_item.user }}
+    {% endif %}
+migrated virtual machine <a href="{% url instance-detail log_item.object1.cluster.slug log_item.object1.hostname %}">{{log_item.object1}}</a></td>

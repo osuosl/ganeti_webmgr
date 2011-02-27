@@ -5,58 +5,14 @@
 {% block head %}
 <link href="{{MEDIA_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
 <style>
-#content h3 {
-    margin-top:25px;
-}
-
-.spinner_small {
-    display:block;
-    margin:10px auto 0 auto;
-    width:16px;
-}
-
-#log {
-    display:block;
-    border-top:1px solid #124612;
-    margin:0;
-    padding: 10px;
-    overflow:auto;
-}
-
-#log li {
-    border:0;
-    color:black;
-    font: 12px monospace;
-    margin:0;
-    padding:1px 0;
-    text-align:left;
-}
-
-#messages li {
-    background-color:#eee;
-    border-width:1px;
-    padding:0;
-}
-
-
-
-#messages h3 {
-    background: url({{MEDIA_URL}}/images/ajax-loader_arrows.gif) 5px 5px no-repeat;
-    background-color:#C2E192;
-    padding: 5px 0 5px 25px;
-    margin:0;
-    text-align:left;
-}
-
+#content h3 { margin-top:25px; }
 #content table {margin-top:5px;}
 </style>
 <script src="{{MEDIA_URL}}/js/jquery-ui.min.js"></script>
 <script src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.form.js"></script>
 <script type="text/javascript">
-    var actions_enabled = true;
-
-    $(document).ready(function() {
+     $(document).ready(function() {
         $('#tabs').tabs({ 
             spinner: false,
             cache: true,
@@ -66,27 +22,34 @@
 		});
         {% if admin %}
             {% ifnotequal instance.info.status "running" %}
-                vnc_tab_index = 2;
-                $('#tabs').tabs("option", "disabled", [vnc_tab_index]);
+                $('#tabs .ui-tabs-nav a[title=console]').parent()
+                    .addClass('ui-state-disabled');
             {% endifnotequal %}
         {% endif %}
         
         $("#actions a.power").live("click", function(event) {
             event.preventDefault();
-            if (actions_enabled) {
-                if ((this.className == 'button shutdown' || this.className == 'button reboot') &&
-                        !confirm('Are you sure you want to ' + this.title + '?')) {
+            if(!$(this).hasClass('disabled')) {
+                if((this.className == 'button shutdown' || 
+                        this.className == 'button reboot') &&
+                        !confirm('Are you sure you want to ' 
+                                + this.title + '?')) {
                     return false;
                 }
                 $.post(this.href, action_response);
             }
         });
 
+        // disable buttons that are actually links to other pages
+        $("#actions .edit, #actions .delete").live("click", function(event) {
+            return !$(this).hasClass('disabled');
+        });
+
         $(".migrate").click(function(event){
             event.preventDefault();
-            if (actions_enabled) {
+            var $this = $(this);
+            if(!$this.hasClass('disabled')) {
                 $('.qtip').qtip('destroy');
-                var $this = $(this);
 
                 $(this).qtip({
                     content: {
@@ -94,11 +57,16 @@
                        title: {text:"Migrate", button:"close"}
                     },
                     position: {  corner:{target:'center', tooltip:'center'}},
-                    style: {name: 'dark', border:{radius:5}, width:400, background:'#eeeeee'},
+                    style: {
+                        name: 'dark', 
+                        border:{radius:5}, 
+                        width:400, 
+                        background:'#eeeeee'},
                     show: {when:false, ready:true},
                     hide: {fixed: true, when:false},
                     api:{onShow:function(){
-                        $(".ajax_form input[type!=hidden], .ajax_form select").first().focus();
+                        $(".ajax_form input[type!=hidden], .ajax_form select")
+                            .first().focus();
                     }}
                 });
             }
@@ -126,9 +94,8 @@
     }
 
     function action_response(result) {
-        if (result.ops == undefined) {
+        if(result.ops == undefined) {
             display_ganeti_error(result['__all__'][0]);
-            actions_enabled = true;
             $('#actions a').removeClass('disabled');
         } else {
             poll_job_status(result['id'], job_complete);
@@ -137,7 +104,7 @@
     }
 
     function vm_form_response(responseText, statusText, xhr, $form) {
-        if (responseText["opstatus"] == undefined) {
+        if(responseText["opstatus"] == undefined) {
             // no opstatus, must be an error
             // parse errors
             for (var key in responseText) {
@@ -166,7 +133,9 @@
 {% block content %}
 <h1>
     {% if cluster_admin %}
-    <a class="breadcrumb" href="{% url cluster-detail cluster.slug %}#virtual_machines">{{cluster.hostname|abbreviate_fqdn}}</a>
+    <a class="breadcrumb" href="{% url cluster-detail cluster.slug %}#virtual_machines">
+        {{cluster.hostname|abbreviate_fqdn}}
+    </a>
     {% else %}
     <span class="breadcrumb">{{cluster.hostname|abbreviate_fqdn}}</span>
     {% endif %}
@@ -174,37 +143,84 @@
 </h1>
 
 <ul id="messages"></ul>
+
 <div id="tabs">
     <ul>
         <li><a href="#overview"><span>Overview</span></a></li>
         {% if admin %}
-            <li><a title="users" href="{% url vm-users cluster.slug instance.hostname %}"><span>Users</span></a></li>
+            <li>
+                <a title="users" href="{% url vm-users cluster.slug instance.hostname %}">
+                    <span>Users</span>
+                </a>
+            </li>
+            <li>
+                <a title="log" href="{% url vm-object_log cluster.slug instance.hostname %}">
+                    <span>Log</span>
+                </a>
+            </li>
         {%endif%}
 	{% if admin or power %}
-	    <li><a title="console" href="{% url instance-vnc cluster.slug instance.hostname %}"><span>Console</span></a></li>
+	    <li>
+            <a title="console" href="{% url instance-vnc cluster.slug instance.hostname %}">
+                <span>Console</span>
+            </a>
+        </li>
         {% endif %}
     </ul>
     <div id="overview" class="tab_content">
         <ul id="actions">
             {% with instance.cluster.username as username %}
                 {% if modify and username %}            
-                    <li><a class="button edit" href="{% url instance-modify cluster.slug instance.hostname %}">Edit</a></li>
+                    <li>
+                        <a class="button edit" href="{% url instance-modify cluster.slug instance.hostname %}">
+                            Edit
+                        </a>
+                    </li>
+                    <li>
+                        <a class="button edit" href="{% url instance-rename cluster.slug instance.hostname %}">
+                            Rename
+                        </a>
+                    </li>
                 {% endif %}
                 {% if remove and username %}
-                    <li><a class="button delete" href="{% url instance-delete cluster.slug instance.hostname %}">Delete</a></li>
-                    <li><a class="button reinstall" href="{% url instance-reinstall cluster.slug instance.hostname %}">Reinstall</a></li>
+                    <li>
+                        <a class="button delete" href="{% url instance-delete cluster.slug instance.hostname %}">
+                            Delete
+                        </a>
+                    </li>
+                    <li>
+                        <a class="button reinstall" href="{% url instance-reinstall cluster.slug instance.hostname %}">
+                            Reinstall
+                        </a>
+                    </li>
                 {% endif %}
                 {% if admin or migrate %}
                     {% if instance|is_drbd %}
-                    <li><a class="button migrate" href="{% url instance-migrate cluster.slug instance.hostname %}">Migrate</a></li>
+                    <li>
+                        <a class="button migrate" href="{% url instance-migrate cluster.slug instance.hostname %}">
+                            Migrate
+                        </a>
+                    </li>
                     {% endif %}
                 {% endif %}
                 {% if admin or power and username %}
                     {% ifequal instance.info.status "running" %}
-                    <li><a class="button shutdown power" title="shutdown" href="{% url instance-shutdown cluster.slug instance.hostname %}">Shutdown</a></li>
-                    <li><a class="button reboot power" title="reboot" href="{% url instance-reboot cluster.slug instance.hostname %}">Reboot</a></li>
+                    <li>
+                        <a class="button shutdown power" title="shutdown" href="{% url instance-shutdown cluster.slug instance.hostname %}">
+                            Shutdown
+                        </a>
+                    </li>
+                    <li>
+                        <a class="button reboot power" title="reboot" href="{% url instance-reboot cluster.slug instance.hostname %}">
+                            Reboot
+                        </a>
+                    </li>
                     {% else %}
-                    <li><a class="button startup power" href="{% url instance-startup cluster.slug instance.hostname %}">Start</a></li>
+                    <li>
+                        <a class="button startup power" href="{% url instance-startup cluster.slug instance.hostname %}">
+                            Start
+                        </a>
+                    </li>
                     {% endifequal %}
                 {% endif %}
             {% endwith %}
@@ -216,26 +232,39 @@
             <tr><th>Owner</th><td>{{ instance.owner.name }}</td></tr>
             <tr><th>Created on</th><td>{{ instance.ctime|date }}</td></tr>
             <tr><th>Last modified</th><td>{{ instance.mtime|date }}</td></tr>
-            <tr><th>Status</th><td>{{ info.oper_state|yesno:"Running,Stopped" }}</td></tr>
+            <tr>
+                <th>Status</th>
+                <td>{{ info.oper_state|yesno:"Running,Stopped" }}</td>
+            </tr>
             <tr><th>Primary node</th><td>
                 {% if cluster_admin %}
-                    <a href="{% url node-detail cluster.slug info.pnode %}">{{ info.pnode }}</a>
+                    <a href="{% url node-detail cluster.slug info.pnode %}">
+                        {{ info.pnode }}
+                    </a>
                 {% else %}
                     {{ info.pnode }}
                 {% endif %}
             </td></tr>
-            <tr><th>Failover node</th><td>
+            <tr><th>Secondary node</th><td>
                 {% if cluster_admin %}
                     {% for host in info.snodes %}
-                        <a href="{% url node-detail cluster.slug host %}">{{ host }}</a>
+                        <a href="{% url node-detail cluster.slug host %}">
+                            {{ host }}
+                        </a>
                         {% if not forloop.last %}, {% endif %}
                     {% endfor %}
                 {% else %}
                     {{ info.snodes|join:", " }}
                 {% endif %}
             </td></tr>
-            <tr><th>Operating System</th><td>{{ instance.operating_system|render_os }}</td></tr>
-            <tr><th>Autostart</th><td>{{ info.admin_state|checkmark }}</td></tr>
+            <tr>
+                <th>Operating System</th>
+                <td>{{ instance.operating_system|render_os }}</td>
+            </tr>
+            <tr>
+                <th>Autostart</th>
+                <td>{{ info.admin_state|checkmark }}</td>
+            </tr>
         </table>
 
         <h3>Hardware</h3>
@@ -275,8 +304,12 @@
                     <td>nic/{{ forloop.counter0 }}</td>
                     <td>{{ mac }}</td>
                     <td>{{ info|index:'nic.ips'|index:forloop.counter0 }}</td>
-                    <td>{{ info|index:'nic.modes'|index:forloop.counter0 }}</td>
-                    <td>{{ info|index:'nic.links'|index:forloop.counter0 }}</td>
+                    <td>
+                        {{ info|index:'nic.modes'|index:forloop.counter0 }}
+                    </td>
+                    <td>
+                        {{ info|index:'nic.links'|index:forloop.counter0 }}
+                    </td>
                 </tr>
             {% endfor %}
         </table>
@@ -285,27 +318,69 @@
         <table class="horizontal">
             <tr><th>ACPI</th><td>{{ info.hvparams.acpi|checkmark }}</td></tr>
             <tr><th>Boot Order</th><td>{{ info.hvparams.boot_order }}</td></tr>
-            <tr><th>CDROM Image Path</th><td>{{ info.hvparams.cdrom_image_path }}</td></tr>
+            <tr>
+                <th>CDROM Image Path</th>
+                <td>{{ info.hvparams.cdrom_image_path }}</td>
+            </tr>
             <tr><th>Disk Cache</th><td>{{ info.hvparams.disk_cache }}</td></tr>
-            <tr><th>initrd Path</th><td>{{ info.hvparams.initrd_path }}</td></tr>
-            <tr><th>Kernel Args</th><td>{{ info.hvparams.kernel_args }}</td></tr>
-            <tr><th>Kernel Path</th><td>{{ info.hvparams.kernel_path }}</td></tr>
+            <tr>
+                <th>initrd Path</th><td>{{ info.hvparams.initrd_path }}</td>
+            </tr>
+            <tr>
+                <th>Kernel Args</th><td>{{ info.hvparams.kernel_args }}</td>
+            </tr>
+            <tr>
+                <th>Kernel Path</th><td>{{ info.hvparams.kernel_path }}</td>
+            </tr>
             <tr><th>KVM Flag</th><td>{{ info.hvparams.kvm_flag }}</td></tr>
             <tr><th>Mem Path</th><td>{{ info.hvparams.mem_path }}</td></tr>
-            <tr><th>Migration Downtime</th><td>{{ info.hvparams.migration_downtime }}</td></tr>
+            <tr>
+                <th>Migration Downtime</th>
+                <td>{{ info.hvparams.migration_downtime }}</td>
+            </tr>
             <tr><th>Nic Type</th><td>{{ info.hvparams.nic_type }}</td></tr>
             <tr><th>Root Path</th><td>{{ info.hvparams.root_path }}</td></tr>
-            <tr><th>Security Domain</th><td>{{ info.hvparams.security_domain }}</td></tr>
-            <tr><th>Security Model</th><td>{{ info.hvparams.security_model }}</td></tr>
-            <tr><th>Serial Console</th><td>{{ info.hvparams.serial_console|checkmark }}</td></tr>
+            <tr>
+                <th>Security Domain</th>
+                <td>{{ info.hvparams.security_domain }}</td>
+            </tr>
+            <tr>
+                <th>Security Model</th>
+                <td>{{ info.hvparams.security_model }}</td>
+            </tr>
+            <tr>
+                <th>Serial Console</th>
+                <td>{{ info.hvparams.serial_console|checkmark }}</td>
+            </tr>
             <tr><th>USB Mouse</th><td>{{ info.hvparams.usb_mouse }}</td></tr>
-            <tr><th>Use Chroot</th><td>{{ info.hvparams.use_chroot|checkmark }}</td></tr>
-            <tr><th>Use Localtime</th><td>{{ info.hvparams.use_localtime|checkmark }}</td></tr>
-            <tr><th>VNC Bind Address</th><td>{{ info.hvparams.vnc_bind_address }}</td></tr>
-            <tr><th>VNC Password File</th><td>{{ info.hvparams.vnc_password_file }}</td></tr>
-            <tr><th>VNC TLS</th><td>{{ info.hvparams.vnc_tls|checkmark }}</td></tr>
-            <tr><th>VNC x509 Path</th><td>{{ info.hvparams.vnc_x509_path }}</td></tr>
-            <tr><th>VNC x509 Verify</th><td>{{ info.hvparams.vnc_x509_verify|checkmark }}</td></tr>
+            <tr>
+                <th>Use Chroot</th>
+                <td>{{ info.hvparams.use_chroot|checkmark }}</td>
+            </tr>
+            <tr>
+                <th>Use Localtime</th>
+                <td>{{ info.hvparams.use_localtime|checkmark }}</td>
+            </tr>
+            <tr>
+                <th>VNC Bind Address</th>
+                <td>{{ info.hvparams.vnc_bind_address }}</td>
+            </tr>
+            <tr>
+                <th>VNC Password File</th>
+                <td>{{ info.hvparams.vnc_password_file }}</td>
+            </tr>
+            <tr>
+                <th>VNC TLS</th>
+                <td>{{ info.hvparams.vnc_tls|checkmark }}</td>
+            </tr>
+            <tr>
+                <th>VNC x509 Path</th>
+                <td>{{ info.hvparams.vnc_x509_path }}</td>
+            </tr>
+            <tr>
+                <th>VNC x509 Verify</th>
+                <td>{{ info.hvparams.vnc_x509_verify|checkmark }}</td>
+            </tr>
         </table>
 
         {% endif %}

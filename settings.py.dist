@@ -113,7 +113,7 @@ INSTALLED_APPS = (
     'registration',
     'object_permissions',
     'ganeti',
-    'logs',
+    'object_log',
     'south'
 )
 

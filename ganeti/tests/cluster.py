@@ -1,5 +1,4 @@
 # Copyright (C) 2010 Oregon State University et al.
-# Copyright (C) 2010 Greek Research and Technology Network
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -25,6 +24,7 @@ from django.contrib.auth.models import User, Group
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 from django.test.client import Client
+from django_test_tools.users import UserTestMixin
 from django_test_tools.views import ViewTestMixin
 from ganeti.models import SSHKey
 
@@ -296,7 +296,7 @@ class TestClusterModel(TestCase):
         self.assertEqual(5064, disk['free'])
     
 
-class TestClusterViews(TestCase, ViewTestMixin):
+class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
     
     def setUp(self):
         self.tearDown()
@@ -311,12 +311,16 @@ class TestClusterViews(TestCase, ViewTestMixin):
         user1 = User(id=3, username='tester1')
         user1.set_password('secret')
         user1.save()
-        
+
         group = Group(name='testing_group')
         group.save()
         
         cluster = Cluster(hostname='test.osuosl.test', slug='OSL_TEST')
         cluster.save()
+
+        self.create_standard_users(globals())
+        self.create_users(['cluster_admin'], globals())
+        cluster_admin.grant('admin', cluster)
         
         dict_ = globals()
         dict_['user'] = user
@@ -836,6 +840,19 @@ class TestClusterViews(TestCase, ViewTestMixin):
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'cluster/group_row.html')
         self.assertEqual(['admin'], group.get_perms(cluster))
+
+    def test_view_object_log(self):
+        """
+        Tests view for cluster object log:
+
+        Verifies:
+            * view can be loaded
+            * cluster specific log actions can be rendered properly
+        """
+        url = "/cluster/%s/object_log/"
+        args = (cluster.slug,)
+        self.assert_standard_fails(url, args)
+        self.assert_200(url, args, users=[superuser, cluster_admin])
 
     def test_view_user_permissions(self):
         """

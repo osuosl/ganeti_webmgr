@@ -1,8 +1,5 @@
 ===== Core Contributors =====
 Peter Krenesky (kreneskyp) -peter@osuosl.org
-Apollon (apoikos) - apollon@noc.grnet.gr
-Faidon Liambotis (paravoid) - faidon@admin.grnet.gr
-Leonidas Poulopoulos - leopoul@noc.grnet.gr
 Corbin Simpson (MostAwesomeDude) - simpsoco@osuosl.org
 Trevor Bramwell (bramwelt) - bramwelt@osuosl.org
 Scott White (whiteau) - whiteau@osuosl.org
@@ -18,6 +15,10 @@ David Zderic - dzderic@gmail.com
 Crypt Wizard - cryptwizard@gmail.com
 Piotr Banaszkiewicz (pbnan) - pbnan@pbnan.pl
 
+===== Other Contributors =====
+Apollon (apoikos) - apollon@noc.grnet.gr
+Faidon Liambotis (paravoid) - faidon@admin.grnet.gr
+Leonidas Poulopoulos - leopoul@noc.grnet.gr
 
 ===== Included Projects =====
 Release Tarballs include noVNC by Joel Martin

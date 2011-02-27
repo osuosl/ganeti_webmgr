@@ -232,7 +232,14 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
         users = [superuser, user_migrate, user_admin]
         self.assert_standard_fails(url, args)
         self.assert_200(url, args, users, 'virtual_machine/table.html')
-    
+
+    def test_object_log(self):
+        args = (cluster.slug, node.hostname)
+        url = '/cluster/%s/node/%s/object_log'
+        users = [superuser, user_migrate, user_admin]
+        self.assert_standard_fails(url, args)
+        self.assert_200(url, args, users)
+
     def test_role(self):
         args = (cluster.slug, node.hostname)
         url = '/cluster/%s/node/%s/role'

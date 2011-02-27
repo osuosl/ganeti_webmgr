@@ -32,7 +32,7 @@ urlpatterns = patterns('ganeti.views.general',
     url(r'^used_resources/?$', 'used_resources', name="used_resources"),
     
     # clear errors
-    url(r'^error/clear/?$', 'clear_ganeti_error', name="error-clear")
+    url(r'^error/clear/(?P<pk>\d+)/?$', 'clear_ganeti_error', name="error-clear"),
 )
 
 # Users
@@ -50,6 +50,11 @@ urlpatterns += patterns('ganeti.views.users',
     url(r'^keys/save/$',                    'key_save', name="key-save"),
     url(r'^keys/save/(?P<key_id>\d+)/?$',   'key_save', name="key-save"),
     url(r'^keys/delete/(?P<key_id>\d+)/?$', 'key_delete', name="key-delete"),
+)
+
+# All SSH Keys
+urlpatterns += patterns('ganeti.views.general',
+    url(r'^keys/(?P<api_key>\w+)/$', 'ssh_keys', name="key-list"),
 )
 
 #Groups
@@ -80,6 +85,9 @@ urlpatterns += patterns('ganeti.views.cluster',
 
     #ssh_keys
     url(r'^%s/keys/(?P<api_key>\w+)/?$' % cluster, "ssh_keys", name="cluster-keys"),
+
+    # object log
+    url(r'^%s/object_log/?$' % cluster, 'object_log', name="cluster-object_log"),
 )
 
 
@@ -92,7 +100,10 @@ urlpatterns += patterns('ganeti.views.node',
     # Primary and secondary Virtual machines
     url(r'^%s/primary/?$' % node_prefix, 'primary', name="node-primary-vms"),
     url(r'^%s/secondary/?$' % node_prefix, 'secondary', name="node-secondary-vms"),
-    
+
+    #object log
+    url(r'^%s/object_log/?$' % node_prefix, 'object_log', name="node-object_log"),
+
     # Node actions
     url(r'^%s/role/?$' % node_prefix, 'role', name="node-role"),
     url(r'^%s/migrate/?$' % node_prefix, 'migrate', name="node-migrate"),
@@ -111,6 +122,9 @@ urlpatterns += patterns('ganeti.views.virtual_machine',
     url(r'^vm/add/options/$', 'cluster_options', name="instance-create-cluster-options"),
     url(r'^vm/add/defaults/$', 'cluster_defaults', name="instance-create-cluster-defaults"),
     url(r'^vm/add/%s/?$' % cluster_slug, 'create', name="instance-create"),
+    url(r'^%s/recover/?$' % vm_prefix, 'recover_failed_deploy', name="instance-create-recover"),
+
+    url(r'^vm/add/template/(?P<pk>\d+)/?$', 'load_template', name="instance-create-template"),
 
     #  VM Table
     url(r'^vm/table/$', 'vm_table', name="virtualmachine-table"),
@@ -140,9 +154,13 @@ urlpatterns += patterns('ganeti.views.virtual_machine',
     # Edit / Modify
     url(r"^%s/edit/?$" % vm_prefix, "modify", name="instance-modify"),
     url(r'^%s/edit/confirm/?$' % vm_prefix, "modify_confirm", name="instance-modify-confirm"),
+    url(r"^%s/rename/?$" % vm_prefix, "rename", name="instance-rename"),
 
     # SSH Keys
     url(r'^%s/keys/(?P<api_key>\w+)/?$' % vm_prefix, "ssh_keys", name="instance-keys"),
+
+    # object log
+    url(r'^%s/object_log/?$' % vm_prefix, 'object_log', name="vm-object_log"),
 )
 
 
@@ -154,8 +172,9 @@ urlpatterns += patterns('ganeti.views.importing',
 )
 
 # Jobs
+job = '%s/job/(?P<job_id>\d+)' % cluster
 urlpatterns += patterns('ganeti.views.jobs',
-    url(r'^%s/job/(?P<job_id>\d+)/status' % cluster, 'status', name='job-status'),
-    url(r'^%s/job/(?P<job_id>\d+)/?' % cluster, 'detail', name='job-detail'),
-    url(r'^job/clear/?', 'clear', name='job-clear'),
+    url(r'^%s/status/?' % job, 'status', name='job-status'),
+    url(r'^%s/clear/?' % job, 'clear', name='job-clear'),
+    url(r'^%s/?' % job, 'detail', name='job-detail'),
 )

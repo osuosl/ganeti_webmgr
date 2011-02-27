@@ -1,5 +1,4 @@
 # Copyright (C) 2010 Oregon State University et al.
-# Copyright (C) 2010 Greek Research and Technology Network
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -200,28 +199,38 @@ class TestJobViews(TestJobMixin, TestCase, UserTestMixin, ViewTestMixin):
     
     def test_clear_job(self):
         
-        url = '/job/clear/'
-        args = ()
-        
+        url = '/cluster/%s/job/%s/clear/'
+
         c_error = Job.objects.create(cluster=cluster, obj=cluster, job_id=1)
         c_error.info = JOB_ERROR
         c_error.save()
         c_error = Job.objects.get(pk=c_error.pk)
         self.assertFalse(c_error.cleared)
-        
-        vm_error = Job.objects.create(cluster=cluster, obj=vm, job_id=1)
+        cluster.last_job = c_error
+        cluster.ignore_cache = True
+        cluster.save()
+        vm_error = Job.objects.create(cluster=cluster, obj=vm, job_id=2)
         vm_error.info = JOB_ERROR
         vm_error.save()
         vm_error = Job.objects.get(pk=vm_error.pk)
         self.assertFalse(vm_error.cleared)
+        vm.last_job = vm_error
+        vm.ignore_cache = True
+        vm.save()
 
-        self.assert_standard_fails(url, args, data={'id':vm_error.id}, method='post')
-        
+
+        # standard errors
+        args = (cluster.slug, c_error.job_id)
+        self.assert_standard_fails(url, args, method='post')
+
         # authorized for cluster
         def tests(user, response):
             error = Job.objects.get(pk=c_error.pk)
             self.assertTrue(error.cleared)
             Job.objects.all().update(cleared=False)
+            updated = Cluster.objects.filter(pk=cluster.pk).values('last_job_id','ignore_cache')[0]
+            self.assertEqual(None, updated['last_job_id'])
+            self.assertFalse(updated['ignore_cache'])
         self.assert_200(url, args, users=[superuser, cluster_admin], data={'id':c_error.pk}, tests=tests, \
                         method='post', mime='application/json')
 
@@ -229,13 +238,36 @@ class TestJobViews(TestJobMixin, TestCase, UserTestMixin, ViewTestMixin):
         self.assert_403(url, args, users=[vm_admin, vm_owner], data={'id':c_error.pk}, method='post')
 
         # authorized for vm
+        args = (cluster.slug, vm_error.job_id)
         def tests(user, response):
             error = Job.objects.get(pk=vm_error.pk)
             self.assertTrue(error.cleared, 'error was not marked cleared')
             Job.objects.all().update(cleared=False)
+            updated = VirtualMachine.objects.filter(pk=vm.pk).values('last_job_id','ignore_cache')[0]
+            self.assertEqual(None, updated['last_job_id'])
+            self.assertFalse(updated['ignore_cache'])
         self.assert_200(url, args, users=[superuser, cluster_admin, vm_admin, vm_owner], \
                         data={'id':vm_error.id}, tests=tests, method='post', mime='application/json')
-        
+
+        # does not clear job if it is not the the current job
+        vm_error = Job.objects.create(cluster=cluster, obj=vm, job_id=3)
+        vm_error.info = JOB_ERROR
+        vm_error.save()
+        vm_error = Job.objects.get(pk=vm_error.pk)
+        vm_error2 = Job.objects.create(cluster=cluster, obj=vm, job_id=4)
+        vm_error2.info = JOB_ERROR
+        vm_error2.save()
+        vm_error2 = Job.objects.get(pk=vm_error.pk)
+        self.assertFalse(vm_error.cleared)
+        vm.last_job = vm_error
+        vm.ignore_cache = True
+        vm.save()
+
+        c.post(url % (cluster.slug, vm_error2.job_id))
+        updated = VirtualMachine.objects.filter(pk=vm.pk).values('last_job_id','ignore_cache')[0]
+        self.assertEqual(vm_error.pk, updated['last_job_id'])
+        self.assertTrue(updated['ignore_cache'])
+
 
     def test_job_detail(self):
         """
