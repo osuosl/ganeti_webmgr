@@ -8,14 +8,14 @@ function formUpdater(url_choices, url_options, url_defaults){
     var owner =                 $("#id_owner");
     var snode =                 $("#id_snode").parent();
     var pnode =                 $("#id_pnode").parent();
-    var niclink =               $("#id_niclink").parent();
+    var niclink =               $("#id_nic_link").parent();
     var disk_template =         $("#id_disk_template");
-    var nicmode =               $("#id_nicmode");
+    var nicmode =               $("#id_nic_mode");
     var curSelection =          $("#id_snode option:selected").index();
     var iallocator =            $("#id_iallocator");
     var iallocator_hostname =   $("#id_iallocator_hostname");
-    var bootOrder =             $("#id_bootorder");
-    var imagePath =             $("#id_imagepath");
+    var bootOrder =             $("#id_boot_order");
+    var imagePath =             $("#id_cdrom_image_path");
     var using_str =             ' Using: ';
     var blankOptStr =           '---------';
     var nodes =                 null; // nodes available
@@ -111,13 +111,15 @@ function formUpdater(url_choices, url_options, url_defaults){
             if(id != '') {
                 // JSON update the cluster when the owner changes
                 $.getJSON(url_choices, {'clusteruser_id':id}, function(data){
+                    var oldcluster = cluster.val();
+
                     cluster.children().not(':first').remove();
                     $.each(data, function(i, item) {
-                        child = $("<option> </option>");
-                        child.attr('value', item[0]);
-                        child.attr('text', item[1]);
-                        cluster.append(child);
+                        cluster.append(_newOpt(item[0], item[1]));
                     });
+
+                    // Try to re-select the previous cluster, if possible.
+                    cluster.val(oldcluster);
 
                     // process dropdown if it's a singleton
                     disableSingletonDropdown(cluster, blankOptStr);
@@ -139,6 +141,10 @@ function formUpdater(url_choices, url_options, url_defaults){
             if( id != '' ) {
                 // JSON update oslist, pnode, and snode when cluster changes
                 $.getJSON(url_options, {'cluster_id':id}, function(data){
+                    var oldpnode = pnode.val();
+                    var oldsnode = snode.val();
+                    var oldos = oslist.val();
+
                     pnode.children().not(':first').remove();
                     snode.children().not(':first').remove();
                     oslist.children().not(':first').remove();
@@ -149,23 +155,27 @@ function formUpdater(url_choices, url_options, url_defaults){
                                 child2 = child.clone();
                                 pnode.append(child);
                                 snode.append(child2);
-
-                                disableSingletonDropdown(pnode, blankOptStr);
-                                disableSingletonDropdown(snode, blankOptStr);
                             }
                             else if (i == 'os') {
                                 child = _newOptGroup(value[0], 
                                         value[1]);
                                 oslist.append(child);
-
-                                disableSingletonDropdown(oslist,
-                                        blankOptStr);
                             }
                         });
                     });
 
                     // make nodes publically available
                     nodes = data['nodes'];
+
+                    // Restore old choices from before, if possible.
+                    pnode.val(oldpnode);
+                    snode.val(oldsnode);
+                    oslist.val(oldos);
+
+                    // And finally, do the singleton dance.
+                    disableSingletonDropdown(pnode, blankOptStr);
+                    disableSingletonDropdown(snode, blankOptStr);
+                    disableSingletonDropdown(oslist, blankOptStr);
                 });
 
                 // only load the defaults if errors are not present 
@@ -174,10 +184,10 @@ function formUpdater(url_choices, url_options, url_defaults){
                         /* fill default options */
 
                         // boot device dropdown
-                        if(d['bootorder']) {
-                            $("#id_bootorder :selected").removeAttr(
-                                    'selected');
-                            $("#id_bootorder [value=" + d['bootorder'] + "]")
+                        if(d['boot_order']) {
+                            $("#id_boot_order :selected").removeAttr(
+                                'selected');
+                            $("#id_boot_order [value=" + d['boot_order'] + "]")
                                 .attr('selected','selected');
                         }
                         
@@ -212,54 +222,54 @@ function formUpdater(url_choices, url_options, url_defaults){
                         }
 
                         // kernel path text box
-                        if(d['kernelpath']){
-                            $("#id_kernelpath").val(d['kernelpath']);
+                        if(d['kernel_path']){
+                            $("#id_kernel_path").val(d['kernel_path']);
                         } else {
-                            $("#id_kernelpath").val('');
+                            $("#id_kernel_path").val('');
                         }
 
                         // nic mode dropdown
-                        if(d['nicmode']) {
-                            $("#id_nicmode :selected").removeAttr('selected');
-                            $("#id_nicmode [value=" + d['nicmode'] + "]")
+                        if(d['nic_mode']) {
+                            $("#id_nic_mode :selected").removeAttr('selected');
+                            $("#id_nic_mode [value=" + d['nic_mode'] + "]")
                                 .attr('selected','selected');
                         } else { 
-                            $("#id_nicmode :first-child")
+                            $("#id_nic_mode :first-child")
                                 .attr('selected', 'selected');
                         }
 
                         // nic link text box
-                        if(d['niclink']){
-                            $("#id_niclink").val(d['niclink']);
+                        if(d['nic_link']){
+                            $("#id_nic_link").val(d['nic_link']);
                         }
                         
                         // nic type dropdown
-                        if(d['nictype']) {
-                            $("#id_nictype :selected").removeAttr('selected');
-                            $("#id_nictype [value=" + d['nictype'] + "]")
+                        if(d['nic_type']) {
+                            $("#id_nic_type :selected").removeAttr('selected');
+                            $("#id_nic_type [value=" + d['nic_type'] + "]")
                                 .attr('selected','selected');
                         }
 
                         // memory text box
-                        if(d['ram']){
-                            $("#id_ram").val(d['ram']);
+                        if(d['memory']){
+                            $("#id_memory").val(d['memory']);
                         }
 
                         // disk type dropdown
-                        if(d['disktype']){
-                             $("#id_disk_type").val(d['disktype']);
+                        if(d['disk_type']){
+                             $("#id_disk_type").val(d['disk_type']);
                         }
                         
                         // root path text box
-                        if(d['rootpath']){
-                            $("#id_rootpath").val(d['rootpath']);
+                        if(d['root_path']){
+                            $("#id_root_path").val(d['root_path']);
                         } else {
-                            $("#id_rootpath").val('/');
+                            $("#id_root_path").val('/');
                         }
                         
                         // enable serial console checkbox
-                        if(d['serialconsole']){
-                            $("#id_serialconsole").attr('checked', true);
+                        if(d['serial_console']){
+                            $("#id_serial_console").attr('checked', true);
                         }
                         
                         // virtual CPUs text box
@@ -268,8 +278,8 @@ function formUpdater(url_choices, url_options, url_defaults){
                         }
                         
                         // image path text box
-                        if(d['imagepath']){
-                            $("#id_imagepath").val(imagepath);
+                        if(d['cdrom_image_path']){
+                            $("#id_cdrom_image_path").val(d['cdrom_image_path']);
                         }
                     });
                 }

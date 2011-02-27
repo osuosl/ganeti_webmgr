@@ -42,16 +42,16 @@ def cluster_default_info(cluster):
         'iallocator': iallocator_info,
         'hypervisors':info['enabled_hypervisors'],
         'vcpus':beparams['vcpus'],
-        'ram':beparams['memory'],
-        'disktype':hvparams['disk_type'],
-        'nictype':hvparams['nic_type'],
-        'nicmode':info['nicparams']['default']['mode'],
-        'niclink':info['nicparams']['default']['link'],
-        'kernelpath':hvparams['kernel_path'],
-        'rootpath':hvparams['root_path'],
-        'serialconsole':hvparams['serial_console'],
-        'bootorder':hvparams['boot_order'],
-        'imagepath':hvparams['cdrom_image_path'],
+        'memory':beparams['memory'],
+        'disk_type':hvparams['disk_type'],
+        'nic_type':hvparams['nic_type'],
+        'nic_mode':info['nicparams']['default']['mode'],
+        'nic_link':info['nicparams']['default']['link'],
+        'kernel_path':hvparams['kernel_path'],
+        'root_path':hvparams['root_path'],
+        'serial_console':hvparams['serial_console'],
+        'boot_order':hvparams['boot_order'],
+        'cdrom_image_path':hvparams['cdrom_image_path'],
         }
 
 
@@ -116,6 +116,11 @@ def compare(x, y):
         elif y == "":
             return "removed"
         return "changed from %s to %s" % (x, y)
+    elif isinstance(x, bool) and i != 0:
+        if y:
+            return "enabled"
+        else:
+            return "disabled"
     if i == -1:
         return "increased from %s to %s" % (x, y)
     elif i == 1:

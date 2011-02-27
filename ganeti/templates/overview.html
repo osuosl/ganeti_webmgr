@@ -47,18 +47,10 @@
         $("#usage_summary .ram, #usage_summary .disk, #usage_summary .vcpus").progressBar(PBAR2_CONF);
         $("#errors_list table").tablesorter();
         
-        $("#errors_list div.clear").live("click", function(){
+        $("#errors_list a.clear").live("click", function(event){
+            event.preventDefault();
             var row = this.parentNode.parentNode;
-            var id = row.id.substring(7);
-            var url;
-
-            if ($(row).hasClass('gerror')) {
-                url = "{% url error-clear %}";
-            } else if ($(row).hasClass('jerror')) {
-                url = "{% url job-clear %}";
-            }
-            
-            $.post(url, {id:id}, function(){
+            $.post(this.href, function(){
                 $(row).fadeOut(1000, function(){
                     $(row).remove();
                     if($("#errors_list tr").length==0) {
@@ -91,8 +83,8 @@
         <tr>
             <th>Cluster</th>
             <th>Version</th>
-            <th>Memory [GiB]</th>
-            <th>Disk [GiB]</th>
+            <th>Free Memory [GiB]</th>
+            <th>Free Disk [GiB]</th>
             <th>Nodes</th>
             <th>VMs</th>
         </tr>
@@ -171,14 +163,14 @@
                     {% include "overview/object_link.html" %}
                     <td>{{ error.msg }}</td>
                     <td>{{ error.timestamp|date }}</td>
-                    <td><div class="clear" title="clear message"></div></td>
+                    <td><a class="clear" title="clear message" href="{% url error-clear error.pk %}"></a></td>
                 </tr>
             {% else %}
                 <tr class="jerror" id="jerror_{{error.pk}}">
                     {% include "overview/object_link.html" %}
                     <td><a href="{% url job-detail error.cluster.slug error.job_id %}">Job #{{error.job_id}}: {{ error.current_operation|format_job_op }}</td>
                     <td>{{ error.finished|date }}</td>
-                    <td><div class="clear" title="clear message"></div></td>
+                    <td><a class="clear" title="clear message" href="{% url job-clear error.cluster.slug error.job_id %}"></a></td>
                 </tr>
             {% endif %}
         {% endwith %}

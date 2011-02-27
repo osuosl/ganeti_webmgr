@@ -91,8 +91,8 @@
             $(".evacuate").click(function(event){
                 event.preventDefault();
                 if(actions_enabled) {
-                    if(confirm("Are you sure you want to migrate all " +
-                            "secondary virtual machines off this node?")){
+                    if(confirm("Are you sure you want to move all " +
+                            "secondary storage off this node?")){
                         $.post(this.href, node_action_response);
                     }
                 }
@@ -203,7 +203,7 @@
             {% endif %}
         </ul>
         <table id="nodes" class="overview horizontal">
-            <tr><th>status</th><td class="status">
+            <tr><th>Status</th><td class="status">
                 {% if node.info.offline %}
                     <div class="icon_stopped" title="Offline"></div>
                 {% else %}
@@ -219,8 +219,8 @@
                 <td>{{node.info.master_candidate|checkmark}}</td>
             </tr>
             <tr><th>Drained</th><td>{{node.info.drained|checkmark}}</td></tr>
-            <tr><th>Ram</th><td class="ram">{% node_memory node %}</td></tr>
-            <tr><th>Disk</th><td class="disk">{% node_disk node %}</td>
+            <tr><th>Ram Free [GiB]</th><td class="ram">{% node_memory node %}</td></tr>
+            <tr><th>Disk Free [GiB]</th><td class="disk">{% node_disk node %}</td>
             <tr>
                 <th>Virtual Machines</th>
                 <td>{{ node.info.pinst_cnt }} / {{ node.info.sinst_cnt }}</td>

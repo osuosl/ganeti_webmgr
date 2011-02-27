@@ -15,6 +15,7 @@
                 {# job was finished before we loaded the page #}
                 job_complete();
             } else {
+                get_job_status(job_id, job_complete);
                 poll_job_status(job_id, job_complete);
             }
         });
@@ -27,7 +28,15 @@
 {% endblock %}
 
 {% block content %}
-    <h1>Deleting: {{instance.hostname}}</h1>
+    <h1>
+    {% if cluster_admin %}
+    <a class="breadcrumb" href="{% url cluster-detail cluster.slug %}#virtual_machines">{{cluster.hostname|abbreviate_fqdn}}</a>
+    {% else %}
+    <span class="breadcrumb">{{cluster.hostname|abbreviate_fqdn}}</span>
+    {% endif %}
+    : <span class="breadcrumb">{{ instance.hostname }}</span>
+    : deleting
+    </h1>
 
     {% include "job_status.html" %}
     <ul id="messages"></ul>

@@ -41,7 +41,7 @@ from django.db.models.query import QuerySet
 from django.db.models.signals import post_save, post_syncdb
 from django.db.utils import DatabaseError
 
-from logs.models import LogItem, LogAction
+from object_log.models import LogItem, LogAction
 log_action = LogItem.objects.log_action
 
 from object_permissions.registration import register
@@ -167,8 +167,9 @@ class CachedClusterObject(models.Model):
         is lazy and will only occur when saving.
         """
         self.__info = value
-        self.parse_info()
-        self.serialized_info = None
+        if value is not None:
+            self.parse_info()
+            self.serialized_info = None
 
     def load_info(self):
         """
@@ -389,6 +390,12 @@ class Job(CachedClusterObject):
                 break
         return info['ops'][index]['OP_ID']
 
+    @property
+    def operation(self):
+        """
+        Returns the last operation, which is generally the primary operation.
+        """
+        return self.info['ops'][-1]['OP_ID']
 
     def __repr__(self):
         return "<Job: '%s'>" % self.id
@@ -448,7 +455,11 @@ class VirtualMachine(CachedClusterObject):
     # and counted in quotas, but only so status can be checked.
     pending_delete = models.BooleanField(default=False)
     deleted = False
-    
+
+    # Template temporarily stores parameters used to create this virtual machine
+    # This template is used to recreate the values entered into the form.
+    template = models.ForeignKey("VirtualMachineTemplate", null=True)
+
     class Meta:
         ordering = ["hostname", ]
         unique_together = (("cluster", "hostname"),)
@@ -552,23 +563,53 @@ class VirtualMachine(CachedClusterObject):
                 Job.objects.filter(pk=self.last_job_id) \
                     .update(status=status, ignore_cache=False, finished=finished)
                 self.ignore_cache = False
-            
+
+            op_id = data['ops'][-1]['OP_ID']
+
             if status == 'success':
                 self.last_job = None
-                # if the job was a deletion, then delete this vm
+                # job cleanups
+                #   - if the job was a deletion, then delete this vm
+                #   - if the job was creation, then delete temporary template
                 # XXX return a None to prevent refresh() from trying to update
                 #     the cache setting for this VM
                 # XXX delete may have multiple ops in it, but delete is always
                 #     the last command run.
-                if data['ops'][-1]['OP_ID'] == 'OP_INSTANCE_REMOVE':
+                if op_id == 'OP_INSTANCE_REMOVE':
                     self.delete()
                     self.deleted = True
                     return None
-                
+                elif op_id == 'OP_INSTANCE_CREATE':
+                    # XXX must update before deleting the template to maintain
+                    # referential integrity.  as a consequence return no other
+                    # updates.
+                    VirtualMachine.objects.filter(pk=self.pk) \
+                        .update(ignore_cache=False, last_job=None, template=None)
+
+                    VirtualMachineTemplate.objects.filter(pk=self.template_id) \
+                        .delete()
+                    self.template=None
+                    return dict()
+
                 return dict(ignore_cache=False, last_job=None)
             
             elif status == 'error':
-                return dict(ignore_cache=False)
+                if op_id == 'OP_INSTANCE_CREATE' and self.info:
+                    # create failed but vm was deployed, template is no longer
+                    # needed
+                    #
+                    # XXX must update before deleting the template to maintain
+                    # referential integrity.  as a consequence return no other
+                    # updates.
+                    VirtualMachine.objects.filter(pk=self.pk) \
+                        .update(ignore_cache=False, template=None)
+
+                    VirtualMachineTemplate.objects.filter(pk=self.template_id) \
+                        .delete()
+                    self.template=None
+                    return dict()
+                else:
+                    return dict(ignore_cache=False)
 
     def _refresh(self):
         # XXX if delete is pending then no need to refresh this object.
@@ -600,10 +641,13 @@ class VirtualMachine(CachedClusterObject):
             .update(last_job=job, ignore_cache=True)
         return job
 
-    def migrate(self, mode='live', cleanup=True):
+    def migrate(self, mode='live', cleanup=False):
         """
         Migrates this VirtualMachine to another node.  only works if the disk
         type is DRDB
+
+        @param mode: live or non-live
+        @param cleanup: clean up a previous migration, default is False
         """
         id = self.rapi.MigrateInstance(self.hostname, mode, cleanup)
         job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
@@ -697,8 +741,8 @@ class Node(CachedClusterObject):
         data = super(Node, cls).parse_persistent_info(info)
 
         # Parse resource properties
-        data['ram_total'] = info['mtotal']
-        data['disk_total'] = info['dtotal']
+        data['ram_total'] = info['mtotal'] if info['mtotal'] is not None else 0
+        data['disk_total'] = info['dtotal'] if info['dtotal'] is not None else 0
         data['offline'] = info['offline']
         data['role'] = info['role']
         return data
@@ -756,7 +800,7 @@ class Node(CachedClusterObject):
         free = total-running if running >= 0 and total >=0  else -1
         return {'total':total, 'free': free}
     
-    def set_role(self, role):
+    def set_role(self, role, force=False):
         """
         Sets the role for this node
         
@@ -767,7 +811,7 @@ class Node(CachedClusterObject):
             * drained
             * offline
         """
-        id = self.rapi.SetNodeRole(self.hostname, role)
+        id = self.rapi.SetNodeRole(self.hostname, role, force)
         job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
         self.last_job = job
         Node.objects.filter(pk=self.pk).update(ignore_cache=True, last_job=job)
@@ -812,12 +856,19 @@ class Cluster(CachedClusterObject):
     username = models.CharField(max_length=128, blank=True, null=True)
     password = models.CharField(max_length=128, blank=True, null=True)
     hash = models.CharField(max_length=40, editable=False)
-
+    
     # quota properties
     virtual_cpus = models.IntegerField(null=True, blank=True)
     disk = models.IntegerField(null=True, blank=True)
     ram = models.IntegerField(null=True, blank=True)
 
+    # The last job reference indicates that there is at least one pending job
+    # for this virtual machine.  There may be more than one job, and that can
+    # never be prevented.  This just indicates that job(s) are pending and the
+    # job related code should be run (status, cleanup, etc).
+    last_job = models.ForeignKey('Job', null=True, blank=True, \
+                                 related_name='cluster_last_job')
+    
     class Meta:
         ordering = ["hostname", "description"]
 
@@ -1002,7 +1053,7 @@ class VirtualMachineTemplate(models.Model):
       form so that they can automatically be used or edited by a user.
     """
     template_name = models.CharField(max_length=255, null=True, blank=True)
-    cluster = models.ForeignKey('Cluster')
+    cluster = models.ForeignKey('Cluster', null=True)
     start = models.BooleanField(verbose_name='Start up After Creation', \
                 default=True)
     name_check = models.BooleanField(verbose_name='DNS Name Check', \
@@ -1019,28 +1070,35 @@ class VirtualMachineTemplate(models.Model):
     os = models.CharField(verbose_name='Operating System', max_length=255)
     # BEPARAMS
     vcpus = models.IntegerField(verbose_name='Virtual CPUs', \
-                validators=[MinValueValidator(1)])
-    ram = models.IntegerField(verbose_name='Memory', \
-                validators=[MinValueValidator(100)])
-    disk_size = models.IntegerField(verbose_name='Disk Size', \
-                validators=[MinValueValidator(100)])
-    disk_type = models.CharField(verbose_name='Disk Type', max_length=255)
-    nicmode = models.CharField(verbose_name='NIC Mode', max_length=255)
-    niclink = models.CharField(verbose_name='NIC Link', max_length=255, \
+                validators=[MinValueValidator(1)], null=True, blank=True)
+    memory = models.IntegerField(verbose_name='Memory', \
+                validators=[MinValueValidator(100)],null=True, blank=True)
+    disk_size = models.IntegerField(verbose_name='Disk Size', null=True, \
+                validators=[MinValueValidator(100)], blank=True)
+    disk_type = models.CharField(verbose_name='Disk Type', max_length=255, \
+                                 null=True, blank=True)
+    nic_mode = models.CharField(verbose_name='NIC Mode', max_length=255, \
+                                null=True, blank=True)
+    nic_link = models.CharField(verbose_name='NIC Link', max_length=255, \
                 null=True, blank=True)
-    nictype = models.CharField(verbose_name='NIC Type', max_length=255)
+    nic_type = models.CharField(verbose_name='NIC Type', max_length=255, \
+                                null=True, blank=True)
     # HVPARAMS
-    kernelpath = models.CharField(verbose_name='Kernel Path', null=True, \
+    kernel_path = models.CharField(verbose_name='Kernel Path', null=True, \
                 blank=True, max_length=255)
-    rootpath = models.CharField(verbose_name='Root Path', default='/', \
-                max_length=255)
-    serialconsole = models.BooleanField(verbose_name='Enable Serial Console')
-    bootorder = models.CharField(verbose_name='Boot Device', max_length=255)
-    imagepath = models.CharField(verbose_name='CD-ROM Image Path', null=True, \
+    root_path = models.CharField(verbose_name='Root Path', default='/', \
+                max_length=255, null=True, blank=True)
+    serial_console = models.BooleanField(verbose_name='Enable Serial Console')
+    boot_order = models.CharField(verbose_name='Boot Device', max_length=255, \
+                                  null=True, blank=True)
+    cdrom_image_path = models.CharField(verbose_name='CD-ROM Image Path', null=True, \
                 blank=True, max_length=512)
 
-    def __unicode__(self):
-        return self.template_name
+    def __str__(self):
+        if self.template_name is None:
+            return 'unnamed'
+        else:
+            return self.template_name
 
 
 if settings.TESTING:
@@ -1436,12 +1494,14 @@ register(permissions.VIRTUAL_MACHINE_PARAMS, VirtualMachine)
 
 
 # Register LogActions used within the Ganeti App
-LogAction.objects.register('VM_RESTART','ganeti/object_log/vm_reboot.html')
+LogAction.objects.register('VM_REBOOT','ganeti/object_log/vm_reboot.html')
 LogAction.objects.register('VM_START','ganeti/object_log/vm_start.html')
 LogAction.objects.register('VM_STOP','ganeti/object_log/vm_stop.html')
 LogAction.objects.register('VM_MIGRATE','ganeti/object_log/vm_migrate.html')
 LogAction.objects.register('VM_REINSTALL','ganeti/object_log/vm_reinstall.html')
-LogAction.objects.register('VM_MODIFY','ganeti/object_log/vm_modifye.html')
+LogAction.objects.register('VM_MODIFY','ganeti/object_log/vm_modify.html')
+LogAction.objects.register('VM_RENAME','ganeti/object_log/vm_rename.html')
+LogAction.objects.register('VM_RECOVER','ganeti/object_log/vm_recover.html')
 
 LogAction.objects.register('NODE_EVACUATE','ganeti/object_log/node_evacuate.html')
 LogAction.objects.register('NODE_MIGRATE','ganeti/object_log/node_migrate.html')

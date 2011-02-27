@@ -33,8 +33,8 @@ from object_permissions import get_users_any
 from object_permissions.views.permissions import view_users, view_permissions
 from object_permissions import signals as op_signals
 
-from logs.models import LogItem
-from logs.views import list_for_object
+from object_log.models import LogItem
+from object_log.views import list_for_object
 from util.client import GanetiApiError
 
 log_action = LogItem.objects.log_action
