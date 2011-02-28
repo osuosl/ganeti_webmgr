@@ -17,26 +17,14 @@
 
 
 from datetime import datetime
-import json
 
-from django.conf import settings
 from django.contrib.auth.models import User, Group
-from django.core.urlresolvers import reverse
 from django.db.utils import IntegrityError
 from django.test import TestCase
-from django.test.client import Client
 
-from django_test_tools.views import ViewTestMixin
-from django_test_tools.users import UserTestMixin
-from ganeti.models import VirtualMachineTemplate
-from object_permissions import grant, get_user_perms
-
-from util import client
-from ganeti.tests.rapi_proxy import RapiProxy, INSTANCE, INFO, JOB, \
-    JOB_RUNNING, JOB_DELETE_SUCCESS, OPERATING_SYSTEMS
+from ganeti.tests.rapi_proxy import (RapiProxy, INSTANCE, JOB, JOB_RUNNING,
+    JOB_DELETE_SUCCESS)
 from ganeti import models, constants
-from ganeti.forms.virtual_machine import NewVirtualMachineForm
-from ganeti.utilities import os_prettify, cluster_os_list
 
 VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
