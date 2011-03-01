@@ -34,6 +34,7 @@ Twitter:      http://twitter.com/ganetiwebmgr
     * django-registration
     * South >=0.7
     * object_permissions (packaged with releases)
+    * object_log (packaged with releases)
     * sqlite3, mysql, or postgresql
     * twisted, twisted-web (deps for twisted-vncauthproxy)
 
@@ -69,7 +70,7 @@ Twitter:      http://twitter.com/ganetiwebmgr
 
     ./manage.py migrate
 
-8. run the server
+8. Run the server
 
     Development:
 

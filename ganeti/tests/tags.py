@@ -1,3 +1,4 @@
+# vim: set fileencoding=utf8 :
 # Copyright (C) 2010 Oregon State University et al.
 #
 # This program is free software; you can redistribute it and/or
@@ -15,7 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-# vim: set fileencoding=utf8 :
+
 import unittest
 
 from ganeti.templatetags import webmgr_tags as tags
