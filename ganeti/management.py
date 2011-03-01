@@ -54,8 +54,9 @@ def update_sites_module(sender, **kwargs):
     try:
         site = Site.objects.get(id=id)
     except Site.DoesNotExist:
-        print "New site: [%s] %s (%s) created in django_site table." % \
-            (id, name, domain)
+        if kwargs['verbosity'] >= 1:
+            print "New site: [%s] %s (%s) created in django_site table." % \
+                (id, name, domain)
         site = Site(id=id, name=name, domain=domain)
         site.save()
         # Reconnect create_default_site request for other apps
