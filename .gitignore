@@ -11,12 +11,6 @@ settings.py
 # Any sqlite database files created by the project
 *.db
 
-# Object permissions
-object_permissions
-
-# Object Log
-object_log
-
 # Patch and Diff files
 *.diff
 *.patch
