@@ -17,8 +17,7 @@
     function ajaxTable(url, tableID){
        
         var FETCH_ARGS = {page:1};
-        var url = url;
-        var tableID = tableID;
+        var current_order_by = null;
 
         // get this table's ID
         this.getID = function(){
@@ -81,6 +80,27 @@
             }
             $(TABLE_ID + ' .pagination .page:not(.active)').live('click', 
                     paginator_jumpTo);
+
+            // --------------
+            // table sorting
+            // --------------
+            $(TABLE_ID + ' #vmlist th').live("click", function(){
+                $this = $(this)
+                field = $this.html();
+                order_by = $this.attr("order_by");
+                if(field == current_order_by && $this.hasClass("ascending")){
+                    $this.addClass("descending").removeClass("ascending");
+                    order_by = "-" + order_by;
+                } else {
+                    $(TABLE_ID + ' #vmlist th').removeClass('ascending')
+                        .removeClass('descending');
+                    $this.addClass("ascending");
+                }
+                FETCH_ARGS["page"] = 1;
+                FETCH_ARGS["order_by"] = order_by;
+                current_order_by = field;
+                THIS_TABLE.update();
+            });
 
             // -----------------------
             // AJAX load spinny thing
@@ -146,28 +166,6 @@
         table.init();
         table.update();
 
-        /*
-        // --[table sorting]--------------------------------------------------
-        $(tableID + ' #vmlist th').live("click", function(){
-            $this = $(this)
-            field = $this.html();
-            order_by = $this.attr("order_by");
-            if(field == $this.data('current_order_by') 
-                    && $this.hasClass("ascending")){
-                $this.addClass("descending")
-                        .removeClass("ascending");
-                order_by = "-" + order_by;
-            } else {
-                $(tableID + ' #vmlist th').removeClass('ascending')
-                    .removeClass('descending');
-                $this.addClass("ascending");
-            }
-            FETCH_ARGS["page"] = 1;
-            FETCH_ARGS["order_by"] = order_by;
-            $this.data('current_order_by', field);
-            table.update();
-        });
-        */
     });
 
 </script>
