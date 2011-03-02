@@ -47,6 +47,9 @@
             
             console.log("Initializing table '"+this.getID()+"'...");
 
+            var THIS_TABLE = this;
+            var TABLE_ID = this.getID();
+
             /*
             // pagination click handling
             $(tableID + ' .pagination .previous').live('click', function(e){
@@ -65,22 +68,21 @@
             });
             */
 
-            $(this.getID() + ' .pagination .page:not(.active)').data('table', this);
-            $(this.getID() + ' .pagination .page:not(.active)')
-                    .live('click', function(){
-                var table = $(this).data('table');
-                console.log("Jump-to page button clicked.");
-                table.setPage(parseInt($(this).html()));
-                table.update();
-            });
+            function paginator_jumpToSuccess(){
+                console.log("Jump-to paginator button clicked.");
+                THIS_TABLE.setPage(parseInt($(this).html()));
+                THIS_TABLE.update();
+            }
+            $(TABLE_ID + ' .pagination .page:not(.active)').live('click', 
+                    paginator_jumpToSuccess);
 
             // show/hide the spinny thing
             var spinner = $(this.getID() + ' .spinner');
             function loadingModeOn(){
                 console.log("Loading mode on.");
                 spinner.show();
-                $(tableID + ' #vmlist tr td').hide();
-                $(tableID + ' #vm-wrapper .pagination').hide();
+                $(TABLE_ID + ' #vmlist tr td').hide();
+                $(TABLE_ID + ' #vm-wrapper .pagination').hide();
             }
             function loadingModeOff(){
                 console.log("Loading mode off.");
