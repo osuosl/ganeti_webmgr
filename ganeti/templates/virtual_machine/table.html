@@ -14,27 +14,98 @@
 
 <script type="text/javascript">
 
-    var FETCH_ARGS = {page:1};
-    
-    // Set the tableID if the template is rendered with one
-    var tableID = '';
-    if('{{tableID}}' != ''){
-        tableID = '#{{tableID}}';
-    }
+    function ajaxTable(url, tableID){
+       
+        var FETCH_ARGS = {page:1};
+        var url = url;
+        var tableID = tableID;
 
-    function ajax_get_update(){
-        {% if cluster %}
-            url = "{% url cluster-virtualmachine-table cluster.slug %}";
-        {% else %}
-            url = "{% url virtualmachine-table %}";
-        {% endif %}
-        $.get(url, FETCH_ARGS, function(results) {
-            $results = $(results);
-            tbody = $results.children("tbody");
-            pagination = $results[2];
-            $(tableID + ' #vm-wrapper .pagination').replaceWith(pagination);
-            $(tableID + ' #vmlist tbody').replaceWith(tbody);
-        }, "html");
+        // get this table's ID
+        this.getID = function(){
+            return '#' + tableID;
+        }
+
+        // paginator stuffs
+        this.pageUp = function(){
+            console.log("Incrementing page...");
+            FETCH_ARGS["page"] = FETCH_ARGS["page"] + 1;
+        }
+
+        this.pageDown = function(){
+            console.log("Decrementing page...");
+            FETCH_ARGS["page"] = FETCH_ARGS["page"] - 1;
+        }
+        this.setPage = function(page){
+            console.log("Updating page number to "+page);
+            FETCH_ARGS["page"] = page;
+        }
+
+        // -----
+        // init 
+        // -----
+        this.init = function(){
+            
+            console.log("Initializing table '"+this.getID()+"'...");
+
+            /*
+            // pagination click handling
+            $(tableID + ' .pagination .previous').live('click', function(e){
+                e.preventDefault();
+                table.pageDown();
+                table.update();
+            });
+           
+            $(tableID + ' .pagination .next').data('table', table);
+            $(tableID + ' .pagination .next').live('click', function(e){
+                var table = $(this).data('table');
+                alert("Next link clicked.");
+                e.preventDefault();
+                table.pageUp();
+                table.update();
+            });
+            */
+
+            $(this.getID() + ' .pagination .page:not(.active)').data('table', this);
+            $(this.getID() + ' .pagination .page:not(.active)')
+                    .live('click', function(){
+                var table = $(this).data('table');
+                console.log("Jump-to page button clicked.");
+                table.setPage(parseInt($(this).html()));
+                table.update();
+            });
+
+            // show/hide the spinny thing
+            var spinner = $(this.getID() + ' .spinner')
+            spinner.data('tableID', this.getID());
+            spinner.hide()
+                .ajaxStart(function(){
+                    var tableID = $(this).data('tableID');
+                    $(this).show();
+                    $(tableID + ' #vmlist tr td').hide();
+                    $(tableID + ' #vm-wrapper .pagination').hide();
+                })
+                .ajaxStop(function(){
+                    $(this).hide()
+                });
+        }
+
+        // ------------
+        // ajax update
+        // ------------
+        this.update = function(){
+
+            console.log("Updating table '"+this.getID()+"'...");
+
+            $.get(url, FETCH_ARGS, function(results){
+                console.log($(this));
+                $results = $(results);
+                tbody = $results.children("tbody");
+                pagination = $results[2];
+                $(tableID + ' #vm-wrapper .pagination')
+                        .replaceWith(pagination);
+                $(tableID + ' #vmlist tbody').replaceWith(tbody);
+            }, "html");
+        }
     }
 
     // -------
@@ -42,27 +113,20 @@
     // -------
     $(function(){
 
-        console.log("Table ID: "+tableID);
-            
-        // --[pagination click handling---------------------------------------
-        $(tableID + ' .pagination .previous').live('click', function(e){
-            e.preventDefault();
-            FETCH_ARGS["page"] = FETCH_ARGS["page"] - 1;
-            ajax_get_update();
-        });
-        
-        $(tableID + ' .pagination .next').live('click', function(e){
-            e.preventDefault();
-            FETCH_ARGS["page"] = FETCH_ARGS["page"] + 1;
-            ajax_get_update();
-        });
-        
-        $(tableID + ' .pagination .page:not(.active)')
-                .live('click', function(){
-            FETCH_ARGS["page"] =  parseInt($(this).html());
-            ajax_get_update();
-        });
+        // --[doc ready init]-------------------------------------------------
+        {% if cluster %}
+            var url = "{% url cluster-virtualmachine-table cluster.slug %}";
+        {% else %}
+            var url = "{% url virtualmachine-table %}";
+        {% endif %}
 
+        var table = new ajaxTable(url, '{{tableID}}');
+        table.init();
+        //table.update();
+
+        console.log("Table '"+table.getID()+"' initialized with URL '"+url+"'");
+
+        /*
         // --[table sorting]--------------------------------------------------
         $(tableID + ' #vmlist th').live("click", function(){
             $this = $(this)
@@ -81,20 +145,11 @@
             FETCH_ARGS["page"] = 1;
             FETCH_ARGS["order_by"] = order_by;
             $this.data('current_order_by', field);
-            ajax_get_update();
+            table.update();
         });
+
         
-        // show/hide the spinny thing
-        $(tableID + ' .spinner')
-            .hide()
-            .ajaxStart(function(){
-                $(this).show();
-                $(tableID + ' #vmlist tr td').hide();
-                $(tableID + ' #vm-wrapper .pagination').hide();
-            })
-            .ajaxStop(function(){
-                $(this).hide()
-            });
+        */
     });
 
 </script>
