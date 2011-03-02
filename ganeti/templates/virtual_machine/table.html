@@ -7,7 +7,7 @@
     #content td.actions a, #content td.actions {
         padding:5px 0 0 0;
     }
-    .vm-wrapper {
+    #vm-wrapper {
         margin-top: 40px;
     }
 </style>
@@ -33,8 +33,8 @@
             $results = $(results);
             tbody = $results.children("tbody");
             pagination = $results[2];
-            $(tableID + ' .vm-wrapper .pagination').replaceWith(pagination);
-            $(tableID + ' .vmlist tbody').replaceWith(tbody);
+            $(tableID + ' #vm-wrapper .pagination').replaceWith(pagination);
+            $(tableID + ' #vmlist tbody').replaceWith(tbody);
         }, "html");
     }
 
@@ -58,28 +58,30 @@
             ajax_get_update();
         });
         
-        $(tableID + ' .pagination .page:not(.active)').live('click', function(){
+        $(tableID + ' .pagination .page:not(.active)')
+                .live('click', function(){
             FETCH_ARGS["page"] =  parseInt($(this).html());
             ajax_get_update();
         });
 
         // --[table sorting]--------------------------------------------------
-        $(tableID + ' .vmlist th').live("click", function(){
+        $(tableID + ' #vmlist th').live("click", function(){
             $this = $(this)
             field = $this.html();
             order_by = $this.attr("order_by");
-            if (field==current_order_by && $this.hasClass("ascending")) {
+            if(field == $this.data('current_order_by') 
+                    && $this.hasClass("ascending")){
                 $this.addClass("descending")
                         .removeClass("ascending");
                 order_by = "-" + order_by;
             } else {
-                $(tableID + ' .vmlist th').removeClass('ascending')
+                $(tableID + ' #vmlist th').removeClass('ascending')
                     .removeClass('descending');
                 $this.addClass("ascending");
             }
             FETCH_ARGS["page"] = 1;
             FETCH_ARGS["order_by"] = order_by;
-            current_order_by = field;
+            $this.data('current_order_by', field);
             ajax_get_update();
         });
         
@@ -88,8 +90,8 @@
             .hide()
             .ajaxStart(function(){
                 $(this).show();
-                $(tableID + ' .vmlist tr td').hide();
-                $(tableID + ' .vm-wrapper .pagination').hide();
+                $(tableID + ' #vmlist tr td').hide();
+                $(tableID + ' #vm-wrapper .pagination').hide();
             })
             .ajaxStop(function(){
                 $(this).hide()
@@ -99,20 +101,20 @@
 </script>
 {% endblock %}
 
-<div id='{{tableID}}'>
-    {% if cluster %}
-        <a class="button add" href="{% url instance-create cluster.slug %}">
-            Add Virtual Machine
-        </a>
-    {% else %}
-        {% if can_create %}
-        <a class="button add" href="{% url instance-create %}">
-            Add Virtual Machine
-        </a>
-        {% endif %}
+{% if cluster %}
+    <a class="button add" href="{% url instance-create cluster.slug %}">
+        Add Virtual Machine
+    </a>
+{% else %}
+    {% if can_create %}
+    <a class="button add" href="{% url instance-create %}">
+        Add Virtual Machine
+    </a>
     {% endif %}
+{% endif %}
 
-    <div class="vm-wrapper">
+<div id='{{tableID}}'>
+    <div id="vm-wrapper">
         {% include "virtual_machine/inner_table.html" %}
     </div>
 
@@ -124,3 +126,4 @@
         <img src='{{ MEDIA_URL }}/images/ajax-loader.gif'>
     </div>
 </div>
+
