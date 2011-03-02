@@ -96,15 +96,21 @@
 
             console.log("Updating table '"+this.getID()+"'...");
 
-            $.get(url, FETCH_ARGS, function(results){
-                console.log($(this));
+            var tableID = this.getID();
+
+            // get call success function must be defined here instead of inside
+            // a $.get() lamda function so it can access tableID
+            function callSuccess(results){
                 $results = $(results);
                 tbody = $results.children("tbody");
                 pagination = $results[2];
                 $(tableID + ' #vm-wrapper .pagination')
                         .replaceWith(pagination);
                 $(tableID + ' #vmlist tbody').replaceWith(tbody);
-            }, "html");
+            }
+            
+            // make the actual get request, call callSuccess on return success
+            $.get(url, FETCH_ARGS, callSuccess, "html");
         }
     }
 
