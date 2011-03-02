@@ -57,40 +57,43 @@
                 table.pageDown();
                 table.update();
             });
-           
-            $(tableID + ' .pagination .next').data('table', table);
-            $(tableID + ' .pagination .next').live('click', function(e){
-                var table = $(this).data('table');
-                alert("Next link clicked.");
-                e.preventDefault();
-                table.pageUp();
-                table.update();
-            });
             */
 
-            function paginator_jumpToSuccess(){
+            /*
+            // paginator next
+            function paginator_next(e){
+                alert("Next paginator button clicked.");
+                e.preventDefault();
+                THIS_TABLE.pageUp();
+                THIS_TABLE.update();
+            }
+            $(TABLE_ID + ' .pagination .next').live('click', paginator_next(e){
+            */
+
+            // paginator jump-to
+            function paginator_jumpTo(){
                 console.log("Jump-to paginator button clicked.");
                 THIS_TABLE.setPage(parseInt($(this).html()));
                 THIS_TABLE.update();
             }
             $(TABLE_ID + ' .pagination .page:not(.active)').live('click', 
-                    paginator_jumpToSuccess);
+                    paginator_jumpTo);
 
-            // show/hide the spinny thing
-            var spinner = $(this.getID() + ' .spinner');
-            function loadingModeOn(){
-                console.log("Loading mode on.");
+            // show/hide the loading spinny thing
+            var spinner = $(TABLE_ID + ' .spinner');
+            function loadModeOn(){
+                console.log("Load mode on. Showing spinner; hiding table.");
                 spinner.show();
                 $(TABLE_ID + ' #vmlist tr td').hide();
                 $(TABLE_ID + ' #vm-wrapper .pagination').hide();
             }
-            function loadingModeOff(){
-                console.log("Loading mode off.");
+            function loadModeOff(){
+                console.log("Load mode off. Hiding spinner.");
                 spinner.hide();
             }
             spinner.hide()
-                .ajaxStart(loadingModeOn)
-                .ajaxStop(loadingModeOff);
+                .ajaxStart(loadModeOn)
+                .ajaxStop(loadModeOff);
         }
 
         // ------------
