@@ -6,7 +6,9 @@
 *.pyc
 
 # Settings should be setup per install
-settings.py
+# Install all setting files except settings.py.dist
+settings.py*
+!settings.py.dist
 
 # Any sqlite database files created by the project
 *.db
@@ -31,3 +33,6 @@ object_log
 object_permissions
 noVNC
 muddle
+
+# Hidden files
+.*
