@@ -75,27 +75,33 @@
             });
 
             // show/hide the spinny thing
-            var spinner = $(this.getID() + ' .spinner')
-            spinner.data('tableID', this.getID());
+            var spinner = $(this.getID() + ' .spinner');
+            function loadingModeOn(){
+                console.log("Loading mode on.");
+                spinner.show();
+                $(tableID + ' #vmlist tr td').hide();
+                $(tableID + ' #vm-wrapper .pagination').hide();
+            }
+            function loadingModeOff(){
+                console.log("Loading mode off.");
+                spinner.hide();
+            }
             spinner.hide()
-                .ajaxStart(function(){
-                    var tableID = $(this).data('tableID');
-                    $(this).show();
-                    $(tableID + ' #vmlist tr td').hide();
-                    $(tableID + ' #vm-wrapper .pagination').hide();
-                })
-                .ajaxStop(function(){
-                    $(this).hide()
-                });
+                .ajaxStart(loadingModeOn)
+                .ajaxStop(loadingModeOff);
         }
 
         // ------------
         // ajax update
         // ------------
         this.update = function(){
-
+            /* 
+            Update the table using AJAX depending on current page and sorting
+            order.
+            */
             console.log("Updating table '"+this.getID()+"'...");
 
+            // grab this table's ID to update
             var tableID = this.getID();
 
             // get call success function must be defined here instead of inside
@@ -128,9 +134,7 @@
 
         var table = new ajaxTable(url, '{{tableID}}');
         table.init();
-        //table.update();
-
-        console.log("Table '"+table.getID()+"' initialized with URL '"+url+"'");
+        table.update();
 
         /*
         // --[table sorting]--------------------------------------------------
@@ -153,8 +157,6 @@
             $this.data('current_order_by', field);
             table.update();
         });
-
-        
         */
     });
 
