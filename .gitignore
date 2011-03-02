@@ -26,3 +26,4 @@ object_log
 
 # vim swap files
 *.swp
+*.swo
