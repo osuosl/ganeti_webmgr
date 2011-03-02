@@ -118,7 +118,7 @@ class RoleForm(forms.Form):
     Form for editing roles
     """
     ROLE_CHOICES = (
-        ('master','Master'),
+        ('', '-------------'),
         ('master-candidate','Master Candidate'),
         ('regular','Regular'),
         ('drained','Drained'),
@@ -127,14 +127,13 @@ class RoleForm(forms.Form):
     
     # map of role codes to form fields
     ROLE_MAP = {
-        'M':'master',
         'C':'master-candidate',
         'R':'regular',
         'D':'drained',
         'O':'offline',
     }
     
-    role = forms.ChoiceField(choices=ROLE_CHOICES)
+    role = forms.ChoiceField(initial='', choices=ROLE_CHOICES, label='New Role')
     force = forms.BooleanField(initial=False, required=False)
 
 
@@ -167,6 +166,10 @@ def role(request, cluster_slug, host):
             # error in form return ajax response
             content = json.dumps(form.errors)
         return HttpResponse(content, mimetype='application/json')
+        
+    elif node.role == 'M':
+        # XXX master isn't a possible choice for changing role
+        form = RoleForm()
         
     else:
         data = {'role':RoleForm.ROLE_MAP[node.role]}
