@@ -1,4 +1,6 @@
-{% load webmgr_tags %}        <tr>
+{% load webmgr_tags %}
+<table id="key_list">
+        <tr>
             <th>Key</th>
             <th>Comment</th>
             <th></th>
@@ -7,3 +9,4 @@
         {# load each row from template row.html #}
         {% include "ssh_keys/row.html" %}
         {% endfor %}
+</table>
