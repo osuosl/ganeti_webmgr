@@ -1,5 +1,19 @@
 {% block head %}
+<!--
+    This is the AJAX table sub-template that can be used to list virtual
+    machines and clusters. 
+    
+    When rendering this template, you may optionally provide a `tableID` 
+    argument and the table will encapsulate itself within the provided term, 
+    for example:
 
+    return render_to_response("virtual_machine/table.html",
+            {'tableID': 'table_foo'},
+            context_instance=RequestContext(request))
+
+    This is handy if you're trying to render this sub-template more than once
+    on the same page.
+-->
 <style>
     td.actions div.delete {
         float:none;
