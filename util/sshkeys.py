@@ -23,9 +23,7 @@ class Application:
             self.url = "http://%s/cluster/%s/keys/%s/" % \
                        (hostname, cluster_slug, api_key)
         else:
-            print '????', hostname, api_key
             self.url = "http://%s/keys/%s/" % (hostname, api_key)
-        print self.url
 
     def get(self):
         """
@@ -87,6 +85,9 @@ VM_NAME\t\t(optional) virtual machine instance name, if not given all ssh keys f
 """)
         sys.exit(1)
     else:
-        a = Application(*options)
-        a.run()
-
+        try:
+            a = Application(*options)
+            a.run()
+        except Exception, e:
+            sys.stderr.write('error retrieving sshkeys')
+            sys.stderr.write(str(e))
