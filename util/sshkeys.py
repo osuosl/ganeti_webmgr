@@ -18,7 +18,7 @@ class Application:
     def __init__(self, api_key, hostname, cluster_slug=None, vm_name=None):
         if cluster_slug and vm_name:
             self.url = "http://%s/cluster/%s/%s/keys/%s/" % \
-                  (api_key, hostname, cluster_slug, vm_name)
+                  (hostname, cluster_slug, vm_name, api_key)
         elif cluster_slug:
             self.url = "http://%s/cluster/%s/keys/%s/" % \
                        (hostname, cluster_slug, api_key)
