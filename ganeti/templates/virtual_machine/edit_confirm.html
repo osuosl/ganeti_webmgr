@@ -36,12 +36,14 @@ form input.save_reboot {width:10em;margin:1em .5em 0px 0px;}
 <form method="post">
     {{ form.as_p }}
     <input class="submit" type="submit" name="edit" value="Edit">
+{% if instance_diff.items %}
 {% ifequal status "running" %}
     {% if power %}
     <input class="save_reboot" type="submit" name="reboot" value="Save & Reboot">
     {% endif %}
 {% endifequal %}
     <input class="submit" type="submit" name="save" value="Save">
+{% endif %}
     <input class="submit" type="submit" name="cancel" value="Cancel">
 </form>
 {% endwith %}
