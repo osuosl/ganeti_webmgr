@@ -1,0 +1,37 @@
+{% comment  %} Form for migrating secondary virtual machines off a node {% endcomment %}
+<form class="ajax_form node_evacuate_form" method="post" action="{% url node-evacuate cluster.slug node.hostname %}">
+    <ul id="errors"></ul>
+    <table>
+    {{form}}
+    </table>
+    <input type="submit" class="submit" value="Evacuate"/>
+</form>
+
+<script type="text/javascript">
+
+    $(function(){
+        var iallocator_hostname = $("#id_iallocator_hostname").val();
+        var $iallocator = $("#id_iallocator");
+
+        if (iallocator_hostname == "") {
+            $iallocator().hide()
+        } else  {
+            // iallocator is always enabled so just hide node choices without
+            // checking its value
+            var $node = $("#id_node").parent().parent();
+            $node.hide();
+
+            // only need change handler if the field is enabled
+            $iallocator.change(function(){
+
+                console.log($iallocator.attr('checked'));
+                if($iallocator.attr('checked')){
+                    $node.hide();
+                } else {
+                    $node.show();
+                }
+            })
+        }
+    });
+
+</script>
