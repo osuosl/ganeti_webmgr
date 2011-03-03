@@ -1,4 +1,4 @@
-function ajaxTable(url, tableID){
+function ajaxTable(URL, TABLE_ID){
     /* A server-side-sortable, paginator-enabled table for the 
      * virtual_machine/table.html template.
      */
@@ -14,7 +14,7 @@ function ajaxTable(url, tableID){
     // =======
     this.getID = function(){
         /* Get this table's CSS ID, complete with the '#' */
-        return '#' + tableID;
+        return '#' + TABLE_ID;
     }
 
     // ===========
@@ -80,7 +80,7 @@ function ajaxTable(url, tableID){
         // -----------------------
         var spinner = $(TABLE_ID + ' .spinner');
         function loadModeOn(){
-            /* AJAX load indicator handler. Show spinny thing, hide table. */`
+            /* AJAX load indicator handler. Show spinny thing, hide table. */
             spinner.show();
             $(TABLE_ID + ' #vmlist tr td').hide();
             $(TABLE_ID + ' #vm-wrapper .pagination').hide();
@@ -111,7 +111,7 @@ function ajaxTable(url, tableID){
             $(TABLE_ID + ' #vm-wrapper .pagination').replaceWith(pagination);
             $(TABLE_ID + ' #vmlist tbody').replaceWith(tbody);
         }
-        $.get(url, FETCH_ARGS, callSuccess, "html");
+        $.get(URL, FETCH_ARGS, callSuccess, "html");
     }
 }
 
