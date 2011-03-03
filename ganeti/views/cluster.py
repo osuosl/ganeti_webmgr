@@ -24,6 +24,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
+from django.db.models.query_utils import Q
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
@@ -216,7 +217,10 @@ def ssh_keys(request, cluster_slug, api_key):
     for vm in cluster.virtual_machines.all():
         users = users.union(set(get_users_any(vm).values_list('id', flat=True)))
 
-    keys = SSHKey.objects.filter(user__in=users).values_list('key','user__username').order_by('user__username')
+    keys = SSHKey.objects \
+        .filter(Q(user__in=users) | Q(user__is_superuser=True)) \
+        .values_list('key','user__username') \
+        .order_by('user__username')
 
     keys_list = list(keys)
     return HttpResponse(json.dumps(keys_list), mimetype="application/json")
