@@ -20,12 +20,14 @@ import json
 
 from django.contrib.auth.decorators import login_required
 from django import forms
-from django.http import HttpResponse, HttpResponseNotAllowed
+from django.forms import ValidationError
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
+from ganeti.utilities import cluster_default_info
 
-from logs.models import LogItem
-from logs.views import list_for_object
+from object_log.models import LogItem
+from object_log.views import list_for_object
 from util.client import GanetiApiError
 
 log_action = LogItem.objects.log_action
@@ -119,7 +121,7 @@ class RoleForm(forms.Form):
     Form for editing roles
     """
     ROLE_CHOICES = (
-        ('master','Master'),
+        ('', '-------------'),
         ('master-candidate','Master Candidate'),
         ('regular','Regular'),
         ('drained','Drained'),
@@ -128,14 +130,14 @@ class RoleForm(forms.Form):
     
     # map of role codes to form fields
     ROLE_MAP = {
-        'M':'master',
         'C':'master-candidate',
         'R':'regular',
         'D':'drained',
         'O':'offline',
     }
     
-    role = forms.ChoiceField(choices=ROLE_CHOICES)
+    role = forms.ChoiceField(initial='', choices=ROLE_CHOICES, label='New Role')
+    force = forms.BooleanField(initial=False, required=False)
 
 
 @login_required
@@ -167,6 +169,10 @@ def role(request, cluster_slug, host):
             # error in form return ajax response
             content = json.dumps(form.errors)
         return HttpResponse(content, mimetype='application/json')
+        
+    elif node.role == 'M':
+        # XXX master isn't a possible choice for changing role
+        form = RoleForm()
         
     else:
         data = {'role':RoleForm.ROLE_MAP[node.role]}
@@ -227,6 +233,45 @@ def migrate(request, cluster_slug, host):
         context_instance=RequestContext(request))
 
 
+class EvacuateForm(forms.Form):
+    EMPTY_FIELD = (u'', u'---------')
+
+    iallocator = forms.BooleanField(initial=False, required=False, \
+                                    label='Automatic Allocation')
+    iallocator_hostname = forms.CharField(initial='', required=False, \
+                                    widget = forms.HiddenInput())
+    node = forms.ChoiceField(initial='', choices=[EMPTY_FIELD], required=False)
+
+    def __init__(self, cluster, node, *args, **kwargs):
+        super(EvacuateForm, self).__init__(*args, **kwargs)
+
+        node_list = [str(h) for h in cluster.nodes.exclude(pk=node.pk)\
+                                    .values_list('hostname', flat=True)]
+        nodes = zip(node_list, node_list)
+        nodes.insert(0, self.EMPTY_FIELD)
+        self.fields['node'].choices = nodes
+
+        defaults = cluster_default_info(cluster)
+        if defaults['iallocator'] != '' :
+            self.fields['iallocator'].initial = True
+            self.fields['iallocator_hostname'].initial = defaults['iallocator']
+
+    def clean(self):
+        data = self.cleaned_data
+        
+        iallocator = data['iallocator']
+        node = data['node'] if 'node' in data else None
+
+        if iallocator:
+            data['node'] = None
+        elif node:
+            data['iallocator_hostname'] = None
+        else:
+            raise ValidationError('Must choose automatic allocation or a specific node')
+
+        return data
+
+
 @login_required
 def evacuate(request, cluster_slug, host):
     """
@@ -238,17 +283,32 @@ def evacuate(request, cluster_slug, host):
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
         return render_403(request, "You do not have sufficient privileges")
-    
-    if request.method == 'POST':
-        try:
-            job = node.evacuate()
-            job.load_info()
-            msg = job.info
 
-            # log information
-            log_action('NODE_EVACUATE', user, node)
-        except GanetiApiError, e:
-            msg = [0, str(e)]
-        return HttpResponse(json.dumps(msg), mimetype='application/json')
-    
-    return HttpResponseNotAllowed(['POST'])
+    if request.method == 'POST':
+        form = EvacuateForm(cluster, node, request.POST)
+        if form.is_valid():
+            try:
+                data = form.cleaned_data
+                evacuate_node = data['node']
+                iallocator_hostname = data['iallocator_hostname']
+                job = node.evacuate(iallocator_hostname, evacuate_node)
+                job.load_info()
+                msg = job.info
+
+                # log information
+                log_action('NODE_EVACUATE', user, node, job)
+
+                return HttpResponse(json.dumps(msg), mimetype='application/json')
+            except GanetiApiError, e:
+                content = json.dumps({'__all__':[str(e)]})
+        else:
+            # error in form return ajax response
+            content = json.dumps(form.errors)
+        return HttpResponse(content, mimetype='application/json')
+
+    else:
+        form = EvacuateForm(cluster, node)
+
+    return render_to_response('node/evacuate.html', \
+        {'form':form, 'node':node, 'cluster':cluster}, \
+        context_instance=RequestContext(request))
