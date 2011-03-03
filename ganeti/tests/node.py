@@ -25,10 +25,11 @@ from django.test import TestCase
 from django_test_tools.users import UserTestMixin
 from django_test_tools.views import ViewTestMixin
 
-from util import client
 from ganeti.tests.rapi_proxy import RapiProxy, NODE
 from ganeti import models
 from util.client import GanetiApiError
+
+from ganeti.views import node
 
 VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
@@ -39,6 +40,15 @@ __all__ = (
     'TestNodeModel',
     'TestNodeViews',
 )
+
+
+def cluster_default_info_proxy(cluster):
+    return {
+        'iallocator':'foo'
+    }
+
+node.cluster_default_info = cluster_default_info_proxy
+
 
 
 class NodeTestCaseMixin():
@@ -195,6 +205,7 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
         models.client.GanetiRapiClient = RapiProxy
         
         node, cluster = self.create_node()
+        node2, cluster = self.create_node(cluster, 'node2.osuosl.bak')
         
         d = globals()
         d['cluster'] = cluster
@@ -297,19 +308,43 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
         node.rapi.MigrateNode.error = GanetiApiError("Testing Error")
         self.assert_200(url, args, [superuser], method='post', mime='application/json', data=data, tests=test)
         node.rapi.MigrateNode.error = None
-    
-    
+
     def test_evacuate(self):
         args = (cluster.slug, node.hostname)
         url = '/cluster/%s/node/%s/evacuate'
         users = [superuser, user_migrate, user_admin]
+
         self.assert_standard_fails(url, args, method='post')
-        self.assert_200(url, args, users, method='post', mime="application/json")
+        self.assert_200(url, args, users, template='node/evacuate.html')
+
+        # Test iallocator
+        data = {'iallocator':True, 'iallocator_hostname':'foo', 'node':''}
+        def tests(user, response):
+            data = json.loads(response.content)
+            self.assertTrue('status' in data, data)
+            self.assertEqual('1', data['id'], data)
+        self.assert_200(url, args, users, method='post', data=data, \
+            tests=tests, mime="application/json")
+
+        # Test node selection
+        data = {'iallocator':False, 'iallocator_hostname':'foo', 'node':'node2.osuosl.bak'}
+        self.assert_200(url, args, users, method='post', data=data, \
+            tests=tests, mime="application/json")
+
+        # Test form errors
+        def test(user, response):
+            data = json.loads(response.content)
+            self.assertFalse('status' in data, data)
+
+        errors = [
+            {'iallocator':False, 'iallocator_hostname':'foo', 'node':''} # must choose iallocator or a node
+        ]
+        self.assert_view_values(url, args, data, errors, mime='application/json', tests=test)
 
         # Test GanetiError
         def test(user, response):
             data = json.loads(response.content);
             self.assertFalse('opstatus' in data)
         node.rapi.EvacuateNode.error = GanetiApiError("Testing Error")
-        self.assert_200(url, args, [superuser], method='post', mime='application/json', tests=test)
+        self.assert_200(url, args, [superuser], data=data, method='post', mime='application/json', tests=test)
         node.rapi.EvacuateNode.error = None
