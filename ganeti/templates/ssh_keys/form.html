@@ -4,6 +4,7 @@
         <form method="post" id="sshkey_form" class="ajax_form" action="{% url key-save %}">
 {% endif %}
             <ul id="errors"></ul>
+            {{ key_form.user }}
             <table>
                 <tr><td>{{ key_form.key.label }}</td></tr>
                 <tr><td>{{ key_form.key }}</td></tr>

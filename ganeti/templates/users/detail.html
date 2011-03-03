@@ -56,7 +56,8 @@
         </table>
         
         <h3>SSH keys</h3>
-        {% include "ssh_keys/list.html" %}
+        <a class="button add" id="add_key" href="{% url user-key-add user_detail.pk %}">Add SSH key</a>
+        {% include "ssh_keys/table.html" %}
     </div>
 </div>
 {% endblock %}

@@ -46,13 +46,20 @@
             
             $(".ram, .disk").progressBar(PBAR_CONF);
 
-            $(".modify, .migrate").click(function(event){
+            $(".modify, .migrate, .evacuate").click(function(event){
                 event.preventDefault();
                 if (actions_enabled) {
                     $('.qtip').qtip('destroy');
                     var $this = $(this);
-                    var title = ($this.hasClass("modify")) ? "Modify Role" : 
-                            "Migrate Primary Virtual Machines";
+                    var title;
+
+                    if ($this.hasClass("modify")) {
+                        title = "Modify Role";
+                    } else if ($this.hasClass("migrate")) {
+                        title = "Migrate Primary Virtual Machines";
+                     } else {
+                        title = "Evacuate Secondary Virtual Machines";
+                    }
 
                     $(this).qtip({
                         content: {
@@ -80,21 +87,11 @@
                 }
             });
 
-            $(".node_role_form, .node_migrate_form").live("submit",
-                    function(event){
-                event.preventDefault();
-                $("#errors").empty();
-                $(this).ajaxSubmit({success: node_form_response});
-            });
-
-            $(".evacuate").click(function(event){
-                event.preventDefault();
-                if(actions_enabled) {
-                    if(confirm("Are you sure you want to move all " +
-                            "secondary storage off this node?")){
-                        $.post(this.href, node_action_response);
-                    }
-                }
+            $(".node_role_form, .node_migrate_form, .node_evacuate_form")
+                .live("submit", function(event){
+                    event.preventDefault();
+                    $("#errors").empty();
+                    $(this).ajaxSubmit({success: node_form_response});
             });
 
             {% if node.last_job_id %}

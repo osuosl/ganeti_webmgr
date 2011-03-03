@@ -817,11 +817,11 @@ class Node(CachedClusterObject):
         Node.objects.filter(pk=self.pk).update(ignore_cache=True, last_job=job)
         return job
 
-    def evacuate(self):
+    def evacuate(self, iallocator=None, node=None):
         """
         migrates all secondary instances off this node
         """
-        id = self.rapi.EvacuateNode(self.hostname)
+        id = self.rapi.EvacuateNode(self.hostname, iallocator=iallocator, remote_node=node)
         job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
         self.last_job = job
         Node.objects.filter(pk=self.pk) \
