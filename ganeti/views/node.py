@@ -26,8 +26,8 @@ from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from ganeti.utilities import cluster_default_info
 
-from logs.models import LogItem
-from logs.views import list_for_object
+from object_log.models import LogItem
+from object_log.views import list_for_object
 from util.client import GanetiApiError
 
 log_action = LogItem.objects.log_action
@@ -138,6 +138,7 @@ class RoleForm(forms.Form):
     
     role = forms.ChoiceField(initial='', choices=ROLE_CHOICES, label='New Role')
     force = forms.BooleanField(initial=False, required=False)
+
 
 @login_required
 def role(request, cluster_slug, host):
