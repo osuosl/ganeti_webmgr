@@ -18,7 +18,7 @@
     // -------
     // "main"
     // -------
-    $(function(){
+    $(document).ready(function(){
         {% if cluster %}
             var url = "{% url cluster-virtualmachine-table cluster.slug %}";
         {% else %}
@@ -27,7 +27,6 @@
 
         $('#{{tableID}}').data('table', new ajaxTable(url, '{{tableID}}'));
         $('#{{tableID}}').data('table').init();
-        $('#{{tableID}}').data('table').update();
     });
 
 </script>

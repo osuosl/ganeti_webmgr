@@ -11,62 +11,49 @@ function ajaxTable(url, tableID){
         return '#' + tableID;
     }
 
-    // paginator stuffs
-    this.pageUp = function(){
-        console.log("Incrementing page...");
-        FETCH_ARGS["page"] = FETCH_ARGS["page"] + 1;
-    }
-
-    this.pageDown = function(){
-        console.log("Decrementing page...");
-        FETCH_ARGS["page"] = FETCH_ARGS["page"] - 1;
-    }
-    this.setPage = function(page){
-        console.log("Updating page number to "+page);
-        FETCH_ARGS["page"] = page;
-    }
-
     // -----
     // init 
     // -----
     this.init = function(){
         
-        console.log("Initializing table '"+this.getID()+"'...");
-
         var THIS_TABLE = this;
         var TABLE_ID = this.getID();
+
+        console.log("Initializing table '"+TABLE_ID+"'...");
 
         // -----------
         // Pagination 
         // -----------
         // paginator previous
         function paginator_prev(e){
-            console.log("Previous paginator button clicked.");
+            console.log("Previous paginator button clicked on '"+TABLE_ID
+                    + "'. Decrementing page.");
             e.preventDefault();
-            THIS_TABLE.pageDown();
+            FETCH_ARGS["page"] = FETCH_ARGS["page"] - 1;
             THIS_TABLE.update();
         }
-        $(TABLE_ID + ' .pagination .previous').live('click', 
-                paginator_prev);
-
+        $(TABLE_ID + ' .pagination .previous').live('click', paginator_prev);
 
         // paginator next
         function paginator_next(e){
-            console.log("Next paginator button clicked.");
+            console.log("Next paginator button clickedi on '"+TABLE_ID
+                    +"'. Incrementing page.");
             e.preventDefault();
-            THIS_TABLE.pageUp();
+            FETCH_ARGS["page"] = FETCH_ARGS["page"] + 1;
             THIS_TABLE.update();
         }
         $(TABLE_ID + ' .pagination .next').live('click', paginator_next);
 
         // paginator jump-to
         function paginator_jumpTo(){
-            console.log("Jump-to paginator button clicked.");
-            THIS_TABLE.setPage(parseInt($(this).html()));
+            var page = parseInt($(this).html());
+            console.log("Jump-to paginator button clicked on '"+TABLE_ID
+                    +"'. Jumping to page "+page);
+            FETCH_ARGS["page"] = page;
             THIS_TABLE.update();
         }
-        $(TABLE_ID + ' .pagination .page:not(.active)').live('click', 
-                paginator_jumpTo);
+        $(TABLE_ID + ' .pagination .page:not(.active)')
+                .live('click', paginator_jumpTo);
 
         // --------------
         // table sorting
@@ -80,7 +67,7 @@ function ajaxTable(url, tableID){
                 order_by = "-" + order_by;
             } else {
                 $(TABLE_ID + ' #vmlist th').removeClass('ascending')
-                    .removeClass('descending');
+                        .removeClass('descending');
                 $this.addClass("ascending");
             }
             FETCH_ARGS["page"] = 1;
@@ -116,23 +103,20 @@ function ajaxTable(url, tableID){
         Update the table using AJAX depending on current page and sorting
         order.
         */
-        console.log("Updating table '"+this.getID()+"'...");
 
-        // grab this table's ID to update
-        var tableID = this.getID();
+        var TABLE_ID = this.getID();
+
+        console.log("Updating table '"+this.getID()+"'...");
 
         // get call success function must be defined here instead of inside
         // a $.get() lamda function so it can access tableID
         function callSuccess(results){
-            console.log("Actuall updating table '"+tableID+"'...");
             $results = $(results);
             tbody = $results.children("tbody");
             pagination = $results[2];
-            $(tableID + ' #vm-wrapper .pagination')
-                    .replaceWith(pagination);
-            $(tableID + ' #vmlist tbody').replaceWith(tbody);
+            $(TABLE_ID + ' #vm-wrapper .pagination').replaceWith(pagination);
+            $(TABLE_ID + ' #vmlist tbody').replaceWith(tbody);
         }
-        
         // make the actual get request, call callSuccess on return success
         $.get(url, FETCH_ARGS, callSuccess, "html");
     }
