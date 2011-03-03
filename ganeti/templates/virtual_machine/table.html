@@ -26,14 +26,13 @@
         {% endif %}
 
         {% if tableID %}
-            $('#{{tableID}}').data('table', new ajaxTable(url, '{{tableID}}'));
-            $('#{{tableID}}').data('table').init();
+            var tableID = '{{tableID}}';
         {% else %} 
-            $('#ajaxTable').data('table', new ajaxTable(url, 'ajaxTable'));
-            $('#ajaxTable').data('table').init();
+            var tableID = 'ajaxTable';
         {% endif %}
 
-
+        $('#'+tableID).data('ajaxTable', new ajaxTable(url, tableID));
+        $('#'+tableID).data('ajaxTable').init();
     });
 
 </script>
@@ -56,7 +55,6 @@
 {% else %}
 <div id='ajaxTable'>
 {% endif %}
-
     <div id="vm-wrapper">
         {% include "virtual_machine/inner_table.html" %}
     </div>
