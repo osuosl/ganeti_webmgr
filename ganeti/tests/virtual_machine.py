@@ -1,5 +1,4 @@
 # Copyright (C) 2010 Oregon State University et al.
-# Copyright (C) 2010 Greek Research and Technology Network
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -27,14 +26,21 @@ from django.db.utils import IntegrityError
 from django.test import TestCase
 from django.test.client import Client
 
+from django_test_tools.views import ViewTestMixin
+from django_test_tools.users import UserTestMixin
+from ganeti.models import VirtualMachineTemplate
 from object_permissions import grant, get_user_perms
 
 from util import client
-from ganeti.tests.rapi_proxy import RapiProxy, INSTANCE, INFO, JOB, JOB_RUNNING, JOB_DELETE_SUCCESS
+from ganeti.tests.rapi_proxy import RapiProxy, INSTANCE, INFO, JOB, \
+    JOB_RUNNING, JOB_DELETE_SUCCESS, OPERATING_SYSTEMS
 from ganeti import models, constants 
-from ganeti.views.virtual_machine import os_prettify, NewVirtualMachineForm
+from ganeti.forms.virtual_machine import NewVirtualMachineForm
+from ganeti.utilities import os_prettify, cluster_os_list
+
 VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
+Node = models.Node
 ClusterUser = models.ClusterUser
 Job = models.Job
 SSHKey = models.SSHKey
@@ -49,8 +55,9 @@ __all__ = (
 
 class VirtualMachineTestCaseMixin():
     def create_virtual_machine(self, cluster=None, hostname='vm1.osuosl.bak'):
-        cluster = cluster if cluster else Cluster(hostname='test.osuosl.bak', slug='OSL_TEST')
+        cluster = cluster if cluster else Cluster(hostname='test.osuosl.bak', slug='OSL_TEST', username='foo', password='bar')
         cluster.save()
+        cluster.sync_nodes()
         vm = VirtualMachine(cluster=cluster, hostname=hostname)
         vm.save()
         return vm, cluster
@@ -59,23 +66,27 @@ class VirtualMachineTestCaseMixin():
 class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
 
     def setUp(self):
-        self.tearDown()
         models.client.GanetiRapiClient = RapiProxy
 
     def tearDown(self):
         Job.objects.all().delete()
         VirtualMachine.objects.all().delete()
+        Node.objects.all().delete()
         Cluster.objects.all().delete()
         User.objects.all().delete()
         Group.objects.all().delete()
         ClusterUser.objects.all().delete()
-    
+
     def test_trivial(self):
         """
-        Test instantiating a VirtualMachine
+        Test the test case's setUp().
         """
+
+        pass
+
+    def test_instantiate(self):
         VirtualMachine()
-    
+
     def test_non_trivial(self):
         """
         Test instantiating a VirtualMachine with extra parameters
@@ -109,10 +120,7 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         # test unique constraints
         vm = VirtualMachine(cluster=cluster, hostname=vm_hostname)
         self.assertRaises(IntegrityError, vm.save)
-        
-        # Remove cluster
-        Cluster.objects.all().delete();
-    
+
     def test_save(self):
         """
         Test saving a VirtualMachine
@@ -171,7 +179,7 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         Test changing owner
         """
         vm, cluster = self.create_virtual_machine()
-        
+
         owner0 = ClusterUser(id=74, name='owner0')
         owner1 = ClusterUser(id=21, name='owner1')
         owner0.save()
@@ -324,130 +332,74 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         self.assert_(vm.deleted)
         self.assertFalse(VirtualMachine.objects.filter(pk=vm.pk).exists())
     
-class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
+class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMixin, UserTestMixin):
     """
     Tests for views showing virtual machines
     """
     
     def setUp(self):
         self.tearDown()
+
         models.client.GanetiRapiClient = RapiProxy
         vm, cluster = self.create_virtual_machine()
+
+        g = globals()
+        self.create_standard_users(g)
+        self.create_users([
+              ('user',{'id':69}),
+              ('user1',{'id':88}),
+              ('vm_admin',{'id':77}),
+              ('vm_modify',{'id':75}),
+              ('cluster_migrate',{'id':78}),
+              ('cluster_admin',{'id':99}),
+        ], g)
+
+        vm_admin.grant('admin', vm)
+        vm_modify.grant('modify', vm)
+        cluster_migrate.grant('migrate', cluster)
+        cluster_admin.grant('admin', cluster)
         
-        user = User(id=69, username='tester0')
-        user.set_password('secret')
-        user.save()
-        user1 = User(id=88, username='tester1')
-        user1.set_password('secret')
-        user1.save()
+
         group = Group(id=42, name='testing_group')
         group.save()
-        
-        g = globals()
+
+        g['users'] = [superuser, vm_admin]
         g['vm'] = vm
         g['cluster'] = cluster
-        g['user'] = user
-        g['user1'] = user1
         g['c'] = Client()
         g['group'] = group
 
     def tearDown(self):
+        VirtualMachineTemplate.objects.all().delete()
         Job.objects.all().delete()
         User.objects.all().delete()
         Group.objects.all().delete()
         VirtualMachine.objects.all().delete()
+        Node.objects.all().delete()
         Cluster.objects.all().delete()
     
     def validate_get(self, url, args, template):
-        # anonymous user
-        response = c.get(url % args, follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'registration/login.html')
-        
-        # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
-        response = c.get(url % args)
-        self.assertEqual(403, response.status_code)
-        
-        # nonexisent cluster
-        response = c.get(url % ("DOES_NOT_EXIST", vm.id))
-        self.assertEqual(404, response.status_code)
-        
-        # nonexisent vm
-        response = c.get(url % (cluster.slug, vm.id))
-        self.assertEqual(404, response.status_code)
-        
-        # authorized user (perm)
-        grant(user, 'admin', vm)
-        response = c.get(url % args)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, template)
-        
-        # authorized user (superuser)
-        user.revoke('admin', vm)
-        user.is_superuser = True
-        user.save()
-        response = c.get(url % args)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, template)
-
-    def validate_get_configurable(self, url, args, template=False,
-            mimetype=False, status=False, perms=[]):
+        self.assert_standard_fails(url, args)
+        self.assert_200(url, args, [superuser, vm_admin], template=template)
+    
+    def validate_get_configurable(self, url, args, template=None, mimetype=False, perms=[]):
         """
         More configurable version of validate_get.
         Additional arguments (only if set) affects only authorized user test.
 
         @template: used template
         @mimetype: returned mimetype
-        @status:   returned Http status code
         @perms:    set of perms granted on authorized user
 
         @return    response content
         """
-        # anonymous user
-        response = c.get(url % args, follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'registration/login.html')
-        
-        # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
-        response = c.get(url % args)
-        self.assertEqual(403, response.status_code)
-        
-        # nonexisent cluster
-        response = c.get(url % ("DOES_NOT_EXIST", vm.id))
-        self.assertEqual(404, response.status_code)
-        
-        # nonexisent vm
-        response = c.get(url % (cluster.slug, vm.id))
-        self.assertEqual(404, response.status_code)
+        self.assert_standard_fails(url, args)
         
         # authorized user (perm)
         if perms:
-            for perm in perms:
-                grant(user, perm, vm)
-        response = c.get(url % args)
-        if status:
-            self.assertEqual(status, response.status_code)
-        if mimetype:
-            self.assertEqual(mimetype, response['content-type'])
-        if template:
-            self.assertTemplateUsed(response, template)
-        
-        # authorized user (superuser)
-        user.revoke_all(vm)
-        user.is_superuser = True
-        user.save()
-        response = c.get(url % args)
-        if status:
-            self.assertEqual(200, response.status_code)
-        if mimetype:
-            self.assertEqual(mimetype, response['content-type'])
-        if template:
-            self.assertTemplateUsed(response, template)
-        return response
+            user.set_perms(perms, vm)
+        self.assert_200(url, args, [superuser, user], mime=mimetype, template=template)
+
     
     def test_view_list(self):
         """
@@ -510,121 +462,43 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         """
         url = '/cluster/%s/%s/'
         args = (cluster.slug, vm.hostname)
-        
-        # anonymous user
-        response = c.get(url % args, follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'registration/login.html')
-        
-        # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
-        response = c.get(url % args)
-        self.assertEqual(403, response.status_code)
-        
-        # invalid cluster
-        response = c.get(url % ("DoesNotExist", vm.hostname))
-        self.assertEqual(404, response.status_code)
-        
-        # invalid vm
-        response = c.get(url % (cluster.slug, "DoesNotExist"))
-        self.assertEqual(404, response.status_code)
-        
-        # authorized (permission)
-        grant(user, 'admin', vm)
-        response = c.get(url % args)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
-        user.revoke('admin', vm)
-        
-        # authorized (cluster admin)
-        grant(user, 'admin', cluster)
-        response = c.get(url % args)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
-        user.revoke('admin', cluster)
-        
-        # authorized (superuser)
-        user.is_superuser = True
-        user.save()
-        response = c.get(url % args)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
+
+        self.assert_standard_fails(url, args)
+        self.assert_200(url, args, [superuser, vm_admin, cluster_admin], template='virtual_machine/detail.html')
     
-    def validate_post_only_url(self, url, args=None):
+    def validate_post_only_url(self, url, args=None, data=dict(), users=None, get_allowed=False):
         """
         generic function for testing urls that post with no data
         """
         vm = globals()['vm']
         args = args if args else (cluster.slug, vm.hostname)
-        
-        # anonymous user
-        response = c.post(url % args, follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'registration/login.html')
-        
-        # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
-        response = c.post(url % args)
-        self.assertEqual(403, response.status_code)
-        
-        # invalid cluster
-        response = c.post(url % ("DoesNotExist", vm.hostname))
-        self.assertEqual(404, response.status_code)
-        
-        # invalid vm
-        response = c.post(url % (cluster.slug, "DoesNotExist"))
-        self.assertEqual(404, response.status_code)
-        
-        # authorized (permission)
-        grant(user, 'admin', vm)
-        response = c.post(url % args)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('application/json', response['content-type'])
-        content = json.loads(response.content)
-        self.assertEqual('1', content['id'])
-        user.revoke('admin', vm)
-        VirtualMachine.objects.all().update(last_job=None)
-        Job.objects.all().delete()
-        
-        # authorized (cluster admin)
-        grant(user, 'admin', cluster)
-        response = c.post(url % args)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('application/json', response['content-type'])
-        content = json.loads(response.content)
-        self.assertEqual('1', content['id'])
-        user.revoke('admin', cluster)
-        VirtualMachine.objects.all().update(last_job=None)
-        Job.objects.all().delete()
-        
-        # authorized (superuser)
-        user.is_superuser = True
-        user.save()
-        
-        response = c.post(url % args)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('application/json', response['content-type'])
-        self.assertEqual('1', content['id'])
-        VirtualMachine.objects.all().update(last_job=None)
-        Job.objects.all().delete()
-        
+        users = users if users else [superuser, vm_admin, cluster_admin]
+        self.assert_standard_fails(url, args)
+
+        def tests(user, response):
+            content = json.loads(response.content)
+            self.assertEqual('1', content['id'])
+            VirtualMachine.objects.all().update(last_job=None)
+            Job.objects.all().delete()
+
+        self.assert_200(url, args, users, data=data, tests=tests, \
+                        mime='application/json', method='post')
+
         # error while issuing reboot command
+        def tests(user, response):
+            content = json.loads(response.content)
+            text = content['__all__'][0]
+            self.assertEqual(msg, text)
+            vm.rapi.error = None
         msg = "SIMULATING_AN_ERROR"
         vm.rapi.error = client.GanetiApiError(msg)
-        response = c.post(url % args)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('application/json', response['content-type'])
-        code, text = json.loads(response.content)
-        self.assertEqual(msg, text)
-        self.assertEqual(0, code)
-        vm.rapi.error = None
-        
+        self.assert_200(url, args, [superuser], data=data, mime='application/json', method='post', tests=tests)
+
         # invalid method
-        response = c.get(url % args)
-        self.assertEqual(405, response.status_code)
+        if not get_allowed:
+            self.assertTrue(c.login(username=superuser.username, password='secret'))
+            response = c.get(url % args, data)
+            self.assertEqual(405, response.status_code)
     
     def test_view_startup(self):
         """
@@ -676,6 +550,23 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         """
         self.validate_post_only_url('/cluster/%s/%s/reboot')
 
+    def test_view_migrate(self):
+        """
+        Tests migrating a virtual machine
+        """
+        url = '/cluster/%s/%s/migrate'
+        args = (cluster.slug, vm.hostname)
+        template='virtual_machine/migrate.html'
+        authorized = [superuser, cluster_admin, cluster_migrate]
+
+        # get
+        self.assert_standard_fails(url, args)
+        self.assert_200(url, args, authorized, template=template)
+
+        # post
+        data = {'mode':'live'}
+        self.validate_post_only_url(url, args, data, users=authorized, get_allowed=True)
+        
     def test_view_ssh_keys(self):
         """
         Test getting SSH keys belonging to users, who have admin permission on
@@ -723,6 +614,352 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertNotContains(response, "test@test")
         self.assertNotContains(response, "asd@asd")
 
+    def test_view_modify(self):
+        """
+        Test modifying an instance
+        """
+        vm = globals()['vm']
+        args = (cluster.slug, vm.hostname)
+        url = '/cluster/%s/%s/edit' % args
+    
+        user = User(id=52, username='modifier')
+        user.set_password('secret2')
+        user.save()
+
+        ## GET
+        # Anonymous User
+        response = c.get(url)
+        self.assertEqual(302, response.status_code)
+
+        # User with Modify Permissions
+        user.grant('modify', vm)
+        self.assertTrue(c.login(username=user.username, password='secret2'))
+        self.assertFalse(user.is_superuser)
+        self.assertTrue(user.has_perm('modify', vm))
+        self.assertFalse(user.has_perm('admin', vm))
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/edit.html')
+        user.revoke_all(vm)
+        c.logout()
+
+        # User with Admin Permissions
+        user.grant('admin', vm)
+        self.assertTrue(c.login(username=user.username, password='secret2'))
+        self.assertFalse(user.is_superuser)
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/edit.html')
+        user.revoke_all(vm)
+        c.logout()
+
+        # Superuser
+        user.is_superuser = True
+        user.save()
+        self.assertTrue(c.login(username=user.username, password='secret2'))
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/edit.html')
+        c.logout()
+        user.is_superuser = False
+        user.save()
+
+        ## POST
+        os_list = cluster_os_list(cluster)
+        data = dict(vcpus=2,
+            acpi=True,
+            disk_cache='default',
+            initrd_path='',
+            kernel_args='ro',
+            kvm_flag='',
+            mem_path='',
+            migration_downtime=30,
+            security_domain='',
+            security_model='none',
+            usb_mouse='',
+            use_chroot=False,
+            use_localtime=False,
+            vnc_bind_addres='0.0.0.0',
+            vnc_tls=False,
+            vnc_x509_path='',
+            vnc_x509_verify=False,
+            memory=512,
+            os='image+debian-osgeo',
+            disk_type='paravirtual',
+            boot_order='disk',
+            nic_type='paravirtual',
+            nic_link='br0',
+            nic_mac='aa:bb:00:00:33:d2',
+            root_path='/dev/vda1',
+            kernel_path='/boot/vmlinuz-2.32.6-27-generic',
+            serial_console=True,
+            cdrom_image_path='')
+        
+        # Required Values
+        user.grant('modify', vm)
+        self.assertTrue(c.login(username=user.username, password='secret2'))
+        session = c.session
+        session['os_list'] = os_list
+        session.save()
+        for property in ['vcpus', 'memory', 'disk_type', 'boot_order', 'nic_type', \
+            'root_path']:
+            data_ = data.copy()
+            del data_[property]
+            self.assertFalse(user.is_superuser)
+            response = c.post(url, data_)
+            # If failure then a field that is not required by the model, but
+            #  should be required by the form, is not being required by
+            #  the form. See the ModifyVirtualMachineForm.required field.
+            self.assertNotEqual(response.context['form'][property].errors, [])
+            self.assertEqual(200, response.status_code) # 302 if success (BAD)
+            self.assertEqual('text/html; charset=utf-8', response['content-type'])
+            self.assertTemplateUsed(response, 'virtual_machine/edit.html')
+        c.logout()
+        user.revoke_all(vm)
+    
+
+        # Anonymous User
+        response = c.post(url, data)
+        self.assertEqual(302, response.status_code)
+
+        # Superuser
+        user.is_superuser = True
+        user.save()
+        self.assertTrue(c.login(username=user.username, password='secret2'))
+        self.assertTrue(user.is_superuser)
+        session = c.session
+        session['os_list'] = os_list
+        session.save()
+        response = c.post(url, data)
+        self.assertEqual(302, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        c.logout()
+        user.is_superuser = False
+        user.save()
+
+        # User without Permissions
+        self.assertTrue(c.login(username=user.username, password='secret2'))
+        self.assertFalse(user.is_superuser)
+        session = c.session
+        session['os_list'] = os_list
+        session.save()
+        response = c.post(url, data)
+        self.assertEqual(403, response.status_code)
+        self.assertTrue(response.context['message'])
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, '403.html')
+        c.logout()
+        
+        # User with Modify Permissions
+        user.grant('modify', vm)
+        self.assertTrue(c.login(username=user.username, password='secret2'))
+        self.assertFalse(user.is_superuser)
+        session = c.session
+        session['os_list'] = os_list
+        session.save()
+        response = c.post(url, data)
+        self.assertEqual(302, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        user.revoke_all(vm)
+        c.logout()
+
+        # User with Admin Permissions
+        user.grant('admin', vm)
+        self.assertTrue(c.login(username=user.username, password='secret2'))
+        self.assertFalse(user.is_superuser)
+        session = c.session
+        session['os_list'] = os_list
+        session.save()
+        response = c.post(url, data)
+        self.assertEqual(302, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        user.revoke_all(vm)
+        c.logout()        
+
+    def test_view_modify_confirm(self):
+        """
+        Test confirm page for modifying an instance
+        """
+        vm = globals()['vm']
+        args = (cluster.slug, vm.hostname)
+        url = '/cluster/%s/%s/edit/confirm' % args
+    
+        user = User(id=52, username='modifier')
+        user.set_password('secret2')
+        user.save()
+        
+        os_list = cluster_os_list(cluster)
+        edit_form = dict(vcpus=2,
+            acpi=True,
+            disk_cache='default',
+            initrd_path='',
+            kernel_args='ro',
+            kvm_flag='',
+            mem_path='',
+            migration_downtime=30,
+            security_domain='',
+            security_model='none',
+            usb_mouse='',
+            use_chroot=False,
+            use_localtime=False,
+            vnc_bind_addres='0.0.0.0',
+            vnc_tls=False,
+            vnc_x509_path='',
+            vnc_x509_verify=False,
+            memory=512,
+            os='image+debian-osgeo',
+            disk_type='paravirtual',
+            boot_order='disk',
+            nic_type='paravirtual',
+            nic_link='br0',
+            nic_mac='aa:bb:00:00:33:d2',
+            root_path='/dev/vda1',
+            kernel_path='/boot/vmlinuz-2.32.6-27-generic',
+            serial_console=True,
+            cdrom_image_path='')
+
+        ## SESSION VARIABLES
+        # Make sure session variables are set
+        user.is_superuser = True
+        user.save()
+        self.assertTrue(c.login(username=user.username, password='secret2'))
+        session = c.session
+        # edit_form 
+        response = c.get(url)
+        self.assertEqual(400, response.status_code)
+        session['edit_form'] = edit_form
+        session.save()
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/edit_confirm.html')
+        
+        #session['os_list'] = os_list
+        #session.save()
+        user.revoke_all(vm)
+        user.is_superuser = False
+        user.save()
+        c.logout()
+
+        ## GET
+        # Anonymous User
+        response = c.get(url)
+        self.assertEqual(302, response.status_code)
+
+        # User with Modify Permissions
+        user.grant('modify', vm)
+        self.assertFalse(user.is_superuser)
+        self.assertTrue(c.login(username=user.username, password='secret2'))
+        session = c.session
+        session['edit_form'] = edit_form
+        session['os_list'] = os_list
+        session.save()
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/edit_confirm.html')
+        user.revoke_all(vm)
+        c.logout()
+
+        # User with Admin Permissions
+        user.grant('admin', vm)
+        self.assertFalse(user.is_superuser)
+        self.assertTrue(c.login(username=user.username, password='secret2'))
+        session = c.session
+        session['edit_form'] = edit_form
+        session['os_list'] = os_list
+        session.save()
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/edit_confirm.html')
+        user.revoke_all(vm)
+        c.logout()
+
+        # Superuser
+        user.is_superuser = True
+        user.save()
+        self.assertTrue(c.login(username=user.username, password='secret2'))
+        session = c.session
+        session['edit_form'] = edit_form
+        session['os_list'] = os_list
+        session.save()
+        response = c.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/edit_confirm.html')
+        c.logout()
+        user.is_superuser = False
+        user.save()
+
+        ## POST
+        data = {'rapi_dict':json.dumps(edit_form)}
+        # Anonymous User
+        response = c.post(url, data)
+        self.assertEqual(302, response.status_code)
+
+        for i in ('cancel', 'edit', 'save', 'reboot'):
+            data[i] = True
+
+            # Superuser
+            user.is_superuser = True
+            user.save()
+            self.assertTrue(c.login(username=user.username, password='secret2'))
+            session = c.session
+            session['edit_form'] = edit_form
+            session['os_list'] = os_list
+            session.save()
+            self.assertTrue(user.is_superuser)
+            response = c.post(url, data)
+            self.assertEqual(302, response.status_code)
+            self.assertEqual('text/html; charset=utf-8', response['content-type'])
+            c.logout()
+            user.is_superuser = False
+            user.save()
+
+            # User without Permissions
+            self.assertTrue(c.login(username=user.username, password='secret2'))
+            self.assertFalse(user.is_superuser)
+            response = c.post(url, data)
+            self.assertEqual(403, response.status_code)
+            self.assertTrue(response.context['message'])
+            self.assertEqual('text/html; charset=utf-8', response['content-type'])
+            self.assertTemplateUsed(response, '403.html')
+            c.logout()
+            
+            # User with Modify Permissions
+            user.grant('modify', vm)
+            self.assertTrue(c.login(username=user.username, password='secret2'))
+            session = c.session
+            session['edit_form'] = edit_form
+            session['os_list'] = os_list
+            session.save()
+            self.assertFalse(user.is_superuser)
+            response = c.post(url, data)
+            self.assertEqual(302, response.status_code)
+            self.assertEqual('text/html; charset=utf-8', response['content-type'])
+            user.revoke_all(vm)
+            c.logout()
+
+            # User with Admin Permissions
+            user.grant('admin', vm)
+            self.assertTrue(c.login(username=user.username, password='secret2'))
+            session = c.session
+            session['edit_form'] = edit_form
+            session['os_list'] = os_list
+            session.save()
+            self.assertFalse(user.is_superuser)
+            response = c.post(url, data)
+            self.assertEqual(302, response.status_code)
+            self.assertEqual('text/html; charset=utf-8', response['content-type'])
+            user.revoke_all(vm)
+            c.logout()
+
+            del data[i]
+
     def test_view_create_quota_first_vm(self):
         # XXX seperated from test_view_create_data since it was polluting the environment for later tests
         url = '/vm/add/%s'
@@ -732,17 +969,17 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
                     hostname='new.vm.hostname',
                     disk_template='plain',
                     disk_size=1000,
-                    ram=256,
+                    memory=256,
                     vcpus=2,
-                    rootpath='/',
-                    nictype='paravirtual',
+                    root_path='/',
+                    nic_type='paravirtual',
                     disk_type = 'paravirtual',
-                    niclink = 'br43',
-                    nicmode='routed',
-                    bootorder='disk',
+                    nic_link = 'br43',
+                    nic_mode='routed',
+                    boot_order='disk',
                     os='image+ubuntu-lucid',
-                    pnode=cluster.nodes()[0],
-                    snode=cluster.nodes()[1])
+                    pnode=cluster.nodes.all()[0],
+                    snode=cluster.nodes.all()[1])
 
 
         # set up for testing quota on user's first VM
@@ -759,7 +996,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(profile.used_resources(cluster), {'ram': 0, 'disk': 0, 'virtual_cpus': 0})
         cluster.set_quota(profile, dict(ram=1000, disk=2000, virtual_cpus=10))
         data_ = data.copy()
-        data_['ram'] = 2000
+        data_['memory'] = 2000
         data_['owner'] = profile.id
         response = c.post(url % '', data_)
         self.assertEqual(200, response.status_code) # 302 if vm creation succeeds
@@ -841,17 +1078,17 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
                     hostname='new.vm.hostname',
                     disk_template='plain',
                     disk_size=1000,
-                    ram=256,
+                    memory=256,
                     vcpus=2,
-                    rootpath='/',
-                    nictype='paravirtual',
+                    root_path='/',
+                    nic_type='paravirtual',
                     disk_type = 'paravirtual',
-                    niclink = 'br43',
-                    nicmode='routed',
-                    bootorder='disk',
+                    nic_link = 'br43',
+                    nic_mode='routed',
+                    boot_order='disk',
                     os='image+ubuntu-lucid',
-                    pnode=cluster.nodes()[0],
-                    snode=cluster.nodes()[1])
+                    pnode=cluster.nodes.all()[0],
+                    snode=cluster.nodes.all()[1])
         
         # login user
         self.assert_(c.login(username=user.username, password='secret'))
@@ -878,9 +1115,9 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
         
         # POST - required values
-        for property in ['cluster', 'hostname', 'disk_size', 'disk_type','nictype', 'nicmode',
+        for property in ['cluster', 'hostname', 'disk_size', 'disk_type','nic_type', 'nic_mode',
                          'vcpus', 'pnode', 'os', 'disk_template',
-                         'rootpath', 'bootorder']:
+                         'root_path', 'boot_order']:
             data_ = data.copy()
             del data_[property]
             response = c.post(url % '', data_)
@@ -942,7 +1179,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         response = c.post(url % '', data_, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
+        self.assertTemplateUsed(response, 'virtual_machine/create_status.html')
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertTrue(user.has_perm('admin', new_vm))
         VirtualMachine.objects.all().delete()
@@ -967,7 +1204,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         response = c.post(url % '', data_, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
+        self.assertTemplateUsed(response, 'virtual_machine/create_status.html')
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
         self.assert_(user.has_perm('admin', new_vm))
@@ -980,7 +1217,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         response = c.post(url % '', data, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
+        self.assertTemplateUsed(response, 'virtual_machine/create_status.html')
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
         self.assert_(user.has_perm('admin', new_vm))
@@ -1003,7 +1240,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         response = c.post(url % '', data, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
+        self.assertTemplateUsed(response, 'virtual_machine/create_status.html')
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
         self.assert_(user.has_perm('admin', new_vm))
@@ -1025,7 +1262,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         response = c.post(url % '', data_, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
+        self.assertTemplateUsed(response, 'virtual_machine/create_status.html')
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
         self.assert_(user1.has_perm('admin', new_vm))
@@ -1058,7 +1295,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         response = c.post(url % '', data, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
+        self.assertTemplateUsed(response, 'virtual_machine/create_status.html')
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
         self.assert_(group.has_perm('admin', new_vm))
@@ -1071,7 +1308,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         response = c.post(url % '', data, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
+        self.assertTemplateUsed(response, 'virtual_machine/create_status.html')
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
         self.assert_(group.has_perm('admin', new_vm))
@@ -1085,7 +1322,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         response = c.post(url % '', data, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
+        self.assertTemplateUsed(response, 'virtual_machine/create_status.html')
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
         self.assert_(group.has_perm('admin', new_vm))
@@ -1098,7 +1335,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         response = c.post(url % '', data_, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/detail.html')
+        self.assertTemplateUsed(response, 'virtual_machine/create_status.html')
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
         self.assert_(group1.has_perm('admin', new_vm))
@@ -1157,7 +1394,86 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'virtual_machine/create.html')
-    
+
+    def test_view_create_recover(self):
+        """
+        Test the create view when recovering a failed vm
+
+        Verifies:
+            * vm can be successfully edited and created
+            * vm object is reused
+            * template object is reused
+            * can only recover a vm in the failure state
+            * owner cannot be changed (security)
+            * editing user is not granted perms (security)
+        """
+        url = '/vm/add/'
+        args = tuple()
+        fail_template = 'virtual_machine/create.html'
+        success_template = 'virtual_machine/create_status.html'
+
+        template = VirtualMachineTemplate()
+        template.save()
+
+        # create a failed vm
+        failed_vm, cluster2 = self.create_virtual_machine(cluster, 'failed.osuosl.org')
+        failed_vm.owner=user.get_profile()
+        failed_vm.template = template
+        failed_vm.save()
+
+        data = dict(cluster=cluster.id,
+                    start=True,
+                    owner=user.get_profile().id, #XXX remove this
+                    hostname=failed_vm.hostname,
+                    disk_template='plain',
+                    disk_size=1000,
+                    memory=256,
+                    vcpus=2,
+                    root_path='/',
+                    nic_type='paravirtual',
+                    disk_type = 'paravirtual',
+                    nic_link = 'br43',
+                    nic_mode='routed',
+                    boot_order='disk',
+                    os='image+ubuntu-lucid',
+                    pnode=cluster.nodes.all()[0],
+                    snode=cluster.nodes.all()[1])
+
+        errors = [
+                    {'hostname':vm.hostname}, # attempt to recover vm that hasn't failed
+                    {'hostname':failed_vm.hostname, 'owner':user1.pk} # attempt to change owner
+        ]
+        self.assert_view_values(url, args, data, errors, fail_template)
+
+        def tests(user, response):
+            created_vm = VirtualMachine.objects.get(pk=failed_vm.pk)
+            self.assertEqual(template.pk, created_vm.template_id)
+            self.assertNotEqual(None, created_vm.last_job_id)
+        users = [superuser]
+        self.assert_200(url, args, users, success_template, data=data, method='post', tests=tests, follow=True)
+
+
+    def test_view_load_recover(self):
+        """
+        Tests loading a VM that failed to deploy back into the create view
+        for editing
+        """
+        url = '/cluster/%s/%s/recover/'
+        args = (cluster.slug, vm.hostname)
+
+        # vm with no template should redirect
+        self.assert_200(url, args, [superuser], template='virtual_machine/detail.html', follow=True)
+
+        template = VirtualMachineTemplate()
+        template.save()
+        vm.template = template
+        vm.save()
+
+        self.assert_standard_fails(url, args)
+        users = [superuser, vm_admin, vm_modify, cluster_admin]
+        self.assert_200(url, args, users, template='virtual_machine/create.html')
+
+
     def test_view_cluster_choices(self):
         """
         Test retrieving list of clusters a user or usergroup has access to
@@ -1270,7 +1586,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/json', response['content-type'])
         content = json.loads(response.content)
-        self.assertEqual(['gtest1.osuosl.bak', 'gtest2.osuosl.bak'], content['nodes'])
+        self.assertEqual([u'gtest1.osuosl.bak', u'gtest2.osuosl.bak', u'gtest3.osuosl.bak'], content['nodes'])
         self.assertEqual(content["os"],
             [[u'Image',
                 [[u'image+debian-osgeo', u'Debian Osgeo'],
@@ -1285,7 +1601,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/json', response['content-type'])
         content = json.loads(response.content)
-        self.assertEqual(['gtest1.osuosl.bak', 'gtest2.osuosl.bak'], content['nodes'])
+        
+        self.assertEqual([u'gtest1.osuosl.bak', u'gtest2.osuosl.bak', u'gtest3.osuosl.bak'], content['nodes'])
         self.assertEqual(content["os"],
             [[u'Image',
                 [[u'image+debian-osgeo', u'Debian Osgeo'],
@@ -1301,7 +1618,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/json', response['content-type'])
         content = json.loads(response.content)
-        self.assertEqual(['gtest1.osuosl.bak', 'gtest2.osuosl.bak'], content['nodes'])
+        self.assertEqual([u'gtest1.osuosl.bak', u'gtest2.osuosl.bak', u'gtest3.osuosl.bak'], content['nodes'])
         self.assertEqual(content["os"],
             [[u'Image',
                 [[u'image+debian-osgeo', u'Debian Osgeo'],
@@ -1317,19 +1634,19 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         args = cluster.id        
         
         expected = dict(
-            bootorder='disk',
-            ram=512,
-            nictype='paravirtual',
-            rootpath='/dev/vda2',
+            boot_order='disk',
+            memory=512,
+            nic_type='paravirtual',
+            root_path='/dev/vda2',
             hypervisors=['kvm'],
-            serialconsole=True,
-            imagepath='',
-            disktype ='paravirtual',
-            niclink ='br42',
-            nicmode='bridged',
+            serial_console=True,
+            cdrom_image_path='',
+            disk_type ='paravirtual',
+            nic_link ='br42',
+            nic_mode='bridged',
             vcpus=2,
             iallocator='',
-            kernelpath=''
+            kernel_path=''
         )
         
         #anonymous users
@@ -1601,18 +1918,22 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         """
         url = "/cluster/%s/%s/vnc_proxy/"
         args = (cluster.slug, vm.hostname)
-        response = self.validate_get_configurable(url, args, False,
-            "application/json", 200, ["admin",])
-        if settings.VNC_PROXY:
-            self.assertEqual(json.loads(response), (False, False, False))
-        else:
-            # NOTE: cannot test with not-real VM
-            #info_ = vm.info
-            #host = info_["pnode"]
-            #port = info_["network_port"]
-            #password = ""
-            self.assertNotEqual(json.loads(response), (False, False, False))
-    
+        response = self.validate_get_configurable(url, args, None,
+            "application/json", ["admin",])
+
+    def test_view_object_log(self):
+        """
+        Tests view for object log:
+
+        Verifies:
+            * lack of permissions returns 403
+            * nonexistent Cluster returns 404
+            * nonexistent VirtualMachine returns 404
+        """
+        url = "/cluster/%s/%s/object_log/"
+        args = (cluster.slug, vm.hostname)
+        self.validate_get(url, args, 'object_log/log.html')
+
     def test_view_users(self):
         """
         Tests view for cluster users:
@@ -1675,35 +1996,35 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
         
         # no user or group
-        data = {'permissions':['admin']}
+        data = {'permissions':['admin'], 'obj':vm.pk}
         response = c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
         
         # both user and group
-        data = {'permissions':['admin'], 'group':group.id, 'user':user1.id}
+        data = {'permissions':['admin'], 'group':group.id, 'user':user1.id, 'obj':vm.pk}
         response = c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
         
         # no permissions specified - user
-        data = {'permissions':[], 'user':user1.id}
+        data = {'permissions':[], 'user':user1.id, 'obj':vm.pk}
         response = c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
         
         # no permissions specified - group
-        data = {'permissions':[], 'group':group.id}
+        data = {'permissions':[], 'group':group.id, 'obj':vm.pk}
         response = c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/json', response['content-type'])
         
         # valid POST user has permissions
         user1.grant('power', vm)
-        data = {'permissions':['admin'], 'user':user1.id}
+        data = {'permissions':['admin'], 'user':user1.id, 'obj':vm.pk}
         response = c.post(url % args, data)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'object_permissions/permissions/user_row.html')
@@ -1712,7 +2033,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         
         # valid POST group has permissions
         group.grant('power', vm)
-        data = {'permissions':['admin'], 'group':group.id}
+        data = {'permissions':['admin'], 'group':group.id, 'obj':vm.pk}
         response = c.post(url % args, data)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'object_permissions/permissions/group_row.html')
@@ -1785,21 +2106,21 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         
         # invalid user (POST)
         user1.grant('power', vm)
-        data = {'permissions':['admin'], 'user':-1}
+        data = {'permissions':['admin'], 'user':-1, 'obj':vm.pk}
         response = c.post(url_post % args_post, data)
         self.assertEqual('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
         
         # no user (POST)
         user1.grant('power', vm)
-        data = {'permissions':['admin']}
+        data = {'permissions':['admin'], 'obj':vm.pk}
         response = c.post(url_post % args_post, data)
         self.assertEqual('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
         
         # valid POST user has permissions
         user1.grant('power', vm)
-        data = {'permissions':['admin'], 'user':user1.id}
+        data = {'permissions':['admin'], 'user':user1.id, 'obj':vm.pk}
         response = c.post(url_post % args_post, data)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'object_permissions/permissions/user_row.html')
@@ -1807,12 +2128,12 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertFalse(user1.has_perm('power', vm))
         
         # valid POST user has no permissions left
-        data = {'permissions':[], 'user':user1.id}
+        data = {'permissions':[], 'user':user1.id, 'obj':vm.pk}
         response = c.post(url_post % args_post, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/json', response['content-type'])
         self.assertEqual([], get_user_perms(user, vm))
-        self.assertEqual('1', response.content)
+        self.assertEqual('"user_88"', response.content)
     
     def test_view_group_permissions(self):
         """
@@ -1869,32 +2190,66 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(404, response.status_code)
         
         # invalid group (POST)
-        data = {'permissions':['admin'], 'group':-1}
+        data = {'permissions':['admin'], 'group':-1, 'obj':vm.pk}
         response = c.post(url_post % args_post, data)
         self.assertEqual('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
         
         # no group (POST)
-        data = {'permissions':['admin']}
+        data = {'permissions':['admin'], 'obj':vm.pk}
         response = c.post(url_post % args_post, data)
         self.assertEqual('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
         
         # valid POST group has permissions
         group.grant('power', vm)
-        data = {'permissions':['admin'], 'group':group.id}
+        data = {'permissions':['admin'], 'group':group.id, 'obj':vm.pk}
         response = c.post(url_post % args_post, data)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'object_permissions/permissions/group_row.html')
         self.assertEqual(['admin'], group.get_perms(vm))
         
         # valid POST group has no permissions left
-        data = {'permissions':[], 'group':group.id}
+        data = {'permissions':[], 'group':group.id, 'obj':vm.pk}
         response = c.post(url_post % args_post, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/json', response['content-type'])
         self.assertEqual([], group.get_perms(vm))
-        self.assertEqual('1', response.content)
+        self.assertEqual('"group_42"', response.content)
+
+    def test_view_rename(self):
+        """ tests renaming a VirtualMachine """
+        url = "/cluster/%s/%s/rename/"
+        args = (cluster.slug, vm.hostname)
+        template = 'virtual_machine/rename.html'
+        template_success = 'virtual_machine/detail.html'
+        users =[superuser, cluster_admin, vm_admin, vm_modify]
+        denied = [cluster_migrate]
+
+        # test GET requests
+        self.assert_standard_fails(url, args)
+        self.assert_200(url, args, users, template=template)
+        self.assert_403(url, args, denied)
+
+        # test POST
+        def tests(user, response):
+            updated_vm = VirtualMachine.objects.get(pk=vm.pk)
+            self.assertEqual('foo.arg.different', updated_vm.hostname)
+            vm.save()
+            
+        data = {'hostname':'foo.arg.different', 'ip_check':False, 'name_check':False}
+        self.assert_standard_fails(url, args, data, method='post')
+        self.assert_200(url, args, users, template_success, data=data, follow=True, method="post", tests=tests)
+        self.assert_403(url, args, denied, data=data, method="post")
+
+        # test form errors
+        def tests(user, response):
+            updated_vm = VirtualMachine.objects.get(pk=vm.pk)
+            self.assertEqual(vm.hostname, updated_vm.hostname)
+        errors = ({'hostname':vm.hostname},)
+
+        self.assert_view_missing_fields(url, args, data, fields=['hostname'], template=template, tests=tests)
+        self.assert_view_values(url, args, data, errors, template, tests=tests)
 
 
 class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
@@ -1910,7 +2265,7 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         cluster1.save()
         cluster2.save()
         cluster3.save()
-        
+        cluster0.sync_nodes()
         cluster0.info = INFO
         
         user = User(id=67, username='tester0')
@@ -1953,16 +2308,16 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
             (u'pcnet',u'pcnet'),
             (u'e1000',u'e1000'),
             (u'paravirtual',u'paravirtual'),
-            ], form.fields['nictype'].choices)
+            ], form.fields['nic_type'].choices)
         self.assertEqual([
             (u'', u'---------'),
             (u'routed', u'routed'),
             (u'bridged', u'bridged')
-            ], form.fields['nicmode'].choices)
+            ], form.fields['nic_mode'].choices)
         self.assertEqual([('disk', 'Hard Disk'),
             ('cdrom', 'CD-ROM'),
             ('network', 'Network')
-            ], form.fields['bootorder'].choices)
+            ], form.fields['boot_order'].choices)
         self.assertEqual([
             (u'', u'---------'),
             (u'plain', u'plain'),
@@ -1988,8 +2343,8 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         
         # cluster provided
         form = NewVirtualMachineForm(user, cluster0)
-        self.assertEqual([(u'', u'---------'), ('gtest1.osuosl.bak', 'gtest1.osuosl.bak'), ('gtest2.osuosl.bak', 'gtest2.osuosl.bak')], form.fields['pnode'].choices)
-        self.assertEqual([(u'', u'---------'), ('gtest1.osuosl.bak', 'gtest1.osuosl.bak'), ('gtest2.osuosl.bak', 'gtest2.osuosl.bak')], form.fields['snode'].choices)
+        self.assertEqual([(u'', u'---------'), (u'gtest1.osuosl.bak', u'gtest1.osuosl.bak'), (u'gtest2.osuosl.bak', u'gtest2.osuosl.bak'), (u'gtest3.osuosl.bak', u'gtest3.osuosl.bak')], form.fields['pnode'].choices)
+        self.assertEqual([(u'', u'---------'), (u'gtest1.osuosl.bak', u'gtest1.osuosl.bak'), (u'gtest2.osuosl.bak', u'gtest2.osuosl.bak'), (u'gtest3.osuosl.bak', u'gtest3.osuosl.bak')], form.fields['snode'].choices)
         self.assertEqual(form.fields['os'].choices,
             [
                 (u'', u'---------'),
@@ -2002,8 +2357,8 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         
         # cluster from initial data
         form = NewVirtualMachineForm(user, None, {'cluster':cluster0.id})
-        self.assertEqual([(u'', u'---------'), ('gtest1.osuosl.bak', 'gtest1.osuosl.bak'), ('gtest2.osuosl.bak', 'gtest2.osuosl.bak')], form.fields['pnode'].choices)
-        self.assertEqual([(u'', u'---------'), ('gtest1.osuosl.bak', 'gtest1.osuosl.bak'), ('gtest2.osuosl.bak', 'gtest2.osuosl.bak')], form.fields['snode'].choices)
+        self.assertEqual([(u'', u'---------'), (u'gtest1.osuosl.bak', u'gtest1.osuosl.bak'), (u'gtest2.osuosl.bak', u'gtest2.osuosl.bak'), (u'gtest3.osuosl.bak', u'gtest3.osuosl.bak')], form.fields['pnode'].choices)
+        self.assertEqual([(u'', u'---------'), (u'gtest1.osuosl.bak', u'gtest1.osuosl.bak'), (u'gtest2.osuosl.bak', u'gtest2.osuosl.bak'), (u'gtest3.osuosl.bak', u'gtest3.osuosl.bak')], form.fields['snode'].choices)
         self.assertEqual(form.fields['os'].choices,
             [
                 (u'', u'---------'),
@@ -2016,8 +2371,8 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         
         # cluster from initial data
         form = NewVirtualMachineForm(user, cluster0, {'cluster':cluster0.id})
-        self.assertEqual([(u'', u'---------'), ('gtest1.osuosl.bak', 'gtest1.osuosl.bak'), ('gtest2.osuosl.bak', 'gtest2.osuosl.bak')], form.fields['pnode'].choices)
-        self.assertEqual([(u'', u'---------'), ('gtest1.osuosl.bak', 'gtest1.osuosl.bak'), ('gtest2.osuosl.bak', 'gtest2.osuosl.bak')], form.fields['snode'].choices)
+        self.assertEqual([(u'', u'---------'), (u'gtest1.osuosl.bak', u'gtest1.osuosl.bak'), (u'gtest2.osuosl.bak', u'gtest2.osuosl.bak'), (u'gtest3.osuosl.bak', u'gtest3.osuosl.bak')], form.fields['pnode'].choices)
+        self.assertEqual([(u'', u'---------'), (u'gtest1.osuosl.bak', u'gtest1.osuosl.bak'), (u'gtest2.osuosl.bak', u'gtest2.osuosl.bak'), (u'gtest3.osuosl.bak', u'gtest3.osuosl.bak')], form.fields['snode'].choices)
         self.assertEqual(form.fields['os'].choices,
             [
                 (u'', u'---------'),
@@ -2153,6 +2508,7 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
                 (user1.profile.id, u'tester1'),
                 (group.organization.id, u'testing_group'),
             ], list(form.fields['owner'].choices))
+
 
 class TestVirtualMachineHelpers(TestCase):
 

@@ -1,3 +1,5 @@
+# vim: set fileencoding=utf8 :
+
 # Copyright (C) 2010 Oregon State University et al.
 # Copyright (C) 2010 Greek Research and Technology Network
 #
@@ -15,17 +17,20 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
+from datetime import datetime
 
 from math import log10
 import re
 import json as json_lib
+from django.contrib.sites.models import Site
 
-from django import template
+from django.db.models import Count
 from django.template import Library, Node, TemplateSyntaxError
 from django.template.defaultfilters import stringfilter
 from django.utils.safestring import mark_safe
 
 from ganeti.models import Cluster
+from ganeti.models import Node as GanetiNode
 
 
 register = Library()
@@ -43,17 +48,35 @@ def vmfield(field):
 def class_name(obj):
     """ returns the modelname of the objects class """
     return obj.__class__.__name__
-    
+
+
+@register.filter
+def index(obj, index):
+    """ returns index of given object """
+    if obj:
+        return obj[index]
+
 
 @register.filter
 @stringfilter
 def truncate(value, count):
     """
-    Truncates value after specified number of chars
+    Truncates a string to be a certain length.
+
+    If the string is shorter than the specified length, it will returned
+    as-is.
     """
-    if count < len(value):
-        return value[:count] + " ..."
+
+    if len(value) > count:
+        return value[:count - 1] + u"…"
+
     return value
+
+
+@register.filter
+def timestamp(int):
+    """ converts a timestamp to a date """
+    return datetime.fromtimestamp(int)
 
 
 @register.filter
@@ -101,6 +124,37 @@ def ssh_keypart_truncate(value, count):
         return value
 
 
+@register.filter
+def is_drbd(vm):
+    """ simple filter for returning true of false if a virtual machine
+    has DRBD for disklayout
+    """
+    return 'drbd' == vm.info['disk_template']
+
+
+@register.filter
+def checkmark(bool):
+    """ converts a boolean into a checkmark if it is true """
+    if bool:
+        str_  = '<div class="check icon"></div>'
+    else:
+        str_ = '<div class="xmark icon"></div>'
+    return mark_safe(str_)
+
+
+@register.filter
+@stringfilter
+def node_role(code):
+    """ renders full role name from role code """
+    return GanetiNode.NODE_ROLE_MAP[str(code)]
+
+
+@register.simple_tag
+def current_domain():
+    """ returns the domain of the current Site """
+    return Site.objects.get_current().domain
+
+
 """
 These filters were taken from Russel Haering's GanetiWeb project
 """
@@ -125,14 +179,24 @@ def render_instance_status(status):
 @register.filter
 @stringfilter
 def render_storage(value):
+    """
+    Render an amount of storage.
+
+    The value should be in mibibytes.
+    """
+
     amount = float(value)
+
     if amount >= 1024:
-        amount = amount / 1024.0
+        amount /= 1024
+
         if amount >= 1024:
-            return "%.2f TiB" % (amount/1024)
-        return "%.2f GiB" % (amount)
+            amount /= 1024
+            return "%.4f TiB" % amount
+
+        return "%.2f GiB" % amount
     else:
-        return "%d MiB" % int(amount)
+        return "%d MiB" % amount
 
 
 @register.filter
@@ -141,14 +205,6 @@ def quota(cluster_user, cluster):
     Returns the quota for user/cluster combination.
     """
     return cluster.get_quota(cluster_user)
-
-
-@register.filter
-def cluster_nodes(cluster, bulk=False):
-    """
-    Helper tag for passing parameter to cluster.nodes()
-    """
-    return cluster.nodes(bulk)
 
 
 @register.filter
@@ -164,16 +220,35 @@ def format_job_op(op):
     return op[3:].replace("_", " ").title()
 
 
+@register.filter
+def format_job_log(log):
+    """ formats a ganeti job log for display on an html page """
+    formatted = log.replace('\n','<br/>')
+    return mark_safe(formatted)
+
+
 def format_part_total(part, total):
     """
     Pretty-print a quantity out of a given total.
     """
-    if not (part or total):
+    if total < 0 or part < 0:
         return "unknown"
-    total = float(total) / 1024
-    part = float(part) / 1024
+
+    if total > 0:
+        total = float(total) / 1024
+        total_decimals =  int(3 - log10(total))
+    else:
+        total_decimals = 0
+    
+    if part > 0:
+        part = float(part) / 1024
+        part_decimals =  int(3 - log10(part))
+    else:
+        part = 0
+        part_decimals = 0
+    
     return "%.*f / %.*f" % (
-        int(3 - log10(part)), part, int(3 - log10(total)), total)
+        part_decimals, part, total_decimals, total)
 
 
 @register.simple_tag
@@ -197,7 +272,8 @@ def node_memory(node):
     """
     Pretty-print a memory quantity, in GiB, with significant figures.
     """
-    return format_part_total(node["mfree"], node["mtotal"])
+    ram = node.ram
+    return format_part_total(ram['free'], ram['total'])
 
 
 @register.simple_tag
@@ -205,24 +281,19 @@ def node_disk(node):
     """
     Pretty-print a disk quantity, in GiB, with significant figures.
     """
-    return format_part_total(node["dfree"], node["dtotal"])
+    disk = node.disk
+    return format_part_total(disk['free'], disk['total'])
 
 
 @register.simple_tag
-def cluster_memory(cluster, nodes=None):
+def cluster_memory(cluster):
     """
     Pretty-print a memory quantity of the whole cluster [GiB]
     """
-    nodes = nodes if nodes else cluster.nodes(True)
-    mfree, mtotal = 0, 0
-    for i in nodes:
-        if isinstance(i, str):
-            continue
-        if i["mfree"]:
-            mfree += i["mfree"]
-        if i["mtotal"]:
-            mtotal += i["mtotal"]
-    return format_part_total(mfree, mtotal)
+    d = cluster.available_ram
+    free = d['free']
+    total = d['total']
+    return format_part_total(free, total)
 
 
 @register.simple_tag
@@ -230,16 +301,10 @@ def cluster_disk(cluster, nodes=None):
     """
     Pretty-print a memory quantity of the whole cluster [GiB]
     """
-    nodes = nodes if nodes else cluster.nodes(True) 
-    dfree, dtotal = 0, 0
-    for i in nodes:
-        if isinstance(i, str):
-            continue
-        if i["dfree"]:
-            dfree += i["dfree"]
-        if i["dtotal"]:
-            dtotal += i["dtotal"]
-    return format_part_total(dfree, dtotal)
+    d = cluster.available_disk
+    free = d['free']
+    total = d['total']
+    return format_part_total(free, total)
 
 
 @register.simple_tag
@@ -252,18 +317,18 @@ def format_running_vms(cluster):
 
 
 @register.simple_tag
-def format_online_nodes(cluster, nodes=None):
+def format_online_nodes(cluster):
     """
     Return number of nodes that are online and number of all nodes
     """
-    n = 0
-    nodes = nodes if nodes else cluster.nodes(True)
-    for i in nodes:
-        if isinstance(i, str):
-            continue
-        if not i['offline']:
-            n += 1
-    return "%d/%d" % (n, len(nodes))
+    annotation = cluster.nodes.values('offline').annotate(count=Count('pk'))
+    offline = online = 0
+    for values in annotation:
+        if values['offline']:
+            offline = values['count']
+        else:
+            online = values['count']
+    return "%d/%d" % (online, offline+online)
 
 
 @register.filter

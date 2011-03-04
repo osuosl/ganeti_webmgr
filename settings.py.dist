@@ -26,6 +26,11 @@ DATABASE_PASSWORD = ''         # Not used with sqlite3.
 DATABASE_HOST = ''             # Set to empty string for localhost. Not used with sqlite3.
 DATABASE_PORT = ''             # Set to empty string for default. Not used with sqlite3.
 
+## XXX - If you are using postgresql_psycopg2 makesure to enable this option
+## or else you will not be able to run syncdb.
+#DATABASE_OPTIONS = {
+#    'autocommit': True 
+#}
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -105,7 +110,6 @@ TEMPLATE_DIRS = (
 )
 
 INSTALLED_APPS = (
-    'compat',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.messages',
@@ -114,7 +118,7 @@ INSTALLED_APPS = (
     'registration',
     'object_permissions',
     'ganeti',
-    'logs',
+    'object_log',
     'south'
 )
 
@@ -150,16 +154,13 @@ PERIODIC_CACHE_REFRESH = 15
 # directly to the VNC server running on the virtual machine.
 #
 # Expected values: False if no proxy, string with proxy host and port otherwise
-# String syntax: "HOST:PORT", for example: "localhost:8888"
+# String syntax: "HOST:PORT", for example: "localhost:8888". Instead of
+# "localhost" you should use the hostname of your proxy server.
 #
 # Note: you will probably have to open more ports in firewall. For proxy's default
 # settings, it uses port 8888 for listening for requests and ports 7000..8000
 # for serving proxy.
 #
-# To run proxy (in 'util' directory):
-#  $ python vncauthproxy.py --websockets
-# If you want to use encryption, then:
-#  $ python vncauthproxy.py --websockets --cert=FILE.pem
 VNC_PROXY='localhost:8888'
 
 

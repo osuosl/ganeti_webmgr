@@ -1,5 +1,4 @@
 # Copyright (C) 2010 Oregon State University et al.
-# Copyright (C) 2010 Greek Research and Technology Network
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -367,7 +366,8 @@ class TestErrorViews(TestGanetiErrorBase, TestCase):
     
     def test_clear_error(self):
         
-        url = '/error/clear/'
+        url = '/error/clear/%s'
+
         
         msg = client.GanetiApiError("Simulating an error", 777)
         RapiProxy.error = msg
@@ -383,7 +383,7 @@ class TestErrorViews(TestGanetiErrorBase, TestCase):
         self.assertFalse(vm_error.cleared)
         
         # anonymous user
-        response = c.post(url, {'id':vm_error.id}, follow=True)
+        response = c.post(url % vm_error.id, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'registration/login.html')
         vm_error = GanetiError.objects.get(pk=vm_error.pk)
@@ -391,25 +391,25 @@ class TestErrorViews(TestGanetiErrorBase, TestCase):
         
         # unauthorized user
         self.assert_(c.login(username=user.username, password='secret'))
-        response = c.post(url, {'id':vm_error.id})
+        response = c.post(url % vm_error.id)
         self.assertEqual(403, response.status_code)
         vm_error = GanetiError.objects.get(pk=vm_error.pk)
         self.assertFalse(vm_error.cleared)
         
         # nonexisent error
-        response = c.post(url, {'id':-1})
+        response = c.post(url % -1)
         self.assertEqual(404, response.status_code)
         
         # authorized for cluster (cluster admin)
         user.grant('admin', cluster)
-        response = c.post(url, {'id':c_error.id})
+        response = c.post(url % c_error.id)
         self.assertEqual(200, response.status_code)
         c_error = GanetiError.objects.get(pk=c_error.pk)
         self.assert_(c_error.cleared)
         GanetiError.objects.all().update(cleared=False)
         
         # authorized for vm (cluster admin)
-        response = c.post(url, {'id':vm_error.id})
+        response = c.post(url % vm_error.id)
         self.assertEqual(200, response.status_code)
         vm_error = GanetiError.objects.get(pk=vm_error.pk)
         self.assert_(vm_error.cleared)
@@ -419,7 +419,7 @@ class TestErrorViews(TestGanetiErrorBase, TestCase):
         # authorized for vm (vm owner)
         vm.owner = user.get_profile()
         vm.save()
-        response = c.post(url, {'id':vm_error.id})
+        response = c.post(url % vm_error.id)
         self.assertEqual(200, response.status_code)
         vm_error = GanetiError.objects.get(pk=vm_error.pk)
         self.assert_(vm_error.cleared)
@@ -430,7 +430,7 @@ class TestErrorViews(TestGanetiErrorBase, TestCase):
         # authorized for vm (superuser)
         user.is_superuser = True
         user.save()
-        response = c.post(url, {'id':vm_error.id})
+        response = c.post(url % vm_error.id)
         self.assertEqual(200, response.status_code)
         vm_error = GanetiError.objects.get(pk=vm_error.pk)
         self.assert_(vm_error.cleared)

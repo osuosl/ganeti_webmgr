@@ -1,5 +1,4 @@
 # Copyright (C) 2010 Oregon State University et al.
-# Copyright (C) 2010 Greek Research and Technology Network
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -55,8 +54,9 @@ def update_sites_module(sender, **kwargs):
     try:
         site = Site.objects.get(id=id)
     except Site.DoesNotExist:
-        print "New site: [%s] %s (%s) created in django_site table." % \
-            (id, name, domain)
+        if kwargs['verbosity'] >= 1:
+            print "New site: [%s] %s (%s) created in django_site table." % \
+                (id, name, domain)
         site = Site(id=id, name=name, domain=domain)
         site.save()
         # Reconnect create_default_site request for other apps

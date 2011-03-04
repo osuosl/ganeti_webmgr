@@ -1,5 +1,4 @@
 # Copyright (C) 2010 Oregon State University et al.
-# Copyright (C) 2010 Greek Research and Technology Network
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,8 +16,7 @@
 # USA.
 
 from django.http import HttpResponseNotFound, HttpResponseForbidden
-from django.template import RequestContext
-from django.template import Context, loader
+from django.template import RequestContext, loader
 
 
 def render_403(request, message):

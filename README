@@ -29,10 +29,12 @@ Twitter:      http://twitter.com/ganetiwebmgr
 ================================================================================
 
 1.  Install Dependencies
+    * Python >= 2.5
     * Django >= 1.2
     * django-registration
     * South >=0.7
     * object_permissions (packaged with releases)
+    * object_log (packaged with releases)
     * sqlite3, mysql, or postgresql
     * twisted, twisted-web (deps for twisted-vncauthproxy)
 
@@ -68,7 +70,7 @@ Twitter:      http://twitter.com/ganetiwebmgr
 
     ./manage.py migrate
 
-8. run the server
+8. Run the server
 
     Development:
 
@@ -288,6 +290,17 @@ want to open port 843 in your firewall for production systems.
 Start the policy server with twistd
 
     sudo twistd --pidfile=/tmp/policy.pid -ny policy.tac
+
+Possible issues
+---------------
+
+You may encounter an issue where twisted fails to start and gives you error.
+This is usually caused by the environment variable PYTHONPATH not being
+exported correctly if you sudo up to root. To fix it type:
+
+    export PYTHONPATH="."
+
+Try executing twisted again and it should work.
 
 Possible issues
 ---------------

@@ -22,9 +22,16 @@
                 show: {when:false, ready:true},
                 hide: {fixed: true, when:false},
                 api:{onShow:function(){
-                    $(".ajax_form input[type!=hidden], .ajax_form select").first().focus();
+                    $("#quota_form input[type!=hidden], .ajax_form select").first().focus();
                 }}
             });
+            return false;
+        });
+        
+        // quota submit
+        $("#quota_form").live("submit", function(){
+            $("#errors").empty();
+            $(this).ajaxSubmit({success: update_user_permissions});
             return false;
         });
         
@@ -32,7 +39,7 @@
         $('#quota_form .delete').live("click", function() {
             id = $('#quota_form input[name=user]').val()
             $.post('{% url cluster-quota object.slug %}'+id,
-                   {user:id, 'delete':true}, update);
+                   {user:id, 'delete':true}, update_user_permissions);
         });
     });
 </script>

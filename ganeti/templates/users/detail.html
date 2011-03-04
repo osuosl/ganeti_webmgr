@@ -7,14 +7,11 @@
 {% block head %}
     <link href="{{MEDIA_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
     <style>
-    .ui-widget-header {background:none; border-width:0 0 1px 0; -moz-border-radius:0px;}
-    .ui-widget-content {border:0;}
     #detail h3 {margin-top:30px;}
     </style>
     <script src="{{MEDIA_URL}}/js/jquery-ui.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
-            console.log($('#tabs'));
             $('#tabs').tabs({
                 spinner: false,
                 cache: true,
@@ -41,6 +38,8 @@
         <li><a href="#detail"><span>Detail</span></a></li>
         <li><a title="permissions" href="{% url user-all-permissions user_detail.pk %}"><span>Permissions</span></a></li>
         <li><a title="usage" href="{% url used_resources %}?id={{user_detail.get_profile.pk}}"><span>Resource Usage</span></a></li>
+        <li><a title="user actions" href="{% url user-object_log-actions user_detail.pk %}"><span>User Actions</span></a></li>
+        <li><a title="log" href="{% url user-object_log user_detail.pk %}"><span>Log</span></a></li>
         {% block tabs %}{% endblock tabs %}
     </ul>
     <div id="detail">
@@ -57,7 +56,8 @@
         </table>
         
         <h3>SSH keys</h3>
-        {% include "ssh_keys/list.html" %}
+        <a class="button add" id="add_key" href="{% url user-key-add user_detail.pk %}">Add SSH key</a>
+        {% include "ssh_keys/table.html" %}
     </div>
 </div>
 {% endblock %}

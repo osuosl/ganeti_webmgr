@@ -20,22 +20,29 @@
 import json
 
 from django import forms
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, HttpResponseRedirect
+from django.db.models.query_utils import Q
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.template.defaultfilters import slugify
 
+from object_permissions import get_users_any
 from object_permissions.views.permissions import view_users, view_permissions
 from object_permissions import signals as op_signals
 
-from logs.models import LogItem
+from object_log.models import LogItem
+from object_log.views import list_for_object
+from util.client import GanetiApiError
+
 log_action = LogItem.objects.log_action
 
-from ganeti.models import Cluster, ClusterUser, Profile, VirtualMachine
-from ganeti.views import render_403, render_404, virtual_machine
+from ganeti.models import Cluster, ClusterUser, Profile, SSHKey
+from ganeti.views import render_403, render_404
+from ganeti.views.virtual_machine import render_vms
 from ganeti.fields import DataVolumeField
 
 # Regex for a resolvable hostname
@@ -54,9 +61,8 @@ def detail(request, cluster_slug):
         return render_403(request, "You do not have sufficient privileges")
     
     return render_to_response("cluster/detail.html", {
-        'cluster': cluster,
-        'user': request.user,
-        'admin' : admin
+        'cluster':cluster,
+        'admin':admin
         },
         context_instance=RequestContext(request),
     )
@@ -73,7 +79,7 @@ def nodes(request, cluster_slug):
         return render_403(request, "You do not have sufficient privileges")
     
     return render_to_response("node/table.html", \
-                        {'cluster': cluster, 'nodes':cluster.nodes(True)}, \
+                        {'cluster': cluster, 'nodes':cluster.nodes.all()}, \
         context_instance=RequestContext(request),
     )
 
@@ -90,8 +96,8 @@ def virtual_machines(request, cluster_slug):
     if not admin:
         return render_403(request, "You do not have sufficient privileges")
 
-    vms = cluster.virtual_machines.select_related().all()
-    vms = virtual_machine.render_vms(request, vms)
+    vms = cluster.virtual_machines.select_related('cluster').all()
+    vms = render_vms(request, vms)
 
     return render_to_response("virtual_machine/table.html", \
                 {'cluster': cluster, 'vms':vms}, \
@@ -118,8 +124,18 @@ def edit(request, cluster_slug=None):
             cluster = form.save()
             # TODO Create post signal to import
             #   virtual machines on edit of cluster
-            if cluster.info == None:
-                cluster.sync_virtual_machines()
+            if cluster.info is None:
+                try:
+                    cluster.sync_nodes()
+                    cluster.sync_virtual_machines()
+                except GanetiApiError:
+                    # ganeti errors here are silently discarded.  It's
+                    # valid to enter bad info.  A user might be adding
+                    # info for an offline cluster.
+                    pass
+
+            log_action('EDIT', user, cluster)
+
             return HttpResponseRedirect(reverse('cluster-detail', \
                                                 args=[cluster.slug]))
     
@@ -188,30 +204,26 @@ def permissions(request, cluster_slug, user_id=None, group_id=None):
                             group_template='cluster/group_row.html')
 
 
-def user_added(sender, editor, user, obj, **kwargs):
+def ssh_keys(request, cluster_slug, api_key):
     """
-    receiver for object_permissions.signals.view_add_user, Logs action
+    Show all ssh keys which belong to users, who have any perms on the cluster
     """
-    log_action(editor, obj, "added user")
+    if settings.WEB_MGR_API_KEY != api_key:
+        return HttpResponseForbidden("You're not allowed to view keys.")
+    
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
 
+    users = set(get_users_any(cluster).values_list("id", flat=True))
+    for vm in cluster.virtual_machines.all():
+        users = users.union(set(get_users_any(vm).values_list('id', flat=True)))
 
-def user_removed(sender, editor, user, obj, **kwargs):
-    """
-    receiver for object_permissions.signals.view_add_user, Logs action
-    """
-    log_action(editor, obj, "removed user")
+    keys = SSHKey.objects \
+        .filter(Q(user__in=users) | Q(user__is_superuser=True)) \
+        .values_list('key','user__username') \
+        .order_by('user__username')
 
-
-def user_edited(sender, editor, user, obj, **kwargs):
-    """
-    receiver for object_permissions.signals.view_add_user, Logs action
-    """
-    log_action(editor, obj, "modified permissions")
-
-
-op_signals.view_add_user.connect(user_added, sender=Cluster)
-op_signals.view_remove_user.connect(user_removed, sender=Cluster)
-op_signals.view_edit_user.connect(user_edited, sender=Cluster)
+    keys_list = list(keys)
+    return HttpResponse(json.dumps(keys_list), mimetype="application/json")
 
 
 class QuotaForm(forms.Form):
@@ -294,7 +306,7 @@ class EditClusterForm(forms.ModelForm):
         }
         
     ram = DataVolumeField(label='Memory', required=False, min_value=0)
-    disk = DataVolumeField(label='Disk Space', required=False, min_value=0)    
+    disk = DataVolumeField(label='Disk Space', required=False, min_value=0)
     
     def clean(self):
         self.cleaned_data = super(EditClusterForm, self).clean()
@@ -330,18 +342,28 @@ class EditClusterForm(forms.ModelForm):
         return data
 
 
+@login_required
+def object_log(request, cluster_slug):
+    """ displays object log for this cluster """
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    user = request.user
+    if not (user.is_superuser or user.has_perm('admin', cluster)):
+        return render_403(request, "You do not have sufficient privileges")
+    return list_for_object(request, cluster)
+
+
 def recv_user_add(sender, editor, user, obj, **kwargs):
     """
     receiver for object_permissions.signals.view_add_user, Logs action
     """
-    log_action(editor, obj, "added user")
+    log_action('ADD_USER', editor, obj, user)
 
 
 def recv_user_remove(sender, editor, user, obj, **kwargs):
     """
     receiver for object_permissions.signals.view_remove_user, Logs action
     """
-    log_action(editor, obj, "removed user")
+    log_action('REMOVE_USER', editor, obj, user)
     
     # remove custom quota user may have had.
     if isinstance(user, (User,)):
@@ -355,7 +377,7 @@ def recv_perm_edit(sender, editor, user, obj, **kwargs):
     """
     receiver for object_permissions.signals.view_edit_user, Logs action
     """
-    log_action(editor, obj, "modified permissions")
+    log_action('MODIFY_PERMS', editor, obj, user)
 
 
 op_signals.view_add_user.connect(recv_user_add, sender=Cluster)

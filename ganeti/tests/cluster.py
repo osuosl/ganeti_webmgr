@@ -1,5 +1,4 @@
 # Copyright (C) 2010 Oregon State University et al.
-# Copyright (C) 2010 Greek Research and Technology Network
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -22,16 +21,20 @@ from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from django.contrib.auth.models import User, Group
+from django.core.urlresolvers import reverse
 from django.test import TestCase
 from django.test.client import Client
+from django_test_tools.users import UserTestMixin
+from django_test_tools.views import ViewTestMixin
+from ganeti.models import SSHKey
 
 from object_permissions import *
-
 
 from ganeti.tests.rapi_proxy import RapiProxy, INFO, NODES, NODES_BULK
 from ganeti import models
 Cluster = models.Cluster
 VirtualMachine = models.VirtualMachine
+Node = models.Node
 Quota = models.Quota
 Job = models.Job
 
@@ -46,9 +49,11 @@ class TestClusterModel(TestCase):
         self.tearDown()
     
     def tearDown(self):
-        Cluster.objects.all().delete()
         User.objects.all().delete()
         Quota.objects.all().delete()
+        VirtualMachine.objects.all().delete()
+        Node.objects.all().delete()
+        Cluster.objects.all().delete()
 
     def test_trivial(self):
         """
@@ -179,6 +184,29 @@ class TestClusterModel(TestCase):
         
         cluster.sync_virtual_machines(True)
         self.assertFalse(VirtualMachine.objects.filter(cluster=cluster, hostname=vm_removed.hostname), 'vm not present in ganeti was not removed from db')
+    
+    def test_sync_nodes(self):
+        """
+        Tests synchronizing cached Nodes (stored in db) with info
+        the ganeti cluster is storing
+        
+        Verifies:
+            * Node no longer in ganeti are deleted
+            * Nodes missing from the database are added
+        """
+        cluster = Cluster.objects.create(hostname='ganeti.osuosl.test')
+        node_missing = 'gtest1.osuosl.bak'
+        node_current = Node.objects.create(cluster=cluster, hostname='gtest2.osuosl.bak')
+        node_removed = Node.objects.create(cluster=cluster, hostname='does.not.exist.org')
+        
+        cluster.sync_nodes()
+        self.assert_(Node.objects.get(cluster=cluster, hostname=node_missing), 'missing node was not created')
+        self.assert_(Node.objects.get(cluster=cluster, hostname=node_current.hostname), 'previously existing node was not created')
+        self.assert_(Node.objects.filter(cluster=cluster, hostname=node_removed.hostname), 'node not present in ganeti was not removed from db, even though remove flag was false')
+        
+        cluster.sync_nodes(True)
+        self.assertFalse(Node.objects.filter(cluster=cluster, hostname=node_removed.hostname), 'node not present in ganeti was not removed from db')
+
 
     def test_missing_in_database(self):
         """
@@ -208,8 +236,67 @@ class TestClusterModel(TestCase):
         
         self.assertEqual([u'does.not.exist.org'], cluster.missing_in_ganeti)
 
+    def test_available_ram(self):
+        """
+        Tests that the available_ram property returns the correct values
+        """
+        c = Cluster.objects.create(hostname='ganeti.osuosl.test')
+        c2 = Cluster.objects.create(hostname='ganeti2.osuosl.test', slug='argh')
+        node = Node.objects.create(cluster=c, hostname='node.osuosl.test')
+        node1 = Node.objects.create(cluster=c2, hostname='node1.osuosl.test')
 
-class TestClusterViews(TestCase):
+        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='foo', ram=123, status='running')
+        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='bar', ram=456, status='running')
+        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='xoo', ram=789, status='admin_down')
+        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='xar', ram=234, status='stopped')
+        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='boo', status='running')
+        VirtualMachine.objects.create(cluster=c2, primary_node=node1, hostname='gar', ram=888, status='running')
+        VirtualMachine.objects.create(cluster=c2, primary_node=node1, hostname='yoo', ram=999, status='admin_down')
+
+        # test with no nodes, should result in zeros since nodes info isn't cached yet
+        ram = c.available_ram
+        self.assertEqual(0, ram['free'])
+        self.assertEqual(0, ram['total'])
+
+        # force refresh of nodes and rerun test for real values
+        node.refresh()
+        node1.refresh()
+        ram = c.available_ram
+        self.assertEqual(9999, ram['total'])
+        self.assertEqual(9420, ram['free'])
+
+    
+    def test_available_disk(self):
+        """
+        Tests that the available_disk property returns the correct values
+        """
+        c = Cluster.objects.create(hostname='ganeti.osuosl.test')
+        c2 = Cluster.objects.create(hostname='ganeti2.osuosl.test', slug='argh')
+        node = Node.objects.create(cluster=c, hostname='node.osuosl.test')
+        node1 = Node.objects.create(cluster=c2, hostname='node1.osuosl.test')
+        
+        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='foo', disk_size=123, status='running')
+        VirtualMachine.objects.create(cluster=c, primary_node=node,hostname='bar', disk_size=456, status='running')
+        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='xoo', disk_size=789, status='admin_down')
+        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='xar', disk_size=234, status='stopped')
+        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='boo', status='running')
+        VirtualMachine.objects.create(cluster=c2, primary_node=node1, hostname='gar', disk_size=888, status='running')
+        VirtualMachine.objects.create(cluster=c2, primary_node=node1, hostname='yoo', disk_size=999, status='admin_down')
+
+        # test with no nodes, should result in zeros since nodes info isn't cached yet
+        disk = c.available_disk
+        self.assertEqual(0, disk['free'])
+        self.assertEqual(0, disk['total'])
+
+        # force refresh of nodes and rerun test for real values
+        node.refresh()
+        node1.refresh()
+        disk = c.available_disk
+        self.assertEqual(6666, disk['total'])
+        self.assertEqual(5064, disk['free'])
+    
+
+class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
     
     def setUp(self):
         self.tearDown()
@@ -224,12 +311,16 @@ class TestClusterViews(TestCase):
         user1 = User(id=3, username='tester1')
         user1.set_password('secret')
         user1.save()
-        
+
         group = Group(name='testing_group')
         group.save()
         
         cluster = Cluster(hostname='test.osuosl.test', slug='OSL_TEST')
         cluster.save()
+
+        self.create_standard_users(globals())
+        self.create_users(['cluster_admin'], globals())
+        cluster_admin.grant('admin', cluster)
         
         dict_ = globals()
         dict_['user'] = user
@@ -239,6 +330,7 @@ class TestClusterViews(TestCase):
         dict_['c'] = Client()
 
     def tearDown(self):
+        VirtualMachine.objects.all().delete()
         Quota.objects.all().delete()
         Cluster.objects.all().delete()
         Group.objects.all().delete()
@@ -706,35 +798,35 @@ class TestClusterViews(TestCase):
         self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
         
         # no user or group
-        data = {'permissions':['admin']}
+        data = {'permissions':['admin'], 'obj':cluster.pk}
         response = c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
         
         # both user and group
-        data = {'permissions':['admin'], 'group':group.id, 'user':user1.id}
+        data = {'permissions':['admin'], 'group':group.id, 'user':user1.id, 'cluster':cluster.pk}
         response = c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
         
         # no permissions specified - user
-        data = {'permissions':[], 'user':user1.id}
+        data = {'permissions':[], 'user':user1.id, 'obj':cluster.pk}
         response = c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
         
         # no permissions specified - group
-        data = {'permissions':[], 'group':group.id}
+        data = {'permissions':[], 'group':group.id, 'obj':cluster.pk}
         response = c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         
         # valid POST user has permissions
         user1.grant('create_vm', cluster)
-        data = {'permissions':['admin'], 'user':user1.id}
+        data = {'permissions':['admin'], 'user':user1.id, 'obj':cluster.pk}
         response = c.post(url % args, data)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'cluster/user_row.html')
@@ -743,11 +835,24 @@ class TestClusterViews(TestCase):
         
         # valid POST group has permissions
         group.grant('create_vm', cluster)
-        data = {'permissions':['admin'], 'group':group.id}
+        data = {'permissions':['admin'], 'group':group.id, 'obj':cluster.pk}
         response = c.post(url % args, data)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'cluster/group_row.html')
         self.assertEqual(['admin'], group.get_perms(cluster))
+
+    def test_view_object_log(self):
+        """
+        Tests view for cluster object log:
+
+        Verifies:
+            * view can be loaded
+            * cluster specific log actions can be rendered properly
+        """
+        url = "/cluster/%s/object_log/"
+        args = (cluster.slug,)
+        self.assert_standard_fails(url, args)
+        self.assert_200(url, args, users=[superuser, cluster_admin])
 
     def test_view_user_permissions(self):
         """
@@ -804,21 +909,21 @@ class TestClusterViews(TestCase):
         
         # invalid user (POST)
         user1.grant('create_vm', cluster)
-        data = {'permissions':['admin'], 'user':-1}
+        data = {'permissions':['admin'], 'user':-1, 'obj':cluster.pk}
         response = c.post(url_post % args_post, data)
         self.assertEquals('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
         
         # no user (POST)
         user1.grant('create_vm', cluster)
-        data = {'permissions':['admin']}
+        data = {'permissions':['admin'], 'obj':cluster.pk}
         response = c.post(url_post % args_post, data)
         self.assertEquals('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
         
         # valid POST user has permissions
         user1.grant('create_vm', cluster)
-        data = {'permissions':['admin'], 'user':user1.id}
+        data = {'permissions':['admin'], 'user':user1.id, 'obj':cluster.pk}
         response = c.post(url_post % args_post, data)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'cluster/user_row.html')
@@ -833,12 +938,12 @@ class TestClusterViews(TestCase):
         self.assertEqual(user_quota, cluster.get_quota(user1.get_profile()))
         
         # valid POST user has no permissions left
-        data = {'permissions':[], 'user':user1.id}
+        data = {'permissions':[], 'user':user1.id, 'obj':cluster.pk}
         response = c.post(url_post % args_post, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertEqual([], get_user_perms(user, cluster))
-        self.assertEqual('1', response.content)
+        self.assertEqual('"user_3"', response.content)
         
         # quota should be deleted (and showing default)
         self.assertEqual(1, cluster.get_quota(user1.get_profile())['default'])
@@ -847,7 +952,7 @@ class TestClusterViews(TestCase):
         # no permissions specified - user with no quota
         user1.grant('create_vm', cluster)
         cluster.set_quota(user1.get_profile(), None)
-        data = {'permissions':[], 'user':user1.id}
+        data = {'permissions':[], 'user':user1.id, 'obj':cluster.pk}
         response = c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
@@ -900,20 +1005,20 @@ class TestClusterViews(TestCase):
         self.assertEqual(404, response.status_code)
         
         # invalid group (POST)
-        data = {'permissions':['admin'], 'group':-1}
+        data = {'permissions':['admin'], 'group':-1, 'obj':cluster.pk}
         response = c.post(url_post % args_post, data)
         self.assertEquals('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
         
         # no group (POST)
-        data = {'permissions':['admin']}
+        data = {'permissions':['admin'], 'obj':cluster.pk}
         response = c.post(url_post % args_post, data)
         self.assertEquals('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
         
         # valid POST group has permissions
         group.grant('create_vm', cluster)
-        data = {'permissions':['admin'], 'group':group.id}
+        data = {'permissions':['admin'], 'group':group.id, 'obj':cluster.pk}
         response = c.post(url_post % args_post, data)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'cluster/group_row.html')
@@ -927,12 +1032,12 @@ class TestClusterViews(TestCase):
         self.assertEqual(user_quota, cluster.get_quota(group.organization))
         
         # valid POST group has no permissions left
-        data = {'permissions':[], 'group':group.id}
+        data = {'permissions':[], 'group':group.id, 'obj':cluster.pk}
         response = c.post(url_post % args_post, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertEqual([], group.get_perms(cluster))
-        self.assertEqual('1', response.content)
+        self.assertEqual('"group_1"', response.content)
         
         # quota should be deleted (and showing default)
         self.assertEqual(1, cluster.get_quota(group.organization)['default'])
@@ -941,7 +1046,7 @@ class TestClusterViews(TestCase):
         # no permissions specified - user with no quota
         group.grant('create_vm', cluster)
         cluster.set_quota(group.organization, None)
-        data = {'permissions':[], 'group':group.id}
+        data = {'permissions':[], 'group':group.id, 'obj':cluster.pk}
         response = c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
@@ -1161,3 +1266,45 @@ class TestClusterViews(TestCase):
         
         # assert that no VMs were created
         self.assertFalse(cluster.virtual_machines.all().exists())
+    
+    def test_view_ssh_keys(self):
+        """
+        Test getting SSH keys belonging to users, who have admin permission on
+        specified cluster
+        """
+        vm = VirtualMachine.objects.create(cluster=cluster, hostname='vm1.osuosl.bak')
+
+        # add some keys
+        SSHKey.objects.create(key="ssh-rsa test test@test", user=user)
+        SSHKey.objects.create(key="ssh-dsa test asd@asd", user=user)
+        SSHKey.objects.create(key="ssh-dsa test foo@bar", user=user1)
+
+        # get API key
+        import settings, json
+        key = settings.WEB_MGR_API_KEY
+
+        url = '/cluster/%s/keys/%s/'
+        args = (cluster.slug, key)
+
+        self.assert_standard_fails(url, args, login_required=False, authorized=False)
+
+        # cluster without users who have admin perms
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code )
+        self.assertEquals("application/json", response["content-type"])
+        self.assertEqual(len(json.loads(response.content)), 0 )
+        self.assertNotContains(response, "test@test")
+        self.assertNotContains(response, "asd@asd")
+
+        # vm with users who have admin perms
+        # grant admin permission to first user
+        user.grant("admin", vm)
+        user1.grant("admin", cluster)
+
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code )
+        self.assertEquals("application/json", response["content-type"])
+        self.assertEqual(len(json.loads(response.content)), 3 )
+        self.assertContains(response, "test@test", count=1)
+        self.assertContains(response, "asd@asd", count=1)
+        self.assertContains(response, "foo@bar", count=1)

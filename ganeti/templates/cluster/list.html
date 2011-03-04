@@ -63,7 +63,7 @@
                 <td>{{ info.software_version }}</td>
                 <td>{{ info.default_hypervisor }}</td>
                 <td>{{ info.master }}</td>
-                <td>{{ nodes|length }}</td>
+                <td>{{ nodes.count }}</td>
                 <td>{{ cluster.virtual_machines.count }}</td>
             </tr>
         {% endwith %}

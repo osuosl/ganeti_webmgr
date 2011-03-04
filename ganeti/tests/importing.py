@@ -1,5 +1,4 @@
 # Copyright (C) 2010 Oregon State University et al.
-# Copyright (C) 2010 Greek Research and Technology Network
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -103,7 +102,7 @@ class ImportViews(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'importing/orphans.html')
-        self.assertEqual([(1, 'test0', 'vm0')], response.context['vms'])
+        self.assertEqual([(vm0.id, 'test0', 'vm0')], response.context['vms'])
         user.revoke_all(cluster0)
 
         # authorized get (superuser)
@@ -113,7 +112,7 @@ class ImportViews(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'importing/orphans.html')
-        self.assertEqual([(1, 'test0', 'vm0'), (3, 'test1', 'vm3')], response.context['vms'])
+        self.assertEqual([(vm0.id, 'test0', 'vm0'), (vm3.id, 'test1', 'vm3')], response.context['vms'])
         user.is_superuser = False
         user.save()
 

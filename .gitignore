@@ -6,13 +6,12 @@
 *.pyc
 
 # Settings should be setup per install
-settings.py
+# Install all setting files except settings.py.dist
+settings.py*
+!settings.py.dist
 
 # Any sqlite database files created by the project
 *.db
-
-# Object permissions
-object_permissions
 
 # Patch and Diff files
 *.diff
@@ -20,6 +19,20 @@ object_permissions
 
 # Komodo files
 *.komodo*
+*.kpf
+
+# PyCharm files
+.idea
 
 # vim swap files
 *.swp
+
+# files that might exist in dev environment
+django
+object_log
+object_permissions
+noVNC
+muddle
+
+# Hidden files
+.*

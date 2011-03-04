@@ -1,9 +1,5 @@
 {% load webmgr_tags %}
 
-{% block head %}
-<script src="{{MEDIA_URL}}/js/jquery.tablesorter.min.js"></script>
-{% endblock %}
-
 <table id="nodes" class="sorted">
 <thead>
     <tr>
@@ -18,16 +14,20 @@
     {% for node in nodes %}
         <tr>
             <td class="status">
-            {% if node.offline %}
+            {% if node.info.offline %}
                 <div class="icon_stopped" title="Offline"></div>
             {% else %}
                 <div class="icon_running" title="Online"></div>
             {% endif %}
             </td>
-            <td>{{ node.name|abbreviate_fqdn }}</td>
+            <td>
+                <a href="{% url node-detail cluster.slug node.hostname %}">
+                    {{ node.hostname|abbreviate_fqdn }}
+                </a>
+            </td>
             <td class="ram">{% node_memory node %}</td>
             <td class="disk">{% node_disk node %}</td>
-            <td>{{ node.pinst_cnt }} / {{ node.sinst_cnt }}</td>
+            <td>{{ node.info.pinst_cnt }} / {{ node.info.sinst_cnt }}</td>
         </tr>
     {% endfor %}
 </tbody>

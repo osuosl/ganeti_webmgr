@@ -3,11 +3,6 @@
 
 {% block head %}
     <link href="{{MEDIA_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
-    <style>
-    .ui-widget-header {background:none; border-width:0 0 1px 0; -moz-border-radius:0px;}
-    .ui-widget-content {border:0;}
-    </style>
-    
     <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
     <script src="{{MEDIA_URL}}/js/jquery-ui.min.js"></script>
     <script src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
@@ -72,7 +67,10 @@
         <li><a href="#overview"><span>Overview</span></a></li>
         <li><a title="virtual machines" href="{% url cluster-vms cluster.slug %}"><span>Virtual Machines</span></a></li>
         <li><a title="nodes" href="{% url cluster-nodes cluster.slug %}"><span>Nodes</span></a></li>
-        {% if admin %}<li><a title="user" href="{% url cluster-users cluster.slug %}"><span>Users</span></a></li>{%endif%}
+        {% if admin %}
+            <li><a title="user" href="{% url cluster-users cluster.slug %}"><span>Users</span></a></li>
+            <li><a title="log" href="{% url cluster-object_log cluster.slug %}"><span>Log</span></a></li>
+        {%endif%}
     </ul>
     <div id="overview" class="tab_content">
         <ul id="actions">
@@ -96,6 +94,8 @@
             {% endif %}
             </td></tr>
             <tr><td>Last modified</td><td >{{ cluster.mtime|date }}</td></tr>
+            <tr><td>Virtual Machines</td><td>{{ cluster.virtual_machines.count }}</td></tr>
+            <tr><td>Nodes</td><td>{{ cluster.nodes.count }}</td></tr>
             {% endwith %}
         </table>
     </div>

@@ -1,6 +1,5 @@
 # Copyright (C) 2010 Oregon State University et al.
-# Copyright (C) 2010 Greek Research and Technology Network
-#
+# 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
@@ -16,17 +15,18 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.core.cache import cache
 from django.test import TestCase
 from django.test.client import Client
+from django_test_tools.views import ViewTestMixin
+from ganeti.models import SSHKey
 
 from object_permissions import *
 
 
-from ganeti.tests.rapi_proxy import RapiProxy, INFO, NODES, NODES_BULK
+from ganeti.tests.rapi_proxy import RapiProxy, JOB_ERROR
 from ganeti import models
 Cluster = models.Cluster
 VirtualMachine = models.VirtualMachine
@@ -37,7 +37,7 @@ from ganeti.views.general import update_vm_counts
 __all__ = ('TestGeneralViews', )
 
 
-class TestGeneralViews(TestCase):
+class TestGeneralViews(TestCase, ViewTestMixin):
     
     def setUp(self):
         models.client.GanetiRapiClient = RapiProxy
@@ -74,6 +74,7 @@ class TestGeneralViews(TestCase):
     
 
     def tearDown(self):
+        SSHKey.objects.all().delete()
         Cluster.objects.all().delete()
         User.objects.all().delete()
         Group.objects.all().delete()
@@ -104,6 +105,7 @@ class TestGeneralViews(TestCase):
         job1 = Job(job_id=1234, obj=vm1, cluster=cluster1,
                 finished="2011-01-05 21:59", status="error")
         job1.save()
+        job.rapi.GetJobStatus.response = JOB_ERROR
 
         url = "/"
         args = []
@@ -180,7 +182,7 @@ class TestGeneralViews(TestCase):
         
         url = "/used_resources/"
         args = {}
-        template = "overview/used_resources.html"
+        template = "overview/used_resources_data.html"
         mimetype = "text/html; charset=utf-8"
 
         # anonymous user
@@ -306,3 +308,48 @@ class TestGeneralViews(TestCase):
         vm21 = VirtualMachine(cluster=cluster2, hostname="vm21")
         vm22 = VirtualMachine(cluster=cluster2, hostname="vm22")
         vm23 = VirtualMachine(cluster=cluster2, hostname="vm23")
+
+    def test_view_ssh_keys(self):
+        """ tests retrieving all sshkeys from the gwm instance """
+
+        # add some keys
+        SSHKey.objects.create(key="ssh-rsa test test@test", user=user)
+        SSHKey.objects.create(key="ssh-dsa test asd@asd", user=user)
+        SSHKey.objects.create(key="ssh-dsa test foo@bar", user=user1)
+
+        user.revoke_all(vm)
+        user.revoke_all(cluster)
+        user1.revoke_all(vm)
+        user1.revoke_all(cluster)
+        user2.revoke_all(vm)
+        user2.revoke_all(cluster)
+
+        # get API key
+        import settings, json
+        key = settings.WEB_MGR_API_KEY
+
+        url = '/keys/%s/'
+        args = (key,)
+
+        self.assert_standard_fails(url, args, login_required=False, authorized=False)
+
+        # cluster without users who have admin perms
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code )
+        self.assertEquals("application/json", response["content-type"])
+        self.assertEqual(len(json.loads(response.content)), 0)
+        self.assertNotContains(response, "test@test")
+        self.assertNotContains(response, "asd@asd")
+
+        # vm with users who have admin perms
+        # grant admin permission to first user
+        user.grant("admin", vm)
+        user1.grant("admin", cluster)
+
+        response = c.get(url % args)
+        self.assertEqual(200, response.status_code )
+        self.assertEquals("application/json", response["content-type"])
+        self.assertEqual(len(json.loads(response.content)), 3 )
+        self.assertContains(response, "test@test", count=1)
+        self.assertContains(response, "asd@asd", count=1)
+        self.assertContains(response, "foo@bar", count=1)

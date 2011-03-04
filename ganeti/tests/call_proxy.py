@@ -1,5 +1,4 @@
 # Copyright (C) 2010 Oregon State University et al.
-# Copyright (C) 2010 Greek Research and Technology Network
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,6 +17,23 @@
 
 
 import types
+
+class ResponseMap(object):
+    """
+    An object that encapsulates return values based on parameters given to the
+    called method.
+    
+    Return Map should be initialized with a list containing tuples all possible
+    arg/kwarg combinations plus the result that should be sent for those args
+    """
+    def __init__(self, map):
+        self.map = map
+    
+    def __getitem__(self, key):
+        for k, response in self.map:
+            if key == k:
+                return response
+
 
 class CallProxy(object):
     """ Proxy for a method that will record calls to it.  To use this class
@@ -111,8 +127,16 @@ class CallProxy(object):
             else:
                 self.matching_function(*args, **kwargs)
         
-        return self.response if self.response != None else response
+        # return mandated response.  This may be a ResponseMap, so process
+        # according to what type it is.
+        if self.response:
+            if isinstance(self.response, (ResponseMap,)):
+                return self.response[(args, kwargs)]
+            return self.response
         
+        return response
+    
+    
     def create_matching_function(self, func):
         """
         constructs a function with a method signature that matches the
