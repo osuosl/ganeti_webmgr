@@ -817,11 +817,11 @@ class Node(CachedClusterObject):
         Node.objects.filter(pk=self.pk).update(ignore_cache=True, last_job=job)
         return job
 
-    def evacuate(self):
+    def evacuate(self, iallocator=None, node=None):
         """
         migrates all secondary instances off this node
         """
-        id = self.rapi.EvacuateNode(self.hostname)
+        id = self.rapi.EvacuateNode(self.hostname, iallocator=iallocator, remote_node=node)
         job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
         self.last_job = job
         Node.objects.filter(pk=self.pk) \
@@ -1494,20 +1494,22 @@ register(permissions.VIRTUAL_MACHINE_PARAMS, VirtualMachine)
 
 
 # Register LogActions used within the Ganeti App
-LogAction.objects.register('VM_REBOOT','ganeti/object_log/vm_reboot.html')
-LogAction.objects.register('VM_START','ganeti/object_log/vm_start.html')
-LogAction.objects.register('VM_STOP','ganeti/object_log/vm_stop.html')
-LogAction.objects.register('VM_MIGRATE','ganeti/object_log/vm_migrate.html')
-LogAction.objects.register('VM_REINSTALL','ganeti/object_log/vm_reinstall.html')
-LogAction.objects.register('VM_MODIFY','ganeti/object_log/vm_modify.html')
-LogAction.objects.register('VM_RENAME','ganeti/object_log/vm_rename.html')
-LogAction.objects.register('VM_RECOVER','ganeti/object_log/vm_recover.html')
+def register_logactions(**kwargs):
+    LogAction.objects.register('VM_REBOOT','ganeti/object_log/vm_reboot.html')
+    LogAction.objects.register('VM_START','ganeti/object_log/vm_start.html')
+    LogAction.objects.register('VM_STOP','ganeti/object_log/vm_stop.html')
+    LogAction.objects.register('VM_MIGRATE','ganeti/object_log/vm_migrate.html')
+    LogAction.objects.register('VM_REINSTALL','ganeti/object_log/vm_reinstall.html')
+    LogAction.objects.register('VM_MODIFY','ganeti/object_log/vm_modify.html')
+    LogAction.objects.register('VM_RENAME','ganeti/object_log/vm_rename.html')
+    LogAction.objects.register('VM_RECOVER','ganeti/object_log/vm_recover.html')
 
-LogAction.objects.register('NODE_EVACUATE','ganeti/object_log/node_evacuate.html')
-LogAction.objects.register('NODE_MIGRATE','ganeti/object_log/node_migrate.html')
-LogAction.objects.register('NODE_ROLE_CHANGE','ganeti/object_log/node_role_change.html')
+    LogAction.objects.register('NODE_EVACUATE','ganeti/object_log/node_evacuate.html')
+    LogAction.objects.register('NODE_MIGRATE','ganeti/object_log/node_migrate.html')
+    LogAction.objects.register('NODE_ROLE_CHANGE','ganeti/object_log/node_role_change.html')
 
-# add log actions for permission actions here
-LogAction.objects.register('ADD_USER', 'ganeti/object_log/permissions/add_user.html')
-LogAction.objects.register('REMOVE_USER', 'ganeti/object_log/permissions/remove_user.html')
-LogAction.objects.register('MODIFY_PERMS', 'ganeti/object_log/permissions/modify_perms.html')
+    # add log actions for permission actions here
+    LogAction.objects.register('ADD_USER', 'ganeti/object_log/permissions/add_user.html')
+    LogAction.objects.register('REMOVE_USER', 'ganeti/object_log/permissions/remove_user.html')
+    LogAction.objects.register('MODIFY_PERMS', 'ganeti/object_log/permissions/modify_perms.html')
+post_syncdb.connect(register_logactions)

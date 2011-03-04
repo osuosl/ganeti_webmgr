@@ -8,6 +8,7 @@ div.info {float:left;width:390px;margin:0px;}
 #vm_summary h2 a {color:white;}
 form {float:left;clear:left;}
 form input.submit {margin:1em .5em 0px 0px;}
+form input.save_reboot {width:10em;margin:1em .5em 0px 0px;}
 </style>
 {% endblock %}
 {% block content %}
@@ -26,7 +27,7 @@ form input.submit {margin:1em .5em 0px 0px;}
 {% ifequal status "running" %}
 <div class="info">
     <p><b style="color:red;">Warning:</b> In order for your changes to the instance to take effect, you must 
-    first reboot the instance. Either click reboot, or click save and reboot at a later time.</p>
+    first reboot the instance. Either click 'Save & Reboot', or click 'Save' and reboot at a later time.</p>
     <br />
     <p><b>Note:</b> Rebooting must be done through Ganeti or Ganeti Web Manager. Your changes will
     not take effect if you reboot from within the instance.</p>
@@ -35,12 +36,14 @@ form input.submit {margin:1em .5em 0px 0px;}
 <form method="post">
     {{ form.as_p }}
     <input class="submit" type="submit" name="edit" value="Edit">
+{% if instance_diff.items %}
 {% ifequal status "running" %}
     {% if power %}
-    <input class="submit" type="submit" name="reboot" value="Reboot">
+    <input class="save_reboot" type="submit" name="reboot" value="Save & Reboot">
     {% endif %}
 {% endifequal %}
     <input class="submit" type="submit" name="save" value="Save">
+{% endif %}
     <input class="submit" type="submit" name="cancel" value="Cancel">
 </form>
 {% endwith %}

@@ -149,6 +149,16 @@ class TestSSHKeys(TestCase):
             response = c.get( reverse("key-get", args=[key.id+10]) )
             self.assertEqual( 404, response.status_code )
 
+    def test_admin_create(self):
+        """
+        Test an admin opening an ssh create form for another user
+        """
+        c.login(username=admin.username, password="secret")
+        response = c.get('/user/%s/key/' % user.pk)
+        self.assertEqual( 200, response.status_code )
+        self.assertEquals("text/html; charset=utf-8", response["content-type"])
+        self.assertTemplateUsed(response, "ssh_keys/form.html")
+
     def test_saving(self):
         """
         Tests key_save views
@@ -185,7 +195,7 @@ class TestSSHKeys(TestCase):
             self.assertNotContains( response, validate_sshkey.message )
 
             # successful creation of new object
-            response = c.post( reverse("key-save"), {"key": "ssh-rsa t t@t"})
+            response = c.post( reverse("key-save"), {"key": "ssh-rsa t t@t", 'user':user.pk})
             self.assertEqual( 200, response.status_code )
             self.assertTemplateUsed( response, "ssh_keys/row.html" )
             self.assertContains( response, "t@t", count=1 )

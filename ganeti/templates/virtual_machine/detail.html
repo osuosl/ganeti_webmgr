@@ -194,7 +194,7 @@
                         </a>
                     </li>
                 {% endif %}
-                {% if admin or migrate %}
+                {% if cluster_admin or migrate %}
                     {% if instance|is_drbd %}
                     <li>
                         <a class="button migrate" href="{% url instance-migrate cluster.slug instance.hostname %}">
