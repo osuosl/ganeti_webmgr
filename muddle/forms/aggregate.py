@@ -1,4 +1,9 @@
 from django.forms import Form
+from django.forms.util import ErrorDict
+
+
+class InvalidFieldsException(Exception):
+    pass
 
 
 def merge_dict(dst, src):
@@ -17,7 +22,7 @@ class AggregateForm(Form):
         """
         Aggregates form classes together to make a new class.
         """
-        fields = {}
+        fields = {'form_classes': forms}
 
         for form in forms:
             for name, field in form.base_fields.items():
@@ -51,24 +56,27 @@ class AggregateForm(Form):
         if not src.initial is None:
             dst.initial = src.initial
 
+    def __init__(self, *args, **kwargs):
+        self.forms = [cls(*args, **kwargs) for cls in self.form_classes]
+    
     def is_valid(self):
         """
         aggregates validation from all child forms.  Will run is_valid on each
         form and then aggregate the errors and or cleaned_data.
         """
         cleaned_data = {}
-        errors = {}
+        errors = ErrorDict()
 
-        for form in self.forms():
+        for form in self.forms:
             if form.is_valid():
                 cleaned_data.update(form.cleaned_data)
             else:
                 merge_dict(errors, form.errors)
 
         if errors:
-            # set using dict as form does something wierd to prevent setting it
-            # self.__dict__['errors'] = None if valid else errors
-            self.errors = errors
+            # XXX set _errors instead of errors since django doesn't like it
+            # when you set errors directly
+            self._errors = errors
             return False
 
         self.cleaned_data = cleaned_data

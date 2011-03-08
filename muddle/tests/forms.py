@@ -4,14 +4,13 @@ from muddle.forms.aggregate import AggregateForm
 
 
 class Foo(forms.Form):
-
     one = forms.BooleanField()
     two = forms.CharField(initial='two!')
     three = forms.CharField(required=True)
 
 class Bar(forms.Form):
     two = forms.CharField(required=False)
-    three = forms.BooleanField(required=False, initial='three!')
+    three = forms.CharField(required=False, initial='three!')
     four = forms.BooleanField()
 
 
@@ -88,13 +87,43 @@ class TestAggregateForms(TestCase):
         """
         Test when is_valid returns successful
         """
-        raise NotImplementedError
+        Klass = AggregateForm.aggregate([Foo, Bar])
+
+        data = {
+            'one':True,
+            'two':"two's value",
+            'three':"three's value",
+            'four':True,
+        }
+
+        form = Klass(data)
+        self.assertTrue(form.is_valid())
+
+        data = form.cleaned_data
+        self.assertEqual(True, data['one'])
+        self.assertEqual("two's value" ,data['two'])
+        self.assertEqual("three's value" ,data['three'])
+        self.assertEqual(True ,data['four'])
 
     def test_is_valid_false(self):
         """
         Test when is_valid returns not successful
         """
-        raise NotImplementedError
+        options = {'two':{'required':True}, 'three':{'required':True}}
+        Klass = AggregateForm.aggregate([Foo, Bar], options)
+
+        data = {
+            'one':True,
+            'four':True,
+        }
+
+        form = Klass(data)
+        self.assertFalse(form.is_valid())
+
+        errors = form.errors
+        self.assertTrue('two' in errors)
+        self.assertTrue('three' in errors)
+
 
     def test_(self):
         raise NotImplementedError
