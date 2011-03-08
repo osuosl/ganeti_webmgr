@@ -19,7 +19,30 @@ OWNER_TAG = 'gwm:owner:'
 
 # Form Constants
 EMPTY_CHOICE_FIELD = (u'', u'---------')
-
+MODE_CHOICES = (
+    ('live','Live'),
+    ('non-live','Non-Live'),
+)
+NODE_ROLE_MAP = {
+    'M':'Master',
+    'C':'Master Candidate',
+    'R':'Regular',
+    'D':'Drained',
+    'O':'Offline',
+}
+ROLE_CHOICES = (
+    ('', '-------------'),
+    ('master-candidate','Master Candidate'),
+    ('regular','Regular'),
+    ('drained','Drained'),
+    ('offline','Offline'),
+)
+ROLE_MAP = {
+    'C':'master-candidate',
+    'R':'regular',
+    'D':'drained',
+    'O':'offline',
+}
 # KVM Choices
 KVM_DISK_TEMPLATES = [
     (u'', u'---------'),
@@ -59,5 +82,24 @@ KVM_BOOT_ORDER = [
     ('cdrom', 'CD-ROM'),
     ('network', 'Network'),
 ]
-
+KVM_DISK_CACHES = [
+    (u'default',u'Default'),
+    (u'writethrough',u'Writethrough'),
+    (u'writeback',u'Writeback'),
+]
+KVM_SECURITY_MODELS = [
+    (u'none',u'None'),
+    (u'user',u'User'),
+    (u'pool',u'Pool'),
+]
+KVM_FLAGS = [
+    (u'', u'---------'),
+    (u'enabled', u'Enabled'),
+    (u'disabled', u'Disabled'),
+]
+KVM_USB_MICE = [
+    (u'', u'---------'),
+    (u'mouse',u'Mouse'),
+    (u'tablet',u'Tablet'),
+]
 # Xen HVM Choices

@@ -281,26 +281,10 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
     required = ('vcpus', 'memory', 'disk_type', 'boot_order', \
         'nic_type', 'root_path')
 
-    disk_caches = [
-        (u'default',u'Default'),
-        (u'writethrough',u'Writethrough'),
-        (u'writeback',u'Writeback'),
-    ]
-    security_models = [
-        (u'none',u'None'),
-        (u'user',u'User'),
-        (u'pool',u'Pool'),
-    ]
-    kvm_flags = [
-        (u'', u'---------'),
-        (u'enabled', u'Enabled'),
-        (u'disabled', u'Disabled'),
-    ]
-    usb_mice = [
-        (u'', u'---------'),
-        (u'mouse',u'Mouse'),
-        (u'tablet',u'Tablet'),
-    ]
+    disk_caches = constants.KVM_DISK_CACHES
+    security_models = constants.KVM_SECURITY_MODELS
+    kvm_flags = constants.KVM_FLAGS
+    usb_mice = constants.KVM_USB_MICE
 
     acpi = forms.BooleanField(label='ACPI', required=False)
     disk_cache = forms.ChoiceField(label='Disk Cache', required=False, \
@@ -407,12 +391,7 @@ class ModifyConfirmForm(forms.Form):
 
 class MigrateForm(forms.Form):
     """ Form used for migrating a Virtual Machine """
-    MODE_CHOICES = (
-        ('live','Live'),
-        ('non-live','Non-Live'),
-    )
-
-    mode = forms.ChoiceField(choices=MODE_CHOICES)
+    mode = forms.ChoiceField(choices=constants.MODE_CHOICES)
     cleanup = forms.BooleanField(initial=False, required=False,
                                  label="Attempt recovery from failed migration")
 

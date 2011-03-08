@@ -31,6 +31,7 @@ from util.client import GanetiApiError
 
 log_action = LogItem.objects.log_action
 
+from ganeti import constants
 from ganeti.models import Node, Cluster
 from ganeti.views import render_403
 from ganeti.views.virtual_machine import render_vms
@@ -119,23 +120,7 @@ class RoleForm(forms.Form):
     """
     Form for editing roles
     """
-    ROLE_CHOICES = (
-        ('', '-------------'),
-        ('master-candidate','Master Candidate'),
-        ('regular','Regular'),
-        ('drained','Drained'),
-        ('offline','Offline'),
-    )
-    
-    # map of role codes to form fields
-    ROLE_MAP = {
-        'C':'master-candidate',
-        'R':'regular',
-        'D':'drained',
-        'O':'offline',
-    }
-    
-    role = forms.ChoiceField(initial='', choices=ROLE_CHOICES, label='New Role')
+    role = forms.ChoiceField(initial='', choices=constants.ROLE_CHOICES, label='New Role')
     force = forms.BooleanField(initial=False, required=False)
 
 
@@ -174,7 +159,7 @@ def role(request, cluster_slug, host):
         form = RoleForm()
         
     else:
-        data = {'role':RoleForm.ROLE_MAP[node.role]}
+        data = {'role':constants.ROLE_MAP[node.role]}
         form = RoleForm(data)
     
     return render_to_response('node/role.html', \
@@ -184,14 +169,7 @@ def role(request, cluster_slug, host):
 
 class MigrateForm(forms.Form):
     """ Form used for migrating primary Virtual Machines off a Node """
-    MODE_CHOICES = (
-        ('live','Live'),
-        ('non-live','Non-Live'),
-    )
-
-    mode = forms.ChoiceField(choices=MODE_CHOICES)
-
-
+    mode = forms.ChoiceField(choices=constants.MODE_CHOICES)
 
 @login_required
 def migrate(request, cluster_slug, host):

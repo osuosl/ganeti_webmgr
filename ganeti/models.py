@@ -692,15 +692,7 @@ class Node(CachedClusterObject):
     Attributes that need to be searchable should be stored as model fields.  All
     other attributes will be stored within VirtualMachine.info.
     """
-    NODE_ROLE_MAP = {
-        'M':'Master',
-        'C':'Master Candidate',
-        'R':'Regular',
-        'D':'Drained',
-        'O':'Offline',
-    }
-
-    ROLE_CHOICES = ((k, v) for k, v in NODE_ROLE_MAP.items())
+    ROLE_CHOICES = ((k, v) for k, v in constants.NODE_ROLE_MAP.items())
     
     cluster = models.ForeignKey('Cluster', related_name='nodes')
     hostname = models.CharField(max_length=128, unique=True)
