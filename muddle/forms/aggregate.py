@@ -13,7 +13,7 @@ def merge_dict(dst, src):
 class AggregateForm(Form):
 
     @classmethod
-    def aggregate(cls, forms):
+    def aggregate(cls, forms, options=None):
         """
         Aggregates form classes together to make a new class.
         """
@@ -22,9 +22,20 @@ class AggregateForm(Form):
         for form in forms:
             for name, field in form.base_fields.items():
                 if name in fields:
+                    # if fields are conflicting their properties must be merged
                     AggregateForm._merge_field(fields[name], field)
                 else:
+                    # the first field added always retains all of its properties
+                    # just add it.
                     fields[name] = field
+
+        # apply options if any.
+        if options:
+            for name, properties in options.items():
+                if name in fields:
+                    field = fields[name]
+                    for property, value in properties.items():
+                        setattr(field, property, value)
                 
         return type('AggregateForm', (AggregateForm,), fields)
 
@@ -34,11 +45,11 @@ class AggregateForm(Form):
         Merge the properties of two form fields together:
            * required must be required if either field is required
         """
+        # basic overrides that can be determined based on value, otherwise
+        # properties are set on a first come first served basis
         dst.required = dst.required or src.required
-
         if not src.initial is None:
             dst.initial = src.initial
-
 
     def is_valid(self):
         """

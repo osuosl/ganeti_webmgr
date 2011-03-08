@@ -50,7 +50,32 @@ class TestAggregateForms(TestCase):
         """
         Test that the standard merge can be overridded with options
         """
-        raise NotImplementedError
+        options = {
+            'one':{'required':False},
+            'two': {'initial':'two overridden', 'required':False},
+            'three': {'initial':'three overridden', 'required':False}
+        }
+
+        Klass = AggregateForm.aggregate([Foo, Bar], options)
+
+        # test class members
+        self.assertEqual(4, len(Klass.base_fields))
+        self.assertTrue('one' in Klass.base_fields)
+        self.assertTrue('two' in Klass.base_fields)
+        self.assertTrue('three' in Klass.base_fields)
+        self.assertTrue('four' in Klass.base_fields)
+
+        # test that required=True always defaults when there are overlapping
+        # field names
+        self.assertFalse(Klass.base_fields['two'].required)
+        self.assertFalse(Klass.base_fields['three'].required)
+
+        # test aggregation of other properties
+        self.assertEqual('two overridden', Klass.base_fields['two'].initial)
+        self.assertEqual('three overridden', Klass.base_fields['three'].initial)
+
+        # test property with no conflicts having its properties set by options
+        self.assertFalse(Klass.base_fields['one'].required)
 
     def test_aggregate_incompatible_fields_retype(self):
         """
