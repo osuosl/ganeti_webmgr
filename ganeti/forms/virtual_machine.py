@@ -15,9 +15,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
+
 from django import forms
 from django.forms import ValidationError
 
+from ganeti import constants
 from ganeti.fields import DataVolumeField
 from ganeti.models import Cluster, ClusterUser, Organization, \
     VirtualMachineTemplate, VirtualMachine
@@ -29,46 +31,12 @@ class NewVirtualMachineForm(forms.ModelForm):
     """
     Virtual Machine Creation form
     """
-    empty_field = (u'', u'---------')
-
-    templates = [
-        (u'', u'---------'),
-        (u'plain', u'plain'),
-        (u'drbd', u'drbd'),
-        (u'file', u'file'),
-        (u'diskless', u'diskless')
-    ]
-    nicmodes = [
-        (u'', u'---------'),
-        (u'routed', u'routed'),
-        (u'bridged', u'bridged')
-    ]
-    nictypes = [
-        (u'', u'---------'),
-        (u'rtl8139',u'rtl8139'),
-        (u'ne2k_isa',u'ne2k_isa'),
-        (u'ne2k_pci',u'ne2k_pci'),
-        (u'i82551',u'i82551'),
-        (u'i82557b',u'i82557b'),
-        (u'i82559er',u'i82559er'),
-        (u'pcnet',u'pcnet'),
-        (u'e1000',u'e1000'),
-        (u'paravirtual',u'paravirtual'),
-    ]
-    disktypes = [
-        (u'', u'---------'),
-        (u'paravirtual',u'paravirtual'),
-        (u'ide',u'ide'),
-        (u'scsi',u'scsi'),
-        (u'sd',u'sd'),
-        (u'mtd',u'mtd'),
-        (u'pflash',u'pflash'),
-    ]
-    bootchoices = [
-        ('disk', 'Hard Disk'),
-        ('cdrom', 'CD-ROM'),
-        ('network', 'Network'),
-    ]
+    empty_field = constants.EMPTY_CHOICE_FIELD
+    templates = constants.KVM_DISK_TEMPLATES
+    disktypes = constants.KVM_DISK_TYPES
+    nicmodes = constants.KVM_NIC_MODES
+    nictypes = constants.KVM_NIC_TYPES
+    bootchoices = constants.KVM_BOOT_ORDER
 
     owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label='Owner')
     cluster = forms.ModelChoiceField(queryset=Cluster.objects.none(), label='Cluster')
