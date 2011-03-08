@@ -211,7 +211,7 @@ def migrate(request, cluster_slug, host):
 
 
 class EvacuateForm(forms.Form):
-    EMPTY_FIELD = (u'', u'---------')
+    EMPTY_FIELD = constants.EMPTY_CHOICE_FIELD 
 
     iallocator = forms.BooleanField(initial=False, required=False, \
                                     label='Automatic Allocation')
