@@ -2,19 +2,26 @@
 Changelog
 ==================
 
-v0.4
+v0.6.2
 ----
- * Initial Release
-   
-   * Caching system
-   * Permissions system: 
-       * user & group management
-       * per cluster/vm permissions
-   * basic VM management: Create, Delete, Start, Stop, Reboot
-   * ssh key feed 
-   * basic quota system
-   * Import tools
+  * fixing packaging issue with object log
 
+v0.6.1
+----
+  * updating object log to 0.5.1
+
+v0.6
+----
+
+Notable Changes:
+  * Nodes are now cached in the database:
+  * Node detail views are now available, including some admin methods
+  * VirtualMachines may now be edited, renamed, and migrated.
+  * Errors while creating virtual machines are now handled better, and can be recovered from
+  * Django Object Log is now providing logs for all objects tracked by GWM
+  * Admins can now add ssh keys for other users
+  * Virtual machine detail page has had its layout updated to be more readable and add more
+  * fixed bugs preventing syncdb working with postgresql
 
 v0.5
 ----
@@ -31,3 +38,18 @@ Notable Changes:
   * Ram and CPU quota is now based off running virtual machines
   * Improved layout
   * Virtual Machines list now properly works for cluster admins
+
+v0.4
+----
+ * Initial Release
+   
+   * Caching system
+   * Permissions system: 
+       * user & group management
+       * per cluster/vm permissions
+   * basic VM management: Create, Delete, Start, Stop, Reboot
+   * ssh key feed 
+   * basic quota system
+   * Import tools
+
+
