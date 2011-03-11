@@ -31,28 +31,28 @@ NODE_ROLE_MAP = {
     'O':'Offline',
 }
 ROLE_CHOICES = (
-    ('', '-------------'),
-    ('master-candidate','Master Candidate'),
-    ('regular','Regular'),
-    ('drained','Drained'),
-    ('offline','Offline'),
+    EMPTY_CHOICE_FIELD,
+    (u'master-candidate',u'Master Candidate'),
+    (u'regular',u'Regular'),
+    (u'drained',u'Drained'),
+    (u'offline',u'Offline'),
 )
 ROLE_MAP = {
-    'C':'master-candidate',
-    'R':'regular',
-    'D':'drained',
-    'O':'offline',
+    'C':u'master-candidate',
+    'R':u'regular',
+    'D':u'drained',
+    'O':u'offline',
 }
 # KVM Choices
 KVM_DISK_TEMPLATES = [
-    (u'', u'---------'),
+    EMPTY_CHOICE_FIELD,
     (u'plain', u'plain'),
     (u'drbd', u'drbd'),
     (u'file', u'file'),
     (u'diskless', u'diskless')
 ]
 KVM_DISK_TYPES = [
-    (u'', u'---------'),
+    EMPTY_CHOICE_FIELD,
     (u'paravirtual',u'paravirtual'),
     (u'ide',u'ide'),
     (u'scsi',u'scsi'),
@@ -61,12 +61,12 @@ KVM_DISK_TYPES = [
     (u'pflash',u'pflash'),
 ]
 KVM_NIC_MODES = [
-    (u'', u'---------'),
+    EMPTY_CHOICE_FIELD,
     (u'routed', u'routed'),
     (u'bridged', u'bridged')
 ]
 KVM_NIC_TYPES = [
-    (u'', u'---------'),
+    EMPTY_CHOICE_FIELD,
     (u'rtl8139',u'rtl8139'),
     (u'ne2k_isa',u'ne2k_isa'),
     (u'ne2k_pci',u'ne2k_pci'),
@@ -93,12 +93,12 @@ KVM_SECURITY_MODELS = [
     (u'pool',u'Pool'),
 ]
 KVM_FLAGS = [
-    (u'', u'---------'),
+    EMPTY_CHOICE_FIELD,
     (u'enabled', u'Enabled'),
     (u'disabled', u'Disabled'),
 ]
 KVM_USB_MICE = [
-    (u'', u'---------'),
+    EMPTY_CHOICE_FIELD,
     (u'mouse',u'Mouse'),
     (u'tablet',u'Tablet'),
 ]
