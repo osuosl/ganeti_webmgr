@@ -15,9 +15,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
+
 from django import forms
 from django.forms import ValidationError
 
+from ganeti import constants
 from ganeti.fields import DataVolumeField
 from ganeti.models import Cluster, ClusterUser, Organization, \
     VirtualMachineTemplate, VirtualMachine
@@ -29,46 +31,12 @@ class NewVirtualMachineForm(forms.ModelForm):
     """
     Virtual Machine Creation form
     """
-    empty_field = (u'', u'---------')
-
-    templates = [
-        (u'', u'---------'),
-        (u'plain', u'plain'),
-        (u'drbd', u'drbd'),
-        (u'file', u'file'),
-        (u'diskless', u'diskless')
-    ]
-    nicmodes = [
-        (u'', u'---------'),
-        (u'routed', u'routed'),
-        (u'bridged', u'bridged')
-    ]
-    nictypes = [
-        (u'', u'---------'),
-        (u'rtl8139',u'rtl8139'),
-        (u'ne2k_isa',u'ne2k_isa'),
-        (u'ne2k_pci',u'ne2k_pci'),
-        (u'i82551',u'i82551'),
-        (u'i82557b',u'i82557b'),
-        (u'i82559er',u'i82559er'),
-        (u'pcnet',u'pcnet'),
-        (u'e1000',u'e1000'),
-        (u'paravirtual',u'paravirtual'),
-    ]
-    disktypes = [
-        (u'', u'---------'),
-        (u'paravirtual',u'paravirtual'),
-        (u'ide',u'ide'),
-        (u'scsi',u'scsi'),
-        (u'sd',u'sd'),
-        (u'mtd',u'mtd'),
-        (u'pflash',u'pflash'),
-    ]
-    bootchoices = [
-        ('disk', 'Hard Disk'),
-        ('cdrom', 'CD-ROM'),
-        ('network', 'Network'),
-    ]
+    empty_field = constants.EMPTY_CHOICE_FIELD
+    templates = constants.KVM_DISK_TEMPLATES
+    disktypes = constants.KVM_DISK_TYPES
+    nicmodes = constants.KVM_NIC_MODES
+    nictypes = constants.KVM_NIC_TYPES
+    bootchoices = constants.KVM_BOOT_ORDER
 
     owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label='Owner')
     cluster = forms.ModelChoiceField(queryset=Cluster.objects.none(), label='Cluster')
@@ -313,26 +281,10 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
     required = ('vcpus', 'memory', 'disk_type', 'boot_order', \
         'nic_type', 'root_path')
 
-    disk_caches = [
-        (u'default',u'Default'),
-        (u'writethrough',u'Writethrough'),
-        (u'writeback',u'Writeback'),
-    ]
-    security_models = [
-        (u'none',u'None'),
-        (u'user',u'User'),
-        (u'pool',u'Pool'),
-    ]
-    kvm_flags = [
-        (u'', u'---------'),
-        (u'enabled', u'Enabled'),
-        (u'disabled', u'Disabled'),
-    ]
-    usb_mice = [
-        (u'', u'---------'),
-        (u'mouse',u'Mouse'),
-        (u'tablet',u'Tablet'),
-    ]
+    disk_caches = constants.KVM_DISK_CACHES
+    security_models = constants.KVM_SECURITY_MODELS
+    kvm_flags = constants.KVM_FLAGS
+    usb_mice = constants.KVM_USB_MICE
 
     acpi = forms.BooleanField(label='ACPI', required=False)
     disk_cache = forms.ChoiceField(label='Disk Cache', required=False, \
@@ -439,12 +391,7 @@ class ModifyConfirmForm(forms.Form):
 
 class MigrateForm(forms.Form):
     """ Form used for migrating a Virtual Machine """
-    MODE_CHOICES = (
-        ('live','Live'),
-        ('non-live','Non-Live'),
-    )
-
-    mode = forms.ChoiceField(choices=MODE_CHOICES)
+    mode = forms.ChoiceField(choices=constants.MODE_CHOICES)
     cleanup = forms.BooleanField(initial=False, required=False,
                                  label="Attempt recovery from failed migration")
 
