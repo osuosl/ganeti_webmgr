@@ -34,7 +34,9 @@ from object_permissions import grant, get_user_perms
 from util import client
 from ganeti.tests.rapi_proxy import RapiProxy, INSTANCE, INFO, JOB, \
     JOB_RUNNING, JOB_DELETE_SUCCESS, OPERATING_SYSTEMS
-from ganeti import models, constants 
+from ganeti import models 
+from ganeti.constants import HV_NIC_TYPES, HV_NIC_MODES, HV_BOOT_ORDER, HV_DISK_TEMPLATES, \
+    OWNER_TAG
 from ganeti.forms.virtual_machine import NewVirtualMachineForm
 from ganeti.utilities import os_prettify, cluster_os_list
 
@@ -192,12 +194,12 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         # setting owner
         vm.owner = owner0
         vm.save()
-        self.assertEqual(['%s%s' % (constants.OWNER_TAG, owner0.id)], vm.info['tags'])
+        self.assertEqual(['%s%s' % (OWNER_TAG, owner0.id)], vm.info['tags'])
         
         # changing owner
         vm.owner = owner1
         vm.save()
-        self.assertEqual(['%s%s' % (constants.OWNER_TAG, owner1.id)], vm.info['tags'])
+        self.assertEqual(['%s%s' % (OWNER_TAG, owner1.id)], vm.info['tags'])
         
         # setting owner to none
         vm.owner = None
@@ -2297,34 +2299,10 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         Test that ChoiceFields have the correct default options
         """
         form = NewVirtualMachineForm(user, None)
-        self.assertEqual([
-            (u'', u'---------'),
-            (u'rtl8139',u'rtl8139'),
-            (u'ne2k_isa',u'ne2k_isa'),
-            (u'ne2k_pci',u'ne2k_pci'),
-            (u'i82551',u'i82551'),
-            (u'i82557b',u'i82557b'),
-            (u'i82559er',u'i82559er'),
-            (u'pcnet',u'pcnet'),
-            (u'e1000',u'e1000'),
-            (u'paravirtual',u'paravirtual'),
-            ], form.fields['nic_type'].choices)
-        self.assertEqual([
-            (u'', u'---------'),
-            (u'routed', u'routed'),
-            (u'bridged', u'bridged')
-            ], form.fields['nic_mode'].choices)
-        self.assertEqual([('disk', 'Hard Disk'),
-            ('cdrom', 'CD-ROM'),
-            ('network', 'Network')
-            ], form.fields['boot_order'].choices)
-        self.assertEqual([
-            (u'', u'---------'),
-            (u'plain', u'plain'),
-            (u'drbd', u'drbd'),
-            (u'file', u'file'),
-            (u'diskless', u'diskless')
-            ], form.fields['disk_template'].choices)
+        self.assertEqual(HV_NIC_TYPES, form.fields['nic_type'].choices)
+        self.assertEqual(HV_NIC_MODES, form.fields['nic_mode'].choices)
+        self.assertEqual(HV_BOOT_ORDER, form.fields['boot_order'].choices)
+        self.assertEqual(HV_DISK_TEMPLATES, form.fields['disk_template'].choices)
     
     def test_cluster_init(self):
         """

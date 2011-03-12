@@ -61,12 +61,31 @@ KVM_FLAGS = [
     (u'disabled', u'Disabled'),
 ]
 
+KVM_DISK_TYPES = [
+    (u'scsi', u'scsi'),
+    (u'sd', u'sd'),
+    (u'mtd', u'mtd'),
+    (u'pflash', u'pflash'),
+]
+
+KVM_NIC_TYPES = [
+    (u'i82551',u'i82551'),
+    (u'i82557b',u'i82557b'),
+    (u'i82559er',u'i82559er'),
+    (u'pcnet',u'pcnet'),
+    (u'e1000',u'e1000'),
+]
+
 # Xen HVM Choices
 HVM_BOOT_ORDER = [
     (u'a', u'Floppy Drive'),
     (u'c', u'Hard Disk'),
     (u'd', u'CD-ROM'),
     (u'n', u'Network'),
+]
+
+HVM_DISK_TYPES = [
+    (u'ioemu', u'ioemu'),
 ]
 
 # HV Choices
@@ -82,11 +101,7 @@ HV_DISK_TYPES = [
     EMPTY_CHOICE_FIELD,
     (u'paravirtual',u'paravirtual'),
     (u'ide',u'ide'),
-    (u'scsi',u'scsi'),
-    (u'sd',u'sd'),
-    (u'mtd',u'mtd'),
-    (u'pflash',u'pflash'),
-]
+] + KVM_DISK_TYPES
 
 HV_NIC_MODES = [
     EMPTY_CHOICE_FIELD,
@@ -99,13 +114,8 @@ HV_NIC_TYPES = [
     (u'rtl8139',u'rtl8139'),
     (u'ne2k_isa',u'ne2k_isa'),
     (u'ne2k_pci',u'ne2k_pci'),
-    (u'i82551',u'i82551'),
-    (u'i82557b',u'i82557b'),
-    (u'i82559er',u'i82559er'),
-    (u'pcnet',u'pcnet'),
-    (u'e1000',u'e1000'),
     (u'paravirtual',u'paravirtual'),
-]
+] + KVM_NIC_TYPES
 
 HV_BOOT_ORDER = KVM_BOOT_ORDER
 
