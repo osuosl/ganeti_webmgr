@@ -19,10 +19,12 @@ OWNER_TAG = 'gwm:owner:'
 
 # Form Constants
 EMPTY_CHOICE_FIELD = (u'', u'---------')
+
 MODE_CHOICES = (
     ('live','Live'),
     ('non-live','Non-Live'),
 )
+
 NODE_ROLE_MAP = {
     'M':'Master',
     'C':'Master Candidate',
@@ -30,6 +32,7 @@ NODE_ROLE_MAP = {
     'D':'Drained',
     'O':'Offline',
 }
+
 ROLE_CHOICES = (
     EMPTY_CHOICE_FIELD,
     (u'master-candidate',u'Master Candidate'),
@@ -37,21 +40,45 @@ ROLE_CHOICES = (
     (u'drained',u'Drained'),
     (u'offline',u'Offline'),
 )
+
 ROLE_MAP = {
     'C':u'master-candidate',
     'R':u'regular',
     'D':u'drained',
     'O':u'offline',
 }
+
 # KVM Choices
-KVM_DISK_TEMPLATES = [
+KVM_BOOT_ORDER = [
+    (u'disk', u'Hard Disk'),
+    (u'cdrom', u'CD-ROM'),
+    (u'network', u'Network'),
+]
+
+KVM_FLAGS = [
+    EMPTY_CHOICE_FIELD,
+    (u'enabled', u'Enabled'),
+    (u'disabled', u'Disabled'),
+]
+
+# Xen HVM Choices
+HVM_BOOT_ORDER = [
+    (u'a', u'Floppy Drive'),
+    (u'c', u'Hard Disk'),
+    (u'd', u'CD-ROM'),
+    (u'n', u'Network'),
+]
+
+# HV Choices
+HV_DISK_TEMPLATES = [
     EMPTY_CHOICE_FIELD,
     (u'plain', u'plain'),
     (u'drbd', u'drbd'),
     (u'file', u'file'),
     (u'diskless', u'diskless')
 ]
-KVM_DISK_TYPES = [
+
+HV_DISK_TYPES = [
     EMPTY_CHOICE_FIELD,
     (u'paravirtual',u'paravirtual'),
     (u'ide',u'ide'),
@@ -60,12 +87,14 @@ KVM_DISK_TYPES = [
     (u'mtd',u'mtd'),
     (u'pflash',u'pflash'),
 ]
-KVM_NIC_MODES = [
+
+HV_NIC_MODES = [
     EMPTY_CHOICE_FIELD,
     (u'routed', u'routed'),
     (u'bridged', u'bridged')
 ]
-KVM_NIC_TYPES = [
+
+HV_NIC_TYPES = [
     EMPTY_CHOICE_FIELD,
     (u'rtl8139',u'rtl8139'),
     (u'ne2k_isa',u'ne2k_isa'),
@@ -77,29 +106,24 @@ KVM_NIC_TYPES = [
     (u'e1000',u'e1000'),
     (u'paravirtual',u'paravirtual'),
 ]
-KVM_BOOT_ORDER = [
-    ('disk', 'Hard Disk'),
-    ('cdrom', 'CD-ROM'),
-    ('network', 'Network'),
-]
-KVM_DISK_CACHES = [
+
+HV_BOOT_ORDER = KVM_BOOT_ORDER
+
+HV_DISK_CACHES = [
     (u'default',u'Default'),
     (u'writethrough',u'Writethrough'),
     (u'writeback',u'Writeback'),
 ]
-KVM_SECURITY_MODELS = [
+
+HV_SECURITY_MODELS = [
     (u'none',u'None'),
     (u'user',u'User'),
     (u'pool',u'Pool'),
 ]
-KVM_FLAGS = [
-    EMPTY_CHOICE_FIELD,
-    (u'enabled', u'Enabled'),
-    (u'disabled', u'Disabled'),
-]
-KVM_USB_MICE = [
+
+HV_USB_MICE = [
     EMPTY_CHOICE_FIELD,
     (u'mouse',u'Mouse'),
     (u'tablet',u'Tablet'),
 ]
-# Xen HVM Choices
+

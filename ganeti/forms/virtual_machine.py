@@ -32,11 +32,11 @@ class NewVirtualMachineForm(forms.ModelForm):
     Virtual Machine Creation form
     """
     empty_field = constants.EMPTY_CHOICE_FIELD
-    templates = constants.KVM_DISK_TEMPLATES
-    disktypes = constants.KVM_DISK_TYPES
-    nicmodes = constants.KVM_NIC_MODES
-    nictypes = constants.KVM_NIC_TYPES
-    bootchoices = constants.KVM_BOOT_ORDER
+    templates = constants.HV_DISK_TEMPLATES
+    disktypes = constants.HV_DISK_TYPES
+    nicmodes = constants.HV_NIC_MODES
+    nictypes = constants.HV_NIC_TYPES
+    bootchoices = constants.HV_BOOT_ORDER
 
     owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label='Owner')
     cluster = forms.ModelChoiceField(queryset=Cluster.objects.none(), label='Cluster')
@@ -281,10 +281,10 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
     required = ('vcpus', 'memory', 'disk_type', 'boot_order', \
         'nic_type', 'root_path')
 
-    disk_caches = constants.KVM_DISK_CACHES
-    security_models = constants.KVM_SECURITY_MODELS
+    disk_caches = constants.HV_DISK_CACHES
+    security_models = constants.HV_SECURITY_MODELS
     kvm_flags = constants.KVM_FLAGS
-    usb_mice = constants.KVM_USB_MICE
+    usb_mice = constants.HV_USB_MICE
 
     acpi = forms.BooleanField(label='ACPI', required=False)
     disk_cache = forms.ChoiceField(label='Disk Cache', required=False, \
