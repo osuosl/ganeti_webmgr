@@ -101,7 +101,7 @@ HV_DISK_TYPES = [
     EMPTY_CHOICE_FIELD,
     (u'paravirtual',u'paravirtual'),
     (u'ide',u'ide'),
-] + KVM_DISK_TYPES
+]
 
 HV_NIC_MODES = [
     EMPTY_CHOICE_FIELD,
@@ -115,7 +115,7 @@ HV_NIC_TYPES = [
     (u'ne2k_isa',u'ne2k_isa'),
     (u'ne2k_pci',u'ne2k_pci'),
     (u'paravirtual',u'paravirtual'),
-] + KVM_NIC_TYPES
+]
 
 HV_BOOT_ORDER = KVM_BOOT_ORDER
 

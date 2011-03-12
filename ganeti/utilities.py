@@ -40,7 +40,7 @@ def cluster_default_info(cluster):
 
     return {
         'iallocator': iallocator_info,
-        'hypervisors':info['enabled_hypervisors'],
+        'hypervisor':hv,
         'vcpus':beparams['vcpus'],
         'memory':beparams['memory'],
         'disk_type':hvparams['disk_type'],

@@ -1640,7 +1640,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
             memory=512,
             nic_type='paravirtual',
             root_path='/dev/vda2',
-            hypervisors=['kvm'],
+            hypervisor='kvm',
             serial_console=True,
             cdrom_image_path='',
             disk_type ='paravirtual',
