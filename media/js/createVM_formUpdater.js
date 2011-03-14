@@ -8,6 +8,7 @@ function formUpdater(url_choices, url_options, url_defaults){
     var owner =                 $("#id_owner");
     var snode =                 $("#id_snode").parent();
     var pnode =                 $("#id_pnode").parent();
+    var hypervisor =            $("#id_hypervisor")
     var niclink =               $("#id_nic_link").parent();
     var disk_template =         $("#id_disk_template");
     var nicmode =               $("#id_nic_mode");
@@ -191,9 +192,14 @@ function formUpdater(url_choices, url_options, url_defaults){
                                 .attr('selected','selected');
                         }
                         
-                        // hypervisors
-                        if(d['hypervisors']) {
-                            //list - do nothing for now.
+                        // hypervisor
+                        if(d['hypervisor']) {
+                            if (d['hypervisor'] != "" &&
+                                d['hypervisor'] != undefined) {
+                                if (!hypervisor.attr('value')){
+                                    hypervisor.attr('value', d['hypervisor']);
+                                }
+                            }
                         }
 
                         // iallocator checkbox

@@ -127,3 +127,9 @@ def compare(x, y):
         return "decreased from %s to %s" % (x, y)
     else:
         return ""
+
+def contains(e, t):
+    """
+    Determine whether or not the element e is contained within the list of tuples t
+    """
+    return any(e == v[0] for v in t)

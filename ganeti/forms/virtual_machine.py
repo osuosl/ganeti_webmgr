@@ -23,7 +23,7 @@ from ganeti import constants
 from ganeti.fields import DataVolumeField
 from ganeti.models import Cluster, ClusterUser, Organization, \
     VirtualMachineTemplate, VirtualMachine
-from ganeti.utilities import cluster_default_info, cluster_os_list
+from ganeti.utilities import cluster_default_info, cluster_os_list, contains
 
 FQDN_RE = r'(?=^.{1,254}$)(^(?:(?!\d+\.|-)[a-zA-Z0-9_\-]{1,63}(?<!-)\.?)+(?:[a-zA-Z]{2,})$)'
 
@@ -33,13 +33,14 @@ class NewVirtualMachineForm(forms.ModelForm):
     """
     empty_field = constants.EMPTY_CHOICE_FIELD
     templates = constants.HV_DISK_TEMPLATES
-    disktypes = constants.HV_DISK_TYPES
+    disktypes = constants.ALL_DISK_TYPES
     nicmodes = constants.HV_NIC_MODES
-    nictypes = constants.HV_NIC_TYPES
-    bootchoices = constants.HV_BOOT_ORDER
+    nictypes = constants.ALL_NIC_TYPES
+    bootchoices = constants.ALL_BOOT_ORDER
 
     owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label='Owner')
     cluster = forms.ModelChoiceField(queryset=Cluster.objects.none(), label='Cluster')
+    hypervisor = forms.CharField(required=False, widget=forms.HiddenInput())
     hostname = forms.RegexField(label='Instance Name', regex=FQDN_RE,
                             error_messages={
                                 'invalid': 'Instance name must be resolvable',
@@ -100,6 +101,7 @@ class NewVirtualMachineForm(forms.ModelForm):
             
             # Set field choices based on hypervisor for cluster
             hv = defaults['hypervisor']
+            self.fields['hypervisor'].initial = hv
             disktypes = self.fields['disk_type'].choices
             nictypes = self.fields['nic_type'].choices
             bootorder = self.fields['boot_order'].choices
@@ -277,6 +279,28 @@ class NewVirtualMachineForm(forms.ModelForm):
                 msg = u'Automatic Allocation was selected, but there is no \
                       IAllocator available.'
                 self._errors['iallocator'] = self.error_class([msg])
+        
+        # Check options which depend on the the hypervisor type
+        hv = data.get('hypervisor')
+        disk_type = data.get('disk_type')
+        nic_type = data.get('nic_type')
+
+        # Check disk_type
+        if (hv == 'kvm' and not (contains(disk_type, constants.KVM_DISK_TYPES) or contains(disk_type, constants.HV_DISK_TYPES))) or \
+           (hv == 'hvm' and not (contains(disk_type, constants.HVM_DISK_TYPES) or contains(disk_type, constants.HV_DISK_TYPES))):
+            msg = '%s is not a valid option for Disk Template on this cluster.' % disk_type
+            self._errors['disk_type'] = self.error_class([msg])
+        # Check nic_type
+        if (hv == 'kvm' and not (contains(nic_type, constants.KVM_NIC_TYPES) or \
+           contains(nic_type, constants.HV_NIC_TYPES))) or \
+           (hv == 'hvm' and not contains(nic_type, constants.HV_NIC_TYPES)):
+            msg = '%s is not a valid option for Nic Type on this cluster.' % nic_type
+            self._errors['nic_type'] = self.error_class([msg])
+        # Check boot_order 
+        if (hv == 'kvm' and not contains(boot_order, constants.KVM_BOOT_ORDER)) or \
+           (hv == 'hvm' and not contains(boot_order, constants.HVM_BOOT_ORDER)):
+            msg = '%s is not a valid option for Boot Device on this cluster.' % boot_order
+            self._errors['boot_order'] = self.error_class([msg])
 
         # Always return the full collection of cleaned data.
         return data
