@@ -243,14 +243,14 @@ class NewVirtualMachineForm(forms.ModelForm):
                 del self._errors["snode"]
 
         # If boot_order = CD-ROM make sure imagepath is set as well.
-        boot_order = data.get('bootorder', '')
-        image_path = data.get('imagepath', '')
+        boot_order = data.get('boot_order', '')
+        image_path = data.get('cdrom_image_path', '')
         if boot_order == 'cdrom':
             if image_path == '':
                 msg = u'Image path required if boot device is CD-ROM.'
-                self._errors["imagepath"] = self.error_class([msg])
+                self._errors["cdrom_image_path"] = self.error_class([msg])
 
-                del data["imagepath"]
+                del data["cdrom_image_path"]
 
         if iallocator:
             # If iallocator is checked,
