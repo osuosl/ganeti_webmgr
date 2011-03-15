@@ -137,6 +137,19 @@ HV_USB_MICE = [
     (u'tablet',u'Tablet'),
 ]
 
+
+KVM_CHOICES = {
+    'disk_type': HV_DISK_TYPES + KVM_DISK_TYPES,
+    'nic_type': HV_NIC_TYPES + KVM_NIC_TYPES,
+    'boot_order': KVM_BOOT_ORDER,
+}
+
+HVM_CHOICES = {
+    'disk_type': HV_DISK_TYPES + HVM_DISK_TYPES,
+    'nic_type': HV_NIC_TYPES,
+    'boot_order': HVM_BOOT_ORDER,
+}
+
 ALL_DISK_TYPES = HV_DISK_TYPES + KVM_DISK_TYPES + HVM_DISK_TYPES
 ALL_NIC_TYPES = HV_NIC_TYPES + KVM_NIC_TYPES
 ALL_BOOT_ORDER = KVM_BOOT_ORDER + HVM_BOOT_ORDER

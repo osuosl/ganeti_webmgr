@@ -8,7 +8,9 @@ function formUpdater(url_choices, url_options, url_defaults){
     var owner =                 $("#id_owner");
     var snode =                 $("#id_snode").parent();
     var pnode =                 $("#id_pnode").parent();
-    var hypervisor =            $("#id_hypervisor")
+    var hypervisor =            $("#id_hypervisor");
+    var disktype =              $("#id_disk_type");
+    var nictype =               $("#id_nic_type");
     var niclink =               $("#id_nic_link").parent();
     var disk_template =         $("#id_disk_template");
     var nicmode =               $("#id_nic_mode");
@@ -185,6 +187,12 @@ function formUpdater(url_choices, url_options, url_defaults){
                         /* fill default options */
 
                         // boot device dropdown
+                        if(d['boot_devices']) {
+                            bootOrder.children().remove();
+                            $.each(d['boot_devices'], function(i, item){
+                                bootOrder.append(_newOpt(item[0], item[1]));
+                            }); 
+                        }
                         if(d['boot_order']) {
                             $("#id_boot_order :selected").removeAttr(
                                 'selected');
@@ -250,6 +258,12 @@ function formUpdater(url_choices, url_options, url_defaults){
                         }
                         
                         // nic type dropdown
+                        if(d['nic_types']) {
+                            nictype.children().remove();
+                            $.each(d['nic_types'], function(i, item){
+                                nictype.append(_newOpt(item[0], item[1]));
+                            }); 
+                        }
                         if(d['nic_type']) {
                             $("#id_nic_type :selected").removeAttr('selected');
                             $("#id_nic_type [value=" + d['nic_type'] + "]")
@@ -262,8 +276,14 @@ function formUpdater(url_choices, url_options, url_defaults){
                         }
 
                         // disk type dropdown
+                        if(d['disk_types']){
+                            disktype.children().remove();
+                            $.each(d['disk_types'], function(i, item){
+                                disktype.append(_newOpt(item[0], item[1]));
+                            });
+                        }
                         if(d['disk_type']){
-                             $("#id_disk_type").val(d['disk_type']);
+                             disktype.val(d['disk_type']);
                         }
                         
                         // root path text box

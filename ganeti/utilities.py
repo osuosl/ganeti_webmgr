@@ -17,7 +17,7 @@
 # USA.
 
 from collections import defaultdict
-
+from ganeti import constants
 
 def cluster_default_info(cluster):
     """
@@ -32,6 +32,15 @@ def cluster_default_info(cluster):
     beparams = info['beparams']['default']
     hv = info['default_hypervisor']
     hvparams = info['hvparams'][hv]
+    
+    if hv == 'kvm':
+        c = constants.KVM_CHOICES
+    elif hv == 'hvm':
+        c = constants.HVM_CHOICES
+    
+    disktypes = c['disk_type']
+    nictypes = c['nic_type']
+    bootdevices = c['boot_order']
 
     try:
         iallocator_info = info['default_iallocator']
@@ -43,13 +52,16 @@ def cluster_default_info(cluster):
         'hypervisor':hv,
         'vcpus':beparams['vcpus'],
         'memory':beparams['memory'],
+        'disk_types':disktypes,
         'disk_type':hvparams['disk_type'],
+        'nic_types':nictypes,
         'nic_type':hvparams['nic_type'],
         'nic_mode':info['nicparams']['default']['mode'],
         'nic_link':info['nicparams']['default']['link'],
         'kernel_path':hvparams['kernel_path'],
         'root_path':hvparams['root_path'],
         'serial_console':hvparams['serial_console'],
+        'boot_devices': bootdevices,
         'boot_order':hvparams['boot_order'],
         'cdrom_image_path':hvparams['cdrom_image_path'],
         }
