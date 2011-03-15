@@ -36,7 +36,7 @@ from ganeti.tests.rapi_proxy import RapiProxy, INSTANCE, INFO, JOB, \
     JOB_RUNNING, JOB_DELETE_SUCCESS, OPERATING_SYSTEMS
 from ganeti import models 
 from ganeti.constants import ALL_NIC_TYPES, HV_NIC_MODES, ALL_BOOT_ORDER, HV_DISK_TEMPLATES, \
-    OWNER_TAG
+    OWNER_TAG, KVM_CHOICES
 from ganeti.forms.virtual_machine import NewVirtualMachineForm
 from ganeti.utilities import os_prettify, cluster_os_list
 
@@ -1635,16 +1635,24 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         url = '/vm/add/defaults/?cluster_id=%s'
         args = cluster.id        
         
+        kvm = KVM_CHOICES
+        # Convert tuples to list to emulate jsonification
+        boot_devices = [list(a) for a in kvm['boot_order']]
+        nic_types = [list(b) for b in kvm['nic_type']]
+        disk_types = [list(d) for d in kvm['disk_type']]
         expected = dict(
+            boot_devices=boot_devices,
             boot_order='disk',
             memory=512,
+            nic_types=nic_types,
             nic_type='paravirtual',
             root_path='/dev/vda2',
             hypervisor='kvm',
             serial_console=True,
             cdrom_image_path='',
-            disk_type ='paravirtual',
-            nic_link ='br42',
+            disk_types=disk_types,
+            disk_type='paravirtual',
+            nic_link='br42',
             nic_mode='bridged',
             vcpus=2,
             iallocator='',
