@@ -570,7 +570,6 @@ def create(request, cluster_slug=None):
             memory = data.get('memory')
             nic_mode = data.get('nic_mode')
             nic_link = data.get('nic_link')
-            nic_type = data.get('nic_type')
             # If iallocator was not checked do not pass in the iallocator
             #  name. If iallocator was checked don't pass snode,pnode.
             if not iallocator:
@@ -584,7 +583,7 @@ def create(request, cluster_slug=None):
             # Create dictionary of only parameters supposed to be in hvparams
             hvparams = dict()
             hvparam_fields = ('kernel_path', 'root_path', 'serial_console',
-                'boot_order', 'disk_type', 'cdrom_image_path',)
+                'boot_order', 'disk_type', 'cdrom_image_path', 'nic_type')
             for field in hvparam_fields:
                 hvparams[field] = data[field]
 

@@ -29,9 +29,8 @@ from django.template import Library, Node, TemplateSyntaxError
 from django.template.defaultfilters import stringfilter
 from django.utils.safestring import mark_safe
 
+from ganeti.constants import NODE_ROLE_MAP
 from ganeti.models import Cluster
-from ganeti.models import Node as GanetiNode
-
 
 register = Library()
 
@@ -146,7 +145,7 @@ def checkmark(bool):
 @stringfilter
 def node_role(code):
     """ renders full role name from role code """
-    return GanetiNode.NODE_ROLE_MAP[str(code)]
+    return NODE_ROLE_MAP[str(code)]
 
 
 @register.simple_tag
