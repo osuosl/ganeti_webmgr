@@ -185,6 +185,7 @@ div.icon_deleting {background:url(/media/images/icons/check_red.png);}
 .connect {background:url(/media/images/icons/disconnect.png) no-repeat;}
 .migrate {background:url(/media/images/icons/arrow_out.png) no-repeat;}
 .evacuate {background:url(/media/images/icons/arrow_out.png) no-repeat;}
+.redistribute-config {background:url(/media/images/icons/arrow_divide.png) no-repeat;}
 .modify {background:url(/media/images/icons/edit.png) no-repeat;}
 .check {background:url(/media/images/icons/check.png) no-repeat;}
 .xmark {background:url(/media/images/icons/cross.png) no-repeat;}
@@ -199,7 +200,10 @@ div.delete.disabled, a.delete.disabled{background:url(/media/images/icons/delete
 .connect.enabled {background:url(/media/images/icons/disconnect.png) no-repeat;}
 .migrate.disabled {background:url(/media/images/icons/arrow_out-disabled.png) no-repeat;}
 .evacuate.disabled {background:url(/media/images/icons/arrow_out-disabled.png) no-repeat;}
+.redistribute-config.disabled {background:url(/media/images/icons/arrow_divide-disabled.png) no-repeat;}
 .modify.disabled {background:url(/media/images/icons/edit-disabled.png) no-repeat;}
+
+.button {background-position: center;}
 
 .icon {
     background-repeat:no-repeat;
@@ -221,7 +225,8 @@ a.clear:hover {background:url(/media/images/icons/cancel.png) no-repeat !importa
 
 .button {
     background-color: #eeeeee !important;
-    background-position:4px 4px !important;
+    /*background-position:4px 4px !important;*/
+    background-position: 4px center !important;
     border: 1px solid #cccccc;
     clear:both;
     color:#666 !important;
