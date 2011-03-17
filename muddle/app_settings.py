@@ -6,7 +6,7 @@ from muddle.forms.aggregate import AggregateForm
 
 __all__ = ['initialize', 'register', 'AppSettings']
 
-DEFAULT_CATEGORY = settings.DEFAULT_CATEGORY if 'DEFAULT_CATEGORY' in settings else 'general'
+DEFAULT_CATEGORY = getattr(settings, 'DEFAULT_CATEGORY', 'general')
 
 SETTINGS = {}
 """
@@ -37,21 +37,23 @@ def register(category, form, subcategory=DEFAULT_CATEGORY):
     @param form: form class being registered
     @param subcategory: name of subcategory to register form under
     """
-
     if category not in SETTINGS:
         subcategories = {subcategory:form}
-        settings[category] = subcategories
+        SETTINGS[category] = subcategories
     else:
         category = SETTINGS[category]
         if subcategory not in category:
             category[subcategory] = form
         else:
             forms = category[subcategory]
-            if issubclass(forms, (forms, AggregateForm)):
+            if issubclass(forms, (AggregateForm, )):
                 # is already an aggregate form.  aggregate the form into this
                 # a new aggregate form
                 forms = forms.form_classes
-            category[subcategory] = AggregateForm.aggregate([forms, form])
+            else:
+                forms = [forms]
+            forms.append(form)
+            category[subcategory] = AggregateForm.aggregate(forms)
 
 
 class AppSettingsLoader(object):
@@ -95,7 +97,7 @@ class AppSettingsLoader(object):
 
 
 
-AppSettings = AppSettingsLoader()
+AppSettings = AppSettingsLoader('')
 """
 A global instance of AppSettingsLoader that can be imported where needed
 """

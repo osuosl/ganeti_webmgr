@@ -8,10 +8,15 @@ class Foo(forms.Form):
     two = forms.CharField(initial='two!')
     three = forms.CharField(required=True)
 
+
 class Bar(forms.Form):
     two = forms.CharField(required=False)
     three = forms.CharField(required=False, initial='three!')
     four = forms.BooleanField()
+
+
+class Xoo(forms.Form):
+    five = forms.BooleanField()
 
 
 class TestAggregateForms(TestCase):

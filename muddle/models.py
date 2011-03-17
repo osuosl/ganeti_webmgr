@@ -88,7 +88,7 @@ class AppSettingsData(models.Model):
             self._data = cPickle.loads(self.serialized_data)
         return self._data
 
-    @property.setter
+    @data.setter
     def data(self, value):
         # clear serialized data, don't know if we'll need to save it
         self.serialized_data = None

@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from muddle.apps.module import load_app_plugin
+from muddle.apps.plugins import load_app_plugin
 from muddle.tests.apps.load_app_plugin.test_plugin import TestPlugin
 from muddle.tests.apps.load_app_plugin import verify
 
