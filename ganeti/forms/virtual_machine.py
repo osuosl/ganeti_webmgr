@@ -313,10 +313,16 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
     # Fields to be excluded from parent.
     exclude = ('start', 'owner', 'cluster', 'hostname', 'name_check',
         'iallocator', 'iallocator_hostname', 'disk_template', 'pnode', 'snode',\
-        'disk_size', 'nic_mode', 'template_name')
+        'disk_size', 'nic_mode', 'template_name', 'hypervisor')
+    # Fields to be excluded if the hypervisor is Xen HVM
+    hvm_exclude_fields = ('vnc_tls', 'vnc_x509_path', 'vnc_x509_verify', \
+        'kernel_path', 'kernel_args', 'initrd_path', 'root_path', \
+        'serial_console', 'disk_cache', 'security_model', 'security_domain', \
+        'kvm_flag', 'use_chroot', 'migration_downtime', 'usb_mouse', \
+        'mem_path')
     # Fields that should be required.
     required = ('vcpus', 'memory', 'disk_type', 'boot_order', \
-        'nic_type', 'root_path')
+        'nic_type',)
 
     disk_caches = constants.HV_DISK_CACHES
     security_models = constants.HV_SECURITY_MODELS
@@ -362,6 +368,14 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
         # Make sure certain fields are required
         for field in self.required:
             self.fields[field].required = True
+
+        # Get hypervisor from passed in cluster
+        hv = None
+        if cluster and cluster.info and 'default_hypervisor' in cluster.info:
+            hv = cluster.info['default_hypervisor']
+        if hv == 'hvm':
+            for field in self.hvm_exclude_fields:
+                del self.fields[field]
 
     def clean_initrd_path(self):
         data = self.cleaned_data['initrd_path']

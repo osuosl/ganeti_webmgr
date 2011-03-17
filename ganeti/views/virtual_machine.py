@@ -672,6 +672,10 @@ def modify(request, cluster_slug, instance):
         or user.has_perm('admin', cluster)):
         return render_403(request,
             'You do not have permissions to edit this virtual machine')
+    
+    hv = None
+    if cluster.info and 'default_hypervisor' in cluster.info:
+        hv = cluster.info['default_hypervisor']
 
     if request.method == 'POST':
         form = ModifyVirtualMachineForm(user, None, request.POST)
@@ -721,8 +725,14 @@ def modify(request, cluster_slug, instance):
             # Set os_list for cluster in session
             request.session['os_list'] = os_list
             form.fields['os'].choices = os_list
-
-    return render_to_response("virtual_machine/edit.html", {
+            
+    # Select template depending on hypervisor
+    # Default to kvm
+    template = "virtual_machine/edit.html"
+    if hv == 'hvm':
+        template = "virtual_machine/edit_hvm.html"
+       
+    return render_to_response(template, {
         'cluster': cluster,
         'instance': vm,
         'form': form,
