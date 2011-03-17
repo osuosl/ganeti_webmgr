@@ -83,6 +83,7 @@ KVM_BOOT_ORDER = [
     ('network', 'Network'),
 ]
 KVM_DISK_CACHES = [
+    (u'none',u'None'),
     (u'default',u'Default'),
     (u'writethrough',u'Writethrough'),
     (u'writeback',u'Writeback'),
