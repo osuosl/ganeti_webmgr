@@ -123,7 +123,3 @@ class TestAggregateForms(TestCase):
         errors = form.errors
         self.assertTrue('two' in errors)
         self.assertTrue('three' in errors)
-
-
-    def test_(self):
-        raise NotImplementedError
