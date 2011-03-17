@@ -120,6 +120,7 @@ HV_NIC_TYPES = [
 HV_BOOT_ORDER = KVM_BOOT_ORDER
 
 HV_DISK_CACHES = [
+    (u'none',u'None'),
     (u'default',u'Default'),
     (u'writethrough',u'Writethrough'),
     (u'writeback',u'Writeback'),
