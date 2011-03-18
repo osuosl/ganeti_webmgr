@@ -1,6 +1,6 @@
 from django import forms
 from django.test import TestCase
-from muddle.forms.aggregate import AggregateForm
+from muddle.core.forms.aggregate import AggregateForm
 
 
 class Foo(forms.Form):

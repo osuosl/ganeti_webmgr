@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.db import models
 
-
 # Models for testing
 if settings.TESTING:
     class TestModel(models.Model):

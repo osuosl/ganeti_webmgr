@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from muddle.resolvers.urls import register, resolve, smart_getattr
+from muddle.core.resolvers.urls import register, resolve, smart_getattr
 from muddle.models import TestModel, TestModelChild, TestModelChildChild
 
 def noop_view(request):
