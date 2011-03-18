@@ -5,7 +5,7 @@ from django.conf import settings
 from muddle.util import path_to_class
 
 
-def load_app_plugin(module, Klass=None, method=None):
+def load_app_plugin(module_name, Klass=None, method=None):
     """
     Helper method for loading an app plugin.  An app plugin is defined as some
     form of plugin that uses a form of registration logic that other apps must
@@ -15,7 +15,7 @@ def load_app_plugin(module, Klass=None, method=None):
         * models found within models.py
         * admin classes within admin.py
 
-    @param module: module name to load.  This is a string,
+    @param module_name: module name to load.  This is a string,
     @param klass: class type(s) to load.  This may be a single class or a list
     of classes.
     @param method: method to run passing in each class that is found, or the
@@ -24,7 +24,7 @@ def load_app_plugin(module, Klass=None, method=None):
 
     for app in settings.INSTALLED_APPS:
         try:
-            module = path_to_class('.'.join([app, module]))
+            module = path_to_class('.'.join([app, module_name]))
 
             if Klass is not None:
                 assert(callable(method))
