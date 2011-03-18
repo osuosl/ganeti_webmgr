@@ -73,15 +73,21 @@ class PluginConfig(models.Model):
         self.config = config
 
 
-class AppSettingsData(models.Model):
+class AppSettingsCategory(models.Model):
     """
-    model for storing settings for an app
+    model for storing settings for an app.  This class
     """
-    app = models.CharField(max_length=128)
-    category = models.CharField(max_length=256)
-    serialized_data = models.TextField()
-    _data = {}
-    
+    name = models.CharField(max_length=256)
+
+
+class AppSettingsValue(models.Model):
+    """
+    An individual app setting value.
+    """
+    category = models.ForeignKey(AppSettingsCategory, related_name='values')
+    key = models.CharField(max_length=64)
+    serialized_data = models.CharField(max_length=512)
+
     @property
     def data(self):
         if self._data:
@@ -97,8 +103,4 @@ class AppSettingsData(models.Model):
     def save(self, *args, **kwargs):
         if self.serialized_data is None:
             self.serialized_data = cPickle.dumps(self._data)
-    
-    def __getattribute__(self, key):
-        if key in self._data:
-            return self.get_value(key)
-        return super(AppSettingsData, self).__getattribute__(key)
+        super(AppSettingsValue, self).save(*args, **kwargs)

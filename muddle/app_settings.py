@@ -1,7 +1,9 @@
+import cPickle
 from django.conf import settings
 from muddle.apps.plugins import load_app_plugin
 
 from muddle.forms.aggregate import AggregateForm
+from muddle.models import AppSettingsValue
 
 
 __all__ = ['initialize', 'register', 'AppSettings']
@@ -60,44 +62,79 @@ class AppSettingsLoader(object):
     """
     class that encompasses settings.
     """
-    
-    def __init__(self, category, has_data=True):
-        self.category = category
-        self.has_data = has_data
+
+    def __init__(self):
         self._categories = {}
-        self._data = {}
-    
+
     def __getattribute__(self, key):
         """
         overloaded to allow dynamic checking of properties
         """
-        if key in self._categories:
+        if key != '_categories' and key in self._categories:
             return self._categories[key]
 
         elif key in SETTINGS:
-            loader = AppSettingsLoader(key)
-            self._categories[key] = loader
+            category = Category(key)
+            self._categories[key] = category
+            return category
 
-        elif self.has_data:
-            # XXX checking properties should be last otherwise data will always
-            # be queried on traversal
-            if key in self._data:
-                return self.data[key]
-            else:
-                pass
+        return super(AppSettingsLoader, self).__getattribute__(key)
 
-        return super(AppSettings, self).__getattribute__(key)
 
-    def load_data(self, keys):
+class Category(object):
+    """
+    class that encompasses settings.
+    """
+
+    def __init__(self, name):
+        self.name = name
+        self._category_names = SETTINGS[name]
+
+    def __getattribute__(self, key):
         """
-        utility method for loading multiple data values at once.  This allows
-        a single query to be used for loading all of the data
+        overloaded to allow dynamic checking of properties
         """
-        pass
+        if key != '_category_names' and key in self._category_names:
+            return Subcategory(self, key)
+                
+        return super(Category, self).__getattribute__(key)
 
 
+class Subcategory(object):
+    """
+    class that encompasses settings.
+    """
+    _data = False
+    _fields = None
 
-AppSettings = AppSettingsLoader('')
+    def __init__(self, parent, name):
+        self._data = None
+        self._name = name
+        self._full_name = '.'.join([parent.name, name])
+        self._fields = parent._category_names[name].base_fields.keys()
+        self._load_data()
+
+    def __setattr__(self, key, value):
+        if self._data and key in self._fields:
+            AppSettingsValue.objects \
+                    .filter(category__name=self._full_name, key=key) \
+                    .update(serialized_data=cPickle.dumps(value))
+
+        return super(Subcategory, self).__setattr__(key, value)
+
+    def _load_data(self):
+        """
+        Loads all values for this subcategory.
+        """
+        values = AppSettingsValue.objects \
+                    .filter(category__name=self._full_name) \
+                    .values('key', 'serialized_data')
+        for value in values:
+            setattr(self, value['key'], cPickle.loads(str(value['serialized_data'])))
+        self._data = True
+
+
+AppSettings = AppSettingsLoader()
 """
 A global instance of AppSettingsLoader that can be imported where needed
 """
