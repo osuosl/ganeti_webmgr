@@ -70,15 +70,13 @@ class AppSettingsLoader(object):
         """
         overloaded to allow dynamic checking of properties
         """
-        if key != '_categories' and key in self._categories:
-            return self._categories[key]
-
-        elif key in SETTINGS:
-            category = Category(key)
-            self._categories[key] = category
-            return category
-
-        return super(AppSettingsLoader, self).__getattribute__(key)
+        try:
+            return super(AppSettingsLoader, self).__getattribute__(key)
+        except AttributeError:
+            if key in SETTINGS:
+                category = Category(key)
+                self._categories[key] = category
+                return category
 
 
 class Category(object):
@@ -96,7 +94,7 @@ class Category(object):
         """
         if key != '_category_names' and key in self._category_names:
             return Subcategory(self, key)
-                
+        
         return super(Category, self).__getattribute__(key)
 
 
