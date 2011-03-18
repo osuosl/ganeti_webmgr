@@ -3,7 +3,7 @@ from django.conf import settings
 from muddle.apps.plugins import load_app_plugin
 
 from muddle.forms.aggregate import AggregateForm
-from muddle.models import AppSettingsValue
+from muddle.app_settings.models import AppSettingsValue
 
 
 __all__ = ['initialize', 'register', 'AppSettings']
