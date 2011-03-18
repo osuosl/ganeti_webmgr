@@ -1,32 +1,8 @@
 from django.conf import settings
 from django.conf.urls.defaults import *
 
-from views import *
 
-
-urlpatterns = patterns('',
-    
-    #default
-    (r'^$', plugins),
-    
-    #plugins
-    (r'^plugins$', plugins),
-    (r'^plugin/depends$', depends),
-    (r'^plugin/dependeds$', dependeds),
-    (r'^plugin/enable$', enable),
-    (r'^plugin/disable$', disable),
-    (r'^plugin/lock/acquire$', acquire_lock),
-    (r'^plugin/lock/refresh$', refresh_lock),
-    (r'^plugin/(\w+)/$', config),
-    (r'^plugin/(\w+)/save$', config_save),
-)
-
-# add view managers special view handler only if it is enabled.  By default it
-# is a core plugin, but a user could disable it.
-if 'ViewManager' in manager:
-    urlpatterns += patterns('',
-        (r'^o/(?P<path>.+)$', manager['ViewManager'].process),
-    )
+urlpatterns = patterns('')
 
 
 # The following is used to serve up local media files like images, css, js
@@ -34,9 +10,9 @@ if 'ViewManager' in manager:
 # determine the path to the static directory which contains all the files
 # we are trying to expose
 media_root = '%s/static' % __file__[:__file__.rfind('/')]
-baseurlregex = r'^muddle_static/(?P<path>.*)$'
+base_url_regex = r'^muddle_static/(?P<path>.*)$'
 urlpatterns += patterns('',
-    (baseurlregex, 'django.views.static.serve', {'document_root': media_root})
+    (base_url_regex, 'django.views.static.serve', {'document_root': media_root})
 )
 
 
