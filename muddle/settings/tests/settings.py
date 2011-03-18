@@ -1,10 +1,10 @@
-from django import forms
 from django.test import TestCase
 
+from muddle.core.forms.aggregate import AggregateForm
 
-from muddle.app_settings import register, SETTINGS, AppSettings, Category, Subcategory
-from muddle.forms.aggregate import AggregateForm
-from muddle.models import AppSettingsCategory, AppSettingsCategory, AppSettingsValue
+from muddle.settings import register, AppSettings
+from muddle.settings.registration import SETTINGS, Category, Subcategory
+from muddle.settings.models import AppSettingsCategory, AppSettingsValue
 from muddle.tests.forms import Foo, Bar, Xoo
 
 
@@ -111,10 +111,8 @@ class AppSettingsUsage(TestCase):
         register('general', Xoo, 'xoo')
 
         category = AppSettingsCategory.objects.create(name='general.foo')
-        data = 'two!'
-        value = AppSettingsValue.objects.create(category=category, key='two', data='two!')
-        data = 'three!'
-        value = AppSettingsValue.objects.create(category=category, key='three', data='three!')
+        AppSettingsValue.objects.create(category=category, key='two', data='two!')
+        AppSettingsValue.objects.create(category=category, key='three', data='three!')
     
     def tearDown(self):
         SETTINGS.clear()

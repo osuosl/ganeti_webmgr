@@ -1,9 +1,8 @@
 import cPickle
 from django.conf import settings
-from muddle.apps.plugins import load_app_plugin
-
-from muddle.forms.aggregate import AggregateForm
-from muddle.app_settings.models import AppSettingsValue
+from muddle.core.apps.plugins import load_app_plugin
+from muddle.core.forms.aggregate import AggregateForm
+from muddle.settings.models import AppSettingsValue
 
 
 __all__ = ['initialize', 'register', 'AppSettings']

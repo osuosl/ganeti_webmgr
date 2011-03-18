@@ -1,0 +1,1 @@
+from muddle.settings.tests.settings import *
