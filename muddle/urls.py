@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.conf.urls.defaults import *
-from django.contrib.auth.views import login, logout
 
 from views import *
 
@@ -42,8 +41,8 @@ urlpatterns += patterns('',
 
 
 # URLS used for testing model glue urls
-if settings.DEBUG or True:
-    urlpatterns = patterns('muddle.tests.resolvers',
+if settings.TESTING:
+    urlpatterns += patterns('muddle.tests.resolvers',
         url(r'^model_resolve_test/(\d+)/(\d+)/$', 'noop_view', name='resolve-test-args'),
         url(r'^model_resolve_test/(?P<one>\d+)/(?P<two>\d+)/$', 'noop_view', name='resolve-test-kwargs'),
     )
