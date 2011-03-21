@@ -10,4 +10,9 @@ def path_to_class(path):
     last_dot = path.rfind('.')
     from_ = path[:last_dot]
     name = path[last_dot+1:]
-    return __import__(from_, {}, {}, [name]).__dict__[name]
+    module = __import__(from_, {}, {}, [name])
+    try:
+        return module.__dict__[name]
+    except KeyError:
+        #XXX raise as import error
+        raise ImportError()
