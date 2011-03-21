@@ -21,7 +21,7 @@ def initialize():
     """
     Initialize the app settings module
     """
-    load_app_plugin('muddled_settings')
+    load_app_plugin('settings')
 
 
 def register(category, form, subcategory=DEFAULT_CATEGORY):
