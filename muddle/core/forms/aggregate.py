@@ -58,6 +58,7 @@ class AggregateForm(Form):
 
     def __init__(self, *args, **kwargs):
         self.forms = [cls(*args, **kwargs) for cls in self.form_classes]
+        super(AggregateForm, self).__init__(*args, **kwargs)
     
     def is_valid(self):
         """
