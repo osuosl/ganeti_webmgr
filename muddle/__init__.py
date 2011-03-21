@@ -1,4 +1,4 @@
-from django.conf import settings
+from django.conf import settings as django_settings
 
 from muddle.plugins.registerable import PERM_ALL, PERM_NONE, PERM_READ, \
                                     PERM_WRITE, PERM_CREATE, PERM_DELETE
@@ -12,8 +12,8 @@ def settings_processor(request):
     """
     return {
         'VERSION':VERSION,
-        'MEDIA':'%s/muddle_static' % settings.SITE_ROOT,
-        'ROOT':settings.SITE_ROOT
+        'MEDIA':'%s/muddle_static' % django_settings.SITE_ROOT,
+        'ROOT':django_settings.SITE_ROOT
     }
 
 
