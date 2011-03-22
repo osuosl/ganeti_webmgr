@@ -4,19 +4,20 @@ from muddle.core.forms.aggregate import AggregateForm
 
 
 class Foo(forms.Form):
-    one = forms.BooleanField()
+    one = forms.BooleanField(initial=True)
     two = forms.CharField(initial='two!')
-    three = forms.CharField(required=True)
+    three = forms.CharField(initial='three?', required=True)
 
 
 class Bar(forms.Form):
     two = forms.CharField(required=False)
     three = forms.CharField(required=False, initial='three!')
-    four = forms.BooleanField()
+    four = forms.BooleanField(initial=False)
+    six = forms.CharField(required=False, initial='six!')
 
 
 class Xoo(forms.Form):
-    five = forms.BooleanField()
+    five = forms.BooleanField(initial=False)
 
 
 class TestAggregateForms(TestCase):
@@ -35,7 +36,7 @@ class TestAggregateForms(TestCase):
         Klass = AggregateForm.aggregate([Foo, Bar])
 
         # test class members
-        self.assertEqual(4, len(Klass.base_fields))
+        self.assertEqual(5, len(Klass.base_fields))
         self.assertTrue('one' in Klass.base_fields)
         self.assertTrue('two' in Klass.base_fields)
         self.assertTrue('three' in Klass.base_fields)
@@ -63,7 +64,7 @@ class TestAggregateForms(TestCase):
         Klass = AggregateForm.aggregate([Foo, Bar], options)
 
         # test class members
-        self.assertEqual(4, len(Klass.base_fields))
+        self.assertEqual(5, len(Klass.base_fields))
         self.assertTrue('one' in Klass.base_fields)
         self.assertTrue('two' in Klass.base_fields)
         self.assertTrue('three' in Klass.base_fields)
