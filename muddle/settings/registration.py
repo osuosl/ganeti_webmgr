@@ -4,7 +4,6 @@ from muddle.core.apps.plugins import load_app_plugin
 from muddle.core.forms.aggregate import AggregateForm
 from muddle.settings.models import AppSettingsValue
 
-
 __all__ = ['initialize', 'register', 'AppSettings']
 
 DEFAULT_CATEGORY = getattr(settings, 'DEFAULT_CATEGORY', 'general')

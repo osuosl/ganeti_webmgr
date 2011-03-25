@@ -97,6 +97,3 @@ class AppSettingsRegistration(TestCase):
         self.assertTrue(Foo in form.form_classes)
         self.assertTrue(Bar in form.form_classes)
         self.assertTrue(Xoo in form.form_classes)
-
-
-

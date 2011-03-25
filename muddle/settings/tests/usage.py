@@ -1,3 +1,4 @@
+import cPickle
 from django.test import TestCase
 
 from muddle.settings import register, AppSettings
@@ -6,24 +7,33 @@ from muddle.settings.models import AppSettingsCategory, AppSettingsValue
 from muddle.tests.forms import Foo, Bar, Xoo
 
 
-__all__ = ['AppSettingsUsage']
+__all__ = ['Usage']
 
 
-class AppSettingsUsageBase(TestCase):
+FOO_DATA = dict(
+    one=True,
+    two='two!',
+    three='three!',
+    four=True,
+    six='six!'
+)
+
+
+class UsageBase(TestCase):
     """
     Base class for TestCases that need an initial set of settings registered
     """
 
     def setUp(self):
         self.tearDown()
-
         register('general', Foo, 'foo')
         register('general', Bar, 'foo')
         register('general', Xoo, 'xoo')
 
         category = AppSettingsCategory.objects.create(name='general.foo')
-        AppSettingsValue.objects.create(category=category, key='two', data='two!')
-        AppSettingsValue.objects.create(category=category, key='three', data='three!')
+
+        for k, v in FOO_DATA.items():
+            AppSettingsValue.objects.create(category=category, key=k, data=v)
 
     def tearDown(self):
         SETTINGS.clear()
@@ -31,7 +41,7 @@ class AppSettingsUsageBase(TestCase):
         AppSettingsValue.objects.all().delete()
 
 
-class AppSettingsUsage(AppSettingsUsageBase):
+class Usage(UsageBase):
 
     def test_get_top_level_category(self):
         category = AppSettings.general

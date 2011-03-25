@@ -38,7 +38,7 @@ def detail(request, category):
             .values_list('key','serialized_data')
         values_dict = {}
         for k, v in values:
-            values_dict[k]=cPickle.loads(v)
+            values_dict[k]=cPickle.loads(str(v))
         subcategories[name] = klass(values_dict)
 
     return render_to_response('muddle/settings/detail.html',
@@ -59,22 +59,32 @@ def save(request, category, subcategory):
     
     if request.method != 'POST':
         return HttpResponseNotAllowed(['POST'])
-
+    
     klass = SETTINGS[category][subcategory]
     form = klass(request.POST)
 
     full_name = '%s.%s' % (category, subcategory)
-    category_instance = AppSettingsCategory.objects.get_or_create(name=category)
+    category_instance, new = AppSettingsCategory.objects.get_or_create(name=full_name)
     if form.is_valid():
+        data = form.cleaned_data
+        for field in form.base_fields.keys():
+            if field in data and data[field] != '':
+                try:
+                    value = AppSettingsValue.objects.get(category=category_instance, key=field)
+                except AppSettingsValue.DoesNotExist:
+                    value = AppSettingsValue(category=category_instance, key=field)
+                value.data = data[field]
+                value.save()
+            else:
+                # delete fields that were not passed in.
+                try:
+                    AppSettingsValue.objects\
+                        .get(category=category_instance, key=field) \
+                        .delete()
+                except AppSettingsValue.DoesNotExist:
+                    # Don't need to delete a value that doesn't exist
+                    pass
 
-        for k, v in form.cleaned_data.items():
-            try:
-                value = AppSettingsValue.objects.get(category=category_instance, key=k)
-            except AppSettingsValue.DoesNotExist:
-                value = AppSettingsValue(category=category_instance, key=k)
-            value.data = v
-            value.save()
-
-        return HttpResponse("1")
+        return HttpResponse("1",  mimetype="application/json")
     
     return HttpResponse(simplejson.dumps(form.errors), mimetype="application/json")
