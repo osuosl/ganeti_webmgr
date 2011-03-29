@@ -706,8 +706,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         session = c.session
         session['os_list'] = os_list
         session.save()
-        for property in ['vcpus', 'memory', 'disk_type', 'boot_order', 'nic_type', \
-            'root_path']:
+        for property in ['vcpus', 'memory', 'disk_type', 'boot_order', 'nic_type']:
             data_ = data.copy()
             del data_[property]
             self.assertFalse(user.is_superuser)
