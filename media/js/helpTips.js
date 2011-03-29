@@ -2,10 +2,12 @@ function initHelpTips(selector){
     /* initialize the help tips for each item on the create VM template */
 
     $(selector).find('input, select')
-            .live('focus', helpTip);
-
+            .live('focus', helpTip)
+          .end()
+            .find('input[type="checkbox"]')
+            .live('click', helpTip);
+    
     function helpTip(){
-        console.log($(this));
         var name = this.name;
         var label = $(this).prev('label').html();
         var content = $('#help-'+name);
