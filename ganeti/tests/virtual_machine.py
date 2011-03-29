@@ -2251,7 +2251,12 @@ class TestVirtualMachineHelpers(TestCase):
                 )
             ])
 
-        # Test the example in the os_prettify() docstring.
+    def test_os_prettify_multiple(self):
+        """
+        Test os_prettify()'s ability to handle multiple entries, including two
+        entries on the same category.
+        """
+
         self.assertEqual(
             os_prettify([
                 "image+obonto-hungry-hydralisk",
@@ -2268,12 +2273,25 @@ class TestVirtualMachineHelpers(TestCase):
                 ]),
             ])
 
-        # Test entries that do not follow the pattern.
-        # This one is from #2157. Still parses, just in a weird way.
+    def test_os_prettify_2517(self):
+        """
+        Test #2157 compliance.
+
+        This example should still parse, but in a weird way. Better than
+        nothing, though.
+        """
+
         self.assertEqual(os_prettify(["debian-pressed+ia32"]),
             [('Debian-pressed', [('debian-pressed+ia32', 'Ia32')])])
 
-        # Test that #2157 causes "Unknown" entries.
+    def test_os_prettify_2517_unknown(self):
+        """
+        Test #2157 compliance.
+
+        This example wasn't part of the bug; it was constructed to show off
+        the fix for #2157.
+        """
+
         self.assertEqual(os_prettify(["deb-ver1", "noop"]),
             [
                 ("Unknown", [
