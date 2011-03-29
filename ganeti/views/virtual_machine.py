@@ -679,7 +679,7 @@ def modify(request, cluster_slug, instance):
 
     if request.method == 'POST':
         form = ModifyVirtualMachineForm(user, None, request.POST)
-        form.fields['os'].choices = request.session['os_list']
+        form.fields['os_name'].choices = request.session['os_list']
         if form.is_valid():
             data = form.cleaned_data
             request.session['edit_form'] = data
@@ -705,7 +705,7 @@ def modify(request, cluster_slug, instance):
                 initial['memory'] = str(info['beparams']['memory'])
                 initial['nic_link'] = info['nic.links'][0]
                 initial['nic_mac'] = info['nic.macs'][0]
-                initial['os'] = info['os']
+                initial['os_name'] = info['os']
                 fields = ('acpi', 'disk_cache', 'initrd_path', 'kernel_args',
                     'kvm_flag', 'mem_path', 'migration_downtime',
                     'security_domain', 'security_model', 'usb_mouse',
@@ -724,7 +724,7 @@ def modify(request, cluster_slug, instance):
 
             # Set os_list for cluster in session
             request.session['os_list'] = os_list
-            form.fields['os'].choices = os_list
+            form.fields['os_name'].choices = os_list
             
     # Select template depending on hypervisor
     # Default to kvm
@@ -767,14 +767,14 @@ def modify_confirm(request, cluster_slug, instance):
                 nicmac = rapi_dict.pop('nic_mac', None)
                 vcpus = rapi_dict.pop('vcpus')
                 memory = rapi_dict.pop('memory')
-                os = rapi_dict.pop('os')
+                os_name = rapi_dict.pop('os_name')
                 # Modify Instance rapi call
                 if nicmac is None:
                     nics=[(0, {'link':niclink,}),]
                 else:
                     nics=[(0, {'link':niclink, 'mac':nicmac,}),]
                 job_id = cluster.rapi.ModifyInstance(instance,
-                    nics=nics, os_name=os, hvparams=rapi_dict,
+                    nics=nics, os_name=os_name, hvparams=rapi_dict,
                     beparams={'vcpus':vcpus,'memory':memory}
                 )
                 # Create job and update message on virtual machine detail page
@@ -817,7 +817,7 @@ def modify_confirm(request, cluster_slug, instance):
             nic_mac=info['nic.macs'][0],
             memory=info['beparams']['memory'],
             vcpus=info['beparams']['vcpus'],
-            os=info['os'],
+            os_name=info['os'],
         )
         # Add hvparams to the old_set
         old_set.update(hvparams)

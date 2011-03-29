@@ -14,7 +14,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
-
+import copy
 
 from django import forms
 from django.forms import ValidationError
@@ -376,6 +376,11 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
         if hv == 'hvm':
             for field in self.hvm_exclude_fields:
                 del self.fields[field]
+        
+        # No easy way to rename a field, so copy to new field and delete old field
+        if 'os' in self.fields and self.fields['os']:
+            self.fields['os_name'] = copy.copy(self.fields['os'])
+            del self.fields['os']
 
     def clean_initrd_path(self):
         data = self.cleaned_data['initrd_path']
