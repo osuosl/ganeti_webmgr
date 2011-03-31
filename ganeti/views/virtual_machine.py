@@ -375,7 +375,8 @@ def list_(request):
 
 
 @login_required
-def vm_table(request, cluster_slug=None, primarysecondary=None):
+def vm_table(request, cluster_slug=None, primary_node=None,
+        secondary_node=None):
     """
     View for displaying the virtual machine table. This is used for ajax calls
     to reload the table. Usually because of a page or sort change.
@@ -402,12 +403,12 @@ def vm_table(request, cluster_slug=None, primarysecondary=None):
         cluster = None
 
     # filter the vms by primary node if applicable
-    if primarysecondary == 'primary':
-        vms = vms.filter(primary_node=True)
+    if primary_node:
+        vms = vms.filter(primary_node=primary_node)
 
     # filter the vms by secondary node if applicable
-    if primarysecondary == 'secondary':
-        vms = vms.filter(secondary_node=True)
+    if secondary_node:
+        vms = vms.filter(secondary_node=secondary_node)
 
     vms = render_vms(request, vms)
 

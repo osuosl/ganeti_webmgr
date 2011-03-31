@@ -20,6 +20,11 @@ from django.conf.urls.defaults import patterns, url
 
 cluster_slug = '(?P<cluster_slug>[-_A-Za-z0-9]+)'
 cluster = 'cluster/%s' % cluster_slug
+
+node = '(?P<node>[-_A-Za-z0-9]+)'
+primary_node = 'primary_node/%s'%node
+secondary_node = 'secondary_node/%s'%node
+
 instance = '/(?P<instance>[^/]+)'
 host = '(?P<host>[^/]+)'
 
@@ -129,8 +134,8 @@ urlpatterns += patterns('ganeti.views.virtual_machine',
     #  VM Table
     url(r'^vm/table/$', 'vm_table', name="virtualmachine-table"),
     url(r'^%s/vm/table/?$' % cluster, 'vm_table', name="cluster-virtualmachine-table"),
-    url(r'^vm/table/(?P<primarysecondary>.+)/?$', 'vm_table', name="virtualmachine-table-primarysecondary"),
-
+    url(r'^vm/table/%s/?$' % primary_node, 'vm_table', name="vm-table-primary"),
+    url(r'^vm/table/%s/?$' % secondary_node, 'vm_table', name="vm-table-secondary"),
 
     #  Detail
     url(r'^%s/?$' % vm_prefix, 'detail', name="instance-detail"),

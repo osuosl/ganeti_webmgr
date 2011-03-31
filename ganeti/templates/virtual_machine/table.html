@@ -37,10 +37,14 @@
             console.log("Cluster!");
             var url = "{% url cluster-virtualmachine-table cluster.slug %}";
         {% else %}
-            {% if primarysecondary %}
-                var url = "{% url virtualmachine-table-primarysecondary primarysecondary %}"
+            {% if primary_node %}
+                var url = "{% url vm-table-primary node %}"
             {% else %}
-                var url = "{% url virtualmachine-table %}";
+                {% if secondary_node %}
+                    var url = "{% url vm-table-secondary node %}"
+                {% else %}
+                    var url = "{% url virtualmachine-table %}";
+                {% endif %}
             {% endif %}
         {% endif %}
 

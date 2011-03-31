@@ -78,7 +78,7 @@ def primary(request, cluster_slug, host):
     vms = render_vms(request, vms)
 
     return render_to_response("virtual_machine/table.html",
-                {'tableID': 'table_primary', 'primarysecondary':'primary',
+                {'tableID': 'table_primary', 'primary_node':True,
                         'node': node, 'vms':vms},
                 context_instance=RequestContext(request))
 
@@ -99,7 +99,7 @@ def secondary(request, cluster_slug, host):
     vms = render_vms(request, vms)
 
     return render_to_response("virtual_machine/table.html",
-                {'tableID': 'table_secondary', 'primarysecondary':'secondary', 
+                {'tableID': 'table_secondary', 'secondary_node':True, 
                         'node': node, 'vms':vms},
                 context_instance=RequestContext(request))
 
