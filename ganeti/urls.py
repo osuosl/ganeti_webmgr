@@ -47,6 +47,7 @@ urlpatterns += patterns('ganeti.views.users',
     url(r'^user/(?P<user_id>\d+)/?$', 'user_detail', name="user-detail"),
     url(r'^user/(?P<user_id>\d+)/edit/?$', 'user_edit', name="user-edit"),
     url(r'^user/(?P<user_id>\d+)/password/?$', 'user_password', name="user-password"),
+    url(r'^user/(?P<user_id>\d+)/key/?$', 'key_get', name="user-key-add"),
 
     # ssh keys
     url(r'^keys/get/$',                     'key_get', name="key-get"),

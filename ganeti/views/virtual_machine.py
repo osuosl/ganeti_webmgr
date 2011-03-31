@@ -22,6 +22,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
+from django.db.models.query_utils import Q
 from django.forms import CharField, HiddenInput
 from django.http import HttpResponse, HttpResponseRedirect, \
     HttpResponseNotAllowed, HttpResponseForbidden, HttpResponseBadRequest
@@ -316,7 +317,10 @@ def ssh_keys(request, cluster_slug, instance, api_key):
                            cluster__slug=cluster_slug)
 
     users = get_users_any(vm, ["admin",]).values_list("id",flat=True)
-    keys = SSHKey.objects.filter(user__in=users).values_list('key','user__username').order_by('user__username')
+    keys = SSHKey.objects \
+        .filter(Q(user__in=users) | Q(user__is_superuser=True)) \
+        .values_list('key','user__username') \
+        .order_by('user__username')
 
     keys_list = list(keys)
     return HttpResponse(json.dumps(keys_list), mimetype="application/json")
