@@ -98,18 +98,16 @@ class NewVirtualMachineForm(forms.ModelForm):
             self.fields['kernel_path'].initial = defaults['kernel_path']
             self.fields['serial_console'].initial = defaults['serial_console']
             self.fields['nic_link'].initial = defaults['nic_link']
+            self.fields['hypervisor'].initial = defaults['hypervisor'] 
             
-            # Set field choices based on hypervisor for cluster
-            hv = defaults['hypervisor']
-            self.fields['hypervisor'].initial = hv
+            # Set field choices and hypervisor
+            self.fields['nic_type'].choices = defaults['nic_types']
+            self.fields['disk_type'].choices = defaults['disk_types']
+            self.fields['boot_order'].choices = defaults['boot_devices']
             
-            if hv == 'kvm':
-                choices = constants.KVM_CHOICES
-            elif hv == 'hvm':
-                choices = constants.HVM_CHOICES
-
-            for key in choices:
-                self.fields[key].choices = choices[key]
+            self.fields['nic_type'].initial = defaults['nic_type']
+            self.fields['disk_type'].initial = defaults['disk_type']
+            self.fields['boot_order'].initial = defaults['boot_order']
 
         # set cluster choices based on the given owner
         if initial and 'owner' in initial and initial['owner']:
