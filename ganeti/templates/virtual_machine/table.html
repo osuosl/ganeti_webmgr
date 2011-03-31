@@ -39,13 +39,11 @@
         {% else %}
             {% if primary_node %}
                 var url = "{% url vm-table-primary node %}"
+            {% else %}{% if secondary_node %}
+                var url = "{% url vm-table-secondary node %}"
             {% else %}
-                {% if secondary_node %}
-                    var url = "{% url vm-table-secondary node %}"
-                {% else %}
-                    var url = "{% url virtualmachine-table %}";
-                {% endif %}
-            {% endif %}
+                var url = "{% url virtualmachine-table %}";
+            {% endif %}{% endif %}
         {% endif %}
 
         {% if tableID %}
