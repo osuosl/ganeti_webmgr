@@ -40,7 +40,7 @@ log_action = LogItem.objects.log_action
 
 from util.client import GanetiApiError
 from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine, \
-        Job, SSHKey, VirtualMachineTemplate
+        Job, SSHKey, VirtualMachineTemplate, Node
 from ganeti.views import render_403
 from ganeti.forms.virtual_machine import NewVirtualMachineForm, \
     ModifyVirtualMachineForm, ModifyConfirmForm, MigrateForm, RenameForm
@@ -404,11 +404,13 @@ def vm_table(request, cluster_slug=None, primary_node=None,
 
     # filter the vms by primary node if applicable
     if primary_node:
-        vms = vms.filter(primary_node=primary_node)
+        vms = vms.filter(
+                primary_node=Node.objects.filter(hostname=primary_node))
 
     # filter the vms by secondary node if applicable
     if secondary_node:
-        vms = vms.filter(secondary_node=secondary_node)
+        vms = vms.filter(
+            secondary_node=Node.objects.filter(hostname=secondary_node))
 
     vms = render_vms(request, vms)
 
