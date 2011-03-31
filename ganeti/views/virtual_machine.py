@@ -375,10 +375,10 @@ def list_(request):
 
 
 @login_required
-def vm_table(request, cluster_slug=None):
+def vm_table(request, cluster_slug=None, primarysecondary=None):
     """
-    View for displaying the virtual machine table.  This is used for ajax calls
-    to reload the table.   Usually because of a page or sort change.
+    View for displaying the virtual machine table. This is used for ajax calls
+    to reload the table. Usually because of a page or sort change.
     """
     user = request.user
 
@@ -391,7 +391,8 @@ def vm_table(request, cluster_slug=None):
     #2) user has any perms on any VM
     #3) user belongs to the group which has perms on any VM
     else:
-        vms = user.get_objects_any_perms(VirtualMachine, groups=True, cluster=['admin'])
+        vms = user.get_objects_any_perms(VirtualMachine, groups=True,
+                cluster=['admin'])
         can_create = user.has_any_perms(Cluster, ['create_vm'])
 
     if cluster_slug:
@@ -400,13 +401,21 @@ def vm_table(request, cluster_slug=None):
     else:
         cluster = None
 
+    # filter the vms by primary node if applicable
+    if primarysecondary == 'primary':
+        vms = vms.filter(primary_node=primary_node)
+
+    # filter the vms by secondary node if applicable
+    if secondarysecondary == 'secondary':
+        vms = vms.filter(secondary_node=secondary_node)
+
     vms = render_vms(request, vms)
 
     return render_to_response('virtual_machine/inner_table.html', {
-        'vms':vms,
-        'can_create':can_create,
-        'cluster':cluster
-       },
+            'vms':vms,
+            'can_create':can_create,
+            'cluster':cluster
+        },
         context_instance=RequestContext(request),
     )
 

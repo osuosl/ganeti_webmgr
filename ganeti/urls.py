@@ -22,6 +22,7 @@ cluster_slug = '(?P<cluster_slug>[-_A-Za-z0-9]+)'
 cluster = 'cluster/%s' % cluster_slug
 instance = '/(?P<instance>[^/]+)'
 host = '(?P<host>[^/]+)'
+primarysecondary = '(?P<primarysecondary>.+)'
 
 # General
 urlpatterns = patterns('ganeti.views.general',
@@ -129,6 +130,7 @@ urlpatterns += patterns('ganeti.views.virtual_machine',
     #  VM Table
     url(r'^vm/table/$', 'vm_table', name="virtualmachine-table"),
     url(r'^%s/vm/table/?$' % cluster, 'vm_table', name="cluster-virtualmachine-table"),
+    url(r'^vm/table/%s$' % primarysecondary, 'vm_table', name="virtualmachine-table-primarysecondary"),
     
     #  Detail
     url(r'^%s/?$' % vm_prefix, 'detail', name="instance-detail"),

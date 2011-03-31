@@ -440,9 +440,10 @@ class VirtualMachine(CachedClusterObject):
     status = models.CharField(max_length=10)
     
     # node relations
-    primary_node = models.ForeignKey('Node', null=True, related_name='primary_vms')
-    secondary_node = models.ForeignKey('Node', null=True, \
-                                        related_name='secondary_vms')
+    primary_node = models.ForeignKey('Node', null=True, 
+            related_name='primary_vms')
+    secondary_node = models.ForeignKey('Node', null=True,
+            related_name='secondary_vms')
     
     # The last job reference indicates that there is at least one pending job
     # for this virtual machine.  There may be more than one job, and that can
