@@ -18,12 +18,11 @@
 
 from django.conf.urls.defaults import patterns, url
 
-cluster_slug = '(?P<cluster_slug>[-_A-Za-z0-9]+)'
+valid_name_pattern = '[-_A-Za-z0-9]+'
+cluster_slug = '(?P<cluster_slug>%s)'%valid_name_pattern
 cluster = 'cluster/%s' % cluster_slug
-
-node = '(?P<node>[-_A-Za-z0-9]+)'
-primary_node = 'primary_node/%s'%node
-secondary_node = 'secondary_node/%s'%node
+primary_node = 'primary_node/(?P<primary_node>%s)'%valid_name_pattern
+secondary_node = 'secondary_node/(?P<secondary_node>%s)'%valid_name_pattern
 
 instance = '/(?P<instance>[^/]+)'
 host = '(?P<host>[^/]+)'
