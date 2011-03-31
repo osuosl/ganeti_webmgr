@@ -403,11 +403,11 @@ def vm_table(request, cluster_slug=None, primarysecondary=None):
 
     # filter the vms by primary node if applicable
     if primarysecondary == 'primary':
-        vms = vms.filter(primary_node=primary_node)
+        vms = vms.filter(primary_node=True)
 
     # filter the vms by secondary node if applicable
-    if secondarysecondary == 'secondary':
-        vms = vms.filter(secondary_node=secondary_node)
+    if primarysecondary == 'secondary':
+        vms = vms.filter(secondary_node=True)
 
     vms = render_vms(request, vms)
 
