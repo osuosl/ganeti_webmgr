@@ -37,6 +37,8 @@ def cluster_default_info(cluster):
         c = constants.KVM_CHOICES
     elif hv == 'hvm':
         c = constants.HVM_CHOICES
+    else:
+        c = constants.ALL_CHOICES
     
     disktypes = c['disk_type']
     nictypes = c['nic_type']
@@ -59,8 +61,8 @@ def cluster_default_info(cluster):
         'nic_mode':info['nicparams']['default']['mode'],
         'nic_link':info['nicparams']['default']['link'],
         'kernel_path':hvparams['kernel_path'],
-        'root_path':hvparams['root_path'],
-        'serial_console':hvparams['serial_console'],
+        'root_path':hvparams['root_path'] if 'root_path' in hvparams else None,
+        'serial_console':hvparams['serial_console'] if 'serial_console' in hvparams else None,
         'boot_devices': bootdevices,
         'boot_order':hvparams['boot_order'],
         'cdrom_image_path':hvparams['cdrom_image_path'],
