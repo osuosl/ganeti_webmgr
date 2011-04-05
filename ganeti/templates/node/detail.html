@@ -189,6 +189,9 @@
                     Migrate
                 </a>
             </li>
+            {% comment %}
+            Disabling this button for now till this is fixed upstream
+
             <li>
                 <a class="button evacuate"
                         title="migrates all secondary instances off this node"
@@ -196,6 +199,7 @@
                     Evacuate
                 </a>
             </li>
+            {% endcomment %}
             {% endif %}
         </ul>
         <table id="nodes" class="overview horizontal">
