@@ -127,10 +127,12 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         self.assert_200(url, args, [superuser, user], mime=mimetype, template=template)
 
 
-    def test_view_list(self):
+    def test_view_list_anonymous(self):
         """
-        Test listing all virtual machines
+        Anonymous users viewing the list of VMs are redirected to the login
+        page.
         """
+
         url = '/vms/'
 
         user2 = User(id=28, username='tester2', is_superuser=True)
@@ -144,12 +146,28 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         user1.grant('admin', vm)
         user1.grant('admin', vm1)
 
-        # anonymous user
         response = c.get(url, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'registration/login.html')
 
-        # user with perms on no virtual machines
+    def test_view_list_user(self):
+        """
+        Users with no VM permissions may view the VM list.
+        """
+
+        url = '/vms/'
+
+        user2 = User(id=28, username='tester2', is_superuser=True)
+        user2.set_password('secret')
+        user2.save()
+
+        # setup vms and perms
+        vm1, cluster1 = self.create_virtual_machine(cluster, 'test1')
+        vm2, cluster1 = self.create_virtual_machine(cluster, 'test2')
+        vm3, cluster1 = self.create_virtual_machine(cluster, 'test3')
+        user1.grant('admin', vm)
+        user1.grant('admin', vm1)
+
         self.assert_(c.login(username=user.username, password='secret'))
         response = c.get(url)
         self.assertEqual(200, response.status_code)
@@ -157,6 +175,24 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         self.assertTemplateUsed(response, 'virtual_machine/list.html')
         vms = response.context['vms'].object_list
         self.assertFalse(vms)
+
+    def test_view_list_user_permissions(self):
+        """
+        Users with VM permissions have some VMs in their VM list.
+        """
+
+        url = '/vms/'
+
+        user2 = User(id=28, username='tester2', is_superuser=True)
+        user2.set_password('secret')
+        user2.save()
+
+        # setup vms and perms
+        vm1, cluster1 = self.create_virtual_machine(cluster, 'test1')
+        vm2, cluster1 = self.create_virtual_machine(cluster, 'test2')
+        vm3, cluster1 = self.create_virtual_machine(cluster, 'test3')
+        user1.grant('admin', vm)
+        user1.grant('admin', vm1)
 
         # user with some perms
         self.assert_(c.login(username=user1.username, password='secret'))
@@ -168,6 +204,24 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         self.assert_(vm in vms)
         self.assert_(vm1 in vms)
         self.assertEqual(2, len(vms))
+
+    def test_view_list_superuser(self):
+        """
+        Superusers see all VMs.
+        """
+
+        url = '/vms/'
+
+        user2 = User(id=28, username='tester2', is_superuser=True)
+        user2.set_password('secret')
+        user2.save()
+
+        # setup vms and perms
+        vm1, cluster1 = self.create_virtual_machine(cluster, 'test1')
+        vm2, cluster1 = self.create_virtual_machine(cluster, 'test2')
+        vm3, cluster1 = self.create_virtual_machine(cluster, 'test3')
+        user1.grant('admin', vm)
+        user1.grant('admin', vm1)
 
         # authorized (superuser)
         self.assert_(c.login(username=user2.username, password='secret'))
