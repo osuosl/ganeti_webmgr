@@ -605,8 +605,9 @@ def create(request, cluster_slug=None):
             else:
                 hvparam_fields = None
 
-            for field in hvparam_fields:
-                hvparams[field] = data[field]
+            if hvparam_fields:
+                for field in hvparam_fields:
+                    hvparams[field] = data[field]
 
             try:
                 # XXX attempt to load the virtual machine.  This ensure that if

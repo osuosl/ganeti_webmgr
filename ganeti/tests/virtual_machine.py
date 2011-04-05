@@ -1639,24 +1639,45 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         boot_devices = [list(a) for a in kvm['boot_order']]
         nic_types = [list(b) for b in kvm['nic_type']]
         disk_types = [list(d) for d in kvm['disk_type']]
-        expected = dict(
-            boot_devices=boot_devices,
-            boot_order='disk',
-            memory=512,
-            nic_types=nic_types,
-            nic_type='paravirtual',
-            root_path='/dev/vda2',
-            hypervisor='kvm',
-            serial_console=True,
-            cdrom_image_path='',
-            disk_types=disk_types,
-            disk_type='paravirtual',
-            nic_link='br42',
-            nic_mode='bridged',
-            vcpus=2,
-            iallocator='',
-            kernel_path=''
-        )
+        expected = {
+            'iallocator':'',
+            'boot_devices': boot_devices,
+            'boot_order': 'disk',
+            'memory': 512,
+            'nic_types': nic_types,
+            'hypervisor': 'kvm',
+            'disk_types': disk_types,
+            'nic_link': 'br42',
+            'nic_mode': 'bridged',
+            'vcpus': 2,
+            'acpi': True,
+            'boot_order': 'disk',
+            'cdrom_image_path': '',
+            'disk_cache': 'default',
+            'disk_type': 'paravirtual',
+            'initrd_path': '',
+            'kernel_args': 'ro',
+            'kernel_path': '',
+            'kvm_flag': '',
+            'migration_bandwidth': 32,
+            'migration_downtime': 30,
+            'migration_mode': 'live',
+            'migration_port': 8102,
+            'nic_type': 'paravirtual',
+            'root_path': '/dev/vda2',
+            'security_domain': '',
+            'security_model': 'none',
+            'serial_console': True,
+            'usb_mouse': '',
+            'use_chroot': False,
+            'use_localtime': False,
+            'vhost_net': False,
+            'vnc_bind_address': '0.0.0.0',
+            'vnc_password_file': '',
+            'vnc_tls': False,
+            'vnc_x509_path': '',
+            'vnc_x509_verify': False
+        }
         
         #anonymous users
         response = c.post(url % args, follow=True)
