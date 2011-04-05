@@ -538,8 +538,7 @@ class VirtualMachine(CachedClusterObject):
                 data['secondary_node'] = Node.objects.get(hostname=secondary)
             except Node.DoesNotExist:
                 # node is not created yet.  fail silently
-                pass
-            data['secondary_node'] = None
+                data['secondary_node'] = None
         else:
             data['secondary_node'] = None
         
