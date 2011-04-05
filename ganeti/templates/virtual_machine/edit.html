@@ -2,19 +2,23 @@
 {% load webmgr_tags %}
 
 {% block head %}
+    <link rel="stylesheet" type="text/css"
+            href="{{MEDIA_URL}}/css/virtual_machine_create.css"/>
     <script src="{{MEDIA_URL}}/js/modifyVM_formUpdater.js"></script>
+    <script src="{{MEDIA_URL}}/js/helpTips.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
             var formUpdate = new modifyFormUpdater();
             formUpdate.init();
+            initHelpTips("#vmeditform");
         });
     </script>
 {% endblock %}
 
 {% block content %}
 <h1>Edit {{ instance.hostname }}</h1>
-<fieldset>
-    <form id="vmeditform" method="post">
+<div id="vmeditform">
+    <form method="post">
         {% vmfield form.os %}
         <fieldset>
             <legend>General Parameters</legend>
@@ -51,5 +55,10 @@
         </fieldset>
         <input class="submit" type="submit" value="Continue" />
     </form>
-</fieldset>
+</div>
+<div id="help">
+    <h3></h3>
+    <div></div>
+</div>
+{% include "virtual_machine/create_help.html" %}
 {% endblock %}

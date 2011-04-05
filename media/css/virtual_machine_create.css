@@ -1,4 +1,4 @@
-#virtualmachineform { float:left; width:400px; }
+#virtualmachineform, #vmeditform { float:left; width:400px; }
 fieldset {margin-top:10px;}
 
 #help {
