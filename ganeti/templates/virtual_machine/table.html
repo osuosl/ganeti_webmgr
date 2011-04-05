@@ -34,7 +34,6 @@
     // -------
     $(document).ready(function(){
         {% if cluster %}
-            console.log("Cluster!");
             var url = "{% url cluster-virtualmachine-table cluster.slug %}";
         {% else %}
             {% if primary_node %}
@@ -51,8 +50,6 @@
         {% else %} 
             var tableID = 'ajaxTable';
         {% endif %}
-
-        console.log(url);
 
         $('#'+tableID).data('ajaxTable', new ajaxTable(url, tableID));
         $('#'+tableID).data('ajaxTable').init();
