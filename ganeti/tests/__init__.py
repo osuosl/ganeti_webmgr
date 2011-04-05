@@ -31,4 +31,5 @@ from ganeti.tests.rapi_cache import *
 from ganeti.tests.ssh_keys import *
 from ganeti.tests.tags import *
 from ganeti.tests.users import *
+from ganeti.tests.utilities import *
 from ganeti.tests.virtual_machine import *
