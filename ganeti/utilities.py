@@ -35,7 +35,7 @@ def cluster_default_info(cluster):
     
     if hv == 'kvm':
         c = constants.KVM_CHOICES
-    elif hv == 'hvm':
+    elif hv == 'xen-hvm':
         c = constants.HVM_CHOICES
     else:
         c = constants.ALL_CHOICES
@@ -49,24 +49,25 @@ def cluster_default_info(cluster):
     except:
         iallocator_info = None
 
-    return {
-        'iallocator': iallocator_info,
-        'hypervisor':hv,
-        'vcpus':beparams['vcpus'],
-        'memory':beparams['memory'],
-        'disk_types':disktypes,
-        'disk_type':hvparams['disk_type'],
-        'nic_types':nictypes,
-        'nic_type':hvparams['nic_type'],
-        'nic_mode':info['nicparams']['default']['mode'],
-        'nic_link':info['nicparams']['default']['link'],
-        'kernel_path':hvparams['kernel_path'],
-        'root_path':hvparams['root_path'] if 'root_path' in hvparams else None,
-        'serial_console':hvparams['serial_console'] if 'serial_console' in hvparams else None,
+    if 'nicparams' in info:
+        nic_mode = info['nicparams']['default']['mode']
+        nic_link = info['nicparams']['default']['link']
+    else:
+        nic_mode = None
+        nic_link = None
+
+    extraparams = {
         'boot_devices': bootdevices,
-        'boot_order':hvparams['boot_order'],
-        'cdrom_image_path':hvparams['cdrom_image_path'],
-        }
+        'disk_types': disktypes,
+        'hypervisor': hv,
+        'iallocator': iallocator_info,
+        'nic_types': nictypes,
+        'nic_mode': nic_mode,
+        'nic_link': nic_link,
+        'memory': beparams['memory'],
+        'vcpus': beparams['vcpus'],
+        }   
+    return dict(hvparams, **extraparams)
 
 
 def cluster_os_list(cluster):

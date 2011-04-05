@@ -31,6 +31,9 @@ class NewVirtualMachineForm(forms.ModelForm):
     """
     Virtual Machine Creation form
     """
+    pvm_exclude_fields = ('disk_type','nic_type', 'boot_order', 'serial_console',
+        'cdrom_image_path')
+
     empty_field = constants.EMPTY_CHOICE_FIELD
     templates = constants.HV_DISK_TEMPLATES
     disktypes = constants.ALL_DISK_TYPES
@@ -85,6 +88,7 @@ class NewVirtualMachineForm(forms.ModelForm):
             self.fields['os'].choices = oslist
 
             defaults = cluster_default_info(cluster)
+            hv = defaults['hypervisor']
             if defaults['iallocator'] != '' :
                 self.fields['iallocator'].initial = True
                 self.fields['iallocator_hostname'] = forms.CharField( \
@@ -93,21 +97,26 @@ class NewVirtualMachineForm(forms.ModelForm):
                                         widget = forms.HiddenInput())
             self.fields['vcpus'].initial = defaults['vcpus']
             self.fields['memory'].initial = defaults['memory']
-            self.fields['disk_type'].initial = defaults['disk_type']
             self.fields['root_path'].initial = defaults['root_path']
             self.fields['kernel_path'].initial = defaults['kernel_path']
-            self.fields['serial_console'].initial = defaults['serial_console']
             self.fields['nic_link'].initial = defaults['nic_link']
-            self.fields['hypervisor'].initial = defaults['hypervisor'] 
+            self.fields['hypervisor'].initial = hv
             
+            if hv == 'kvm':
+                self.fields['serial_console'].initial = defaults['serial_console']
+
             # Set field choices and hypervisor
-            self.fields['nic_type'].choices = defaults['nic_types']
-            self.fields['disk_type'].choices = defaults['disk_types']
-            self.fields['boot_order'].choices = defaults['boot_devices']
-            
-            self.fields['nic_type'].initial = defaults['nic_type']
-            self.fields['disk_type'].initial = defaults['disk_type']
-            self.fields['boot_order'].initial = defaults['boot_order']
+            if hv == 'kvm' or hv == 'xen-hvm':
+                self.fields['nic_type'].choices = defaults['nic_types']
+                self.fields['disk_type'].choices = defaults['disk_types']
+                self.fields['boot_order'].choices = defaults['boot_devices']
+                
+                self.fields['nic_type'].initial = defaults['nic_type']
+                self.fields['disk_type'].initial = defaults['disk_type']
+                self.fields['boot_order'].initial = defaults['boot_order']
+            elif hv == 'xen-pvm':
+                for field in self.pvm_exclude_fields:
+                    del self.fields[field]
 
         # set cluster choices based on the given owner
         if initial and 'owner' in initial and initial['owner']:
@@ -283,18 +292,18 @@ class NewVirtualMachineForm(forms.ModelForm):
 
         # Check disk_type
         if (hv == 'kvm' and not (contains(disk_type, constants.KVM_DISK_TYPES) or contains(disk_type, constants.HV_DISK_TYPES))) or \
-           (hv == 'hvm' and not (contains(disk_type, constants.HVM_DISK_TYPES) or contains(disk_type, constants.HV_DISK_TYPES))):
+           (hv == 'xen-hvm' and not (contains(disk_type, constants.HVM_DISK_TYPES) or contains(disk_type, constants.HV_DISK_TYPES))):
             msg = '%s is not a valid option for Disk Template on this cluster.' % disk_type
             self._errors['disk_type'] = self.error_class([msg])
         # Check nic_type
         if (hv == 'kvm' and not (contains(nic_type, constants.KVM_NIC_TYPES) or \
            contains(nic_type, constants.HV_NIC_TYPES))) or \
-           (hv == 'hvm' and not contains(nic_type, constants.HV_NIC_TYPES)):
+           (hv == 'xen-hvm' and not contains(nic_type, constants.HV_NIC_TYPES)):
             msg = '%s is not a valid option for Nic Type on this cluster.' % nic_type
             self._errors['nic_type'] = self.error_class([msg])
         # Check boot_order 
         if (hv == 'kvm' and not contains(boot_order, constants.KVM_BOOT_ORDER)) or \
-           (hv == 'hvm' and not contains(boot_order, constants.HVM_BOOT_ORDER)):
+           (hv == 'xen-hvm' and not contains(boot_order, constants.HVM_BOOT_ORDER)):
             msg = '%s is not a valid option for Boot Device on this cluster.' % boot_order
             self._errors['boot_order'] = self.error_class([msg])
 
@@ -369,7 +378,7 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
         hv = None
         if cluster and cluster.info and 'default_hypervisor' in cluster.info:
             hv = cluster.info['default_hypervisor']
-        if hv == 'hvm':
+        if hv == 'xen-hvm':
             for field in self.hvm_exclude_fields:
                 del self.fields[field]
         

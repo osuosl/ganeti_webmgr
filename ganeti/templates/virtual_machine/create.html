@@ -56,18 +56,28 @@
             {% vmfield form.vcpus %}
             {% vmfield form.memory %}
             {% vmfield form.disk_size %}
+            {% if form.disk_type %}
             {% vmfield form.disk_type %}
+            {% endif %}
             {% vmfield form.nic_mode %}
             {% vmfield form.nic_link %}
+            {% if form.nic_type %}
             {% vmfield form.nic_type %}
+            {% endif %}
         </fieldset>
         <fieldset>
             <legend>Hypervisor Parameters</legend>
             {% vmfield form.kernel_path %}
             {% vmfield form.root_path %}
+            {% if form.serial_console %}
             {% vmfield form.serial_console %}
+            {% endif %}
+            {% if form.boot_order %}
             {% vmfield form.boot_order %}
+            {% endif %}
+            {% if form.cdrom_image_path %}
             {% vmfield form.cdrom_image_path %}
+            {% endif %}
         </fieldset>
         <input class="submit" type="submit" value="Create">
     </form>

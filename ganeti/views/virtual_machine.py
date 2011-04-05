@@ -581,9 +581,30 @@ def create(request, cluster_slug=None):
                 snode = data.get('snode')
 
             # Create dictionary of only parameters supposed to be in hvparams
+            hv = data.get('hypervisor', '')
             hvparams = dict()
-            hvparam_fields = ('kernel_path', 'root_path', 'serial_console',
-                'boot_order', 'disk_type', 'cdrom_image_path', 'nic_type')
+            if hv == 'xen-pvm':
+                hvparam_fields = ('kernel_path', 'root_path')
+            elif hv == 'xen-hvm':
+                hvparam_fields = (
+                    'kernel_path',
+                    'root_path',
+                    'boot_order',
+                    'disk_type',
+                    'nic_type',
+                    'cdrom_image_path') 
+            elif hv == 'kvm':
+                hvparam_fields = (
+                    'kernel_path',
+                    'root_path',
+                    'serial_console',
+                    'boot_order',
+                    'disk_type',
+                    'cdrom_image_path',
+                    'nic_type')
+            else:
+                hvparam_fields = None
+
             for field in hvparam_fields:
                 hvparams[field] = data[field]
 
@@ -729,7 +750,7 @@ def modify(request, cluster_slug, instance):
     # Select template depending on hypervisor
     # Default to kvm
     template = "virtual_machine/edit.html"
-    if hv == 'hvm':
+    if hv == 'xen-hvm':
         template = "virtual_machine/edit_hvm.html"
        
     return render_to_response(template, {
