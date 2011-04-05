@@ -26,6 +26,7 @@ settings.py*
 
 # vim swap files
 *.swp
+*.swo
 
 # files that might exist in dev environment
 django
@@ -36,3 +37,4 @@ muddle
 
 # Hidden files
 .*
+
