@@ -43,7 +43,7 @@ class NewVirtualMachineForm(forms.ModelForm):
 
     owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label='Owner')
     cluster = forms.ModelChoiceField(queryset=Cluster.objects.none(), label='Cluster')
-    hypervisor = forms.CharField(required=False, widget=forms.HiddenInput())
+    hypervisor = forms.ChoiceField(required=False, choices=[empty_field])
     hostname = forms.RegexField(label='Instance Name', regex=FQDN_RE,
                             error_messages={
                                 'invalid': 'Instance name must be resolvable',
@@ -100,6 +100,7 @@ class NewVirtualMachineForm(forms.ModelForm):
             self.fields['root_path'].initial = defaults['root_path']
             self.fields['kernel_path'].initial = defaults['kernel_path']
             self.fields['nic_link'].initial = defaults['nic_link']
+            self.fields['hypervisor'].choices = defaults['hypervisors']
             self.fields['hypervisor'].initial = hv
             
             if hv == 'kvm':

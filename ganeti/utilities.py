@@ -31,6 +31,7 @@ def cluster_default_info(cluster):
     info = cluster.info
     beparams = info['beparams']['default']
     hv = info['default_hypervisor']
+    hvs = info['enabled_hypervisors']
     hvparams = info['hvparams'][hv]
     
     if hv == 'kvm':
@@ -60,6 +61,7 @@ def cluster_default_info(cluster):
         'boot_devices': bootdevices,
         'disk_types': disktypes,
         'hypervisor': hv,
+        'hypervisors': zip(hvs, hvs),
         'iallocator': iallocator_info,
         'nic_types': nictypes,
         'nic_mode': nic_mode,

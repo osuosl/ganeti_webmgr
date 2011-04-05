@@ -200,14 +200,22 @@ function formUpdater(url_choices, url_options, url_defaults){
                                 .attr('selected','selected');
                         }
                         
-                        // hypervisor
+                        // hypervisors dropdown
+                        if(d['hypervisors']) {
+                            hypervisor.children().remove();
+                            $.each(d['hypervisors'], function(i, item){
+                                hypervisor.append(_newOpt(item[0], item[1]));
+                            });
+                        }
                         if(d['hypervisor']) {
                             if (d['hypervisor'] != "" &&
                                 d['hypervisor'] != undefined) {
-                                if (!hypervisor.attr('value')){
-                                    hypervisor.attr('value', d['hypervisor']);
-                                }
+                                hypervisor.find(":selected").removeAttr(
+                                        "selected");
+                                hypervisor.find("[value=" + d['hypervisor'] + "]")
+                                    .attr("selected", "selected");     
                             }
+                            disableSingletonDropdown(hypervisor, blankOptStr);
                         }
 
                         // iallocator checkbox
