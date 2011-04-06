@@ -1,4 +1,5 @@
 # Copyright (C) 2010 Oregon State University et al.
+# Copyright (C) 2010 Greek Research and Technology Network
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -77,8 +78,9 @@ def primary(request, cluster_slug, host):
     vms = node.primary_vms.all()
     vms = render_vms(request, vms)
 
-    return render_to_response("virtual_machine/table.html", \
-                {'node': node, 'vms':vms}, \
+    return render_to_response("virtual_machine/table.html",
+                {'tableID': 'table_primary', 'primary_node':True,
+                        'node': node, 'vms':vms},
                 context_instance=RequestContext(request))
 
 
@@ -97,8 +99,9 @@ def secondary(request, cluster_slug, host):
     vms = node.secondary_vms.all()
     vms = render_vms(request, vms)
 
-    return render_to_response("virtual_machine/table.html", \
-                {'node': node, 'vms':vms}, \
+    return render_to_response("virtual_machine/table.html",
+                {'tableID': 'table_secondary', 'secondary_node':True, 
+                        'node': node, 'vms':vms},
                 context_instance=RequestContext(request))
 
 @login_required
@@ -145,7 +148,7 @@ def role(request, cluster_slug, host):
                 msg = job.info
 
                 # log information
-                log_action('NODE_ROLE_CHANGE', user, node, job)
+                log_action('NODE_ROLE_CHANGE', user, node)
                 return HttpResponse(json.dumps(msg), mimetype='application/json')
             except GanetiApiError, e:
                 content = json.dumps({'__all__':[str(e)]})
@@ -192,7 +195,7 @@ def migrate(request, cluster_slug, host):
                 msg = job.info
 
                 # log information
-                log_action('NODE_MIGRATE', user, node, job)
+                log_action('NODE_MIGRATE', user, node)
 
                 return HttpResponse(json.dumps(msg), mimetype='application/json')
             except GanetiApiError, e:
@@ -289,3 +292,4 @@ def evacuate(request, cluster_slug, host):
     return render_to_response('node/evacuate.html', \
         {'form':form, 'node':node, 'cluster':cluster}, \
         context_instance=RequestContext(request))
+
