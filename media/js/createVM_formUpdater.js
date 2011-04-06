@@ -61,12 +61,11 @@ function formUpdater(url_choices, url_options, url_defaults){
         /* setup change hooks for the form elements */
 
         // boot device change
-        bootOrder.change(function(){
+        bootOrder.live('change', function(){
             /* 
             Only show image path stuffs if CD-ROM is selected in the boot 
             order dropdown.
             */
-            var dropdown = $(this);
             var id = $(this).children("option:selected").val();
             if(id == 'cdrom'){
                 _imagePathShow();
@@ -76,7 +75,7 @@ function formUpdater(url_choices, url_options, url_defaults){
         });
 
         // iallocator change
-        iallocator.change(function() {
+        iallocator.live('change', function() {
             if(!iallocator.attr('readonly')) {
                 if(iallocator.is(':checked')) {
                     pnode.hide();
@@ -94,7 +93,7 @@ function formUpdater(url_choices, url_options, url_defaults){
         });
 
         // disk_template change
-        disk_template.change(function() {
+        disk_template.live('change', function() {
             if(!iallocator.is(':checked') || 
                     iallocator.attr('readonly')) {
 
@@ -107,8 +106,7 @@ function formUpdater(url_choices, url_options, url_defaults){
         });
 
         // owner change
-        owner.change(function() {
-            var dropdown = $(this);
+        owner.live('change', function() {
             var id = $(this).children("option:selected").val();
 
             if(id != '') {
@@ -134,11 +132,10 @@ function formUpdater(url_choices, url_options, url_defaults){
         });
 
         // cluster change
-        cluster.change(function() {
+        cluster.live('change', function() {
             var pnode       = $("#id_pnode");
             var snode       = $("#id_snode");
             var oslist      = $("#id_os");
-            var dropdown    = $(this);
             var id = $(this).children("option:selected").val();
             
             if( id != '' ) {
@@ -313,7 +310,8 @@ function formUpdater(url_choices, url_options, url_defaults){
                         
                         // image path text box
                         if(d['cdrom_image_path']){
-                            $("#id_cdrom_image_path").val(d['cdrom_image_path']);
+                            $("#id_cdrom_image_path")
+                                .val(d['cdrom_image_path']);
                         }
                     });
                 }
@@ -362,3 +360,4 @@ function formUpdater(url_choices, url_options, url_defaults){
         return group;
     }
 }
+
