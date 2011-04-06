@@ -19,6 +19,9 @@ function formUpdater(url_choices, url_options, url_defaults){
     var iallocator_hostname =   $("#id_iallocator_hostname");
     var bootOrder =             $("#id_boot_order");
     var imagePath =             $("#id_cdrom_image_path");
+    var root_path =             $("#id_root_path").parent("p");
+    var kernel_path =           $("#id_kernel_path").parent("p");
+    var serial_console =        $("#id_serial_console").parent("p");
     var using_str =             ' Using: ';
     var blankOptStr =           '---------';
     var nodes =                 null; // nodes available
@@ -59,6 +62,29 @@ function formUpdater(url_choices, url_options, url_defaults){
     
     function _initChangeHooks(){
         /* setup change hooks for the form elements */
+
+        // handle hypervisor changes
+        hypervisor.live('change', function() {
+            var id = $(this).val();
+            if (id != this.oldid) {
+                if (id == 'xen-hvm') {
+                    _showHvmKvmElements();
+                    _hidePvmKvmElements();
+                    _hideKvmElements();
+                } 
+                if (id == 'xen-pvm') {
+                    _showPvmKvmElements();
+                    _hideHvmKvmElements();
+                    _hideKvmElements(); 
+                }
+                if (id == 'kvm') {
+                    _showKvmElements();
+                    _showHvmKvmElements();
+                    _showPvmKvmElements();
+                } 
+                this.oldid = id;
+            } 
+        });
 
         // boot device change
         bootOrder.live('change', function(){
@@ -199,7 +225,7 @@ function formUpdater(url_choices, url_options, url_defaults){
                         
                         // hypervisors dropdown
                         if(d['hypervisors']) {
-                            hypervisor.children().remove();
+                            hypervisor.children().not(":first").remove();
                             $.each(d['hypervisors'], function(i, item){
                                 hypervisor.append(_newOpt(item[0], item[1]));
                             });
@@ -213,6 +239,7 @@ function formUpdater(url_choices, url_options, url_defaults){
                                     .attr("selected", "selected");     
                             }
                             disableSingletonDropdown(hypervisor, blankOptStr);
+                            hypervisor.change()
                         }
 
                         // iallocator checkbox
@@ -358,6 +385,44 @@ function formUpdater(url_choices, url_options, url_defaults){
             group.append(_newOpt(option[0], option[1]));
         });
         return group;
+    }
+    
+    function _hideHvmKvmElements() {
+        // Hide hvm + kvm specific hypervisor fields
+        bootOrder.parent("p").hide();
+        imagePath.parent("p").hide(); 
+        nictype.parent("p").hide();
+        disktype.parent("p").hide();
+    }
+
+    function _showHvmKvmElements() {
+        // Show hvm + kvm specific hypervisor fields
+        bootOrder.parent("p").show();
+        imagePath.parent("p").show(); 
+        nictype.parent("p").show();
+        disktype.parent("p").show();
+    }
+
+    function _hidePvmKvmElements() {
+        // Hide pvm specific hypervisor fields
+        root_path.hide();
+        kernel_path.hide();
+    }
+
+    function _showPvmKvmElements() {
+        // Show pvm specific hypervisor fields
+        root_path.show();
+        kernel_path.show();
+    }
+
+    function _hideKvmElements() {
+        // Hide kvm specific hypervisor fields
+        serial_console.hide();
+    }
+
+    function _showKvmElements() {
+        // Show kvm specific hypervisor fields
+        serial_console.show();
     }
 }
 
