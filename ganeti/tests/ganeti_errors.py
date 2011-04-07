@@ -23,7 +23,7 @@ from django.test.client import Client
 from util import client
 from ganeti.tests.call_proxy import CallProxy
 from ganeti.tests.rapi_proxy import RapiProxy
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
 from ganeti import models
 
 VirtualMachine = models.VirtualMachine
@@ -193,7 +193,6 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
 
         msg0 = client.GanetiApiError("Simulating 401 error", 401)
         msg1 = client.GanetiApiError("Simulating 404 error", 404)
-        msg2 = client.GanetiApiError("Simulating normal error", 777)
         RapiProxy.error = msg0
 
         store_error = GanetiError.objects.store_error
