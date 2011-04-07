@@ -5,7 +5,6 @@ function initHelpTips(selector){
             .live('focus', helpTip);
 
     function helpTip(){
-        console.log($(this));
         var name = this.name;
         var label = $(this).prev('label').html();
         var content = $('#help-'+name);
