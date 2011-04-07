@@ -211,7 +211,6 @@ class TestClusterModel(TestCase):
         """
         cluster = Cluster(hostname='ganeti.osuosl.test')
         cluster.save()
-        vm_missing = 'gimager.osuosl.bak'
         vm_current = VirtualMachine(cluster=cluster, hostname='gimager2.osuosl.bak')
         vm_removed = VirtualMachine(cluster=cluster, hostname='does.not.exist.org')
         vm_current.save()
@@ -225,7 +224,6 @@ class TestClusterModel(TestCase):
         """
         cluster = Cluster(hostname='ganeti.osuosl.test')
         cluster.save()
-        vm_missing = 'gimager.osuosl.bak'
         vm_current = VirtualMachine(cluster=cluster, hostname='gimager2.osuosl.bak')
         vm_removed = VirtualMachine(cluster=cluster, hostname='does.not.exist.org')
         vm_current.save()

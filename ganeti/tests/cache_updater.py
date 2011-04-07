@@ -93,7 +93,6 @@ class TestCacheUpdater(TestCase, VirtualMachineTestCaseMixin):
         mtime_timestamp = 1285883000.1234000
         mtime = datetime.fromtimestamp(mtime_timestamp)
         new_mtime_timestamp = 1999999999.8692000
-        new_mtime = datetime.fromtimestamp(new_mtime_timestamp)
         cached = datetime.now()
         
         # set data so that mtime is up to date.  include a data change that
@@ -137,7 +136,6 @@ class TestCacheUpdater(TestCase, VirtualMachineTestCaseMixin):
         
         os = 'image+gentoo-hardened-cf'
         mtime_timestamp = 1285883000.8692000
-        mtime = datetime.fromtimestamp(mtime_timestamp)
         cached = datetime.now()
         
         # set data so that mtime is up to date.  include a data change that
@@ -178,7 +176,6 @@ class TestCacheUpdater(TestCase, VirtualMachineTestCaseMixin):
         
         os = 'image+gentoo-hardened-cf'
         mtime_timestamp = 1285883000.8692000
-        mtime = datetime.fromtimestamp(mtime_timestamp)
         cached = datetime.now()
         
         # set data so that mtime is up to date.  include a data change that

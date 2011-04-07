@@ -36,8 +36,7 @@ class TestUtilities(TestCase):
         float2 = -34.00
         bool1 = True
         bool2 = False
-        none = None
-        
+
         stringRemoved = "removed"
         stringSet = "set to %s"
         stringChanged = "changed from %s to %s"
