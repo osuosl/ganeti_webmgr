@@ -643,44 +643,67 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         for k, v in data_.items():
             self.assertEqual(v, getattr(cluster, k))
 
-    def test_view_delete(self):
+    def test_view_delete_anonymous(self):
         """
-        Tests delete a cluster
+        Random people shouldn't be able to delete clusters.
         """
-        cluster = globals()['cluster']
+
+        cluster = Cluster(hostname='test.cluster.bak', slug='cluster1')
+        cluster.save()
         url = '/cluster/%s/edit/' % cluster.slug
-        
-        # anonymous user
-        response = c.get(url, follow=True)
+
+        response = c.delete(url, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'registration/login.html')
-        
-        # unauthorized user
+
+    def test_view_delete_unauthorized(self):
+        """
+        Unauthorized people shouldn't be able to delete clusters.
+        """
+
+        cluster = Cluster(hostname='test.cluster.bak', slug='cluster1')
+        cluster.save()
+        url = '/cluster/%s/edit/' % cluster.slug
+
         self.assert_(c.login(username=user.username, password='secret'))
         response = c.delete(url)
         self.assertEqual(403, response.status_code)
-        
-        # authorized (permission)
+
+    def test_view_delete_authorized(self):
+        """
+        Users with admin on the cluster should be able to delete the cluster.
+        """
+
+        cluster = Cluster(hostname='test.cluster.bak', slug='cluster1')
+        cluster.save()
+        url = '/cluster/%s/edit/' % cluster.slug
+
         user.grant('admin', cluster)
-        response = c.delete(url)
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.delete(url, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertEquals('1', response.content)
-        self.assertFalse(Cluster.objects.all.filter(id=cluster.id).exists())
-        user.revoke('admin', cluster)
-        
-        # recreate cluster
+        self.assertFalse(Cluster.objects.all().filter(id=cluster.id).exists())
+
+    def test_view_delete_superuser(self):
+        """
+        Superusers can delete clusters.
+        """
+
+        cluster = Cluster(hostname='test.cluster.bak', slug='cluster1')
         cluster.save()
-        
-        # authorized (GET)
+        url = '/cluster/%s/edit/' % cluster.slug
+
         user.is_superuser = True
         user.save()
-        response = c.delete(url)
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.delete(url, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertEquals('1', response.content)
-        self.assertFalse(Cluster.objects.all.filter(id=cluster.id).exists())
-    
+        self.assertFalse(Cluster.objects.all().filter(id=cluster.id).exists())
+
     def test_view_detail(self):
         """
         Tests displaying detailed view for a Cluster
@@ -1182,50 +1205,6 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         Tests updating a Group's quota
         """
         self.validate_quota(group.organization, template='cluster/group_row.html')
-
-    def test_view_delete(self):
-        """
-        Test the deletion of a cluster
-        """
-        cluster = Cluster(hostname='test.cluster.bak', slug='cluster1')
-        cluster.save()
-        url='/cluster/%s/edit/'
-        args = cluster.slug
-        query = Cluster.objects.filter(hostname='test.cluster.bak')
-        
-        
-        # anonymous user
-        response = c.delete(url % args, follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'registration/login.html')
-        
-        # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
-        response = c.delete(url % args)
-        self.assertEqual(403, response.status_code)
-        
-        # nonexisent cluster
-        response = c.delete(url % "DOES_NOT_EXIST")
-        self.assertEqual(404, response.status_code)
-        
-        # valid GET authorized user (perm)
-        grant(user, 'admin', cluster)
-        response = c.delete(url % args)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('application/json', response['content-type'])
-        self.assertEqual('1', response.content)
-        self.assertFalse(query.exists())
-        
-        # valid GET authorized user (superuser)
-        cluster.save()
-        user.revoke('admin', cluster)
-        user.is_superuser = True
-        user.save()
-        response = c.delete(url % args)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('application/json', response['content-type'])
-        self.assertEqual('1', response.content)
-        self.assertFalse(query.exists())
 
     def test_sync_virtual_machines_in_edit_view(self):
         """
