@@ -160,3 +160,9 @@ ALL_CHOICES = {
     'boot_order': ALL_BOOT_ORDER,
 }
 
+NO_CHOICES = {
+    'disk_type': None,
+    'nic_type': None,
+    'boot_order': None,
+}
+

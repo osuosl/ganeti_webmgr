@@ -36,10 +36,7 @@ class NewVirtualMachineForm(forms.ModelForm):
 
     empty_field = constants.EMPTY_CHOICE_FIELD
     templates = constants.HV_DISK_TEMPLATES
-    disktypes = constants.ALL_DISK_TYPES
     nicmodes = constants.HV_NIC_MODES
-    nictypes = constants.ALL_NIC_TYPES
-    bootchoices = constants.ALL_BOOT_ORDER
 
     owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label='Owner')
     cluster = forms.ModelChoiceField(queryset=Cluster.objects.none(), label='Cluster')
@@ -56,10 +53,10 @@ class NewVirtualMachineForm(forms.ModelForm):
                                       choices=templates)
     memory = DataVolumeField(label='Memory', min_value=100)
     disk_size = DataVolumeField(label='Disk Size', min_value=100)
-    disk_type = forms.ChoiceField(label='Disk Type', choices=disktypes)
+    disk_type = forms.ChoiceField(label='Disk Type', choices=[empty_field])
     nic_mode = forms.ChoiceField(label='NIC Mode', choices=nicmodes)
-    nic_type = forms.ChoiceField(label='NIC Type', choices=nictypes)
-    boot_order = forms.ChoiceField(label='Boot Device', choices=bootchoices)
+    nic_type = forms.ChoiceField(label='NIC Type', choices=[empty_field])
+    boot_order = forms.ChoiceField(label='Boot Device', choices=[empty_field])
 
     class Meta:
         model = VirtualMachineTemplate

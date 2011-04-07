@@ -314,7 +314,7 @@ function formUpdater(url_choices, url_options, url_defaults){
                             });
                         }
                         if(d["disk_type"]){
-                             disk_type.val(d["disk_type"]);
+                            disk_type.val(d["disk_type"]);
                         }
                         
                         // root path text box

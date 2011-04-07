@@ -36,10 +36,16 @@ def cluster_default_info(cluster):
     
     if hv == 'kvm':
         c = constants.KVM_CHOICES
-    elif hv == 'xen-hvm':
+    elif hv == 'xen-hvm' or hv == 'xen-pvm':
         c = constants.HVM_CHOICES
+        if hv == 'xen-pvm':
+            # PVM does not have disk types or nic types, so these options get
+            # taken from HVM. This does not affect forms as pvm ignores
+            # the disk_type and nic_type fields.
+            hvparams['disk_type'] = info['hvparams']['xen-hvm']['disk_type']
+            hvparams['nic_type'] = info['hvparams']['xen-hvm']['nic_type']
     else:
-        c = constants.ALL_CHOICES
+        c = constants.NO_CHOICES
     
     disktypes = c['disk_type']
     nictypes = c['nic_type']
