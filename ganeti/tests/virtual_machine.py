@@ -215,33 +215,40 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
 
     def validate_post_only_url(self, url, args=None, data=dict(), users=None, get_allowed=False):
         """
-        generic function for testing urls that post with no data
+        Generic function for POSTing to URLs.
+
+        This function does some standard URL checks, then does two POSTs: One
+        normal, and one with a faked error. Additionally, if ``get_allowed``
+        is not set, the GET method is checked to make sure it fails.
         """
+
         vm = globals()['vm']
         args = args if args else (cluster.slug, vm.hostname)
         users = users if users else [superuser, vm_admin, cluster_admin]
         self.assert_standard_fails(url, args)
 
-        def tests(user, response):
+        def test_json(user, response):
             content = json.loads(response.content)
             self.assertEqual('1', content['id'])
             VirtualMachine.objects.all().update(last_job=None)
             Job.objects.all().delete()
-
-        self.assert_200(url, args, users, data=data, tests=tests, \
-                        mime='application/json', method='post')
-
-        # error while issuing reboot command
-        def tests(user, response):
+        def test_json_error(user, response):
             content = json.loads(response.content)
             text = content['__all__'][0]
             self.assertEqual(msg, text)
             vm.rapi.error = None
+
+        self.assert_200(url, args, users, data=data, tests=test_json,
+                        mime='application/json', method='post')
+
         msg = "SIMULATING_AN_ERROR"
         vm.rapi.error = client.GanetiApiError(msg)
-        self.assert_200(url, args, [superuser], data=data, mime='application/json', method='post', tests=tests)
+        self.assert_200(url, args, [superuser], data=data,
+                        tests=test_json_error, mime='application/json',
+                        method='post')
 
-        # invalid method
+        # If GET is supposed to be forbidden on this URL, make sure that GET
+        # 405s.
         if not get_allowed:
             self.assertTrue(c.login(username=superuser.username, password='secret'))
             response = c.get(url % args, data)
@@ -332,7 +339,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         key1.save()
 
         # get API key
-        import settings, json
+        import settings
         key = settings.WEB_MGR_API_KEY
 
         # forbidden
@@ -1986,7 +1993,6 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
 
         url = "/cluster/%s/%s/rename/"
         args = (cluster.slug, vm.hostname)
-        template = 'virtual_machine/rename.html'
         template_success = 'virtual_machine/detail.html'
         users =[superuser, cluster_admin, vm_admin, vm_modify]
         denied = [cluster_migrate]
@@ -2011,7 +2017,6 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         url = "/cluster/%s/%s/rename/"
         args = (cluster.slug, vm.hostname)
         template = 'virtual_machine/rename.html'
-        users =[superuser, cluster_admin, vm_admin, vm_modify]
         data = {'hostname':'foo.arg.different', 'ip_check':False, 'name_check':False}
         errors = ({'hostname':vm.hostname},)
 
