@@ -878,7 +878,6 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         # POST - over ram quota
         profile = user.get_profile()
         cluster.set_quota(profile, dict(ram=1000, disk=2000, virtual_cpus=10))
-        vm = VirtualMachine(cluster=cluster, ram=100, disk_size=100, virtual_cpus=2, owner=profile).save()
         data_ = data.copy()
         data_['ram'] = 2000
         data_['owner'] = profile.id
@@ -1667,8 +1666,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         """
         url = "/cluster/%s/%s/vnc_proxy/"
         args = (cluster.slug, vm.hostname)
-        response = self.validate_get_configurable(url, args, None,
-            "application/json", ["admin",])
+        self.validate_get_configurable(url, args, None, "application/json",
+            ["admin",])
 
     def test_view_object_log(self):
         """
@@ -1966,12 +1965,14 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         self.assertEqual([], group.get_perms(vm))
         self.assertEqual('"group_42"', response.content)
 
-    def test_view_rename(self):
-        """ tests renaming a VirtualMachine """
+    def test_view_rename_get(self):
+        """
+        VM rename GET requests should have the standard responses.
+        """
+
         url = "/cluster/%s/%s/rename/"
         args = (cluster.slug, vm.hostname)
         template = 'virtual_machine/rename.html'
-        template_success = 'virtual_machine/detail.html'
         users =[superuser, cluster_admin, vm_admin, vm_modify]
         denied = [cluster_migrate]
 
@@ -1980,22 +1981,45 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         self.assert_200(url, args, users, template=template)
         self.assert_403(url, args, denied)
 
-        # test POST
+    def test_view_rename_post(self):
+        """
+        VM rename POST requests should have the standard responses.
+        """
+
+        url = "/cluster/%s/%s/rename/"
+        args = (cluster.slug, vm.hostname)
+        template = 'virtual_machine/rename.html'
+        template_success = 'virtual_machine/detail.html'
+        users =[superuser, cluster_admin, vm_admin, vm_modify]
+        denied = [cluster_migrate]
+        data = {'hostname':'foo.arg.different', 'ip_check':False, 'name_check':False}
+
         def tests(user, response):
             updated_vm = VirtualMachine.objects.get(pk=vm.pk)
             self.assertEqual('foo.arg.different', updated_vm.hostname)
             vm.save()
 
-        data = {'hostname':'foo.arg.different', 'ip_check':False, 'name_check':False}
         self.assert_standard_fails(url, args, data, method='post')
         self.assert_200(url, args, users, template_success, data=data, follow=True, method="post", tests=tests)
         self.assert_403(url, args, denied, data=data, method="post")
 
-        # test form errors
+    def test_view_rename_form(self):
+        """
+        VM rename form errors should do what they're supposed to do.
+
+        XXX can somebody actually explain what this test is doing?
+        """
+
+        url = "/cluster/%s/%s/rename/"
+        args = (cluster.slug, vm.hostname)
+        template = 'virtual_machine/rename.html'
+        users =[superuser, cluster_admin, vm_admin, vm_modify]
+        data = {'hostname':'foo.arg.different', 'ip_check':False, 'name_check':False}
+        errors = ({'hostname':vm.hostname},)
+
         def tests(user, response):
             updated_vm = VirtualMachine.objects.get(pk=vm.pk)
             self.assertEqual(vm.hostname, updated_vm.hostname)
-        errors = ({'hostname':vm.hostname},)
 
         self.assert_view_missing_fields(url, args, data, fields=['hostname'], template=template, tests=tests)
         self.assert_view_values(url, args, data, errors, template, tests=tests)
