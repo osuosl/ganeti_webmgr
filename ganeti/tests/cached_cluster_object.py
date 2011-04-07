@@ -41,42 +41,39 @@ class CachedClusterObjectBase(TestCase):
     adds a series of tests to verify the caching mechanisms are working as
     intended for that model.
     """
-    
-    __GanetiRapiClient = None
+
     __LAZY_CACHE_REFRESH = None
-    
+
     def setUp(self):
-        self.tearDown()
         self.__GanetiRapiClient = models.client.GanetiRapiClient
         models.client.GanetiRapiClient = RapiProxy
         self.__LAZY_CACHE_REFRESH = settings.LAZY_CACHE_REFRESH
         settings.LAZY_CACHE_REFRESH = 50
-    
+
+    def tearDown(self):
+        TestModel.objects.all().delete()
+        Cluster.objects.all().delete()
+
+        models.client.GanetiRapiClient = self.__GanetiRapiClient
+
+        if self.__LAZY_CACHE_REFRESH:
+            settings.LAZY_CACHE_REFRESH = self.__LAZY_CACHE_REFRESH
+
     def create_model(self, **kwargs):
         """
         create an instance of the model being tested, this will instrument
         some methods of the model to check if they have been called
         """
         cluster, chaff = Cluster.objects.get_or_create(hostname='test.foo.org')
-        object = self.Model(cluster=cluster, **kwargs)
+        obj = self.Model(cluster=cluster, **kwargs)
         
         # patch model class
-        CallProxy.patch(object, 'parse_transient_info')
-        CallProxy.patch(object, 'parse_persistent_info')
-        CallProxy.patch(object, '_refresh')
-        CallProxy.patch(object, 'load_info')
-        CallProxy.patch(object, 'save')
-        return object
-    
-    def tearDown(self):
-        TestModel.objects.all().delete()
-        Cluster.objects.all().delete()
-        
-        if self.__GanetiRapiClient is not None:
-            models.client.GanetiRapiClient = self.__GanetiRapiClient
-        
-        if self.__LAZY_CACHE_REFRESH:
-            settings.LAZY_CACHE_REFRESH = self.__LAZY_CACHE_REFRESH
+        CallProxy.patch(obj, 'parse_transient_info')
+        CallProxy.patch(obj, 'parse_persistent_info')
+        CallProxy.patch(obj, '_refresh')
+        CallProxy.patch(obj, 'load_info')
+        CallProxy.patch(obj, 'save')
+        return obj
 
     def test_trivial(self):
         """

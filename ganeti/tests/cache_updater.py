@@ -17,8 +17,7 @@
 
 from __future__ import with_statement
 
-from datetime import datetime, time
-import time
+from datetime import datetime
 
 from django.test import TestCase
 
@@ -36,10 +35,12 @@ Cluster = models.Cluster
 class TestCacheUpdater(TestCase, VirtualMachineTestCaseMixin):
 
     def setUp(self):
-        self.tearDown()
+        # Django lacks a monkeypatcher, so...
+        self._stashedGanetiRapiClient = models.client.GanetiRapiClient
         models.client.GanetiRapiClient = RapiProxy
 
     def tearDown(self):
+        models.client.GanetiRapiClient = self._stashedGanetiRapiClient
         VirtualMachine.objects.all().delete()
         Cluster.objects.all().delete()
     

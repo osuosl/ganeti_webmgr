@@ -15,9 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-from datetime import datetime
-
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
 from django.test import TestCase
 from django.test.client import Client
 
@@ -38,7 +36,6 @@ Job = models.Job
 class TestJobMixin(VirtualMachineTestCaseMixin):
 
     def setUp(self):
-        self.tearDown()
         models.client.GanetiRapiClient = RapiProxy
         
         d = globals()

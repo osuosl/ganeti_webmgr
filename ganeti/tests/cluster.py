@@ -18,10 +18,8 @@
 
 from datetime import datetime
 
-from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from django.contrib.auth.models import User, Group
-from django.core.urlresolvers import reverse
 from django.test import TestCase
 from django.test.client import Client
 from django_test_tools.users import UserTestMixin
@@ -46,7 +44,6 @@ class TestClusterModel(TestCase):
     
     def setUp(self):
         models.client.GanetiRapiClient = RapiProxy
-        self.tearDown()
     
     def tearDown(self):
         User.objects.all().delete()

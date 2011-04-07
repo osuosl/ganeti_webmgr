@@ -39,29 +39,28 @@ class TestGanetiErrorBase():
     """
     
     def setUp(self):
-        self.tearDown()
         models.client.GanetiRapiClient = RapiProxy
-    
-    def create_model(self, class_, *args, **kwargs):
-        """
-        create an instance of the model being tested, this will instrument
-        some methods of the model to check if they have been called
-        """
-        object = class_.objects.create(*args, **kwargs)
-        
-        # patch model class
-        CallProxy.patch(object, 'parse_transient_info')
-        CallProxy.patch(object, 'parse_persistent_info')
-        CallProxy.patch(object, '_refresh')
-        CallProxy.patch(object, 'load_info')
-        CallProxy.patch(object, 'save')
-        return object
-    
+
     def tearDown(self):
         VirtualMachine.objects.all().delete()
         Cluster.objects.all().delete()
         GanetiError.objects.all().delete()
         RapiProxy.error = None
+
+    def create_model(self, class_, *args, **kwargs):
+        """
+        create an instance of the model being tested, this will instrument
+        some methods of the model to check if they have been called
+        """
+        obj = class_.objects.create(*args, **kwargs)
+
+        # patch model class
+        CallProxy.patch(obj, 'parse_transient_info')
+        CallProxy.patch(obj, 'parse_persistent_info')
+        CallProxy.patch(obj, '_refresh')
+        CallProxy.patch(obj, 'load_info')
+        CallProxy.patch(obj, 'save')
+        return obj
 
 
 class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):

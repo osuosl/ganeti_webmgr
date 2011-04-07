@@ -18,8 +18,8 @@
 
 from django.test import TestCase
 
-from ganeti.models import get_rapi, clear_rapi_cache, RAPI_CACHE, \
-    RAPI_CACHE_HASHES, Cluster
+from ganeti.models import (get_rapi, clear_rapi_cache, RAPI_CACHE,
+    Cluster)
 from util import client
 
 __all__ = ('TestRapiCache',)

@@ -64,8 +64,6 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
     """
 
     def setUp(self):
-        self.tearDown()
-
         models.client.GanetiRapiClient = RapiProxy
         vm, cluster = self.create_virtual_machine()
 
@@ -2028,7 +2026,6 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
 class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
 
     def setUp(self):
-        self.tearDown()
         models.client.GanetiRapiClient = RapiProxy
         cluster0 = Cluster(hostname='test0', slug='test0')
         cluster1 = Cluster(hostname='test1', slug='test1')

@@ -41,7 +41,6 @@ class TestGeneralViews(TestCase, ViewTestMixin):
     
     def setUp(self):
         models.client.GanetiRapiClient = RapiProxy
-        self.tearDown()
 
         cluster = Cluster(hostname='test.osuosl.test', slug='OSL_TEST')
         cluster.save()
