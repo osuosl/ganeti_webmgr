@@ -24,7 +24,7 @@ from django.template import RequestContext
 from ganeti.models import VirtualMachine, Cluster, ClusterUser
 from ganeti.views import render_403
 from ganeti.views.general import update_vm_counts
-
+from django.utils.translation import ugettext as _
 
 class VirtualMachineForm(forms.Form):
     virtual_machines = forms.MultipleChoiceField()
@@ -62,7 +62,7 @@ def orphans(request):
     else:
         clusters = user.get_objects_any_perms(Cluster, ['admin'])
         if not clusters:
-            return render_403(request, 'You do not have sufficient privileges')
+            return render_403(request, _('You do not have sufficient privileges'))
     
     vms_with_cluster = VirtualMachine.objects.filter(owner=None, cluster__in=clusters) \
                           .order_by('hostname').values_list('id','hostname','cluster')
@@ -125,7 +125,7 @@ def missing_ganeti(request):
     else:
         clusters = user.get_objects_any_perms(Cluster, ['admin'])
         if not clusters:
-            return render_403(request, 'You do not have sufficient privileges')
+            return render_403(request, _('You do not have sufficient privileges'))
 
     vms = []
     for cluster in clusters:
@@ -190,7 +190,7 @@ def missing_db(request):
     else:
         clusters = user.get_objects_any_perms(Cluster, ['admin'])
         if not clusters:
-            return render_403(request, 'You do not have sufficient privileges')
+            return render_403(request, _('You do not have sufficient privileges'))
     
     vms = []
     for cluster in clusters:
