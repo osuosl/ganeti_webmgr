@@ -1,4 +1,6 @@
 {% block head %}
+{% load i18n %}
+
 <!--
     This is the AJAX table sub-template that can be used to list virtual
     machines and clusters. 
@@ -14,6 +16,9 @@
     This is handy if you're trying to render this sub-template more than once
     on the same page.
 -->
+
+
+
 <style>
     td.actions div.delete {
         float:none;
@@ -60,16 +65,17 @@
 
 {% if cluster %}
     <a class="button add" href="{% url instance-create cluster.slug %}">
-        Add Virtual Machine
+        {% trans "Add Virtual Machine" %}
     </a>
 {% else %}
     {% if can_create %}
     <a class="button add" href="{% url instance-create %}">
-        Add Virtual Machine
+        {% trans "Add Virtual Machine" %}
     </a>
     {% endif %}
 {% endif %}
 
+<<<<<<< HEAD
 {% if tableID %}
 <div id='{{tableID}}'>
 {% else %}
@@ -81,7 +87,7 @@
 
     <div class='spinner'>
         <br/>
-        Loading...
+       	{% trans "Loading" %}...
         <br/>
         <br/>
         <img src='{{ MEDIA_URL }}/images/ajax-loader.gif'>

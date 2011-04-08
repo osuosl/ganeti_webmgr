@@ -1,7 +1,7 @@
 {% extends "menu_base.html" %}
 {% load webmgr_tags %}
-
-{% block title %}Reinstall Virtual Machine{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Reinstall" %} Virtual Machine{% endblock %}
 
 {% block head %}
     <link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}/css/delete.css"/>
@@ -24,7 +24,7 @@
         original operating system.
     </div>
     <form method="post">
-        <label for="os">Operating System</label>
+        <label for="os">{% trans "Operating System" %}</label>
         <select name="os" id="os">
 {% for osgroup in oschoices %}
             <optgroup label="{{ osgroup.0 }}">
@@ -40,7 +40,7 @@
 {% endfor %}
         </select><br /><br />
 
-        <input id="reinstall" type="submit" value="Reinstall" />
+        <input id="reinstall" type="submit" value="{% trans "Reinstall" %}" />
     </form>
 </div>
 

@@ -1,8 +1,8 @@
 {% extends "menu_base.html" %}
-
+{% load i18n %}
 {% load webmgr_tags %}
 
-{% block title %}Overview{% endblock %}
+{% block title %}{%trans "Overview" %}{% endblock %}
 
 {% block head %}
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
@@ -73,20 +73,20 @@
 {% endblock %}
 
 {% block content %}
-<h1>Overview</h1>
+<h1>{% trans "Overview" %}</h1>
 
 {% if admin %}
 <div id="cluster_summary">
-<h2>Cluster Status</h2>
+<h2>{% trans "Cluster Status" %}</h2>
 <table id="clusters" class="sorted">
     <thead>
         <tr>
-            <th>Cluster</th>
-            <th>Version</th>
-            <th>Free Memory [GiB]</th>
-            <th>Free Disk [GiB]</th>
-            <th>Nodes</th>
-            <th>VMs</th>
+            <th>{% trans "Cluster" %}</th>
+            <th>{% trans "Version" %}</th>
+            <th>{% trans "Free Memory [GiB]" %}</th>
+            <th>{% trans "Free Disk [GiB]" %}</th>
+            <th>{% trans "Nodes" %}</th>
+            <th>{% trans "VMs" %}</th>
         </tr>
     </thead>
     <tbody>
@@ -94,7 +94,7 @@
         {% with cluster.info as info %}
             <tr id="cluster_{{cluster.id}}">
                 <td class="name">
-                    {% if cluster.error %}<div class="icon_error" title="Ganeti API Error: {{cluster.error}}"></div>{% endif %}
+                    {% if cluster.error %}<div class="icon_error" title='{% trans "Ganeti API Error" %}: {{cluster.error}}'></div>{% endif %}
                     <a href="{% url cluster-detail cluster.slug %}">
                         {{ cluster.hostname|abbreviate_fqdn }}
                     </a>
@@ -107,7 +107,7 @@
             </tr>
         {% endwith %}
     {% empty %}
-        <tr class="none"><td colspan="100%">No Clusters</td></tr>
+        <tr class="none"><td colspan="100%">{% trans "No Clusters" %}</td></tr>
     {% endfor %}
     </tbody>
 </table>
@@ -115,13 +115,13 @@
 {% endif %}
 
 <div id="vm_summary">
-<h2>Virtual Machine Status</h2>
+<h2>{% trans "Virtual Machine Status" %}</h2>
 <table>
     <thead>
         <tr>
-            <th>Cluster</th>
-            <th>Running</th>
-            <th>Total</th>
+            <th>{% trans "Cluster" %}</th>
+            <th>{% trans "Running" %}</th>
+            <th>{% trans "Total" %}</th>
         </tr>
     </thead>
     <tbody>
@@ -132,14 +132,14 @@
                 <td>{{dict.total}}</td>
             </tr>
         {% empty %}
-            <tr><td colspan="100%" class="none">You do have access to any virtual machines</td></tr>
+            <tr><td colspan="100%" class="none">{% trans "You do have access to any virtual machines" %}</td></tr>
         {% endfor %}
     </tbody>
 </table>
 </div>
 
 <div id="usage_summary">
-<h2>Resource Usage:
+<h2>{% trans "Resource Usage" %}:
 
 <select>
     {% for persona in personas %}
@@ -153,7 +153,7 @@
 
 {% if errors %}
 <div id="errors_list">
-    <h2>Errors and Failures</h2>
+    <h2>{% trans "Errors and Failures" %}</h2>
     <table>
     {% for tuple in errors %}
         {% with tuple.0 as is_ganeti_error %}
@@ -168,7 +168,7 @@
             {% else %}
                 <tr class="jerror" id="jerror_{{error.pk}}">
                     {% include "overview/object_link.html" %}
-                    <td><a href="{% url job-detail error.cluster.slug error.job_id %}">Job #{{error.job_id}}: {{ error.current_operation|format_job_op }}</td>
+                    <td><a href="{% url job-detail error.cluster.slug error.job_id %}">{% trans "Job" noop %}#{{error.job_id}}: {{ error.current_operation|format_job_op }}</td>
                     <td>{{ error.finished|date }}</td>
                     <td><a class="clear" title="clear message" href="{% url job-clear error.cluster.slug error.job_id %}"></a></td>
                 </tr>
@@ -182,30 +182,40 @@
 
 {% if orphaned or import_ready or missing %}
 <div id="administration">
-    <h2>Administration</h2>
+    <h2>{% trans "Administration" %}</h2>
     <table style="width: auto;">
     {% if orphaned %}
         <tr>
             <th>Orphaned VMs</th>
-            <td><a href="{% url import-orphans %}">Adopt {{ orphaned }}</a></td>
+            <td><a href="{% url import-orphans %}">{% trans "Adopt" %} {{ orphaned }}</a></td>
         </tr>
     {% endif %}
 
     {% if import_ready %}
         <tr>
-            <th>VMs ready to import</th>
-            <td><a href="{% url import-missing_db %}">Import {{ import_ready }}</a></td>
+            <th>{% trans "VMs ready to import" %}</th>
+            <td><a href="{% url import-missing_db %}">{% trans "Import" %} {{ import_ready }}</a></td>
         </tr>
     {% endif %}
 
     {% if missing %}
         <tr>
-            <th>VMs missing from ganeti</th>
-            <td><a href="{% url import-missing %}">Remove {{ missing }}</a></td>
+            <th>{% trans "VMs missing from ganeti" %}</th>
+            <td><a href="{% url import-missing %}">{% trans "Remove" %} {{ missing }}</a></td>
         </tr>
     {% endif %}
     </table>
 </div>
 {% endif %}
-
+<form action="/i18n/setlang/" method="post">
+<input name="next" type="hidden" value="" />
+<select name="language">
+{% for lang in LANGUAGES %}
+<option value="{{ lang.0 }}">{{ lang.1 }}</option>
+{% endfor %}
+</select>
+{% csrf_token %}
+<input type="submit" value="Go" />
+</form>
 {% endblock %}
+

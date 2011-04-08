@@ -1,7 +1,7 @@
 {% extends "menu_base.html" %}
+{% load i18n %}
 {% load webmgr_tags %}
-
-{% block title %}Create a new Virtual Machine{% endblock %}
+{% block title %}{% trans "Create a new Virtual Machine" %}{% endblock %}
 
 {% block head %}
     <link rel="stylesheet" type="text/css"
@@ -37,7 +37,7 @@
 <div id="virtualmachineform">
     <form method="post" action="{% url instance-create %}">
         <fieldset>
-            <h1><span class="breadcrumb">Virtual Machine</span> : Create</h1>
+            <h1><span class="breadcrumb">{% trans "Virtual Machine" %}</span> : {% trans "Create" %}</h1>
             {% vmfield form.owner %}
             {% vmfield form.cluster %}
             {% vmfield form.hostname %}
@@ -51,7 +51,7 @@
             {% vmfield form.os %}
         </fieldset>
         <fieldset>
-            <legend>General Parameters</legend>
+            <legend>{% trans "General Parameters" %}</legend>
             {% vmfield form.vcpus %}
             {% vmfield form.memory %}
             {% vmfield form.disk_size %}
@@ -61,19 +61,21 @@
             {% vmfield form.nic_type %}
         </fieldset>
         <fieldset>
-            <legend>Hypervisor Parameters</legend>
+            <legend>{% trans "Hypervisor Parameters" %}</legend>
             {% vmfield form.kernel_path %}
             {% vmfield form.root_path %}
             {% vmfield form.serial_console %}
             {% vmfield form.boot_order %}
             {% vmfield form.cdrom_image_path %}
         </fieldset>
-        <input class="submit" type="submit" value="Create">
+        <input class="submit" type="submit" value="{% trans "Create" %}">
     </form>
 </div>
+
 <div id="help">
     <h3></h3>
     <div></div>
 </div>
 {% include "virtual_machine/create_help.html" %}
+
 {% endblock %}

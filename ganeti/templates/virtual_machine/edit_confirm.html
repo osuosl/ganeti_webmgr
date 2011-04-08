@@ -1,5 +1,5 @@
 {% extends "menu_base.html" %}
-
+{% load i18n %}
 {% block head %}
 <style>
 div.info {float:left;width:390px;margin:0px;}
@@ -12,14 +12,14 @@ form input.save_reboot {width:10em;margin:1em .5em 0px 0px;}
 </style>
 {% endblock %}
 {% block content %}
-<h1>Confirm Changes</h1>
+<h1>{% trans "Confirm Changes" %}</h1>
 <div id="vm_summary">
     <table>
         <h2><a href="{% url instance-detail cluster.slug instance.hostname %}">{{ instance.hostname }}</a></h2>
         {% for k, v in instance_diff.items %}
             <tr><th>{{ k }}</th><td>{{ v|capfirst }}</td></tr>
         {% empty %}
-            <tr><td>Nothing changed.</td></tr>
+            <tr><td>{% trans "Nothing changed" %}.</td></tr>
         {% endfor %}
     </table>
 </div>
@@ -35,16 +35,16 @@ form input.save_reboot {width:10em;margin:1em .5em 0px 0px;}
 {% endifequal %}
 <form method="post">
     {{ form.as_p }}
-    <input class="submit" type="submit" name="edit" value="Edit">
+    <input class="submit" type="submit" name="edit" value="{% trans "Edit" %}">
 {% if instance_diff.items %}
 {% ifequal status "running" %}
     {% if power %}
-    <input class="save_reboot" type="submit" name="reboot" value="Save & Reboot">
+    <input class="save_reboot" type="submit" name="reboot" value="{% trans "Save & Reboot" %}">
     {% endif %}
 {% endifequal %}
-    <input class="submit" type="submit" name="save" value="Save">
+    <input class="submit" type="submit" name="save" value="{% trans "Save" %}">
 {% endif %}
-    <input class="submit" type="submit" name="cancel" value="Cancel">
+    <input class="submit" type="submit" name="cancel" value="{% trans "Cancel" %}">
 </form>
 {% endwith %}
 {% endblock %}

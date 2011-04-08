@@ -1,7 +1,7 @@
 {% extends "menu_base.html" %}
-
+{% load i18n %}
 {% block title %}
-    {% if username %}Edit User{% else %}Add User{% endif %}
+    {% if username %}{% trans "Edit User" %}{% else %}{% trans "Add User" %}{% endif %}
 {% endblock %}
 
 {% block head %}
@@ -20,7 +20,7 @@
                 },
                 ajaxOptions: {
                     error: function(xhr, status, index, anchor) {
-                        $(anchor.hash).html("Couldn't load this tab. We'll try to fix this as soon as possible.");
+                        $(anchor.hash).html("{% trans "Couldn't load this tab. We'll try to fix this as soon as possible" %}.");
                     }
                 }
             });
@@ -32,31 +32,31 @@
 {% endblock %}
 
 {% block content %}
-<h1><a class="breadcrumb" href="{%url user-list %}">Users</a> : {{ user_detail.username }}</h1>
+<h1><a class="breadcrumb" href="{%url user-list %}">{% trans "Users" %}</a> : {{ user_detail.username }}</h1>
 <div id="tabs">
     <ul>
-        <li><a href="#detail"><span>Detail</span></a></li>
-        <li><a title="permissions" href="{% url user-all-permissions user_detail.pk %}"><span>Permissions</span></a></li>
-        <li><a title="usage" href="{% url used_resources %}?id={{user_detail.get_profile.pk}}"><span>Resource Usage</span></a></li>
-        <li><a title="user actions" href="{% url user-object_log-actions user_detail.pk %}"><span>User Actions</span></a></li>
-        <li><a title="log" href="{% url user-object_log user_detail.pk %}"><span>Log</span></a></li>
+        <li><a href="#detail"><span>{% trans "Detail" %}</span></a></li>
+        <li><a title="permissions" href="{% url user-all-permissions user_detail.pk %}"><span>{% trans "Permissions" %}</span></a></li>
+        <li><a title="usage" href="{% url used_resources %}?id={{user_detail.get_profile.pk}}"><span>{% trans "Resource Usage" %}</span></a></li>
+        <li><a title="user actions" href="{% url user-object_log-actions user_detail.pk %}"><span>{% trans "User Actions" %}</span></a></li>
+        <li><a title="log" href="{% url user-object_log user_detail.pk %}"><span>{% trans "Log" %}</span></a></li>
         {% block tabs %}{% endblock tabs %}
     </ul>
     <div id="detail">
         <ul id="actions">
-            <li><a class="button edit" title="edit user" href="{% url user-edit user_detail.pk %}">Edit</a></li>
+            <li><a class="button edit" title="edit user" href="{% url user-edit user_detail.pk %}">{% trans "Edit" %}</a></li>
         </ul>
         
         <table>
-        <tr><th>Email:</th><td>{{user_detail.email}}</td></tr>
-        <tr><th>Join Date:</th><td>{{user_detail.date_joined|date}}</td></tr>
-        <tr><th>Last Login:</th><td>{{user_detail.last_login|date}}</td></tr>
-        <tr><th>Active:</th><td>{{user_detail.is_active}}</td></tr>
-        <tr><th>Admin:</th><td>{{user_detail.is_superuser}}</td></tr>
+        <tr><th>{%trans "Email" %}:</th><td>{{user_detail.email}}</td></tr>
+        <tr><th>{% trans "Join Date" %}:</th><td>{{user_detail.date_joined|date}}</td></tr>
+        <tr><th>{% trans "Last Login" %}:</th><td>{{user_detail.last_login|date}}</td></tr>
+        <tr><th>{% trans "Active" %}:</th><td>{{user_detail.is_active}}</td></tr>
+        <tr><th>{% trans "Admin" %}:</th><td>{{user_detail.is_superuser}}</td></tr>
         </table>
         
         <h3>SSH keys</h3>
-        <a class="button add" id="add_key" href="{% url user-key-add user_detail.pk %}">Add SSH key</a>
+        <a class="button add" id="add_key" href="{% url user-key-add user_detail.pk %}">{% trans "Add SSH key" %}</a>
         {% include "ssh_keys/table.html" %}
     </div>
 </div>

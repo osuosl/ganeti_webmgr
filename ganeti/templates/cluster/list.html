@@ -1,8 +1,8 @@
 {% extends "menu_base.html" %}
-
+{% load i18n %}
 {% load webmgr_tags %}
 
-{% block title %}Clusters{% endblock %}
+{% block title %}{% trans 'Clusters' %}{% endblock %}
 
 {% block head %}
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
@@ -33,19 +33,19 @@
 <h1>Clusters</h1>
 
 {% if user.is_superuser %}
-<a class="button add" href="{% url cluster-create %}">Add Cluster</a>
+<a class="button add" href="{% url cluster-create %}">{% trans "Add Cluster" %}</a>
 {% endif %}
 
 <table id="clusters" class="sorted">
     <thead>
         <tr>
-            <th>Cluster</th>
-            <th>Desc.</th>
-            <th>Version</th>
-            <th>Hypervisor</th>
-            <th>Master node</th>
-            <th>Nodes</th>
-            <th>VMs</th>
+            <th>{% trans "Cluster" %}</th>
+            <th>{% trans "Description" %}</th>
+            <th>{% trans "Version" %}</th>
+            <th>{% trans "Hypervisor" %}</th>
+            <th>{% trans "Master node" %}</th>
+            <th>{% trans "Nodes" %}</th>
+            <th>{% trans "VMs" %}</th>
         </tr>
     </thead>
     <tbody>
@@ -54,7 +54,7 @@
         {% with cluster.nodes as nodes %}
             <tr id="cluster_{{cluster.id}}">
                 <td class="name">
-                    {% if cluster.error %}<div class="icon_error" title="Ganeti API Error: {{cluster.error}}"></div>{% endif %}
+                    {% if cluster.error %}<div class="icon_error" title="{% trans 'Ganeti API Error' %}: {{cluster.error}}"></div>{% endif %}
                     <a href="{% url cluster-detail cluster.slug %}">
                         {{ cluster.hostname|abbreviate_fqdn }}
                     </a>
@@ -69,7 +69,7 @@
         {% endwith %}
         {% endwith %}
     {% empty %}
-        <tr class="none"><td colspan="100%">No Clusters</td></tr>
+        <tr class="none"><td colspan="100%">{% trans "No Clusters" %}</td></tr>
     {% endfor %}
     </tbody>
 </table>

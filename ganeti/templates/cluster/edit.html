@@ -1,17 +1,17 @@
 {% extends "menu_base.html" %}
-
+{% load i18n %}
 {% block title %}
 {% if cluster %}
-Edit {{ cluster.slug }}
+{% trans "Edit" %} {{ cluster.slug }}
 {% else %}
-Add a new cluster
+{% trans "Add a new cluster" %}
 {% endif %}
 {% endblock %}
 
 {% block content %}
 
-<h1><a class="breadcrumb" href="{% url cluster-list %}">Cluster</a> :
-{% if cluster %}Edit{% else %}Add{% endif %}</h1>
+<h1><a class="breadcrumb" href="{% url cluster-list %}">{% trans "Cluster" %}</a> :
+{% if cluster %}{% trans "Edit" %}{% else %}{% trans "Add" %}{% endif %}</h1>
 
 
 <form method="post">
@@ -34,7 +34,7 @@ Add a new cluster
     </fieldset>
     
     <fieldset>
-        <legend>Default Quota</legend>
+        <legend>{% trans "Default Quota" %}</legend>
         {% if form.virtual_cpus.errors %}<p class="error">{{form.hostname.errors}}</p>{%endif%}
         <p><label for="id_virtual_cpus">{{form.virtual_cpus.label}}:</label> {{form.virtual_cpus}}</p>
         {% if form.disk.errors %}<p class="error">{{form.hostname.errors}}</p>{%endif%}
@@ -44,9 +44,9 @@ Add a new cluster
     </fieldset>
     
     {% if cluster %}
-    <input class="submit" type="submit" value="Save">
+    <input class="submit" type="submit" value="{% trans 'Save' %}">
     {% else %}
-    <input class="submit" type="submit" value="Add">
+    <input class="submit" type="submit" value="{% trans 'Add' %}">
     {% endif %}
 </form>
 {% endblock %}

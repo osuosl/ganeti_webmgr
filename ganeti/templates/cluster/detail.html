@@ -1,6 +1,6 @@
 {% extends "menu_base.html" %}
 {% block title %}Cluster {{ cluster.id }}: {{ cluster.hostname|safe }}{% endblock %}
-
+{% load i18n %}
 {% block head %}
     <link href="{{MEDIA_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
     <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
@@ -25,22 +25,23 @@
                 spinner: false,
                 select: function(event, ui) {
                     window.location.hash = ui.tab.hash;
+					var loadingMsg = '{% trans "Loading" %}';
                     var tabID = ui.panel;
                                        if (tabID.id != "overview") {
-                                               $(tabID).html("<div class='spinner'><br/>Loading...<br/><br/><img src='{{MEDIA_URL}}/images/ajax-loader.gif'></div>");
+                                               $(tabID).html("<div class='spinner'><br/>"+loadingMsg+"...<br/><br/><img src='{{MEDIA_URL}}/images/ajax-loader.gif'></div>");
                                        }
                  },
                 ajaxOptions: {
                     error: function(xhr, status, index, anchor) {
-                        $(anchor.hash).html("Couldn't load this tab. We'll try to fix this as soon as possible.");
+                        $(anchor.hash).html("{% trans "Couldn't load this tab. We'll try to fix this as soon as possible" %}.");
                     }
                 }
             });
 	    
             $("a.delete").live("click", function(){
-                if (confirm("Are you sure you want to delete this cluster?")) {
+                if (confirm("{% trans 'Are you sure you want to delete this cluster' %}?")) {
 					
-                    $("a.delete").text("Deleting...");
+                    $("a.delete").text("{% trans 'Deleting' %}...");
                     $("a.delete").removeAttr("href");
                     $("a.delete").addClass("deleting");
                     $("a.delete").removeClass("delete");
@@ -57,45 +58,45 @@
 {% endblock %}
 
 {% block content %}
-<h1><a class="breadcrumb" href="{% url cluster-list %}">Cluster</a> : {{ cluster.hostname }}</h1>
+<h1><a class="breadcrumb" href="{% url cluster-list %}">{% trans "Cluster" %}</a> : {{ cluster.hostname }}</h1>
 
 <ul id="messages">
-    {%if cluster.error%}<li class="error">Error in Ganeti API:<p>{{cluster.error}}</p></li>{%endif%}
+    {%if cluster.error%}<li class="error">{% trans "Error in Ganeti API" %}:<p>{{cluster.error}}</p></li>{%endif%}
 </ul>
 <div id="tabs">
     <ul>
-        <li><a href="#overview"><span>Overview</span></a></li>
-        <li><a title="virtual machines" href="{% url cluster-vms cluster.slug %}"><span>Virtual Machines</span></a></li>
-        <li><a title="nodes" href="{% url cluster-nodes cluster.slug %}"><span>Nodes</span></a></li>
+        <li><a href="#overview"><span>{% trans "Overview" %}</span></a></li>
+        <li><a title="virtual machines" href="{% url cluster-vms cluster.slug %}"><span>{% trans "Virtual Machines" %}</span></a></li>
+        <li><a title="nodes" href="{% url cluster-nodes cluster.slug %}"><span>{% trans "Nodes" %}</span></a></li>
         {% if admin %}
-            <li><a title="user" href="{% url cluster-users cluster.slug %}"><span>Users</span></a></li>
-            <li><a title="log" href="{% url cluster-object_log cluster.slug %}"><span>Log</span></a></li>
+            <li><a title="user" href="{% url cluster-users cluster.slug %}"><span>{% trans "Users" %}</span></a></li>
+            <li><a title="log" href="{% url cluster-object_log cluster.slug %}"><span>{% trans "Log" %}</span></a></li>
         {%endif%}
     </ul>
     <div id="overview" class="tab_content">
         <ul id="actions">
             {% if admin %}
-                <li><a class="button edit" title="edit cluster" href="{% url cluster-edit cluster.slug %}">Edit</a></li>
-                <li><a class="button delete" title="delete cluster" href="{% url cluster-edit cluster.slug %}">Delete</a></li>
+                <li><a class="button edit" title="edit cluster" href="{% url cluster-edit cluster.slug %}">{% trans "Edit" %}</a></li>
+                <li><a class="button delete" title="delete cluster" href="{% url cluster-edit cluster.slug %}">{% trans "Delete" %}</a></li>
             {% endif %}
         </ul>
         <table class="overview">
             {% with cluster.info as info %}
-            <tr><td>Architecture</td><td>{{ info.architecture.0 }}</td></tr>
-            <tr><td>Ganeti Version</td><td>{{info.software_version}}</td></tr>
-            <tr><td>Default hypervisor</td><td>{{ info.default_hypervisor }}</td></tr>
-            <tr><td>Available hypervisors</td><td>{{ info.enabled_hypervisors|join:", " }}</td></tr>
-            <tr><td>Master node</td><td>{{ info.master }}</td></tr>
-            <tr><td>Created</td><td>
+            <tr><td>{% trans "Architecture" %}</td><td>{{ info.architecture.0 }}</td></tr>
+            <tr><td>{% trans "Ganeti Version" %}</td><td>{{info.software_version}}</td></tr>
+            <tr><td>{% trans "Default hypervisor" %}</td><td>{{ info.default_hypervisor }}</td></tr>
+            <tr><td>{% trans "Available hypervisors" %}</td><td>{{ info.enabled_hypervisors|join:", " }}</td></tr>
+            <tr><td>{% trans "Master node" %}</td><td>{{ info.master }}</td></tr>
+            <tr><td>{% trans "Created" %}</td><td>
             {% if cluster.ctime %}
                 {{ cluster.ctime|date }}
             {% else %}
-                <em>unknown</em>
+                <em>{% trans "unknown" %}</em>
             {% endif %}
             </td></tr>
-            <tr><td>Last modified</td><td >{{ cluster.mtime|date }}</td></tr>
-            <tr><td>Virtual Machines</td><td>{{ cluster.virtual_machines.count }}</td></tr>
-            <tr><td>Nodes</td><td>{{ cluster.nodes.count }}</td></tr>
+            <tr><td>{% trans "Last modified" %}</td><td >{{ cluster.mtime|date }}</td></tr>
+            <tr><td>{% trans "Virtual Machines" %}</td><td>{{ cluster.virtual_machines.count }}</td></tr>
+            <tr><td>{% trans "Nodes" %}</td><td>{{ cluster.nodes.count }}</td></tr>
             {% endwith %}
         </table>
     </div>
