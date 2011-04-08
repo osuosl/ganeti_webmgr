@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-from django.conf.urls.defaults import patterns, url
+from django.conf.urls.defaults import patterns, url, include
 
 cluster_slug = '(?P<cluster_slug>[-_A-Za-z0-9]+)'
 cluster = 'cluster/%s' % cluster_slug
@@ -185,3 +185,8 @@ urlpatterns += patterns('ganeti.views.jobs',
     url(r'^%s/clear/?' % job, 'clear', name='job-clear'),
     url(r'^%s/?' % job, 'detail', name='job-detail'),
 )
+
+# Language settings
+urlpatterns += patterns('',
+    (r'^i18n/', include('django.conf.urls.i18n')),
+    )
