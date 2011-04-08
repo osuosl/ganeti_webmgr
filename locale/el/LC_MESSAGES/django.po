@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GAWM_translation-0.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-04-05 17:30+0300\n"
+"POT-Creation-Date: 2011-04-05 19:23+0300\n"
 "PO-Revision-Date: 2011-03-31 15:18+0300\n"
 "Last-Translator: Leonidas Poulopoulos <leopoul@noc.grnet.gr>\n"
 "Language-Team: GRNET NOC <noc@noc.grnet.gr>\n"
@@ -270,7 +270,8 @@ msgstr "Το νέο hostname πρέπει να διαφέρει από το υπ
 #: ganeti/templates/overview.html.py:76
 #: ganeti/templates/cluster/detail.html:68 ganeti/templates/job/detail.html:24
 #: ganeti/templates/virtual_machine/detail.html:149
-#: templates/menu_base.html:44
+
+#: templates/menu_base.html:41
 msgid "Overview"
 msgstr "Επισκόπηση"
 
@@ -437,7 +438,8 @@ msgstr "Σφάλμα στο API του Ganeti"
 
 #: ganeti/templates/cluster/detail.html:69
 #: ganeti/templates/cluster/detail.html:98
-#: ganeti/templates/node/detail.html:224 templates/menu_base.html:46
+
+#: ganeti/templates/node/detail.html:224 templates/menu_base.html:43
 #, fuzzy
 msgid "Virtual Machines"
 msgstr "Εικονικές Μηχανές"
@@ -446,7 +448,7 @@ msgstr "Εικονικές Μηχανές"
 #: ganeti/templates/users/detail.html:35 ganeti/templates/users/list.html:3
 #: ganeti/templates/users/list.html:24
 #: ganeti/templates/virtual_machine/detail.html:153
-#: templates/menu_base.html:62
+#: templates/menu_base.html:59
 msgid "Users"
 msgstr "Χρήστες"
 
@@ -510,7 +512,7 @@ msgstr "Προεπιλεγμένη Αναλογία Πόρων"
 msgid "Save"
 msgstr "Αποθήκευση"
 
-#: ganeti/templates/cluster/list.html:5 templates/menu_base.html:45
+#: ganeti/templates/cluster/list.html:5 templates/menu_base.html:42
 msgid "Clusters"
 msgstr ""
 
@@ -544,14 +546,14 @@ msgid "Quota"
 msgstr "Αναλογία Πόρων"
 
 #: ganeti/templates/importing/missing.html:17
-#: ganeti/templates/importing/missing_db.html:3 templates/menu_base.html:57
+#: ganeti/templates/importing/missing_db.html:3 templates/menu_base.html:54
 msgid "Orphan VMs"
 msgstr "Ορφανά VMs"
 
 #: ganeti/templates/importing/missing.html:20
 #: ganeti/templates/importing/missing_db.html:19
 #: ganeti/templates/importing/orphans.html:19
-#: ganeti/templates/users/detail.html:55 templates/menu_base.html:54
+#: ganeti/templates/users/detail.html:55 templates/menu_base.html:51
 msgid "Admin"
 msgstr "Διαχείριση"
 
@@ -1459,59 +1461,48 @@ msgid "You do not have permission to view the default cluster options"
 msgstr ""
 "Δεν έχετε δικαιώματα για την προβολή των προεπιλεγμένων ρυθμίσεων του cluster"
 
-#: templates/menu_base.html:33
+#: templates/menu_base.html:30
 msgid "You are logged in as"
 msgstr "Έχετε συνδεθεί ως"
 
-#: templates/menu_base.html:34
+#: templates/menu_base.html:31
 msgid "Logout"
 msgstr "Έξοδος"
 
-#: templates/menu_base.html:48
+#: templates/menu_base.html:45
 msgid "Create VM"
 msgstr "Δημιουργία VM"
 
-#: templates/menu_base.html:58
+#: templates/menu_base.html:55
 msgid "Import VMs"
 msgstr "Εισαγωγή VMs"
 
-#: templates/menu_base.html:59
+#: templates/menu_base.html:56
 msgid "Missing VMs"
 msgstr "Χαμένα VMs"
 
-#: templates/menu_base.html:65
+#: templates/menu_base.html:62
 msgid "Groups"
 msgstr "Ομάδες"
 
-#: templates/registration/login.html:17 templates/registration/login.html:37
+#: templates/registration/login.html:14 templates/registration/login.html:31
+#: templates/registration/login.html:36
 msgid "Login"
 msgstr "Είσοδος"
 
-#: templates/registration/login.html:24
-msgid "Select Language"
-msgstr "Επιλογή γλώσσας"
-
-#: templates/registration/login.html:40
+#: templates/registration/login.html:39
 msgid "Forgot password"
 msgstr "Ξέχασατε τον κωδικό σας"
 
-#: templates/registration/login.html:41
+#: templates/registration/login.html:40
 msgid "Not a member"
 msgstr "Δεν έχετε εγγραφεί"
 
-#: templates/registration/logout.html:4
-msgid "Logged out"
-msgstr ""
+#~ msgid "Select Language"
+#~ msgstr "Επιλογή γλώσσας"
 
-#: templates/registration/password_reset_complete.html:5
-msgid "Password Reset Complete"
-msgstr ""
-
-#: templates/registration/password_reset_complete.html:6
-msgid ""
-"Your password was successfully reset.\n"
-"    You may login "
-msgstr "Ο κωδικός σας άλλαξε επιτυχώς. Μπορείτε να συνεχίσετε"
+#~ msgid "Adopt %(orphaned)s"
+#~ msgstr "Υιοθέτηση %(orphaned)s"
 
 #: templates/registration/password_reset_complete.html:7
 msgid "here"
