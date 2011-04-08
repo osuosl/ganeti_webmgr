@@ -816,11 +816,41 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         # clean up after quota tests
         self.assert_(c.login(username=user.username, password='secret'))
 
+    def test_view_create_data_invalid_cluster(self):
+        """
+        Test that an invalid cluster causes a form error.
+        """
+
+        url = '/vm/add/%s'
+        data = dict(cluster=-1,
+                    start=True,
+                    owner=user.get_profile().id, #XXX remove this
+                    hostname='new.vm.hostname',
+                    disk_template='plain',
+                    disk_size=1000,
+                    memory=256,
+                    vcpus=2,
+                    root_path='/',
+                    nic_type='paravirtual',
+                    disk_type = 'paravirtual',
+                    nic_link = 'br43',
+                    nic_mode='routed',
+                    boot_order='disk',
+                    os='image+ubuntu-lucid',
+                    pnode=cluster.nodes.all()[0],
+                    snode=cluster.nodes.all()[1])
+
+        self.assert_(c.login(username=user.username, password='secret'))
+
+        user.grant('create_vm', cluster)
+        response = c.post(url % '', data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
+
     def test_view_create_data(self):
-        """
-        Test creating a virtual machine
-        with changes to the data
-        """
+
         url = '/vm/add/%s'
         group1 = Group(id=81, name='testing_group2')
         group1.save()
@@ -847,21 +877,12 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         # login user
         self.assert_(c.login(username=user.username, password='secret'))
 
-        # POST - invalid cluster
-        user.grant('create_vm', cluster)
-        data_ = data.copy()
-        data_['cluster'] = -1
-        response = c.post(url % '', data_)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create.html')
-        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
-        user.revoke_all(cluster)
-
         # POST - unauthorized for cluster selected (authorized for another)
         user.grant('create_vm', cluster1)
         user.is_superuser = False
         user.save()
+        data_ = data.copy()
+        data_['cluster'] = -1
         response = c.post(url % '', data_)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
