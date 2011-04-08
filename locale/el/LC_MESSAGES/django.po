@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GAWM_translation-0.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-04-05 19:32+0300\n"
+"POT-Creation-Date: 2011-04-05 19:47+0300\n"
 "PO-Revision-Date: 2011-03-31 15:18+0300\n"
 "Last-Translator: Leonidas Poulopoulos <leopoul@noc.grnet.gr>\n"
 "Language-Team: GRNET NOC <noc@noc.grnet.gr>\n"
@@ -1485,18 +1485,65 @@ msgstr "Χαμένα VMs"
 msgid "Groups"
 msgstr "Ομάδες"
 
-#: templates/registration/login.html:14 templates/registration/login.html:31
-#: templates/registration/login.html:36
+#: templates/registration/login.html:4 templates/registration/login.html:11
+#: templates/registration/login.html:16
 msgid "Login"
 msgstr "Είσοδος"
 
-#: templates/registration/login.html:39
+#: templates/registration/login.html:19
 msgid "Forgot password"
 msgstr "Ξέχασατε τον κωδικό σας"
 
-#: templates/registration/login.html:40
+#: templates/registration/login.html:20
 msgid "Not a member"
 msgstr "Δεν έχετε εγγραφεί"
+
+#: templates/registration/logout.html:4
+msgid "Logged out"
+msgstr ""
+
+#: templates/registration/password_reset_complete.html:5
+msgid "Password Reset Complete"
+msgstr ""
+
+#: templates/registration/password_reset_complete.html:6
+msgid ""
+"Your password was successfully reset.\n"
+"    You may login "
+msgstr "Ο κωδικός σας άλλαξε επιτυχώς. Μπορείτε να συνεχίσετε"
+
+#: templates/registration/password_reset_complete.html:7
+msgid "here"
+msgstr "εδώ"
+
+#: templates/registration/password_reset_confirm.html:7
+#, fuzzy
+msgid "Reset Password"
+msgstr "Αλλαγή κωδικού"
+
+#: templates/registration/password_reset_confirm.html:17
+msgid "There was an error processing your password change request."
+msgstr ""
+
+#: templates/registration/password_reset_done.html:4
+msgid "Email Sent"
+msgstr "Στάλθηκε e-mail"
+
+#: templates/registration/password_reset_done.html:5
+msgid ""
+"An email has been sent containing instructions on resetting your password. "
+"Please\n"
+"check your inbox."
+msgstr ""
+
+#: templates/registration/password_reset_form.html:5
+#, fuzzy
+msgid "Password Reset"
+msgstr "Αλλαγή κωδικού"
+
+#: templates/registration/password_reset_form.html:9
+msgid "Reset"
+msgstr ""
 
 #: templates/registration/registration_complete.html:4
 msgid "Registration Email Sent"
