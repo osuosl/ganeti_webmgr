@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GAWM_translation-0.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-04-12 15:19+0300\n"
+"POT-Creation-Date: 2011-04-05 17:30+0300\n"
 "PO-Revision-Date: 2011-03-31 15:18+0300\n"
 "Last-Translator: Leonidas Poulopoulos <leopoul@noc.grnet.gr>\n"
 "Language-Team: GRNET NOC <noc@noc.grnet.gr>\n"
@@ -1483,16 +1483,19 @@ msgstr "Χαμένα VMs"
 msgid "Groups"
 msgstr "Ομάδες"
 
-#: templates/registration/login.html:4 templates/registration/login.html:11
-#: templates/registration/login.html:16
+#: templates/registration/login.html:17 templates/registration/login.html:37
 msgid "Login"
 msgstr "Είσοδος"
 
-#: templates/registration/login.html:19
+#: templates/registration/login.html:24
+msgid "Select Language"
+msgstr "Επιλογή γλώσσας"
+
+#: templates/registration/login.html:40
 msgid "Forgot password"
 msgstr "Ξέχασατε τον κωδικό σας"
 
-#: templates/registration/login.html:20
+#: templates/registration/login.html:41
 msgid "Not a member"
 msgstr "Δεν έχετε εγγραφεί"
 

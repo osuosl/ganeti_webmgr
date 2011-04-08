@@ -10,12 +10,24 @@
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip.js"></script>
 <script type="text/javascript">var DOMAIN = "{% current_domain %}";</script>
 <script type="text/javascript" src="{{MEDIA_URL}}/js/ajax_csrf_protection.js"></script>
-
+<script type="text/javascript">
+	function setlang(lang){
+		$("#langsel").val(lang);
+		$("#langform").submit();
+	}
+</script>
 {% endblock %}
 
 {% block inner_header %}
 <div id="user_menu">
-    {% trans "You are logged in as" %} <a href="{% url profile %}">{{user.username}}</a>,
+	<form action="/i18n/setlang/" method="post" id="langform">
+		<input name="next" type="hidden" value="" />
+		<input id="langsel" name="language" type="hidden" value="" />
+		{% for lang in LANGUAGES %}<a class="select_lang" href="#" onclick="setlang('{{ lang.0 }}'); return false;" title="{{lang.1}}">{% ifequal LANGUAGE_CODE lang.0 %}<strong>{% endifequal %}{{ lang.0 }}{% ifequal LANGUAGE_CODE lang.0 %}</strong>{% endifequal %}</a>{% if not forloop.last %} -{% endif %}
+		{% endfor %}
+		{% csrf_token %}
+	</form>
+    |{% trans "You are logged in as" %} <a href="{% url profile %}">{{user.username}}</a>,
     <a href="{% url logout %}">{% trans "Logout" %}</a>
 	
 </div>

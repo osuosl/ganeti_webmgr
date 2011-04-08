@@ -36,3 +36,22 @@
 #passwordreset2 {margin: 2em auto 0em auto; width:53%;}
 #passwordreset2 p label {width:14.5em;}
 #passwordreset2 input.submit {margin-left: 15em; width:6em;}
+
+#user_menu {
+    background-color:#e17009;
+    border: 1px solid #ccc;
+    border-width:0 1px 1px 1px;
+    font-weight:normal;
+    font-size:11px;
+    height:18px;
+    padding:5px 5px 0 10px;
+    position:absolute;
+    right:100px;
+    top:-1px;
+    -moz-border-radius-bottomleft:5px;
+    -moz-border-radius-bottomright:5px;
+    -webkit-border-bottom-left-radius: 5px;
+    -webkit-border-bottom-right-radius: 5px;
+}
+#user_menu a {font-size:11px !important; margin:0 !important; padding:0 !important; font-weight:normal !important;}
+#user_menu a:hover {text-decoration:underline;}

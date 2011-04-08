@@ -1,9 +1,32 @@
 {% extends "no_menu_base.html" %}
 {% load i18n %}
-{% block title %}Login{% endblock %}
 
+{% block head %}
+	<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.js"></script>
+	<script type="text/javascript">
+		function setlang(lang){
+			$("#langsel").val(lang);
+			$("#langform").submit();
+		}
+	</script>
+
+{% endblock %}
+{% block title %}{% trans "Login" %}{% endblock %}
+{% block inner_header %}
+<div id="user_menu">
+	<form action="/i18n/setlang/" method="post" id="langform">
+		<input name="next" type="hidden" value="" />
+		<input id="langsel" name="language" type="hidden" value="" />
+		{% for lang in LANGUAGES %}<a class="select_lang" href="#" onclick="setlang('{{ lang.0 }}'); return false;" title="{{lang.1}}">{% ifequal LANGUAGE_CODE lang.0 %}<strong>{% endifequal %}{{ lang.0 }}{% ifequal LANGUAGE_CODE lang.0 %}</strong>{% endifequal %}</a>{% if not forloop.last %} -{% endif %}
+		{% endfor %}
+		{% csrf_token %}
+	</form>
+</div>
+{% endblock %}
 {% block content %}
+
 <div id="login">
+	
     <fieldset>
         <h2>Login</h2>
         <form method="post">
@@ -16,14 +39,4 @@
     <p><a href="{% url auth_password_reset %}">{% trans "Forgot password" %}?</a></p>
     <p><a href="{% url registration_register %}">{% trans "Not a member" %}?</a></p>
 </div>
-<form action="/i18n/setlang/" method="post">
-<input name="next" type="hidden" value="" />
-<select name="language">
-{% for lang in LANGUAGES %}
-<option value="{{ lang.0 }}">{{ lang.1 }}</option>
-{% endfor %}
-</select>
-{% csrf_token %}
-<input type="submit" value="Set" />
-</form>
 {% endblock %}

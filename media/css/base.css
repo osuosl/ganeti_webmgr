@@ -92,6 +92,10 @@ pre {
 #header a:visited, #header a:hover {color: white; font-weight: bold;}
 #header_strip {height:5px; background-color:#C16328; border-bottom:1px solid #ccc;}
 
+#langform {display:inline;}
+
+.select_lang{color: white; font-weight: normal !important;}
+
 #logo {display:block; margin-left:145px;}
 
 #content_wrapper {
