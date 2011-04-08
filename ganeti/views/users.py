@@ -26,7 +26,7 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
-
+from django.utils.translation import ugettext as _
 from ganeti.models import SSHKey
 from ganeti.views import render_403
 
@@ -34,7 +34,7 @@ from ganeti.views import render_403
 def user_list(request):
     user = request.user
     if not user.is_superuser:
-        return render_403(request, 'Only a superuser may view all users.')
+        return render_403(request, _('Only a superuser may view all users.'))
     
     users = User.objects.all()
     
@@ -49,7 +49,7 @@ def user_list(request):
 def user_add(request):
     user = request.user
     if not user.is_superuser:
-        return render_403(request, 'Only a superuser may add a user.')
+        return render_403(request, _('Only a superuser may add a user.'))
 
     if request.method == "POST":
         form = UserCreationForm(request.POST)
@@ -74,7 +74,7 @@ def user_add(request):
 def user_detail(request, user_id=None):
     user = request.user
     if not user.is_superuser:
-        return render_403(request, 'Only a superuser may view a user.')
+        return render_403(request, _('Only a superuser may view a user.'))
 
     user = get_object_or_404(User, id=user_id)
     
@@ -92,7 +92,7 @@ def user_detail(request, user_id=None):
 def user_edit(request, user_id=None):
     user = request.user
     if not user.is_superuser:
-        return render_403(request, 'Only a superuser may edit a user.')
+        return render_403(request, _('Only a superuser may edit a user.'))
 
     user_edit = get_object_or_404(User, id=user_id)
 
@@ -126,8 +126,8 @@ def user_edit(request, user_id=None):
 def user_password(request, user_id=None):
     user = request.user
     if not user.is_superuser:
-        return render_403(request, 'Only superusers have access to the change \
-                                     password form.')
+        return render_403(request, _('Only superusers have access to the change \
+                                     password form.'))
 
     user_edit = get_object_or_404(User, id=user_id)
 
@@ -166,7 +166,7 @@ def user_profile(request):
             user.get_profile().save()
             form = None
             messages.add_message(request, messages.SUCCESS,
-                                 'Saved successfully')
+                                 _('Saved successfully'))
     
     if not form:
         
@@ -197,11 +197,11 @@ def key_get(request, key_id=None, user_id=None):
             user_cmp = key_edit.user
         
         if not (user.is_superuser or user_cmp==user):
-            return HttpResponseForbidden("Only superuser or owner can get user's SSH key.")
+            return HttpResponseForbidden(_("Only superuser or owner can get user's SSH key."))
         
         return render_to_response("ssh_keys/form.html", {"key_form": form,
                     "key_id":key_id}, context_instance=RequestContext(request))
-    return HttpResponse("Cannot retrieve information")
+    return HttpResponse(_("Cannot retrieve information"))
 
 
 @login_required
@@ -218,7 +218,7 @@ def key_save(request, key_id=None):
         # check if the user has appropriate permissions
         user = request.user
         if not (user.is_superuser or user.id==owner_id):
-            return HttpResponseForbidden("Only superuser or owner can save user's SSH key.")
+            return HttpResponseForbidden(_("Only superuser or owner can save user's SSH key."))
 
         form = SSHKeyForm(data=request.POST, instance=key_edit)
         if form.is_valid():
@@ -228,7 +228,7 @@ def key_save(request, key_id=None):
         else:
             return HttpResponse(json.dumps(form.errors),
                                 mimetype="application/json")
-    return HttpResponse("Cannot retrieve information")
+    return HttpResponse(_("Cannot retrieve information"))
 
 
 @login_required
@@ -237,13 +237,13 @@ def key_delete(request, key_id):
     key_edit = get_object_or_404(SSHKey, pk=key_id)
 
     if not (user.is_superuser or key_edit.user==user):
-        return HttpResponseForbidden('Only superuser or owner can delete user\'s SSH key.')
+        return HttpResponseForbidden(_('Only superuser or owner can delete user\'s SSH key.'))
 
     if request.method == "DELETE":
         key_edit.delete()
         return HttpResponse("1", mimetype="application/json")
 
-    return HttpResponse("Cannot retrieve information")
+    return HttpResponse(_("Cannot retrieve information"))
 
 
 class SSHKeyForm(forms.ModelForm):
@@ -266,9 +266,9 @@ class UserEditForm(UserChangeForm):
     Form to edit user, based on Auth.UserChangeForm
     """
 
-    new_password1 = forms.CharField(label='New password',
+    new_password1 = forms.CharField(label=_('New password'),
                                     widget=forms.PasswordInput, required=False)
-    new_password2 = forms.CharField(label='Confirm password',
+    new_password2 = forms.CharField(label=_('Confirm password'),
                                     widget=forms.PasswordInput, required=False)
     
     class Meta(UserChangeForm.Meta):
@@ -287,7 +287,7 @@ class UserEditForm(UserChangeForm):
     def clean_new_password2(self):
         password2 = self.cleaned_data.get('new_password2')
         if self.cleaned_data.get('new_password1') != password2:
-            raise forms.ValidationError("The two password fields didn't match.")
+            raise forms.ValidationError(_("The two password fields didn't match."))
         return password2
 
     def save(self, commit=True):
@@ -321,23 +321,23 @@ class UserProfileForm(forms.Form):
         if new or confirm:
             if not self.user.check_password(old):
                 del data['old_password']
-                msg = 'Old Password is incorrect'
+                msg = _('Old Password is incorrect')
                 self._errors['old_password'] = self.error_class([msg])
             
             if not new:
                 if 'new_password' in data: del data['new_password']
-                msg = 'Enter a new password'
+                msg = _('Enter a new password')
                 self._errors['new_password'] = self.error_class([msg])
             
             if not confirm:
                 if 'confirm_password' in data: del data['confirm_password']
-                msg = 'Confirm new password'
+                msg = _('Confirm new password')
                 self._errors['confirm_password'] = self.error_class([msg])
             
             if new and confirm and new != confirm:
                 del data['new_password']
                 del data['confirm_password']
-                msg = 'New passwords do not match'
+                msg = _('New passwords do not match')
                 self._errors['new_password'] = self.error_class([msg])
         
         return data
