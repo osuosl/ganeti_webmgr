@@ -1537,7 +1537,6 @@ msgid ""
 msgstr ""
 
 #: templates/registration/password_reset_form.html:5
-#, fuzzy
 msgid "Password Reset"
 msgstr "Επαναφορά κωδικού"
 

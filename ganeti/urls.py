@@ -186,7 +186,3 @@ urlpatterns += patterns('ganeti.views.jobs',
     url(r'^%s/?' % job, 'detail', name='job-detail'),
 )
 
-# Language settings
-urlpatterns += patterns('',
-    (r'^i18n/', include('django.conf.urls.i18n')),
-    )
