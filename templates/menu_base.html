@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-
+{% load i18n %}
 {% load object_permission_tags %}
 {% load webmgr_tags %}
 
@@ -15,8 +15,9 @@
 
 {% block inner_header %}
 <div id="user_menu">
-    You are logged in as <a href="{% url profile %}">{{user.username}}</a>,
-    <a href="{% url logout %}">Logout</a>
+    {% trans "You are logged in as" %} <a href="{% url profile %}">{{user.username}}</a>,
+    <a href="{% url logout %}">{% trans "Logout" %}</a>
+	
 </div>
 {% endblock %}
     
@@ -25,28 +26,28 @@
     {% with user|cluster_admin as cluster_admin %}
     <div id="mainmenu" class="menu">
     <ul>
-        <li><a href="{% url overview %}">Overview</a></li>
-        <li><a href="{% url cluster-list %}">Clusters</a></li>
-        <li><a href="{% url virtualmachine-list %}">Virtual Machines</a></li>
+        <li><a href="{% url overview %}">{% trans "Overview" %}</a></li>
+        <li><a href="{% url cluster-list %}">{% trans "Clusters" %}</a></li>
+        <li><a href="{% url virtualmachine-list %}">{% trans "Virtual Machines" %}</a></li>
         {% if user.is_superuser or cluster_admin or perms.Cluster.create_vm %}
-        <li><a href="{% url instance-create %}">Create VM </a></li>
+        <li><a href="{% url instance-create %}">{% trans "Create VM" %}</a></li>
         {% endif %}
     </ul>
     {% with user|group_admin as group_admin %}
     
     {% if user.is_superuser or group_admin or cluster_admin %}
-    <h3>Admin</h3>
+    <h3>{% trans "Admin" %}</h3>
     <ul>
         {% if user.is_superuser or cluster_admin %}
-            <li><a href="{% url import-orphans %}">Orphan VMs</a></li>
-            <li><a href="{% url import-missing_db %}">Import VMs</a></li>
-            <li><a href="{% url import-missing %}">Missing VMs</a></li>
+            <li><a href="{% url import-orphans %}">{% trans "Orphan VMs" %}</a></li>
+            <li><a href="{% url import-missing_db %}">{% trans "Import VMs" %}</a></li>
+            <li><a href="{% url import-missing %}">{% trans "Missing VMs" %}</a></li>
         {% endif %}
         {% if user.is_superuser %}
-            <li><a href="{% url user-list %}">Users</a></li>
+            <li><a href="{% url user-list %}">{% trans "Users" %}</a></li>
         {% endif %}
         {% if user.is_superuser or group_admin %}
-            <li><a href="{% url usergroup-list %}">Groups</a></li>
+            <li><a href="{% url usergroup-list %}">{% trans "Groups" %}</a></li>
         {% endif %}
     </ul>
     {% endif %}
