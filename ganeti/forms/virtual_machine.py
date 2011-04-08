@@ -163,6 +163,15 @@ class NewVirtualMachineForm(forms.ModelForm):
 
         return hostname
 
+    def clean_vcpus(self):
+        vcpus = self.cleaned_data.get("vcpus")
+
+        if vcpus is None or vcpus < 1:
+            self._errors["vcpus"] = self.error_class(
+                ["At least one CPU must be present"])
+        else:
+            return vcpus
+
     def clean(self):
         data = self.cleaned_data
 
