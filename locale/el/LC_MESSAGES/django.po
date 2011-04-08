@@ -1539,11 +1539,11 @@ msgstr ""
 #: templates/registration/password_reset_form.html:5
 #, fuzzy
 msgid "Password Reset"
-msgstr "Αλλαγή κωδικού"
+msgstr "Επαναφορά κωδικού"
 
 #: templates/registration/password_reset_form.html:9
 msgid "Reset"
-msgstr ""
+msgstr "Επαναφορά"
 
 #: templates/registration/registration_complete.html:4
 msgid "Registration Email Sent"
