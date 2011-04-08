@@ -44,6 +44,7 @@ from ganeti.models import Cluster, ClusterUser, Profile, SSHKey
 from ganeti.views import render_403, render_404
 from ganeti.views.virtual_machine import render_vms
 from ganeti.fields import DataVolumeField
+from django.utils.translation import ugettext as _
 
 # Regex for a resolvable hostname
 FQDN_RE = r'^[\w]+(\.[\w]+)*$'
@@ -58,7 +59,7 @@ def detail(request, cluster_slug):
     user = request.user
     admin = True if user.is_superuser else user.has_perm('admin', cluster)
     if not admin:
-        return render_403(request, "You do not have sufficient privileges")
+        return render_403(request, _("You do not have sufficient privileges"))
     
     return render_to_response("cluster/detail.html", {
         'cluster':cluster,
@@ -76,7 +77,7 @@ def nodes(request, cluster_slug):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
-        return render_403(request, "You do not have sufficient privileges")
+        return render_403(request, _("You do not have sufficient privileges"))
     
     return render_to_response("node/table.html", \
                         {'cluster': cluster, 'nodes':cluster.nodes.all()}, \
@@ -94,7 +95,7 @@ def virtual_machines(request, cluster_slug):
     user = request.user
     admin = True if user.is_superuser else user.has_perm('admin', cluster)
     if not admin:
-        return render_403(request, "You do not have sufficient privileges")
+        return render_403(request, _("You do not have sufficient privileges"))
 
     vms = cluster.virtual_machines.select_related('cluster').all()
     vms = render_vms(request, vms)
@@ -116,7 +117,7 @@ def edit(request, cluster_slug=None):
     
     user = request.user
     if not (user.is_superuser or (cluster and user.has_perm('admin', cluster))):
-        return render_403(request, "You do not have sufficient privileges")
+        return render_403(request, _("You do not have sufficient privileges"))
     
     if request.method == 'POST':
         form = EditClusterForm(request.POST, instance=cluster)
@@ -181,7 +182,7 @@ def users(request, cluster_slug):
     
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
-        return render_403(request, "You do not have sufficient privileges")
+        return render_403(request, _("You do not have sufficient privileges"))
     
     url = reverse('cluster-permissions', args=[cluster.slug])
     return view_users(request, cluster, url, template='cluster/users.html')
@@ -209,7 +210,7 @@ def ssh_keys(request, cluster_slug, api_key):
     Show all ssh keys which belong to users, who have any perms on the cluster
     """
     if settings.WEB_MGR_API_KEY != api_key:
-        return HttpResponseForbidden("You're not allowed to view keys.")
+        return HttpResponseForbidden(_("You're not allowed to view keys."))
     
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
 
@@ -248,7 +249,7 @@ def quota(request, cluster_slug, user_id):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
-        return render_403(request, "You do not have sufficient privileges")
+        return render_403(request, _("You do not have sufficient privileges"))
     
     if request.method == 'POST':
         form = QuotaForm(request.POST)
@@ -290,7 +291,7 @@ def quota(request, cluster_slug, user_id):
         if quota:
             data.update(quota)
     else:
-        return render_404(request, 'User was not found')
+        return render_404(request, _('User was not found'))
     
     form = QuotaForm(data)
     return render_to_response("cluster/quota.html", \
@@ -305,8 +306,8 @@ class EditClusterForm(forms.ModelForm):
             'password' : forms.PasswordInput(),
         }
         
-    ram = DataVolumeField(label='Memory', required=False, min_value=0)
-    disk = DataVolumeField(label='Disk Space', required=False, min_value=0)
+    ram = DataVolumeField(label=_('Memory'), required=False, min_value=0)
+    disk = DataVolumeField(label=_('Disk Space'), required=False, min_value=0)
     
     def clean(self):
         self.cleaned_data = super(EditClusterForm, self).clean()
@@ -317,22 +318,22 @@ class EditClusterForm(forms.ModelForm):
         
         # Automatically set the slug on cluster creation
         if not host:
-            msg = 'Enter a hostname'
+            msg = _('Enter a hostname')
             self._errors['hostname'] = self.error_class([msg])
             
         if user: 
             if not new:
                 if 'password' in data: del data['password']
-                msg = 'Enter a password'
+                msg = _('Enter a password')
                 self._errors['password'] = self.error_class([msg])
             
         elif new:
-            msg = 'Enter a username'
+            msg = _('Enter a username')
             self._errors['username'] = self.error_class([msg])
             
             if not new:
                 if 'password' in data: del data['password']
-                msg = 'Enter a password'
+                msg = _('Enter a password')
                 self._errors['password'] = self.error_class([msg])
 
         if 'hostname' in data and data['hostname'] and 'slug' not in data:
@@ -348,7 +349,7 @@ def object_log(request, cluster_slug):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
-        return render_403(request, "You do not have sufficient privileges")
+        return render_403(request, _("You do not have sufficient privileges"))
     return list_for_object(request, cluster)
 
 
