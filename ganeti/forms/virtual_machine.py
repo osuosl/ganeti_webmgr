@@ -24,6 +24,7 @@ from ganeti.fields import DataVolumeField
 from ganeti.models import Cluster, ClusterUser, Organization, \
     VirtualMachineTemplate, VirtualMachine
 from ganeti.utilities import cluster_default_info, cluster_os_list
+from django.utils.translation import ugettext_lazy as _
 
 FQDN_RE = r'(?=^.{1,254}$)(^(?:(?!\d+\.|-)[a-zA-Z0-9_\-]{1,63}(?<!-)\.?)+(?:[a-zA-Z]{2,})$)'
 
@@ -38,24 +39,24 @@ class NewVirtualMachineForm(forms.ModelForm):
     nictypes = constants.KVM_NIC_TYPES
     bootchoices = constants.KVM_BOOT_ORDER
 
-    owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label='Owner')
-    cluster = forms.ModelChoiceField(queryset=Cluster.objects.none(), label='Cluster')
-    hostname = forms.RegexField(label='Instance Name', regex=FQDN_RE,
+    owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label=_('Owner'))
+    cluster = forms.ModelChoiceField(queryset=Cluster.objects.none(), label=_('Cluster'))
+    hostname = forms.RegexField(label=_('Instance Name'), regex=FQDN_RE,
                             error_messages={
-                                'invalid': 'Instance name must be resolvable',
+                                'invalid': _('Instance name must be resolvable'),
                             },
                             max_length=255)
-    pnode = forms.ChoiceField(label='Primary Node', choices=[empty_field])
-    snode = forms.ChoiceField(label='Secondary Node', choices=[empty_field])
-    os = forms.ChoiceField(label='Operating System', choices=[empty_field])
-    disk_template = forms.ChoiceField(label='Disk Template', \
+    pnode = forms.ChoiceField(label=_('Primary Node'), choices=[empty_field])
+    snode = forms.ChoiceField(label=_('Secondary Node'), choices=[empty_field])
+    os = forms.ChoiceField(label=_('Operating System'), choices=[empty_field])
+    disk_template = forms.ChoiceField(label=_('Disk Template'), \
                                       choices=templates)
-    memory = DataVolumeField(label='Memory', min_value=100)
-    disk_size = DataVolumeField(label='Disk Size', min_value=100)
-    disk_type = forms.ChoiceField(label='Disk Type', choices=disktypes)
-    nic_mode = forms.ChoiceField(label='NIC Mode', choices=nicmodes)
-    nic_type = forms.ChoiceField(label='NIC Type', choices=nictypes)
-    boot_order = forms.ChoiceField(label='Boot Device', choices=bootchoices)
+    memory = DataVolumeField(label=_('Memory'), min_value=100)
+    disk_size = DataVolumeField(label=_('Disk Size'), min_value=100)
+    disk_type = forms.ChoiceField(label=_('Disk Type'), choices=disktypes)
+    nic_mode = forms.ChoiceField(label=_('NIC Mode'), choices=nicmodes)
+    nic_type = forms.ChoiceField(label=_('NIC Type'), choices=nictypes)
+    boot_order = forms.ChoiceField(label=_('Boot Device'), choices=bootchoices)
 
     class Meta:
         model = VirtualMachineTemplate
@@ -152,10 +153,10 @@ class NewVirtualMachineForm(forms.ModelForm):
                     if current_owner == self.owner:
                         data['vm_recovery'] = vm
                     else:
-                        msg = "Owner cannot be changed when recovering a failed deployment"
+                        msg = _("Owner cannot be changed when recovering a failed deployment")
                         self._errors["owner"] = self.error_class([msg])
                 else:
-                    raise ValidationError("Hostname is already in use for this cluster")
+                    raise ValidationError(_("Hostname is already in use for this cluster"))
 
             except VirtualMachine.DoesNotExist:
                 # doesn't exist, no further checks needed
@@ -199,18 +200,18 @@ class NewVirtualMachineForm(forms.ModelForm):
             if isinstance(owner, (Organization,)):
                 # check user membership in group if group
                 if not grantee.user_set.filter(id=self.user.id).exists():
-                    msg = u"User is not a member of the specified group."
+                    msg = u"%s." % _("User is not a member of the specified group")
 
             else:
                 if not owner.user_id == self.user.id:
-                    msg = "You are not allowed to act on behalf of this user."
+                    msg = u"%s." % _("You are not allowed to act on behalf of this user")
 
             # check permissions on cluster
             if 'cluster' in data:
                 cluster = data['cluster']
                 if not (owner.has_perm('create_vm', cluster) \
                         or owner.has_perm('admin', cluster)):
-                    msg = u"Owner does not have permissions for this cluster."
+                    msg = u"%s." % _("Owner does not have permissions for this cluster")
 
                 # check quota
                 start = data['start']
@@ -221,18 +222,18 @@ class NewVirtualMachineForm(forms.ModelForm):
                     if start and quota['ram'] is not None and \
                         (used['ram'] + data['memory']) > quota['ram']:
                             del data['memory']
-                            q_msg = u"Owner does not have enough ram remaining on this cluster. You may choose to not automatically start the instance or reduce the amount of ram."
+                            q_msg = u"%s" % _("Owner does not have enough ram remaining on this cluster. You may choose to not automatically start the instance or reduce the amount of ram.")
                             self._errors["ram"] = self.error_class([q_msg])
                     
                     if quota['disk'] and used['disk'] + data['disk_size'] > quota['disk']:
                         del data['disk_size']
-                        q_msg = u"Owner does not have enough diskspace remaining on this cluster."
+                        q_msg = u"%s" % _("Owner does not have enough diskspace remaining on this cluster.")
                         self._errors["disk_size"] = self.error_class([q_msg])
                     
                     if start and quota['virtual_cpus'] is not None and \
                         (used['virtual_cpus'] + data['vcpus']) > quota['virtual_cpus']:
                             del data['vcpus']
-                            q_msg = u"Owner does not have enough virtual cpus remaining on this cluster. You may choose to not automatically start the instance or reduce the amount of virtual cpus."
+                            q_msg = u"%s" % _("Owner does not have enough virtual cpus remaining on this cluster. You may choose to not automatically start the instance or reduce the amount of virtual cpus.")
                             self._errors["vcpus"] = self.error_class([q_msg])
             
             if msg:
@@ -249,7 +250,7 @@ class NewVirtualMachineForm(forms.ModelForm):
         if disk_template == "drbd" and not iallocator:
             if pnode == snode and (pnode != '' or snode != ''):
                 # We know these are not in self._errors now
-                msg = u"Primary and Secondary Nodes must not match."
+                msg = u"%s." % _("Primary and Secondary Nodes must not match")
                 self._errors["pnode"] = self.error_class([msg])
 
                 # These fields are no longer valid. Remove them from the
@@ -265,9 +266,8 @@ class NewVirtualMachineForm(forms.ModelForm):
         image_path = data.get('cdrom_image_path', '')
         if boot_order == 'cdrom':
             if image_path == '':
-                msg = u'Image path required if boot device is CD-ROM.'
+                msg = u"%s." % _("Image path required if boot device is CD-ROM")
                 self._errors["cdrom_image_path"] = self.error_class([msg])
-
                 del data["cdrom_image_path"]
 
         if iallocator:
@@ -279,8 +279,8 @@ class NewVirtualMachineForm(forms.ModelForm):
                 if 'snode' in self._errors:
                     del self._errors['snode']
             else:
-                msg = u'Automatic Allocation was selected, but there is no \
-                      IAllocator available.'
+                msg = u"%s." % _("Automatic Allocation was selected, but there is no \
+                      IAllocator available.")
                 self._errors['iallocator'] = self.error_class([msg])
 
         # Always return the full collection of cleaned data.
@@ -348,7 +348,7 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
         data = self.cleaned_data['initrd_path']
         if data != '' and \
             (not data.startswith('/') and data != 'no_initrd_path'):
-            msg = u'This field must start with a "/".'
+            msg = u"%s." % _('This field must start with a "/"')
             self._errors['initrd_path'] = self.error_class([msg])
         return data
 
@@ -358,13 +358,13 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
         msg = None
 
         if data and security_model != 'user': 
-            msg = u'This field can not be set if Security Mode \
-                is not set to User.'
+            msg = u'%s.' % _('This field can not be set if Security Mode \
+                is not set to User')
         elif security_model == 'user':
             if not data:
-                msg = u'This field is required.'
+                msg = u'%s.' % _('This field is required')
             elif not data[0].isalpha():
-                msg = u'This field must being with an alpha character.'
+                msg = u'%s.' % _('This field must being with an alpha character')
 
         if msg:
             self._errors['security_domain'] = self.error_class([msg])
@@ -373,7 +373,7 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
     def clean_vnc_x509_path(self):
         data = self.cleaned_data['vnc_x509_path']
         if data and not data.startswith('/'):
-            msg = u'This field must start with a "/".' 
+            msg = u'%s,' % _('This field must start with a "/"') 
             self._errors['vnc_x509_path'] = self.error_class([msg])
         return data
 
@@ -384,7 +384,7 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
 
         # Makesure if initrd_path is set, kernel_path is aswell
         if initrd_path and not kernel_path:
-            msg = u"Kernel Path must be specified along with Initrd Path."
+            msg = u"%s." % _("Kernel Path must be specified along with Initrd Path")
             self._errors['kernel_path'] = self.error_class([msg])
             self._errors['initrd_path'] = self.error_class([msg])
             del data['initrd_path']
@@ -394,10 +394,10 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
         vnc_x509_verify = data.get('vnc_x509_verify')
     
         if not vnc_tls and vnc_x509_path:
-            msg = u'This field can not be set without VNC TLS enabled.'
+            msg = u'%s.' % _('This field can not be set without VNC TLS enabled')
             self._errors['vnc_x509_path'] = self.error_class([msg])
         if vnc_x509_verify and not vnc_x509_path:
-            msg = u'This field is required.'
+            msg = u'%s.' % _('This field is required')
             self._errors['vnc_x509_path'] = self.error_class([msg])
 
         return data
@@ -411,18 +411,18 @@ class MigrateForm(forms.Form):
     """ Form used for migrating a Virtual Machine """
     mode = forms.ChoiceField(choices=constants.MODE_CHOICES)
     cleanup = forms.BooleanField(initial=False, required=False,
-                                 label="Attempt recovery from failed migration")
+                                 label=_("Attempt recovery from failed migration"))
 
 
 class RenameForm(forms.Form):
     """ form used for renaming a Virtual Machine """
-    hostname = forms.RegexField(label='Instance Name', regex=FQDN_RE,
+    hostname = forms.RegexField(label=_('Instance Name'), regex=FQDN_RE,
                             error_messages={
-                                'invalid': 'Instance name must be resolvable',
+                                'invalid': _('Instance name must be resolvable'),
                             },
                             max_length=255, required=True)
-    ip_check = forms.BooleanField(initial=True, required=False, label='IP Check')
-    name_check = forms.BooleanField(initial=True, required=False, label='DNS Name Check')
+    ip_check = forms.BooleanField(initial=True, required=False, label=_('IP Check'))
+    name_check = forms.BooleanField(initial=True, required=False, label=_('DNS Name Check'))
 
     def __init__(self, vm, *args, **kwargs):
         self.vm = vm
@@ -432,5 +432,5 @@ class RenameForm(forms.Form):
         data = self.cleaned_data
         hostname = data.get('hostname', None)
         if hostname and hostname == self.vm.hostname:
-            raise ValidationError("The new hostname must be different than the current hostname")
+            raise ValidationError(_("The new hostname must be different than the current hostname"))
         return hostname
