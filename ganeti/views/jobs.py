@@ -24,7 +24,7 @@ from django.shortcuts import get_object_or_404, render_to_response
 
 from ganeti.models import Job, Cluster, VirtualMachine, Node
 from ganeti.views import render_403
-
+from django.utils.translation import ugettext as _
 
 @login_required
 def status(request, cluster_slug, job_id):
@@ -64,13 +64,13 @@ def clear(request, cluster_slug, job_id):
 
     if not cluster_admin:
         if isinstance(obj, (Cluster, Node)):
-            return render_403(request, "You do not have sufficient privileges")
+            return render_403(request, _("You do not have sufficient privileges"))
         elif isinstance(obj, (VirtualMachine,)):
             # object is a virtual machine, check perms on VM and on Cluster
             if not (obj.owner_id == user.get_profile().pk  \
                 or user.has_perm('admin', obj) \
                 or user.has_perm('admin', obj.cluster)):
-                    return render_403(request, "You do not have sufficient privileges")
+                    return render_403(request, _("You do not have sufficient privileges"))
 
     
     # clear the error.
