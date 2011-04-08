@@ -1,5 +1,5 @@
 {% extends "no_menu_base.html" %}
-
+{% load i18n %}
 {% block title %}Login{% endblock %}
 
 {% block content %}
@@ -10,10 +10,20 @@
             {% csrf_token %}
             {{ form.as_p }}
             <input type="hidden" name="next" value="{{ next }}" />
-            <input class="submit"type="submit" value="Login">
+            <input class="submit" type="submit" value='{% trans "Login" %}'>
         </form>
     </fieldset>
-    <p><a href="{% url auth_password_reset %}">Forgot password?</a></p>
-    <p><a href="{% url registration_register %}">Not a member?</a></p>
+    <p><a href="{% url auth_password_reset %}">{% trans "Forgot password" %}?</a></p>
+    <p><a href="{% url registration_register %}">{% trans "Not a member" %}?</a></p>
 </div>
+<form action="/i18n/setlang/" method="post">
+<input name="next" type="hidden" value="" />
+<select name="language">
+{% for lang in LANGUAGES %}
+<option value="{{ lang.0 }}">{{ lang.1 }}</option>
+{% endfor %}
+</select>
+{% csrf_token %}
+<input type="submit" value="Set" />
+</form>
 {% endblock %}
