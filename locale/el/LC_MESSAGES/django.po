@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GAWM_translation-0.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-04-05 19:23+0300\n"
+"POT-Creation-Date: 2011-04-05 19:32+0300\n"
 "PO-Revision-Date: 2011-03-31 15:18+0300\n"
 "Last-Translator: Leonidas Poulopoulos <leopoul@noc.grnet.gr>\n"
 "Language-Team: GRNET NOC <noc@noc.grnet.gr>\n"
@@ -1497,6 +1497,22 @@ msgstr "Ξέχασατε τον κωδικό σας"
 #: templates/registration/login.html:40
 msgid "Not a member"
 msgstr "Δεν έχετε εγγραφεί"
+
+#: templates/registration/registration_complete.html:4
+msgid "Registration Email Sent"
+msgstr "Στάλθηκε e-mail εγγραφής"
+
+#: templates/registration/registration_complete.html:5
+msgid ""
+"An email has been sent to your email address. \n"
+"You must confirm your account prior to logging in by following the "
+"instructions\n"
+"in the email."
+msgstr ""
+
+#: templates/registration/registration_form.html:5
+msgid "Registration"
+msgstr "Έγγραφή"
 
 #~ msgid "Select Language"
 #~ msgstr "Επιλογή γλώσσας"
