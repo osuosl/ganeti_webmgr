@@ -960,6 +960,42 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         self.assertTemplateUsed(response, 'virtual_machine/create.html')
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
 
+    def test_view_create_data_disk_quota_exceeded(self):
+        """
+        Disk quotas, when enabled, should cause form errors when exceeded.
+        """
+
+        url = '/vm/add/%s'
+        data = dict(cluster=cluster.id,
+                    start=True,
+                    owner=user.get_profile().id,
+                    hostname='new.vm.hostname',
+                    disk_template='plain',
+                    disk_size=4000,
+                    memory=256,
+                    vcpus=2,
+                    root_path='/',
+                    nic_type='paravirtual',
+                    disk_type = 'paravirtual',
+                    nic_link = 'br43',
+                    nic_mode='routed',
+                    boot_order='disk',
+                    os='image+ubuntu-lucid',
+                    pnode=cluster.nodes.all()[0],
+                    snode=cluster.nodes.all()[1])
+
+        # Login and grant user.
+        self.assert_(c.login(username=user.username, password='secret'))
+        user.grant('create_vm', cluster)
+        profile = user.get_profile()
+        cluster.set_quota(user.get_profile(), dict(ram=1000, disk=2000, virtual_cpus=10))
+
+        response = c.post(url % '', data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
+
     def test_view_create_data(self):
 
         url = '/vm/add/%s'
@@ -989,16 +1025,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         self.assert_(c.login(username=user.username, password='secret'))
         user.grant('create_vm', cluster)
         profile = user.get_profile()
-
-        # POST - over disk quota
-        data_ = data.copy()
-        data_['disk_size'] = 2000
-        data_['owner'] = profile.id
-        response = c.post(url % '', data_)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create.html')
-        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
+        cluster.set_quota(user.get_profile(), dict(ram=1000, disk=2000, virtual_cpus=10))
 
         # POST - over cpu quota
         data_ = data.copy()
