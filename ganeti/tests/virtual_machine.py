@@ -885,6 +885,49 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'virtual_machine/create.html')
 
+    def test_view_create_data_required_keys(self):
+        """
+        If any of these keys are missing from the form data, a form error
+        should occur.
+        """
+
+        url = '/vm/add/%s'
+        data = dict(cluster=cluster.id,
+                    start=True,
+                    owner=user.get_profile().id, #XXX remove this
+                    hostname='new.vm.hostname',
+                    disk_template='plain',
+                    disk_size=1000,
+                    memory=256,
+                    vcpus=2,
+                    root_path='/',
+                    nic_type='paravirtual',
+                    disk_type = 'paravirtual',
+                    nic_link = 'br43',
+                    nic_mode='routed',
+                    boot_order='disk',
+                    os='image+ubuntu-lucid',
+                    pnode=cluster.nodes.all()[0],
+                    snode=cluster.nodes.all()[1])
+
+        # Login and grant user.
+        self.assert_(c.login(username=user.username, password='secret'))
+        user.grant('create_vm', cluster)
+
+        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
+
+        # POST - required values
+        for prop in ['cluster', 'hostname', 'disk_size', 'disk_type',
+                     'nic_type', 'nic_mode', 'vcpus', 'pnode', 'os',
+                     'disk_template', 'root_path', 'boot_order']:
+            data_ = data.copy()
+            del data_[prop]
+            response = c.post(url % '', data_)
+            self.assertEqual(200, response.status_code)
+            self.assertEqual('text/html; charset=utf-8', response['content-type'])
+            self.assertTemplateUsed(response, 'virtual_machine/create.html')
+            self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
+
     def test_view_create_data(self):
 
         url = '/vm/add/%s'
@@ -913,20 +956,6 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         # Login and grant user.
         self.assert_(c.login(username=user.username, password='secret'))
         user.grant('create_vm', cluster)
-
-        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
-
-        # POST - required values
-        for property in ['cluster', 'hostname', 'disk_size', 'disk_type','nic_type', 'nic_mode',
-                         'vcpus', 'pnode', 'os', 'disk_template',
-                         'root_path', 'boot_order']:
-            data_ = data.copy()
-            del data_[property]
-            response = c.post(url % '', data_)
-            self.assertEqual(200, response.status_code)
-            self.assertEqual('text/html; charset=utf-8', response['content-type'])
-            self.assertTemplateUsed(response, 'virtual_machine/create.html')
-            self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
 
         # POST - over ram quota
         profile = user.get_profile()

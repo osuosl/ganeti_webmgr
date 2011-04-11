@@ -163,6 +163,15 @@ class NewVirtualMachineForm(forms.ModelForm):
 
         return hostname
 
+    def clean_root_path(self):
+        root_path = self.cleaned_data.get("root_path")
+
+        if root_path:
+            return root_path
+        else:
+            self.errors["root_path"] = self.error_class(
+                ["The root path cannot be empty"])
+
     def clean_vcpus(self):
         vcpus = self.cleaned_data.get("vcpus")
 
