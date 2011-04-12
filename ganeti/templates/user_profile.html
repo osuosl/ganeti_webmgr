@@ -20,7 +20,7 @@
         <li class="fadeout">{{ message }}</li>
     {% endfor %}
     </div>
-    <h1>Profile information for {{user.username}}</h1>
+    <h1>{% trans "Profile information for" %} {{user.username}}</h1>
     <fieldset id="uprofile">
         <form action="{% url profile %}" method="post">
             {{ form.as_p }}
