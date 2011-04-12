@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GAWM_translation-0.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-04-05 19:47+0300\n"
+"POT-Creation-Date: 2011-04-12 15:19+0300\n"
 "PO-Revision-Date: 2011-03-31 15:18+0300\n"
 "Last-Translator: Leonidas Poulopoulos <leopoul@noc.grnet.gr>\n"
 "Language-Team: GRNET NOC <noc@noc.grnet.gr>\n"
@@ -270,8 +270,12 @@ msgstr "Το νέο hostname πρέπει να διαφέρει από το υπ
 #: ganeti/templates/overview.html.py:76
 #: ganeti/templates/cluster/detail.html:68 ganeti/templates/job/detail.html:24
 #: ganeti/templates/virtual_machine/detail.html:149
+<<<<<<< HEAD
 
 #: templates/menu_base.html:41
+=======
+#: templates/menu_base.html:44
+>>>>>>> [LOCALIZE] Updated translation file and compiled translation for Greek locale
 msgid "Overview"
 msgstr "Επισκόπηση"
 
@@ -438,8 +442,12 @@ msgstr "Σφάλμα στο API του Ganeti"
 
 #: ganeti/templates/cluster/detail.html:69
 #: ganeti/templates/cluster/detail.html:98
+<<<<<<< HEAD
 
 #: ganeti/templates/node/detail.html:224 templates/menu_base.html:43
+=======
+#: ganeti/templates/node/detail.html:224 templates/menu_base.html:46
+>>>>>>> [LOCALIZE] Updated translation file and compiled translation for Greek locale
 #, fuzzy
 msgid "Virtual Machines"
 msgstr "Εικονικές Μηχανές"
@@ -448,7 +456,7 @@ msgstr "Εικονικές Μηχανές"
 #: ganeti/templates/users/detail.html:35 ganeti/templates/users/list.html:3
 #: ganeti/templates/users/list.html:24
 #: ganeti/templates/virtual_machine/detail.html:153
-#: templates/menu_base.html:59
+#: templates/menu_base.html:62
 msgid "Users"
 msgstr "Χρήστες"
 
@@ -512,7 +520,7 @@ msgstr "Προεπιλεγμένη Αναλογία Πόρων"
 msgid "Save"
 msgstr "Αποθήκευση"
 
-#: ganeti/templates/cluster/list.html:5 templates/menu_base.html:42
+#: ganeti/templates/cluster/list.html:5 templates/menu_base.html:45
 msgid "Clusters"
 msgstr ""
 
@@ -546,14 +554,14 @@ msgid "Quota"
 msgstr "Αναλογία Πόρων"
 
 #: ganeti/templates/importing/missing.html:17
-#: ganeti/templates/importing/missing_db.html:3 templates/menu_base.html:54
+#: ganeti/templates/importing/missing_db.html:3 templates/menu_base.html:57
 msgid "Orphan VMs"
 msgstr "Ορφανά VMs"
 
 #: ganeti/templates/importing/missing.html:20
 #: ganeti/templates/importing/missing_db.html:19
 #: ganeti/templates/importing/orphans.html:19
-#: ganeti/templates/users/detail.html:55 templates/menu_base.html:51
+#: ganeti/templates/users/detail.html:55 templates/menu_base.html:54
 msgid "Admin"
 msgstr "Διαχείριση"
 
@@ -1461,27 +1469,27 @@ msgid "You do not have permission to view the default cluster options"
 msgstr ""
 "Δεν έχετε δικαιώματα για την προβολή των προεπιλεγμένων ρυθμίσεων του cluster"
 
-#: templates/menu_base.html:30
+#: templates/menu_base.html:33
 msgid "You are logged in as"
 msgstr "Έχετε συνδεθεί ως"
 
-#: templates/menu_base.html:31
+#: templates/menu_base.html:34
 msgid "Logout"
 msgstr "Έξοδος"
 
-#: templates/menu_base.html:45
+#: templates/menu_base.html:48
 msgid "Create VM"
 msgstr "Δημιουργία VM"
 
-#: templates/menu_base.html:55
+#: templates/menu_base.html:58
 msgid "Import VMs"
 msgstr "Εισαγωγή VMs"
 
-#: templates/menu_base.html:56
+#: templates/menu_base.html:59
 msgid "Missing VMs"
 msgstr "Χαμένα VMs"
 
-#: templates/menu_base.html:62
+#: templates/menu_base.html:65
 msgid "Groups"
 msgstr "Ομάδες"
 
@@ -1559,9 +1567,12 @@ msgstr ""
 #: templates/registration/registration_form.html:5
 msgid "Registration"
 msgstr "Έγγραφή"
+<<<<<<< HEAD
 
 #~ msgid "Select Language"
 #~ msgstr "Επιλογή γλώσσας"
 
 #~ msgid "Adopt %(orphaned)s"
 #~ msgstr "Υιοθέτηση %(orphaned)s"
+=======
+>>>>>>> [LOCALIZE] Updated translation file and compiled translation for Greek locale
