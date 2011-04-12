@@ -27,6 +27,7 @@ from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidde
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy
 from ganeti.models import SSHKey
 from ganeti.views import render_403
 
@@ -266,9 +267,9 @@ class UserEditForm(UserChangeForm):
     Form to edit user, based on Auth.UserChangeForm
     """
 
-    new_password1 = forms.CharField(label=_('New password'),
+    new_password1 = forms.CharField(label=ugettext_lazy('New password'),
                                     widget=forms.PasswordInput, required=False)
-    new_password2 = forms.CharField(label=_('Confirm password'),
+    new_password2 = forms.CharField(label=ugettext_lazy('Confirm password'),
                                     widget=forms.PasswordInput, required=False)
     
     class Meta(UserChangeForm.Meta):
@@ -301,10 +302,10 @@ class UserProfileForm(forms.Form):
     """
     Form for editing a User's Profile
     """
-    email = forms.EmailField()
-    old_password = forms.CharField(required=False, widget=forms.PasswordInput)
-    new_password = forms.CharField(required=False, widget=forms.PasswordInput)
-    confirm_password = forms.CharField(required=False, widget=forms.PasswordInput)
+    email = forms.EmailField(label=ugettext_lazy('E-mail'))
+    old_password = forms.CharField(label=ugettext_lazy('Old password'), required=False, widget=forms.PasswordInput)
+    new_password = forms.CharField(label=ugettext_lazy('New password'), required=False, widget=forms.PasswordInput)
+    confirm_password = forms.CharField(label=ugettext_lazy('Confirm password'), required=False, widget=forms.PasswordInput)
 
     # needed to verify the user's password
     user = None
