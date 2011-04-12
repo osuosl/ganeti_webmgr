@@ -36,14 +36,22 @@ TIME_ZONE = 'America/Los_Angeles'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
+
+# In order to support localization the following have to be added:
+
 ugettext = lambda s: s
 
+# If no other locale is present/supported for the time leave the following as is.
+# When locales are added, place them ath the "('yourlang', ugettext('YOUR LANGUAGE')),"
+# line. E.g, for the Greek locale, it becomes: ('el', ugettext('Greek'))
+
 LANGUAGES = (
-    ('yourlang', ugettext('YOUR LANGUAGE')),
+#	 ('yourlang', ugettext('YOUR LANGUAGE')),
     ('en', ugettext('English')),
 )
+# end-of localization support
 
-LANGUAGE_CODE = 'el-GR'
+LANGUAGE_CODE = 'en-US'
 
 # Unique site id used by many modules to distinguish site from others.
 SITE_ID = 1
