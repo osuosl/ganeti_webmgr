@@ -16,6 +16,7 @@
 {% endblock %}
 
 {% block inner_header %}
+{% ifnotequal LANGUAGES|length 1 %}
 <div id="user_menu">
 	<form action="/i18n/setlang/" method="post" id="langform">
 		<input name="next" type="hidden" value="" />
@@ -25,4 +26,5 @@
 		{% csrf_token %}
 	</form>
 </div>
+{% endifnotequal %}
 {% endblock %}

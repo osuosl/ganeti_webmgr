@@ -20,6 +20,7 @@
 
 {% block inner_header %}
 <div id="user_menu">
+	{% ifnotequal LANGUAGES|length 1 %}
 	<form action="/i18n/setlang/" method="post" id="langform">
 		<input name="next" type="hidden" value="" />
 		<input id="langsel" name="language" type="hidden" value="" />
@@ -27,7 +28,9 @@
 		{% endfor %}
 		{% csrf_token %}
 	</form>
-    |{% trans "You are logged in as" %} <a href="{% url profile %}">{{user.username}}</a>,
+    |
+	{% endifnotequal %}
+	{% trans "You are logged in as" %} <a href="{% url profile %}">{{user.username}}</a>,
     <a href="{% url logout %}">{% trans "Logout" %}</a>
 	
 </div>
