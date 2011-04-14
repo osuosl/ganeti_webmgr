@@ -120,10 +120,10 @@
     </div>
 
     <div id="help-vcpus">
-        <p>Number of virtual cpus to allocate to this virtual machine.<p>
+        <p>Number of virtual cpus to allocate to this virtual machine.</p>
         <p><b><i>This will be deducted from the owner's quota.</i></b></p>
     </div>
-    <div id="help-ram">
+    <div id="help-memory">
         <p>
             Amount of ram to allocate to this virtual machine. If no units
             are given, megabytes is assumed.
@@ -155,7 +155,7 @@
         </ul>
         <p>Valid for the Xen HVM and KVM hypervisors.</p>
     </div>
-    <div id="help-nicmode">
+    <div id="help-nic_mode">
         <p>
             This option specifies how the virtual machine connects to the
             network. More information on this can be found in the <a
@@ -173,7 +173,7 @@
             </li>
         </ul>
     </div>
-    <div id="help-niclink">
+    <div id="help-nic_link">
         <p>
             In <b>bridged</b> mode, it specifies the bridge interface to
             attach this NIC to on the node <i>(e.g. br0)</i>.
@@ -186,7 +186,7 @@
             gnt-cluster(8)</a> for more details.
         </p>
     </div>
-    <div id="help-nictype">
+    <div id="help-nic_type">
         <p>
             This parameter determines the way the network cards are 
             presented to the virtual machine. The possible options are:
@@ -205,7 +205,7 @@
         <p>Valid for the Xen PVM and KVM hypervisors.</p>
     </div>
 
-    <div id="help-kernelpath">
+    <div id="help-kernel_path">
         <p>
             This option specifies the path (on the node) to the kernel to 
             boot the virtual machine with. Xen PVM instances always require
@@ -214,7 +214,7 @@
         </p>
         <p>Valid for the Xen PVM and KVM hypervisors.</p>
     </div>
-    <div id="help-rootpath">
+    <div id="help-root_path">
         <p>
             This option specifies the name of the root device. This is 
             always needed for Xen PVM, while for KVM it is only used if the
@@ -222,14 +222,14 @@
         </p>
         <p>Valid for the Xen PVM and KVM hypervisors.</p>
     </div>
-    <div id="help-serialconsole">
+    <div id="help-serial_console">
         <p>
             This boolean option specifies whether to emulate a serial
             console for the instance.
         </p>
         <p>Valid for the KVM hypervisor.</p>
     </div>
-    <div id="help-bootorder">
+    <div id="help-boot_order">
         <p>Value denoting boot order for the virtual machine.</p>
         <ul>
             <li><b>Hard Disk</b> - boot from the first disk device</li>
@@ -240,7 +240,7 @@
         </ul>
         <p>Valid for the Xen HVM and KVM hypervisors.</p>
     </div>
-    <div id="help-imagepath">
+    <div id="help-image_path">
         <p>
            The path to a CDROM image on the node to attach to the virtual
            machine.
@@ -248,4 +248,3 @@
         <p>Valid for the Xen HVM and KVM hypervisors.</p>
     </div>
 </div>
-
