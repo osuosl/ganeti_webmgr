@@ -28,6 +28,7 @@ urlpatterns = patterns('',
     (r'^', include('ganeti.urls')),
     (r'^', include('object_permissions.urls')),
     (r'^', include('object_log.urls')),
+    (r'^search/', include('haystack.urls')),
 
     # user management
     # account/activate/<key>/ - Activate a user
