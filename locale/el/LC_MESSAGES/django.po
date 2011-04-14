@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GAWM_translation-0.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-04-12 15:19+0300\n"
+"POT-Creation-Date: 2011-04-14 14:01+0300\n"
 "PO-Revision-Date: 2011-03-31 15:18+0300\n"
 "Last-Translator: Leonidas Poulopoulos <leopoul@noc.grnet.gr>\n"
 "Language-Team: GRNET NOC <noc@noc.grnet.gr>\n"
@@ -30,135 +30,135 @@ msgstr "Αγγλικά"
 msgid "Enter a valid SSH public key with comment (SSH2 RSA or DSA)."
 msgstr ""
 
-#: ganeti/models.py:852
+#: ganeti/models.py:844
 msgid "hostname"
 msgstr ""
 
-#: ganeti/models.py:853
+#: ganeti/models.py:845
 msgid "slug"
 msgstr ""
 
-#: ganeti/models.py:854
+#: ganeti/models.py:846
 msgid "port"
 msgstr "Θύρα"
 
-#: ganeti/models.py:855
+#: ganeti/models.py:847
 msgid "description"
 msgstr "Περιγραφή"
 
-#: ganeti/models.py:856
+#: ganeti/models.py:848
 #, fuzzy
 msgid "username"
 msgstr "Εισάγετε ένα όνομα χρήστη"
 
-#: ganeti/models.py:857
+#: ganeti/models.py:849
 #, fuzzy
 msgid "password"
 msgstr "Ξέχασατε τον κωδικό σας"
 
-#: ganeti/models.py:858
+#: ganeti/models.py:850
 msgid "hash"
 msgstr ""
 
-#: ganeti/models.py:861
+#: ganeti/models.py:853
 msgid "virtual_cpus"
 msgstr "Εικονικές CPUs"
 
-#: ganeti/models.py:862
+#: ganeti/models.py:854
 msgid "disk"
 msgstr ""
 
-#: ganeti/models.py:863
+#: ganeti/models.py:855
 msgid "ram"
 msgstr ""
 
-#: ganeti/models.py:1057
+#: ganeti/models.py:1049
 msgid "Start up After Creation"
 msgstr "Εκκίνηση τώρα"
 
-#: ganeti/models.py:1059 ganeti/forms/virtual_machine.py:461
+#: ganeti/models.py:1051 ganeti/forms/virtual_machine.py:407
 msgid "DNS Name Check"
 msgstr "Έλεγχος ονόματος DNS"
 
-#: ganeti/models.py:1061
+#: ganeti/models.py:1053
 msgid "Automatic Allocation"
 msgstr ""
 
-#: ganeti/models.py:1065 ganeti/forms/virtual_machine.py:84
+#: ganeti/models.py:1057 ganeti/forms/virtual_machine.py:52
 msgid "Disk Template"
 msgstr "Πρότυπο Δίσκου"
 
-#: ganeti/models.py:1066 ganeti/forms/virtual_machine.py:81
+#: ganeti/models.py:1058 ganeti/forms/virtual_machine.py:49
 msgid "Primary Node"
 msgstr "Κύριος Κόμβος"
 
-#: ganeti/models.py:1068 ganeti/forms/virtual_machine.py:82
+#: ganeti/models.py:1060 ganeti/forms/virtual_machine.py:50
 msgid "Secondary Node"
 msgstr "Δευτερεύων Κόμβος"
 
-#: ganeti/models.py:1070 ganeti/forms/virtual_machine.py:83
+#: ganeti/models.py:1062 ganeti/forms/virtual_machine.py:51
 #: ganeti/templates/virtual_machine/detail.html:261
 #: ganeti/templates/virtual_machine/reinstall.html:27
 msgid "Operating System"
 msgstr "Λειτουργικό Σύστημα"
 
-#: ganeti/models.py:1072 ganeti/templates/overview/used_resources_data.html:10
+#: ganeti/models.py:1064 ganeti/templates/overview/used_resources_data.html:10
 msgid "Virtual CPUs"
 msgstr "Εικονικές CPUs"
 
-#: ganeti/models.py:1074 ganeti/forms/virtual_machine.py:86
+#: ganeti/models.py:1066 ganeti/forms/virtual_machine.py:54
 #: ganeti/templates/cluster/user_quota.html:10
 #: ganeti/templates/virtual_machine/detail.html:273
 #: ganeti/views/cluster.py:309
 msgid "Memory"
 msgstr "Μνήμη"
 
-#: ganeti/models.py:1076 ganeti/forms/virtual_machine.py:87
+#: ganeti/models.py:1068 ganeti/forms/virtual_machine.py:55
 msgid "Disk Size"
 msgstr "Χωρητικότητα Δίσκου"
 
-#: ganeti/models.py:1078 ganeti/forms/virtual_machine.py:88
+#: ganeti/models.py:1070 ganeti/forms/virtual_machine.py:56
 msgid "Disk Type"
 msgstr "Είδος Δίσκου"
 
-#: ganeti/models.py:1080 ganeti/forms/virtual_machine.py:89
+#: ganeti/models.py:1072 ganeti/forms/virtual_machine.py:57
 msgid "NIC Mode"
 msgstr "Κάρτα δικτύου"
 
-#: ganeti/models.py:1082
+#: ganeti/models.py:1074
 msgid "NIC Link"
 msgstr ""
 
-#: ganeti/models.py:1084 ganeti/forms/virtual_machine.py:90
+#: ganeti/models.py:1076 ganeti/forms/virtual_machine.py:58
 msgid "NIC Type"
 msgstr "Είδος κάρτας δικτύου"
 
-#: ganeti/models.py:1087
+#: ganeti/models.py:1079
 msgid "Kernel Path"
 msgstr ""
 
-#: ganeti/models.py:1089
+#: ganeti/models.py:1081
 msgid "Root Path"
 msgstr ""
 
-#: ganeti/models.py:1091
+#: ganeti/models.py:1083
 msgid "Enable Serial Console"
 msgstr ""
 
-#: ganeti/models.py:1092 ganeti/forms/virtual_machine.py:91
+#: ganeti/models.py:1084 ganeti/forms/virtual_machine.py:59
 msgid "Boot Device"
 msgstr "Συσκευή εκκίνησης"
 
-#: ganeti/models.py:1094
+#: ganeti/models.py:1086
 msgid "CD-ROM Image Path"
 msgstr ""
 
-#: ganeti/forms/virtual_machine.py:74
+#: ganeti/forms/virtual_machine.py:42
 #: ganeti/templates/virtual_machine/detail.html:232
 msgid "Owner"
 msgstr "Ιδιοκτήτης"
 
-#: ganeti/forms/virtual_machine.py:75 ganeti/templates/index.html:10
+#: ganeti/forms/virtual_machine.py:43 ganeti/templates/index.html:10
 #: ganeti/templates/overview.html:84 ganeti/templates/overview.html.py:122
 #: ganeti/templates/cluster/detail.html:61
 #: ganeti/templates/cluster/edit.html:13 ganeti/templates/cluster/list.html:42
@@ -170,99 +170,99 @@ msgstr "Ιδιοκτήτης"
 msgid "Cluster"
 msgstr ""
 
-#: ganeti/forms/virtual_machine.py:76 ganeti/forms/virtual_machine.py:455
+#: ganeti/forms/virtual_machine.py:44 ganeti/forms/virtual_machine.py:401
 msgid "Instance Name"
 msgstr ""
 
-#: ganeti/forms/virtual_machine.py:78 ganeti/forms/virtual_machine.py:457
+#: ganeti/forms/virtual_machine.py:46 ganeti/forms/virtual_machine.py:403
 msgid "Instance name must be resolvable"
 msgstr ""
 
-#: ganeti/forms/virtual_machine.py:188
+#: ganeti/forms/virtual_machine.py:156
 msgid "Owner cannot be changed when recovering a failed deployment"
 msgstr ""
 
-#: ganeti/forms/virtual_machine.py:191
+#: ganeti/forms/virtual_machine.py:159
 msgid "Hostname is already in use for this cluster"
 msgstr "Το hostname χρησιμοποιείται ήδη σε αυτό το cluster"
 
-#: ganeti/forms/virtual_machine.py:217
+#: ganeti/forms/virtual_machine.py:185
 msgid "User is not a member of the specified group"
 msgstr "Ο χρήστης δεν ανήκει στη συγκεκριμένη ομάδα"
 
-#: ganeti/forms/virtual_machine.py:221
+#: ganeti/forms/virtual_machine.py:189
 msgid "You are not allowed to act on behalf of this user"
 msgstr "Δεν έχετε δικαιώματα να ενεργήσετε εκ μέρους του χρήστη"
 
-#: ganeti/forms/virtual_machine.py:228
+#: ganeti/forms/virtual_machine.py:196
 msgid "Owner does not have permissions for this cluster"
 msgstr ""
 
-#: ganeti/forms/virtual_machine.py:239
+#: ganeti/forms/virtual_machine.py:207
 msgid ""
 "Owner does not have enough ram remaining on this cluster. You may choose to "
 "not automatically start the instance or reduce the amount of ram."
 msgstr ""
 
-#: ganeti/forms/virtual_machine.py:244
+#: ganeti/forms/virtual_machine.py:212
 msgid "Owner does not have enough diskspace remaining on this cluster."
 msgstr ""
 
-#: ganeti/forms/virtual_machine.py:250
+#: ganeti/forms/virtual_machine.py:218
 msgid ""
 "Owner does not have enough virtual cpus remaining on this cluster. You may "
 "choose to not automatically start the instance or reduce the amount of "
 "virtual cpus."
 msgstr ""
 
-#: ganeti/forms/virtual_machine.py:267
+#: ganeti/forms/virtual_machine.py:235
 msgid "Primary and Secondary Nodes must not match"
 msgstr "Ο κύριος και ο δευτερεύον κόμβος δε θα πρέπει να συμπίπτουν"
 
-#: ganeti/forms/virtual_machine.py:283
+#: ganeti/forms/virtual_machine.py:251
 msgid "Image path required if boot device is CD-ROM"
 msgstr ""
 
-#: ganeti/forms/virtual_machine.py:297
+#: ganeti/forms/virtual_machine.py:264
 msgid ""
 "Automatic Allocation was selected, but there is no                       "
 "IAllocator available."
 msgstr ""
 
-#: ganeti/forms/virtual_machine.py:382 ganeti/forms/virtual_machine.py:407
+#: ganeti/forms/virtual_machine.py:333 ganeti/forms/virtual_machine.py:358
 msgid "This field must start with a \"/\""
 msgstr ""
 
-#: ganeti/forms/virtual_machine.py:392
+#: ganeti/forms/virtual_machine.py:343
 msgid ""
 "This field can not be set if Security Mode                 is not set to User"
 msgstr ""
 
-#: ganeti/forms/virtual_machine.py:396 ganeti/forms/virtual_machine.py:431
+#: ganeti/forms/virtual_machine.py:347 ganeti/forms/virtual_machine.py:382
 msgid "This field is required"
 msgstr "Το πεδίο είναι υποχρεωτικό"
 
-#: ganeti/forms/virtual_machine.py:398
+#: ganeti/forms/virtual_machine.py:349
 msgid "This field must being with an alpha character"
 msgstr ""
 
-#: ganeti/forms/virtual_machine.py:418
+#: ganeti/forms/virtual_machine.py:369
 msgid "Kernel Path must be specified along with Initrd Path"
 msgstr ""
 
-#: ganeti/forms/virtual_machine.py:428
+#: ganeti/forms/virtual_machine.py:379
 msgid "This field can not be set without VNC TLS enabled"
 msgstr ""
 
-#: ganeti/forms/virtual_machine.py:450
+#: ganeti/forms/virtual_machine.py:396
 msgid "Attempt recovery from failed migration"
 msgstr ""
 
-#: ganeti/forms/virtual_machine.py:460
+#: ganeti/forms/virtual_machine.py:406
 msgid "IP Check"
 msgstr "Έλεγχος IP"
 
-#: ganeti/forms/virtual_machine.py:471
+#: ganeti/forms/virtual_machine.py:417
 msgid "The new hostname must be different than the current hostname"
 msgstr "Το νέο hostname πρέπει να διαφέρει από το υπάρχον"
 
@@ -270,12 +270,7 @@ msgstr "Το νέο hostname πρέπει να διαφέρει από το υπ
 #: ganeti/templates/overview.html.py:76
 #: ganeti/templates/cluster/detail.html:68 ganeti/templates/job/detail.html:24
 #: ganeti/templates/virtual_machine/detail.html:149
-<<<<<<< HEAD
-
-#: templates/menu_base.html:41
-=======
 #: templates/menu_base.html:44
->>>>>>> [LOCALIZE] Updated translation file and compiled translation for Greek locale
 msgid "Overview"
 msgstr "Επισκόπηση"
 
@@ -416,12 +411,12 @@ msgid "Deleted"
 msgstr "Διαγραφή"
 
 #: ganeti/templates/cluster/detail.html:28
-#: ganeti/templates/virtual_machine/table.html:107
+#: ganeti/templates/virtual_machine/table.html:90
 msgid "Loading"
 msgstr "Φόρτωση"
 
 #: ganeti/templates/cluster/detail.html:36
-#: ganeti/templates/node/detail.html:41 ganeti/templates/users/detail.html:23
+#: ganeti/templates/node/detail.html:42 ganeti/templates/users/detail.html:23
 msgid "Couldn't load this tab. We'll try to fix this as soon as possible"
 msgstr ""
 "Δεν ήταν εφικτό να ληφθούν δεδομένα. Θα προσπαθήσουμε για την άμεση "
@@ -442,12 +437,7 @@ msgstr "Σφάλμα στο API του Ganeti"
 
 #: ganeti/templates/cluster/detail.html:69
 #: ganeti/templates/cluster/detail.html:98
-<<<<<<< HEAD
-
-#: ganeti/templates/node/detail.html:224 templates/menu_base.html:43
-=======
-#: ganeti/templates/node/detail.html:224 templates/menu_base.html:46
->>>>>>> [LOCALIZE] Updated translation file and compiled translation for Greek locale
+#: ganeti/templates/node/detail.html:225 templates/menu_base.html:46
 #, fuzzy
 msgid "Virtual Machines"
 msgstr "Εικονικές Μηχανές"
@@ -462,7 +452,7 @@ msgstr "Χρήστες"
 
 #: ganeti/templates/cluster/detail.html:73
 #: ganeti/templates/ganeti/group/detail.html:5
-#: ganeti/templates/node/detail.html:171 ganeti/templates/users/detail.html:42
+#: ganeti/templates/node/detail.html:172 ganeti/templates/users/detail.html:42
 #: ganeti/templates/virtual_machine/detail.html:158
 msgid "Log"
 msgstr "Καταγραφή"
@@ -472,7 +462,7 @@ msgstr "Καταγραφή"
 #: ganeti/templates/users/detail.html:47 ganeti/templates/users/edit.html:21
 #: ganeti/templates/virtual_machine/create_status.html:49
 #: ganeti/templates/virtual_machine/detail.html:176
-#: ganeti/templates/virtual_machine/edit.html:15
+#: ganeti/templates/virtual_machine/edit.html:19
 #: ganeti/templates/virtual_machine/edit_confirm.html:38
 msgid "Edit"
 msgstr "Επεξεργασία"
@@ -516,7 +506,7 @@ msgstr "Προεπιλεγμένη Αναλογία Πόρων"
 
 #: ganeti/templates/cluster/edit.html:47 ganeti/templates/node/role.html:10
 #: ganeti/templates/users/edit.html:27 ganeti/templates/users/password.html:15
-#: ganeti/templates/virtual_machine/edit_confirm.html:44
+#: ganeti/templates/virtual_machine/edit_confirm.html:45
 msgid "Save"
 msgstr "Αποθήκευση"
 
@@ -636,81 +626,81 @@ msgstr ""
 msgid "Finished"
 msgstr "Ολοκληρώθηκε"
 
-#: ganeti/templates/node/detail.html:56
+#: ganeti/templates/node/detail.html:57
 msgid "Modify Role"
 msgstr "Τροποποίηση ρόλου"
 
-#: ganeti/templates/node/detail.html:58
+#: ganeti/templates/node/detail.html:59
 #, fuzzy
 msgid "Migrate Primary Virtual Machines"
 msgstr "Δημιουργία νέου VM"
 
-#: ganeti/templates/node/detail.html:60
+#: ganeti/templates/node/detail.html:61
 #, fuzzy
 msgid "Evacuate Secondary Virtual Machines"
 msgstr "Δημιουργία νέου VM"
 
-#: ganeti/templates/node/detail.html:138
+#: ganeti/templates/node/detail.html:139
 #: templates/registration/password_reset_confirm.html:16
 msgid "Error"
 msgstr "Σφάλμα"
 
-#: ganeti/templates/node/detail.html:155 ganeti/templates/users/detail.html:38
+#: ganeti/templates/node/detail.html:156 ganeti/templates/users/detail.html:38
 msgid "Detail"
 msgstr "Λεπτομέρειες"
 
-#: ganeti/templates/node/detail.html:159
+#: ganeti/templates/node/detail.html:160
 #, fuzzy
 msgid "Primary"
 msgstr "Κύριος Κόμβος"
 
-#: ganeti/templates/node/detail.html:165
+#: ganeti/templates/node/detail.html:166
 #, fuzzy
 msgid "Secondary"
 msgstr "Δευτερεύων Κόμβος"
 
-#: ganeti/templates/node/detail.html:181
+#: ganeti/templates/node/detail.html:182
 msgid "Change Role"
 msgstr "Αλλαγή ρόλου"
 
-#: ganeti/templates/node/detail.html:188 ganeti/templates/node/migrate.html:8
+#: ganeti/templates/node/detail.html:189 ganeti/templates/node/migrate.html:8
 #: ganeti/templates/virtual_machine/detail.html:201
 msgid "Migrate"
 msgstr ""
 
-#: ganeti/templates/node/detail.html:198
+#: ganeti/templates/node/detail.html:199
 msgid "Evacuate"
 msgstr ""
 
-#: ganeti/templates/node/detail.html:213
+#: ganeti/templates/node/detail.html:214
 #, fuzzy
 msgid "Primary IP"
 msgstr "Κύριος Κόμβος"
 
-#: ganeti/templates/node/detail.html:214
+#: ganeti/templates/node/detail.html:215
 #, fuzzy
 msgid "Secondary IP"
 msgstr "Δευτερεύων Κόμβος"
 
-#: ganeti/templates/node/detail.html:215
+#: ganeti/templates/node/detail.html:216
 msgid "Role"
 msgstr "Ρόλος"
 
-#: ganeti/templates/node/detail.html:217
+#: ganeti/templates/node/detail.html:218
 #, fuzzy
 msgid "Master Candidate"
 msgstr "Κύριος κόμβος"
 
-#: ganeti/templates/node/detail.html:220
+#: ganeti/templates/node/detail.html:221
 msgid "Drained"
 msgstr ""
 
-#: ganeti/templates/node/detail.html:221
+#: ganeti/templates/node/detail.html:222
 #, fuzzy
 msgid "Ram Free [GiB]"
 msgstr "Ελέυθερος Δίσκος [GiB]"
 
-#: ganeti/templates/node/detail.html:222
+#: ganeti/templates/node/detail.html:223
 #, fuzzy
 msgid "Disk Free [GiB]"
 msgstr "Ελέυθερος Δίσκος [GiB]"
@@ -803,8 +793,8 @@ msgid "Create New User"
 msgstr "Νέος χρήστης"
 
 #: ganeti/templates/users/edit.html:27
-#: ganeti/templates/virtual_machine/create.html:41
-#: ganeti/templates/virtual_machine/create.html:72
+#: ganeti/templates/virtual_machine/create.html:40
+#: ganeti/templates/virtual_machine/create.html:71
 #: templates/registration/registration_form.html:9
 msgid "Create"
 msgstr "Δημιουργία"
@@ -830,23 +820,23 @@ msgstr "Όνομα Χρήστη"
 msgid "Create a new Virtual Machine"
 msgstr "Δημιουργία νέου VM"
 
-#: ganeti/templates/virtual_machine/create.html:41
+#: ganeti/templates/virtual_machine/create.html:40
 #: ganeti/templates/virtual_machine/detail.html:4
 #, fuzzy
 msgid "Virtual Machine"
 msgstr "Εικονικές Μηχανές"
 
-#: ganeti/templates/virtual_machine/create.html:55
-#: ganeti/templates/virtual_machine/edit.html:20
+#: ganeti/templates/virtual_machine/create.html:54
+#: ganeti/templates/virtual_machine/edit.html:24
 msgid "General Parameters"
 msgstr "Γενικές Παράμετροι"
 
-#: ganeti/templates/virtual_machine/create.html:65
-#: ganeti/templates/virtual_machine/edit.html:29
+#: ganeti/templates/virtual_machine/create.html:64
+#: ganeti/templates/virtual_machine/edit.html:33
 msgid "Hypervisor Parameters"
 msgstr "Παράμετροι Hypervisor"
 
-#: ganeti/templates/virtual_machine/create.html:87
+#: ganeti/templates/virtual_machine/create_help.html:6
 msgid ""
 "The owner indicates who this virtual machine belongs to. Resources\n"
 "            used by the virtual machine will be deducted from the owner's\n"
@@ -856,7 +846,7 @@ msgstr ""
 "χρησιμοποιηθούν από το virtual machine θα αφαιρεθούν από τα όρια χρήσης "
 "πόρων του ιδιοκτήτη."
 
-#: ganeti/templates/virtual_machine/create.html:92
+#: ganeti/templates/virtual_machine/create_help.html:11
 msgid ""
 "An owner may be a user or a group.  If you are a member of a group\n"
 "            you may create a virtual machine on behalf of that group."
@@ -865,25 +855,25 @@ msgstr ""
 "μέλος μιας ομάδας, μπορείτε να δημιουργήσετε ένα virtual machine εκ μέρους "
 "της ομάδας "
 
-#: ganeti/templates/virtual_machine/create.html:96
+#: ganeti/templates/virtual_machine/create_help.html:15
 #, fuzzy
 msgid ""
 "If your user does not directly have access/permission to a cluster,\n"
 "            it will not have permission to own a virtual machine directly."
 msgstr "Δεν έχετε δικαιώματα επεξεργασίας του virtual machine"
 
-#: ganeti/templates/virtual_machine/create.html:102
+#: ganeti/templates/virtual_machine/create_help.html:21
 msgid "Which ganeti cluster to deploy the new virtual machine on"
 msgstr ""
 "Επιλογή του ganeti cluster στον οποίο θα εγκατασταθεί το virtual machine"
 
-#: ganeti/templates/virtual_machine/create.html:106
+#: ganeti/templates/virtual_machine/create_help.html:25
 msgid ""
 "Fully qualified domain name <i>(<b>FQDN</b>)</i> to assign to this\n"
 "            virtual machine. <i>(e.g. hostname.example.org)</i>"
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:113
+#: ganeti/templates/virtual_machine/create_help.html:32
 msgid ""
 "Uncheck this if you don't want the instance to automatically start\n"
 "            after creation. If you do so, you can start it manually on the\n"
@@ -893,7 +883,7 @@ msgstr ""
 "μετά τη δημιουργία του. Εάν αποεπιλέξετε το πεδίο, μπορείτε να εκκινήσετε "
 "χειροκίνητα το virtual machine από τη σελίδα λεπτομερειών"
 
-#: ganeti/templates/virtual_machine/create.html:120
+#: ganeti/templates/virtual_machine/create_help.html:39
 msgid ""
 "Check the virtual machine DNS name via the resolver <i>(e.g. in DNS\n"
 "            or /etc/hosts, depending on your setup)</i>. Since the name "
@@ -902,61 +892,61 @@ msgid ""
 "            checks <i>(e.g.  if the IP is pingable)</i>."
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:126
+#: ganeti/templates/virtual_machine/create_help.html:45
 msgid ""
 "This is useful for setups that deploy virtual machines using\n"
 "            dynamic DNS and thus the name is not resolvable yet."
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:130
+#: ganeti/templates/virtual_machine/create_help.html:49
 msgid ""
 "<b>Use with caution!</b> If left unchecked you may run into name/ip\n"
 "            collisions."
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:136
+#: ganeti/templates/virtual_machine/create_help.html:55
 msgid ""
 "Automatically select primary and secondary node to allocate disks\n"
 "            on."
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:148
+#: ganeti/templates/virtual_machine/create_help.html:67
 #, fuzzy
 msgid "Disk layout template for the virtual machine on the cluster node."
 msgstr "Σφάλμα κατά τη δημιουργία virtual machine στον cluster"
 
-#: ganeti/templates/virtual_machine/create.html:150
+#: ganeti/templates/virtual_machine/create_help.html:69
 msgid "The available choices are"
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:153
+#: ganeti/templates/virtual_machine/create_help.html:72
 msgid "Disk devices will be logical volumes"
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:157
+#: ganeti/templates/virtual_machine/create_help.html:76
 msgid "Disk devices will be"
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:158
+#: ganeti/templates/virtual_machine/create_help.html:77
 msgid "version"
 msgstr "έκδοση"
 
-#: ganeti/templates/virtual_machine/create.html:158
+#: ganeti/templates/virtual_machine/create_help.html:77
 msgid "on top of LVM volumes"
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:161
+#: ganeti/templates/virtual_machine/create_help.html:80
 msgid "Disk devices will be regular files"
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:165
+#: ganeti/templates/virtual_machine/create_help.html:84
 msgid ""
 "This creates a virtual machine with no\n"
 "                    disks. Its useful for testing only (or other special\n"
 "                    cases)."
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:171
+#: ganeti/templates/virtual_machine/create_help.html:90
 msgid ""
 "If drbd is selected, then a primary and secondary node will\n"
 "                need to be chosen unless automatic allocation has been \n"
@@ -964,29 +954,29 @@ msgid ""
 "                migration and failover in case one of the nodes goes offline."
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:178
+#: ganeti/templates/virtual_machine/create_help.html:97
 msgid ""
 "The primary node to use for the virtual machine (in case automatic\n"
 "            allocation is not used)."
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:183
+#: ganeti/templates/virtual_machine/create_help.html:102
 msgid ""
 "The secondary node to use for the virtual machine (in case\n"
 "                automatic allocation is not used)."
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:187
+#: ganeti/templates/virtual_machine/create_help.html:106
 msgid "This is only required when using the drbd disk template."
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:192
+#: ganeti/templates/virtual_machine/create_help.html:111
 msgid ""
 "Operating system to install on the virtual machine. Your\n"
 "                choices are limited to the images configured on the cluster."
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:196
+#: ganeti/templates/virtual_machine/create_help.html:115
 msgid ""
 "The text in <b>bold</b> signifies the Ganeti Operating\n"
 "                System Type which may be called debootstrap, image, or some\n"
@@ -995,19 +985,19 @@ msgid ""
 "                (or os-type variant) that the cluster has access to."
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:204
+#: ganeti/templates/virtual_machine/create_help.html:123
 msgid "Number of virtual cpus to allocate to this virtual machine"
 msgstr "Αριθμός των εικονικών CPUs που θα αποδωθούν στο virtual macnine"
 
-#: ganeti/templates/virtual_machine/create.html:205
-#: ganeti/templates/virtual_machine/create.html:212
-#: ganeti/templates/virtual_machine/create.html:219
+#: ganeti/templates/virtual_machine/create_help.html:124
+#: ganeti/templates/virtual_machine/create_help.html:131
+#: ganeti/templates/virtual_machine/create_help.html:138
 msgid "This will be deducted from the owner's quota"
 msgstr ""
 "Οι χρησιμοποιούμενοι πόροι θα αφαιρεθούν από τους πόρους που αναλογούν στο "
 "χρήστη"
 
-#: ganeti/templates/virtual_machine/create.html:209
+#: ganeti/templates/virtual_machine/create_help.html:128
 msgid ""
 "Amount of ram to allocate to this virtual machine. If no units\n"
 "                are given, megabytes is assumed."
@@ -1015,63 +1005,63 @@ msgstr ""
 "Μνήμη RAM που θα δεσμευθεί για το virtual machine. Εάν δεν καθοριστούν "
 "μονάδες, η προεπιλογή είναι Megabytes"
 
-#: ganeti/templates/virtual_machine/create.html:216
+#: ganeti/templates/virtual_machine/create_help.html:135
 msgid ""
 "Size of the system disk to allocate to this virtual machine. If\n"
 "                no units are given, megabytes is assumed."
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:223
+#: ganeti/templates/virtual_machine/create_help.html:142
 msgid ""
 "This parameter determines the way the disks are presented to\n"
 "                the virtual machine."
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:224
-#: ganeti/templates/virtual_machine/create.html:274
+#: ganeti/templates/virtual_machine/create_help.html:143
+#: ganeti/templates/virtual_machine/create_help.html:193
 msgid "The possible options are"
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:238
-#: ganeti/templates/virtual_machine/create.html:323
-#: ganeti/templates/virtual_machine/create.html:330
+#: ganeti/templates/virtual_machine/create_help.html:157
+#: ganeti/templates/virtual_machine/create_help.html:242
+#: ganeti/templates/virtual_machine/create_help.html:249
 msgid "Valid for the Xen HVM and KVM hypervisors"
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:242
+#: ganeti/templates/virtual_machine/create_help.html:161
 msgid ""
 "This option specifies how the virtual machine connects to the\n"
 "                network. More information on this can be found in the "
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:245
+#: ganeti/templates/virtual_machine/create_help.html:164
 msgid "Ganeti tutorial documentation"
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:247
+#: ganeti/templates/virtual_machine/create_help.html:166
 msgid "When in doubt, choose"
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:250
+#: ganeti/templates/virtual_machine/create_help.html:169
 msgid ""
 "The virtual machine's network interface\n"
 "                    will be attached to a software bridge running on the "
 "node."
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:253
+#: ganeti/templates/virtual_machine/create_help.html:172
 msgid ""
 "The virtual machine's network interface\n"
 "                    will be routed"
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:260
+#: ganeti/templates/virtual_machine/create_help.html:179
 msgid ""
 "In <b>bridged</b> mode, it specifies the bridge interface to\n"
 "                attach this NIC to on the node <i>(e.g. br0)</i>."
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:264
+#: ganeti/templates/virtual_machine/create_help.html:183
 msgid ""
 "In <b>routed</b> mode it's intended to differentiate between \n"
 "                different routing tables/virtual machine groups (but the \n"
@@ -1081,19 +1071,19 @@ msgid ""
 "                gnt-cluster(8)</a> for more details."
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:273
+#: ganeti/templates/virtual_machine/create_help.html:192
 msgid ""
 "This parameter determines the way the network cards are \n"
 "                presented to the virtual machine."
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:287
-#: ganeti/templates/virtual_machine/create.html:297
-#: ganeti/templates/virtual_machine/create.html:305
+#: ganeti/templates/virtual_machine/create_help.html:206
+#: ganeti/templates/virtual_machine/create_help.html:216
+#: ganeti/templates/virtual_machine/create_help.html:224
 msgid "Valid for the Xen PVM and KVM hypervisors"
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:292
+#: ganeti/templates/virtual_machine/create_help.html:211
 msgid ""
 "This option specifies the path (on the node) to the kernel to \n"
 "                boot the virtual machine with. Xen PVM instances always "
@@ -1103,7 +1093,7 @@ msgid ""
 "                machine to load the kernel from its disks."
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:301
+#: ganeti/templates/virtual_machine/create_help.html:220
 msgid ""
 "This option specifies the name of the root device. This is \n"
 "                always needed for Xen PVM, while for KVM it is only used if "
@@ -1111,33 +1101,33 @@ msgid ""
 "                kernel_path option is also specified."
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:309
+#: ganeti/templates/virtual_machine/create_help.html:228
 msgid ""
 "This boolean option specifies whether to emulate a serial\n"
 "                console for the instance."
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:312
+#: ganeti/templates/virtual_machine/create_help.html:231
 #, fuzzy
 msgid "Valid for the KVM hypervisor"
 msgstr "Προεπιλεγμένος hypervisor"
 
-#: ganeti/templates/virtual_machine/create.html:315
+#: ganeti/templates/virtual_machine/create_help.html:234
 #, fuzzy
 msgid "Value denoting boot order for the virtual machine"
 msgstr "Δεν έχετε δικαιώματα για την επανεκκίνηση του virtual machine"
 
-#: ganeti/templates/virtual_machine/create.html:317
+#: ganeti/templates/virtual_machine/create_help.html:236
 msgid "boot from the first disk device"
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:319
+#: ganeti/templates/virtual_machine/create_help.html:238
 msgid ""
 "boot from the cdrom (requires CD Image path\n"
 "                    being set)"
 msgstr ""
 
-#: ganeti/templates/virtual_machine/create.html:327
+#: ganeti/templates/virtual_machine/create_help.html:246
 msgid ""
 "The path to a CDROM image on the node to attach to the virtual\n"
 "               machine."
@@ -1229,7 +1219,7 @@ msgstr "Σειρά εκκίνησης"
 msgid "CDROM Image Path"
 msgstr ""
 
-#: ganeti/templates/virtual_machine/edit.html:52
+#: ganeti/templates/virtual_machine/edit.html:56
 msgid "Continue"
 msgstr "Συνέχεια"
 
@@ -1241,11 +1231,11 @@ msgstr "Επιβεβαίωση Αλλαγών"
 msgid "Nothing changed"
 msgstr "Καμία αλλαγή"
 
-#: ganeti/templates/virtual_machine/edit_confirm.html:41
+#: ganeti/templates/virtual_machine/edit_confirm.html:42
 msgid "Save & Reboot"
 msgstr "Αποθήκευση & Επανεκκίνηση"
 
-#: ganeti/templates/virtual_machine/edit_confirm.html:45
+#: ganeti/templates/virtual_machine/edit_confirm.html:47
 msgid "Cancel"
 msgstr "Άκυρο"
 
@@ -1278,8 +1268,8 @@ msgstr "Προηγούμενο"
 msgid "Next"
 msgstr "Επόμενο"
 
-#: ganeti/templates/virtual_machine/table.html:92
-#: ganeti/templates/virtual_machine/table.html:97
+#: ganeti/templates/virtual_machine/table.html:68
+#: ganeti/templates/virtual_machine/table.html:73
 msgid "Add Virtual Machine"
 msgstr "Νέο Virtual Machine"
 
@@ -1289,12 +1279,12 @@ msgstr "Νέο Virtual Machine"
 #: ganeti/views/cluster.py:352 ganeti/views/general.py:294
 #: ganeti/views/general.py:299 ganeti/views/importing.py:65
 #: ganeti/views/importing.py:128 ganeti/views/importing.py:193
-#: ganeti/views/jobs.py:67 ganeti/views/jobs.py:73 ganeti/views/node.py:52
-#: ganeti/views/node.py:75 ganeti/views/node.py:95 ganeti/views/node.py:114
-#: ganeti/views/node.py:153 ganeti/views/node.py:207 ganeti/views/node.py:285
+#: ganeti/views/jobs.py:67 ganeti/views/jobs.py:73 ganeti/views/node.py:54
+#: ganeti/views/node.py:77 ganeti/views/node.py:98 ganeti/views/node.py:118
+#: ganeti/views/node.py:141 ganeti/views/node.py:188 ganeti/views/node.py:266
 #: ganeti/views/virtual_machine.py:70 ganeti/views/virtual_machine.py:119
-#: ganeti/views/virtual_machine.py:257 ganeti/views/virtual_machine.py:490
-#: ganeti/views/virtual_machine.py:507 ganeti/views/virtual_machine.py:524
+#: ganeti/views/virtual_machine.py:257 ganeti/views/virtual_machine.py:502
+#: ganeti/views/virtual_machine.py:519 ganeti/views/virtual_machine.py:536
 msgid "You do not have sufficient privileges"
 msgstr "Δεν έχετε επαρκή δικαιώματα"
 
@@ -1324,7 +1314,7 @@ msgstr "Εισάγετε ένα όνομα χρήστη"
 msgid "You are not authorized to view this page"
 msgstr "Δεν έχετε δικαιώματα για να προσπελάσετε αυτή τη σελίδα"
 
-#: ganeti/views/node.py:270
+#: ganeti/views/node.py:251
 msgid "Must choose automatic allocation or a specific node"
 msgstr ""
 
@@ -1436,35 +1426,35 @@ msgstr ""
 msgid "You do not have permission to reboot this virtual machine"
 msgstr "Δεν έχετε δικαιώματα για την επανεκκίνηση του virtual machine"
 
-#: ganeti/views/virtual_machine.py:444
+#: ganeti/views/virtual_machine.py:456
 msgid "You do not have permission to view this cluster's details"
 msgstr "Δεν έχετε δικαιώματα για προβολή των λεπτομερειών του cluster"
 
-#: ganeti/views/virtual_machine.py:539
+#: ganeti/views/virtual_machine.py:551
 msgid "You do not have permission to create virtual machines"
 msgstr "Δεν έχετε δικαιώματα δημιουργίας virtual machine"
 
-#: ganeti/views/virtual_machine.py:653
+#: ganeti/views/virtual_machine.py:664
 msgid "Error creating virtual machine on this cluster"
 msgstr "Σφάλμα κατά τη δημιουργία virtual machine στον cluster"
 
-#: ganeti/views/virtual_machine.py:745 ganeti/views/virtual_machine.py:923
+#: ganeti/views/virtual_machine.py:756 ganeti/views/virtual_machine.py:934
 msgid "You do not have permissions to edit this virtual machine"
 msgstr "Δεν έχετε δικαιώματα επεξεργασίας του virtual machine"
 
-#: ganeti/views/virtual_machine.py:784
+#: ganeti/views/virtual_machine.py:795
 msgid "Sorry, but you do not have permission to reboot this machine."
 msgstr "Δεν έχετε δικαιώματα για την επανεκκίνηση του virtual machine"
 
-#: ganeti/views/virtual_machine.py:864
+#: ganeti/views/virtual_machine.py:875
 msgid "You do not have permissions to edit             this virtual machine"
 msgstr "Δεν έχετε δικαιώματα επεξεργασίας             του virtual machine"
 
-#: ganeti/views/virtual_machine.py:1001
+#: ganeti/views/virtual_machine.py:1012
 msgid "You do not have permissions to view this cluster"
 msgstr "Δεν έχετε δικαιώματα για να προσπελάσετε αυτό τον cluster"
 
-#: ganeti/views/virtual_machine.py:1021
+#: ganeti/views/virtual_machine.py:1032
 msgid "You do not have permission to view the default cluster options"
 msgstr ""
 "Δεν έχετε δικαιώματα για την προβολή των προεπιλεγμένων ρυθμίσεων του cluster"
@@ -1567,12 +1557,3 @@ msgstr ""
 #: templates/registration/registration_form.html:5
 msgid "Registration"
 msgstr "Έγγραφή"
-<<<<<<< HEAD
-
-#~ msgid "Select Language"
-#~ msgstr "Επιλογή γλώσσας"
-
-#~ msgid "Adopt %(orphaned)s"
-#~ msgstr "Υιοθέτηση %(orphaned)s"
-=======
->>>>>>> [LOCALIZE] Updated translation file and compiled translation for Greek locale
