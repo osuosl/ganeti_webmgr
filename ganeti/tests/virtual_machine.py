@@ -32,7 +32,7 @@ from util import client
 from ganeti.tests.rapi_proxy import RapiProxy, INFO, JOB_RUNNING
 from ganeti import models
 from ganeti.constants import ALL_NIC_TYPES, HV_NIC_MODES, ALL_BOOT_ORDER, HV_DISK_TEMPLATES, \
-    OWNER_TAG, KVM_CHOICES
+    OWNER_TAG, KVM_CHOICES, EMPTY_CHOICE_FIELD
 from ganeti.forms.virtual_machine import NewVirtualMachineForm
 from ganeti.utilities import os_prettify, cluster_os_list
 
@@ -2077,9 +2077,9 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         Test that ChoiceFields have the correct default options
         """
         form = NewVirtualMachineForm(user, None)
-        self.assertEqual(ALL_NIC_TYPES, form.fields['nic_type'].choices)
+        self.assertEqual([EMPTY_CHOICE_FIELD], form.fields['nic_type'].choices)
         self.assertEqual(HV_NIC_MODES, form.fields['nic_mode'].choices)
-        self.assertEqual(ALL_BOOT_ORDER, form.fields['boot_order'].choices)
+        self.assertEqual([EMPTY_CHOICE_FIELD], form.fields['boot_order'].choices)
         self.assertEqual(HV_DISK_TEMPLATES, form.fields['disk_template'].choices)
     
     def test_cluster_init(self):

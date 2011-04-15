@@ -239,6 +239,62 @@ INFO = {'architecture': ['64bit', 'x86_64'],
     'uid_pool': [],
     'uuid': 'a22576ba-9158-4336-8590-a497306f84b9',
     'volume_group_name': 'ganeti'}
+XEN_INFO = {'architecture': ['64bit','x86_64'],
+  'beparams': {'default': {'auto_balance': True,'memory': 512,'vcpus': 2}},
+  'blacklisted_os': [],
+  'candidate_pool_size': 10,
+  'config_version': 2040000,
+  'ctime': 1301603254.797797,
+  'default_hypervisor': 'xen-pvm',
+  'default_iallocator': '',
+  'drbd_usermode_helper': '',
+  'enabled_hypervisors': ['xen-pvm','xen-hvm'],
+  'export_version': 0,
+  'file_storage_dir': '/srv/ganeti/file-storage',
+  'hidden_os': [],
+  'hvparams': {'xen-hvm': {'acpi': True,
+                           'blockdev_prefix': 'hd',
+                           'boot_order': 'cd',
+                           'cdrom_image_path': '',
+                           'device_model': '/usr/lib/xen/bin/qemu-dm',
+                           'disk_type': 'paravirtual',
+                           'kernel_path': '/usr/lib/xen/boot/hvmloader',
+                           'migration_mode': 'non-live',
+                           'migration_port': 8002,
+                           'nic_type': 'rtl8139',
+                           'pae': True,
+                           'use_localtime': False,
+                           'vnc_bind_address': '0.0.0.0',
+                           'vnc_password_file': '/etc/ganeti/vnc-cluster-password'},
+               'xen-pvm': {'blockdev_prefix': 'sd',
+                           'bootloader_args': '',
+                           'bootloader_path': '',
+                           'initrd_path': '/boot/initrd-2.6-xenU',
+                           'kernel_args': 'ro',
+                           'kernel_path': '/boot/vmlinuz-2.6-xenU',
+                           'migration_mode': 'live',
+                           'migration_port': 8002,
+                           'root_path': '/dev/xvda1',
+                           'use_bootloader': False}},
+  'maintain_node_health': False,
+  'master': 'gtest3.osuosl.bak',
+  'master_netdev': 'br42',
+  'mtime': 1301954099.043431,
+  'name': 'ganeti-xen.osuosl.bak',
+  'ndparams': {'oob_program': ''},
+  'nicparams': {'default': {'link': 'br42','mode': 'bridged'}},
+  'os_api_version': 20,
+  'os_hvp': {},
+  'osparams': {},
+  'prealloc_wipe_disks': False,
+  'primary_ip_version': 4,
+  'protocol_version': 2040000,
+  'reserved_lvs': [],
+  'software_version': '2.4.1',
+  'tags': [],
+  'uid_pool': [],
+  'uuid': '355c4147-bbcd-4213-9e84-7095343b1595',
+  'volume_group_name': 'ganeti'}
 
 OPERATING_SYSTEMS = ['image+debian-osgeo', 'image+ubuntu-lucid']
 
@@ -504,7 +560,6 @@ class RapiProxy(client.GanetiRapiClient):
         CallProxy.patch(instance, 'ModifyInstance', False, 1)
         CallProxy.patch(instance, 'MigrateInstance', False, 1)
         CallProxy.patch(instance, 'RenameInstance', False, 1)
-
         CallProxy.patch(instance, 'SetNodeRole', False, 1)
         CallProxy.patch(instance, 'EvacuateNode', False, 1)
         CallProxy.patch(instance, 'MigrateNode', False, 1)
@@ -514,6 +569,16 @@ class RapiProxy(client.GanetiRapiClient):
     def fail(self, *args, **kwargs):
         raise self.error
     
+    def __setattr__(self, name, value):
+        if name == 'hv':
+            if value == 'kvm':
+                self.GetInfo = None
+                CallProxy.patch(self, 'GetInfo', False, INFO)
+            elif value == 'xen':
+                self.GetInfo = None
+                CallProxy.patch(self, 'GetInfo', False, XEN_INFO)
+        return super(RapiProxy, self).__setattr__(name, value)
+     
     def __getattribute__(self, key):
         if key in ['GetInstances','GetInstance','GetNodes','GetNode', \
                    'GetInfo', 'StartupInstance', 'ShutdownInstance', \
