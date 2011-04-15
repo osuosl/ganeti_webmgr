@@ -12,3 +12,4 @@ class VirtualMachineIndex(RealTimeSearchIndex):
         return VirtualMachine.objects.all()
         
 site.register(VirtualMachine, VirtualMachineIndex)
+
