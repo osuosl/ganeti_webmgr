@@ -19,12 +19,12 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
-DATABASE_ENGINE = 'sqlite3'           # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-DATABASE_NAME = 'ganeti.db'             # Or path to database file if using sqlite3.
-DATABASE_USER = ''             # Not used with sqlite3.
-DATABASE_PASSWORD = ''         # Not used with sqlite3.
-DATABASE_HOST = ''             # Set to empty string for localhost. Not used with sqlite3.
-DATABASE_PORT = ''             # Set to empty string for default. Not used with sqlite3.
+DATABASE_ENGINE = 'sqlite3' # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+DATABASE_NAME = 'ganeti.db' # Or path to database file if using sqlite3.
+DATABASE_USER = ''          # Not used with sqlite3.
+DATABASE_PASSWORD = ''      # Not used with sqlite3.
+DATABASE_HOST = ''          # Set to empty string for localhost. Not used with sqlite3.
+DATABASE_PORT = ''          # Set to empty string for default. Not used with sqlite3.
 
 
 # Local time zone for this installation. Choices can be found here:
@@ -129,8 +129,14 @@ INSTALLED_APPS = (
     'object_permissions',
     'ganeti',
     'object_log',
-    'south'
+    'south',
+    'haystack',
 )
+
+#haystack search stuff
+HAYSTACK_SITECONF = 'ganeti_webmgr.search_sites'
+HAYSTACK_SEARCH_ENGINE = 'whoosh'
+HAYSTACK_WHOOSH_PATH = os.path.join(os.path.dirname(__file__), 'whoosh_index')
 
 AUTH_PROFILE_MODULE = 'ganeti.Profile'
 LOGIN_REDIRECT_URL = '/'
