@@ -21,8 +21,8 @@ from django.forms import ValidationError
 
 from ganeti import constants
 from ganeti.fields import DataVolumeField
-from ganeti.models import Cluster, ClusterUser, Organization, \
-    VirtualMachineTemplate, VirtualMachine
+from ganeti.models import (Cluster, ClusterUser, Organization,
+                           VirtualMachineTemplate, VirtualMachine)
 from ganeti.utilities import cluster_default_info, cluster_os_list
 from django.utils.translation import ugettext_lazy as _
 
@@ -49,7 +49,7 @@ class NewVirtualMachineForm(forms.ModelForm):
     pnode = forms.ChoiceField(label=_('Primary Node'), choices=[empty_field])
     snode = forms.ChoiceField(label=_('Secondary Node'), choices=[empty_field])
     os = forms.ChoiceField(label=_('Operating System'), choices=[empty_field])
-    disk_template = forms.ChoiceField(label=_('Disk Template'), \
+    disk_template = forms.ChoiceField(label=_('Disk Template'),
                                       choices=templates)
     memory = DataVolumeField(label=_('Memory'), min_value=100)
     disk_size = DataVolumeField(label=_('Disk Size'), min_value=100)
@@ -87,9 +87,9 @@ class NewVirtualMachineForm(forms.ModelForm):
             defaults = cluster_default_info(cluster)
             if defaults['iallocator'] != '' :
                 self.fields['iallocator'].initial = True
-                self.fields['iallocator_hostname'] = forms.CharField( \
-                                        initial=defaults['iallocator'], \
-                                        required=False, \
+                self.fields['iallocator_hostname'] = forms.CharField(
+                                        initial=defaults['iallocator'],
+                                        required=False,
                                         widget = forms.HiddenInput())
             self.fields['vcpus'].initial = defaults['vcpus']
             self.fields['memory'].initial = defaults['memory']
@@ -234,8 +234,8 @@ class NewVirtualMachineForm(forms.ModelForm):
                 if 'snode' in self._errors:
                     del self._errors['snode']
             else:
-                msg = u"%s." % _("Automatic Allocation was selected, but there is no \
-                      IAllocator available.")
+                msg = u"%s." % _(
+                    "Automatic Allocation was selected, but there is no IAllocator available.")
                 self._errors['iallocator'] = self.error_class([msg])
 
         # If there are any errors, exit early.
@@ -268,7 +268,7 @@ class NewVirtualMachineForm(forms.ModelForm):
             # check permissions on cluster
             if 'cluster' in data:
                 cluster = data['cluster']
-                if not (owner.has_perm('create_vm', cluster) \
+                if not (owner.has_perm('create_vm', cluster)
                         or owner.has_perm('admin', cluster)):
                     msg = u"%s." % _("Owner does not have permissions for this cluster")
 
@@ -277,24 +277,25 @@ class NewVirtualMachineForm(forms.ModelForm):
                 quota = cluster.get_quota(owner)
                 if quota.values():
                     used = owner.used_resources(cluster, only_running=True)
-                    
-                    if start and quota['ram'] is not None and \
-                        (used['ram'] + data['memory']) > quota['ram']:
+
+                    if (start and quota['ram'] is not None and
+                        (used['ram'] + data['memory']) > quota['ram']):
                             del data['memory']
                             q_msg = u"%s" % _("Owner does not have enough ram remaining on this cluster. You may choose to not automatically start the instance or reduce the amount of ram.")
                             self._errors["ram"] = self.error_class([q_msg])
-                    
+
                     if quota['disk'] and used['disk'] + data['disk_size'] > quota['disk']:
                         del data['disk_size']
                         q_msg = u"%s" % _("Owner does not have enough diskspace remaining on this cluster.")
                         self._errors["disk_size"] = self.error_class([q_msg])
-                    
-                    if start and quota['virtual_cpus'] is not None and \
-                        (used['virtual_cpus'] + data['vcpus']) > quota['virtual_cpus']:
+
+                    if (start and quota['virtual_cpus'] is not None and
+                        (used['virtual_cpus'] + data['vcpus']) >
+                        quota['virtual_cpus']):
                             del data['vcpus']
                             q_msg = u"%s" % _("Owner does not have enough virtual cpus remaining on this cluster. You may choose to not automatically start the instance or reduce the amount of virtual cpus.")
                             self._errors["vcpus"] = self.error_class([q_msg])
-            
+
             if msg:
                 self._errors["owner"] = self.error_class([msg])
                 del data['owner']
@@ -309,10 +310,10 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
     """
     # Fields to be excluded from parent.
     exclude = ('start', 'owner', 'cluster', 'hostname', 'name_check',
-        'iallocator', 'iallocator_hostname', 'disk_template', 'pnode', 'snode',\
+        'iallocator', 'iallocator_hostname', 'disk_template', 'pnode', 'snode',
         'disk_size', 'nic_mode', 'template_name')
     # Fields that should be required.
-    required = ('vcpus', 'memory', 'disk_type', 'boot_order', \
+    required = ('vcpus', 'memory', 'disk_type', 'boot_order',
         'nic_type', 'root_path')
 
     disk_caches = constants.KVM_DISK_CACHES
@@ -321,49 +322,48 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
     usb_mice = constants.KVM_USB_MICE
 
     acpi = forms.BooleanField(label='ACPI', required=False)
-    disk_cache = forms.ChoiceField(label='Disk Cache', required=False, \
+    disk_cache = forms.ChoiceField(label='Disk Cache', required=False,
         choices=disk_caches)
     initrd_path = forms.CharField(label='initrd Path', required=False)
     kernel_args = forms.CharField(label='Kernel Args', required=False)
-    kvm_flag = forms.ChoiceField(label='KVM Flag', required=False, \
+    kvm_flag = forms.ChoiceField(label='KVM Flag', required=False,
         choices=kvm_flags)
     mem_path = forms.CharField(label='Mem Path', required=False)
-    migration_downtime = forms.IntegerField(label='Migration Downtime', \
+    migration_downtime = forms.IntegerField(label='Migration Downtime',
         required=False)
     nic_mac = forms.CharField(label='NIC Mac', required=False)
-    security_model = forms.ChoiceField(label='Security Model', \
+    security_model = forms.ChoiceField(label='Security Model',
         required=False, choices=security_models)
     security_domain = forms.CharField(label='Security Domain', required=False)
-    usb_mouse = forms.ChoiceField(label='USB Mouse', required=False, \
+    usb_mouse = forms.ChoiceField(label='USB Mouse', required=False,
         choices=usb_mice)
     use_chroot = forms.BooleanField(label='Use Chroot', required=False)
     use_localtime = forms.BooleanField(label='Use Localtime', required=False)
-    vnc_bind_address = forms.IPAddressField(label='VNC Bind Address', \
+    vnc_bind_address = forms.IPAddressField(label='VNC Bind Address',
         required=False)
     vnc_tls = forms.BooleanField(label='VNC TLS', required=False)
     vnc_x509_path = forms.CharField(label='VNC x509 Path', required=False)
-    vnc_x509_verify = forms.BooleanField(label='VNC x509 Verify', \
+    vnc_x509_verify = forms.BooleanField(label='VNC x509 Verify',
         required=False)
 
     class Meta:
         model = VirtualMachineTemplate
 
     def __init__(self, user, cluster, initial=None, *args, **kwargs):
-        super(ModifyVirtualMachineForm, self).__init__(user, cluster=cluster, \
+        super(ModifyVirtualMachineForm, self).__init__(user, cluster=cluster,
                 initial=initial, *args, **kwargs)
-        # Remove all fields in the form that are not required to modify the 
+        # Remove all fields in the form that are not required to modify the
         #   instance.
         for field in self.exclude:
             del self.fields[field]
-    
+
         # Make sure certain fields are required
         for field in self.required:
             self.fields[field].required = True
 
     def clean_initrd_path(self):
         data = self.cleaned_data['initrd_path']
-        if data != '' and \
-            (not data.startswith('/') and data != 'no_initrd_path'):
+        if data and not data.startswith('/') and data != 'no_initrd_path':
             msg = u"%s." % _('This field must start with a "/"')
             self._errors['initrd_path'] = self.error_class([msg])
         return data
@@ -373,9 +373,9 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
         security_model = self.cleaned_data['security_model']
         msg = None
 
-        if data and security_model != 'user': 
-            msg = u'%s.' % _('This field can not be set if Security Mode \
-                is not set to User')
+        if data and security_model != 'user':
+            msg = u'%s.' % _(
+                'This field can not be set if Security Mode is not set to User')
         elif security_model == 'user':
             if not data:
                 msg = u'%s.' % _('This field is required')
@@ -389,7 +389,7 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
     def clean_vnc_x509_path(self):
         data = self.cleaned_data['vnc_x509_path']
         if data and not data.startswith('/'):
-            msg = u'%s,' % _('This field must start with a "/"') 
+            msg = u'%s,' % _('This field must start with a "/"')
             self._errors['vnc_x509_path'] = self.error_class([msg])
         return data
 
@@ -408,7 +408,7 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
         vnc_tls = data.get('vnc_tls')
         vnc_x509_path = data.get('vnc_x509_path')
         vnc_x509_verify = data.get('vnc_x509_verify')
-    
+
         if not vnc_tls and vnc_x509_path:
             msg = u'%s.' % _('This field can not be set without VNC TLS enabled')
             self._errors['vnc_x509_path'] = self.error_class([msg])
