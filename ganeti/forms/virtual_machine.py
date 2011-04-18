@@ -185,6 +185,23 @@ class NewVirtualMachineForm(forms.ModelForm):
     def clean(self):
         data = self.cleaned_data
 
+        # First things first. Let's do any error-checking and validation which
+        # requires combinations of data but doesn't require hitting the DB.
+
+        # Check that, if we are on any disk template but diskless, our
+        # disk_size is set and greater than zero.
+        if data.get("disk_template") != "diskless":
+            if not data.get("disk_size", 0):
+                self._errors["disk_size"] = self.error_class(
+                    [u"Disk size must be set and greater than zero"])
+
+        # If there are any errors, exit early.
+        import pdb; pdb.set_trace()
+        if self._errors:
+            return data
+
+        # From this point, database stuff is alright.
+
         owner = self.owner
         if owner:
             if isinstance(owner, (Organization,)):
