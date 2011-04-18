@@ -195,8 +195,50 @@ class NewVirtualMachineForm(forms.ModelForm):
                 self._errors["disk_size"] = self.error_class(
                     [u"Disk size must be set and greater than zero"])
 
+        pnode = data.get("pnode", '')
+        snode = data.get("snode", '')
+        iallocator = data.get('iallocator', False)
+        iallocator_hostname = data.get('iallocator_hostname', '')
+        disk_template = data.get("disk_template")
+
+        # Need to have pnode != snode
+        if disk_template == "drbd" and not iallocator:
+            if pnode == snode and (pnode != '' or snode != ''):
+                # We know these are not in self._errors now
+                msg = u"%s." % _("Primary and Secondary Nodes must not match")
+                self._errors["pnode"] = self.error_class([msg])
+
+                # These fields are no longer valid. Remove them from the
+                # cleaned data.
+                del data["pnode"]
+                del data["snode"]
+        else:
+            if "snode" in self._errors:
+                del self._errors["snode"]
+
+        # If boot_order = CD-ROM make sure imagepath is set as well.
+        boot_order = data.get('boot_order', '')
+        image_path = data.get('cdrom_image_path', '')
+        if boot_order == 'cdrom':
+            if image_path == '':
+                msg = u"%s." % _("Image path required if boot device is CD-ROM")
+                self._errors["cdrom_image_path"] = self.error_class([msg])
+                del data["cdrom_image_path"]
+
+        if iallocator:
+            # If iallocator is checked,
+            #  don't display error messages for nodes
+            if iallocator_hostname != '':
+                if 'pnode' in self._errors:
+                    del self._errors['pnode']
+                if 'snode' in self._errors:
+                    del self._errors['snode']
+            else:
+                msg = u"%s." % _("Automatic Allocation was selected, but there is no \
+                      IAllocator available.")
+                self._errors['iallocator'] = self.error_class([msg])
+
         # If there are any errors, exit early.
-        import pdb; pdb.set_trace()
         if self._errors:
             return data
 
@@ -256,49 +298,6 @@ class NewVirtualMachineForm(forms.ModelForm):
             if msg:
                 self._errors["owner"] = self.error_class([msg])
                 del data['owner']
-
-        pnode = data.get("pnode", '')
-        snode = data.get("snode", '')
-        iallocator = data.get('iallocator', False)
-        iallocator_hostname = data.get('iallocator_hostname', '')
-        disk_template = data.get("disk_template")
-
-        # Need to have pnode != snode
-        if disk_template == "drbd" and not iallocator:
-            if pnode == snode and (pnode != '' or snode != ''):
-                # We know these are not in self._errors now
-                msg = u"%s." % _("Primary and Secondary Nodes must not match")
-                self._errors["pnode"] = self.error_class([msg])
-
-                # These fields are no longer valid. Remove them from the
-                # cleaned data.
-                del data["pnode"]
-                del data["snode"]
-        else:
-            if "snode" in self._errors:
-                del self._errors["snode"]
-
-        # If boot_order = CD-ROM make sure imagepath is set as well.
-        boot_order = data.get('boot_order', '')
-        image_path = data.get('cdrom_image_path', '')
-        if boot_order == 'cdrom':
-            if image_path == '':
-                msg = u"%s." % _("Image path required if boot device is CD-ROM")
-                self._errors["cdrom_image_path"] = self.error_class([msg])
-                del data["cdrom_image_path"]
-
-        if iallocator:
-            # If iallocator is checked,
-            #  don't display error messages for nodes
-            if iallocator_hostname != '':
-                if 'pnode' in self._errors:
-                    del self._errors['pnode']
-                if 'snode' in self._errors:
-                    del self._errors['snode']
-            else:
-                msg = u"%s." % _("Automatic Allocation was selected, but there is no \
-                      IAllocator available.")
-                self._errors['iallocator'] = self.error_class([msg])
 
         # Always return the full collection of cleaned data.
         return data
