@@ -1110,10 +1110,6 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         """
 
         url = '/vm/add/%s'
-        group1 = Group(id=81, name='testing_group2')
-        group1.save()
-        cluster1 = Cluster(hostname='test2.osuosl.bak', slug='OSL_TEST2')
-        cluster1.save()
         data = dict(cluster=cluster.id,
                     start=True,
                     owner=user.get_profile().id, #XXX remove this
@@ -1140,7 +1136,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         cluster.set_quota(user.get_profile(), dict(ram=1000, disk=2000, virtual_cpus=10))
 
         user.grant('create_vm', cluster)
-        response = c.post(url % '', data, follow=True)
+        response = c.post(url % '', data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'virtual_machine/create.html')
