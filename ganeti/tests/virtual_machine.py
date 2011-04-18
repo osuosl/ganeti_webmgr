@@ -1202,6 +1202,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         user.revoke_all(new_vm)
 
         # POST - User attempting to be other user
+        user.grant('admin', cluster)
         data_ = data.copy()
         data_['owner'] = user1.get_profile().id
         response = c.post(url % '', data_)
@@ -1209,6 +1210,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'virtual_machine/create.html')
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
+        user.revoke_all(cluster)
 
         # POST - user authorized for cluster (superuser)
         user.is_superuser = True
@@ -1249,18 +1251,21 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         VirtualMachine.objects.all().delete()
 
         # reset for group owner
-        user.is_superuser = False
+        user.is_superuser = False 
         user.save()
         data['owner'] = group.organization.id
 
         # POST - user is not member of group
+        user.grant('admin', cluster)
         group.grant('create_vm', cluster)
+        self.assertFalse(group in user.groups.all())
         response = c.post(url % '', data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'virtual_machine/create.html')
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
-        group.revoke_all(new_vm)
+        user.revoke_all(cluster)
+        group.revoke_all(cluster)
         VirtualMachine.objects.all().delete()
 
         # add user to group
