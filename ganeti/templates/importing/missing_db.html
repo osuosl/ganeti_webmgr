@@ -1,6 +1,6 @@
 {% extends "menu_base.html" %}
-
-{% block title %}Orphan VMs{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Orphan VMs" %}{% endblock %}
 {% block head %}
     <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.multi_checkbox_selector.js"></script>
     <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.tablesorter.min.js"></script>
@@ -16,30 +16,29 @@
     </script>
 {% endblock %}
 {% block content %}
-    <h1><span class="breadcrumb">Admin</span> : Import Virtual Machines</h1>
+    <h1><span class="breadcrumb">{% trans "Admin" %}</span> : {% trans "Import Virtual Machines" %}</h1>
     
     <p class="info">
-        If you manually create virtual machines they will exist in ganeti, and
-        must be manually imported.
+        {% trans "If you manually create virtual machines they will exist in ganeti, and must be manually imported" %}.
     </p>
     
     <form action="{% url import-missing_db %}" method="post">
         {{form.errors}}
         {{form.owner.label}} {{form.owner}}
-        <input type="submit" value="Import Selected" {%if not vms%}disabled{%endif%}>
+        <input type="submit" value="{% trans "Import Selected" %}" {%if not vms%}disabled{%endif%}>
         <table id="orphanlist" class="sorted">
         <thead>
             <tr>
                 <th></th>
-                <th>Cluster</th>
-                <th>Hostname</th>
+                <th>{% trans "Cluster" %}</th>
+                <th>{% trans "Hostname" %}</th>
             </tr>
         </thead>
         <tbody id="orphans">
                 {% for vm in vms %}
                     <tr><td><input type="checkbox" name="virtual_machines" value="{{vm.0}}" /></td><td>{{vm.1}}</td><td>{{vm.2}}</td></tr>
                 {% empty %}
-                    <tr><td colspan="3">All virtual machines are synchronized.</td></tr>
+                    <tr><td colspan="3">{% trans "All virtual machines are synchronized" %}.</td></tr>
                 {% endfor %}
         </tbody>
         </table>

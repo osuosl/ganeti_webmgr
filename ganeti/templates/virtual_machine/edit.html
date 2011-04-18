@@ -1,6 +1,6 @@
 {% extends "menu_base.html" %}
 {% load webmgr_tags %}
-
+{% load i18n %}
 {% block head %}
     <link rel="stylesheet" type="text/css"
             href="{{MEDIA_URL}}/css/virtual_machine_create.css"/>
@@ -16,11 +16,11 @@
 {% endblock %}
 
 {% block content %}
-<h1>Edit {{ instance.hostname }}</h1>
+<h1>{% trans "Edit" %} {{ instance.hostname }}</h1>
 <div id="vmeditform">
     <form method="post">
         <fieldset>
-            <legend>General Parameters</legend>
+            <legend>{% trans "General Parameters" %}</legend>
             {% vmfield form.vcpus %}
             {% vmfield form.memory %}
             {% vmfield form.disk_type %}
@@ -29,11 +29,11 @@
             {% vmfield form.nic_mac %}
         </fieldset>
         <fieldset>
-            <legend>Operating System Parameters</legend>
+            <legend>{% trans "Operating System Parameters" %}</legend>
             {% vmfield form.os_name %}
         </fieldset>
         <fieldset>
-            <legend>Hypervisor Parameters</legend>
+            <legend>{% trans "Hypervisor Parameters" %}</legend>
             {% vmfield form.kernel_path %}
             {% vmfield form.root_path %}
             {% vmfield form.serial_console %}
@@ -56,7 +56,7 @@
             {% vmfield form.vnc_x509_path %}
             {% vmfield form.vnc_x509_verify %}
         </fieldset>
-        <input class="submit" type="submit" value="Continue" />
+        <input class="submit" type="submit" value="{% trans "Continue" %}" />
     </form>
 </div>
 <div id="help">

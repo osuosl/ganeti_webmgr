@@ -35,8 +35,7 @@ class TestClusterUser(TestCase):
     
     def setUp(self):
         models.client.GanetiRapiClient = RapiProxy
-        self.tearDown()
-    
+
     def tearDown(self):
         User.objects.all().delete()
         ClusterUser.objects.all().delete()

@@ -1,10 +1,11 @@
+{% load i18n %}
 <table>
     <tr>
-        <th>Username</th>
-        <th>Email</th>
-        <th>Active</th>
-        <th>Join Date</th>
-        <th>Last Login</th>
+        <th>{% trans "Username" %}</th>
+        <th>{% trans "Email" %}</th>
+        <th>{% trans "Active" %}</th>
+        <th>{% trans "Join Date" %}</th>
+        <th>{% trans "Last Login" %}</th>
         <th></th>
     </tr>
     {% for user in userlist %}

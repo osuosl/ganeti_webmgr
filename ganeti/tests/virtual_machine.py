@@ -66,8 +66,6 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
     """
 
     def setUp(self):
-        self.tearDown()
-
         models.client.GanetiRapiClient = RapiProxy
         vm, cluster = self.create_virtual_machine()
 
@@ -219,33 +217,40 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
 
     def validate_post_only_url(self, url, args=None, data=dict(), users=None, get_allowed=False):
         """
-        generic function for testing urls that post with no data
+        Generic function for POSTing to URLs.
+
+        This function does some standard URL checks, then does two POSTs: One
+        normal, and one with a faked error. Additionally, if ``get_allowed``
+        is not set, the GET method is checked to make sure it fails.
         """
+
         vm = globals()['vm']
         args = args if args else (cluster.slug, vm.hostname)
         users = users if users else [superuser, vm_admin, cluster_admin]
         self.assert_standard_fails(url, args)
 
-        def tests(user, response):
+        def test_json(user, response):
             content = json.loads(response.content)
             self.assertEqual('1', content['id'])
             VirtualMachine.objects.all().update(last_job=None)
             Job.objects.all().delete()
-
-        self.assert_200(url, args, users, data=data, tests=tests, \
-                        mime='application/json', method='post')
-
-        # error while issuing reboot command
-        def tests(user, response):
+        def test_json_error(user, response):
             content = json.loads(response.content)
             text = content['__all__'][0]
             self.assertEqual(msg, text)
             vm.rapi.error = None
+
+        self.assert_200(url, args, users, data=data, tests=test_json,
+                        mime='application/json', method='post')
+
         msg = "SIMULATING_AN_ERROR"
         vm.rapi.error = client.GanetiApiError(msg)
-        self.assert_200(url, args, [superuser], data=data, mime='application/json', method='post', tests=tests)
+        self.assert_200(url, args, [superuser], data=data,
+                        tests=test_json_error, mime='application/json',
+                        method='post')
 
-        # invalid method
+        # If GET is supposed to be forbidden on this URL, make sure that GET
+        # 405s.
         if not get_allowed:
             self.assertTrue(c.login(username=superuser.username, password='secret'))
             response = c.get(url % args, data)
@@ -336,7 +341,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         key1.save()
 
         # get API key
-        import settings, json
+        import settings
         key = settings.WEB_MGR_API_KEY
 
         # forbidden
@@ -812,11 +817,295 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         # clean up after quota tests
         self.assert_(c.login(username=user.username, password='secret'))
 
+    def test_view_create_data_invalid_cluster(self):
+        """
+        An invalid cluster causes a form error.
+        """
+
+        url = '/vm/add/%s'
+        data = dict(cluster=-1,
+                    start=True,
+                    owner=user.get_profile().id, #XXX remove this
+                    hostname='new.vm.hostname',
+                    disk_template='plain',
+                    disk_size=1000,
+                    memory=256,
+                    vcpus=2,
+                    root_path='/',
+                    nic_type='paravirtual',
+                    disk_type = 'paravirtual',
+                    nic_link = 'br43',
+                    nic_mode='routed',
+                    boot_order='disk',
+                    os='image+ubuntu-lucid',
+                    pnode=cluster.nodes.all()[0],
+                    snode=cluster.nodes.all()[1])
+
+        self.assert_(c.login(username=user.username, password='secret'))
+
+        user.grant('create_vm', cluster)
+        response = c.post(url % '', data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
+
+    def test_view_create_data_wrong_cluster(self):
+        """
+        A cluster the user isn't authorized for causes a form error.
+        """
+
+        url = '/vm/add/%s'
+        cluster1 = Cluster(hostname='test2.osuosl.bak', slug='OSL_TEST2')
+        cluster1.save()
+        data = dict(cluster=-1,
+                    start=True,
+                    owner=user.get_profile().id, #XXX remove this
+                    hostname='new.vm.hostname',
+                    disk_template='plain',
+                    disk_size=1000,
+                    memory=256,
+                    vcpus=2,
+                    root_path='/',
+                    nic_type='paravirtual',
+                    disk_type = 'paravirtual',
+                    nic_link = 'br43',
+                    nic_mode='routed',
+                    boot_order='disk',
+                    os='image+ubuntu-lucid',
+                    pnode=cluster.nodes.all()[0],
+                    snode=cluster.nodes.all()[1])
+
+        self.assert_(c.login(username=user.username, password='secret'))
+
+        user.grant('create_vm', cluster1)
+        user.is_superuser = False
+        user.save()
+        response = c.post(url % '', data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+
+    def test_view_create_data_required_keys(self):
+        """
+        If any of these keys are missing from the form data, a form error
+        should occur.
+        """
+
+        url = '/vm/add/%s'
+        data = dict(cluster=cluster.id,
+                    start=True,
+                    owner=user.get_profile().id, #XXX remove this
+                    hostname='new.vm.hostname',
+                    disk_template='plain',
+                    disk_size=1000,
+                    memory=256,
+                    vcpus=2,
+                    root_path='/',
+                    nic_type='paravirtual',
+                    disk_type = 'paravirtual',
+                    nic_link = 'br43',
+                    nic_mode='routed',
+                    boot_order='disk',
+                    os='image+ubuntu-lucid',
+                    pnode=cluster.nodes.all()[0],
+                    snode=cluster.nodes.all()[1])
+
+        # Login and grant user.
+        self.assert_(c.login(username=user.username, password='secret'))
+        user.grant('create_vm', cluster)
+
+        for prop in ['cluster', 'hostname', 'disk_size', 'disk_type',
+                     'nic_type', 'nic_mode', 'vcpus', 'pnode', 'os',
+                     'disk_template', 'root_path', 'boot_order']:
+            data_ = data.copy()
+            del data_[prop]
+            response = c.post(url % '', data_)
+            self.assertEqual(200, response.status_code)
+            self.assertEqual('text/html; charset=utf-8', response['content-type'])
+            self.assertTemplateUsed(response, 'virtual_machine/create.html')
+            self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
+
+    def test_view_create_data_ram_quota_exceeded(self):
+        """
+        RAM quotas should cause form errors when exceeded.
+        """
+
+        url = '/vm/add/%s'
+        data = dict(cluster=cluster.id,
+                    start=True,
+                    owner=user.get_profile().id,
+                    hostname='new.vm.hostname',
+                    disk_template='plain',
+                    disk_size=1000,
+                    memory=2048,
+                    vcpus=2,
+                    root_path='/',
+                    nic_type='paravirtual',
+                    disk_type = 'paravirtual',
+                    nic_link = 'br43',
+                    nic_mode='routed',
+                    boot_order='disk',
+                    os='image+ubuntu-lucid',
+                    pnode=cluster.nodes.all()[0],
+                    snode=cluster.nodes.all()[1])
+
+        # Login and grant user.
+        self.assert_(c.login(username=user.username, password='secret'))
+        user.grant('create_vm', cluster)
+
+        cluster.set_quota(user.get_profile(), dict(ram=1000, disk=2000, virtual_cpus=10))
+        response = c.post(url % '', data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
+
+    def test_view_create_data_disk_quota_exceeded(self):
+        """
+        Disk quotas, when enabled, should cause form errors when exceeded.
+        """
+
+        url = '/vm/add/%s'
+        data = dict(cluster=cluster.id,
+                    start=True,
+                    owner=user.get_profile().id,
+                    hostname='new.vm.hostname',
+                    disk_template='plain',
+                    disk_size=4000,
+                    memory=256,
+                    vcpus=2,
+                    root_path='/',
+                    nic_type='paravirtual',
+                    disk_type = 'paravirtual',
+                    nic_link = 'br43',
+                    nic_mode='routed',
+                    boot_order='disk',
+                    os='image+ubuntu-lucid',
+                    pnode=cluster.nodes.all()[0],
+                    snode=cluster.nodes.all()[1])
+
+        # Login and grant user.
+        self.assert_(c.login(username=user.username, password='secret'))
+        user.grant('create_vm', cluster)
+        profile = user.get_profile()
+        cluster.set_quota(user.get_profile(), dict(ram=1000, disk=2000, virtual_cpus=10))
+
+        response = c.post(url % '', data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
+
+    def test_view_create_data_cpu_quota_exceeded(self):
+        """
+        You may not emulate NUMA systems that exceed your quota.
+
+        XXX should we also test more reasonable CPU limits?
+        """
+
+        url = '/vm/add/%s'
+        data = dict(cluster=cluster.id,
+                    start=True,
+                    owner=user.get_profile().id,
+                    hostname='new.vm.hostname',
+                    disk_template='plain',
+                    disk_size=1000,
+                    memory=256,
+                    vcpus=200,
+                    root_path='/',
+                    nic_type='paravirtual',
+                    disk_type = 'paravirtual',
+                    nic_link = 'br43',
+                    nic_mode='routed',
+                    boot_order='disk',
+                    os='image+ubuntu-lucid',
+                    pnode=cluster.nodes.all()[0],
+                    snode=cluster.nodes.all()[1])
+
+        # Login and grant user.
+        self.assert_(c.login(username=user.username, password='secret'))
+        user.grant('create_vm', cluster)
+        profile = user.get_profile()
+        cluster.set_quota(user.get_profile(), dict(ram=1000, disk=2000, virtual_cpus=10))
+
+        response = c.post(url % '', data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
+
+    def test_view_create_data_invalid_owner(self):
+        """
+        Obviously bogus owners should cause form errors.
+        """
+
+        url = '/vm/add/%s'
+        data = dict(cluster=cluster.id,
+                    start=True,
+                    owner=-1,
+                    hostname='new.vm.hostname',
+                    disk_template='plain',
+                    disk_size=1000,
+                    memory=256,
+                    vcpus=2,
+                    root_path='/',
+                    nic_type='paravirtual',
+                    disk_type = 'paravirtual',
+                    nic_link = 'br43',
+                    nic_mode='routed',
+                    boot_order='disk',
+                    os='image+ubuntu-lucid',
+                    pnode=cluster.nodes.all()[0],
+                    snode=cluster.nodes.all()[1])
+
+        # Login and grant user.
+        self.assert_(c.login(username=user.username, password='secret'))
+        user.grant('create_vm', cluster)
+
+        response = c.post(url % '', data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
+
+    def test_view_create_data_iallocator(self):
+        """
+        The iallocator should be useable.
+        """
+
+        url = '/vm/add/%s'
+        data = dict(cluster=cluster.id,
+                    start=True,
+                    owner=user.get_profile().id, #XXX remove this
+                    hostname='new.vm.hostname',
+                    disk_template='plain',
+                    disk_size=1000,
+                    memory=256,
+                    vcpus=2,
+                    root_path='/',
+                    nic_type='paravirtual',
+                    disk_type = 'paravirtual',
+                    nic_link = 'br43',
+                    nic_mode='routed',
+                    boot_order='disk',
+                    os='image+ubuntu-lucid',
+                    iallocator=True,
+                    iallocator_hostname="hail")
+
+        # Login and grant user.
+        self.assert_(c.login(username=user.username, password='secret'))
+        user.grant('create_vm', cluster)
+
+        response = c.post(url % '', data, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/create_status.html')
+        new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
+        self.assertTrue(user.has_perm('admin', new_vm))
+
     def test_view_create_data(self):
-        """
-        Test creating a virtual machine
-        with changes to the data
-        """
+
         url = '/vm/add/%s'
         group1 = Group(id=81, name='testing_group2')
         group1.save()
@@ -840,101 +1129,11 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
                     pnode=cluster.nodes.all()[0],
                     snode=cluster.nodes.all()[1])
 
-        # login user
+        # Login and grant user.
         self.assert_(c.login(username=user.username, password='secret'))
-
-        # POST - invalid cluster
         user.grant('create_vm', cluster)
-        data_ = data.copy()
-        data_['cluster'] = -1
-        response = c.post(url % '', data_)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create.html')
-        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
-        user.revoke_all(cluster)
-
-        # POST - unauthorized for cluster selected (authorized for another)
-        user.grant('create_vm', cluster1)
-        user.is_superuser = False
-        user.save()
-        response = c.post(url % '', data_)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create.html')
-        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
-
-        # POST - required values
-        for property in ['cluster', 'hostname', 'disk_size', 'disk_type','nic_type', 'nic_mode',
-                         'vcpus', 'pnode', 'os', 'disk_template',
-                         'root_path', 'boot_order']:
-            data_ = data.copy()
-            del data_[property]
-            response = c.post(url % '', data_)
-            self.assertEqual(200, response.status_code)
-            self.assertEqual('text/html; charset=utf-8', response['content-type'])
-            self.assertTemplateUsed(response, 'virtual_machine/create.html')
-            self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
-
-        # POST - over ram quota
         profile = user.get_profile()
-        cluster.set_quota(profile, dict(ram=1000, disk=2000, virtual_cpus=10))
-        vm = VirtualMachine(cluster=cluster, ram=100, disk_size=100, virtual_cpus=2, owner=profile).save()
-        data_ = data.copy()
-        data_['ram'] = 2000
-        data_['owner'] = profile.id
-        response = c.post(url % '', data_)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create.html')
-        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
-
-        # POST - over disk quota
-        data_ = data.copy()
-        data_['disk_size'] = 2000
-        data_['owner'] = profile.id
-        response = c.post(url % '', data_)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create.html')
-        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
-
-        # POST - over cpu quota
-        data_ = data.copy()
-        data_['vcpus'] = 2000
-        data_['owner'] = profile.id
-        response = c.post(url % '', data_)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create.html')
-        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
-
-        # POST invalid owner
-        data_ = data.copy()
-        data_['owner'] = -1
-        response = c.post(url % '', data_)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create.html')
-        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
-
-        # POST - iallocator support
-        user.grant('create_vm', cluster)
-        data_ = data.copy()
-        del data_['pnode']
-        del data_['snode']
-        data_['iallocator'] = True
-        data_['iallocator_hostname'] = 'hail'
-        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
-        response = c.post(url % '', data_, follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create_status.html')
-        new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
-        self.assertTrue(user.has_perm('admin', new_vm))
-        VirtualMachine.objects.all().delete()
-        user.revoke_all(cluster)
-        user.revoke_all(new_vm)
+        cluster.set_quota(user.get_profile(), dict(ram=1000, disk=2000, virtual_cpus=10))
 
         # POST - iallocator enabled, but none passed
         user.grant('create_vm', cluster)
@@ -976,6 +1175,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         user.revoke_all(new_vm)
 
         # POST - User attempting to be other user
+        user.grant('admin', cluster)
         data_ = data.copy()
         data_['owner'] = user1.get_profile().id
         response = c.post(url % '', data_)
@@ -983,6 +1183,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'virtual_machine/create.html')
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
+        user.revoke_all(cluster)
 
         # POST - user authorized for cluster (superuser)
         user.is_superuser = True
@@ -1023,18 +1224,21 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         VirtualMachine.objects.all().delete()
 
         # reset for group owner
-        user.is_superuser = False
+        user.is_superuser = False 
         user.save()
         data['owner'] = group.organization.id
 
         # POST - user is not member of group
+        user.grant('admin', cluster)
         group.grant('create_vm', cluster)
+        self.assertFalse(group in user.groups.all())
         response = c.post(url % '', data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'virtual_machine/create.html')
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
-        group.revoke_all(new_vm)
+        user.revoke_all(cluster)
+        group.revoke_all(cluster)
         VirtualMachine.objects.all().delete()
 
         # add user to group
@@ -1698,8 +1902,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         """
         url = "/cluster/%s/%s/vnc_proxy/"
         args = (cluster.slug, vm.hostname)
-        response = self.validate_get_configurable(url, args, None,
-            "application/json", ["admin",])
+        self.validate_get_configurable(url, args, None, "application/json",
+            ["admin",])
 
     def test_view_object_log(self):
         """
@@ -1997,12 +2201,14 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         self.assertEqual([], group.get_perms(vm))
         self.assertEqual('"group_42"', response.content)
 
-    def test_view_rename(self):
-        """ tests renaming a VirtualMachine """
+    def test_view_rename_get(self):
+        """
+        VM rename GET requests should have the standard responses.
+        """
+
         url = "/cluster/%s/%s/rename/"
         args = (cluster.slug, vm.hostname)
         template = 'virtual_machine/rename.html'
-        template_success = 'virtual_machine/detail.html'
         users =[superuser, cluster_admin, vm_admin, vm_modify]
         denied = [cluster_migrate]
 
@@ -2011,22 +2217,43 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         self.assert_200(url, args, users, template=template)
         self.assert_403(url, args, denied)
 
-        # test POST
+    def test_view_rename_post(self):
+        """
+        VM rename POST requests should have the standard responses.
+        """
+
+        url = "/cluster/%s/%s/rename/"
+        args = (cluster.slug, vm.hostname)
+        template_success = 'virtual_machine/detail.html'
+        users =[superuser, cluster_admin, vm_admin, vm_modify]
+        denied = [cluster_migrate]
+        data = {'hostname':'foo.arg.different', 'ip_check':False, 'name_check':False}
+
         def tests(user, response):
             updated_vm = VirtualMachine.objects.get(pk=vm.pk)
             self.assertEqual('foo.arg.different', updated_vm.hostname)
             vm.save()
 
-        data = {'hostname':'foo.arg.different', 'ip_check':False, 'name_check':False}
         self.assert_standard_fails(url, args, data, method='post')
         self.assert_200(url, args, users, template_success, data=data, follow=True, method="post", tests=tests)
         self.assert_403(url, args, denied, data=data, method="post")
 
-        # test form errors
+    def test_view_rename_form(self):
+        """
+        VM rename form errors should do what they're supposed to do.
+
+        XXX can somebody actually explain what this test is doing?
+        """
+
+        url = "/cluster/%s/%s/rename/"
+        args = (cluster.slug, vm.hostname)
+        template = 'virtual_machine/rename.html'
+        data = {'hostname':'foo.arg.different', 'ip_check':False, 'name_check':False}
+        errors = ({'hostname':vm.hostname},)
+
         def tests(user, response):
             updated_vm = VirtualMachine.objects.get(pk=vm.pk)
             self.assertEqual(vm.hostname, updated_vm.hostname)
-        errors = ({'hostname':vm.hostname},)
 
         self.assert_view_missing_fields(url, args, data, fields=['hostname'], template=template, tests=tests)
         self.assert_view_values(url, args, data, errors, template, tests=tests)
@@ -2035,7 +2262,6 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
 class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
 
     def setUp(self):
-        self.tearDown()
         models.client.GanetiRapiClient = RapiProxy
         cluster0 = Cluster(hostname='test0', slug='test0')
         cluster1 = Cluster(hostname='test1', slug='test1')

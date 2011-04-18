@@ -22,7 +22,7 @@ from django.test.client import Client
 
 from object_permissions import *
 
-from ganeti.tests.rapi_proxy import RapiProxy, INSTANCES
+from ganeti.tests.rapi_proxy import RapiProxy
 from ganeti import models
 Cluster = models.Cluster
 VirtualMachine = models.VirtualMachine
@@ -34,7 +34,6 @@ __all__ = ('ImportViews', )
 class ImportViews(TestCase):
 
     def setUp(self):
-        self.tearDown()
         models.client.GanetiRapiClient = RapiProxy
 
         user = User(id=2, username='tester0')

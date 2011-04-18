@@ -25,6 +25,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from ganeti.utilities import cluster_default_info
+from django.utils.translation import ugettext as _
 
 from object_log.models import LogItem
 from object_log.views import list_for_object
@@ -50,7 +51,7 @@ def detail(request, cluster_slug, host):
     admin = True if user.is_superuser else user.has_perm('admin', cluster)
     modify = True if admin else user.has_perm('migrate', cluster)
     if not (admin or modify):
-        return render_403(request, "You do not have sufficient privileges")
+        return render_403(request, _("You do not have sufficient privileges"))
     
     return render_to_response("node/detail.html", {
         'cluster':cluster,
@@ -73,7 +74,7 @@ def primary(request, cluster_slug, host):
     
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
-        return render_403(request, "You do not have sufficient privileges")
+        return render_403(request, _("You do not have sufficient privileges"))
 
     vms = node.primary_vms.all()
     vms = render_vms(request, vms)
@@ -94,7 +95,7 @@ def secondary(request, cluster_slug, host):
     
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
-        return render_403(request, "You do not have sufficient privileges")
+        return render_403(request, _("You do not have sufficient privileges"))
 
     vms = node.secondary_vms.all()
     vms = render_vms(request, vms)
@@ -114,7 +115,7 @@ def object_log(request, cluster_slug, host):
 
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
-        return render_403(request, "You do not have sufficient privileges")
+        return render_403(request, _("You do not have sufficient privileges"))
 
     return list_for_object(request, node)
 
@@ -137,7 +138,7 @@ def role(request, cluster_slug, host):
     
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
-        return render_403(request, "You do not have sufficient privileges")
+        return render_403(request, _("You do not have sufficient privileges"))
     
     if request.method == 'POST':
         form = RoleForm(request.POST)
@@ -184,7 +185,7 @@ def migrate(request, cluster_slug, host):
     
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
-        return render_403(request, "You do not have sufficient privileges")
+        return render_403(request, _("You do not have sufficient privileges"))
     
     if request.method == 'POST':
         form = MigrateForm(request.POST)
@@ -247,7 +248,7 @@ class EvacuateForm(forms.Form):
         elif node:
             data['iallocator_hostname'] = None
         else:
-            raise ValidationError('Must choose automatic allocation or a specific node')
+            raise ValidationError(_('Must choose automatic allocation or a specific node'))
 
         return data
 
@@ -262,7 +263,7 @@ def evacuate(request, cluster_slug, host):
     
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
-        return render_403(request, "You do not have sufficient privileges")
+        return render_403(request, _("You do not have sufficient privileges"))
 
     if request.method == 'POST':
         form = EvacuateForm(cluster, node, request.POST)

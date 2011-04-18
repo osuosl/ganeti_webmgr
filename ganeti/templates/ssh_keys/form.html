@@ -1,3 +1,4 @@
+{% load i18n %}
 {% if key_id %}
         <form method="post" id="sshkey_form" class="ajax_form" action="{% url key-save key_id %}">
 {% else %}
@@ -9,7 +10,7 @@
                 <tr><td>{{ key_form.key.label }}</td></tr>
                 <tr><td>{{ key_form.key }}</td></tr>
                 <tr><td>
-                <input type="submit" class="submit" value="Submit" />
+                <input type="submit" class="submit" value="{% trans "Submit" %}" />
                 </td></tr>
             </table>
         </form>

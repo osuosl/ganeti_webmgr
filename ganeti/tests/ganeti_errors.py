@@ -23,7 +23,7 @@ from django.test.client import Client
 from util import client
 from ganeti.tests.call_proxy import CallProxy
 from ganeti.tests.rapi_proxy import RapiProxy
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
 from ganeti import models
 
 VirtualMachine = models.VirtualMachine
@@ -39,29 +39,28 @@ class TestGanetiErrorBase():
     """
     
     def setUp(self):
-        self.tearDown()
         models.client.GanetiRapiClient = RapiProxy
-    
-    def create_model(self, class_, *args, **kwargs):
-        """
-        create an instance of the model being tested, this will instrument
-        some methods of the model to check if they have been called
-        """
-        object = class_.objects.create(*args, **kwargs)
-        
-        # patch model class
-        CallProxy.patch(object, 'parse_transient_info')
-        CallProxy.patch(object, 'parse_persistent_info')
-        CallProxy.patch(object, '_refresh')
-        CallProxy.patch(object, 'load_info')
-        CallProxy.patch(object, 'save')
-        return object
-    
+
     def tearDown(self):
         VirtualMachine.objects.all().delete()
         Cluster.objects.all().delete()
         GanetiError.objects.all().delete()
         RapiProxy.error = None
+
+    def create_model(self, class_, *args, **kwargs):
+        """
+        create an instance of the model being tested, this will instrument
+        some methods of the model to check if they have been called
+        """
+        obj = class_.objects.create(*args, **kwargs)
+
+        # patch model class
+        CallProxy.patch(obj, 'parse_transient_info')
+        CallProxy.patch(obj, 'parse_persistent_info')
+        CallProxy.patch(obj, '_refresh')
+        CallProxy.patch(obj, 'load_info')
+        CallProxy.patch(obj, 'save')
+        return obj
 
 
 class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
@@ -194,7 +193,6 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
 
         msg0 = client.GanetiApiError("Simulating 401 error", 401)
         msg1 = client.GanetiApiError("Simulating 404 error", 404)
-        msg2 = client.GanetiApiError("Simulating normal error", 777)
         RapiProxy.error = msg0
 
         store_error = GanetiError.objects.store_error

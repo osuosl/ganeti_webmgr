@@ -17,8 +17,7 @@
 
 from __future__ import with_statement
 
-from datetime import datetime, time
-import time
+from datetime import datetime
 
 from django.test import TestCase
 
@@ -36,10 +35,12 @@ Cluster = models.Cluster
 class TestCacheUpdater(TestCase, VirtualMachineTestCaseMixin):
 
     def setUp(self):
-        self.tearDown()
+        # Django lacks a monkeypatcher, so...
+        self._stashedGanetiRapiClient = models.client.GanetiRapiClient
         models.client.GanetiRapiClient = RapiProxy
 
     def tearDown(self):
+        models.client.GanetiRapiClient = self._stashedGanetiRapiClient
         VirtualMachine.objects.all().delete()
         Cluster.objects.all().delete()
     
@@ -92,7 +93,6 @@ class TestCacheUpdater(TestCase, VirtualMachineTestCaseMixin):
         mtime_timestamp = 1285883000.1234000
         mtime = datetime.fromtimestamp(mtime_timestamp)
         new_mtime_timestamp = 1999999999.8692000
-        new_mtime = datetime.fromtimestamp(new_mtime_timestamp)
         cached = datetime.now()
         
         # set data so that mtime is up to date.  include a data change that
@@ -136,7 +136,6 @@ class TestCacheUpdater(TestCase, VirtualMachineTestCaseMixin):
         
         os = 'image+gentoo-hardened-cf'
         mtime_timestamp = 1285883000.8692000
-        mtime = datetime.fromtimestamp(mtime_timestamp)
         cached = datetime.now()
         
         # set data so that mtime is up to date.  include a data change that
@@ -177,7 +176,6 @@ class TestCacheUpdater(TestCase, VirtualMachineTestCaseMixin):
         
         os = 'image+gentoo-hardened-cf'
         mtime_timestamp = 1285883000.8692000
-        mtime = datetime.fromtimestamp(mtime_timestamp)
         cached = datetime.now()
         
         # set data so that mtime is up to date.  include a data change that

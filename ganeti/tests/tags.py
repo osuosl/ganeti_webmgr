@@ -1,4 +1,4 @@
-# vim: set fileencoding=utf8 :
+# -*- coding: utf-8 -*- vim:encoding=utf-8:
 # Copyright (C) 2010 Oregon State University et al.
 #
 # This program is free software; you can redistribute it and/or

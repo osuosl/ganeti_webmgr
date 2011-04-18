@@ -41,7 +41,6 @@ class TestGeneralViews(TestCase, ViewTestMixin):
     
     def setUp(self):
         models.client.GanetiRapiClient = RapiProxy
-        self.tearDown()
 
         cluster = Cluster(hostname='test.osuosl.test', slug='OSL_TEST')
         cluster.save()
@@ -295,19 +294,6 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         self.assertEqual(9, cached['cluster_admin_1']['orphaned'])
         self.assertEqual(10, cached['cluster_admin_1']['missing'])
         self.assertEqual(11, cached['cluster_admin_1']['ready_to_import'])
-
-    def test_vm_counts(self):
-        """
-        Tests the helper function get_vm_counts.
-        """
-        cluster1 = Cluster(hostname="cluster1")
-        cluster2 = Cluster(hostname="cluster2")
-        vm11 = VirtualMachine(cluster=cluster1, hostname="vm11")
-        vm12 = VirtualMachine(cluster=cluster1, hostname="vm12")
-        vm13 = VirtualMachine(cluster=cluster1, hostname="vm13")
-        vm21 = VirtualMachine(cluster=cluster2, hostname="vm21")
-        vm22 = VirtualMachine(cluster=cluster2, hostname="vm22")
-        vm23 = VirtualMachine(cluster=cluster2, hostname="vm23")
 
     def test_view_ssh_keys(self):
         """ tests retrieving all sshkeys from the gwm instance """

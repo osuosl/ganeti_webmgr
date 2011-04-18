@@ -185,3 +185,4 @@ urlpatterns += patterns('ganeti.views.jobs',
     url(r'^%s/clear/?' % job, 'clear', name='job-clear'),
     url(r'^%s/?' % job, 'detail', name='job-detail'),
 )
+

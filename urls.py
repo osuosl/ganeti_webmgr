@@ -50,7 +50,10 @@ urlpatterns = patterns('',
 
     (r'^500/$', 'django.views.generic.simple.direct_to_template', {'template':"500.html"})
 )
-
+# Language settings
+urlpatterns += patterns('',
+    (r'^i18n/', include('django.conf.urls.i18n')),
+    )
 handler500 = 'ganeti.views.view_500'
 
 

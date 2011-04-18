@@ -30,6 +30,7 @@ from object_permissions import get_users_any
 from ganeti.models import Cluster, VirtualMachine, Job, GanetiError, \
     ClusterUser, Profile, Organization, SSHKey
 from ganeti.views import render_403, render_404
+from django.utils.translation import ugettext as _
 
 
 
@@ -266,11 +267,11 @@ def used_resources(request):
         if cu.real_type_id == user_type.pk:
             if not Profile.objects.filter(clusteruser_ptr=cu.pk, user=user)\
                 .exists():
-                return render_403(request, 'You are not authorized to view this page')
+                return render_403(request, _('You are not authorized to view this page'))
         else:
             if not Organization.objects.filter(clusteruser_ptr=cu.pk, \
                                                group__user=user).exists():
-                return render_403(request, 'You are not authorized to view this page')
+                return render_403(request, _('You are not authorized to view this page'))
     
     resources = get_used_resources(cu)
     return render_to_response("overview/used_resources.html", {
@@ -290,12 +291,12 @@ def clear_ganeti_error(request, pk):
     # if not a superuser, check permissions on the object itself
     if not user.is_superuser:
         if isinstance(obj, (Cluster,)) and not user.has_perm('admin', obj):
-            return render_403(request, "You do not have sufficient privileges")
+            return render_403(request, _("You do not have sufficient privileges"))
         elif isinstance(obj, (VirtualMachine,)):
             # object is a virtual machine, check perms on VM and on Cluster
             if not (obj.owner_id == user.get_profile().pk or \
                 user.has_perm('admin', obj.cluster)):
-                    return render_403(request, "You do not have sufficient privileges")
+                    return render_403(request, _("You do not have sufficient privileges"))
     
     # clear the error
     GanetiError.objects.filter(pk=error.pk).update(cleared=True)
@@ -309,7 +310,7 @@ def ssh_keys(request, api_key):
     Show all ssh keys which belong to users, who have any perms on the cluster
     """
     if settings.WEB_MGR_API_KEY != api_key:
-        return HttpResponseForbidden("You're not allowed to view keys.")
+        return HttpResponseForbidden(_("You're not allowed to view keys."))
 
     users = set()
     for cluster in Cluster.objects.all():
