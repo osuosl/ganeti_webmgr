@@ -10,6 +10,5 @@ class VirtualMachineIndex(RealTimeSearchIndex):
     
     def get_queryset(self):
         return VirtualMachine.objects.all()
-        
-site.register(VirtualMachine, VirtualMachineIndex)
 
+site.register(VirtualMachine, VirtualMachineIndex)
