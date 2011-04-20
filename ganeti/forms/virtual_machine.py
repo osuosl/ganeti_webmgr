@@ -62,10 +62,11 @@ class NewVirtualMachineForm(forms.ModelForm):
         model = VirtualMachineTemplate
         exclude = ('template_name')
 
-    def __init__(self, user, cluster=None, initial=None, *args, **kwargs):
+    def __init__(self, user, initial=None, *args, **kwargs):
         self.user = user
         super(NewVirtualMachineForm, self).__init__(initial, *args, **kwargs)
 
+        cluster = None
         if initial:
             if 'cluster' in initial and initial['cluster']:
                 try:
@@ -349,10 +350,10 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
     class Meta:
         model = VirtualMachineTemplate
 
-    def __init__(self, user, cluster, initial=None, *args, **kwargs):
-        super(ModifyVirtualMachineForm, self).__init__(user, cluster=cluster,
-                initial=initial, *args, **kwargs)
-        # Remove all fields in the form that are not required to modify the
+    def __init__(self, user, initial=None, *args, **kwargs):
+        super(ModifyVirtualMachineForm, self).__init__(user, initial=initial,
+                *args, **kwargs)
+        # Remove all fields in the form that are not required to modify the 
         #   instance.
         for field in self.exclude:
             del self.fields[field]
