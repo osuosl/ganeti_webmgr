@@ -1,5 +1,5 @@
 {% extends "object_permissions/permissions/users.html" %}
-
+{% load i18n %}
 {% block head %}
 <script type="text/javascript">
     $(document).ready(function() {
@@ -10,7 +10,7 @@
             $(this).qtip({
                 content: {
                    url: this.href,
-                   title: {text:'Quota: ', button:'close'},
+                   title: {text:'{% trans "Quota" %}: ', button:'close'},
                 },
                 position: {corner:{ target:"topMiddle", tooltip:"bottomMiddle"}},
                 style: {name:"dark",
@@ -45,7 +45,7 @@
 </script>
 {%endblock%}
 
-{%block table_headers%}<th>Quota</th>{%endblock%}
+{%block table_headers%}<th>{% trans "Quota" %}</th>{%endblock%}
 {%block user_row%}{% include "cluster/user_row.html" %}{%endblock%}
 {%block group_row%}{% include "cluster/group_row.html" %}{%endblock%}
 

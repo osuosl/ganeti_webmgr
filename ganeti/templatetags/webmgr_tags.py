@@ -1,4 +1,4 @@
-# vim: set fileencoding=utf8 :
+# -*- coding: utf-8 -*- vim:encoding=utf-8:
 
 # Copyright (C) 2010 Oregon State University et al.
 # Copyright (C) 2010 Greek Research and Technology Network
@@ -29,9 +29,8 @@ from django.template import Library, Node, TemplateSyntaxError
 from django.template.defaultfilters import stringfilter
 from django.utils.safestring import mark_safe
 
+from ganeti.constants import NODE_ROLE_MAP
 from ganeti.models import Cluster
-from ganeti.models import Node as GanetiNode
-
 
 register = Library()
 
@@ -146,7 +145,7 @@ def checkmark(bool):
 @stringfilter
 def node_role(code):
     """ renders full role name from role code """
-    return GanetiNode.NODE_ROLE_MAP[str(code)]
+    return NODE_ROLE_MAP[str(code)]
 
 
 @register.simple_tag

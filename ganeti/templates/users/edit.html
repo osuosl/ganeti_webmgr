@@ -1,7 +1,7 @@
 {% extends "menu_base.html" %}
-
+{% load i18n %}
 {% block title %}
-    {% if username %}Edit User{% else %}Add User{% endif %}
+    {% if username %}{% trans "Edit User" %}{% else %}{% trans "Add User" %}{% endif %}
 {% endblock %}
 
 {% block head %}
@@ -18,13 +18,13 @@
     <fieldset>
         <legend>
             {% if username %}
-                Edit {{ username }}
+                {% trans "Edit" %} {{ username }}
             {% else %}
-                Create New User
+                {% trans "Create New User" %}
             {% endif %}
         </legend>
         {{ form.as_p }}
-        <input type="submit" value="{% if username %}Save{% else %}Create{% endif %}">
+        <input type="submit" value="{% if username %}{%trans "Save" %}{% else %}{% trans "Create" %}{% endif %}">
     </fieldset>
 </form>
 

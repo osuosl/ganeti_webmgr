@@ -1,4 +1,5 @@
 # Copyright (C) 2010 Oregon State University et al.
+# Copyright (C) 2010 Greek Research and Technology Network
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -24,6 +25,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from ganeti.utilities import cluster_default_info
+from django.utils.translation import ugettext as _
 
 from object_log.models import LogItem
 from object_log.views import list_for_object
@@ -31,6 +33,7 @@ from util.client import GanetiApiError
 
 log_action = LogItem.objects.log_action
 
+from ganeti import constants
 from ganeti.models import Node, Cluster
 from ganeti.views import render_403
 from ganeti.views.virtual_machine import render_vms
@@ -48,7 +51,7 @@ def detail(request, cluster_slug, host):
     admin = True if user.is_superuser else user.has_perm('admin', cluster)
     modify = True if admin else user.has_perm('migrate', cluster)
     if not (admin or modify):
-        return render_403(request, "You do not have sufficient privileges")
+        return render_403(request, _("You do not have sufficient privileges"))
     
     return render_to_response("node/detail.html", {
         'cluster':cluster,
@@ -71,13 +74,14 @@ def primary(request, cluster_slug, host):
     
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
-        return render_403(request, "You do not have sufficient privileges")
+        return render_403(request, _("You do not have sufficient privileges"))
 
     vms = node.primary_vms.all()
     vms = render_vms(request, vms)
 
-    return render_to_response("virtual_machine/table.html", \
-                {'node': node, 'vms':vms}, \
+    return render_to_response("virtual_machine/table.html",
+                {'tableID': 'table_primary', 'primary_node':True,
+                        'node': node, 'vms':vms},
                 context_instance=RequestContext(request))
 
 
@@ -91,13 +95,14 @@ def secondary(request, cluster_slug, host):
     
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
-        return render_403(request, "You do not have sufficient privileges")
+        return render_403(request, _("You do not have sufficient privileges"))
 
     vms = node.secondary_vms.all()
     vms = render_vms(request, vms)
 
-    return render_to_response("virtual_machine/table.html", \
-                {'node': node, 'vms':vms}, \
+    return render_to_response("virtual_machine/table.html",
+                {'tableID': 'table_secondary', 'secondary_node':True, 
+                        'node': node, 'vms':vms},
                 context_instance=RequestContext(request))
 
 @login_required
@@ -110,7 +115,7 @@ def object_log(request, cluster_slug, host):
 
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
-        return render_403(request, "You do not have sufficient privileges")
+        return render_403(request, _("You do not have sufficient privileges"))
 
     return list_for_object(request, node)
 
@@ -119,23 +124,7 @@ class RoleForm(forms.Form):
     """
     Form for editing roles
     """
-    ROLE_CHOICES = (
-        ('', '-------------'),
-        ('master-candidate','Master Candidate'),
-        ('regular','Regular'),
-        ('drained','Drained'),
-        ('offline','Offline'),
-    )
-    
-    # map of role codes to form fields
-    ROLE_MAP = {
-        'C':'master-candidate',
-        'R':'regular',
-        'D':'drained',
-        'O':'offline',
-    }
-    
-    role = forms.ChoiceField(initial='', choices=ROLE_CHOICES, label='New Role')
+    role = forms.ChoiceField(initial='', choices=constants.ROLE_CHOICES, label='New Role')
     force = forms.BooleanField(initial=False, required=False)
 
 
@@ -149,7 +138,7 @@ def role(request, cluster_slug, host):
     
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
-        return render_403(request, "You do not have sufficient privileges")
+        return render_403(request, _("You do not have sufficient privileges"))
     
     if request.method == 'POST':
         form = RoleForm(request.POST)
@@ -160,7 +149,7 @@ def role(request, cluster_slug, host):
                 msg = job.info
 
                 # log information
-                log_action('NODE_ROLE_CHANGE', user, node, job)
+                log_action('NODE_ROLE_CHANGE', user, node)
                 return HttpResponse(json.dumps(msg), mimetype='application/json')
             except GanetiApiError, e:
                 content = json.dumps({'__all__':[str(e)]})
@@ -174,7 +163,7 @@ def role(request, cluster_slug, host):
         form = RoleForm()
         
     else:
-        data = {'role':RoleForm.ROLE_MAP[node.role]}
+        data = {'role':constants.ROLE_MAP[node.role]}
         form = RoleForm(data)
     
     return render_to_response('node/role.html', \
@@ -184,14 +173,7 @@ def role(request, cluster_slug, host):
 
 class MigrateForm(forms.Form):
     """ Form used for migrating primary Virtual Machines off a Node """
-    MODE_CHOICES = (
-        ('live','Live'),
-        ('non-live','Non-Live'),
-    )
-
-    mode = forms.ChoiceField(choices=MODE_CHOICES)
-
-
+    mode = forms.ChoiceField(choices=constants.MODE_CHOICES)
 
 @login_required
 def migrate(request, cluster_slug, host):
@@ -203,7 +185,7 @@ def migrate(request, cluster_slug, host):
     
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
-        return render_403(request, "You do not have sufficient privileges")
+        return render_403(request, _("You do not have sufficient privileges"))
     
     if request.method == 'POST':
         form = MigrateForm(request.POST)
@@ -214,7 +196,7 @@ def migrate(request, cluster_slug, host):
                 msg = job.info
 
                 # log information
-                log_action('NODE_MIGRATE', user, node, job)
+                log_action('NODE_MIGRATE', user, node)
 
                 return HttpResponse(json.dumps(msg), mimetype='application/json')
             except GanetiApiError, e:
@@ -233,7 +215,7 @@ def migrate(request, cluster_slug, host):
 
 
 class EvacuateForm(forms.Form):
-    EMPTY_FIELD = (u'', u'---------')
+    EMPTY_FIELD = constants.EMPTY_CHOICE_FIELD 
 
     iallocator = forms.BooleanField(initial=False, required=False, \
                                     label='Automatic Allocation')
@@ -266,7 +248,7 @@ class EvacuateForm(forms.Form):
         elif node:
             data['iallocator_hostname'] = None
         else:
-            raise ValidationError('Must choose automatic allocation or a specific node')
+            raise ValidationError(_('Must choose automatic allocation or a specific node'))
 
         return data
 
@@ -281,7 +263,7 @@ def evacuate(request, cluster_slug, host):
     
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
-        return render_403(request, "You do not have sufficient privileges")
+        return render_403(request, _("You do not have sufficient privileges"))
 
     if request.method == 'POST':
         form = EvacuateForm(cluster, node, request.POST)
@@ -311,3 +293,4 @@ def evacuate(request, cluster_slug, host):
     return render_to_response('node/evacuate.html', \
         {'form':form, 'node':node, 'cluster':cluster}, \
         context_instance=RequestContext(request))
+

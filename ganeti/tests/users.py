@@ -27,8 +27,6 @@ class TestUsersViews(TestCase):
       that a superuser has access to.
     """
     def setUp(self):
-        self.tearDown()
-        
         superuser = User(id=1, username='sudo', is_superuser=True)
         superuser.set_password('sudome')
         superuser.save()

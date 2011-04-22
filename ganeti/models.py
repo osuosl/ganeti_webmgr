@@ -440,9 +440,10 @@ class VirtualMachine(CachedClusterObject):
     status = models.CharField(max_length=10)
     
     # node relations
-    primary_node = models.ForeignKey('Node', null=True, related_name='primary_vms')
-    secondary_node = models.ForeignKey('Node', null=True, \
-                                        related_name='secondary_vms')
+    primary_node = models.ForeignKey('Node', null=True, 
+            related_name='primary_vms')
+    secondary_node = models.ForeignKey('Node', null=True,
+            related_name='secondary_vms')
     
     # The last job reference indicates that there is at least one pending job
     # for this virtual machine.  There may be more than one job, and that can
@@ -538,8 +539,7 @@ class VirtualMachine(CachedClusterObject):
                 data['secondary_node'] = Node.objects.get(hostname=secondary)
             except Node.DoesNotExist:
                 # node is not created yet.  fail silently
-                pass
-            data['secondary_node'] = None
+                data['secondary_node'] = None
         else:
             data['secondary_node'] = None
         
@@ -692,15 +692,7 @@ class Node(CachedClusterObject):
     Attributes that need to be searchable should be stored as model fields.  All
     other attributes will be stored within VirtualMachine.info.
     """
-    NODE_ROLE_MAP = {
-        'M':'Master',
-        'C':'Master Candidate',
-        'R':'Regular',
-        'D':'Drained',
-        'O':'Offline',
-    }
-
-    ROLE_CHOICES = ((k, v) for k, v in NODE_ROLE_MAP.items())
+    ROLE_CHOICES = ((k, v) for k, v in constants.NODE_ROLE_MAP.items())
     
     cluster = models.ForeignKey('Cluster', related_name='nodes')
     hostname = models.CharField(max_length=128, unique=True)
@@ -849,18 +841,18 @@ class Cluster(CachedClusterObject):
     """
     A Ganeti cluster that is being tracked by this manager tool
     """
-    hostname = models.CharField(max_length=128, unique=True)
-    slug = models.SlugField(max_length=50, unique=True, db_index=True)
-    port = models.PositiveIntegerField(default=5080)
-    description = models.CharField(max_length=128, blank=True, null=True)
-    username = models.CharField(max_length=128, blank=True, null=True)
-    password = models.CharField(max_length=128, blank=True, null=True)
-    hash = models.CharField(max_length=40, editable=False)
+    hostname = models.CharField(_('hostname'), max_length=128, unique=True)
+    slug = models.SlugField(_('slug'), max_length=50, unique=True, db_index=True)
+    port = models.PositiveIntegerField(_('port'), default=5080)
+    description = models.CharField(_('description'), max_length=128, blank=True, null=True)
+    username = models.CharField(_('username'), max_length=128, blank=True, null=True)
+    password = models.CharField(_('password'), max_length=128, blank=True, null=True)
+    hash = models.CharField(_('hash'), max_length=40, editable=False)
     
     # quota properties
-    virtual_cpus = models.IntegerField(null=True, blank=True)
-    disk = models.IntegerField(null=True, blank=True)
-    ram = models.IntegerField(null=True, blank=True)
+    virtual_cpus = models.IntegerField(_('virtual_cpus'), null=True, blank=True)
+    disk = models.IntegerField(_('disk'), null=True, blank=True)
+    ram = models.IntegerField(_('ram'), null=True, blank=True)
 
     # The last job reference indicates that there is at least one pending job
     # for this virtual machine.  There may be more than one job, and that can
@@ -1054,44 +1046,44 @@ class VirtualMachineTemplate(models.Model):
     """
     template_name = models.CharField(max_length=255, null=True, blank=True)
     cluster = models.ForeignKey('Cluster', null=True)
-    start = models.BooleanField(verbose_name='Start up After Creation', \
+    start = models.BooleanField(verbose_name=_('Start up After Creation'), \
                 default=True)
-    name_check = models.BooleanField(verbose_name='DNS Name Check', \
+    name_check = models.BooleanField(verbose_name=_('DNS Name Check'), \
                 default=True)
-    iallocator = models.BooleanField(verbose_name='Automatic Allocation', \
+    iallocator = models.BooleanField(verbose_name=_('Automatic Allocation'), \
                 default=False)
     iallocator_hostname = models.CharField(null=True, blank=True, \
                 max_length=255)
-    disk_template = models.CharField(max_length=16)
-    pnode = models.CharField(verbose_name='Primary Node', max_length=255, \
+    disk_template = models.CharField(verbose_name=_('Disk Template'), max_length=16)
+    pnode = models.CharField(verbose_name=_('Primary Node'), max_length=255, \
                 null=True, blank=True)
-    snode = models.CharField(verbose_name='Secondary Node', max_length=255, \
+    snode = models.CharField(verbose_name=_('Secondary Node'), max_length=255, \
                 null=True, blank=True)
-    os = models.CharField(verbose_name='Operating System', max_length=255)
+    os = models.CharField(verbose_name=_('Operating System'), max_length=255)
     # BEPARAMS
-    vcpus = models.IntegerField(verbose_name='Virtual CPUs', \
+    vcpus = models.IntegerField(verbose_name=_('Virtual CPUs'), \
                 validators=[MinValueValidator(1)], null=True, blank=True)
-    memory = models.IntegerField(verbose_name='Memory', \
+    memory = models.IntegerField(verbose_name=_('Memory'), \
                 validators=[MinValueValidator(100)],null=True, blank=True)
-    disk_size = models.IntegerField(verbose_name='Disk Size', null=True, \
+    disk_size = models.IntegerField(verbose_name=_('Disk Size'), null=True, \
                 validators=[MinValueValidator(100)], blank=True)
-    disk_type = models.CharField(verbose_name='Disk Type', max_length=255, \
+    disk_type = models.CharField(verbose_name=_('Disk Type'), max_length=255, \
                                  null=True, blank=True)
-    nic_mode = models.CharField(verbose_name='NIC Mode', max_length=255, \
+    nic_mode = models.CharField(verbose_name=_('NIC Mode'), max_length=255, \
                                 null=True, blank=True)
-    nic_link = models.CharField(verbose_name='NIC Link', max_length=255, \
+    nic_link = models.CharField(verbose_name=_('NIC Link'), max_length=255, \
                 null=True, blank=True)
-    nic_type = models.CharField(verbose_name='NIC Type', max_length=255, \
+    nic_type = models.CharField(verbose_name=_('NIC Type'), max_length=255, \
                                 null=True, blank=True)
     # HVPARAMS
-    kernel_path = models.CharField(verbose_name='Kernel Path', null=True, \
+    kernel_path = models.CharField(verbose_name=_('Kernel Path'), null=True, \
                 blank=True, max_length=255)
-    root_path = models.CharField(verbose_name='Root Path', default='/', \
+    root_path = models.CharField(verbose_name=_('Root Path'), default='/', \
                 max_length=255, null=True, blank=True)
-    serial_console = models.BooleanField(verbose_name='Enable Serial Console')
-    boot_order = models.CharField(verbose_name='Boot Device', max_length=255, \
+    serial_console = models.BooleanField(verbose_name=_('Enable Serial Console'))
+    boot_order = models.CharField(verbose_name=_('Boot Device'), max_length=255, \
                                   null=True, blank=True)
-    cdrom_image_path = models.CharField(verbose_name='CD-ROM Image Path', null=True, \
+    cdrom_image_path = models.CharField(verbose_name=_('CD-ROM Image Path'), null=True, \
                 blank=True, max_length=512)
 
     def __str__(self):
@@ -1494,22 +1486,20 @@ register(permissions.VIRTUAL_MACHINE_PARAMS, VirtualMachine)
 
 
 # Register LogActions used within the Ganeti App
-def register_logactions(**kwargs):
-    LogAction.objects.register('VM_REBOOT','ganeti/object_log/vm_reboot.html')
-    LogAction.objects.register('VM_START','ganeti/object_log/vm_start.html')
-    LogAction.objects.register('VM_STOP','ganeti/object_log/vm_stop.html')
-    LogAction.objects.register('VM_MIGRATE','ganeti/object_log/vm_migrate.html')
-    LogAction.objects.register('VM_REINSTALL','ganeti/object_log/vm_reinstall.html')
-    LogAction.objects.register('VM_MODIFY','ganeti/object_log/vm_modify.html')
-    LogAction.objects.register('VM_RENAME','ganeti/object_log/vm_rename.html')
-    LogAction.objects.register('VM_RECOVER','ganeti/object_log/vm_recover.html')
+LogAction.objects.register('VM_REBOOT','ganeti/object_log/vm_reboot.html')
+LogAction.objects.register('VM_START','ganeti/object_log/vm_start.html')
+LogAction.objects.register('VM_STOP','ganeti/object_log/vm_stop.html')
+LogAction.objects.register('VM_MIGRATE','ganeti/object_log/vm_migrate.html')
+LogAction.objects.register('VM_REINSTALL','ganeti/object_log/vm_reinstall.html')
+LogAction.objects.register('VM_MODIFY','ganeti/object_log/vm_modify.html')
+LogAction.objects.register('VM_RENAME','ganeti/object_log/vm_rename.html')
+LogAction.objects.register('VM_RECOVER','ganeti/object_log/vm_recover.html')
 
-    LogAction.objects.register('NODE_EVACUATE','ganeti/object_log/node_evacuate.html')
-    LogAction.objects.register('NODE_MIGRATE','ganeti/object_log/node_migrate.html')
-    LogAction.objects.register('NODE_ROLE_CHANGE','ganeti/object_log/node_role_change.html')
+LogAction.objects.register('NODE_EVACUATE','ganeti/object_log/node_evacuate.html')
+LogAction.objects.register('NODE_MIGRATE','ganeti/object_log/node_migrate.html')
+LogAction.objects.register('NODE_ROLE_CHANGE','ganeti/object_log/node_role_change.html')
 
-    # add log actions for permission actions here
-    LogAction.objects.register('ADD_USER', 'ganeti/object_log/permissions/add_user.html')
-    LogAction.objects.register('REMOVE_USER', 'ganeti/object_log/permissions/remove_user.html')
-    LogAction.objects.register('MODIFY_PERMS', 'ganeti/object_log/permissions/modify_perms.html')
-post_syncdb.connect(register_logactions)
+# add log actions for permission actions here
+LogAction.objects.register('ADD_USER', 'ganeti/object_log/permissions/add_user.html')
+LogAction.objects.register('REMOVE_USER', 'ganeti/object_log/permissions/remove_user.html')
+LogAction.objects.register('MODIFY_PERMS', 'ganeti/object_log/permissions/modify_perms.html')

@@ -1,23 +1,27 @@
 {% extends "menu_base.html" %}
 {% load webmgr_tags %}
-
+{% load i18n %}
 {% block head %}
+    <link rel="stylesheet" type="text/css"
+            href="{{MEDIA_URL}}/css/virtual_machine_create.css"/>
     <script src="{{MEDIA_URL}}/js/modifyVM_formUpdater.js"></script>
+    <script src="{{MEDIA_URL}}/js/helpTips.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
             var formUpdate = new modifyFormUpdater();
             formUpdate.init();
+            initHelpTips("#vmeditform");
         });
     </script>
 {% endblock %}
 
 {% block content %}
-<h1>Edit {{ instance.hostname }}</h1>
-<fieldset>
-    <form id="vmeditform" method="post">
+<h1>{% trans "Edit" %} {{ instance.hostname }}</h1>
+<div id="vmeditform">
+    <form method="post">
         {% vmfield form.os %}
         <fieldset>
-            <legend>General Parameters</legend>
+            <legend>{% trans "General Parameters" %}</legend>
             {% vmfield form.vcpus %}
             {% vmfield form.memory %}
             {% vmfield form.disk_type %}
@@ -26,7 +30,7 @@
             {% vmfield form.nic_mac %}
         </fieldset>
         <fieldset>
-            <legend>Hypervisor Parameters</legend>
+            <legend>{% trans "Hypervisor Parameters" %}</legend>
             {% vmfield form.kernel_path %}
             {% vmfield form.root_path %}
             {% vmfield form.serial_console %}
@@ -49,7 +53,12 @@
             {% vmfield form.vnc_x509_path %}
             {% vmfield form.vnc_x509_verify %}
         </fieldset>
-        <input class="submit" type="submit" value="Continue" />
+        <input class="submit" type="submit" value="{% trans "Continue" %}" />
     </form>
-</fieldset>
+</div>
+<div id="help">
+    <h3></h3>
+    <div></div>
+</div>
+{% include "virtual_machine/create_help.html" %}
 {% endblock %}

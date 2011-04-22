@@ -1,13 +1,14 @@
+{% load i18n %}
 {% load webmgr_tags %}
 
 <table id="nodes" class="sorted">
 <thead>
     <tr>
         <th class="status"></th>
-        <th>Name</th>
-        <th>Free Memory (GB)</th>
-        <th>Free Disk (GB)</th>
-        <th>Instances (P/S)</th>
+        <th>{% trans "Name" %}</th>
+        <th>{% trans "Free Memory (GB)" %}</th>
+        <th>{% trans "Free Disk (GB)" %}</th>
+        <th>{% trans "Instances (P/S)" %}</th>
     </tr>
 </thead>
 <tbody>

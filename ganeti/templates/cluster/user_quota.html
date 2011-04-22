@@ -1,14 +1,14 @@
 {#  snippet for rendering quota of a User or Group #}
 {% load webmgr_tags %}
-
+{% load i18n %}
 {% with cluster_user|quota:object as quota %}
     <td>
         <a href="{% url cluster-quota object.slug cluster_user.id %}"
            class="quota {%if quota.default%}default{%endif%}">
         {%if quota.virtual_cpus or quota.ram or quota.disk %}
-            {%if quota.virtual_cpus%}CPUs:{{quota.virtual_cpus}} {%endif%}
-            {%if quota.ram%}Memory:{{quota.ram|mult:"1048576"|filesizeformat}} {%endif%}
-            {%if quota.disk%}Disk:{{quota.disk|mult:"1048576"|filesizeformat}} {%endif%}
+            {%if quota.virtual_cpus%}{% trans "CPUs"%}:{{quota.virtual_cpus}} {%endif%}
+            {%if quota.ram%}{% trans "Memory" %}:{{quota.ram|mult:"1048576"|filesizeformat}} {%endif%}
+            {%if quota.disk%}{% trans "Disk" %}:{{quota.disk|mult:"1048576"|filesizeformat}} {%endif%}
         {% else %}
             &#8734;
         {% endif %}

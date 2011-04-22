@@ -20,6 +20,10 @@ from django.conf.urls.defaults import patterns, url
 
 cluster_slug = '(?P<cluster_slug>[-_A-Za-z0-9]+)'
 cluster = 'cluster/%s' % cluster_slug
+
+primary_node = 'primary_node/(?P<primary_node>.+)'
+secondary_node = 'secondary_node/(?P<secondary_node>.+)'
+
 instance = '/(?P<instance>[^/]+)'
 host = '(?P<host>[^/]+)'
 
@@ -128,9 +132,11 @@ urlpatterns += patterns('ganeti.views.virtual_machine',
     url(r'^vm/add/template/(?P<pk>\d+)/?$', 'load_template', name="instance-create-template"),
 
     #  VM Table
-    url(r'^vm/table/$', 'vm_table', name="virtualmachine-table"),
     url(r'^%s/vm/table/?$' % cluster, 'vm_table', name="cluster-virtualmachine-table"),
-    
+    url(r'^vm/table/$', 'vm_table', name="virtualmachine-table"),
+    url(r'^vm/table/%s/?$' % primary_node, 'vm_table', name="vm-table-primary"),
+    url(r'^vm/table/%s/?$' % secondary_node, 'vm_table', name="vm-table-secondary"),
+
     #  Detail
     url(r'^%s/?$' % vm_prefix, 'detail', name="instance-detail"),
     url(r'^%s/users/?$' % vm_prefix, 'users', name="vm-users"),
@@ -179,3 +185,4 @@ urlpatterns += patterns('ganeti.views.jobs',
     url(r'^%s/clear/?' % job, 'clear', name='job-clear'),
     url(r'^%s/?' % job, 'detail', name='job-detail'),
 )
+

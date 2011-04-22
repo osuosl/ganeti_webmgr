@@ -1,12 +1,13 @@
 {% load webmgr_tags %}
+{% load i18n %}
 <table class="used_resources">
     <thead>
         <tr>
-            <th>Cluster</th>
-            <th>Your VMs</th>
-            <th>Disk</th>
-            <th>RAM</th>
-            <th>Virtual CPUs</th>
+            <th>{% trans "Cluster" %}</th>
+            <th>{% trans "Your VMs" %}</th>
+            <th>{% trans "Disk" %}</th>
+            <th>{% trans "RAM" %}</th>
+            <th>{% trans "Virtual CPUs" %}</th>
         </tr>
     </thead>
     <tbody>
@@ -21,7 +22,7 @@
                 {% if res.used.disk > res.set.disk %}
                 <td>
                     <div class="icon_error"></div>
-                    Exceeded by {% diff_render_storage res.used.disk res.set.disk %}
+                    {% trans "Exceeded by" %} {% diff_render_storage res.used.disk res.set.disk %}
                 </td>
                 {% else %}
                 <td class="disk">{{ res.used.disk }} / {{ res.set.disk }}</td>
@@ -34,7 +35,7 @@
                 {% if res.used.ram > res.set.ram %}
                 <td>
                     <div class="icon_error"></div>
-                    Exceeded by {% diff_render_storage res.used.ram res.set.ram %}
+                    {% trans "Exceeded by" %}{% diff_render_storage res.used.ram res.set.ram %}
                 </td>
                 {% else %}
                 <td class="ram">{{ res.used.ram }} / {{ res.set.ram }}</td>
@@ -47,7 +48,7 @@
                 {% if res.used.virtual_cpus > res.set.virtual_cpus %}
                 <td>
                     <div class="icon_error"></div>
-                    Exceeded by {% diff res.used.virtual_cpus res.set.virtual_cpus %}
+                    {% trans "Exceeded by" %} {% diff res.used.virtual_cpus res.set.virtual_cpus %}
                 </td>
                 {% else %}
                 <td class="vcpus">{{ res.used.virtual_cpus }} / {{ res.set.virtual_cpus }}</td>
@@ -55,7 +56,7 @@
             {% endif %}
         </tr>
         {% empty %}
-        <tr><td colspan="100%" class="none">You do not own any virtual machines</td></tr>
+        <tr><td colspan="100%" class="none">{% trans "You do not own any virtual machines" %}</td></tr>
         {% endfor %}
     </tbody>
 </table>

@@ -1,18 +1,18 @@
 {% load webmgr_tags %}
-
+{% load i18n %}
 <table id="vmlist" class="sorted">
 <thead>
     <tr>
       <th class="status" order_by="status"></th>
-      <th order_by="hostname">Name</th>
+      <th order_by="hostname">{% trans "Name" %}</th>
       {% if not cluster %}
-      <th order_by="cluster__hostname">Cluster</th>
+      <th order_by="cluster__hostname">{% trans "Cluster" %}</th>
       {% endif %}
-      <th order_by="cluster__hostname">Node</th>
-      <th order_by="operating_system">OS</th>
-      <th order_by="ram">RAM</th>
-      <th order_by="disk_size">Disk Space</th>
-      <th order_by="virtual_cpus">vCPUs</th>
+      <th order_by="cluster__hostname">{% trans "Node" %}</th>
+      <th order_by="operating_system">{% trans "OS" %}</th>
+      <th order_by="ram">{% trans "RAM" %}</th>
+      <th order_by="disk_size">{% trans "Disk Space" %}</th>
+      <th order_by="virtual_cpus">{% trans "vCPUs" %}</th>
     </tr>
 </thead>
 <tbody id="vms">
@@ -22,7 +22,7 @@
     <tr>
         <td class="status">
             {% if vm.error %}
-                <div class="icon_error" title="Ganeti API Error: {{vm.error}}, last status was {{ vm.status|render_instance_status }}"></div>
+                <div class="icon_error" title="{% trans "Ganeti API Error" %}: {{vm.error}}, last status was {{ vm.status|render_instance_status }}"></div>
             {% else %}
                 {% if vm.pending_delete %}
                     <div class="icon_deleting" title="delete in progress"></div>
@@ -60,7 +60,7 @@
     {% endwith %}
     {% endif %}
     {% empty %}
-        <tr class="none"><td colspan="100%">No Virtual Machines</td></tr>
+        <tr class="none"><td colspan="100%">{% trans "No Virtual Machines" %}</td></tr>
     {% endfor %}
 </tbody>
 </table>
@@ -68,7 +68,7 @@
 <ul class="pagination">
     {% if vms.has_previous %}
     <li class="previous">
-        <a href="{% url virtualmachine-table %}?page={{ vms.previous_page_number }}">&laquo; Previous</a>
+        <a href="{% url virtualmachine-table %}?page={{ vms.previous_page_number }}">&laquo; {% trans "Previous" %}</a>
     </li>
     {% endif %}
 
@@ -78,7 +78,7 @@
 
     {% if vms.has_next %}
     <li class="next">
-        <a href="{% url virtualmachine-table %}?page={{ vms.next_page_number }}">Next &raquo;</a>
+        <a href="{% url virtualmachine-table %}?page={{ vms.next_page_number }}">{% trans "Next" %} &raquo;</a>
     </li>
     {% endif %}
 </ul>

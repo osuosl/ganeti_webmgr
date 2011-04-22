@@ -1,6 +1,6 @@
 {% extends "menu_base.html" %}
 {% load webmgr_tags %}
-
+{% load i18n %}
 {% block head %}
     <!-- "import" the CSS and javascript for this template -->
     <link href="{{MEDIA_URL}}/css/jquery-ui.css" rel="stylesheet" 
@@ -32,14 +32,14 @@
         $(document).ready(function() {
             $('#tabs').tabs({
                 spinner: false,
-                cache: true,
+                cache: false, // no-cache b/c we want data to update
+                //cache: true,
                 select: function(event, ui) {
                     window.location.hash = ui.tab.hash;
                 },
                 ajaxOptions: {
                     error: function(xhr, status, index, anchor) {
-                        $(anchor.hash).html("Couldn't load this tab. We'll " +
-                                "try to fix this as soon as possible.");
+                        $(anchor.hash).html("{% trans "Couldn't load this tab. We'll try to fix this as soon as possible" %}.");
                     }
                 }
             });
@@ -54,11 +54,11 @@
                     var title;
 
                     if ($this.hasClass("modify")) {
-                        title = "Modify Role";
+                        title = "{% trans "Modify Role" %}";
                     } else if ($this.hasClass("migrate")) {
-                        title = "Migrate Primary Virtual Machines";
+                        title = "{% trans "Migrate Primary Virtual Machines" %}";
                      } else {
-                        title = "Evacuate Secondary Virtual Machines";
+                        title = "{% trans "Evacuate Secondary Virtual Machines" %}";
                     }
 
                     $(this).qtip({
@@ -136,7 +136,7 @@
 
         function display_ganeti_error(msg) {
             $("#messages").empty();
-            var html = "<li class='error'>Error:<p>" + msg + "</p></li>";
+            var html = "<li class='error'>{% trans "Error" %}:<p>" + msg + "</p></li>";
             $("#messages").append(html);
         }
     </script>
@@ -153,23 +153,23 @@
 <ul id="messages"></ul>
 <div id="tabs">
     <ul>
-        <li><a href="#detail"><span>Detail</span></a></li>
+        <li><a href="#detail"><span>{% trans "Detail" %}</span></a></li>
         <li>
             <a title="primary"
                     href="{% url node-primary-vms cluster.slug node.hostname %}">
-                <span>Primary</span>
+                <span>{% trans "Primary" %}</span>
             </a>
         </li>
         <li>
             <a title="secondary" 
                     href="{% url node-secondary-vms cluster.slug node.hostname %}">
-                <span>Secondary</span>
+                <span>{% trans "Secondary" %}</span>
             </a>
         </li>
         <li>
             <a title="log"
                     href="{% url node-object_log cluster.slug node.hostname %}">
-                <span>Log</span>
+                <span>{% trans "Log" %}</span>
             </a>
         </li>
     </ul>
@@ -179,23 +179,27 @@
             <li>
                 <a class="button modify" title="modifies the role of this node"
                         href="{% url node-role cluster.slug node.hostname %}">
-                    Change Role
+                    {% trans "Change Role" %}
                 </a>
             </li>
             <li>
                 <a class="button migrate" 
                         title="migrates all primary instances of this node" 
                         href="{% url node-migrate cluster.slug node.hostname %}">
-                    Migrate
+                    {% trans "Migrate" %}
                 </a>
             </li>
+            {% comment %}
+            Disabling this button for now till this is fixed upstream
+
             <li>
                 <a class="button evacuate"
                         title="migrates all secondary instances off this node"
                         href="{% url node-evacuate cluster.slug node.hostname %}">
-                    Evacuate
+                    {% trans "Evacuate" %}
                 </a>
             </li>
+            {% endcomment %}
             {% endif %}
         </ul>
         <table id="nodes" class="overview horizontal">
@@ -207,18 +211,18 @@
                 {% endif %}
                 </td>
             </tr>
-            <tr><th>Primary IP</th><td>{{node.info.pip}}</td></tr>
-            <tr><th>Secondary IP</th><td>{{node.info.sip}}</td></tr>
-            <tr><th>Role</th><td>{{node.info.role|node_role}}</td></tr>
+            <tr><th>{% trans "Primary IP" %}</th><td>{{node.info.pip}}</td></tr>
+            <tr><th>{% trans "Secondary IP" %}</th><td>{{node.info.sip}}</td></tr>
+            <tr><th>{% trans "Role" %}</th><td>{{node.info.role|node_role}}</td></tr>
             <tr>
-                <th>Master Candidate</th>
+                <th>{% trans "Master Candidate" %}</th>
                 <td>{{node.info.master_candidate|checkmark}}</td>
             </tr>
-            <tr><th>Drained</th><td>{{node.info.drained|checkmark}}</td></tr>
-            <tr><th>Ram Free [GiB]</th><td class="ram">{% node_memory node %}</td></tr>
-            <tr><th>Disk Free [GiB]</th><td class="disk">{% node_disk node %}</td>
+            <tr><th>{% trans "Drained" %}</th><td>{{node.info.drained|checkmark}}</td></tr>
+            <tr><th>{% trans "Ram Free [GiB]" %}</th><td class="ram">{% node_memory node %}</td></tr>
+            <tr><th>{% trans "Disk Free [GiB]" %}</th><td class="disk">{% node_disk node %}</td>
             <tr>
-                <th>Virtual Machines</th>
+                <th>{% trans "Virtual Machines" %}</th>
                 <td>{{ node.info.pinst_cnt }} / {{ node.info.sinst_cnt }}</td>
             </tr>
         </table>

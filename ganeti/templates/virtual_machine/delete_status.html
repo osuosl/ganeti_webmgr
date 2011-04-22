@@ -1,6 +1,6 @@
 {% extends "menu_base.html" %}
 {% load webmgr_tags %}
-
+{% load i18n %}
 {% block title %}Delete In Progress{% endblock %}
 
 {% block head %}
@@ -35,11 +35,11 @@
     <span class="breadcrumb">{{cluster.hostname|abbreviate_fqdn}}</span>
     {% endif %}
     : <span class="breadcrumb">{{ instance.hostname }}</span>
-    : deleting
+    : {% trans "deleting" %}
     </h1>
 
     {% include "job_status.html" %}
     <ul id="messages"></ul>
     
-    <div id="success">Deleted.</div>
+    <div id="success">{% trans "Deleted" %}.</div>
 {% endblock %}

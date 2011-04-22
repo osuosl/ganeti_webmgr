@@ -1,6 +1,6 @@
 {% extends "menu_base.html" %}
 {% load webmgr_tags %}
-
+{% load i18n %}
 {% block title %}Delete Cluster{% endblock %}
 
 {% block head %}
@@ -22,17 +22,18 @@
 {% block content %}
 <div id="confirm">
     <div class="message">
-        Are you sure you want to delete this cluster?  This action
+    	{% trans 
+        "Are you sure you want to delete this cluster?  This action
         can not be undone.  The cluster and all associated virtual machines will
         be removed from the database.
         
-        The virtual machines on the cluster will remain unchanged.
+        The virtual machines on the cluster will remain unchanged." %}
         <ul><li>{{cluster.hostname}}</li></ul>
     </div>
-    <input id="delete" type="button" value="Delete" />
+    <input id="delete" type="button" value='{% trans "Delete" %}' />
 </div>
 
 <div id="success">
-    Deleted.
+    {% trans "Deleted" %}.
 </div>
 {% endblock %}

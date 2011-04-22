@@ -1,7 +1,7 @@
 {% extends "menu_base.html" %}
 {% load webmgr_tags %}
-
-{% block title %}User Profile{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "User Profile" %}{% endblock %}
 
 {% block head %}
     {% include "ssh_keys/header.html" %}
@@ -20,11 +20,11 @@
         <li class="fadeout">{{ message }}</li>
     {% endfor %}
     </div>
-    <h1>Profile information for {{user.username}}</h1>
+    <h1>{% trans "Profile information for" %} {{user.username}}</h1>
     <fieldset id="uprofile">
         <form action="{% url profile %}" method="post">
             {{ form.as_p }}
-            <input class="submit" id="save" type="submit" value="Update"/>
+            <input class="submit" id="save" type="submit" value="{% trans "Update" %}"/>
         </form>
     </fieldset>
 

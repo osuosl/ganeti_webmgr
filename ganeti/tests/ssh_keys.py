@@ -16,9 +16,6 @@
 # USA.
 
 
-from datetime import datetime
-
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.conf import settings
 from django.contrib.auth.models import User, Group
@@ -34,8 +31,6 @@ __all__ = ('TestSSHKeys', )
 class TestSSHKeys(TestCase):
     
     def setUp(self):
-        self.tearDown()
-        
         # anonymous user
         User(id=1, username='anonymous').save()
         settings.ANONYMOUS_USER_ID=1
