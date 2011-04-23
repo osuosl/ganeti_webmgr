@@ -988,6 +988,32 @@ class Cluster(CachedClusterObject):
         return filter(lambda x: unicode(x) not in db, ganeti)
 
     @property
+    def nodes_missing_in_db(self):
+        """
+        Returns list of Nodes that are missing from the database, but present
+        in ganeti.
+        """
+        try:
+            ganeti = self.rapi.GetNodes()
+        except GanetiError:
+            ganeti = []
+        db = self.nodes.all().values_list('hostname', flat=True)
+        return filter(lambda x: unicode(x) not in db, ganeti)
+    
+    @property
+    def nodes_missing_in_ganeti(self):
+        """
+        Returns list of Nodes that are missing from the ganeti cluster
+        but present in the database
+        """
+        try:
+            ganeti = self.rapi.GetNodes()
+        except GanetiError:
+            ganeti = []
+        db = self.nodes.all().values_list('hostname', flat=True)
+        return filter(lambda x: str(x) not in ganeti, db)
+
+    @property
     def available_ram(self):
         """ returns dict of free and total ram """
         nodes = self.nodes.exclude(ram_total=-1) \

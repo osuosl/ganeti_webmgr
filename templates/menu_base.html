@@ -57,6 +57,8 @@
             <li><a href="{% url import-orphans %}">{% trans "Orphan VMs" %}</a></li>
             <li><a href="{% url import-missing_db %}">{% trans "Import VMs" %}</a></li>
             <li><a href="{% url import-missing %}">{% trans "Missing VMs" %}</a></li>
+            <li><a href="{% url import-nodes-missing_db %}">{% trans "Import Nodes" %}</a></li>
+            <li><a href="{% url import-nodes-missing %}">{% trans "Missing Nodes" %}</a></li>
         {% endif %}
         {% if user.is_superuser %}
             <li><a href="{% url user-list %}">{% trans "Users" %}</a></li>
