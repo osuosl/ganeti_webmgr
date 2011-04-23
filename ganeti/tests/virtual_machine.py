@@ -35,6 +35,7 @@ from ganeti.constants import ALL_NIC_TYPES, HV_NIC_MODES, ALL_BOOT_ORDER, HV_DIS
     OWNER_TAG, KVM_CHOICES, EMPTY_CHOICE_FIELD
 from ganeti.forms.virtual_machine import NewVirtualMachineForm
 from ganeti.utilities import os_prettify, cluster_os_list
+from ganeti.constants import EMPTY_CHOICE_FIELD
 
 VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
@@ -1104,6 +1105,45 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertTrue(user.has_perm('admin', new_vm))
 
+    def test_view_create_data_iallocator_missing(self):
+        """
+        Enabling the iallocator without actually specifying which iallocator
+        to run should cause a form error.
+        """
+
+        url = '/vm/add/%s'
+        data = dict(cluster=cluster.id,
+                    start=True,
+                    owner=user.get_profile().id, #XXX remove this
+                    hostname='new.vm.hostname',
+                    disk_template='plain',
+                    disk_size=1000,
+                    memory=256,
+                    vcpus=2,
+                    root_path='/',
+                    nic_type='paravirtual',
+                    disk_type = 'paravirtual',
+                    nic_link = 'br43',
+                    nic_mode='routed',
+                    boot_order='disk',
+                    os='image+ubuntu-lucid',
+                    pnode=cluster.nodes.all()[0],
+                    snode=cluster.nodes.all()[1],
+                    iallocator=True)
+
+        # Login and grant user.
+        self.assert_(c.login(username=user.username, password='secret'))
+        user.grant('create_vm', cluster)
+        profile = user.get_profile()
+        cluster.set_quota(user.get_profile(), dict(ram=1000, disk=2000, virtual_cpus=10))
+
+        user.grant('create_vm', cluster)
+        response = c.post(url % '', data)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
+
     def test_view_create_data(self):
 
         url = '/vm/add/%s'
@@ -1134,17 +1174,6 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         user.grant('create_vm', cluster)
         profile = user.get_profile()
         cluster.set_quota(user.get_profile(), dict(ram=1000, disk=2000, virtual_cpus=10))
-
-        # POST - iallocator enabled, but none passed
-        user.grant('create_vm', cluster)
-        data_ = data.copy()
-        data_['iallocator'] = True
-        response = c.post(url % '', data_, follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create.html')
-        self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
-        user.revoke_all(cluster)
 
         # POST - user authorized for cluster (create_vm)
         user.grant('create_vm', cluster)
@@ -2318,13 +2347,13 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         """
 
         # no cluster
-        form = NewVirtualMachineForm(user, None)
+        form = NewVirtualMachineForm(user)
         self.assertEqual([(u'', u'---------')], form.fields['pnode'].choices)
         self.assertEqual([(u'', u'---------')], form.fields['snode'].choices)
         self.assertEqual([(u'', u'---------')], form.fields['os'].choices)
 
-        # cluster provided
-        form = NewVirtualMachineForm(user, cluster0)
+        # cluster from initial data
+        form = NewVirtualMachineForm(user, {'cluster':cluster0.id})
         self.assertEqual([(u'', u'---------'), (u'gtest1.osuosl.bak', u'gtest1.osuosl.bak'), (u'gtest2.osuosl.bak', u'gtest2.osuosl.bak'), (u'gtest3.osuosl.bak', u'gtest3.osuosl.bak')], form.fields['pnode'].choices)
         self.assertEqual([(u'', u'---------'), (u'gtest1.osuosl.bak', u'gtest1.osuosl.bak'), (u'gtest2.osuosl.bak', u'gtest2.osuosl.bak'), (u'gtest3.osuosl.bak', u'gtest3.osuosl.bak')], form.fields['snode'].choices)
         self.assertEqual(form.fields['os'].choices,
@@ -2338,21 +2367,7 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         )
 
         # cluster from initial data
-        form = NewVirtualMachineForm(user, None, {'cluster':cluster0.id})
-        self.assertEqual([(u'', u'---------'), (u'gtest1.osuosl.bak', u'gtest1.osuosl.bak'), (u'gtest2.osuosl.bak', u'gtest2.osuosl.bak'), (u'gtest3.osuosl.bak', u'gtest3.osuosl.bak')], form.fields['pnode'].choices)
-        self.assertEqual([(u'', u'---------'), (u'gtest1.osuosl.bak', u'gtest1.osuosl.bak'), (u'gtest2.osuosl.bak', u'gtest2.osuosl.bak'), (u'gtest3.osuosl.bak', u'gtest3.osuosl.bak')], form.fields['snode'].choices)
-        self.assertEqual(form.fields['os'].choices,
-            [
-                (u'', u'---------'),
-                ('Image',
-                    [('image+debian-osgeo', 'Debian Osgeo'),
-                    ('image+ubuntu-lucid', 'Ubuntu Lucid')]
-                )
-            ]
-        )
-
-        # cluster from initial data
-        form = NewVirtualMachineForm(user, cluster0, {'cluster':cluster0.id})
+        form = NewVirtualMachineForm(user, {'cluster':cluster0.id})
         self.assertEqual([(u'', u'---------'), (u'gtest1.osuosl.bak', u'gtest1.osuosl.bak'), (u'gtest2.osuosl.bak', u'gtest2.osuosl.bak'), (u'gtest3.osuosl.bak', u'gtest3.osuosl.bak')], form.fields['pnode'].choices)
         self.assertEqual([(u'', u'---------'), (u'gtest1.osuosl.bak', u'gtest1.osuosl.bak'), (u'gtest2.osuosl.bak', u'gtest2.osuosl.bak'), (u'gtest3.osuosl.bak', u'gtest3.osuosl.bak')], form.fields['snode'].choices)
         self.assertEqual(form.fields['os'].choices,
@@ -2378,7 +2393,7 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         """
 
         # no owner, no permissions
-        form = NewVirtualMachineForm(user, None)
+        form = NewVirtualMachineForm(user)
         self.assertEqual(set([(u'', u'---------')]), set(form.fields['cluster'].choices))
 
         # no owner, group and direct permissions
@@ -2392,33 +2407,33 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         group.revoke_all(cluster2)
 
         # owner, user with no choices
-        form = NewVirtualMachineForm(user, None, initial={'owner':user.get_profile().id})
+        form = NewVirtualMachineForm(user, initial={'owner':user.get_profile().id})
         self.assertEqual(set([(u'', u'---------')]), set(form.fields['cluster'].choices))
 
         # owner, user with choices
         user.grant('admin', cluster0)
         user.grant('create_vm', cluster1)
-        form = NewVirtualMachineForm(user, None, initial={'owner':user.get_profile().id})
+        form = NewVirtualMachineForm(user, initial={'owner':user.get_profile().id})
         self.assertEqual(set([(u'', u'---------'), (1, u'test0'), (2, u'test1')]), set(form.fields['cluster'].choices))
 
         # owner, group with no choices
-        form = NewVirtualMachineForm(user, None, initial={'owner':group.organization.id})
+        form = NewVirtualMachineForm(user, initial={'owner':group.organization.id})
         self.assertEqual(set([(u'', u'---------')]), set(form.fields['cluster'].choices))
 
         # owner, group with choices
         group.grant('admin', cluster2)
         group.grant('create_vm', cluster3)
-        form = NewVirtualMachineForm(user, None, initial={'owner':group.organization.id})
+        form = NewVirtualMachineForm(user, initial={'owner':group.organization.id})
         self.assertEqual(set([(u'', u'---------'), (3, u'test2'), (4, u'test3')]), set(form.fields['cluster'].choices))
 
         # user - superuser
         user.is_superuser = True
         user.save()
-        form = NewVirtualMachineForm(user, None, initial={'owner':user.get_profile().id})
+        form = NewVirtualMachineForm(user, initial={'owner':user.get_profile().id})
         self.assertEqual(set([(u'', u'---------'), (1, u'test0'), (2, u'test1'), (3, u'test2'), (4, u'test3')]), set(form.fields['cluster'].choices))
 
         # group - superuser
-        form = NewVirtualMachineForm(user, None, initial={'owner':group.organization.id})
+        form = NewVirtualMachineForm(user, initial={'owner':group.organization.id})
         self.assertEqual(set([(u'', u'---------'), (1, u'test0'), (2, u'test1'), (3, u'test2'), (4, u'test3')]), set(form.fields['cluster'].choices))
 
     def test_owner_choices_init(self):
@@ -2432,19 +2447,19 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         """
 
         # user with no choices
-        form = NewVirtualMachineForm(user, cluster0)
+        form = NewVirtualMachineForm(user)
         self.assertEqual([(u'', u'---------')], form.fields['owner'].choices)
 
         # user with perms on self, no groups
         user.grant('admin', cluster0)
-        form = NewVirtualMachineForm(user, None)
+        form = NewVirtualMachineForm(user)
         self.assertEqual(
             [
                 (u'', u'---------'),
                 (user.profile.id, u'tester0'),
             ], form.fields['owner'].choices)
         user.set_perms(['create_vm'], cluster0)
-        form = NewVirtualMachineForm(user, None)
+        form = NewVirtualMachineForm(user)
         self.assertEqual(
             [
                 (u'', u'---------'),
@@ -2454,7 +2469,7 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         # user with perms on self and groups
         group.user_set.add(user)
         group.grant('admin', cluster0)
-        form = NewVirtualMachineForm(user, None)
+        form = NewVirtualMachineForm(user)
         self.assertEqual(
             [
                 (u'', u'---------'),
@@ -2464,14 +2479,14 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         user.revoke_all(cluster0)
 
         # user with no perms on self, but groups
-        form = NewVirtualMachineForm(user, None)
+        form = NewVirtualMachineForm(user)
         self.assertEqual(
             [
                 (u'', u'---------'),
                 (group.organization.id, u'testing_group'),
             ], form.fields['owner'].choices)
         group.set_perms(['create_vm'], cluster0)
-        form = NewVirtualMachineForm(user, None)
+        form = NewVirtualMachineForm(user)
         self.assertEqual(
             [
                 (u'', u'---------'),
@@ -2482,7 +2497,7 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         # superuser
         user.is_superuser = True
         user.save()
-        form = NewVirtualMachineForm(user, None)
+        form = NewVirtualMachineForm(user)
         self.assertEqual(
             [
                 (u'', u'---------'),

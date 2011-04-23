@@ -556,7 +556,7 @@ def create(request, cluster_slug=None):
         cluster = None
 
     if request.method == 'POST':
-        form = NewVirtualMachineForm(user, None, request.POST)
+        form = NewVirtualMachineForm(user, request.POST)
         if form.is_valid():
             data = form.cleaned_data
             start = data.get('start')
@@ -687,7 +687,7 @@ def create(request, cluster_slug=None):
                 form._errors["cluster"] = form.error_class([msg])
 
     elif request.method == 'GET':
-        form = NewVirtualMachineForm(user, cluster)
+        form = NewVirtualMachineForm(user)
 
     return render_to_response('virtual_machine/create.html', {
         'form': form
@@ -712,7 +712,7 @@ def modify(request, cluster_slug, instance):
         hv = cluster.info['default_hypervisor']
 
     if request.method == 'POST':
-        form = ModifyVirtualMachineForm(user, None, request.POST)
+        form = ModifyVirtualMachineForm(user, request.POST)
         form.fields['os_name'].choices = request.session['os_list']
         if form.is_valid():
             data = form.cleaned_data
@@ -751,7 +751,7 @@ def modify(request, cluster_slug, instance):
                 for field in fields:
                     initial[field] = hvparams[field]
 
-            form = ModifyVirtualMachineForm(user, cluster, initial=initial)
+            form = ModifyVirtualMachineForm(user, initial=initial)
 
             # Get the list of oses from the cluster
             os_list = cluster_os_list(cluster)
