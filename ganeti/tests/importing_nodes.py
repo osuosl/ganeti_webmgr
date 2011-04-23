@@ -57,6 +57,8 @@ class NodeImportBase(TestCase):
         self.cluster0.rapi.GetNodes.response = ['node0','node2']
         self.cluster1.rapi.GetNodes.response = ['node3','node5']
 
+        self.vm = VirtualMachine.objects.create(hostname='gimager.osuosl.bak', cluster=self.cluster0)
+
         self.node0 = Node.objects.create(hostname='node0', cluster=self.cluster0)
         self.node1 = Node.objects.create(hostname='node1', cluster=self.cluster0)
         self.node3 = Node.objects.create(hostname='node3', cluster=self.cluster1)
@@ -137,6 +139,11 @@ class NodeMissingDBTests(NodeImportBase):
         self.assertFalse(response.context['form'].errors)
         self.assertTrue(Node.objects.filter(hostname='node2').exists())
         self.assertEqual([], response.context['nodes'])
+
+        # check to see that vm nodes were updated
+        vm = VirtualMachine.objects.filter(hostname='gimager.osuosl.bak') \
+            .values_list('primary_node__hostname')[0][0]
+        self.assertEqual('node2', vm)
 
 
 class NodeMissingTests(NodeImportBase):

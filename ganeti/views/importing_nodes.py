@@ -1,10 +1,11 @@
 from django import forms
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.shortcuts import render_to_response
 from django.template.context import RequestContext
 from django.utils.translation import ugettext as _
 
-from ganeti.models import Cluster, Node
+from ganeti.models import Cluster, Node, VirtualMachine
 from ganeti.views import render_403
 
 
@@ -112,7 +113,18 @@ def missing_db(request):
             for node in node_ids:
                 cluster_id, host = node.split(':')
                 cluster = Cluster.objects.get(id=cluster_id)
-                Node.objects.create(hostname=host, cluster=cluster)
+                node = Node.objects.create(hostname=host, cluster=cluster)
+                node.refresh()
+
+                # refresh all vms on this node
+                VirtualMachine.objects\
+                    .filter(cluster=cluster, hostname__in=node.info['pinst_list']) \
+                    .update(primary_node=node)
+
+                VirtualMachine.objects\
+                    .filter(cluster=cluster, hostname__in=node.info['sinst_list']) \
+                    .update(secondary_node=node)
+            
     else:
         form = NodeForm(nodes)
 
