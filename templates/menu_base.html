@@ -38,18 +38,16 @@
     
 {% block navigation %}
     {% if user.is_authenticated %}
-    {% with user|cluster_admin as cluster_admin %}
     <div id="mainmenu" class="menu">
     <ul>
         <li><a href="{% url overview %}">{% trans "Overview" %}</a></li>
         <li><a href="{% url cluster-list %}">{% trans "Clusters" %}</a></li>
         <li><a href="{% url virtualmachine-list %}">{% trans "Virtual Machines" %}</a></li>
-        {% if user.is_superuser or cluster_admin or perms.Cluster.create_vm %}
+        {% if user.is_superuser or cluster_admin or create_vm %}
         <li><a href="{% url instance-create %}">{% trans "Create VM" %}</a></li>
         {% endif %}
     </ul>
     {% with user|group_admin as group_admin %}
-    
     {% if user.is_superuser or group_admin or cluster_admin %}
     <h3>{% trans "Admin" %}</h3>
     <ul>
@@ -68,7 +66,6 @@
         {% endif %}
     </ul>
     {% endif %}
-    {% endwith %}
     {% endwith %}
     </div>
     {% endif %}
