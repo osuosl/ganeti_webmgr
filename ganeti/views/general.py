@@ -230,7 +230,7 @@ def overview(request):
     personas = list(Organization.objects.filter(group__user=user))
     if profile.virtual_machines.count() or \
         user.has_any_perms(Cluster, ['admin', 'create_vm']) or not personas:
-            personas += [profile]
+            personas.insert(0, profile)
     
     # get resources used per cluster from the first persona in the list
     resources = get_used_resources(personas[0])
