@@ -173,19 +173,18 @@ def overview(request):
     admin = user.is_superuser or clusters
 
     #orphaned, ready to import, missing
-    orphaned = import_ready = missing = 0
-
-    # Get query containing any virtual machines the user has permissions for
-    vms = user.get_objects_any_perms(VirtualMachine, groups=True).values('pk')
-
     if admin:
-        # filter VMs from the vm list where the user is an admin.  These VMs are
-        # already shown in that section
-        vms = vms.exclude(cluster__in=clusters)
-        
         # build list of admin tasks for this user's clusters
         orphaned, import_ready, missing = get_vm_counts(clusters)
-    
+    else:
+        orphaned = import_ready = missing = 0
+
+    if user.is_superuser:
+        vms = VirtualMachine.objects.all()
+    else:
+        # Get query containing any virtual machines the user has permissions for
+        vms = user.get_objects_any_perms(VirtualMachine, groups=True, cluster=['admin']).values('pk')
+
     # build list of job errors.  Include jobs from any vm the user has access to
     # If the user has admin on any cluster then those clusters and it's objects
     # must be included too.
