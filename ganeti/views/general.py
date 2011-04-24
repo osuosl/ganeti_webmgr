@@ -121,30 +121,30 @@ def get_vm_counts(clusters, timeout=600):
     format_key = 'cluster_admin_%d'
     orphaned = import_ready = missing = 0
     cached = cache.get_many((format_key % cluster.pk for cluster in clusters))
-    keys = (key[14:] for key in cached.keys())
-    cluster_list = clusters.exclude(pk__in=keys)
-    
+    exclude = [int(key[14:]) for key in cached.keys()]
+    keys = [k for k in clusters.values_list('pk', flat=True) if k not in exclude]
+    cluster_list = Cluster.objects.filter(pk__in=keys)
+
     # total the cached values first
     for k in cached.values():
         orphaned += k["orphaned"]
         import_ready += k["import_ready"]
         missing += k["missing"]
-    
+
     # update the values that were not cached
     if cluster_list.count():
         base = VirtualMachine.objects.filter(cluster__in=cluster_list,
                 owner=None).order_by()
-        annoted = base.values("cluster__pk").annotate(orphaned=Count("id"))
+        annotated = base.values("cluster__pk").annotate(orphaned=Count("id"))
         
         result = {}
-        for i in annoted:
+        for i in annotated:
             result[format_key % i["cluster__pk"]] = {"orphaned": i["orphaned"]}
             orphaned += i["orphaned"]
-        
         for cluster in cluster_list:
             key = format_key % cluster.pk
             
-            if cluster.pk not in result:
+            if key not in result:
                 result[key] = {"orphaned": 0}
             
             result[key]["import_ready"] = len(cluster.missing_in_db)
@@ -155,7 +155,7 @@ def get_vm_counts(clusters, timeout=600):
         
         # add all results into cache
         cache.set_many(result, timeout)
-    
+
     return orphaned, import_ready, missing
 
 
