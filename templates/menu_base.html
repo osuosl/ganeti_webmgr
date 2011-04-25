@@ -41,7 +41,9 @@
     <div id="mainmenu" class="menu">
     <ul>
         <li><a href="{% url overview %}">{% trans "Overview" %}</a></li>
+        {% if view_cluster %}
         <li><a href="{% url cluster-list %}">{% trans "Clusters" %}</a></li>
+        {% endif %}
         <li><a href="{% url virtualmachine-list %}">{% trans "Virtual Machines" %}</a></li>
         {% if user.is_superuser or cluster_admin or create_vm %}
         <li><a href="{% url instance-create %}">{% trans "Create VM" %}</a></li>

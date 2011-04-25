@@ -50,6 +50,7 @@ from ganeti.utilities import cluster_default_info, cluster_os_list, \
     compare, os_prettify
 from django.utils.translation import ugettext as _
 
+
 @login_required
 def delete(request, cluster_slug, instance):
     """
