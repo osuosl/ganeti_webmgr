@@ -2570,3 +2570,37 @@ class TestVirtualMachineHelpers(TestCase):
                     ("noop", "noop"),
                 ]),
             ])
+
+
+class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
+    
+    def setUp(self):
+        models.client.GanetiRapiClient = RapiProxy
+        # Create kvm, and xen clusters
+        cluster_kvm = Cluster(hostname='kvmcluster', slug='kvmcluster')
+        cluster_xen = Cluster(hostname='xencluster', slug='xencluster')
+        cluster_kvm.save()
+        cluster_xen.save()
+        cluster_xen.rapi.hv = 'xen'
+        # Create xen-pvm, xen-hvm, and kvm vms
+        vm_kvm = VirtualMachine()
+        vm_pvm = VirtualMachine()
+        vm_hvm = VirtualMachine()
+        # Create superuser
+        user = User(id=253, username='superuser253')
+        user.set_password('secret1')
+        user.is_superuser = True
+        user.save()
+
+        g = globals()
+        g['cluster_kvm'] = cluster_kvm
+        g['cluster_xen'] = cluster_xen
+        g['vm_kvm'] = vm_kvm
+        g['vm_hvm'] = vm_hvm
+        g['vm_pvm'] = vm_pvm
+        g['user'] = user
+    
+    def tearDown(self):
+        Cluster.objects.all().delete()
+        VirtualMachine.objects.all().delete()
+        User.objects.all().delete()
