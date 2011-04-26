@@ -29,13 +29,12 @@ from ganeti.models import VirtualMachineTemplate
 from object_permissions import grant, get_user_perms
 
 from util import client
-from ganeti.tests.rapi_proxy import RapiProxy, INFO, JOB_RUNNING
+from ganeti.tests.rapi_proxy import RapiProxy, INFO, JOB_RUNNING, XEN_INFO
 from ganeti import models
 from ganeti.constants import ALL_NIC_TYPES, HV_NIC_MODES, ALL_BOOT_ORDER, HV_DISK_TEMPLATES, \
-    OWNER_TAG, KVM_CHOICES, EMPTY_CHOICE_FIELD
-from ganeti.forms.virtual_machine import NewVirtualMachineForm
+    OWNER_TAG, HVM_CHOICES, NO_CHOICES, KVM_CHOICES, EMPTY_CHOICE_FIELD
+from ganeti.forms.virtual_machine import NewVirtualMachineForm, ModifyVirtualMachineForm
 from ganeti.utilities import os_prettify, cluster_os_list
-from ganeti.constants import EMPTY_CHOICE_FIELD
 
 VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
@@ -46,8 +45,9 @@ SSHKey = models.SSHKey
 
 __all__ = (
     'TestVirtualMachineViews',
-    "TestVirtualMachineHelpers",
+    'TestVirtualMachineHelpers',
     'TestNewVirtualMachineForm',
+    'TestModifyVirtualMachineForm',
     'VirtualMachineTestCaseMixin',
 )
 
@@ -2572,35 +2572,89 @@ class TestVirtualMachineHelpers(TestCase):
             ])
 
 
-class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
+class TestModifyVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin, UserTestMixin):
     
     def setUp(self):
         models.client.GanetiRapiClient = RapiProxy
         # Create kvm, and xen clusters
         cluster_kvm = Cluster(hostname='kvmcluster', slug='kvmcluster')
-        cluster_xen = Cluster(hostname='xencluster', slug='xencluster')
+        cluster_pvm = Cluster(hostname='pvmcluster', slug='pvmcluster')
+        cluster_hvm = Cluster(hostname='hvmcluster', slug='hvmcluster')
         cluster_kvm.save()
-        cluster_xen.save()
-        cluster_xen.rapi.hv = 'xen'
+        cluster_pvm.save()
+        cluster_hvm.save()
+        cluster_pvm.rapi.hv = 'xen-pvm'
+        cluster_hvm.rapi.hv = 'xen-hvm'
         # Create xen-pvm, xen-hvm, and kvm vms
-        vm_kvm = VirtualMachine()
-        vm_pvm = VirtualMachine()
-        vm_hvm = VirtualMachine()
+        vm_kvm = VirtualMachine(cluster=cluster_kvm, hostname='test.vm_kvm')
+        vm_pvm = VirtualMachine(cluster=cluster_pvm, hostname='test.vm_pvm')
+        vm_hvm = VirtualMachine(cluster=cluster_hvm, hostname='test.vm_hvm')
         # Create superuser
-        user = User(id=253, username='superuser253')
-        user.set_password('secret1')
-        user.is_superuser = True
-        user.save()
-
         g = globals()
+
+        self.create_users([
+            ('user',{'id':345,'is_superuser':True}),
+        ], g);
+
         g['cluster_kvm'] = cluster_kvm
-        g['cluster_xen'] = cluster_xen
+        g['cluster_pvm'] = cluster_pvm
+        g['cluster_hvm'] = cluster_hvm
         g['vm_kvm'] = vm_kvm
         g['vm_hvm'] = vm_hvm
         g['vm_pvm'] = vm_pvm
-        g['user'] = user
     
     def tearDown(self):
         Cluster.objects.all().delete()
         VirtualMachine.objects.all().delete()
         User.objects.all().delete()
+
+    def test_kvm_form_init(self):
+        """
+        Check bound kvm modify form for no errors on init.
+        """
+        form = ModifyVirtualMachineForm(user, cluster_kvm, {}) 
+        # If need to list errors if this fails use:
+        #for error in form.errors:
+        #    print "%s" % error
+        self.assertTrue(form.is_valid())
+        
+    def test_kvm_form_defaults(self):
+        """
+        Compare defaults for kvm cluster modify form.
+        """
+        form = ModifyVirtualMachineForm(user, cluster_kvm, {})
+        for field in KVM_CHOICES:
+            self.assertEqual(form.fields[field].choices, KVM_CHOICES[field])
+
+    # XEN PVM Cluster Specific Tests
+    def test_xen_pvm_form_init(self):
+        """
+        Check bound xen_pvm modify form for no errors on init.
+        """
+        form = ModifyVirtualMachineForm(user, cluster_pvm, {}); 
+        self.assertTrue(form.is_valid())
+  
+    def test_xen_pvm_form_defaults(self):
+        """
+        Compare defaults for xen_pvm cluster modify form.
+        """
+        form = ModifyVirtualMachineForm(user, cluster_pvm, {})
+        for field in HVM_CHOICES:
+            self.assertFalse(field in form.fields)
+
+    # XEN HVM Cluster Specific Tests
+    def test_xen_hvm_form_init(self):
+        """
+        Check bound xen_hvm modiy form for no errors on init.
+        """
+        form = ModifyVirtualMachineForm(user, cluster_hvm, {});
+        self.assertTrue(form.is_valid())
+
+    def test_xen_hvm_form_defaults(self):
+        """
+        Compare defaults for xen_hvm cluster modify form.
+        """
+        form = ModifyVirtualMachineForm(user, cluster_hvm, {})
+        for field in HVM_CHOICES:
+            self.assertEqual(form.fields[field].choices, HVM_CHOICES[field])
+

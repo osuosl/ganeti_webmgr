@@ -574,9 +574,12 @@ class RapiProxy(client.GanetiRapiClient):
             if value == 'kvm':
                 self.GetInfo = None
                 CallProxy.patch(self, 'GetInfo', False, INFO)
-            elif value == 'xen':
+            elif value == 'xen-pvm' or value == 'xen-hvm':
                 self.GetInfo = None
-                CallProxy.patch(self, 'GetInfo', False, XEN_INFO)
+                inf = XEN_INFO.copy()
+                if value == 'xen-hvm':
+                    inf['default_hypervisor'] = 'xen-hvm'
+                CallProxy.patch(self, 'GetInfo', False, inf)
         return super(RapiProxy, self).__setattr__(name, value)
      
     def __getattribute__(self, key):
