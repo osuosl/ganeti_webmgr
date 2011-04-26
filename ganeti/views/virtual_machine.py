@@ -712,7 +712,7 @@ def modify(request, cluster_slug, instance):
         hv = cluster.info['default_hypervisor']
 
     if request.method == 'POST':
-        form = ModifyVirtualMachineForm(user, request.POST)
+        form = ModifyVirtualMachineForm(user, cluster, request.POST)
         form.fields['os_name'].choices = request.session['os_list']
         if form.is_valid():
             data = form.cleaned_data
@@ -751,7 +751,7 @@ def modify(request, cluster_slug, instance):
                 for field in fields:
                     initial[field] = hvparams[field]
 
-            form = ModifyVirtualMachineForm(user, initial=initial)
+            form = ModifyVirtualMachineForm(user, cluster, initial=initial)
 
             # Get the list of oses from the cluster
             os_list = cluster_os_list(cluster)
@@ -857,7 +857,7 @@ def modify_confirm(request, cluster_slug, instance):
         old_set.update(hvparams)
 
         instance_diff = {}
-        fields = ModifyVirtualMachineForm(user, None).fields
+        fields = ModifyVirtualMachineForm(user, cluster, {}).fields
         for key in data.keys():
             if key == 'memory':
                 diff = compare(render_storage(old_set[key]),

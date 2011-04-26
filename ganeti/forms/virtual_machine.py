@@ -96,8 +96,6 @@ class NewVirtualMachineForm(forms.ModelForm):
                                         widget = forms.HiddenInput())
             self.fields['vcpus'].initial = defaults['vcpus']
             self.fields['memory'].initial = defaults['memory']
-            self.fields['root_path'].initial = defaults['root_path']
-            self.fields['kernel_path'].initial = defaults['kernel_path']
             self.fields['nic_link'].initial = defaults['nic_link']
             self.fields['hypervisor'].choices = defaults['hypervisors']
             self.fields['hypervisor'].initial = hv
@@ -106,6 +104,9 @@ class NewVirtualMachineForm(forms.ModelForm):
                 self.fields['serial_console'].initial = defaults['serial_console']
 
             # Set field choices and hypervisor
+            if hv == 'kvm' or hv == 'xen-pvm':
+                self.fields['root_path'].initial = defaults['root_path']
+                self.fields['kernel_path'].initial = defaults['kernel_path']
             if hv == 'kvm' or hv == 'xen-hvm':
                 self.fields['nic_type'].choices = defaults['nic_types']
                 self.fields['disk_type'].choices = defaults['disk_types']
@@ -114,7 +115,7 @@ class NewVirtualMachineForm(forms.ModelForm):
                 self.fields['nic_type'].initial = defaults['nic_type']
                 self.fields['disk_type'].initial = defaults['disk_type']
                 self.fields['boot_order'].initial = defaults['boot_order']
-            elif hv == 'xen-pvm':
+            if hv == 'xen-pvm':
                 for field in self.pvm_exclude_fields:
                     del self.fields[field]
 
@@ -402,8 +403,8 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
         'kvm_flag', 'use_chroot', 'migration_downtime', 'usb_mouse', \
         'mem_path')
     # Fields that should be required.
-    required = ('vcpus', 'memory', 'disk_type', 'boot_order', \
-        'nic_type',)
+    required = ('vcpus', 'memory')
+    non_pvm_required = ('disk_type', 'boot_order', 'nic_type')
 
     disk_caches = constants.HV_DISK_CACHES
     security_models = constants.HV_SECURITY_MODELS
@@ -439,7 +440,8 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
         model = VirtualMachineTemplate
 
     # TODO: Need to reference cluster in init...but no reference to cluster.
-    def __init__(self, user, initial=None, *args, **kwargs):
+    def __init__(self, user, cluster, initial=None, *args, **kwargs):
+        initial['cluster'] = cluster.id
         super(ModifyVirtualMachineForm, self).__init__(user, initial=initial,\
                 *args, **kwargs)
         # Remove all fields in the form that are not required to modify the 
@@ -458,6 +460,10 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
         if hv == 'xen-hvm':
             for field in self.hvm_exclude_fields:
                 del self.fields[field]
+        if hv == 'kvm' or hv == 'xen-hvm':
+            for field in self.non_pvm_required:
+                self.fields[field].required = True
+
         
         # No easy way to rename a field, so copy to new field and delete old field
         if 'os' in self.fields and self.fields['os']:
