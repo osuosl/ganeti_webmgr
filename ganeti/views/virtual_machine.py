@@ -64,8 +64,7 @@ def delete(request, cluster_slug, instance):
     # Check permissions.
     if not (
         user.is_superuser or
-        user.has_perm("remove", instance) or
-        user.has_perm("admin", instance) or
+        user.has_any_perms(instance, ["remove", "admin"]) or
         user.has_perm("admin", instance.cluster)
         ):
         return render_403(request, _('You do not have sufficient privileges'))
@@ -438,20 +437,24 @@ def detail(request, cluster_slug, instance):
 
     user = request.user
     cluster_admin = user.is_superuser or user.has_perm('admin', cluster)
-    admin = cluster_admin or user.has_perm('admin', vm)
 
-    if admin:
+    if not cluster_admin:
+        perms = user.get_perms(vm)
+
+    if cluster_admin or 'admin' in perms:
+        admin = True
         remove = True
         power = True
         modify = True
         migrate = True
         tags = True
     else:
-        remove = user.has_perm('remove', vm)
-        power = user.has_perm('power', vm)
-        modify = user.has_perm('modify', vm)
-        tags = user.has_perm('tags', vm)
-        migrate = user.has_perm('migrate', cluster)
+        admin = False
+        remove = 'remove' in perms
+        power = 'power' in perms
+        modify = 'modify' in perms
+        tags = 'tags' in perms
+        migrate = 'migrate' in perms
 
     if not (admin or power or remove or modify or tags):
         return render_403(request, _('You do not have permission to view this cluster\'s details'))
