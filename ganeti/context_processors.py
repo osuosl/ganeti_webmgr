@@ -28,6 +28,10 @@ def site(request):
 
 ANONYMOUS_PERMISSIONS = dict(cluster_admin=False,
                              create_vm=False,
+                             view_cluster=False)
+
+CLUSTER_ADMIN_PERMISSIONS = dict(cluster_admin=True,
+                             create_vm=True,
                              view_cluster=True)
 
 def common_permissions(request):
@@ -41,20 +45,19 @@ def common_permissions(request):
     user = request.user
     if user.is_authenticated():
         if user.is_superuser:
-            cluster_admin = True
-            create_vm = True
-            view_cluster = True
-        else:
-            cluster_admin = user.has_any_perms(Cluster, ['admin'])
-            if cluster_admin:
-                create_vm = True
-                view_cluster = True
-            else:
-                create_vm = user.has_any_perms(Cluster, ['create_vm'])
-                view_cluster = user.has_any_perms(Cluster, ['migrate','export','replace_disks','tags'])
+            return CLUSTER_ADMIN_PERMISSIONS
 
+        perms = user.get_perms_any(Cluster)
+
+        if 'admin' in perms:
+            return CLUSTER_ADMIN_PERMISSIONS
+
+        else:
+            create_vm = 'create_vm' in perms
+            view_cluster = any((p in perms for p in ['migrate','export','replace_disks','tags']))
+        
         return {
-            'cluster_admin':cluster_admin,
+            'cluster_admin':False,
             'create_vm':create_vm,
             'view_cluster':view_cluster
         }
