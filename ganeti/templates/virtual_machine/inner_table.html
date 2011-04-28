@@ -50,7 +50,15 @@
             </a>
         </td>
         {% if not cluster %}
-            <td>{{ vm.cluster|abbreviate_fqdn }}</td>
+            <td>
+                {% if view_cluster %}
+                    <a href="{% url cluster-detail vm.cluster.slug %}">
+                    {{ vm.cluster|abbreviate_fqdn }}
+                    </a>
+                {% else %}
+                    {{ vm.cluster|abbreviate_fqdn }}
+                {% endif %}
+            </td>
         {% endif %}
         <td>{{ info.pnode|abbreviate_fqdn }}</td>
         <td>{{ vm.operating_system|render_os }}</td>

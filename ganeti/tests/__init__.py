@@ -24,6 +24,7 @@ from ganeti.tests.fields import *
 from ganeti.tests.ganeti_errors import *
 from ganeti.tests.general import *
 from ganeti.tests.importing import *
+from ganeti.tests.importing_nodes import *
 from ganeti.tests.job import *
 from ganeti.tests.models.virtual_machine import *
 from ganeti.tests.node import *

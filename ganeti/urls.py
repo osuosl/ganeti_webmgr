@@ -178,6 +178,12 @@ urlpatterns += patterns('ganeti.views.importing',
     url(r'^import/missing_db/', 'missing_db', name='import-missing_db'),
 )
 
+# Node Importing
+urlpatterns += patterns('ganeti.views.importing_nodes',
+    url(r'^import/node/missing/', 'missing_ganeti', name='import-nodes-missing'),
+    url(r'^import/node/missing_db/', 'missing_db', name='import-nodes-missing_db'),
+)
+
 # Jobs
 job = '%s/job/(?P<job_id>\d+)' % cluster
 urlpatterns += patterns('ganeti.views.jobs',

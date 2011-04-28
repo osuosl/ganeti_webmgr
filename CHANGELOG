@@ -2,6 +2,14 @@
 Changelog
 ==================
 
+v0.6.2
+----
+  * fixing packaging issue with object log
+
+v0.6.1
+----
+  * updating object log to 0.5.1
+
 v0.6
 ----
 
