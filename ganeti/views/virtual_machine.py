@@ -50,6 +50,7 @@ from ganeti.utilities import cluster_default_info, cluster_os_list, \
     compare, os_prettify
 from django.utils.translation import ugettext as _
 
+
 @login_required
 def delete(request, cluster_slug, instance):
     """
@@ -63,8 +64,7 @@ def delete(request, cluster_slug, instance):
     # Check permissions.
     if not (
         user.is_superuser or
-        user.has_perm("remove", instance) or
-        user.has_perm("admin", instance) or
+        user.has_any_perms(instance, ["remove", "admin"]) or
         user.has_perm("admin", instance.cluster)
         ):
         return render_403(request, _('You do not have sufficient privileges'))
@@ -437,20 +437,24 @@ def detail(request, cluster_slug, instance):
 
     user = request.user
     cluster_admin = user.is_superuser or user.has_perm('admin', cluster)
-    admin = cluster_admin or user.has_perm('admin', vm)
 
-    if admin:
+    if not cluster_admin:
+        perms = user.get_perms(vm)
+
+    if cluster_admin or 'admin' in perms:
+        admin = True
         remove = True
         power = True
         modify = True
         migrate = True
         tags = True
     else:
-        remove = user.has_perm('remove', vm)
-        power = user.has_perm('power', vm)
-        modify = user.has_perm('modify', vm)
-        tags = user.has_perm('tags', vm)
-        migrate = user.has_perm('migrate', cluster)
+        admin = False
+        remove = 'remove' in perms
+        power = 'power' in perms
+        modify = 'modify' in perms
+        tags = 'tags' in perms
+        migrate = 'migrate' in perms
 
     if not (admin or power or remove or modify or tags):
         return render_403(request, _('You do not have permission to view this cluster\'s details'))
@@ -556,7 +560,7 @@ def create(request, cluster_slug=None):
         cluster = None
 
     if request.method == 'POST':
-        form = NewVirtualMachineForm(user, None, request.POST)
+        form = NewVirtualMachineForm(user, request.POST)
         if form.is_valid():
             data = form.cleaned_data
             start = data.get('start')
@@ -665,7 +669,7 @@ def create(request, cluster_slug=None):
                 form._errors["cluster"] = form.error_class([msg])
 
     elif request.method == 'GET':
-        form = NewVirtualMachineForm(user, cluster)
+        form = NewVirtualMachineForm(user)
 
     return render_to_response('virtual_machine/create.html', {
         'form': form
@@ -686,7 +690,7 @@ def modify(request, cluster_slug, instance):
             'You do not have permissions to edit this virtual machine')
 
     if request.method == 'POST':
-        form = ModifyVirtualMachineForm(user, None, request.POST)
+        form = ModifyVirtualMachineForm(user, request.POST)
         form.fields['os'].choices = request.session['os_list']
         if form.is_valid():
             data = form.cleaned_data
@@ -725,7 +729,7 @@ def modify(request, cluster_slug, instance):
                 for field in fields:
                     initial[field] = hvparams[field]
 
-            form = ModifyVirtualMachineForm(user, cluster, initial=initial)
+            form = ModifyVirtualMachineForm(user, initial=initial)
 
             # Get the list of oses from the cluster
             os_list = cluster_os_list(cluster)

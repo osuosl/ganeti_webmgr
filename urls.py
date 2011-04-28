@@ -64,6 +64,9 @@ if settings.DEBUG:
     urlpatterns += patterns('',
         (r'^media/(?P<path>.*)', 'django.views.static.serve',\
             {'document_root':  settings.MEDIA_ROOT}),
+
+        (r'^favicon.ico', 'django.views.static.serve',
+            {'document_root':  settings.MEDIA_ROOT, 'path': 'favicon.ico'}),
         
         # noVNC files
         (r'^novnc/(?P<path>.*)', 'django.views.static.serve',\

@@ -135,6 +135,20 @@
             	{% blocktrans %}Size of the system disk to allocate to this virtual machine. If
                 no units are given, megabytes is assumed.{% endblocktrans %}
             </p>
+             <p>
+                Acceptable Formats: 
+            </p>
+            <ul>
+                <li>
+                    <b>M</b> or MB - (megabytes)
+                </li>
+                <li>
+                    <b>G</b> or GB - (gigabytes) 
+                </li>
+                <li>
+                    <b>T</b> or TB - (terabytes)
+                </li>
+            </ul>
             <p><b><i>{% trans "This will be deducted from the owner's quota" %}.</i></b></p>
         </div>
         <div id="help-disk_type">
