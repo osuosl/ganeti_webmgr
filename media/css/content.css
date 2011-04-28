@@ -341,8 +341,8 @@ tr.user td.name, tr.group td.name { padding-left:22px !important;}
 tr.user td.name {background:url(/media/images/icons/user.png) no-repeat 0 4px;}
 tr.group td.name {background:url(/media/images/icons/group.png) no-repeat 0 4px;}
 
-.permissions a {color:#333333;}
-.permissions .none, .quota.default {color:#C1C1C1; font-style:italic;}
+.permissions a {}
+.permissions .none, .quota.default {font-style:italic;}
 
 #vnc_errors {
     background-color: #ee9c98;
