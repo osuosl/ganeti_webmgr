@@ -429,7 +429,7 @@ class VirtualMachine(CachedClusterObject):
     """
     cluster = models.ForeignKey('Cluster', editable=False, default=0,
                                 related_name='virtual_machines')
-    hostname = models.CharField(max_length=128)
+    hostname = models.CharField(max_length=128, db_index=True)
     owner = models.ForeignKey('ClusterUser', null=True, \
                               related_name='virtual_machines')
     virtual_cpus = models.IntegerField(default=-1)
