@@ -15,30 +15,28 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-from datetime import datetime
 import cPickle
+from datetime import datetime
 
-from twisted.internet.defer import DeferredList, Deferred
-from twisted.internet import reactor
-from twisted.web import client
 from django.utils import simplejson
+from twisted.internet import reactor
+from twisted.internet.defer import DeferredList, Deferred
+from twisted.web import client
 from ganeti.cacher import Timer, Counter
-
-from ganeti.models import Cluster, Node, VirtualMachine
-
-
-NODES_URL = 'https://%s:%s/2/nodes?bulk=1'
+from ganeti.models import Cluster, VirtualMachine
 
 
-class NodeCacheUpdater(object):
-    """
-    Updates the cache for all all Nodes in all clusters.  This method
-    processes the data in bulk, where possible, to reduce runtime. Generally
-    this should be faster than refreshing individual Nodes.
-    """
+VMS_URL = 'https://%s:%s/2/instances?bulk=1'
+
+
+class VirtualMachineCacheUpdater(object):
 
     def update(self):
-        """ start the update process """
+        """
+        Updates the cache for all all VirtualMachines in all clusters.  This method
+        processes the data in bulk, where possible, to reduce runtime.  Generally
+        this should be faster than refreshing individual VirtualMachines.
+        """
         self.timer = Timer()
         print '------[cache update]-------------------------------'
         clusters = Cluster.objects.all()
@@ -52,10 +50,10 @@ class NodeCacheUpdater(object):
         fetch cluster info from ganeti
         """
         deferred = Deferred()
-        d = client.getPage(str(NODES_URL % (cluster.hostname, cluster.port)))
+        d = client.getPage(str(VMS_URL % (cluster.hostname, cluster.port)))
         d.addCallback(self.process_cluster_info, cluster, deferred.callback)
         return deferred
-
+    
     def process_cluster_info(self, json, cluster, callback):
         """
         process data received from ganeti.
@@ -64,37 +62,39 @@ class NodeCacheUpdater(object):
         infos = simplejson.loads(json)
         self.timer.tick('info fetched from ganeti     ')
         updated = Counter()
-        base = cluster.nodes.all()
-        mtimes = base.values_list('hostname', 'id', 'mtime')
+        base = cluster.virtual_machines.all()
+        mtimes = base.values_list('hostname', 'id', 'mtime', 'status')
 
         data = {}
-        for hostname, id, mtime in mtimes:
-            data[hostname] = (id, float(mtime) if mtime else None)
+        for name, id, mtime, status in mtimes:
+            data[name] = (id, float(mtime) if mtime else None, status)
         self.timer.tick('mtimes fetched from db       ')
 
-        deferreds = [self.update_node(cluster, info, data, updated) for info in infos]
+        deferreds = [self.update_vm(cluster, info, data, updated) for info in infos]
         deferred_list = DeferredList(deferreds)
 
-        # batch update the cache updated time for all Nodes in this cluster. This
-        # will set the last updated time for both Nodes that were modified and for
+        # batch update the cache updated time for all VMs in this cluster. This
+        # will set the last updated time for both VMs that were modified and for
         # those that weren't.  even if it wasn't modified we want the last
         # updated time to be up to date.
         #
-        # XXX don't bother checking to see whether this query needs to run.  With
+        # XXX don't bother checking to see whether this query needs to run.  It
         # normal usage it will almost always need to
         def update_timestamps(result):
             print '    updated: %s out of %s' % (updated, len(infos))
             base.update(cached=datetime.now())
             self.timer.tick('records or timestamps updated')
         deferred_list.addCallback(update_timestamps)
+
+        # XXX it would be nice if the deferred list could be returned and this
+        # callback hooked up outside of the method, but that doesn't seem
+        # possible
         deferred_list.addCallback(callback)
 
-        return deferred_list
-
-    def update_node(self, cluster, info, data, updated):
+    def update_vm(self, cluster, info, data, updated):
         """
-        updates an individual node: this just sets up the work in a deferred
-        by using callLater.  Actual work is done in _update_node().
+        updates an individual VirtualMachine: this just sets up the work in a
+        deferred by using callLater.  Actual work is done in _update_vm().
 
         @param cluster - cluster this node is on
         @param info - info from ganeti
@@ -104,12 +104,12 @@ class NodeCacheUpdater(object):
         """
         deferred = Deferred()
         args = (cluster, info, data, updated, deferred.callback)
-        reactor.callLater(0, self._update_node, *args)
+        reactor.callLater(0, self._update_vm, *args)
         return deferred
 
-    def _update_node(self, cluster, info, data, updated, callback):
+    def _update_vm(self, cluster, info, data, updated, callback):
         """
-        updates an individual node, this is the actual work function
+        updates an individual VirtualMachine, this is the actual work function
 
         @param cluster - cluster this node is on
         @param info - info from ganeti
@@ -117,38 +117,27 @@ class NodeCacheUpdater(object):
         @param updated - counter object
         @param callback - callback fired when method is complete.
         """
-        hostname = info['name']
-        if hostname in data:
-            id, mtime = data[hostname]
-            if not mtime or mtime < info['mtime']:
-                print '    Node (updated) : %s' % hostname
+        name = info['name']
+        if name in data:
+            id, mtime, status = data[name]
+            if not mtime or mtime < info['mtime'] \
+            or status != info['status']:
+                print '    Virtual Machine (updated) : %s' % name
                 #print '        %s :: %s' % (mtime, datetime.fromtimestamp(info['mtime']))
                 # only update the whole object if it is new or modified.
-                parsed = Node.parse_persistent_info(info)
-                Node.objects.filter(pk=id) \
+                #
+                # XXX status changes will not always be reflected in mtime
+                # explicitly check status to see if it has changed.  failing
+                # to check this would result in state changes being lost
+                parsed = VirtualMachine.parse_persistent_info(info)
+                VirtualMachine.objects.filter(pk=id) \
                     .update(serialized_info=cPickle.dumps(info), **parsed)
                 updated += 1
         else:
-            # new node
-            node = Node(cluster=cluster, hostname=info['name'])
-            node.info = info
-            node.save()
-            id = node.pk
-
-
-        # Updates relationships between a Node and its Primary and Secondary
-        # VirtualMachines.  This always runs even when there are no updates but
-        # it should execute quickly since it runs against an indexed column
-        #
-        # XXX this blocks so it may be worthwhile to spin this off into a
-        # deferred just to break up this method.  
-        VirtualMachine.objects \
-            .filter(hostname__in=info['pinst_list']) \
-            .update(primary_node=id)
-
-        VirtualMachine.objects \
-            .filter(hostname__in=info['sinst_list']) \
-            .update(secondary_node=id)
+            # new vm
+            vm = VirtualMachine(cluster=cluster, hostname=info['name'])
+            vm.info = info
+            vm.save()
 
         callback(id)
 
