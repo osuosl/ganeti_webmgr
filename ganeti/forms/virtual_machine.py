@@ -165,15 +165,6 @@ class NewVirtualMachineForm(forms.ModelForm):
 
         return hostname
 
-    def clean_root_path(self):
-        root_path = self.cleaned_data.get("root_path")
-
-        if root_path:
-            return root_path
-        else:
-            self.errors["root_path"] = self.error_class(
-                ["The root path cannot be empty"])
-
     def clean_vcpus(self):
         vcpus = self.cleaned_data.get("vcpus")
 
@@ -314,8 +305,7 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
         'iallocator', 'iallocator_hostname', 'disk_template', 'pnode', 'snode',
         'disk_size', 'nic_mode', 'template_name')
     # Fields that should be required.
-    required = ('vcpus', 'memory', 'disk_type', 'boot_order',
-        'nic_type', 'root_path')
+    required = ('vcpus', 'memory', 'disk_type', 'boot_order', 'nic_type')
 
     disk_caches = constants.KVM_DISK_CACHES
     security_models = constants.KVM_SECURITY_MODELS
