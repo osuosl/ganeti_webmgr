@@ -17,6 +17,7 @@
 
 
 import json
+from itertools import chain
 
 from django.contrib.auth.models import User, Group
 from django.core.urlresolvers import reverse
@@ -2585,10 +2586,45 @@ class TestModifyVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin, UserTe
         cluster_hvm.save()
         cluster_pvm.rapi.hv = 'xen-pvm'
         cluster_hvm.rapi.hv = 'xen-hvm'
+
         # Create xen-pvm, xen-hvm, and kvm vms
         vm_kvm = VirtualMachine(cluster=cluster_kvm, hostname='test.vm_kvm')
         vm_pvm = VirtualMachine(cluster=cluster_pvm, hostname='test.vm_pvm')
         vm_hvm = VirtualMachine(cluster=cluster_hvm, hostname='test.vm_hvm')
+
+        # Fields required for each hv type
+        kvm_fields = (
+            'vnc_tls',
+            'vnc_x509_path',
+            'vnc_x509_verify',
+            'serial_console',
+            'disk_cache',
+            'security_model',
+            'security_domain',
+            'kvm_flag',
+            'mem_path',
+            'use_chroot',
+            'migration_downtime',
+            'usb_mouse'
+        )
+        pvm_fields = (
+            #'blockdev_prefix', TODO implement on modify form
+            'kernel_path',
+            'kernel_args',
+            'initrd_path',
+            'root_path'
+        )
+        hvm_fields = (
+            'boot_order',
+            'cdrom_image_path',
+            'nic_type',
+            'disk_type',
+            'vnc_bind_address',
+            'acpi',
+            #'pae', TODO implement pae on modify form
+            'use_localtime'
+        )
+
         # Create superuser
         g = globals()
 
@@ -2602,59 +2638,46 @@ class TestModifyVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin, UserTe
         g['vm_kvm'] = vm_kvm
         g['vm_hvm'] = vm_hvm
         g['vm_pvm'] = vm_pvm
+        g['kvm_fields'] = kvm_fields
+        g['pvm_fields'] = pvm_fields
+        g['hvm_fields'] = hvm_fields
     
     def tearDown(self):
         Cluster.objects.all().delete()
         VirtualMachine.objects.all().delete()
         User.objects.all().delete()
-
+       
     def test_kvm_form_init(self):
         """
-        Check bound kvm modify form for no errors on init.
+        Make sure initial choices are correct for a kvm cluster and
+          only fields for the kvm hypervisor are present.
         """
-        form = ModifyVirtualMachineForm(user, cluster_kvm, {}) 
-        # If need to list errors if this fails use:
-        #for error in form.errors:
-        #    print "%s" % error
-        self.assertTrue(form.is_valid())
-        
-    def test_kvm_form_defaults(self):
-        """
-        Compare defaults for kvm cluster modify form.
-        """
-        form = ModifyVirtualMachineForm(user, cluster_kvm, {})
+        form = ModifyVirtualMachineForm(user, cluster_kvm, vm_kvm)
         for field in KVM_CHOICES:
             self.assertEqual(form.fields[field].choices, KVM_CHOICES[field])
-
-    # XEN PVM Cluster Specific Tests
+        for field in chain(kvm_fields, hvm_fields, pvm_fields):
+            self.assertTrue(field in form.fields.keys(), msg=field)
+ 
     def test_xen_pvm_form_init(self):
         """
-        Check bound xen_pvm modify form for no errors on init.
+        Make sure only fields for the xen-pvm hypervisor are present.
         """
-        form = ModifyVirtualMachineForm(user, cluster_pvm, {}); 
-        self.assertTrue(form.is_valid())
-  
-    def test_xen_pvm_form_defaults(self):
-        """
-        Compare defaults for xen_pvm cluster modify form.
-        """
-        form = ModifyVirtualMachineForm(user, cluster_pvm, {})
-        for field in HVM_CHOICES:
-            self.assertFalse(field in form.fields)
+        form = ModifyVirtualMachineForm(user, cluster_pvm, vm_pvm)
+        for field in pvm_fields:
+            self.assertTrue(field in form.fields.keys(), msg=field)
+        for field in chain(kvm_fields, hvm_fields):
+            self.assertFalse(field in form.fields.keys(), msg=field)
 
-    # XEN HVM Cluster Specific Tests
     def test_xen_hvm_form_init(self):
         """
-        Check bound xen_hvm modiy form for no errors on init.
+        Make sure initial choices are correct for a hvm cluster and
+          only fields for the xen-hvm hypervisor are present.
         """
-        form = ModifyVirtualMachineForm(user, cluster_hvm, {});
-        self.assertTrue(form.is_valid())
-
-    def test_xen_hvm_form_defaults(self):
-        """
-        Compare defaults for xen_hvm cluster modify form.
-        """
-        form = ModifyVirtualMachineForm(user, cluster_hvm, {})
+        form = ModifyVirtualMachineForm(user, cluster_hvm, vm_hvm)
         for field in HVM_CHOICES:
             self.assertEqual(form.fields[field].choices, HVM_CHOICES[field])
+        for field in hvm_fields:
+            self.assertTrue(field in form.fields.keys(), msg=field)
+        for field in chain(kvm_fields, pvm_fields):
+            self.assertFalse(field in form.fields.keys(), msg=field)
 
