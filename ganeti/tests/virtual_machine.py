@@ -459,8 +459,8 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
         session = c.session
         session['os_list'] = os_list
         session.save()
-        for property in ['vcpus', 'memory', 'disk_type', 'boot_order', 'nic_type', \
-            'root_path']:
+        for property in ['vcpus', 'memory', 'disk_type', 'boot_order',
+                         'nic_type']:
             data_ = data.copy()
             del data_[property]
             self.assertFalse(user.is_superuser)
@@ -917,7 +917,7 @@ class TestVirtualMachineViews(TestCase, VirtualMachineTestCaseMixin, ViewTestMix
 
         for prop in ['cluster', 'hostname', 'disk_size', 'disk_type',
                      'nic_type', 'nic_mode', 'vcpus', 'pnode', 'os',
-                     'disk_template', 'root_path', 'boot_order']:
+                     'disk_template', 'boot_order']:
             data_ = data.copy()
             del data_[prop]
             response = c.post(url % '', data_)
