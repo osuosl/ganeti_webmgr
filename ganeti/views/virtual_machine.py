@@ -633,12 +633,12 @@ def create(request, cluster_slug=None):
                 job_id = cluster.rapi.CreateInstance('create', hostname,
                         disk_template,
                         [{"size": disk_size, }],[{'mode':nic_mode, 'link':nic_link, }],
-                        start=start, os=os, vcpus=vcpus,
+                        start=start, os=os, 
                         pnode=pnode, snode=snode,
                         name_check=name_check, ip_check=name_check,
                         iallocator=iallocator_hostname,
                         hvparams=hvparams,
-                        beparams={"memory": memory})
+                        beparams={"memory": memory, "vcpus":vcpus})
 
                 # Check for a vm recovery, If it is not found then
                 if 'vm_recovery' in data:
