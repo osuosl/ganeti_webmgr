@@ -894,8 +894,8 @@ def recover_failed_deploy(request, cluster_slug, instance):
             initial[k] = v
     initial['cluster'] = vm.template.cluster_id
     initial['pnode'] = vm.template.pnode
+    initial['owner'] = vm.owner_id
     form = NewVirtualMachineForm(request.user, initial=initial)
-
     return render_to_response('virtual_machine/create.html', {'form': form},
         context_instance=RequestContext(request),
     )
