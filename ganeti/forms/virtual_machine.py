@@ -18,6 +18,7 @@
 
 from django import forms
 from django.forms import ValidationError
+from django.utils import simplejson
 
 from ganeti import constants
 from ganeti.fields import DataVolumeField
@@ -27,6 +28,8 @@ from ganeti.utilities import cluster_default_info, cluster_os_list
 from django.utils.translation import ugettext_lazy as _
 
 FQDN_RE = r'(?=^.{1,254}$)(^(?:(?!\d+\.|-)[a-zA-Z0-9_\-]{1,63}(?<!-)\.?)+(?:[a-zA-Z]{2,})$)'
+
+
 
 class NewVirtualMachineForm(forms.ModelForm):
     """
@@ -296,6 +299,40 @@ class NewVirtualMachineForm(forms.ModelForm):
         return data
 
 
+def check_quota_modify(form):
+    """ method for validating user is within their quota when modifying """
+    data = form.cleaned_data
+    cluster = form.cluster
+    owner = form.owner
+    vm = form.vm
+
+    # check quota
+    if owner is not None:
+        start = data['start']
+        quota = cluster.get_quota(owner)
+        if quota.values():
+            used = owner.used_resources(cluster, only_running=True)
+
+            if (start and quota['ram'] is not None and
+                (used['ram'] + data['memory']-vm.ram) > quota['ram']):
+                    del data['memory']
+                    q_msg = u"%s" % _("Owner does not have enough ram remaining on this cluster. You must reduce the amount of ram.")
+                    form._errors["ram"] = form.error_class([q_msg])
+
+            if 'disk_size' in data:
+                if quota['disk'] and used['disk'] + data['disk_size'] > quota['disk']:
+                    del data['disk_size']
+                    q_msg = u"%s" % _("Owner does not have enough diskspace remaining on this cluster.")
+                    form._errors["disk_size"] = form.error_class([q_msg])
+
+            if (start and quota['virtual_cpus'] is not None and
+                (used['virtual_cpus'] + data['vcpus'] - vm.virtual_cpus) >
+                quota['virtual_cpus']):
+                    del data['vcpus']
+                    q_msg = u"%s" % _("Owner does not have enough virtual cpus remaining on this cluster. You must reduce the amount of virtual cpus.")
+                    form._errors["vcpus"] = form.error_class([q_msg])
+
+
 class ModifyVirtualMachineForm(NewVirtualMachineForm):
     """
     Simple way to modify a virtual machine instance.
@@ -340,7 +377,8 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
     class Meta:
         model = VirtualMachineTemplate
 
-    def __init__(self, user, initial=None, *args, **kwargs):
+    def __init__(self, user, cluster, initial=None, *args, **kwargs):
+        self.cluster=cluster
         super(ModifyVirtualMachineForm, self).__init__(user, initial=initial,
                 *args, **kwargs)
         # Remove all fields in the form that are not required to modify the 
@@ -407,11 +445,28 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
             msg = u'%s.' % _('This field is required')
             self._errors['vnc_x509_path'] = self.error_class([msg])
 
+        if self.owner:
+            data['start'] = 'reboot' in self.data or self.vm.is_running
+            check_quota_modify(self)
+            del data['start']
+
         return data
 
 
 class ModifyConfirmForm(forms.Form):
-    pass
+
+    def clean(self):
+        raw = self.data['rapi_dict']
+        data = simplejson.loads(raw)
+
+        cleaned = self.cleaned_data
+        cleaned['rapi_dict'] = data
+        cleaned['memory'] = data['memory']
+        cleaned['vcpus'] = data['vcpus']
+        cleaned['start'] = 'reboot' in data or self.vm.is_running
+        check_quota_modify(self)
+        
+        return cleaned
 
 
 class MigrateForm(forms.Form):
