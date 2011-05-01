@@ -22,8 +22,8 @@ function formUpdater(url_choices, url_options, url_defaults){
     // ------------
     // init stuffs
     // ------------
-    this.init = function(){
-        /* initialize the live form updator */
+    this.init = function(cluster_defaults){
+        /* initialize the live form updater */
 
         // disable the iallocator stuff by default
         if(!iallocator_hostname.attr("value")){
@@ -35,11 +35,19 @@ function formUpdater(url_choices, url_options, url_defaults){
                 "</span>"
             );
         }
-        _iallocatorDisable();
-    
+
+        // only disable iallocator by default if there is no cluster selected
+        // or the cluster already selected does not support iallocator
+        var def_iallocator = cluster_defaults['iallocator']
+        if (!iallocator.is(":checked")
+            && (def_iallocator == undefined|| def_iallocator == '')
+        ){
+            _iallocatorDisable();
+        }
+        
         // hide CD-ROM Image Path stuffs by default
         _imagePathHide();
-
+        
         // setup form element change hooks
         _initChangeHooks();
 

@@ -670,12 +670,20 @@ def create(request, cluster_slug=None):
             except GanetiApiError, e:
                 msg = '%s: %s' % (_('Error creating virtual machine on this cluster'),e)
                 form._errors["cluster"] = form.error_class([msg])
-
+        
+        if 'cluster' in request.POST and request.POST['cluster'] != '':
+            cluster =  Cluster.objects.get(pk=request.POST['cluster'])
+            cluster_defaults = cluster_default_info(cluster)
+        else:
+            cluster_defaults = {}
+                
     elif request.method == 'GET':
         form = NewVirtualMachineForm(user)
+        cluster_defaults = {}
 
     return render_to_response('virtual_machine/create.html', {
-        'form': form
+        'form': form,
+        'cluster_defaults':json.dumps(cluster_defaults)
         },
         context_instance=RequestContext(request),
     )
@@ -915,7 +923,10 @@ def recover_failed_deploy(request, cluster_slug, instance):
     initial['pnode'] = vm.template.pnode
     initial['owner'] = vm.owner_id
     form = NewVirtualMachineForm(request.user, initial=initial)
-    return render_to_response('virtual_machine/create.html', {'form': form},
+    cluster_defaults = cluster_default_info(cluster)
+
+    return render_to_response('virtual_machine/create.html',
+        {'form': form, 'cluster_defaults':json.dumps(cluster_defaults)},
         context_instance=RequestContext(request),
     )
 
@@ -991,6 +1002,7 @@ def rename(request, cluster_slug, instance):
         },
         context_instance=RequestContext(request),
     )
+
 
 @login_required
 def cluster_choices(request):
