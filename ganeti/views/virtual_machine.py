@@ -736,12 +736,12 @@ def modify(request, cluster_slug, instance):
 
             form = ModifyVirtualMachineForm(user, cluster, initial=initial)
 
-            # Get the list of oses from the cluster
-            os_list = cluster_os_list(cluster)
+        # Get the list of oses from the cluster
+        os_list = cluster_os_list(cluster)
 
-            # Set os_list for cluster in session
-            request.session['os_list'] = os_list
-            form.fields['os'].choices = os_list
+        # Set os_list for cluster in session
+        request.session['os_list'] = os_list
+        form.fields['os'].choices = os_list
 
     return render_to_response("virtual_machine/edit.html", {
         'cluster': cluster,
