@@ -58,6 +58,7 @@ def delete(request, cluster_slug, instance):
     """
 
     user = request.user
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
     instance = get_object_or_404(VirtualMachine, cluster__slug=cluster_slug,
         hostname=instance)
 
@@ -65,13 +66,13 @@ def delete(request, cluster_slug, instance):
     if not (
         user.is_superuser or
         user.has_any_perms(instance, ["remove", "admin"]) or
-        user.has_perm("admin", instance.cluster)
+        user.has_perm("admin", cluster)
         ):
         return render_403(request, _('You do not have sufficient privileges'))
 
     if request.method == 'GET':
         return render_to_response("virtual_machine/delete.html",
-            {'vm': instance},
+            {'vm': instance, 'cluster':cluster},
             context_instance=RequestContext(request),
         )
 
@@ -105,6 +106,7 @@ def reinstall(request, cluster_slug, instance):
     """
 
     user = request.user
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
     instance = get_object_or_404(VirtualMachine, cluster__slug=cluster_slug,
         hostname=instance)
 
@@ -114,14 +116,15 @@ def reinstall(request, cluster_slug, instance):
     if not (
         user.is_superuser or
         user.has_any_perms(instance, ["remove", "admin"]) or
-        user.has_perm("admin", instance.cluster)
+        user.has_perm("admin", cluster)
         ):
         return render_403(request, _('You do not have sufficient privileges'))
 
     if request.method == 'GET':
         return render_to_response("virtual_machine/reinstall.html",
-            {'vm': instance, 'oschoices': cluster_os_list(instance.cluster),
-             'current_os': instance.operating_system, 'submitted': False},
+            {'vm': instance, 'oschoices': cluster_os_list(cluster),
+             'current_os': instance.operating_system,
+             'cluster':cluster},
             context_instance=RequestContext(request),
         )
 
@@ -137,14 +140,14 @@ def reinstall(request, cluster_slug, instance):
         # checking whether this VM is already running and subtracting that)
 
         job_id = instance.rapi.ReinstallInstance(instance.hostname, os=os, no_startup=True)
-        job = Job.objects.create(job_id=job_id, obj=instance, cluster=instance.cluster)
+        job = Job.objects.create(job_id=job_id, obj=instance, cluster=cluster)
         VirtualMachine.objects.filter(id=instance.id).update(last_job=job, ignore_cache=True)
 
         # log information
         log_action('VM_REINSTALL', user, instance, job)
 
         return HttpResponseRedirect(
-            reverse('instance-detail', args=[instance.cluster.slug, instance.hostname]))
+            reverse('instance-detail', args=[cluster.slug, instance.hostname]))
 
     return HttpResponseNotAllowed(["GET","POST"])
 

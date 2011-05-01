@@ -1,5 +1,6 @@
 {% extends "menu_base.html" %}
 {% load webmgr_tags %}
+{% load i18n %}
 
 {% block title %}Delete Virtual Machine{% endblock %}
 
@@ -8,6 +9,18 @@
 {% endblock %}
 
 {% block content %}
+
+<h1>
+    {% if cluster_admin %}
+    <a class="breadcrumb" href="{% url cluster-detail cluster.slug %}#virtual_machines">{{cluster.hostname|abbreviate_fqdn}}</a>
+    {% else %}
+    <span class="breadcrumb">{{cluster.hostname|abbreviate_fqdn}}</span>
+    {% endif %}
+    : <a class="breadcrumb" href="{% url instance-detail cluster.slug vm.hostname %}">{{ vm.hostname }}</a>
+    : {% trans "Delete" %}
+</h1>
+
+
 <div id="confirm">
     <div class="message">
         Are you sure you want to delete this virtual machine?  This action
