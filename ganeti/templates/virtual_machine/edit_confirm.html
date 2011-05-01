@@ -34,7 +34,9 @@ form input.save_reboot {width:10em;margin:1em .5em 0px 0px;}
 </div>
 {% endifequal %}
 <form method="post">
-    {{ form.as_p }}
+    {% csrf_token %}
+    {{ form.rapi_dict }}
+    {{ form.errors }}
     <input class="submit" type="submit" name="edit" value="{% trans "Edit" %}">
 {% if instance_diff.items %}
 {% ifequal status "running" %}

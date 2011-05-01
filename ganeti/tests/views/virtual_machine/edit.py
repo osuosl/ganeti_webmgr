@@ -199,6 +199,9 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         user.set_password('secret2')
         user.save()
 
+        vm.owner = user.get_profile()
+        vm.save()
+
         os_list = cluster_os_list(cluster)
         edit_form = dict(vcpus=2,
             acpi=True,
@@ -340,6 +343,7 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
 
             # User with Modify Permissions
             user.grant('modify', vm)
+            user.grant('power', vm)
             self.assertTrue(c.login(username=user.username, password='secret2'))
             session = c.session
             session['edit_form'] = edit_form

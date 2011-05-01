@@ -690,7 +690,10 @@ def modify(request, cluster_slug, instance):
             'You do not have permissions to edit this virtual machine')
 
     if request.method == 'POST':
-        form = ModifyVirtualMachineForm(user, request.POST)
+        form = ModifyVirtualMachineForm(user, cluster, request.POST)
+        form.owner = vm.owner
+        form.vm = vm
+        form.cluster = cluster
         form.fields['os'].choices = request.session['os_list']
         if form.is_valid():
             data = form.cleaned_data
@@ -729,7 +732,7 @@ def modify(request, cluster_slug, instance):
                 for field in fields:
                     initial[field] = hvparams[field]
 
-            form = ModifyVirtualMachineForm(user, initial=initial)
+            form = ModifyVirtualMachineForm(user, cluster, initial=initial)
 
             # Get the list of oses from the cluster
             os_list = cluster_os_list(cluster)
@@ -760,15 +763,20 @@ def modify_confirm(request, cluster_slug, instance):
             _('You do not have permissions to edit this virtual machine'))
 
     if request.method == "POST":
-        form = ModifyConfirmForm(request.POST)
-        if form.is_valid():
-            data = form.data
-            if 'edit' in request.POST:
-                return HttpResponseRedirect(
-                    reverse("instance-modify",
-                    args=[cluster.slug, vm.hostname]))
-            elif 'reboot' in request.POST or 'save' in request.POST:
-                rapi_dict = json.loads(data['rapi_dict'])
+        if 'edit' in request.POST:
+            return HttpResponseRedirect(
+                reverse("instance-modify",
+                args=[cluster.slug, vm.hostname]))
+        elif 'reboot' in request.POST or 'save' in request.POST:
+            form = ModifyConfirmForm(request.POST)
+            form.session = request.session
+            form.owner = vm.owner
+            form.vm = vm
+            form.cluster = cluster
+
+            if form.is_valid():
+                data = form.cleaned_data
+                rapi_dict = data['rapi_dict']
                 niclink = rapi_dict.pop('nic_link')
                 nicmac = rapi_dict.pop('nic_mac', None)
                 vcpus = rapi_dict.pop('vcpus')
@@ -798,6 +806,11 @@ def modify_confirm(request, cluster_slug, instance):
                         return render_403(request,
                             _("Sorry, but you do not have permission to reboot this machine."))
 
+                # Redirect to instance-detail
+                return HttpResponseRedirect(
+                    reverse("instance-detail", args=[cluster.slug, vm.hostname]))
+
+        elif 'cancel' in request.POST:
             # Remove session variables.
             if 'edit_form' in request.session:
                 del request.session['edit_form']
@@ -806,53 +819,54 @@ def modify_confirm(request, cluster_slug, instance):
             # Redirect to instance-detail
             return HttpResponseRedirect(
                 reverse("instance-detail", args=[cluster.slug, vm.hostname]))
-
-    if request.method == "GET":
+        
+    elif request.method == "GET":
         form = ModifyConfirmForm()
-        session = request.session
 
-        if not 'edit_form' in request.session:
-            return HttpResponseBadRequest('Incorrect Session Data')
+    session = request.session
 
-        data = session['edit_form']
-        info = vm.info
-        hvparams = info['hvparams']
+    if not 'edit_form' in request.session:
+        return HttpResponseBadRequest('Incorrect Session Data')
 
-        old_set = dict(
-            nic_link=info['nic.links'][0],
-            nic_mac=info['nic.macs'][0],
-            memory=info['beparams']['memory'],
-            vcpus=info['beparams']['vcpus'],
-            os=info['os'],
-        )
-        # Add hvparams to the old_set
-        old_set.update(hvparams)
+    data = session['edit_form']
+    info = vm.info
+    hvparams = info['hvparams']
 
-        instance_diff = {}
-        fields = ModifyVirtualMachineForm(user, None).fields
-        for key in data.keys():
-            if key == 'memory':
-                diff = compare(render_storage(old_set[key]),
-                    render_storage(data[key]))
-            elif key == 'os':
-                oses = os_prettify([old_set[key], data[key]])[0][1]
-                diff = compare(oses[0][1], oses[1][1])
-            elif key not in old_set.keys():
-                diff = ""
-                instance_diff[key] = 'Key missing'
-            else:
-                diff = compare(old_set[key], data[key])
+    old_set = dict(
+        nic_link=info['nic.links'][0],
+        nic_mac=info['nic.macs'][0],
+        memory=info['beparams']['memory'],
+        vcpus=info['beparams']['vcpus'],
+        os=info['os'],
+    )
+    # Add hvparams to the old_set
+    old_set.update(hvparams)
 
-            if diff != "":
-                label = fields[key].label
-                instance_diff[label] = diff
+    instance_diff = {}
+    fields = ModifyVirtualMachineForm(user, None).fields
+    for key in data.keys():
+        if key == 'memory':
+            diff = compare(render_storage(old_set[key]),
+                render_storage(data[key]))
+        elif key == 'os':
+            oses = os_prettify([old_set[key], data[key]])[0][1]
+            diff = compare(oses[0][1], oses[1][1])
+        elif key not in old_set.keys():
+            diff = ""
+            instance_diff[key] = 'Key missing'
+        else:
+            diff = compare(old_set[key], data[key])
 
-        # Remove NIC MAC from data if it does not change
-        if fields['nic_mac'].label not in instance_diff:
-            del data['nic_mac']
-        # Repopulate form with changed values
-        form.fields['rapi_dict'] = CharField(widget=HiddenInput,
-            initial=json.dumps(data))
+        if diff != "":
+            label = fields[key].label
+            instance_diff[label] = diff
+
+    # Remove NIC MAC from data if it does not change
+    if fields['nic_mac'].label not in instance_diff:
+        del data['nic_mac']
+    # Repopulate form with changed values
+    form.fields['rapi_dict'] = CharField(widget=HiddenInput,
+        initial=json.dumps(data))
 
     return render_to_response('virtual_machine/edit_confirm.html', {
         'cluster': cluster,
