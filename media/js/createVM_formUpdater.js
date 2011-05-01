@@ -51,7 +51,7 @@ function formUpdater(url_choices, url_options, url_defaults){
         // process the owner dropdown, i.e., if it only has a single option, 
         // select it, and make the dropdown read-only
         disableSingletonDropdown(owner, blankOptStr);
-    }
+    };
     
     function _initChangeHooks(){
         /* setup change hooks for the form elements */
@@ -129,6 +129,7 @@ function formUpdater(url_choices, url_options, url_defaults){
 
         // cluster change
         cluster.live("change", function() {
+            var child, child2;
             var pnode       = $("#id_pnode");
             var snode       = $("#id_snode");
             var oslist      = $("#id_os");
@@ -153,7 +154,7 @@ function formUpdater(url_choices, url_options, url_defaults){
                                 snode.append(child2);
                             }
                             else if (i == "os") {
-                                child = _newOptGroup(value[0], 
+                                child = _newOptGroup(value[0],
                                         value[1]);
                                 oslist.append(child);
                             }
@@ -309,7 +310,7 @@ function formUpdater(url_choices, url_options, url_defaults){
 
     function _newOpt(value, text) {
         /* Create new option items for select field */
-        o = $("<option></option>");
+        var o = $("<option></option>");
         o.attr("value", value);
         o.attr("text", text);
         return o;
@@ -317,7 +318,7 @@ function formUpdater(url_choices, url_options, url_defaults){
 
     function _newOptGroup(value, options) {
         /* Create new option group for select field */
-        group = $("<optgroup></optgroup>");
+        var group = $("<optgroup></optgroup>");
         group.attr("label", value);
         $.each(options, function(i, option) {
             group.append(_newOpt(option[0], option[1]));
