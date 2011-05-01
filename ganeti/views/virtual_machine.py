@@ -698,15 +698,17 @@ def modify(request, cluster_slug, instance):
         if form.is_valid():
             data = form.cleaned_data
             request.session['edit_form'] = data
-
+            request.session['edit_vm'] = vm.id
             return HttpResponseRedirect(
             reverse('instance-modify-confirm', args=[cluster.slug, vm.hostname]))
 
     elif request.method == 'GET':
-        if 'edit_form' in request.session:
+        if 'edit_form' in request.session and vm.id == request.session['edit_vm']:
             form = ModifyVirtualMachineForm(user, cluster, request.session['edit_form'])
-            del request.session['edit_form']
         else:
+            form = None
+                
+        if form is None:
             # Need to set initial values from vm.info as these are not saved
             #  per the vm model.
             if vm.info and 'hvparams' in vm.info:
