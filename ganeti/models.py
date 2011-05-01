@@ -469,6 +469,10 @@ class VirtualMachine(CachedClusterObject):
     def rapi(self):
         return get_rapi(self.cluster_hash, self.cluster_id)
 
+    @property
+    def is_running(self):
+        return self.status == 'running'
+
     def save(self, *args, **kwargs):
         """
         sets the cluster_hash for newly saved instances
