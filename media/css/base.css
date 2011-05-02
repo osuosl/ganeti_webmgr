@@ -158,3 +158,24 @@ pre {
 #footer a {color:#C16328;}
 
 .floatfix {clear:both;}
+
+/**
+ * Top menu bar
+ **/
+#language {cursor:pointer;}
+#languages {
+    background-color:#C16328;
+    display:none;
+    margin: 5px 0;
+    width:245px;
+    -moz-border-radius-bottomleft:15px;
+    -moz-border-radius-bottomright:15px;
+
+}
+#languages ul {margin-left:15px;}
+#languages ul li {
+    float:left;
+    list-style:disc !important;
+    margin:3px;
+    width:70px;
+}
