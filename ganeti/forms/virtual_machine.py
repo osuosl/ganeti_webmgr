@@ -402,6 +402,12 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
         'serial_console', 'disk_cache', 'security_model', 'security_domain', \
         'kvm_flag', 'use_chroot', 'migration_downtime', 'usb_mouse', \
         'mem_path')
+    pvm_exclude_fields = ('vnc_tls', 'vnc_x509_path', 'vnc_x509_verify',
+        'serial_console', 'disk_cache', 'security_model', 'security_domain',
+        'kvm_flag', 'use_chroot', 'migration_downtime', 'usb_mouse',
+        'mem_path', 'disk_type', 'boot_order', 'nic_type',  'acpi',
+        'use_localtime', 'cdrom_image_path', 'vnc_bind_address',
+        )
     # Fields that should be required.
     required = ('vcpus', 'memory')
     non_pvm_required = ('disk_type', 'boot_order', 'nic_type')
@@ -441,7 +447,10 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
 
     # TODO: Need to reference cluster in init...but no reference to cluster.
     def __init__(self, user, cluster, initial=None, *args, **kwargs):
-        initial['cluster'] = cluster.id
+        if initial is not None:
+            cp = initial.copy()
+            cp.__setitem__('cluster', cluster.id)
+            initial = cp
         super(ModifyVirtualMachineForm, self).__init__(user, initial=initial,\
                 *args, **kwargs)
         # Remove all fields in the form that are not required to modify the 
@@ -460,8 +469,12 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
         if hv == 'xen-hvm':
             for field in self.hvm_exclude_fields:
                 del self.fields[field]
-        if hv == 'kvm' or hv == 'xen-hvm':
-            for field in self.non_pvm_required:
+        elif hv == 'xen-pvm':
+            for field in self.pvm_exclude_fields:
+                del self.fields[field]
+
+        for field in self.non_pvm_required:
+            if hv != 'xen-pvm':
                 self.fields[field].required = True
 
         

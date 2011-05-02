@@ -724,6 +724,7 @@ def modify(request, cluster_slug, instance):
     elif request.method == 'GET':
         if 'edit_form' in request.session:
             form = ModifyVirtualMachineForm(user, cluster, request.session['edit_form'])
+            form.fields['os_name'].choices = request.session['os_list']
             del request.session['edit_form']
         else:
             # Need to set initial values from vm.info as these are not saved
@@ -740,14 +741,26 @@ def modify(request, cluster_slug, instance):
                 initial['nic_link'] = info['nic.links'][0]
                 initial['nic_mac'] = info['nic.macs'][0]
                 initial['os_name'] = info['os']
-                fields = ('acpi', 'disk_cache', 'initrd_path', 'kernel_args',
-                    'kvm_flag', 'mem_path', 'migration_downtime',
-                    'security_domain', 'security_model', 'usb_mouse',
-                    'use_chroot', 'use_localtime', 'vnc_bind_address',
-                    'vnc_tls', 'vnc_x509_path', 'vnc_x509_verify',
-                    'disk_type', 'boot_order', 'nic_type', 'root_path',
-                    'kernel_path', 'serial_console', 'cdrom_image_path',
-                )
+                if hv == 'kvm':
+                    fields = ('acpi', 'disk_cache', 'initrd_path', 
+                        'kernel_args', 'kvm_flag', 'mem_path', 
+                        'migration_downtime', 'security_domain', 
+                        'security_model', 'usb_mouse', 'use_chroot', 
+                        'use_localtime', 'vnc_bind_address', 'vnc_tls', 
+                        'vnc_x509_path', 'vnc_x509_verify', 'disk_type', 
+                        'boot_order', 'nic_type', 'root_path', 
+                        'kernel_path', 'serial_console', 
+                        'cdrom_image_path',
+                    )
+                elif hv == 'xen-pvm':
+                    fields = ('root_path', 'kernel_path', 'kernel_args',
+                        'initrd_path',
+                    )
+                elif hv == 'xen-hvm':
+                    fields = ('boot_order', 'cdrom_image_path', 'nic_type',
+                        'disk_type', 'vnc_bind_address', 'acpi', 
+                        'use_localtime',
+                    )
                 for field in fields:
                     initial[field] = hvparams[field]
 
@@ -765,6 +778,8 @@ def modify(request, cluster_slug, instance):
     template = "virtual_machine/edit.html"
     if hv == 'xen-hvm':
         template = "virtual_machine/edit_hvm.html"
+    elif hv == 'xen-pvm':
+        template = 'virtual_machine/edit_pvm.html'
        
     return render_to_response(template, {
         'cluster': cluster,
