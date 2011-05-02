@@ -672,8 +672,11 @@ def create(request, cluster_slug=None):
                 form._errors["cluster"] = form.error_class([msg])
         
         if 'cluster' in request.POST and request.POST['cluster'] != '':
-            cluster =  Cluster.objects.get(pk=request.POST['cluster'])
-            cluster_defaults = cluster_default_info(cluster)
+            try:
+                cluster =  Cluster.objects.get(pk=request.POST['cluster'])
+                cluster_defaults = cluster_default_info(cluster)
+            except Cluster.DoesNotExist:
+                cluster_defaults = {}
         else:
             cluster_defaults = {}
                 
