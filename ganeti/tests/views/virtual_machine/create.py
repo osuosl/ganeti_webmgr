@@ -161,7 +161,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         url = '/vm/add/%s'
         cluster1 = Cluster(hostname='test2.osuosl.bak', slug='OSL_TEST2')
         cluster1.save()
-        data = dict(cluster=-1,
+        data = dict(cluster=cluster.id,
                     start=True,
                     owner=user.get_profile().id, #XXX remove this
                     hostname='new.vm.hostname',
