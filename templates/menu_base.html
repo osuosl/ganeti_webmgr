@@ -6,33 +6,16 @@
 
 {% block basehead %}
 <link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}/css/content.css"/>
-<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.js"></script>
+
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip.js"></script>
 <script type="text/javascript">var DOMAIN = "{% current_domain %}";</script>
 <script type="text/javascript" src="{{MEDIA_URL}}/js/ajax_csrf_protection.js"></script>
-<script type="text/javascript" src="{{MEDIA_URL}}/js/L18N.js"></script>
 {% endblock %}
 
 {% block inner_header %}
-<div id="user_menu">
-    {% ifnotequal LANGUAGES|length 1 %}<span id="language">{{ LANGUAGE_CODE }} &#9660;</span> |{% endifnotequal %}
-	{% trans "You are logged in as" %} <a href="{% url profile %}">{{user.username}}</a>,
+    {% ifnotequal LANGUAGES|length 1 %}|{% endifnotequal %}
+    {% trans "You are logged in as" %} <a href="{% url profile %}">{{user.username}}</a>,
     <a href="{% url logout %}">{% trans "Logout" %}</a>
-	{% ifnotequal LANGUAGES|length 1 %}
-    <div id="languages">
-    <form action="/i18n/setlang/" method="post" id="langform">
-		<input name="next" type="hidden" value="" />
-		<input id="langsel" name="language" type="hidden" value="" />
-        <ul>
-		{% for lang in LANGUAGES %}
-            <li><a class="select_lang" href="#" onclick="setlang('{{ lang.0 }}'); return false;" title="{{lang.1}}">{% ifequal LANGUAGE_CODE lang.0 %}<strong>{% endifequal %}{{ lang.0 }}{% ifequal LANGUAGE_CODE lang.0 %}</strong>{% endifequal %}</a></li>
-		{% endfor %}
-        </ul>
-		{% csrf_token %}
-	</form>
-    </div>
-	{% endifnotequal %}
-</div>
 {% endblock %}
     
 {% block navigation %}

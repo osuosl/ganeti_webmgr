@@ -7,26 +7,6 @@ h1 a.breadcrumb:hover {text-decoration:underline;}
     background: url(/media/images/background_with_menu.png) repeat-y center #eee !important;
 }
 
-#user_menu {
-    background-color:#C16328;
-    border: 1px solid #ccc;
-    border-width:0 1px 1px 1px;
-    font-weight:normal;
-    font-size:11px;
-    min-height:18px;
-    padding:5px 5px 0 10px;
-    position:absolute;
-    right:50px;
-    top:-1px;
-    -moz-border-radius-bottomleft:5px;
-    -moz-border-radius-bottomright:5px;
-    -webkit-border-bottom-left-radius: 5px;
-    -webkit-border-bottom-right-radius: 5px;
-    z-index:100;
-}
-#user_menu a {font-size:11px !important; margin:0 !important; padding:0 !important;}
-#user_menu a:hover {text-decoration:underline;}
-
 .menu {
     float:left;
     color:#555555;

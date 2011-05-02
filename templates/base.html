@@ -5,6 +5,10 @@
     <head>
     <title>{% block title %}Ganeti Web Manager{% endblock %}</title>
     <link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}/css/base.css"/>
+    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.js"></script>
+    {% ifnotequal LANGUAGES|length 1 %}
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/L18N.js"></script>
+    {% endifnotequal %}
     {% block basehead %}{% endblock %}
     {% block head %}{% endblock %}
     </head>
@@ -14,7 +18,22 @@
         <div id="header_strip"></div>
         <div id="header">
             <a href="/" id="logo"><img src="{{MEDIA_URL}}/logo.png"/></a>
-            {% block inner_header %}{% endblock %}
+            <div id="user_menu">
+                {% ifnotequal LANGUAGES|length 1 %}<span id="language">{{ LANGUAGE_CODE }} &#9660;</span>{% endifnotequal %}
+                {% block inner_header %}{% endblock %}
+                {% ifnotequal LANGUAGES|length 1 %}
+                <ul id="languages">
+                    {% for lang in LANGUAGES %}
+                        <li><a class="select_lang" href="#" title="{{lang.1}}" {% ifequal LANGUAGE_CODE lang.0 %}class="current"{% endifequal %}>{{ lang.0 }}</a></li>
+                    {% endfor %}
+                    <form action="/i18n/setlang/" method="post" id="langform">
+                        {% csrf_token %}
+                        <input id="langsel" name="language" type="hidden" value="" />
+                    </form>
+                    <div class="floatfix"></div>
+                </ul>
+                {% endifnotequal %}
+            </div>
         </div>
         <div id="content_wrapper">
             <div id="content_column">

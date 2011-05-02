@@ -2,14 +2,7 @@
  * Django L18N localization selection.
  */
 
-function setlang(lang){
-    $("#langsel").val(lang);
-    $("#langform").submit();
-}
-
 $(function(){
-
-
     $('#language').click(function(event) {
         var $language = $(this);
         var $languages = $('#languages')
@@ -23,5 +16,12 @@ $(function(){
             });
             event.stopPropagation();
         }
+    });
+
+    $('#languages li a').click(function(event) {
+        event.preventDefault();
+        var lang = $(this).html();
+        $("#langsel").val(lang);
+        $("#langform").submit();
     });
 });
