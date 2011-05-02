@@ -2,8 +2,8 @@
 * {
     font-family:"Lucida Grande","DejaVu Sans","Bitstream Vera Sans",Verdana,Arial,sans-serif;
     font-size:12px;
-    margin: 0px;
-    padding: 0px;
+    margin: 0;
+    padding: 0;
 }
 
 html {width: 100%;}
@@ -23,7 +23,7 @@ body:before {
     margin-top:-32767px;
 }
 
-h1 {font-size: 1.5em; margin-top: 0px;}
+h1 {font-size: 1.5em; margin-top: 0;}
 h2 {font-size: 1.4em;}
 h3 {font-size: 1.1em; margin: 15px 0 0.5ex 0;}
 h3 a, h3 a:visited {color: #559BD7; font-size: 1em; text-decoration: none;}
@@ -35,12 +35,12 @@ table {border-collapse:collapse;}
 tr.even {background: #fafafa;}
 td a {border:0;}
 
-ul {margin-top: 0px; list-style-type: square;}
+ul {margin-top: 0; list-style-type: square;}
 li {
     font-size:12px;
     line-height:16px;
     list-style:none;
-    margin-left:0px; 
+    margin-left:0;
 }
 
 /**
@@ -56,8 +56,8 @@ form p label {
     display: block;
 }
 form ul.errorlist {color:red;padding:1ex 1ex;}
-form p {padding:0.5ex 0ex;}
-fieldset {border:0px; padding-top:0.7em;}
+form p {padding:0.5ex 0;}
+fieldset {border:0; padding-top:0.7em;}
 legend {font-size: 1.1em; font-weight:bold; padding-top: 10px;}
 form table, form table td, form table td {border:0 !important;}
 form p label {width:12em;}
@@ -148,7 +148,7 @@ pre {
     clear:both; /* sticky footer */
     color: #C8CED3;
     height: 60px; /* sticky footer - must have fixed height */
-    margin: -67px auto 0px auto; /* Sticky footer - top is negative value of footer height, includes padding */
+    margin: -67px auto 0 auto; /* Sticky footer - top is negative value of footer height, includes padding */
     position:relative; /* Sticky Footer */
     padding: 5px 0 0 0;
     text-align: center;
