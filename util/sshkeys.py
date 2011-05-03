@@ -7,12 +7,15 @@ import urllib2
 import json
 
 
-class ArgumentException(BaseException):
-    pass
+class ArgumentException(Exception):
+    """
+    There was a bad argument, or something like that.
+    """
 
-class BadMimetype(BaseException):
-    pass
-
+class BadMimetype(Exception):
+    """
+    There was a bad MIME type, or something like that.
+    """
 
 class Application:
     def __init__(self, api_key, hostname, cluster_slug=None, vm_name=None):
@@ -33,7 +36,7 @@ class Application:
         if content.info()["Content-Type"] != "application/json":
             raise BadMimetype("It's not JSON")
         return content.read()
-    
+
     def parse(self, content):
         """
         Parses returned results from JSON into Python list
