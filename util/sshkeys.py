@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-import sys
 from optparse import OptionParser
-import urllib2
+from urllib2 import urlopen
+from urlparse import urlparse, urlunparse
 import json
+import sys
 
 parser = OptionParser()
 parser.add_option("-c", "--cluster", help="cluster to retrieve keys from")
@@ -33,20 +34,24 @@ class BadMimetype(Exception):
 
 class Application:
     def __init__(self, api_key, hostname, cluster_slug=None, vm_name=None):
-        if cluster_slug and vm_name:
-            self.url = "http://%s/cluster/%s/%s/keys/%s/" % \
-                  (hostname, cluster_slug, vm_name, api_key)
-        elif cluster_slug:
-            self.url = "http://%s/cluster/%s/keys/%s/" % \
-                       (hostname, cluster_slug, api_key)
+        if cluster_slug is not None:
+            if vm_name is not None:
+                path = "/cluster/%s/%s/keys/%s" % (cluster_slug, vm_name,
+                                                   api_key)
+            else:
+                path = "/cluster/%s/keys/%s" % (cluster_slug, api_key)
         else:
-            self.url = "http://%s/keys/%s/" % (hostname, api_key)
+            path = "/keys/%s/" % api_key
+
+        split = urlparse(hostname)
+        self.url = urlunparse(split._replace(path=path))
 
     def get(self):
         """
         Gets the page specified in __init__
         """
-        content = urllib2.urlopen(self.url)
+
+        content = urlopen(self.url)
         if content.info()["Content-Type"] != "application/json":
             raise BadMimetype("It's not JSON")
         return content.read()
@@ -55,12 +60,14 @@ class Application:
         """
         Parses returned results from JSON into Python list
         """
+
         return json.loads(content)
 
     def printout(self, data):
         """
         Returns string with authorized_keys file syntax and some comments
         """
+
         s = []
         for i in data:
             # append key and comment with username
