@@ -32,14 +32,14 @@ class BadMimetype(Exception):
     There was a bad MIME type, or something like that.
     """
 
-class Application:
+class Application(object):
     def __init__(self, api_key, hostname, cluster_slug=None, vm_name=None):
         if cluster_slug is not None:
             if vm_name is not None:
-                path = "/cluster/%s/%s/keys/%s" % (cluster_slug, vm_name,
-                                                   api_key)
+                path = "/cluster/%s/%s/keys/%s/" % (cluster_slug, vm_name,
+                                                    api_key)
             else:
-                path = "/cluster/%s/keys/%s" % (cluster_slug, api_key)
+                path = "/cluster/%s/keys/%s/" % (cluster_slug, api_key)
         else:
             path = "/keys/%s/" % api_key
 
@@ -68,12 +68,9 @@ class Application:
         Returns string with authorized_keys file syntax and some comments
         """
 
-        s = []
-        for i in data:
-            # append key and comment with username
-            s.append("%s  added automatically for ganeti web manager user: %s\n" % \
-                    (i[0], i[1]))
-        return "".join(s)
+        s = ["%s added automatically for ganeti web manager user: %s" % i
+             for i in data]
+        return "\n".join(s)
 
     def run(self):
         """
@@ -81,7 +78,7 @@ class Application:
         """
         try:
             s = self.printout(self.parse(self.get()))
-        except BaseException, e:
+        except Exception, e:
             sys.stderr.write("Errors occured, could not retrieve informations.\n")
             sys.stderr.write(str(e)+"\n")
         else:
