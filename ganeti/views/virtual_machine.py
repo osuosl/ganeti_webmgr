@@ -58,6 +58,7 @@ def delete(request, cluster_slug, instance):
     """
 
     user = request.user
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
     instance = get_object_or_404(VirtualMachine, cluster__slug=cluster_slug,
         hostname=instance)
 
@@ -65,13 +66,13 @@ def delete(request, cluster_slug, instance):
     if not (
         user.is_superuser or
         user.has_any_perms(instance, ["remove", "admin"]) or
-        user.has_perm("admin", instance.cluster)
+        user.has_perm("admin", cluster)
         ):
         return render_403(request, _('You do not have sufficient privileges'))
 
     if request.method == 'GET':
         return render_to_response("virtual_machine/delete.html",
-            {'vm': instance},
+            {'vm': instance, 'cluster':cluster},
             context_instance=RequestContext(request),
         )
 
@@ -105,6 +106,7 @@ def reinstall(request, cluster_slug, instance):
     """
 
     user = request.user
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
     instance = get_object_or_404(VirtualMachine, cluster__slug=cluster_slug,
         hostname=instance)
 
@@ -114,14 +116,15 @@ def reinstall(request, cluster_slug, instance):
     if not (
         user.is_superuser or
         user.has_any_perms(instance, ["remove", "admin"]) or
-        user.has_perm("admin", instance.cluster)
+        user.has_perm("admin", cluster)
         ):
         return render_403(request, _('You do not have sufficient privileges'))
 
     if request.method == 'GET':
         return render_to_response("virtual_machine/reinstall.html",
-            {'vm': instance, 'oschoices': cluster_os_list(instance.cluster),
-             'current_os': instance.operating_system, 'submitted': False},
+            {'vm': instance, 'oschoices': cluster_os_list(cluster),
+             'current_os': instance.operating_system,
+             'cluster':cluster},
             context_instance=RequestContext(request),
         )
 
@@ -137,14 +140,14 @@ def reinstall(request, cluster_slug, instance):
         # checking whether this VM is already running and subtracting that)
 
         job_id = instance.rapi.ReinstallInstance(instance.hostname, os=os, no_startup=True)
-        job = Job.objects.create(job_id=job_id, obj=instance, cluster=instance.cluster)
+        job = Job.objects.create(job_id=job_id, obj=instance, cluster=cluster)
         VirtualMachine.objects.filter(id=instance.id).update(last_job=job, ignore_cache=True)
 
         # log information
         log_action('VM_REINSTALL', user, instance, job)
 
         return HttpResponseRedirect(
-            reverse('instance-detail', args=[instance.cluster.slug, instance.hostname]))
+            reverse('instance-detail', args=[cluster.slug, instance.hostname]))
 
     return HttpResponseNotAllowed(["GET","POST"])
 
@@ -615,12 +618,12 @@ def create(request, cluster_slug=None):
                 job_id = cluster.rapi.CreateInstance('create', hostname,
                         disk_template,
                         [{"size": disk_size, }],[{'mode':nic_mode, 'link':nic_link, }],
-                        start=start, os=os, vcpus=vcpus,
+                        start=start, os=os,
                         pnode=pnode, snode=snode,
                         name_check=name_check, ip_check=name_check,
                         iallocator=iallocator_hostname,
                         hvparams=hvparams,
-                        beparams={"memory": memory})
+                        beparams={"memory": memory, 'vcpus':vcpus})
 
                 # Check for a vm recovery, If it is not found then
                 if 'vm_recovery' in data:
@@ -667,12 +670,23 @@ def create(request, cluster_slug=None):
             except GanetiApiError, e:
                 msg = '%s: %s' % (_('Error creating virtual machine on this cluster'),e)
                 form._errors["cluster"] = form.error_class([msg])
-
+        
+        if 'cluster' in request.POST and request.POST['cluster'] != '':
+            try:
+                cluster =  Cluster.objects.get(pk=request.POST['cluster'])
+                cluster_defaults = cluster_default_info(cluster)
+            except Cluster.DoesNotExist:
+                cluster_defaults = {}
+        else:
+            cluster_defaults = {}
+                
     elif request.method == 'GET':
         form = NewVirtualMachineForm(user)
+        cluster_defaults = {}
 
     return render_to_response('virtual_machine/create.html', {
-        'form': form
+        'form': form,
+        'cluster_defaults':json.dumps(cluster_defaults)
         },
         context_instance=RequestContext(request),
     )
@@ -690,20 +704,25 @@ def modify(request, cluster_slug, instance):
             'You do not have permissions to edit this virtual machine')
 
     if request.method == 'POST':
-        form = ModifyVirtualMachineForm(user, request.POST)
+        form = ModifyVirtualMachineForm(user, cluster, request.POST)
+        form.owner = vm.owner
+        form.vm = vm
+        form.cluster = cluster
         form.fields['os'].choices = request.session['os_list']
         if form.is_valid():
             data = form.cleaned_data
             request.session['edit_form'] = data
-
+            request.session['edit_vm'] = vm.id
             return HttpResponseRedirect(
             reverse('instance-modify-confirm', args=[cluster.slug, vm.hostname]))
 
     elif request.method == 'GET':
-        if 'edit_form' in request.session:
+        if 'edit_form' in request.session and vm.id == request.session['edit_vm']:
             form = ModifyVirtualMachineForm(user, cluster, request.session['edit_form'])
-            del request.session['edit_form']
         else:
+            form = None
+                
+        if form is None:
             # Need to set initial values from vm.info as these are not saved
             #  per the vm model.
             if vm.info and 'hvparams' in vm.info:
@@ -729,14 +748,14 @@ def modify(request, cluster_slug, instance):
                 for field in fields:
                     initial[field] = hvparams[field]
 
-            form = ModifyVirtualMachineForm(user, initial=initial)
+            form = ModifyVirtualMachineForm(user, cluster, initial=initial)
 
-            # Get the list of oses from the cluster
-            os_list = cluster_os_list(cluster)
+        # Get the list of oses from the cluster
+        os_list = cluster_os_list(cluster)
 
-            # Set os_list for cluster in session
-            request.session['os_list'] = os_list
-            form.fields['os'].choices = os_list
+        # Set os_list for cluster in session
+        request.session['os_list'] = os_list
+        form.fields['os'].choices = os_list
 
     return render_to_response("virtual_machine/edit.html", {
         'cluster': cluster,
@@ -760,15 +779,20 @@ def modify_confirm(request, cluster_slug, instance):
             _('You do not have permissions to edit this virtual machine'))
 
     if request.method == "POST":
-        form = ModifyConfirmForm(request.POST)
-        if form.is_valid():
-            data = form.data
-            if 'edit' in request.POST:
-                return HttpResponseRedirect(
-                    reverse("instance-modify",
-                    args=[cluster.slug, vm.hostname]))
-            elif 'reboot' in request.POST or 'save' in request.POST:
-                rapi_dict = json.loads(data['rapi_dict'])
+        if 'edit' in request.POST:
+            return HttpResponseRedirect(
+                reverse("instance-modify",
+                args=[cluster.slug, vm.hostname]))
+        elif 'reboot' in request.POST or 'save' in request.POST:
+            form = ModifyConfirmForm(request.POST)
+            form.session = request.session
+            form.owner = vm.owner
+            form.vm = vm
+            form.cluster = cluster
+
+            if form.is_valid():
+                data = form.cleaned_data
+                rapi_dict = data['rapi_dict']
                 niclink = rapi_dict.pop('nic_link')
                 nicmac = rapi_dict.pop('nic_mac', None)
                 vcpus = rapi_dict.pop('vcpus')
@@ -798,6 +822,11 @@ def modify_confirm(request, cluster_slug, instance):
                         return render_403(request,
                             _("Sorry, but you do not have permission to reboot this machine."))
 
+                # Redirect to instance-detail
+                return HttpResponseRedirect(
+                    reverse("instance-detail", args=[cluster.slug, vm.hostname]))
+
+        elif 'cancel' in request.POST:
             # Remove session variables.
             if 'edit_form' in request.session:
                 del request.session['edit_form']
@@ -806,53 +835,54 @@ def modify_confirm(request, cluster_slug, instance):
             # Redirect to instance-detail
             return HttpResponseRedirect(
                 reverse("instance-detail", args=[cluster.slug, vm.hostname]))
-
-    if request.method == "GET":
+        
+    elif request.method == "GET":
         form = ModifyConfirmForm()
-        session = request.session
 
-        if not 'edit_form' in request.session:
-            return HttpResponseBadRequest('Incorrect Session Data')
+    session = request.session
 
-        data = session['edit_form']
-        info = vm.info
-        hvparams = info['hvparams']
+    if not 'edit_form' in request.session:
+        return HttpResponseBadRequest('Incorrect Session Data')
 
-        old_set = dict(
-            nic_link=info['nic.links'][0],
-            nic_mac=info['nic.macs'][0],
-            memory=info['beparams']['memory'],
-            vcpus=info['beparams']['vcpus'],
-            os=info['os'],
-        )
-        # Add hvparams to the old_set
-        old_set.update(hvparams)
+    data = session['edit_form']
+    info = vm.info
+    hvparams = info['hvparams']
 
-        instance_diff = {}
-        fields = ModifyVirtualMachineForm(user, None).fields
-        for key in data.keys():
-            if key == 'memory':
-                diff = compare(render_storage(old_set[key]),
-                    render_storage(data[key]))
-            elif key == 'os':
-                oses = os_prettify([old_set[key], data[key]])[0][1]
-                diff = compare(oses[0][1], oses[1][1])
-            elif key not in old_set.keys():
-                diff = ""
-                instance_diff[key] = 'Key missing'
-            else:
-                diff = compare(old_set[key], data[key])
+    old_set = dict(
+        nic_link=info['nic.links'][0],
+        nic_mac=info['nic.macs'][0],
+        memory=info['beparams']['memory'],
+        vcpus=info['beparams']['vcpus'],
+        os=info['os'],
+    )
+    # Add hvparams to the old_set
+    old_set.update(hvparams)
 
-            if diff != "":
-                label = fields[key].label
-                instance_diff[label] = diff
+    instance_diff = {}
+    fields = ModifyVirtualMachineForm(user, None).fields
+    for key in data.keys():
+        if key == 'memory':
+            diff = compare(render_storage(old_set[key]),
+                render_storage(data[key]))
+        elif key == 'os':
+            oses = os_prettify([old_set[key], data[key]])[0][1]
+            diff = compare(oses[0][1], oses[1][1])
+        elif key not in old_set.keys():
+            diff = ""
+            instance_diff[key] = 'Key missing'
+        else:
+            diff = compare(old_set[key], data[key])
 
-        # Remove NIC MAC from data if it does not change
-        if fields['nic_mac'].label not in instance_diff:
-            del data['nic_mac']
-        # Repopulate form with changed values
-        form.fields['rapi_dict'] = CharField(widget=HiddenInput,
-            initial=json.dumps(data))
+        if diff != "":
+            label = fields[key].label
+            instance_diff[label] = diff
+
+    # Remove NIC MAC from data if it does not change
+    if fields['nic_mac'].label not in instance_diff:
+        del data['nic_mac']
+    # Repopulate form with changed values
+    form.fields['rapi_dict'] = CharField(widget=HiddenInput,
+        initial=json.dumps(data))
 
     return render_to_response('virtual_machine/edit_confirm.html', {
         'cluster': cluster,
@@ -894,9 +924,12 @@ def recover_failed_deploy(request, cluster_slug, instance):
             initial[k] = v
     initial['cluster'] = vm.template.cluster_id
     initial['pnode'] = vm.template.pnode
+    initial['owner'] = vm.owner_id
     form = NewVirtualMachineForm(request.user, initial=initial)
+    cluster_defaults = cluster_default_info(cluster)
 
-    return render_to_response('virtual_machine/create.html', {'form': form},
+    return render_to_response('virtual_machine/create.html',
+        {'form': form, 'cluster_defaults':json.dumps(cluster_defaults)},
         context_instance=RequestContext(request),
     )
 
@@ -972,6 +1005,7 @@ def rename(request, cluster_slug, instance):
         },
         context_instance=RequestContext(request),
     )
+
 
 @login_required
 def cluster_choices(request):

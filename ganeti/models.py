@@ -469,6 +469,10 @@ class VirtualMachine(CachedClusterObject):
     def rapi(self):
         return get_rapi(self.cluster_hash, self.cluster_id)
 
+    @property
+    def is_running(self):
+        return self.status == 'running'
+
     def save(self, *args, **kwargs):
         """
         sets the cluster_hash for newly saved instances
@@ -850,7 +854,7 @@ class Cluster(CachedClusterObject):
     hash = models.CharField(_('hash'), max_length=40, editable=False)
     
     # quota properties
-    virtual_cpus = models.IntegerField(_('virtual_cpus'), null=True, blank=True)
+    virtual_cpus = models.IntegerField(_('Virtual CPUs'), null=True, blank=True)
     disk = models.IntegerField(_('disk'), null=True, blank=True)
     ram = models.IntegerField(_('ram'), null=True, blank=True)
 

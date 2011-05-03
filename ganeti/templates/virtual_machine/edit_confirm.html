@@ -1,5 +1,6 @@
 {% extends "menu_base.html" %}
 {% load i18n %}
+{% load webmgr_tags %}
 {% block head %}
 <style>
 div.info {float:left;width:390px;margin:0px;}
@@ -12,7 +13,16 @@ form input.save_reboot {width:10em;margin:1em .5em 0px 0px;}
 </style>
 {% endblock %}
 {% block content %}
-<h1>{% trans "Confirm Changes" %}</h1>
+<h1>
+    {% if cluster_admin %}
+    <a class="breadcrumb" href="{% url cluster-detail cluster.slug %}#virtual_machines">{{cluster.hostname|abbreviate_fqdn}}</a>
+    {% else %}
+    <span class="breadcrumb">{{cluster.hostname|abbreviate_fqdn}}</span>
+    {% endif %}
+    : <a class="breadcrumb" href="{% url instance-detail cluster.slug instance.hostname %}">{{ instance.hostname }}</a>
+    : {% trans "Confirm Changes" %}
+</h1>
+
 <div id="vm_summary">
     <table>
         <h2><a href="{% url instance-detail cluster.slug instance.hostname %}">{{ instance.hostname }}</a></h2>
@@ -34,7 +44,9 @@ form input.save_reboot {width:10em;margin:1em .5em 0px 0px;}
 </div>
 {% endifequal %}
 <form method="post">
-    {{ form.as_p }}
+    {% csrf_token %}
+    {{ form.rapi_dict }}
+    {{ form.errors }}
     <input class="submit" type="submit" name="edit" value="{% trans "Edit" %}">
 {% if instance_diff.items %}
 {% ifequal status "running" %}
