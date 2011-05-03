@@ -6,6 +6,20 @@ from optparse import OptionParser
 import urllib2
 import json
 
+parser = OptionParser()
+parser.add_option("-c", "--cluster", help="cluster to retrieve keys from")
+parser.add_option("-i", "--instance", help="instance to retrieve keys from")
+
+def main():
+    options, arguments = parser.parse_args()
+    if len(arguments) < 2:
+        parser.error("an API key and hostname are required")
+    if options.instance and not options.cluster:
+        parser.error("instances cannot be specified without a cluster")
+
+    app = Application(arguments[0], arguments[1],
+                      cluster_slug=options.cluster, vm_name=options.instance)
+    app.run()
 
 class ArgumentException(Exception):
     """
@@ -66,31 +80,5 @@ class Application:
         else:
             sys.stdout.write(s)
 
-
-def main():
-    if len(sys.argv)<3:
-        raise ArgumentException("Too much or too few arguments!")
-    return sys.argv[1:]
-
-
 if __name__ == "__main__":
-    try:
-        options = main()
-    except ArgumentException, e:
-        sys.stderr.write(str(e)+"\n"*2)
-        sys.stderr.write(
-"""Usage:   sshkeys.py API_KEY  HOSTNAME  [CLUSTER_SLUG  [VM_NAME]]
-
-API_KEY\t\tGaneti API key used to connect to the application
-HOSTNAME\thost Ganeti is running on
-CLUSTER_SLUG\t(optional) cluster short name, if not given all ssh keys for all clusters are retrieved
-VM_NAME\t\t(optional) virtual machine instance name, if not given all ssh keys for the cluster are retrieved
-""")
-        sys.exit(1)
-    else:
-        try:
-            a = Application(*options)
-            a.run()
-        except Exception, e:
-            sys.stderr.write('error retrieving sshkeys')
-            sys.stderr.write(str(e))
+    main()
