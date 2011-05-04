@@ -599,8 +599,6 @@ def create(request, cluster_slug=None):
                 hvparam_fields = ('kernel_path', 'root_path')
             elif hv == 'xen-hvm':
                 hvparam_fields = (
-                    'kernel_path',
-                    'root_path',
                     'boot_order',
                     'disk_type',
                     'nic_type',
@@ -617,7 +615,7 @@ def create(request, cluster_slug=None):
             else:
                 hvparam_fields = None
 
-            if hvparam_fields:
+            if hvparam_fields is not None:
                 for field in hvparam_fields:
                     hvparams[field] = data[field]
 
@@ -637,6 +635,7 @@ def create(request, cluster_slug=None):
                         pnode=pnode, snode=snode,
                         name_check=name_check, ip_check=name_check,
                         iallocator=iallocator_hostname,
+                        hypervisor=hv,
                         hvparams=hvparams,
                         beparams={"memory": memory, "vcpus":vcpus})
 
@@ -736,6 +735,7 @@ def modify(request, cluster_slug, instance):
                 # XXX Convert ram string since it comes out
                 #  from ganeti as an int and the DataVolumeField does not like
                 #  ints.
+                initial['cluster'] = cluster.id
                 initial['vcpus'] = info['beparams']['vcpus']
                 initial['memory'] = str(info['beparams']['memory'])
                 initial['nic_link'] = info['nic.links'][0]
@@ -780,7 +780,7 @@ def modify(request, cluster_slug, instance):
         template = "virtual_machine/edit_hvm.html"
     elif hv == 'xen-pvm':
         template = 'virtual_machine/edit_pvm.html'
-       
+
     return render_to_response(template, {
         'cluster': cluster,
         'instance': vm,
@@ -1071,6 +1071,7 @@ def cluster_defaults(request):
     on the NewVirtualMachineForm.
     """
     cluster_id = request.GET.get('cluster_id', None)
+    hypervisor = request.GET.get('hypervisor', None)
     cluster = get_object_or_404(Cluster, id__exact=cluster_id)
 
     user = request.user
@@ -1078,7 +1079,7 @@ def cluster_defaults(request):
             user.has_perm('admin', cluster)):
         return render_403(request, _('You do not have permission to view the default cluster options'))
 
-    content = json.dumps(cluster_default_info(cluster))
+    content = json.dumps(cluster_default_info(cluster, hypervisor))
     return HttpResponse(content, mimetype='application/json')
 
 

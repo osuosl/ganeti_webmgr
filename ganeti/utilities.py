@@ -19,7 +19,7 @@
 from collections import defaultdict
 from ganeti import constants
 
-def cluster_default_info(cluster):
+def cluster_default_info(cluster, hypervisor=None):
     """
     Returns a dictionary containing the following
     default values set on a cluster:
@@ -30,10 +30,17 @@ def cluster_default_info(cluster):
     # Create variables so that dictionary lookups are not so horrendous.
     info = cluster.info
     beparams = info['beparams']['default']
-    hv = info['default_hypervisor']
     hvs = info['enabled_hypervisors']
-    hvparams = info['hvparams'][hv]
+
+    if hypervisor is not None:
+        if hypervisor not in hvs:
+            return -1
+        else:
+            hv = hypervisor
+    else:
+        hv = info['default_hypervisor']
     
+    hvparams = info['hvparams'][hv]
     if hv == 'kvm':
         c = constants.KVM_CHOICES
     elif hv == 'xen-hvm' or hv == 'xen-pvm':
