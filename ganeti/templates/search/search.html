@@ -19,7 +19,7 @@
 
             {% for result in page.object_list %}
                 <p>
-                    <a href="{{ result.object.get_absolute_url }}">{{ result.object.hostname }}</a>
+                    <a href="{% url instance-detail result.object.cluster.slug result.object.hostname %}">{{ result.object.hostname }}</a>
                 </p>
             {% empty %}
                 <p>No results found.</p>

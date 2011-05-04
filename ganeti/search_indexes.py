@@ -7,7 +7,7 @@ class VirtualMachineIndex(RealTimeSearchIndex):
 
     # We can pull data strait out of the model via `model_attr`
     hostname = CharField(model_attr='hostname')
-    
+
     # Experimenting with auto-complete
     content_auto = EdgeNgramField(model_attr='hostname')
 
