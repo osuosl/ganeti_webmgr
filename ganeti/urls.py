@@ -129,8 +129,6 @@ urlpatterns += patterns('ganeti.views.virtual_machine',
     url(r'^vm/add/%s/?$' % cluster_slug, 'create', name="instance-create"),
     url(r'^%s/recover/?$' % vm_prefix, 'recover_failed_deploy', name="instance-create-recover"),
 
-    url(r'^vm/add/template/(?P<pk>\d+)/?$', 'load_template', name="instance-create-template"),
-
     #  VM Table
     url(r'^%s/vm/table/?$' % cluster, 'vm_table', name="cluster-virtualmachine-table"),
     url(r'^vm/table/$', 'vm_table', name="virtualmachine-table"),

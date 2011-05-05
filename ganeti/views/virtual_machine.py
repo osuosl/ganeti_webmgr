@@ -935,28 +935,6 @@ def recover_failed_deploy(request, cluster_slug, instance):
 
 
 @login_required
-def load_template(request, pk):
-    """ Loads a template into the create form """
-    template = get_object_or_404(VirtualMachineTemplate, pk=pk)
-
-    # create initial data - load this from the template.  Not all properties
-    # can be copied directly, some need to be copied explicitly due to naming
-    # conflicts.
-    initial = {}
-    for k,v in vm.template.__dict__.items():
-        if v is not None and v != '':
-            initial[k] = v
-    initial['cluster'] = template.cluster_id
-    initial['pnode'] = template.pnode
-
-    form = NewVirtualMachineForm(request.user, initial=initial)
-
-    return render_to_response('virtual_machine/create.html', {'form': form},
-        context_instance=RequestContext(request),
-    )
-
-
-@login_required
 def rename(request, cluster_slug, instance):
     """
     Rename an existing instance

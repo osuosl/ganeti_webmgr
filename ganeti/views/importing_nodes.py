@@ -1,6 +1,5 @@
 from django import forms
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
 from django.shortcuts import render_to_response
 from django.template.context import RequestContext
 from django.utils.translation import ugettext as _
