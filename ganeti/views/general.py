@@ -121,30 +121,30 @@ def get_vm_counts(clusters, timeout=600):
     format_key = 'cluster_admin_%d'
     orphaned = import_ready = missing = 0
     cached = cache.get_many((format_key % cluster.pk for cluster in clusters))
-    keys = (key[14:] for key in cached.keys())
-    cluster_list = clusters.exclude(pk__in=keys)
-    
+    exclude = [int(key[14:]) for key in cached.keys()]
+    keys = [k for k in clusters.values_list('pk', flat=True) if k not in exclude]
+    cluster_list = Cluster.objects.filter(pk__in=keys)
+
     # total the cached values first
     for k in cached.values():
         orphaned += k["orphaned"]
         import_ready += k["import_ready"]
         missing += k["missing"]
-    
+
     # update the values that were not cached
     if cluster_list.count():
         base = VirtualMachine.objects.filter(cluster__in=cluster_list,
                 owner=None).order_by()
-        annoted = base.values("cluster__pk").annotate(orphaned=Count("id"))
+        annotated = base.values("cluster__pk").annotate(orphaned=Count("id"))
         
         result = {}
-        for i in annoted:
+        for i in annotated:
             result[format_key % i["cluster__pk"]] = {"orphaned": i["orphaned"]}
             orphaned += i["orphaned"]
-        
         for cluster in cluster_list:
             key = format_key % cluster.pk
             
-            if cluster.pk not in result:
+            if key not in result:
                 result[key] = {"orphaned": 0}
             
             result[key]["import_ready"] = len(cluster.missing_in_db)
@@ -155,7 +155,7 @@ def get_vm_counts(clusters, timeout=600):
         
         # add all results into cache
         cache.set_many(result, timeout)
-    
+
     return orphaned, import_ready, missing
 
 
@@ -173,19 +173,18 @@ def overview(request):
     admin = user.is_superuser or clusters
 
     #orphaned, ready to import, missing
-    orphaned = import_ready = missing = 0
-
-    # Get query containing any virtual machines the user has permissions for
-    vms = user.get_objects_any_perms(VirtualMachine, groups=True).values('pk')
-
     if admin:
-        # filter VMs from the vm list where the user is an admin.  These VMs are
-        # already shown in that section
-        vms = vms.exclude(cluster__in=clusters)
-        
         # build list of admin tasks for this user's clusters
         orphaned, import_ready, missing = get_vm_counts(clusters)
-    
+    else:
+        orphaned = import_ready = missing = 0
+
+    if user.is_superuser:
+        vms = VirtualMachine.objects.all()
+    else:
+        # Get query containing any virtual machines the user has permissions for
+        vms = user.get_objects_any_perms(VirtualMachine, groups=True, cluster=['admin']).values('pk')
+
     # build list of job errors.  Include jobs from any vm the user has access to
     # If the user has admin on any cluster then those clusters and it's objects
     # must be included too.
@@ -230,7 +229,7 @@ def overview(request):
     personas = list(Organization.objects.filter(group__user=user))
     if profile.virtual_machines.count() or \
         user.has_any_perms(Cluster, ['admin', 'create_vm']) or not personas:
-            personas += [profile]
+            personas.insert(0, profile)
     
     # get resources used per cluster from the first persona in the list
     resources = get_used_resources(personas[0])

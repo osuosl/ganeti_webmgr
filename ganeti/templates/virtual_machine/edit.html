@@ -16,7 +16,16 @@
 {% endblock %}
 
 {% block content %}
-<h1>{% trans "Edit" %} {{ instance.hostname }}</h1>
+<h1>
+    {% if cluster_admin %}
+    <a class="breadcrumb" href="{% url cluster-detail cluster.slug %}#virtual_machines">{{cluster.hostname|abbreviate_fqdn}}</a>
+    {% else %}
+    <span class="breadcrumb">{{cluster.hostname|abbreviate_fqdn}}</span>
+    {% endif %}
+    : <a class="breadcrumb" href="{% url instance-detail cluster.slug instance.hostname %}">{{ instance.hostname }}</a>
+    : {% trans "Edit" %}
+</h1>
+
 <div id="vmeditform">
     <form method="post">
         <fieldset>

@@ -136,6 +136,9 @@ class DataVolumeField(CharField):
             # XXX is this the right thing?
             return None
 
+        if isinstance(value, (int,)):
+            return value
+
         value = value.upper().strip()
 
         if len(value) == 0:

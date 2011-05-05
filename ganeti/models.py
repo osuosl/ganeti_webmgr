@@ -429,7 +429,7 @@ class VirtualMachine(CachedClusterObject):
     """
     cluster = models.ForeignKey('Cluster', editable=False, default=0,
                                 related_name='virtual_machines')
-    hostname = models.CharField(max_length=128)
+    hostname = models.CharField(max_length=128, db_index=True)
     owner = models.ForeignKey('ClusterUser', null=True, \
                               related_name='virtual_machines')
     virtual_cpus = models.IntegerField(default=-1)
@@ -468,6 +468,10 @@ class VirtualMachine(CachedClusterObject):
     @property
     def rapi(self):
         return get_rapi(self.cluster_hash, self.cluster_id)
+
+    @property
+    def is_running(self):
+        return self.status == 'running'
 
     def save(self, *args, **kwargs):
         """
@@ -850,7 +854,7 @@ class Cluster(CachedClusterObject):
     hash = models.CharField(_('hash'), max_length=40, editable=False)
     
     # quota properties
-    virtual_cpus = models.IntegerField(_('virtual_cpus'), null=True, blank=True)
+    virtual_cpus = models.IntegerField(_('Virtual CPUs'), null=True, blank=True)
     disk = models.IntegerField(_('disk'), null=True, blank=True)
     ram = models.IntegerField(_('ram'), null=True, blank=True)
 
@@ -986,6 +990,32 @@ class Cluster(CachedClusterObject):
         ganeti = self.instances()
         db = self.virtual_machines.all().values_list('hostname', flat=True)
         return filter(lambda x: unicode(x) not in db, ganeti)
+
+    @property
+    def nodes_missing_in_db(self):
+        """
+        Returns list of Nodes that are missing from the database, but present
+        in ganeti.
+        """
+        try:
+            ganeti = self.rapi.GetNodes()
+        except GanetiError:
+            ganeti = []
+        db = self.nodes.all().values_list('hostname', flat=True)
+        return filter(lambda x: unicode(x) not in db, ganeti)
+    
+    @property
+    def nodes_missing_in_ganeti(self):
+        """
+        Returns list of Nodes that are missing from the ganeti cluster
+        but present in the database
+        """
+        try:
+            ganeti = self.rapi.GetNodes()
+        except GanetiError:
+            ganeti = []
+        db = self.nodes.all().values_list('hostname', flat=True)
+        return filter(lambda x: str(x) not in ganeti, db)
 
     @property
     def available_ram(self):

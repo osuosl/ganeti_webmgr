@@ -129,8 +129,6 @@ urlpatterns += patterns('ganeti.views.virtual_machine',
     url(r'^vm/add/%s/?$' % cluster_slug, 'create', name="instance-create"),
     url(r'^%s/recover/?$' % vm_prefix, 'recover_failed_deploy', name="instance-create-recover"),
 
-    url(r'^vm/add/template/(?P<pk>\d+)/?$', 'load_template', name="instance-create-template"),
-
     #  VM Table
     url(r'^%s/vm/table/?$' % cluster, 'vm_table', name="cluster-virtualmachine-table"),
     url(r'^vm/table/$', 'vm_table', name="virtualmachine-table"),
@@ -176,6 +174,12 @@ urlpatterns += patterns('ganeti.views.importing',
     url(r'^import/orphans/', 'orphans', name='import-orphans'),
     url(r'^import/missing/', 'missing_ganeti', name='import-missing'),
     url(r'^import/missing_db/', 'missing_db', name='import-missing_db'),
+)
+
+# Node Importing
+urlpatterns += patterns('ganeti.views.importing_nodes',
+    url(r'^import/node/missing/', 'missing_ganeti', name='import-nodes-missing'),
+    url(r'^import/node/missing_db/', 'missing_db', name='import-nodes-missing_db'),
 )
 
 # Jobs

@@ -24,7 +24,7 @@
                     '{% url instance-create-cluster-choices %}',
                     '{% url instance-create-cluster-options %}',
                     '{% url instance-create-cluster-defaults %}');
-            frmUpdater.init();
+            frmUpdater.init({{ cluster_defaults|safe }});
  
             // init the help tips for the individ. form objects
             initHelpTips('#virtualmachineform');

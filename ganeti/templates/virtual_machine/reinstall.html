@@ -8,8 +8,15 @@
 {% endblock %}
 
 {% block content %}
-
-{% if not submitted %}
+<h1>
+    {% if cluster_admin %}
+    <a class="breadcrumb" href="{% url cluster-detail cluster.slug %}#virtual_machines">{{cluster.hostname|abbreviate_fqdn}}</a>
+    {% else %}
+    <span class="breadcrumb">{{cluster.hostname|abbreviate_fqdn}}</span>
+    {% endif %}
+    : <a class="breadcrumb" href="{% url instance-detail cluster.slug vm.hostname %}">{{ vm.hostname }}</a>
+    : {% trans "Reinstall" %}
+</h1>
 
 <div id="confirm">
     <div class="message">
@@ -43,12 +50,5 @@
         <input id="reinstall" type="submit" value="{% trans "Reinstall" %}" />
     </form>
 </div>
-
-{% else %}
-<div id="success" style="display:block">
-    <!-- This never gets shown with the current code, since it redirects straight
-         back to the detail page. -->
-</div>
-{% endif %}
 
 {% endblock %}

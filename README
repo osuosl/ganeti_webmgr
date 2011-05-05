@@ -125,8 +125,12 @@ Here is an example with a user jack and password abc123:
 
     echo -n 'jack:Ganeti Remote API:abc123' | openssl md5
 
-Add the hash to /var/lib/ganeti/rapi_users on all the nodes in the cluster and
-restart ganeti-rapi. Here's an example using above:
+Add the hash to the RAPI users file and restart ganeti-rapi. Depending on the
+version of Ganeti you are running, you will need to either use
+`/var/lib/ganeti/rapi_users` (Ganeti 2.3.x and older) or
+`/var/lib/ganeti/rapi/users` (Ganeti 2.4.x and newer).
+
+An example hash entry might look like the following:
 
     # Hashed password for jack
     jack {HA1}54c12257ee9be413f2f3182435514aae write

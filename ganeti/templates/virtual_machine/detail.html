@@ -132,7 +132,7 @@
 
 {% block content %}
 <h1>
-    {% if cluster_admin %}
+    {% if view_cluster %}
     <a class="breadcrumb" href="{% url cluster-detail cluster.slug %}#virtual_machines">
         {{cluster.hostname|abbreviate_fqdn}}
     </a>
@@ -339,6 +339,7 @@
                 <td>{{ info.hvparams.migration_downtime }}</td>
             </tr>
             <tr><th>Nic Type</th><td>{{ info.hvparams.nic_type }}</td></tr>
+            <tr><th>Network Port</th><td>{{ info.hvparams.network_port }}</td></tr>
             <tr><th>Root Path</th><td>{{ info.hvparams.root_path }}</td></tr>
             <tr>
                 <th>Security Domain</th>

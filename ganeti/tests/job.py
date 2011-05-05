@@ -25,7 +25,7 @@ from django_test_tools.users import UserTestMixin
 from ganeti.tests.call_proxy import CallProxy
 from ganeti.tests.rapi_proxy import RapiProxy, JOB, JOB_RUNNING, JOB_ERROR
 from ganeti import models
-from ganeti.tests.virtual_machine import VirtualMachineTestCaseMixin
+from ganeti.tests.views.virtual_machine.base import VirtualMachineTestCaseMixin
 
 
 Cluster = models.Cluster

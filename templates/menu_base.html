@@ -6,50 +6,32 @@
 
 {% block basehead %}
 <link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}/css/content.css"/>
-<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.js"></script>
+
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip.js"></script>
 <script type="text/javascript">var DOMAIN = "{% current_domain %}";</script>
 <script type="text/javascript" src="{{MEDIA_URL}}/js/ajax_csrf_protection.js"></script>
-<script type="text/javascript">
-	function setlang(lang){
-		$("#langsel").val(lang);
-		$("#langform").submit();
-	}
-</script>
 {% endblock %}
 
 {% block inner_header %}
-<div id="user_menu">
-	{% ifnotequal LANGUAGES|length 1 %}
-	<form action="/i18n/setlang/" method="post" id="langform">
-		<input name="next" type="hidden" value="" />
-		<input id="langsel" name="language" type="hidden" value="" />
-		{% for lang in LANGUAGES %}<a class="select_lang" href="#" onclick="setlang('{{ lang.0 }}'); return false;" title="{{lang.1}}">{% ifequal LANGUAGE_CODE lang.0 %}<strong>{% endifequal %}{{ lang.0 }}{% ifequal LANGUAGE_CODE lang.0 %}</strong>{% endifequal %}</a>{% if not forloop.last %} -{% endif %}
-		{% endfor %}
-		{% csrf_token %}
-	</form>
-    |
-	{% endifnotequal %}
-	{% trans "You are logged in as" %} <a href="{% url profile %}">{{user.username}}</a>,
+    {% ifnotequal LANGUAGES|length 1 %}|{% endifnotequal %}
+    {% trans "You are logged in as" %} <a href="{% url profile %}">{{user.username}}</a>,
     <a href="{% url logout %}">{% trans "Logout" %}</a>
-	
-</div>
 {% endblock %}
     
 {% block navigation %}
     {% if user.is_authenticated %}
-    {% with user|cluster_admin as cluster_admin %}
     <div id="mainmenu" class="menu">
     <ul>
         <li><a href="{% url overview %}">{% trans "Overview" %}</a></li>
+        {% if view_cluster %}
         <li><a href="{% url cluster-list %}">{% trans "Clusters" %}</a></li>
+        {% endif %}
         <li><a href="{% url virtualmachine-list %}">{% trans "Virtual Machines" %}</a></li>
-        {% if user.is_superuser or cluster_admin or perms.Cluster.create_vm %}
+        {% if user.is_superuser or cluster_admin or create_vm %}
         <li><a href="{% url instance-create %}">{% trans "Create VM" %}</a></li>
         {% endif %}
     </ul>
     {% with user|group_admin as group_admin %}
-    
     {% if user.is_superuser or group_admin or cluster_admin %}
     <h3>{% trans "Admin" %}</h3>
     <ul>
@@ -57,6 +39,8 @@
             <li><a href="{% url import-orphans %}">{% trans "Orphan VMs" %}</a></li>
             <li><a href="{% url import-missing_db %}">{% trans "Import VMs" %}</a></li>
             <li><a href="{% url import-missing %}">{% trans "Missing VMs" %}</a></li>
+            <li><a href="{% url import-nodes-missing_db %}">{% trans "Import Nodes" %}</a></li>
+            <li><a href="{% url import-nodes-missing %}">{% trans "Missing Nodes" %}</a></li>
         {% endif %}
         {% if user.is_superuser %}
             <li><a href="{% url user-list %}">{% trans "Users" %}</a></li>
@@ -66,7 +50,6 @@
         {% endif %}
     </ul>
     {% endif %}
-    {% endwith %}
     {% endwith %}
     </div>
     {% endif %}
