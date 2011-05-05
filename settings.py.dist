@@ -119,7 +119,7 @@ INSTALLED_APPS = (
     'object_permissions',
     'ganeti',
     'object_log',
-    #'south' # Disabling for now until ticket #4707 is addressed -Rob
+    'south'
 )
 
 AUTH_PROFILE_MODULE = 'ganeti.Profile'
