@@ -5,16 +5,31 @@
 
 
 {% block basehead %}
+<!-- Include CSS -->
 <link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}/css/content.css"/>
+<link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}/css/jquery-ui.css"/>
+
+<!-- Include Javascript -->
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.js"></script>
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-ui.min.js"></script>
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip.js"></script>
-<script type="text/javascript">var DOMAIN = "{% current_domain %}";</script>
 <script type="text/javascript" src="{{MEDIA_URL}}/js/ajax_csrf_protection.js"></script>
 <script type="text/javascript">
-	function setlang(lang){
+
+    var DOMAIN = "{% current_domain %}";
+	
+    function setlang(lang){
 		$("#langsel").val(lang);
 		$("#langform").submit();
 	}
+    
+    // Autocomplete search box stuffs
+    $(function(){
+        var terms = ("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce in dui tellus. Pellentesque scelerisque tempus sem vel tincidunt. Mauris congue elit vitae libero feugiat quis condimentum urna pellentesque. Cras tempus vestibulum ante eu dapibus. Aliquam erat volutpat. Fusce pellentesque odio vitae ligula luctus nec luctus turpis gravida. Nunc nunc ligula, volutpat sit amet rutrum at, dapibus quis eros. Morbi scelerisque euismod rhoncus. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Phasellus nec ipsum non tortor aliquet consectetur eu vitae justo. Mauris consectetur viverra erat, lobortis pulvinar risus lacinia id. Morbi id felis id arcu ullamcorper ornare non non urna. Vestibulum posuere libero vel nulla egestas a tempus lectus luctus. Duis nisl sem, interdum eget mattis in, tempus ut sem. Pellentesque lectus leo, pulvinar eu pellentesque ut, interdum quis risus. Nam ac tortor nunc, a feugiat elit. Nam dui metus, cursus at adipiscing ac, imperdiet ut diam. Donec euismod volutpat urna. Proin bibendum velit et tellus auctor convallis.").split(' ');
+        $("#search").autocomplete({
+            source: terms 
+        });
+    });
 </script>
 {% endblock %}
 
@@ -69,6 +84,11 @@
     </ul>
     {% endif %}
     {% endwith %}
+
+    <h3>{% trans "Search" %}</h3>
+    <div class="ui-widget">
+        <input id="search" />
+    </div>  
     </div>
     {% endif %}
 {% endblock %}
