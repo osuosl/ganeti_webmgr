@@ -121,7 +121,7 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
             # If failure then a field that is not required by the model, but
             #  should be required by the form, is not being required by
             #  the form. See the ModifyVirtualMachineForm.required field.
-            self.assertNotEqual(response.context['form'][property].errors, [])
+            self.assertNotEqual(response.context['form'][property].errors, [], msg=property)
             self.assertEqual(200, response.status_code) # 302 if success (BAD)
             self.assertEqual('text/html; charset=utf-8', response['content-type'])
             self.assertTemplateUsed(response, 'virtual_machine/edit.html')

@@ -141,8 +141,7 @@ class NewVirtualMachineForm(VirtualMachineForm):
     nic_type = forms.ChoiceField(label=_('NIC Type'), choices=[empty_field])
     boot_order = forms.ChoiceField(label=_('Boot Device'), choices=[empty_field])
 
-    class Meta:
-        model = VirtualMachineTemplate
+    class Meta(VirtualMachineForm.Meta):
         exclude = ('template_name')
 
     def __init__(self, user, initial=None, *args, **kwargs):
@@ -444,7 +443,7 @@ def check_quota_modify(form):
                     q_msg = u"%s" % _("Owner does not have enough ram remaining on this cluster. You must reduce the amount of ram.")
                     form._errors["ram"] = form.error_class([q_msg])
 
-            if 'disk_size' in data:
+            if 'disk_size' in data and data['disk_size']:
                 if quota['disk'] and used['disk'] + data['disk_size'] > quota['disk']:
                     del data['disk_size']
                     q_msg = u"%s" % _("Owner does not have enough diskspace remaining on this cluster.")
@@ -458,101 +457,63 @@ def check_quota_modify(form):
                     form._errors["vcpus"] = form.error_class([q_msg])
 
 
-class ModifyVirtualMachineForm(NewVirtualMachineForm):
+class ModifyVirtualMachineForm(VirtualMachineForm):
     """
-    Simple way to modify a virtual machine instance.
+    Base modify class.
+        If hvparam_fields (itirable) set on child, then
+        each field on the form will be initialized to the
+        value in vm.info.hvparams
     """
-    # Fields to be excluded from parent.
-    exclude = ('start', 'owner', 'cluster', 'hostname', 'name_check',
-        'iallocator', 'iallocator_hostname', 'disk_template', 'pnode', 'snode',\
-        'disk_size', 'nic_mode', 'template_name', 'hypervisor')
-    # Fields to be excluded if the hypervisor is Xen HVM
-    hvm_exclude_fields = ('vnc_tls', 'vnc_x509_path', 'vnc_x509_verify', \
-        'kernel_path', 'kernel_args', 'initrd_path', 'root_path', \
-        'serial_console', 'disk_cache', 'security_model', 'security_domain', \
-        'kvm_flag', 'use_chroot', 'migration_downtime', 'usb_mouse', \
-        'mem_path')
-    pvm_exclude_fields = ('vnc_tls', 'vnc_x509_path', 'vnc_x509_verify',
-        'serial_console', 'disk_cache', 'security_model', 'security_domain',
-        'kvm_flag', 'use_chroot', 'migration_downtime', 'usb_mouse',
-        'mem_path', 'disk_type', 'boot_order', 'nic_type',  'acpi',
-        'use_localtime', 'cdrom_image_path', 'vnc_bind_address',
-        )
-    # Fields that should be required.
-    required = ('vcpus', 'memory')
-    non_pvm_required = ('disk_type', 'boot_order', 'nic_type')
+    always_required = ('vcpus', 'memory')
 
-    disk_caches = constants.HV_DISK_CACHES
-    security_models = constants.HV_SECURITY_MODELS
-    kvm_flags = constants.KVM_FLAGS
-    usb_mice = constants.HV_USB_MICE
-
-    acpi = forms.BooleanField(label='ACPI', required=False)
-    disk_cache = forms.ChoiceField(label='Disk Cache', required=False,
-        choices=disk_caches)
-    initrd_path = forms.CharField(label='initrd Path', required=False)
-    kernel_args = forms.CharField(label='Kernel Args', required=False)
-    kvm_flag = forms.ChoiceField(label='KVM Flag', required=False,
-        choices=kvm_flags)
-    mem_path = forms.CharField(label='Mem Path', required=False)
-    migration_downtime = forms.IntegerField(label='Migration Downtime',
-        required=False)
     nic_mac = forms.CharField(label='NIC Mac', required=False)
-    security_model = forms.ChoiceField(label='Security Model',
-        required=False, choices=security_models)
-    security_domain = forms.CharField(label='Security Domain', required=False)
-    usb_mouse = forms.ChoiceField(label='USB Mouse', required=False,
-        choices=usb_mice)
-    use_chroot = forms.BooleanField(label='Use Chroot', required=False)
-    use_localtime = forms.BooleanField(label='Use Localtime', required=False)
-    vnc_bind_address = forms.IPAddressField(label='VNC Bind Address',
-        required=False)
-    vnc_tls = forms.BooleanField(label='VNC TLS', required=False)
-    vnc_x509_path = forms.CharField(label='VNC x509 Path', required=False)
-    vnc_x509_verify = forms.BooleanField(label='VNC x509 Verify',
-        required=False)
 
     class Meta:
         model = VirtualMachineTemplate
+        exclude = ('start', 'owner', 'cluster', 'hostname', 'name_check',
+        'iallocator', 'iallocator_hostname', 'disk_template', 'pnode', 
+        'snode','disk_size', 'nic_mode', 'template_name', 'hypervisor')
 
-    # TODO: Need to reference cluster in init...but no reference to cluster.
-    def __init__(self, user, cluster, initial=None, *args, **kwargs):
-        if initial is not None:
-            cp = initial.copy()
-            cp.__setitem__('cluster', cluster.id)
-            initial = cp
-        super(ModifyVirtualMachineForm, self).__init__(user, initial=initial,\
-                *args, **kwargs)
-        # Remove all fields in the form that are not required to modify the 
-        #   instance.
-        for field in self.exclude:
-            del self.fields[field]
-
-        # Make sure certain fields are required
-        for field in self.required:
-            self.fields[field].required = True
-
-        # Get hypervisor from passed in cluster
-        hv = None
-        if cluster and cluster.info and 'default_hypervisor' in cluster.info:
-            hv = cluster.info['default_hypervisor']
-        if hv == 'xen-hvm':
-            for field in self.hvm_exclude_fields:
-                del self.fields[field]
-        elif hv == 'xen-pvm':
-            for field in self.pvm_exclude_fields:
-                del self.fields[field]
-
-        for field in self.non_pvm_required:
-            if hv != 'xen-pvm':
-                self.fields[field].required = True
-
-        
-        # No easy way to rename a field, so copy to new field and delete old field
+    def __init__(self, vm, *args, **kwargs):
+        super(VirtualMachineForm, self).__init__(*args, **kwargs)
+        # No easy way to rename a field, so copy to 
+        #   new field and delete old field
         if 'os' in self.fields and self.fields['os']:
             self.fields['os_name'] = copy.copy(self.fields['os'])
             del self.fields['os']
-    
+
+        for field in self.always_required:
+            self.fields[field].required = True
+        # If the required property is set on a child class,
+        #  require those form fields   
+        try:
+            if self.required:
+                for field in self.required:
+                    self.fields[field].required = True
+        except AttributeError:
+            pass
+
+        # Need to set initial values from vm.info as these are not saved
+        #  per the vm model.
+        if vm.info:
+            info = vm.info
+            hvparam = info['hvparams']
+            # XXX Convert ram string since it comes out
+            #  from ganeti as an int and the DataVolumeField does not like
+            #  ints.
+            self.fields['vcpus'].initial = info['beparams']['vcpus']
+            self.fields['memory'].initial = str(info['beparams']['memory'])
+            self.fields['nic_link'].initial = info['nic.links'][0]
+            self.fields['nic_mac'].initial = info['nic.macs'][0]
+            self.fields['os_name'].initial = info['os']
+            
+            try:
+                if self.hvparam_fields:
+                    for field in self.hvparam_fields:
+                        self.fields[field].initial = hvparam[field]
+            except AttributeError:
+                pass
+            
     def clean(self):
         data = self.cleaned_data
         kernel_path = data.get('kernel_path')
@@ -583,6 +544,81 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
 
         return data
 
+
+class HvmModifyVirtualMachineForm(ModifyVirtualMachineForm):
+    """
+    hvm_exclude_fields = ('vnc_tls', 'vnc_x509_path', 'vnc_x509_verify', \
+        'kernel_path', 'kernel_args', 'initrd_path', 'root_path', \
+        'serial_console', 'disk_cache', 'security_model', 'security_domain', \
+        'kvm_flag', 'use_chroot', 'migration_downtime', 'usb_mouse', \
+        'mem_path')
+    """
+    hvparam_fields = ('boot_order', 'cdrom_image_path', 'nic_type', 
+        'disk_type', 'vnc_bind_address', 'acpi', 'use_localtime')
+    required = ('disk_type', 'boot_order', 'nic_type')
+
+    acpi = forms.BooleanField(label='ACPI', required=False)
+    use_localtime = forms.BooleanField(label='Use Localtime', required=False)
+    vnc_bind_address = forms.IPAddressField(label='VNC Bind Address',
+        required=False)
+
+
+class PvmModifyVirtualMachineForm(ModifyVirtualMachineForm):
+    """
+    pvm_exclude_fields = ('vnc_tls', 'vnc_x509_path', 'vnc_x509_verify',
+        'serial_console', 'disk_cache', 'security_model', 'security_domain',
+        'kvm_flag', 'use_chroot', 'migration_downtime', 'usb_mouse',
+        'mem_path', 'disk_type', 'boot_order', 'nic_type',  'acpi',
+        'use_localtime', 'cdrom_image_path', 'vnc_bind_address',)
+    """
+    hvparam_fields = ('root_path', 'kernel_path', 'kernel_args', 
+        'initrd_path')
+
+    initrd_path = forms.CharField(label='initrd Path', required=False)
+    kernel_args = forms.CharField(label='Kernel Args', required=False)
+
+    def __init__(self, vm, *args, **kwargs):
+        super(PvmModifyVirtualMachineForm, self).__init__(vm, *args, **kwargs)
+
+
+class KvmModifyVirtualMachineForm(PvmModifyVirtualMachineForm,
+                                  HvmModifyVirtualMachineForm):
+    hvparam_fields = ('acpi', 'disk_cache', 'initrd_path', 
+        'kernel_args', 'kvm_flag', 'mem_path', 
+        'migration_downtime', 'security_domain', 
+        'security_model', 'usb_mouse', 'use_chroot', 
+        'use_localtime', 'vnc_bind_address', 'vnc_tls', 
+        'vnc_x509_path', 'vnc_x509_verify', 'disk_type', 
+        'boot_order', 'nic_type', 'root_path', 
+        'kernel_path', 'serial_console', 
+        'cdrom_image_path',
+    )
+    disk_caches = constants.HV_DISK_CACHES
+    kvm_flags = constants.KVM_FLAGS
+    security_models = constants.HV_SECURITY_MODELS
+    usb_mice = constants.HV_USB_MICE
+
+    disk_cache = forms.ChoiceField(label='Disk Cache', required=False,
+        choices=disk_caches)
+    kvm_flag = forms.ChoiceField(label='KVM Flag', required=False,
+        choices=kvm_flags)
+    mem_path = forms.CharField(label='Mem Path', required=False)
+    migration_downtime = forms.IntegerField(label='Migration Downtime',
+        required=False)
+    security_model = forms.ChoiceField(label='Security Model',
+        required=False, choices=security_models)
+    security_domain = forms.CharField(label='Security Domain', required=False)
+    usb_mouse = forms.ChoiceField(label='USB Mouse', required=False,
+        choices=usb_mice)
+    use_chroot = forms.BooleanField(label='Use Chroot', required=False)
+    vnc_tls = forms.BooleanField(label='VNC TLS', required=False)
+    vnc_x509_path = forms.CharField(label='VNC x509 Path', required=False)
+    vnc_x509_verify = forms.BooleanField(label='VNC x509 Verify',
+        required=False)
+    
+    def __init__(self, vm, *args, **kwargs):
+        super(KvmModifyVirtualMachineForm, self).__init__(vm, *args, **kwargs)
+    
 
 class ModifyConfirmForm(forms.Form):
 

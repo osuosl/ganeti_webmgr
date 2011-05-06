@@ -44,7 +44,8 @@ from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine, \
         Job, SSHKey, VirtualMachineTemplate, Node
 from ganeti.views import render_403
 from ganeti.forms.virtual_machine import NewVirtualMachineForm, \
-    ModifyVirtualMachineForm, ModifyConfirmForm, MigrateForm, RenameForm
+    KvmModifyVirtualMachineForm, PvmModifyVirtualMachineForm, \
+    HvmModifyVirtualMachineForm, ModifyConfirmForm, MigrateForm, RenameForm
 from ganeti.templatetags.webmgr_tags import render_storage
 from ganeti.utilities import cluster_default_info, cluster_os_list, \
     compare, os_prettify
@@ -725,11 +726,26 @@ def modify(request, cluster_slug, instance):
             'You do not have permissions to edit this virtual machine')
     
     hv = None
-    if cluster.info and 'default_hypervisor' in cluster.info:
-        hv = cluster.info['default_hypervisor']
+    hv_form = None
+    if vm.info:
+        info = vm.info['hvparams']
+        if 'serial_console' in info:
+            # KVM
+            hv = 'kvm'
+            hv_form = KvmModifyVirtualMachineForm
+        elif 'initrd_path' in info:
+            # PVM
+            hv = 'xen-pvm'
+            hv_form = PvmModifyVirtualMachineForm
+        elif 'acpi' in info:
+            # HVM
+            hv = 'xen-hvm'
+            hv_form = HvmModifyVirtualMachineForm
 
     if request.method == 'POST':
-        form = ModifyVirtualMachineForm(user, cluster, request.POST)
+        
+        form = hv_form(vm, request.POST)
+        
         form.owner = vm.owner
         form.vm = vm
         form.cluster = cluster
@@ -743,50 +759,9 @@ def modify(request, cluster_slug, instance):
 
     elif request.method == 'GET':
         if 'edit_form' in request.session and vm.id == request.session['edit_vm']:
-            form = ModifyVirtualMachineForm(user, cluster, request.session['edit_form'])
+            form = hv_form(vm, request.session['edit_form'])
         else:
-            form = None
-                
-        if form is None:
-            # Need to set initial values from vm.info as these are not saved
-            #  per the vm model.
-            if vm.info and 'hvparams' in vm.info:
-                info = vm.info
-                initial = {}
-                hvparams = info['hvparams']
-                # XXX Convert ram string since it comes out
-                #  from ganeti as an int and the DataVolumeField does not like
-                #  ints.
-                initial['cluster'] = cluster.id
-                initial['vcpus'] = info['beparams']['vcpus']
-                initial['memory'] = str(info['beparams']['memory'])
-                initial['nic_link'] = info['nic.links'][0]
-                initial['nic_mac'] = info['nic.macs'][0]
-                initial['os_name'] = info['os']
-                if hv == 'kvm':
-                    fields = ('acpi', 'disk_cache', 'initrd_path', 
-                        'kernel_args', 'kvm_flag', 'mem_path', 
-                        'migration_downtime', 'security_domain', 
-                        'security_model', 'usb_mouse', 'use_chroot', 
-                        'use_localtime', 'vnc_bind_address', 'vnc_tls', 
-                        'vnc_x509_path', 'vnc_x509_verify', 'disk_type', 
-                        'boot_order', 'nic_type', 'root_path', 
-                        'kernel_path', 'serial_console', 
-                        'cdrom_image_path',
-                    )
-                elif hv == 'xen-pvm':
-                    fields = ('root_path', 'kernel_path', 'kernel_args',
-                        'initrd_path',
-                    )
-                elif hv == 'xen-hvm':
-                    fields = ('boot_order', 'cdrom_image_path', 'nic_type',
-                        'disk_type', 'vnc_bind_address', 'acpi', 
-                        'use_localtime',
-                    )
-                for field in fields:
-                    initial[field] = hvparams[field]
-
-            form = ModifyVirtualMachineForm(user, cluster, initial=initial)
+            form = hv_form(vm)
 
             # Get the list of oses from the cluster
             os_list = cluster_os_list(cluster)
@@ -816,6 +791,23 @@ def modify(request, cluster_slug, instance):
 def modify_confirm(request, cluster_slug, instance):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
+
+    hv = None
+    hv_form = None
+    if vm.info:
+        info = vm.info['hvparams']
+        if 'serial_console' in info:
+            # KVM
+            hv = 'kvm'
+            hv_form = KvmModifyVirtualMachineForm
+        elif 'initrd_path' in info:
+            # PVM
+            hv = 'xen-pvm'
+            hv_form = PvmModifyVirtualMachineForm
+        elif 'acpi' in info:
+            # HVM
+            hv = 'xen-hvm'
+            hv_form = HvmModifyVirtualMachineForm
 
     user = request.user
     power = user.is_superuser or user.has_any_perms(vm, ['admin','power'])
@@ -905,7 +897,7 @@ def modify_confirm(request, cluster_slug, instance):
     old_set.update(hvparams)
 
     instance_diff = {}
-    fields = ModifyVirtualMachineForm(user, None).fields
+    fields = hv_form(vm).fields
     for key in data.keys():
         if key == 'memory':
             diff = compare(render_storage(old_set[key]),
