@@ -23,11 +23,16 @@
 		$("#langform").submit();
 	}
     
-    // Autocomplete search box stuffs
     $(function(){
-        var terms = ("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce in dui tellus. Pellentesque scelerisque tempus sem vel tincidunt. Mauris congue elit vitae libero feugiat quis condimentum urna pellentesque. Cras tempus vestibulum ante eu dapibus. Aliquam erat volutpat. Fusce pellentesque odio vitae ligula luctus nec luctus turpis gravida. Nunc nunc ligula, volutpat sit amet rutrum at, dapibus quis eros. Morbi scelerisque euismod rhoncus. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Phasellus nec ipsum non tortor aliquet consectetur eu vitae justo. Mauris consectetur viverra erat, lobortis pulvinar risus lacinia id. Morbi id felis id arcu ullamcorper ornare non non urna. Vestibulum posuere libero vel nulla egestas a tempus lectus luctus. Duis nisl sem, interdum eget mattis in, tempus ut sem. Pellentesque lectus leo, pulvinar eu pellentesque ut, interdum quis risus. Nam ac tortor nunc, a feugiat elit. Nam dui metus, cursus at adipiscing ac, imperdiet ut diam. Donec euismod volutpat urna. Proin bibendum velit et tellus auctor convallis.").split(' ');
+        /* Disabling fancy autocomplete stuff for now
+        var terms = ['foo', 'bar', 'bear', 'apple']
         $("#search").autocomplete({
             source: terms 
+        });
+        */
+
+        $('#search').submit(function(){
+            alert("hello!");
         });
     });
 </script>
@@ -86,9 +91,15 @@
     {% endwith %}
 
     <h3>{% trans "Search" %}</h3>
+    <!-- autocomplete skeleton
     <div class="ui-widget">
         <input id="search" />
     </div>  
+    -->
+    <form name="input" action="{% url search %}" method="get">
+        <input id="search" type="text" name="q" />
+    </form>
+    </div>
     </div>
     {% endif %}
 {% endblock %}
