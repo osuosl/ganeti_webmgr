@@ -16,9 +16,13 @@
         </ul>
 
         {# Otherwise, no results were found #}
+        {% else %}{% if query|length < 2 %}
+        <h3>Search query too short!</h3>
+        <p>Please make your search query at least two characters long.</p>
         {% else %}
+        <h3>No results</h3>
         <p>No results matching "{{query}}".</p>
-        {% endif %}
+        {% endif %}{% endif %}
 
         {# Paging stuffs #}
         {% if page.has_previous or page.has_next %}
