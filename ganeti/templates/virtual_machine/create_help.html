@@ -121,7 +121,12 @@
             (or os-type variant) that the cluster has access to.{% endblocktrans %}
         </p>
     </div>
-
+    <div id="help-os_name">
+        <p>
+            {% blocktrans %}This option changes the name of the Virtual Machine's Operating
+            System. It does <b>not</b> reinstall the Operating System. {% endblocktrans %}
+        </p>
+    </div>
     <div id="help-vcpus">
         <p>{% trans "Number of virtual cpus to allocate to this virtual machine" %}.</p>
         <p><b><i>{% trans "This will be deducted from the owner's quota" %}.</i></b></p>
