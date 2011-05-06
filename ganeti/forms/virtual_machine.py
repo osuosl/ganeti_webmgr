@@ -30,8 +30,88 @@ from django.utils.translation import ugettext_lazy as _
 FQDN_RE = r'(?=^.{1,254}$)(^(?:(?!\d+\.|-)[a-zA-Z0-9_\-]{1,63}(?<!-)\.?)+(?:[a-zA-Z]{2,})$)'
 
 
+class VirtualMachineForm(forms.ModelForm):
+    """
+    Parent class that holds all vm clean methods
+      and shared form fields.
+    """
+    memory = DataVolumeField(label=_('Memory'), min_value=100)
 
-class NewVirtualMachineForm(forms.ModelForm):
+    class Meta:
+        model = VirtualMachineTemplate
+
+    def clean_hostname(self):
+        data = self.cleaned_data
+        hostname = data.get('hostname')
+        cluster = data.get('cluster')
+        if hostname and cluster:
+            # Verify that this hostname is not in use for this cluster.  It can
+            # only be reused when recovering a VM that failed to deploy.
+            #
+            # Recoveries are only allowed when the user is the owner of the VM
+            try:
+                vm = VirtualMachine.objects.get(cluster=cluster, hostname=hostname)
+
+                # detect vm that failed to deploy
+                if not vm.pending_delete and vm.template is not None:
+                    current_owner = vm.owner.cast()
+                    if current_owner == self.owner:
+                        data['vm_recovery'] = vm
+                    else:
+                        msg = _("Owner cannot be changed when recovering a failed deployment")
+                        self._errors["owner"] = self.error_class([msg])
+                else:
+                    raise ValidationError(_("Hostname is already in use for this cluster"))
+
+            except VirtualMachine.DoesNotExist:
+                # doesn't exist, no further checks needed
+                pass
+
+        return hostname
+
+    def clean_vcpus(self):
+        vcpus = self.cleaned_data.get("vcpus")
+
+        if vcpus is None or vcpus < 1:
+            self._errors["vcpus"] = self.error_class(
+                ["At least one CPU must be present"])
+        else:
+            return vcpus
+
+    def clean_initrd_path(self):
+        data = self.cleaned_data['initrd_path']
+        if data and not data.startswith('/') and data != 'no_initrd_path':
+            msg = u"%s." % _('This field must start with a "/"')
+            self._errors['initrd_path'] = self.error_class([msg])
+        return data
+
+    def clean_security_domain(self):
+        data = self.cleaned_data['security_domain']
+        security_model = self.cleaned_data['security_model']
+        msg = None
+
+        if data and security_model != 'user':
+            msg = u'%s.' % _(
+                'This field can not be set if Security Mode is not set to User')
+        elif security_model == 'user':
+            if not data:
+                msg = u'%s.' % _('This field is required')
+            elif not data[0].isalpha():
+                msg = u'%s.' % _('This field must being with an alpha character')
+
+        if msg:
+            self._errors['security_domain'] = self.error_class([msg])
+        return data
+
+    def clean_vnc_x509_path(self):
+        data = self.cleaned_data['vnc_x509_path']
+        if data and not data.startswith('/'):
+            msg = u'%s,' % _('This field must start with a "/"')
+            self._errors['vnc_x509_path'] = self.error_class([msg])
+        return data
+
+
+class NewVirtualMachineForm(VirtualMachineForm):
     """
     Virtual Machine Creation form
     """
@@ -55,7 +135,6 @@ class NewVirtualMachineForm(forms.ModelForm):
     os = forms.ChoiceField(label=_('Operating System'), choices=[empty_field])
     disk_template = forms.ChoiceField(label=_('Disk Template'),
                                       choices=templates)
-    memory = DataVolumeField(label=_('Memory'), min_value=100)
     disk_size = DataVolumeField(label=_('Disk Size'), min_value=100)
     disk_type = forms.ChoiceField(label=_('Disk Type'), choices=[empty_field])
     nic_mode = forms.ChoiceField(label=_('NIC Mode'), choices=nicmodes)
@@ -157,44 +236,6 @@ class NewVirtualMachineForm(forms.ModelForm):
             else:
                 q = user.get_objects_any_perms(Cluster, ['admin','create_vm'])
             self.fields['cluster'].queryset = q
-
-    def clean_hostname(self):
-        data = self.cleaned_data
-        hostname = data.get('hostname')
-        cluster = data.get('cluster')
-        if hostname and cluster:
-            # Verify that this hostname is not in use for this cluster.  It can
-            # only be reused when recovering a VM that failed to deploy.
-            #
-            # Recoveries are only allowed when the user is the owner of the VM
-            try:
-                vm = VirtualMachine.objects.get(cluster=cluster, hostname=hostname)
-
-                # detect vm that failed to deploy
-                if not vm.pending_delete and vm.template is not None:
-                    current_owner = vm.owner.cast()
-                    if current_owner == self.owner:
-                        data['vm_recovery'] = vm
-                    else:
-                        msg = _("Owner cannot be changed when recovering a failed deployment")
-                        self._errors["owner"] = self.error_class([msg])
-                else:
-                    raise ValidationError(_("Hostname is already in use for this cluster"))
-
-            except VirtualMachine.DoesNotExist:
-                # doesn't exist, no further checks needed
-                pass
-
-        return hostname
-
-    def clean_vcpus(self):
-        vcpus = self.cleaned_data.get("vcpus")
-
-        if vcpus is None or vcpus < 1:
-            self._errors["vcpus"] = self.error_class(
-                ["At least one CPU must be present"])
-        else:
-            return vcpus
 
     def clean(self):
         data = self.cleaned_data
@@ -511,39 +552,7 @@ class ModifyVirtualMachineForm(NewVirtualMachineForm):
         if 'os' in self.fields and self.fields['os']:
             self.fields['os_name'] = copy.copy(self.fields['os'])
             del self.fields['os']
-
-    def clean_initrd_path(self):
-        data = self.cleaned_data['initrd_path']
-        if data and not data.startswith('/') and data != 'no_initrd_path':
-            msg = u"%s." % _('This field must start with a "/"')
-            self._errors['initrd_path'] = self.error_class([msg])
-        return data
-
-    def clean_security_domain(self):
-        data = self.cleaned_data['security_domain']
-        security_model = self.cleaned_data['security_model']
-        msg = None
-
-        if data and security_model != 'user':
-            msg = u'%s.' % _(
-                'This field can not be set if Security Mode is not set to User')
-        elif security_model == 'user':
-            if not data:
-                msg = u'%s.' % _('This field is required')
-            elif not data[0].isalpha():
-                msg = u'%s.' % _('This field must being with an alpha character')
-
-        if msg:
-            self._errors['security_domain'] = self.error_class([msg])
-        return data
-
-    def clean_vnc_x509_path(self):
-        data = self.cleaned_data['vnc_x509_path']
-        if data and not data.startswith('/'):
-            msg = u'%s,' % _('This field must start with a "/"')
-            self._errors['vnc_x509_path'] = self.error_class([msg])
-        return data
-
+    
     def clean(self):
         data = self.cleaned_data
         kernel_path = data.get('kernel_path')
