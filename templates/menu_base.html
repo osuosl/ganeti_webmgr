@@ -22,17 +22,13 @@
 		$("#langsel").val(lang);
 		$("#langform").submit();
 	}
-    
+   
     $(function(){
-        /* Disabling fancy autocomplete stuff for now
-        var terms = ['foo', 'bar', 'bear', 'apple']
+        // Autocomplete search box
         $("#search").autocomplete({
-            source: terms 
-        });
-        */
-
-        $('#search').submit(function(){
-            alert("hello!");
+            source: "{% url search-json %}",
+            minLength: 2,
+            autoFocus: true
         });
     });
 </script>
@@ -90,14 +86,12 @@
     {% endif %}
     {% endwith %}
 
+    <!-- autocomplete search box -->
     <h3>{% trans "Search" %}</h3>
-    <!-- autocomplete skeleton
-    <div class="ui-widget">
-        <input id="search" />
-    </div>  
-    -->
     <form name="input" action="{% url search %}" method="get">
-        <input id="search" type="text" name="q" />
+        <div class="ui-widget">
+            <input id="search" type="text" name="q" />
+        </div>
     </form>
 
     </div>

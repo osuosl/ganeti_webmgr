@@ -29,6 +29,9 @@ h1 a.breadcrumb:hover {text-decoration:underline;}
 #search{
     width:130px;
 }
+.ui-autocomplete-loading{
+    background: white url('/media/images/ajax-loader_small_transparent.gif') right center no-repeat;
+}
 
 .menu {
     float:left;
