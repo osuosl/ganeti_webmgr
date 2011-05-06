@@ -1,9 +1,10 @@
 {% extends 'menu_base.html' %}
 
 {% block content %}
-    <h2>Search</h2>
+    <h2>Search results</h2>
 
     <form method="get" action=".">
+        <!--
         <table>
             {{ form.as_table }}
             <tr>
@@ -13,17 +14,20 @@
                 </td>
             </tr>
         </table>
+        -->
 
         {% if query %}
-            <h3>Results</h3>
-
-            {% for result in page.object_list %}
-                <p>
+            {% if page.object_list %}
+            <ul>
+                {% for result in page.object_list %}
+                <li>
                     <a href="{% url instance-detail result.object.cluster.slug result.object.hostname %}">{{ result.object.hostname }}</a>
-                </p>
-            {% empty %}
-                <p>No results found.</p>
-            {% endfor %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p>No results found.</p>
+            {% endif %}
 
             {% if page.has_previous or page.has_next %}
                 <div>
