@@ -17,20 +17,29 @@
 <script type="text/javascript">
 
     var DOMAIN = "{% current_domain %}";
-	
-    function setlang(lang){
-		$("#langsel").val(lang);
-		$("#langform").submit();
-	}
-   
+    var ENTER_KEYCODE = 13; // code for the enter/return key
+
     $(function(){
+        /* "Main" */
+
         // Autocomplete search box
         $("#search").autocomplete({
             source: "{% url search-json %}",
             minLength: 2,
-            autoFocus: true
+
+        // make the search form submit if the enter key is pressed, even if the
+        // autocomplete suggestion box is open
+        }).keypress(function(event){
+            if(event.keyCode == ENTER_KEYCODE){
+                $("#search_form").submit();
+            }
         });
     });
+
+    function setlang(lang){
+		$("#langsel").val(lang);
+		$("#langform").submit();
+	}
 </script>
 {% endblock %}
 
@@ -88,7 +97,7 @@
 
     <!-- autocomplete search box -->
     <h3>{% trans "Search" %}</h3>
-    <form name="input" action="{% url search %}" method="get">
+    <form id="search_form" action="{% url search %}" method="get">
         <div class="ui-widget">
             <input id="search" type="text" name="q" />
         </div>
