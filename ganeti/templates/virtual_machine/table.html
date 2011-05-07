@@ -17,8 +17,6 @@
     on the same page.
 -->
 
-
-
 <style>
     td.actions div.delete {
         float:none;
@@ -34,10 +32,9 @@
 <script type="text/javascript" src="{{MEDIA_URL}}/js/VM_ajaxTable.js"></script>
 <script type="text/javascript">
 
-    // -------
-    // "main"
-    // -------
-    $(document).ready(function(){
+    $(function(){
+        /* "Main" */
+
         {% if cluster %}
             var url = "{% url cluster-virtualmachine-table cluster.slug %}";
         {% else %}
