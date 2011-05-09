@@ -490,6 +490,13 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
             self.fields['os_name'] = copy.copy(self.fields['os'])
             del self.fields['os']
 
+        # Setup os choices
+        try:
+            os_list = cluster_os_list(vm.cluster)
+            self.fields['os_name'].choices = os_list
+        except AttributeError:
+            pass
+
         for field in self.always_required:
             self.fields[field].required = True
         # If the required property is set on a child class,

@@ -749,7 +749,6 @@ def modify(request, cluster_slug, instance):
         form.owner = vm.owner
         form.vm = vm
         form.cluster = cluster
-        form.fields['os_name'].choices = request.session['os_list']
         if form.is_valid():
             data = form.cleaned_data
             request.session['edit_form'] = data
@@ -762,14 +761,7 @@ def modify(request, cluster_slug, instance):
             form = hv_form(vm, request.session['edit_form'])
         else:
             form = hv_form(vm)
-
-            # Get the list of oses from the cluster
-            os_list = cluster_os_list(cluster)
-
-            # Set os_list for cluster in session
-            request.session['os_list'] = os_list
-            form.fields['os_name'].choices = os_list
-            
+ 
     # Select template depending on hypervisor
     # Default to kvm
     template = "virtual_machine/edit.html"
@@ -777,7 +769,7 @@ def modify(request, cluster_slug, instance):
         template = "virtual_machine/edit_hvm.html"
     elif hv == 'xen-pvm':
         template = 'virtual_machine/edit_pvm.html'
-
+    
     return render_to_response(template, {
         'cluster': cluster,
         'instance': vm,
@@ -868,8 +860,6 @@ def modify_confirm(request, cluster_slug, instance):
             # Remove session variables.
             if 'edit_form' in request.session:
                 del request.session['edit_form']
-            if 'os_list' in request.session:
-                del request.session['os_list']
             # Redirect to instance-detail
             return HttpResponseRedirect(
                 reverse("instance-detail", args=[cluster.slug, vm.hostname]))
@@ -891,7 +881,7 @@ def modify_confirm(request, cluster_slug, instance):
         nic_mac=info['nic.macs'][0],
         memory=info['beparams']['memory'],
         vcpus=info['beparams']['vcpus'],
-        os=info['os'],
+        os_name=info['os'],
     )
     # Add hvparams to the old_set
     old_set.update(hvparams)
@@ -902,9 +892,29 @@ def modify_confirm(request, cluster_slug, instance):
         if key == 'memory':
             diff = compare(render_storage(old_set[key]),
                 render_storage(data[key]))
-        elif key == 'os':
-            oses = os_prettify([old_set[key], data[key]])[0][1]
-            diff = compare(oses[0][1], oses[1][1])
+        elif key == 'os_name':
+            oses = os_prettify([old_set[key], data[key]])
+            if len(oses) > 1:
+                """
+                XXX - Special case for a cluster with two different types of
+                  optgroups (i.e. Image, Debootstrap). 
+                  The elements at 00 and 10:
+                    The optgroups
+                  The elements at 010 and 110:
+                    Tuple containing the OS Name and OS value. 
+                  The elements at 0101 and 1101:
+                    String containing the OS Name
+                """
+                oses[0][1][0] = list(oses[0][1][0])
+                oses[1][1][0] = list(oses[1][1][0])
+                oses[0][1][0][1] = '%s (%s)' % (oses[0][1][0][1], oses[0][0])
+                oses[1][1][0][1] = '%s (%s)' % (oses[1][1][0][1], oses[1][0])
+                oses = oses[0][1] + oses[1][1]
+                diff = compare(oses[0][1], oses[1][1])
+            else:
+                oses = oses[0][1]
+                diff = compare(oses[0][1], oses[1][1])
+            #diff = compare(oses[0][1], oses[1][1])
         elif key not in old_set.keys():
             diff = ""
             instance_diff[key] = 'Key missing'
@@ -912,8 +922,6 @@ def modify_confirm(request, cluster_slug, instance):
             diff = compare(old_set[key], data[key])
 
         if diff != "":
-            if key == 'os':
-                key = 'os_name'
             label = fields[key].label
             instance_diff[label] = diff
 
