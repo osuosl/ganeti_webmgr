@@ -15,6 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 import copy
+from itertools import chain
 
 from django import forms
 from django.forms import ValidationError
@@ -465,8 +466,10 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
         value in vm.info.hvparams
     """
     always_required = ('vcpus', 'memory')
+    empty_field = constants.EMPTY_CHOICE_FIELD
 
-    nic_mac = forms.CharField(label='NIC Mac', required=False)
+    nic_mac = forms.CharField(label=_('NIC Mac'), required=False)
+    os = forms.ChoiceField(label=_('Operating System'), choices=[empty_field])
 
     class Meta:
         model = VirtualMachineTemplate
@@ -476,6 +479,11 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
 
     def __init__(self, vm, *args, **kwargs):
         super(VirtualMachineForm, self).__init__(*args, **kwargs)
+        # Set owner on form
+        try:
+            self.owner
+        except AttributeError:
+            self.owner = vm.owner
         # No easy way to rename a field, so copy to 
         #   new field and delete old field
         if 'os' in self.fields and self.fields['os']:
@@ -546,36 +554,37 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
 
 
 class HvmModifyVirtualMachineForm(ModifyVirtualMachineForm):
-    """
-    hvm_exclude_fields = ('vnc_tls', 'vnc_x509_path', 'vnc_x509_verify', \
-        'kernel_path', 'kernel_args', 'initrd_path', 'root_path', \
-        'serial_console', 'disk_cache', 'security_model', 'security_domain', \
-        'kvm_flag', 'use_chroot', 'migration_downtime', 'usb_mouse', \
-        'mem_path')
-    """
     hvparam_fields = ('boot_order', 'cdrom_image_path', 'nic_type', 
         'disk_type', 'vnc_bind_address', 'acpi', 'use_localtime')
     required = ('disk_type', 'boot_order', 'nic_type')
+    empty_field = constants.EMPTY_CHOICE_FIELD
+    disk_types = constants.HVM_CHOICES['disk_type']
+    nic_types = constants.HVM_CHOICES['nic_type']
+    boot_devices = constants.HVM_CHOICES['boot_order']
 
     acpi = forms.BooleanField(label='ACPI', required=False)
     use_localtime = forms.BooleanField(label='Use Localtime', required=False)
     vnc_bind_address = forms.IPAddressField(label='VNC Bind Address',
         required=False)
+    disk_type = forms.ChoiceField(label=_('Disk Type'), choices=disk_types)
+    nic_type = forms.ChoiceField(label=_('NIC Type'), choices=nic_types)
+    boot_order = forms.ChoiceField(label=_('Boot Device'), choices=boot_devices)
+
+    class Meta(ModifyVirtualMachineForm.Meta):
+        exclude = ModifyVirtualMachineForm.Meta.exclude + ('kernel_path', 
+            'root_path', 'kernel_args', 'serial_console')
 
 
 class PvmModifyVirtualMachineForm(ModifyVirtualMachineForm):
-    """
-    pvm_exclude_fields = ('vnc_tls', 'vnc_x509_path', 'vnc_x509_verify',
-        'serial_console', 'disk_cache', 'security_model', 'security_domain',
-        'kvm_flag', 'use_chroot', 'migration_downtime', 'usb_mouse',
-        'mem_path', 'disk_type', 'boot_order', 'nic_type',  'acpi',
-        'use_localtime', 'cdrom_image_path', 'vnc_bind_address',)
-    """
     hvparam_fields = ('root_path', 'kernel_path', 'kernel_args', 
         'initrd_path')
 
     initrd_path = forms.CharField(label='initrd Path', required=False)
     kernel_args = forms.CharField(label='Kernel Args', required=False)
+
+    class Meta(ModifyVirtualMachineForm.Meta):
+        exclude = ModifyVirtualMachineForm.Meta.exclude + ('disk_type', 
+            'nic_type', 'boot_order', 'cdrom_image_path', 'serial_console')
 
     def __init__(self, vm, *args, **kwargs):
         super(PvmModifyVirtualMachineForm, self).__init__(vm, *args, **kwargs)
@@ -597,6 +606,9 @@ class KvmModifyVirtualMachineForm(PvmModifyVirtualMachineForm,
     kvm_flags = constants.KVM_FLAGS
     security_models = constants.HV_SECURITY_MODELS
     usb_mice = constants.HV_USB_MICE
+    disk_types = constants.KVM_CHOICES['disk_type']
+    nic_types = constants.KVM_CHOICES['nic_type']
+    boot_devices = constants.KVM_CHOICES['boot_order']
 
     disk_cache = forms.ChoiceField(label='Disk Cache', required=False,
         choices=disk_caches)
@@ -616,8 +628,14 @@ class KvmModifyVirtualMachineForm(PvmModifyVirtualMachineForm,
     vnc_x509_verify = forms.BooleanField(label='VNC x509 Verify',
         required=False)
     
+    class Meta(ModifyVirtualMachineForm.Meta):
+        pass
+    
     def __init__(self, vm, *args, **kwargs):
         super(KvmModifyVirtualMachineForm, self).__init__(vm, *args, **kwargs)
+        self.fields['disk_type'].choices = self.disk_types
+        self.fields['nic_type'].choices = self.nic_types
+        self.fields['boot_order'].choices = self.boot_devices
     
 
 class ModifyConfirmForm(forms.Form):
