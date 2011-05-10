@@ -34,7 +34,11 @@ from django.utils.translation import ugettext as _
 from ganeti.constants import VERSION
 
 def about(request):
-    return render_to_response("about.html", {'version':VERSION})
+    return render_to_response("about.html", {
+        'version':VERSION
+        },
+        context_instance=RequestContext(request),
+    )
 
 def merge_errors(errors, jobs):
     """ helper function for merging queryset of GanetiErrors and Job Errors """

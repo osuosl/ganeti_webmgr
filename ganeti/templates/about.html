@@ -1,15 +1,26 @@
-{% extends "base.html" %}
+{% extends "menu_base.html" %}
 {% load webmgr_tags %}
 {% load i18n %}
+{% block title %}{%trans "About" %}{% endblock %}
+{% block head %}
+    <style type="text/css">
+       .show_bullets li{
+           margin-left:20px;
+           list-style-type:disc;
+       }
+    </style>
+{% endblock %}
 {% block content %}
     <h1>{% trans "About" %}</h1>
     <p>Ganeti Web Manager is a project by the Oregon State University Open Source Lab (<a href=http://osuosl.org>osuosl.org</a>).</p>
+
     <div id="version">
-    <h2>{% trans "Ganeti Version" %}</h2>
+    <h3>{% trans "Ganeti Version" %}</h3>
     <p>The current Ganeti version is {{ version }}</p>
     </div>
-    <div id="contributors">
-    <h2>{% trans "Core Contributors" %}</h2>
+
+    <div id="contributors" class="show_bullets">
+    <h3>{% trans "Core Contributors" %}</h3>
     <p><ul>
         <li>Peter Krenesky (kreneskyp)</li>
         <li>Corbin Simpson (MostAwesomeDude)</li>
@@ -17,17 +28,20 @@
         <li>Scott White (whiteau)</li>
     </ul></p>
     </div>
-    <div id="addons">
-    <h2>{% trans "Add-ons" %}</h2>
+
+    <div id="addons" class="show_bullets">
+    <h3>{% trans "Add-ons" %}</h3>
     <p>Add-ons currently included in Ganeti Web Manager:</p>
-    <p><ul>
+    <p><ul >
         <li> noVNC by Joel Martin
         <ul><li><a href=https://github.com/kanaka/noVNC>github.com/kanaka/noVNC</a></li></ul>
         </li>
     </ul></p>
+
     </div>
     <div id="donation">
-    <h2>{% trans "Donate to Ganeti Web Manager" %}</h2>
+    <h3>{% trans "Donate to Ganeti Web Manager" %}</h3>
     <p>Donations that support the Ganeti Web Manager project can be made at <a href=http://osuosl.org/donate.>osuosl.org/donate</a></p>
     </div>
+
 {% endblock %}
