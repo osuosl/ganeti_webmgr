@@ -1,10 +1,9 @@
 {% extends "base.html" %}
-{% load il8n %}
-{% block title %}{%trans "About" %}{% endblock %}
+{% load webmgr_tags %}
+{% load i18n %}
 {% block content %}
-    <div id="about"><h1>{% trans "About" %}</h1>
+    <h1>{% trans "About" %}</h1>
     <p>Ganeti Web Manager is a project by the Oregon State University Open Source Lab (<a href=http://osuosl.org>osuosl.org</a>).</p>
-    </div>
     <div id="version">
     <h2>{% trans "Ganeti Version" %}</h2>
     <p>The current Ganeti version is {{ version }}</p>
@@ -31,5 +30,4 @@
     <h2>{% trans "Donate to Ganeti Web Manager" %}</h2>
     <p>Donations that support the Ganeti Web Manager project can be made at <a href=http://osuosl.org/donate.>osuosl.org/donate</a></p>
     </div>
-
 {% endblock %}

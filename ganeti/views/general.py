@@ -31,8 +31,10 @@ from ganeti.models import Cluster, VirtualMachine, Job, GanetiError, \
     ClusterUser, Profile, Organization, SSHKey
 from ganeti.views import render_403, render_404
 from django.utils.translation import ugettext as _
+from ganeti.constants import VERSION
 
-
+def about(request):
+    return render_to_response("about.html", {'version':VERSION})
 
 def merge_errors(errors, jobs):
     """ helper function for merging queryset of GanetiErrors and Job Errors """
