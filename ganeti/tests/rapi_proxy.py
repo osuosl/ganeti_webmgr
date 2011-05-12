@@ -591,4 +591,19 @@ class RapiProxy(client.GanetiRapiClient):
                     and self.error:
             return self.fail
         return super(RapiProxy, self).__getattribute__(key)
-    
+
+
+class XenRapiProxy(RapiProxy):
+    def __new__(klass, *args, **kwargs):
+        instance = RapiProxy.__new__(klass, *args, **kwargs)
+        # Unbind functions that are to be patched
+        instance.GetInstances = None
+        instance.GetInstance = None
+        instance.GetInfo = None
+        instance.GetOperatingSystems = None
+        CallProxy.patch(instance, 'GetInstances', False, INSTANCES)
+        CallProxy.patch(instance, 'GetInstance', False, INSTANCE)
+        CallProxy.patch(instance, 'GetInfo', False, XEN_INFO)
+        CallProxy.patch(instance, 'GetOperatingSystems', False, OPERATING_SYSTEMS)
+
+        return instance
