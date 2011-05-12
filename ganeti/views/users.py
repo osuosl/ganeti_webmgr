@@ -31,6 +31,9 @@ from django.utils.translation import ugettext_lazy
 from ganeti.models import SSHKey
 from ganeti.views import render_403
 
+class CustomUserCreationForm(UserCreationForm):
+    email = forms.EmailField(label=_("Email Address"), max_length=100)
+
 @login_required
 def user_list(request):
     user = request.user
@@ -53,16 +56,17 @@ def user_add(request):
         return render_403(request, _('Only a superuser may add a user.'))
 
     if request.method == "POST":
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
             new_user = User(username=data['username'])
             new_user.set_password(data['password2'])
+            new_user.email=data['email']
             new_user.save()
             return HttpResponseRedirect(reverse('user-list'))
 
     else:
-        form = UserCreationForm()
+        form = CustomUserCreationForm()
 
     return render_to_response("users/edit.html", {
             'form':form,
