@@ -12,11 +12,10 @@
 {% endblock %}
 {% block content %}
     <h1>{% trans "About" %}</h1>
-    <p>Ganeti Web Manager is a project by the (<a href=http://osuosl.org>Oregon State University Open Source Lab </a>).</p>
-
+    <p>Ganeti Web Manager is a project by the <a href=http://osuosl.org>Oregon State University Open Source Lab </a>.</p>
+    <p>The <a href=http://code.osuosl.org/projects/ganeti-webmgr>project page</a> has Ganeti Web Manager support, wiki, development information, and more.</p>
     <div id="version">
-    <h3>{% trans "Ganeti Version" %}</h3>
-    <p>Ganeti Version: {{ version }}</p>
+    <h3>{% trans "Ganeti Version: " %}{{ version }}</h3>
     </div>
 
     <div id="contributors" class="show_bullets">
@@ -35,6 +34,8 @@
     <p><ul >
         <li><a href=https://github.com/kanaka/noVNC>noVNC by Joel Martin</a></li>
         <li><a href=http://code.osuosl.org/projects/twisted-vncauthproxy>Twisted VNCAuthProxy</a></li>
+        <li><a href=http://code.osuosl.org/projects/object-permissions>Django Object Permissions </a></li>
+        <li><a href=http://code.osuosl.org/projects/django-object-log>Django Object Log</a></li>
     </ul>
     </p>
 
