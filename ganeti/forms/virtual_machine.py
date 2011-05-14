@@ -581,6 +581,8 @@ class HvmModifyVirtualMachineForm(ModifyVirtualMachineForm):
         exclude = ModifyVirtualMachineForm.Meta.exclude + ('kernel_path', 
             'root_path', 'kernel_args', 'serial_console')
 
+    def __init__(self, vm, *args, **kwargs):
+        super(HvmModifyVirtualMachineForm, self).__init__(vm, *args, **kwargs)
 
 class PvmModifyVirtualMachineForm(ModifyVirtualMachineForm):
     hvparam_fields = ('root_path', 'kernel_path', 'kernel_args', 
