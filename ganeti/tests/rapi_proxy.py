@@ -82,6 +82,146 @@ INSTANCE = {'admin_state': False,
     'tags': [],
     'uuid': '27bac3d3-f634-4dee-aa60-ed2eeb5f2287'}
 
+XEN_INSTANCES = ['hvm.osuosl', 'pvm.osuosl']
+XEN_HVM_INSTANCE = {
+  'admin_state': False,
+  'beparams': {
+    'auto_balance': True,
+    'memory': 512,
+    'vcpus': 2
+  },
+  'ctime': 1304546866.803153,
+  'custom_beparams': {
+    'memory': 512,
+    'vcpus': 2
+  },
+  'custom_hvparams': {
+    'boot_order': 'c',
+    'cdrom_image_path': '',
+    'disk_type': 'paravirtual',
+    'nic_type': 'rtl8139'
+  },
+  'custom_nicparams': [
+    {
+      'link': 'br42',
+      'mode': 'bridged'
+    }
+  ],
+  'disk.sizes': [
+    1024
+  ],
+  'disk_template': 'plain',
+  'disk_usage': 1024,
+  'hvparams': {
+    'acpi': True,
+    'blockdev_prefix': 'hd',
+    'boot_order': 'c',
+    'cdrom_image_path': '',
+    'device_model': '/usr/lib/xen/bin/qemu-dm',
+    'disk_type': 'paravirtual',
+    'kernel_path': '/usr/lib/xen/boot/hvmloader',
+    'nic_type': 'rtl8139',
+    'pae': True,
+    'use_localtime': False,
+    'vnc_bind_address': '0.0.0.0',
+    'vnc_password_file': '/etc/ganeti/vnc-cluster-password'
+  },
+  'mtime': 1305055017.671782,
+  'name': 'hvm.osuosl',
+  'network_port': 11003,
+  'nic.bridges': [
+    'br42'
+  ],
+  'nic.ips': [
+    None
+  ],
+  'nic.links': [
+    'br42'
+  ],
+  'nic.macs': [
+    'aa:00:00:20:8d:41'
+  ],
+  'nic.modes': [
+    'bridged'
+  ],
+  'oper_ram': None,
+  'oper_state': False,
+  'oper_vcpus': None,
+  'os': 'debootstrap+default',
+  'pnode': 'gtest3.osuosl.bak',
+  'serial_no': 5,
+  'snodes': [],
+  'status': 'ADMIN_down',
+  'tags': [],
+  'uuid': '4e4241fd-8aa1-4efb-b378-69e658c480f7'
+}
+XEN_PVM_INSTANCE = {
+  'admin_state': False,
+  'beparams': {
+    'auto_balance': True,
+    'memory': 512,
+    'vcpus': 2
+  },
+  'ctime': 1304546944.3501799,
+  'custom_beparams': {
+    'memory': 512,
+    'vcpus': 2
+  },
+  'custom_hvparams': {
+    'kernel_path': '/boot/vmlinuz-2.6-xenU',
+    'root_path': '/dev/xvda1'
+  },
+  'custom_nicparams': [
+    {
+      'link': 'br42',
+      'mode': 'bridged'
+    }
+  ],
+  'disk.sizes': [
+    1024
+  ],
+  'disk_template': 'plain',
+  'disk_usage': 1024,
+  'hvparams': {
+    'blockdev_prefix': 'sd',
+    'bootloader_args': '',
+    'bootloader_path': '',
+    'initrd_path': '/boot/initrd-2.6-xenU',
+    'kernel_args': 'ro',
+    'kernel_path': '/boot/vmlinuz-2.6-xenU',
+    'root_path': '/dev/xvda1',
+    'use_bootloader': False
+  },
+  'mtime': 1305055018.4669311,
+  'name': 'pvm.osuosl',
+  'network_port': None,
+  'nic.bridges': [
+    'br42'
+  ],
+  'nic.ips': [
+    None
+  ],
+  'nic.links': [
+    'br42'
+  ],
+  'nic.macs': [
+    'aa:00:00:1f:33:6e'
+  ],
+  'nic.modes': [
+    'bridged'
+  ],
+  'oper_ram': None,
+  'oper_state': False,
+  'oper_vcpus': None,
+  'os': 'debootstrap+default',
+  'pnode': 'gtest3.osuosl.bak',
+  'serial_no': 5,
+  'snodes': [],
+  'status': 'ADMIN_down',
+  'tags': [],
+  'uuid': '4b570908-6094-4dab-bbb0-b67aab517128'
+}
+
 NODES = ['gtest1.osuosl.bak', 'gtest2.osuosl.bak','gtest3.osuosl.bak']
 NODES_BULK = [
     {'cnodes': 1,
@@ -133,30 +273,30 @@ NODES_BULK = [
     'tags': [],
     'uuid': '1fee760b-b240-4d7a-a514-5c9441877a01'},
     {
-    "cnodes": None,
-    "csockets": None,
-    "ctime": 1272388723.7258999,
-    "ctotal": None,
-    "dfree": None,
-    "drained": False,
-    "dtotal": None,
-    "master_candidate": False,
-    "mfree": None,
-    "mnode": None,
-    "mtime": 1293527598.306725,
-    "mtotal": None,
-    "name": "gtest3.osuosl.bak",
-    "offline": True,
-    "pinst_cnt": 0,
-    "pinst_list": [],
-    "pip": "10.192.0.179",
-    "role": "O",
-    "serial_no": 2,
-    "sinst_cnt": 0,
-    "sinst_list": [],
-    "sip": "192.168.166.179",
-    "tags": [],
-    "uuid": "5b1001e7-2595-47d4-a1ae-5a6da7b461ca"}
+    'cnodes': None,
+    'csockets': None,
+    'ctime': 1272388723.7258999,
+    'ctotal': None,
+    'dfree': None,
+    'drained': False,
+    'dtotal': None,
+    'master_candidate': False,
+    'mfree': None,
+    'mnode': None,
+    'mtime': 1293527598.306725,
+    'mtotal': None,
+    'name': 'gtest3.osuosl.bak',
+    'offline': True,
+    'pinst_cnt': 0,
+    'pinst_list': [],
+    'pip': '10.192.0.179',
+    'role': 'O',
+    'serial_no': 2,
+    'sinst_cnt': 0,
+    'sinst_list': [],
+    'sip': '192.168.166.179',
+    'tags': [],
+    'uuid': '5b1001e7-2595-47d4-a1ae-5a6da7b461ca'}
 ]
 
 
@@ -297,6 +437,7 @@ XEN_INFO = {'architecture': ['64bit','x86_64'],
   'volume_group_name': 'ganeti'}
 
 OPERATING_SYSTEMS = ['image+debian-osgeo', 'image+ubuntu-lucid']
+XEN_OPERATING_SYSTEMS = ['debootstrap+default', 'image+default']
 
 JOB = {'end_ts': [1291845036, 492131],
  'id': '1',
@@ -570,16 +711,6 @@ class RapiProxy(client.GanetiRapiClient):
         raise self.error
     
     def __setattr__(self, name, value):
-        if name == 'hv':
-            if value == 'kvm':
-                self.GetInfo = None
-                CallProxy.patch(self, 'GetInfo', False, INFO)
-            elif value == 'xen-pvm' or value == 'xen-hvm':
-                self.GetInfo = None
-                inf = XEN_INFO.copy()
-                if value == 'xen-hvm':
-                    inf['default_hypervisor'] = 'xen-hvm'
-                CallProxy.patch(self, 'GetInfo', False, inf)
         return super(RapiProxy, self).__setattr__(name, value)
      
     def __getattribute__(self, key):
@@ -602,8 +733,8 @@ class XenRapiProxy(RapiProxy):
         instance.GetInfo = None
         instance.GetOperatingSystems = None
         CallProxy.patch(instance, 'GetInstances', False, INSTANCES)
-        CallProxy.patch(instance, 'GetInstance', False, INSTANCE)
+        CallProxy.patch(instance, 'GetInstance', False, XEN_PVM_INSTANCE)
         CallProxy.patch(instance, 'GetInfo', False, XEN_INFO)
-        CallProxy.patch(instance, 'GetOperatingSystems', False, OPERATING_SYSTEMS)
+        CallProxy.patch(instance, 'GetOperatingSystems', False, XEN_OPERATING_SYSTEMS)
 
         return instance
