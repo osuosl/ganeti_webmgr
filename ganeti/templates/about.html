@@ -12,8 +12,15 @@
 {% endblock %}
 {% block content %}
     <h1>{% trans "About" %}</h1>
-    <p>Ganeti Web Manager is a project by the <a href=http://osuosl.org>Oregon State University Open Source Lab </a>.</p>
-    <p>The <a href=http://code.osuosl.org/projects/ganeti-webmgr>project page</a> has Ganeti Web Manager support, wiki, development information, and more.</p>
+    <p>Ganeti Web Manager is a project by the 
+        <a href="http://osuosl.org">Oregon State University Open Source Lab</a>.
+    </p>
+    <p>If you would like more information, or are interested in getting 
+        involved, check out the 
+        <a href="http://code.osuosl.org/projects/ganeti-webmgr">project page</a>.
+        <br /> It contains the bug tracker, wiki, and information on 
+        support and development.
+    </p>
     <div id="version">
     <h3>{% trans "Ganeti Version: " %}{{ version }}</h3>
     </div>
@@ -32,17 +39,17 @@
     <h3>{% trans "Add-ons" %}</h3>
     <p>Add-ons currently included in Ganeti Web Manager:</p>
     <p><ul >
-        <li><a href=https://github.com/kanaka/noVNC>noVNC by Joel Martin</a></li>
-        <li><a href=http://code.osuosl.org/projects/twisted-vncauthproxy>Twisted VNCAuthProxy</a></li>
-        <li><a href=http://code.osuosl.org/projects/object-permissions>Django Object Permissions </a></li>
-        <li><a href=http://code.osuosl.org/projects/django-object-log>Django Object Log</a></li>
+        <li><a href="https://github.com/kanaka/noVNC">noVNC by Joel Martin</a></li>
+        <li><a href="http://code.osuosl.org/projects/twisted-vncauthproxy">Twisted VNCAuthProxy</a></li>
+        <li><a href="http://code.osuosl.org/projects/object-permissions">Django Object Permissions </a></li>
+        <li><a href="http://code.osuosl.org/projects/django-object-log">Django Object Log</a></li>
     </ul>
     </p>
 
     </div>
     <div id="donation">
     <h3>{% trans "Donate to Ganeti Web Manager" %}</h3>
-    <p>Donations that support the Ganeti Web Manager project can be made at <a href=http://osuosl.org/donate.>osuosl.org/donate</a></p>
+    <p>Donations that support the Ganeti Web Manager project can be made <a href="http://osuosl.org/contribute">here</a>.</p>
     </div>
 
 {% endblock %}
