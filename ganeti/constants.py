@@ -78,6 +78,7 @@ KVM_NIC_TYPES = [
 
 # Xen HVM Choices
 HVM_BOOT_ORDER = [
+    (u'cd', u'Hard Disk, CD-ROM'),
     (u'a', u'Floppy Drive'),
     (u'c', u'Hard Disk'),
     (u'd', u'CD-ROM'),
