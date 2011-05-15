@@ -248,10 +248,9 @@
             <p>{% trans "Value denoting boot order for the virtual machine" %}.</p>
             <ul>
                 <li><b>Hard Disk</b> - {% trans "boot from the first disk device" %}</li>
-                <li>
-                    <b>CD-ROM</b> - {% blocktrans %}boot from the cdrom (requires CD Image path
-                    being set){% endblocktrans %}
-                </li>
+                <li><b>CD-ROM</b> - {% blocktrans %}boot from the cdrom
+                (requires CD Image path being set){% endblocktrans %}</li>
+                <li><b>Network</b> - {% trans "boot from the network (such as PXE)" %}</li>
             </ul>
             <p>{% trans "Valid for the Xen HVM and KVM hypervisors" %}.</p>
         </div>
