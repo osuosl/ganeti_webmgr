@@ -29,14 +29,15 @@ Twitter:      http://twitter.com/ganetiwebmgr
 ================================================================================
 
 1.  Install Dependencies
-    * Python >= 2.5
+    * Python >= 2.5 but < 3.x (Python 3.x is not supported due to
+                               backward-compatibility issues)
     * Django >= 1.2
     * django-registration
     * South >=0.7
     * object_permissions (packaged with releases)
     * object_log (packaged with releases)
     * sqlite3, mysql, or postgresql
-    * twisted, twisted-web (deps for twisted-vncauthproxy)
+    * twisted >=10.2, twisted-web (deps for twisted-vncauthproxy)
 
 2. Deploy this code somewhere (i.e. /var/lib/django/ganeti_webmgr)
 3. Copy settings.py.dist to settings.py
@@ -127,8 +128,8 @@ Here is an example with a user jack and password abc123:
 
 Add the hash to the RAPI users file and restart ganeti-rapi. Depending on the
 version of Ganeti you are running, you will need to either use
-`/var/lib/ganeti/rapi_users` (Ganeti 2.3.x and older) or
-`/var/lib/ganeti/rapi/users` (Ganeti 2.4.x and newer).
+`/var/lib/ganeti/rapi_users` (Ganeti <=2.3.x ) or
+`/var/lib/ganeti/rapi/users` (Ganeti >=2.4.x ).
 
 An example hash entry might look like the following:
 
