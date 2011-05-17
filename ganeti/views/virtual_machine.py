@@ -652,14 +652,12 @@ def create(request, cluster_slug=None):
                 job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
                 VirtualMachine.objects.filter(pk=vm.pk).update(last_job=job)
 
-
-
                 # grant admin permissions to the owner.  Only do this for new
                 # VMs.  otherwise we run the risk of granting perms to a
                 # different owner.  We should be preventing that elsewhere, but
                 # lets be extra careful since this check is cheap.
                 if 'vm_recovery' in data:
-                    log_action('VM_RECOVER', user, vm)
+                    log_action('VM_RECOVER', user, vm, job)
                 else:
                     grantee.grant('admin', vm)
                     log_action('CREATE', user, vm)
@@ -816,8 +814,8 @@ def modify_confirm(request, cluster_slug, instance):
                 if 'reboot' in request.POST and vm.info['status'] == 'running':
                     if power:
                         # Reboot the vm
-                        vm.reboot()
-                        log_action('VM_REBOOT', user, vm)
+                        job = vm.reboot()
+                        log_action('VM_REBOOT', user, vm, job)
                     else:
                         return render_403(request,
                             _("Sorry, but you do not have permission to reboot this machine."))
