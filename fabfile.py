@@ -36,12 +36,12 @@ GIT_INSTALL =  {
         'production':'hash:f899070482f',
         },
     'django_object_permissions':{
-        'url':'git@git.osuosl.org:django/django_object_permissions',
+        'url':'git://git.osuosl.org/gitolite/django/django_object_permissions',
         'development':'develop',
         'symlink':'object_permissions',
         },
     'django_object_log':{
-        'url':'git@git.osuosl.org:django/django_object_log',
+        'url':'git://git.osuosl.org/gitolite/django/django_object_log',
         'development':'develop',
         'symlink':'object_log'
         }
