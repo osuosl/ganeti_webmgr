@@ -25,7 +25,7 @@ from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.db.models.query_utils import Q
 from django.forms import CharField, HiddenInput
 from django.http import HttpResponse, HttpResponseRedirect, \
-    HttpResponseNotAllowed, HttpResponseForbidden, HttpResponseBadRequest
+    HttpResponseNotAllowed, HttpResponseForbidden, HttpResponseBadRequest, Http404
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.conf import settings
@@ -51,6 +51,19 @@ from ganeti.utilities import cluster_default_info, cluster_os_list, \
 from django.utils.translation import ugettext as _
 
 
+def get_vm_and_cluster_or_404(cluster_slug, instance):
+    """
+    Utility function for querying VirtualMachine and Cluster in a single query
+    rather than 2 separate calls to get_object_or_404.
+    """
+    query = VirtualMachine.objects \
+        .filter(cluster__slug=cluster_slug, hostname=instance) \
+        .select_related('cluster')
+    if len(query) == 0:
+        raise Http404('Virtual Machine does not exist')
+    return query[0], query[0].cluster
+
+
 @login_required
 def delete(request, cluster_slug, instance):
     """
@@ -58,9 +71,7 @@ def delete(request, cluster_slug, instance):
     """
 
     user = request.user
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    instance = get_object_or_404(VirtualMachine, cluster__slug=cluster_slug,
-        hostname=instance)
+    instance, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
 
     # Check permissions.
     if not (
@@ -106,9 +117,7 @@ def reinstall(request, cluster_slug, instance):
     """
 
     user = request.user
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    instance = get_object_or_404(VirtualMachine, cluster__slug=cluster_slug,
-        hostname=instance)
+    instance, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
 
     # Check permissions.
     # XXX Reinstalling is somewhat similar to deleting in that you destroy data,
@@ -435,8 +444,7 @@ def detail(request, cluster_slug, instance):
     """
     Display details of virtual machine.
     """
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
+    vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
 
     user = request.user
     cluster_admin = user.is_superuser or user.has_perm('admin', cluster)
@@ -500,8 +508,7 @@ def users(request, cluster_slug, instance):
     """
     Display all of the Users of a VirtualMachine
     """
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    vm = get_object_or_404(VirtualMachine, hostname=instance)
+    vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
 
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', vm) or
@@ -694,8 +701,7 @@ def create(request, cluster_slug=None):
 
 @login_required
 def modify(request, cluster_slug, instance):
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
+    vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
 
     user = request.user
     if not (user.is_superuser or user.has_any_perms(vm, ['admin','modify'])
@@ -768,8 +774,7 @@ def modify(request, cluster_slug, instance):
 
 @login_required
 def modify_confirm(request, cluster_slug, instance):
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
+    vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
 
     user = request.user
     power = user.is_superuser or user.has_any_perms(vm, ['admin','power'])
@@ -900,8 +905,7 @@ def recover_failed_deploy(request, cluster_slug, instance):
     """
     Loads a vm that failed to deploy back into the edit form
     """
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
+    vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
 
     user = request.user
     if not (user.is_superuser or user.has_any_perms(vm, ['admin','modify']) \
@@ -939,8 +943,7 @@ def rename(request, cluster_slug, instance):
     """
     Rename an existing instance
     """
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
+    vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
 
     user = request.user
     if not (user.is_superuser or user.has_any_perms(vm, ['admin','modify'])
@@ -990,8 +993,7 @@ def reparent(request, cluster_slug, instance):
     """
     update a virtual machine to have a new owner
     """
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
+    vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
 
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
