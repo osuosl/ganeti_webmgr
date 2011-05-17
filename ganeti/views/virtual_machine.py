@@ -460,7 +460,7 @@ def detail(request, cluster_slug, instance):
         migrate = 'migrate' in perms
 
     if not (admin or power or remove or modify or tags):
-        return render_403(request, _('You do not have permission to view this cluster\'s details'))
+        return render_403(request, _('You do not have permission to view this virtual machines\'s details'))
 
     context = {
         'cluster': cluster,
