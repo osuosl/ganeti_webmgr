@@ -276,7 +276,6 @@ a.clear:hover {background:url(/media/images/icons/cancel.png) no-repeat !importa
  * Job Status Queue and Log
  **/
 #messages li.job {
-    background-color:#eee;
     border-width:1px;
     padding:0;
 }
@@ -288,12 +287,13 @@ a.clear:hover {background:url(/media/images/icons/cancel.png) no-repeat !importa
     text-align:left;
 }
 #messages li.job.error h3 {background: #ee9c98;}
+#messages li.job.error{overflow:scroll;}
 #messages .op_log {
     display:block;
     border-top:1px solid #124612;
     margin:0;
     padding: 10px;
-    overflow:auto;
+    overflow:visible;
 }
 
 #messages .op_log  li {
