@@ -1061,8 +1061,7 @@ def cluster_options(request):
     cluster = get_object_or_404(Cluster, id__exact=cluster_id)
 
     user = request.user
-    if not (user.is_superuser or user.has_perm('create_vm', cluster) or
-            user.has_perm('admin', cluster)):
+    if not (user.is_superuser or user.has_any_perms(cluster, ['admin', 'create_vm'])):
         return render_403(request,
             _('You do not have permissions to view this cluster'))
 
@@ -1082,8 +1081,7 @@ def cluster_defaults(request):
     cluster = get_object_or_404(Cluster, id__exact=cluster_id)
 
     user = request.user
-    if not (user.is_superuser or user.has_perm('create_vm', cluster) or
-            user.has_perm('admin', cluster)):
+    if not (user.is_superuser or user.has_any_perms(cluster, ['admin', 'create_vm'])):
         return render_403(request, _('You do not have permission to view the default cluster options'))
 
     content = json.dumps(cluster_default_info(cluster))
