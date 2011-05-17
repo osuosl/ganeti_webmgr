@@ -743,9 +743,7 @@ class TestVirtualMachineRenameViews(TestVirtualMachineViewsBase):
 
     def test_view_rename_form(self):
         """
-        VM rename form errors should do what they're supposed to do.
-
-        XXX can somebody actually explain what this test is doing?
+        Tests that form validation is working properly
         """
 
         url = "/cluster/%s/%s/rename/"
