@@ -44,7 +44,7 @@ from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine, \
         Job, SSHKey, VirtualMachineTemplate, Node
 from ganeti.views import render_403
 from ganeti.forms.virtual_machine import NewVirtualMachineForm, \
-    ModifyVirtualMachineForm, ModifyConfirmForm, MigrateForm, RenameForm
+    ModifyVirtualMachineForm, ModifyConfirmForm, MigrateForm, RenameForm, ChangeOwnerForm
 from ganeti.templatetags.webmgr_tags import render_storage
 from ganeti.utilities import cluster_default_info, cluster_os_list, \
     compare, os_prettify
@@ -977,6 +977,43 @@ def rename(request, cluster_slug, instance):
         form = RenameForm(vm)
 
     return render_to_response('virtual_machine/rename.html', {
+        'cluster': cluster,
+        'vm': vm,
+        'form': form
+        },
+        context_instance=RequestContext(request),
+    )
+
+
+@login_required
+def reparent(request, cluster_slug, instance):
+    """
+    update a virtual machine to have a new owner
+    """
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
+
+    user = request.user
+    if not (user.is_superuser or user.has_perm('admin', cluster)):
+        return render_403(request,
+            _('You do not have permissions to change the owner of this virtual machine'))
+
+    if request.method == 'POST':
+        form = ChangeOwnerForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            vm.owner = data['owner']
+            vm.save(force_update=True)
+
+            # log information about creating the machine
+            log_action('VM_MODIFY', user, vm)
+
+            return HttpResponseRedirect(reverse('instance-detail', args=[cluster_slug, instance]))
+
+    else:
+        form = ChangeOwnerForm()
+
+    return render_to_response('virtual_machine/reparent.html', {
         'cluster': cluster,
         'vm': vm,
         'form': form

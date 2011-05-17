@@ -157,15 +157,16 @@ urlpatterns += patterns('ganeti.views.virtual_machine',
 
     # Reinstall
     url(r"^%s/reinstall/?$" % vm_prefix, "reinstall", name="instance-reinstall"),
-
+    
     # Edit / Modify
     url(r"^%s/edit/?$" % vm_prefix, "modify", name="instance-modify"),
     url(r'^%s/edit/confirm/?$' % vm_prefix, "modify_confirm", name="instance-modify-confirm"),
     url(r"^%s/rename/?$" % vm_prefix, "rename", name="instance-rename"),
-
+    url(r"^%s/reparent/?$" % vm_prefix, "reparent", name="instance-reparent"),
+    
     # SSH Keys
     url(r'^%s/keys/(?P<api_key>\w+)/?$' % vm_prefix, "ssh_keys", name="instance-keys"),
-
+    
     # object log
     url(r'^%s/object_log/?$' % vm_prefix, 'object_log', name="vm-object_log"),
 )

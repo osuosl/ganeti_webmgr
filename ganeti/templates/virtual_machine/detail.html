@@ -170,7 +170,7 @@
     <div id="overview" class="tab_content">
         <ul id="actions">
             {% with instance.cluster.username as username %}
-                {% if modify and username %}            
+                {% if modify and username %}
                     <li>
                         <a class="button edit" href="{% url instance-modify cluster.slug instance.hostname %}">
                             {% trans "Edit" %}
@@ -179,6 +179,13 @@
                     <li>
                         <a class="button edit" href="{% url instance-rename cluster.slug instance.hostname %}">
                             {% trans "Rename" %}
+                        </a>
+                    </li>
+                {% endif %}
+                {% if cluster_admin %}
+                    <li>
+                        <a class="button edit" href="{% url instance-reparent cluster.slug instance.hostname %}">
+                            {% trans "Change Owner" %}
                         </a>
                     </li>
                 {% endif %}
