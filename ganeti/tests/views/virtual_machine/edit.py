@@ -10,7 +10,8 @@ from ganeti.utilities import cluster_os_list
 __all__ = ['TestVirtualMachineEditViews',
            'TestVirtualMachineDeleteViews',
            'TestVirtualMachineReinstallViews',
-           'TestVirtualMachineRenameViews']
+           'TestVirtualMachineRenameViews',
+           'TestVirtualMachineReparentViews']
 
 VirtualMachine = models.VirtualMachine
 
@@ -743,9 +744,7 @@ class TestVirtualMachineRenameViews(TestVirtualMachineViewsBase):
 
     def test_view_rename_form(self):
         """
-        VM rename form errors should do what they're supposed to do.
-
-        XXX can somebody actually explain what this test is doing?
+        Tests that form validation is working properly
         """
 
         url = "/cluster/%s/%s/rename/"
@@ -761,3 +760,48 @@ class TestVirtualMachineRenameViews(TestVirtualMachineViewsBase):
 
         self.assert_view_missing_fields(url, args, data, fields=['hostname'], template=template, tests=tests)
         self.assert_view_values(url, args, data, errors, template, tests=tests)
+
+
+class TestVirtualMachineReparentViews(TestVirtualMachineViewsBase):
+
+    context = globals()
+
+    def test_view_rename_get(self):
+        """
+        VM reparent GET requests should have the standard responses.
+        """
+
+        url = "/cluster/%s/%s/reparent/"
+        args = (cluster.slug, vm.hostname)
+        template = 'virtual_machine/reparent.html'
+        users =[superuser, cluster_admin]
+        denied = [vm_admin, vm_modify, cluster_migrate]
+
+        # test GET requests
+        self.assert_standard_fails(url, args)
+        self.assert_200(url, args, users, template=template)
+        self.assert_403(url, args, denied)
+
+    def test_view_rename_post(self):
+        """
+        VM reparent POST requests should have the standard responses.
+        """
+
+        vm.owner = vm_admin.get_profile()
+        vm.save()
+
+        url = "/cluster/%s/%s/reparent/"
+        args = (cluster.slug, vm.hostname)
+        template_success = 'virtual_machine/detail.html'
+        users = [superuser, cluster_admin]
+        denied = [vm_admin, vm_modify, cluster_migrate]
+        data = {'owner':vm_modify.get_profile().pk}
+
+        #noinspection PyUnusedLocal
+        def tests(user, response):
+            updated_vm = VirtualMachine.objects.get(pk=vm.pk)
+            self.assertEqual(vm_modify.get_profile().clusteruser_ptr, updated_vm.owner)
+
+        self.assert_standard_fails(url, args, data, method='post')
+        self.assert_200(url, args, users, template_success, data=data, follow=True, method="post", tests=tests)
+        self.assert_403(url, args, denied, data=data, method="post")

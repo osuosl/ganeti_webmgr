@@ -496,3 +496,8 @@ class RenameForm(forms.Form):
         if hostname and hostname == self.vm.hostname:
             raise ValidationError(_("The new hostname must be different than the current hostname"))
         return hostname
+
+
+class ChangeOwnerForm(forms.Form):
+    """ Form used when modifying the owner of a virtual machine """
+    owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label=_('Owner'))
