@@ -39,8 +39,9 @@
         {# performatted help content that will be copied into the help div #}
 
         <div id="help-hostname">
-            Fully qualified domain name <i>(<b>FQDN</b>)</i> to assign to this
-            virtual machine. <i>(e.g. hostname.example.org)</i>
+            {% blocktrans %}Domain name or host name to assign to this virtual
+            machine; e.g. <tt>example.org</tt> or
+            <tt>subdomain.example.org</tt>.{% endblocktrans %}
         </div>
         <div id="help-ip_check">
             Whether to ensure instance’s IP address is inactive.
