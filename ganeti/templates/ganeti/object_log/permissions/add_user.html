@@ -1,5 +1,6 @@
 {% load webmgr_tags %}
 <td class="timestamp">{{log_item.timestamp|date}}</td>
+{% with log_item.data as data %}
 <td>
     {% if user.is_superuser %}
         <a href="{% url user-detail log_item.user.pk %}">{{log_item.user}}</a>
@@ -7,16 +8,15 @@
         {{ log_item.user }}
     {% endif %}
 added
-    {% with log_item.object2|class_name as klass %}
-        {{ klass }}
-        {% if user.is_superuser %}
-            {% ifequal klass "User" %}
-                <a href="{% url user-detail log_item.object2.pk %}">{{log_item.object2}}</a>
-            {% else %}
-                <a href="{% url usergroup-detail log_item.object2.pk %}">{{log_item.object2}}</a>
-            {% endifequal %}
+    {{ data.affected_user_class }}
+    {% if user.is_superuser %}
+        {% ifequal data.affected_user_class "User" %}
+            <a href="{% url user-detail data.affected_user_id %}">{{data.affected_user}}</a>
         {% else %}
-            {{ log_item.object2 }}
-        {% endif %}
-    {% endwith %}
-    to {{log_item.object_type1}} {{log_item.object1}}</td>
+            <a href="{% url usergroup-detail data.affected_user_id %}">{{data.affected_user_id}}</a>
+        {% endifequal %}
+    {% else %}
+        {{ data.affected_user }}
+    {% endif %}
+    to {{log_item.object_type1}} {{data.object_str}}</td>
+{% endwith %}
