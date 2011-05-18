@@ -81,6 +81,8 @@ urlpatterns += patterns('ganeti.views.cluster',
     url(r'^%s/?$' % cluster, 'detail', name="cluster-detail"),
     #   Edit
     url(r'^%s/edit/?$' % cluster, 'edit', name="cluster-edit"),
+    #   Redistribute config
+    url(r'^%s/redistribute-config/?$' % cluster, 'redistribute_config', name="cluster-redistribute-config"),
     #   User
     url(r'^%s/users/?$' % cluster, 'users', name="cluster-users"),
     url(r'^%s/virtual_machines/?$' % cluster, 'virtual_machines', name="cluster-vms"),

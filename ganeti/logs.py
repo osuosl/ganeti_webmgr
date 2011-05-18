@@ -54,6 +54,8 @@ def register_log_actions():
     LogAction.objects.register('VM_RENAME','ganeti/object_log/vm_rename.html', build_vm_cache)
     LogAction.objects.register('VM_RECOVER','ganeti/object_log/vm_recover.html', build_vm_cache)
 
+    LogAction.objects.register('CLUSTER_REDISTRIBUTE','ganeti/object_log/cluster_redistribute.html')
+
     LogAction.objects.register('NODE_EVACUATE','ganeti/object_log/node_evacuate.html', build_node_cache)
     LogAction.objects.register('NODE_MIGRATE','ganeti/object_log/node_migrate.html', build_node_cache)
     LogAction.objects.register('NODE_ROLE_CHANGE','ganeti/object_log/node_role_change.html', build_node_cache)

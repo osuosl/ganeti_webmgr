@@ -25,7 +25,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.db.models.query_utils import Q
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.template.defaultfilters import slugify
@@ -203,6 +203,30 @@ def permissions(request, cluster_slug, user_id=None, group_id=None):
     return view_permissions(request, cluster, url, user_id, group_id,
                             user_template='cluster/user_row.html',
                             group_template='cluster/group_row.html')
+
+
+@login_required
+def redistribute_config(request, cluster_slug):
+    """
+    Redistribute master-node config to all cluster's other nodes.
+    """
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+
+    user = request.user
+    if not (user.is_superuser or user.has_perm('admin', cluster)):
+        return render_403(request, "You do not have sufficient privileges")
+
+    if request.method == 'POST':
+        try:
+            job = cluster.redistribute_config()
+            job.load_info()
+            msg = job.info
+
+            log_action('CLUSTER_REDISTRIBUTE', user, cluster, job)
+        except GanetiApiError, e:
+            msg = {'__all__':[str(e)]}
+        return HttpResponse(json.dumps(msg), mimetype='application/json')
+    return HttpResponseNotAllowed(['POST'])
 
 
 def ssh_keys(request, cluster_slug, api_key):
