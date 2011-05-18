@@ -62,6 +62,7 @@ urlpatterns += patterns('ganeti.views.users',
 
 # All SSH Keys
 urlpatterns += patterns('ganeti.views.general',
+    url(r'^keys/(?P<api_key>\w+)/$', 'ssh_keys', name="key-list"),
 )
 
 #Groups
