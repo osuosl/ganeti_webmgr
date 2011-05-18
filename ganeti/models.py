@@ -40,8 +40,9 @@ from django.db.models import Q, Sum
 from django.db.models.query import QuerySet
 from django.db.models.signals import post_save, post_syncdb
 from django.db.utils import DatabaseError
+from ganeti.logs import register_log_actions
 
-from object_log.models import LogItem, LogAction
+from object_log.models import LogItem
 log_action = LogItem.objects.log_action
 
 from object_permissions.registration import register
@@ -1515,46 +1516,5 @@ register(permissions.CLUSTER_PARAMS, Cluster)
 register(permissions.VIRTUAL_MACHINE_PARAMS, VirtualMachine)
 
 
-def build_vm_cache(user, object1, object2, object3, data):
-    data = {'cluster_slug':object1.cluster.slug,
-            'hostname':object1.hostname}
-    if object2 is not None:
-        data['job_id'] = object2.job_id
-    return data
-
-
-def build_node_cache(user, object1, object2, object3, data):
-    data = {'cluster_slug':object1.cluster.slug,
-            'hostname':object1.hostname}
-    if object2 is not None:
-        data['job_id'] = object2.job_id
-    return data
-
-
-def build_op_cache(user, object1, object2, object3, data):
-    return {
-        'object_str':str(object1),
-        'affected_user':str(object2),
-        'affected_user_id':object2.pk,
-        'affected_user_class':object2.__class__.__name__
-    }
-
-
-# Register LogActions used within the Ganeti App
-LogAction.objects.register('VM_REBOOT','ganeti/object_log/vm_reboot.html', build_vm_cache)
-LogAction.objects.register('VM_START','ganeti/object_log/vm_start.html', build_vm_cache)
-LogAction.objects.register('VM_STOP','ganeti/object_log/vm_stop.html', build_vm_cache)
-LogAction.objects.register('VM_MIGRATE','ganeti/object_log/vm_migrate.html', build_vm_cache)
-LogAction.objects.register('VM_REINSTALL','ganeti/object_log/vm_reinstall.html', build_vm_cache)
-LogAction.objects.register('VM_MODIFY','ganeti/object_log/vm_modify.html', build_vm_cache)
-LogAction.objects.register('VM_RENAME','ganeti/object_log/vm_rename.html', build_vm_cache)
-LogAction.objects.register('VM_RECOVER','ganeti/object_log/vm_recover.html', build_vm_cache)
-
-LogAction.objects.register('NODE_EVACUATE','ganeti/object_log/node_evacuate.html', build_node_cache)
-LogAction.objects.register('NODE_MIGRATE','ganeti/object_log/node_migrate.html', build_node_cache)
-LogAction.objects.register('NODE_ROLE_CHANGE','ganeti/object_log/node_role_change.html', build_node_cache)
-
-# add log actions for permission actions here
-LogAction.objects.register('ADD_USER', 'ganeti/object_log/permissions/add_user.html', build_op_cache)
-LogAction.objects.register('REMOVE_USER', 'ganeti/object_log/permissions/remove_user.html', build_op_cache)
-LogAction.objects.register('MODIFY_PERMS', 'ganeti/object_log/permissions/modify_perms.html', build_op_cache)
+# register log actions
+register_log_actions()
