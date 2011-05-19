@@ -88,7 +88,7 @@ def detail(request, id=None, template='groups/detail.html'):
                             {'object':group,
                              'group':group,
                              'users':group.user_set.all(),
-                             'url':reverse('usergroup-permissions', args=[id])
+                             'url':reverse('group-permissions', args=[id])
                              }, \
                               context_instance=RequestContext(request))
     
@@ -103,7 +103,7 @@ def detail(request, id=None, template='groups/detail.html'):
                     view_group_created.send(sender=group, editor=user)
                 else:
                     view_group_edited.send(sender=group, editor=user)
-                    
+
                 return render_to_response( \
                     "object_permissions/group/group_row.html", \
                     {'group':group}, \
@@ -111,7 +111,7 @@ def detail(request, id=None, template='groups/detail.html'):
             
             content = json.dumps(form.errors)
             return HttpResponse(content, mimetype='application/json')
-        
+            
         else:
             form = GroupForm(instance=group)
         
@@ -150,7 +150,7 @@ def add_user(request, id):
             view_add_user.send(sender=editor, user=user, obj=group)
             
             # return html for new user row
-            url = reverse('usergroup-permissions', args=[id])
+            url = reverse('group-permissions', args=[id])
             return render_to_response(\
                 "object_permissions/permissions/user_row.html", \
                         {'user':user, 'object':group, 'url':url})

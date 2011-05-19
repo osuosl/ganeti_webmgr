@@ -30,9 +30,9 @@ urlpatterns = patterns('muddle_users.views.user',
 # Groups
 urlpatterns += patterns('muddle_users.views.group',
     # Groups
-    url(r'^groups/$', 'list', name="usergroup-list"),
-    url(r'^group/?$', 'detail', name="usergroup"),
-    url(r'^group/(?P<id>\d+)/?$', 'detail', name="usergroup-detail"),
-    url(r'^group/(?P<id>\d+)/user/add/?$','add_user', name="usergroup-add-user"),
-    url(r'^group/(?P<id>\d+)/user/remove/?$','remove_user', name="usergroup-remove-user"),
+    url(r'^groups/$', 'list', name="group-list"),
+    url(r'^group/?$', 'detail', name="group-add"),
+    url(r'^group/(?P<id>\d+)/?$', 'detail', name="group-detail"),
+    url(r'^group/(?P<id>\d+)/user/add/?$','add_user', name="group-add-user"),
+    url(r'^group/(?P<id>\d+)/user/remove/?$','remove_user', name="group-remove-user"),
 )

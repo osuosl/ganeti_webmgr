@@ -1,6 +1,6 @@
 {% comment  %} Form for adding users {% endcomment %}
 
-<form class="add_user_form" method="post" action="{% url usergroup-add-user group.id %}">
+<form class="add_user_form" method="post" action="{% url group-add-user group.id %}">
     <ul id="errors"></ul>
     {{form.user}}
     <input type="submit" class="submit" value="Save"/>

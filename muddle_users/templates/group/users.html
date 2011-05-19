@@ -11,7 +11,7 @@
             $('.qtip').qtip('destroy');
             $(this).qtip({
                 content: {
-                   url: '{% url usergroup-add-user object.id %}',
+                   url: '{% url group-add-user object.id %}',
                    title: {text:'Add User: ', button:'close'},
                 },
                 position: {  corner:{target:'center', tooltip:'center'}},
@@ -30,7 +30,7 @@
             name = $(this).parent().parent().children('.name').html();
             if (confirm("Remove user: " + name)) {
                 id = this.parentNode.parentNode.id.substring(5);
-                $.post('{% url usergroup-remove-user object.id %}', {'user':id},
+                $.post('{% url group-remove-user object.id %}', {'user':id},
                     function(code){
                         if(code==1) {$('#user_'+id).remove();}
                     }, "json");
