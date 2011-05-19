@@ -68,10 +68,10 @@ urlpatterns += patterns('ganeti.views.general',
 )
 
 #Groups
-urlpatterns += patterns('object_permissions.views.groups',
+urlpatterns += patterns('muddle_users.views.group',
     url(r'^group/(?P<id>\d+)/?$', 'detail',
             {'template':'ganeti/group/detail.html'},
-            name="usergroup-detail"),
+            name="group-detail"),
 )
 
 # Clusters
