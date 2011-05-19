@@ -1459,7 +1459,7 @@ class SSHKey(models.Model):
     """
     key = models.TextField(validators=[validate_sshkey])
     #filename = models.CharField(max_length=128) # saves key file's name
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, related_name='ssh_keys')
 
 
 def create_profile(sender, instance, **kwargs):
