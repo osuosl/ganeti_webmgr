@@ -10,7 +10,7 @@
                 $('.qtip').qtip('destroy');
                 $(this).qtip( {
                     content: {
-                       url: '{% url group %}',
+                       url: '{% url group-add %}',
                        title: {text:'Add Group: ', button:'close'},
                        method: "post",
                     },
@@ -29,7 +29,7 @@
                 id = this.parentNode.parentNode.id.substring(6);
                 $(this).qtip( {
                     content: {
-                       url: '{% url group %}/'+id,
+                       url: '{% url group-add %}/'+id,
                        title: {text:'Edit Group: ', button:'close'},
                        method: "post",
                     },
@@ -55,7 +55,7 @@
                 name = $(this).parent().parent().children('.name').children('a').html();
                 if (confirm("Delete group: " + name)) {
                     id = this.parentNode.parentNode.id.substring(6);
-                    $.delete_('{% url group %}/'+id,
+                    $.delete_('{% url group-add %}/'+id,
                         function(code){
                             if(code==1) {$('#group_'+id).remove();}
                         }, "json");
