@@ -1,0 +1,97 @@
+<style>
+    #users {width:100%;}
+    #users .permissions {cursor:pointer;}
+</style>
+
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.form.js"></script>
+<script type="text/javascript">
+    $(document).ready(function() {
+        // Add user button
+        $('#add_user').click(function(){
+            $('.qtip').qtip('destroy');
+            $(this).qtip({
+                content: {
+                   url: '{% url usergroup-add-user object.id %}',
+                   title: {text:'Add User: ', button:'close'},
+                },
+                position: {  corner:{target:'center', tooltip:'center'}},
+                style: {name: 'dark', border:{radius:5}, width:400, background:'#eeeeee'},
+                show: {when:false, ready:true},
+                hide: {fixed: true, when:false},
+                api:{onShow:function(){
+                    $(".ajax_form input[type!=hidden], .ajax_form select").first().focus();
+                }}
+            });
+            return false;
+        });
+        
+        // Delete user button
+        $('#op_users .delete').live("click", function() {
+            name = $(this).parent().parent().children('.name').html();
+            if (confirm("Remove user: " + name)) {
+                id = this.parentNode.parentNode.id.substring(5);
+                $.post('{% url usergroup-remove-user object.id %}', {'user':id},
+                    function(code){
+                        if(code==1) {$('#user_'+id).remove();}
+                    }, "json");
+            }
+        });
+        
+        // submit button
+        $(".add_user_form").live('submit', function(){
+            $("#errors").empty();
+            $(this).ajaxSubmit({success: update_group_user});
+            return false;
+        });
+        
+        // Update Permission Button
+        $("#op_users .permissions").live("click", function() {
+            id = this.parentNode.id.substring(5);
+            $('.qtip').qtip('destroy');
+            $(this).qtip({
+                content: {
+                   url: this.href,
+                   title: {text:'Permissions: '+id, button:'close'},
+                },
+                position: {corner:{ target:"rightMiddle", tooltip:"leftMiddle"}},
+                style: {name: 'dark', border:{radius:5}, width:400, background:'#eeeeee', tip: 'bottomMiddle'},
+                show: {when:false, ready:true},
+                hide: {fixed: true, when:false},
+                api:{onShow:function(){
+                    $(".ajax_form input[type!=hidden], .ajax_form select").first().focus();
+                    
+                    // submit button
+                    $(".object_permissions_form").submit(function(){
+                        $("#errors").empty();
+                        $(this).ajaxSubmit({success: update_group_user});
+                        return false;
+                    });
+                }}
+            });
+            return false;
+        });
+    });
+    
+    function update_group_user(responseText, statusText, xhr, $form) {
+        if (xhr.getResponseHeader('Content-Type') == 'application/json') {
+            // parse errors
+            for (key in responseText) {
+                $("#errors").append("<li>"+ responseText[key] +"</li>")
+            }
+        } else {
+            // successful permissions change.  replace the user row with the
+            // newly rendered html
+            $('.qtip').qtip('hide');
+            html = $(responseText);
+            id = html.attr('id')
+            $row = $('#op_users #' + id);
+            if ($row.length == 1) {
+                $row.replaceWith(html)
+            } else {
+                $("#op_users").append(html);
+            }
+        }
+    }
+</script>
+
+{% include "object_permissions/permissions/table.html" %}
