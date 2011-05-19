@@ -85,7 +85,7 @@ class TestGroupViews(TestCase):
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'object_permissions/group/list.html')
+        self.assertTemplateUsed(response, 'group/list.html')
         groups = response.context['groups']
         self.assert_(group in groups)
         self.assert_(group1 in groups)
@@ -99,7 +99,7 @@ class TestGroupViews(TestCase):
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'object_permissions/group/list.html')
+        self.assertTemplateUsed(response, 'group/list.html')
         groups = response.context['groups']
         self.assert_(group in groups)
         self.assert_(group0 in groups)
@@ -205,10 +205,11 @@ class TestGroupViews(TestCase):
 
         # successful edit
         data = {'id':group.id, 'name':'EDITED_NAME'}
+
         response = c.post(url % group.id, data)
-        self.assertRedirects(response, reverse('group-detail', args=[group.id]))
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'object_permissions/group/group_row.html')
         group = Group.objects.get(id=group.id)
         self.assertEqual('EDITED_NAME', group.name)
 
@@ -268,7 +269,7 @@ class TestGroupViews(TestCase):
         response = c.post(url, data, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'group/group_row.html')
+        self.assertTemplateUsed(response, 'object_permissions/group/group_row.html')
         self.assert_(Group.objects.filter(name='ADD_NEW_GROUP').exists())
 
         # check signal set properties
