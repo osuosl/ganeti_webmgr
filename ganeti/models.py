@@ -48,6 +48,8 @@ log_action = LogItem.objects.log_action
 from object_permissions.registration import register
 from object_permissions import signals as op_signals
 
+from muddle_users import signals as muddle_user_signals
+
 from ganeti import constants, management
 from ganeti.fields import PreciseDateTimeField, SumIf
 from ganeti import permissions
@@ -1542,8 +1544,8 @@ def log_group_edit(sender, editor, **kwargs):
     """ log group edit signal """
     log_action('EDIT', editor, sender)
 
-op_signals.view_group_created.connect(log_group_create)
-op_signals.view_group_edited.connect(log_group_edit)
+muddle_user_signals.view_group_created.connect(log_group_create)
+muddle_user_signals.view_group_edited.connect(log_group_edit)
 
 
 # Register permissions on our models.
