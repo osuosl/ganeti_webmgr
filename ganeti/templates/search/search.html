@@ -1,9 +1,10 @@
 {% extends 'menu_base.html' %}
 
 {% block content %}
+
     {# If there was a query... #}
     {% if query %}
-        <h2>Search results</h2>
+        <h1>Search results</h1>
 
         {# If there were results, list them #}
         {% if page.object_list %}
