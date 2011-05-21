@@ -2,22 +2,42 @@
 
 {% block content %}
 
+    <style>
+        #search_result_title{
+            border-bottom:  1px solid #333333;
+            margin-bottom:  20px;
+        }
+
+        #search_results li{
+            margin-left:    20px;
+            margin-top:     10px;
+            margin-bottom:  10px;
+        }
+    </style>
+
     {# If there was a query... #}
     {% if query %}
-        <h1>Search results</h1>
+        <h1 id='search_result_title'>Search results</h1>
 
         {# If there were results, list them #}
         {% if page.object_list %}
-        <ul>
+        <ul id='search_results'>
             {% for result in page.object_list %}
-            <li>
-                {% if result.model_name == 'virtualmachine' %}
-                    Virtual Machine: {{ result.object.hostname }}
-                {% else %}{% if result.model_name == 'cluster' %}
-                    Cluster: {{ result.object.hostname }}
-                {% endif %}{% endif %}
-
-            </li>
+                <li>
+                    <h2>{{result.object.hostname}}</h2>
+                    {% if result.model_name == 'virtualmachine' %}
+                        <b>Virtual Machine</b> | 
+                        {{result.object.operating_system}} | 
+                        {{result.object.virtual_cpus}} CPUs | 
+                        {{result.object.ram}} MiB RAM | 
+                        {{result.object.disk_size}} MiB disk
+                    {% else %}{% if result.model_name == 'cluster' %}
+                        <b>Cluster</b> | 
+                        {% if result.object.description %}
+                            {{result.object.description}} |
+                        {% endif %} 
+                    {% endif %}{% endif %}
+                </li>
             {% endfor %}
         </ul>
 
