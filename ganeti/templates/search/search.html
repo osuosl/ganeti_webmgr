@@ -11,7 +11,12 @@
         <ul>
             {% for result in page.object_list %}
             <li>
-                <a href="{% url instance-detail result.object.cluster.slug result.object.hostname %}">{{ result.object.hostname }}</a>
+                {% if result.model_name == 'virtualmachine' %}
+                    Virtual Machine: {{ result.object.hostname }}
+                {% else %}{% if result.model_name == 'cluster' %}
+                    Cluster: {{ result.object.hostname }}
+                {% endif %}{% endif %}
+
             </li>
             {% endfor %}
         </ul>
