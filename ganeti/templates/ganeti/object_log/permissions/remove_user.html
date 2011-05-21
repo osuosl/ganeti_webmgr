@@ -1,7 +1,6 @@
 {% load webmgr_tags %}
-<td class="timestamp">{{log_item.timestamp|date}}</td>
 {% with log_item.data as data %}
-<td>{% if user.is_superuser %}
+{% if user.is_superuser %}
         <a href="{% url user-detail log_item.user.pk %}">{{log_item.user}}</a>
     {% else %}
         {{ log_item.user }}
@@ -17,5 +16,5 @@ removed
     {% else %}
         {{ data.affected_user }}
     {% endif %}
-    from {{log_item.object_type1}} {{data.object_str}}</td>
+    from {{log_item.object_type1}} {{data.object_str}}
 {% endwith %}
