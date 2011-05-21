@@ -6,7 +6,15 @@ from ganeti.models import VirtualMachine, Cluster
 
 This is where the indexes are defined. They fill the Haystack search query set
 (the set of objects that are searchable.) There should be one index defined per
-GWM object.
+GWM model.
+
+Note that I'm using `RealTimeSearchIndex` to index the GWM models every time
+it changes. This keeps things up-to-date at the cost of some performance. If
+you're experienceing db performance issues, try using `SearchIndex` instead and
+run `./manage.py update_index` every half-hour or so. (For more information,
+see 
+http://docs.haystacksearch.org/dev/searchindex_api.html#keeping-the-index-fresh
+)
 '''
 
 class VirtualMachineIndex(RealTimeSearchIndex):
