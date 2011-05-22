@@ -28,7 +28,7 @@
         <ul id='search_results'>
             {% for result in page.object_list %}
                 <li>
-                    {# If the result was a virtual machine #}
+                    {# If the result was a VirtualMachine #}
                     {% if result.model_name == 'virtualmachine' %}
                         {% with result.object as vm %}
                             <p><b>Virtual Machine</b></p>
@@ -47,7 +47,7 @@
                             </p>
                         {% endwith %}
 
-                    {# Otherwise, if the result is a cluster #}
+                    {# Otherwise, if the result is a Cluster #}
                     {% else %}{% if result.model_name == 'cluster' %}
                         {% with result.object as cluster %}
                             <p><b>Cluster</b></p>
@@ -78,7 +78,19 @@
                                 {% endif %}
                             </p>
                         {% endwith %}
-                    {% endif %}{% endif %}
+
+                    {# Otherwise, if the result is a Node #}
+                    {% else %}{% if result.model_name == 'node' %}
+                        {% with result.object as node %}
+                            <p><b>Node</b></p>
+                            <a href='{% url node-detail node.cluster.slug node.hostname %}'>
+                                <h2>{{ node.hostname }}</h2>
+                            </a>
+                            {% node_memory node %} GiB RAM |
+                            {% node_disk node %} GiB disk |
+                            {{ node.info.pinst_cnt }} / {{ node.info.sinst_cnt }} instances (P/S)
+                        {% endwith %}
+                    {% endif %}{% endif %}{% endif %}
                 </li>
             {% endfor %}
         </ul>
