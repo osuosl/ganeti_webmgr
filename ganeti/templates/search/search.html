@@ -52,11 +52,21 @@
                         {% with result.object as cluster %}
                             <p><b>Cluster</b></p>
                             <a href='{% url cluster-detail cluster.slug %}'>
-                                <h2>{{result.object.hostname}}</h2>
+                                <h2>{{cluster.hostname}}</h2>
                             </a>
-                            {% if result.object.description %}
-                                {{result.object.description}} |
-                            {% endif %} 
+                            <p>
+                                On master node 
+                                <a href='{% url node-detail cluster.slug cluster.info.master %}'>
+                                    {{cluster.info.master|abbreviate_fqdn}}
+                                </a> |
+                                {% if cluster.description %}
+                                    {{cluster.description}} |
+                                {% endif %} 
+                                v{{cluster.info.software_version}} |
+                                {{cluster.info.default_hypervisor}} hypervisor |
+                                {{cluster.nodes.count}} node(s) |
+                                {{cluster.virtual_machines.count}} virtual machine(s)
+                            </p>
                         {% endwith %}
                     {% endif %}{% endif %}
                 </li>
