@@ -49,11 +49,15 @@
 
                     {# Otherwise, if the result is a cluster #}
                     {% else %}{% if result.model_name == 'cluster' %}
-                        <p>Cluster</p>
-                        <h2>{{result.object.hostname}}</h2>
-                        {% if result.object.description %}
-                            {{result.object.description}} |
-                        {% endif %} 
+                        {% with result.object as cluster %}
+                            <p><b>Cluster</b></p>
+                            <a href='{% url cluster-detail cluster.slug %}'>
+                                <h2>{{result.object.hostname}}</h2>
+                            </a>
+                            {% if result.object.description %}
+                                {{result.object.description}} |
+                            {% endif %} 
+                        {% endwith %}
                     {% endif %}{% endif %}
                 </li>
             {% endfor %}
