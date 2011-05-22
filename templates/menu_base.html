@@ -14,6 +14,14 @@
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-ui.min.js"></script>
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip.js"></script>
 <script type="text/javascript" src="{{MEDIA_URL}}/js/ajax_csrf_protection.js"></script>
+
+<style>
+    .ui-autocomplete{
+        background: white;
+        border:     1px solid #BBBBBB;
+    }
+</style>
+
 <script type="text/javascript">
 
     var DOMAIN = "{% current_domain %}";
@@ -34,6 +42,11 @@
                 $("#search_form").submit();
             }
         });
+
+        // Remove the widget-content class b/c it is customized for tab use in
+        // other parts of the site. We'll then redefine it in the style tags 
+        // above.
+        $('.ui-autocomplete').removeClass('ui-widget-content');
     });
 
     function setlang(lang){
@@ -98,9 +111,7 @@
     <!-- autocomplete search box -->
     <h3>{% trans "Search" %}</h3>
     <form id="search_form" action="{% url search %}" method="get">
-        <div class="ui-widget">
-            <input id="search" type="text" name="q" />
-        </div>
+        <input id="search" type="text" name="q" />
     </form>
 
     </div>
