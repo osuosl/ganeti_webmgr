@@ -1,12 +1,12 @@
 from haystack.indexes import *
 from haystack import site
-from ganeti.models import VirtualMachine, Cluster
+from ganeti.models import VirtualMachine, Cluster, Node
 
 ''' Haystack search indexex.
 
-This is where the indexes are defined. They fill the Haystack search query set
-(the set of objects that are searchable.) There should be one index defined per
-GWM model.
+This is where the search indexes are defined. They fill the Haystack search 
+query set (the set of objects that are searchable.) There should be one index 
+defined per GWM model.
 
 Note that I'm using `RealTimeSearchIndex` to index the GWM models every time
 it changes. This keeps things up-to-date at the cost of some performance. If
@@ -46,3 +46,16 @@ class ClusterIndex(RealTimeSearchIndex):
         return Cluster.objects.all()
 
 site.register(Cluster, ClusterIndex)
+
+class NodeIndex(RealTimeSearchIndex):
+    ''' Search index for Nodes '''
+
+    text = CharField(document=True, use_template=True)
+
+    # Autocomplete search field on `hostname` model field
+    content_auto = EdgeNgramField(model_attr='hostname')
+
+    def get_queryset(self):
+        return Cluster.objects.all()
+
+site.register(Node, NodeIndex)
