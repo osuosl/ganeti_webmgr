@@ -32,18 +32,18 @@
                     {% if result.model_name == 'virtualmachine' %}
                         {% with result.object as vm %}
                             <p><b>Virtual Machine</b></p>
-                            <a href='{% url instance-detail result.object.cluster.slug result.object.hostname %}'>
-                                <h2>{{result.object.hostname}}</h2>
+                            <a href='{% url instance-detail vm.cluster.slug result.object.hostname %}'>
+                                <h2>{{vm.hostname}}</h2>
                             </a>
                             <p>
                                 On cluster 
                                 <a href='{% url cluster-detail vm.cluster.slug %}'>
                                     {{ vm.cluster|abbreviate_fqdn }}
                                 </a> |
-                                {{result.object.operating_system|render_os}} | 
-                                {{result.object.virtual_cpus}} CPUs | 
-                                {{result.object.ram|render_storage}} RAM | 
-                                {{result.object.disk_size|render_storage}} disk
+                                {{vm.operating_system|render_os}} | 
+                                {{vm.virtual_cpus}} CPUs | 
+                                {{vm.ram|render_storage}} RAM | 
+                                {{vm.disk_size|render_storage}} disk
                             </p>
                         {% endwith %}
 
