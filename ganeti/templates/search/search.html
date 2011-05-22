@@ -64,8 +64,18 @@
                                 {% endif %} 
                                 v{{cluster.info.software_version}} |
                                 {{cluster.info.default_hypervisor}} hypervisor |
-                                {{cluster.nodes.count}} node(s) |
-                                {{cluster.virtual_machines.count}} virtual machine(s)
+
+                                {% if cluster.nodes.count == 1 %}
+                                    1 node
+                                {% else %}
+                                    {{cluster.nodes.count}} nodes
+                                {% endif %} |
+
+                                {% if cluster.virtual_machines.count == 1 %}
+                                    1 virtual machine
+                                {% else %}
+                                    {{cluster.virtual_machines.count}} virtual machines
+                                {% endif %}
                             </p>
                         {% endwith %}
                     {% endif %}{% endif %}
