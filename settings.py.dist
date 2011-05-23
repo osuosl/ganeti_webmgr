@@ -139,7 +139,8 @@ INSTALLED_APPS = (
     'object_permissions',
     'ganeti',
     'object_log',
-    'south'
+    'south',
+    'muddle_users'
 )
 
 AUTH_PROFILE_MODULE = 'ganeti.Profile'

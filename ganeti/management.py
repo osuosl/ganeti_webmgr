@@ -32,6 +32,7 @@ def update_sites_module(sender, **kwargs):
       If SITE_NAME or SITE_DOMAIN are not defined they
        will default to 'example.com'
     """
+    verb = kwargs.get('verbosity', 0)
     id, name, domain = (1, 'example.com', 'example.com')
     try:
         id = settings.SITE_ID
@@ -53,8 +54,19 @@ def update_sites_module(sender, **kwargs):
     
     try:
         site = Site.objects.get(id=id)
+        if site.name != name:
+            if verb >= 1:
+                print "Site name changed from %s to %s." % \
+                    (site.name, name)
+            site.name = name
+        if site.domain != domain:
+            if verb >= 1:
+                print "Site domain changed from %s to %s." % \
+                    (site.domain, domain)
+            site.domain = domain
+        site.save()
     except Site.DoesNotExist:
-        if kwargs['verbosity'] >= 1:
+        if verb >= 1:
             print "New site: [%s] %s (%s) created in django_site table." % \
                 (id, name, domain)
         site = Site(id=id, name=name, domain=domain)

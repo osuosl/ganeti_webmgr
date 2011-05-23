@@ -41,6 +41,7 @@ bin
 dependencies
 include
 lib
+pysqlite2-doc
 
 # whoosh index files (used by haystack search)
 whoosh_index
