@@ -26,7 +26,8 @@ PIP_INSTALL = {
     'pysqlite'                  :'',
     'django-haystack'           :'>=1.2.1',
     'whoosh'                    :'>=1.8.1',
-    'django_object_permissions' :'>=1.3.1',
+    'django_object_permissions' :'=1.3.1',
+    'twisted'                   :'>=11.0.0'
 }
 
 GIT_INSTALL =  {
@@ -44,7 +45,12 @@ GIT_INSTALL =  {
         'url':'git://git.osuosl.org/gitolite/django/django_object_log',
         'development':'develop',
         'symlink':'object_log'
-        }
+        },
+    'django_muddle_users':{
+        'url':'git://git.osuosl.org/gitolite/django/django_muddle_users',
+        'development':'develop',
+        'symlink':'muddle_users'
+    }
 }
 
 

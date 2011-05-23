@@ -1,6 +1,4 @@
-<td class="timestamp">{{log_item.timestamp|date}}</td>
 {% with log_item.data as data %}
-<td>
     {% if log_item.object2 %}
         <a href="{% url job-detail data.cluster_slug data.job_id %}">Job #{{ data.job_id }}</a> -
     {% endif %}
@@ -9,5 +7,5 @@
     {% else %}
         {{ log_item.user }}
     {% endif %}
-reinstalled virtual machine <a href="{% url instance-detail data.cluster_slug data.hostname %}">{{data.hostname}}</a></td>
+reinstalled virtual machine <a href="{% url instance-detail data.cluster_slug data.hostname %}">{{data.hostname}}</a>
 {% endwith %}

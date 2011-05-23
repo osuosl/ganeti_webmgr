@@ -42,14 +42,17 @@ urlpatterns = patterns('ganeti.views.general',
     url(r'^about/?$', 'about', name="about"),
 )
 
+
+# Users - overridden from users app to use custom templates
+urlpatterns += patterns('muddle_users.views.user',
+    url(r'^accounts/profile/?', 'user_profile', name='profile',
+        kwargs={'template':'ganeti/users/profile.html'}),
+    url(r'^user/(?P<user_id>\d+)/?$', 'user_detail', name="user-detail",
+        kwargs={'template':'ganeti/users/detail.html'}),
+)
+
 # Users
 urlpatterns += patterns('ganeti.views.users',
-    url(r'^accounts/profile/?', 'user_profile', name="profile"),
-    url(r'^users/?$', 'user_list', name="user-list"),
-    url(r'^users/add$', 'user_add', name="user-create"),
-    url(r'^user/(?P<user_id>\d+)/?$', 'user_detail', name="user-detail"),
-    url(r'^user/(?P<user_id>\d+)/edit/?$', 'user_edit', name="user-edit"),
-    url(r'^user/(?P<user_id>\d+)/password/?$', 'user_password', name="user-password"),
     url(r'^user/(?P<user_id>\d+)/key/?$', 'key_get', name="user-key-add"),
 
     # ssh keys
@@ -62,13 +65,14 @@ urlpatterns += patterns('ganeti.views.users',
 
 # All SSH Keys
 urlpatterns += patterns('ganeti.views.general',
+    url(r'^keys/(?P<api_key>\w+)/$', 'ssh_keys', name="key-list"),
 )
 
 #Groups
-urlpatterns += patterns('object_permissions.views.groups',
+urlpatterns += patterns('muddle_users.views.group',
     url(r'^group/(?P<id>\d+)/?$', 'detail',
             {'template':'ganeti/group/detail.html'},
-            name="usergroup-detail"),
+            name="group-detail"),
 )
 
 # Clusters

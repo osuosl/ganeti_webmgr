@@ -34,6 +34,16 @@ object_log
 object_permissions
 noVNC
 muddle
+muddle_users
+
+# files/dirs created by Fabric and or VirtualEnv
+bin
+dependencies
+include
+lib
+
+# whoosh index files (used by haystack search)
+whoosh_index
 
 # Hidden files
 .*

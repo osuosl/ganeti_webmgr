@@ -1,0 +1,8 @@
+{% extends "user/profile.html" %}
+
+{% block detail %}
+    {%  with user.ssh_keys.all as keyslist %}
+    <h3>SSH keys</h3>
+    {% include "ssh_keys/list.html" %}
+    {% endwith %}
+{% endblock %}
