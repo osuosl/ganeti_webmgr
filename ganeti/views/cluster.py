@@ -47,9 +47,6 @@ from ganeti.views.virtual_machine import render_vms
 from ganeti.fields import DataVolumeField
 from django.utils.translation import ugettext as _
 
-# Regex for a resolvable hostname
-FQDN_RE = r'^[\w]+(\.[\w]+)*$'
-
 
 @login_required
 def detail(request, cluster_slug):

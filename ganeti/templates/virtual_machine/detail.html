@@ -272,6 +272,10 @@
                 <th>{% trans "Autostart" %}</th>
                 <td>{{ info.admin_state|checkmark }}</td>
             </tr>
+            <tr>
+                <th>VNC</th>
+                <td>{{ info.pnode }}::{{ info.network_port }}</td>
+            </tr>
         </table>
 
         <h3>Hardware</h3>
@@ -346,7 +350,7 @@
                 <td>{{ info.hvparams.migration_downtime }}</td>
             </tr>
             <tr><th>Nic Type</th><td>{{ info.hvparams.nic_type }}</td></tr>
-            <tr><th>Network Port</th><td>{{ info.hvparams.network_port }}</td></tr>
+            <tr><th>Network Port</th><td>{{ info.network_port }}</td></tr>
             <tr><th>Root Path</th><td>{{ info.hvparams.root_path }}</td></tr>
             <tr>
                 <th>Security Domain</th>
