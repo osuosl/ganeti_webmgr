@@ -168,8 +168,12 @@ class NewVirtualMachineForm(VirtualMachineForm):
             self.fields['snode'].choices = nodes
             self.fields['os'].choices = oslist
 
-            defaults = cluster_default_info(cluster)
-            hv = defaults['hypervisor']
+            hv = initial.get('hypervisor', None)
+            if hv is not None:
+                defaults = cluster_default_info(cluster, hv)
+            else:
+                defaults = cluster_default_info(cluster)
+                hv = defaults['hypervisor']
             if defaults['iallocator'] != '' :
                 self.fields['iallocator'].initial = True
                 self.fields['iallocator_hostname'] = forms.CharField(
