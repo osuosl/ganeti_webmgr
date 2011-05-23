@@ -202,4 +202,4 @@ def install_dependencies_git():
                 env.symlink_path = '%(doc_root)s/dependencies/%(git_repo)s' % env
 
             with settings(hide('warnings','stderr'), warn_only=True):
-                local('ln -s %(symlink_path)s %(doc_root)s' % env)
+                local('ln -sf %(symlink_path)s %(doc_root)s' % env)
