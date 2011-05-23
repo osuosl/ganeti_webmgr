@@ -24,6 +24,7 @@ function formUpdater(url_choices, url_options, url_defaults){
     var using_str =             " Using: ";
     var blankOptStr =           "---------";
     var nodes =                 null; // nodes available
+    var oldid; // global for hypervisor.change function
 
     // ------------
     // init stuffs
@@ -61,6 +62,7 @@ function formUpdater(url_choices, url_options, url_defaults){
         iallocator.change();
         disk_template.change();
         boot_order.change();
+        hypervisor.change();
         
         // process the owner dropdown, i.e., if it only has a single option, 
         // select it, and make the dropdown read-only
@@ -73,28 +75,27 @@ function formUpdater(url_choices, url_options, url_defaults){
         // handle hypervisor changes
         hypervisor.live("change", function() {
             var id = $(this).val();
-            var cluster_id = cluster.children("option:selected").val();
-            if (id != this.oldid) {
-                if (id == "xen-hvm") {
-                    _showHvmKvmElements();
-                    _hidePvmKvmElements();
-                    _hideKvmElements();
-                } 
-                if (id == "xen-pvm") {
-                    _showPvmKvmElements();
-                    _hideHvmKvmElements();
-                    _hideKvmElements(); 
-                }
-                if (id == "kvm") {
-                    _showKvmElements();
-                    _showHvmKvmElements();
-                    _showPvmKvmElements();
-                } 
-                if (id == "kvm" || id == "xen-hvm" || id == "xen-pvm") {
-                    _fillDefaultOptions(cluster_id, id);
-                }
-                this.oldid = id;
+            if (id == "xen-hvm") {
+                _showHvmKvmElements();
+                _hidePvmKvmElements();
+                _hideKvmElements();
             } 
+            else if (id == "xen-pvm") {
+                _showPvmKvmElements();
+                _hideHvmKvmElements();
+                _hideKvmElements(); 
+            }
+            else if (id == "kvm") {
+                _showKvmElements();
+                _showHvmKvmElements();
+                _showPvmKvmElements();
+            } else {
+                return;
+            } 
+            if(id != oldid && oldid != undefined) {
+                _fillDefaultOptions(cluster.val(), id);
+            }
+            oldid = id;
         });
 
         // boot device change
@@ -220,7 +221,6 @@ function formUpdater(url_choices, url_options, url_defaults){
                 if($(".errorlist").length == 0){
                     _fillDefaultOptions(id);   
                 }
-                hypervisor.change();
             }
         });
     }
@@ -253,22 +253,23 @@ function formUpdater(url_choices, url_options, url_defaults){
             }
             
             // hypervisors dropdown
-            if(d["hypervisors"]) {
-                hypervisor.children().not(":first").remove();
-                $.each(d["hypervisors"], function(i, item){
-                    hypervisor.append(_newOpt(item[0], item[1]));
-                });
-            }
-            if(d["hypervisor"]) {
-                if (d["hypervisor"] != "" &&
-                    d["hypervisor"] != undefined) {
-                    hypervisor.find(":selected").removeAttr(
-                            "selected");
-                    hypervisor.find("[value=" + d["hypervisor"] + "]")
-                        .attr("selected", "selected");     
+            if(typeof hypervisor_id != undefined) {
+                if(d["hypervisors"]) {
+                    hypervisor.children().remove();
+                    $.each(d["hypervisors"], function(i, item){
+                        hypervisor.append(_newOpt(item[0], item[1]));
+                    });
+                    if(d["hypervisor"]) {
+                        if (d["hypervisor"] != "" &&
+                            d["hypervisor"] != undefined) {
+                            hypervisor.find(":selected").removeAttr(
+                                    "selected");
+                            hypervisor.find("[value=" + d["hypervisor"] + "]")
+                                .attr("selected", "selected");     
+                            hypervisor.change();
+                        }
+                    }
                 }
-                disableSingletonDropdown(hypervisor, blankOptStr);
-                hypervisor.change()
             }
 
             // iallocator checkbox
@@ -341,9 +342,9 @@ function formUpdater(url_choices, url_options, url_defaults){
                 $.each(d["disk_types"], function(i, item){
                     disk_type.append(_newOpt(item[0], item[1]));
                 });
-            }
-            if(d["disk_type"]){
-                disk_type.val(d["disk_type"]);
+                if(d["disk_type"]){
+                    disk_type.val(d["disk_type"]);
+                }
             }
             
             // root path text box
@@ -370,6 +371,7 @@ function formUpdater(url_choices, url_options, url_defaults){
             if(d["cdrom_image_path"]){
                 image_path.find("input").val(d["cdrom_image_path"]);
             }
+            disableSingletonDropdown(hypervisor, blankOptStr);
         });
     }
 
