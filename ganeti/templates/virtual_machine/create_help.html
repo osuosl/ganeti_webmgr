@@ -143,6 +143,20 @@
         	{% blocktrans %}Size of the system disk to allocate to this virtual machine. If
             no units are given, megabytes is assumed.{% endblocktrans %}
         </p>
+        <p>
+            Acceptable Formats: 
+        </p>
+        <ul>
+            <li>
+                <b>M</b> or MB - (megabytes)
+            </li>
+            <li>
+                <b>G</b> or GB - (gigabytes) 
+            </li>
+            <li>
+                <b>T</b> or TB - (terabytes)
+            </li>
+        </ul>
         <p><b><i>{% trans "This will be deducted from the owner's quota" %}.</i></b></p>
     </div>
     <div id="help-disk_type">
@@ -254,6 +268,7 @@
                 <b>CD-ROM</b> - {% blocktrans %}boot from the cdrom (requires CD Image path
                 being set){% endblocktrans %}
             </li>
+            <li><b>Network</b> - {% trans "boot from the network (such as PXE)" %}</li>
         </ul>
         <p>{% trans "Valid for the Xen HVM and KVM hypervisors" %}.</p>
     </div>
@@ -272,12 +287,10 @@
         <p>{% trans "Valid for the Xen HVM and KVM hypervisors" %}.</p>
     </div>
     <div id="help-disk_cache">
-        <p> 
-            {% blocktrans %}The disk cache mode. Note that there are special 
-            considerations for the cache mode depending on
-            version of KVM used and disk type (always raw file 
-            under Ganeti), please refer to the KVM documentation
-            for more details.{% endblocktrans %} 
+        <p>
+            {% blocktrans %}The disk cache mode. It can be either default to
+            not pass any cache option to KVM, or one of the KVM  cache
+            modes.{% endblocktrans %}
             {% trans "The possible options are" %}:
         </p>
         <ul>
@@ -322,6 +335,13 @@
             this to single will cause the instance to start in single-user mode.{% endblocktrans %}
         </p>
         <p>{% trans "Valid for the Xen PVM and KVM hypervisors" %}.</p>
+    </div>
+    <div id="help-kvm_flag">
+        <p>{% blocktrans %}If <b><i>enabled</i></b> the -enable-kvm flag is
+        passed to kvm. If <b><i>disabled</i></b> -disable-kvm is passed. If
+        unset no flag is passed, and the default running mode for your kvm
+        binary will be used.{% endblocktrans %}</p>
+        <p>{% trans "Valid for the KVM hypervisor." %}</p>
     </div>
     <div id="help-mem_path">
         <p>

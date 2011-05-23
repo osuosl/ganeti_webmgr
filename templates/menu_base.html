@@ -8,7 +8,6 @@
 <link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}/css/content.css"/>
 
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip.js"></script>
-<script type="text/javascript">var DOMAIN = "{% current_domain %}";</script>
 <script type="text/javascript" src="{{MEDIA_URL}}/js/ajax_csrf_protection.js"></script>
 {% endblock %}
 
@@ -46,7 +45,7 @@
             <li><a href="{% url user-list %}">{% trans "Users" %}</a></li>
         {% endif %}
         {% if user.is_superuser or group_admin %}
-            <li><a href="{% url usergroup-list %}">{% trans "Groups" %}</a></li>
+            <li><a href="{% url group-list %}">{% trans "Groups" %}</a></li>
         {% endif %}
     </ul>
     {% endif %}

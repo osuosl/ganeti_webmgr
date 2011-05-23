@@ -24,6 +24,10 @@ from django.test.client import Client
 from ganeti.models import Profile
 
 
+global user
+global c
+
+
 __all__ = ('TestProfileModel', 'TestAccountViews',)
 
 
@@ -165,14 +169,14 @@ class TestAccountViews(TestCase):
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'user_profile.html')
+        self.assertTemplateUsed(response, 'user/profile.html')
         
         # bad method (CSRF check)
         data = {'email':'new@test.com', 'old_password':'secret','new_password':'foo', 'confirm_password':'foo'}
         response = c.get(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'user_profile.html')
+        self.assertTemplateUsed(response, 'user/profile.html')
         user = User.objects.get(id=user.id)
         self.assertEqual('test@test.com', user.email)
         self.assert_(user.check_password('secret'), 'Password should not have been changed')
@@ -182,7 +186,7 @@ class TestAccountViews(TestCase):
         response = c.get(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'user_profile.html')
+        self.assertTemplateUsed(response, 'user/profile.html')
         user = User.objects.get(id=user.id)
         self.assertEqual('test@test.com', user.email)
         self.assert_(user.check_password('secret'), 'Password should not have been changed')
@@ -192,7 +196,7 @@ class TestAccountViews(TestCase):
         response = c.get(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'user_profile.html')
+        self.assertTemplateUsed(response, 'user/profile.html')
         user = User.objects.get(id=user.id)
         self.assertEqual('test@test.com', user.email)
         self.assert_(user.check_password('secret'), 'Password should not have been changed')
@@ -201,7 +205,7 @@ class TestAccountViews(TestCase):
         response = c.post(url, {'email':'new@test.com'})
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'user_profile.html')
+        self.assertTemplateUsed(response, 'user/profile.html')
         user = User.objects.get(id=user.id)
         self.assertEqual('new@test.com', user.email)
         self.assert_(user.check_password('secret'), 'Password should not have been changed')
@@ -211,7 +215,7 @@ class TestAccountViews(TestCase):
         response = c.post(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'user_profile.html')
+        self.assertTemplateUsed(response, 'user/profile.html')
         user = User.objects.get(id=user.id)
         self.assertEqual('new2@test.com', user.email)
         self.assert_(user.check_password('foo'), 'Password was not been changed')

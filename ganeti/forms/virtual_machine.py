@@ -28,7 +28,6 @@ from ganeti.models import (Cluster, ClusterUser, Organization,
 from ganeti.utilities import cluster_default_info, cluster_os_list, contains
 from django.utils.translation import ugettext_lazy as _
 
-FQDN_RE = r'(?=^.{1,254}$)(^(?:(?!\d+\.|-)[a-zA-Z0-9_\-]{1,63}(?<!-)\.?)+(?:[a-zA-Z]{2,})$)'
 
 
 class VirtualMachineForm(forms.ModelForm):
@@ -126,11 +125,7 @@ class NewVirtualMachineForm(VirtualMachineForm):
     owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label=_('Owner'))
     cluster = forms.ModelChoiceField(queryset=Cluster.objects.none(), label=_('Cluster'))
     hypervisor = forms.ChoiceField(required=False, choices=[empty_field])
-    hostname = forms.RegexField(label=_('Instance Name'), regex=FQDN_RE,
-                            error_messages={
-                                'invalid': _('Instance name must be resolvable'),
-                            },
-                            max_length=255)
+    hostname = forms.CharField(label=_('Instance Name'), max_length=255)
     pnode = forms.ChoiceField(label=_('Primary Node'), choices=[empty_field])
     snode = forms.ChoiceField(label=_('Secondary Node'), choices=[empty_field])
     os = forms.ChoiceField(label=_('Operating System'), choices=[empty_field])
@@ -676,11 +671,8 @@ class MigrateForm(forms.Form):
 
 class RenameForm(forms.Form):
     """ form used for renaming a Virtual Machine """
-    hostname = forms.RegexField(label=_('Instance Name'), regex=FQDN_RE,
-                            error_messages={
-                                'invalid': _('Instance name must be resolvable'),
-                            },
-                            max_length=255, required=True)
+    hostname = forms.CharField(label=_('Instance Name'), max_length=255,
+                               required=True)
     ip_check = forms.BooleanField(initial=True, required=False, label=_('IP Check'))
     name_check = forms.BooleanField(initial=True, required=False, label=_('DNS Name Check'))
 
@@ -694,3 +686,8 @@ class RenameForm(forms.Form):
         if hostname and hostname == self.vm.hostname:
             raise ValidationError(_("The new hostname must be different than the current hostname"))
         return hostname
+
+
+class ChangeOwnerForm(forms.Form):
+    """ Form used when modifying the owner of a virtual machine """
+    owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label=_('Owner'))

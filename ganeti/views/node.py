@@ -175,6 +175,7 @@ class MigrateForm(forms.Form):
     """ Form used for migrating primary Virtual Machines off a Node """
     mode = forms.ChoiceField(choices=constants.MODE_CHOICES)
 
+
 @login_required
 def migrate(request, cluster_slug, host):
     """

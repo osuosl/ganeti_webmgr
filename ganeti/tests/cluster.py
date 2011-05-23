@@ -28,7 +28,7 @@ from ganeti.models import SSHKey
 
 from object_permissions import *
 
-from ganeti.tests.rapi_proxy import RapiProxy, INFO, NODES, NODES_BULK
+from ganeti.tests.rapi_proxy import RapiProxy, INFO, NODES, NODES_BULK, JOB_RUNNING, JOB
 from ganeti import models
 Cluster = models.Cluster
 VirtualMachine = models.VirtualMachine
@@ -289,7 +289,35 @@ class TestClusterModel(TestCase):
         disk = c.available_disk
         self.assertEqual(6666, disk['total'])
         self.assertEqual(5064, disk['free'])
-    
+
+    def test_redistribute_config(self):
+        """
+        Test Cluster.redistribute_config()
+
+        Verifies:
+            * job is created
+            * cache is disabled while job is running
+            * cache is reenabled when job is finished
+        """
+        cluster = Cluster.objects.create(hostname='ganeti.osuosl.test')
+        cluster.rapi.GetJobStatus.response = JOB_RUNNING
+
+        # redistribute_config enables ignore_cache flag
+        job_id = cluster.redistribute_config().id
+        self.assert_(Job.objects.filter(id=job_id).exists())
+        cluster = Cluster.objects.get(id=cluster.id)
+        self.assert_(cluster.ignore_cache)
+        self.assert_(cluster.last_job_id)
+        self.assert_(Job.objects.filter(id=job_id).values()[0]['ignore_cache'])
+
+        # finished job resets ignore_cache flag
+        cluster.rapi.GetJobStatus.response = JOB
+        cluster = Cluster.objects.get(id=cluster.id)
+        self.assertFalse(cluster.ignore_cache)
+        self.assertFalse(cluster.last_job_id)
+        self.assertFalse(Job.objects.filter(id=job_id).values()[0]['ignore_cache'])
+        self.assert_(Job.objects.get(id=job_id).finished)
+
 
 class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
     
@@ -1282,3 +1310,41 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertContains(response, "test@test", count=1)
         self.assertContains(response, "asd@asd", count=1)
         self.assertContains(response, "foo@bar", count=1)
+
+    def test_view_redistribute_config(self):
+        """
+        Tests cluster's config redistribution
+        """
+        cluster = globals()['cluster']
+        url = '/cluster/%s/redistribute-config/' % cluster.slug
+
+        # anonymous user
+        response = c.get(url, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'registration/login.html')
+
+        # unauthorized user
+        self.assert_(c.login(username=user.username, password='secret'))
+        response = c.delete(url)
+        self.assertEqual(403, response.status_code)
+
+        # authorized (permission)
+        user.grant('admin', cluster)
+        response = c.post(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        self.assert_('status' in response.content)
+        self.assert_(Cluster.objects.filter(id=cluster.id).exists())
+        user.revoke('admin', cluster)
+
+        # recreate cluster
+        cluster.save()
+
+        # authorized (GET)
+        user.is_superuser = True
+        user.save()
+        response = c.post(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+        self.assert_('status' in response.content)
+        self.assert_(Cluster.objects.filter(id=cluster.id).exists())

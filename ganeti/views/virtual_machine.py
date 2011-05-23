@@ -25,7 +25,7 @@ from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.db.models.query_utils import Q
 from django.forms import CharField, HiddenInput
 from django.http import HttpResponse, HttpResponseRedirect, \
-    HttpResponseNotAllowed, HttpResponseForbidden, HttpResponseBadRequest
+    HttpResponseNotAllowed, HttpResponseForbidden, HttpResponseBadRequest, Http404
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.conf import settings
@@ -45,11 +45,25 @@ from ganeti.models import Cluster, ClusterUser, Organization, VirtualMachine, \
 from ganeti.views import render_403
 from ganeti.forms.virtual_machine import NewVirtualMachineForm, \
     KvmModifyVirtualMachineForm, PvmModifyVirtualMachineForm, \
-    HvmModifyVirtualMachineForm, ModifyConfirmForm, MigrateForm, RenameForm
+    HvmModifyVirtualMachineForm, ModifyConfirmForm, MigrateForm, RenameForm, \
+    ChangeOwnerForm
 from ganeti.templatetags.webmgr_tags import render_storage
 from ganeti.utilities import cluster_default_info, cluster_os_list, \
     compare, os_prettify
 from django.utils.translation import ugettext as _
+
+
+def get_vm_and_cluster_or_404(cluster_slug, instance):
+    """
+    Utility function for querying VirtualMachine and Cluster in a single query
+    rather than 2 separate calls to get_object_or_404.
+    """
+    query = VirtualMachine.objects \
+        .filter(cluster__slug=cluster_slug, hostname=instance) \
+        .select_related('cluster')
+    if len(query) == 0:
+        raise Http404('Virtual Machine does not exist')
+    return query[0], query[0].cluster
 
 
 @login_required
@@ -59,9 +73,7 @@ def delete(request, cluster_slug, instance):
     """
 
     user = request.user
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    instance = get_object_or_404(VirtualMachine, cluster__slug=cluster_slug,
-        hostname=instance)
+    instance, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
 
     # Check permissions.
     if not (
@@ -107,9 +119,7 @@ def reinstall(request, cluster_slug, instance):
     """
 
     user = request.user
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    instance = get_object_or_404(VirtualMachine, cluster__slug=cluster_slug,
-        hostname=instance)
+    instance, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
 
     # Check permissions.
     # XXX Reinstalling is somewhat similar to deleting in that you destroy data,
@@ -436,8 +446,7 @@ def detail(request, cluster_slug, instance):
     """
     Display details of virtual machine.
     """
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
+    vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
 
     user = request.user
     cluster_admin = user.is_superuser or user.has_perm('admin', cluster)
@@ -461,7 +470,7 @@ def detail(request, cluster_slug, instance):
         migrate = 'migrate' in perms
 
     if not (admin or power or remove or modify or tags):
-        return render_403(request, _('You do not have permission to view this cluster\'s details'))
+        return render_403(request, _('You do not have permission to view this virtual machines\'s details'))
 
     context = {
         'cluster': cluster,
@@ -501,8 +510,7 @@ def users(request, cluster_slug, instance):
     """
     Display all of the Users of a VirtualMachine
     """
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    vm = get_object_or_404(VirtualMachine, hostname=instance)
+    vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
 
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', vm) or
@@ -674,14 +682,12 @@ def create(request, cluster_slug=None):
                 job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
                 VirtualMachine.objects.filter(pk=vm.pk).update(last_job=job)
 
-
-
                 # grant admin permissions to the owner.  Only do this for new
                 # VMs.  otherwise we run the risk of granting perms to a
                 # different owner.  We should be preventing that elsewhere, but
                 # lets be extra careful since this check is cheap.
                 if 'vm_recovery' in data:
-                    log_action('VM_RECOVER', user, vm)
+                    log_action('VM_RECOVER', user, vm, job)
                 else:
                     grantee.grant('admin', vm)
                     log_action('CREATE', user, vm)
@@ -716,8 +722,7 @@ def create(request, cluster_slug=None):
 
 @login_required
 def modify(request, cluster_slug, instance):
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
+    vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
 
     user = request.user
     if not (user.is_superuser or user.has_any_perms(vm, ['admin','modify'])
@@ -781,8 +786,7 @@ def modify(request, cluster_slug, instance):
 
 @login_required
 def modify_confirm(request, cluster_slug, instance):
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
+    vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
 
     hv = None
     hv_form = None
@@ -846,8 +850,8 @@ def modify_confirm(request, cluster_slug, instance):
                 if 'reboot' in request.POST and vm.info['status'] == 'running':
                     if power:
                         # Reboot the vm
-                        vm.reboot()
-                        log_action('VM_REBOOT', user, vm)
+                        job = vm.reboot()
+                        log_action('VM_REBOOT', user, vm, job)
                     else:
                         return render_403(request,
                             _("Sorry, but you do not have permission to reboot this machine."))
@@ -948,8 +952,7 @@ def recover_failed_deploy(request, cluster_slug, instance):
     """
     Loads a vm that failed to deploy back into the edit form
     """
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
+    vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
 
     user = request.user
     if not (user.is_superuser or user.has_any_perms(vm, ['admin','modify']) \
@@ -987,8 +990,7 @@ def rename(request, cluster_slug, instance):
     """
     Rename an existing instance
     """
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    vm = get_object_or_404(VirtualMachine, hostname=instance, cluster=cluster)
+    vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
 
     user = request.user
     if not (user.is_superuser or user.has_any_perms(vm, ['admin','modify'])
@@ -1034,6 +1036,42 @@ def rename(request, cluster_slug, instance):
 
 
 @login_required
+def reparent(request, cluster_slug, instance):
+    """
+    update a virtual machine to have a new owner
+    """
+    vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
+
+    user = request.user
+    if not (user.is_superuser or user.has_perm('admin', cluster)):
+        return render_403(request,
+            _('You do not have permissions to change the owner of this virtual machine'))
+
+    if request.method == 'POST':
+        form = ChangeOwnerForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            vm.owner = data['owner']
+            vm.save(force_update=True)
+
+            # log information about creating the machine
+            log_action('VM_MODIFY', user, vm)
+
+            return HttpResponseRedirect(reverse('instance-detail', args=[cluster_slug, instance]))
+
+    else:
+        form = ChangeOwnerForm()
+
+    return render_to_response('virtual_machine/reparent.html', {
+        'cluster': cluster,
+        'vm': vm,
+        'form': form
+        },
+        context_instance=RequestContext(request),
+    )
+
+
+@login_required
 def cluster_choices(request):
     """
     Ajax view for looking up list of choices a user or usergroup has.  Returns
@@ -1070,8 +1108,7 @@ def cluster_options(request):
     cluster = get_object_or_404(Cluster, id__exact=cluster_id)
 
     user = request.user
-    if not (user.is_superuser or user.has_perm('create_vm', cluster) or
-            user.has_perm('admin', cluster)):
+    if not (user.is_superuser or user.has_any_perms(cluster, ['admin', 'create_vm'])):
         return render_403(request,
             _('You do not have permissions to view this cluster'))
 
@@ -1092,8 +1129,7 @@ def cluster_defaults(request):
     cluster = get_object_or_404(Cluster, id__exact=cluster_id)
 
     user = request.user
-    if not (user.is_superuser or user.has_perm('create_vm', cluster) or
-            user.has_perm('admin', cluster)):
+    if not (user.is_superuser or user.has_any_perms(cluster, ['admin', 'create_vm'])):
         return render_403(request, _('You do not have permission to view the default cluster options'))
 
     content = json.dumps(cluster_default_info(cluster, hypervisor))

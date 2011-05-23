@@ -25,14 +25,15 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.db.models.query_utils import Q
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.template.defaultfilters import slugify
 
 from object_permissions import get_users_any
 from object_permissions.views.permissions import view_users, view_permissions
-from object_permissions import signals as op_signals
+
+from muddle_users import signals as muddle_user_signals
 
 from object_log.models import LogItem
 from object_log.views import list_for_object
@@ -45,9 +46,6 @@ from ganeti.views import render_403, render_404
 from ganeti.views.virtual_machine import render_vms
 from ganeti.fields import DataVolumeField
 from django.utils.translation import ugettext as _
-
-# Regex for a resolvable hostname
-FQDN_RE = r'^[\w]+(\.[\w]+)*$'
 
 
 @login_required
@@ -203,6 +201,30 @@ def permissions(request, cluster_slug, user_id=None, group_id=None):
     return view_permissions(request, cluster, url, user_id, group_id,
                             user_template='cluster/user_row.html',
                             group_template='cluster/group_row.html')
+
+
+@login_required
+def redistribute_config(request, cluster_slug):
+    """
+    Redistribute master-node config to all cluster's other nodes.
+    """
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+
+    user = request.user
+    if not (user.is_superuser or user.has_perm('admin', cluster)):
+        return render_403(request, "You do not have sufficient privileges")
+
+    if request.method == 'POST':
+        try:
+            job = cluster.redistribute_config()
+            job.load_info()
+            msg = job.info
+
+            log_action('CLUSTER_REDISTRIBUTE', user, cluster, job)
+        except GanetiApiError, e:
+            msg = {'__all__':[str(e)]}
+        return HttpResponse(json.dumps(msg), mimetype='application/json')
+    return HttpResponseNotAllowed(['POST'])
 
 
 def ssh_keys(request, cluster_slug, api_key):
@@ -381,6 +403,6 @@ def recv_perm_edit(sender, editor, user, obj, **kwargs):
     log_action('MODIFY_PERMS', editor, obj, user)
 
 
-op_signals.view_add_user.connect(recv_user_add, sender=Cluster)
-op_signals.view_remove_user.connect(recv_user_remove, sender=Cluster)
-op_signals.view_edit_user.connect(recv_perm_edit, sender=Cluster)
+muddle_user_signals.view_add_user.connect(recv_user_add, sender=Cluster)
+muddle_user_signals.view_remove_user.connect(recv_user_remove, sender=Cluster)
+muddle_user_signals.view_edit_user.connect(recv_perm_edit, sender=Cluster)

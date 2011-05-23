@@ -2,6 +2,7 @@ from django.contrib.auth.models import User, Group
 
 from ganeti import models
 from ganeti.models import VirtualMachineTemplate
+from ganeti.tests.rapi_proxy import JOB_RUNNING
 from ganeti.tests.views.virtual_machine.base import TestVirtualMachineViewsBase
 from util import client
 
@@ -707,6 +708,7 @@ class TestVirtualMachineRecoverView(TestVirtualMachineViewsBase):
         failed_vm.owner=user.get_profile()
         failed_vm.template = template
         failed_vm.save()
+        vm.rapi.GetJobStatus.response = JOB_RUNNING
 
         data = dict(cluster=cluster.id,
                     start=True,
@@ -732,6 +734,7 @@ class TestVirtualMachineRecoverView(TestVirtualMachineViewsBase):
         ]
         self.assert_view_values(url, args, data, errors, fail_template)
 
+        
         #noinspection PyUnusedLocal
         def tests(user, response):
             created_vm = VirtualMachine.objects.get(pk=failed_vm.pk)
