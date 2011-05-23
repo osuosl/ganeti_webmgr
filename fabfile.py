@@ -45,7 +45,7 @@ GIT_INSTALL =  {
         'development':'develop',
         'symlink':'object_log'
         },
-    'muddle_users':{
+    'django_muddle_users':{
         'url':'git://git.osuosl.org/gitolite/django/django_muddle_users',
         'development':'develop',
         'symlink':'muddle_users'
