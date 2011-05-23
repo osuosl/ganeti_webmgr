@@ -13,7 +13,7 @@ added
         {% ifequal data.affected_user_class "User" %}
             <a href="{% url user-detail data.affected_user_id %}">{{data.affected_user}}</a>
         {% else %}
-            <a href="{% url usergroup-detail data.affected_user_id %}">{{data.affected_user_id}}</a>
+            <a href="{% url group-detail data.affected_user_id %}">{{data.affected_user_id}}</a>
         {% endifequal %}
     {% else %}
         {{ data.affected_user }}

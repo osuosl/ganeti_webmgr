@@ -46,7 +46,7 @@
             <li><a href="{% url user-list %}">{% trans "Users" %}</a></li>
         {% endif %}
         {% if user.is_superuser or group_admin %}
-            <li><a href="{% url usergroup-list %}">{% trans "Groups" %}</a></li>
+            <li><a href="{% url group-list %}">{% trans "Groups" %}</a></li>
         {% endif %}
     </ul>
     {% endif %}
