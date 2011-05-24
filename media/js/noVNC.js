@@ -4,6 +4,8 @@
  * Javascript for custom noVNC interface.
  */
 
+var PROXY_REQUEST_URI;
+
 (function () {
     // XXX remap document.write to a dom function so that it works after DOM is
     // loaded function will be reset after noVNC scripts are loaded.
