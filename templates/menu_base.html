@@ -31,7 +31,8 @@
 
     var DOMAIN = "{% current_domain %}";
 
-    // Example results experimenting with custom data format
+    // Example results showing custom autocomplete results format
+    /*
     var example_results = [
         {
             "value": "abc",
@@ -46,14 +47,15 @@
             "type": "vm"
         }
     ]
+    */
 
     $(function(){
         /* "Main" */
 
         // Autocomplete search box
         $("#search").autocomplete({
-            //source: "{% url search-json %}",
-            source: example_results, 
+            source: "{% url search-json %}",
+            //source: example_results, 
             minLength: 2,
 
             // Custom focus function to handle our custom results format
