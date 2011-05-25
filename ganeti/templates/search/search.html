@@ -31,12 +31,11 @@
                     {# If the result was a VirtualMachine #}
                     {% if result.model_name == 'virtualmachine' %}
                         {% with result.object as vm %}
-                            <p><b>Virtual Machine</b></p>
                             <a href='{% url instance-detail vm.cluster.slug result.object.hostname %}'>
                                 <h2>{{vm.hostname}}</h2>
                             </a>
                             <p>
-                                On cluster 
+                                <b>Virtual Machine</b> on cluster 
                                 <a href='{% url cluster-detail vm.cluster.slug %}'>
                                     {{ vm.cluster|abbreviate_fqdn }}
                                 </a> |
@@ -50,12 +49,11 @@
                     {# Otherwise, if the result is a Cluster #}
                     {% else %}{% if result.model_name == 'cluster' %}
                         {% with result.object as cluster %}
-                            <p><b>Cluster</b></p>
                             <a href='{% url cluster-detail cluster.slug %}'>
                                 <h2>{{cluster.hostname}}</h2>
                             </a>
                             <p>
-                                On master node 
+                                <b>Cluster</b> on master node 
                                 <a href='{% url node-detail cluster.slug cluster.info.master %}'>
                                     {{cluster.info.master|abbreviate_fqdn}}
                                 </a> |
@@ -82,10 +80,10 @@
                     {# Otherwise, if the result is a Node #}
                     {% else %}{% if result.model_name == 'node' %}
                         {% with result.object as node %}
-                            <p><b>Node</b></p>
                             <a href='{% url node-detail node.cluster.slug node.hostname %}'>
                                 <h2>{{ node.hostname }}</h2>
                             </a>
+                            <b>Node</b> |
                             {% node_memory node %} GiB RAM |
                             {% node_disk node %} GiB disk |
                             {{ node.info.pinst_cnt }} / {{ node.info.sinst_cnt }} instances (P/S)
