@@ -17,10 +17,40 @@
             margin-top:     5px;
             margin-bottom:  5px;
         }
+
+        .result_title{
+            font-size:      1.5em;
+        }
+
+        .result_title .highlight{
+            font-size:      1em;
+            font-weight:    bold;
+        }
     </style>
 
     {# If there was a query... #}
     {% if query %}
+
+        <script type="text/javascript">
+
+            // Grab the actual search query
+            TERM = '{{ query }}';
+
+            // Highlight the matched terms in the results
+            $(function(){
+                $('.result_title').each(function(){
+                    var ORIG_TEXT = $(this).text();
+                    var INDEX_OF_TERM = ORIG_TEXT.indexOf(TERM);
+                    var BEFORE_TERM = ORIG_TEXT.substring(0, INDEX_OF_TERM);
+                    var AFTER_TERM = ORIG_TEXT.substring(
+                            INDEX_OF_TERM+TERM.length, ORIG_TEXT.length);
+                    $(this).html(
+                        BEFORE_TERM + "<span class='highlight'>" + TERM + "</span>" + AFTER_TERM
+                    );
+                });
+            });
+        </script>
+
         <h1 id='search_result_title'>Search results</h1>
 
         {# If there were results, list them #}
@@ -32,7 +62,7 @@
                     {% if result.model_name == 'virtualmachine' %}
                         {% with result.object as vm %}
                             <a href='{% url instance-detail vm.cluster.slug result.object.hostname %}'>
-                                <h2>{{vm.hostname}}</h2>
+                                <div class='result_title'>{{vm.hostname}}</div>
                             </a>
                             <p>
                                 <b>Virtual Machine</b> on cluster 
@@ -50,7 +80,7 @@
                     {% else %}{% if result.model_name == 'cluster' %}
                         {% with result.object as cluster %}
                             <a href='{% url cluster-detail cluster.slug %}'>
-                                <h2>{{cluster.hostname}}</h2>
+                                <div class='result_title'>{{cluster.hostname}}</div>
                             </a>
                             <p>
                                 <b>Cluster</b> on master node 
@@ -81,7 +111,7 @@
                     {% else %}{% if result.model_name == 'node' %}
                         {% with result.object as node %}
                             <a href='{% url node-detail node.cluster.slug node.hostname %}'>
-                                <h2>{{ node.hostname }}</h2>
+                                <div class='result_title'>{{ node.hostname }}</div>
                             </a>
                             <b>Node</b> |
                             {% node_memory node %} GiB RAM |
@@ -95,11 +125,11 @@
 
         {# Otherwise, no results were found #}
         {% else %}{% if query|length < 2 %}
-        <h3>Search query too short!</h3>
-        <p>Please make your search query at least two characters long.</p>
+            <h2>Search query too short!</h2>
+            <p>Please make your search query at least two characters long.</p>
         {% else %}
-        <h3>No results</h3>
-        <p>No results matching "{{query}}".</p>
+            <h2>No results</h2>
+            <p>No results matching "{{query}}".</p>
         {% endif %}{% endif %}
 
         {# Paging stuffs #}
@@ -113,7 +143,7 @@
 
     {# If no query was entered... #}
     {% else %}
-        <h2>Not sure which <del>droids</del> virtual machines you're looking for...</h2>
+        <h1>Not sure which <del>droids</del> virtual machines you're looking for...</h1>
         <p>
             Please enter a query in the search box in the sidebar.
         </p>
