@@ -524,7 +524,7 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
             try:
                 if self.hvparam_fields:
                     for field in self.hvparam_fields:
-                        self.fields[field].initial = hvparam[field]
+                        self.fields[field].initial = hvparam.get(field)
             except AttributeError:
                 pass
             
