@@ -8,6 +8,7 @@ function ajaxTable(URL, TABLE_ID){
     // ============
     var FETCH_ARGS = {page:1};
     var current_order_by = null;
+    var spinner = null;
 
     // =======
     // Get ID
@@ -25,6 +26,8 @@ function ajaxTable(URL, TABLE_ID){
 
         var THIS_TABLE = this;
         var TABLE_ID = this.getID();
+        
+        spinner = $(TABLE_ID + ' .spinner');
 
         // ----------
         // Paginator
@@ -75,23 +78,8 @@ function ajaxTable(URL, TABLE_ID){
             THIS_TABLE.update();
         });
 
-        // -----------------------
-        // AJAX loading indicator
-        // -----------------------
-        var spinner = $(TABLE_ID + ' .spinner');
-        function loadModeOn(){
-            /* AJAX load indicator handler. Show spinny thing, hide table. */
-            spinner.show();
-            $(TABLE_ID + ' #vmlist tr td').hide();
-            $(TABLE_ID + ' #vm-wrapper .pagination').hide();
-        }
-        function loadModeOff(){
-            /* AJAX load indicator off. Hide spinny thing. */
-            spinner.hide();
-        }
-        spinner.hide()
-            .ajaxStart(loadModeOn)
-            .ajaxStop(loadModeOff);
+        // hide the spinner initially
+        spinner.hide();
     }
 
     // =============
@@ -101,17 +89,25 @@ function ajaxTable(URL, TABLE_ID){
         /* Update the table using AJAX depending on current page and sorting 
          * order.
          */
+
         var TABLE_ID = this.getID();
 
-        function callSuccess(results){
-            /* AJAX load call success handler. Push results into table. */
+        // Show load spinner thing, hide the table contents
+        spinner.show();
+        $(TABLE_ID + ' #vmlist tr td').hide();
+        $(TABLE_ID + ' #vm-wrapper .pagination').hide();
+
+        // AJAX load the table contents, push results into table
+        $.get(URL, FETCH_ARGS, function(results){
             $results = $(results);
             tbody = $results.children("tbody");
             pagination = $results[2];
             $(TABLE_ID + ' #vm-wrapper .pagination').replaceWith(pagination);
             $(TABLE_ID + ' #vmlist tbody').replaceWith(tbody);
-        }
-        $.get(URL, FETCH_ARGS, callSuccess, "html");
+
+            // Hide load spinner thing
+            spinner.hide();;
+        }, "html");
     }
 }
 

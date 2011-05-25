@@ -1,0 +1,153 @@
+{% extends 'menu_base.html' %}
+{% load webmgr_tags %}
+{% block content %}
+
+    <style>
+        #search_result_title{
+            margin-bottom:  20px;
+        }
+
+        #search_results li{
+            margin-left:    20px;
+            margin-top:     20px;
+            margin-bottom:  10px;
+        }
+
+        #search_results p{
+            margin-top:     5px;
+            margin-bottom:  5px;
+        }
+
+        .result_title{
+            font-size:      1.5em;
+        }
+
+        .result_title .highlight{
+            font-size:      1em;
+            font-weight:    bold;
+        }
+    </style>
+
+    {# If there was a query... #}
+    {% if query %}
+
+        <script type="text/javascript">
+
+            // Grab the actual search query
+            TERM = '{{ query }}';
+
+            // Highlight the matched terms in the results
+            $(function(){
+                $('.result_title').each(function(){
+                    var ORIG_TEXT = $(this).text();
+                    var INDEX_OF_TERM = ORIG_TEXT.indexOf(TERM);
+                    var BEFORE_TERM = ORIG_TEXT.substring(0, INDEX_OF_TERM);
+                    var AFTER_TERM = ORIG_TEXT.substring(
+                            INDEX_OF_TERM+TERM.length, ORIG_TEXT.length);
+                    $(this).html(
+                        BEFORE_TERM + "<span class='highlight'>" + TERM + "</span>" + AFTER_TERM
+                    );
+                });
+            });
+        </script>
+
+        <h1 id='search_result_title'>Search results</h1>
+
+        {# If there were results, list them #}
+        {% if page.object_list %}
+        <ul id='search_results'>
+            {% for result in page.object_list %}
+                <li>
+                    {# If the result was a VirtualMachine #}
+                    {% if result.model_name == 'virtualmachine' %}
+                        {% with result.object as vm %}
+                            <a href='{% url instance-detail vm.cluster.slug result.object.hostname %}'>
+                                <div class='result_title'>{{vm.hostname}}</div>
+                            </a>
+                            <p>
+                                <b>Virtual Machine</b> on cluster 
+                                <a href='{% url cluster-detail vm.cluster.slug %}'>
+                                    {{ vm.cluster|abbreviate_fqdn }}
+                                </a> |
+                                {{vm.operating_system|render_os}} | 
+                                {{vm.virtual_cpus}} CPUs | 
+                                {{vm.ram|render_storage}} RAM | 
+                                {{vm.disk_size|render_storage}} disk
+                            </p>
+                        {% endwith %}
+
+                    {# Otherwise, if the result is a Cluster #}
+                    {% else %}{% if result.model_name == 'cluster' %}
+                        {% with result.object as cluster %}
+                            <a href='{% url cluster-detail cluster.slug %}'>
+                                <div class='result_title'>{{cluster.hostname}}</div>
+                            </a>
+                            <p>
+                                <b>Cluster</b> on master node 
+                                <a href='{% url node-detail cluster.slug cluster.info.master %}'>
+                                    {{cluster.info.master|abbreviate_fqdn}}
+                                </a> |
+                                {% if cluster.description %}
+                                    {{cluster.description}} |
+                                {% endif %} 
+                                v{{cluster.info.software_version}} |
+                                {{cluster.info.default_hypervisor}} hypervisor |
+
+                                {% if cluster.nodes.count == 1 %}
+                                    1 node
+                                {% else %}
+                                    {{cluster.nodes.count}} nodes
+                                {% endif %} |
+
+                                {% if cluster.virtual_machines.count == 1 %}
+                                    1 virtual machine
+                                {% else %}
+                                    {{cluster.virtual_machines.count}} virtual machines
+                                {% endif %}
+                            </p>
+                        {% endwith %}
+
+                    {# Otherwise, if the result is a Node #}
+                    {% else %}{% if result.model_name == 'node' %}
+                        {% with result.object as node %}
+                            <a href='{% url node-detail node.cluster.slug node.hostname %}'>
+                                <div class='result_title'>{{ node.hostname }}</div>
+                            </a>
+                            <b>Node</b> |
+                            {% node_memory node %} GiB RAM |
+                            {% node_disk node %} GiB disk |
+                            {{ node.info.pinst_cnt }} / {{ node.info.sinst_cnt }} instances (P/S)
+                        {% endwith %}
+                    {% endif %}{% endif %}{% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+
+        {# Otherwise, no results were found #}
+        {% else %}{% if query|length < 2 %}
+            <h2>Search query too short!</h2>
+            <p>Please make your search query at least two characters long.</p>
+        {% else %}
+            <h2>No results</h2>
+            <p>No results matching "{{query}}".</p>
+        {% endif %}{% endif %}
+
+        {# Paging stuffs #}
+        {% if page.has_previous or page.has_next %}
+            <div>
+                {% if page.has_previous %}<a href="?q={{ query }}&amp;page={{ page.previous_page_number }}">{% endif %}&laquo; Previous{% if page.has_previous %}</a>{% endif %}
+                |
+                {% if page.has_next %}<a href="?q={{ query }}&amp;page={{ page.next_page_number }}">{% endif %}Next &raquo;{% if page.has_next %}</a>{% endif %}
+            </div>
+        {% endif %}
+
+    {# If no query was entered... #}
+    {% else %}
+        <h1>Not sure which <del>droids</del> virtual machines you're looking for...</h1>
+        <p>
+            Please enter a query in the search box in the sidebar.
+        </p>
+    {% endif %}
+
+{% endblock %}
+

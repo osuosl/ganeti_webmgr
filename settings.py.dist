@@ -140,8 +140,16 @@ INSTALLED_APPS = (
     'ganeti',
     'object_log',
     'south',
-    'muddle_users'
+    'haystack',
+    'muddle_users',
 )
+
+#haystack search stuff
+ROOT_DIR_PATH = os.path.dirname(__file__)
+ROOT_DIR_NAME = ROOT_DIR_PATH.split('/')[-1]
+HAYSTACK_SITECONF = ROOT_DIR_NAME + '.search_sites'
+HAYSTACK_SEARCH_ENGINE = 'whoosh'
+HAYSTACK_WHOOSH_PATH = os.path.join(ROOT_DIR_PATH, 'whoosh_index')
 
 AUTH_PROFILE_MODULE = 'ganeti.Profile'
 LOGIN_REDIRECT_URL = '/'

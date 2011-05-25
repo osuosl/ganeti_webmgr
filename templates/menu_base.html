@@ -5,10 +5,73 @@
 
 
 {% block basehead %}
+<!-- Include CSS -->
 <link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}/css/content.css"/>
+<link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}/css/jquery-ui.css"/>
 
+<!-- Include Javascript -->
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.js"></script>
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-ui.min.js"></script>
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip.js"></script>
 <script type="text/javascript" src="{{MEDIA_URL}}/js/ajax_csrf_protection.js"></script>
+
+<style>
+    .ui-autocomplete{
+        background: white;
+        border:     1px solid #BBBBBB;
+
+        /* box shadow */
+        -moz-box-shadow:    0px 0px 20px black;
+        -webkit-box-shadow: 0px 0px 20px black;
+        box-shadow:         0px 0px 20px black;
+    }
+</style>
+
+<script type="text/javascript">
+    var ENTER_KEYCODE = 13;
+
+    $(function(){
+        /* "Main" */
+
+        // Autocomplete search box
+        $('#search').autocomplete({
+            source: "{% url search-json %}",
+            //source: example_results, 
+            minLength: 2,
+
+            // Custom focus function to handle our custom results format
+            focus: function( event, ui ) {
+                $('#search').val(ui.item.value);
+                return false;
+            },
+
+            // Submit the search on item selection
+            select: function(){
+                $("#search_form").submit();
+            }
+        })
+
+        // Submit search on return/enter keypress
+        .keypress(function(event){
+            if(event.keyCode == ENTER_KEYCODE){
+                $('#search_form').submit();
+            }
+        })
+
+        // Create custom result item rendering for out custom format
+        .data("autocomplete")._renderItem = function(ul, item){
+            return $("<li></li>")
+                .data("item.autocomplete", item)
+                .append("<a><b>" + item.type + ": </b>" + item.value + "</a>")
+                .appendTo(ul);
+        };
+
+        // Remove the widget-content class b/c it is customized for tab use in
+        // other parts of the site.  We'll customize the the autocomplete box
+        // in the styles above.
+        $('.ui-autocomplete').removeClass('ui-widget-content');
+    });
+</script>
 {% endblock %}
 
 {% block inner_header %}
@@ -50,6 +113,14 @@
     </ul>
     {% endif %}
     {% endwith %}
+
+    <!-- autocomplete search box -->
+    <h3>{% trans "Search" %}</h3>
+    <form id="search_form" action="{% url search %}" method="get">
+        <input id="search" type="text" name="q" />
+    </form>
+
+    </div>
     </div>
     {% endif %}
 {% endblock %}
