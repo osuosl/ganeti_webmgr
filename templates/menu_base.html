@@ -30,43 +30,33 @@
 <script type="text/javascript">
 
     var DOMAIN = "{% current_domain %}";
-
-    // Example results showing custom autocomplete results format
-    /*
-    var example_results = [
-        {
-            "value": "abc",
-            "type": "node"
-        },
-        {
-            "value": "abc",
-            "type": "cluster"
-        },
-        {
-            "value": "abc",
-            "type": "vm"
-        }
-    ]
-    */
+    var ENTER_KEYCODE = 13;
 
     $(function(){
         /* "Main" */
 
         // Autocomplete search box
-        $("#search").autocomplete({
+        $('#search').autocomplete({
             source: "{% url search-json %}",
             //source: example_results, 
             minLength: 2,
 
             // Custom focus function to handle our custom results format
             focus: function( event, ui ) {
-                $("#search").val(ui.item.value);
+                $('#search').val(ui.item.value);
                 return false;
             },
 
             // Submit the search on item selection
             select: function(){
                 $("#search_form").submit();
+            }
+        })
+
+        // Submit search on return/enter keypress
+        .keypress(function(event){
+            if(event.keyCode == ENTER_KEYCODE){
+                $('#search_form').submit();
             }
         })
 
