@@ -78,7 +78,7 @@ INSTANCE = {'admin_state': False,
     'pnode': 'gtest1.osuosl.bak',
     'serial_no': 8,
     'snodes': [],
-    'status': 'ADMIN_down',
+    'status': 'running',
     'tags': [],
     'uuid': '27bac3d3-f634-4dee-aa60-ed2eeb5f2287'}
 
@@ -504,6 +504,7 @@ class RapiProxy(client.GanetiRapiClient):
         CallProxy.patch(instance, 'ModifyInstance', False, 1)
         CallProxy.patch(instance, 'MigrateInstance', False, 1)
         CallProxy.patch(instance, 'RenameInstance', False, 1)
+        CallProxy.patch(instance, 'RedistributeConfig', False, 1)
 
         CallProxy.patch(instance, 'SetNodeRole', False, 1)
         CallProxy.patch(instance, 'EvacuateNode', False, 1)

@@ -11,7 +11,10 @@
 {% block content %}
 
 <h1><a class="breadcrumb" href="{% url cluster-list %}">{% trans "Cluster" %}</a> :
-{% if cluster %}{% trans "Edit" %}{% else %}{% trans "Add" %}{% endif %}</h1>
+{% if cluster %}
+    <a class="breadcrumb" href="{% url cluster-detail cluster.slug %}">{{ cluster.hostname }}</a>
+    : {% trans "Edit" %}
+{% else %}{% trans "Add" %}{% endif %}</h1>
 
 
 <form method="post">

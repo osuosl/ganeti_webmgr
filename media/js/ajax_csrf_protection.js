@@ -7,8 +7,6 @@
  *   e.g. "localhost:8000"
  */
 
-var DOMAIN;
-
 $(document).ready(function() {
     $('html').ajaxSend(function(event, xhr, settings) {
         function getCookie(name) {
@@ -30,8 +28,8 @@ $(document).ready(function() {
         // Only send the token locally.  Check for both relative urls, and
         // absolute urls to the domain.
         var url = settings.url;
-        var absolute_https = new RegExp("^https:\/\/"+DOMAIN+"\/.*");
-        var absolute_http = new RegExp("^http:\/\/"+DOMAIN+"\/.*");
+        var absolute_https = new RegExp("^https:\/\/"+window.location.host+"\/.*");
+        var absolute_http = new RegExp("^http:\/\/"+window.location.host+"\/.*");
         if (
             !(/^http:.*/.test(url)|| /^https:.*/.test(url))
             || (absolute_https.test(url) || absolute_http.test(url))

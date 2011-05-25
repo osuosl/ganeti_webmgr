@@ -39,16 +39,22 @@ urlpatterns = patterns('ganeti.views.general',
     
     # clear errors
     url(r'^error/clear/(?P<pk>\d+)/?$', 'clear_ganeti_error', name="error-clear"),
+
+    #About page
+    url(r'^about/?$', 'about', name="about"),
+)
+
+
+# Users - overridden from users app to use custom templates
+urlpatterns += patterns('muddle_users.views.user',
+    url(r'^accounts/profile/?', 'user_profile', name='profile',
+        kwargs={'template':'ganeti/users/profile.html'}),
+    url(r'^user/(?P<user_id>\d+)/?$', 'user_detail', name="user-detail",
+        kwargs={'template':'ganeti/users/detail.html'}),
 )
 
 # Users
 urlpatterns += patterns('ganeti.views.users',
-    url(r'^accounts/profile/?', 'user_profile', name="profile"),
-    url(r'^users/?$', 'user_list', name="user-list"),
-    url(r'^users/add$', 'user_add', name="user-create"),
-    url(r'^user/(?P<user_id>\d+)/?$', 'user_detail', name="user-detail"),
-    url(r'^user/(?P<user_id>\d+)/edit/?$', 'user_edit', name="user-edit"),
-    url(r'^user/(?P<user_id>\d+)/password/?$', 'user_password', name="user-password"),
     url(r'^user/(?P<user_id>\d+)/key/?$', 'key_get', name="user-key-add"),
 
     # ssh keys
@@ -65,10 +71,10 @@ urlpatterns += patterns('ganeti.views.general',
 )
 
 #Groups
-urlpatterns += patterns('object_permissions.views.groups',
+urlpatterns += patterns('muddle_users.views.group',
     url(r'^group/(?P<id>\d+)/?$', 'detail',
             {'template':'ganeti/group/detail.html'},
-            name="usergroup-detail"),
+            name="group-detail"),
 )
 
 # Clusters
@@ -81,6 +87,8 @@ urlpatterns += patterns('ganeti.views.cluster',
     url(r'^%s/?$' % cluster, 'detail', name="cluster-detail"),
     #   Edit
     url(r'^%s/edit/?$' % cluster, 'edit', name="cluster-edit"),
+    #   Redistribute config
+    url(r'^%s/redistribute-config/?$' % cluster, 'redistribute_config', name="cluster-redistribute-config"),
     #   User
     url(r'^%s/users/?$' % cluster, 'users', name="cluster-users"),
     url(r'^%s/virtual_machines/?$' % cluster, 'virtual_machines', name="cluster-vms"),
@@ -131,8 +139,6 @@ urlpatterns += patterns('ganeti.views.virtual_machine',
     url(r'^vm/add/%s/?$' % cluster_slug, 'create', name="instance-create"),
     url(r'^%s/recover/?$' % vm_prefix, 'recover_failed_deploy', name="instance-create-recover"),
 
-    url(r'^vm/add/template/(?P<pk>\d+)/?$', 'load_template', name="instance-create-template"),
-
     #  VM Table
     url(r'^%s/vm/table/?$' % cluster, 'vm_table', name="cluster-virtualmachine-table"),
     url(r'^vm/table/$', 'vm_table', name="virtualmachine-table"),
@@ -159,15 +165,16 @@ urlpatterns += patterns('ganeti.views.virtual_machine',
 
     # Reinstall
     url(r"^%s/reinstall/?$" % vm_prefix, "reinstall", name="instance-reinstall"),
-
+    
     # Edit / Modify
     url(r"^%s/edit/?$" % vm_prefix, "modify", name="instance-modify"),
     url(r'^%s/edit/confirm/?$' % vm_prefix, "modify_confirm", name="instance-modify-confirm"),
     url(r"^%s/rename/?$" % vm_prefix, "rename", name="instance-rename"),
-
+    url(r"^%s/reparent/?$" % vm_prefix, "reparent", name="instance-reparent"),
+    
     # SSH Keys
     url(r'^%s/keys/(?P<api_key>\w+)/?$' % vm_prefix, "ssh_keys", name="instance-keys"),
-
+    
     # object log
     url(r'^%s/object_log/?$' % vm_prefix, 'object_log', name="vm-object_log"),
 )

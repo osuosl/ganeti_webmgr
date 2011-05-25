@@ -22,8 +22,8 @@ function formUpdater(url_choices, url_options, url_defaults){
     // ------------
     // init stuffs
     // ------------
-    this.init = function(){
-        /* initialize the live form updator */
+    this.init = function(cluster_defaults){
+        /* initialize the live form updater */
 
         // disable the iallocator stuff by default
         if(!iallocator_hostname.attr("value")){
@@ -35,11 +35,19 @@ function formUpdater(url_choices, url_options, url_defaults){
                 "</span>"
             );
         }
-        _iallocatorDisable();
-    
+
+        // only disable iallocator by default if there is no cluster selected
+        // or the cluster already selected does not support iallocator
+        var def_iallocator = cluster_defaults['iallocator']
+        if (!iallocator.is(":checked")
+            && (def_iallocator == undefined|| def_iallocator == '')
+        ){
+            _iallocatorDisable();
+        }
+        
         // hide CD-ROM Image Path stuffs by default
         _imagePathHide();
-
+        
         // setup form element change hooks
         _initChangeHooks();
 
@@ -51,7 +59,7 @@ function formUpdater(url_choices, url_options, url_defaults){
         // process the owner dropdown, i.e., if it only has a single option, 
         // select it, and make the dropdown read-only
         disableSingletonDropdown(owner, blankOptStr);
-    }
+    };
     
     function _initChangeHooks(){
         /* setup change hooks for the form elements */
@@ -129,6 +137,7 @@ function formUpdater(url_choices, url_options, url_defaults){
 
         // cluster change
         cluster.live("change", function() {
+            var child, child2;
             var pnode       = $("#id_pnode");
             var snode       = $("#id_snode");
             var oslist      = $("#id_os");
@@ -153,7 +162,7 @@ function formUpdater(url_choices, url_options, url_defaults){
                                 snode.append(child2);
                             }
                             else if (i == "os") {
-                                child = _newOptGroup(value[0], 
+                                child = _newOptGroup(value[0],
                                         value[1]);
                                 oslist.append(child);
                             }
@@ -174,114 +183,111 @@ function formUpdater(url_choices, url_options, url_defaults){
                     disableSingletonDropdown(oslist, blankOptStr);
                 });
 
-                // only load the defaults if errors are not present 
-                if($(".errorlist").length == 0){
-                    $.getJSON(url_defaults, {"cluster_id":id}, function(d){
-                        /* fill default options */
+                $.getJSON(url_defaults, {"cluster_id":id}, function(d){
+                    /* fill default options */
 
-                        // boot device dropdown
-                        if(d["boot_order"]) {
-                            boot_order.find(":selected").removeAttr(
-                                "selected");
-                            boot_order.find("[value=" + d["boot_order"] + "]")
-                                .attr("selected","selected");
-                        }
-                        
-                        // hypervisors
-                        if(d["hypervisors"]) {
-                            //list - do nothing for now.
-                        }
+                    // boot device dropdown
+                    if(d["boot_order"]) {
+                        boot_order.find(":selected").removeAttr(
+                            "selected");
+                        boot_order.find("[value=" + d["boot_order"] + "]")
+                            .attr("selected","selected");
+                    }
 
-                        // iallocator checkbox
-                        if(d["iallocator"] != "" && 
-                                d["iallocator"] != undefined){
-                            if(!iallocator_hostname.attr("value")) {
-                                iallocator_hostname.attr("value",
-                                        d["iallocator"]);
-                                if(iallocator.siblings("span").length == 0){
-                                    iallocator.after(
-                                        "<span>" + using_str +
-                                            d["iallocator"] + 
-                                        "</span>"
-                                    );
-                                }
+                    // hypervisors
+                    if(d["hypervisors"]) {
+                        //list - do nothing for now.
+                    }
+
+                    // iallocator checkbox
+                    if(d["iallocator"] != "" &&
+                            d["iallocator"] != undefined){
+                        if(!iallocator_hostname.attr("value")) {
+                            iallocator_hostname.attr("value",
+                                    d["iallocator"]);
+                            if(iallocator.siblings("span").length == 0){
+                                iallocator.after(
+                                    "<span>" + using_str +
+                                        d["iallocator"] +
+                                    "</span>"
+                                );
                             }
-                            // Check iallocator checkbox
-                            iallocator.parent("p").show();
-                            iallocator.removeAttr("disabled")
-                                .removeAttr("readonly")
-                                .attr("checked", "checked")
-                                .change();
-                        } else {
-                            _iallocatorDisable();
                         }
+                        // Check iallocator checkbox
+                        iallocator.parent("p").show();
+                        iallocator.removeAttr("disabled")
+                            .removeAttr("readonly")
+                            .attr("checked", "checked")
+                            .change();
+                    } else {
+                        _iallocatorDisable();
+                    }
 
-                        // kernel path text box
-                        if(d["kernel_path"]){
-                            $("#id_kernel_path").val(d["kernel_path"]);
-                        } else {
-                            $("#id_kernel_path").val("");
-                        }
+                    // kernel path text box
+                    if(d["kernel_path"]){
+                        $("#id_kernel_path").val(d["kernel_path"]);
+                    } else {
+                        $("#id_kernel_path").val("");
+                    }
 
-                        // nic mode dropdown
-                        if(d["nic_mode"]) {
-                            nic_mode.find(":selected").removeAttr("selected");
-                            nic_mode.find("[value=" + d["nic_mode"] + "]")
-                                .attr("selected","selected");
-                        } else { 
-                            nic_mode.find(":first-child")
-                                .attr("selected", "selected");
-                        }
+                    // nic mode dropdown
+                    if(d["nic_mode"]) {
+                        nic_mode.find(":selected").removeAttr("selected");
+                        nic_mode.find("[value=" + d["nic_mode"] + "]")
+                            .attr("selected","selected");
+                    } else {
+                        nic_mode.find(":first-child")
+                            .attr("selected", "selected");
+                    }
 
-                        // nic link text box
-                        if(d["nic_link"]){
-                            nic_link.val(d["nic_link"]);
-                        }
-                        
-                        // nic type dropdown
-                        if(d["nic_type"]) {
-                            $("#id_nic_type :selected").removeAttr("selected");
-                            $("#id_nic_type [value=" + d["nic_type"] + "]")
-                                .attr("selected","selected");
-                        }
+                    // nic link text box
+                    if(d["nic_link"]){
+                        nic_link.val(d["nic_link"]);
+                    }
 
-                        // memory text box
-                        if(d["memory"]){
-                            $("#id_memory").val(d["memory"]);
-                        }
+                    // nic type dropdown
+                    if(d["nic_type"]) {
+                        $("#id_nic_type :selected").removeAttr("selected");
+                        $("#id_nic_type [value=" + d["nic_type"] + "]")
+                            .attr("selected","selected");
+                    }
 
-                        // disk type dropdown
-                        if(d["disk_type"]){
-                             $("#id_disk_type").val(d["disk_type"]);
-                        }
-                        
-                        // root path text box
-                        if(d["root_path"]){
-                            $("#id_root_path").val(d["root_path"]);
-                        } else {
-                            $("#id_root_path").val("/");
-                        }
-                        
-                        // enable serial console checkbox
-                        if(d["serial_console"]){
-                            $("#id_serial_console")
-                                .attr("checked", "checked");
-                        } else {
-                            $("#id_serial_console").removeAttr("checked");
-                        }
-                        
-                        // virtual CPUs text box
-                        if(d["vcpus"]){
-                            $("#id_vcpus").val(d["vcpus"]);
-                        }
-                        
-                        // image path text box
-                        if(d["cdrom_image_path"]){
-                            image_path.find("input") 
-                                .val(d["cdrom_image_path"]);
-                        }
-                    });
-                }
+                    // memory text box
+                    if(d["memory"]){
+                        $("#id_memory").val(d["memory"]);
+                    }
+
+                    // disk type dropdown
+                    if(d["disk_type"]){
+                         $("#id_disk_type").val(d["disk_type"]);
+                    }
+
+                    // root path text box
+                    if(d["root_path"]){
+                        $("#id_root_path").val(d["root_path"]);
+                    } else {
+                        $("#id_root_path").val("/");
+                    }
+
+                    // enable serial console checkbox
+                    if(d["serial_console"]){
+                        $("#id_serial_console")
+                            .attr("checked", "checked");
+                    } else {
+                        $("#id_serial_console").removeAttr("checked");
+                    }
+
+                    // virtual CPUs text box
+                    if(d["vcpus"]){
+                        $("#id_vcpus").val(d["vcpus"]);
+                    }
+
+                    // image path text box
+                    if(d["cdrom_image_path"]){
+                        image_path.find("input")
+                            .val(d["cdrom_image_path"]);
+                    }
+                });
             }
         });
     }
@@ -309,7 +315,7 @@ function formUpdater(url_choices, url_options, url_defaults){
 
     function _newOpt(value, text) {
         /* Create new option items for select field */
-        o = $("<option></option>");
+        var o = $("<option></option>");
         o.attr("value", value);
         o.attr("text", text);
         return o;
@@ -317,7 +323,7 @@ function formUpdater(url_choices, url_options, url_defaults){
 
     function _newOptGroup(value, options) {
         /* Create new option group for select field */
-        group = $("<optgroup></optgroup>");
+        var group = $("<optgroup></optgroup>");
         group.attr("label", value);
         $.each(options, function(i, option) {
             group.append(_newOpt(option[0], option[1]));

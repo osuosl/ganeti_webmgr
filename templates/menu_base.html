@@ -28,8 +28,6 @@
 </style>
 
 <script type="text/javascript">
-
-    var DOMAIN = "{% current_domain %}";
     var ENTER_KEYCODE = 13;
 
     $(function(){
@@ -73,30 +71,13 @@
         // in the styles above.
         $('.ui-autocomplete').removeClass('ui-widget-content');
     });
-
-    function setlang(lang){
-		$("#langsel").val(lang);
-		$("#langform").submit();
-	}
 </script>
 {% endblock %}
 
 {% block inner_header %}
-<div id="user_menu">
-	{% ifnotequal LANGUAGES|length 1 %}
-	<form action="/i18n/setlang/" method="post" id="langform">
-		<input name="next" type="hidden" value="" />
-		<input id="langsel" name="language" type="hidden" value="" />
-		{% for lang in LANGUAGES %}<a class="select_lang" href="#" onclick="setlang('{{ lang.0 }}'); return false;" title="{{lang.1}}">{% ifequal LANGUAGE_CODE lang.0 %}<strong>{% endifequal %}{{ lang.0 }}{% ifequal LANGUAGE_CODE lang.0 %}</strong>{% endifequal %}</a>{% if not forloop.last %} -{% endif %}
-		{% endfor %}
-		{% csrf_token %}
-	</form>
-    |
-	{% endifnotequal %}
-	{% trans "You are logged in as" %} <a href="{% url profile %}">{{user.username}}</a>,
+    {% ifnotequal LANGUAGES|length 1 %}|{% endifnotequal %}
+    {% trans "You are logged in as" %} <a href="{% url profile %}">{{user.username}}</a>,
     <a href="{% url logout %}">{% trans "Logout" %}</a>
-	
-</div>
 {% endblock %}
     
 {% block navigation %}
@@ -127,7 +108,7 @@
             <li><a href="{% url user-list %}">{% trans "Users" %}</a></li>
         {% endif %}
         {% if user.is_superuser or group_admin %}
-            <li><a href="{% url usergroup-list %}">{% trans "Groups" %}</a></li>
+            <li><a href="{% url group-list %}">{% trans "Groups" %}</a></li>
         {% endif %}
     </ul>
     {% endif %}

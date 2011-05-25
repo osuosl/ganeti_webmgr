@@ -141,6 +141,7 @@ INSTALLED_APPS = (
     'object_log',
     'south',
     'haystack',
+    'muddle_users',
 )
 
 #haystack search stuff

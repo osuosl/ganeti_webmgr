@@ -22,8 +22,9 @@
             </p>
         </div>
         <div id="help-hostname">
-        	{% blocktrans %}Fully qualified domain name <i>(<b>FQDN</b>)</i> to assign to this
-            virtual machine. <i>(e.g. hostname.example.org)</i>{% endblocktrans %}
+            {% blocktrans %}Domain name or host name to assign to this virtual
+            machine; e.g. <tt>example.org</tt> or
+            <tt>subdomain.example.org</tt>.{% endblocktrans %}
         </div>
 
 
@@ -248,10 +249,9 @@
             <p>{% trans "Value denoting boot order for the virtual machine" %}.</p>
             <ul>
                 <li><b>Hard Disk</b> - {% trans "boot from the first disk device" %}</li>
-                <li>
-                    <b>CD-ROM</b> - {% blocktrans %}boot from the cdrom (requires CD Image path
-                    being set){% endblocktrans %}
-                </li>
+                <li><b>CD-ROM</b> - {% blocktrans %}boot from the cdrom
+                (requires CD Image path being set){% endblocktrans %}</li>
+                <li><b>Network</b> - {% trans "boot from the network (such as PXE)" %}</li>
             </ul>
             <p>{% trans "Valid for the Xen HVM and KVM hypervisors" %}.</p>
         </div>
@@ -261,5 +261,139 @@
                machine.{% endblocktrans %}
             </p>
             <p>{% trans "Valid for the Xen HVM and KVM hypervisors" %}.</p>
+        </div>
+        <div id="help-cdrom_image_path">
+            <p>{% trans "The path to a CDROM image to attach to the instance" %}.</p>
+            <p>{% trans "Valid for the Xen HVM and KVM hypervisors." %}.</p>
+        </div>
+        <div id="help-acpi">
+            <p>{% blocktrans %}A  boolean  option  that  specifies if the
+            hypervisor should enable ACPI support for this instance.
+            {% endblocktrans %}</p>
+            <p>{% trans "Valid for the Xen HVM and KVM hypervisors." %}</p>
+        </div>
+        <div id="help-disk_cache">
+            <p>{% blocktrans %}The disk cache mode. It can be either default to
+            not pass any cache option to KVM, or one of the KVM  cache
+            modes:{% endblocktrans %}</p>
+            <ul>
+                <li><b>none</b> {% trans "(for  direct I/O)"%}</li>
+                <li><b>writethrough</b> {% blocktrans %}(to use the host cache
+                but report completion to the guest only when the host has
+                committed the changes to disk){% endblocktrans %}</li>
+                <li><b>writeback</b> {% blocktrans %}(to use the host cache and
+                report completion as soon as the data is in the host cache).
+                {% endblocktrans%}</li>
+            </ul>
+            <p>{% blocktrans %}Note that there are special considerations for
+            the cache mode depending on version of KVM used and disk type
+            (always raw file under Ganeti), please refer to the KVM
+            documentation for more details.{% endblocktrans %}.</p>
+            <p>{% trans "Valid for the KVM hypervisor." %}</p>
+        </div>
+        <div id="help-initrd_path">
+            <p>{% blocktrans %} This option specifies the path (on the node) to
+            the initrd to boot the instance with. Xen PVM instances can use
+            this always, while for KVM if this option is only used if the
+            <b><i>kernel_path</i></b> option is also specified. You can pass here
+            either an absolute filename (the path to the initrd) if you want to
+            use an initrd, or use the format no_initrd_path for no initrd.
+            {% endblocktrans %}</p>
+            <p>{% trans "Valid for the Xen PVM and KVM hypervisors." %}</p>
+        </div>
+        <div id="help-kernel_args">
+            <p>{% blocktrans %}This option specifies extra arguments to the
+            kernel that will be loaded device. This is always used for Xen
+            PVM, while for KVM it is only used if the <b><i>kernel_path</i></b>
+            option is also specified.{% endblocktrans %}</p>
+            <p>{% blocktrans %} The default setting for this value is simply
+            "<b>ro</b>", which mounts the root disk (initially) in read-only
+            one. For example, setting this to single will cause the instance
+            to start in single-user mode.{% endblocktrans %}</p>
+            <p>{% trans "Valid for the Xen PVM and KVM hypervisors." %}</p>
+        </div>
+        <div id="help-kvm_flag">
+            <p>{% blocktrans %}If <b><i>enabled</i></b> the -enable-kvm flag is
+            passed to kvm. If <b><i>disabled</i></b> -disable-kvm is passed. If
+            unset no flag is passed, and the default running mode for your kvm
+            binary will be used.{% endblocktrans %}</p>
+            <p>{% trans "Valid for the KVM hypervisor." %}</p>
+        </div>
+        <div id="help-mem_path">
+            <p>{% blocktrans %}This option passes the -mem-path argument to kvm
+            with the path (on the node) to the mount point of the hugetlbfs
+            file system, along with the -mem-prealloc argument too.
+            {% endblocktrans %}</p>
+            <p>{% trans "Valid for the KVM hypervisor." %}</p>
+        </div>
+        <div id="help-migration_downtime">
+            <p>{% blocktrans %}The maximum amount of time (in ms) a KVM
+            instance is allowed to be frozen during a live migration, in
+            order to copy dirty memory pages. Default value is <i>30ms</i>, but
+            you may need to increase this value for busy instances.
+            {% endblocktrans %}</p>
+            <p>{% blocktrans %}This option is only effective with kvm versions
+            >= 87 and qemu-kvm versions >= 0.11.0.{% endblocktrans %}</p>
+            <p>{% trans "Valid for the KVM hypervisor." %}</p>
+        </div>
+        <div id="help-security_model">
+            <p>{% blocktrans %}The security model for kvm. Currently one of
+            <b>none</b>, <b>user</b> or <b>pool</b>. Under <b>none</b>, the
+            <i>default</i>, nothing is done and instances are run as the Ganeti
+            daemon user (normally root).{% endblocktrans %}</p>
+            <ul>
+                <li><b>user</b> - {% blocktrans %}kvm will drop privileges and
+                become the user specified by the <i>security_domain</i>
+                parameter. {% endblocktrans %}</li>
+                <li><b>pool</b> - {% blocktrans %}a global cluster pool of
+                users will be used, making sure no two instances share the same
+                user on the same node. (this mode is not implemented yet)
+                {% endblocktrans %}</li>
+            </ul>
+            <p>{% trans "Valid for the KVM hypervisor." %}</p>
+        </div>
+        <div id="help-usb_mouse">
+            <p>{% blocktrans %}This option  specifies the usb mouse type to
+            be used. It can be <b>mouse</b> or <b>tablet</b>. When using VNC it's
+            recommended to set it to <b>tablet</b>.{% endblocktrans %}</p>
+            <p>{% trans "Valid for the KVM hypervisor." %}</p>
+        </div>
+        <div id="help-use_chroot">
+            <p>{% blocktrans %}This boolean option determines wether to run the
+            KVM instance in a chroot directory.{% endblocktrans %}</p>
+            <p>{% blocktrans %}If it is set to <b>true</b>, an empty directory
+            is created before starting the instance and its path is passed via
+            the <i>-chroot</i> flag to kvm.  The directory is removed when the
+            instance is stopped.{% endblocktrans %}</p>
+            <p>{% trans "Valid for the KVM hypervisor." %}</p>
+        </div>
+        <div id="help-use_localtime">
+            <p>{% blocktrans %}A boolean option that specifies if the instance
+            should be started with its clock set to the localtime of the
+            machine (when <b>true</b>) or to the UTC (when <b>false</b>). The
+            default is <b>false</b>, which is useful for Linux/Unix machines;
+            for Windows OSes, it is recommended to <b>enable</b> this
+            parameter.{% endblocktrans %}</p>
+            <p>{% trans "Valid for the Xen HVM and KVM hypervisors." %}</p>
+        </div>
+        <div id="help-vnc_bind_address">
+            <p>{% blocktrans %}Specifies the address that the VNC listener for
+            this instance should bind to. Valid values are IPv4 addresses.  Use
+            the address <b>0.0.0.0</b> to bind to <i>all</i> available
+            interfaces (this is the <i>default</i>) or specify the address of
+            one of the interfaces on the node to restrict listening to that
+            interface.{% endblocktrans %}</p>
+            <p>{% trans "Valid for the Xen HVM and KVM hypervisors." %}</p>
+        </div>
+        <div id="help-vnc_tls">
+            <p>{% blocktrans %}A boolean option that controls whether the VNC
+            connection is secured with TLS.{% endblocktrans %}</p>
+            <p>{% trans "Valid for the KVM hypervisor." %}</p>
+        </div>
+        <div id="help-vnc_x509_path">
+            <p>{% blocktrans %}If <b>vnc_tls</b> is enabled, this options
+            specifies the path to the x509 certificate to use.
+            {% endblocktrans %}</p>
+            <p>{% trans "Valid for the KVM hypervisor." %}</p>
         </div>
 </div>

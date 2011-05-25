@@ -40,12 +40,15 @@ from django.db.models import Q, Sum
 from django.db.models.query import QuerySet
 from django.db.models.signals import post_save, post_syncdb
 from django.db.utils import DatabaseError
+from ganeti.logs import register_log_actions
 
-from object_log.models import LogItem, LogAction
+from object_log.models import LogItem
 log_action = LogItem.objects.log_action
 
 from object_permissions.registration import register
 from object_permissions import signals as op_signals
+
+from muddle_users import signals as muddle_user_signals
 
 from ganeti import constants, management
 from ganeti.fields import PreciseDateTimeField, SumIf
@@ -429,7 +432,7 @@ class VirtualMachine(CachedClusterObject):
     """
     cluster = models.ForeignKey('Cluster', editable=False, default=0,
                                 related_name='virtual_machines')
-    hostname = models.CharField(max_length=128)
+    hostname = models.CharField(max_length=128, db_index=True)
     owner = models.ForeignKey('ClusterUser', null=True, \
                               related_name='virtual_machines')
     virtual_cpus = models.IntegerField(default=-1)
@@ -468,6 +471,10 @@ class VirtualMachine(CachedClusterObject):
     @property
     def rapi(self):
         return get_rapi(self.cluster_hash, self.cluster_id)
+
+    @property
+    def is_running(self):
+        return self.status == 'running'
 
     def save(self, *args, **kwargs):
         """
@@ -850,7 +857,7 @@ class Cluster(CachedClusterObject):
     hash = models.CharField(_('hash'), max_length=40, editable=False)
     
     # quota properties
-    virtual_cpus = models.IntegerField(_('virtual_cpus'), null=True, blank=True)
+    virtual_cpus = models.IntegerField(_('Virtual CPUs'), null=True, blank=True)
     disk = models.IntegerField(_('disk'), null=True, blank=True)
     ram = models.IntegerField(_('ram'), null=True, blank=True)
 
@@ -1063,6 +1070,44 @@ class Cluster(CachedClusterObject):
             return self.rapi.GetInstance(instance)
         except GanetiApiError:
             return None
+
+    def check_job_status(self):
+        """
+        if the cache bypass is enabled then check the status of the last job
+        when the job is complete we can reenable the cache.
+        @returns - dictionary of values that were updates
+        """
+        if self.last_job_id:
+            (job_id,) = Job.objects.filter(pk=self.last_job_id)\
+                            .values_list('job_id', flat=True)
+            data = self.rapi.GetJobStatus(job_id)
+            status = data['status']
+
+            if status in ('success', 'error'):
+                finished = Job.parse_end_timestamp(data)
+                Job.objects.filter(pk=self.last_job_id) \
+                    .update(status=status, ignore_cache=False, finished=finished)
+                self.ignore_cache = False
+
+            if status == 'success':
+                self.last_job = None
+                return dict(ignore_cache=False, last_job=None)
+
+            elif status == 'error':
+                return dict(ignore_cache=False)
+
+    def redistribute_config(self):
+        """
+        Redistribute config from cluster's master node to all
+        other nodes.
+        """
+        # no exception handling, because it's being done in a view
+        id = self.rapi.RedistributeConfig()
+        job = Job.objects.create(job_id=id, obj=self, cluster_id=self.id)
+        self.last_job = job
+        Cluster.objects.filter(pk=self.id) \
+            .update(last_job=job, ignore_cache=True)
+        return job
 
 
 class VirtualMachineTemplate(models.Model):
@@ -1414,7 +1459,7 @@ class SSHKey(models.Model):
     """
     key = models.TextField(validators=[validate_sshkey])
     #filename = models.CharField(max_length=128) # saves key file's name
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, related_name='ssh_keys')
 
 
 def create_profile(sender, instance, **kwargs):
@@ -1499,8 +1544,8 @@ def log_group_edit(sender, editor, **kwargs):
     """ log group edit signal """
     log_action('EDIT', editor, sender)
 
-op_signals.view_group_created.connect(log_group_create)
-op_signals.view_group_edited.connect(log_group_edit)
+muddle_user_signals.view_group_created.connect(log_group_create)
+muddle_user_signals.view_group_edited.connect(log_group_edit)
 
 
 # Register permissions on our models.
@@ -1511,21 +1556,5 @@ register(permissions.CLUSTER_PARAMS, Cluster)
 register(permissions.VIRTUAL_MACHINE_PARAMS, VirtualMachine)
 
 
-# Register LogActions used within the Ganeti App
-LogAction.objects.register('VM_REBOOT','ganeti/object_log/vm_reboot.html')
-LogAction.objects.register('VM_START','ganeti/object_log/vm_start.html')
-LogAction.objects.register('VM_STOP','ganeti/object_log/vm_stop.html')
-LogAction.objects.register('VM_MIGRATE','ganeti/object_log/vm_migrate.html')
-LogAction.objects.register('VM_REINSTALL','ganeti/object_log/vm_reinstall.html')
-LogAction.objects.register('VM_MODIFY','ganeti/object_log/vm_modify.html')
-LogAction.objects.register('VM_RENAME','ganeti/object_log/vm_rename.html')
-LogAction.objects.register('VM_RECOVER','ganeti/object_log/vm_recover.html')
-
-LogAction.objects.register('NODE_EVACUATE','ganeti/object_log/node_evacuate.html')
-LogAction.objects.register('NODE_MIGRATE','ganeti/object_log/node_migrate.html')
-LogAction.objects.register('NODE_ROLE_CHANGE','ganeti/object_log/node_role_change.html')
-
-# add log actions for permission actions here
-LogAction.objects.register('ADD_USER', 'ganeti/object_log/permissions/add_user.html')
-LogAction.objects.register('REMOVE_USER', 'ganeti/object_log/permissions/remove_user.html')
-LogAction.objects.register('MODIFY_PERMS', 'ganeti/object_log/permissions/modify_perms.html')
+# register log actions
+register_log_actions()
