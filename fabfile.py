@@ -31,8 +31,8 @@ PIP_INSTALL = {
 GIT_INSTALL =  {
     'noVNC':{
         'url':'git://github.com/kanaka/noVNC.git',
-        'development':'hash:f899070482f',
-        'production':'hash:f899070482f',
+        'development':'f899070482f',
+        'production':'f899070482f',
         },
     'django_object_permissions':{
         'url':'git://git.osuosl.org/gitolite/django/django_object_permissions',
@@ -179,16 +179,10 @@ def install_dependencies_git():
             # create branch if not using master
             if opts['head'] != 'master':
                 with lcd(name):
-                    if opts['head'][:5] == 'hash:':
-                        # is a hash, can just do a local checkout
-                        opts['head'] = opts['head'][5:]
-                        local('git checkout %(head)s' % opts)
-                    else:
-                        # is a tag or branch, create and pull branch
-                        with settings(hide('warnings','stderr'), warn_only=True):
-                            local('git branch %(head)s' % opts)
-                        local('git checkout %(head)s' % opts)
-                        local('git pull origin +%(head)s:%(head)s' % opts)
+                    local('git fetch')
+                    local('git checkout %(head)s' % opts)
+                    with settings(hide('warnings','stderr'), warn_only=True):
+                            local('git pull')
 
         # configure and create symlink to git repo
         with lcd (env.doc_root):
