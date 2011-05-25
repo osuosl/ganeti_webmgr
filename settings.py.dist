@@ -12,6 +12,8 @@ TEMPLATE_DEBUG = DEBUG
 #
 # If you run the unittests without this set to TRUE, you will get many errors!
 TESTING = False
+# Setting this to False disables south migrations when running tests.
+SOUTH_TESTS_MIGRATIONS = False
 
 ADMINS = (
     # ('Your Name', 'your_email@domain.com'),
