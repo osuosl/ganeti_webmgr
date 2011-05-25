@@ -30,7 +30,6 @@
 <script type="text/javascript">
 
     var DOMAIN = "{% current_domain %}";
-    var ENTER_KEYCODE = 13; // code for the enter/return key
 
     $(function(){
         /* "Main" */
@@ -38,12 +37,10 @@
         // Autocomplete search box
         $("#search").autocomplete({
             source: "{% url search-json %}",
-            minLength: 2
+            minLength: 2,
 
-        // make the search form submit if the enter key is pressed, even if the
-        // autocomplete suggestion box is open
-        }).keypress(function(event){
-            if(event.keyCode == ENTER_KEYCODE){
+            // Submit the search on selection
+            select: function(){
                 $("#search_form").submit();
             }
         });
