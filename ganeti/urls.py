@@ -17,6 +17,8 @@
 # USA.
 
 from django.conf.urls.defaults import patterns, url
+from haystack.views import SearchView
+from forms.autocomplete_search_form import autocomplete_search_form
 
 cluster_slug = '(?P<cluster_slug>[-_A-Za-z0-9]+)'
 cluster = 'cluster/%s' % cluster_slug
@@ -199,3 +201,10 @@ urlpatterns += patterns('ganeti.views.jobs',
     url(r'^%s/?' % job, 'detail', name='job-detail'),
 )
 
+# Search
+urlpatterns += patterns('haystack.views',
+    url(r'^search/', SearchView(form_class=autocomplete_search_form), name='search')
+)
+urlpatterns += patterns('ganeti.views.search',
+    url(r'^search.json', 'search_json', name='search-json')
+)

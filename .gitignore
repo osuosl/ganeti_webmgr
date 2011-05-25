@@ -34,6 +34,7 @@ object_log
 object_permissions
 noVNC
 muddle
+haystack
 muddle_users
 
 # files/dirs created by Fabric and or VirtualEnv
