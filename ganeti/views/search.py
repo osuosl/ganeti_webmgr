@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from haystack.query import SearchQuerySet
 
+
 @login_required
 def search_json(request):
     ''' Return a list of search results for the autocomplete search box.
