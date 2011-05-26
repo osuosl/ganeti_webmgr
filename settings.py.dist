@@ -1,3 +1,21 @@
+# Copyright (C) 2010 Oregon State University et al.
+# Copyright (C) 2010 Greek Research and Technology Network
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
+# USA.
+
 # Django settings for ganeti_webmgr project.
 
 import os.path
@@ -49,6 +67,7 @@ ugettext = lambda s: s
 
 LANGUAGES = (
 #	 ('yourlang', ugettext('YOUR LANGUAGE')),
+    ('el', ugettext('Greek')),
     ('en', ugettext('English')),
 )
 # end-of localization support
@@ -63,9 +82,10 @@ SITE_ID = 1
 SITE_NAME = 'Ganeti Web Manager'
 SITE_DOMAIN = 'localhost:8000'
 
-# If you set this to False, Django will make some optimizations so as not
-# to load the internationalization machinery.
+# Enable i18n (translations) and l10n (locales, currency, times).
+# You really have no good reason to disable this.
 USE_I18N = True
+USE_L10N = True
 
 # absolute path to the docroot of this site
 DOC_ROOT = os.path.dirname(os.path.realpath(__file__))
