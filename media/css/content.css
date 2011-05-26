@@ -56,6 +56,12 @@ h1 a.breadcrumb:hover {text-decoration:underline;}
 #content table.horizontal td { text-align:left; }
 #content table.horizontal th { width:15em; }
 
+
+/**
+Search
+*/
+#search {width:131px;}
+
 /**
  *Tabs
  */
