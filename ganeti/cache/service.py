@@ -4,8 +4,8 @@ from twisted.internet.task import LoopingCall
 
 from django.conf import settings
 
-from ganeti.cacher.node import NodeCacheUpdater
-from ganeti.cacher.virtual_machine import VirtualMachineCacheUpdater
+from ganeti.cache.node import NodeCacheUpdater
+from ganeti.cache.virtual_machine import VirtualMachineCacheUpdater
 
 
 class CacheService(Service):

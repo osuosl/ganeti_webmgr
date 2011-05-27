@@ -6,10 +6,12 @@ import os
 # ==========================================================
 if not os.environ.has_key('DJANGO_SETTINGS_MODULE'):
     sys.path.insert(0, os.getcwd())
-    os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+    from django.core.management import setup_environ
+    import settings
+    setup_environ(settings)
 
 from twisted.application import service
-from ganeti.cacher.service import CacheService
+from ganeti.cache.service import CacheService
 
 application = service.Application("Ganeti Web Manager Cache Updater")
 service = CacheService()
