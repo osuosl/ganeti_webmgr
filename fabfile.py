@@ -22,7 +22,7 @@ PIP_INSTALL = {
     'django'                    :'>=1.2',
     'django-registration'       :'',
     'south'                     :'',
-    'django-haystack'           :'>=1.2.1',
+    'django-haystack'           :'==1.2.1',
     'whoosh'                    :'>=1.8.1',
     'django_object_permissions' :'=1.3.1',
     'twisted'                   :'>=11.0.0'

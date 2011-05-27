@@ -52,7 +52,7 @@
         })
 
         // Submit search on return/enter keypress
-        .keypress(function(event){
+        .keydown(function(event){
             if(event.keyCode == ENTER_KEYCODE){
                 $('#search_form').submit();
             }
