@@ -58,9 +58,21 @@ h1 a.breadcrumb:hover {text-decoration:underline;}
 
 
 /**
-Search
-*/
-#search {width:131px;}
+ * Search
+ */
+#search_box{
+    width:131px;
+}
+
+.ui-autocomplete{
+    background: white;
+    border:     1px solid #BBBBBB;
+
+    /* box shadow */
+    -moz-box-shadow:    0px 0px 20px black;
+    -webkit-box-shadow: 0px 0px 20px black;
+    box-shadow:         0px 0px 20px black;
+}
 
 /**
  *Tabs
@@ -379,13 +391,3 @@ tr.group td.name {background:url(/media/images/icons/group.png) no-repeat 0 4px;
 .object_log .timestamp {font-weight:bold; width:4em;}
 .object_log td {text-align:left !important;}
 
-/* Autocomplete search box */
-.ui-autocomplete{
-    background: white;
-    border:     1px solid #BBBBBB;
-
-    /* box shadow */
-    -moz-box-shadow:    0px 0px 20px black;
-    -webkit-box-shadow: 0px 0px 20px black;
-    box-shadow:         0px 0px 20px black;
-}
