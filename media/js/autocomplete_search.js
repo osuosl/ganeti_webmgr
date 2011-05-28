@@ -32,23 +32,26 @@ function autocomplete_search(search_box, search_form, JSON_url){
         minLength: 2,
 
         // Custom focus function to handle our custom results format
-        focus: function( event, ui ) {
+        focus: function(event, ui) {
             search_box.val(ui.item.value);
             return false;
         },
 
-        // Submit the search on item selection
-        select: function(){
-            search_form.submit();
+        // When an item is selected, bypass the search results and go directly
+        // to the item's detail page
+        select: function(event, ui){
+            window.location = ui.item.url;
         }
     })
 
     // Submit search on return/enter keypress
+    /*
     .keydown(function(event){
         if(event.keyCode == ENTER_KEYCODE){
             search_form.submit();
         }
     })
+    */
 
     // Create custom result item rendering for out custom format
     .data("autocomplete")._renderItem = function(ul, item){

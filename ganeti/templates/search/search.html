@@ -45,7 +45,9 @@
                     var AFTER_TERM = ORIG_TEXT.substring(
                             INDEX_OF_TERM+TERM.length, ORIG_TEXT.length);
                     $(this).html(
-                        BEFORE_TERM + "<span class='highlight'>" + TERM + "</span>" + AFTER_TERM
+                        BEFORE_TERM + 
+                        "<span class='highlight'>" + TERM + "</span>" + 
+                        AFTER_TERM
                     );
                 });
             });

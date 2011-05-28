@@ -1,6 +1,7 @@
 import json
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
+from django.core.urlresolvers import reverse
 from haystack.query import SearchQuerySet
 
 
@@ -51,12 +52,25 @@ def search_json(request):
             result_object['value'] = result.content_auto
             if result.model_name == 'virtualmachine':
                 result_object['type'] = 'vm'
+                result_object['url'] = reverse('instance-detail', 
+                        args=[
+                            result.object.cluster.slug, 
+                            result.object.hostname
+                        ])
             elif result.model_name == 'cluster':
                 result_object['type'] = 'cluster'
+                result_object['url'] = reverse('cluster-detail', 
+                        args=[result.object.slug])
             elif result.model_name == 'node':
                 result_object['type'] = 'node'
+                result_object['url'] = reverse('node-detail', 
+                        args=[
+                            result.object.cluster.slug,
+                            result.object.hostname
+                        ])
             else:
                 result_object['type'] = 'unknown'
+
             result_objects.append(result_object)
 
     # Return the results list as a json object
