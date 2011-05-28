@@ -26,10 +26,21 @@ function autocomplete_search(search_box, search_form, JSON_url){
     // keycode for the enter/return key
     var ENTER_KEYCODE = 13;
     
-    // Autocomplete search box
-    search_box.autocomplete({
-        source: JSON_url,
-        minLength: 2,
+    // Submit search on return/enter keypress
+    search_box.keydown(function(event){
+        if(event.keyCode == ENTER_KEYCODE){
+            search_form.submit();
+        }
+    })
+   
+    // Initialize the autocomplete widget on the search box. This must go
+    // *after* the keydown binding (above) in the chain so the autocomplete 
+    // selection event takes precedence, i.e., when something is selected, go 
+    // to its details page over simply searching for the keyword, and if
+    // nothing's selected, search for the keyword.
+    .autocomplete({
+        source: JSON_url,   // The search results as a JSON file
+        minLength: 2,       // Only AJAX search if there are >= 2 chars entered
 
         // Custom focus function to handle our custom results format
         focus: function(event, ui) {
@@ -43,15 +54,6 @@ function autocomplete_search(search_box, search_form, JSON_url){
             window.location = ui.item.url;
         }
     })
-
-    // Submit search on return/enter keypress
-    /*
-    .keydown(function(event){
-        if(event.keyCode == ENTER_KEYCODE){
-            search_form.submit();
-        }
-    })
-    */
 
     // Create custom result item rendering for out custom format
     .data("autocomplete")._renderItem = function(ul, item){
