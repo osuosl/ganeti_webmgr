@@ -29,9 +29,12 @@
 </style>
 
 <script type="text/javascript">
-    // initialize the autocomplete search box
     $(function(){
-        autocomplete_search('{% url search-json %}', $('#search'), $('#search_form'));
+        /* "main" */
+
+        // initialize the autocomplete search box
+        autocomplete_search($('#search_box'), $('#search_form'), 
+                '{% url search-json %}');
     });
 </script>
 {% endblock %}
@@ -79,7 +82,7 @@
     <!-- autocomplete search box -->
     <h3>{% trans "Search" %}</h3>
     <form id="search_form" action="{% url search %}" method="get">
-        <input id="search" type="text" name="q" />
+        <input id="search_box" type="text" name="q" />
     </form>
 
     </div>

@@ -1,6 +1,6 @@
 /* JavaScript responsible for making the autocomplete search box work. */
 
-function autocomplete_search(JSON_url, search_box, search_form){
+function autocomplete_search(search_box, search_form, JSON_url){
     /* Customized autocomplete search box for use with GWM's search system.
      *
      * This autocomplete search box works with the search.py view to provide
@@ -9,8 +9,10 @@ function autocomplete_search(JSON_url, search_box, search_form){
      *
      *      `search_box`:   The search input box as a jQuery object
      *              e.g. $('#search_box')
-     *      `search_form`:  The earch form that contains `search_box` as a 
-     *              jQuery object, e.g., $('#search_form')
+     *      `search_form`:  The form that contains the search box as a jQuery
+     *              object, e.g. $('#search_form')
+     *      `JSON_url`:     The url responsible for returning the search
+     *              suggestions as a JSON object, e.g. '/search.json'
      *
      * Example markup:
      *      <form id='search_form' action='/search' method='GET'>
