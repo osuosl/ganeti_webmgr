@@ -1,62 +1,63 @@
 /* JavaScript responsible for making the autocomplete search box work. */
 
-var autocomplete_search = function(search_box, search_form, autocomplete_lib){
+function autocomplete_search(JSON_url, search_box, search_form){
     /* Customized autocomplete search box for use with GWM's search system.
      *
      * This autocomplete search box works with the search.py view to provide
-     * a list of search suggestions.
+     * a list of search suggestions as the user types. It must be provided the
+     * following parameters:
      *
-     * `search_box` is a jQuery object representing the search input box
-     * `search_form` is a jQuery object that represents the search form that
-     *      houses the `search_box`
+     *      `search_box`:   The search input box as a jQuery object
+     *              e.g. $('#search_box')
+     *      `search_form`:  The earch form that contains `search_box` as a 
+     *              jQuery object, e.g., $('#search_form')
      *
-     *  Requires jQuery and jquery-ui (with the autocomplete widget)
+     * Example markup:
+     *      <form id='search_form' action='/search' method='GET'>
+     *          <input id='search_box' type='text' name='q'>
+     *      </form>
+     *
+     * Requires:
+     *      jQuery and jquery-ui (with the autocomplete widget)
      */
 
     // keycode for the enter/return key
     var ENTER_KEYCODE = 13;
+    
+    // Autocomplete search box
+    search_box.autocomplete({
+        source: JSON_url,
+        minLength: 2,
 
-    $(function(){
-        /* "Main" */
-        
-        var autocomplete = autocomplete_lib;
+        // Custom focus function to handle our custom results format
+        focus: function( event, ui ) {
+            search_box.val(ui.item.value);
+            return false;
+        },
 
-        // Autocomplete search box
-        search_box.autocomplete({
-            source: "{% url search-json %}",
-            //source: example_results, 
-            minLength: 2,
+        // Submit the search on item selection
+        select: function(){
+            search_form.submit();
+        }
+    })
 
-            // Custom focus function to handle our custom results format
-            focus: function( event, ui ) {
-                search_box.val(ui.item.value);
-                return false;
-            },
+    // Submit search on return/enter keypress
+    .keydown(function(event){
+        if(event.keyCode == ENTER_KEYCODE){
+            search_form.submit();
+        }
+    })
 
-            // Submit the search on item selection
-            select: function(){
-                search_form.submit();
-            }
-        })
+    // Create custom result item rendering for out custom format
+    .data("autocomplete")._renderItem = function(ul, item){
+        return $("<li></li>")
+            .data("item.autocomplete", item)
+            .append("<a><b>" + item.type + ": </b>" + item.value + "</a>")
+            .appendTo(ul);
+    };
 
-        // Submit search on return/enter keypress
-        .keydown(function(event){
-            if(event.keyCode == ENTER_KEYCODE){
-                search_form.submit();
-            }
-        })
-
-        // Create custom result item rendering for out custom format
-        .data("autocomplete")._renderItem = function(ul, item){
-            return $("<li></li>")
-                .data("item.autocomplete", item)
-                .append("<a><b>" + item.type + ": </b>" + item.value + "</a>")
-                .appendTo(ul);
-        };
-
-        // Remove the widget-content class b/c it is customized for tab use in
-        // other parts of the site.  We'll customize the the autocomplete box
-        // in the styles above.
-        $('.ui-autocomplete').removeClass('ui-widget-content');
-    });
+    // Remove the widget-content class b/c it is customized for tab use in
+    // other parts of the site.  We'll customize the the autocomplete box
+    // in the styles above.
+    $('.ui-autocomplete').removeClass('ui-widget-content');
 }

@@ -30,7 +30,9 @@
 
 <script type="text/javascript">
     // initialize the autocomplete search box
-    autocomplete_search($('#search'), $('#search_form'));
+    $(function(){
+        autocomplete_search('{% url search-json %}', $('#search'), $('#search_form'));
+    });
 </script>
 {% endblock %}
 
