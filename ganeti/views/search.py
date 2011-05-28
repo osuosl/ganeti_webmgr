@@ -18,19 +18,23 @@ def search_json(request):
         [
             {
                 'value':    'foo',
-                'type':     'vm'
+                'type':     'vm',
+                'url':      'vm/foo'
             },
             {
                 'value':    'bar',
-                'type':     'vm'
+                'type':     'vm',
+                'url':      'vm/bar'
             },
             {
                 'value':    'herp',
-                'type':     'cluster'
+                'type':     'cluster',
+                'url':      'cluster/herp'
             },
             {
                 'value':    'derp',
-                'type':     'node'
+                'type':     'node',
+                'url':      'node/derp'
             }
         ]
     '''
