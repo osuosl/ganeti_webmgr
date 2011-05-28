@@ -27,7 +27,7 @@ def slot(parser, token):
 
 
 class SlotNode(Node):
-
+    
     def __init__(self, slot=None, nodelist=None):
         if slot and slot.template_slats:
             if nodelist:
@@ -37,17 +37,17 @@ class SlotNode(Node):
 
             else:
                 # XXX when there's no inner nodes just monkey patch template
-                # render method to reduce traversal to nodelist
+                # render method to reduce traversal time
                 nodes = [SlatNode(slat) for slat in slot.template_slats]
                 self.render = NodeList(nodes).render
-    
+
     def render(self, context):
         return NodeList().render(context)
 
     def render_slats(self, context):
         nodelist = NodeList()
         inner_nodelist = self.inner_nodelist
-        
+
         context.push()
         for slat in self.slats:
             context['slat'] = slat.template.render(context)
@@ -55,7 +55,6 @@ class SlotNode(Node):
         context.pop()
 
         return nodelist.render(context)
-        
 
 
 class SlatNode(Node):
