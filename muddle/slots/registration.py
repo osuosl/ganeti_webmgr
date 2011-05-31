@@ -4,17 +4,12 @@ from django.template import loader
 from muddle.core.apps.plugins import load_app_plugin
 
 
-__all__ = ['initialize', 'register', 'AppSettings']
+__all__ = ['initialize', 'register']
 
 DEFAULT_CATEGORY = getattr(settings, 'DEFAULT_CATEGORY', 'general')
 
 MUDDLE_SLOTS = {}
-"""
-stores form classes that define settings in each category.  A settings category
-may be a single form or a dictionary of forms, with the keys indicating
-sub-categories.  If there is only one sub-category it will be rendered as if
-there were no sub-categories
-"""
+
 
 def initialize():
     """
@@ -28,8 +23,6 @@ def register(key, *slats):
     """
     Register
     """
-    print 'WTF!', key
-
     global MUDDLE_SLOTS
     try:
         slot = MUDDLE_SLOTS[key]
@@ -44,16 +37,19 @@ class Slot(object):
     def __init__(self):
         self.context_slats = []
         self.template_slats = []
-        self.related_slats = []
 
     def add_slats(self, slats):
         for slat in slats:
             if isinstance(slat, (ContextSlat,)):
-                self.context_slats(slat)
+                if any((s for s in self.context_slats if s.function is slat.function)):
+                    continue
+                self.context_slats.append(slat)
+            
             elif isinstance(slat, (TemplateSlat,)):
+                if any((s for s in self.template_slats if s.origin == slat.origin)):
+                    continue
                 self.template_slats.append(slat)
-            elif isinstance(slat, (TemplateSlat,)):
-                self.related_slats.append(slat)
+            
             else:
                 raise RuntimeError('Invalid slat type')
 
@@ -69,8 +65,13 @@ class ContextSlat(object):
         assert(callable(function))
         self.function = function
 
-    def __call__(self, request, context):
-        self.function(request, context)
+    def __call__(self, request):
+        return self.function(request)
+
+    def __eq__(self, o):
+        if isinstance(o, (ContextSlat,)):
+            return o.function == self.function
+        return o == self.function
 
 
 class TemplateSlat(object):
@@ -84,6 +85,7 @@ class TemplateSlat(object):
     
     def __init__(self, template=None, ajax=None):
         assert(isinstance(template, (str,)))
+        self.origin = template
         self.render_template = template
         self.ajax = ajax
 
@@ -92,3 +94,11 @@ class TemplateSlat(object):
 
     def render(self):
         self.template.render()
+
+    def __repr__(self):
+        return self.origin
+
+    def __eq__(self, o):
+        if isinstance(o, (TemplateSlat,)):
+            return o.origin == self.origin
+        return o == self.origin
