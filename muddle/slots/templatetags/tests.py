@@ -1,10 +1,11 @@
+from copy import copy
 from django import template
 register = template.Library()
 
+from muddle.slots.tests import context as global_context
 
-CONTEXT = None
 
 @register.simple_tag(takes_context=True)
 def context_dump(context):
     """ a simple tag used in testing that allows us to grab the context """
-    CONTEXT = context
+    global_context.CONTEXT = copy(context)
