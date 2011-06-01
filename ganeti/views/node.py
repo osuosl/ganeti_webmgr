@@ -39,6 +39,17 @@ from ganeti.views import render_403
 from ganeti.views.virtual_machine import render_vms
 
 
+def get_node_and_cluster_or_404(cluster_slug, host):
+    """
+    Utility function for querying Node and Cluster in a single query
+    rather than 2 separate calls to get_object_or_404.
+    """
+    query = Node.objects \
+        .filter(cluster__slug=cluster_slug, hostname=host) \
+        .select_related('cluster')
+    if len(query):
+        return query[0], query[0].cluster
+    raise Http404('Node does not exist')
 
 
 @login_required
@@ -57,8 +68,7 @@ def detail(request, cluster_slug, host):
     """
     Renders a detail view for a Node
     """
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    node = get_object_or_404(Node, hostname=host)
+    node, cluster = get_node_and_cluster_or_404(cluster_slug, host)
     
     user = request.user
     admin = True if user.is_superuser else user.has_perm('admin', cluster)
@@ -82,8 +92,7 @@ def primary(request, cluster_slug, host):
     """
     Renders a list of primary VirtualMachines on the given node
     """
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    node = get_object_or_404(Node, hostname=host)
+    node, cluster = get_node_and_cluster_or_404(cluster_slug, host)
     
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
@@ -103,8 +112,7 @@ def secondary(request, cluster_slug, host):
     """
     Renders a list of secondary VirtualMachines on the given node
     """
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    node = get_object_or_404(Node, hostname=host)
+    node, cluster = get_node_and_cluster_or_404(cluster_slug, host)
     
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
@@ -123,8 +131,7 @@ def object_log(request, cluster_slug, host):
     """
     Display object log for this node
     """
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    node = get_object_or_404(Node, hostname=host)
+    node, cluster = get_node_and_cluster_or_404(cluster_slug, host)
 
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
@@ -146,8 +153,7 @@ def role(request, cluster_slug, host):
     """
     view used for setting node role
     """
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    node = get_object_or_404(Node, hostname=host)
+    node, cluster = get_node_and_cluster_or_404(cluster_slug, host)
     
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
@@ -194,8 +200,7 @@ def migrate(request, cluster_slug, host):
     """
     view used for initiating a Node Migrate job
     """
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    node = get_object_or_404(Node, hostname=host)
+    node, cluster = get_node_and_cluster_or_404(cluster_slug, host)
     
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
@@ -272,8 +277,7 @@ def evacuate(request, cluster_slug, host):
     """
     view used for initiating a node evacuate job
     """
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    node = get_object_or_404(Node, hostname=host)
+    node, cluster = get_node_and_cluster_or_404(cluster_slug, host)
     
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
