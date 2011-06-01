@@ -31,8 +31,8 @@
 {% endblock %}
 
 {% block content %}
-<h1>{{group.name}}</h1>
 
+<a class="breadcrumb" href="{%url group-list %}">{% trans "Groups" %}</a> : {{ group.name }}</h1>
 
 <div id="tabs">
     <ul>
