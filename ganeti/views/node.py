@@ -21,7 +21,7 @@ import json
 from django.contrib.auth.decorators import login_required
 from django import forms
 from django.forms import ValidationError
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound, Http404
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from ganeti.utilities import cluster_default_info
@@ -37,6 +37,19 @@ from ganeti import constants
 from ganeti.models import Node, Cluster
 from ganeti.views import render_403
 from ganeti.views.virtual_machine import render_vms
+
+
+
+
+@login_required
+def detail_by_id(request, id):
+    """
+    Node detail using a non-canonical url
+    """
+    query = Node.objects.filter(pk=id).select_related('cluster')
+    if len(query):
+        return HttpResponseRedirect(query[0].get_absolute_url())
+    return HttpResponseNotFound('Node does not exist')
 
 
 @login_required

@@ -113,6 +113,7 @@ node_prefix = 'cluster/%s/node/%s' %  (cluster_slug, host)
 urlpatterns += patterns('ganeti.views.node',
     # Detail
     url(r'^%s/?$' % node_prefix, 'detail', name="node-detail"),
+    url(r'^node/(?P<id>\d+)/?$', 'detail_by_id', name="node-detail-id"),
     
     # Primary and secondary Virtual machines
     url(r'^%s/primary/?$' % node_prefix, 'primary', name="node-primary-vms"),
@@ -149,6 +150,7 @@ urlpatterns += patterns('ganeti.views.virtual_machine',
 
     #  Detail
     url(r'^%s/?$' % vm_prefix, 'detail', name="instance-detail"),
+    url(r'^vm/(?P<id>\d+)/?$', 'detail_by_id', name="instance-detail-id"),
     url(r'^%s/users/?$' % vm_prefix, 'users', name="vm-users"),
     url(r'^%s/permissions/?$' % vm_prefix, 'permissions', name="vm-permissions"),
     url(r'^%s/permissions/user/(?P<user_id>\d+)/?$' % vm_prefix, 'permissions', name="vm-permissions-user"),

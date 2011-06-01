@@ -442,6 +442,17 @@ def vm_table(request, cluster_slug=None, primary_node=None,
 
 
 @login_required
+def detail_by_id(request, id):
+    """
+    instance detail using a non-canonical url
+    """
+    query = VirtualMachine.objects.filter(pk=id).select_related('cluster')
+    if len(query):
+        return HttpResponseRedirect(query[0].get_absolute_url())
+    raise Http404('Virtual Machine does not exist')
+
+
+@login_required
 def detail(request, cluster_slug, instance):
     """
     Display details of virtual machine.
