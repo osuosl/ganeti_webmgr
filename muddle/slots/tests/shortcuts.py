@@ -27,10 +27,6 @@ class SlotsResponseTests(SlotsTestsBase):
         self.factory = RequestFactory()
         self.request = self.factory.get('/test/')
 
-    def tearDown(self):
-        super(SlotsResponseTests, self).tearDown()
-        
-
     def test_basic(self):
         register('foo', ContextSlat(foo), ContextSlat(bar))
         response = muddled_response('foo', self.request, 'slots/tests/test.html')
