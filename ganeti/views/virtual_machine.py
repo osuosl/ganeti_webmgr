@@ -61,9 +61,9 @@ def get_vm_and_cluster_or_404(cluster_slug, instance):
     query = VirtualMachine.objects \
         .filter(cluster__slug=cluster_slug, hostname=instance) \
         .select_related('cluster')
-    if len(query) == 0:
-        raise Http404('Virtual Machine does not exist')
-    return query[0], query[0].cluster
+    if len(query):
+        return query[0], query[0].cluster
+    raise Http404('Virtual Machine does not exist')
 
 
 @login_required
@@ -439,6 +439,17 @@ def vm_table(request, cluster_slug=None, primary_node=None,
         },
         context_instance=RequestContext(request),
     )
+
+
+@login_required
+def detail_by_id(request, id):
+    """
+    instance detail using a non-canonical url
+    """
+    query = VirtualMachine.objects.filter(pk=id).select_related('cluster')
+    if len(query):
+        return HttpResponseRedirect(query[0].get_absolute_url())
+    raise Http404('Virtual Machine does not exist')
 
 
 @login_required

@@ -682,6 +682,19 @@ class VirtualMachine(CachedClusterObject):
         else:
             return node, port, password
 
+    @models.permalink
+    def get_absolute_url(self):
+        """
+        Return absolute url for this instance.  Since the canonical url requires
+        the cluster object this method will check to see if the cluster is
+        already queried.  If it has not been queried it will use the
+        non-canonical url which is quicker to render.
+        """
+        if hasattr(self, '_cluster_cache'):
+            return 'instance-detail', (), {'cluster_slug':self.cluster.slug,
+                                           'instance':self.hostname}
+        return 'instance-detail-id', (), {'id':self.pk}
+
     def __repr__(self):
         return "<VirtualMachine: '%s'>" % self.hostname
 
@@ -726,7 +739,20 @@ class Node(CachedClusterObject):
         if self.id is None:
             self.cluster_hash = self.cluster.hash
         super(Node, self).save(*args, **kwargs)
-    
+
+    @models.permalink
+    def get_absolute_url(self):
+        """
+        Return absolute url for this node.  Since the canonical url requires
+        the cluster object this method will check to see if the cluster is
+        already queried.  If it has not been queried it will use the
+        non-canonical url which is quicker to render.
+        """
+        if hasattr(self, '_cluster_cache'):
+            return 'node-detail', (), {'cluster_slug':self.cluster.slug,
+                                           'host':self.hostname}
+        return 'node-detail-id', (), {'id':self.pk}
+
     @property
     def rapi(self):
         return get_rapi(self.cluster_hash, self.cluster_id)
@@ -877,6 +903,10 @@ class Cluster(CachedClusterObject):
     def save(self, *args, **kwargs):
         self.hash = self.create_hash()
         super(Cluster, self).save(*args, **kwargs)
+
+    @models.permalink
+    def get_absolute_url(self):
+        return 'cluster-detail', (), {'cluster_slug':self.slug}
 
     @property
     def rapi(self):
