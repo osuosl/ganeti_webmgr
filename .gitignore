@@ -47,6 +47,9 @@ pysqlite2-doc
 # whoosh index files (used by haystack search)
 whoosh_index
 
+# twisted cache
+twisted/plugins/dropin.cache
+
 # Hidden files
 .*
 
