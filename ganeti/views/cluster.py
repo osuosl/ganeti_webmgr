@@ -263,6 +263,7 @@ class QuotaForm(forms.Form):
     disk = DataVolumeField(label='Disk Space', required=False, min_value=0)
     delete = forms.BooleanField(required=False, widget=forms.HiddenInput)
 
+
 @login_required
 def quota(request, cluster_slug, user_id):
     """
@@ -296,11 +297,12 @@ def quota(request, cluster_slug, user_id):
             url = reverse('cluster-permissions', args=[cluster.slug])
             if isinstance(cluster_user, (Profile,)):
                 return render_to_response("cluster/user_row.html",
-                    {'object':cluster, 'user':cluster_user.user, 'url':url})
+                    {'object':cluster, 'user_detail':cluster_user.user, 'url':url},
+                    context_instance=RequestContext(request))
             else:
                 return render_to_response("cluster/group_row.html",
-                    {'object':cluster, 'group':cluster_user.group, \
-                     'url':url})
+                    {'object':cluster, 'group':cluster_user.group, 'url':url},
+                    context_instance=RequestContext(request))
         
         # error in form return ajax response
         content = json.dumps(form.errors)

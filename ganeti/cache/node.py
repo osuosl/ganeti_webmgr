@@ -22,7 +22,7 @@ from twisted.internet.defer import DeferredList, Deferred
 from twisted.internet import reactor
 from twisted.web import client
 from django.utils import simplejson
-from ganeti.cacher import Timer, Counter
+from ganeti.cache import Timer, Counter
 
 from ganeti.models import Cluster, Node, VirtualMachine
 
@@ -40,7 +40,7 @@ class NodeCacheUpdater(object):
     def update(self):
         """ start the update process """
         self.timer = Timer()
-        print '------[cache update]-------------------------------'
+        print '------[node cache update]-------------------------------'
         clusters = Cluster.objects.all()
         deferreds = [self.get_cluster_info(cluster) for cluster in clusters]
         deferred_list = DeferredList(deferreds)

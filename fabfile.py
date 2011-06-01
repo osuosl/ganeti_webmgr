@@ -31,8 +31,8 @@ PIP_INSTALL = {
 GIT_INSTALL =  {
     'noVNC':{
         'url':'git://github.com/kanaka/noVNC.git',
-        'development':'f899070482f',
-        'production':'f899070482f',
+        'development':'3859e1d35cf',
+        'production':'3859e1d35cf',
         },
     'django_object_permissions':{
         'url':'git://git.osuosl.org/gitolite/django/django_object_permissions',

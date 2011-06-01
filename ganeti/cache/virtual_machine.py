@@ -22,7 +22,7 @@ from django.utils import simplejson
 from twisted.internet import reactor
 from twisted.internet.defer import DeferredList, Deferred
 from twisted.web import client
-from ganeti.cacher import Timer, Counter
+from ganeti.cache import Timer, Counter
 from ganeti.models import Cluster, VirtualMachine
 
 
@@ -38,11 +38,12 @@ class VirtualMachineCacheUpdater(object):
         this should be faster than refreshing individual VirtualMachines.
         """
         self.timer = Timer()
-        print '------[cache update]-------------------------------'
+        print '------[vm cache update]-------------------------------'
         clusters = Cluster.objects.all()
         deferreds = [self.get_cluster_info(cluster) for cluster in clusters]
         deferred_list = DeferredList(deferreds)
         deferred_list.addCallback(self.complete)
+
         return deferred_list
 
     def get_cluster_info(self, cluster):
