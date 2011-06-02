@@ -2,7 +2,7 @@ import os
 from fabric.api import env
 from fabric.context_managers import cd, settings, hide, lcd
 from fabric.contrib.files import exists
-from fabric.operations import local, require
+from fabric.operations import local, require, prompt
 
 # Required dependencies
 #
@@ -66,6 +66,31 @@ def dev():
 def prod():
     """ configure a production deployment """
     env.environment = 'production'
+
+
+# Files and directories that will be included in tarball when packaged
+env.MANIFEST = [
+    "django_test_tools",
+    "ganeti",
+    "i18n",
+    "locale",
+    "media",
+    "templates",
+    "twisted",
+    "util",
+    "__init__.py",
+    "AUTHORS",
+    "CHANGELOG",
+    "COPYING",
+    "fabfile.py",
+    "LICENSE",
+    "manage.py",
+    "README",
+    "search_sites.py",
+    "settings.py.dist",
+    "UPGRADING",
+    "urls.py"
+]
 
 
 def deploy():
@@ -195,3 +220,18 @@ def install_dependencies_git():
 
             with settings(hide('warnings','stderr'), warn_only=True):
                 local('ln -sf %(symlink_path)s %(doc_root)s' % env)
+
+
+def tarball():
+    """ package a release tarball """
+    tarball = prompt('tarball name', default='ganeti-webmgr-tar.gz')
+    files = ['ganeti_webmgr/%s' % file for file in env.MANIFEST]
+    files = ' '.join(files)
+
+    with lcd('..'):
+        data = dict(
+            tarball=tarball,
+            files=files
+        )
+        local('tar cfz %(tarball)s %(files)s --exclude=*.pyc' % data)
+        local('mv %(tarball)s ./ganeti_webmgr/' % data)
