@@ -799,21 +799,19 @@ def modify(request, cluster_slug, instance):
 def modify_confirm(request, cluster_slug, instance):
     vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
 
-    hv = None
     hv_form = None
     if vm.info:
+        # Guess at the hypervisor flavor by looking at hypervisor-specific
+        # parameters.
         info = vm.info['hvparams']
         if 'serial_console' in info:
             # KVM
-            hv = 'kvm'
             hv_form = KvmModifyVirtualMachineForm
         elif 'initrd_path' in info:
             # PVM
-            hv = 'xen-pvm'
             hv_form = PvmModifyVirtualMachineForm
         elif 'acpi' in info:
             # HVM
-            hv = 'xen-hvm'
             hv_form = HvmModifyVirtualMachineForm
 
     user = request.user

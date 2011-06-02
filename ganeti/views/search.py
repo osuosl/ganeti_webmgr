@@ -1,7 +1,6 @@
 import json
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-from django.core.urlresolvers import reverse
 from haystack.query import SearchQuerySet
 
 
