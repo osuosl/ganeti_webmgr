@@ -17,7 +17,8 @@
 
 from django.test import TestCase
 
-from ganeti.utilities import compare
+from ganeti.utilities import compare, get_hypervisor
+from ganeti.tests.rapi_proxy import INSTANCE, XEN_PVM_INSTANCE, XEN_HVM_INSTANCE
 
 __all__ = ('TestUtilities',)
 
@@ -90,3 +91,26 @@ class TestUtilities(TestCase):
         outcome = numDecreased % (int1, int2)
         self.assertEqual(result, outcome)
 
+    def test_get_hypervisor(self):
+        class VirtualMachineTest(object):
+            info = None
+
+            def __init__(self, info):
+                self.info = info
+
+        kvm = VirtualMachineTest(INSTANCE)
+        pvm = VirtualMachineTest(XEN_PVM_INSTANCE)
+        hvm = VirtualMachineTest(XEN_HVM_INSTANCE)
+        foo = VirtualMachineTest({'hvparams': 'asdfaf'})
+
+        hv = get_hypervisor(kvm)
+        self.assertEqual(hv, 'kvm')
+
+        hv = get_hypervisor(pvm)
+        self.assertEqual(hv, 'xen-pvm')
+
+        hv = get_hypervisor(hvm)
+        self.assertEqual(hv, 'xen-hvm')
+
+        hv = get_hypervisor(foo)
+        self.assertEqual(hv, None)

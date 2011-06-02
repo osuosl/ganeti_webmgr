@@ -49,7 +49,7 @@ from ganeti.forms.virtual_machine import NewVirtualMachineForm, \
     ChangeOwnerForm
 from ganeti.templatetags.webmgr_tags import render_storage
 from ganeti.utilities import cluster_default_info, cluster_os_list, \
-    compare, os_prettify
+    compare, os_prettify, get_hypervisor
 from django.utils.translation import ugettext as _
 
 
@@ -741,22 +741,14 @@ def modify(request, cluster_slug, instance):
         return render_403(request,
             'You do not have permissions to edit this virtual machine')
     
-    hv = None
     hv_form = None
-    if vm.info:
-        info = vm.info['hvparams']
-        if 'serial_console' in info:
-            # KVM
-            hv = 'kvm'
-            hv_form = KvmModifyVirtualMachineForm
-        elif 'initrd_path' in info:
-            # PVM
-            hv = 'xen-pvm'
-            hv_form = PvmModifyVirtualMachineForm
-        elif 'acpi' in info:
-            # HVM
-            hv = 'xen-hvm'
-            hv_form = HvmModifyVirtualMachineForm
+    hv = get_hypervisor(vm)
+    if hv == 'kvm':
+        hv_form = KvmModifyVirtualMachineForm
+    elif hv == 'xen-pvm':
+        hv_form = PvmModifyVirtualMachineForm
+    elif hv == 'xen-hvm':
+        hv_form = HvmModifyVirtualMachineForm
 
     if request.method == 'POST':
         
@@ -799,22 +791,14 @@ def modify(request, cluster_slug, instance):
 def modify_confirm(request, cluster_slug, instance):
     vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
 
-    hv = None
     hv_form = None
-    if vm.info:
-        info = vm.info['hvparams']
-        if 'serial_console' in info:
-            # KVM
-            hv = 'kvm'
-            hv_form = KvmModifyVirtualMachineForm
-        elif 'initrd_path' in info:
-            # PVM
-            hv = 'xen-pvm'
-            hv_form = PvmModifyVirtualMachineForm
-        elif 'acpi' in info:
-            # HVM
-            hv = 'xen-hvm'
-            hv_form = HvmModifyVirtualMachineForm
+    hv = get_hypervisor(vm)
+    if hv == 'kvm':
+        hv_form = KvmModifyVirtualMachineForm
+    elif hv == 'xen-pvm':
+        hv_form = PvmModifyVirtualMachineForm
+    elif hv == 'xen-hvm':
+        hv_form = HvmModifyVirtualMachineForm
 
     user = request.user
     power = user.is_superuser or user.has_any_perms(vm, ['admin','power'])
