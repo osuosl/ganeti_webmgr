@@ -75,9 +75,15 @@ USAGE:
                                 argvalue	= $this.html().replace("%","");	// parse percentage
                             }
                             else if (config.textFormat == 'fraction'){
-                                var parts   = $this.html().split('/');
-                                argvalue    = parts[0].replace(' ', '');
-                                config.max  = parts[1].replace(' ', '');
+                                try{
+                                    var parts   = $this.html().split('/');
+                                    argvalue    = parts[0].replace(' ', '');
+                                    config.max  = parts[1].replace(' ', '');
+                                }
+                                catch(e){
+                                    argvalue = 0;
+                                    config.max = 0;
+                                }
                             }
                         //}
 						
