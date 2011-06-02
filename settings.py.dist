@@ -200,19 +200,21 @@ ITEMS_PER_PAGE = 10
 LAZY_CACHE_REFRESH = 60000
 PERIODIC_CACHE_REFRESH = 15
 
-# Enable the VNC proxy.  When enabled this will use the proxy to create local
-# ports that are forwarded to the virtual machines.  It allows you to control
-# access to the VNC servers.  When disabled, the console tab will connect 
-# directly to the VNC server running on the virtual machine.
+# VNC Proxy. This will use a proxy to create local ports that are forwarded to
+# the virtual machines.  It allows you to control access to the VNC servers.
 #
-# Expected values: False if no proxy, string with proxy host and port otherwise
-# String syntax: "HOST:PORT", for example: "localhost:8888". Instead of
-# "localhost" you should use the hostname of your proxy server.
+# Expected values:
+#   String syntax: "HOST:CONTROL_PORT", for example: "localhost:8888". If
+#   localhost is used then the proxy will only be accessible to clients and
+#   browsers on localhost. Production servers should use a publicly accessible
+#   hostname or IP
 #
-# Note: you will probably have to open more ports in firewall. For proxy's default
-# settings, it uses port 8888 for listening for requests and ports 7000..8000
-# for serving proxy.
-#
+# Firewall Rules:
+#   Control Port: 8888, must be open between Ganeti Web Manager and Proxy
+#   Internal Ports: 12000+ must be open between the Proxy and Ganeti Nodes
+#   External Ports: default is 7000-8000, must be open between Proxy and Clients
+#   Flash Policy Server: 843, must open between Proxy and Clients
+
 VNC_PROXY='localhost:8888'
 
 
