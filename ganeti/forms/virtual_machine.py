@@ -15,7 +15,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 import copy
-from itertools import chain
 
 from django import forms
 from django.forms import ValidationError

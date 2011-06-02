@@ -163,3 +163,18 @@ def contains(e, t):
     Determine whether or not the element e is contained within the list of tuples t
     """
     return any(e == v[0] for v in t)
+
+def get_hypervisor(vm):
+    """
+    Given a VirtualMachine object, return its hypervisor depending on what hvparam fields
+    it contains.
+    """
+    if vm.info:
+        info = vm.info['hvparams']
+        if 'serial_console' in info:
+            return 'kvm'
+        elif 'initrd_path' in info:
+            return 'xen-pvm'
+        elif 'acpi' in info:
+            return 'xen-hvm'
+    return None
