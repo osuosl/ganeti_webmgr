@@ -22,7 +22,7 @@ from django.contrib.auth.decorators import login_required
 from django import forms
 from django.forms import ValidationError
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound, Http404
-from django.shortcuts import get_object_or_404, render_to_response
+from django.shortcuts import render_to_response
 from django.template import RequestContext
 from ganeti.utilities import cluster_default_info
 from django.utils.translation import ugettext as _
@@ -34,7 +34,7 @@ from util.client import GanetiApiError
 log_action = LogItem.objects.log_action
 
 from ganeti import constants
-from ganeti.models import Node, Cluster
+from ganeti.models import Node
 from ganeti.views import render_403
 from ganeti.views.virtual_machine import render_vms
 
