@@ -133,7 +133,7 @@ class TestVirtualMachineCreateHelpers(TestVirtualMachineViewsBase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/json', response['content-type'])
         content = json.loads(response.content)
-        self.assertEqual([u'gtest1.osuosl.bak', u'gtest2.osuosl.bak', u'gtest3.osuosl.bak'], content['nodes'])
+        self.assertEqual(set([u'gtest1.osuosl.bak', u'gtest2.osuosl.bak', u'gtest3.osuosl.bak']), set(content['nodes']))
         self.assertEqual(content["os"],
             [[u'Image',
                 [[u'image+debian-osgeo', u'Debian Osgeo'],
@@ -149,7 +149,7 @@ class TestVirtualMachineCreateHelpers(TestVirtualMachineViewsBase):
         self.assertEqual('application/json', response['content-type'])
         content = json.loads(response.content)
 
-        self.assertEqual([u'gtest1.osuosl.bak', u'gtest2.osuosl.bak', u'gtest3.osuosl.bak'], content['nodes'])
+        self.assertEqual(set([u'gtest1.osuosl.bak', u'gtest2.osuosl.bak', u'gtest3.osuosl.bak']), set(content['nodes']))
         self.assertEqual(content["os"],
             [[u'Image',
                 [[u'image+debian-osgeo', u'Debian Osgeo'],
