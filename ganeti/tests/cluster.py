@@ -1088,7 +1088,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertEqual([], group.get_perms(cluster))
-        self.assertEqual('"group_1"', response.content)
+        self.assertEqual('"group_%s"'%group.id, response.content)
         
         # quota should be deleted (and showing default)
         self.assertEqual(1, cluster.get_quota(group.organization)['default'])
