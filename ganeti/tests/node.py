@@ -18,8 +18,8 @@
 from datetime import datetime
 import json
 
+
 from django.contrib.auth.models import User
-from django.db.utils import IntegrityError
 from django.test import TestCase
 
 from django_test_tools.users import UserTestMixin
@@ -96,13 +96,6 @@ class TestNodeModel(TestCase, NodeTestCaseMixin):
         self.assertTrue(node.id)
         self.assertEqual('node.test.org', node.hostname)
         self.assertFalse(node.error)
-        
-        # test unique constraints
-        node = Node(cluster=cluster, hostname=node_hostname)
-        self.assertRaises(IntegrityError, node.save)
-        
-        # Remove cluster
-        Cluster.objects.all().delete();
     
     def test_save(self):
         """
