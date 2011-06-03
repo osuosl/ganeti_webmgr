@@ -33,6 +33,9 @@ __all__ = ('TestProfileModel', 'TestAccountViews',)
 
 class TestProfileModel(TestCase):
 
+    def setUp(self):
+        self.tearDown()
+
     def tearDown(self):
         Profile.objects.all().delete()
         User.objects.all().delete()
@@ -60,6 +63,8 @@ class TestProfileModel(TestCase):
 class TestAccountViews(TestCase):
     
     def setUp(self):
+        self.tearDown()
+
         user = User(username='tester', email='test@test.com')
         user.set_password('secret')
         user.save()

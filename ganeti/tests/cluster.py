@@ -47,6 +47,7 @@ global cluster, c
 class TestClusterModel(TestCase):
     
     def setUp(self):
+        self.tearDown()
         models.client.GanetiRapiClient = RapiProxy
     
     def tearDown(self):

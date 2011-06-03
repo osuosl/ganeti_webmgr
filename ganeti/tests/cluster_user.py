@@ -34,18 +34,19 @@ __all__ = ('TestClusterUser',)
 class TestClusterUser(TestCase):
     
     def setUp(self):
+        self.tearDown()
         models.client.GanetiRapiClient = RapiProxy
 
     def tearDown(self):
-        User.objects.all().delete()
+        Quota.objects.all().delete()
+        Profile.objects.all().delete()
         ClusterUser.objects.all().delete()
+        User.objects.all().delete()
         Organization.objects.all().delete()
         Group.objects.all().delete()
-        Profile.objects.all().delete()
         VirtualMachine.objects.all().delete()
         Cluster.objects.all().delete()
-        Quota.objects.all().delete()
-    
+
     def test_user_signal(self):
         """
         Test signals related to User:

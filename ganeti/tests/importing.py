@@ -34,6 +34,8 @@ __all__ = ('ImportViews', )
 class ImportViews(TestCase):
 
     def setUp(self):
+        self.tearDown()
+
         models.client.GanetiRapiClient = RapiProxy
 
         user = User(id=2, username='tester0')

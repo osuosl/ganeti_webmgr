@@ -39,6 +39,7 @@ class TestGanetiErrorBase():
     """
     
     def setUp(self):
+        self.tearDown()
         models.client.GanetiRapiClient = RapiProxy
 
     def tearDown(self):

@@ -40,6 +40,8 @@ __all__ = ('TestGeneralViews', )
 class TestGeneralViews(TestCase, ViewTestMixin):
     
     def setUp(self):
+        self.tearDown()
+
         models.client.GanetiRapiClient = RapiProxy
 
         cluster = Cluster(hostname='test.osuosl.test', slug='OSL_TEST')

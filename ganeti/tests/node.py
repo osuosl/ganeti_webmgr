@@ -63,6 +63,7 @@ class NodeTestCaseMixin():
 class TestNodeModel(TestCase, NodeTestCaseMixin):
     
     def setUp(self):
+        self.tearDown()
         models.client.GanetiRapiClient = RapiProxy
 
     def tearDown(self):

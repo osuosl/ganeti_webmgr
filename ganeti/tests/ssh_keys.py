@@ -25,12 +25,16 @@ from django.test.client import Client
 from object_permissions import *
 from ganeti.models import SSHKey, validate_sshkey
 
+global user, user1, admin, key, c
+
 
 __all__ = ('TestSSHKeys', )
 
 class TestSSHKeys(TestCase):
     
     def setUp(self):
+        self.tearDown()
+
         # anonymous user
         User(id=1, username='anonymous').save()
         settings.ANONYMOUS_USER_ID=1

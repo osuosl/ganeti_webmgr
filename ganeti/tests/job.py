@@ -36,6 +36,8 @@ Job = models.Job
 class TestJobMixin(VirtualMachineTestCaseMixin):
 
     def setUp(self):
+        self.tearDown()
+
         models.client.GanetiRapiClient = RapiProxy
         
         d = globals()
