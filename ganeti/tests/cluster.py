@@ -40,6 +40,10 @@ Job = models.Job
 __all__ = ('TestClusterViews', 'TestClusterModel')
 
 
+global user, user1, group, cluster_admin, superuser
+global cluster, c
+
+
 class TestClusterModel(TestCase):
     
     def setUp(self):
@@ -666,7 +670,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'cluster/detail.html')
         cluster = response.context['cluster']
-	self.assertNotEqual(None, cluster.info)
+        self.assertNotEqual(None, cluster.info)
         del data_['confirm_password']
         for k, v in data_.items():
             self.assertEqual(v, getattr(cluster, k))
