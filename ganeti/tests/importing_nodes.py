@@ -101,7 +101,7 @@ class NodeMissingDBTests(NodeImportBase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'importing/nodes/import.html')
-        self.assertEqual([('1:node2','test0','node2')], response.context['nodes'])
+        self.assertEqual([('%s:node2'%self.cluster0.pk,'test0','node2')], response.context['nodes'])
 
     def test_get_form_superuser(self):
         """ authorized get (superuser) """
@@ -110,7 +110,7 @@ class NodeMissingDBTests(NodeImportBase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'importing/nodes/import.html')
-        self.assertEqual([('1:node2','test0','node2'), ('2:node5','test1','node5')], response.context['nodes'])
+        self.assertEqual([('%s:node2'%self.cluster0.pk,'test0','node2'), ('%s:node5'%self.cluster1.pk,'test1','node5')], response.context['nodes'])
 
     def test_invalid_node(self):
         """ POST - invalid node """
@@ -135,7 +135,7 @@ class NodeMissingDBTests(NodeImportBase):
     def test_successful_import(self):
         """ POST - success """
         self.assertTrue(self.c.login(username=self.authorized.username, password='secret'))
-        data = {'nodes':['1:node2']}
+        data = {'nodes':['%s:node2'%self.cluster0.pk]}
         response = self.c.post(self.url, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
