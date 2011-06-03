@@ -174,7 +174,10 @@ add_introspection_rules([], ["^ganeti\.fields\.PreciseDateTimeField"])
 class SQLSumIf(models.sql.aggregates.Aggregate):
     is_ordinal = True
     sql_function = 'SUM'
-    sql_template= '%(function)s(CASE %(condition)s WHEN 1 THEN %(field)s ELSE NULL END)'
+    # XXX not all databases treat 1 and True the same, or have True. Use the
+    # expression 1=1 which always evaluates true with a value compatible with
+    # the database.
+    sql_template= "%(function)s(CASE %(condition)s WHEN 1=1 THEN %(field)s ELSE NULL END)"
 
 
 class SumIf(models.Aggregate):
