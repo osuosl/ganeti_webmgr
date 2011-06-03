@@ -24,7 +24,7 @@ from django.test import TestCase
 from django.test.client import Client
 from django_test_tools.users import UserTestMixin
 from django_test_tools.views import ViewTestMixin
-from ganeti.models import SSHKey
+from ganeti.models import SSHKey, Profile
 
 from object_permissions import *
 
@@ -51,6 +51,7 @@ class TestClusterModel(TestCase):
         models.client.GanetiRapiClient = RapiProxy
     
     def tearDown(self):
+        Profile.objects.all().delete()
         User.objects.all().delete()
         Quota.objects.all().delete()
         VirtualMachine.objects.all().delete()
@@ -148,19 +149,19 @@ class TestClusterModel(TestCase):
         cluster.set_quota(user.get_profile(), user_quota)
         query = Quota.objects.filter(cluster=cluster, user=user.get_profile())
         self.assert_(query.exists())
-        self.assertEqual(user_quota, cluster.get_quota(user))
+        self.assertEqual(user_quota, cluster.get_quota(user.get_profile()))
         
         # update quota with new values
         cluster.set_quota(user.get_profile(), user_quota2)
         query = Quota.objects.filter(cluster=cluster, user=user.get_profile())
         self.assertEqual(1, query.count())
-        self.assertEqual(user_quota2, cluster.get_quota(user))
+        self.assertEqual(user_quota2, cluster.get_quota(user.get_profile()))
         
         # delete quota
         cluster.set_quota(user.get_profile(), None)
         query = Quota.objects.filter(cluster=cluster, user=user.get_profile())
         self.assertFalse(query.exists())
-        self.assertEqual(default_quota, cluster.get_quota(user))
+        self.assertEqual(default_quota, cluster.get_quota(user.get_profile()))
     
     def test_sync_virtual_machines(self):
         """
