@@ -33,8 +33,11 @@ __all__ = ['NodeMissingDBTests', 'NodeMissingTests']
 
 class NodeImportBase(TestCase):
     url = ''
+    c = None
 
     def setUp(self):
+        self.tearDown()
+        
         models.client.GanetiRapiClient = RapiProxy
 
         self.unauthorized = User(id=2, username='tester0')
@@ -67,7 +70,8 @@ class NodeImportBase(TestCase):
         self.c = Client()
 
     def tearDown(self):
-        self.c.logout()
+        if self.c is not None:
+            self.c.logout()
         Node.objects.all().delete()
         Cluster.objects.all().delete()
         Profile.objects.all().delete()
