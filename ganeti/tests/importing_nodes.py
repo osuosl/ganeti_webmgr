@@ -21,7 +21,7 @@ from django.test import TestCase
 from django.test.client import Client
 from ganeti.models import Node
 
-from ganeti.tests.rapi_proxy import RapiProxy
+from ganeti.tests.rapi_proxy import RapiProxy, NODES
 from ganeti import models
 Cluster = models.Cluster
 VirtualMachine = models.VirtualMachine
@@ -34,6 +34,8 @@ __all__ = ['NodeMissingDBTests', 'NodeMissingTests']
 class NodeImportBase(TestCase):
     url = ''
     c = None
+    cluster0 = None
+    cluster1 = None
 
     def setUp(self):
         self.tearDown()
@@ -70,6 +72,12 @@ class NodeImportBase(TestCase):
         self.c = Client()
 
     def tearDown(self):
+        # reset proxy object default values, could cause collisions in other tests
+        if self.cluster0 is not None:
+            self.cluster0.rapi.GetNodes.response = NODES
+        if self.cluster1 is not None:
+            self.cluster1.rapi.GetNodes.response = NODES
+
         if self.c is not None:
             self.c.logout()
         Node.objects.all().delete()
