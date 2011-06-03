@@ -29,7 +29,7 @@ from ganeti.tests.rapi_proxy import RapiProxy, NODE
 from ganeti import models
 from util.client import GanetiApiError
 
-from ganeti.views import node
+from ganeti.views import node as view_node
 
 VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
@@ -41,14 +41,15 @@ __all__ = (
     'TestNodeViews',
 )
 
+global user_admin, user_migrate, superuser
+global cluster, node
 
 def cluster_default_info_proxy(cluster):
     return {
         'iallocator':'foo'
     }
 
-node.cluster_default_info = cluster_default_info_proxy
-
+view_node.cluster_default_info = cluster_default_info_proxy
 
 
 class NodeTestCaseMixin():
@@ -258,21 +259,21 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
         
         # test posts
         def test(user, response):
-            data = json.loads(response.content);
+            data = json.loads(response.content)
             self.assertTrue('opstatus' in data)
         data = {'role':'master-candidate'}
         self.assert_200(url, args, users, method='post', data=data, mime='application/json', tests=test)
         
         #test form error
         def test(user, response):
-            data = json.loads(response.content);
+            data = json.loads(response.content)
             self.assertFalse('opstatus' in data)
         self.assert_200(url, args, [superuser], method='post', \
                 mime='application/json', data={}, tests=test)
 
         #test ganeti error
         def test(user, response):
-            data = json.loads(response.content);
+            data = json.loads(response.content)
             self.assertFalse('opstatus' in data)
         node.rapi.SetNodeRole.error = GanetiApiError("Testing Error")
         self.assert_200(url, args, [superuser], method='post', mime='application/json', data=data, tests=test)
@@ -287,21 +288,21 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
         
         #test posts
         def test(user, response):
-            data = json.loads(response.content);
+            data = json.loads(response.content)
             self.assertTrue('opstatus' in data)
         data = {'mode':'live'}
         self.assert_200(url, args, users, method='post', data=data, mime='application/json', tests=test)
         
         #test form error
         def test(user, response):
-            data = json.loads(response.content);
+            data = json.loads(response.content)
             self.assertFalse('opstatus' in data)
         self.assert_200(url, args, [superuser], method='post', \
                 mime='application/json', data={}, tests=test)
 
         #test ganeti error
         def test(user, response):
-            data = json.loads(response.content);
+            data = json.loads(response.content)
             self.assertFalse('opstatus' in data)
         node.rapi.MigrateNode.error = GanetiApiError("Testing Error")
         self.assert_200(url, args, [superuser], method='post', mime='application/json', data=data, tests=test)
@@ -341,7 +342,7 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
 
         # Test GanetiError
         def test(user, response):
-            data = json.loads(response.content);
+            data = json.loads(response.content)
             self.assertFalse('opstatus' in data)
         node.rapi.EvacuateNode.error = GanetiApiError("Testing Error")
         self.assert_200(url, args, [superuser], data=data, method='post', mime='application/json', tests=test)
