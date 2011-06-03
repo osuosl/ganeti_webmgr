@@ -1384,15 +1384,17 @@ class ClusterUser(models.Model):
 
         # XXX - use a custom aggregate for ram and vcpu count when filtering by
         # running.  this allows us to execute a single query.
+        #
+        # XXX - quotes must be used in this order.  postgresql quirk
         if only_running:
-            sum_ram = SumIf('ram', condition='status="running"')
-            sum_vcpus = SumIf('virtual_cpus', condition='status="running"')
+            sum_ram = SumIf('ram', condition="status='running'")
+            sum_vcpus = SumIf('virtual_cpus', condition="status='running'")
         else:
             sum_ram = Sum('ram')
             sum_vcpus = Sum('virtual_cpus')
         
         base = base.exclude(ram=-1, disk_size=-1, virtual_cpus=-1)
-        
+
         if cluster:
             base = base.filter(cluster=cluster)
             result = base.aggregate(ram=sum_ram, disk=Sum('disk_size'), \
