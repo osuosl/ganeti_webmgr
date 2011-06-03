@@ -28,6 +28,7 @@ __all__ = ('TestRapiCache',)
 class TestRapiCache(TestCase):
     
     def setUp(self):
+        self.tearDown()
         self.cluster = Cluster(hostname='ganeti.osuosl.test')
         self.cluster.save()
     
