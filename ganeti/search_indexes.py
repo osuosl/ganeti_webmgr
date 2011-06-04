@@ -8,13 +8,17 @@ This is where the search indexes are defined. They fill the Haystack search
 query set (the set of objects that are searchable.) There should be one index 
 defined per GWM model.
 
-Note that I'm using `RealTimeSearchIndex` to index the GWM models every time
-it changes. This keeps things up-to-date at the cost of some performance. If
-you're experienceing db performance issues, try using `SearchIndex` instead and
-run `./manage.py update_index` every half-hour or so. (For more information,
-see 
+Note that we're using the `SearchIndex` update-based search indexer. This means
+the search index will need to be updated periodically with 
+`./manage.py update_index`
+
+Previously, we were using `RealTimeSearchIndex` which updated the index anytime
+an associated GWM model changed in the database. Concerns about database
+performance, database locking issues, and dev server socket problems pushed us 
+away from this indexer.
+
+For more informaiton about the availible search indexers, see 
 http://docs.haystacksearch.org/dev/searchindex_api.html#keeping-the-index-fresh
-)
 '''
 
 class VirtualMachineIndex(SearchIndex):
