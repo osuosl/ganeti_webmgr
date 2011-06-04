@@ -314,6 +314,8 @@ a.clear:hover {background:url(/media/images/icons/cancel.png) no-repeat !importa
 #messages pre.error {text-align:left;}
 #messages .op_log {
     border-top:1px solid #124612;
+    border-left:0;
+    border-right:0;
     margin:0;
     padding: 10px;
     overflow:visible;
