@@ -1,5 +1,5 @@
-from haystack.indexes import *
 from haystack import site
+from haystack.indexes import *
 from ganeti.models import VirtualMachine, Cluster, Node
 
 ''' Haystack search indexex.
@@ -17,7 +17,7 @@ http://docs.haystacksearch.org/dev/searchindex_api.html#keeping-the-index-fresh
 )
 '''
 
-class VirtualMachineIndex(RealTimeSearchIndex):
+class VirtualMachineIndex(SearchIndex):
     ''' Search index for VirtualMachines '''
 
     text = CharField(document=True, use_template=True)
@@ -34,7 +34,7 @@ class VirtualMachineIndex(RealTimeSearchIndex):
 
 site.register(VirtualMachine, VirtualMachineIndex)
 
-class ClusterIndex(RealTimeSearchIndex):
+class ClusterIndex(SearchIndex):
     ''' Search index for Clusters '''
 
     text = CharField(document=True, use_template=True)
