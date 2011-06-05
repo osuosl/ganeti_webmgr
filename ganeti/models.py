@@ -1584,8 +1584,8 @@ muddle_user_signals.view_group_edited.connect(log_group_edit)
 # These are part of the DB schema and should not be changed without serious
 # forethought.
 # You *must* syncdb after you change these.
-register(permissions.CLUSTER_PARAMS, Cluster)
-register(permissions.VIRTUAL_MACHINE_PARAMS, VirtualMachine)
+register(permissions.CLUSTER_PARAMS, Cluster, 'ganeti')
+register(permissions.VIRTUAL_MACHINE_PARAMS, VirtualMachine, 'ganeti')
 
 
 # register log actions
