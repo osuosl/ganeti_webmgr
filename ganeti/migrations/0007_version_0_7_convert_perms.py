@@ -18,13 +18,36 @@ class Migration(DataMigration):
         Cluster_Perms = orm['ganeti.cluster_perms']
         Old_Perms = orm['object_permissions.cluster_perms']
         for old_perm in Old_Perms.objects.all():
-            Cluster_Perms.create(**old_perm.__dict__)
+            perm = Cluster_Perms()
+            perm.pk = old_perm.pk
+            perm.user = old_perm.user
+            perm.group = old_perm.group
+            perm.user = old_perm.user
+            perm.obj = old_perm.obj
+            perm.admin = old_perm.admin
+            perm.create_vm = old_perm.create_vm
+            perm.export = old_perm.export
+            perm.migrate = old_perm.migrate
+            perm.replace_disks = old_perm.replace_disks
+            perm.tags = old_perm.tags
+            perm.save()
 
         # Convert VirtualMachine permissions
         VirtualMachine_Perms = orm['ganeti.virtualmachine_perms']
         Old_Perms = orm['object_permissions.virtualmachine_perms']
         for old_perm in Old_Perms.objects.all():
-            VirtualMachine_Perms.create(**old_perm.__dict__)
+            perm = VirtualMachine_Perms()
+            perm.pk = old_perm.pk
+            perm.user = old_perm.user
+            perm.group = old_perm.group
+            perm.user = old_perm.user
+            perm.obj = old_perm.obj
+            perm.admin = old_perm.admin
+            perm.modify = old_perm.modify
+            perm.power = old_perm.power
+            perm.remove = old_perm.remove
+            perm.tags = old_perm.tags
+            perm.save()
     
     
     def backwards(self, orm):
@@ -33,14 +56,38 @@ class Migration(DataMigration):
         # Convert cluster permissions
         Cluster_Perms = orm['ganeti.cluster_perms']
         Old_Perms = orm['object_permissions.cluster_perms']
-        for old_perm in Cluster_Perms.objects.all():
-            Old_Perms.create(**old_perm.__dict__)
+        for new_perm in Cluster_Perms.objects.all():
+            perm = Old_Perms()
+            perm.pk = new_perm.pk
+            perm.user = new_perm.user
+            perm.group = new_perm.group
+            perm.user = new_perm.user
+            perm.obj = new_perm.obj
+            perm.admin = new_perm.admin
+            perm.create_vm = new_perm.create_vm
+            perm.export = new_perm.export
+            perm.migrate = new_perm.migrate
+            perm.replace_disks = new_perm.replace_disks
+            perm.tags = new_perm.tags
+            perm.save()
 
         # Convert VirtualMachine permissions
         VirtualMachine_Perms = orm['ganeti.virtualmachine_perms']
         Old_Perms = orm['object_permissions.virtualmachine_perms']
-        for old_perm in VirtualMachine_Perms.objects.all():
-            Old_Perms.create(**old_perm.__dict__)
+        for new_perm in VirtualMachine_Perms.objects.all():
+            perm = Old_Perms()
+            perm.pk = new_perm.pk
+            perm.user = new_perm.user
+            perm.group = new_perm.group
+            perm.user = new_perm.user
+            perm.obj = new_perm.obj
+            perm.admin = new_perm.admin
+            perm.create_vm = new_perm.create_vm
+            perm.export = new_perm.export
+            perm.migrate = new_perm.migrate
+            perm.replace_disks = new_perm.replace_disks
+            perm.tags = new_perm.tags
+            perm.save()
 
     
     models = {
