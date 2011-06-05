@@ -212,3 +212,6 @@ urlpatterns += patterns('haystack.views',
 urlpatterns += patterns('ganeti.views.search',
     url(r'^search.json', 'search_json', name='search-json')
 )
+urlpatterns += patterns('ganeti.views.search',
+    url(r'^search/detail_lookup.json', 'detail_lookup', name='detail-lookup')
+)

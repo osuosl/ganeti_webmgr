@@ -70,3 +70,7 @@ def search_json(request):
     return HttpResponse(json.dumps(result_objects, indent=4), 
             mimetype='application/json')
     
+def detail_lookup(request):
+    
+
+    return HttpResponse('', mimetype='application/json')
