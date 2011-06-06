@@ -482,18 +482,10 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
             self.owner
         except AttributeError:
             self.owner = vm.owner
-        # No easy way to rename a field, so copy to 
-        #   new field and delete old field
-        if 'os' in self.fields and self.fields['os']:
-            self.fields['os_name'] = copy.copy(self.fields['os'])
-            del self.fields['os']
 
         # Setup os choices
-        try:
-            os_list = cluster_os_list(vm.cluster)
-            self.fields['os_name'].choices = os_list
-        except AttributeError:
-            pass
+        os_list = cluster_os_list(vm.cluster)
+        self.fields['os'].choices = os_list
 
         for field in self.always_required:
             self.fields[field].required = True
@@ -518,7 +510,7 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
             self.fields['memory'].initial = str(info['beparams']['memory'])
             self.fields['nic_link'].initial = info['nic.links'][0]
             self.fields['nic_mac'].initial = info['nic.macs'][0]
-            self.fields['os_name'].initial = info['os']
+            self.fields['os'].initial = info['os']
             
             try:
                 if self.hvparam_fields:

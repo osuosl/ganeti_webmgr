@@ -826,7 +826,7 @@ def modify_confirm(request, cluster_slug, instance):
                 nicmac = rapi_dict.pop('nic_mac', None)
                 vcpus = rapi_dict.pop('vcpus')
                 memory = rapi_dict.pop('memory')
-                os_name = rapi_dict.pop('os_name')
+                os_name = rapi_dict.pop('os')
                 # Modify Instance rapi call
                 if nicmac is None:
                     nics=[(0, {'link':niclink,}),]
@@ -880,7 +880,7 @@ def modify_confirm(request, cluster_slug, instance):
         nic_mac=info['nic.macs'][0],
         memory=info['beparams']['memory'],
         vcpus=info['beparams']['vcpus'],
-        os_name=info['os'],
+        os=info['os'],
     )
     # Add hvparams to the old_set
     old_set.update(hvparams)
@@ -891,7 +891,7 @@ def modify_confirm(request, cluster_slug, instance):
         if key == 'memory':
             diff = compare(render_storage(old_set[key]),
                 render_storage(data[key]))
-        elif key == 'os_name':
+        elif key == 'os':
             oses = os_prettify([old_set[key], data[key]])
             if len(oses) > 1:
                 """

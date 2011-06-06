@@ -295,7 +295,7 @@ class TestKvmModifyVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         """
         Test that the form does not contain any extra fields.
         """
-        modify_fields = ('vcpus', 'memory', 'nic_link', 'nic_mac', 'os_name')
+        modify_fields = ('vcpus', 'memory', 'nic_link', 'nic_mac', 'os')
         hv_fields = KvmModifyVirtualMachineForm.hvparam_fields
         form = KvmModifyVirtualMachineForm(kvm_vm)
 
@@ -350,7 +350,7 @@ class TestHvmModifyVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         """
         Test that the form does not contain any extra fields.
         """
-        modify_fields = ('vcpus', 'memory', 'nic_link', 'nic_mac', 'os_name')
+        modify_fields = ('vcpus', 'memory', 'nic_link', 'nic_mac', 'os')
         hv_fields = HvmModifyVirtualMachineForm.hvparam_fields
         form = HvmModifyVirtualMachineForm(hvm_vm)
 
@@ -409,7 +409,7 @@ class TestPvmModifyVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         """
         Test that the form does not contain any extra fields.
         """
-        modify_fields = ('vcpus', 'memory', 'nic_link', 'nic_mac', 'os_name')
+        modify_fields = ('vcpus', 'memory', 'nic_link', 'nic_mac', 'os')
         hv_fields = PvmModifyVirtualMachineForm.hvparam_fields
         form = PvmModifyVirtualMachineForm(pvm_vm)
 
@@ -421,7 +421,7 @@ class TestPvmModifyVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
 
     def test_bound_form(self):
         data = dict(
-            os_name = 'image+default',
+            os = 'image+default',
             vcpus = 2,
             memory = 200,
         )
