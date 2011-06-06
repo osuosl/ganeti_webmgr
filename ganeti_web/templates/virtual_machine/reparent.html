@@ -4,26 +4,32 @@
 {% block title %}{% trans "Rename" %} Virtual Machine{% endblock %}
 
 {% block head %}
-    <link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}/css/virtual_machine_create.css"/>
-    <script src="{{MEDIA_URL}}/js/createVM_helpTips.js"></script>
-    <script type="text/javascript">initHelpTips();</script>
+    <link rel="stylesheet" type="text/css"
+            href="{{MEDIA_URL}}/css/virtual_machine_create.css"/>
+    <script src="{{MEDIA_URL}}/js/helpTips.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            initHelpTips("#virtualmachineform");
+        });
+    </script>
 {% endblock %}
 
 {% block content %}
-    <h1>
-        {% if cluster_admin %}
-        <a class="breadcrumb" href="{% url cluster-detail cluster.slug %}#virtual_machines">{{cluster.hostname|abbreviate_fqdn}}</a>
-        {% else %}
-        <span class="breadcrumb">{{cluster.hostname|abbreviate_fqdn}}</span>
-        {% endif %}
-        : <a class="breadcrumb" href="{% url instance-detail cluster.slug vm.hostname %}">{{ vm.hostname }}</a>
-        : {% trans "Change Owner" %}
-    </h1>
-
     <div id="virtualmachineform">
         <form method="post">
-            {% vmfield form.owner %}
-            <input class="submit" type="submit" value="Save">
+            <fieldset>
+                <h1>
+                    {% if cluster_admin %}
+                    <a class="breadcrumb" href="{% url cluster-detail cluster.slug %}#virtual_machines">{{cluster.hostname|abbreviate_fqdn}}</a>
+                    {% else %}
+                    <span class="breadcrumb">{{cluster.hostname|abbreviate_fqdn}}</span>
+                    {% endif %}
+                    : <a class="breadcrumb" href="{% url instance-detail cluster.slug vm.hostname %}">{{ vm.hostname }}</a>
+                    : {% trans "Change Owner" %}
+                </h1>
+                {% vmfield form.owner %}
+                <input class="submit" type="submit" value="Save">
+            </fieldset>
         </form>
     </div>
 
@@ -33,8 +39,6 @@
     </div>
 
     <div id="help-contents">
-        {# performatted help content that will be copied into the help div #}
-
-        
+       {% include "helptips/vm_create.html" %} 
     </div>
 {% endblock %}
