@@ -60,6 +60,6 @@ class NodeIndex(RealTimeSearchIndex):
     content_auto = EdgeNgramField(model_attr='hostname')
 
     def get_queryset(self):
-        return Cluster.objects.all()
+        return Node.objects.all()
 
 site.register(Node, NodeIndex)
