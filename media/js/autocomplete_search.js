@@ -12,7 +12,10 @@ function autocomplete_search(search_box, search_form, search_URL, lookup_URL){
      *      `search_form`:  The form that contains the search box as a jQuery
      *              object, e.g. $('#search_form')
      *      `search_URL`:   The url responsible for returning the search
-     *              suggestions as a JSON object, e.g. '/search.json'
+     *              suggestions as a JSON object, e.g. 
+     *              '/search-suggestions.json'
+     *      `lookup_URL`:   The url responsible for returning the absolute URL
+     *              to the details page for a GWM object
      *
      * Example markup:
      *      <form id='search_form' action='/search' method='GET'>
@@ -51,17 +54,15 @@ function autocomplete_search(search_box, search_form, search_URL, lookup_URL){
         // When an item is selected, bypass the search results and go directly
         // to the item's detail page
         select: function(event, ui){
-            $.ajax({
-                url: lookup_URL, 
-                dataType: 'text/json',
-                data: {
+            $.getJSON(lookup_URL, 
+                {
                     'type': ui.item.type,
                     'hostname': ui.item.value
                 },
-                success: function(details_url){
-                    //window.location = details_url;
+                function(details_url){
+                    window.location = details_url;
                 }
-            });
+            );
         }
     })
 
