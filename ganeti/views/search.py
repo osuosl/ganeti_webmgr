@@ -67,6 +67,7 @@ def suggestions(request):
 
 @login_required
 def detail_lookup(request):
+    ''' Look up the detail page URL for the given item '''
     object_type = request.GET.get('type', None)
     hostname = request.GET.get('hostname', None)
     URL = []
