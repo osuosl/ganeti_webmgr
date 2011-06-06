@@ -1,57 +1,94 @@
 # encoding: utf-8
 import datetime
 from south.db import db
-from south.v2 import SchemaMigration
+from south.v2 import DataMigration
 from django.db import models
 
-class Migration(SchemaMigration):
+class Migration(DataMigration):
     
     def forwards(self, orm):
-        
-        # Adding model 'Cluster_Perms'
-        db.create_table('ganeti_cluster_perms', (
-            ('obj', self.gf('django.db.models.fields.related.ForeignKey')(related_name='operms', to=orm['ganeti.Cluster'])),
-            ('tags', self.gf('django.db.models.fields.IntegerField')(default=False)),
-            ('admin', self.gf('django.db.models.fields.IntegerField')(default=False)),
-            ('replace_disks', self.gf('django.db.models.fields.IntegerField')(default=False)),
-            ('create_vm', self.gf('django.db.models.fields.IntegerField')(default=False)),
-            ('migrate', self.gf('django.db.models.fields.IntegerField')(default=False)),
-            ('export', self.gf('django.db.models.fields.IntegerField')(default=False)),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(related_name='Cluster_uperms', null=True, to=orm['auth.User'])),
-            ('group', self.gf('django.db.models.fields.related.ForeignKey')(related_name='Cluster_gperms', null=True, to=orm['auth.Group'])),
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-        ))
-        db.send_create_signal('ganeti', ['Cluster_Perms'])
+        """
+        Convert permissions stored in old object permission tables (v1.3) to
+        new perm tables (v1.4)
 
-        # Adding model 'VirtualMachine_Perms'
-        db.create_table('ganeti_virtualmachine_perms', (
-            ('obj', self.gf('django.db.models.fields.related.ForeignKey')(related_name='operms', to=orm['ganeti.VirtualMachine'])),
-            ('power', self.gf('django.db.models.fields.IntegerField')(default=False)),
-            ('tags', self.gf('django.db.models.fields.IntegerField')(default=False)),
-            ('admin', self.gf('django.db.models.fields.IntegerField')(default=False)),
-            ('modify', self.gf('django.db.models.fields.IntegerField')(default=False)),
-            ('remove', self.gf('django.db.models.fields.IntegerField')(default=False)),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(related_name='VirtualMachine_uperms', null=True, to=orm['auth.User'])),
-            ('group', self.gf('django.db.models.fields.related.ForeignKey')(related_name='VirtualMachine_gperms', null=True, to=orm['auth.Group'])),
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-        ))
-        db.send_create_signal('ganeti', ['VirtualMachine_Perms'])
+            see ticket # for more details
+        """
 
-        # Adding index on 'VirtualMachine', fields ['hostname']
-        db.create_index('ganeti_virtualmachine', ['hostname'])
+        # Convert cluster permissions
+        Cluster_Perms = orm['ganeti.cluster_perms']
+        Old_Perms = orm['object_permissions.cluster_perms']
+        for old_perm in Old_Perms.objects.all():
+            perm = Cluster_Perms()
+            perm.pk = old_perm.pk
+            perm.user = old_perm.user
+            perm.group = old_perm.group
+            perm.user = old_perm.user
+            perm.obj = old_perm.obj
+            perm.admin = old_perm.admin
+            perm.create_vm = old_perm.create_vm
+            perm.export = old_perm.export
+            perm.migrate = old_perm.migrate
+            perm.replace_disks = old_perm.replace_disks
+            perm.tags = old_perm.tags
+            perm.save()
+
+        # Convert VirtualMachine permissions
+        VirtualMachine_Perms = orm['ganeti.virtualmachine_perms']
+        Old_Perms = orm['object_permissions.virtualmachine_perms']
+        for old_perm in Old_Perms.objects.all():
+            perm = VirtualMachine_Perms()
+            perm.pk = old_perm.pk
+            perm.user = old_perm.user
+            perm.group = old_perm.group
+            perm.user = old_perm.user
+            perm.obj = old_perm.obj
+            perm.admin = old_perm.admin
+            perm.modify = old_perm.modify
+            perm.power = old_perm.power
+            perm.remove = old_perm.remove
+            perm.tags = old_perm.tags
+            perm.save()
     
     
     def backwards(self, orm):
-        
-        # Deleting model 'Cluster_Perms'
-        db.delete_table('ganeti_cluster_perms')
+        "Write your backwards methods here."
 
-        # Deleting model 'VirtualMachine_Perms'
-        db.delete_table('ganeti_virtualmachine_perms')
+        # Convert cluster permissions
+        Cluster_Perms = orm['ganeti.cluster_perms']
+        Old_Perms = orm['object_permissions.cluster_perms']
+        for new_perm in Cluster_Perms.objects.all():
+            perm = Old_Perms()
+            perm.pk = new_perm.pk
+            perm.user = new_perm.user
+            perm.group = new_perm.group
+            perm.user = new_perm.user
+            perm.obj = new_perm.obj
+            perm.admin = new_perm.admin
+            perm.create_vm = new_perm.create_vm
+            perm.export = new_perm.export
+            perm.migrate = new_perm.migrate
+            perm.replace_disks = new_perm.replace_disks
+            perm.tags = new_perm.tags
+            perm.save()
 
-        # Removing index on 'VirtualMachine', fields ['hostname']
-        db.delete_index('ganeti_virtualmachine', ['hostname'])
-    
+        # Convert VirtualMachine permissions
+        VirtualMachine_Perms = orm['ganeti.virtualmachine_perms']
+        Old_Perms = orm['object_permissions.virtualmachine_perms']
+        for new_perm in VirtualMachine_Perms.objects.all():
+            perm = Old_Perms()
+            perm.pk = new_perm.pk
+            perm.user = new_perm.user
+            perm.group = new_perm.group
+            perm.user = new_perm.user
+            perm.obj = new_perm.obj
+            perm.admin = new_perm.admin
+            perm.create_vm = new_perm.create_vm
+            perm.export = new_perm.export
+            perm.migrate = new_perm.migrate
+            perm.replace_disks = new_perm.replace_disks
+            perm.tags = new_perm.tags
+            perm.save()
+
     
     models = {
         'auth.group': {
@@ -264,7 +301,33 @@ class Migration(SchemaMigration):
             'start': ('django.db.models.fields.BooleanField', [], {'default': 'True', 'blank': 'True'}),
             'template_name': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
             'vcpus': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'})
+        },
+        'object_permissions.cluster_perms': {
+            'Meta': {'object_name': 'Cluster_Perms'},
+            'admin': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'create_vm': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'export': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'group': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Cluster_gperms'", 'null': 'True', 'to': "orm['auth.Group']"}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'migrate': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'obj': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'operms'", 'to': "orm['ganeti.Cluster']"}),
+            'replace_disks': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'tags': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Cluster_uperms'", 'null': 'True', 'to': "orm['auth.User']"})
+        },
+        'object_permissions.virtualmachine_perms': {
+            'Meta': {'object_name': 'VirtualMachine_Perms'},
+            'admin': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'group': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'VirtualMachine_gperms'", 'null': 'True', 'to': "orm['auth.Group']"}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'modify': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'obj': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'operms'", 'to': "orm['ganeti.VirtualMachine']"}),
+            'power': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'remove': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'tags': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'VirtualMachine_uperms'", 'null': 'True', 'to': "orm['auth.User']"})
         }
+
     }
     
     complete_apps = ['ganeti']
