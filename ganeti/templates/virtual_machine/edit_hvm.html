@@ -29,4 +29,14 @@
         <input class="submit" type="submit" value="Continue" />
     </form>
 </fieldset>
+<div id="help">
+    <h3></h3>
+    <div></div>
+</div>
+<div id="help-contents">
+    {% include "helptips/vm.html" %}
+    {% include "helptips/vm_create.html" %}
+    {% include "helptips/vm_edit.html" %}
+    {% include "helptips/vm_edit_hvm.html" %}
+</div>
 {% endblock %}

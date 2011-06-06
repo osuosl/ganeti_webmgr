@@ -15,12 +15,19 @@ function modifyFormUpdater() {
     var tmp_vnc_x509_path = "";
     var tmp_vnc_x509_verify = false;
 
+    var os = $("#id_os");
+
     this.init = function() {
         // Hide vnc_x509_path and verify if checkbox enabled
         if( !vnc_tls.is(':checked')) {
             vnc_x509_path_field.hide();
             vnc_x509_verify.parent().hide();
         }
+
+        // Change id of os field to os_name
+        os.prev("label").attr("for", "id_os_name");
+        os.attr("id", "id_os_name");
+        os.attr("name", "os_name");
     }
 
     /**

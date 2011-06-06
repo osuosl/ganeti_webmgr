@@ -72,5 +72,12 @@
     <h3></h3>
     <div></div>
 </div>
-{% include "virtual_machine/create_help.html" %}
+<div id="help-contents">
+    {% include "helptips/vm.html" %}
+    {% include "helptips/vm_create.html" %}
+    {% include "helptips/vm_edit.html" %}
+    {% include "helptips/vm_edit_kvm.html" %}
+    {% include "helptips/vm_edit_hvm.html" %}
+    {% include "helptips/vm_edit_pvm.html" %}
+</div>
 {% endblock %}
