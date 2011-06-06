@@ -6,13 +6,13 @@
     <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.tablesorter.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
-            check_box_selector();
+            $("#import_form").select_all();
             $("#node_list").tablesorter({
                     headers: {
                             0: { sorter: 'false' },
                     }
             });
-          });
+        });
     </script>
 {% endblock %}
 {% block content %}
@@ -22,7 +22,7 @@
         {% trans "When you add nodes to ganeti they must be manually imported" %}.
     </p>
 
-    <form action="{% url import-nodes-missing_db %}" method="post">
+    <form id="import_form" action="{% url import-nodes-missing_db %}" method="post">
         {{form.errors}}
         {{form.owner.label}} {{form.owner}}
         <input type="submit" value="{% trans "Import Selected" %}" {%if not nodes%}disabled{%endif%}>

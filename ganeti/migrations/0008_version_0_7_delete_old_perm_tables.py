@@ -3,15 +3,19 @@ import datetime
 from south.db import db
 from south.v2 import SchemaMigration
 from django.db import models
+from ganeti.migrations import db_table_exists
 
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
+
         # Deleting model 'Cluster_Perms'
-        db.delete_table('object_permissions_cluster_perms')
+        if db_table_exists('object_permissions_cluster_perms'):
+            db.delete_table('object_permissions_cluster_perms')
 
         # Deleting model 'VirtualMachine_Perms'
-        db.delete_table('object_permissions_virtualmachine_perms')
+        if db_table_exists('object_permissions_virtualmachine_perms'):
+            db.delete_table('object_permissions_virtualmachine_perms')
 
     def backwards(self, orm):
          # Adding model 'Cluster_Perms'
