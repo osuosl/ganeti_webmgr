@@ -17,7 +17,7 @@
 {% block content %}
     <div id="virtualmachineform">
         <form method="post">
-            <fieldset>
+            <fieldset class="first_fieldset">
                 <h1>
                     {% if cluster_admin %}
                     <a class="breadcrumb" href="{% url cluster-detail cluster.slug %}#virtual_machines">{{cluster.hostname|abbreviate_fqdn}}</a>

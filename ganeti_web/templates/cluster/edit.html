@@ -19,7 +19,7 @@
 
 <form method="post">
     {% csrf_token %}
-    <fieldset>
+    <fieldset class="first_fieldset">
         {% if form.hostname.errors %}<p class="error">{{form.hostname.errors}}</p>{%endif%}
         <p><label for="id_hostname" class="required">{{form.hostname.label}}:</label> {{form.hostname}}</p>
         {% if cluster %}
