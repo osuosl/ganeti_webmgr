@@ -6,7 +6,7 @@
     <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.tablesorter.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
-            check_box_selector();
+            $("#orphans_form").select_all();
             $("#orphanlist").tablesorter({
                 headers: {
                     0: { sorter: 'false' },
@@ -22,7 +22,7 @@
         {% trans "Orphaned virtual machines are those that do not have an owner. Owners are not required but they allow you to track who a virtual machine was created for. Ownership does not grant permissions to a user or group but it does consume their resource quota" %}. 
     </p>
 
-    <form action="{% url import-orphans %}" method="post">
+    <form id="orphans_form" action="{% url import-orphans %}" method="post">
         {{form.errors}}
         {{form.owner.label}} {{form.owner}}
         <input type="submit" value="{% trans "Update Selected" %}" {%if not vms%}disabled{%endif%}>
