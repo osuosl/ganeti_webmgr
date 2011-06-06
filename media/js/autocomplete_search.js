@@ -29,10 +29,12 @@ function autocomplete_search(search_box, search_form, search_URL, lookup_URL){
     // keycode for the enter/return key
     var ENTER_KEYCODE = 13;
     
-    // Submit search on return/enter keypress
+    // Submit search on return/enter keypress as long as no suggestion selected
     search_box.keydown(function(event){
         if(event.keyCode == ENTER_KEYCODE){
-            //search_form.submit();
+            if(!$('.ui-autocomplete #ui-active-menuitem').is(":visible")){
+                search_form.submit();
+            }
         }
     })
    
@@ -52,8 +54,10 @@ function autocomplete_search(search_box, search_form, search_URL, lookup_URL){
         },
 
         // When an item is selected, bypass the search results and go directly
-        // to the item's detail page
+        // to the item's detail page. We do this by looking up the item's URL
+        // and setting the window location appropriately.
         select: function(event, ui){
+            search_box.attr('disabled', 'disabled');
             $.getJSON(lookup_URL, 
                 {
                     'type': ui.item.type,
