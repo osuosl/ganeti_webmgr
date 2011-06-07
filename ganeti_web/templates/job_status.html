@@ -93,7 +93,10 @@
     }
     
     function format_op(str){
-        str = str.substring(3).replace('_',' ').toLowerCase();
+        str = str.substring(3).toLowerCase();
+        while(str.indexOf('_')!=-1) {
+            str = str.replace('_',' ')
+        }
         str = cap_first(str);
         return str
     }
