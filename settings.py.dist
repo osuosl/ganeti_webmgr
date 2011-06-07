@@ -32,6 +32,7 @@ TEMPLATE_DEBUG = DEBUG
 TESTING = False
 # Setting this to False disables south migrations when running tests.
 SOUTH_TESTS_MIGRATE = False
+SKIP_SOUTH_TESTS = True
 
 ADMINS = (
     # ('Your Name', 'your_email@domain.com'),
