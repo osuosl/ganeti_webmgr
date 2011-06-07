@@ -8,62 +8,62 @@ from ganeti_web.migrations import db_table_exists
 class Migration(DataMigration):
 
     def convert(self, orm, model, fields):
-        if db_table_exists('ganeti.%s' % model):
+        if db_table_exists('ganeti_%s' % model):
             Old = orm['ganeti.%s' % model]
             New = orm['ganeti_web.%s' % model]
             for old in Old.objects.all():
                 new = New()
                 for field in fields:
                     val = old.__dict__[field]
-                    if isinstance(val, (models.Model,)):
-                        new.__dict__['%s_id'%field] = val.pk
-                    else:
-                        new.__dict__[field] = val
+                    new.__dict__[field] = val
                 new.save()
     
     def forwards(self, orm):
 
-        fields = ['pk','description','disk','hash','hostname','ignore_cache',\
-                      'last_job','mtime','password', 'port','ram',\
+        fields = ['id','description','disk','hash','hostname','ignore_cache',\
+                      'last_job_id','mtime','password', 'port','ram',\
                       'serialized_info','slug','username','virtual_cpus']
         self.convert(orm, 'cluster', fields)
 
-        fields = ['pk','name','real_type']
+        fields = ['id','name','real_type_id']
         self.convert(orm, 'clusteruser', fields)
 
-        fields = ['pk','cleared','cluster','code','msg','obj_id','obj_type','timestamp']
+        fields = ['id','cleared','cluster_id','code','msg','obj_id','obj_type_id','timestamp']
         self.convert(orm, 'ganetierror', fields)
 
-        fields = ['pk','cleared','cluster','cluster_hash','content_type',
+        fields = ['id','cleared','cluster_id','cluster_hash','content_type_id',
                   'finished','ignore_cache','job_id','mtime','object_id',
                   'serialized_info','status']
         self.convert(orm, 'job', fields)
 
-        fields = ['pk','cached','cluster','cluster_hash','disk_total',
-                  'hostname','ignore_cache','last_job','mtime','offline',
+        fields = ['id','cached','cluster_id','cluster_hash','disk_total',
+                  'hostname','ignore_cache','last_job_id','mtime','offline',
                   'ram_total','role','serialized_info']
         self.convert(orm, 'node', fields)
 
-        fields = ['pk','group']
+        fields = ['id','group_id']
         self.convert(orm, 'organization', fields)
 
-        fields = ['pk','user']
+        fields = ['id','user_id']
         self.convert(orm, 'profile', fields)
 
-        fields = ['pk','cluster','disk','ram','user','virtual_cpus']
+        fields = ['id','cluster_id','disk','ram','user_id','virtual_cpus']
         self.convert(orm, 'quota', fields)
 
-        fields = ['pk','key','user']
+        fields = ['id','key','user']
         self.convert(orm, 'sshkey', fields)
 
-        fields = ['pk','boot_order','cdrom_image_path','cluster','disk_size',
+        fields = ['id','boot_order','cdrom_image_path','cluster_id','disk_size',
                   'disk_template','disk_type','iallocator',
                   'iallocator_hostname','kernel_path','memory','name_check',
                   'nic_link','nic_mode', 'nic_type','os','pnode','root_path',
                   'serial_console','snode','start','template_name','vcpus']
         self.convert(orm, 'virtualmachinetemplate', fields)
 
-        fields = ['pk',]
+        fields = ['id','cached','cluster_id','cluster_hash','disk_size','hostname',
+                  'ignore_cache','last_job_id','mtime','operating_system','owner_id',
+                  'pending_delete','primary_node_id','ram','secondary_node_id',
+                  'serialized_info','status','template_id','virtual_cpus']
         self.convert(orm, 'virtualmachine', fields)
 
     def backwards(self, orm):
