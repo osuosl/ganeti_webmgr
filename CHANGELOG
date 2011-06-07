@@ -2,6 +2,33 @@
 Changelog
 ==================
 
+v0.7
+----
+
+Notable Changes:
+  * Xen Support
+  * Internationalization Support (only greek translations.)
+  * Fabric & Virtual Environment deployment.
+  * Improved Navigation:
+     * Search
+     * Contextual links added to more pages
+     * Breadcrumbs available on most pages
+  * Object log upgraded to 0.6 includes scalability improvements
+  * Object permissions upgraded to 1.4
+     * speed improvements
+     * contextual links added to generic views
+     * user/group selection widget added for permission editor.
+  * noVNC updated to latest head, includes better support for future revisions
+  * Node Evacuation now works properly
+  * VirtualMachine owner can now be edited
+  * Periodic Cache updater
+      - now syncronizes Nodes
+      - now runs using twistd
+  * Nodes can now be imported through the user interface
+  * Various UI fixes
+  * Various optimizations to views to improve load times.
+
+
 v0.6.2
 ----
   * fixing packaging issue with object log
