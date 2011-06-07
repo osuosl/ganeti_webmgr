@@ -96,7 +96,7 @@
 
             {% if node.last_job_id %}
                 {# there is a running job, display it and poll for status #}
-                get_job_status({{node.last_job.job_id}});
+                get_job_status({{node.last_job.job_id}}, job_complete);
                 poll_job_status({{node.last_job.job_id}}, job_complete);
             {% else %}
                 {% if node.error %}
