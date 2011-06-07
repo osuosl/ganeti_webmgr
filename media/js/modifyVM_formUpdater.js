@@ -23,11 +23,6 @@ function modifyFormUpdater() {
             vnc_x509_path_field.hide();
             vnc_x509_verify.parent().hide();
         }
-
-        // Change id of os field to os_name
-        os.prev("label").attr("for", "id_os_name");
-        os.attr("id", "id_os_name");
-        os.attr("name", "os_name");
     }
 
     /**

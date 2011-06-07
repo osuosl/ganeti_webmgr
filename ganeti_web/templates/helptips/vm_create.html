@@ -107,7 +107,9 @@
         {% trans "This is only required when using the drbd disk template." %}
     </p>
 </div>
+
 <div id="help-os">
+{% block help-os %}
     <p>
         {% blocktrans %}Operating system to install on the virtual machine. Your
         choices are limited to the images configured on the cluster.{% endblocktrans %}
@@ -118,6 +120,7 @@
         other type. The text that is selectable is the operating system
         (or os-type variant) that the cluster has access to.{% endblocktrans %}
     </p>
+{% endblock %}
 </div>
 <div id="help-disk_size">
     <p>
