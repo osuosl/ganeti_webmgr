@@ -1,6 +1,5 @@
 {% extends "menu_base.html" %}
-{% load webmgr_tags %}
-{% load i18n %}
+{% load webmgr_tags i18n %}
 {% block head %}
     <link rel="stylesheet" type="text/css"
             href="{{MEDIA_URL}}/css/virtual_machine_create.css"/>
@@ -32,9 +31,8 @@
             <legend>{% trans "General Parameters" %}</legend>
             {% vmfield form.vcpus %}
             {% vmfield form.memory %}
-            {% vmfield form.disk_type %}
+            {% block beparams %}{% endblock %}
             {% vmfield form.nic_link %}
-            {% vmfield form.nic_type %}
             {% vmfield form.nic_mac %}
         </fieldset>
         <fieldset>
@@ -43,27 +41,7 @@
         </fieldset>
         <fieldset>
             <legend>{% trans "Hypervisor Parameters" %}</legend>
-            {% vmfield form.kernel_path %}
-            {% vmfield form.root_path %}
-            {% vmfield form.serial_console %}
-            {% vmfield form.boot_order %}
-            {% vmfield form.cdrom_image_path %}
-            {% vmfield form.acpi %}
-            {% vmfield form.disk_cache %}
-            {% vmfield form.initrd_path %}
-            {% vmfield form.kernel_args %}
-            {% vmfield form.kvm_flag %}
-            {% vmfield form.mem_path %}
-            {% vmfield form.migration_downtime %}
-            {% vmfield form.security_model %}
-            {% vmfield form.security_domain %}
-            {% vmfield form.usb_mouse %}
-            {% vmfield form.use_chroot %}
-            {% vmfield form.use_localtime %}
-            {% vmfield form.vnc_bind_address %}
-            {% vmfield form.vnc_tls %}
-            {% vmfield form.vnc_x509_path %}
-            {% vmfield form.vnc_x509_verify %}
+            {% block hvparams %}{% endblock %}
         </fieldset>
         <input class="submit" type="submit" value="{% trans "Continue" %}" />
     </form>
@@ -75,8 +53,6 @@
 <div id="help-contents">
     {% include "helptips/vm.html" %}
     {% include "helptips/vm_edit.html" %}
-    {% include "helptips/vm_edit_kvm.html" %}
-    {% include "helptips/vm_edit_hvm.html" %}
-    {% include "helptips/vm_edit_pvm.html" %}
+    {% block helptips %}{% endblock %}
 </div>
 {% endblock %}
