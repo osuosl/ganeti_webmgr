@@ -1,20 +1,3 @@
-# Copyright (C) 2010 Oregon State University et al.
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
-# USA.
-
 # encoding: utf-8
 import datetime
 from south.db import db
@@ -25,48 +8,84 @@ class Migration(SchemaMigration):
     
     def forwards(self, orm):
         
-        # Adding model 'GanetiError'
-        db.create_table('ganeti_ganetierror', (
-            ('obj_type', self.gf('django.db.models.fields.related.ForeignKey')(related_name='ganeti_errors', to=orm['contenttypes.ContentType'])),
-            ('code', self.gf('django.db.models.fields.PositiveSmallIntegerField')(null=True, blank=True)),
-            ('obj_id', self.gf('django.db.models.fields.PositiveIntegerField')()),
-            ('timestamp', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-            ('cluster', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['ganeti.Cluster'])),
-            ('msg', self.gf('django.db.models.fields.TextField')()),
-            ('cleared', self.gf('django.db.models.fields.BooleanField')(default=False, blank=True)),
+        # Adding model 'Node'
+        db.create_table('ganeti_node', (
+            ('cluster_hash', self.gf('django.db.models.fields.CharField')(max_length=40)),
+            ('cached', self.gf('ganeti_web.fields.PreciseDateTimeField')(null=True, max_digits=18, decimal_places=6)),
+            ('hostname', self.gf('django.db.models.fields.CharField')(unique=True, max_length=128)),
+            ('cluster', self.gf('django.db.models.fields.related.ForeignKey')(related_name='nodes', to=orm['ganeti.Cluster'])),
+            ('disk_total', self.gf('django.db.models.fields.IntegerField')(default=-1)),
+            ('role', self.gf('django.db.models.fields.CharField')(max_length=1)),
+            ('ignore_cache', self.gf('django.db.models.fields.BooleanField')(default=False, blank=True)),
+            ('ram_total', self.gf('django.db.models.fields.IntegerField')(default=-1)),
+            ('mtime', self.gf('ganeti_web.fields.PreciseDateTimeField')(null=True, max_digits=18, decimal_places=6)),
+            ('offline', self.gf('django.db.models.fields.BooleanField')(default=False, blank=True)),
+            ('serialized_info', self.gf('django.db.models.fields.TextField')(default=None, null=True)),
+            ('last_job', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['ganeti.Job'], null=True)),
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
         ))
-        db.send_create_signal('ganeti', ['GanetiError'])
+        db.send_create_signal('ganeti', ['Node'])
 
-        # Adding field 'VirtualMachine.pending_delete'
-        db.add_column('ganeti_virtualmachine', 'pending_delete', self.gf('django.db.models.fields.BooleanField')(default=False, blank=True), keep_default=False)
+        # Adding model 'VirtualMachineTemplate'
+        db.create_table('ganeti_virtualmachinetemplate', (
+            ('nic_type', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True)),
+            ('template_name', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True)),
+            ('nic_mode', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True)),
+            ('cluster', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['ganeti.Cluster'], null=True)),
+            ('disk_template', self.gf('django.db.models.fields.CharField')(max_length=16)),
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('pnode', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True)),
+            ('cdrom_image_path', self.gf('django.db.models.fields.CharField')(max_length=512, null=True, blank=True)),
+            ('name_check', self.gf('django.db.models.fields.BooleanField')(default=True, blank=True)),
+            ('start', self.gf('django.db.models.fields.BooleanField')(default=True, blank=True)),
+            ('memory', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
+            ('kernel_path', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True)),
+            ('boot_order', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True)),
+            ('serial_console', self.gf('django.db.models.fields.BooleanField')(default=False, blank=True)),
+            ('snode', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True)),
+            ('disk_type', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True)),
+            ('iallocator_hostname', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True)),
+            ('disk_size', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
+            ('nic_link', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True)),
+            ('root_path', self.gf('django.db.models.fields.CharField')(default='/', max_length=255, null=True, blank=True)),
+            ('vcpus', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
+            ('iallocator', self.gf('django.db.models.fields.BooleanField')(default=False, blank=True)),
+            ('os', self.gf('django.db.models.fields.CharField')(max_length=255)),
+        ))
+        db.send_create_signal('ganeti', ['VirtualMachineTemplate'])
 
-        # Adding unique constraint on 'VirtualMachine', fields ['cluster', 'hostname']
-        db.create_unique('ganeti_virtualmachine', ['cluster_id', 'hostname'])
+        # Adding field 'Cluster.last_job'
+        db.add_column('ganeti_cluster', 'last_job', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='cluster_last_job', null=True, to=orm['ganeti.Job']), keep_default=False)
 
-        # Adding field 'TestModel.cluster'
-        db.add_column('ganeti_testmodel', 'cluster', self.gf('django.db.models.fields.related.ForeignKey')(default=0, to=orm['ganeti.Cluster']), keep_default=False)
+        # Adding field 'VirtualMachine.secondary_node'
+        db.add_column('ganeti_virtualmachine', 'secondary_node', self.gf('django.db.models.fields.related.ForeignKey')(related_name='secondary_vms', null=True, to=orm['ganeti.Node']), keep_default=False)
 
-        # Adding field 'Job.cleared'
-        db.add_column('ganeti_job', 'cleared', self.gf('django.db.models.fields.BooleanField')(default=False, blank=True), keep_default=False)
+        # Adding field 'VirtualMachine.primary_node'
+        db.add_column('ganeti_virtualmachine', 'primary_node', self.gf('django.db.models.fields.related.ForeignKey')(related_name='primary_vms', null=True, to=orm['ganeti.Node']), keep_default=False)
+
+        # Adding field 'VirtualMachine.template'
+        db.add_column('ganeti_virtualmachine', 'template', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['ganeti.VirtualMachineTemplate'], null=True), keep_default=False)
     
     
     def backwards(self, orm):
         
-        # Deleting model 'GanetiError'
-        db.delete_table('ganeti_ganetierror')
+        # Deleting model 'Node'
+        db.delete_table('ganeti_node')
 
-        # Deleting field 'VirtualMachine.pending_delete'
-        db.delete_column('ganeti_virtualmachine', 'pending_delete')
+        # Deleting model 'VirtualMachineTemplate'
+        db.delete_table('ganeti_virtualmachinetemplate')
 
-        # Removing unique constraint on 'VirtualMachine', fields ['cluster', 'hostname']
-        db.delete_unique('ganeti_virtualmachine', ['cluster_id', 'hostname'])
+        # Deleting field 'Cluster.last_job'
+        db.delete_column('ganeti_cluster', 'last_job_id')
 
-        # Deleting field 'TestModel.cluster'
-        db.delete_column('ganeti_testmodel', 'cluster_id')
+        # Deleting field 'VirtualMachine.secondary_node'
+        db.delete_column('ganeti_virtualmachine', 'secondary_node_id')
 
-        # Deleting field 'Job.cleared'
-        db.delete_column('ganeti_job', 'cleared')
+        # Deleting field 'VirtualMachine.primary_node'
+        db.delete_column('ganeti_virtualmachine', 'primary_node_id')
+
+        # Deleting field 'VirtualMachine.template'
+        db.delete_column('ganeti_virtualmachine', 'template_id')
     
     
     models = {
@@ -115,6 +134,7 @@ class Migration(SchemaMigration):
             'hostname': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '128'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'ignore_cache': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'last_job': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'cluster_last_job'", 'null': 'True', 'to': "orm['ganeti.Job']"}),
             'mtime': ('ganeti_web.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
             'password': ('django.db.models.fields.CharField', [], {'max_length': '128', 'null': 'True', 'blank': 'True'}),
             'port': ('django.db.models.fields.PositiveIntegerField', [], {'default': '5080'}),
@@ -156,6 +176,22 @@ class Migration(SchemaMigration):
             'object_id': ('django.db.models.fields.IntegerField', [], {}),
             'serialized_info': ('django.db.models.fields.TextField', [], {'default': 'None', 'null': 'True'}),
             'status': ('django.db.models.fields.CharField', [], {'max_length': '10'})
+        },
+        'ganeti.node': {
+            'Meta': {'object_name': 'Node'},
+            'cached': ('ganeti_web.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'cluster': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'nodes'", 'to': "orm['ganeti.Cluster']"}),
+            'cluster_hash': ('django.db.models.fields.CharField', [], {'max_length': '40'}),
+            'disk_total': ('django.db.models.fields.IntegerField', [], {'default': '-1'}),
+            'hostname': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '128'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'ignore_cache': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'last_job': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['ganeti.Job']", 'null': 'True'}),
+            'mtime': ('ganeti_web.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'offline': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'ram_total': ('django.db.models.fields.IntegerField', [], {'default': '-1'}),
+            'role': ('django.db.models.fields.CharField', [], {'max_length': '1'}),
+            'serialized_info': ('django.db.models.fields.TextField', [], {'default': 'None', 'null': 'True'})
         },
         'ganeti.organization': {
             'Meta': {'object_name': 'Organization', '_ormbases': ['ganeti.ClusterUser']},
@@ -205,11 +241,40 @@ class Migration(SchemaMigration):
             'operating_system': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
             'owner': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'virtual_machines'", 'null': 'True', 'to': "orm['ganeti.ClusterUser']"}),
             'pending_delete': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'primary_node': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'primary_vms'", 'null': 'True', 'to': "orm['ganeti.Node']"}),
             'ram': ('django.db.models.fields.IntegerField', [], {'default': '-1'}),
+            'secondary_node': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'secondary_vms'", 'null': 'True', 'to': "orm['ganeti.Node']"}),
             'serialized_info': ('django.db.models.fields.TextField', [], {'default': 'None', 'null': 'True'}),
             'status': ('django.db.models.fields.CharField', [], {'max_length': '10'}),
+            'template': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['ganeti.VirtualMachineTemplate']", 'null': 'True'}),
             'virtual_cpus': ('django.db.models.fields.IntegerField', [], {'default': '-1'})
+        },
+        'ganeti.virtualmachinetemplate': {
+            'Meta': {'object_name': 'VirtualMachineTemplate'},
+            'boot_order': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'cdrom_image_path': ('django.db.models.fields.CharField', [], {'max_length': '512', 'null': 'True', 'blank': 'True'}),
+            'cluster': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['ganeti.Cluster']", 'null': 'True'}),
+            'disk_size': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'disk_template': ('django.db.models.fields.CharField', [], {'max_length': '16'}),
+            'disk_type': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'iallocator': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'iallocator_hostname': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'kernel_path': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'memory': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'name_check': ('django.db.models.fields.BooleanField', [], {'default': 'True', 'blank': 'True'}),
+            'nic_link': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'nic_mode': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'nic_type': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'os': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
+            'pnode': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'root_path': ('django.db.models.fields.CharField', [], {'default': "'/'", 'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'serial_console': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'snode': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'start': ('django.db.models.fields.BooleanField', [], {'default': 'True', 'blank': 'True'}),
+            'template_name': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'vcpus': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'})
         }
     }
     
-    complete_apps = ['ganeti_web']
+    complete_apps = ['ganeti']

@@ -17,7 +17,7 @@ class Migration(DataMigration):
 
         if db_table_exists('object_permissions_cluster_perms'):
             # Convert cluster permissions
-            Cluster_Perms = orm['ganeti.cluster_perms']
+            Cluster_Perms = orm['ganeti_web.cluster_perms']
             Old_Perms = orm['object_permissions.cluster_perms']
             for old_perm in Old_Perms.objects.all():
                 perm = Cluster_Perms()
@@ -25,7 +25,7 @@ class Migration(DataMigration):
                 perm.user = old_perm.user
                 perm.group = old_perm.group
                 perm.user = old_perm.user
-                perm.obj = old_perm.obj
+                perm.obj_id = old_perm.obj_id
                 perm.admin = old_perm.admin
                 perm.create_vm = old_perm.create_vm
                 perm.export = old_perm.export
@@ -36,7 +36,7 @@ class Migration(DataMigration):
 
         # Convert VirtualMachine permissions
         if db_table_exists('object_permissions_virtualmachine_perms'):
-            VirtualMachine_Perms = orm['ganeti.virtualmachine_perms']
+            VirtualMachine_Perms = orm['ganeti_web.virtualmachine_perms']
             Old_Perms = orm['object_permissions.virtualmachine_perms']
             for old_perm in Old_Perms.objects.all():
                 perm = VirtualMachine_Perms()
@@ -44,7 +44,7 @@ class Migration(DataMigration):
                 perm.user = old_perm.user
                 perm.group = old_perm.group
                 perm.user = old_perm.user
-                perm.obj = old_perm.obj
+                perm.obj_id = old_perm.obj_id
                 perm.admin = old_perm.admin
                 perm.modify = old_perm.modify
                 perm.power = old_perm.power
@@ -58,7 +58,7 @@ class Migration(DataMigration):
 
         # Convert cluster permissions
         if db_table_exists('object_permissions_cluster_perms'):
-            Cluster_Perms = orm['ganeti.cluster_perms']
+            Cluster_Perms = orm['ganeti_web.cluster_perms']
             Old_Perms = orm['object_permissions.cluster_perms']
             for new_perm in Cluster_Perms.objects.all():
                 perm = Old_Perms()
@@ -66,7 +66,7 @@ class Migration(DataMigration):
                 perm.user = new_perm.user
                 perm.group = new_perm.group
                 perm.user = new_perm.user
-                perm.obj = new_perm.obj
+                perm.obj_id = new_perm.obj
                 perm.admin = new_perm.admin
                 perm.create_vm = new_perm.create_vm
                 perm.export = new_perm.export
@@ -77,7 +77,7 @@ class Migration(DataMigration):
 
         # Convert VirtualMachine permissions
         if db_table_exists('object_permissions_virtualmachine_perms'):
-            VirtualMachine_Perms = orm['ganeti.virtualmachine_perms']
+            VirtualMachine_Perms = orm['ganeti_web.virtualmachine_perms']
             Old_Perms = orm['object_permissions.virtualmachine_perms']
             for new_perm in VirtualMachine_Perms.objects.all():
                 perm = Old_Perms()
@@ -85,7 +85,7 @@ class Migration(DataMigration):
                 perm.user = new_perm.user
                 perm.group = new_perm.group
                 perm.user = new_perm.user
-                perm.obj = new_perm.obj
+                perm.obj_id = new_perm.obj
                 perm.admin = new_perm.admin
                 perm.create_vm = new_perm.create_vm
                 perm.export = new_perm.export
@@ -132,6 +132,206 @@ class Migration(DataMigration):
             'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
         },
+        'ganeti_web.cluster': {
+            'Meta': {'object_name': 'Cluster'},
+            'cached': ('ganeti_web.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'description': ('django.db.models.fields.CharField', [], {'max_length': '128', 'null': 'True', 'blank': 'True'}),
+            'disk': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'hash': ('django.db.models.fields.CharField', [], {'max_length': '40'}),
+            'hostname': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '128'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'ignore_cache': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'last_job': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'cluster_last_job'", 'null': 'True', 'to': "orm['ganeti_web.Job']"}),
+            'mtime': ('ganeti_web.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'password': ('django.db.models.fields.CharField', [], {'max_length': '128', 'null': 'True', 'blank': 'True'}),
+            'port': ('django.db.models.fields.PositiveIntegerField', [], {'default': '5080'}),
+            'ram': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'serialized_info': ('django.db.models.fields.TextField', [], {'default': 'None', 'null': 'True'}),
+            'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '50', 'db_index': 'True'}),
+            'username': ('django.db.models.fields.CharField', [], {'max_length': '128', 'null': 'True', 'blank': 'True'}),
+            'virtual_cpus': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'})
+        },
+        'ganeti_web.cluster_perms': {
+            'Meta': {'object_name': 'Cluster_Perms'},
+            'admin': ('django.db.models.fields.IntegerField', [], {'default': 'False'}),
+            'create_vm': ('django.db.models.fields.IntegerField', [], {'default': 'False'}),
+            'export': ('django.db.models.fields.IntegerField', [], {'default': 'False'}),
+            'group': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Cluster_gperms'", 'null': 'True', 'to': "orm['auth.Group']"}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'migrate': ('django.db.models.fields.IntegerField', [], {'default': 'False'}),
+            'obj': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'operms'", 'to': "orm['ganeti_web.Cluster']"}),
+            'replace_disks': ('django.db.models.fields.IntegerField', [], {'default': 'False'}),
+            'tags': ('django.db.models.fields.IntegerField', [], {'default': 'False'}),
+            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Cluster_uperms'", 'null': 'True', 'to': "orm['auth.User']"})
+        },
+        'ganeti_web.clusteruser': {
+            'Meta': {'object_name': 'ClusterUser'},
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
+            'real_type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['contenttypes.ContentType']", 'null': 'True'})
+        },
+        'ganeti_web.ganetierror': {
+            'Meta': {'object_name': 'GanetiError'},
+            'cleared': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'cluster': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['ganeti_web.Cluster']"}),
+            'code': ('django.db.models.fields.PositiveSmallIntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'msg': ('django.db.models.fields.TextField', [], {}),
+            'obj_id': ('django.db.models.fields.PositiveIntegerField', [], {}),
+            'obj_type': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'ganeti_errors'", 'to': "orm['contenttypes.ContentType']"}),
+            'timestamp': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'})
+        },
+        'ganeti_web.job': {
+            'Meta': {'object_name': 'Job'},
+            'cached': ('ganeti_web.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'cleared': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'cluster': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'jobs'", 'to': "orm['ganeti_web.Cluster']"}),
+            'cluster_hash': ('django.db.models.fields.CharField', [], {'max_length': '40'}),
+            'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['contenttypes.ContentType']"}),
+            'finished': ('django.db.models.fields.DateTimeField', [], {'null': 'True'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'ignore_cache': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'job_id': ('django.db.models.fields.IntegerField', [], {}),
+            'mtime': ('ganeti_web.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'object_id': ('django.db.models.fields.IntegerField', [], {}),
+            'serialized_info': ('django.db.models.fields.TextField', [], {'default': 'None', 'null': 'True'}),
+            'status': ('django.db.models.fields.CharField', [], {'max_length': '10'})
+        },
+        'ganeti_web.node': {
+            'Meta': {'object_name': 'Node'},
+            'cached': ('ganeti_web.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'cluster': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'nodes'", 'to': "orm['ganeti_web.Cluster']"}),
+            'cluster_hash': ('django.db.models.fields.CharField', [], {'max_length': '40'}),
+            'disk_total': ('django.db.models.fields.IntegerField', [], {'default': '-1'}),
+            'hostname': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '128'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'ignore_cache': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'last_job': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['ganeti_web.Job']", 'null': 'True'}),
+            'mtime': ('ganeti_web.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'offline': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'ram_total': ('django.db.models.fields.IntegerField', [], {'default': '-1'}),
+            'role': ('django.db.models.fields.CharField', [], {'max_length': '1'}),
+            'serialized_info': ('django.db.models.fields.TextField', [], {'default': 'None', 'null': 'True'})
+        },
+        'ganeti_web.organization': {
+            'Meta': {'object_name': 'Organization', '_ormbases': ['ganeti_web.ClusterUser']},
+            'clusteruser_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['ganeti_web.ClusterUser']", 'unique': 'True', 'primary_key': 'True'}),
+            'group': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'organization'", 'unique': 'True', 'to': "orm['auth.Group']"})
+        },
+        'ganeti_web.profile': {
+            'Meta': {'object_name': 'Profile', '_ormbases': ['ganeti_web.ClusterUser']},
+            'clusteruser_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['ganeti_web.ClusterUser']", 'unique': 'True', 'primary_key': 'True'}),
+            'user': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['auth.User']", 'unique': 'True'})
+        },
+        'ganeti_web.quota': {
+            'Meta': {'object_name': 'Quota'},
+            'cluster': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'quotas'", 'to': "orm['ganeti_web.Cluster']"}),
+            'disk': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'ram': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True'}),
+            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'quotas'", 'to': "orm['ganeti_web.ClusterUser']"}),
+            'virtual_cpus': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True'})
+        },
+        'ganeti_web.sshkey': {
+            'Meta': {'object_name': 'SSHKey'},
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'key': ('django.db.models.fields.TextField', [], {}),
+            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'ssh_keys'", 'to': "orm['auth.User']"})
+        },
+        'ganeti_web.testmodel': {
+            'Meta': {'object_name': 'TestModel'},
+            'cached': ('ganeti_web.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'cluster': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['ganeti_web.Cluster']"}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'ignore_cache': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'mtime': ('ganeti_web.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'serialized_info': ('django.db.models.fields.TextField', [], {'default': 'None', 'null': 'True'})
+        },
+        'ganeti_web.virtualmachine': {
+            'Meta': {'unique_together': "(('cluster', 'hostname'),)", 'object_name': 'VirtualMachine'},
+            'cached': ('ganeti_web.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'cluster': ('django.db.models.fields.related.ForeignKey', [], {'default': '0', 'related_name': "'virtual_machines'", 'to': "orm['ganeti_web.Cluster']"}),
+            'cluster_hash': ('django.db.models.fields.CharField', [], {'max_length': '40'}),
+            'disk_size': ('django.db.models.fields.IntegerField', [], {'default': '-1'}),
+            'hostname': ('django.db.models.fields.CharField', [], {'max_length': '128', 'db_index': 'True'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'ignore_cache': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'last_job': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['ganeti_web.Job']", 'null': 'True'}),
+            'mtime': ('ganeti_web.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'operating_system': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
+            'owner': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'virtual_machines'", 'null': 'True', 'to': "orm['ganeti_web.ClusterUser']"}),
+            'pending_delete': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'primary_node': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'primary_vms'", 'null': 'True', 'to': "orm['ganeti_web.Node']"}),
+            'ram': ('django.db.models.fields.IntegerField', [], {'default': '-1'}),
+            'secondary_node': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'secondary_vms'", 'null': 'True', 'to': "orm['ganeti_web.Node']"}),
+            'serialized_info': ('django.db.models.fields.TextField', [], {'default': 'None', 'null': 'True'}),
+            'status': ('django.db.models.fields.CharField', [], {'max_length': '10'}),
+            'template': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['ganeti_web.VirtualMachineTemplate']", 'null': 'True'}),
+            'virtual_cpus': ('django.db.models.fields.IntegerField', [], {'default': '-1'})
+        },
+        'ganeti_web.virtualmachine_perms': {
+            'Meta': {'object_name': 'VirtualMachine_Perms'},
+            'admin': ('django.db.models.fields.IntegerField', [], {'default': 'False'}),
+            'group': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'VirtualMachine_gperms'", 'null': 'True', 'to': "orm['auth.Group']"}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'modify': ('django.db.models.fields.IntegerField', [], {'default': 'False'}),
+            'obj': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'operms'", 'to': "orm['ganeti_web.VirtualMachine']"}),
+            'power': ('django.db.models.fields.IntegerField', [], {'default': 'False'}),
+            'remove': ('django.db.models.fields.IntegerField', [], {'default': 'False'}),
+            'tags': ('django.db.models.fields.IntegerField', [], {'default': 'False'}),
+            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'VirtualMachine_uperms'", 'null': 'True', 'to': "orm['auth.User']"})
+        },
+        'ganeti_web.virtualmachinetemplate': {
+            'Meta': {'object_name': 'VirtualMachineTemplate'},
+            'boot_order': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'cdrom_image_path': ('django.db.models.fields.CharField', [], {'max_length': '512', 'null': 'True', 'blank': 'True'}),
+            'cluster': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['ganeti_web.Cluster']", 'null': 'True'}),
+            'disk_size': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'disk_template': ('django.db.models.fields.CharField', [], {'max_length': '16'}),
+            'disk_type': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'iallocator': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'iallocator_hostname': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'kernel_path': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'memory': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'name_check': ('django.db.models.fields.BooleanField', [], {'default': 'True', 'blank': 'True'}),
+            'nic_link': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'nic_mode': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'nic_type': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'os': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
+            'pnode': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'root_path': ('django.db.models.fields.CharField', [], {'default': "'/'", 'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'serial_console': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'snode': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'start': ('django.db.models.fields.BooleanField', [], {'default': 'True', 'blank': 'True'}),
+            'template_name': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'vcpus': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'})
+        },
+        'object_permissions.cluster_perms': {
+            'Meta': {'object_name': 'Cluster_Perms'},
+            'admin': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'create_vm': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'export': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'group': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Cluster_gperms'", 'null': 'True', 'to': "orm['auth.Group']"}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'migrate': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'obj': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'operms'", 'to': "orm['ganeti.Cluster']"}),
+            'replace_disks': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'tags': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Cluster_uperms'", 'null': 'True', 'to': "orm['auth.User']"})
+        },
+        'object_permissions.virtualmachine_perms': {
+            'Meta': {'object_name': 'VirtualMachine_Perms'},
+            'admin': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'group': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'VirtualMachine_gperms'", 'null': 'True', 'to': "orm['auth.Group']"}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'modify': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'obj': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'operms'", 'to': "orm['ganeti.VirtualMachine']"}),
+            'power': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'remove': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'tags': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'VirtualMachine_uperms'", 'null': 'True', 'to': "orm['auth.User']"})
+        },
         'ganeti.cluster': {
             'Meta': {'object_name': 'Cluster'},
             'cached': ('ganeti_web.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
@@ -150,19 +350,6 @@ class Migration(DataMigration):
             'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '50', 'db_index': 'True'}),
             'username': ('django.db.models.fields.CharField', [], {'max_length': '128', 'null': 'True', 'blank': 'True'}),
             'virtual_cpus': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'})
-        },
-        'ganeti.cluster_perms': {
-            'Meta': {'object_name': 'Cluster_Perms'},
-            'admin': ('django.db.models.fields.IntegerField', [], {'default': 'False'}),
-            'create_vm': ('django.db.models.fields.IntegerField', [], {'default': 'False'}),
-            'export': ('django.db.models.fields.IntegerField', [], {'default': 'False'}),
-            'group': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Cluster_gperms'", 'null': 'True', 'to': "orm['auth.Group']"}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'migrate': ('django.db.models.fields.IntegerField', [], {'default': 'False'}),
-            'obj': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'operms'", 'to': "orm['ganeti.Cluster']"}),
-            'replace_disks': ('django.db.models.fields.IntegerField', [], {'default': 'False'}),
-            'tags': ('django.db.models.fields.IntegerField', [], {'default': 'False'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Cluster_uperms'", 'null': 'True', 'to': "orm['auth.User']"})
         },
         'ganeti.clusteruser': {
             'Meta': {'object_name': 'ClusterUser'},
@@ -236,7 +423,7 @@ class Migration(DataMigration):
             'Meta': {'object_name': 'SSHKey'},
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'key': ('django.db.models.fields.TextField', [], {}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'ssh_keys'", 'to': "orm['auth.User']"})
+            'user': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']"})
         },
         'ganeti.testmodel': {
             'Meta': {'object_name': 'TestModel'},
@@ -253,7 +440,7 @@ class Migration(DataMigration):
             'cluster': ('django.db.models.fields.related.ForeignKey', [], {'default': '0', 'related_name': "'virtual_machines'", 'to': "orm['ganeti.Cluster']"}),
             'cluster_hash': ('django.db.models.fields.CharField', [], {'max_length': '40'}),
             'disk_size': ('django.db.models.fields.IntegerField', [], {'default': '-1'}),
-            'hostname': ('django.db.models.fields.CharField', [], {'max_length': '128', 'db_index': 'True'}),
+            'hostname': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'ignore_cache': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
             'last_job': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['ganeti.Job']", 'null': 'True'}),
@@ -268,18 +455,6 @@ class Migration(DataMigration):
             'status': ('django.db.models.fields.CharField', [], {'max_length': '10'}),
             'template': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['ganeti.VirtualMachineTemplate']", 'null': 'True'}),
             'virtual_cpus': ('django.db.models.fields.IntegerField', [], {'default': '-1'})
-        },
-        'ganeti.virtualmachine_perms': {
-            'Meta': {'object_name': 'VirtualMachine_Perms'},
-            'admin': ('django.db.models.fields.IntegerField', [], {'default': 'False'}),
-            'group': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'VirtualMachine_gperms'", 'null': 'True', 'to': "orm['auth.Group']"}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'modify': ('django.db.models.fields.IntegerField', [], {'default': 'False'}),
-            'obj': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'operms'", 'to': "orm['ganeti.VirtualMachine']"}),
-            'power': ('django.db.models.fields.IntegerField', [], {'default': 'False'}),
-            'remove': ('django.db.models.fields.IntegerField', [], {'default': 'False'}),
-            'tags': ('django.db.models.fields.IntegerField', [], {'default': 'False'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'VirtualMachine_uperms'", 'null': 'True', 'to': "orm['auth.User']"})
         },
         'ganeti.virtualmachinetemplate': {
             'Meta': {'object_name': 'VirtualMachineTemplate'},
@@ -306,31 +481,6 @@ class Migration(DataMigration):
             'start': ('django.db.models.fields.BooleanField', [], {'default': 'True', 'blank': 'True'}),
             'template_name': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
             'vcpus': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'})
-        },
-        'object_permissions.cluster_perms': {
-            'Meta': {'object_name': 'Cluster_Perms'},
-            'admin': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
-            'create_vm': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
-            'export': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
-            'group': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Cluster_gperms'", 'null': 'True', 'to': "orm['auth.Group']"}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'migrate': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
-            'obj': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'operms'", 'to': "orm['ganeti.Cluster']"}),
-            'replace_disks': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
-            'tags': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Cluster_uperms'", 'null': 'True', 'to': "orm['auth.User']"})
-        },
-        'object_permissions.virtualmachine_perms': {
-            'Meta': {'object_name': 'VirtualMachine_Perms'},
-            'admin': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
-            'group': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'VirtualMachine_gperms'", 'null': 'True', 'to': "orm['auth.Group']"}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'modify': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
-            'obj': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'operms'", 'to': "orm['ganeti.VirtualMachine']"}),
-            'power': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
-            'remove': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
-            'tags': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'VirtualMachine_uperms'", 'null': 'True', 'to': "orm['auth.User']"})
         }
 
     }
