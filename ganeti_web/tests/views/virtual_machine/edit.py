@@ -49,7 +49,7 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/edit.html')
+        self.assertTemplateUsed(response, 'virtual_machine/edit_kvm.html')
         user.revoke_all(vm)
         c.logout()
 
@@ -60,7 +60,7 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/edit.html')
+        self.assertTemplateUsed(response, 'virtual_machine/edit_kvm.html')
         user.revoke_all(vm)
         c.logout()
 
@@ -71,7 +71,7 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/edit.html')
+        self.assertTemplateUsed(response, 'virtual_machine/edit_kvm.html')
         c.logout()
         user.is_superuser = False
         user.save()
@@ -125,7 +125,7 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
             self.assertNotEqual(response.context['form'][property].errors, [], msg=property)
             self.assertEqual(200, response.status_code) # 302 if success (BAD)
             self.assertEqual('text/html; charset=utf-8', response['content-type'])
-            self.assertTemplateUsed(response, 'virtual_machine/edit.html')
+            self.assertTemplateUsed(response, 'virtual_machine/edit_kvm.html')
         c.logout()
         user.revoke_all(vm)
 
@@ -427,7 +427,7 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         session.save()
         response = c.post(url, data)
         self.assertEqual(200, response.status_code) # 302 if success (BAD)
-        self.assertTemplateUsed(response, 'virtual_machine/edit.html')
+        self.assertTemplateUsed(response, 'virtual_machine/edit_kvm.html')
         user.revoke_all(vm)
         c.logout()
 

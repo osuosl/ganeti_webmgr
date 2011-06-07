@@ -771,13 +771,16 @@ def modify(request, cluster_slug, instance):
             form = hv_form(vm)
  
     # Select template depending on hypervisor
-    # Default to kvm
-    template = "virtual_machine/edit.html"
-    if hv == 'xen-hvm':
-        template = "virtual_machine/edit_hvm.html"
+    # Default to edit_base
+    if hv == 'kvm':
+        template = 'virtual_machine/edit_kvm.html'
+    elif hv == 'xen-hvm':
+        template = 'virtual_machine/edit_hvm.html'
     elif hv == 'xen-pvm':
         template = 'virtual_machine/edit_pvm.html'
-    
+    else:
+        template = 'virtual_machine/edit_base.html'
+
     return render_to_response(template, {
         'cluster': cluster,
         'instance': vm,
