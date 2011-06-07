@@ -1,37 +1,13 @@
-{% extends "menu_base.html" %}
+{% extends "virtual_machine/edit_base.html" %}
 {% load webmgr_tags %}
 
-{% block content %}
-<h1>Edit {{ instance.hostname }}</h1>
-<form id="vmeditform" method="post">
-    <fieldset class="first_fieldset">
-        <legend>General Parameters</legend>
-        {% vmfield form.vcpus %}
-        {% vmfield form.memory %}
-        {% vmfield form.nic_link %}
-        {% vmfield form.nic_mac %}
-    </fieldset>
-    <fieldset>
-        <legend>Operating System Parameters</legend>
-        {% vmfield form.os %}
-    </fieldset>
-    <fieldset>
-        <legend>Hypervisor Parameters</legend>
-        {% vmfield form.root_path %}
-        {% vmfield form.kernel_path %}
-        {% vmfield form.kernel_args %}
-        {% vmfield form.initrd_path %}
-    </fieldset>
-    <input class="submit" type="submit" value="Continue" />
-</form>
-<div id="help">
-    <h3></h3>
-    <div></div>
-</div>
-<div id="help-contents">
-    {% include "helptips/vm.html" %}
-    {% include "helptips/vm_create.html" %}
-    {% include "helptips/vm_edit.html" %}
+{% block hvparams %}
+    {% vmfield form.root_path %}
+    {% vmfield form.kernel_path %}
+    {% vmfield form.kernel_args %}
+    {% vmfield form.initrd_path %}
+{% endblock %}
+
+{% block helptips %}
     {% include "helptips/vm_edit_pvm.html" %}
-</div>
 {% endblock %}

@@ -15,8 +15,6 @@ function modifyFormUpdater() {
     var tmp_vnc_x509_path = "";
     var tmp_vnc_x509_verify = false;
 
-    var os = $("#id_os");
-
     this.init = function() {
         // Hide vnc_x509_path and verify if checkbox enabled
         if( !vnc_tls.is(':checked')) {
