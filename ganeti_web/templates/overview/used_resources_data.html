@@ -35,7 +35,7 @@
                 {% if res.used.ram > res.set.ram %}
                 <td>
                     <div class="icon_error"></div>
-                    {% trans "Exceeded by" %}{% diff_render_storage res.used.ram res.set.ram %}
+                    {% trans "Exceeded by" %} {% diff_render_storage res.used.ram res.set.ram %}
                 </td>
                 {% else %}
                 <td class="ram">{{ res.used.ram }} / {{ res.set.ram }}</td>
