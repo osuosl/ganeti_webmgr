@@ -19,28 +19,34 @@ from object_log.models import LogAction
 
 
 def build_vm_cache(user, object1, object2, object3, data):
-    data = {'cluster_slug':object1.cluster.slug,
-            'hostname':object1.hostname}
+    data = {}
+    if object1 is not None:
+        data['cluster_slug']=object1.cluster.slug,
+        data['hostname']=object1.hostname
     if object2 is not None:
         data['job_id'] = object2.job_id
     return data
 
 
 def build_node_cache(user, object1, object2, object3, data):
-    data = {'cluster_slug':object1.cluster.slug,
-            'hostname':object1.hostname}
+    data = {}
+    if object1 is not None:
+        data['cluster_slug']=object1.cluster.slug,
+        data['hostname']=object1.hostname
     if object2 is not None:
         data['job_id'] = object2.job_id
     return data
 
 
 def build_op_cache(user, object1, object2, object3, data):
-    return {
-        'object_str':str(object1),
-        'affected_user':str(object2),
-        'affected_user_id':object2.pk,
-        'affected_user_class':object2.__class__.__name__
+    data = {
+        'object_str':str(object1)
     }
+    if object2:
+        data['affected_user']=str(object2)
+        data['affected_user_id']=object2.pk
+        data['affected_user_class']=object2.__class__.__name__
+    return data
 
 
 def register_log_actions():
