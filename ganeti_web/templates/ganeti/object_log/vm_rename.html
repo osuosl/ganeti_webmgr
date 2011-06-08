@@ -1,5 +1,5 @@
 {% with log_item.data as data %}
-    {% if log_item.object2 %}
+    {% if log_item.object2_id %}
         <a href="{% url job-detail data.cluster_slug data.job_id %}">Job #{{ data.job_id }}</a> -
     {% endif %}
     {% if user.is_superuser %}
@@ -8,5 +8,6 @@
         {{ log_item.user }}
     {% endif %}
     renamed virtual machine
-    <a href="{% url instance-detail data.cluster_slug data.hostname %}">{{data.hostname}}</a>
+    {% if log_item.object1_id %}<a href="{% url instance-detail data.cluster_slug data.hostname %}">{{data.hostname}}</a>
+    {% else %}[deleted]{% endif %}
 {% endwith %}

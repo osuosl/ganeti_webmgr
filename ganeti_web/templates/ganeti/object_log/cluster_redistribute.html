@@ -1,4 +1,4 @@
-    {% if log_item.object2 %}
+    {% if log_item.object2_id %}
         <a href="{% url job-detail log_item.object1.slug log_item.object2.job_id %}">Job #{{ log_item.object2.job_id }}</a> -
     {% endif %}
     {% if user.is_superuser %}

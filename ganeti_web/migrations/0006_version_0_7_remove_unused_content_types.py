@@ -16,14 +16,13 @@ class Migration(DataMigration):
             .filter(model__in=['cluster_perms', 'virtualmachine_perms'])
         cts.delete()
 
-        ContentType.objects.filter(app_label='ganeti').delete()
+        # XXX just jupdate the contenttype's app since that's easier than
+        # updating any records that have relations to these content types
+        ContentType.objects.filter(app_label='ganeti').update(app_label='ganeti_web')
     
     def backwards(self, orm):
-        """
-        no backwards conversion needed.  Content Types should be created
-        automatically.
-        """
-        pass
+        ContentType = orm['contenttypes.contenttype']
+        ContentType.objects.filter(app_label='ganeti_web').update(app_label='ganeti')
 
     
     models = {
