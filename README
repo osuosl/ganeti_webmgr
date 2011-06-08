@@ -29,19 +29,22 @@ Twitter:      http://twitter.com/ganetiwebmgr
 ================================================================================
 
 1.  Install Dependencies
-    * Python >= 2.5 but < 3.x (Python 3.x is not supported due to
+    * Python     >= 2.5 but < 3.x (Python 3.x is not supported due to
                                backward-compatibility issues)
-    * Django >= 1.2
-    * django-registration
-    * South >=0.7
-    * object_permissions (packaged with releases)
-    * object_log (packaged with releases)
-    * sqlite3, mysql, or postgresql
-    * twisted >=10.2, twisted-web (deps for twisted-vncauthproxy)
-
+    * Pip        >= 0.8.2
+    * Fabric     >= 1.0.1 (installable from pip)
+    * VirtualEnv >= 1.6.1 (installable from pip)
 2. Deploy this code somewhere (i.e. /var/lib/django/ganeti_webmgr)
-3. Copy settings.py.dist to settings.py
-4. Create a database and configure your settings:
+3. Run Fabric deployment
+      cd ./ganeti_webmgr
+      fab dev deploy
+
+  or a production deployment:
+
+      fab prod deploy
+
+4. Copy settings.py.dist to settings.py
+5. Create a database and configure your settings:
 
  DATABASE_ENGINE = ''   <-- Change This to 'mysql', 'postgresql',
                             'postgresql_psycopg2' or 'sqlite3'
@@ -51,9 +54,8 @@ Twitter:      http://twitter.com/ganetiwebmgr
  DATABASE_HOST = ''     <-- Change this (not needed if database is localhost)
  DATABASE_PORT = ''     <-- Change this (not needed if database is localhost)
 
-5. If you are using the Django sites module, you will can set the id, name and
-   domain of your site in settings.py and the site will automatically be
-   created when syncdb is run.
+6. Set the id, name and domain of your site in settings.py and the site will
+   automatically be created when syncdb is run.
 
  # Unique site id used by many modules to distinguish site from others.
  SITE_ID = 1
@@ -63,13 +65,13 @@ Twitter:      http://twitter.com/ganetiwebmgr
  SITE_NAME = 'Ganeti Web Manager'
  SITE_DOMAIN = 'localhost:8000'
 
-6. Initialize the database
+7. Initialize the database
 
-    ./manage.py syncdb
+    ./manage.py syncdb --migrate
 
-7. South migrations (0.5 only)
+8. Activate Virtual Environment
 
-    ./manage.py migrate
+    source bin/activate
 
 8. Run the server
 
@@ -107,11 +109,13 @@ Twitter:      http://twitter.com/ganetiwebmgr
                 import django.core.handlers.wsgi
                 application = django.core.handlers.wsgi.WSGIHandler()
 
-    5. Configure cron job for periodic cache updater [3].
+    5. Enable periodic cache updater [3].
+
+        twistd gwm_cache --pidfile=tmp/gwm_cache.pid
 
  [1] http://docs.djangoproject.com/en/1.2/topics/email/
  [2] http://docs.djangoproject.com/en/1.2/howto/deployment/
- [3] http://code.osuosl.org/projects/ganeti-webmgr/wiki/Cache_System#Updating-with-cron
+ [3] http://code.osuosl.org/projects/ganeti-webmgr/wiki/Cache_System#Periodic-Cache-Refresh
 
 Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/Install
 
@@ -281,7 +285,7 @@ Twisted VNC Authproxy is started with twistd, the twisted daemon. Eventually we
 will include init.d scripts for better managing the daemon. You may want to open
 port 8888 in your firewall for production systems.
 
-    twistd --pidfile=/tmp/proxy.pid -ny proxy.tac 
+    twistd --pidfile=/tmp/proxy.pid -n vncap
 
 Starting Flash Policy Server
 ----------------------------
@@ -294,7 +298,7 @@ want to open port 843 in your firewall for production systems.
 
 Start the policy server with twistd
 
-    sudo twistd --pidfile=/tmp/policy.pid -ny policy.tac
+    sudo twistd --pidfile=/tmp/policy.pid -n flashpolicy
 
 
 Possible issues

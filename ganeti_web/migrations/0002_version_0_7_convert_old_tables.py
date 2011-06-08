@@ -50,7 +50,7 @@ class Migration(DataMigration):
         fields = ['id','cluster_id','disk','ram','user_id','virtual_cpus']
         self.convert(orm, 'quota', fields)
 
-        fields = ['id','key','user']
+        fields = ['id','key','user_id']
         self.convert(orm, 'sshkey', fields)
 
         fields = ['id','boot_order','cdrom_image_path','cluster_id','disk_size',
