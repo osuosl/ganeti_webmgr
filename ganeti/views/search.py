@@ -1,6 +1,7 @@
 import json
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, \
+        HttpResponseNotFound
 from django.core.urlresolvers import reverse
 from haystack.query import SearchQuerySet
 from ganeti.models import VirtualMachine, Cluster, Node
@@ -70,22 +71,16 @@ def detail_lookup(request):
     ''' Look up and redirect to the detail page URL for the given item '''
     object_type = request.GET.get('type', None)
     hostname = request.GET.get('hostname', None)
-    URL = None
-    if object_type == 'vm':
-        vm = VirtualMachine.objects.filter(hostname=hostname)[0]
-        URL = reverse('instance-detail', 
-                args=[
-                    vm.cluster.slug, 
-                    vm.hostname
-                ])
-    elif object_type == 'cluster':
-        cluster = Cluster.objects.filter(hostname=hostname)[0]
-        URL = reverse('cluster-detail', args=[cluster.slug])
-    elif object_type == 'node':
-        node = Node.objects.filter(hostname=hostname)[0]
-        URL = reverse('node-detail', 
-                args=[
-                    node.cluster.slug, 
-                    node.hostname
-                ])
-    return HttpResponseRedirect(URL)
+    obj = None
+    try:
+        if object_type == 'vm':
+            obj = VirtualMachine.objects.filter(hostname=hostname)\
+                    .select_related('cluster')[0]
+        elif object_type == 'cluster':
+            obj = Cluster.objects.filter(hostname=hostname)[0]
+        elif object_type == 'node':
+            obj = Node.objects.filter(hostname=hostname)\
+                    .select_related('cluster')[0]
+    except IndexError:
+        return HttpResponseNotFound()
+    return HttpResponseRedirect(obj.get_absolute_url())
