@@ -1,6 +1,6 @@
 import json
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from haystack.query import SearchQuerySet
 from ganeti.models import VirtualMachine, Cluster, Node
@@ -67,32 +67,25 @@ def suggestions(request):
 
 @login_required
 def detail_lookup(request):
-    ''' Look up the detail page URL for the given item '''
+    ''' Look up and redirect to the detail page URL for the given item '''
     object_type = request.GET.get('type', None)
     hostname = request.GET.get('hostname', None)
-    URL = []
-    if object_type and hostname:
-        try:
-            if object_type == 'vm':
-                vm = VirtualMachine.objects.filter(hostname=hostname)[0]
-                URL.append(reverse('instance-detail', 
-                        args=[
-                            vm.cluster.slug, 
-                            vm.hostname
-                        ]))
-            elif object_type == 'cluster':
-                cluster = Cluster.objects.filter(hostname=hostname)[0]
-                URL.append(reverse('cluster-detail', args=[cluster.slug]))
-            elif object_type == 'node':
-                node = Node.objects.filter(hostname=hostname)[0]
-                URL.append(reverse('node-detail', 
-                        args=[
-                            node.cluster.slug, 
-                            node.hostname
-                        ]))
-
-        # If an object can't be found, just return a blank URL
-        except IndexError:
-            pass 
-
-    return HttpResponse(json.dumps(URL, indent=4), mimetype='application/json')
+    URL = None
+    if object_type == 'vm':
+        vm = VirtualMachine.objects.filter(hostname=hostname)[0]
+        URL = reverse('instance-detail', 
+                args=[
+                    vm.cluster.slug, 
+                    vm.hostname
+                ])
+    elif object_type == 'cluster':
+        cluster = Cluster.objects.filter(hostname=hostname)[0]
+        URL = reverse('cluster-detail', args=[cluster.slug])
+    elif object_type == 'node':
+        node = Node.objects.filter(hostname=hostname)[0]
+        URL = reverse('node-detail', 
+                args=[
+                    node.cluster.slug, 
+                    node.hostname
+                ])
+    return HttpResponseRedirect(URL)
