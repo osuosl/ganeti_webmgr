@@ -25,7 +25,7 @@ from django.conf.urls.defaults import *
 #admin.autodiscover()
 
 urlpatterns = patterns('',
-    (r'^', include('ganeti.urls')),
+    (r'^', include('ganeti_web.urls')),
     (r'^', include('object_permissions.urls')),
     (r'^', include('object_log.urls')),
     (r'^', include('muddle_users.urls')),
@@ -55,7 +55,7 @@ urlpatterns = patterns('',
 urlpatterns += patterns('',
     (r'^i18n/', include('django.conf.urls.i18n')),
     )
-handler500 = 'ganeti.views.view_500'
+handler500 = 'ganeti_web.views.view_500'
 
 
 #The following is used to serve up local media files like images

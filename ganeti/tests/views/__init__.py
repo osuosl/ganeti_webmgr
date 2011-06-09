@@ -1,1 +1,0 @@
-from ganeti.tests.views.virtual_machine import *

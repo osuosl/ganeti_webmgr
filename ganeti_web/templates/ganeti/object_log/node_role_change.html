@@ -1,0 +1,9 @@
+    {% if log_item.object2_id %}
+        <a href="{% url job-detail log_item.data.cluster_slug log_item.data.job_id %}">Job #{{ log_item.data.job_id }}</a> -
+    {% endif %}
+    {% if user.is_superuser %}
+        <a href="{% url user-detail log_item.user.pk %}">{{log_item.user}}</a>
+    {% else %}
+        {{ log_item.user }}
+    {% endif %}
+change the role of node <a href="{% url node-detail log_item.data.cluster_slug log_item.data.hostname %}">{{log_item.data.hostname}}</a>
