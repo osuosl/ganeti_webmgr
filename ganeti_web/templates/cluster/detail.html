@@ -1,0 +1,151 @@
+{% extends "menu_base.html" %}
+{% block title %}Cluster {{ cluster.id }}: {{ cluster.hostname|safe }}{% endblock %}
+{% load i18n %}
+{% block head %}
+    <link href="{{MEDIA_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
+    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
+    <script src="{{MEDIA_URL}}/js/jquery-ui.min.js"></script>
+    <script src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
+    <script type="text/javascript">
+        var PBAR_CONF = {
+            steps: 0,
+            showText: true,
+            textFormat: 'fraction',
+            boxImage: '/media/images/progressbar/progressbar.gif',
+            barImage: {
+                0:  '/media/images/progressbar/progressbg_red.gif',
+                30: '/media/images/progressbar/progressbg_orange.gif',
+                50: '/media/images/progressbar/progressbg_yellow.gif',
+                75: '/media/images/progressbar/progressbg_green.gif',
+            }
+        };
+        
+        $(document).ready(function() {
+            $('#tabs').tabs({
+                spinner: false,
+                select: function(event, ui) {
+                    window.location.hash = ui.tab.hash;
+					var loadingMsg = '{% trans "Loading" %}';
+                    var tabID = ui.panel;
+                                       if (tabID.id != "overview") {
+                                               $(tabID).html("<div class='spinner'><br/>"+loadingMsg+"...<br/><br/><img src='{{MEDIA_URL}}/images/ajax-loader.gif'></div>");
+                                       }
+                 },
+                ajaxOptions: {
+                    error: function(xhr, status, index, anchor) {
+                        $(anchor.hash).html("{% trans "Couldn't load this tab. We'll try to fix this as soon as possible" %}.");
+                    }
+                }
+            });
+	    
+            $("a.delete").live("click", function(){
+                if (confirm("{% trans 'Are you sure you want to delete this cluster' %}?")) {
+					
+                    $("a.delete").text("{% trans 'Deleting' %}...");
+                    $("a.delete").removeAttr("href");
+                    $("a.delete").addClass("deleting");
+                    $("a.delete").removeClass("delete");
+
+                    href = "{% url cluster-edit cluster.slug %}";
+                    $.delete_(href, function(){
+                        window.location = "{% url cluster-list %}";
+                    });
+                }
+                return false;
+            });
+
+            $("#actions a.redistribute-config").live("click", function(event) {
+                event.preventDefault();
+                if(!$(this).hasClass('disabled')) {
+                    if(!confirm('Are you sure you want to '
+                           +'redistribute master node config to '
+                           +'all other nodes?')) {
+                        return false;
+                    }
+                    $.post(this.href, action_response);
+                }
+            });
+        
+            {% if cluster.last_job_id %}
+                {# there is a running job, display it and poll for status #}
+                get_job_status({{cluster.last_job.job_id}}, job_complete);
+                poll_job_status({{cluster.last_job.job_id}}, job_complete);
+            {% else %}
+                {% if cluster.error %}
+                    display_ganeti_error("{{cluster.error}}");
+                {% endif %}
+            {% endif %}
+        });
+
+        function job_complete() {
+            window.location.reload();
+        }
+
+        function action_response(result) {
+            if(result.ops == undefined) {
+                display_ganeti_error(result['__all__'][0]);
+                $('#actions a').removeClass('disabled');
+            } else {
+                poll_job_status(result['id'], job_complete);
+                display_job(result);
+            }
+        }
+
+        /* XXX: temporarily (maybe permanently) using this for reporting
+         when a quota limit has been encountered on startup */
+        function display_ganeti_error(msg) {
+            $("#messages").empty();
+            var html = "<li class='error'>Error:<p>" + msg + "</p></li>";
+            $("#messages").append(html);
+        }
+    </script>
+
+    {% include "job_status.html" %}
+{% endblock %}
+
+{% block content %}
+<h1><a class="breadcrumb" href="{% url cluster-list %}">{% trans "Cluster" %}</a> : {{ cluster.hostname }}</h1>
+
+<ul id="messages">
+    {%if cluster.error%}<li class="error">{% trans "Error in Ganeti API" %}:<p>{{cluster.error}}</p></li>{%endif%}
+</ul>
+<div id="tabs">
+    <ul>
+        <li><a href="#overview"><span>{% trans "Overview" %}</span></a></li>
+        <li><a title="virtual machines" href="{% url cluster-vms cluster.slug %}"><span>{% trans "Virtual Machines" %}</span></a></li>
+        <li><a title="nodes" href="{% url cluster-nodes cluster.slug %}"><span>{% trans "Nodes" %}</span></a></li>
+        {% if admin %}
+            <li><a title="user" href="{% url cluster-users cluster.slug %}"><span>{% trans "Users" %}</span></a></li>
+            <li><a title="log" href="{% url cluster-object_log cluster.slug %}"><span>{% trans "Log" %}</span></a></li>
+        {%endif%}
+    </ul>
+    <div id="overview" class="tab_content">
+        <ul id="actions">
+            {% if admin %}
+                <li><a class="button edit" title="edit cluster" href="{% url cluster-edit cluster.slug %}">{% trans "Edit" %}</a></li>
+                <li><a class="button delete" title="delete cluster" href="{% url cluster-edit cluster.slug %}">{% trans "Delete" %}</a></li>
+                <li><a class="button redistribute-config" title="redistribute cluster config" href="{% url cluster-redistribute-config cluster.slug %}">{% trans "Redistribute Config" %}</a></li>
+            {% endif %}
+        </ul>
+        <table class="overview">
+            {% with cluster.info as info %}
+            <tr><td>{% trans "Architecture" %}</td><td>{{ info.architecture.0 }}</td></tr>
+            <tr><td>{% trans "Ganeti Version" %}</td><td>{{info.software_version}}</td></tr>
+            <tr><td>{% trans "Default hypervisor" %}</td><td>{{ info.default_hypervisor }}</td></tr>
+            <tr><td>{% trans "Available hypervisors" %}</td><td>{{ info.enabled_hypervisors|join:", " }}</td></tr>
+            <tr><td>{% trans "Master node" %}</td><td>{{ info.master }}</td></tr>
+            <tr><td>{% trans "Created" %}</td><td>
+            {% if cluster.ctime %}
+                {{ cluster.ctime|date }}
+            {% else %}
+                <em>{% trans "unknown" %}</em>
+            {% endif %}
+            </td></tr>
+            <tr><td>{% trans "Last modified" %}</td><td >{{ cluster.mtime|date }}</td></tr>
+            <tr><td>{% trans "Virtual Machines" %}</td><td>{{ cluster.virtual_machines.count }}</td></tr>
+            <tr><td>{% trans "Nodes" %}</td><td>{{ cluster.nodes.count }}</td></tr>
+            {% endwith %}
+        </table>
+    </div>
+</div>
+{% endblock %}

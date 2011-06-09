@@ -26,7 +26,8 @@
 
         // initialize the autocomplete search box
         autocomplete_search($('#search_box'), $('#search_form'), 
-                '{% url search-json %}');
+                '{% url search-suggestions %}', 
+                '{% url search-detail-lookup %}');
     });
 </script>
 {% endblock %}

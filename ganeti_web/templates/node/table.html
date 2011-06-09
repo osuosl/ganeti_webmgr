@@ -1,0 +1,42 @@
+{% load i18n %}
+{% load webmgr_tags %}
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.tablesorter.min.js"></script>
+<script type="text/javascript">
+    $(function(){
+        $("#nodes .ram, #nodes .disk").progressBar(PBAR_CONF);
+        $("#nodes").tablesorter();
+    });
+</script>
+
+<table id="nodes" class="sorted">
+<thead>
+    <tr>
+        <th class="status"></th>
+        <th>{% trans "Name" %}</th>
+        <th>{% trans "Free Memory (GB)" %}</th>
+        <th>{% trans "Free Disk (GB)" %}</th>
+        <th>{% trans "Instances (P/S)" %}</th>
+    </tr>
+</thead>
+<tbody>
+    {% for node in nodes %}
+        <tr>
+            <td class="status">
+            {% if node.info.offline %}
+                <div class="icon_stopped" title="Offline"></div>
+            {% else %}
+                <div class="icon_running" title="Online"></div>
+            {% endif %}
+            </td>
+            <td>
+                <a href="{% url node-detail cluster.slug node.hostname %}">
+                    {{ node.hostname|abbreviate_fqdn }}
+                </a>
+            </td>
+            <td class="ram">{% node_memory node %}</td>
+            <td class="disk">{% node_disk node %}</td>
+            <td>{{ node.info.pinst_cnt }} / {{ node.info.sinst_cnt }}</td>
+        </tr>
+    {% endfor %}
+</tbody>
+</table>

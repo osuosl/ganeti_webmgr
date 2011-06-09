@@ -32,6 +32,7 @@ TEMPLATE_DEBUG = DEBUG
 TESTING = False
 # Setting this to False disables south migrations when running tests.
 SOUTH_TESTS_MIGRATE = False
+SKIP_SOUTH_TESTS = True
 
 ADMINS = (
     # ('Your Name', 'your_email@domain.com'),
@@ -130,8 +131,8 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.debug',
     'django.core.context_processors.i18n',
     'django.core.context_processors.media',
-    'ganeti.context_processors.site',
-    'ganeti.context_processors.common_permissions'
+    'ganeti_web.context_processors.site',
+    'ganeti_web.context_processors.common_permissions'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -159,22 +160,22 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.sites',
     'registration',
-    'object_permissions',
-    'ganeti',
+    'deprecated.ganeti', # XXX deprecated ganeti MUST come before ganeti_web
+    'ganeti_web',        # XXX must come before object permissions for migration to 0.7
+    'object_permissions', 
     'object_log',
     'south',
     'haystack',
     'muddle_users',
 )
 
-#haystack search stuff
-ROOT_DIR_PATH = os.path.dirname(__file__)
-ROOT_DIR_NAME = ROOT_DIR_PATH.split('/')[-1]
+# Search settings
+ROOT_DIR_NAME = DOC_ROOT.split('/')[-1]
 HAYSTACK_SITECONF = ROOT_DIR_NAME + '.search_sites'
 HAYSTACK_SEARCH_ENGINE = 'whoosh'
-HAYSTACK_WHOOSH_PATH = os.path.join(ROOT_DIR_PATH, 'whoosh_index')
+HAYSTACK_WHOOSH_PATH = os.path.join(DOC_ROOT, 'whoosh_index')
 
-AUTH_PROFILE_MODULE = 'ganeti.Profile'
+AUTH_PROFILE_MODULE = 'ganeti_web.Profile'
 LOGIN_REDIRECT_URL = '/'
 
 DATE_FORMAT = "d/m/Y H:i"

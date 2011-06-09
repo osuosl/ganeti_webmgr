@@ -1,6 +1,6 @@
 /* JavaScript responsible for making the autocomplete search box work. */
 
-function autocomplete_search(search_box, search_form, JSON_url){
+function autocomplete_search(search_box, search_form, search_URL, lookup_URL){
     /* Customized autocomplete search box for use with GWM's search system.
      *
      * This autocomplete search box works with the search.py view to provide
@@ -11,8 +11,11 @@ function autocomplete_search(search_box, search_form, JSON_url){
      *              e.g. $('#search_box')
      *      `search_form`:  The form that contains the search box as a jQuery
      *              object, e.g. $('#search_form')
-     *      `JSON_url`:     The url responsible for returning the search
-     *              suggestions as a JSON object, e.g. '/search.json'
+     *      `search_URL`:   The url responsible for returning the search
+     *              suggestions as a JSON object, e.g. 
+     *              '/search-suggestions.json'
+     *      `lookup_URL`:   The url responsible for returning the absolute URL
+     *              to the details page for a GWM object
      *
      * Example markup:
      *      <form id='search_form' action='/search' method='GET'>
@@ -26,10 +29,12 @@ function autocomplete_search(search_box, search_form, JSON_url){
     // keycode for the enter/return key
     var ENTER_KEYCODE = 13;
     
-    // Submit search on return/enter keypress
+    // Submit search on return/enter keypress as long as no suggestion selected
     search_box.keydown(function(event){
         if(event.keyCode == ENTER_KEYCODE){
-            search_form.submit();
+            if(!$('.ui-autocomplete #ui-active-menuitem').is(":visible")){
+                search_form.submit();
+            }
         }
     })
    
@@ -39,7 +44,7 @@ function autocomplete_search(search_box, search_form, JSON_url){
     // to its details page over simply searching for the keyword, and if
     // nothing's selected, search for the keyword.
     .autocomplete({
-        source: JSON_url,   // The search results as a JSON file
+        source: search_URL,   // The search results as a JSON file
         minLength: 2,       // Only AJAX search if there are >= 2 chars entered
 
         // Custom focus function to handle our custom results format
@@ -49,9 +54,19 @@ function autocomplete_search(search_box, search_form, JSON_url){
         },
 
         // When an item is selected, bypass the search results and go directly
-        // to the item's detail page
+        // to the item's detail page. We do this by looking up the item's URL
+        // and setting the window location appropriately.
         select: function(event, ui){
-            window.location = ui.item.url;
+            search_box.attr('disabled', 'disabled');
+            $.getJSON(lookup_URL, 
+                {
+                    'type': ui.item.type,
+                    'hostname': ui.item.value
+                },
+                function(details_url){
+                    window.location = details_url;
+                }
+            );
         }
     })
 

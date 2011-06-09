@@ -1,0 +1,2160 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2011-06-08 11:16-0700\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: settings.py:70
+msgid "Greek"
+msgstr ""
+
+#: settings.py:71
+msgid "English"
+msgstr ""
+
+#: ganeti_web/models.py:126
+msgid "Enter a valid SSH public key with comment (SSH2 RSA or DSA)."
+msgstr ""
+
+#: ganeti_web/models.py:877
+msgid "hostname"
+msgstr ""
+
+#: ganeti_web/models.py:878
+msgid "slug"
+msgstr ""
+
+#: ganeti_web/models.py:879
+msgid "port"
+msgstr ""
+
+#: ganeti_web/models.py:880
+msgid "description"
+msgstr ""
+
+#: ganeti_web/models.py:881
+msgid "username"
+msgstr ""
+
+#: ganeti_web/models.py:882
+msgid "password"
+msgstr ""
+
+#: ganeti_web/models.py:883
+msgid "hash"
+msgstr ""
+
+#: ganeti_web/models.py:886 ganeti_web/models.py:1165
+#: ganeti_web/templates/overview/used_resources_data.html:10
+msgid "Virtual CPUs"
+msgstr ""
+
+#: ganeti_web/models.py:887
+msgid "disk"
+msgstr ""
+
+#: ganeti_web/models.py:888
+msgid "ram"
+msgstr ""
+
+#: ganeti_web/models.py:1150
+msgid "Start up After Creation"
+msgstr ""
+
+#: ganeti_web/models.py:1152 ganeti_web/forms/virtual_machine.py:668
+msgid "DNS Name Check"
+msgstr ""
+
+#: ganeti_web/models.py:1154
+msgid "Automatic Allocation"
+msgstr ""
+
+#: ganeti_web/models.py:1158 ganeti_web/forms/virtual_machine.py:131
+msgid "Disk Template"
+msgstr ""
+
+#: ganeti_web/models.py:1159 ganeti_web/forms/virtual_machine.py:128
+msgid "Primary Node"
+msgstr ""
+
+#: ganeti_web/models.py:1161 ganeti_web/forms/virtual_machine.py:129
+msgid "Secondary Node"
+msgstr ""
+
+#: ganeti_web/models.py:1163 ganeti_web/forms/virtual_machine.py:130
+#: ganeti_web/forms/virtual_machine.py:470
+#: ganeti_web/templates/virtual_machine/detail.html:268
+#: ganeti_web/templates/virtual_machine/reinstall.html:34
+msgid "Operating System"
+msgstr ""
+
+#: ganeti_web/models.py:1167 ganeti_web/forms/virtual_machine.py:37
+#: ganeti_web/templates/cluster/user_quota.html:10
+#: ganeti_web/templates/virtual_machine/detail.html:284
+#: ganeti_web/views/cluster.py:333
+msgid "Memory"
+msgstr ""
+
+#: ganeti_web/models.py:1169 ganeti_web/forms/virtual_machine.py:133
+msgid "Disk Size"
+msgstr ""
+
+#: ganeti_web/models.py:1171 ganeti_web/forms/virtual_machine.py:134
+#: ganeti_web/forms/virtual_machine.py:566
+msgid "Disk Type"
+msgstr ""
+
+#: ganeti_web/models.py:1173 ganeti_web/forms/virtual_machine.py:135
+msgid "NIC Mode"
+msgstr ""
+
+#: ganeti_web/models.py:1175
+msgid "NIC Link"
+msgstr ""
+
+#: ganeti_web/models.py:1177 ganeti_web/forms/virtual_machine.py:136
+#: ganeti_web/forms/virtual_machine.py:567
+msgid "NIC Type"
+msgstr ""
+
+#: ganeti_web/models.py:1180
+msgid "Kernel Path"
+msgstr ""
+
+#: ganeti_web/models.py:1182
+msgid "Root Path"
+msgstr ""
+
+#: ganeti_web/models.py:1184
+msgid "Enable Serial Console"
+msgstr ""
+
+#: ganeti_web/models.py:1185 ganeti_web/forms/virtual_machine.py:137
+#: ganeti_web/forms/virtual_machine.py:568
+msgid "Boot Device"
+msgstr ""
+
+#: ganeti_web/models.py:1187
+msgid "CD-ROM Image Path"
+msgstr ""
+
+#: ganeti_web/forms/virtual_machine.py:60
+msgid "Owner cannot be changed when recovering a failed deployment"
+msgstr ""
+
+#: ganeti_web/forms/virtual_machine.py:63
+msgid "Hostname is already in use for this cluster"
+msgstr ""
+
+#: ganeti_web/forms/virtual_machine.py:83
+#: ganeti_web/forms/virtual_machine.py:108
+msgid "This field must start with a \"/\""
+msgstr ""
+
+#: ganeti_web/forms/virtual_machine.py:94
+msgid "This field can not be set if Security Mode is not set to User"
+msgstr ""
+
+#: ganeti_web/forms/virtual_machine.py:97
+#: ganeti_web/forms/virtual_machine.py:542
+msgid "This field is required"
+msgstr ""
+
+#: ganeti_web/forms/virtual_machine.py:99
+msgid "This field must being with an alpha character"
+msgstr ""
+
+#: ganeti_web/forms/virtual_machine.py:124
+#: ganeti_web/forms/virtual_machine.py:684
+#: ganeti_web/templates/virtual_machine/detail.html:239
+msgid "Owner"
+msgstr ""
+
+#: ganeti_web/forms/virtual_machine.py:125 ganeti_web/templates/index.html:10
+#: ganeti_web/templates/overview.html:84
+#: ganeti_web/templates/overview.html:122
+#: ganeti_web/templates/cluster/detail.html:107
+#: ganeti_web/templates/cluster/edit.html:13
+#: ganeti_web/templates/cluster/list.html:42
+#: ganeti_web/templates/importing/missing.html:35
+#: ganeti_web/templates/importing/missing_db.html:33
+#: ganeti_web/templates/importing/orphans.html:33
+#: ganeti_web/templates/importing/nodes/import.html:33
+#: ganeti_web/templates/importing/nodes/missing.html:35
+#: ganeti_web/templates/overview/used_resources_data.html:6
+#: ganeti_web/templates/virtual_machine/inner_table.html:9
+msgid "Cluster"
+msgstr ""
+
+#: ganeti_web/forms/virtual_machine.py:127
+#: ganeti_web/forms/virtual_machine.py:665
+msgid "Instance Name"
+msgstr ""
+
+#: ganeti_web/forms/virtual_machine.py:261
+#: ganeti_web/forms/virtual_machine.py:366
+msgid "Primary and Secondary Nodes must not match"
+msgstr ""
+
+#: ganeti_web/forms/virtual_machine.py:277
+#: ganeti_web/forms/virtual_machine.py:382
+msgid "Image path required if boot device is CD-ROM"
+msgstr ""
+
+#: ganeti_web/forms/virtual_machine.py:291
+msgid ""
+"Automatic Allocation was selected, but there is no IAllocator available."
+msgstr ""
+
+#: ganeti_web/forms/virtual_machine.py:315
+msgid "User is not a member of the specified group"
+msgstr ""
+
+#: ganeti_web/forms/virtual_machine.py:319
+msgid "You are not allowed to act on behalf of this user"
+msgstr ""
+
+#: ganeti_web/forms/virtual_machine.py:326
+msgid "Owner does not have permissions for this cluster"
+msgstr ""
+
+#: ganeti_web/forms/virtual_machine.py:337
+msgid ""
+"Owner does not have enough ram remaining on this cluster. You may choose to "
+"not automatically start the instance or reduce the amount of ram."
+msgstr ""
+
+#: ganeti_web/forms/virtual_machine.py:342
+#: ganeti_web/forms/virtual_machine.py:448
+msgid "Owner does not have enough diskspace remaining on this cluster."
+msgstr ""
+
+#: ganeti_web/forms/virtual_machine.py:349
+msgid ""
+"Owner does not have enough virtual cpus remaining on this cluster. You may "
+"choose to not automatically start the instance or reduce the amount of "
+"virtual cpus."
+msgstr ""
+
+#: ganeti_web/forms/virtual_machine.py:395
+msgid ""
+"Automatic Allocation was selected, but there is no                       "
+"IAllocator available."
+msgstr ""
+
+#: ganeti_web/forms/virtual_machine.py:442
+msgid ""
+"Owner does not have enough ram remaining on this cluster. You must reduce "
+"the amount of ram."
+msgstr ""
+
+#: ganeti_web/forms/virtual_machine.py:455
+msgid ""
+"Owner does not have enough virtual cpus remaining on this cluster. You must "
+"reduce the amount of virtual cpus."
+msgstr ""
+
+#: ganeti_web/forms/virtual_machine.py:469
+msgid "NIC Mac"
+msgstr ""
+
+#: ganeti_web/forms/virtual_machine.py:529
+msgid "Kernel Path must be specified along with Initrd Path"
+msgstr ""
+
+#: ganeti_web/forms/virtual_machine.py:539
+msgid "This field can not be set without VNC TLS enabled"
+msgstr ""
+
+#: ganeti_web/forms/virtual_machine.py:660
+msgid "Attempt recovery from failed migration"
+msgstr ""
+
+#: ganeti_web/forms/virtual_machine.py:667
+msgid "IP Check"
+msgstr ""
+
+#: ganeti_web/forms/virtual_machine.py:678
+msgid "The new hostname must be different than the current hostname"
+msgstr ""
+
+#: ganeti_web/templates/about.html:4 ganeti_web/templates/about.html.py:17
+msgid "About"
+msgstr ""
+
+#: ganeti_web/templates/about.html:27
+msgid "Ganeti Version: "
+msgstr ""
+
+#: ganeti_web/templates/about.html:31
+msgid "Core Contributors"
+msgstr ""
+
+#: ganeti_web/templates/about.html:43
+msgid "Add-ons"
+msgstr ""
+
+#: ganeti_web/templates/about.html:56
+msgid "Donate to Ganeti Web Manager"
+msgstr ""
+
+#: ganeti_web/templates/index.html:5 ganeti_web/templates/overview.html:5
+#: ganeti_web/templates/overview.html:76
+#: ganeti_web/templates/cluster/detail.html:114
+#: ganeti_web/templates/job/detail.html:24
+#: ganeti_web/templates/virtual_machine/detail.html:149
+#: templates/menu_base.html:50
+msgid "Overview"
+msgstr ""
+
+#: ganeti_web/templates/index.html:15
+msgid "Hypervisors"
+msgstr ""
+
+#: ganeti_web/templates/index.html:16
+#: ganeti_web/templates/cluster/detail.html:134
+msgid "Default hypervisor"
+msgstr ""
+
+#: ganeti_web/templates/index.html:17
+#: ganeti_web/templates/cluster/detail.html:136
+#: ganeti_web/templates/cluster/list.html:46
+msgid "Master node"
+msgstr ""
+
+#: ganeti_web/templates/index.html:18
+msgid "Ganeti version"
+msgstr ""
+
+#: ganeti_web/templates/index.html:22 ganeti_web/templates/overview.html:88
+#: ganeti_web/templates/cluster/detail.html:116
+#: ganeti_web/templates/cluster/detail.html:146
+#: ganeti_web/templates/cluster/list.html:47
+#: ganeti_web/templates/node/list.html:2
+msgid "Nodes"
+msgstr ""
+
+#: ganeti_web/templates/index.html:29 ganeti_web/templates/overview.html:110
+#: ganeti_web/templates/cluster/list.html:72
+msgid "No Clusters"
+msgstr ""
+
+#: ganeti_web/templates/overview.html:80
+msgid "Cluster Status"
+msgstr ""
+
+#: ganeti_web/templates/overview.html:85
+#: ganeti_web/templates/cluster/list.html:44
+msgid "Version"
+msgstr ""
+
+#: ganeti_web/templates/overview.html:86
+msgid "Free Memory [GiB]"
+msgstr ""
+
+#: ganeti_web/templates/overview.html:87
+msgid "Free Disk [GiB]"
+msgstr ""
+
+#: ganeti_web/templates/overview.html:89
+#: ganeti_web/templates/cluster/list.html:48
+msgid "VMs"
+msgstr ""
+
+#: ganeti_web/templates/overview.html:97
+#: ganeti_web/templates/cluster/list.html:57
+#: ganeti_web/templates/virtual_machine/inner_table.html:25
+msgid "Ganeti API Error"
+msgstr ""
+
+#: ganeti_web/templates/overview.html:118
+msgid "Virtual Machine Status"
+msgstr ""
+
+#: ganeti_web/templates/overview.html:123
+msgid "Running"
+msgstr ""
+
+#: ganeti_web/templates/overview.html:124
+msgid "Total"
+msgstr ""
+
+#: ganeti_web/templates/overview.html:135
+msgid "You do have access to any virtual machines"
+msgstr ""
+
+#: ganeti_web/templates/overview.html:142
+#: ganeti_web/templates/ganeti/group/detail.html:4
+#: ganeti_web/templates/ganeti/users/detail.html:6
+msgid "Resource Usage"
+msgstr ""
+
+#: ganeti_web/templates/overview.html:156
+msgid "Errors and Failures"
+msgstr ""
+
+#: ganeti_web/templates/overview.html:171
+msgid "Job"
+msgstr ""
+
+#: ganeti_web/templates/overview.html:185
+msgid "Administration"
+msgstr ""
+
+#: ganeti_web/templates/overview.html:190
+msgid "Adopt"
+msgstr ""
+
+#: ganeti_web/templates/overview.html:196
+msgid "VMs ready to import"
+msgstr ""
+
+#: ganeti_web/templates/overview.html:197
+msgid "Import"
+msgstr ""
+
+#: ganeti_web/templates/overview.html:203
+msgid "VMs missing from ganeti"
+msgstr ""
+
+#: ganeti_web/templates/overview.html:204
+msgid "Remove"
+msgstr ""
+
+#: ganeti_web/templates/cluster/delete.html:33
+#: ganeti_web/templates/cluster/detail.html:126
+#: ganeti_web/templates/cluster/quota.html:12
+#: ganeti_web/templates/virtual_machine/create_status.html:50
+#: ganeti_web/templates/virtual_machine/delete.html:20
+#: ganeti_web/templates/virtual_machine/detail.html:195
+msgid "Delete"
+msgstr ""
+
+#: ganeti_web/templates/cluster/delete.html:37
+#: ganeti_web/templates/virtual_machine/delete_status.html:44
+msgid "Deleted"
+msgstr ""
+
+#: ganeti_web/templates/cluster/detail.html:28
+#: ganeti_web/templates/virtual_machine/table.html:86
+msgid "Loading"
+msgstr ""
+
+#: ganeti_web/templates/cluster/detail.html:36
+#: ganeti_web/templates/node/detail.html:42
+msgid "Couldn't load this tab. We'll try to fix this as soon as possible"
+msgstr ""
+
+#: ganeti_web/templates/cluster/detail.html:42
+msgid "Are you sure you want to delete this cluster"
+msgstr ""
+
+#: ganeti_web/templates/cluster/detail.html:44
+msgid "Deleting"
+msgstr ""
+
+#: ganeti_web/templates/cluster/detail.html:110
+msgid "Error in Ganeti API"
+msgstr ""
+
+#: ganeti_web/templates/cluster/detail.html:115
+#: ganeti_web/templates/cluster/detail.html:145
+#: ganeti_web/templates/node/detail.html:225 templates/menu_base.html:64
+msgid "Virtual Machines"
+msgstr ""
+
+#: ganeti_web/templates/cluster/detail.html:118
+#: ganeti_web/templates/virtual_machine/detail.html:153
+#: templates/menu_base.html:111
+msgid "Users"
+msgstr ""
+
+#: ganeti_web/templates/cluster/detail.html:119
+#: ganeti_web/templates/ganeti/group/detail.html:5
+#: ganeti_web/templates/ganeti/users/detail.html:8
+#: ganeti_web/templates/node/detail.html:172
+#: ganeti_web/templates/virtual_machine/detail.html:158
+msgid "Log"
+msgstr ""
+
+#: ganeti_web/templates/cluster/detail.html:125
+#: ganeti_web/templates/cluster/edit.html:5
+#: ganeti_web/templates/cluster/edit.html:16
+#: ganeti_web/templates/virtual_machine/create_status.html:49
+#: ganeti_web/templates/virtual_machine/detail.html:176
+#: ganeti_web/templates/virtual_machine/edit.html:26
+#: ganeti_web/templates/virtual_machine/edit_confirm.html:50
+msgid "Edit"
+msgstr ""
+
+#: ganeti_web/templates/cluster/detail.html:127
+msgid "Redistribute Config"
+msgstr ""
+
+#: ganeti_web/templates/cluster/detail.html:132
+msgid "Architecture"
+msgstr ""
+
+#: ganeti_web/templates/cluster/detail.html:133
+msgid "Ganeti Version"
+msgstr ""
+
+#: ganeti_web/templates/cluster/detail.html:135
+msgid "Available hypervisors"
+msgstr ""
+
+#: ganeti_web/templates/cluster/detail.html:137
+msgid "Created"
+msgstr ""
+
+#: ganeti_web/templates/cluster/detail.html:141
+msgid "unknown"
+msgstr ""
+
+#: ganeti_web/templates/cluster/detail.html:144
+#: ganeti_web/templates/virtual_machine/detail.html:241
+msgid "Last modified"
+msgstr ""
+
+#: ganeti_web/templates/cluster/edit.html:7
+msgid "Add a new cluster"
+msgstr ""
+
+#: ganeti_web/templates/cluster/edit.html:17
+#: ganeti_web/templates/cluster/edit.html:52
+msgid "Add"
+msgstr ""
+
+#: ganeti_web/templates/cluster/edit.html:40
+msgid "Default Quota"
+msgstr ""
+
+#: ganeti_web/templates/cluster/edit.html:50
+#: ganeti_web/templates/node/role.html:10
+#: ganeti_web/templates/virtual_machine/edit_confirm.html:57
+msgid "Save"
+msgstr ""
+
+#: ganeti_web/templates/cluster/list.html:5 templates/menu_base.html:57
+msgid "Clusters"
+msgstr ""
+
+#: ganeti_web/templates/cluster/list.html:36
+msgid "Add Cluster"
+msgstr ""
+
+#: ganeti_web/templates/cluster/list.html:43
+msgid "Description"
+msgstr ""
+
+#: ganeti_web/templates/cluster/list.html:45
+msgid "Hypervisor"
+msgstr ""
+
+#: ganeti_web/templates/cluster/quota.html:11
+msgid "Update"
+msgstr ""
+
+#: ganeti_web/templates/cluster/user_quota.html:9
+msgid "CPUs"
+msgstr ""
+
+#: ganeti_web/templates/cluster/user_quota.html:11
+#: ganeti_web/templates/overview/used_resources_data.html:8
+#: ganeti_web/templates/virtual_machine/detail.html:291
+msgid "Disk"
+msgstr ""
+
+#: ganeti_web/templates/cluster/users.html:13
+#: ganeti_web/templates/cluster/users.html:48
+msgid "Quota"
+msgstr ""
+
+#: ganeti_web/templates/ganeti/users/detail.html:5
+msgid "Permissions"
+msgstr ""
+
+#: ganeti_web/templates/ganeti/users/detail.html:7
+msgid "User Actions"
+msgstr ""
+
+#: ganeti_web/templates/ganeti/users/detail.html:15
+msgid "Add SSH key"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm.html:3
+#: ganeti_web/templates/virtual_machine/create_help.html:131
+msgid "Number of virtual cpus to allocate to this virtual machine"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm.html:4
+#: ganeti_web/templates/helptips/vm.html:11
+#: ganeti_web/templates/helptips/vm_create.html:141
+#: ganeti_web/templates/virtual_machine/create_help.html:132
+#: ganeti_web/templates/virtual_machine/create_help.html:139
+#: ganeti_web/templates/virtual_machine/create_help.html:160
+msgid "This will be deducted from the owner's quota"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm.html:8
+msgid ""
+"Amount of ram to allocate to this virtual machine. If no units\n"
+"        are given, megabytes is assumed."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm.html:15
+msgid ""
+"In <b>bridged</b> mode, it specifies the bridge interface to\n"
+"        attach this NIC to on the node <i>(e.g. br0)</i>."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm.html:19
+msgid ""
+"In <b>routed</b> mode it's intended to differentiate between \n"
+"        different routing tables/virtual machine groups (but the \n"
+"        meaning is dependant on the network script, see \n"
+"        <a href=\"http://docs.ganeti.org/ganeti/current/man/gnt-cluster.html"
+"\">\n"
+"        gnt-cluster(8)</a> for more details."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm.html:28
+#: ganeti_web/templates/virtual_machine/create_help.html:232
+msgid "This option specifies a MAC address to be associated with the NIC"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm.html:31
+msgid ""
+"Acceptable values are a valid MAC address or 'generate' to\n"
+"        generate a new unique MAC address."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:4
+msgid ""
+"The owner indicates who this virtual machine belongs to. Resources\n"
+"    used by the virtual machine will be deducted from the owner's\n"
+"    quota."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:9
+msgid ""
+"An owner may be a user or a group.  If you are a member of a group\n"
+"    you may create a virtual machine on behalf of that group."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:13
+msgid ""
+"If your user does not directly have access/permission to a cluster,\n"
+"    it will not have permission to own a virtual machine directly."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:19
+#: ganeti_web/templates/virtual_machine/create_help.html:21
+msgid "Which ganeti cluster to deploy the new virtual machine on"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:23
+msgid ""
+"Fully qualified domain name <i>(<b>FQDN</b>)</i> to assign to this\n"
+"    virtual machine. <i>(e.g. hostname.example.org)</i>"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:28
+#: ganeti_web/templates/virtual_machine/create_help.html:30
+msgid "Which hypervisor the new virtual machine will run under"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:33
+msgid ""
+"Uncheck this if you don't want the instance to automatically start\n"
+"    after creation. If you do so, you can start it manually on the\n"
+"    virtual machine detail page."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:40
+msgid ""
+"Check the virtual machine DNS name via the resolver <i>(e.g. in DNS\n"
+"    or /etc/hosts, depending on your setup)</i>. Since the name check\n"
+"    is used to compute the IP address this also enables/disables IP\n"
+"    checks <i>(e.g.  if the IP is pingable)</i>."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:46
+msgid ""
+"This is useful for setups that deploy virtual machines using\n"
+"    dynamic DNS and thus the name is not resolvable yet."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:50
+msgid ""
+"<b>Use with caution!</b> If left unchecked you may run into name/ip\n"
+"    collisions."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:56
+msgid ""
+"Automatically select primary and secondary node to allocate disks\n"
+"    on."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:68
+#: ganeti_web/templates/virtual_machine/create_help.html:70
+msgid "Disk layout template for the virtual machine on the cluster node."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:70
+#: ganeti_web/templates/virtual_machine/create_help.html:72
+msgid "The available choices are"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:73
+#: ganeti_web/templates/virtual_machine/create_help.html:75
+msgid "Disk devices will be logical volumes"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:77
+#: ganeti_web/templates/virtual_machine/create_help.html:79
+msgid "Disk devices will be"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:78
+#: ganeti_web/templates/virtual_machine/create_help.html:80
+msgid "version"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:78
+#: ganeti_web/templates/virtual_machine/create_help.html:80
+msgid "on top of LVM volumes"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:81
+#: ganeti_web/templates/virtual_machine/create_help.html:83
+msgid "Disk devices will be regular files"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:85
+msgid ""
+"This creates a virtual machine with no\n"
+"            disks. Its useful for testing only (or other special\n"
+"            cases)."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:91
+msgid ""
+"If drbd is selected, then a primary and secondary node will\n"
+"        need to be chosen unless automatic allocation has been \n"
+"        selection. DRBD will allow the virtual machine to use live \n"
+"        migration and failover in case one of the nodes goes offline."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:98
+msgid ""
+"The primary node to use for the virtual machine (in case automatic\n"
+"    allocation is not used)."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:103
+msgid ""
+"The secondary node to use for the virtual machine (in case\n"
+"        automatic allocation is not used)."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:107
+#: ganeti_web/templates/virtual_machine/create_help.html:109
+msgid "This is only required when using the drbd disk template."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:112
+msgid ""
+"Operating system to install on the virtual machine. Your\n"
+"        choices are limited to the images configured on the cluster."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:116
+msgid ""
+"The text in <b>bold</b> signifies the Ganeti Operating\n"
+"        System Type which may be called debootstrap, image, or some\n"
+"        other type. The text that is selectable is the operating system\n"
+"        (or os-type variant) that the cluster has access to."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:124
+msgid ""
+"Size of the system disk to allocate to this virtual machine. If\n"
+"        no units are given, megabytes is assumed."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:145
+msgid ""
+"This parameter determines the way the disks are presented to\n"
+"        the virtual machine."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:146
+#: ganeti_web/templates/helptips/vm_create.html:183
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:7
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:59
+#: ganeti_web/templates/virtual_machine/create_help.html:165
+#: ganeti_web/templates/virtual_machine/create_help.html:215
+#: ganeti_web/templates/virtual_machine/create_help.html:294
+#: ganeti_web/templates/virtual_machine/create_help.html:373
+msgid "The possible options are"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:160
+#: ganeti_web/templates/helptips/vm_create.html:232
+#: ganeti_web/templates/helptips/vm_create.html:239
+#: ganeti_web/templates/helptips/vm_edit_hvm.html:7
+#: ganeti_web/templates/helptips/vm_edit_hvm.html:17
+#: ganeti_web/templates/helptips/vm_edit_hvm.html:27
+#: ganeti_web/templates/virtual_machine/create_help.html:179
+#: ganeti_web/templates/virtual_machine/create_help.html:273
+#: ganeti_web/templates/virtual_machine/create_help.html:280
+#: ganeti_web/templates/virtual_machine/create_help.html:287
+#: ganeti_web/templates/virtual_machine/create_help.html:423
+#: ganeti_web/templates/virtual_machine/create_help.html:433
+msgid "Valid for the Xen HVM and KVM hypervisors"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:164
+msgid ""
+"This option specifies how the virtual machine connects to the\n"
+"        network. More information on this can be found in the "
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:167
+#: ganeti_web/templates/virtual_machine/create_help.html:186
+msgid "Ganeti tutorial documentation"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:169
+#: ganeti_web/templates/virtual_machine/create_help.html:188
+msgid "When in doubt, choose"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:172
+msgid ""
+"The virtual machine's network interface\n"
+"            will be attached to a software bridge running on the node."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:175
+msgid ""
+"The virtual machine's network interface\n"
+"            will be routed"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:182
+msgid ""
+"This parameter determines the way the network cards are \n"
+"        presented to the virtual machine."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:196
+#: ganeti_web/templates/helptips/vm_create.html:205
+#: ganeti_web/templates/helptips/vm_create.html:213
+#: ganeti_web/templates/helptips/vm_edit_pvm.html:14
+#: ganeti_web/templates/helptips/vm_edit_pvm.html:27
+#: ganeti_web/templates/virtual_machine/create_help.html:228
+#: ganeti_web/templates/virtual_machine/create_help.html:246
+#: ganeti_web/templates/virtual_machine/create_help.html:254
+#: ganeti_web/templates/virtual_machine/create_help.html:324
+#: ganeti_web/templates/virtual_machine/create_help.html:337
+msgid "Valid for the Xen PVM and KVM hypervisors"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:200
+msgid ""
+"This option specifies the path (on the node) to the kernel to \n"
+"        boot the virtual machine with. Xen PVM instances always require\n"
+"        this, while for KVM if this option is empty, it will cause the\n"
+"        machine to load the kernel from its disks."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:209
+msgid ""
+"This option specifies the name of the root device. This is \n"
+"        always needed for Xen PVM, while for KVM it is only used if the\n"
+"        kernel_path option is also specified."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:217
+msgid ""
+"This boolean option specifies whether to emulate a serial\n"
+"        console for the instance."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:220
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:23
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:38
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:54
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:71
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:78
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:86
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:99
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:105
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:112
+#: ganeti_web/templates/virtual_machine/create_help.html:261
+#: ganeti_web/templates/virtual_machine/create_help.html:310
+#: ganeti_web/templates/virtual_machine/create_help.html:352
+#: ganeti_web/templates/virtual_machine/create_help.html:368
+#: ganeti_web/templates/virtual_machine/create_help.html:385
+#: ganeti_web/templates/virtual_machine/create_help.html:392
+#: ganeti_web/templates/virtual_machine/create_help.html:400
+#: ganeti_web/templates/virtual_machine/create_help.html:413
+#: ganeti_web/templates/virtual_machine/create_help.html:439
+#: ganeti_web/templates/virtual_machine/create_help.html:446
+msgid "Valid for the KVM hypervisor"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:223
+#: ganeti_web/templates/virtual_machine/create_help.html:264
+msgid "Value denoting boot order for the virtual machine"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:225
+#: ganeti_web/templates/virtual_machine/create_help.html:266
+msgid "boot from the first disk device"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:227
+msgid ""
+"boot from the cdrom (requires CD Image path\n"
+"            being set)"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:230
+#: ganeti_web/templates/virtual_machine/create_help.html:271
+msgid "boot from the network (such as PXE)"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_create.html:236
+msgid ""
+"The path to a CDROM image on the node to attach to the virtual\n"
+"       machine."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit.html:4
+msgid ""
+"This option changes the name of the Virtual Machine's Operating\n"
+"        System. It does <b>not</b> reinstall the Operating System. "
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_hvm.html:4
+msgid ""
+"A boolean option that specifies if the hypervisor should enable \n"
+"        ACPI support for this instance. By default, ACPI is disabled."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_hvm.html:11
+msgid ""
+"A boolean option that specifies if the instance should be started \n"
+"        with its clock set to the localtime of the machine (when true) or \n"
+"        to the UTC (When false). The default is false, which is useful \n"
+"        for Linux/Unix machines; for Windows OSes, it is recommended to \n"
+"        enable this parameter."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_hvm.html:21
+msgid ""
+"Specifies the address that the VNC listener for this instance should\n"
+"        bind to. Valid values are IPv4 addresses. Use the address 0.0.0.0 \n"
+"        to bind to all available interfaces (this is the default) or "
+"specify \n"
+"        the address of one of the interfaces on the node to restrict "
+"listening\n"
+"        to that interface."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:4
+msgid ""
+"The disk cache mode. It can be either default to\n"
+"        not pass any cache option to KVM, or one of the KVM  cache\n"
+"        modes."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:10
+#: ganeti_web/templates/virtual_machine/create_help.html:297
+msgid "For direct I/O"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:11
+#: ganeti_web/templates/virtual_machine/create_help.html:298
+msgid "No cache option is sent to KVM"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:13
+msgid ""
+"To use the host cache but \n"
+"             report completion to the guest only when the\n"
+"             host has committed the changes to disk"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:19
+msgid ""
+"To use the host cache and report completion as soon\n"
+"             as the data is in the host cache"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:26
+msgid ""
+"If <b><i>enabled</i></b> the -enable-kvm flag is\n"
+"    passed to kvm. If <b><i>disabled</i></b> -disable-kvm is passed. If\n"
+"    unset no flag is passed, and the default running mode for your kvm\n"
+"    binary will be used."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:30
+#: ganeti_web/templates/virtual_machine/create_help.html:344
+msgid "Valid for the KVM hypervisor."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:34
+msgid ""
+"This option passes the -mem-path argument to kvm with the path \n"
+"        (on the node) to the mount point of the hugetlbfs file system,\n"
+"        along with the -mem-prealloc argument too."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:42
+msgid ""
+"The maximum amount of time (in ms) a KVM instance is allowed to be \n"
+"        frozen during a live migration, in order to copy dirty memory pages."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:46
+msgid ""
+"Default value is 30ms, but you may need to increase this value for \n"
+"        busy instances."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:50
+#: ganeti_web/templates/virtual_machine/create_help.html:364
+msgid "This option is only effective with KVM"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:51
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:52
+#: ganeti_web/templates/virtual_machine/create_help.html:365
+#: ganeti_web/templates/virtual_machine/create_help.html:366
+msgid "versions"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:51
+#: ganeti_web/templates/virtual_machine/create_help.html:365
+msgid "and QEMU-KVM"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:58
+#: ganeti_web/templates/virtual_machine/create_help.html:372
+msgid "The security model for kvm"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:62
+msgid ""
+"The default option. Nothing is done and\n"
+"        instances are run as the Ganeti daemon user (normally root)."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:64
+msgid ""
+"KVM will drop privileges and become the \n"
+"        user specified by the Security Domain parameter."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:66
+msgid ""
+"A global cluster pool of users will be used,\n"
+"        making sure no two instances share the same user on the \n"
+"        same node."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:69
+#: ganeti_web/templates/virtual_machine/create_help.html:383
+msgid "This mode is not implemented yet"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:75
+msgid ""
+"Specifies the username to run the instance under. It must \n"
+"        be a valid username existing on the host."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:82
+msgid ""
+"This option specifies the usb mouse type to be used. It can be\n"
+"        \"mouse\" or \"tablet\". When using VNC it's recommended to set\n"
+"        it to \"tablet\"."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:90
+msgid ""
+"This boolean option determines wether to run the KVM instance in \n"
+"       a chroot directory."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:94
+msgid ""
+"If it is set to \"true\", an empty directory is created before\n"
+"       starting the instance and its path is passed via the -chroot flag\n"
+"       to kvm. The directory is removed when the instance is stopped."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:98
+#: ganeti_web/templates/virtual_machine/create_help.html:412
+msgid "It is set to &quot;false&quot; by default"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:103
+#: ganeti_web/templates/virtual_machine/create_help.html:437
+msgid ""
+"A boolean option that dictates if the VNC connection is secured with TLS"
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_kvm.html:109
+msgid ""
+"If VNC TLS is enabled, this option specifies the path to the x509\n"
+"        certificate."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_pvm.html:4
+msgid ""
+"This option specifies the path (on the node) to the initrd \n"
+"        to boot the instance with. Xen PVM instances can use this \n"
+"        always, while for KVM if this option is only used if the \n"
+"        Kernel Path option is also specified."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_pvm.html:10
+msgid ""
+"You can pass here either an absolute filename (the path to \n"
+"        the initrd) if you want to use an initrd, or use the \n"
+"        format no_initrd_path for no initrd."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_pvm.html:18
+msgid ""
+"This options specifies extra arguments to the kernel that will \n"
+"        be loaded. device. This is always used for Xen PVM, while for\n"
+"        KVM it is only used if the kernel_path option is also specified."
+msgstr ""
+
+#: ganeti_web/templates/helptips/vm_edit_pvm.html:23
+msgid ""
+"The default setting for this value is simply \"ro\", which mounts\n"
+"        the root disk (initially) in read-only one. For example, setting\n"
+"        this to single will cause the instance to start in single-user mode."
+msgstr ""
+
+#: ganeti_web/templates/importing/missing.html:17
+#: ganeti_web/templates/importing/missing_db.html:3
+#: ganeti_web/templates/importing/nodes/import.html:3
+#: ganeti_web/templates/importing/nodes/missing.html:17
+#: templates/menu_base.html:83
+msgid "Orphan VMs"
+msgstr ""
+
+#: ganeti_web/templates/importing/missing.html:20
+#: ganeti_web/templates/importing/missing_db.html:19
+#: ganeti_web/templates/importing/orphans.html:19
+#: ganeti_web/templates/importing/nodes/import.html:19
+#: ganeti_web/templates/importing/nodes/missing.html:20
+#: templates/menu_base.html:78
+msgid "Admin"
+msgstr ""
+
+#: ganeti_web/templates/importing/missing.html:20
+msgid "Missing Virtual Machines"
+msgstr ""
+
+#: ganeti_web/templates/importing/missing.html:30
+#: ganeti_web/templates/importing/nodes/missing.html:30
+msgid "Delete Selected"
+msgstr ""
+
+#: ganeti_web/templates/importing/missing.html:36
+#: ganeti_web/templates/importing/missing_db.html:34
+#: ganeti_web/templates/importing/orphans.html:34
+#: ganeti_web/templates/importing/nodes/import.html:34
+#: ganeti_web/templates/importing/nodes/missing.html:36
+msgid "Hostname"
+msgstr ""
+
+#: ganeti_web/templates/importing/missing.html:43
+#: ganeti_web/templates/importing/missing_db.html:41
+#: ganeti_web/templates/importing/orphans.html:41
+msgid "All virtual machines are synchronized"
+msgstr ""
+
+#: ganeti_web/templates/importing/missing_db.html:19
+msgid "Import Virtual Machines"
+msgstr ""
+
+#: ganeti_web/templates/importing/missing_db.html:22
+msgid ""
+"If you manually create virtual machines they will exist in ganeti, and must "
+"be manually imported"
+msgstr ""
+
+#: ganeti_web/templates/importing/missing_db.html:28
+#: ganeti_web/templates/importing/nodes/import.html:28
+msgid "Import Selected"
+msgstr ""
+
+#: ganeti_web/templates/importing/orphans.html:19
+msgid "Orphaned Virtual Machines"
+msgstr ""
+
+#: ganeti_web/templates/importing/orphans.html:22
+msgid ""
+"Orphaned virtual machines are those that do not have an owner. Owners are "
+"not required but they allow you to track who a virtual machine was created "
+"for. Ownership does not grant permissions to a user or group but it does "
+"consume their resource quota"
+msgstr ""
+
+#: ganeti_web/templates/importing/orphans.html:28
+msgid "Update Selected"
+msgstr ""
+
+#: ganeti_web/templates/importing/nodes/import.html:19
+#: templates/menu_base.html:98
+msgid "Import Nodes"
+msgstr ""
+
+#: ganeti_web/templates/importing/nodes/import.html:22
+msgid "When you add nodes to ganeti they must be manually imported"
+msgstr ""
+
+#: ganeti_web/templates/importing/nodes/import.html:41
+#: ganeti_web/templates/importing/nodes/missing.html:43
+msgid "All nodes are synchronized"
+msgstr ""
+
+#: ganeti_web/templates/importing/nodes/missing.html:20
+#: templates/menu_base.html:103
+msgid "Missing Nodes"
+msgstr ""
+
+#: ganeti_web/templates/job/detail.html:25
+#: ganeti_web/templates/job/detail.html:38
+#: ganeti_web/templates/virtual_machine/detail.html:243
+msgid "Status"
+msgstr ""
+
+#: ganeti_web/templates/job/detail.html:31
+msgid "Completed"
+msgstr ""
+
+#: ganeti_web/templates/job/detail.html:39
+msgid "Started"
+msgstr ""
+
+#: ganeti_web/templates/job/detail.html:40
+msgid "Finished"
+msgstr ""
+
+#: ganeti_web/templates/node/detail.html:57
+msgid "Modify Role"
+msgstr ""
+
+#: ganeti_web/templates/node/detail.html:59
+msgid "Migrate Primary Virtual Machines"
+msgstr ""
+
+#: ganeti_web/templates/node/detail.html:61
+msgid "Evacuate Secondary Virtual Machines"
+msgstr ""
+
+#: ganeti_web/templates/node/detail.html:139
+#: templates/registration/password_reset_confirm.html:16
+msgid "Error"
+msgstr ""
+
+#: ganeti_web/templates/node/detail.html:156
+msgid "Detail"
+msgstr ""
+
+#: ganeti_web/templates/node/detail.html:160
+msgid "Primary"
+msgstr ""
+
+#: ganeti_web/templates/node/detail.html:166
+msgid "Secondary"
+msgstr ""
+
+#: ganeti_web/templates/node/detail.html:182
+msgid "Change Role"
+msgstr ""
+
+#: ganeti_web/templates/node/detail.html:189
+#: ganeti_web/templates/node/migrate.html:8
+#: ganeti_web/templates/virtual_machine/detail.html:208
+msgid "Migrate"
+msgstr ""
+
+#: ganeti_web/templates/node/detail.html:199
+msgid "Evacuate"
+msgstr ""
+
+#: ganeti_web/templates/node/detail.html:214
+msgid "Primary IP"
+msgstr ""
+
+#: ganeti_web/templates/node/detail.html:215
+msgid "Secondary IP"
+msgstr ""
+
+#: ganeti_web/templates/node/detail.html:216
+msgid "Role"
+msgstr ""
+
+#: ganeti_web/templates/node/detail.html:218
+msgid "Master Candidate"
+msgstr ""
+
+#: ganeti_web/templates/node/detail.html:221
+msgid "Drained"
+msgstr ""
+
+#: ganeti_web/templates/node/detail.html:222
+msgid "Ram Free [GiB]"
+msgstr ""
+
+#: ganeti_web/templates/node/detail.html:223
+msgid "Disk Free [GiB]"
+msgstr ""
+
+#: ganeti_web/templates/node/role.html:7
+msgid "Current Role"
+msgstr ""
+
+#: ganeti_web/templates/node/table.html:8
+#: ganeti_web/templates/virtual_machine/inner_table.html:7
+msgid "Name"
+msgstr ""
+
+#: ganeti_web/templates/node/table.html:9
+msgid "Free Memory (GB)"
+msgstr ""
+
+#: ganeti_web/templates/node/table.html:10
+msgid "Free Disk (GB)"
+msgstr ""
+
+#: ganeti_web/templates/node/table.html:11
+msgid "Instances (P/S)"
+msgstr ""
+
+#: ganeti_web/templates/overview/used_resources_data.html:7
+msgid "Your VMs"
+msgstr ""
+
+#: ganeti_web/templates/overview/used_resources_data.html:9
+#: ganeti_web/templates/virtual_machine/inner_table.html:13
+msgid "RAM"
+msgstr ""
+
+#: ganeti_web/templates/overview/used_resources_data.html:25
+#: ganeti_web/templates/overview/used_resources_data.html:38
+#: ganeti_web/templates/overview/used_resources_data.html:51
+msgid "Exceeded by"
+msgstr ""
+
+#: ganeti_web/templates/overview/used_resources_data.html:59
+msgid "You do not own any virtual machines"
+msgstr ""
+
+#: ganeti_web/templates/ssh_keys/form.html:13
+#: templates/registration/password_change_form.html:9
+#: templates/registration/password_reset_confirm.html:11
+msgid "Submit"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create.html:4
+msgid "Create a new Virtual Machine"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create.html:40
+#: ganeti_web/templates/virtual_machine/detail.html:4
+msgid "Virtual Machine"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create.html:40
+#: ganeti_web/templates/virtual_machine/create.html:82
+#: templates/registration/registration_form.html:9
+msgid "Create"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create.html:55
+#: ganeti_web/templates/virtual_machine/edit.html:32
+msgid "General Parameters"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create.html:69
+#: ganeti_web/templates/virtual_machine/edit.html:45
+msgid "Hypervisor Parameters"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:6
+msgid ""
+"The owner indicates who this virtual machine belongs to. Resources\n"
+"        used by the virtual machine will be deducted from the owner's\n"
+"        quota."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:11
+msgid ""
+"An owner may be a user or a group.  If you are a member of a group\n"
+"        you may create a virtual machine on behalf of that group."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:15
+msgid ""
+"If your user does not directly have access/permission to a cluster,\n"
+"        it will not have permission to own a virtual machine directly."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:25
+msgid ""
+"Fully qualified domain name <i>(<b>FQDN</b>)</i> to assign to this\n"
+"        virtual machine. <i>(e.g. hostname.example.org)</i>"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:35
+msgid ""
+"Uncheck this if you don't want the instance to automatically start\n"
+"        after creation. If you do so, you can start it manually on the\n"
+"        virtual machine detail page."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:42
+msgid ""
+"Check the virtual machine DNS name via the resolver <i>(e.g. in DNS\n"
+"        or /etc/hosts, depending on your setup)</i>. Since the name check\n"
+"        is used to compute the IP address this also enables/disables IP\n"
+"        checks <i>(e.g.  if the IP is pingable)</i>."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:48
+msgid ""
+"This is useful for setups that deploy virtual machines using\n"
+"        dynamic DNS and thus the name is not resolvable yet."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:52
+msgid ""
+"<b>Use with caution!</b> If left unchecked you may run into name/ip\n"
+"        collisions."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:58
+msgid ""
+"Automatically select primary and secondary node to allocate disks\n"
+"        on."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:87
+msgid ""
+"This creates a virtual machine with no\n"
+"                disks. Its useful for testing only (or other special\n"
+"                cases)."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:93
+msgid ""
+"If drbd is selected, then a primary and secondary node will\n"
+"            need to be chosen unless automatic allocation has been \n"
+"            selection. DRBD will allow the virtual machine to use live \n"
+"            migration and failover in case one of the nodes goes offline."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:100
+msgid ""
+"The primary node to use for the virtual machine (in case automatic\n"
+"        allocation is not used)."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:105
+msgid ""
+"The secondary node to use for the virtual machine (in case\n"
+"            automatic allocation is not used)."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:114
+msgid ""
+"Operating system to install on the virtual machine. Your\n"
+"            choices are limited to the images configured on the cluster."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:118
+msgid ""
+"The text in <b>bold</b> signifies the Ganeti Operating\n"
+"            System Type which may be called debootstrap, image, or some\n"
+"            other type. The text that is selectable is the operating system\n"
+"            (or os-type variant) that the cluster has access to."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:126
+msgid ""
+"This option changes the name of the Virtual Machine's Operating\n"
+"            System. It does <b>not</b> reinstall the Operating System. "
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:136
+msgid ""
+"Amount of ram to allocate to this virtual machine. If no units\n"
+"            are given, megabytes is assumed."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:143
+msgid ""
+"Size of the system disk to allocate to this virtual machine. If\n"
+"            no units are given, megabytes is assumed."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:164
+msgid ""
+"This parameter determines the way the disks are presented to\n"
+"            the virtual machine."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:183
+msgid ""
+"This option specifies how the virtual machine connects to the\n"
+"            network. More information on this can be found in the "
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:191
+msgid ""
+"The virtual machine's network interface\n"
+"                will be attached to a software bridge running on the node."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:194
+msgid ""
+"The virtual machine's network interface\n"
+"                will be routed"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:201
+msgid ""
+"In <b>bridged</b> mode, it specifies the bridge interface to\n"
+"            attach this NIC to on the node <i>(e.g. br0)</i>."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:205
+msgid ""
+"In <b>routed</b> mode it's intended to differentiate between \n"
+"            different routing tables/virtual machine groups (but the \n"
+"            meaning is dependant on the network script, see \n"
+"            <a href=\"http://docs.ganeti.org/ganeti/current/man/gnt-cluster."
+"html\">\n"
+"            gnt-cluster(8)</a> for more details."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:214
+msgid ""
+"This parameter determines the way the network cards are \n"
+"            presented to the virtual machine."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:235
+msgid ""
+"Acceptable values are a valid MAC address or 'generate' to\n"
+"            generate a new unique MAC address."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:241
+msgid ""
+"This option specifies the path (on the node) to the kernel to \n"
+"            boot the virtual machine with. Xen PVM instances always require\n"
+"            this, while for KVM if this option is empty, it will cause the\n"
+"            machine to load the kernel from its disks."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:250
+msgid ""
+"This option specifies the name of the root device. This is \n"
+"            always needed for Xen PVM, while for KVM it is only used if the\n"
+"            kernel_path option is also specified."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:258
+msgid ""
+"This boolean option specifies whether to emulate a serial\n"
+"            console for the instance."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:268
+msgid ""
+"boot from the cdrom (requires CD Image path\n"
+"                being set)"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:277
+msgid ""
+"The path to a CDROM image on the node to attach to the virtual\n"
+"           machine."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:284
+msgid ""
+"A boolean option that specifies if the hypervisor should enable \n"
+"            ACPI support for this instance. By default, ACPI is disabled."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:291
+msgid ""
+"The disk cache mode. It can be either default to\n"
+"            not pass any cache option to KVM, or one of the KVM  cache\n"
+"            modes."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:300
+msgid ""
+"To use the host cache but \n"
+"                 report completion to the guest only when the\n"
+"                 host has committed the changes to disk"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:306
+msgid ""
+"To use the host cache and report completion as soon\n"
+"                 as the data is in the host cache"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:314
+msgid ""
+"This option specifies the path (on the node) to the initrd \n"
+"            to boot the instance with. Xen PVM instances can use this \n"
+"            always, while for KVM if this option is only used if the \n"
+"            Kernel Path option is also specified."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:320
+msgid ""
+"You can pass here either an absolute filename (the path to \n"
+"            the initrd) if you want to use an initrd, or use the \n"
+"            format no_initrd_path for no initrd."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:328
+msgid ""
+"This options specifies extra arguments to the kernel that will \n"
+"            be loaded. device. This is always used for Xen PVM, while for\n"
+"            KVM it is only used if the kernel_path option is also specified."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:333
+msgid ""
+"The default setting for this value is simply \"ro\", which mounts\n"
+"            the root disk (initially) in read-only one. For example, "
+"setting\n"
+"            this to single will cause the instance to start in single-user "
+"mode."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:340
+msgid ""
+"If <b><i>enabled</i></b> the -enable-kvm flag is\n"
+"        passed to kvm. If <b><i>disabled</i></b> -disable-kvm is passed. If\n"
+"        unset no flag is passed, and the default running mode for your kvm\n"
+"        binary will be used."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:348
+msgid ""
+"This option passes the -mem-path argument to kvm with the path \n"
+"            (on the node) to the mount point of the hugetlbfs file system,\n"
+"            along with the -mem-prealloc argument too."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:356
+msgid ""
+"The maximum amount of time (in ms) a KVM instance is allowed to be \n"
+"            frozen during a live migration, in order to copy dirty memory "
+"pages."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:360
+msgid ""
+"Default value is 30ms, but you may need to increase this value for \n"
+"            busy instances."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:376
+msgid ""
+"The default option. Nothing is done and\n"
+"            instances are run as the Ganeti daemon user (normally root)."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:378
+msgid ""
+"KVM will drop privileges and become the \n"
+"            user specified by the Security Domain parameter."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:380
+msgid ""
+"A global cluster pool of users will be used,\n"
+"            making sure no two instances share the same user on the \n"
+"            same node."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:389
+msgid ""
+"Specifies the username to run the instance under. It must \n"
+"            be a valid username existing on the host."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:396
+msgid ""
+"This option specifies the usb mouse type to be used. It can be\n"
+"            \"mouse\" or \"tablet\". When using VNC it's recommended to set\n"
+"            it to \"tablet\"."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:404
+msgid ""
+"This boolean option determines wether to run the KVM instance in \n"
+"           a chroot directory."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:408
+msgid ""
+"If it is set to \"true\", an empty directory is created before\n"
+"           starting the instance and its path is passed via the -chroot "
+"flag\n"
+"           to kvm. The directory is removed when the instance is stopped."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:417
+msgid ""
+"A boolean option that specifies if the instance should be started \n"
+"            with its clock set to the localtime of the machine (when true) "
+"or \n"
+"            to the UTC (When false). The default is false, which is useful \n"
+"            for Linux/Unix machines; for Windows OSes, it is recommended "
+"to \n"
+"            enable this parameter."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:427
+msgid ""
+"Specifies the address that the VNC listener for this instance should\n"
+"            bind to. Valid values are IPv4 addresses. Use the address "
+"0.0.0.0 \n"
+"            to bind to all available interfaces (this is the default) or "
+"specify \n"
+"            the address of one of the interfaces on the node to restrict "
+"listening\n"
+"            to that interface."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/create_help.html:443
+msgid ""
+"If VNC TLS is enabled, this option specifies the path to the x509\n"
+"            certificate."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/delete_status.html:38
+msgid "deleting"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/detail.html:165
+msgid "Console"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/detail.html:181
+#: ganeti_web/templates/virtual_machine/rename.html:4
+#: ganeti_web/templates/virtual_machine/rename.html:21
+#: ganeti_web/templates/virtual_machine/reparent.html:4
+msgid "Rename"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/detail.html:188
+#: ganeti_web/templates/virtual_machine/reparent.html:28
+msgid "Change Owner"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/detail.html:200
+#: ganeti_web/templates/virtual_machine/reinstall.html:4
+#: ganeti_web/templates/virtual_machine/reinstall.html:18
+#: ganeti_web/templates/virtual_machine/reinstall.html:50
+msgid "Reinstall"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/detail.html:217
+msgid "Shutdown"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/detail.html:222
+msgid "Reboot"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/detail.html:228
+msgid "Start"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/detail.html:240
+msgid "Created on"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/detail.html:246
+msgid "Primary node"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/detail.html:255
+msgid "Secondary node"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/detail.html:272
+msgid "Autostart"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/detail.html:283
+msgid "VCPUs"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/detail.html:285
+msgid "NIC type"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/detail.html:288
+msgid "Disks"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/detail.html:292
+msgid "Type"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/detail.html:293
+msgid "Size"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/detail.html:304
+msgid "Network Devices"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/detail.html:331
+msgid "Boot Order"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/detail.html:333
+msgid "CDROM Image Path"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/edit.html:41
+msgid "Operating System Parameters"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/edit.html:68
+msgid "Continue"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/edit_confirm.html:23
+msgid "Confirm Changes"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/edit_confirm.html:32
+msgid "Nothing changed"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/edit_confirm.html:54
+msgid "Save & Reboot"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/edit_confirm.html:59
+msgid "Cancel"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/inner_table.html:11
+msgid "Node"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/inner_table.html:12
+msgid "OS"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/inner_table.html:14
+#: ganeti_web/views/cluster.py:334
+msgid "Disk Space"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/inner_table.html:15
+msgid "vCPUs"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/inner_table.html:71
+msgid "No Virtual Machines"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/inner_table.html:79
+msgid "Previous"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/inner_table.html:89
+msgid "Next"
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/rename.html:42
+msgid ""
+"Domain name or host name to assign to this virtual\n"
+"            machine; e.g. <tt>example.org</tt> or\n"
+"            <tt>subdomain.example.org</tt>."
+msgstr ""
+
+#: ganeti_web/templates/virtual_machine/table.html:65
+#: ganeti_web/templates/virtual_machine/table.html:70
+msgid "Add Virtual Machine"
+msgstr ""
+
+#: ganeti_web/views/cluster.py:60 ganeti_web/views/cluster.py:78
+#: ganeti_web/views/cluster.py:96 ganeti_web/views/cluster.py:118
+#: ganeti_web/views/cluster.py:183 ganeti_web/views/cluster.py:275
+#: ganeti_web/views/cluster.py:376 ganeti_web/views/general.py:299
+#: ganeti_web/views/general.py:304 ganeti_web/views/importing.py:65
+#: ganeti_web/views/importing.py:128 ganeti_web/views/importing.py:193
+#: ganeti_web/views/importing_nodes.py:26
+#: ganeti_web/views/importing_nodes.py:43
+#: ganeti_web/views/importing_nodes.py:95 ganeti_web/views/jobs.py:67
+#: ganeti_web/views/jobs.py:73 ganeti_web/views/node.py:77
+#: ganeti_web/views/node.py:99 ganeti_web/views/node.py:119
+#: ganeti_web/views/node.py:138 ganeti_web/views/node.py:160
+#: ganeti_web/views/node.py:207 ganeti_web/views/node.py:284
+#: ganeti_web/views/virtual_machine.py:84
+#: ganeti_web/views/virtual_machine.py:132
+#: ganeti_web/views/virtual_machine.py:271
+#: ganeti_web/views/virtual_machine.py:529
+#: ganeti_web/views/virtual_machine.py:546
+#: ganeti_web/views/virtual_machine.py:563
+msgid "You do not have sufficient privileges"
+msgstr ""
+
+#: ganeti_web/views/cluster.py:235 ganeti_web/views/general.py:318
+#: ganeti_web/views/virtual_machine.py:328
+msgid "You're not allowed to view keys."
+msgstr ""
+
+#: ganeti_web/views/cluster.py:318
+msgid "User was not found"
+msgstr ""
+
+#: ganeti_web/views/cluster.py:345
+msgid "Enter a hostname"
+msgstr ""
+
+#: ganeti_web/views/cluster.py:351 ganeti_web/views/cluster.py:360
+msgid "Enter a password"
+msgstr ""
+
+#: ganeti_web/views/cluster.py:355
+msgid "Enter a username"
+msgstr ""
+
+#: ganeti_web/views/general.py:275 ganeti_web/views/general.py:279
+msgid "You are not authorized to view this page"
+msgstr ""
+
+#: ganeti_web/views/node.py:270
+msgid "Must choose automatic allocation or a specific node"
+msgstr ""
+
+#: ganeti_web/views/users.py:44
+msgid "Only superuser or owner can get user's SSH key."
+msgstr ""
+
+#: ganeti_web/views/users.py:48 ganeti_web/views/users.py:75
+#: ganeti_web/views/users.py:90
+msgid "Cannot retrieve information"
+msgstr ""
+
+#: ganeti_web/views/users.py:65
+msgid "Only superuser or owner can save user's SSH key."
+msgstr ""
+
+#: ganeti_web/views/users.py:84
+msgid "Only superuser or owner can delete user's SSH key."
+msgstr ""
+
+#: ganeti_web/views/virtual_machine.py:174
+#: ganeti_web/views/virtual_machine.py:192
+msgid "You do not have permission to vnc on this"
+msgstr ""
+
+#: ganeti_web/views/virtual_machine.py:207
+msgid "You do not have permission to shut down this virtual machine"
+msgstr ""
+
+#: ganeti_web/views/virtual_machine.py:230
+msgid "You do not have permission to start up this virtual machine"
+msgstr ""
+
+#: ganeti_web/views/virtual_machine.py:240
+msgid ""
+"Owner does not have enough RAM remaining on this cluster to start the "
+"virtual machine."
+msgstr ""
+
+#: ganeti_web/views/virtual_machine.py:244
+msgid ""
+"Owner does not have enough Virtual CPUs remaining on this cluster to start "
+"the virtual machine."
+msgstr ""
+
+#: ganeti_web/views/virtual_machine.py:307
+msgid "You do not have permission to reboot this virtual machine"
+msgstr ""
+
+#: ganeti_web/views/virtual_machine.py:484
+msgid "You do not have permission to view this virtual machines's details"
+msgstr ""
+
+#: ganeti_web/views/virtual_machine.py:578
+msgid "You do not have permission to create virtual machines"
+msgstr ""
+
+#: ganeti_web/views/virtual_machine.py:710
+msgid "Error creating virtual machine on this cluster"
+msgstr ""
+
+#: ganeti_web/views/virtual_machine.py:808
+#: ganeti_web/views/virtual_machine.py:994
+msgid "You do not have permissions to edit this virtual machine"
+msgstr ""
+
+#: ganeti_web/views/virtual_machine.py:852
+msgid "Sorry, but you do not have permission to reboot this machine."
+msgstr ""
+
+#: ganeti_web/views/virtual_machine.py:955
+msgid "You do not have permissions to edit             this virtual machine"
+msgstr ""
+
+#: ganeti_web/views/virtual_machine.py:1043
+msgid "You do not have permissions to change the owner of this virtual machine"
+msgstr ""
+
+#: ganeti_web/views/virtual_machine.py:1108
+msgid "You do not have permissions to view this cluster"
+msgstr ""
+
+#: ganeti_web/views/virtual_machine.py:1128
+msgid "You do not have permission to view the default cluster options"
+msgstr ""
+
+#: templates/menu_base.html:38
+msgid "You are logged in as"
+msgstr ""
+
+#: templates/menu_base.html:41
+msgid "Logout"
+msgstr ""
+
+#: templates/menu_base.html:70
+msgid "Create VM"
+msgstr ""
+
+#: templates/menu_base.html:88
+msgid "Import VMs"
+msgstr ""
+
+#: templates/menu_base.html:93
+msgid "Missing VMs"
+msgstr ""
+
+#: templates/menu_base.html:119
+msgid "Groups"
+msgstr ""
+
+#: templates/menu_base.html:128
+msgid "Search"
+msgstr ""
+
+#: templates/registration/login.html:4 templates/registration/login.html:11
+#: templates/registration/login.html:16
+msgid "Login"
+msgstr ""
+
+#: templates/registration/login.html:19
+msgid "Forgot password"
+msgstr ""
+
+#: templates/registration/login.html:20
+msgid "Not a member"
+msgstr ""
+
+#: templates/registration/logout.html:4
+msgid "Logged out"
+msgstr ""
+
+#: templates/registration/password_reset_complete.html:5
+msgid "Password Reset Complete"
+msgstr ""
+
+#: templates/registration/password_reset_complete.html:6
+msgid ""
+"Your password was successfully reset.\n"
+"    You may login "
+msgstr ""
+
+#: templates/registration/password_reset_complete.html:7
+msgid "here"
+msgstr ""
+
+#: templates/registration/password_reset_confirm.html:7
+msgid "Reset Password"
+msgstr ""
+
+#: templates/registration/password_reset_confirm.html:17
+msgid "There was an error processing your password change request."
+msgstr ""
+
+#: templates/registration/password_reset_done.html:4
+msgid "Email Sent"
+msgstr ""
+
+#: templates/registration/password_reset_done.html:5
+msgid ""
+"An email has been sent containing instructions on resetting your password. "
+"Please\n"
+"check your inbox."
+msgstr ""
+
+#: templates/registration/password_reset_form.html:5
+msgid "Password Reset"
+msgstr ""
+
+#: templates/registration/password_reset_form.html:9
+msgid "Reset"
+msgstr ""
+
+#: templates/registration/registration_complete.html:4
+msgid "Registration Email Sent"
+msgstr ""
+
+#: templates/registration/registration_complete.html:5
+msgid ""
+"An email has been sent to your email address. \n"
+"You must confirm your account prior to logging in by following the "
+"instructions\n"
+"in the email."
+msgstr ""
+
+#: templates/registration/registration_form.html:5
+msgid "Registration"
+msgstr ""
