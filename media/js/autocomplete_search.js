@@ -57,16 +57,8 @@ function autocomplete_search(search_box, search_form, search_URL, lookup_URL){
         // to the item's detail page. We do this by looking up the item's URL
         // and setting the window location appropriately.
         select: function(event, ui){
-            search_box.attr('disabled', 'disabled');
-            $.getJSON(lookup_URL, 
-                {
-                    'type': ui.item.type,
-                    'hostname': ui.item.value
-                },
-                function(details_url){
-                    window.location = details_url;
-                }
-            );
+            window.location = lookup_URL + "?type=" + ui.item.type +
+                    "&hostname=" + ui.item.value;
         }
     })
 
