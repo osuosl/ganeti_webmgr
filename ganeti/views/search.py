@@ -97,7 +97,7 @@ def detail_lookup(request):
                     .select_related('cluster')[0]
         elif object_type == 'cluster':
             obj = Cluster.objects.filter(hostname=hostname)[0]
-        else
+        else:
             return HttpResponseNotFound()
     except IndexError:
         return HttpResponseNotFound()

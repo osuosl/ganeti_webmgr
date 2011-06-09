@@ -208,7 +208,7 @@ urlpatterns += patterns('ganeti.views.jobs',
 # Search
 urlpatterns += patterns('ganeti.views.search',
     url(r'^search/suggestions.json', 'suggestions', name='search-suggestions'),
-    url(r'^search/detail_lookup.json', 'detail_lookup', name='search-detail-lookup')
+    url(r'^search/detail_lookup', 'detail_lookup', name='search-detail-lookup')
 )
 urlpatterns += patterns('haystack.views',
     url(r'^search/', login_required(SearchView(form_class=autocomplete_search_form)), name='search')
