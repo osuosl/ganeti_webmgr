@@ -6,6 +6,13 @@
     <title>{% block title %}Ganeti Web Manager{% endblock %}</title>
     <link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}/css/base.css"/>
     <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.js"></script>
+    <script type="text/javascript">
+        function requireOnce(url) {
+            if (!$("script[scr='" + url + "']").length) {
+                $('head').append("<script type='text/javascript' src='" + url + "'><//script>");
+            }
+        }
+    </script>
     {% ifnotequal LANGUAGES|length 1 %}
         <script type="text/javascript" src="{{MEDIA_URL}}/js/L18N.js"></script>
     {% endifnotequal %}
