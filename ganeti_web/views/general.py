@@ -233,8 +233,9 @@ def overview(request):
     # include the user only if it owns a vm or has perms on at least one cluster
     profile = user.get_profile()
     personas = list(Organization.objects.filter(group__user=user))
-    if profile.virtual_machines.count() or \
-        user.has_any_perms(Cluster, ['admin', 'create_vm']) or not personas:
+    if profile.virtual_machines.count() \
+        or user.has_any_perms(Cluster, ['admin', 'create_vm'], groups=False) \
+        or not personas:
             personas.insert(0, profile)
     
     # get resources used per cluster from the first persona in the list
