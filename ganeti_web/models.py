@@ -245,8 +245,9 @@ class CachedClusterObject(models.Model):
             GanetiError.objects.store_error(str(e), obj=self, code=e.code)
 
         else:
-            self.error = None
-            GanetiError.objects.clear_errors(obj=self)
+            if self.error:
+                self.error = None
+                GanetiError.objects.clear_errors(obj=self)
 
     def _refresh(self):
         """
