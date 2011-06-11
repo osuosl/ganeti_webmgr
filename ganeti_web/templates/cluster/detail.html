@@ -1,6 +1,7 @@
 {% extends "menu_base.html" %}
 {% block title %}Cluster {{ cluster.id }}: {{ cluster.hostname|safe }}{% endblock %}
 {% load i18n %}
+{% load webmgr_tags %}
 {% block head %}
     <link href="{{MEDIA_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
     <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
@@ -145,6 +146,17 @@
             <tr><th>{% trans "Virtual Machines" %}</th><td>{{ cluster.virtual_machines.count }}</td></tr>
             <tr><th>{% trans "Nodes" %}</th><td>{{ cluster.nodes.count }}</td></tr>
             {% endwith %}
+        </table>
+        
+        <h3>{% trans "Default Quota" %}</h3>
+        <table class="horizontal">
+            <tr><th>{% trans "Disk Space" %}</th><td>
+                {% if cluster.disk %}
+                    {{ cluster.disk|mult:"1048576"|filesizeformat }}
+                {% else %}{% trans "unlimited" %}{% endif %}
+                </td></tr>
+            <tr><th>{% trans "Memory" %}</th><td>{% if cluster.ram %}{{ cluster.ram|mult:"1048576"|filesizeformat }}{% else %}{% trans "unlimited" %}{% endif %}</td></tr>
+            <tr><th>{% trans "Virtual CPUs" %}</th><td>{% if cluster.virtual_cpus %}{{ cluster.virtual_cpus|mult:"1048576"|filesizeformat }}{% else %}{% trans "unlimited" %}{% endif %}</td></tr>
         </table>
     </div>
 </div>
