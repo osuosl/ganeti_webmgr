@@ -127,23 +127,23 @@
                 <li><a class="button redistribute-config" title="redistribute cluster config" href="{% url cluster-redistribute-config cluster.slug %}">{% trans "Redistribute Config" %}</a></li>
             {% endif %}
         </ul>
-        <table class="overview">
+        <table class="overview horizontal">
             {% with cluster.info as info %}
-            <tr><td>{% trans "Architecture" %}</td><td>{{ info.architecture.0 }}</td></tr>
-            <tr><td>{% trans "Ganeti Version" %}</td><td>{{info.software_version}}</td></tr>
-            <tr><td>{% trans "Default hypervisor" %}</td><td>{{ info.default_hypervisor }}</td></tr>
-            <tr><td>{% trans "Available hypervisors" %}</td><td>{{ info.enabled_hypervisors|join:", " }}</td></tr>
-            <tr><td>{% trans "Master node" %}</td><td>{{ info.master }}</td></tr>
-            <tr><td>{% trans "Created" %}</td><td>
+            <tr><th>{% trans "Architecture" %}</th><td>{{ info.architecture.0 }}</td></tr>
+            <tr><th>{% trans "Ganeti Version" %}</th><td>{{info.software_version}}</td></tr>
+            <tr><th>{% trans "Default hypervisor" %}</th><td>{{ info.default_hypervisor }}</td></tr>
+            <tr><th>{% trans "Available hypervisors" %}</th><td>{{ info.enabled_hypervisors|join:", " }}</td></tr>
+            <tr><th>{% trans "Master node" %}</th><td><a href="{% url node-detail cluster.slug info.master %}">{{ info.master }}</a></td></tr>
+            <tr><th>{% trans "Created" %}</th><td>
             {% if cluster.ctime %}
                 {{ cluster.ctime|date }}
             {% else %}
                 <em>{% trans "unknown" %}</em>
             {% endif %}
             </td></tr>
-            <tr><td>{% trans "Last modified" %}</td><td >{{ cluster.mtime|date }}</td></tr>
-            <tr><td>{% trans "Virtual Machines" %}</td><td>{{ cluster.virtual_machines.count }}</td></tr>
-            <tr><td>{% trans "Nodes" %}</td><td>{{ cluster.nodes.count }}</td></tr>
+            <tr><th>{% trans "Last modified" %}</th><td >{{ cluster.mtime|date }}</td></tr>
+            <tr><th>{% trans "Virtual Machines" %}</th><td>{{ cluster.virtual_machines.count }}</td></tr>
+            <tr><th>{% trans "Nodes" %}</th><td>{{ cluster.nodes.count }}</td></tr>
             {% endwith %}
         </table>
     </div>

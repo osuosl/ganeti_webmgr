@@ -90,7 +90,8 @@ h1 a.breadcrumb:hover {text-decoration:underline;}
     -webkit-border-radius:0 !important;
 }
 .ui-widget-content {border:0 !important;}
-
+#tabs h3 {margin-top:25px;}
+#tabs table {margin-top:5px;}
 
 
 /**
