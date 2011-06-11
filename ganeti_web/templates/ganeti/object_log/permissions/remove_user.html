@@ -16,5 +16,5 @@ removed
     {% else %}
         {{ data.affected_user|default:"[deleted user]"}}
     {% endif %}
-    from {{log_item.object_type1}} {{data.object_str}}
+    from {{log_item.object_type1_id|ct_for_id}} {% contenttypelink log_item.object_type1_id log_item.object_id1 %}{{log_item.data.object_str}}{% endcontenttypelink %}
 {% endwith %}

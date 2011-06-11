@@ -1,4 +1,5 @@
 {% load webmgr_tags %}
+{% load object_log_tags %}
 {% with log_item.data as data %}
     {% if user.is_superuser %}
         <a href="{% url user-detail log_item.user.pk %}">{{log_item.user}}</a>
@@ -16,5 +17,5 @@ added
     {% else %}
         {{ data.affected_user|default:"[deleted user]"}}
     {% endif %}
-    to {{log_item.object_type1}} {{data.object_str}}
+    to {{log_item.object_type1_id|ct_for_id}} {% contenttypelink log_item.object_type1_id log_item.object_id1 %}{{log_item.data.object_str}}{% endcontenttypelink %}
 {% endwith %}
