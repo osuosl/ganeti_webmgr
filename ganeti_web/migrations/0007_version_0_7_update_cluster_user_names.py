@@ -11,6 +11,10 @@ class Migration(DataMigration):
             org.name = org.group.name
             org.save()
 
+        for profile in orm.Profile.objects.all().select_related('user'):
+            profile.name = profile.user.username
+            profile.save()
+
     def backwards(self, orm):
         """No need for backwards, row will be deleted anyways"""
         pass
