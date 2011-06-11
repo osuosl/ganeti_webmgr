@@ -44,7 +44,6 @@ def build_op_cache(user, object1, object2, object3, data):
     }
     if object2:
         data['affected_user']=str(object2)
-        data['affected_user_id']=object2.pk
         data['affected_user_class']=object2.__class__.__name__
     return data
 

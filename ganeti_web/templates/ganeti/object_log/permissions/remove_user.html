@@ -7,11 +7,11 @@
     {% endif %}
 removed
     {{ data.affected_user_class }}
-    {% if user.is_superuser and log_item.object2_id %}
+    {% if user.is_superuser and log_item.object_id2 %}
         {% ifequal data.affected_user_class "User" %}
-            <a href="{% url user-detail data.affected_user_id %}">{{data.affected_user}}</a>
+            <a href="{% url user-detail log_item.object_id2 %}">{{data.affected_user}}</a>
         {% else %}
-            <a href="{% url group-detail data.affected_user_id %}">{{data.affected_user}}</a>
+            <a href="{% url group-detail log_item.object_id2 %}">{{data.affected_user}}</a>
         {% endifequal %}
     {% else %}
         {{ data.affected_user|default:"[deleted user]"}}
