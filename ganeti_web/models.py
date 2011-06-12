@@ -1410,7 +1410,7 @@ class ClusterUser(models.Model):
     def __unicode__(self):
         return self.name
 
-    def used_resources(self, cluster=None, only_running=False):
+    def used_resources(self, cluster=None, only_running=True):
         """
         Return dictionary of total resources used by VMs that this ClusterUser
         has perms to.
