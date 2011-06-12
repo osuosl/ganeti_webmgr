@@ -70,17 +70,21 @@ def merge_errors(errors, jobs):
     return merged
 
 
+USED_NOTHING = dict(disk=0, ram=0, virtual_cpus=0)
+
+
 def get_used_resources(cluster_user):
     """ help function for querying resources used for a given cluster_user """
     resources = {}
     owned_vms = cluster_user.virtual_machines.all()
     used = cluster_user.used_resources()
-    clusters = Cluster.objects.in_bulk(used.keys())
-    for id in used.keys():
-        cluster = clusters[id]
+    clusters = cluster_user.permissable.get_objects_any_perms(Cluster)
+    quotas = Cluster.get_quotas(clusters, cluster_user)
+
+    for cluster, quota in quotas.items():
         resources[cluster] = {
-            "used": used[cluster.pk],
-            "set": cluster.get_quota(cluster_user),
+            "used": used[cluster.id] if cluster.id in used else USED_NOTHING,
+            "set": quota
         }
         resources[cluster]["total"] = owned_vms.filter(cluster=cluster).count()
         resources[cluster]["running"] = owned_vms.filter(cluster=cluster, \
@@ -233,8 +237,9 @@ def overview(request):
     # include the user only if it owns a vm or has perms on at least one cluster
     profile = user.get_profile()
     personas = list(Organization.objects.filter(group__user=user))
-    if profile.virtual_machines.count() or \
-        user.has_any_perms(Cluster, ['admin', 'create_vm']) or not personas:
+    if profile.virtual_machines.count() \
+        or user.has_any_perms(Cluster, ['admin', 'create_vm'], groups=False) \
+        or not personas:
             personas.insert(0, profile)
     
     # get resources used per cluster from the first persona in the list
@@ -278,7 +283,7 @@ def used_resources(request):
                                                group__user=user).exists():
                 return render_403(request, _('You are not authorized to view this page'))
     
-    resources = get_used_resources(cu)
+    resources = get_used_resources(cu.cast())
     return render_to_response("overview/used_resources.html", {
         'resources':resources
     }, context_instance=RequestContext(request))

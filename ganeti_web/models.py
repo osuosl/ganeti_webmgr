@@ -245,8 +245,9 @@ class CachedClusterObject(models.Model):
             GanetiError.objects.store_error(str(e), obj=self, code=e.code)
 
         else:
-            self.error = None
-            GanetiError.objects.clear_errors(obj=self)
+            if self.error:
+                self.error = None
+                GanetiError.objects.clear_errors(obj=self)
 
     def _refresh(self):
         """
@@ -962,7 +963,40 @@ class Cluster(CachedClusterObject):
             quota, new = Quota.objects.get_or_create(**kwargs)
             quota.__dict__.update(values)
             quota.save()
+    
+    @classmethod
+    def get_quotas(cls, clusters=None, user=None):
+        """ retrieve a bulk list of cluster quotas """
 
+        if clusters is None:
+            clusters = Cluster.objects.all()
+
+        quotas = {}
+        cluster_id_map = {}
+        for cluster in clusters:
+            quotas[cluster] = {'default':1,
+                               'ram':cluster.ram, \
+                               'disk':cluster.disk, \
+                               'virtual_cpus':cluster.virtual_cpus}
+            cluster_id_map[cluster.id] = cluster
+
+        # get user's custom queries if any
+        if user is not None:
+            query = Quota.objects.filter(cluster__in=clusters, user=user) \
+                        .values('ram', 'disk', 'virtual_cpus','cluster__id')
+
+            for custom in query:
+                try:
+                    cluster = cluster_id_map[custom['cluster__id']]
+                except KeyError:
+                    continue
+                custom['default'] = 0
+                del custom['cluster__id']
+                quotas[cluster] = custom
+
+        return quotas
+    
+    
     def sync_virtual_machines(self, remove=False):
         """
         Synchronizes the VirtualMachines in the database with the information
@@ -1357,6 +1391,11 @@ class ClusterUser(models.Model):
     name = models.CharField(max_length=128)
     real_type = models.ForeignKey(ContentType, editable=False, null=True)
 
+    @property
+    def permissable(self):
+        """ returns an object that can be granted permissions """
+        raise self.cast().permissable
+
     def save(self, *args, **kwargs):
         if not self.id:
             self.real_type = self._get_real_type()
@@ -1371,7 +1410,7 @@ class ClusterUser(models.Model):
     def __unicode__(self):
         return self.name
 
-    def used_resources(self, cluster=None, only_running=False):
+    def used_resources(self, cluster=None, only_running=True):
         """
         Return dictionary of total resources used by VMs that this ClusterUser
         has perms to.
@@ -1447,6 +1486,11 @@ class Profile(ClusterUser):
     def has_perm(self, *args, **kwargs):
         return self.user.has_perm(*args, **kwargs)
 
+    @property
+    def permissable(self):
+        """ returns an object that can be granted permissions """
+        return self.user
+
 
 class Organization(ClusterUser):
     """
@@ -1468,6 +1512,11 @@ class Organization(ClusterUser):
 
     def has_perm(self, *args, **kwargs):
         return self.group.has_perm(*args, **kwargs)
+    
+    @property
+    def permissable(self):
+        """ returns an object that can be granted permissions """
+        return self.group
 
 
 class Quota(models.Model):
