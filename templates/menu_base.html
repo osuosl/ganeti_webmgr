@@ -125,10 +125,12 @@
             {% endwith %}
 
             <!-- autocomplete search box -->
+            {%  if user.is_superuser %}
             <h3>{% trans "Search" %}</h3>
             <form id="search_form" action="{% url search %}" method="get">
                 <input id="search_box" type="text" name="q" />
             </form>
+            {% endif %}
 
         </div>
     {% endif %}
