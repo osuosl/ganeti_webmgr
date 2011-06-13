@@ -22,12 +22,12 @@
 
 <script type="text/javascript">
     $(function(){
-        /* "main" */
-
         // initialize the autocomplete search box
-        autocomplete_search($('#search_box'), $('#search_form'), 
-                '{% url search-suggestions %}', 
-                '{% url search-detail-lookup %}');
+        if ($('#search_box').length == 1) {
+            autocomplete_search($('#search_box'), $('#search_form'),
+                    '{% url search-suggestions %}',
+                    '{% url search-detail-lookup %}');
+        }
     });
 </script>
 {% endblock %}
