@@ -70,7 +70,7 @@ def list(request):
 
 
 @login_required
-def detail(request, id=None, template='groups/detail.html'):
+def detail(request, id=None, template='group/detail.html'):
     """
     Display group details
     
@@ -151,7 +151,7 @@ def add_user(request, id):
             
             # return html for new user row
             url = reverse('group-permissions', args=[id])
-            return render_to_response(\
+            return render_to_response( \
                 "object_permissions/permissions/user_row.html", \
                         {'user_detail':user, 'object':group, 'url':url},
                         context_instance=RequestContext(request))

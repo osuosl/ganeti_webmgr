@@ -1,4 +1,6 @@
 {% extends "menu_base.html" %}
+{% load i18n %}
+
 {% block title %} User Group: {{ object.name }}{% endblock %}
 
 {% block head %}
@@ -31,9 +33,7 @@
 {% endblock %}
 
 {% block content %}
-
-<a class="breadcrumb" href="{%url group-list %}">{% trans "Groups" %}</a> : {{ group.name }}</h1>
-
+<h1><a class="breadcrumb" href="{%url group-list %}">{% trans "Groups" %}</a> : {{ group.name }}</h1>
 <div id="tabs">
     <ul>
         <li><a href="#users"><span>Users</span></a></li>
@@ -44,4 +44,4 @@
         {% include "object_permissions/group/users.html" %}
     </div>
 </div>
-{% endblock %}
+{% endblock content %}
