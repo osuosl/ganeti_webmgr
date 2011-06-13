@@ -78,7 +78,14 @@ Twitter:      http://twitter.com/ganetiwebmgr
 
     source bin/activate
 
-10. Run the server
+10. Build the search indexes
+
+    ./manage.py rebuild_index
+
+NOTE: running ./manage.py update_index on a regular basis ensures that the
+search indexes stay up-to-date when models change in Ganeti Web Manager.
+
+11. Run the server
 
     Development:
 
