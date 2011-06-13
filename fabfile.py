@@ -71,7 +71,7 @@ def prod():
 # Files and directories that will be included in tarball when packaged
 env.MANIFEST = [
     "django_test_tools",
-    "ganeti",
+    "ganeti_web",
     "i18n",
     "locale",
     "media",
