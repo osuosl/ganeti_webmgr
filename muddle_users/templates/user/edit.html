@@ -10,7 +10,11 @@
 
 {% block content %}
 <h1><a class="breadcrumb" href="{%url user-list %}">{% trans "Users" %}</a>
+    {% if user_edit %}
     : <a class="breadcrumb" href="{% url user-detail user_edit.id %}">{{ user_edit.username }}</a> : {% trans "Edit" %}</h1>
+    {% else %}
+    : {%  trans "Create" %}
+    {% endif %}
 
 {% if username %}
 <form id="user-edit" method="post">
