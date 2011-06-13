@@ -4,10 +4,6 @@
     {% if user_edit.username %}{% trans "Edit User" %}{% else %}{% trans "Add User" %}{% endif %}
 {% endblock %}
 
-{% block head %}
-    {% include "ssh_keys/header.html" %}
-{% endblock %}
-
 {% block content %}
 <h1><a class="breadcrumb" href="{%url user-list %}">{% trans "Users" %}</a>
     {% if user_edit %}
