@@ -49,7 +49,7 @@
                     $("a.delete").addClass("deleting");
                     $("a.delete").removeClass("delete");
 
-                    href = "{% url cluster-edit cluster.slug %}";
+                    var href = "{% url cluster-edit cluster.slug %}";
                     $.delete_(href, function(){
                         window.location = "{% url cluster-list %}";
                     });
@@ -153,7 +153,9 @@
         <h3>{% trans "Resource Usage" %}</h3>
         <table id="resources" class="horizontal">
             <tr><th>{% trans "Ram Allocated [GiB]" %}</th><td class="ram">{% cluster_memory cluster %}</td></tr>
+            <tr><th>{% trans "Ram Used [GiB]" %}</th><td class="ram">{% cluster_memory cluster 0 %}</td></tr>
             <tr><th>{% trans "Disk Allocated [GiB]" %}</th><td class="disk">{% cluster_disk cluster %}</td></tr>
+            <tr><th>{% trans "Disk Used [GiB]" %}</th><td class="disk">{% cluster_disk cluster 0 %}</td></tr>
         </table>
 
         <h3>{% trans "Default Quota" %}</h3>

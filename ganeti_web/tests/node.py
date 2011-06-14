@@ -169,7 +169,9 @@ class TestNodeModel(TestCase, NodeTestCaseMixin):
         ram = node.ram
         self.assertEqual(9999, ram['total'])
         self.assertEqual(9420, ram['free'])
-    
+        self.assertEqual(8888, ram['used'])
+        self.assertEqual(579, ram['allocated'])
+
     def test_disk(self):
         """
         Tests the Node.ram property
@@ -190,6 +192,8 @@ class TestNodeModel(TestCase, NodeTestCaseMixin):
         disk = node.disk
         self.assertEqual(6666, disk['total'])
         self.assertEqual(5064, disk['free'])
+        self.assertEqual(4444, disk['used'])
+        self.assertEqual(1602, disk['allocated'])
 
 
 class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):

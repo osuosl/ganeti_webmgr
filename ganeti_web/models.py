@@ -722,7 +722,9 @@ class Node(CachedClusterObject):
     offline = models.BooleanField()
     role = models.CharField(max_length=1, choices=ROLE_CHOICES)
     ram_total = models.IntegerField(default=-1)
+    ram_free = models.IntegerField(default=-1)
     disk_total = models.IntegerField(default=-1)
+    disk_free = models.IntegerField(default=-1)
 
     # The last job reference indicates that there is at least one pending job
     # for this virtual machine.  There may be more than one job, and that can
@@ -769,7 +771,9 @@ class Node(CachedClusterObject):
 
         # Parse resource properties
         data['ram_total'] = info['mtotal'] if info['mtotal'] is not None else 0
+        data['ram_free'] = info['mfree'] if info['mfree'] is not None else 0
         data['disk_total'] = info['dtotal'] if info['dtotal'] is not None else 0
+        data['disk_free'] = info['dfree'] if info['dfree'] is not None else 0
         data['offline'] = info['offline']
         data['role'] = info['role']
         return data
@@ -810,7 +814,7 @@ class Node(CachedClusterObject):
             .aggregate(used=Sum('ram'))
 
         total = self.ram_total
-        used = total - self.info['mfree']
+        used = total - self.ram_free
         allocated = 0 if values['used'] is None else values['used']
         free = total-allocated if allocated >= 0 and total >=0  else -1
         return {'total':total, 'free': free, 'allocated':allocated, 'used':used}
@@ -824,7 +828,7 @@ class Node(CachedClusterObject):
             .aggregate(used=Sum('disk_size'))
 
         total = self.disk_total
-        used = total - self.info['dfree']
+        used = total - self.disk_free
         allocated = 0 if 'used' not in values or values['used'] is None else values['used']
         free = total-allocated if allocated >= 0 and total >=0  else -1
 
@@ -1092,8 +1096,10 @@ class Cluster(CachedClusterObject):
     def available_ram(self):
         """ returns dict of free and total ram """
         nodes = self.nodes.exclude(ram_total=-1) \
-            .aggregate(total=Sum('ram_total'))
+            .aggregate(total=Sum('ram_total'), free=Sum('ram_free'))
         total = nodes['total'] if 'total' in nodes and nodes['total'] >= 0 else 0
+        free = nodes['free'] if 'free' in nodes and nodes['free'] >= 0 else 0
+        used = total-free
         values = self.virtual_machines \
             .filter(status='running') \
             .exclude(ram=-1).order_by() \
@@ -1101,22 +1107,24 @@ class Cluster(CachedClusterObject):
 
         allocated = 0 if 'used' not in values or values['used'] is None else values['used']
         free = total-allocated if total-allocated >= 0 else 0
-        return {'total':total, 'free':free, 'allocated':allocated}
+        return {'total':total, 'free':free, 'allocated':allocated, 'used':used}
 
     @property
     def available_disk(self):
         """ returns dict of free and total disk space """
         nodes = self.nodes.exclude(disk_total=-1) \
-            .aggregate(total=Sum('disk_total'))
+            .aggregate(total=Sum('disk_total'), free=Sum('disk_free'))
         total = nodes['total'] if 'total' in nodes and nodes['total'] >= 0 else 0
+        free = nodes['free'] if 'free' in nodes and nodes['free'] >= 0 else 0
+        used = total-free
         values = self.virtual_machines \
             .exclude(disk_size=-1).order_by() \
             .aggregate(used=Sum('disk_size'))
 
         allocated = 0 if 'used' not in values or values['used'] is None else values['used']
         free = total-allocated if total-allocated >= 0 else 0
-        
-        return {'total':total, 'free':free, 'allocated':allocated}
+    
+        return {'total':total, 'free':free, 'allocated':allocated, 'used':used}
 
     def _refresh(self):
         return self.rapi.GetInfo()

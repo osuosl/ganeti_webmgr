@@ -274,7 +274,7 @@ def node_memory(node, allocated=True):
     d = node.ram
     if allocated:
         return format_part_total(d['allocated'], d['total'])
-    return format_part_total(d['free'], d['total'])
+    return format_part_total(d['used'], d['total'])
 
 
 @register.simple_tag
@@ -285,7 +285,7 @@ def node_disk(node, allocated=True):
     d = node.disk
     if allocated:
         return format_part_total(d['allocated'], d['total'])
-    return format_part_total(d['free'], d['total'])
+    return format_part_total(d['used'], d['total'])
 
 
 @register.simple_tag
@@ -296,7 +296,7 @@ def cluster_memory(cluster, allocated=True):
     d = cluster.available_ram
     if allocated:
         return format_part_total(d['allocated'], d['total'])
-    return format_part_total(d['free'], d['total'])
+    return format_part_total(d['used'], d['total'])
     
 
 @register.simple_tag
@@ -307,7 +307,7 @@ def cluster_disk(cluster, allocated=True):
     d = cluster.available_disk
     if allocated:
         return format_part_total(d['allocated'], d['total'])
-    return format_part_total(d['free'], d['total'])
+    return format_part_total(d['used'], d['total'])
 
 
 @register.simple_tag
