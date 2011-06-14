@@ -48,6 +48,11 @@ GIT_INSTALL =  {
         'url':'git://git.osuosl.org/gitolite/django/django_muddle_users',
         'development':'develop',
         'symlink':'muddle_users'
+    },
+    'twisted_vncauthproxy':{
+        'url':'git://git.osuosl.org/gitolite/ganeti/twisted_vncauthproxy',
+        'development':'develop',
+        'virtualenv':True
     }
 }
 
