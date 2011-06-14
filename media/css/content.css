@@ -139,6 +139,9 @@ h1 a.breadcrumb:hover {text-decoration:underline;}
 }
 
 
+/* Create User */
+#user-create input.submit {margin-left: 12.5em;}
+
 /*   User Profile   */
 #uprofile {margin: 0 auto 0 0; width: 50%;}
 #uprofile fieldset { margin-bottom:10px; padding:1em; }
