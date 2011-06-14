@@ -29,7 +29,7 @@ class CacheUpdaterServiceMaker(object):
             import settings
             setup_environ(settings)
 
-        from ganeti.cache.service import CacheService
+        from ganeti_web.cache.service import CacheService
         return CacheService()
 
 

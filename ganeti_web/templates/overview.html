@@ -17,10 +17,10 @@
         width: 120,
         boxImage: '{{MEDIA_URL}}/images/progressbar/progressbar.gif',
         barImage: {
-            0:  '{{MEDIA_URL}}/images/progressbar/progressbg_red.gif',
-            30: '{{MEDIA_URL}}/images/progressbar/progressbg_orange.gif',
-            50: '{{MEDIA_URL}}/images/progressbar/progressbg_yellow.gif',
-            75: '{{MEDIA_URL}}/images/progressbar/progressbg_green.gif'
+            0: '{{MEDIA_URL}}/images/progressbar/progressbg_green.gif',
+            30: '{{MEDIA_URL}}/images/progressbar/progressbg_yellow.gif',
+            50: '{{MEDIA_URL}}/images/progressbar/progressbg_orange.gif',
+            75:  '{{MEDIA_URL}}/images/progressbar/progressbg_red.gif'
         }
     };
     $(document).ready(function() {
@@ -68,8 +68,8 @@
         <tr>
             <th>{% trans "Cluster" %}</th>
             <th>{% trans "Version" %}</th>
-            <th>{% trans "Free Memory [GiB]" %}</th>
-            <th>{% trans "Free Disk [GiB]" %}</th>
+            <th>{% trans "Memory Allocated [GiB]" %}</th>
+            <th>{% trans "Disk Allocated [GiB]" %}</th>
             <th>{% trans "Nodes" %}</th>
             <th>{% trans "VMs" %}</th>
         </tr>

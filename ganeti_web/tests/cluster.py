@@ -258,6 +258,8 @@ class TestClusterModel(TestCase):
         ram = c.available_ram
         self.assertEqual(0, ram['free'])
         self.assertEqual(0, ram['total'])
+        self.assertEqual(0, ram['used'])
+        self.assertEqual(579, ram['allocated'])
 
         # force refresh of nodes and rerun test for real values
         node.refresh()
@@ -265,6 +267,8 @@ class TestClusterModel(TestCase):
         ram = c.available_ram
         self.assertEqual(9999, ram['total'])
         self.assertEqual(9420, ram['free'])
+        self.assertEqual(8888, ram['used'])
+        self.assertEqual(579, ram['allocated'])
 
     
     def test_available_disk(self):
@@ -288,6 +292,8 @@ class TestClusterModel(TestCase):
         disk = c.available_disk
         self.assertEqual(0, disk['free'])
         self.assertEqual(0, disk['total'])
+        self.assertEqual(0, disk['used'])
+        self.assertEqual(1602, disk['allocated'])
 
         # force refresh of nodes and rerun test for real values
         node.refresh()
@@ -295,6 +301,8 @@ class TestClusterModel(TestCase):
         disk = c.available_disk
         self.assertEqual(6666, disk['total'])
         self.assertEqual(5064, disk['free'])
+        self.assertEqual(4444, disk['used'])
+        self.assertEqual(1602, disk['allocated'])
 
     def test_redistribute_config(self):
         """
