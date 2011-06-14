@@ -48,8 +48,13 @@ Twitter:      http://twitter.com/ganetiwebmgr
 
       fab prod deploy
 
-5. Copy settings.py.dist to settings.py
-6. Create a database and configure your settings:
+5. Activate Virtual Environment
+
+    source bin/activate
+
+6. Copy settings.py.dist to settings.py
+
+7. Create a database and configure your settings:
 
  DATABASE_ENGINE = ''   <-- Change This to 'mysql', 'postgresql',
                             'postgresql_psycopg2' or 'sqlite3'
@@ -59,7 +64,7 @@ Twitter:      http://twitter.com/ganetiwebmgr
  DATABASE_HOST = ''     <-- Change this (not needed if database is localhost)
  DATABASE_PORT = ''     <-- Change this (not needed if database is localhost)
 
-7. Set the id, name and domain of your site in settings.py and the site will
+8. Set the id, name and domain of your site in settings.py and the site will
    automatically be created when syncdb is run.
 
  # Unique site id used by many modules to distinguish site from others.
@@ -70,13 +75,9 @@ Twitter:      http://twitter.com/ganetiwebmgr
  SITE_NAME = 'Ganeti Web Manager'
  SITE_DOMAIN = 'localhost:8000'
 
-8. Initialize the database
+9. Initialize the database
 
     ./manage.py syncdb --migrate
-
-9. Activate Virtual Environment
-
-    source bin/activate
 
 10. Build the search indexes
 
