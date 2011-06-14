@@ -248,7 +248,7 @@ clusters in the database. This allows the following:
       ---  Ganeti  ---
      /                \
     /                  \
- Cluster ->       ->   Bulk
+ Cluster ->       <-   Bulk
   Model  <- cache <-  Updater
 
     * Permissions are stored in the database and are associated to the cached
