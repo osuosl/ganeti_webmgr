@@ -37,7 +37,7 @@ Twitter:      http://twitter.com/ganetiwebmgr
 2. Deploy this code somewhere (i.e. /var/lib/django/ganeti_webmgr)
 3. Install libaries needed for pip installs
 
-      sudo apt-get install python-dev libmysqlclient-dev
+      sudo apt-get install python-dev
 
 4. Run Fabric deployment
 
