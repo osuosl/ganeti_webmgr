@@ -19,7 +19,7 @@ from fabric.operations import local, require, prompt
 # preference for production environments
 
 PIP_INSTALL = {
-    'django'                    :'>=1.2',
+    'django'                    :'>=1.3',
     'django-registration'       :'',
     'south'                     :'',
     'django-haystack'           :'==1.2.1',

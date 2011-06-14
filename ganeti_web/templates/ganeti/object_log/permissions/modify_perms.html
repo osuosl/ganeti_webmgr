@@ -1,4 +1,5 @@
 {% load webmgr_tags %}
+{% load object_log_tags %}
 {% with log_item.data as data %}
 {% if user.is_superuser %}
         <a href="{% url user-detail log_item.user.pk %}">{{log_item.user}}</a>
