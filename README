@@ -123,7 +123,7 @@ search indexes stay up-to-date when models change in Ganeti Web Manager.
 
     5. Enable periodic cache updater [3].
 
-        twistd gwm_cache --pidfile=tmp/gwm_cache.pid
+        twistd --pidfile=tmp/gwm_cache.pid gwm_cache
 
  [1] http://docs.djangoproject.com/en/1.2/topics/email/
  [2] http://docs.djangoproject.com/en/1.2/howto/deployment/
