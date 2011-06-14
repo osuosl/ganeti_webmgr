@@ -14,10 +14,10 @@
             textFormat: 'fraction',
             boxImage: '/media/images/progressbar/progressbar.gif',
             barImage: {
-                0:  '/media/images/progressbar/progressbg_red.gif',
-                30: '/media/images/progressbar/progressbg_orange.gif',
-                50: '/media/images/progressbar/progressbg_yellow.gif',
-                75: '/media/images/progressbar/progressbg_green.gif'
+                0: '{{MEDIA_URL}}/images/progressbar/progressbg_green.gif',
+                30: '{{MEDIA_URL}}/images/progressbar/progressbg_yellow.gif',
+                50: '{{MEDIA_URL}}/images/progressbar/progressbg_orange.gif',
+                75:  '{{MEDIA_URL}}/images/progressbar/progressbg_red.gif'
             }
         };
         
@@ -38,7 +38,9 @@
                     }
                 }
             });
-	    
+
+            $("#resources .ram, #resources .disk").progressBar(PBAR_CONF);
+
             $("a.delete").live("click", function(){
                 if (confirm("{% trans 'Are you sure you want to delete this cluster' %}?")) {
 					
@@ -147,7 +149,13 @@
             <tr><th>{% trans "Nodes" %}</th><td>{{ cluster.nodes.count }}</td></tr>
             {% endwith %}
         </table>
-        
+
+        <h3>{% trans "Resource Usage" %}</h3>
+        <table id="resources" class="horizontal">
+            <tr><th>{% trans "Ram Allocated [GiB]" %}</th><td class="ram">{% cluster_memory cluster %}</td></tr>
+            <tr><th>{% trans "Disk Allocated [GiB]" %}</th><td class="disk">{% cluster_disk cluster %}</td></tr>
+        </table>
+
         <h3>{% trans "Default Quota" %}</h3>
         <table class="horizontal">
             <tr><th>{% trans "Disk Space" %}</th><td>

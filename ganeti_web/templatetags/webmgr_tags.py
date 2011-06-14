@@ -267,43 +267,47 @@ def diff_render_storage(a, b):
 
 
 @register.simple_tag
-def node_memory(node):
+def node_memory(node, allocated=True):
     """
     Pretty-print a memory quantity, in GiB, with significant figures.
     """
-    ram = node.ram
-    return format_part_total(ram['free'], ram['total'])
+    d = node.ram
+    if allocated:
+        return format_part_total(d['allocated'], d['total'])
+    return format_part_total(d['free'], d['total'])
 
 
 @register.simple_tag
-def node_disk(node):
+def node_disk(node, allocated=True):
     """
     Pretty-print a disk quantity, in GiB, with significant figures.
     """
-    disk = node.disk
-    return format_part_total(disk['free'], disk['total'])
+    d = node.disk
+    if allocated:
+        return format_part_total(d['allocated'], d['total'])
+    return format_part_total(d['free'], d['total'])
 
 
 @register.simple_tag
-def cluster_memory(cluster):
+def cluster_memory(cluster, allocated=True):
     """
     Pretty-print a memory quantity of the whole cluster [GiB]
     """
     d = cluster.available_ram
-    free = d['free']
-    total = d['total']
-    return format_part_total(free, total)
-
+    if allocated:
+        return format_part_total(d['allocated'], d['total'])
+    return format_part_total(d['free'], d['total'])
+    
 
 @register.simple_tag
-def cluster_disk(cluster, nodes=None):
+def cluster_disk(cluster, allocated=True):
     """
     Pretty-print a memory quantity of the whole cluster [GiB]
     """
     d = cluster.available_disk
-    free = d['free']
-    total = d['total']
-    return format_part_total(free, total)
+    if allocated:
+        return format_part_total(d['allocated'], d['total'])
+    return format_part_total(d['free'], d['total'])
 
 
 @register.simple_tag

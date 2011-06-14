@@ -810,9 +810,10 @@ class Node(CachedClusterObject):
             .aggregate(used=Sum('ram'))
 
         total = self.ram_total
-        running = 0 if values['used'] is None else values['used']
-        free = total-running if running >= 0 and total >=0  else -1
-        return {'total':total, 'free': free}
+        used = total - self.info['mfree']
+        allocated = 0 if values['used'] is None else values['used']
+        free = total-allocated if allocated >= 0 and total >=0  else -1
+        return {'total':total, 'free': free, 'allocated':allocated, 'used':used}
     
     @property
     def disk(self):
@@ -823,9 +824,11 @@ class Node(CachedClusterObject):
             .aggregate(used=Sum('disk_size'))
 
         total = self.disk_total
-        running = 0 if 'used' not in values or values['used'] is None else values['used']
-        free = total-running if running >= 0 and total >=0  else -1
-        return {'total':total, 'free': free}
+        used = total - self.info['dfree']
+        allocated = 0 if 'used' not in values or values['used'] is None else values['used']
+        free = total-allocated if allocated >= 0 and total >=0  else -1
+
+        return {'total':total, 'free': free, 'allocated':allocated, 'used':used}
     
     def set_role(self, role, force=False):
         """
@@ -1096,9 +1099,9 @@ class Cluster(CachedClusterObject):
             .exclude(ram=-1).order_by() \
             .aggregate(used=Sum('ram'))
 
-        used = 0 if 'used' not in values or values['used'] is None else values['used']
-        free = total-used if total-used >= 0 else 0
-        return {'total':total, 'free':free}
+        allocated = 0 if 'used' not in values or values['used'] is None else values['used']
+        free = total-allocated if total-allocated >= 0 else 0
+        return {'total':total, 'free':free, 'allocated':allocated}
 
     @property
     def available_disk(self):
@@ -1110,10 +1113,10 @@ class Cluster(CachedClusterObject):
             .exclude(disk_size=-1).order_by() \
             .aggregate(used=Sum('disk_size'))
 
-        used = 0 if 'used' not in values or values['used'] is None else values['used']
-        free = total-used if total-used >= 0 else 0
+        allocated = 0 if 'used' not in values or values['used'] is None else values['used']
+        free = total-allocated if total-allocated >= 0 else 0
         
-        return {'total':total, 'free':free}
+        return {'total':total, 'free':free, 'allocated':allocated}
 
     def _refresh(self):
         return self.rapi.GetInfo()
