@@ -25,7 +25,7 @@
     {% csrf_token %}
     <fieldset>
         {{ form.as_p }}
-        <input type="submit" value="{% if user_edit.username %}{%trans "Save" %}{% else %}{% trans "Create" %}{% endif %}">
+        <input class="submit" type="submit" value="{% if user_edit.username %}{%trans "Save" %}{% else %}{% trans "Create" %}{% endif %}">
     </fieldset>
 </form>
 
