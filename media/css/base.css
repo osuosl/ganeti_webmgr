@@ -211,4 +211,4 @@ pre.error {
     margin:3px;
     width:70px;
 }
-#languages li.current {font-weight:bold;}
+#languages li a.current {font-weight:bold;}

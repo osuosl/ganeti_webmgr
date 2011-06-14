@@ -48,6 +48,11 @@ GIT_INSTALL =  {
         'url':'git://git.osuosl.org/gitolite/django/django_muddle_users',
         'development':'develop',
         'symlink':'muddle_users'
+    },
+    'twisted_vncauthproxy':{
+        'url':'git://git.osuosl.org/gitolite/ganeti/twisted_vncauthproxy',
+        'development':'develop',
+        'virtualenv':True
     }
 }
 
@@ -210,17 +215,23 @@ def install_dependencies_git():
                     with settings(hide('warnings','stderr'), warn_only=True):
                             local('git pull')
 
-        # configure and create symlink to git repo
-        with lcd (env.doc_root):
-            if 'symlink' in opts:
-                env.symlink = opts['symlink']
-                env.symlink_path = '%(doc_root)s/dependencies/%(git_repo)s/%(symlink)s' % env
-            else:
-                env.symlink = name
-                env.symlink_path = '%(doc_root)s/dependencies/%(git_repo)s' % env
+        # install using virtualenv if configured to do so
+        if 'virtualenv' in opts and opts['virtualenv']:
+            with lcd(env.doc_root):
+                local('pip install -e dependencies/%s' % name)
 
-            with settings(hide('warnings','stderr'), warn_only=True):
-                local('ln -sf %(symlink_path)s %(doc_root)s' % env)
+        else:
+            # else, configure and create symlink to git repo
+            with lcd (env.doc_root):
+                if 'symlink' in opts:
+                    env.symlink = opts['symlink']
+                    env.symlink_path = '%(doc_root)s/dependencies/%(git_repo)s/%(symlink)s' % env
+                else:
+                    env.symlink = name
+                    env.symlink_path = '%(doc_root)s/dependencies/%(git_repo)s' % env
+
+                with settings(hide('warnings','stderr'), warn_only=True):
+                    local('ln -sf %(symlink_path)s %(doc_root)s' % env)
 
 
 def tarball():

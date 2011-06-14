@@ -32,7 +32,8 @@
                 {% ifnotequal LANGUAGES|length 1 %}
                 <ul id="languages">
                     {% for lang in LANGUAGES %}
-                        <li><a class="select_lang" href="#" title="{{lang.1}}" {% ifequal LANGUAGE_CODE lang.0 %}class="current"{% endifequal %}>{{ lang.0 }}</a></li>
+
+                        <li><a class="{% ifequal LANGUAGE_CODE lang.0 %}current{% else %}select_lang{% endifequal %}" href="#" title="{{lang.1}}" >{{ lang.0 }}</a></li>
                     {% endfor %}
                     <form action="/i18n/setlang/" method="post" id="langform">
                         {% csrf_token %}
