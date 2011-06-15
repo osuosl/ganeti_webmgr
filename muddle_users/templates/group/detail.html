@@ -1,5 +1,6 @@
 {% extends "menu_base.html" %}
-{% block title %} User Group: {{ object.name }}{% endblock %}
+{% include i18n %}
+{% block title %}{% trans "Group:" %}{{ object.name }}{% endblock %}
 
 {% block head %}
     <link href="{{MEDIA_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
