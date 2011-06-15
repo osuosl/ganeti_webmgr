@@ -192,14 +192,20 @@ EMAIL_PORT = "25"
 ITEMS_PER_PAGE = 10
 
 # Ganeti Cached Cluster Objects Timeouts
-#    lazy cache is the fallback cache timer that is checked when the object is
-#    instantiated.
+#    LAZY_CACHE_REFRESH (milliseconds) is the fallback cache timer that is
+#    checked when the object is instantiated.
 #
-#    periodic cache timer is for use by an outside process such as Celery or
-#    or cron which updates the cache on a set interval to ensure that data is
-#    always up to date.
-LAZY_CACHE_REFRESH = 60000
-PERIODIC_CACHE_REFRESH = 15
+#    PERIODIC_CACHE_REFRESH - timer used by an outside process twisted process
+#    that uses bulk methods for keeping the cache in sync with ganeti.  If used
+#    this value should *always* be less than LAZY_CACHE_REFRESH.  Note that this
+#    process still takes time to update object.  If it does not complete fast
+#    enough LAZY_CACHE_REFRESH will still be checked
+#
+#    Start this process this this command:
+#       twistd gwm_cache
+#
+LAZY_CACHE_REFRESH = 600000
+PERIODIC_CACHE_REFRESH = 300
 
 # VNC Proxy. This will use a proxy to create local ports that are forwarded to
 # the virtual machines.  It allows you to control access to the VNC servers.
