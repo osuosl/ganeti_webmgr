@@ -60,7 +60,15 @@
                 {% endif %}
             </td>
         {% endif %}
-        <td>{{ info.pnode|abbreviate_fqdn }}</td>
+        <td>
+            {% if view_cluster %}
+                <a href="{% url node-detail vm.cluster.slug info.pnode %}">
+                {{ info.pnode|abbreviate_fqdn }}
+                </a>
+            {% else %}
+                {{ info.pnode|abbreviate_fqdn }}
+            {% endif %}
+        </td>
         <td>{{ vm.operating_system|render_os }}</td>
         <td>{{ vm.ram|render_storage }}</td>
         <td>{{ vm.disk_size|render_storage }}</td>
