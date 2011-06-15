@@ -78,7 +78,7 @@ env.MANIFEST = [
     "django_test_tools",
     "deprecated",
     "ganeti_web",
-    "i18n",
+    #"i18n",
     "locale",
     "media",
     "templates",
