@@ -96,8 +96,10 @@
 
             {% if node.last_job_id %}
                 {# there is a running job, display it and poll for status #}
-                get_job_status({{node.last_job.job_id}}, job_complete);
-                poll_job_status({{node.last_job.job_id}}, job_complete);
+                get_job_status("{% url cluster-detail cluster.slug %}",
+                        {{node.last_job.job_id}}, job_complete);
+                poll_job_status("{% url cluster-detail cluster.slug %}",
+                        {{node.last_job.job_id}}, job_complete);
             {% else %}
                 {% if node.error %}
                     display_ganeti_error("{{node.error}}");
@@ -111,7 +113,8 @@
                 actions_enabled = true;
                 $('#actions a').removeClass('disabled');
             } else {
-                poll_job_status(result['id'], job_complete);
+                poll_job_status("{% url cluster-detail cluster.slug %}",
+                        result['id'], job_complete);
                 display_job(result);
             }
         }
@@ -130,7 +133,7 @@
             } else {
                 $('.qtip').qtip("hide");
                 poll_job_status(responseText['id'], job_complete);
-                display_job(responseText);
+                display_job("{% url cluster-detail cluster.slug %}", responseText);
             }
         }
 
