@@ -134,7 +134,7 @@ class NodeCacheUpdater(object):
             node.info = info
             node.save()
             id = node.pk
-
+            updated += 1
 
         # Updates relationships between a Node and its Primary and Secondary
         # VirtualMachines.  This always runs even when there are no updates but
