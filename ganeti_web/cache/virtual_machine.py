@@ -139,6 +139,8 @@ class VirtualMachineCacheUpdater(object):
             vm = VirtualMachine(cluster=cluster, hostname=info['name'])
             vm.info = info
             vm.save()
+            id = vm.id
+            updated += 1
 
         callback(id)
 
