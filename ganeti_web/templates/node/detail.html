@@ -132,8 +132,10 @@
                 }
             } else {
                 $('.qtip').qtip("hide");
-                poll_job_status(responseText['id'], job_complete);
-                display_job("{% url cluster-detail cluster.slug %}", responseText);
+                poll_job_status("{% url cluster-detail cluster.slug %}",
+                        responseText['id'], job_complete);
+                display_job("{% url cluster-detail cluster.slug %}",
+                        responseText);
             }
         }
 
