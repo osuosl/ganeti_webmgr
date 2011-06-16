@@ -144,7 +144,7 @@
                 <a href="{% url node-detail cluster.slug info.master %}">{{ info.master }}</a>
             {% else %}
                 <em>{% trans "unknown" %}</em>
-            </td></th>
+            </td></tr>
             {% endif %}
             <tr><th>{% trans "Created" %}</th><td>
             {% if cluster.ctime %}

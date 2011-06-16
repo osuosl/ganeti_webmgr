@@ -1074,7 +1074,7 @@ class Cluster(CachedClusterObject):
         """
         try:
             ganeti = self.rapi.GetNodes()
-        except GanetiError:
+        except GanetiApiError:
             ganeti = []
         db = self.nodes.all().values_list('hostname', flat=True)
         return filter(lambda x: unicode(x) not in db, ganeti)
@@ -1087,7 +1087,7 @@ class Cluster(CachedClusterObject):
         """
         try:
             ganeti = self.rapi.GetNodes()
-        except GanetiError:
+        except GanetiApiError:
             ganeti = []
         db = self.nodes.all().values_list('hostname', flat=True)
         return filter(lambda x: str(x) not in ganeti, db)

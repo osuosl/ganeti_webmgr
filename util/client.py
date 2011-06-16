@@ -270,7 +270,11 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
     try:
       socket.inet_pton(socket.AF_INET6, host)
       address = "[%s]:%s" % (host, port)
-    except socket.error:
+
+    # XXX ValueError needed here for when this is run within twisted 11 and
+    # python2.7.  Twisted patches the IPV6 code and doesn't like receiving
+    # hostnames as IPV6 addresses.
+    except (socket.error, ValueError):
       address = "%s:%s" % (host, port)
 
     self._base_url = "https://%s" % address

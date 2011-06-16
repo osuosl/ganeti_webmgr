@@ -52,8 +52,17 @@ class NodeCacheUpdater(object):
         fetch cluster info from ganeti
         """
         deferred = Deferred()
-        d = client.getPage(str(NODES_URL % (cluster.hostname, cluster.port)))
+        url = str(NODES_URL % (cluster.hostname, cluster.port))
+        d = client.getPage(url)
         d.addCallback(self.process_cluster_info, cluster, deferred.callback)
+
+        # XXX even when the get fails we want to send the callback so the loop
+        # does not stop because a single cluster had an error
+        def error(*args, **kwargs):
+            print 'ERROR retrieving: %s ' % url
+            deferred.callback(None)
+        d.addErrback(error)
+
         return deferred
 
     def process_cluster_info(self, json, cluster, callback):
@@ -134,7 +143,7 @@ class NodeCacheUpdater(object):
             node.info = info
             node.save()
             id = node.pk
-
+            updated += 1
 
         # Updates relationships between a Node and its Primary and Secondary
         # VirtualMachines.  This always runs even when there are no updates but

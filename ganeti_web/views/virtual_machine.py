@@ -710,14 +710,14 @@ def create(request, cluster_slug=None):
                 msg = '%s: %s' % (_('Error creating virtual machine on this cluster'),e)
                 form._errors["cluster"] = form.error_class([msg])
         
+        cluster_defaults = {}
         if 'cluster' in request.POST and request.POST['cluster'] != '':
             try:
                 cluster =  Cluster.objects.get(pk=request.POST['cluster'])
-                cluster_defaults = cluster_default_info(cluster)
+                if cluster.info:
+                    cluster_defaults = cluster_default_info(cluster)
             except Cluster.DoesNotExist:
-                cluster_defaults = {}
-        else:
-            cluster_defaults = {}
+                pass
                 
     elif request.method == 'GET':
         form = NewVirtualMachineForm(user)

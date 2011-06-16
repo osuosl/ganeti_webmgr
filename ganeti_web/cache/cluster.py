@@ -44,17 +44,25 @@ class ClusterCacheUpdater(object):
         deferreds = [self.get_cluster_info(data) for data in clusters]
         deferred_list = DeferredList(deferreds)
         deferred_list.addCallback(self.complete)
-
+        
         return deferred_list
 
     def get_cluster_info(self, data):
         """
         fetch cluster info from ganeti
         """
-        print 'creating GET deferred', data
         deferred = Deferred()
-        d = client.getPage(str(CLUSTERS_URL % data))
+        url = str(CLUSTERS_URL % data)
+        d = client.getPage(url)
         d.addCallback(self.process_cluster_info, data, deferred.callback)
+
+        # XXX even when the get fails we want to send the callback so the loop
+        # does not stop because a single cluster had an error
+        def error(*args, **kwargs):
+            print 'ERROR retrieving: %s ' % url
+            deferred.callback(None)
+        d.addErrback(error)
+        
         return deferred
     
     def process_cluster_info(self, json, data, callback):

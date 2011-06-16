@@ -151,7 +151,7 @@ class NewVirtualMachineForm(VirtualMachineForm):
                 except Cluster.DoesNotExist:
                     # defer to clean function to return errors
                     pass
-        if cluster is not None:
+        if cluster is not None and cluster.info is not None:
             # set choices based on selected cluster if given
             oslist = cluster_os_list(cluster)
             nodelist = [str(h) for h in cluster.nodes.values_list('hostname', flat=True)]
@@ -234,6 +234,15 @@ class NewVirtualMachineForm(VirtualMachineForm):
             else:
                 q = user.get_objects_any_perms(Cluster, ['admin','create_vm'])
             self.fields['cluster'].queryset = q
+
+    def clean_cluster(self):
+        # Invalid or unavailable cluster
+        cluster = self.cleaned_data.get('cluster', None)
+        if cluster is None or cluster.info is None:
+            msg = u"%s." % _("This cluster is currently unavailable. Please check for Errors on the \
+                cluster detail page")
+            self._errors['cluster'] = self.error_class([msg])
+        return cluster
 
     def clean(self):
         data = self.cleaned_data

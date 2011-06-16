@@ -19,6 +19,8 @@
 from collections import defaultdict
 from ganeti_web import constants
 
+from util.client import GanetiApiError
+
 def cluster_default_info(cluster, hypervisor=None):
     """
     Returns a dictionary containing the following
@@ -89,9 +91,10 @@ def cluster_os_list(cluster):
     """
     Create a detailed manifest of available operating systems on the cluster.
     """
-
-    return os_prettify(cluster.rapi.GetOperatingSystems())
-
+    try:
+        return os_prettify(cluster.rapi.GetOperatingSystems())
+    except GanetiApiError:
+        return []
 
 def os_prettify(oses):
     """
