@@ -1,21 +1,49 @@
 # encoding: utf-8
+import sys
 from django.contrib.contenttypes.models import ContentType
 from south.v2 import DataMigration
+from ganeti_web.models import Cluster, Node, VirtualMachine
 
 class Migration(DataMigration):
     
     def forwards(self, orm):
         """
-        Update content types for Cluster Users
+        This forces of refresh of all Clusters, Nodes, and VirtualMachines.  It
+        will also import any new Nodes.
         """
-        ct = ContentType.objects.get_for_model(orm.Organization)
-        orm.Organization.objects.all().update(real_type=ct)
-        
-        ct = ContentType.objects.get_for_model(orm.Profile)
-        orm.Profile.objects.all().update(real_type=ct)
+        Cluster.objects.all().update(mtime=None)
+        Node.objects.all().update(mtime=None)
+        VirtualMachine.objects.all().update(mtime=None)
+
+        write = sys.stdout.write
+        flush = sys.stdout.flush
+        def wf(str, newline=False):
+            if newline:
+                write('\n')
+            write(str)
+            flush()
+
+        wf ('   : Synchronizing Cluster Nodes')
+        flush ()
+        for cluster in Cluster.objects.all().iterator():
+            cluster.sync_nodes()
+            wf('.')
+
+        wf('   : Refreshing Node Caches', True)
+        for node in Node.objects.all().iterator():
+            wf('.')
+
+
+        wf('   : Refreshing Instance Caches', True)
+        for instance in VirtualMachine.objects.all().iterator():
+            try:
+                wf('.')
+            except Exception, e:
+                wf('E')
+        wf('\n')
 
     def backwards(self, orm):
-        """No need for backwards, row will be deleted anyways"""
+        """ No need for backwards, data will be deleted anyways """
         pass
 
     models = {
