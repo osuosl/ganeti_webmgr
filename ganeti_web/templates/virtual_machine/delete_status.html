@@ -15,8 +15,10 @@
                 {# job was finished before we loaded the page #}
                 job_complete();
             } else {
-                get_job_status(job_id, job_complete);
-                poll_job_status(job_id, job_complete);
+                get_job_status("{% url cluster-detail cluster.slug %}",
+                    job_id, job_complete);
+                poll_job_status("{% url cluster-detail cluster.slug %}",
+                    job_id, job_complete);
             }
         });
         
@@ -38,7 +40,8 @@
     : {% trans "deleting" %}
     </h1>
 
-    {% include "job_status.html" %}
+    <script type="text/javascript" src="{{MEDIA_URL}}/js/job_status.js"></script>
+
     <ul id="messages"></ul>
     
     <div id="success">{% trans "Deleted" %}.</div>

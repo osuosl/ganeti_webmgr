@@ -76,8 +76,10 @@
 
         {% if instance.last_job_id %}
             {# there is a running job, display it and poll for status #}
-            get_job_status({{instance.last_job.job_id}}, job_complete);
-            poll_job_status({{instance.last_job.job_id}}, job_complete);
+            get_job_status("{% url cluster-detail cluster.slug %}",
+                    "{{instance.last_job.job_id}}", job_complete);
+            poll_job_status("{% url cluster-detail cluster.slug %}",
+                    "{{instance.last_job.job_id}}", job_complete);
         {% else %}
             {% if instance.error %}
                 display_ganeti_error("{{instance.error}}");
@@ -94,7 +96,8 @@
             display_ganeti_error(result['__all__'][0]);
             $('#actions a').removeClass('disabled');
         } else {
-            poll_job_status(result['id'], job_complete);
+            poll_job_status("{% url cluster-detail cluster.slug %}",
+                    result['id'], job_complete);
             display_job(result);
         }
     }
@@ -108,8 +111,10 @@
             }
         } else {
             $('.qtip').qtip("hide");
-            poll_job_status(responseText['id'], job_complete);
-            display_job(responseText);
+            poll_job_status("{% url cluster-detail cluster.slug %}",
+                    responseText['id'], job_complete);
+            display_job("{% url cluster-detail cluster.slug %}",
+                    responseText);
         }
     }
 
@@ -122,7 +127,7 @@
     }
 </script>
 
-{% include "job_status.html" %}
+<script type="text/javascript" src="{{MEDIA_URL}}/js/job_status.js"></script>
 
 {% endblock %}
 

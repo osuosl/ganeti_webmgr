@@ -220,7 +220,7 @@ def install_dependencies_git():
         # install using virtualenv if configured to do so
         if 'virtualenv' in opts and opts['virtualenv']:
             with lcd(env.doc_root):
-                local('pip install -e dependencies/%s' % name)
+                local('pip install -E %(virtualenv)s -e dependencies/%(git_repo)s' % env)
 
         else:
             # else, configure and create symlink to git repo
