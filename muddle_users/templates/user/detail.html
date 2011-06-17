@@ -1,7 +1,7 @@
 {% extends "menu_base.html" %}
 {% load i18n %}
 {% block title %}
-    {% if username %}{% trans "Edit User" %}{% else %}{% trans "Add User" %}{% endif %}
+   {% trans "User:" %} {{user_detail.username}}
 {% endblock %}
 
 {% block head %}

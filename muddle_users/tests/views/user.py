@@ -31,18 +31,20 @@ class TestUsersViews(TestCase):
       that a superuser has access to.
     """
     def setUp(self):
+        self.tearDown()
+
         global superuser, user, test_user
         global c, url_list, url_create, url_edit, url_password
 
-        superuser = User(id=1, username='sudo', is_superuser=True)
+        superuser = User(username='sudo', is_superuser=True)
         superuser.set_password('sudome')
         superuser.save()
 
-        user = User(id=2, username='test')
+        user = User(username='test')
         user.set_password('password')
         user.save()
 
-        test_user = User(id=4, username='tester')
+        test_user = User(username='tester')
         test_user.set_password('testpassword')
         test_user.save()
 

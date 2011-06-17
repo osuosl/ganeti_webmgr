@@ -122,7 +122,7 @@ def user_edit(request, user_id=None, template="user/edit.html"):
 
     return render_to_response(template, {
             'form':form,
-            'username':user_edit,
+            'user_edit':user_edit,
         },
         context_instance=RequestContext(request),
     )
