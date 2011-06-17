@@ -5,8 +5,8 @@ from setuptools import setup
 long_desc = open('README').read()
 
 setup(name='django-muddle-users',
-      version="0.5",
-      description='a django app for managing users',
+      version="0.4",
+      description='a django muddle app for for managing users',
       long_description=long_desc,
       author='Peter Krenesky',
       author_email='peter@osuosl.org',
