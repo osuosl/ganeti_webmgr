@@ -623,7 +623,7 @@ class VirtualMachine(CachedClusterObject):
                     VirtualMachineTemplate.objects.filter(pk=self.template_id) \
                         .delete()
                     self.template=None
-                    return dict()
+                    return dict(template=None)
 
                 return dict(ignore_cache=False, last_job=None)
             
@@ -641,7 +641,7 @@ class VirtualMachine(CachedClusterObject):
                     VirtualMachineTemplate.objects.filter(pk=self.template_id) \
                         .delete()
                     self.template=None
-                    return dict()
+                    return dict(template=None)
                 else:
                     return dict(ignore_cache=False)
 
