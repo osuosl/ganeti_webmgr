@@ -209,7 +209,7 @@ def shutdown(request, cluster_slug, instance):
     if request.method == 'POST':
         try:
             job = vm.shutdown()
-            job.load_info()
+            job.refresh()
             msg = job.info
 
             # log information about stopping the machine
@@ -247,7 +247,7 @@ def startup(request, cluster_slug, instance):
     if request.method == 'POST':
         try:
             job = vm.startup()
-            job.load_info()
+            job.refresh()
             msg = job.info
 
             # log information about starting up the machine
@@ -275,13 +275,11 @@ def migrate(request, cluster_slug, instance):
         if form.is_valid():
             try:
                 job = vm.migrate(form.cleaned_data['mode'])
-                job.load_info()
-                msg = job.info
+                job.refresh()
+                content = json.dumps(job.info)
 
                 # log information
                 log_action('VM_MIGRATE', user, vm, job)
-
-                return HttpResponse(json.dumps(msg), mimetype='application/json')
             except GanetiApiError, e:
                 content = json.dumps({'__all__':[str(e)]})
         else:
@@ -309,7 +307,7 @@ def reboot(request, cluster_slug, instance):
     if request.method == 'POST':
         try:
             job = vm.reboot()
-            job.load_info()
+            job.refresh()
             msg = job.info
 
             # log information about restarting the machine

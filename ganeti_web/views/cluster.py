@@ -217,7 +217,7 @@ def redistribute_config(request, cluster_slug):
     if request.method == 'POST':
         try:
             job = cluster.redistribute_config()
-            job.load_info()
+            job.refresh()
             msg = job.info
 
             log_action('CLUSTER_REDISTRIBUTE', user, cluster, job)

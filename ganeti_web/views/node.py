@@ -164,7 +164,7 @@ def role(request, cluster_slug, host):
         if form.is_valid():
             try:
                 job = node.set_role(form.cleaned_data['role'])
-                job.load_info()
+                job.refresh()
                 msg = job.info
 
                 # log information
@@ -211,7 +211,7 @@ def migrate(request, cluster_slug, host):
         if form.is_valid():
             try:
                 job = node.migrate(form.cleaned_data['mode'])
-                job.load_info()
+                job.refresh()
                 msg = job.info
 
                 # log information
@@ -291,7 +291,7 @@ def evacuate(request, cluster_slug, host):
                 evacuate_node = data['node']
                 iallocator_hostname = data['iallocator_hostname']
                 job = node.evacuate(iallocator_hostname, evacuate_node)
-                job.load_info()
+                job.refresh()
                 msg = job.info
 
                 # log information

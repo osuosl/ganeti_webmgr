@@ -226,7 +226,10 @@ class CachedClusterObject(models.Model):
             if self.mtime is None or mtime > self.mtime:
                 # there was an update. Set info and save the object
                 self.info = info_
-                self.check_job_status()
+                job_data = self.check_job_status()
+                if job_data:
+                    for k, v in job_data.items():
+                        setattr(self, k, v)
                 self.save()
             else:
                 # There was no change on the server.  Only update the cache
@@ -345,9 +348,23 @@ class Job(CachedClusterObject):
         otherwise this will always load from the cache.
         """
         if self.id and (self.ignore_cache or self.info is None):
-            self.info = self._refresh()
-            self.save()
-    
+            try:
+                self.refresh()
+            except GanetiApiError, e:
+                # if the Job has been archived then we don't know whether it was
+                # successful or not.  Mark it as unknown.
+                if e.code == 404:
+                    self.status = 'unknown'
+                    self.save()
+                else:
+                    # its possible the cluster or crednetials are bad. fail
+                    # silently
+                    pass
+
+    def refresh(self):
+        self.info = self._refresh()
+        self.save()
+
     @classmethod
     def parse_persistent_info(cls, info):
         """
@@ -561,19 +578,27 @@ class VirtualMachine(CachedClusterObject):
         
         @returns - dictionary of values that were updates
         """
-        if self.ignore_cache and self.last_job_id:
+        if self.last_job_id:
             (job_id,) = Job.objects.filter(pk=self.last_job_id)\
                             .values_list('job_id', flat=True)
-            data = self.rapi.GetJobStatus(job_id)
-            status = data['status']
-            
+            try:
+                data = self.rapi.GetJobStatus(job_id)
+                status = data['status']
+            except GanetiApiError:
+                status = 'unknown'
+
             if status in ('success', 'error'):
                 finished = Job.parse_end_timestamp(data)
                 Job.objects.filter(pk=self.last_job_id) \
                     .update(status=status, ignore_cache=False, finished=finished)
                 self.ignore_cache = False
 
-            op_id = data['ops'][-1]['OP_ID']
+            if status == 'unknown':
+                Job.objects.filter(pk=self.last_job_id) \
+                    .update(status=status, ignore_cache=False)
+                self.ignore_cache = False
+            else:
+                op_id = data['ops'][-1]['OP_ID']
 
             if status == 'success':
                 self.last_job = None
@@ -619,6 +644,17 @@ class VirtualMachine(CachedClusterObject):
                     return dict()
                 else:
                     return dict(ignore_cache=False)
+
+            elif status == 'unknown':
+                # unknown status, the job was archived before it's final status
+                # was polled.  Impossible to tell what happened.  Clear the job
+                # so it is no longer polled.
+                #
+                # XXX This VM might be added by the CLI and be in an invalid
+                # pending_delete state.  clearing pending_delete prevents this
+                # but will result in "missing" vms in some cases.
+                self.last_job=None
+                return dict(ignore_cache=False, last_job=None, pending_delete=False)
 
     def _refresh(self):
         # XXX if delete is pending then no need to refresh this object.
@@ -788,16 +824,23 @@ class Node(CachedClusterObject):
         if self.last_job_id:
             (job_id,) = Job.objects.filter(pk=self.last_job_id)\
                             .values_list('job_id', flat=True)
-            data = self.rapi.GetJobStatus(job_id)
-            status = data['status']
+            try:
+                data = self.rapi.GetJobStatus(job_id)
+                status = data['status']
+            except GanetiApiError:
+                status = 'unknown'
 
             if status in ('success', 'error'):
                 finished = Job.parse_end_timestamp(data)
                 Job.objects.filter(pk=self.last_job_id) \
                     .update(status=status, ignore_cache=False, finished=finished)
                 self.ignore_cache = False
+            elif status == 'unknown':
+                Job.objects.filter(pk=self.last_job_id) \
+                    .update(status=status, ignore_cache=False)
+                self.ignore_cache = False
 
-            if status == 'success':
+            if status in ('success', 'unknown'):
                 self.last_job = None
                 return dict(ignore_cache=False, last_job=None)
 
@@ -1159,13 +1202,23 @@ class Cluster(CachedClusterObject):
             data = self.rapi.GetJobStatus(job_id)
             status = data['status']
 
+            try:
+                data = self.rapi.GetJobStatus(job_id)
+                status = data['status']
+            except GanetiApiError:
+                status = 'unknown'
+
             if status in ('success', 'error'):
                 finished = Job.parse_end_timestamp(data)
                 Job.objects.filter(pk=self.last_job_id) \
                     .update(status=status, ignore_cache=False, finished=finished)
                 self.ignore_cache = False
+            elif status == 'unknown':
+                Job.objects.filter(pk=self.last_job_id) \
+                    .update(status=status, ignore_cache=False)
+                self.ignore_cache = False
 
-            if status == 'success':
+            if status in ('success','unknown'):
                 self.last_job = None
                 return dict(ignore_cache=False, last_job=None)
 
