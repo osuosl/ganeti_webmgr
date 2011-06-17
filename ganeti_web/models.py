@@ -442,7 +442,7 @@ class VirtualMachine(CachedClusterObject):
     ram = models.IntegerField(default=-1)
     cluster_hash = models.CharField(max_length=40, editable=False)
     operating_system = models.CharField(max_length=128)
-    status = models.CharField(max_length=10)
+    status = models.CharField(max_length=14)
     
     # node relations
     primary_node = models.ForeignKey('Node', null=True, 
