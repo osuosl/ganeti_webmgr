@@ -115,7 +115,7 @@
             } else {
                 poll_job_status("{% url cluster-detail cluster.slug %}",
                         result['id'], job_complete);
-                display_job(result, "{% url cluster-detail cluster.slug %}");
+                display_job("{% url cluster-detail cluster.slug %}", result);
             }
         }
 
