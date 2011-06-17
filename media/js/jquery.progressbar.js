@@ -116,7 +116,11 @@ USAGE:
 					}
 
 					function getPercentage(config) {
-						return config.running_value * 100 / config.max;
+						var percent = (config.running_value * 100 / config.max);
+                        if (percent > 100) {
+                            return 100;
+                        }
+						return percent;
 					}
 
 					function getBarImage(config) {
