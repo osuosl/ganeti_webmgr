@@ -61,7 +61,7 @@
             </td>
         {% endif %}
         <td>
-            {% if view_cluster %}
+            {% if view_cluster and info.pnode %}
                 <a href="{% url node-detail vm.cluster.slug info.pnode %}">
                 {{ info.pnode|abbreviate_fqdn }}
                 </a>

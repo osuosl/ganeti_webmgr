@@ -16,6 +16,7 @@ Cluster = models.Cluster
 Node = models.Node
 Job = models.Job
 
+global c
 global cluster, vm
 global user, users, group, vm_admin, vm_modify, cluster_migrate, \
     cluster_admin, superuser
@@ -69,6 +70,9 @@ class TestVirtualMachineViewsBase(TestCase, VirtualMachineTestCaseMixin, ViewTes
         self.context.update(context)
 
     def tearDown(self):
+        if vm is not None:
+            vm.rapi.error = None
+
         VirtualMachineTemplate.objects.all().delete()
         Job.objects.all().delete()
         User.objects.all().delete()
@@ -120,6 +124,7 @@ class TestVirtualMachineViewsBase(TestCase, VirtualMachineTestCaseMixin, ViewTes
             self.assertEqual('1', content['id'])
             VirtualMachine.objects.all().update(last_job=None)
             Job.objects.all().delete()
+
         def test_json_error(user, response):
             content = json.loads(response.content)
             text = content['__all__'][0]
