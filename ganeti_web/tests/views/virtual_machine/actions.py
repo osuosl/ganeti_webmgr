@@ -70,7 +70,7 @@ class TestVirtualMachineActions(TestVirtualMachineViewsBase):
         """
         url = '/cluster/%s/%s/migrate'
         args = (cluster.slug, vm.hostname)
-        template='virtual_machine/migrate.html'
+        template='ganeti/virtual_machine/migrate.html'
         authorized = [superuser, cluster_admin, cluster_migrate]
 
         # get

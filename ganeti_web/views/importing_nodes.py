@@ -25,7 +25,7 @@ def importing(request):
     if not user.is_superuser or user.get_objects_any_perms(Cluster, ['admin']):
         return render_403(request, _('You do not have sufficient privileges'))
 
-    return render_to_response('importing/nodes/main.html',
+    return render_to_response('ganeti/importing/nodes/main.html',
               context_instance=RequestContext(request))
 
 
@@ -73,7 +73,8 @@ def missing_ganeti(request):
 
     nodes = node_tuple_list
 
-    return render_to_response("importing/nodes/missing.html", {
+    return render_to_response("ganeti/importing/nodes/missing.html"
+                              , {
         'nodes': nodes,
         'form':form,
         },
@@ -140,7 +141,7 @@ def missing_db(request):
 
     nodes = nodes_tuple_list
 
-    return render_to_response("importing/nodes/import.html", {
+    return render_to_response("ganeti/importing/nodes/import.html", {
         'nodes': nodes,
         'form':form,
         },

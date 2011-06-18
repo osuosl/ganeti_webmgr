@@ -84,7 +84,8 @@ def delete(request, cluster_slug, instance):
         return render_403(request, _('You do not have sufficient privileges'))
 
     if request.method == 'GET':
-        return render_to_response("virtual_machine/delete.html",
+        return render_to_response(
+            "ganeti/virtual_machine/delete.html",
             {'vm': instance, 'cluster':cluster},
             context_instance=RequestContext(request),
         )
@@ -132,7 +133,8 @@ def reinstall(request, cluster_slug, instance):
         return render_403(request, _('You do not have sufficient privileges'))
 
     if request.method == 'GET':
-        return render_to_response("virtual_machine/reinstall.html",
+        return render_to_response(
+            "ganeti/virtual_machine/reinstall.html",
             {'vm': instance, 'oschoices': cluster_os_list(cluster),
              'current_os': instance.operating_system,
              'cluster':cluster},
@@ -173,7 +175,7 @@ def novnc(request, cluster_slug, instance):
             or user.has_perm('admin', vm.cluster)):
         return HttpResponseForbidden(_('You do not have permission to vnc on this'))
 
-    return render_to_response("virtual_machine/novnc.html",
+    return render_to_response("ganeti/virtual_machine/novnc.html",
                               {'cluster_slug': cluster_slug,
                                'instance': vm,
                                },
@@ -290,7 +292,8 @@ def migrate(request, cluster_slug, instance):
     else:
         form = MigrateForm()
 
-    return render_to_response('virtual_machine/migrate.html',
+    return render_to_response('ganeti/virtual_machine/migrate.html'
+                              ,
         {'form':form, 'vm':vm, 'cluster':cluster},
         context_instance=RequestContext(request))
 
@@ -382,7 +385,7 @@ def list_(request):
     # paginate, sort
     vms = render_vms(request, vms)
 
-    return render_to_response('virtual_machine/list.html', {
+    return render_to_response('ganeti/virtual_machine/list.html', {
         'vms':vms,
         'can_create':can_create,
         },
@@ -430,7 +433,8 @@ def vm_table(request, cluster_slug=None, primary_node=None,
 
     vms = render_vms(request, vms)
 
-    return render_to_response('virtual_machine/inner_table.html', {
+    return render_to_response(
+        'ganeti/virtual_machine/inner_table.html', {
             'vms':vms,
             'can_create':can_create,
             'cluster':cluster
@@ -497,9 +501,9 @@ def detail(request, cluster_slug, instance):
     # something strange like rebooting a VM that is being deleted or is not
     # fully created yet.
     if vm.pending_delete:
-        template = 'virtual_machine/delete_status.html'
+        template = 'ganeti/virtual_machine/delete_status.html'
     elif vm.template:
-        template = 'virtual_machine/create_status.html'
+        template = 'ganeti/virtual_machine/create_status.html'
         if vm.last_job:
             context['job'] = vm.last_job
         else:
@@ -507,7 +511,7 @@ def detail(request, cluster_slug, instance):
             context['job'] = Job.objects.order_by('-finished') \
                 .filter(content_type=ct, object_id=vm.pk)[0]
     else:
-        template = 'virtual_machine/detail.html'
+        template = 'ganeti/virtual_machine/detail.html'
 
     return render_to_response(template, context,
         context_instance=RequestContext(request),
@@ -721,7 +725,7 @@ def create(request, cluster_slug=None):
         form = NewVirtualMachineForm(user)
         cluster_defaults = {}
 
-    return render_to_response('virtual_machine/create.html', {
+    return render_to_response('ganeti/virtual_machine/create.html', {
         'form': form,
         'cluster_defaults':json.dumps(cluster_defaults)
         },
@@ -771,13 +775,13 @@ def modify(request, cluster_slug, instance):
     # Select template depending on hypervisor
     # Default to edit_base
     if hv == 'kvm':
-        template = 'virtual_machine/edit_kvm.html'
+        template = 'ganeti/virtual_machine/edit_kvm.html'
     elif hv == 'xen-hvm':
-        template = 'virtual_machine/edit_hvm.html'
+        template = 'ganeti/virtual_machine/edit_hvm.html'
     elif hv == 'xen-pvm':
-        template = 'virtual_machine/edit_pvm.html'
+        template = 'ganeti/virtual_machine/edit_pvm.html'
     else:
-        template = 'virtual_machine/edit_base.html'
+        template = 'ganeti/virtual_machine/edit_base.html'
 
     return render_to_response(template, {
         'cluster': cluster,
@@ -932,7 +936,8 @@ def modify_confirm(request, cluster_slug, instance):
     form.fields['rapi_dict'] = CharField(widget=HiddenInput,
         initial=json.dumps(data))
 
-    return render_to_response('virtual_machine/edit_confirm.html', {
+    return render_to_response(
+        'ganeti/virtual_machine/edit_confirm.html', {
         'cluster': cluster,
         'form': form,
         'instance': vm,
@@ -975,7 +980,7 @@ def recover_failed_deploy(request, cluster_slug, instance):
     form = NewVirtualMachineForm(request.user, initial=initial)
     cluster_defaults = cluster_default_info(cluster)
 
-    return render_to_response('virtual_machine/create.html',
+    return render_to_response('ganeti/virtual_machine/create.html',
         {'form': form, 'cluster_defaults':json.dumps(cluster_defaults)},
         context_instance=RequestContext(request),
     )
@@ -1022,7 +1027,7 @@ def rename(request, cluster_slug, instance):
     elif request.method == 'GET':
         form = RenameForm(vm)
 
-    return render_to_response('virtual_machine/rename.html', {
+    return render_to_response('ganeti/virtual_machine/rename.html', {
         'cluster': cluster,
         'vm': vm,
         'form': form
@@ -1058,7 +1063,8 @@ def reparent(request, cluster_slug, instance):
     else:
         form = ChangeOwnerForm()
 
-    return render_to_response('virtual_machine/reparent.html', {
+    return render_to_response(
+        'ganeti/virtual_machine/reparent.html', {
         'cluster': cluster,
         'vm': vm,
         'form': form

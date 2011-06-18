@@ -110,7 +110,7 @@ class TestGeneralViews(TestCase, ViewTestMixin):
 
         url = "/"
         args = []
-        template = "overview.html"
+        template = "ganeti/overview.html"
         mimetype = "text/html; charset=utf-8"
         status = 200
 
@@ -183,7 +183,7 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         
         url = "/used_resources/"
         args = {}
-        template = "overview/used_resources_data.html"
+        template = "ganeti/overview/used_resources_data.html"
         mimetype = "text/html; charset=utf-8"
 
         # anonymous user

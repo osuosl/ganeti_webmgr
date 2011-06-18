@@ -25,7 +25,7 @@
         <tr><td>{% trans "Status" %}</td><td>{{ job.status }}</td></tr>
         <tr><td>{{ job.obj|class_name }}</td>
             {% with job as error %}
-                {% include "overview/object_link.html" %}
+                {% include "ganeti/overview/object_link.html" %}
             {% endwith %}
         </tr>
         <tr><td>{% trans "Completed" %}</td><td>{{ job.finished|date }}</td></tr>

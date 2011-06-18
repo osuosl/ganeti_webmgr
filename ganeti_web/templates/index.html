@@ -21,7 +21,7 @@
             
             <h3 class="indent">{% trans "Nodes" %}</h3>
             {% with cluster|cluster_nodes:1 as nodes %}
-            {% include "node/table.html" %}
+            {% include "ganeti/node/table.html" %}
             {% endwith %}
 
         </div>

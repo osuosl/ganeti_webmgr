@@ -42,7 +42,7 @@ def detail(request, cluster_slug, job_id):
     user = request.user
     cluster_admin = True if user.is_superuser else user.has_perm('admin', job.cluster)
 
-    return render_to_response("job/detail.html",{
+    return render_to_response("ganeti/job/detail.html",{
         'job':job,
         'cluster_admin':cluster_admin
     } ,context_instance=RequestContext(request))

@@ -13,6 +13,6 @@
     {%  with user_detail.ssh_keys.all as keyslist %}
     <h3>SSH keys</h3>
     <a class="button add" id="add_key" href="{% url user-key-add user_detail.pk %}">{% trans "Add SSH key" %}</a>
-    {% include "ssh_keys/table.html" %}
+    {% include "ganeti/ssh_keys/table.html" %}
     {% endwith %}
 {% endblock %}

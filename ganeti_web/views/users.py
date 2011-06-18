@@ -43,7 +43,7 @@ def key_get(request, key_id=None, user_id=None):
         if not (user.is_superuser or user_cmp==user):
             return HttpResponseForbidden(_("Only superuser or owner can get user's SSH key."))
         
-        return render_to_response("ssh_keys/form.html", {"key_form": form,
+        return render_to_response("ganeti/ssh_keys/form.html", {"key_form": form,
                     "key_id":key_id}, context_instance=RequestContext(request))
     return HttpResponse(_("Cannot retrieve information"))
 
@@ -67,7 +67,7 @@ def key_save(request, key_id=None):
         form = SSHKeyForm(data=request.POST, instance=key_edit)
         if form.is_valid():
             obj = form.save()
-            return render_to_response("ssh_keys/row.html", {"key": obj},
+            return render_to_response("ganeti/ssh_keys/row.html", {"key": obj},
                                       context_instance=RequestContext(request))
         else:
             return HttpResponse(json.dumps(form.errors),
