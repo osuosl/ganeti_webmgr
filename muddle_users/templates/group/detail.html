@@ -1,6 +1,5 @@
 {% extends "menu_base.html" %}
 {% load i18n %}
-
 {% block title %} User Group: {{ object.name }}{% endblock %}
 
 {% block head %}
@@ -37,7 +36,6 @@
 <div id="tabs">
     <ul>
         <li><a href="#users"><span>Users</span></a></li>
-        <li><a title="permissions" href="{% url group-all-permissions group.pk %}"><span>Permissions</span></a></li>
         {% block tabs %}{% endblock %}
     </ul>
     <div id="users">
