@@ -8,7 +8,7 @@ __all__ = ['initialize', 'register']
 
 DEFAULT_CATEGORY = getattr(settings, 'DEFAULT_CATEGORY', 'general')
 
-MUDDLE_SLOTS = {}
+MUDDLE_SHOTS = {}
 
 
 def initialize():
@@ -23,12 +23,12 @@ def register(key, *mixers):
     """
     Register
     """
-    global MUDDLE_SLOTS
+    global MUDDLE_SHOTS
     try:
-        shot = MUDDLE_SLOTS[key]
+        shot = MUDDLE_SHOTS[key]
     except KeyError:
         shot = Shot()
-        MUDDLE_SLOTS[key] = shot
+        MUDDLE_SHOTS[key] = shot
     shot.add_mixers(mixers)
 
 

@@ -1,13 +1,13 @@
 from django.shortcuts import render
 from django.template.context import RequestContext
-from muddle.shots.registration import MUDDLE_SLOTS
+from muddle.shots.registration import MUDDLE_SHOTS
 
 __all__ = ['muddled_response', 'ShotProcessor']
 
 
 def muddled_response(key, request, template_name, *args, **kwargs):
     try:
-        mixers = MUDDLE_SLOTS[key].context_mixers
+        mixers = MUDDLE_SHOTS[key].context_mixers
     except KeyError:
         mixers = None
     
@@ -37,7 +37,7 @@ class ShotProcessor(object):
 
     def __init__(self, key):
         try:
-            self.mixers = MUDDLE_SLOTS[key].context_mixers
+            self.mixers = MUDDLE_SHOTS[key].context_mixers
         except KeyError:
             self.mixers = None
     
