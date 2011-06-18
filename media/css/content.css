@@ -7,25 +7,6 @@ h1 a.breadcrumb:hover {text-decoration:underline;}
     background: url(/media/images/background_with_menu.png) repeat-y center #eee !important;
 }
 
-#user_menu {
-    background-color:#C16328;
-    border: 1px solid #ccc;
-    border-width:0 1px 1px 1px;
-    font-weight:normal;
-    font-size:11px;
-    height:18px;
-    padding:5px 5px 0 10px;
-    position:absolute;
-    right:50px;
-    top:-1px;
-    -moz-border-radius-bottomleft:5px;
-    -moz-border-radius-bottomright:5px;
-    -webkit-border-bottom-left-radius: 5px;
-    -webkit-border-bottom-right-radius: 5px;
-}
-#user_menu a {font-size:11px !important; margin:0 !important; padding:0 !important;}
-#user_menu a:hover {text-decoration:underline;}
-
 .menu {
     float:left;
     color:#555555;
@@ -75,6 +56,24 @@ h1 a.breadcrumb:hover {text-decoration:underline;}
 #content table.horizontal td { text-align:left; }
 #content table.horizontal th { width:15em; }
 
+
+/**
+ * Search
+ */
+#search_box{
+    width:131px;
+}
+
+.ui-autocomplete{
+    background: white;
+    border:     1px solid #BBBBBB;
+
+    /* box shadow */
+    -moz-box-shadow:    0px 0px 20px black;
+    -webkit-box-shadow: 0px 0px 20px black;
+    box-shadow:         0px 0px 20px black;
+}
+
 /**
  *Tabs
  */
@@ -91,7 +90,8 @@ h1 a.breadcrumb:hover {text-decoration:underline;}
     -webkit-border-radius:0 !important;
 }
 .ui-widget-content {border:0 !important;}
-
+#tabs h3 {margin-top:25px;}
+#tabs table {margin-top:5px;}
 
 
 /**
@@ -138,6 +138,9 @@ h1 a.breadcrumb:hover {text-decoration:underline;}
     background:url(/media/images/icons/node.png) no-repeat 4px 4px;
 }
 
+
+/* Create User */
+#user-create input.submit {margin-left: 12.5em;}
 
 /*   User Profile   */
 #uprofile {margin: 0 auto 0 0; width: 50%;}
@@ -204,6 +207,7 @@ div.icon_deleting {background:url(/media/images/icons/check_red.png);}
 .connect {background:url(/media/images/icons/disconnect.png) no-repeat;}
 .migrate {background:url(/media/images/icons/arrow_out.png) no-repeat;}
 .evacuate {background:url(/media/images/icons/arrow_out.png) no-repeat;}
+.redistribute-config {background:url(/media/images/icons/arrow_divide.png) no-repeat;}
 .modify {background:url(/media/images/icons/edit.png) no-repeat;}
 .check {background:url(/media/images/icons/check.png) no-repeat;}
 .xmark {background:url(/media/images/icons/cross.png) no-repeat;}
@@ -218,7 +222,10 @@ div.delete.disabled, a.delete.disabled{background:url(/media/images/icons/delete
 .connect.enabled {background:url(/media/images/icons/disconnect.png) no-repeat;}
 .migrate.disabled {background:url(/media/images/icons/arrow_out-disabled.png) no-repeat;}
 .evacuate.disabled {background:url(/media/images/icons/arrow_out-disabled.png) no-repeat;}
+.redistribute-config.disabled {background:url(/media/images/icons/arrow_divide-disabled.png) no-repeat;}
 .modify.disabled {background:url(/media/images/icons/edit-disabled.png) no-repeat;}
+
+.button {background-position: center;}
 
 .icon {
     background-repeat:no-repeat;
@@ -240,7 +247,8 @@ a.clear:hover {background:url(/media/images/icons/cancel.png) no-repeat !importa
 
 .button {
     background-color: #eeeeee !important;
-    background-position:4px 4px !important;
+    /*background-position:4px 4px !important;*/
+    background-position: 4px center !important;
     border: 1px solid #cccccc;
     clear:both;
     color:#666 !important;
@@ -295,7 +303,6 @@ a.clear:hover {background:url(/media/images/icons/cancel.png) no-repeat !importa
  * Job Status Queue and Log
  **/
 #messages li.job {
-    background-color:#eee;
     border-width:1px;
     padding:0;
 }
@@ -307,12 +314,20 @@ a.clear:hover {background:url(/media/images/icons/cancel.png) no-repeat !importa
     text-align:left;
 }
 #messages li.job.error h3 {background: #ee9c98;}
+#messages li.job.error .scrollable {overflow:auto; display:inline-block;}
+#messages pre.error {text-align:left;}
 #messages .op_log {
-    display:block;
     border-top:1px solid #124612;
+    border-left:0;
+    border-right:0;
     margin:0;
     padding: 10px;
-    overflow:auto;
+    overflow:visible;
+}
+
+.scrollable .detector {
+    width: inherit;
+    height: 0px;
 }
 
 #messages .op_log  li {
@@ -341,8 +356,8 @@ tr.user td.name, tr.group td.name { padding-left:22px !important;}
 tr.user td.name {background:url(/media/images/icons/user.png) no-repeat 0 4px;}
 tr.group td.name {background:url(/media/images/icons/group.png) no-repeat 0 4px;}
 
-.permissions a {color:#333333;}
-.permissions .none, .quota.default {color:#C1C1C1; font-style:italic;}
+.permissions a {}
+.permissions .none, .quota.default {font-style:italic;}
 
 #vnc_errors {
     background-color: #ee9c98;
@@ -384,5 +399,6 @@ tr.group td.name {background:url(/media/images/icons/group.png) no-repeat 0 4px;
 #encrypt_check {display:none;}
 
 /* object log */
-.object_log .timestamp {width:9em;}
+.object_log .timestamp {font-weight:bold; width:4em;}
 .object_log td {text-align:left !important;}
+

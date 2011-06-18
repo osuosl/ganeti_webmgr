@@ -1,6 +1,0 @@
-{% extends "object_permissions/group/detail.html" %}
-
-{% block tabs %}
-<li><a title="usage" href="{% url used_resources %}?id={{group.organization.pk}}"><span>Resource Usage</span></a></li>
-<li><a title="log" href="{% url group-object_log group.pk %}"><span>Log</span></a></li>
-{% endblock %}

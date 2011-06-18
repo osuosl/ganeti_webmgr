@@ -1,12 +1,12 @@
 {% extends "no_menu_base.html" %}
-
+{% load i18n %}
 {% block content %}
 <div id="registration">
-    <h1>Registration</h1>
+    <h1>{% trans "Registration" %}</h1>
     <fieldset>
         <form method="post">
           {{ form.as_p }}
-          <input class="submit"type="submit" value="Create" />
+          <input class="submit"type="submit" value="{% trans "Create" %}" />
         </form>
     </fieldset>
 </div>

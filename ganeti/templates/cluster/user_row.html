@@ -1,9 +1,0 @@
-{# customized user row for cluster #}
-
-{% extends "object_permissions/permissions/user_row.html" %}
-
-{%block table_cells%}
-    {% with user.profile as cluster_user %}
-        {% include "cluster/user_quota.html" %}
-    {% endwith %}
-{%endblock%}

@@ -1,0 +1,66 @@
+{% extends "menu_base.html" %}
+{% load webmgr_tags %}
+{% load i18n %}
+{% block title %}{% trans "Rename" %} Virtual Machine{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" type="text/css"
+            href="{{MEDIA_URL}}/css/virtual_machine_create.css"/>
+    <script src="{{MEDIA_URL}}/js/helpTips.js"></script>
+    <script type="text/javascript">initHelpTips('#virtualmachineform');</script>
+{% endblock %}
+
+{% block content %}
+    <h1>
+        {% if cluster_admin %}
+        <a class="breadcrumb" href="{% url cluster-detail cluster.slug %}#virtual_machines">{{cluster.hostname|abbreviate_fqdn}}</a>
+        {% else %}
+        <span class="breadcrumb">{{cluster.hostname|abbreviate_fqdn}}</span>
+        {% endif %}
+        : <a class="breadcrumb" href="{% url instance-detail cluster.slug vm.hostname %}">{{ vm.hostname }}</a>
+        : {% trans "Rename" %}
+    </h1>
+
+    <div id="virtualmachineform">
+        <form method="post">
+            {% vmfield form.hostname %}
+            {% vmfield form.ip_check %}
+            {% vmfield form.name_check %}
+            <input class="submit" type="submit" value="Rename">
+        </form>
+    </div>
+
+    <div id="help">
+        <h3></h3>
+        <div></div>
+    </div>
+
+    <div id="help-contents">
+        {# performatted help content that will be copied into the help div #}
+
+        <div id="help-hostname">
+            {% blocktrans %}Domain name or host name to assign to this virtual
+            machine; e.g. <tt>example.org</tt> or
+            <tt>subdomain.example.org</tt>.{% endblocktrans %}
+        </div>
+        <div id="help-ip_check">
+            Whether to ensure instance’s IP address is inactive.
+        </div>
+        <div id="help-name_check">
+            <p>
+            Check the virtual machine DNS name via the resolver <i>(e.g. in DNS
+            or /etc/hosts, depending on your setup)</i>. Since the name check
+            is used to compute the IP address this also enables/disables IP
+            checks <i>(e.g.  if the IP is pingable)</i>.
+            </p>
+            <p>
+            This is useful for setups that deploy virtual machines using
+            dynamic DNS and thus the name is not resolvable yet.
+            </p>
+            <p>
+            <b>Use with caution!</b> If left unchecked you may run into name/ip
+            collisions.
+            </p>
+        </div>
+    </div>
+{% endblock %}

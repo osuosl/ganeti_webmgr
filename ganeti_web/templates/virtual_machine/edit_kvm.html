@@ -1,0 +1,37 @@
+{% extends "virtual_machine/edit_base.html" %}
+{% load webmgr_tags %}
+
+{% block beparams %}
+    {% vmfield form.disk_type %}
+    {% vmfield form.nic_type %}
+{% endblock %}
+        
+{% block hvparams %}
+    {% vmfield form.kernel_path %}
+    {% vmfield form.root_path %}
+    {% vmfield form.serial_console %}
+    {% vmfield form.boot_order %}
+    {% vmfield form.cdrom_image_path %}
+    {% vmfield form.acpi %}
+    {% vmfield form.disk_cache %}
+    {% vmfield form.initrd_path %}
+    {% vmfield form.kernel_args %}
+    {% vmfield form.kvm_flag %}
+    {% vmfield form.mem_path %}
+    {% vmfield form.migration_downtime %}
+    {% vmfield form.security_model %}
+    {% vmfield form.security_domain %}
+    {% vmfield form.usb_mouse %}
+    {% vmfield form.use_chroot %}
+    {% vmfield form.use_localtime %}
+    {% vmfield form.vnc_bind_address %}
+    {% vmfield form.vnc_tls %}
+    {% vmfield form.vnc_x509_path %}
+    {% vmfield form.vnc_x509_verify %}
+{% endblock %}
+
+{% block helptips %}
+    {% include "helptips/vm_edit_kvm.html" %}
+    {% include "helptips/vm_edit_hvm.html" %}
+    {% include "helptips/vm_edit_pvm.html" %}
+{% endblock %}
