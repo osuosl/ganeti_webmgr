@@ -27,9 +27,9 @@
         
         // Delete user button
         $('#op_users .delete').live("click", function() {
-            name = $(this).parent().parent().children('.name').html();
+            var name = $(this).parent().parent().children('.name').html();
             if (confirm("Remove user: " + name)) {
-                id = this.parentNode.parentNode.id.substring(5);
+                var id = this.parentNode.parentNode.id.substring(5);
                 $.post('{% url group-remove-user object.id %}', {'user':id},
                     function(code){
                         if(code==1) {$('#user_'+id).remove();}
@@ -46,7 +46,7 @@
         
         // Update Permission Button
         $("#op_users .permissions").live("click", function() {
-            id = this.parentNode.id.substring(5);
+            var id = this.parentNode.id.substring(5);
             $('.qtip').qtip('destroy');
             $(this).qtip({
                 content: {
@@ -75,18 +75,18 @@
     function update_group_user(responseText, statusText, xhr, $form) {
         if (xhr.getResponseHeader('Content-Type') == 'application/json') {
             // parse errors
-            for (key in responseText) {
+            for (var key in responseText) {
                 $("#errors").append("<li>"+ responseText[key] +"</li>")
             }
         } else {
             // successful permissions change.  replace the user row with the
             // newly rendered html
             $('.qtip').qtip('hide');
-            html = $(responseText);
-            id = html.attr('id')
-            $row = $('#op_users #' + id);
+            var html = $(responseText);
+            var id = html.attr('id');
+            var $row = $('#op_users #' + id);
             if ($row.length == 1) {
-                $row.replaceWith(html)
+                $row.replaceWith(html);
             } else {
                 $("#op_users").append(html);
             }
