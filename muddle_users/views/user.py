@@ -238,9 +238,9 @@ class UserProfileForm(forms.Form):
         Overridden to add password change verification
         """
         data = self.cleaned_data
-        old = data.get('old_password', None)
-        new = data.get('new_password', None)
-        confirm = data.get('confirm_password', None)
+        old = data.get('old_password')
+        new = data.get('new_password')
+        confirm = data.get('confirm_password')
 
         if new or confirm:
             if not self.user.check_password(old):
