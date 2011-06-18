@@ -16,7 +16,7 @@ def initialize():
     Initialize the app settings module
     """
     print 'Loading Muddle Shots'
-    load_app_plugin('mixers')
+    load_app_plugin('muddle.mixers')
 
 
 def register(key, *mixers):
