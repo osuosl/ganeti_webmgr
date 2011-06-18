@@ -20,7 +20,7 @@ def initialize():
     """
     Initialize the app settings module
     """
-    load_app_plugin('settings')
+    load_app_plugin('muddle.settings')
 
 
 def register(category, form, subcategory=DEFAULT_CATEGORY):
