@@ -27,7 +27,7 @@
             
             $('#groups .edit').live("click", function(){
                 $('.qtip').qtip('destroy');
-                id = this.parentNode.parentNode.id.substring(6);
+                var id = this.parentNode.parentNode.id.substring(6);
                 $(this).qtip( {
                     content: {
                        url: '{% url group-add %}/'+id,
@@ -53,9 +53,9 @@
             
             // Delete user button
             $('#groups .delete').live("click", function() {
-                name = $(this).parent().parent().children('.name').children('a').html();
+                var name = $(this).parent().parent().children('.name').children('a').html();
                 if (confirm("Delete group: " + name)) {
-                    id = this.parentNode.parentNode.id.substring(6);
+                    var id = this.parentNode.parentNode.id.substring(6);
                     $.delete_('{% url group-add %}/'+id,
                         function(code){
                             if(code==1) {$('#group_'+id).remove();}
@@ -66,18 +66,18 @@
             function update(responseText, statusText, xhr, $form) {
                 if (xhr.getResponseHeader('Content-Type') == 'application/json') {
                     // parse errors
-                    for (key in responseText) {
+                    for (var key in responseText) {
                         $("#errors").append("<li>"+ responseText[key] +"</li>")
                     }
                 } else {
                     // successful permissions change.  replace the user row with the
                     // newly rendered html
                     $('.qtip').qtip('hide');
-                    html = $(responseText);
-                    id = html.attr('id')
-                    $row = $('#groups #' + id);
+                    var html = $(responseText);
+                    var id = html.attr('id');
+                    var $row = $('#groups #' + id);
                     if ($row.length == 1) {
-                        $row.replaceWith(html)
+                        $row.replaceWith(html);
                     } else {
                         $("#groups").append(html);
                     }
