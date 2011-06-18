@@ -979,6 +979,13 @@ class Cluster(CachedClusterObject):
                     (self.username, self.password, self.hostname, self.port)) \
                 .hexdigest()
 
+    def get_default_quota(self):
+        """
+        Returns the default quota for this cluster
+        """
+        return {'default':1, 'ram':self.ram, 'disk':self.disk, \
+                    'virtual_cpus':self.virtual_cpus}
+
     def get_quota(self, user=None):
         """
         Get the quota for a ClusterUser
