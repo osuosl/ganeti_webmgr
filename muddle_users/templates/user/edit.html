@@ -7,10 +7,11 @@
 {% block content %}
 <h1><a class="breadcrumb" href="{%url user-list %}">{% trans "Users" %}</a>
     {% if user_edit %}
-    : <a class="breadcrumb" href="{% url user-detail user_edit.id %}">{{ user_edit.username }}</a> : {% trans "Edit" %}</h1>
+    : <a class="breadcrumb" href="{% url user-detail user_edit.id %}">{{ user_edit.username }}</a> : {% trans "Edit" %}
     {% else %}
     : {%  trans "Create" %}
     {% endif %}
+    </h1>
 
 {% if username %}
 <form id="user-edit" method="post">
@@ -20,7 +21,7 @@
     {% csrf_token %}
     <fieldset>
         {{ form.as_p }}
-        <input type="submit" value="{% if user_edit.username %}{%trans "Save" %}{% else %}{% trans "Create" %}{% endif %}">
+        <input class="submit" type="submit" value="{% if user_edit.username %}{%trans "Save" %}{% else %}{% trans "Create" %}{% endif %}">
     </fieldset>
 </form>
 
