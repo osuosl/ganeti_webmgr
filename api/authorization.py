@@ -1,6 +1,8 @@
-from tastypie.authorization import Authorization
 
 __author__ = 'bojan'
+
+from tastypie.authorization import Authorization
+
 
 class SuperuserAuthorization(Authorization):
     def is_authorized(self, request, object=None):
