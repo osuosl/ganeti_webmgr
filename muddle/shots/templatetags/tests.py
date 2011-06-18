@@ -2,7 +2,7 @@ from copy import copy
 from django import template
 register = template.Library()
 
-from muddle.slots.tests import context as global_context
+from muddle.shots.tests import context as global_context
 
 
 @register.simple_tag(takes_context=True)

@@ -15,48 +15,48 @@ def initialize():
     """
     Initialize the app settings module
     """
-    print 'Loading Muddle Slots'
-    load_app_plugin('slats')
+    print 'Loading Muddle Shots'
+    load_app_plugin('mixers')
 
 
-def register(key, *slats):
+def register(key, *mixers):
     """
     Register
     """
     global MUDDLE_SLOTS
     try:
-        slot = MUDDLE_SLOTS[key]
+        shot = MUDDLE_SLOTS[key]
     except KeyError:
-        slot = Slot()
-        MUDDLE_SLOTS[key] = slot
-    slot.add_slats(slats)
+        shot = Shot()
+        MUDDLE_SLOTS[key] = shot
+    shot.add_mixers(mixers)
 
 
-class Slot(object):
+class Shot(object):
 
     def __init__(self):
-        self.context_slats = []
-        self.template_slats = []
+        self.context_mixers = []
+        self.template_mixers = []
 
-    def add_slats(self, slats):
-        for slat in slats:
-            if isinstance(slat, (ContextSlat,)):
-                if any((s for s in self.context_slats if s.function is slat.function)):
+    def add_mixers(self, mixers):
+        for mixer in mixers:
+            if isinstance(mixer, (ContextMixer,)):
+                if any((s for s in self.context_mixers if s.function is mixer.function)):
                     continue
-                self.context_slats.append(slat)
+                self.context_mixers.append(mixer)
             
-            elif isinstance(slat, (TemplateSlat,)):
-                if any((s for s in self.template_slats if s.origin == slat.origin)):
+            elif isinstance(mixer, (TemplateMixer,)):
+                if any((s for s in self.template_mixers if s.origin == mixer.origin)):
                     continue
-                self.template_slats.append(slat)
+                self.template_mixers.append(mixer)
             
             else:
-                raise RuntimeError('Invalid slat type')
+                raise RuntimeError('Invalid mixer type')
 
 
-class ContextSlat(object):
+class ContextMixer(object):
     """
-    A slat that provides additional context.  This class wraps a handler
+    A mixer that provides additional context.  This class wraps a handler
     function.  It contains additional functionality that might be included with
     """
     function = None
@@ -69,15 +69,15 @@ class ContextSlat(object):
         return self.function(request)
 
     def __eq__(self, o):
-        if isinstance(o, (ContextSlat,)):
+        if isinstance(o, (ContextMixer,)):
             return o.function == self.function
         return o == self.function
 
 
-class TemplateSlat(object):
+class TemplateMixer(object):
     """
-    A slat that provides additional content to a template.  TemplateSlats can
-    be inline by just providing a template.  TemplateSlats can optionally be
+    A mixer that provides additional content to a template.  TemplateMixers can
+    be inline by just providing a template.  TemplateMixers can optionally be
     loaded using ajax by providing an ajax URL.  When an ajax url is provided
     a special ajax template is used to render html & javascript that handles the
     asynchronous loading via ajax.
@@ -99,6 +99,6 @@ class TemplateSlat(object):
         return self.origin
 
     def __eq__(self, o):
-        if isinstance(o, (TemplateSlat,)):
+        if isinstance(o, (TemplateMixer,)):
             return o.origin == self.origin
         return o == self.origin

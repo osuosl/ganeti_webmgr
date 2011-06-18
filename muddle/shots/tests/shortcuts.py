@@ -1,12 +1,12 @@
 from django.template.context import RequestContext
 from django.test.client import RequestFactory
 
-from muddle.slots import register, ContextSlat, SlotProcessor
-from muddle.slots.shortcuts import muddled_response
-from muddle.slots.tests.registration import SlotsTestsBase
-from muddle.slots.tests import context as global_context
+from muddle.shots import register, ContextMixer, ShotProcessor
+from muddle.shots.shortcuts import muddled_response
+from muddle.shots.tests.registration import ShotsTestsBase
+from muddle.shots.tests import context as global_context
 
-__all__ = ['SlotsResponseTests', 'SlotsProcessorTests']
+__all__ = ['ShotsResponseTests', 'ShotsProcessorTests']
 
 CONTEXT = None
 
@@ -20,52 +20,52 @@ def bar(request):
     return dict(bar=3, xoo=4)
 
 
-class SlotsResponseTests(SlotsTestsBase):
+class ShotsResponseTests(ShotsTestsBase):
 
     def setUp(self):
-        super(SlotsResponseTests, self).setUp()
+        super(ShotsResponseTests, self).setUp()
         self.factory = RequestFactory()
         self.request = self.factory.get('/test/')
 
     def test_basic(self):
-        register('foo', ContextSlat(foo), ContextSlat(bar))
-        response = muddled_response('foo', self.request, 'slots/tests/test.html')
+        register('foo', ContextMixer(foo), ContextMixer(bar))
+        response = muddled_response('foo', self.request, 'shots/tests/test.html')
         self.assertEqual(200, response.status_code)
         self.assertEqual(1, global_context.CONTEXT.get('foo'))
         self.assertEqual(3, global_context.CONTEXT.get('bar'))
         self.assertEqual(4, global_context.CONTEXT.get('xoo'))
     
-    def test_no_slot(self):
-        response = muddled_response('foo', self.request, 'slots/tests/foo1.html')
+    def test_no_shot(self):
+        response = muddled_response('foo', self.request, 'shots/tests/foo1.html')
         self.assertEqual(200, response.status_code)
     
-    def test_no_slats(self):
+    def test_no_mixers(self):
         register('foo')
-        response = muddled_response('foo', self.request, 'slots/tests/foo1.html')
+        response = muddled_response('foo', self.request, 'shots/tests/foo1.html')
         self.assertEqual(200, response.status_code)
     
     def test_with_context_instance(self):
-        register('foo', ContextSlat(foo), ContextSlat(bar))
+        register('foo', ContextMixer(foo), ContextMixer(bar))
         context = RequestContext(self.request)
-        response = muddled_response('foo', self.request, 'slots/tests/test.html', context_instance=context)
+        response = muddled_response('foo', self.request, 'shots/tests/test.html', context_instance=context)
         self.assertEqual(200, response.status_code)
         self.assertEqual(1, global_context.CONTEXT.get('foo'))
         self.assertEqual(3, global_context.CONTEXT.get('bar'))
         self.assertEqual(4, global_context.CONTEXT.get('xoo'))
     
     def test_with_dictionary(self):
-        register('foo', ContextSlat(foo), ContextSlat(bar))
+        register('foo', ContextMixer(foo), ContextMixer(bar))
         data = dict(xar=42, foo=42)
-        response = muddled_response('foo', self.request, 'slots/tests/test.html', data)
+        response = muddled_response('foo', self.request, 'shots/tests/test.html', data)
         self.assertEqual(200, response.status_code)
         self.assertEqual(42, global_context.CONTEXT.get('xar'))
         self.assertEqual(42, global_context.CONTEXT.get('foo'))
     
     def test_with_context_and_dictionary(self):
-        register('foo', ContextSlat(foo), ContextSlat(bar))
+        register('foo', ContextMixer(foo), ContextMixer(bar))
         context = RequestContext(self.request)
         data = dict(xar=42, foo=42)
-        response = muddled_response('foo', self.request, 'slots/tests/test.html', data, context_instance=context)
+        response = muddled_response('foo', self.request, 'shots/tests/test.html', data, context_instance=context)
         self.assertEqual(200, response.status_code)
         self.assertEqual(42, global_context.CONTEXT.get('xar'))
         self.assertEqual(42, global_context.CONTEXT.get('foo'))
@@ -73,33 +73,33 @@ class SlotsResponseTests(SlotsTestsBase):
         self.assertEqual(4, global_context.CONTEXT.get('xoo'))
 
     
-class SlotsProcessorTests(SlotsTestsBase):
+class ShotsProcessorTests(ShotsTestsBase):
 
     def setUp(self):
-        super(SlotsProcessorTests, self).setUp()
+        super(ShotsProcessorTests, self).setUp()
 
     def test_trivial(self):
-        register('foo', ContextSlat(foo))
-        SlotProcessor('foo')
+        register('foo', ContextMixer(foo))
+        ShotProcessor('foo')
 
-    def test_no_slot(self):
-        sp = SlotProcessor('DOES_NOT_EXIST')
+    def test_no_shot(self):
+        sp = ShotProcessor('DOES_NOT_EXIST')
         self.assertEqual({}, sp(None))
 
-    def test_no_slats(self):
+    def test_no_mixers(self):
         register('foo')
-        sp = SlotProcessor('foo')
+        sp = ShotProcessor('foo')
         self.assertEqual({}, sp(None))
 
-    def test_single_slat(self):
-        register('foo', ContextSlat(foo))
-        sp = SlotProcessor('foo')
+    def test_single_mixer(self):
+        register('foo', ContextMixer(foo))
+        sp = ShotProcessor('foo')
         self.assertEqual(dict(foo=1, xoo=2), sp(None))
 
-    def test_multiple_slats(self):
-        register('foo', ContextSlat(foo))
-        register('foo', ContextSlat(bar))
-        sp = SlotProcessor('foo')
+    def test_multiple_mixers(self):
+        register('foo', ContextMixer(foo))
+        register('foo', ContextMixer(bar))
+        sp = ShotProcessor('foo')
         self.assertEqual(dict(foo=1, bar=3, xoo=4), sp(None))
 
 
