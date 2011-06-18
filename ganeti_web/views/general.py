@@ -83,12 +83,23 @@ def get_used_resources(cluster_user):
 
     for cluster, quota in quotas.items():
         resources[cluster] = {
-            "used": used[cluster.id] if cluster.id in used else USED_NOTHING,
+            "used": used.pop(cluster.id) if cluster.id in used else USED_NOTHING,
             "set": quota
         }
         resources[cluster]["total"] = owned_vms.filter(cluster=cluster).count()
         resources[cluster]["running"] = owned_vms.filter(cluster=cluster, \
                                                     status="running").count()
+
+    # add any clusters that have used resources but no perms (and thus no quota)
+    # since we know they don't have a custom quota just add the default quota
+    if used:
+        for cluster in Cluster.objects.filter(pk__in=used):
+            resources[cluster] = {"used":used[cluster.id],
+                                  "set":cluster.get_default_quota()}
+            resources[cluster]["total"] = owned_vms.filter(cluster=cluster).count()
+            resources[cluster]["running"] = owned_vms.filter(cluster=cluster, \
+                                                    status="running").count()
+
     return resources
 
 
