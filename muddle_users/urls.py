@@ -18,13 +18,18 @@
 from django.conf import settings
 from django.conf.urls.defaults import patterns, url
 
+# If muddled.shots is installed then load templates that allow mixers to extend
+# the templates.  Otherwise use standard templates.  The standard templates can
+# still be overridden by manually adding a url with a different template
+# attribute
 if 'muddle.shots' in settings.INSTALLED_APPS:
-    USER_TEMPLATE = 'user/detail.html'
-    GROUP_TEMPLATE = 'group/detail.html'
-else:
     USER_TEMPLATE = 'muddle/user/detail.html'
     GROUP_TEMPLATE = 'muddle/group/detail.html'
-
+    GROUP_LIST_TEMPLATE = 'muddle/group/list.html'
+else:
+    USER_TEMPLATE = 'user/detail.html'
+    GROUP_TEMPLATE = 'group/detail.html'
+    GROUP_LIST_TEMPLATE = 'group/list.html'
 
 # Users
 urlpatterns = patterns('muddle_users.views.user',
@@ -39,7 +44,7 @@ urlpatterns = patterns('muddle_users.views.user',
 # Groups
 urlpatterns += patterns('muddle_users.views.group',
     # Groups
-    url(r'^groups/$', 'list', name="group-list"),
+    url(r'^groups/$', 'list', {'template': GROUP_LIST_TEMPLATE}, name="group-list"),
     url(r'^group/?$', 'detail', name="group-add"),
     url(r'^group/(?P<id>\d+)/?$', 'detail', {'template':GROUP_TEMPLATE}, name="group-detail"),
     url(r'^group/(?P<id>\d+)/user/add/?$','add_user', name="group-add-user"),

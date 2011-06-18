@@ -13,7 +13,7 @@
                     content: {
                        url: '{% url group-add %}',
                        title: {text:'Add Group: ', button:'close'},
-                       method: "post",
+                       method: "post"
                     },
                     position: {  corner:{target:'center', tooltip:'center'}},
                     style: {name: 'dark', border:{radius:5}, width:300, background:'#eeeeee'},
@@ -32,7 +32,7 @@
                     content: {
                        url: '{% url group-add %}/'+id,
                        title: {text:'Edit Group: ', button:'close'},
-                       method: "post",
+                       method: "post"
                     },
                     position: {corner:{ target:"topMiddle", tooltip:"bottomMiddle"}},
                     style: {name: 'dark', border:{radius:5}, width:300, background:'#eeeeee', tip: 'bottomMiddle'},
@@ -94,13 +94,13 @@
     <table id="groups">
         <tr>
             <th>Name</th>
-            <th>All users</th>
-            <th>Admins</th>
+            <th>Users</th>
+            {% block group_headers %}{% endblock %}
             <th></th>
             <th></th>
         </tr>
         {% for group in groups %}
-            {% include "object_permissions/group/group_row.html" %}
+            {% block group_row %}{% include "group/group_row.html" %}{% endblock %}
         {% endfor %}
     </table>
 {% endblock %}

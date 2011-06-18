@@ -1,5 +1,5 @@
 {% extends "menu_base.html" %}
-{% include i18n %}
+{% load i18n %}
 {% block title %}{% trans "Group:" %}{{ object.name }}{% endblock %}
 
 {% block head %}
@@ -39,7 +39,7 @@
         {% block tabs %}{% endblock %}
     </ul>
     <div id="users">
-        {% include "object_permissions/group/users.html" %}
+        {% block users %}{% include "group/users.html" %}{% endblock %}
     </div>
 </div>
 {% endblock content %}

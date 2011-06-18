@@ -92,6 +92,15 @@
             }
         }
     }
-</script>
 
-{% include "object_permissions/permissions/table.html" %}
+</script>
+<div id="add_user" class="button add">Add User</div>
+<table id="op_users">
+    <tr>
+        <th>Name</th>
+        {% block user_headers%}{% endblock %}
+    </tr>
+    {% for user_detail in users %}
+        {% block user_row %}{% include "group/user_row.html" %}{% endblock %}
+    {% endfor %}
+</table>
