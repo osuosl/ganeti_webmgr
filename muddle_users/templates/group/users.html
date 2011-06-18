@@ -5,7 +5,8 @@
 <script type="text/javascript">
     $(document).ready(function() {
         // Add user button
-        $('#add_user').click(function(){
+        $('#add_user').click(function(event){
+            event.preventDefault();
             $('.qtip').qtip('destroy');
             $(this).qtip({
                 content: {
@@ -20,11 +21,11 @@
                     $(".ajax_form input[type!=hidden], .ajax_form select").first().focus();
                 }}
             });
-            return false;
         });
         
         // Delete user button
-        $('#op_users .delete').live("click", function() {
+        $('#op_users .delete').live("click", function(event) {
+            event.preventDefault();
             var name = $(this).parent().parent().children('.name').html();
             if (confirm("Remove user: " + name)) {
                 var id = this.parentNode.parentNode.id.substring(5);
@@ -36,14 +37,15 @@
         });
         
         // submit button
-        $(".add_user_form").live('submit', function(){
+        $(".add_user_form").live('submit', function(event){
+            event.preventDefault();
             $("#errors").empty();
             $(this).ajaxSubmit({success: update_group_user});
-            return false;
         });
         
         // Update Permission Button
-        $("#op_users .permissions").live("click", function() {
+        $("#op_users .permissions").live("click", function(event) {
+            event.preventDefault();
             var id = this.parentNode.id.substring(5);
             $('.qtip').qtip('destroy');
             $(this).qtip({
@@ -66,7 +68,6 @@
                     });
                 }}
             });
-            return false;
         });
     });
     
