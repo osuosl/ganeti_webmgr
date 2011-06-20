@@ -51,8 +51,6 @@ urlpatterns = patterns('ganeti_web.views.general',
 urlpatterns += patterns('muddle_users.views.user',
     url(r'^accounts/profile/?', 'user_profile', name='profile',
         kwargs={'template':'ganeti/users/profile.html'}),
-    url(r'^user/(?P<user_id>\d+)/?$', 'user_detail', name="user-detail",
-        kwargs={'template':'ganeti/users/detail.html'}),
 )
 
 # Users
