@@ -181,7 +181,7 @@ def get_vm_counts(clusters, timeout=600):
 
 
 @login_required
-def overview(request):
+def overview(request, rest=False):
     """
     Status page
     """
@@ -256,20 +256,24 @@ def overview(request):
     # get resources used per cluster from the first persona in the list
     resources = get_used_resources(personas[0])
     
-    return render_to_response("overview.html", {
-        'admin':admin,
-        'cluster_list': clusters,
-        'user': request.user,
-        'errors': errors,
-        'orphaned': orphaned,
-        'import_ready': import_ready,
-        'missing': missing,
-        'resources': resources,
-        'vm_summary': vm_summary,
-        'personas': personas,
-        },
-        context_instance=RequestContext(request),
-    )
+    if (rest):
+        print "rest\n"
+        return clusters
+    else:
+        return render_to_response("overview.html", {
+            'admin':admin,
+            'cluster_list': clusters,
+            'user': request.user,
+            'errors': errors,
+            'orphaned': orphaned,
+            'import_ready': import_ready,
+            'missing': missing,
+            'resources': resources,
+            'vm_summary': vm_summary,
+            'personas': personas,
+            },
+            context_instance=RequestContext(request),
+        )
 
 
 @login_required

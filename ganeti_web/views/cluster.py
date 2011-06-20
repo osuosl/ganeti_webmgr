@@ -49,7 +49,7 @@ from django.utils.translation import ugettext as _
 
 
 @login_required
-def detail(request, cluster_slug):
+def detail(request, cluster_slug, rest=False):
     """
     Display details of a cluster
     """
@@ -58,10 +58,12 @@ def detail(request, cluster_slug):
     admin = True if user.is_superuser else user.has_perm('admin', cluster)
     if not admin:
         return render_403(request, _("You do not have sufficient privileges"))
-    
-    return render_to_response("cluster/detail.html", {
-        'cluster':cluster,
-        'admin':admin
+    if (rest == True):
+        return {'cluster':cluster,'admin':admin}
+    else:
+        return render_to_response("cluster/detail.html", {
+            'cluster':cluster,
+            'admin':admin
         },
         context_instance=RequestContext(request),
     )
@@ -154,7 +156,7 @@ def edit(request, cluster_slug=None):
 
 
 @login_required
-def list_(request):
+def list_(request, rest = False):
     """
     List all clusters
     """
@@ -163,7 +165,10 @@ def list_(request):
         cluster_list = Cluster.objects.all()
     else:
         cluster_list = user.get_objects_all_perms(Cluster, ['admin',])
-    return render_to_response("cluster/list.html", {
+    if rest:
+        return cluster_list
+    else:
+        return render_to_response("cluster/list.html", {
         'cluster_list': cluster_list,
         'user': request.user,
         },
