@@ -127,7 +127,7 @@ def detail(request, id=None, template='group/detail.html'):
 
 
 @login_required
-def add_user(request, id):
+def add_user(request, id, user_row_template='group/user_row.html'):
     """
     ajax call to add a user to a Group
     
@@ -151,7 +151,7 @@ def add_user(request, id):
             # return html for new user row
             url = reverse('group-permissions', args=[id])
             return render_to_response(
-                "object_permissions/permissions/user_row.html",
+                user_row_template,
                         {'user_detail':user, 'object':group, 'url':url},
                         context_instance=RequestContext(request))
         

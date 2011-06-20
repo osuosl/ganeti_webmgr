@@ -53,7 +53,9 @@
             
             // Delete user button
             $('#groups .delete').live("click", function() {
+
                 var name = $(this).parent().parent().children('.name').children('a').html();
+
                 if (confirm("Delete group: " + name)) {
                     var id = this.parentNode.parentNode.id.substring(6);
                     $.delete_('{% url group-add %}/'+id,

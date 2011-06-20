@@ -26,10 +26,13 @@ if 'muddle.shots' in settings.INSTALLED_APPS:
     USER_TEMPLATE = 'muddle/user/detail.html'
     GROUP_TEMPLATE = 'muddle/group/detail.html'
     GROUP_LIST_TEMPLATE = 'muddle/group/list.html'
+    USER_ROW_TEMPLATE = 'muddle/group/user_row.html'
 else:
     USER_TEMPLATE = 'user/detail.html'
     GROUP_TEMPLATE = 'group/detail.html'
     GROUP_LIST_TEMPLATE = 'group/list.html'
+    USER_ROW_TEMPLATE = 'group/user_row.html'
+
 
 # Users
 urlpatterns = patterns('muddle_users.views.user',
@@ -47,7 +50,8 @@ urlpatterns += patterns('muddle_users.views.group',
     url(r'^groups/$', 'list', {'template': GROUP_LIST_TEMPLATE}, name="group-list"),
     url(r'^group/?$', 'detail', name="group-add"),
     url(r'^group/(?P<id>\d+)/?$', 'detail', {'template':GROUP_TEMPLATE}, name="group-detail"),
-    url(r'^group/(?P<id>\d+)/user/add/?$','add_user', name="group-add-user"),
+    url(r'^group/(?P<id>\d+)/user/add/?$','add_user',
+        {'user_row_template':USER_ROW_TEMPLATE}, name="group-add-user"),
     url(r'^group/(?P<id>\d+)/user/remove/?$','remove_user', name="group-remove-user"),
 )
 
