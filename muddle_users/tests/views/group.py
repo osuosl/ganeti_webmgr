@@ -4,7 +4,6 @@ from django.core.urlresolvers import reverse
 from django.test import TestCase, Client
 from object_permissions.registration import grant, revoke
 from muddle_users.signals import view_remove_user, view_group_edited, view_group_created, view_group_deleted, view_add_user
-from muddle_users.templatetags.muddle_users import number_group_admins
 
 global user0, user1
 
@@ -36,27 +35,6 @@ class TestGroupViews(TestCase):
         group = Group(name=name)
         group.save()
         return group
-
-    def test_number_of_group_admins(self):
-        """
-        Test template tag used in list of Groups view
-        """
-
-        group0 = self.test_save(name='group1')
-        group1 = self.test_save(name='group2')
-
-        group0.user_set.add(user0)
-        group0.user_set.add(user1)
-        user0.grant("admin", group0)
-        group1.user_set.add(user0)
-        group1.user_set.add(user1)
-
-        self.assertEqual(number_group_admins(group0), 1)
-        self.assertEqual(number_group_admins(group1), 0)
-        user1.grant("admin", group1)
-        self.assertEqual(number_group_admins(group1), 1)
-        user1.grant("admin", group0)
-        self.assertEqual(number_group_admins(group0), 2)
 
     def test_view_list(self):
         """
