@@ -47,12 +47,12 @@ function get_job_status(cluster, job_id, callback, errback) {
 }
 
 function display_job(cluster, data) {
-    // get the sub operation that is either running or errored
-    for (var sub_op=0; sub_op<data['opstatus'].length-1;) {
+    /* Find a sub-operation which has not successfully completed. There
+     * probably will be only one. */
+    for (var sub_op = 0; sub_op < data['opstatus'].length; sub_op++) {
         if (data['opstatus'][sub_op] != 'success') {
             break;
         }
-        sub_op++;
     }
 
     $("#messages").empty();
