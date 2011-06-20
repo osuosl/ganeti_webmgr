@@ -1,0 +1,10 @@
+<!-- autocomplete search box -->
+{% load i18n %}
+{%  if user.is_superuser %}
+<li><h3>{% trans "Search" %}</h3></li>
+<li>
+<form id="search_form" action="{% url search %}" method="get">
+    <input id="search_box" type="text" name="q" />
+</form>
+</li>
+{% endif %}
