@@ -1,0 +1,3 @@
+{% extends "group/user_row.html" %}
+{% load shots %}
+{% block table_cells %}{% shot group-users-table-cells %}{{ mixer }}{% endshot %}{% endblock %}

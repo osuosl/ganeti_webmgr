@@ -85,7 +85,7 @@ def user_add(request, template="user/edit.html"):
 
 
 @login_required
-def user_detail(request, user_id=None, template="users/detail.html"):
+def user_detail(request, user_id=None, template="user/detail.html"):
     user = request.user
     if not user.is_superuser:
         return render_403(request, _('Only a superuser may view a user.'))
@@ -238,9 +238,9 @@ class UserProfileForm(forms.Form):
         Overridden to add password change verification
         """
         data = self.cleaned_data
-        old = data.get('old_password', None)
-        new = data.get('new_password', None)
-        confirm = data.get('confirm_password', None)
+        old = data.get('old_password')
+        new = data.get('new_password')
+        confirm = data.get('confirm_password')
 
         if new or confirm:
             if not self.user.check_password(old):

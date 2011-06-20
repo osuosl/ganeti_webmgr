@@ -26,9 +26,6 @@
             });
         });
     </script>
-    {% include "ganeti/ssh_keys/header.html" %}
-    
-    
 {% endblock %}
 
 {% block content %}
@@ -51,6 +48,7 @@
         <tr><th>{% trans "Admin" %}:</th><td>{{user_detail.is_superuser}}</td></tr>
         </table>
 
-        {% block detail %}{% endblock %}    </div>
+        {% block detail %}{% endblock %}
+    </div>
 </div>
 {% endblock %}

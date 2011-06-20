@@ -1,16 +1,9 @@
 {% extends "menu_base.html" %}
-{% include i18n %}
+{% load i18n %}
 {% block title %}{% trans "Group:" %}{{ object.name }}{% endblock %}
 
 {% block head %}
     <link href="{{MEDIA_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
-
-    <style>
-    #users {width:100%;}
-    #users .permissions {cursor:pointer;}
-    .ui-widget-header {background:none; border-width:0 0 1px 0; -moz-border-radius:0px;}
-    .ui-widget-content {border:0;}
-    </style>
     <script src="{{MEDIA_URL}}/js/jquery-ui.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
@@ -32,17 +25,14 @@
 {% endblock %}
 
 {% block content %}
-
-<a class="breadcrumb" href="{%url group-list %}">{% trans "Groups" %}</a> : {{ group.name }}</h1>
-
+<h1><a class="breadcrumb" href="{%url group-list %}">{% trans "Groups" %}</a> : {{ group.name }}</h1>
 <div id="tabs">
     <ul>
         <li><a href="#users"><span>Users</span></a></li>
-        <li><a title="permissions" href="{% url group-all-permissions group.pk %}"><span>Permissions</span></a></li>
         {% block tabs %}{% endblock %}
     </ul>
     <div id="users">
-        {% include "object_permissions/group/users.html" %}
+        {% block users %}{% include "group/users.html" %}{% endblock %}
     </div>
 </div>
-{% endblock %}
+{% endblock content %}

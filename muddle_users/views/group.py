@@ -52,7 +52,7 @@ class RemoveUserForm(UserForm):
 
 
 @login_required
-def list(request):
+def list(request, template='group/list.html'):
     """
     List all user groups.
     """
@@ -64,13 +64,13 @@ def list(request):
         if not groups:
             return HttpResponseForbidden()
 
-    return render_to_response("group/list.html", \
-                              {'groups':groups}, \
+    return render_to_response(template,
+                              {'groups':groups},
                               context_instance=RequestContext(request)) 
 
 
 @login_required
-def detail(request, id=None, template='groups/detail.html'):
+def detail(request, id=None, template='group/detail.html'):
     """
     Display group details
     
@@ -89,7 +89,7 @@ def detail(request, id=None, template='groups/detail.html'):
                              'group':group,
                              'users':group.user_set.all(),
                              'url':reverse('group-permissions', args=[id])
-                             }, \
+                             },
                               context_instance=RequestContext(request))
     
     elif method == 'POST':
@@ -104,9 +104,8 @@ def detail(request, id=None, template='groups/detail.html'):
                 else:
                     view_group_edited.send(sender=group, editor=user)
 
-                return render_to_response( \
-                    "object_permissions/group/group_row.html", \
-                    {'group':group}, \
+                return render_to_response("group/group_row.html",
+                    {'group':group}, 
                     context_instance=RequestContext(request))
             
             content = json.dumps(form.errors)
@@ -115,8 +114,8 @@ def detail(request, id=None, template='groups/detail.html'):
         else:
             form = GroupForm(instance=group)
         
-        return render_to_response("group/edit.html", \
-                        {'group':group, 'form':form}, \
+        return render_to_response("group/edit.html",
+                        {'group':group, 'form':form},
                         context_instance=RequestContext(request))
     
     elif method == 'DELETE':
@@ -128,7 +127,7 @@ def detail(request, id=None, template='groups/detail.html'):
 
 
 @login_required
-def add_user(request, id):
+def add_user(request, id, user_row_template='group/user_row.html'):
     """
     ajax call to add a user to a Group
     
@@ -151,8 +150,8 @@ def add_user(request, id):
             
             # return html for new user row
             url = reverse('group-permissions', args=[id])
-            return render_to_response(\
-                "object_permissions/permissions/user_row.html", \
+            return render_to_response(
+                user_row_template,
                         {'user_detail':user, 'object':group, 'url':url},
                         context_instance=RequestContext(request))
         
@@ -161,8 +160,8 @@ def add_user(request, id):
         return HttpResponse(content, mimetype='application/json')
 
     form = AddUserForm()
-    return render_to_response("group/add_user.html",\
-                              {'form':form, 'group':group}, \
+    return render_to_response("group/add_user.html",
+                              {'form':form, 'group':group},
                               context_instance=RequestContext(request))
 
 
