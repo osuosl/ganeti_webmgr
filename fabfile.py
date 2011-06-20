@@ -26,8 +26,8 @@ PIP_INSTALL = {
     'whoosh'                    :'>=1.8.1',
     'pycurl'                    :'',
     'pyopenssl'                 :'',
-    'django_object_permissions' :'==1.4',
-    'django-object-log'         :'==0.6',
+    'django_object_permissions' :'==1.4.1',
+    'django_object_log'         :'==0.6',
     'twisted'                   :'>=11.0.0'
 }
 

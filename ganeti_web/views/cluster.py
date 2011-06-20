@@ -59,7 +59,7 @@ def detail(request, cluster_slug):
     if not admin:
         return render_403(request, _("You do not have sufficient privileges"))
     
-    return render_to_response("cluster/detail.html", {
+    return render_to_response("ganeti/cluster/detail.html", {
         'cluster':cluster,
         'admin':admin
         },
@@ -77,7 +77,7 @@ def nodes(request, cluster_slug):
     if not (user.is_superuser or user.has_perm('admin', cluster)):
         return render_403(request, _("You do not have sufficient privileges"))
     
-    return render_to_response("node/table.html", \
+    return render_to_response("ganeti/node/table.html", \
                         {'cluster': cluster, 'nodes':cluster.nodes.all()}, \
         context_instance=RequestContext(request),
     )
@@ -98,7 +98,7 @@ def virtual_machines(request, cluster_slug):
     vms = cluster.virtual_machines.select_related('cluster').all()
     vms = render_vms(request, vms)
 
-    return render_to_response("virtual_machine/table.html", \
+    return render_to_response("ganeti/virtual_machine/table.html", \
                 {'cluster': cluster, 'vms':vms}, \
                 context_instance=RequestContext(request))
 
@@ -145,7 +145,7 @@ def edit(request, cluster_slug=None):
     else:
         form = EditClusterForm(instance=cluster)
     
-    return render_to_response("cluster/edit.html", {
+    return render_to_response("ganeti/cluster/edit.html", {
         'form' : form,
         'cluster': cluster,
         },
@@ -163,7 +163,7 @@ def list_(request):
         cluster_list = Cluster.objects.all()
     else:
         cluster_list = user.get_objects_all_perms(Cluster, ['admin',])
-    return render_to_response("cluster/list.html", {
+    return render_to_response("ganeti/cluster/list.html", {
         'cluster_list': cluster_list,
         'user': request.user,
         },
@@ -183,7 +183,7 @@ def users(request, cluster_slug):
         return render_403(request, _("You do not have sufficient privileges"))
     
     url = reverse('cluster-permissions', args=[cluster.slug])
-    return view_users(request, cluster, url, template='cluster/users.html')
+    return view_users(request, cluster, url, template='ganeti/cluster/users.html')
 
 
 @login_required
@@ -199,8 +199,8 @@ def permissions(request, cluster_slug, user_id=None, group_id=None):
 
     url = reverse('cluster-permissions', args=[cluster.slug])
     return view_permissions(request, cluster, url, user_id, group_id,
-                            user_template='cluster/user_row.html',
-                            group_template='cluster/group_row.html')
+                            user_template='ganeti/cluster/user_row.html',
+                            group_template='ganeti/cluster/group_row.html')
 
 
 @login_required
@@ -296,11 +296,13 @@ def quota(request, cluster_slug, user_id):
             cluster_user = cluster_user.cast()
             url = reverse('cluster-permissions', args=[cluster.slug])
             if isinstance(cluster_user, (Profile,)):
-                return render_to_response("cluster/user_row.html",
+                return render_to_response(
+                    "ganeti/cluster/user_row.html",
                     {'object':cluster, 'user_detail':cluster_user.user, 'url':url},
                     context_instance=RequestContext(request))
             else:
-                return render_to_response("cluster/group_row.html",
+                return render_to_response(
+                    "ganeti/cluster/group_row.html",
                     {'object':cluster, 'group':cluster_user.group, 'url':url},
                     context_instance=RequestContext(request))
         
@@ -318,7 +320,7 @@ def quota(request, cluster_slug, user_id):
         return render_404(request, _('User was not found'))
     
     form = QuotaForm(data)
-    return render_to_response("cluster/quota.html", \
+    return render_to_response("ganeti/cluster/quota.html", \
                         {'form':form, 'cluster':cluster, 'user_id':user_id}, \
                         context_instance=RequestContext(request))
 

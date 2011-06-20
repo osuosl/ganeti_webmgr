@@ -106,7 +106,7 @@ def orphans(request):
         clusterdict[i.id] = i.hostname
     vms = [ (i[0], clusterdict[i[2]], i[1]) for i in vms_with_cluster ]
 
-    return render_to_response("importing/orphans.html", {
+    return render_to_response("ganeti/importing/orphans.html", {
         'vms': vms,
         'form':form,
         },
@@ -171,7 +171,7 @@ def missing_ganeti(request):
 
     vms = vms_tuplelist
         
-    return render_to_response("importing/missing.html", {
+    return render_to_response("ganeti/importing/missing.html", {
         'vms': vms,
         'form':form,
         },
@@ -238,7 +238,7 @@ def missing_db(request):
 
     vms = vms_tuplelist
 
-    return render_to_response("importing/missing_db.html", {
+    return render_to_response("ganeti/importing/missing_db.html", {
         'vms': vms,
         'form':form,
         },

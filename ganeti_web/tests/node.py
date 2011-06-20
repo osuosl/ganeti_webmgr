@@ -225,21 +225,21 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
         url = '/cluster/%s/node/%s/'
         users = [superuser, user_migrate, user_admin]
         self.assert_standard_fails(url, args)
-        self.assert_200(url, args, users, 'node/detail.html')
+        self.assert_200(url, args, users, 'ganeti/node/detail.html')
     
     def test_primary_vms(self):
         args = (cluster.slug, node.hostname)
         url = '/cluster/%s/node/%s/primary'
         users = [superuser, user_migrate, user_admin]
         self.assert_standard_fails(url, args)
-        self.assert_200(url, args, users, 'virtual_machine/table.html')
+        self.assert_200(url, args, users, 'ganeti/virtual_machine/table.html')
     
     def test_secondary_vms(self):
         args = (cluster.slug, node.hostname)
         url = '/cluster/%s/node/%s/secondary'
         users = [superuser, user_migrate, user_admin]
         self.assert_standard_fails(url, args)
-        self.assert_200(url, args, users, 'virtual_machine/table.html')
+        self.assert_200(url, args, users, 'ganeti/virtual_machine/table.html')
 
     def test_object_log(self):
         args = (cluster.slug, node.hostname)
@@ -253,7 +253,7 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
         url = '/cluster/%s/node/%s/role'
         users = [superuser, user_migrate, user_admin]
         self.assert_standard_fails(url, args)
-        self.assert_200(url, args, users, 'node/role.html')
+        self.assert_200(url, args, users, 'ganeti/node/role.html')
         
         # test posts
         def test(user, response):
@@ -282,7 +282,7 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
         url = '/cluster/%s/node/%s/migrate'
         users = [superuser, user_migrate, user_admin]
         self.assert_standard_fails(url, args)
-        self.assert_200(url, args, users, 'node/migrate.html')
+        self.assert_200(url, args, users, 'ganeti/node/migrate.html')
         
         #test posts
         def test(user, response):
@@ -312,7 +312,7 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
         users = [superuser, user_migrate, user_admin]
 
         self.assert_standard_fails(url, args, method='post')
-        self.assert_200(url, args, users, template='node/evacuate.html')
+        self.assert_200(url, args, users, template='ganeti/node/evacuate.html')
 
         # Test iallocator
         data = {'iallocator':True, 'iallocator_hostname':'foo', 'node':''}

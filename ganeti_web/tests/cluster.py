@@ -495,7 +495,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/list.html')
+        self.assertTemplateUsed(response, 'ganeti/cluster/list.html')
         clusters = response.context['cluster_list']
         self.assertFalse(clusters)
         
@@ -504,7 +504,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/list.html')
+        self.assertTemplateUsed(response, 'ganeti/cluster/list.html')
         clusters = response.context['cluster_list']
         self.assert_(cluster in clusters)
         self.assert_(cluster1 not in clusters)
@@ -515,7 +515,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/list.html')
+        self.assertTemplateUsed(response, 'ganeti/cluster/list.html')
         clusters = response.context['cluster_list']
         self.assert_(cluster in clusters)
         self.assert_(cluster1 in clusters)
@@ -545,7 +545,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/edit.html')
+        self.assertTemplateUsed(response, 'ganeti/cluster/edit.html')
         
         data = dict(hostname='new-host3.hostname',
                     slug='new-host3',
@@ -566,7 +566,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
             response = c.post(url, data_)
             self.assertEqual(200, response.status_code)
             self.assertEquals('text/html; charset=utf-8', response['content-type'])
-            self.assertTemplateUsed(response, 'cluster/edit.html')
+            self.assertTemplateUsed(response, 'ganeti/cluster/edit.html')
         
         # test not-requireds
         non_required = ['slug','description','virtual_cpus','disk','ram']
@@ -576,7 +576,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
             response = c.post(url, data_, follow=True)
             self.assertEqual(200, response.status_code)
             self.assertEquals('text/html; charset=utf-8', response['content-type'])
-            self.assertTemplateUsed(response, 'cluster/detail.html')
+            self.assertTemplateUsed(response, 'ganeti/cluster/detail.html')
             cluster = response.context['cluster']
             for k, v in data_.items():
                 self.assertEqual(v, getattr(cluster, k))
@@ -587,7 +587,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         response = c.post(url, data, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/detail.html')
+        self.assertTemplateUsed(response, 'ganeti/cluster/detail.html')
         cluster = response.context['cluster']
         for k, v in data_.items():
             self.assertEqual(v, getattr(cluster, k))
@@ -600,7 +600,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         response = c.post(url, data_, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/detail.html')
+        self.assertTemplateUsed(response, 'ganeti/cluster/detail.html')
         cluster = response.context['cluster']
         for k, v in data_.items():
             self.assertEqual(v, getattr(cluster, k))
@@ -614,7 +614,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
             response = c.post(url, data_, follow=True)
             self.assertEqual(200, response.status_code)
             self.assertEquals('text/html; charset=utf-8', response['content-type'])
-            self.assertTemplateUsed(response, 'cluster/edit.html')
+            self.assertTemplateUsed(response, 'ganeti/cluster/edit.html')
         
         # test unique fields
         response = c.post(url, data)
@@ -624,7 +624,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
             response = c.post(url, data_)
             self.assertEqual(200, response.status_code)
             self.assertEquals('text/html; charset=utf-8', response['content-type'])
-            self.assertTemplateUsed(response, 'cluster/edit.html')
+            self.assertTemplateUsed(response, 'ganeti/cluster/edit.html')
     
     def test_view_edit(self):
         """
@@ -648,7 +648,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/edit.html')
+        self.assertTemplateUsed(response, 'ganeti/cluster/edit.html')
         self.assertEqual(cluster, response.context['cluster'])
         user.revoke('admin', cluster)
         
@@ -658,7 +658,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/edit.html')
+        self.assertTemplateUsed(response, 'ganeti/cluster/edit.html')
         self.assertEqual(None, cluster.info)
         
         data = dict(hostname='new-host-1.hostname',
@@ -678,7 +678,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         response = c.post(url, data, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/detail.html')
+        self.assertTemplateUsed(response, 'ganeti/cluster/detail.html')
         cluster = response.context['cluster']
         self.assertNotEqual(None, cluster.info)
         del data_['confirm_password']
@@ -772,7 +772,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/detail.html')
+        self.assertTemplateUsed(response, 'ganeti/cluster/detail.html')
         
         # authorized (superuser)
         user.revoke('admin', cluster)
@@ -781,7 +781,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/detail.html')
+        self.assertTemplateUsed(response, 'ganeti/cluster/detail.html')
 
     def test_view_users(self):
         """
@@ -793,7 +793,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         """
         url = "/cluster/%s/users/"
         args = cluster.slug
-        self.validate_get(url, args, 'cluster/users.html')
+        self.validate_get(url, args, 'ganeti/cluster/users.html')
 
     def test_view_virtual_machines(self):
         """
@@ -805,7 +805,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         """
         url = "/cluster/%s/virtual_machines/"
         args = cluster.slug
-        self.validate_get(url, args, 'virtual_machine/table.html')
+        self.validate_get(url, args, 'ganeti/virtual_machine/table.html')
 
     def test_view_nodes(self):
         """
@@ -818,7 +818,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         url = "/cluster/%s/nodes/"
         args = cluster.slug
         cluster.rapi.GetNodes.response = NODES_BULK
-        self.validate_get(url, args, 'node/table.html')
+        self.validate_get(url, args, 'ganeti/node/table.html')
         cluster.rapi.GetNodes.response = NODES
 
     def test_view_add_permissions(self):
@@ -889,7 +889,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         data = {'permissions':['admin'], 'user':user1.id, 'obj':cluster.pk}
         response = c.post(url % args, data)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/user_row.html')
+        self.assertTemplateUsed(response, 'ganeti/cluster/user_row.html')
         self.assert_(user1.has_perm('admin', cluster))
         self.assertFalse(user1.has_perm('create_vm', cluster))
         
@@ -898,7 +898,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         data = {'permissions':['admin'], 'group':group.id, 'obj':cluster.pk}
         response = c.post(url % args, data)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/group_row.html')
+        self.assertTemplateUsed(response, 'ganeti/cluster/group_row.html')
         self.assertEqual(['admin'], group.get_perms(cluster))
 
     def test_view_object_log(self):
@@ -986,7 +986,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         data = {'permissions':['admin'], 'user':user1.id, 'obj':cluster.pk}
         response = c.post(url_post % args_post, data)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/user_row.html')
+        self.assertTemplateUsed(response, 'ganeti/cluster/user_row.html')
         self.assert_(user1.has_perm('admin', cluster))
         self.assertFalse(user1.has_perm('create_vm', cluster))
         
@@ -1081,7 +1081,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         data = {'permissions':['admin'], 'group':group.id, 'obj':cluster.pk}
         response = c.post(url_post % args_post, data)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/group_row.html')
+        self.assertTemplateUsed(response, 'ganeti/cluster/group_row.html')
         self.assertEqual(['admin'], group.get_perms(cluster))
         
         # add quota to the group
@@ -1159,7 +1159,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'cluster/quota.html')
+        self.assertTemplateUsed(response, 'ganeti/cluster/quota.html')
         
         # valid GET authorized user (superuser)
         user.revoke('admin', cluster)
@@ -1167,7 +1167,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         user.save()
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'cluster/quota.html')
+        self.assertTemplateUsed(response, 'ganeti/cluster/quota.html')
         
         # invalid user
         response = c.get(url % (cluster.slug, 0))
@@ -1240,13 +1240,13 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         """
         Tests updating users quota
         """
-        self.validate_quota(user1.get_profile(), template='cluster/user_row.html')
+        self.validate_quota(user1.get_profile(), template='ganeti/cluster/user_row.html')
     
     def test_view_group_quota(self):
         """
         Tests updating a Group's quota
         """
-        self.validate_quota(group.organization, template='cluster/group_row.html')
+        self.validate_quota(group.organization, template='ganeti/cluster/group_row.html')
 
     def test_sync_virtual_machines_in_edit_view(self):
         """

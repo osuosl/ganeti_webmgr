@@ -133,7 +133,7 @@
 </select>
 
 </h2>
-{% include "overview/used_resources.html" %}
+{% include "ganeti/overview/used_resources.html" %}
 </div>
 
 {% if errors %}
@@ -145,14 +145,14 @@
         {% with tuple.1 as error %}
             {% if is_ganeti_error %}
                 <tr class="gerror" id="gerror_{{error.pk}}">
-                    {% include "overview/object_link.html" %}
+                    {% include "ganeti/overview/object_link.html" %}
                     <td>{{ error.msg }}</td>
                     <td>{{ error.timestamp|date }}</td>
                     <td><a class="clear" title="clear message" href="{% url error-clear error.pk %}"></a></td>
                 </tr>
             {% else %}
                 <tr class="jerror" id="jerror_{{error.pk}}">
-                    {% include "overview/object_link.html" %}
+                    {% include "ganeti/overview/object_link.html" %}
                     <td><a href="{% url job-detail error.cluster.slug error.job_id %}">{% trans "Job" noop %}#{{error.job_id}}: {{ error.current_operation|format_job_op }}</a></td>
                     <td>{{ error.finished|date }}</td>
                     <td><a class="clear" title="clear message" href="{% url job-clear error.cluster.slug error.job_id %}"></a></td>

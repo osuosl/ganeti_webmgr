@@ -38,7 +38,7 @@ register = Library()
 These filters were created specifically
 for the Ganeti Web Manager project
 """
-@register.inclusion_tag('virtual_machine/vmfield.html')
+@register.inclusion_tag('ganeti/virtual_machine/vmfield.html')
 def vmfield(field):
     return {'field':field}
 

@@ -76,7 +76,7 @@ def detail(request, cluster_slug, host):
     if not (admin or modify):
         return render_403(request, _("You do not have sufficient privileges"))
     
-    return render_to_response("node/detail.html", {
+    return render_to_response("ganeti/node/detail.html", {
         'cluster':cluster,
         'node_count':cluster.nodes.all().count(),
         'node':node, 
@@ -101,7 +101,7 @@ def primary(request, cluster_slug, host):
     vms = node.primary_vms.all()
     vms = render_vms(request, vms)
 
-    return render_to_response("virtual_machine/table.html",
+    return render_to_response("ganeti/virtual_machine/table.html",
                 {'tableID': 'table_primary', 'primary_node':True,
                         'node': node, 'vms':vms},
                 context_instance=RequestContext(request))
@@ -121,7 +121,7 @@ def secondary(request, cluster_slug, host):
     vms = node.secondary_vms.all()
     vms = render_vms(request, vms)
 
-    return render_to_response("virtual_machine/table.html",
+    return render_to_response("ganeti/virtual_machine/table.html",
                 {'tableID': 'table_secondary', 'secondary_node':True, 
                         'node': node, 'vms':vms},
                 context_instance=RequestContext(request))
@@ -185,7 +185,7 @@ def role(request, cluster_slug, host):
         data = {'role':constants.ROLE_MAP[node.role]}
         form = RoleForm(data)
     
-    return render_to_response('node/role.html', \
+    return render_to_response('ganeti/node/role.html', \
         {'form':form, 'node':node, 'cluster':cluster}, \
         context_instance=RequestContext(request))
 
@@ -228,7 +228,7 @@ def migrate(request, cluster_slug, host):
     else:
         form = MigrateForm()
     
-    return render_to_response('node/migrate.html', \
+    return render_to_response('ganeti/node/migrate.html', \
         {'form':form, 'node':node, 'cluster':cluster}, \
         context_instance=RequestContext(request))
 
@@ -308,7 +308,7 @@ def evacuate(request, cluster_slug, host):
     else:
         form = EvacuateForm(cluster, node)
 
-    return render_to_response('node/evacuate.html', \
+    return render_to_response('ganeti/node/evacuate.html', \
         {'form':form, 'node':node, 'cluster':cluster}, \
         context_instance=RequestContext(request))
 

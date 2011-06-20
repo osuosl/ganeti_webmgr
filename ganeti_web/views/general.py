@@ -34,7 +34,7 @@ from django.utils.translation import ugettext as _
 from ganeti_web.constants import VERSION
 
 def about(request):
-    return render_to_response("about.html", {
+    return render_to_response("ganeti/about.html", {
         'version':VERSION
         },
         context_instance=RequestContext(request),
@@ -83,12 +83,23 @@ def get_used_resources(cluster_user):
 
     for cluster, quota in quotas.items():
         resources[cluster] = {
-            "used": used[cluster.id] if cluster.id in used else USED_NOTHING,
+            "used": used.pop(cluster.id) if cluster.id in used else USED_NOTHING,
             "set": quota
         }
         resources[cluster]["total"] = owned_vms.filter(cluster=cluster).count()
         resources[cluster]["running"] = owned_vms.filter(cluster=cluster, \
                                                     status="running").count()
+
+    # add any clusters that have used resources but no perms (and thus no quota)
+    # since we know they don't have a custom quota just add the default quota
+    if used:
+        for cluster in Cluster.objects.filter(pk__in=used):
+            resources[cluster] = {"used":used[cluster.id],
+                                  "set":cluster.get_default_quota()}
+            resources[cluster]["total"] = owned_vms.filter(cluster=cluster).count()
+            resources[cluster]["running"] = owned_vms.filter(cluster=cluster, \
+                                                    status="running").count()
+
     return resources
 
 
@@ -245,7 +256,7 @@ def overview(request):
     # get resources used per cluster from the first persona in the list
     resources = get_used_resources(personas[0])
     
-    return render_to_response("overview.html", {
+    return render_to_response("ganeti/overview.html", {
         'admin':admin,
         'cluster_list': clusters,
         'user': request.user,
@@ -284,7 +295,8 @@ def used_resources(request):
                 return render_403(request, _('You are not authorized to view this page'))
     
     resources = get_used_resources(cu.cast())
-    return render_to_response("overview/used_resources.html", {
+    return render_to_response("ganeti/overview/used_resources.html"
+                              , {
         'resources':resources
     }, context_instance=RequestContext(request))
     
