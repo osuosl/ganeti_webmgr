@@ -30,6 +30,7 @@ settings.py*
 
 # files that might exist in dev environment
 django
+ganeti_web_layout
 object_log
 object_permissions
 noVNC
