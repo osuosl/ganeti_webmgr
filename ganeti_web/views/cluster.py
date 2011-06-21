@@ -326,46 +326,47 @@ def quota(request, cluster_slug, user_id):
 
 
 class EditClusterForm(forms.ModelForm):
+    """
+    Basic form for editing a cluster.
+    """
+
     class Meta:
         model = Cluster
         widgets = {
             'password' : forms.PasswordInput(),
         }
-        
+
     ram = DataVolumeField(label=_('Memory'), required=False, min_value=0)
     disk = DataVolumeField(label=_('Disk Space'), required=False, min_value=0)
-    
+
     def clean(self):
-        self.cleaned_data = super(EditClusterForm, self).clean()
-        data = self.cleaned_data
-        host = data.get('hostname', None)
+        """
+        Validate this form.
+
+        Much of the validation is handled in the Cluster model; this method
+        should not duplicate any validation done as part of the Cluster model
+        definition.
+        """
+
+        data = self.cleaned_data = super(EditClusterForm, self).clean()
         user = data.get('username', None)
-        new = data.get('password', None)
-        
-        # Automatically set the slug on cluster creation
-        if not host:
-            msg = _('Enter a hostname')
-            self._errors['hostname'] = self.error_class([msg])
-            
-        if user: 
-            if not new:
-                if 'password' in data: del data['password']
-                msg = _('Enter a password')
-                self._errors['password'] = self.error_class([msg])
-            
-        elif new:
+        password = data.get('password', None)
+        hostname = data.get("hostname", None)
+
+        if user and not password:
+            msg = _('Enter a password')
+            self._errors['password'] = self.error_class([msg])
+
+        elif password and not user:
             msg = _('Enter a username')
             self._errors['username'] = self.error_class([msg])
-            
-            if not new:
-                if 'password' in data: del data['password']
-                msg = _('Enter a password')
-                self._errors['password'] = self.error_class([msg])
 
-        if 'hostname' in data and data['hostname'] and 'slug' not in data:
-            data['slug'] = slugify(data['hostname'].split('.')[0])
+        # Automatically set the slug on cluster creation, based on the
+        # hostname, if no slug was provided.
+        if hostname and 'slug' not in data:
+            data['slug'] = slugify(hostname.split('.')[0])
             del self._errors['slug']
-        
+
         return data
 
 
