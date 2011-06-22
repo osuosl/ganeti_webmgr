@@ -19,7 +19,6 @@
 
 import json
 
-from django import forms
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -44,7 +43,7 @@ log_action = LogItem.objects.log_action
 from ganeti_web.models import Cluster, ClusterUser, Profile, SSHKey
 from ganeti_web.views import render_403, render_404
 from ganeti_web.views.virtual_machine import render_vms
-from ganeti_web.fields import DataVolumeField
+from ganeti_web.forms.cluster import EditClusterForm, QuotaForm
 from django.utils.translation import ugettext as _
 
 
@@ -249,21 +248,6 @@ def ssh_keys(request, cluster_slug, api_key):
     return HttpResponse(json.dumps(keys_list), mimetype="application/json")
 
 
-class QuotaForm(forms.Form):
-    """
-    Form for editing user quota on a cluster
-    """
-    input = forms.TextInput(attrs={'size':5})
-    
-    user = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), \
-                                  widget=forms.HiddenInput)
-    ram = DataVolumeField(label='Memory', required=False, min_value=0)
-    virtual_cpus = forms.IntegerField(label='Virtual CPUs', required=False, \
-                                    min_value=0, widget=input)
-    disk = DataVolumeField(label='Disk Space', required=False, min_value=0)
-    delete = forms.BooleanField(required=False, widget=forms.HiddenInput)
-
-
 @login_required
 def quota(request, cluster_slug, user_id):
     """
@@ -323,51 +307,6 @@ def quota(request, cluster_slug, user_id):
     return render_to_response("ganeti/cluster/quota.html", \
                         {'form':form, 'cluster':cluster, 'user_id':user_id}, \
                         context_instance=RequestContext(request))
-
-
-class EditClusterForm(forms.ModelForm):
-    """
-    Basic form for editing a cluster.
-    """
-
-    class Meta:
-        model = Cluster
-        widgets = {
-            'password' : forms.PasswordInput(),
-        }
-
-    ram = DataVolumeField(label=_('Memory'), required=False, min_value=0)
-    disk = DataVolumeField(label=_('Disk Space'), required=False, min_value=0)
-
-    def clean(self):
-        """
-        Validate this form.
-
-        Much of the validation is handled in the Cluster model; this method
-        should not duplicate any validation done as part of the Cluster model
-        definition.
-        """
-
-        data = self.cleaned_data = super(EditClusterForm, self).clean()
-        user = data.get('username', None)
-        password = data.get('password', None)
-        hostname = data.get("hostname", None)
-
-        if user and not password:
-            msg = _('Enter a password')
-            self._errors['password'] = self.error_class([msg])
-
-        elif password and not user:
-            msg = _('Enter a username')
-            self._errors['username'] = self.error_class([msg])
-
-        # Automatically set the slug on cluster creation, based on the
-        # hostname, if no slug was provided.
-        if hostname and 'slug' not in data:
-            data['slug'] = slugify(hostname.split('.')[0])
-            del self._errors['slug']
-
-        return data
 
 
 @login_required

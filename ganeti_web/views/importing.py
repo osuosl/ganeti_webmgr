@@ -16,38 +16,15 @@
 # USA.
 
 
-from django import forms
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
-from ganeti_web.models import VirtualMachine, Cluster, ClusterUser
+from ganeti_web.forms.importing import ImportForm, OrphanForm, VirtualMachineForm
+from ganeti_web.models import VirtualMachine, Cluster
 from ganeti_web.views import render_403
 from ganeti_web.views.general import update_vm_counts
 from django.utils.translation import ugettext as _
-
-class VirtualMachineForm(forms.Form):
-    virtual_machines = forms.MultipleChoiceField()
-    
-    def __init__(self, choices, *args, **kwargs):
-        super(VirtualMachineForm, self).__init__(*args, **kwargs)
-        self.fields['virtual_machines'].choices = choices
-
-
-class OrphanForm(VirtualMachineForm):
-    """
-    Form used for assigning owners to VirtualMachines that do not yet have an
-    owner (orphans).
-    """
-    owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all())
-
-
-class ImportForm(VirtualMachineForm):
-    """
-    Form used for assigning owners to VirtualMachines that do not yet have an
-    owner (orphans).
-    """
-    owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), required=False)
 
 
 @login_required

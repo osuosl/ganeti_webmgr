@@ -19,12 +19,9 @@
 import json
 
 from django.contrib.auth.decorators import login_required
-from django import forms
-from django.forms import ValidationError
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound, Http404
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from ganeti_web.utilities import cluster_default_info
 from django.utils.translation import ugettext as _
 
 from object_log.models import LogItem
@@ -34,7 +31,9 @@ from util.client import GanetiApiError
 log_action = LogItem.objects.log_action
 
 from ganeti_web import constants
+from ganeti_web.forms.node import RoleForm, MigrateForm, EvacuateForm
 from ganeti_web.models import Node
+from ganeti_web.utilities import cluster_default_info
 from ganeti_web.views import render_403
 from ganeti_web.views.virtual_machine import render_vms
 
@@ -140,14 +139,6 @@ def object_log(request, cluster_slug, host):
     return list_for_object(request, node)
 
 
-class RoleForm(forms.Form):
-    """
-    Form for editing roles
-    """
-    role = forms.ChoiceField(initial='', choices=constants.ROLE_CHOICES, label='New Role')
-    force = forms.BooleanField(initial=False, required=False)
-
-
 @login_required
 def role(request, cluster_slug, host):
     """
@@ -190,11 +181,6 @@ def role(request, cluster_slug, host):
         context_instance=RequestContext(request))
 
 
-class MigrateForm(forms.Form):
-    """ Form used for migrating primary Virtual Machines off a Node """
-    mode = forms.ChoiceField(choices=constants.MODE_CHOICES)
-
-
 @login_required
 def migrate(request, cluster_slug, host):
     """
@@ -231,45 +217,6 @@ def migrate(request, cluster_slug, host):
     return render_to_response('ganeti/node/migrate.html', \
         {'form':form, 'node':node, 'cluster':cluster}, \
         context_instance=RequestContext(request))
-
-
-class EvacuateForm(forms.Form):
-    EMPTY_FIELD = constants.EMPTY_CHOICE_FIELD 
-
-    iallocator = forms.BooleanField(initial=False, required=False, \
-                                    label='Automatic Allocation')
-    iallocator_hostname = forms.CharField(initial='', required=False, \
-                                    widget = forms.HiddenInput())
-    node = forms.ChoiceField(initial='', choices=[EMPTY_FIELD], required=False)
-
-    def __init__(self, cluster, node, *args, **kwargs):
-        super(EvacuateForm, self).__init__(*args, **kwargs)
-
-        node_list = [str(h) for h in cluster.nodes.exclude(pk=node.pk)\
-                                    .values_list('hostname', flat=True)]
-        nodes = zip(node_list, node_list)
-        nodes.insert(0, self.EMPTY_FIELD)
-        self.fields['node'].choices = nodes
-
-        defaults = cluster_default_info(cluster)
-        if defaults['iallocator'] != '' :
-            self.fields['iallocator'].initial = True
-            self.fields['iallocator_hostname'].initial = defaults['iallocator']
-
-    def clean(self):
-        data = self.cleaned_data
-        
-        iallocator = data['iallocator']
-        node = data['node'] if 'node' in data else None
-
-        if iallocator:
-            data['node'] = None
-        elif node:
-            data['iallocator_hostname'] = None
-        else:
-            raise ValidationError(_('Must choose automatic allocation or a specific node'))
-
-        return data
 
 
 @login_required
