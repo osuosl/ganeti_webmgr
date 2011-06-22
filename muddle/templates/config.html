@@ -1,35 +1,8 @@
 {% extends "base.html" %}
 
 {% block head %}
-    {{ block.super }}
-    
-    <style>
-        select {padding-right:5px;}
-    
-        #save {
-            margin-top:10px;
-        }
-    
-    
-        #h1 {
-            border-bottom: 1px solid #888888;
-            height:26px;
-            margin-bottom:20px;
-            margin-top:10px;
-            width:100%;
-            padding:0;
-        }
-    
-        #h1 h1 {float:left; border:0; margin:0;}
-    
-        #tabs {
-            float:left;
-            margin-left:100px;
-        }
-        
-        #tab_content {display:none;}
-    </style>
-    
+     <link rel="stylesheet" type="text/css" href="../static/css/config.css" />
+    {{ block.super }}    
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
     <script type="text/javascript">
     
@@ -99,7 +72,7 @@
             }
         }
     
-        {% include "config_lock.js" %}
+        {% include "../static/js/config_lock.js" %}
     </script>
 {% endblock %}
 
