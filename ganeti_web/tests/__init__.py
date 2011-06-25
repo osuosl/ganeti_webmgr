@@ -33,3 +33,4 @@ from ganeti_web.tests.ssh_keys import *
 from ganeti_web.tests.tags import *
 from ganeti_web.tests.utilities import *
 from ganeti_web.tests.views import *
+from ganeti_web.tests.vm_template import *

@@ -1,0 +1,11 @@
+{% extends "menu_base.html" %}
+{% load i18n %}
+{% load webmgr_tags %}
+
+{% block title %}{% trans "Template" %}{% endblock title %}
+
+{% block content %}
+<h1>{% trans "Template" %}: {{template.template_name}}</h1>
+<p>{{template.template_name}}</p>
+{% endblock content %}
+

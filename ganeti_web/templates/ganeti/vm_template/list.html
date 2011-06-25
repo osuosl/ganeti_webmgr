@@ -1,0 +1,36 @@
+{% extends "menu_base.html" %}
+{% load i18n %}
+{% load webmgr_tags %}
+
+{% block title %}{% trans "Templates" %}{% endblock title %}
+
+{% block content %}
+<h1>{% trans "Templates" %}</h1>
+<p>
+    <a class="button add" href="{% url template-create %}">Create Template</a>
+</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>ID</th>
+            <th>VCPUs</th>
+            <th>Memory</th>
+            <th>Disk Size</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for template in templates %}
+        <tr>
+            <td><a href="{% url template-detail template.id %}">{{ template.template_name }}</a></td>
+            <td>{{template.id}}</td>
+            <td>{{template.vcpus}}</td>
+            <td>{{template.memory}}</td>
+            <td>{{template.disk_size}}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock content %}
+

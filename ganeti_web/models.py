@@ -1252,6 +1252,7 @@ class VirtualMachineTemplate(models.Model):
       form so that they can automatically be used or edited by a user.
     """
     template_name = models.CharField(max_length=255, null=True, blank=True)
+    description = models.CharField(max_length=255, null=True, blank=True)
     cluster = models.ForeignKey('Cluster', null=True)
     start = models.BooleanField(verbose_name=_('Start up After Creation'), \
                 default=True)

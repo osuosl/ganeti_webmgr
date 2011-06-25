@@ -126,6 +126,12 @@ urlpatterns += patterns('ganeti_web.views.node',
     url(r'^%s/evacuate/?$' % node_prefix, 'evacuate', name="node-evacuate"),
 )
 
+# VirtualMachineTemplates
+urlpatterns += patterns('ganeti_web.views.vm_template',
+    url(r'^templates/$', 'templates', name='template-list'),
+    url(r'^template/(?P<template_id>\d+)/?$', 'detail', name='template-detail'),
+    url(r'^template/create/$', 'create', name='template-create')
+)
 
 # VirtualMachines
 vm_prefix = '%s%s' %  (cluster, instance)

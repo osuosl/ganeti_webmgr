@@ -7,16 +7,25 @@
         </a>
     </li>
 {% endif %}
-
 <li>
     <a href="{% url virtualmachine-list %}">
         {% trans "Virtual Machines" %}
+    </a>
+</li>
+<li>
+    <a href="{% url template-list %}">
+        {% trans "Templates" %}
     </a>
 </li>
 {% if user.is_superuser or cluster_admin or create_vm %}
     <li>
         <a href="{% url instance-create %}">
             {% trans "Create VM" %}
+        </a>
+    </li>
+    <li>
+        <a href="{% url template-create %}">
+            {% trans "Create Template" %}
         </a>
     </li>
 {% endif %}
