@@ -13,3 +13,7 @@ settings.py
 
 # vim swap files
 *.swp
+
+
+#patches
+*.patch
