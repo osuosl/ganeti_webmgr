@@ -13,37 +13,46 @@ function poll_job_status(cluster, job_id, callback, errback) {
 // Get job status.
 // The cluster should be the URL corresponding to a cluster slug.
 function get_job_status(cluster, job_id, callback, errback) {
+    /* On success, clear the interval and run the callback. */
+    on_success = function() {
+        clearInterval(checkInterval);
+        if (callback != undefined) {
+            callback();
+        }
+    }
+
+    /* On error, clear the interval and run the errback. */
+    on_error = function() {
+        clearInterval(checkInterval);
+        if (errback != undefined) {
+            errback();
+        }
+    }
+
+    /* Run the AJAX call. */
     $.ajax({
         url: cluster + "/job/" + job_id + "/status/",
+        error: on_error,
         success: function(data) {
-            if (data.status == 'success'){
+            if (data.status == 'success') {
                 $("#messages").empty();
-                clearInterval(checkInterval);
-                if (callback!=undefined){
-                    callback();
-                }
-            } else if (data.status == 'error' && errback != undefined) {
-                errback();
+                on_success();
+            } else if (data.status == 'error') {
+                on_error();
             }
 
             display_job(cluster, data);
-            if (data.status == 'error'){
-                if (checkInterval != undefined){
-                    clearInterval(checkInterval);
-                    checkInterval = undefined;
-                }
-            }
         }
     });
 }
 
 function display_job(cluster, data) {
-    // get the sub operation that is either running or errored
-    for (var sub_op=0; sub_op<data['opstatus'].length-1;) {
+    /* Find a sub-operation which has not successfully completed. There
+     * probably will be only one. */
+    for (var sub_op = 0; sub_op < data['opstatus'].length; sub_op++) {
         if (data['opstatus'][sub_op] != 'success') {
             break;
         }
-        sub_op++;
     }
 
     $("#messages").empty();
