@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.contrib.auth.models import User, Group
-from django.core.urlresolvers import reverse
 from django.test import TestCase, Client
 from object_permissions.registration import grant, revoke
 from muddle_users.signals import view_remove_user, view_group_edited, view_group_created, view_group_deleted, view_add_user
@@ -117,13 +116,13 @@ class TestGroupViews(TestCase):
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'object_permissions/group/detail.html')
+        self.assertTemplateUsed(response, 'group/detail.html')
 
         # authorized (superuser)
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'object_permissions/group/detail.html')
+        self.assertTemplateUsed(response, 'group/detail.html')
 
     def test_view_edit(self):
         group = self.test_save()
@@ -187,7 +186,7 @@ class TestGroupViews(TestCase):
         response = c.post(url % group.id, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'object_permissions/group/group_row.html')
+        self.assertTemplateUsed(response, 'group/group_row.html')
         group = Group.objects.get(id=group.id)
         self.assertEqual('EDITED_NAME', group.name)
 
@@ -247,7 +246,7 @@ class TestGroupViews(TestCase):
         response = c.post(url, data, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'object_permissions/group/group_row.html')
+        self.assertTemplateUsed(response, 'group/group_row.html')
         self.assert_(Group.objects.filter(name='ADD_NEW_GROUP').exists())
 
         # check signal set properties
@@ -377,7 +376,7 @@ class TestGroupViews(TestCase):
         response = c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'object_permissions/permissions/user_row.html')
+        self.assertTemplateUsed(response, 'muddle/group/user_row.html')
         self.assert_(group.user_set.filter(id=user0.id).exists())
 
         # check signal fired
