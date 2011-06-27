@@ -25,9 +25,10 @@ from django.conf.urls.defaults import *
 #admin.autodiscover()
 
 urlpatterns = patterns('',
-    (r'^', include('ganeti.urls')),
+    (r'^', include('ganeti_web.urls')),
     (r'^', include('object_permissions.urls')),
     (r'^', include('object_log.urls')),
+    (r'^', include('muddle_users.urls')),
 
     # user management
     # account/activate/<key>/ - Activate a user
@@ -50,8 +51,11 @@ urlpatterns = patterns('',
 
     (r'^500/$', 'django.views.generic.simple.direct_to_template', {'template':"500.html"})
 )
-
-handler500 = 'ganeti.views.view_500'
+# Language settings
+urlpatterns += patterns('',
+    (r'^i18n/', include('django.conf.urls.i18n')),
+    )
+handler500 = 'ganeti_web.views.view_500'
 
 
 #The following is used to serve up local media files like images
@@ -60,6 +64,9 @@ if settings.DEBUG:
     urlpatterns += patterns('',
         (r'^media/(?P<path>.*)', 'django.views.static.serve',\
             {'document_root':  settings.MEDIA_ROOT}),
+
+        (r'^favicon.ico', 'django.views.static.serve',
+            {'document_root':  settings.MEDIA_ROOT, 'path': 'favicon.ico'}),
         
         # noVNC files
         (r'^novnc/(?P<path>.*)', 'django.views.static.serve',\

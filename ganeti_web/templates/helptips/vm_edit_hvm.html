@@ -1,0 +1,28 @@
+{% load i18n %}
+<div id="help-acpi">
+    <p>
+        {% blocktrans %}A boolean option that specifies if the hypervisor should enable 
+        ACPI support for this instance. By default, ACPI is disabled.{% endblocktrans %}
+    </p>
+    <p>{% trans "Valid for the Xen HVM and KVM hypervisors" %}.</p>
+</div>
+<div id="help-use_localtime">
+    <p>
+        {% blocktrans %}A boolean option that specifies if the instance should be started 
+        with its clock set to the localtime of the machine (when true) or 
+        to the UTC (When false). The default is false, which is useful 
+        for Linux/Unix machines; for Windows OSes, it is recommended to 
+        enable this parameter.{% endblocktrans %}
+    </p>
+    <p>{% trans "Valid for the Xen HVM and KVM hypervisors" %}.</p>
+</div>
+<div id="help-vnc_bind_address">
+    <p>
+        {% blocktrans %}Specifies the address that the VNC listener for this instance should
+        bind to. Valid values are IPv4 addresses. Use the address 0.0.0.0 
+        to bind to all available interfaces (this is the default) or specify 
+        the address of one of the interfaces on the node to restrict listening
+        to that interface.{% endblocktrans %}
+    </p>
+    <p>{% trans "Valid for the Xen HVM and KVM hypervisors" %}.</p>
+</div>

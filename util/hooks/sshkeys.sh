@@ -31,7 +31,7 @@ if [ -z "${GWM_API_KEY}" ] ; then
 fi
 
 mkdir -p ${TARGET}/root/.ssh
-${GWM_SSHKEYS} ${GWM_HOST} ${GWM_SLUG} \
-    ${INSTANCE_NAME} ${GWM_API_KEY} > ${TARGET}/root/.ssh/authorized_keys
+${GWM_SSHKEYS} ${GWM_API_KEY} ${GWM_HOST} ${GWM_SLUG} \
+    ${INSTANCE_NAME} > ${TARGET}/root/.ssh/authorized_keys
 
 exit 0

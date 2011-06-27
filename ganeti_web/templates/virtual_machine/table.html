@@ -1,0 +1,92 @@
+{% block head %}
+{% load i18n %}
+
+{% comment %}
+    This is the AJAX table sub-template that can be used to list virtual
+    machines and clusters. 
+    
+    When rendering this template, you may optionally provide a `tableID` 
+    argument and the table will encapsulate itself within the provided term, 
+    for example:
+
+    return render_to_response("virtual_machine/table.html",
+            {'tableID': 'table_foo'},
+            context_instance=RequestContext(request))
+
+    This is handy if you're trying to render this sub-template more than once
+    on the same page.
+{% endcomment %}
+
+<style>
+    td.actions div.delete {
+        float:none;
+    }
+    #content td.actions a, #content td.actions {
+        padding:5px 0 0 0;
+    }
+    #vm-wrapper {
+        margin-top: 40px;
+    }
+</style>
+
+<script type="text/javascript" src="{{MEDIA_URL}}/js/VM_ajaxTable.js"></script>
+<script type="text/javascript">
+
+    $(function(){
+        /* "Main" */
+
+        {% if cluster %}
+            var url = "{% url cluster-virtualmachine-table cluster.slug %}";
+        {% else %}
+            {% if primary_node %}
+                var url = "{% url vm-table-primary node %}"
+            {% else %}{% if secondary_node %}
+                var url = "{% url vm-table-secondary node %}"
+            {% else %}
+                var url = "{% url virtualmachine-table %}";
+            {% endif %}{% endif %}
+        {% endif %}
+
+        {% if tableID %}
+            var tableID = '{{tableID}}';
+        {% else %} 
+            var tableID = 'ajaxTable';
+        {% endif %}
+
+        $('#'+tableID).data('ajaxTable', new ajaxTable(url, tableID));
+        $('#'+tableID).data('ajaxTable').init();
+    });
+
+</script>
+{% endblock %}
+
+{% if cluster %}
+    <a class="button add" href="{% url instance-create cluster.slug %}">
+        {% trans "Add Virtual Machine" %}
+    </a>
+{% else %}
+    {% if can_create %}
+    <a class="button add" href="{% url instance-create %}">
+        {% trans "Add Virtual Machine" %}
+    </a>
+    {% endif %}
+{% endif %}
+
+{% if tableID %}
+<div id='{{tableID}}'>
+{% else %}
+<div id='ajaxTable'>
+{% endif %}
+    <div id="vm-wrapper">
+        {% include "virtual_machine/inner_table.html" %}
+    </div>
+
+    <div class='spinner'>
+        <br/>
+       	{% trans "Loading" %}...
+        <br/>
+        <br/>
+        <img src='{{ MEDIA_URL }}/images/ajax-loader.gif'>
+    </div>
+</div>
+

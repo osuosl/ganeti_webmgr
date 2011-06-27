@@ -17,7 +17,7 @@
 }
 #login fieldset h2 {margin-bottom:5px;}
 #login fieldset p {padding-bottom:1.5ex;}
-#login p label {width: 5.5em;}
+#login p label {width: 12em; text-align:left;}
 #login input.submit {margin-left: 6em;}
 
 /* Registration Form */
