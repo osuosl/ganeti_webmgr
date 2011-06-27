@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.template.context import RequestContext
 from django.test.client import RequestFactory
 
@@ -26,6 +27,10 @@ class ShotsResponseTests(ShotsTestsBase):
         super(ShotsResponseTests, self).setUp()
         self.factory = RequestFactory()
         self.request = self.factory.get('/test/')
+        self.request.user = User.objects.create(username='tester')
+
+    def tearDown(self):
+        User.objects.all().delete()
 
     def test_basic(self):
         register('foo', ContextMixer(foo), ContextMixer(bar))
