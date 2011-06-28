@@ -8,6 +8,6 @@
         {{ log_item.user }}
     {% endif %}
     attempted recovery of virtual machine
-    {% if log_item.object1_id %}<a href="{% url instance-detail data.cluster_slug data.hostname %}">{{data.hostname}}</a>
+    {% if log_item.object_id1 %}<a href="{% url instance-detail data.cluster_slug data.hostname %}">{{data.hostname}}</a>
     {% else %}[deleted]{% endif %}
 {% endwith %}

@@ -9,6 +9,6 @@
     {% else %}
         {{ log_item.user }}
     {% endif %}
-started virtual machine {% if log_item.object1_id %}<a href="{% url instance-detail data.cluster_slug data.hostname %}">{{data.hostname}}</a>
+started virtual machine {% if log_item.object_id1 %}<a href="{% url instance-detail data.cluster_slug data.hostname %}">{{data.hostname}}</a>
     {% else %}[deleted]{% endif %}
 {% endwith %}
