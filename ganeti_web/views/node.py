@@ -26,10 +26,10 @@ from django.utils.translation import ugettext as _
 
 from object_log.models import LogItem
 from object_log.views import list_for_object
-from util.client import GanetiApiError
 
 log_action = LogItem.objects.log_action
 
+from ganeti_web.util.client import GanetiApiError
 from ganeti_web import constants
 from ganeti_web.forms.node import RoleForm, MigrateForm, EvacuateForm
 from ganeti_web.models import Node
