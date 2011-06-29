@@ -26,7 +26,7 @@ from ganeti_web.models import (Cluster, ClusterUser, Organization,
                            VirtualMachineTemplate, VirtualMachine)
 from ganeti_web.utilities import cluster_default_info, cluster_os_list, contains, get_hypervisor
 from django.utils.translation import ugettext_lazy as _
-from util.client import REPLACE_DISK_AUTO, REPLACE_DISK_PRI, REPLACE_DISK_CHG, \
+from ganeti_web.util.client import REPLACE_DISK_AUTO, REPLACE_DISK_PRI, REPLACE_DISK_CHG, \
     REPLACE_DISK_SECONDARY
 
 

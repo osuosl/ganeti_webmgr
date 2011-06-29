@@ -11,7 +11,7 @@ from ganeti_web.forms.virtual_machine import NewVirtualMachineForm, \
     PvmModifyVirtualMachineForm, ReplaceDisksForm
 from ganeti_web.tests.rapi_proxy import RapiProxy, XenRapiProxy, INFO, XEN_INFO
 from ganeti_web.tests.views.virtual_machine.base import VirtualMachineTestCaseMixin
-from util.client import REPLACE_DISK_CHG, REPLACE_DISK_AUTO
+from ganeti_web.util.client import REPLACE_DISK_CHG, REPLACE_DISK_AUTO
 
 __all__ = ['TestNewVirtualMachineForm',
     'TestKvmModifyVirtualMachineForm',
