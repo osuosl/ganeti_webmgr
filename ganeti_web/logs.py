@@ -23,8 +23,8 @@ def build_vm_cache(user, object1, object2, object3, data):
     if object1 is not None:
         data['cluster_slug']=object1.cluster.slug
         data['hostname']=object1.hostname
-    if object2 is not None:
-        data['job_id'] = object2.job_id
+        if object2 is not None:
+            data['job_id'] = object2.job_id
     return data
 
 
@@ -32,6 +32,16 @@ def build_node_cache(user, object1, object2, object3, data):
     data = {}
     if object1 is not None:
         data['cluster_slug']=object1.cluster.slug
+        data['hostname']=object1.hostname
+        if object2 is not None:
+            data['job_id'] = object2.job_id
+    return data
+
+
+def build_cluster_cache(user, object1, object2, object3, data):
+    data = {}
+    if object1 is not None:
+        data['cluster_slug']=object1.slug
         data['hostname']=object1.hostname
     if object2 is not None:
         data['job_id'] = object2.job_id
@@ -60,7 +70,7 @@ def register_log_actions():
     LogAction.objects.register('VM_RENAME','ganeti/object_log/vm_rename.html', build_vm_cache)
     LogAction.objects.register('VM_RECOVER','ganeti/object_log/vm_recover.html', build_vm_cache)
 
-    LogAction.objects.register('CLUSTER_REDISTRIBUTE','ganeti/object_log/cluster_redistribute.html')
+    LogAction.objects.register('CLUSTER_REDISTRIBUTE','ganeti/object_log/cluster_redistribute.html', build_cluster_cache)
 
     LogAction.objects.register('NODE_EVACUATE','ganeti/object_log/node_evacuate.html', build_node_cache)
     LogAction.objects.register('NODE_MIGRATE','ganeti/object_log/node_migrate.html', build_node_cache)
