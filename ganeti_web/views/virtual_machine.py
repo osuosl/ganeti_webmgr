@@ -265,8 +265,7 @@ def migrate(request, cluster_slug, instance):
     """
     view used for initiating a Node Migrate job
     """
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    vm = get_object_or_404(VirtualMachine, hostname=instance)
+    vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
 
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
