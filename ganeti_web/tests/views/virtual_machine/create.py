@@ -4,7 +4,7 @@ from ganeti_web import models
 from ganeti_web.models import VirtualMachineTemplate
 from ganeti_web.tests.rapi_proxy import JOB_RUNNING
 from ganeti_web.tests.views.virtual_machine.base import TestVirtualMachineViewsBase
-from util import client
+from ganeti_web.util import client
 
 __all__ = ['TestVirtualMachineCreateView', 'TestVirtualMachineRecoverView']
 

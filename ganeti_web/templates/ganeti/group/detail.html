@@ -1,4 +1,4 @@
-{% extends "object_permissions/group/detail.html" %}
+{% extends "group/detail.html" %}
 {% load i18n %}
 {% block tabs %}
 <li><a title="usage" href="{% url used_resources %}?id={{group.organization.pk}}"><span>{% trans "Resource Usage" %}</span></a></li>

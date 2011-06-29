@@ -30,6 +30,7 @@ urlpatterns = patterns('',
     (r'^', include('object_permissions.urls')),
     (r'^', include('object_log.urls')),
     (r'^', include('muddle_users.urls')),
+    (r'^', include('muddle.urls')),
 
     # user management
     # account/activate/<key>/ - Activate a user

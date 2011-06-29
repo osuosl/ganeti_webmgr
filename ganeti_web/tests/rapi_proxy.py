@@ -18,7 +18,7 @@
 
 
 from ganeti_web.tests.call_proxy import CallProxy, ResponseMap
-from util import client
+from ganeti_web.util import client
 
 
 class MethodProxy(object):

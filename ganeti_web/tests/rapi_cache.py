@@ -20,7 +20,7 @@ from django.test import TestCase
 
 from ganeti_web.models import (get_rapi, clear_rapi_cache, RAPI_CACHE,
     Cluster)
-from util import client
+from ganeti_web.util import client
 
 __all__ = ('TestRapiCache',)
 

@@ -19,6 +19,7 @@
 from django.conf.urls.defaults import patterns, url
 from haystack.views import SearchView
 from django.contrib.auth.decorators import login_required
+import os
 from forms.autocomplete_search_form import autocomplete_search_form
 
 
@@ -216,4 +217,12 @@ urlpatterns += patterns('ganeti_web.views.search',
 )
 urlpatterns += patterns('haystack.views',
     url(r'^search/', login_required(SearchView(form_class=autocomplete_search_form)), name='search')
+)
+
+
+#The following is used to serve up local media files like images
+root = '%s/media' % os.path.dirname(os.path.realpath(__file__))
+urlpatterns += patterns('',
+    (r'^ganeti_web_media/(?P<path>.*)', 'django.views.static.serve',
+     {'document_root':  root}),
 )
