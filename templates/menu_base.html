@@ -1,57 +1,137 @@
 {% extends "base.html" %}
-
+{% load i18n %}
 {% load object_permission_tags %}
 {% load webmgr_tags %}
 
-
 {% block basehead %}
+<!-- Include CSS -->
 <link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}/css/content.css"/>
-<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.js"></script>
-<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip.js"></script>
-<script type="text/javascript">var DOMAIN = "{% current_domain %}";</script>
-<script type="text/javascript" src="{{MEDIA_URL}}/js/ajax_csrf_protection.js"></script>
+<link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}/css/jquery-ui.css"/>
 
+<!-- Include Javascript -->
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.js">
+        </script>
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-ui.min.js">
+        </script>
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip.js">
+        </script>
+<script type="text/javascript" src="{{MEDIA_URL}}/js/ajax_csrf_protection.js">
+        </script>
+<script type="text/javascript" src="{{MEDIA_URL}}/js/autocomplete_search.js">
+        </script>
+
+<script type="text/javascript">
+    $(function(){
+        // initialize the autocomplete search box
+        if ($('#search_box').length == 1) {
+            autocomplete_search($('#search_box'), $('#search_form'),
+                    '{% url search-suggestions %}',
+                    '{% url search-detail-lookup %}');
+        }
+    });
+</script>
 {% endblock %}
 
 {% block inner_header %}
-<div id="user_menu">
-    You are logged in as <a href="{% url profile %}">{{user.username}}</a>,
-    <a href="{% url logout %}">Logout</a>
-</div>
+    {% ifnotequal LANGUAGES|length 1 %}|{% endifnotequal %}
+
+    {% trans "You are logged in as" %} <a href="{% url profile %}">
+    {{user.username}}</a>,
+
+    <a href="{% url logout %}">{% trans "Logout" %}</a>
 {% endblock %}
     
 {% block navigation %}
     {% if user.is_authenticated %}
-    {% with user|cluster_admin as cluster_admin %}
-    <div id="mainmenu" class="menu">
-    <ul>
-        <li><a href="{% url overview %}">Overview</a></li>
-        <li><a href="{% url cluster-list %}">Clusters</a></li>
-        <li><a href="{% url virtualmachine-list %}">Virtual Machines</a></li>
-        {% if user.is_superuser or cluster_admin or perms.Cluster.create_vm %}
-        <li><a href="{% url instance-create %}">Create VM </a></li>
-        {% endif %}
-    </ul>
-    {% with user|group_admin as group_admin %}
-    
-    {% if user.is_superuser or group_admin or cluster_admin %}
-    <h3>Admin</h3>
-    <ul>
-        {% if user.is_superuser or cluster_admin %}
-            <li><a href="{% url import-orphans %}">Orphan VMs</a></li>
-            <li><a href="{% url import-missing_db %}">Import VMs</a></li>
-            <li><a href="{% url import-missing %}">Missing VMs</a></li>
-        {% endif %}
-        {% if user.is_superuser %}
-            <li><a href="{% url user-list %}">Users</a></li>
-        {% endif %}
-        {% if user.is_superuser or group_admin %}
-            <li><a href="{% url usergroup-list %}">Groups</a></li>
-        {% endif %}
-    </ul>
-    {% endif %}
-    {% endwith %}
-    {% endwith %}
-    </div>
+        <div id="mainmenu" class="menu">
+            <ul>
+                <li>
+                    <a href="{% url overview %}">
+                        {% trans "Overview" %}
+                    </a>
+                </li>
+
+                {% if view_cluster %}
+                    <li>
+                        <a href="{% url cluster-list %}">
+                            {% trans "Clusters" %}
+                        </a>
+                    </li>
+                {% endif %}
+
+                <li>
+                    <a href="{% url virtualmachine-list %}">
+                        {% trans "Virtual Machines" %}
+                    </a>
+                </li>
+                {% if user.is_superuser or cluster_admin or create_vm %}
+                    <li>
+                        <a href="{% url instance-create %}">
+                            {% trans "Create VM" %}
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+
+            {% with user|group_admin as group_admin %}
+                {% if user.is_superuser or group_admin or cluster_admin %}
+                    <h3>{% trans "Admin" %}</h3>
+                    <ul>
+                        {% if user.is_superuser or cluster_admin %}
+                            <li>
+                                <a href="{% url import-orphans %}">
+                                    {% trans "Orphan VMs" %}
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{% url import-missing_db %}">
+                                    {% trans "Import VMs" %}
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{% url import-missing %}">
+                                    {% trans "Missing VMs" %}
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{% url import-nodes-missing_db %}">
+                                    {% trans "Import Nodes" %}
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{% url import-nodes-missing %}">
+                                    {% trans "Missing Nodes" %}
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% if user.is_superuser %}
+                            <li>
+                                <a href="{% url user-list %}">
+                                    {% trans "Users" %}
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% if user.is_superuser or group_admin %}
+                            <li>
+                                <a href="{% url group-list %}">
+                                    {% trans "Groups" %}
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                {% endif %}
+            {% endwith %}
+
+            <!-- autocomplete search box -->
+            {%  if user.is_superuser %}
+            <h3>{% trans "Search" %}</h3>
+            <form id="search_form" action="{% url search %}" method="get">
+                <input id="search_box" type="text" name="q" />
+            </form>
+            {% endif %}
+
+        </div>
     {% endif %}
 {% endblock %}

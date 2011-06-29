@@ -26,6 +26,7 @@ settings.py*
 
 # vim swap files
 *.swp
+*.swo
 
 # files that might exist in dev environment
 django
@@ -33,6 +34,22 @@ object_log
 object_permissions
 noVNC
 muddle
+haystack
+muddle_users
+
+# files/dirs created by Fabric and or VirtualEnv
+bin
+dependencies
+include
+lib
+pysqlite2-doc
+
+# whoosh index files (used by haystack search)
+whoosh_index
+
+# twisted cache
+twisted/plugins/dropin.cache
 
 # Hidden files
 .*
+

@@ -5,6 +5,7 @@ Trevor Bramwell (bramwelt) - bramwelt@osuosl.org
 Scott White (whiteau) - whiteau@osuosl.org
 Piotr Banaszkiewicz (pbnan) - pbnan@pbnan.pl
 Lance Albertson (ramereth) - lance@osuosl.org
+Rob McGuire-Dale (robatron) - rob@osuosl.org
 
 ===== Google Code in 2010 =====
 Jonathan Smith (jaydez) - j.jaydez@gmail.com
@@ -23,3 +24,15 @@ Leonidas Poulopoulos - leopoul@noc.grnet.gr
 ===== Included Projects =====
 Release Tarballs include noVNC by Joel Martin
 https://github.com/kanaka/noVNC
+Search function uses Haystack by Daniel Lindsley
+https://github.com/toastdriven/django-haystack/
+
+===== Internally Created Add-Ons: =====
+Django Object Permissions
+http://code.osuosl.org/projects/object-permissions
+Django Object Log
+http://code.osuosl.org/projects/django-object-log
+Twisted VNCAuthProxy
+http://code.osuosl.org/projects/twisted-vncauthproxy
+
+

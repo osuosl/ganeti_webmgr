@@ -29,18 +29,32 @@ Twitter:      http://twitter.com/ganetiwebmgr
 ================================================================================
 
 1.  Install Dependencies
-    * Python >= 2.5
-    * Django >= 1.2
-    * django-registration
-    * South >=0.7
-    * object_permissions (packaged with releases)
-    * object_log (packaged with releases)
-    * sqlite3, mysql, or postgresql
-    * twisted, twisted-web (deps for twisted-vncauthproxy)
-
+    * Python     >= 2.5 but < 3.x (Python 3.x is not supported due to
+                               backward-compatibility issues)
+    * Pip        >= 0.8.2
+    * Fabric     >= 1.0.1 (installable from pip)
+    * VirtualEnv >= 1.6.1 (installable from pip)
 2. Deploy this code somewhere (i.e. /var/lib/django/ganeti_webmgr)
-3. Copy settings.py.dist to settings.py
-4. Create a database and configure your settings:
+3. Install libaries needed for pip installs
+
+      sudo apt-get install python-dev
+
+4. Run Fabric deployment
+
+      cd ./ganeti_webmgr
+      fab dev deploy
+
+  or a production deployment:
+
+      fab prod deploy
+
+5. Activate Virtual Environment
+
+    source bin/activate
+
+6. Copy settings.py.dist to settings.py
+
+7. Create a database and configure your settings:
 
  DATABASE_ENGINE = ''   <-- Change This to 'mysql', 'postgresql',
                             'postgresql_psycopg2' or 'sqlite3'
@@ -50,9 +64,8 @@ Twitter:      http://twitter.com/ganetiwebmgr
  DATABASE_HOST = ''     <-- Change this (not needed if database is localhost)
  DATABASE_PORT = ''     <-- Change this (not needed if database is localhost)
 
-5. If you are using the Django sites module, you will can set the id, name and
-   domain of your site in settings.py and the site will automatically be
-   created when syncdb is run.
+8. Set the id, name and domain of your site in settings.py and the site will
+   automatically be created when syncdb is run.
 
  # Unique site id used by many modules to distinguish site from others.
  SITE_ID = 1
@@ -62,15 +75,18 @@ Twitter:      http://twitter.com/ganetiwebmgr
  SITE_NAME = 'Ganeti Web Manager'
  SITE_DOMAIN = 'localhost:8000'
 
-6. Initialize the database
+9. Initialize the database
 
-    ./manage.py syncdb
+    ./manage.py syncdb --migrate
 
-7. South migrations (0.5 only)
+10. Build the search indexes
 
-    ./manage.py migrate
+    ./manage.py rebuild_index
 
-8. Run the server
+NOTE: running ./manage.py update_index on a regular basis ensures that the
+search indexes stay up-to-date when models change in Ganeti Web Manager.
+
+11. Run the server
 
     Development:
 
@@ -106,11 +122,13 @@ Twitter:      http://twitter.com/ganetiwebmgr
                 import django.core.handlers.wsgi
                 application = django.core.handlers.wsgi.WSGIHandler()
 
-    5. Configure cron job for periodic cache updater [3].
+    5. Enable periodic cache updater [3].
+
+        twistd --pidfile=tmp/gwm_cache.pid gwm_cache
 
  [1] http://docs.djangoproject.com/en/1.2/topics/email/
  [2] http://docs.djangoproject.com/en/1.2/howto/deployment/
- [3] http://code.osuosl.org/projects/ganeti-webmgr/wiki/Cache_System#Updating-with-cron
+ [3] http://code.osuosl.org/projects/ganeti-webmgr/wiki/Cache_System#Periodic-Cache-Refresh
 
 Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/Install
 
@@ -125,8 +143,12 @@ Here is an example with a user jack and password abc123:
 
     echo -n 'jack:Ganeti Remote API:abc123' | openssl md5
 
-Add the hash to /var/lib/ganeti/rapi_users on all the nodes in the cluster and
-restart ganeti-rapi. Here's an example using above:
+Add the hash to the RAPI users file and restart ganeti-rapi. Depending on the
+version of Ganeti you are running, you will need to either use
+`/var/lib/ganeti/rapi_users` (Ganeti <=2.3.x ) or
+`/var/lib/ganeti/rapi/users` (Ganeti >=2.4.x ).
+
+An example hash entry might look like the following:
 
     # Hashed password for jack
     jack {HA1}54c12257ee9be413f2f3182435514aae write
@@ -227,7 +249,7 @@ clusters in the database. This allows the following:
       ---  Ganeti  ---
      /                \
     /                  \
- Cluster ->       ->   Bulk
+ Cluster ->       <-   Bulk
   Model  <- cache <-  Updater
 
     * Permissions are stored in the database and are associated to the cached
@@ -276,7 +298,7 @@ Twisted VNC Authproxy is started with twistd, the twisted daemon. Eventually we
 will include init.d scripts for better managing the daemon. You may want to open
 port 8888 in your firewall for production systems.
 
-    twistd --pidfile=/tmp/proxy.pid -ny proxy.tac 
+    twistd --pidfile=/tmp/proxy.pid -n vncap
 
 Starting Flash Policy Server
 ----------------------------
@@ -289,23 +311,13 @@ want to open port 843 in your firewall for production systems.
 
 Start the policy server with twistd
 
-    sudo twistd --pidfile=/tmp/policy.pid -ny policy.tac
+    sudo twistd --pidfile=/tmp/policy.pid -n flashpolicy
+
 
 Possible issues
 ---------------
 
-You may encounter an issue where twisted fails to start and gives you error.
-This is usually caused by the environment variable PYTHONPATH not being
-exported correctly if you sudo up to root. To fix it type:
-
-    export PYTHONPATH="."
-
-Try executing twisted again and it should work.
-
-Possible issues
----------------
-
-You may encounter an issue where twisted fails to start and gives you error.
+You may encounter an issue where twisted fails to start and gives you an error.
 This is usually caused by the environment variable PYTHONPATH not being
 exported correctly if you sudo up to root. To fix it type:
 

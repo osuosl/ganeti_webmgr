@@ -1,0 +1,62 @@
+{% extends "menu_base.html" %}
+{% load i18n %}
+{% load webmgr_tags %}
+{% block head %}
+<style>
+div.info {float:left;width:390px;margin:0px;}
+#vm_summary {width:390px;float:left;margin-right:10px;}
+#vm_summary h2 {margin-top:0px;}
+#vm_summary h2 a {color:white;}
+form {float:left;clear:left;}
+form input.submit {margin:1em .5em 0px 0px;}
+form input.save_reboot {width:10em;margin:1em .5em 0px 0px;}
+</style>
+{% endblock %}
+{% block content %}
+<h1>
+    {% if cluster_admin %}
+    <a class="breadcrumb" href="{% url cluster-detail cluster.slug %}#virtual_machines">{{cluster.hostname|abbreviate_fqdn}}</a>
+    {% else %}
+    <span class="breadcrumb">{{cluster.hostname|abbreviate_fqdn}}</span>
+    {% endif %}
+    : <a class="breadcrumb" href="{% url instance-detail cluster.slug instance.hostname %}">{{ instance.hostname }}</a>
+    : {% trans "Confirm Changes" %}
+</h1>
+
+<div id="vm_summary">
+    <table>
+        <h2><a href="{% url instance-detail cluster.slug instance.hostname %}">{{ instance.hostname }}</a></h2>
+        {% for k, v in instance_diff.items %}
+            <tr><th>{{ k }}</th><td>{{ v|capfirst }}</td></tr>
+        {% empty %}
+            <tr><td>{% trans "Nothing changed" %}.</td></tr>
+        {% endfor %}
+    </table>
+</div>
+{% with instance.info.status as status %}
+{% ifequal status "running" %}
+<div class="info">
+    <p><b style="color:red;">Warning:</b> In order for your changes to the instance to take effect, you must 
+    first reboot the instance. Either click 'Save & Reboot', or click 'Save' and reboot at a later time.</p>
+    <br />
+    <p><b>Note:</b> Rebooting must be done through Ganeti or Ganeti Web Manager. Your changes will
+    not take effect if you reboot from within the instance.</p>
+</div>
+{% endifequal %}
+<form method="post">
+    {% csrf_token %}
+    {{ form.rapi_dict }}
+    {{ form.errors }}
+    <input class="submit" type="submit" name="edit" value="{% trans "Edit" %}">
+{% if instance_diff.items %}
+{% ifequal status "running" %}
+    {% if power %}
+    <input class="save_reboot" type="submit" name="reboot" value="{% trans "Save & Reboot" %}">
+    {% endif %}
+{% endifequal %}
+    <input class="submit" type="submit" name="save" value="{% trans "Save" %}">
+{% endif %}
+    <input class="submit" type="submit" name="cancel" value="{% trans "Cancel" %}">
+</form>
+{% endwith %}
+{% endblock %}

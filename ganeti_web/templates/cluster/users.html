@@ -1,0 +1,51 @@
+{% extends "object_permissions/permissions/users.html" %}
+{% load i18n %}
+{% block head %}
+<script type="text/javascript">
+    $(document).ready(function() {
+        // Update Quota Button
+        $(".quota").live("click", function() {
+            // destroy old qtip before showing new one
+            $('.qtip').qtip('destroy');
+            $(this).qtip({
+                content: {
+                   url: this.href,
+                   title: {text:'{% trans "Quota" %}: ', button:'close'},
+                },
+                position: {corner:{ target:"topMiddle", tooltip:"bottomMiddle"}},
+                style: {name:"dark",
+                        border:{radius:5},
+                        width:300,
+                        tip: 'bottomMiddle',
+                        background:"#eeeeee"
+                        },
+                show: {when:false, ready:true},
+                hide: {fixed: true, when:false},
+                api:{onShow:function(){
+                    $("#quota_form input[type!=hidden], .ajax_form select").first().focus();
+                }}
+            });
+            return false;
+        });
+        
+        // quota submit
+        $("#quota_form").live("submit", function(){
+            $("#errors").empty();
+            $(this).ajaxSubmit({success: update_user_permissions});
+            return false;
+        });
+        
+        // Delete quota button
+        $('#quota_form .delete').live("click", function() {
+            id = $('#quota_form input[name=user]').val()
+            $.post('{% url cluster-quota object.slug %}'+id,
+                   {user:id, 'delete':true}, update_user_permissions);
+        });
+    });
+</script>
+{%endblock%}
+
+{%block table_headers%}<th>{% trans "Quota" %}</th>{%endblock%}
+{%block user_row%}{% include "cluster/user_row.html" %}{%endblock%}
+{%block group_row%}{% include "cluster/group_row.html" %}{%endblock%}
+

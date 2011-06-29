@@ -1,3 +1,21 @@
+# Copyright (C) 2010 Oregon State University et al.
+# Copyright (C) 2010 Greek Research and Technology Network
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
+# USA.
+
 # Django settings for ganeti_webmgr project.
 
 import os.path
@@ -12,6 +30,9 @@ TEMPLATE_DEBUG = DEBUG
 #
 # If you run the unittests without this set to TRUE, you will get many errors!
 TESTING = False
+# Setting this to False disables south migrations when running tests.
+SOUTH_TESTS_MIGRATE = False
+SKIP_SOUTH_TESTS = True
 
 ADMINS = (
     # ('Your Name', 'your_email@domain.com'),
@@ -26,11 +47,6 @@ DATABASE_PASSWORD = ''      # Not used with sqlite3.
 DATABASE_HOST = ''          # Set to empty string for localhost. Not used with sqlite3.
 DATABASE_PORT = ''          # Set to empty string for default. Not used with sqlite3.
 
-## XXX - If you are using postgresql_psycopg2 makesure to enable this option
-## or else you will not be able to run syncdb.
-#DATABASE_OPTIONS = {
-#    'autocommit': True 
-#}
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -41,7 +57,23 @@ TIME_ZONE = 'America/Los_Angeles'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
-LANGUAGE_CODE = 'en-us'
+
+# In order to support localization the following have to be added:
+
+ugettext = lambda s: s
+
+# If no other locale is present/supported for the time leave the following as is.
+# When locales are added, place them ath the "('yourlang', ugettext('YOUR LANGUAGE')),"
+# line. E.g, for the Greek locale, it becomes: ('el', ugettext('Greek'))
+
+LANGUAGES = (
+#	 ('yourlang', ugettext('YOUR LANGUAGE')),
+    ('el', ugettext('Greek')),
+    ('en', ugettext('English')),
+)
+# end-of localization support
+
+LANGUAGE_CODE = 'en-US'
 
 # Unique site id used by many modules to distinguish site from others.
 SITE_ID = 1
@@ -51,9 +83,10 @@ SITE_ID = 1
 SITE_NAME = 'Ganeti Web Manager'
 SITE_DOMAIN = 'localhost:8000'
 
-# If you set this to False, Django will make some optimizations so as not
-# to load the internationalization machinery.
+# Enable i18n (translations) and l10n (locales, currency, times).
+# You really have no good reason to disable this.
 USE_I18N = True
+USE_L10N = True
 
 # absolute path to the docroot of this site
 DOC_ROOT = os.path.dirname(os.path.realpath(__file__))
@@ -92,10 +125,21 @@ TEMPLATE_LOADERS = (
 #     'django.template.loaders.eggs.load_template_source',
 )
 
+TEMPLATE_CONTEXT_PROCESSORS = (
+    'django.contrib.auth.context_processors.auth',
+    'django.contrib.messages.context_processors.messages',
+    'django.core.context_processors.debug',
+    'django.core.context_processors.i18n',
+    'django.core.context_processors.media',
+    'ganeti_web.context_processors.site',
+    'ganeti_web.context_processors.common_permissions'
+)
+
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.csrf.CsrfResponseMiddleware'
@@ -116,13 +160,22 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.sites',
     'registration',
-    'object_permissions',
-    'ganeti',
+    'deprecated.ganeti', # XXX deprecated ganeti MUST come before ganeti_web
+    'ganeti_web',        # XXX must come before object permissions for migration to 0.7
+    'object_permissions', 
     'object_log',
-    'south'
+    'south',
+    'haystack',
+    'muddle_users',
 )
 
-AUTH_PROFILE_MODULE = 'ganeti.Profile'
+# Search settings
+ROOT_DIR_NAME = DOC_ROOT.split('/')[-1]
+HAYSTACK_SITECONF = ROOT_DIR_NAME + '.search_sites'
+HAYSTACK_SEARCH_ENGINE = 'whoosh'
+HAYSTACK_WHOOSH_PATH = os.path.join(DOC_ROOT, 'whoosh_index')
+
+AUTH_PROFILE_MODULE = 'ganeti_web.Profile'
 LOGIN_REDIRECT_URL = '/'
 
 DATE_FORMAT = "d/m/Y H:i"
@@ -139,28 +192,36 @@ EMAIL_PORT = "25"
 ITEMS_PER_PAGE = 10
 
 # Ganeti Cached Cluster Objects Timeouts
-#    lazy cache is the fallback cache timer that is checked when the object is
-#    instantiated.
+#    LAZY_CACHE_REFRESH (milliseconds) is the fallback cache timer that is
+#    checked when the object is instantiated.
 #
-#    periodic cache timer is for use by an outside process such as Celery or
-#    or cron which updates the cache on a set interval to ensure that data is
-#    always up to date.
-LAZY_CACHE_REFRESH = 60000
-PERIODIC_CACHE_REFRESH = 15
+#    PERIODIC_CACHE_REFRESH - timer used by an outside process twisted process
+#    that uses bulk methods for keeping the cache in sync with ganeti.  If used
+#    this value should *always* be less than LAZY_CACHE_REFRESH.  Note that this
+#    process still takes time to update object.  If it does not complete fast
+#    enough LAZY_CACHE_REFRESH will still be checked
+#
+#    Start this process this this command:
+#       twistd gwm_cache
+#
+LAZY_CACHE_REFRESH = 600000
+PERIODIC_CACHE_REFRESH = 300
 
-# Enable the VNC proxy.  When enabled this will use the proxy to create local
-# ports that are forwarded to the virtual machines.  It allows you to control
-# access to the VNC servers.  When disabled, the console tab will connect 
-# directly to the VNC server running on the virtual machine.
+# VNC Proxy. This will use a proxy to create local ports that are forwarded to
+# the virtual machines.  It allows you to control access to the VNC servers.
 #
-# Expected values: False if no proxy, string with proxy host and port otherwise
-# String syntax: "HOST:PORT", for example: "localhost:8888". Instead of
-# "localhost" you should use the hostname of your proxy server.
+# Expected values:
+#   String syntax: "HOST:CONTROL_PORT", for example: "localhost:8888". If
+#   localhost is used then the proxy will only be accessible to clients and
+#   browsers on localhost. Production servers should use a publicly accessible
+#   hostname or IP
 #
-# Note: you will probably have to open more ports in firewall. For proxy's default
-# settings, it uses port 8888 for listening for requests and ports 7000..8000
-# for serving proxy.
-#
+# Firewall Rules:
+#   Control Port: 8888, must be open between Ganeti Web Manager and Proxy
+#   Internal Ports: 12000+ must be open between the Proxy and Ganeti Nodes
+#   External Ports: default is 7000-8000, must be open between Proxy and Clients
+#   Flash Policy Server: 843, must open between Proxy and Clients
+
 VNC_PROXY='localhost:8888'
 
 

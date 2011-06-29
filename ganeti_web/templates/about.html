@@ -1,0 +1,61 @@
+{% extends "no_menu_base.html" %}
+{% load webmgr_tags %}
+{% load i18n %}
+{% block title %}{%trans "About" %}{% endblock %}
+{% block head %}
+    <style type="text/css">
+       .show_bullets li{
+           margin-left:40px;
+           list-style-type:disc;
+       }
+
+        h3 {margin-top:30px;}
+        h4 {margin-top:10px;}
+    </style>
+{% endblock %}
+{% block content %}
+    <h1>{% trans "About" %}</h1>
+    <p>Ganeti Web Manager is a project by the 
+        <a href="http://osuosl.org">Oregon State University Open Source Lab</a>.
+    </p>
+    <p>If you would like more information, support, or are interested in getting
+        involved, check out the 
+        <a href="http://code.osuosl.org/projects/ganeti-webmgr">project page</a>.
+
+    </p>
+    <div id="version">
+    <h4>{% trans "Ganeti Version: " %}{{ version }}</h4>
+    </div>
+
+    <div id="contributors" class="show_bullets">
+    <h3>{% trans "Core Contributors" %}</h3>
+    <p>For a complete list of people who have contributed code to the Ganeti Web Manager project, see the <a href=http://git.osuosl.org/?p=gitolite/ganeti/ganeti_webmgr.git;a=blob_plain;f=AUTHORS>AUTHORS</a> file. </p>
+    <p><ul>
+        <li>Peter Krenesky (kreneskyp)</li>
+        <li>Trevor Bramwell (bramwelt)</li>
+	<li>Rob McGuire-Dale (robatron)</li>
+        <li>Corbin Simpson (MostAwesomeDude)</li>
+	<li>Piotr Banaszkiewicz (pbnan)</li>
+    </ul></p>
+    </div>
+
+    <div id="addons" class="show_bullets">
+    <h3>{% trans "Add-ons" %}</h3>
+    <p>Add-ons currently used by Ganeti Web Manager:</p>
+    <p><ul >
+        <li><a href="https://github.com/kanaka/noVNC">noVNC by Joel Martin</a></li>
+	<li><a href="https://github.com/toastdriven/django-haystack/">Haystack Search by Daniel Lindsley</a>, using <a href="https://bitbucket.org/mchaput/whoosh/wiki/home/">Whoosh by Matt Chaput</a></li>
+        <li><a href="http://code.osuosl.org/projects/twisted-vncauthproxy">Twisted VNCAuthProxy</a></li>
+        <li><a href="http://code.osuosl.org/projects/object-permissions">Django Object Permissions </a></li>
+        <li><a href="http://code.osuosl.org/projects/django-object-log">Django Object Log</a></li>
+        <li><a href="http://code.osuosl.org/projects/muddle-users">Muddle Users</a></li>
+    </ul>
+    </p>
+
+    </div>
+    <div id="donation">
+    <h3>{% trans "Donate to Ganeti Web Manager" %}</h3>
+    <p>Donations that support the Ganeti Web Manager project can be made <a href="http://osuosl.org/contribute">here</a>.</p>
+    </div>
+
+{% endblock %}
