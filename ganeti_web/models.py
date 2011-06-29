@@ -53,11 +53,11 @@ from muddle_users import signals as muddle_user_signals
 from ganeti_web import constants, management
 from ganeti_web.fields import PreciseDateTimeField, SumIf
 from ganeti_web import permissions
-from util import client
-from util.client import GanetiApiError, REPLACE_DISK_AUTO
+from ganeti_web.util import client
+from ganeti_web.util.client import GanetiApiError, REPLACE_DISK_AUTO
 
 if settings.VNC_PROXY:
-    from util.vncdaemon.vapclient import request_forwarding
+    from ganeti_web.util.vncdaemon.vapclient import request_forwarding
 import random
 import string
 

@@ -139,7 +139,8 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.i18n',
     'django.core.context_processors.media',
     'ganeti_web.context_processors.site',
-    'ganeti_web.context_processors.common_permissions'
+    'ganeti_web.context_processors.common_permissions',
+	'ganeti_web_layout.context_processors.open_reg'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -197,6 +198,10 @@ ACCOUNT_ACTIVATION_DAYS = 7
 EMAIL_HOST = "localhost"
 EMAIL_PORT = "25"
 # DEFAULT_FROM_EMAIL = "noreply@example.org"
+
+# Whether users should be able to create their own accounts. 
+# False if accounts can only be created by admins. 
+ALLOW_OPEN_REGISTRATION = True
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to

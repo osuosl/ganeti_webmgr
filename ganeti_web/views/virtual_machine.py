@@ -39,7 +39,7 @@ from object_permissions import signals as op_signals
 from object_log.models import LogItem
 log_action = LogItem.objects.log_action
 
-from util.client import GanetiApiError
+from ganeti_web.util.client import GanetiApiError
 from ganeti_web.models import Cluster, ClusterUser, Organization, VirtualMachine, \
         Job, SSHKey, VirtualMachineTemplate, Node
 from ganeti_web.views import render_403

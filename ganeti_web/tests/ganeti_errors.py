@@ -20,7 +20,7 @@ from datetime import datetime
 from django.test import TestCase
 from django.test.client import Client
 
-from util import client
+from ganeti_web.util import client
 from ganeti_web.tests.call_proxy import CallProxy
 from ganeti_web.tests.rapi_proxy import RapiProxy
 from django.contrib.auth.models import User
