@@ -54,7 +54,7 @@ from ganeti_web import constants, management
 from ganeti_web.fields import PreciseDateTimeField, SumIf
 from ganeti_web import permissions
 from util import client
-from util.client import GanetiApiError
+from util.client import GanetiApiError, REPLACE_DISK_AUTO
 
 if settings.VNC_PROXY:
     from util.vncdaemon.vapclient import request_forwarding
@@ -701,6 +701,16 @@ class VirtualMachine(CachedClusterObject):
             .update(last_job=job, ignore_cache=True)
         return job
 
+    def replace_disks(self, mode=REPLACE_DISK_AUTO, disks=None, node=None,
+                      iallocator=None):
+        id = self.rapi.ReplaceInstanceDisks(self.hostname, disks, mode, node,
+                                            iallocator)
+        job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
+        self.last_job = job
+        VirtualMachine.objects.filter(pk=self.id) \
+            .update(last_job=job, ignore_cache=True)
+        return job
+
     def setup_vnc_forwarding(self, sport=''):
         password = ''
         info_ = self.info
@@ -1053,8 +1063,7 @@ class Cluster(CachedClusterObject):
                 quotas[cluster] = custom
 
         return quotas
-    
-    
+
     def sync_virtual_machines(self, remove=False):
         """
         Synchronizes the VirtualMachines in the database with the information

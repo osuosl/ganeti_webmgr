@@ -74,6 +74,39 @@
             $(this).ajaxSubmit({success: vm_form_response});
         });
 
+        $(".replace_disks").click(function(event){
+            event.preventDefault();
+            var $this = $(this);
+            if(!$this.hasClass('disabled')) {
+                $('.qtip').qtip('destroy');
+
+                $(this).qtip({
+                    content: {
+                       url: this.href,
+                       title: {text:"Replace Disks", button:"close"}
+                    },
+                    position: {  corner:{target:'center', tooltip:'center'}},
+                    style: {
+                        name: 'dark',
+                        border:{radius:5},
+                        width:400,
+                        background:'#eeeeee'},
+                    show: {when:false, ready:true},
+                    hide: {fixed: true, when:false},
+                    api:{onShow:function(){
+                        $(".ajax_form input[type!=hidden], .ajax_form select")
+                            .first().focus();
+                    }}
+                });
+            }
+        });
+
+        $(".vm_replace_disks_form").live("submit", function(event){
+            event.preventDefault();
+            $("#errors").empty();
+            $(this).ajaxSubmit({success: vm_form_response});
+        });
+
         {% if instance.last_job_id %}
             {# there is a running job, display it and poll for status #}
             get_job_status("{% url cluster-detail cluster.slug %}",
@@ -201,6 +234,15 @@
                             {% trans "Reinstall" %}
                         </a>
                     </li>
+                {% endif %}
+                {% if cluster_admin or replace_disks %}
+                    {% if instance|is_drbd %}
+                    <li>
+                        <a class="button replace_disks" href="{% url instance-replace-disks cluster.slug instance.hostname %}">
+                            {% trans "Replace Disks" %}
+                        </a>
+                    </li>
+                    {% endif %}
                 {% endif %}
                 {% if cluster_admin or migrate %}
                     {% if instance|is_drbd %}

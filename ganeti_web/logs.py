@@ -54,6 +54,7 @@ def register_log_actions():
     LogAction.objects.register('VM_START','ganeti/object_log/vm_start.html', build_vm_cache)
     LogAction.objects.register('VM_STOP','ganeti/object_log/vm_stop.html', build_vm_cache)
     LogAction.objects.register('VM_MIGRATE','ganeti/object_log/vm_migrate.html', build_vm_cache)
+    LogAction.objects.register('VM_REPLACE_DISKS','ganeti/object_log/vm_replace_disks.html', build_vm_cache)
     LogAction.objects.register('VM_REINSTALL','ganeti/object_log/vm_reinstall.html', build_vm_cache)
     LogAction.objects.register('VM_MODIFY','ganeti/object_log/vm_modify.html', build_vm_cache)
     LogAction.objects.register('VM_RENAME','ganeti/object_log/vm_rename.html', build_vm_cache)
