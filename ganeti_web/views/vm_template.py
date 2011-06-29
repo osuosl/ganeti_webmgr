@@ -24,6 +24,7 @@ from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
 from ganeti_web.models import VirtualMachineTemplate
+from ganeti_web.forms.virtual_machine import VirtualMachineTemplateForm
 
 
 @login_required
@@ -38,7 +39,19 @@ def templates(request):
 
 @login_required
 def create(request): 
+    if request.method == "GET":
+        form = VirtualMachineTemplateForm()
+    elif request.method == "POST":
+        form = VirtualMachineTemplateForm(request.POST)
+        if form.is_valid():
+            template = form.save()
+            return HttpResponseRedirect(reverse('template-detail', 
+                args=[template.id]))
+    else:
+        return HttpResponseNotAllowed(["GET","POST"])
+
     return render_to_response('ganeti/vm_template/create.html', {
+        'form':form
         },
         context_instance = RequestContext(request)
     )
@@ -47,9 +60,8 @@ def create(request):
 @login_required
 def detail(request, template_id):
     vm_template = get_object_or_404(VirtualMachineTemplate, pk=template_id)
-    print vm_template
     return render_to_response('ganeti/vm_template/detail.html', {
-        'template':vm_template.__dict__,
+        'template':vm_template,
         },
         context_instance = RequestContext(request)
     )

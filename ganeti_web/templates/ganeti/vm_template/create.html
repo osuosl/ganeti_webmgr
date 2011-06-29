@@ -2,9 +2,68 @@
 {% load i18n %}
 {% load webmgr_tags %}
 
+{% block head %}
+    <link rel="stylesheet" type="text/css"
+            href="{{MEDIA_URL}}/css/virtual_machine_create.css"/>
+    <!-- javascript includes -->
+    <script src="{{SITE_ROOT}}/ganeti_web_media/js/helpTips.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            // init help tips
+            initHelpTips('#virtualmachineform');
+        });
+    </script>
+{% endblock %}
+
 {% block title %}{% trans "Create Template" %}{% endblock title %}
 
 {% block content %}
-<h1>{% trans "Create Template" %}</h1>
+<div id="virtualmachineform">
+    <form method="post" action="{% url template-create %}">
+        <fieldset class="first_fieldset">
+            <h1>{% trans "Create Template" %}</h1>
+            {% vmfield form.template_name %}
+            {% vmfield form.description %}
+        </fieldset>
+        <fieldset>
+            <legend>{% trans "Operating System" %}</legend>
+            {% vmfield form.os %}
+        </fieldset>
+        <fieldset>
+            <legend>{% trans "Instance Options" %}</legend>
+            {% vmfield form.start %}
+            {% vmfield form.name_check %}
+            {% vmfield form.disk_template %}
+        </fieldset>
+        <fieldset>
+            <legend>{% trans "General Parameters" %}</legend>
+            {% vmfield form.vcpus %}
+            {% vmfield form.memory %}
+            {% vmfield form.disk_size %}
+            {% vmfield form.disk_type %}
+            {% vmfield form.nic_mode %}
+            {% vmfield form.nic_link %}
+            {% vmfield form.nic_type %}
+        </fieldset>
+        <fieldset>
+            <legend>{% trans "Hypervisor Parameters" %}</legend>
+            {% vmfield form.kernel_path %}
+            {% vmfield form.root_path %}
+            {% vmfield form.serial_console %}
+            {% vmfield form.boot_order %}
+            {% vmfield form.cdrom_image_path %}
+        </fieldset>
+        <input class="submit" type="submit" value="{% trans "Save" %}">
+    </form>
+</div>
+
+<div id="help">
+    <h3></h3>
+    <div></div>
+</div>
+<div id="help-contents">
+    {% include "ganeti/helptips/vm.html" %}
+    {% include "ganeti/helptips/vm_create.html" %}
+</div>
 {% endblock content %}
 

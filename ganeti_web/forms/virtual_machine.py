@@ -28,7 +28,6 @@ from ganeti_web.utilities import cluster_default_info, cluster_os_list, contains
 from django.utils.translation import ugettext_lazy as _
 
 
-
 class VirtualMachineForm(forms.ModelForm):
     """
     Parent class that holds all vm clean methods
@@ -463,6 +462,41 @@ def check_quota_modify(form):
                     del data['vcpus']
                     q_msg = u"%s" % _("Owner does not have enough virtual cpus remaining on this cluster. You must reduce the amount of virtual cpus.")
                     form._errors["vcpus"] = form.error_class([q_msg])
+
+
+class VirtualMachineTemplateForm(NewVirtualMachineForm):
+    """
+    Form to edit/create VirtualMachineTemplates
+    """
+
+    class Meta(VirtualMachineForm.Meta):
+        exclude = ('cluster','pnode','snode','iallocator','iallocator_hostname',
+            'owner', 'hypervisor', 'hostname')
+        required = ('template_name')
+
+    def __init__(self, *args, **kwargs):
+        """
+        Do not use the NewVirtualMachineForm init
+        """
+        super(VirtualMachineForm, self).__init__(*args, **kwargs)
+        # XXX Remove fields explicitly set in NewVirtualMachineForm
+        #  Django ticket #8620
+        for field in self.Meta.exclude:
+            if field in self.fields.keys():
+                del self.fields[field]
+        for field in self.fields:
+            if field not in self.Meta.required:
+                self.fields[field].required = False
+            else:
+                self.fields[field].required = True
+
+    def clean(self):
+        """
+        Do not use the NewVirtualMachineFrom clean method
+        """
+        super(VirtualMachineForm, self).clean()
+        data = self.cleaned_data
+        return data
 
 
 class ModifyVirtualMachineForm(VirtualMachineForm):

@@ -5,7 +5,74 @@
 {% block title %}{% trans "Template" %}{% endblock title %}
 
 {% block content %}
-<h1>{% trans "Template" %}: {{template.template_name}}</h1>
-<p>{{template.template_name}}</p>
+<h1>
+    <a class="breadcrumb" href="{% url template-list %}">{% trans "Template" %}</a>
+     : {{template.template_name}}
+</h1>
+<table class="horizontal">
+    <tr><th>{% trans "Description" %}</th><td>{{ template.description }}</td></tr>
+    <tr>
+        <th>{% trans "Operating System" %}</th>
+        <td>{{ template.operating_system|render_os }}</td>
+    </tr>
+    <tr><th>{% trans "Autostart" %}</th><td>{{ template.start|checkmark }}</td></tr>
+    <tr><th>{% trans "DNS Name Check" %}</th><td>{{ template.name_check|checkmark }}</td></tr>
+</table>
+<h3>Hardware</h3>
+<table class="horizontal">
+    <tr><th>{% trans "VCPUs" %}</th><td>{{ template.vcpus }}</td></tr>
+    <tr><th>{% trans "Memory" %}</th><td>{{ template.memory }}</td></tr>
+    <tr><th>{% trans "NIC type" %}</th><td>{{ template.nic_type }}</td></tr>
+</table>
+
+<h3>{% trans "Disks" %}</h3>
+<table>
+    <tr>
+        <th>{% trans "Disk" %}</th>
+        <th>{% trans "Type" %}</th>
+        <th>{% trans "Size" %}</th>
+    </tr>
+    <tr>
+        <td>{% trans "disk" %}/0</td>
+        <td>{{ template.disk_type }}</td>
+        <td>{{ template.disk_size }}</td>
+    </tr>
+</table>
+
+<h3>{% trans "Network Devices" %}</h3>
+<table>
+    <tr>
+        <th>{% trans "Nic" %}</th>
+        <th>{% trans "Mac" %}</th>
+        <th>{% trans "IP" %}</th>
+        <th>{% trans "Mode" %}</th>
+        <th>{% trans "Link" %}</th>
+    </tr>
+    <tr>
+        <td>{% trans "nic" %}/0</td>
+        <td>{{ template.nic_mac }}</td>
+        <td></td>
+        <td>{{ template.nic_mode }}</td>
+        <td>{{ template.nic_type }}</td>
+    </tr>
+</table>
+
+<h3>Hypervisor</h3>
+<table class="horizontal">
+    <tr><th>{% trans "Boot Order" %}</th><td>{{ template.boot_order }}</td></tr>
+    <tr>
+        <th>{% trans "CDROM Image Path" %}</th>
+        <td>{{ template.cdrom_image_path }}</td>
+    </tr>
+    <tr>
+        <th>{% trans "Kernel Path" %}</th><td>{{ template.kernel_path }}</td>
+    </tr>
+    <tr><th>{% trans "Root Path" %}</th><td>{{ template.root_path }}</td></tr>
+    <tr>
+        <th>{% trans "Serial Console" %}</th>
+        <td>{{ template.serial_console|checkmark }}</td>
+    </tr>
+</table>
+
 {% endblock content %}
 
