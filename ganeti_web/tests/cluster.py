@@ -22,6 +22,9 @@ from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.test import TestCase
 from django.test.client import Client
+# Per #6579, do not change this import without discussion.
+from django.utils import simplejson as json
+
 from django_test_tools.users import UserTestMixin
 from django_test_tools.views import ViewTestMixin
 from ganeti_web.models import SSHKey, Profile
@@ -1296,7 +1299,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         SSHKey.objects.create(key="ssh-dsa test foo@bar", user=user1)
 
         # get API key
-        import settings, json
+        import settings
         key = settings.WEB_MGR_API_KEY
 
         url = '/cluster/%s/keys/%s/'

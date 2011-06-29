@@ -1,7 +1,7 @@
-import json
-
 from django.contrib.auth.models import User, Group
 from django.test import TestCase, Client
+# Per #6579, do not change this import without discussion.
+from django.utils import simplejson as json
 
 from django_test_tools.views import ViewTestMixin
 from django_test_tools.users import UserTestMixin

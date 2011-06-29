@@ -18,7 +18,8 @@ import copy
 
 from django import forms
 from django.forms import ValidationError
-from django.utils import simplejson
+# Per #6579, do not change this import without discussion.
+from django.utils import simplejson as json
 
 from ganeti_web import constants
 from ganeti_web.fields import DataVolumeField
@@ -650,7 +651,7 @@ class ModifyConfirmForm(forms.Form):
 
     def clean(self):
         raw = self.data['rapi_dict']
-        data = simplejson.loads(raw)
+        data = json.loads(raw)
 
         cleaned = self.cleaned_data
         cleaned['rapi_dict'] = data
