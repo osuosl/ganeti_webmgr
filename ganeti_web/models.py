@@ -46,7 +46,6 @@ from object_log.models import LogItem
 log_action = LogItem.objects.log_action
 
 from object_permissions.registration import register
-from object_permissions import signals as op_signals
 
 from muddle_users import signals as muddle_user_signals
 
