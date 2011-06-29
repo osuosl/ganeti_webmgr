@@ -72,7 +72,7 @@ def user_add(request, template="user/edit.html"):
             new_user.set_password(data['password2'])
             new_user.email=data['email']
             new_user.save()
-            return HttpResponseRedirect(reverse('user-list'))
+            return HttpResponseRedirect(new_user.get_absolute_url())
 
     else:
         form = CustomUserCreationForm()
@@ -111,7 +111,7 @@ def user_edit(request, user_id=None, template="user/edit.html"):
         form = UserEditForm(data=request.POST, instance=user_edit)
         if form.is_valid():
             form.save()
-            return HttpResponseRedirect(reverse('user-list'))
+            return HttpResponseRedirect(user_edit.get_absolute_url())
 
     elif request.method == "DELETE":
         user_edit.delete()
