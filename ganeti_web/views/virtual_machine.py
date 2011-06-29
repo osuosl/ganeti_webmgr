@@ -317,7 +317,7 @@ def replace_disks(request, cluster_slug, instance):
                 content = json.dumps(job.info)
 
                 # log information
-                #log_action('VM_REPLACE_DISKS', user, vm, job)
+                log_action('VM_REPLACE_DISKS', user, vm, job)
             except GanetiApiError, e:
                 content = json.dumps({'__all__':[str(e)]})
         else:
