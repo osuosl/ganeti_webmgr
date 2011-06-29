@@ -6,44 +6,6 @@
     <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.form.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
-            // Add user button
-            $('#add_group').click(function(){
-                $('.qtip').qtip('destroy');
-                $(this).qtip( {
-                    content: {
-                       url: '{% url group-add %}',
-                       title: {text:'Add Group: ', button:'close'},
-                       method: "post"
-                    },
-                    position: {  corner:{target:'center', tooltip:'center'}},
-                    style: {name: 'dark', border:{radius:5}, width:300, background:'#eeeeee'},
-                    show: {when:false, ready:true},
-                    hide: {fixed: true, when:false},
-                    api:{onShow:function(){
-                        $(".ajax_form input[type!=hidden], .ajax_form select").first().focus();
-                    }}
-                });
-            });
-            
-            $('#groups .edit').live("click", function(){
-                $('.qtip').qtip('destroy');
-                var id = this.parentNode.parentNode.id.substring(6);
-                $(this).qtip( {
-                    content: {
-                       url: '{% url group-add %}/'+id,
-                       title: {text:'Edit Group: ', button:'close'},
-                       method: "post"
-                    },
-                    position: {corner:{ target:"topMiddle", tooltip:"bottomMiddle"}},
-                    style: {name: 'dark', border:{radius:5}, width:300, background:'#eeeeee', tip: 'bottomMiddle'},
-                    show: {when:false, ready:true},
-                    hide: {fixed: true, when:false},
-                    api:{onShow:function(){
-                        $(".ajax_form input[type!=hidden], .ajax_form select").first().focus();
-                    }}
-                });
-            });
-            
             // submit button
             $(".ajax_form").live("submit", function(){
                 $("#errors").empty();
@@ -52,39 +14,17 @@
             });
             
             // Delete user button
-            $('#groups .delete').live("click", function() {
-
+            $('#groups .delete').live("click", function(event) {
+                event.preventDefault();
                 var name = $(this).parent().parent().children('.name').children('a').html();
-
                 if (confirm("Delete group: " + name)) {
                     var id = this.parentNode.parentNode.id.substring(6);
-                    $.delete_('{% url group-add %}/'+id,
+                    $.delete_(this.href,
                         function(code){
                             if(code==1) {$('#group_'+id).remove();}
                         }, "json");
                 }
             });
-            
-            function update(responseText, statusText, xhr, $form) {
-                if (xhr.getResponseHeader('Content-Type') == 'application/json') {
-                    // parse errors
-                    for (var key in responseText) {
-                        $("#errors").append("<li>"+ responseText[key] +"</li>")
-                    }
-                } else {
-                    // successful permissions change.  replace the user row with the
-                    // newly rendered html
-                    $('.qtip').qtip('hide');
-                    var html = $(responseText);
-                    var id = html.attr('id');
-                    var $row = $('#groups #' + id);
-                    if ($row.length == 1) {
-                        $row.replaceWith(html);
-                    } else {
-                        $("#groups").append(html);
-                    }
-                }
-            }
         });
     </script>
 {% endblock %}
@@ -92,13 +32,12 @@
 {% block content %}
     <h1>Groups</h1>
 
-    {% if user.is_superuser %}<a id="add_group" href="javascript:none()" class="button add">Add Group</a>{% endif %}
+    {% if user.is_superuser %}<a id="add_group" href="{% url group-add %}" class="button add">Add Group</a>{% endif %}
     <table id="groups">
         <tr>
             <th>Name</th>
             <th>Users</th>
             {% block group_headers %}{% endblock %}
-            <th></th>
             <th></th>
         </tr>
         {% for group in groups %}

@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Group
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseForbidden, \
-    HttpResponseNotAllowed
+    HttpResponseNotAllowed, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
@@ -82,48 +82,56 @@ def detail(request, id=None, template='group/detail.html'):
     if not (user.is_superuser or user.has_perm('admin', group)):
         return HttpResponseForbidden()
     
+    return render_to_response(template,
+                        {'object':group,
+                         'group':group,
+                         'users':group.user_set.all(),
+                         'url':reverse('group-permissions', args=[id])
+                         },
+                          context_instance=RequestContext(request))
+
+
+@login_required
+def edit(request, id=None, template="group/edit.html"):
+    """
+    Edit a group
+
+    @param id: id of group to edit, or None for a new group
+    @param template: template used for rendering a form
+    """
+    group = get_object_or_404(Group, id=id) if id else None
+    user = request.user
+
+    if not (user.is_superuser or user.has_perm('admin', group)):
+        return HttpResponseForbidden()
+
     method = request.method
-    if method == 'GET':
-        return render_to_response(template,
-                            {'object':group,
-                             'group':group,
-                             'users':group.user_set.all(),
-                             'url':reverse('group-permissions', args=[id])
-                             },
-                              context_instance=RequestContext(request))
-    
-    elif method == 'POST':
-        if request.POST:
+    if method == 'POST':
             # form data, this was a submission
             form = GroupForm(request.POST, instance=group)
             if form.is_valid():
-                new = False if group else True
                 group = form.save()
-                if new:
+                if not id:
                     view_group_created.send(sender=group, editor=user)
                 else:
                     view_group_edited.send(sender=group, editor=user)
 
-                return render_to_response("group/group_row.html",
-                    {'group':group}, 
-                    context_instance=RequestContext(request))
+                return HttpResponseRedirect(group.get_absolute_url())
             
-            content = json.dumps(form.errors)
-            return HttpResponse(content, mimetype='application/json')
-            
-        else:
-            form = GroupForm(instance=group)
-        
-        return render_to_response("group/edit.html",
-                        {'group':group, 'form':form},
-                        context_instance=RequestContext(request))
-    
     elif method == 'DELETE':
         group.delete()
         view_group_deleted.send(sender=group, editor=user)
         return HttpResponse('1', mimetype='application/json')
 
-    return HttpResponseNotAllowed(['PUT', 'HEADER'])
+    else:
+        form = GroupForm(instance=group)
+
+    return render_to_response(template, {
+            'form':form,
+            'group':group,
+        },
+        context_instance=RequestContext(request),
+    )
 
 
 @login_required

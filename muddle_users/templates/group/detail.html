@@ -25,12 +25,16 @@
 {% endblock %}
 
 {% block content %}
-<h1><a class="breadcrumb" href="{%url group-list %}">{% trans "Groups" %}</a> : {{ group.name }}</h1>
+<h1 class="breadcrumb"><a href="{%url group-list %}">{% trans "Groups" %}</a> : {{ group.name }}</h1>
+
 <div id="tabs">
     <ul>
-        <li><a href="#users"><span>Users</span></a></li>
+        <li><a href="#users"><span>{% trans "Users" %}</span></a></li>
         {% block tabs %}{% endblock %}
     </ul>
+
+    <a class="button edit" href="{% url group-edit group.id %}">Edit</a>
+
     <div id="users">
         {% block users %}{% include "group/users.html" %}{% endblock %}
     </div>

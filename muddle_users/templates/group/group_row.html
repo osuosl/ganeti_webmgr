@@ -3,9 +3,6 @@
     <td>{{ group.user_set.count }}</td>
     {% block table_cells %}{% endblock %}
     <td class="actions">
-        <div class="edit" title="edit"></div>
-    </td>
-    <td class="actions">
-        <div class="delete" title="delete"></div>
+        <a class="delete" title="delete" href="{% url group-edit group.id %}">123</a>
     </td>
 </tr>

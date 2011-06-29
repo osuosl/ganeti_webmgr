@@ -127,7 +127,7 @@ class TestGroupViews(TestCase):
     def test_view_edit(self):
         group = self.test_save()
         c = Client()
-        url = '/group/%s/'
+        url = '/group/%s/edit/'
 
         # anonymous user
         response = c.post(url % group.id, follow=True)
@@ -171,7 +171,7 @@ class TestGroupViews(TestCase):
         data = {'id':group.id}
         response = c.post(url % group.id, data)
         self.assertEqual(200, response.status_code)
-        self.assertEquals('application/json', response['content-type'])
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
 
         # setup signal
         self.signal_editor = self.signal_group = None
@@ -184,9 +184,7 @@ class TestGroupViews(TestCase):
         data = {'id':group.id, 'name':'EDITED_NAME'}
 
         response = c.post(url % group.id, data)
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'group/group_row.html')
+        self.assertRedirects(response, '/group/%s' % group.pk)
         group = Group.objects.get(id=group.id)
         self.assertEqual('EDITED_NAME', group.name)
 
@@ -200,7 +198,7 @@ class TestGroupViews(TestCase):
         """
         group = self.test_save()
         c = Client()
-        url = '/group/'
+        url = '/group/add/'
 
         # anonymous user
         response = c.post(url, follow=True)
@@ -232,7 +230,8 @@ class TestGroupViews(TestCase):
         # missing name
         response = c.post(url, {'name':''})
         self.assertEqual(200, response.status_code)
-        self.assertEquals('application/json', response['content-type'])
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'group/edit.html')
 
         # setup signal
         self.signal_editor = self.signal_group = None
@@ -243,14 +242,14 @@ class TestGroupViews(TestCase):
 
         # successful edit
         data = {'name':'ADD_NEW_GROUP'}
-        response = c.post(url, data, follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'group/group_row.html')
+        response = c.post(url, data)
+        group = Group.objects.get(name='ADD_NEW_GROUP')
+        self.assertRedirects(response, '/group/%s' % group.pk)
+
         self.assert_(Group.objects.filter(name='ADD_NEW_GROUP').exists())
 
         # check signal set properties
-        self.assertEqual(Group.objects.get(name='ADD_NEW_GROUP'), self.signal_group)
+        self.assertEqual(group, self.signal_group)
         self.assertEqual(user0, self.signal_user)
 
     def test_view_delete(self):
@@ -264,7 +263,7 @@ class TestGroupViews(TestCase):
         group0 = self.test_save()
         group1 = self.test_save(name='test2')
         c = Client()
-        url = '/group/%s/'
+        url = '/group/%s/edit/'
 
         # anonymous user
         response = c.delete(url % group0.id, follow=True)
