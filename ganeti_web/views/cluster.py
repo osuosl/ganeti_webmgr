@@ -36,10 +36,10 @@ from muddle_users import signals as muddle_user_signals
 
 from object_log.models import LogItem
 from object_log.views import list_for_object
-from util.client import GanetiApiError
 
 log_action = LogItem.objects.log_action
 
+from ganeti_web.util.client import GanetiApiError
 from ganeti_web.models import Cluster, ClusterUser, Profile, SSHKey
 from ganeti_web.views import render_403, render_404
 from ganeti_web.views.virtual_machine import render_vms

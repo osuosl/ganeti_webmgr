@@ -19,7 +19,7 @@
 from collections import defaultdict
 from ganeti_web import constants
 
-from util.client import GanetiApiError
+from ganeti_web.util.client import GanetiApiError
 
 def cluster_default_info(cluster, hypervisor=None):
     """
