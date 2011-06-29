@@ -21,7 +21,7 @@ from object_log.models import LogAction
 def build_vm_cache(user, object1, object2, object3, data):
     data = {}
     if object1 is not None:
-        data['cluster_slug']=object1.cluster.slug,
+        data['cluster_slug']=object1.cluster.slug
         data['hostname']=object1.hostname
     if object2 is not None:
         data['job_id'] = object2.job_id
@@ -31,7 +31,7 @@ def build_vm_cache(user, object1, object2, object3, data):
 def build_node_cache(user, object1, object2, object3, data):
     data = {}
     if object1 is not None:
-        data['cluster_slug']=object1.cluster.slug,
+        data['cluster_slug']=object1.cluster.slug
         data['hostname']=object1.hostname
     if object2 is not None:
         data['job_id'] = object2.job_id
