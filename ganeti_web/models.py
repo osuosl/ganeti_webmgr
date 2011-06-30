@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-
+import binascii
 import cPickle
 from datetime import datetime, timedelta
 from hashlib import sha1
@@ -32,6 +32,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import GenericForeignKey
 
 from django.core.validators import RegexValidator, MinValueValidator
+from django.utils.encoding import force_unicode
 from django.utils.translation import ugettext_lazy as _
 import re
 
@@ -41,6 +42,8 @@ from django.db.models.query import QuerySet
 from django.db.models.signals import post_save, post_syncdb
 from django.db.utils import DatabaseError
 from ganeti_web.logs import register_log_actions
+
+from django_fields.fields import EncryptedCharField
 
 from object_log.models import LogItem
 log_action = LogItem.objects.log_action
@@ -94,7 +97,10 @@ def get_rapi(hash, cluster):
         .values_list('hash','hostname','port','username','password')
     hash, host, port, user, password = credentials
     user = user if user else None
-    password = password if password else None
+    # decrypt password
+    # XXX django-fields only stores str, convert to None if needed
+    password = Cluster.decrypt_password(password) if password else None
+    password = None if password == 'None' else password
 
     # now that we know hash is fresh, check cache again. The original hash could
     # have been stale.  This avoids constructing a new RAPI that already exists.
@@ -940,7 +946,7 @@ class Cluster(CachedClusterObject):
     port = models.PositiveIntegerField(_('port'), default=5080)
     description = models.CharField(_('description'), max_length=128, blank=True, null=True)
     username = models.CharField(_('username'), max_length=128, blank=True, null=True)
-    password = models.CharField(_('password'), max_length=128, blank=True, null=True)
+    password = EncryptedCharField(_('password'), max_length=128, blank=True, null=True)
     hash = models.CharField(_('hash'), max_length=40, editable=False)
     
     # quota properties
@@ -960,6 +966,20 @@ class Cluster(CachedClusterObject):
 
     def __unicode__(self):
         return self.hostname
+
+    @classmethod
+    def decrypt_password(cls, value):
+        """
+        Convenience method for decrypted a password without an instance.
+        This was partly cribbed from django-fields which only allows decrypting
+        from a model instance.
+        """
+        field, chaff, chaff, chaff = Cluster._meta.get_field_by_name('password')
+        return force_unicode(
+            field.cipher.decrypt(
+                binascii.a2b_hex(value[len(field.prefix):])
+            ).split('\0')[0]
+        )
 
     def save(self, *args, **kwargs):
         self.hash = self.create_hash()
