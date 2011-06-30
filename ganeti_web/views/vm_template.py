@@ -38,11 +38,20 @@ def templates(request):
 
 
 @login_required
-def create(request): 
+def create(request, template_id=None):
+    """
+    View to create or edit a new VirtualMachineTemplate.
+
+    @param template_id Will populate the form with data from a template.
+    """
+    obj = None
+    if template_id:
+        obj = VirtualMachineTemplate.objects.get(pk=template_id)
+
     if request.method == "GET":
-        form = VirtualMachineTemplateForm()
+        form = VirtualMachineTemplateForm(instance=obj)
     elif request.method == "POST":
-        form = VirtualMachineTemplateForm(request.POST)
+        form = VirtualMachineTemplateForm(request.POST, instance=obj)
         if form.is_valid():
             template = form.save()
             return HttpResponseRedirect(reverse('template-detail', 
@@ -50,8 +59,14 @@ def create(request):
     else:
         return HttpResponseNotAllowed(["GET","POST"])
 
+    if obj:
+        action = reverse('template-edit', args=[template_id])
+    else:
+        action = reverse('template-create')
+
     return render_to_response('ganeti/vm_template/create.html', {
-        'form':form
+        'form':form,
+        'action':action,
         },
         context_instance = RequestContext(request)
     )

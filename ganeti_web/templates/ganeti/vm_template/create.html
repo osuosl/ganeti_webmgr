@@ -19,7 +19,7 @@
 
 {% block content %}
 <div id="virtualmachineform">
-    <form method="post" action="{% url template-create %}">
+    <form method="post" action="{{ action }}">
         <fieldset class="first_fieldset">
             <h1>{% trans "Create Template" %}</h1>
             {% vmfield form.template_name %}

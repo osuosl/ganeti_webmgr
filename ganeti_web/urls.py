@@ -129,10 +129,16 @@ urlpatterns += patterns('ganeti_web.views.node',
 
 # VirtualMachineTemplates
 urlpatterns += patterns('ganeti_web.views.vm_template',
+    # List
     url(r'^templates/$', 'templates', name='template-list'),
+    # Detail
     url(r'^template/(?P<template_id>\d+)/?$', 'detail', name='template-detail'),
+    # Delete
     url(r'^template/(?P<template_id>\d+)/delete/?$', 'delete', name='template-delete'),
-    url(r'^template/create/$', 'create', name='template-create')
+    # Create
+    url(r'^template/create/$', 'create', name='template-create'),
+    # Edit
+    url(r'^template/edit/(?P<template_id>\d+)/?$', 'create', name='template-edit'),
 )
 
 # VirtualMachines
