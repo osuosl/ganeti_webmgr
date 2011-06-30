@@ -46,7 +46,6 @@ from object_log.models import LogItem
 log_action = LogItem.objects.log_action
 
 from object_permissions.registration import register
-from object_permissions import signals as op_signals
 
 from muddle_users import signals as muddle_user_signals
 
@@ -54,7 +53,7 @@ from ganeti_web import constants, management
 from ganeti_web.fields import PreciseDateTimeField, SumIf
 from ganeti_web import permissions
 from ganeti_web.util import client
-from ganeti_web.util.client import GanetiApiError
+from ganeti_web.util.client import GanetiApiError, REPLACE_DISK_AUTO
 
 if settings.VNC_PROXY:
     from ganeti_web.util.vncdaemon.vapclient import request_forwarding
@@ -701,6 +700,16 @@ class VirtualMachine(CachedClusterObject):
             .update(last_job=job, ignore_cache=True)
         return job
 
+    def replace_disks(self, mode=REPLACE_DISK_AUTO, disks=None, node=None,
+                      iallocator=None):
+        id = self.rapi.ReplaceInstanceDisks(self.hostname, disks, mode, node,
+                                            iallocator)
+        job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
+        self.last_job = job
+        VirtualMachine.objects.filter(pk=self.id) \
+            .update(last_job=job, ignore_cache=True)
+        return job
+
     def setup_vnc_forwarding(self, sport=''):
         password = ''
         info_ = self.info
@@ -1053,8 +1062,7 @@ class Cluster(CachedClusterObject):
                 quotas[cluster] = custom
 
         return quotas
-    
-    
+
     def sync_virtual_machines(self, remove=False):
         """
         Synchronizes the VirtualMachines in the database with the information
@@ -1067,7 +1075,8 @@ class Cluster(CachedClusterObject):
 
         # add VMs missing from the database
         for hostname in filter(lambda x: unicode(x) not in db, ganeti):
-            VirtualMachine(cluster=self, hostname=hostname).save()
+            vm = VirtualMachine.objects.create(cluster=self, hostname=hostname)
+            vm.refresh()
 
         # deletes VMs that are no longer in ganeti
         if remove:
@@ -1088,7 +1097,8 @@ class Cluster(CachedClusterObject):
         
         # add Nodes missing from the database
         for hostname in filter(lambda x: unicode(x) not in db, ganeti):
-            Node(cluster=self, hostname=hostname).save()
+            node = Node.objects.create(cluster=self, hostname=hostname)
+            node.refresh()
         
         # deletes Nodes that are no longer in ganeti
         if remove:

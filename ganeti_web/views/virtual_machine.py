@@ -46,7 +46,7 @@ from ganeti_web.views import render_403
 from ganeti_web.forms.virtual_machine import NewVirtualMachineForm, \
     KvmModifyVirtualMachineForm, PvmModifyVirtualMachineForm, \
     HvmModifyVirtualMachineForm, ModifyConfirmForm, MigrateForm, RenameForm, \
-    ChangeOwnerForm
+    ChangeOwnerForm, ReplaceDisksForm
 from ganeti_web.templatetags.webmgr_tags import render_storage
 from ganeti_web.utilities import cluster_default_info, cluster_os_list, \
     compare, os_prettify, get_hypervisor
@@ -265,8 +265,7 @@ def migrate(request, cluster_slug, instance):
     """
     view used for initiating a Node Migrate job
     """
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    vm = get_object_or_404(VirtualMachine, hostname=instance)
+    vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
 
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
@@ -293,6 +292,43 @@ def migrate(request, cluster_slug, instance):
         form = MigrateForm()
 
     return render_to_response('ganeti/virtual_machine/migrate.html'
+                              ,
+        {'form':form, 'vm':vm, 'cluster':cluster},
+        context_instance=RequestContext(request))
+
+
+@login_required
+def replace_disks(request, cluster_slug, instance):
+    """
+    view used for initiating a Replace Disks job
+    """
+    vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
+    print vm.info
+    user = request.user
+    if not (user.is_superuser or user.has_any_perms(cluster, ['admin','replace_disks'])):
+        return render_403(request, _("You do not have sufficient privileges"))
+
+    if request.method == 'POST':
+        form = ReplaceDisksForm(vm, request.POST)
+        if form.is_valid():
+            try:
+                job = form.save()
+                job.refresh()
+                content = json.dumps(job.info)
+
+                # log information
+                log_action('VM_REPLACE_DISKS', user, vm, job)
+            except GanetiApiError, e:
+                content = json.dumps({'__all__':[str(e)]})
+        else:
+            # error in form return ajax response
+            content = json.dumps(form.errors)
+        return HttpResponse(content, mimetype='application/json')
+
+    else:
+        form = ReplaceDisksForm(vm)
+
+    return render_to_response('ganeti/virtual_machine/replace_disks.html'
                               ,
         {'form':form, 'vm':vm, 'cluster':cluster},
         context_instance=RequestContext(request))

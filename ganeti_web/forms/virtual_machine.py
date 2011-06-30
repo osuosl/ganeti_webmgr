@@ -25,9 +25,10 @@ from ganeti_web import constants
 from ganeti_web.fields import DataVolumeField
 from ganeti_web.models import (Cluster, ClusterUser, Organization,
                            VirtualMachineTemplate, VirtualMachine)
-from ganeti_web.utilities import cluster_default_info, cluster_os_list, contains
+from ganeti_web.utilities import cluster_default_info, cluster_os_list, contains, get_hypervisor
 from django.utils.translation import ugettext_lazy as _
-
+from ganeti_web.util.client import REPLACE_DISK_AUTO, REPLACE_DISK_PRI, REPLACE_DISK_CHG, \
+    REPLACE_DISK_SECONDARY
 
 
 class VirtualMachineForm(forms.ModelForm):
@@ -584,6 +585,7 @@ class HvmModifyVirtualMachineForm(ModifyVirtualMachineForm):
     def __init__(self, vm, *args, **kwargs):
         super(HvmModifyVirtualMachineForm, self).__init__(vm, *args, **kwargs)
 
+
 class PvmModifyVirtualMachineForm(ModifyVirtualMachineForm):
     hvparam_fields = ('root_path', 'kernel_path', 'kernel_args', 
         'initrd_path')
@@ -692,3 +694,86 @@ class RenameForm(forms.Form):
 class ChangeOwnerForm(forms.Form):
     """ Form used when modifying the owner of a virtual machine """
     owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label=_('Owner'))
+
+
+class ReplaceDisksForm(forms.Form):
+    """
+    Form used when replacing disks for a virtual machine
+    """
+    empty_field = constants.EMPTY_CHOICE_FIELD
+
+    MODE_CHOICES = (
+        (REPLACE_DISK_AUTO, _('Automatic')),
+        (REPLACE_DISK_PRI, _('Replace disks on primary')),
+        (REPLACE_DISK_SECONDARY, _('Replace disks secondary')),
+        (REPLACE_DISK_CHG, _('Replace secondary with new disk')),
+    )
+
+    mode = forms.ChoiceField(choices=MODE_CHOICES, label=_('Mode'))
+    disks = forms.MultipleChoiceField(label=_('Disks'), required=False)
+    node = forms.ChoiceField(label=_('Node'), choices=[empty_field], required=False)
+    iallocator = forms.BooleanField(initial=False, label=_('Iallocator'), required=False)
+    
+    def __init__(self, instance, *args, **kwargs):
+        super(ReplaceDisksForm, self).__init__(*args, **kwargs)
+        self.instance = instance
+
+        # set disk choices based on the instance
+        disk_choices = [(i, 'disk/%s' % i) for i,v in enumerate(instance.info['disk.sizes'])]
+        self.fields['disks'].choices = disk_choices
+
+        # set choices based on the instances cluster
+        cluster = instance.cluster
+        nodelist = [str(h) for h in cluster.nodes.values_list('hostname', flat=True)]
+        nodes = zip(nodelist, nodelist)
+        nodes.insert(0, self.empty_field)
+        self.fields['node'].choices = nodes
+
+        defaults = cluster_default_info(cluster, get_hypervisor(instance))
+        if defaults['iallocator'] != '' :
+            self.fields['iallocator'].initial = True
+            self.fields['iallocator_hostname'] = forms.CharField(
+                                    initial=defaults['iallocator'],
+                                    required=False,
+                                    widget = forms.HiddenInput())
+    
+    def clean(self):
+        data = self.cleaned_data
+        mode = data.get('mode')
+        if mode == REPLACE_DISK_CHG:
+            iallocator = data.get('iallocator')
+            node = data.get('node')
+            if not (iallocator or node):
+                msg = _('Node or iallocator is required when replacing secondary with new disk')
+                self._errors['mode'] = self.error_class([msg])
+
+            elif iallocator and node:
+                msg = _('Choose either node or iallocator')
+                self._errors['mode'] = self.error_class([msg])
+                
+        return data
+
+    def clean_disks(self):
+        """ format disks into a comma delimited string """
+        disks = self.cleaned_data.get('disks')
+        if disks is not None:
+            disks = ','.join(disks)
+        return disks
+
+    def clean_node(self):
+        node = self.cleaned_data.get('node')
+        return node if node else None
+
+    def save(self):
+        """
+        Start a replace disks job using the data in this form.
+        """
+        data = self.cleaned_data
+        mode = data['mode']
+        disks = data['disks']
+        node = data['node']
+        if data['iallocator']:
+            iallocator = data['iallocator_hostname']
+        else:
+            iallocator = None
+        return self.instance.replace_disks(mode, disks, node, iallocator)

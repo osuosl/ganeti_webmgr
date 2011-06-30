@@ -1,5 +1,5 @@
 {% with log_item.data as data %}
-    {% if log_item.object2_id %}
+    {% if log_item.object_id2 %}
         <a href="{% url job-detail data.cluster_slug data.job_id %}">Job #{{ data.job_id }}</a> -
     {% endif %}
     {% if user.is_superuser %}
