@@ -19,6 +19,7 @@
 from django.conf.urls.defaults import patterns, url
 from haystack.views import SearchView
 from django.contrib.auth.decorators import login_required
+import os
 from forms.autocomplete_search_form import autocomplete_search_form
 
 
@@ -51,8 +52,6 @@ urlpatterns = patterns('ganeti_web.views.general',
 urlpatterns += patterns('muddle_users.views.user',
     url(r'^accounts/profile/?', 'user_profile', name='profile',
         kwargs={'template':'ganeti/users/profile.html'}),
-    url(r'^user/(?P<user_id>\d+)/?$', 'user_detail', name="user-detail",
-        kwargs={'template':'ganeti/users/detail.html'}),
 )
 
 # Users
@@ -163,6 +162,7 @@ urlpatterns += patterns('ganeti_web.views.virtual_machine',
     url(r'^%s/startup/?$' % vm_prefix, 'startup', name="instance-startup"),
     url(r'^%s/reboot/?$' % vm_prefix, 'reboot', name="instance-reboot"),
     url(r'^%s/migrate/?$' % vm_prefix, 'migrate', name="instance-migrate"),
+    url(r'^%s/replace_disks/?$' % vm_prefix, 'replace_disks', name="instance-replace-disks"),
 
     # Delete
     url(r"^%s/delete/?$" % vm_prefix, "delete", name="instance-delete"),
@@ -212,4 +212,12 @@ urlpatterns += patterns('ganeti_web.views.search',
 )
 urlpatterns += patterns('haystack.views',
     url(r'^search/', login_required(SearchView(form_class=autocomplete_search_form)), name='search')
+)
+
+
+#The following is used to serve up local media files like images
+root = '%s/media' % os.path.dirname(os.path.realpath(__file__))
+urlpatterns += patterns('',
+    (r'^ganeti_web_media/(?P<path>.*)', 'django.views.static.serve',
+     {'document_root':  root}),
 )

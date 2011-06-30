@@ -1,0 +1,9 @@
+{% comment  %} Form for replacing disks of a virtual machine {% endcomment %}
+<script type="text/javascript" src="{{ SITE_ROOT }}/ganeti_web_media/js/replace_disks_form.js"></script>
+<form class="ajax_form vm_replace_disks_form" method="post" action="{% url instance-replace-disks cluster.slug vm.hostname %}">
+    <ul id="errors"></ul>
+    <table>
+    {{form}}
+    </table>
+    <input type="submit" class="submit" value="Replace Disks"/>
+</form>

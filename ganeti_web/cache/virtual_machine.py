@@ -18,7 +18,9 @@
 import cPickle
 from datetime import datetime
 
-from django.utils import simplejson
+# Per #6579, do not change this import without discussion.
+from django.utils import simplejson as json
+
 from twisted.internet import reactor
 from twisted.internet.defer import DeferredList, Deferred
 from twisted.web import client
@@ -64,12 +66,12 @@ class VirtualMachineCacheUpdater(object):
 
         return deferred
     
-    def process_cluster_info(self, json, cluster, callback):
+    def process_cluster_info(self, info, cluster, callback):
         """
         process data received from ganeti.
         """
         print '%s:' % cluster.hostname
-        infos = simplejson.loads(json)
+        infos = json.loads(info)
         self.timer.tick('info fetched from ganeti     ')
         updated = Counter()
         base = cluster.virtual_machines.all()

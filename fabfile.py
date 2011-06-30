@@ -32,6 +32,11 @@ PIP_INSTALL = {
 }
 
 GIT_INSTALL =  {
+    'ganeti_webmgr_layout':{
+        'url':'git://git.osuosl.org/gitolite/ganeti/ganeti_webmgr_layout',
+        'development':'develop',
+        'symlink':'ganeti_web_layout'
+        },
     'noVNC':{
         'url':'git://github.com/kanaka/noVNC.git',
         'development':'3859e1d35cf',
@@ -51,7 +56,12 @@ GIT_INSTALL =  {
         'url':'git://git.osuosl.org/gitolite/django/django_muddle_users',
         'development':'develop',
         'symlink':'muddle_users'
-    },
+        },
+    'muddle':{
+        'url':'git://git.osuosl.org/gitolite/django/muddle',
+        'development':'develop',
+        'symlink':'muddle'
+        },
     'twisted_vncauthproxy':{
         'url':'git://git.osuosl.org/gitolite/ganeti/twisted_vncauthproxy',
         'development':'develop',

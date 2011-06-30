@@ -14,40 +14,17 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
+from collections import defaultdict
 
-
-from django import forms
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
-from ganeti_web.models import VirtualMachine, Cluster, ClusterUser
+from ganeti_web.forms.importing import ImportForm, OrphanForm, VirtualMachineForm
+from ganeti_web.models import VirtualMachine, Cluster
 from ganeti_web.views import render_403
 from ganeti_web.views.general import update_vm_counts
 from django.utils.translation import ugettext as _
-
-class VirtualMachineForm(forms.Form):
-    virtual_machines = forms.MultipleChoiceField()
-    
-    def __init__(self, choices, *args, **kwargs):
-        super(VirtualMachineForm, self).__init__(*args, **kwargs)
-        self.fields['virtual_machines'].choices = choices
-
-
-class OrphanForm(VirtualMachineForm):
-    """
-    Form used for assigning owners to VirtualMachines that do not yet have an
-    owner (orphans).
-    """
-    owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all())
-
-
-class ImportForm(VirtualMachineForm):
-    """
-    Form used for assigning owners to VirtualMachines that do not yet have an
-    owner (orphans).
-    """
-    owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), required=False)
 
 
 @login_required
@@ -82,15 +59,12 @@ def orphans(request):
             # update the owner and save the vm.  This isn't the most efficient
             # way of updating the VMs but we would otherwise need to group them
             # by cluster
-            orphaned = {}
+            orphaned = defaultdict(lambda:0)
             for id in vm_ids:
                 vm = VirtualMachine.objects.get(id=id)
                 vm.owner = owner
                 vm.save()
-                if vm.cluster_id in orphaned.keys():
-                    orphaned[vm.cluster_id] += 1
-                else:
-                    orphaned[vm.cluster_id] = 1
+                orphaned[vm.cluster_id] -= 1
             update_vm_counts(key='orphaned', data=orphaned)
             
             # remove updated vms from the list
@@ -106,7 +80,7 @@ def orphans(request):
         clusterdict[i.id] = i.hostname
     vms = [ (i[0], clusterdict[i[2]], i[1]) for i in vms_with_cluster ]
 
-    return render_to_response("importing/orphans.html", {
+    return render_to_response("ganeti/importing/orphans.html", {
         'vms': vms,
         'form':form,
         },
@@ -141,12 +115,9 @@ def missing_ganeti(request):
             vm_ids = data['virtual_machines']
             q = VirtualMachine.objects.filter(hostname__in=vm_ids)
 
-            missing = {}
+            missing = defaultdict(lambda:0)
             for i in q:
-                if i.cluster in missing.keys():
-                    missing[ i.cluster_id ] += 1
-                else:
-                    missing[ i.cluster_id ] = 1
+                missing[ i.cluster_id ] -= 1
             update_vm_counts(key='missing', data=missing)
 
             q.delete()
@@ -171,7 +142,7 @@ def missing_ganeti(request):
 
     vms = vms_tuplelist
         
-    return render_to_response("importing/missing.html", {
+    return render_to_response("ganeti/importing/missing.html", {
         'vms': vms,
         'form':form,
         },
@@ -206,19 +177,21 @@ def missing_db(request):
             owner = data['owner']
             vm_ids = data['virtual_machines']
             
-            import_ready = {}
+            import_ready = defaultdict(lambda:0)
+            orphaned = defaultdict(lambda:0)
+
             # create missing VMs
             for vm in vm_ids:
                 cluster_id, host = vm.split(':')
                 cluster = Cluster.objects.get(id=cluster_id)
                 VirtualMachine(hostname=host, cluster=cluster, owner=owner).save()
+                import_ready[cluster.pk] -= 1
+                if owner is None:
+                    orphaned[cluster.pk] += 1
 
-                if cluster.hostname in import_ready.keys():
-                    import_ready[cluster.pk] += 1
-                else:
-                    import_ready[cluster.pk] = 1
             update_vm_counts(key='import_ready', data=import_ready)
-            
+            update_vm_counts(key='orphaned', data=orphaned)
+
             # remove created vms from the list
             vms = filter(lambda x: unicode(x[0]) not in vm_ids, vms)
 
@@ -238,7 +211,7 @@ def missing_db(request):
 
     vms = vms_tuplelist
 
-    return render_to_response("importing/missing_db.html", {
+    return render_to_response("ganeti/importing/missing_db.html", {
         'vms': vms,
         'form':form,
         },

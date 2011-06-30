@@ -18,7 +18,7 @@
 
 
 from ganeti_web.tests.call_proxy import CallProxy, ResponseMap
-from util import client
+from ganeti_web.util import client
 
 
 class MethodProxy(object):
@@ -702,6 +702,7 @@ class RapiProxy(client.GanetiRapiClient):
         CallProxy.patch(instance, 'MigrateInstance', False, 1)
         CallProxy.patch(instance, 'RenameInstance', False, 1)
         CallProxy.patch(instance, 'RedistributeConfig', False, 1)
+        CallProxy.patch(instance, 'ReplaceInstanceDisks', False, 1)
         CallProxy.patch(instance, 'SetNodeRole', False, 1)
         CallProxy.patch(instance, 'EvacuateNode', False, 1)
         CallProxy.patch(instance, 'MigrateNode', False, 1)

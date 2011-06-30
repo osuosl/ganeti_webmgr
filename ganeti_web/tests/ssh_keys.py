@@ -134,14 +134,14 @@ class TestSSHKeys(TestCase):
             response = c.get( reverse("key-get", args=[key.id]) )
             self.assertEqual( 200, response.status_code )
             self.assertEquals("text/html; charset=utf-8", response["content-type"])
-            self.assertTemplateUsed(response, "ssh_keys/form.html")
+            self.assertTemplateUsed(response, "ganeti/ssh_keys/form.html")
             self.assertContains(response, key.key, count=1)
 
             # new object is being created
             response = c.get( reverse("key-get") )
             self.assertEqual( 200, response.status_code )
             self.assertEquals("text/html; charset=utf-8", response["content-type"])
-            self.assertTemplateUsed(response, "ssh_keys/form.html")
+            self.assertTemplateUsed(response, "ganeti/ssh_keys/form.html")
             self.assertNotContains(response, key.key,)
 
             # 404 for non-existing object
@@ -156,7 +156,7 @@ class TestSSHKeys(TestCase):
         response = c.get('/user/%s/key/' % user.pk)
         self.assertEqual( 200, response.status_code )
         self.assertEquals("text/html; charset=utf-8", response["content-type"])
-        self.assertTemplateUsed(response, "ssh_keys/form.html")
+        self.assertTemplateUsed(response, "ganeti/ssh_keys/form.html")
 
     def test_saving(self):
         """
@@ -196,7 +196,7 @@ class TestSSHKeys(TestCase):
             # successful creation of new object
             response = c.post( reverse("key-save"), {"key": "ssh-rsa t t@t", 'user':user.pk})
             self.assertEqual( 200, response.status_code )
-            self.assertTemplateUsed( response, "ssh_keys/row.html" )
+            self.assertTemplateUsed(response, "ganeti/ssh_keys/row.html" )
             self.assertContains( response, "t@t", count=1 )
 
     def test_deletion(self):

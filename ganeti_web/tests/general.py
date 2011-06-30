@@ -20,6 +20,9 @@ from django.contrib.auth.models import User, Group
 from django.core.cache import cache
 from django.test import TestCase
 from django.test.client import Client
+# Per #6579, do not change this import without discussion.
+from django.utils import simplejson as json
+
 from django_test_tools.views import ViewTestMixin
 from ganeti_web.models import SSHKey
 
@@ -110,7 +113,7 @@ class TestGeneralViews(TestCase, ViewTestMixin):
 
         url = "/"
         args = []
-        template = "overview.html"
+        template = "ganeti/overview.html"
         mimetype = "text/html; charset=utf-8"
         status = 200
 
@@ -183,7 +186,7 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         
         url = "/used_resources/"
         args = {}
-        template = "overview/used_resources_data.html"
+        template = "ganeti/overview/used_resources_data.html"
         mimetype = "text/html; charset=utf-8"
 
         # anonymous user
@@ -313,7 +316,7 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         user2.revoke_all(cluster)
 
         # get API key
-        import settings, json
+        import settings
         key = settings.WEB_MGR_API_KEY
 
         url = '/keys/%s/'

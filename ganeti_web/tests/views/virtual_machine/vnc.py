@@ -19,7 +19,7 @@ class TestVirtualMachineVNCViews(TestVirtualMachineViewsBase):
         """
         url = "/cluster/%s/%s/vnc/"
         args = (cluster.slug, vm.hostname)
-        self.validate_get(url, args, 'virtual_machine/novnc.html')
+        self.validate_get(url, args, 'ganeti/virtual_machine/novnc.html')
 
     def test_view_vnc_proxy(self):
         """

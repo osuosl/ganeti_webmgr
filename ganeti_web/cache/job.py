@@ -17,7 +17,9 @@
 
 import cPickle
 
-from django.utils import simplejson
+# Per #6579, do not change this import without discussion.
+from django.utils import simplejson as json
+
 from twisted.internet import reactor
 from twisted.internet.defer import DeferredList, Deferred
 from twisted.web import client
@@ -53,12 +55,12 @@ class JobCacheUpdater(object):
         d.addCallback(self.process_cluster_info, cluster, deferred.callback)
         return deferred
 
-    def process_cluster_info(self, json, cluster, callback):
+    def process_cluster_info(self, info, cluster, callback):
         """
         process data received from ganeti.
         """
         print '%s:' % cluster.hostname
-        ids = simplejson.loads(json)
+        ids = json.loads(info)
         self.timer.tick('info fetched from ganeti     ')
         updated = Counter()
 
@@ -75,6 +77,7 @@ class JobCacheUpdater(object):
         #
         # XXX don't bother checking to see whether this query needs to run.  It
         # normal usage it will almost always need to
+        # XXX undefined name "infos"
         def update_timestamps(result):
             print '    updated: %s out of %s' % (updated, len(infos))
             self.timer.tick('records or timestamps updated')

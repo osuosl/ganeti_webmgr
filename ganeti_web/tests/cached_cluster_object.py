@@ -22,7 +22,7 @@ import time
 from django.conf import settings
 from django.test import TestCase
 
-from util import client
+from ganeti_web.util import client
 from ganeti_web.tests.rapi_proxy import RapiProxy
 from ganeti_web.tests.call_proxy import CallProxy
 from ganeti_web import models

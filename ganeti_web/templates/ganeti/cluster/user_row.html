@@ -1,0 +1,9 @@
+{# customized user row for cluster #}
+
+{% extends "object_permissions/permissions/user_row.html" %}
+
+{%block table_cells%}
+    {% with user_detail.profile as cluster_user %}
+        {% include "ganeti/cluster/user_quota.html" %}
+    {% endwith %}
+{%endblock%}

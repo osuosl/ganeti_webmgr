@@ -4,7 +4,7 @@ from ganeti_web import models
 from ganeti_web.models import VirtualMachineTemplate
 from ganeti_web.tests.rapi_proxy import JOB_RUNNING
 from ganeti_web.tests.views.virtual_machine.base import TestVirtualMachineViewsBase
-from util import client
+from ganeti_web.util import client
 
 __all__ = ['TestVirtualMachineCreateView', 'TestVirtualMachineRecoverView']
 
@@ -60,7 +60,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         response = c.post(url % '', data_)
         self.assertEqual(200, response.status_code) # 302 if vm creation succeeds
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/create.html')
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
 
         # POST - over disk quota (user's first WM)
@@ -70,7 +70,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         response = c.post(url % '', data_)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/create.html')
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
 
         # POST - over cpu quota (user's first VM)
@@ -80,7 +80,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         response = c.post(url % '', data_)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/create.html')
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
 
         # POST - over ram quota (user's first VM) (start = False)
@@ -104,7 +104,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         response = c.post(url % '', data_)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/create.html')
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
 
         # POST - over cpu quota (user's first VM) (start = False)
@@ -151,7 +151,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         response = c.post(url % '', data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/create.html')
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
 
     def test_view_create_data_wrong_cluster(self):
@@ -188,7 +188,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         response = c.post(url % '', data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/create.html')
 
     def test_view_create_data_required_keys(self):
         """
@@ -227,7 +227,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
             response = c.post(url % '', data_)
             self.assertEqual(200, response.status_code)
             self.assertEqual('text/html; charset=utf-8', response['content-type'])
-            self.assertTemplateUsed(response, 'virtual_machine/create.html')
+            self.assertTemplateUsed(response, 'ganeti/virtual_machine/create.html')
             self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
 
     def test_view_create_data_ram_quota_exceeded(self):
@@ -262,7 +262,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         response = c.post(url % '', data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/create.html')
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
 
     def test_view_create_data_disk_quota_exceeded(self):
@@ -297,7 +297,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         response = c.post(url % '', data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/create.html')
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
 
     def test_view_create_data_cpu_quota_exceeded(self):
@@ -334,7 +334,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         response = c.post(url % '', data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/create.html')
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
 
     def test_view_create_data_invalid_owner(self):
@@ -368,7 +368,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         response = c.post(url % '', data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/create.html')
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
 
     def test_view_create_data_iallocator(self):
@@ -402,7 +402,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         response = c.post(url % '', data, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create_status.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/create_status.html')
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertTrue(user.has_perm('admin', new_vm))
 
@@ -442,7 +442,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         response = c.post(url % '', data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/create.html')
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
 
     def test_view_create_data(self):
@@ -482,7 +482,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         response = c.post(url % '', data_, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create_status.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/create_status.html')
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
         self.assert_(user.has_perm('admin', new_vm))
@@ -495,7 +495,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         response = c.post(url % '', data, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create_status.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/create_status.html')
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
         self.assert_(user.has_perm('admin', new_vm))
@@ -510,7 +510,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         response = c.post(url % '', data_)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/create.html')
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
         user.revoke_all(cluster)
 
@@ -520,7 +520,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         response = c.post(url % '', data, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create_status.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/create_status.html')
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
         self.assert_(user.has_perm('admin', new_vm))
@@ -532,7 +532,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         response = c.post(url % '', data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/create.html')
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
         cluster.rapi.CreateInstance.error = None
 
@@ -542,7 +542,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         response = c.post(url % '', data_, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create_status.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/create_status.html')
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
         self.assert_(user1.has_perm('admin', new_vm))
@@ -564,7 +564,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         response = c.post(url % '', data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/create.html')
         self.assertFalse(VirtualMachine.objects.filter(hostname='new.vm.hostname').exists())
         user.revoke_all(cluster)
         group.revoke_all(cluster)
@@ -578,7 +578,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         response = c.post(url % '', data, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create_status.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/create_status.html')
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
         self.assert_(group.has_perm('admin', new_vm))
@@ -591,7 +591,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         response = c.post(url % '', data, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create_status.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/create_status.html')
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
         self.assert_(group.has_perm('admin', new_vm))
@@ -605,7 +605,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         response = c.post(url % '', data, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create_status.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/create_status.html')
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
         self.assert_(group.has_perm('admin', new_vm))
@@ -618,7 +618,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         response = c.post(url % '', data_, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create_status.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/create_status.html')
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
         self.assert_(group1.has_perm('admin', new_vm))
@@ -649,7 +649,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         response = c.get(url % '')
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/create.html')
         user.revoke_all(cluster)
 
         # authorized GET (cluster admin permissions)
@@ -657,7 +657,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         response = c.get(url % '')
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/create.html')
         user.revoke_all(cluster)
 
         # authorized GET (superuser)
@@ -666,7 +666,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         response = c.get(url % '')
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/create.html')
 
         # GET unknown cluster
         response = c.get(url % 'DOES_NOT_EXIST')
@@ -676,7 +676,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         response = c.get(url % cluster.slug)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/create.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/create.html')
 
 
 class TestVirtualMachineRecoverView(TestVirtualMachineViewsBase):
@@ -697,8 +697,8 @@ class TestVirtualMachineRecoverView(TestVirtualMachineViewsBase):
         """
         url = '/vm/add/'
         args = tuple()
-        fail_template = 'virtual_machine/create.html'
-        success_template = 'virtual_machine/create_status.html'
+        fail_template = 'ganeti/virtual_machine/create.html'
+        success_template = 'ganeti/virtual_machine/create_status.html'
 
         template = VirtualMachineTemplate()
         template.save()
@@ -753,7 +753,7 @@ class TestVirtualMachineRecoverView(TestVirtualMachineViewsBase):
         args = (cluster.slug, vm.hostname)
 
         # vm with no template should redirect
-        self.assert_200(url, args, [superuser], template='virtual_machine/detail.html', follow=True)
+        self.assert_200(url, args, [superuser], template='ganeti/virtual_machine/detail.html', follow=True)
 
         template = VirtualMachineTemplate()
         template.save()
@@ -762,4 +762,4 @@ class TestVirtualMachineRecoverView(TestVirtualMachineViewsBase):
 
         self.assert_standard_fails(url, args)
         users = [superuser, vm_admin, vm_modify, cluster_admin]
-        self.assert_200(url, args, users, template='virtual_machine/create.html')
+        self.assert_200(url, args, users, template='ganeti/virtual_machine/create.html')
