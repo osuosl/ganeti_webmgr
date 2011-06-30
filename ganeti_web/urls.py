@@ -131,6 +131,7 @@ urlpatterns += patterns('ganeti_web.views.node',
 urlpatterns += patterns('ganeti_web.views.vm_template',
     url(r'^templates/$', 'templates', name='template-list'),
     url(r'^template/(?P<template_id>\d+)/?$', 'detail', name='template-detail'),
+    url(r'^template/(?P<template_id>\d+)/delete/?$', 'delete', name='template-delete'),
     url(r'^template/create/$', 'create', name='template-create')
 )
 

@@ -66,3 +66,14 @@ def detail(request, template_id):
         context_instance = RequestContext(request)
     )
 
+
+@login_required
+def delete(request, template_id):
+    if request.method == "DELETE":
+        try:
+            vm_template = VirtualMachineTemplate.objects.get(pk=template_id)
+            vm_template.delete()
+        except VirtualMachineTemplate.DoesNotExist:
+            return HttpResponse('-1', mimetype='application/json')
+        return HttpResponse('1', mimetype='application/json')
+    return HttpResponseNotAllowed(["DELETE"])

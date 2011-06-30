@@ -3,12 +3,40 @@
 {% load webmgr_tags %}
 
 {% block title %}{% trans "Template" %}{% endblock title %}
+{% block head %}
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+    $("a.delete").live("click", function(){
+        if (confirm("{% trans 'Are you sure you want to delete this template' %}?")) {
+            $("a.delete").text("{% trans 'Deleting' %}...");
+            $("a.delete").removeAttr("href");
+            $("a.delete").addClass("deleting");
+            $("a.delete").removeClass("delete");
 
+            var href = "{% url template-delete template.id %}";
+            $.delete_(href, function(data){
+                window.location = "{% url template-list %}";
+            });
+        }
+        return false;
+    });
+});
+</script>
+{% endblock head %}
 {% block content %}
 <h1>
     <a class="breadcrumb" href="{% url template-list %}">{% trans "Template" %}</a>
      : {{template.template_name}}
 </h1>
+<ul id="actions">
+    <li>
+        <a class="button delete" href="{% url template-delete template.id %}">
+            {% trans "Delete" %}
+        </a>
+    </li>
+</ul>
+
 <table class="horizontal">
     <tr><th>{% trans "Description" %}</th><td>{{ template.description }}</td></tr>
     <tr>
