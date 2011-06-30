@@ -7,13 +7,13 @@
 
 {% block content %}
 
-<h1>
+<h1 class="breadcrumb">
     {% if cluster_admin %}
-    <a class="breadcrumb" href="{% url cluster-detail job.cluster.slug %}#virtual_machines">{{job.cluster.hostname|abbreviate_fqdn}}</a>
+    <a href="{% url cluster-detail job.cluster.slug %}#virtual_machines">{{job.cluster.hostname|abbreviate_fqdn}}</a>
     {% else %}
-    <span class="breadcrumb">{{job.cluster.hostname|abbreviate_fqdn}}</span>
+    <span>{{job.cluster.hostname|abbreviate_fqdn}}</span>
     {% endif %}
-    : <span class="breadcrumb">Jobs</span>
+    : <span>Jobs</span>
     : {{ job.job_id }}
 </h1>
 

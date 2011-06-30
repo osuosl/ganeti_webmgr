@@ -36,7 +36,7 @@
 <div id="virtualmachineform">
     <form method="post" action="{% url instance-create %}">
         <fieldset class="first_fieldset">
-            <h1><span class="breadcrumb">{% trans "Virtual Machine" %}</span> : {% trans "Create" %}</h1>
+            <h1 class="breadcrumb"><span>{% trans "Virtual Machine" %}</span> : {% trans "Create" %}</h1>
             {% vmfield form.owner %}
             {% vmfield form.cluster %}
             {% vmfield form.hypervisor %}

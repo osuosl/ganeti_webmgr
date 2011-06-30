@@ -10,9 +10,9 @@
 
 {% block content %}
 
-<h1><a class="breadcrumb" href="{% url cluster-list %}">{% trans "Cluster" %}</a> :
+<h1 class="breadcrumb"><a href="{% url cluster-list %}">{% trans "Cluster" %}</a> :
 {% if cluster %}
-    <a class="breadcrumb" href="{% url cluster-detail cluster.slug %}">{{ cluster.hostname }}</a>
+    <a href="{% url cluster-detail cluster.slug %}">{{ cluster.hostname }}</a>
     : {% trans "Edit" %}
 {% else %}{% trans "Add" %}{% endif %}</h1>
 
