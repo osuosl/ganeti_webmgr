@@ -499,6 +499,14 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
         return data
 
 
+class VirtualMachineTemplateCopyForm(forms.Form):
+    """
+    Form used to when copying a VirtualMachineTemplate
+    """
+    template_name = forms.CharField(label=_('Template Name'), max_length=255)
+    description = forms.CharField(label=_('Description'), max_length=255, required=False)
+
+
 class ModifyVirtualMachineForm(VirtualMachineForm):
     """
     Base modify class.
@@ -725,3 +733,4 @@ class RenameForm(forms.Form):
 class ChangeOwnerForm(forms.Form):
     """ Form used when modifying the owner of a virtual machine """
     owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label=_('Owner'))
+

@@ -1,0 +1,20 @@
+{% extends "menu_base.html" %}
+{% load i18n %}
+{% load webmgr_tags %}
+
+{% block title %}{% trans "Copy Template" %}{% endblock title %}
+{% block content %}
+<h1>
+    <a class="breadcrumb" href="{% url template-detail template.id %}">{{template.template_name}}</a>
+     : {% trans "Copy" %}
+</h1>
+<div id="virtualmachineform">
+    <form method="post" action="{% url template-copy template.id %}">
+        <fieldset class="first_fieldset">
+            {% vmfield form.template_name %}
+            {% vmfield form.description %}
+        </fieldset>
+        <input class="submit" type="submit" value="{% trans "Copy" %}">
+    </form>
+</div>
+{% endblock content %}

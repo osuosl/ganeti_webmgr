@@ -139,6 +139,8 @@ urlpatterns += patterns('ganeti_web.views.vm_template',
     url(r'^template/create/$', 'create', name='template-create'),
     # Edit
     url(r'^template/edit/(?P<template_id>\d+)/?$', 'create', name='template-edit'),
+    # Copy
+    url(r'^template/copy/(?P<template_id>\d+)/?$', 'copy', name='template-copy'),
 )
 
 # VirtualMachines

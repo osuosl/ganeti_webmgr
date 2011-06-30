@@ -24,7 +24,8 @@ from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
 from ganeti_web.models import VirtualMachineTemplate
-from ganeti_web.forms.virtual_machine import VirtualMachineTemplateForm
+from ganeti_web.forms.virtual_machine import VirtualMachineTemplateForm, \
+    VirtualMachineTemplateCopyForm
 
 
 @login_required
@@ -80,6 +81,37 @@ def detail(request, template_id):
         },
         context_instance = RequestContext(request)
     )
+
+
+@login_required
+def copy(request, template_id):
+    """
+    View used to create a copy of a VirtualMachineTemplate
+    """
+    obj = get_object_or_404(VirtualMachineTemplate, pk=template_id)
+    if request.method == "GET":
+        form = VirtualMachineTemplateCopyForm()
+        return render_to_response('ganeti/vm_template/copy.html', {
+            'form':form,
+            'template':obj,
+            },
+            context_instance = RequestContext(request)
+        )
+    elif request.method == "POST":
+        form = VirtualMachineTemplateCopyForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            name = data.get('template_name', 'unnamed')
+            desc = data.get('description', None)
+            # Set pk to None to create new object instead of editing
+            #  current one.
+            obj.pk = None
+            obj.template_name = name
+            obj.description = desc
+            obj.save()
+        return HttpResponseRedirect(reverse('template-detail', 
+                            args=[obj.id]))
+    return HttpResponseNotAllowed(["GET", "POST"])
 
 
 @login_required

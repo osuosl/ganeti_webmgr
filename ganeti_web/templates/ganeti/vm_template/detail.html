@@ -36,6 +36,11 @@ $(document).ready(function() {
         </a>
     </li>
     <li>
+        <a class="button edit" href="{% url template-copy template.id %}">
+            {% trans "Copy" %}
+        </a>
+    </li>
+    <li>
         <a class="button delete" href="{% url template-delete template.id %}">
             {% trans "Delete" %}
         </a>
