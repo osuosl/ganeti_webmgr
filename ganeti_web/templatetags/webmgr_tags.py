@@ -21,7 +21,6 @@ from datetime import datetime
 
 from math import log10
 import re
-import json as json_lib
 from django.contrib.sites.models import Site
 
 from django.db.models import Count
@@ -332,11 +331,6 @@ def format_online_nodes(cluster):
         else:
             online = values['count']
     return "%d/%d" % (online, offline+online)
-
-
-@register.filter
-def json(obj):
-    return mark_safe(json_lib.dumps(obj))
 
 
 @register.tag
