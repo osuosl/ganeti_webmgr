@@ -202,8 +202,17 @@
         {% endif %}
     </ul>
     <div id="overview" class="tab_content">
+		{% if instance.cluster.username %}
         <ul id="actions">
+             {% if cluster_admin %}
+                <li>
+                    <a class="button edit" href="{% url instance-reparent cluster.slug instance.hostname %}">
+                        {% trans "Change Owner" %}
+                    </a>
+                </li>
+            {% endif %}
             {% with instance.cluster.username as username %}
+			{% if username %}
                 {% if modify and username %}
                     <li>
                         <a class="button edit" href="{% url instance-modify cluster.slug instance.hostname %}">
@@ -216,14 +225,7 @@
                         </a>
                     </li>
                 {% endif %}
-                {% if cluster_admin %}
-                    <li>
-                        <a class="button edit" href="{% url instance-reparent cluster.slug instance.hostname %}">
-                            {% trans "Change Owner" %}
-                        </a>
-                    </li>
-                {% endif %}
-                {% if remove and username %}
+               {% if remove and username %}
                     <li>
                         <a class="button delete" href="{% url instance-delete cluster.slug instance.hostname %}">
                             {% trans "Delete" %}
@@ -273,8 +275,10 @@
                     </li>
                     {% endifequal %}
                 {% endif %}
+			{% endif %}
             {% endwith %}
         </ul>
+		{% endif %}
 
         {% with instance.info as info %}
         {% if info %}
