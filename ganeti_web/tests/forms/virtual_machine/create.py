@@ -260,6 +260,18 @@ class TestNewVirtualMachineFormInit(TestCase, VirtualMachineTestCaseMixin):
         self.assertTrue('disk_size_0' in form.fields)
         self.assertTrue('disk_size_1' in form.fields)
 
+    def test_multiple_disks(self):
+        user.grant('admin', cluster0)
+        initial = dict(disks=[dict(size=123), dict(size=456)])
+        form = NewVirtualMachineForm(user, initial)
+        self.assertTrue('disk_size_0' in form.fields)
+        self.assertTrue('disk_size_1' in form.fields)
+        
+        data = form.data
+        self.assertEqual(2, data['disk_count'])
+        self.assertEqual(123, data['disk_size_0'])
+        self.assertEqual(456, data['disk_size_1'])
+
 
 class TestNewVirtualMachineFormValidation(TestVirtualMachineViewsBase):
 
@@ -426,3 +438,32 @@ class TestNewVirtualMachineFormValidation(TestVirtualMachineViewsBase):
         user.grant('create_vm', cluster)
         form = NewVirtualMachineForm(user, data)
         self.assertFalse(form.is_valid())
+
+    def test_no_disks(self):
+        """
+        test that diskless allows no disks
+        """
+        self.data['disk_count'] = 0
+        user.grant('create_vm', cluster)
+        form = NewVirtualMachineForm(user, self.data)
+        self.assertTrue(form.is_valid())
+
+    def test_multiple_disks_missing_size(self):
+        """
+        tests submitting multiple disks, and that one is missing disk_size
+        """
+        self.data['disk_count'] = 2
+        user.grant('create_vm', cluster)
+        form = NewVirtualMachineForm(user, self.data)
+        self.assertFalse(form.is_valid())
+
+    def test_multiple_disks_disk_size_calculation(self):
+        """
+        test that multiple disks are used in calculating total disk size
+        """
+        self.data['disk_count'] = 2
+        self.data['disk_size_1'] = 3836
+        user.grant('create_vm', cluster)
+        form = NewVirtualMachineForm(user, self.data)
+        self.assertTrue(form.is_valid())
+        self.assertEqual(4836, form.cleaned_data['disk_size'])
