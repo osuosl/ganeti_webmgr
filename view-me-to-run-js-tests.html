@@ -25,6 +25,14 @@
                     strictEqual(cap_first("test"), "Test");
                 });
 
+                test("cap_first multiple words", 1, function() {
+                    strictEqual(cap_first("test string"), "Test String");
+                });
+
+                test("format_op no replacements", 1, function() {
+                    strictEqual(format_op("Test"), "Test");
+                });
+
                 test("format_op no replacements", 1, function() {
                     strictEqual(format_op("Test string"), "Test String");
                 });

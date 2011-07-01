@@ -101,6 +101,18 @@ function display_job(cluster, data) {
     }
 }
 
+/* Capitalize the first letter of every word in a string. */
+function cap_first(str) {
+    var a = str.split(" ");
+    var len = a.length;
+
+    for (var i = 0; i < len; i++) {
+        a[i] = a[i][0].toUpperCase() + a[i].substring(1);
+    }
+
+    return a.join(" ");
+}
+
 function format_op(str){
     str = str.substring(3).toLowerCase();
     while(str.indexOf('_')!=-1) {
@@ -108,16 +120,6 @@ function format_op(str){
     }
     str = cap_first(str);
     return str
-}
-
-function cap_first(str) {
-    var new_str = '';
-    str = str.split(' ');
-    for(var i=0; i < str.length; i++) {
-        new_str += str[i].substring(0,1).toUpperCase() +
-        str[i].substring(1,str[i].length) + ' ';
-    }
-    return new_str;
 }
 
 $("#messages a.clear").live("click", function(event){
