@@ -4,18 +4,21 @@ from django.test import TestCase
 from ganeti_web import models
 from ganeti_web.forms.virtual_machine import NewVirtualMachineForm
 from ganeti_web.tests.rapi_proxy import RapiProxy, INFO
-from ganeti_web.tests.views.virtual_machine.base import VirtualMachineTestCaseMixin
+from ganeti_web.tests.views.virtual_machine.base import \
+    \
+    VirtualMachineTestCaseMixin, TestVirtualMachineViewsBase
 
-__all__ = ['TestNewVirtualMachineForm']
+__all__ = ['TestNewVirtualMachineFormInit',
+           'TestNewVirtualMachineFormValidation']
 
 VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
 
 global user, user1, group
-global cluster0, cluster1, cluster2, cluster3
+global cluster, cluster0, cluster1, cluster2, cluster3
 
 
-class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
+class TestNewVirtualMachineFormInit(TestCase, VirtualMachineTestCaseMixin):
 
     def setUp(self):
         global user, user1, group, cluster0, cluster1, cluster2, cluster3
@@ -258,4 +261,168 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         self.assertTrue('disk_size_1' in form.fields)
 
 
+class TestNewVirtualMachineFormValidation(TestVirtualMachineViewsBase):
 
+    context = globals()
+
+    def setUp(self):
+        global cluster
+        super(TestNewVirtualMachineFormValidation, self).setUp()
+        self.data = dict(cluster=cluster.id,
+                        start=True,
+                        owner=user.get_profile().id, #XXX remove this
+                        hostname='new.vm.hostname',
+                        disk_template='plain',
+                        disk_count=1,
+                        disk_size_0=1000,
+                        memory=256,
+                        vcpus=2,
+                        root_path='/',
+                        nic_type='paravirtual',
+                        disk_type = 'paravirtual',
+                        nic_link = 'br43',
+                        nic_mode='routed',
+                        boot_order='disk',
+                        os='image+ubuntu-lucid',
+                        pnode=cluster.nodes.all()[0],
+                        snode=cluster.nodes.all()[1])
+
+    def test_invalid_cluster(self):
+        """
+        An invalid cluster causes a form error.
+        """
+
+        data = self.data
+        data['cluster'] = -1
+        form = NewVirtualMachineForm(user, data)
+        self.assertFalse(form.is_valid())
+
+    def test_wrong_cluster(self):
+        """
+        A cluster the user isn't authorized for causes a form error.
+        """
+
+        cluster1 = Cluster(hostname='test2.osuosl.bak', slug='OSL_TEST2')
+        cluster1.save()
+        data = self.data
+        data['cluster'] = cluster.id
+        user.grant('create_vm', cluster1)
+        user.is_superuser = False
+        user.save()
+        form = NewVirtualMachineForm(user, data)
+        self.assertFalse(form.is_valid())
+
+    def test_required_keys(self):
+        """
+        If any of these keys are missing from the form data, a form error
+        should occur.
+        """
+
+        data = self.data
+
+        # grant user.
+        user.grant('create_vm', cluster)
+
+        for prop in ['cluster', 'hostname', 'disk_size_0', 'disk_type',
+                     'nic_type', 'nic_mode', 'vcpus', 'pnode', 'os',
+                     'disk_template', 'boot_order']:
+            data_ = data.copy()
+            del data_[prop]
+            form = NewVirtualMachineForm(user, data_)
+            self.assertFalse(form.is_valid(), prop)
+
+    def test_ram_quota_exceeded(self):
+        """
+        RAM quotas should cause form errors when exceeded.
+        """
+
+        data = self.data
+        data['memory'] = 2048
+
+        # Login and grant user.
+        user.grant('create_vm', cluster)
+
+        cluster.set_quota(user.get_profile(), dict(ram=1000, disk=2000, virtual_cpus=10))
+        form = NewVirtualMachineForm(user, data)
+        self.assertFalse(form.is_valid())
+
+    def test_data_disk_quota_exceeded(self):
+        """
+        Disk quotas, when enabled, should cause form errors when exceeded.
+        """
+
+        data = self.data
+        data['disk_size_0'] = 4000
+
+        # Login and grant user.
+        user.grant('create_vm', cluster)
+        cluster.set_quota(user.get_profile(), dict(ram=1000, disk=2000, virtual_cpus=10))
+
+        form = NewVirtualMachineForm(user, data)
+        self.assertFalse(form.is_valid())
+
+    def test_data_cpu_quota_exceeded(self):
+        """
+        You may not emulate NUMA systems that exceed your quota.
+
+        XXX should we also test more reasonable CPU limits?
+        """
+
+        data = self.data
+        data['vcpus'] = 200
+
+        # Login and grant user.
+        user.grant('create_vm', cluster)
+        cluster.set_quota(user.get_profile(), dict(ram=1000, disk=2000, virtual_cpus=10))
+
+        form = NewVirtualMachineForm(user, data)
+        self.assertFalse(form.is_valid())
+
+    def test_invalid_owner(self):
+        """
+        Obviously bogus owners should cause form errors.
+        """
+        url = '/vm/add/%s'
+        data = self.data
+        data['owner'] = -1
+
+        # Login and grant user.
+        self.assert_(c.login(username=user.username, password='secret'))
+        user.grant('create_vm', cluster)
+
+        form = NewVirtualMachineForm(user, data)
+        self.assertFalse(form.is_valid())
+
+    def test_iallocator(self):
+        """
+        The iallocator should be useable.
+        """
+
+        url = '/vm/add/%s'
+        data = self.data
+        data['iallocator'] = True
+        data['iallocator_hostname'] = "hail"
+
+        # Login and grant user.
+        user.grant('create_vm', cluster)
+        form = NewVirtualMachineForm(user, data)
+        self.assertTrue(form.is_valid())
+
+    def test_iallocator_missing(self):
+        """
+        Enabling the iallocator without actually specifying which iallocator
+        to run should cause a form error.
+        """
+
+        url = '/vm/add/%s'
+        data = self.data
+        data['iallocator'] = True
+
+        # Login and grant user.
+        user.grant('create_vm', cluster)
+        user.get_profile()
+        cluster.set_quota(user.get_profile(), dict(ram=1000, disk=2000, virtual_cpus=10))
+
+        user.grant('create_vm', cluster)
+        form = NewVirtualMachineForm(user, data)
+        self.assertFalse(form.is_valid())
