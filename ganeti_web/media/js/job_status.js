@@ -113,13 +113,15 @@ function cap_first(str) {
     return a.join(" ");
 }
 
-function format_op(str){
+/* Format an operation string.
+ *
+ * Operation strings look like "OP_DO_SOMETHING". They should be formatted to
+ * appear as "Do Something". */
+function format_op(str) {
     str = str.substring(3).toLowerCase();
-    while(str.indexOf('_')!=-1) {
-        str = str.replace('_',' ')
-    }
+    str = str.replace(/_/g, " ");
     str = cap_first(str);
-    return str
+    return str;
 }
 
 $("#messages a.clear").live("click", function(event){
