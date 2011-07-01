@@ -190,7 +190,7 @@ class TestCacheUpdater(TestCase, VirtualMachineTestCaseMixin):
         # run updater and refresh the objects from the db
         with MuteStdout():
             update_cache()
-        self.assert_(VirtualMachine.objects.filter(hostname='vm2.osuosl.bak').exists())
+        self.assertTrue(VirtualMachine.objects.filter(hostname='vm2.osuosl.bak').exists())
         vm0 = VirtualMachine.objects.filter(pk=vm0.id).values('mtime','cached','status','operating_system')[0]
         vm1 = VirtualMachine.objects.filter(hostname='vm2.osuosl.bak').values('mtime','cached','status','operating_system')[0]
         

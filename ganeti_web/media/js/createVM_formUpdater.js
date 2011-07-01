@@ -10,6 +10,10 @@ function formUpdater(url_choices, url_options, url_defaults){
     var pnode =                 $("#id_pnode").parent("p");
     var hypervisor =            $("#id_hypervisor");
     var disk_type =             $("#id_disk_type");
+    var disks =                 $("#disks");
+    var disk_count =            $("#id_disk_count");
+    var disk_add =              $("#disks .add");
+    var disk_delete =           $("#disks .delete");
     var nic_type =              $("#id_nic_type");
     var nic_link =              $("#id_nic_link");
     var disk_template =         $("#id_disk_template");
@@ -45,7 +49,7 @@ function formUpdater(url_choices, url_options, url_defaults){
 
         // only disable iallocator by default if there is no cluster selected
         // or the cluster already selected does not support iallocator
-        var def_iallocator = cluster_defaults['iallocator']
+        var def_iallocator = cluster_defaults['iallocator'];
         if (!iallocator.is(":checked")
             && (def_iallocator == undefined|| def_iallocator == '')
         ){
@@ -223,6 +227,9 @@ function formUpdater(url_choices, url_options, url_defaults){
                 }
             }
         });
+
+        disk_add.click(_add_disk);
+        disk_delete.live("click",_remove_disk);
     }
 
     // ----------------
@@ -448,5 +455,39 @@ function formUpdater(url_choices, url_options, url_defaults){
         // Show kvm specific hypervisor fields
         serial_console.show();
     }
+
+    function _add_disk() {
+        var count = disk_count.val();
+        disk_count.val(parseInt(count)+1);
+        var p = $('<p></p>');
+        var label = $("<label>Disk/" + count+ " Size</label>");
+        label.attr('for', "id_disk_size_" + count);
+        var input = $('<input type="text"/>');
+        input.attr("name", "disk_size_" + count);
+        input.attr("id", "id_disk_size_" + count);
+        p.append(label);
+        p.append(input);
+        disks.append(p);
+        disks.append('<div class="icon delete"></div>');
+    }
+
+    function _remove_disk() {
+        var count = disk_count.val();
+        disk_count.val(parseInt(count)-1);
+        var button = $(this);
+        button.prev("p").remove();
+        button.prev("ul").remove();
+        button.remove();
+
+        // renumber remaining disks
+        var i = 0;
+        $('#disks label').each(function(){
+            $(this).html("Disk/" + i + " Size");
+            i++;
+        });
+
+    }
+
+
 }
 

@@ -108,12 +108,12 @@ class TestNodeModel(TestCase, NodeTestCaseMixin):
             * Hash is copied from cluster
         """
         node, cluster = self.create_node()
-        self.assert_(node.id)
+        self.assertTrue(node.id)
         self.assertFalse(node.error)
         self.assertEqual(node.cluster_hash, cluster.hash)
         
         node = Node.objects.get(id=node.id)
-        self.assert_(node.info)
+        self.assertTrue(node.info)
         self.assertFalse(node.error)
     
     def test_hash_update(self):

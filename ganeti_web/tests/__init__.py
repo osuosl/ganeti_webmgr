@@ -26,7 +26,8 @@ from ganeti_web.tests.general import *
 from ganeti_web.tests.importing import *
 from ganeti_web.tests.importing_nodes import *
 from ganeti_web.tests.job import *
-from ganeti_web.tests.models.virtual_machine import *
+from ganeti_web.tests.forms import *
+from ganeti_web.tests.models import *
 from ganeti_web.tests.node import *
 from ganeti_web.tests.rapi_cache import *
 from ganeti_web.tests.ssh_keys import *

@@ -123,6 +123,8 @@ class NewVirtualMachineForm(VirtualMachineForm):
     templates = constants.HV_DISK_TEMPLATES
     nicmodes = constants.HV_NIC_MODES
 
+    disk_count = forms.IntegerField(initial=1,  widget=forms.HiddenInput())
+    #nic_count = forms.IntegerField(initial=1, widget=forms.HiddenInput())
     owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label=_('Owner'))
     cluster = forms.ModelChoiceField(queryset=Cluster.objects.none(), label=_('Cluster'))
     hypervisor = forms.ChoiceField(required=False, choices=[empty_field])
@@ -132,7 +134,6 @@ class NewVirtualMachineForm(VirtualMachineForm):
     os = forms.ChoiceField(label=_('Operating System'), choices=[empty_field])
     disk_template = forms.ChoiceField(label=_('Disk Template'),
                                       choices=templates)
-    disk_size = DataVolumeField(label=_('Disk Size'), min_value=100)
     disk_type = forms.ChoiceField(label=_('Disk Type'), choices=[empty_field])
     nic_mode = forms.ChoiceField(label=_('NIC Mode'), choices=nicmodes)
     nic_type = forms.ChoiceField(label=_('NIC Type'), choices=[empty_field])
@@ -153,6 +154,22 @@ class NewVirtualMachineForm(VirtualMachineForm):
                 except Cluster.DoesNotExist:
                     # defer to clean function to return errors
                     pass
+
+            # Load disks.  Prefer raw fields, but unpack from disks (dict)
+            # if the raw fields are not available.  This allows modify and
+            # API calls to use a cleaner syntax
+            if 'disks' in initial and not 'disk_count' in initial:
+                disks = initial['disks']
+                initial['disk_count'] = disk_count = len(disks)
+                for i, disk in enumerate(disks):
+                    initial['disk_size_%s' % i] = disk['size']
+            else:
+                disk_count = int(initial.get('disk_count', 1))
+            nic_count = initial.get('nic_count', 1)
+        else:
+            disk_count = 1
+            nic_count = 1
+        
         if cluster is not None and cluster.info is not None:
             # set choices based on selected cluster if given
             oslist = cluster_os_list(cluster)
@@ -185,6 +202,7 @@ class NewVirtualMachineForm(VirtualMachineForm):
             if hv == 'kvm':
                 self.fields['serial_console'].initial = defaults['serial_console']
 
+
             # Set field choices and hypervisor
             if hv == 'kvm' or hv == 'xen-pvm':
                 self.fields['root_path'].initial = defaults['root_path']
@@ -193,14 +211,15 @@ class NewVirtualMachineForm(VirtualMachineForm):
                 self.fields['nic_type'].choices = defaults['nic_types']
                 self.fields['disk_type'].choices = defaults['disk_types']
                 self.fields['boot_order'].choices = defaults['boot_devices']
-                
+
                 self.fields['nic_type'].initial = defaults['nic_type']
                 self.fields['disk_type'].initial = defaults['disk_type']
                 self.fields['boot_order'].initial = defaults['boot_order']
             if hv == 'xen-pvm':
                 for field in self.pvm_exclude_fields:
                     del self.fields[field]
-
+        self.create_disk_fields(disk_count)
+            
         # set cluster choices based on the given owner
         if initial and 'owner' in initial and initial['owner']:
             try:
@@ -236,6 +255,13 @@ class NewVirtualMachineForm(VirtualMachineForm):
             else:
                 q = user.get_objects_any_perms(Cluster, ['admin','create_vm'])
             self.fields['cluster'].queryset = q
+    
+    def create_disk_fields(self, count):
+        self.disk_fields = range(count)
+        for i in range(count):
+            disk_size = DataVolumeField(min_value=100, required=True,
+                                        label=_("Disk/%s Size" % i))
+            self.fields['disk_size_%s'%i] = disk_size
 
     def clean_cluster(self):
         # Invalid or unavailable cluster
@@ -245,19 +271,12 @@ class NewVirtualMachineForm(VirtualMachineForm):
                 cluster detail page")
             self._errors['cluster'] = self.error_class([msg])
         return cluster
-
+    
     def clean(self):
         data = self.cleaned_data
 
         # First things first. Let's do any error-checking and validation which
         # requires combinations of data but doesn't require hitting the DB.
-
-        # Check that, if we are on any disk template but diskless, our
-        # disk_size is set and greater than zero.
-        if data.get("disk_template") != "diskless":
-            if not data.get("disk_size", 0):
-                self._errors["disk_size"] = self.error_class(
-                    [u"Disk size must be set and greater than zero"])
 
         pnode = data.get("pnode", '')
         snode = data.get("snode", '')
@@ -316,6 +335,12 @@ class NewVirtualMachineForm(VirtualMachineForm):
                 grantee = owner.user
             data['grantee'] = grantee
 
+        # sum disk sizes and build disks param for input into ganeti
+        disk_sizes = [data.get('disk_size_%s' % i) for i in range(data.get('disk_count'))]
+        disk_size = sum(disk_sizes)
+        data['disk_size'] = disk_size
+        data['disks'] = [dict(size=size) for size in disk_sizes]
+        
         # superusers bypass all permission and quota checks
         if not self.user.is_superuser and owner:
             msg = None
@@ -406,7 +431,7 @@ class NewVirtualMachineForm(VirtualMachineForm):
                 msg = u"%s." % _("Automatic Allocation was selected, but there is no \
                       IAllocator available.")
                 self._errors['iallocator'] = self.error_class([msg])
-        
+
         # Check options which depend on the the hypervisor type
         hv = data.get('hypervisor')
         disk_type = data.get('disk_type')

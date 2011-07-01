@@ -45,8 +45,8 @@ class TestRapiCache(TestCase):
         """
         cluster = self.cluster
         rapi = get_rapi(cluster.hash, cluster)
-        self.assert_(rapi)
-        self.assert_(isinstance(rapi, (client.GanetiRapiClient,)))
+        self.assertTrue(rapi)
+        self.assertTrue(isinstance(rapi, (client.GanetiRapiClient,)))
     
     def test_get_with_id(self):
         """
@@ -56,8 +56,8 @@ class TestRapiCache(TestCase):
         """
         cluster = self.cluster
         rapi = get_rapi(cluster.hash, cluster.id)
-        self.assert_(rapi)
-        self.assert_(isinstance(rapi, (client.GanetiRapiClient,)))
+        self.assertTrue(rapi)
+        self.assertTrue(isinstance(rapi, (client.GanetiRapiClient,)))
     
     def test_get_cached_client(self):
         """
@@ -68,8 +68,8 @@ class TestRapiCache(TestCase):
         """
         cluster = self.cluster
         rapi = get_rapi(cluster.hash, cluster.id)
-        self.assert_(rapi)
-        self.assert_(isinstance(rapi, (client.GanetiRapiClient,)))
+        self.assertTrue(rapi)
+        self.assertTrue(isinstance(rapi, (client.GanetiRapiClient,)))
         
         cached_rapi = get_rapi(cluster.hash, cluster)
         self.assertEqual(rapi, cached_rapi)
@@ -94,8 +94,8 @@ class TestRapiCache(TestCase):
         cluster.save()
         self.assertNotEqual(old_hash, cluster.hash, "new hash was not created")
         new_rapi = get_rapi(cluster.hash, cluster)
-        self.assert_(rapi)
-        self.assert_(isinstance(rapi, (client.GanetiRapiClient,)))
+        self.assertTrue(rapi)
+        self.assertTrue(isinstance(rapi, (client.GanetiRapiClient,)))
         self.assertNotEqual(rapi, new_rapi)
         self.assertFalse(old_hash in RAPI_CACHE, "old rapi client was not removed")
     
@@ -112,8 +112,8 @@ class TestRapiCache(TestCase):
         cluster.save()
         clear_rapi_cache()
         stale_rapi = get_rapi(stale_cluster.hash, stale_cluster)
-        self.assert_(stale_rapi)
-        self.assert_(isinstance(stale_rapi, (client.GanetiRapiClient,)))
+        self.assertTrue(stale_rapi)
+        self.assertTrue(isinstance(stale_rapi, (client.GanetiRapiClient,)))
         
         fresh_rapi = get_rapi(cluster.hash, cluster)
         self.assertEqual(stale_rapi, fresh_rapi)
@@ -133,6 +133,6 @@ class TestRapiCache(TestCase):
         clear_rapi_cache()
         fresh_rapi = get_rapi(cluster.hash, cluster)
         stale_rapi = get_rapi(stale_cluster.hash, stale_cluster)
-        self.assert_(stale_rapi)
-        self.assert_(isinstance(stale_rapi, (client.GanetiRapiClient,)))
+        self.assertTrue(stale_rapi)
+        self.assertTrue(isinstance(stale_rapi, (client.GanetiRapiClient,)))
         self.assertEqual(stale_rapi, fresh_rapi)
