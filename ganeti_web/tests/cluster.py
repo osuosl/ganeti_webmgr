@@ -77,11 +77,11 @@ class TestClusterModel(TestCase):
         """
         cluster = Cluster()
         cluster.save()
-        self.assert_(cluster.hash)
+        self.assertTrue(cluster.hash)
         
         cluster = Cluster(hostname='foo.fake.hostname', slug='different')
         cluster.save()
-        self.assert_(cluster.hash)
+        self.assertTrue(cluster.hash)
     
     def test_parse_info(self):
         """
@@ -151,7 +151,7 @@ class TestClusterModel(TestCase):
         # create new quota
         cluster.set_quota(user.get_profile(), user_quota)
         query = Quota.objects.filter(cluster=cluster, user=user.get_profile())
-        self.assert_(query.exists())
+        self.assertTrue(query.exists())
         self.assertEqual(user_quota, cluster.get_quota(user.get_profile()))
         
         # update quota with new values
@@ -184,9 +184,9 @@ class TestClusterModel(TestCase):
         vm_removed.save()
         
         cluster.sync_virtual_machines()
-        self.assert_(VirtualMachine.objects.get(cluster=cluster, hostname=vm_missing), 'missing vm was not created')
-        self.assert_(VirtualMachine.objects.get(cluster=cluster, hostname=vm_current.hostname), 'previously existing vm was not created')
-        self.assert_(VirtualMachine.objects.filter(cluster=cluster, hostname=vm_removed.hostname), 'vm not present in ganeti was not removed from db, even though remove flag was false')
+        self.assertTrue(VirtualMachine.objects.get(cluster=cluster, hostname=vm_missing), 'missing vm was not created')
+        self.assertTrue(VirtualMachine.objects.get(cluster=cluster, hostname=vm_current.hostname), 'previously existing vm was not created')
+        self.assertTrue(VirtualMachine.objects.filter(cluster=cluster, hostname=vm_removed.hostname), 'vm not present in ganeti was not removed from db, even though remove flag was false')
         
         cluster.sync_virtual_machines(True)
         self.assertFalse(VirtualMachine.objects.filter(cluster=cluster, hostname=vm_removed.hostname), 'vm not present in ganeti was not removed from db')
@@ -206,9 +206,9 @@ class TestClusterModel(TestCase):
         node_removed = Node.objects.create(cluster=cluster, hostname='does.not.exist.org')
         
         cluster.sync_nodes()
-        self.assert_(Node.objects.get(cluster=cluster, hostname=node_missing), 'missing node was not created')
-        self.assert_(Node.objects.get(cluster=cluster, hostname=node_current.hostname), 'previously existing node was not created')
-        self.assert_(Node.objects.filter(cluster=cluster, hostname=node_removed.hostname), 'node not present in ganeti was not removed from db, even though remove flag was false')
+        self.assertTrue(Node.objects.get(cluster=cluster, hostname=node_missing), 'missing node was not created')
+        self.assertTrue(Node.objects.get(cluster=cluster, hostname=node_current.hostname), 'previously existing node was not created')
+        self.assertTrue(Node.objects.filter(cluster=cluster, hostname=node_removed.hostname), 'node not present in ganeti was not removed from db, even though remove flag was false')
         
         cluster.sync_nodes(True)
         self.assertFalse(Node.objects.filter(cluster=cluster, hostname=node_removed.hostname), 'node not present in ganeti was not removed from db')
@@ -321,11 +321,11 @@ class TestClusterModel(TestCase):
 
         # redistribute_config enables ignore_cache flag
         job_id = cluster.redistribute_config().id
-        self.assert_(Job.objects.filter(id=job_id).exists())
+        self.assertTrue(Job.objects.filter(id=job_id).exists())
         cluster = Cluster.objects.get(id=cluster.id)
-        self.assert_(cluster.ignore_cache)
-        self.assert_(cluster.last_job_id)
-        self.assert_(Job.objects.filter(id=job_id).values()[0]['ignore_cache'])
+        self.assertTrue(cluster.ignore_cache)
+        self.assertTrue(cluster.last_job_id)
+        self.assertTrue(Job.objects.filter(id=job_id).values()[0]['ignore_cache'])
 
         # finished job resets ignore_cache flag
         cluster.rapi.GetJobStatus.response = JOB
@@ -333,7 +333,7 @@ class TestClusterModel(TestCase):
         self.assertFalse(cluster.ignore_cache)
         self.assertFalse(cluster.last_job_id)
         self.assertFalse(Job.objects.filter(id=job_id).values()[0]['ignore_cache'])
-        self.assert_(Job.objects.get(id=job_id).finished)
+        self.assertTrue(Job.objects.get(id=job_id).finished)
 
 
 class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
@@ -383,7 +383,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertTemplateUsed(response, 'registration/login.html')
         
         # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.get(url % args)
         self.assertEqual(403, response.status_code)
         
@@ -426,7 +426,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertTemplateUsed(response, 'registration/login.html')
         
         # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.get(url % args)
         self.assertEqual(403, response.status_code)
         
@@ -494,7 +494,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertTemplateUsed(response, 'registration/login.html')
         
         # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
@@ -503,27 +503,27 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertFalse(clusters)
         
         # authorized permissions
-        self.assert_(c.login(username=user1.username, password='secret'))
+        self.assertTrue(c.login(username=user1.username, password='secret'))
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/cluster/list.html')
         clusters = response.context['cluster_list']
-        self.assert_(cluster in clusters)
-        self.assert_(cluster1 not in clusters)
+        self.assertTrue(cluster in clusters)
+        self.assertTrue(cluster1 not in clusters)
         self.assertEqual(1, len(clusters))
         
         # authorized (superuser)
-        self.assert_(c.login(username=user2.username, password='secret'))
+        self.assertTrue(c.login(username=user2.username, password='secret'))
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/cluster/list.html')
         clusters = response.context['cluster_list']
-        self.assert_(cluster in clusters)
-        self.assert_(cluster1 in clusters)
-        self.assert_(cluster2 in clusters)
-        self.assert_(cluster3 in clusters)
+        self.assertTrue(cluster in clusters)
+        self.assertTrue(cluster1 in clusters)
+        self.assertTrue(cluster2 in clusters)
+        self.assertTrue(cluster3 in clusters)
         self.assertEqual(4, len(clusters))
 
     def test_view_add(self):
@@ -538,7 +538,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertTemplateUsed(response, 'registration/login.html')
         
         # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.get(url)
         self.assertEqual(403, response.status_code)
         
@@ -642,7 +642,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertTemplateUsed(response, 'registration/login.html')
         
         # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.get(url)
         self.assertEqual(403, response.status_code)
         
@@ -710,7 +710,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         cluster.save()
         url = '/cluster/%s/edit/' % cluster.slug
 
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.delete(url)
         self.assertEqual(403, response.status_code)
 
@@ -724,7 +724,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         url = '/cluster/%s/edit/' % cluster.slug
 
         user.grant('admin', cluster)
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.delete(url, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
@@ -742,7 +742,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
 
         user.is_superuser = True
         user.save()
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.delete(url, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
@@ -762,7 +762,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertTemplateUsed(response, 'registration/login.html')
         
         # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.get(url % args)
         self.assertEqual(403, response.status_code)
         
@@ -837,7 +837,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertTemplateUsed(response, 'registration/login.html')
         
         # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.get(url % args)
         self.assertEqual(403, response.status_code)
         
@@ -893,7 +893,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         response = c.post(url % args, data)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/cluster/user_row.html')
-        self.assert_(user1.has_perm('admin', cluster))
+        self.assertTrue(user1.has_perm('admin', cluster))
         self.assertFalse(user1.has_perm('create_vm', cluster))
         
         # valid POST group has permissions
@@ -943,7 +943,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertTemplateUsed(response, 'registration/login.html')
         
         # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.get(url % args)
         self.assertEqual(403, response.status_code)
         
@@ -990,7 +990,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         response = c.post(url_post % args_post, data)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/cluster/user_row.html')
-        self.assert_(user1.has_perm('admin', cluster))
+        self.assertTrue(user1.has_perm('admin', cluster))
         self.assertFalse(user1.has_perm('create_vm', cluster))
         
         # add quota to the user
@@ -1040,7 +1040,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertTemplateUsed(response, 'registration/login.html')
         
         # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.get(url % args)
         self.assertEqual(403, response.status_code)
         
@@ -1149,7 +1149,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertTemplateUsed(response, 'registration/login.html')
         
         # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.get(url % args)
         self.assertEqual(403, response.status_code)
         
@@ -1194,7 +1194,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertTemplateUsed(response, template)
         self.assertEqual(user_unlimited, cluster.get_quota(cluster_user))
         query = Quota.objects.filter(cluster=cluster, user=cluster_user)
-        self.assert_(query.exists())
+        self.assertTrue(query.exists())
         
         # valid POST - setting values
         data = {'user':cluster_user.id, 'ram':4, 'virtual_cpus':5, 'disk':''}
@@ -1202,7 +1202,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, template)
         self.assertEqual(user_quota, cluster.get_quota(cluster_user))
-        self.assert_(query.exists())
+        self.assertTrue(query.exists())
         
         # valid POST - same as default values (should delete)
         data = {'user':cluster_user.id, 'ram':1, 'disk':3}
@@ -1229,7 +1229,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, template)
         self.assertEqual(user_unlimited, cluster.get_quota(cluster_user))
-        self.assert_(query.exists())
+        self.assertTrue(query.exists())
         
         # valid DELETE - returns to default values
         data = {'user':cluster_user.id, 'delete':True}
@@ -1259,7 +1259,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         #configuring stuff needed to test edit view
         user.is_superuser = True
         user.save()
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         cluster.virtual_machines.all().delete()
         url = '/cluster/%s/edit/' % cluster.slug
 
@@ -1341,7 +1341,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.delete(url)
         self.assertEqual(403, response.status_code)
 
@@ -1350,8 +1350,8 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         response = c.post(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
-        self.assert_('status' in response.content)
-        self.assert_(Cluster.objects.filter(id=cluster.id).exists())
+        self.assertTrue('status' in response.content)
+        self.assertTrue(Cluster.objects.filter(id=cluster.id).exists())
         user.revoke('admin', cluster)
 
         # recreate cluster
@@ -1363,5 +1363,5 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         response = c.post(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
-        self.assert_('status' in response.content)
-        self.assert_(Cluster.objects.filter(id=cluster.id).exists())
+        self.assertTrue('status' in response.content)
+        self.assertTrue(Cluster.objects.filter(id=cluster.id).exists())

@@ -29,7 +29,7 @@ class TestVirtualMachineActions(TestVirtualMachineViewsBase):
         url = '/cluster/%s/%s/startup'
 
         # authorized (permission)
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
 
         grant(user, 'admin', vm)
         cluster.set_quota(user.get_profile(), dict(ram=10, disk=2000, virtual_cpus=10))
@@ -41,7 +41,7 @@ class TestVirtualMachineActions(TestVirtualMachineViewsBase):
         response = c.post(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/json', response['content-type'])
-        self.assert_('Owner does not have enough RAM' in response.content)
+        self.assertTrue('Owner does not have enough RAM' in response.content)
         user.revoke('admin', vm)
         VirtualMachine.objects.all().update(last_job=None)
         Job.objects.all().delete()

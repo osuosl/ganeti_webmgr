@@ -116,12 +116,12 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
             * Hash is copied from cluster
         """
         vm, cluster = self.create_virtual_machine()
-        self.assert_(vm.id)
+        self.assertTrue(vm.id)
         self.assertFalse(vm.error)
         self.assertEqual(vm.cluster_hash, cluster.hash)
 
         vm = VirtualMachine.objects.get(id=vm.id)
-        self.assert_(vm.info)
+        self.assertTrue(vm.info)
         self.assertFalse(vm.error)
 
     def test_hash_update(self):
@@ -204,16 +204,16 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         # reboot enables ignore_cache flag
         job_id = vm.startup().id
         vm = VirtualMachine.objects.get(id=vm.id)
-        self.assert_(Job.objects.filter(id=job_id).exists())
-        self.assert_(vm.ignore_cache)
-        self.assert_(vm.last_job_id)
+        self.assertTrue(Job.objects.filter(id=job_id).exists())
+        self.assertTrue(vm.ignore_cache)
+        self.assertTrue(vm.last_job_id)
 
         # finished job resets ignore_cache flag
         vm.rapi.GetJobStatus.response = JOB
         vm = VirtualMachine.objects.get(id=vm.id)
         self.assertFalse(vm.ignore_cache)
         self.assertFalse(vm.last_job_id)
-        self.assert_(Job.objects.get(id=job_id).finished)
+        self.assertTrue(Job.objects.get(id=job_id).finished)
 
     def test_stop(self):
         """
@@ -229,11 +229,11 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
 
         # reboot enables ignore_cache flag
         job_id = vm.shutdown().id
-        self.assert_(Job.objects.filter(id=job_id).exists())
+        self.assertTrue(Job.objects.filter(id=job_id).exists())
         vm = VirtualMachine.objects.get(id=vm.id)
-        self.assert_(vm.ignore_cache)
-        self.assert_(vm.last_job_id)
-        self.assert_(Job.objects.filter(id=job_id).values()[0]['ignore_cache'])
+        self.assertTrue(vm.ignore_cache)
+        self.assertTrue(vm.last_job_id)
+        self.assertTrue(Job.objects.filter(id=job_id).values()[0]['ignore_cache'])
 
         # finished job resets ignore_cache flag
         vm.rapi.GetJobStatus.response = JOB
@@ -241,7 +241,7 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         self.assertFalse(vm.ignore_cache)
         self.assertFalse(vm.last_job_id)
         self.assertFalse(Job.objects.filter(id=job_id).values()[0]['ignore_cache'])
-        self.assert_(Job.objects.get(id=job_id).finished)
+        self.assertTrue(Job.objects.get(id=job_id).finished)
 
     def test_reboot(self):
         """
@@ -257,20 +257,20 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
 
         # reboot enables ignore_cache flag
         job_id = vm.reboot().id
-        self.assert_(Job.objects.filter(id=job_id).exists())
+        self.assertTrue(Job.objects.filter(id=job_id).exists())
         vm = VirtualMachine.objects.get(id=vm.id)
-        self.assert_(vm.ignore_cache)
-        self.assert_(vm.last_job_id)
-        self.assert_(Job.objects.filter(id=job_id).values()[0]['ignore_cache'])
+        self.assertTrue(vm.ignore_cache)
+        self.assertTrue(vm.last_job_id)
+        self.assertTrue(Job.objects.filter(id=job_id).values()[0]['ignore_cache'])
 
         # finished job resets ignore_cache flag
         vm.rapi.GetJobStatus.response = JOB
-        self.assert_(Job.objects.filter(id=job_id).exists())
+        self.assertTrue(Job.objects.filter(id=job_id).exists())
         vm = VirtualMachine.objects.get(id=vm.id)
         self.assertFalse(vm.ignore_cache)
         self.assertFalse(vm.last_job_id)
         self.assertFalse(Job.objects.filter(id=job_id).values()[0]['ignore_cache'])
-        self.assert_(Job.objects.get(id=job_id).finished)
+        self.assertTrue(Job.objects.get(id=job_id).finished)
 
     def test_load_pending_delete(self):
         """
@@ -289,8 +289,8 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
 
         # Test loading vm, job is running so it should not be deleted yet
         vm = VirtualMachine.objects.get(pk=vm.pk)
-        self.assert_(vm.id)
-        self.assert_(vm.pending_delete)
+        self.assertTrue(vm.id)
+        self.assertTrue(vm.pending_delete)
         self.assertFalse(vm.deleted)
 
     def test_load_deleted(self):
@@ -313,6 +313,6 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         vm.rapi.GetJobStatus.response = JOB_DELETE_SUCCESS
         vm = VirtualMachine.objects.get(pk=vm.pk)
         self.assertFalse(vm.id)
-        self.assert_(vm.pending_delete)
-        self.assert_(vm.deleted)
+        self.assertTrue(vm.pending_delete)
+        self.assertTrue(vm.deleted)
         self.assertFalse(VirtualMachine.objects.filter(pk=vm.pk).exists())

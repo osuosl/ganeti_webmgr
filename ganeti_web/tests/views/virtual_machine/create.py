@@ -48,7 +48,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         url = '/vm/add/%s'
         data = self.data
         data['cluster'] = -1,
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
 
         user.grant('create_vm', cluster)
         response = c.post(url % '', data)
@@ -67,7 +67,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         data = self.data
 
         # Login and grant user.
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         user.grant('create_vm', cluster)
         cluster.set_quota(user.get_profile(), dict(ram=1000, disk=2000, virtual_cpus=10))
 
@@ -81,7 +81,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         self.assertTemplateUsed(response, 'ganeti/virtual_machine/create_status.html')
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
-        self.assert_(user.has_perm('admin', new_vm))
+        self.assertTrue(user.has_perm('admin', new_vm))
         user.revoke_all(cluster)
         user.revoke_all(new_vm)
         VirtualMachine.objects.all().delete()
@@ -94,7 +94,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         self.assertTemplateUsed(response, 'ganeti/virtual_machine/create_status.html')
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
-        self.assert_(user.has_perm('admin', new_vm))
+        self.assertTrue(user.has_perm('admin', new_vm))
         VirtualMachine.objects.all().delete()
         user.revoke_all(cluster)
         user.revoke_all(new_vm)
@@ -119,7 +119,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         self.assertTemplateUsed(response, 'ganeti/virtual_machine/create_status.html')
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
-        self.assert_(user.has_perm('admin', new_vm))
+        self.assertTrue(user.has_perm('admin', new_vm))
         user.revoke_all(new_vm)
         VirtualMachine.objects.all().delete()
 
@@ -141,7 +141,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         self.assertTemplateUsed(response, 'ganeti/virtual_machine/create_status.html')
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
-        self.assert_(user1.has_perm('admin', new_vm))
+        self.assertTrue(user1.has_perm('admin', new_vm))
         self.assertEqual([], user.get_perms(new_vm))
 
         user.revoke_all(new_vm)
@@ -177,7 +177,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         self.assertTemplateUsed(response, 'ganeti/virtual_machine/create_status.html')
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
-        self.assert_(group.has_perm('admin', new_vm))
+        self.assertTrue(group.has_perm('admin', new_vm))
         group.revoke_all(cluster)
         group.revoke_all(new_vm)
         VirtualMachine.objects.all().delete()
@@ -190,7 +190,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         self.assertTemplateUsed(response, 'ganeti/virtual_machine/create_status.html')
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
-        self.assert_(group.has_perm('admin', new_vm))
+        self.assertTrue(group.has_perm('admin', new_vm))
         group.revoke_all(cluster)
         group.revoke_all(new_vm)
         VirtualMachine.objects.all().delete()
@@ -204,7 +204,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         self.assertTemplateUsed(response, 'ganeti/virtual_machine/create_status.html')
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
-        self.assert_(group.has_perm('admin', new_vm))
+        self.assertTrue(group.has_perm('admin', new_vm))
         group.revoke_all(new_vm)
         VirtualMachine.objects.all().delete()
 
@@ -217,7 +217,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         self.assertTemplateUsed(response, 'ganeti/virtual_machine/create_status.html')
         new_vm = VirtualMachine.objects.get(hostname='new.vm.hostname')
         self.assertEqual(new_vm, response.context['instance'])
-        self.assert_(group1.has_perm('admin', new_vm))
+        self.assertTrue(group1.has_perm('admin', new_vm))
         self.assertFalse(group.has_perm('admin', new_vm))
 
     def test_view_create(self):
@@ -236,7 +236,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.post(url % '')
         self.assertEqual(403, response.status_code)
 

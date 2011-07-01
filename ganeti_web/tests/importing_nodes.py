@@ -93,7 +93,7 @@ class NodeImportBase(TestCase):
 
     def test_unauthorized(self):
         """ unauthorized user """
-        self.assert_(self.c.login(username=self.unauthorized.username, password='secret'))
+        self.assertTrue(self.c.login(username=self.unauthorized.username, password='secret'))
         response = self.c.get(self.url)
         self.assertEqual(403, response.status_code)
 

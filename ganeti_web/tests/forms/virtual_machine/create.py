@@ -399,7 +399,7 @@ class TestNewVirtualMachineFormValidation(TestVirtualMachineViewsBase):
         data['owner'] = -1
 
         # Login and grant user.
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         user.grant('create_vm', cluster)
 
         form = NewVirtualMachineForm(user, data)

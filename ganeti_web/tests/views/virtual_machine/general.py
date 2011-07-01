@@ -39,7 +39,7 @@ class TestVirtualMachineViewList(TestVirtualMachineViewsBase):
 
         self.create_virtual_machine(cluster, 'test1')
 
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
@@ -62,7 +62,7 @@ class TestVirtualMachineViewList(TestVirtualMachineViewsBase):
         user1.grant('admin', vm1)
 
         # user with some perms
-        self.assert_(c.login(username=user1.username, password='secret'))
+        self.assertTrue(c.login(username=user1.username, password='secret'))
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
@@ -87,7 +87,7 @@ class TestVirtualMachineViewList(TestVirtualMachineViewsBase):
         vm3, cluster1 = self.create_virtual_machine(cluster, 'test3')
 
         # authorized (superuser)
-        self.assert_(c.login(username=user2.username, password='secret'))
+        self.assertTrue(c.login(username=user2.username, password='secret'))
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
