@@ -34,6 +34,7 @@ from django.contrib.contenttypes.generic import GenericForeignKey
 from django.core.validators import RegexValidator, MinValueValidator
 from django.utils.encoding import force_unicode
 from django.utils.translation import ugettext_lazy as _
+from django_fields.fields import PickleField
 import re
 
 from django.db import models
@@ -1302,8 +1303,7 @@ class VirtualMachineTemplate(models.Model):
                 validators=[MinValueValidator(1)], null=True, blank=True)
     memory = models.IntegerField(verbose_name=_('Memory'), \
                 validators=[MinValueValidator(100)],null=True, blank=True)
-    disk_size = models.CharField(verbose_name=_('Disk Size'), null=True, \
-                 blank=True, max_length=255)
+    disks = PickleField(verbose_name=_('Disks'), null=True, blank=True)
     disk_type = models.CharField(verbose_name=_('Disk Type'), max_length=255, \
                                  null=True, blank=True)
     nic_mode = models.CharField(verbose_name=_('NIC Mode'), max_length=255, \

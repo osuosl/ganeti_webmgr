@@ -154,7 +154,17 @@ class NewVirtualMachineForm(VirtualMachineForm):
                 except Cluster.DoesNotExist:
                     # defer to clean function to return errors
                     pass
-            disk_count = int(initial.get('disk_count', 1))
+
+            # Load disks.  Prefer raw fields, but unpack from disks (dict)
+            # if the raw fields are not available.  This allows modify and
+            # API calls to use a cleaner syntax
+            if 'disks' in initial and not 'disk_count' in initial:
+                disks = initial['disks']
+                initial['disk_count'] = disk_count = len(disks)
+                for i, disk in enumerate(disks):
+                    initial['disk_size_%s' % i] = disk['size']
+            else:
+                disk_count = int(initial.get('disk_count', 1))
             nic_count = initial.get('nic_count', 1)
         else:
             disk_count = 1
