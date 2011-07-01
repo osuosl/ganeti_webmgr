@@ -233,7 +233,29 @@ class TestNewVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
                 (group.organization.id, u'testing_group'),
             ], list(form.fields['owner'].choices))
 
+    def test_default_disks(self):
+        user.grant('admin', cluster0)
+        form = NewVirtualMachineForm(user)
+        self.assertTrue('disk_size_0' in form.fields)
+        self.assertFalse('disk_size_1' in form.fields)
 
+    def test_no_disks(self):
+        user.grant('admin', cluster0)
+        form = NewVirtualMachineForm(user, dict(disk_count=0))
+        self.assertFalse('disk_size_0' in form.fields)
+        self.assertFalse('disk_size_1' in form.fields)
+
+    def test_single_disk(self):
+        user.grant('admin', cluster0)
+        form = NewVirtualMachineForm(user, dict(disk_count=1))
+        self.assertTrue('disk_size_0' in form.fields)
+        self.assertFalse('disk_size_1' in form.fields)
+
+    def test_multiple_disks(self):
+        user.grant('admin', cluster0)
+        form = NewVirtualMachineForm(user, dict(disk_count=2))
+        self.assertTrue('disk_size_0' in form.fields)
+        self.assertTrue('disk_size_1' in form.fields)
 
 
 

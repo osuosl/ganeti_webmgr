@@ -19,27 +19,31 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
 
     context = globals()
 
+    def setUp(self):
+        super(TestVirtualMachineCreateView, self).setUp()
+        self.data = dict(cluster=cluster.id,
+            start=True,
+            owner=user.get_profile().id, #XXX remove this
+            hostname='new.vm.hostname',
+            disk_template='plain',
+            disk_count=1,
+            disk_size_0=1000,
+            memory=256,
+            vcpus=2,
+            root_path='/',
+            nic_type='paravirtual',
+            disk_type = 'paravirtual',
+            nic_link = 'br43',
+            nic_mode='routed',
+            boot_order='disk',
+            os='image+ubuntu-lucid',
+            pnode=cluster.nodes.all()[0],
+            snode=cluster.nodes.all()[1])
+
     def test_view_create_quota_first_vm(self):
         # XXX seperated from test_view_create_data since it was polluting the environment for later tests
         url = '/vm/add/%s'
-        data = dict(cluster=cluster.id,
-                    start=True,
-                    owner=user.get_profile().id, #XXX remove this
-                    hostname='new.vm.hostname',
-                    disk_template='plain',
-                    disk_size=1000,
-                    memory=256,
-                    vcpus=2,
-                    root_path='/',
-                    nic_type='paravirtual',
-                    disk_type = 'paravirtual',
-                    nic_link = 'br43',
-                    nic_mode='routed',
-                    boot_order='disk',
-                    os='image+ubuntu-lucid',
-                    pnode=cluster.nodes.all()[0],
-                    snode=cluster.nodes.all()[1])
-
+        data = self.data
 
         # set up for testing quota on user's first VM
         user2 = User(id=43, username='quota_tester')
@@ -65,7 +69,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
 
         # POST - over disk quota (user's first WM)
         data_ = data.copy()
-        data_['disk_size'] = 9001
+        data_['disk_size_0'] = 9001
         data_['owner'] = profile.id
         response = c.post(url % '', data_)
         self.assertEqual(200, response.status_code)
@@ -99,7 +103,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         # POST - over disk quota (user's first VM) (start = False)
         data_ = data.copy()
         data_['start'] = False
-        data_['disk_size'] = 9001
+        data_['disk_size_0'] = 9001
         data_['owner'] = profile.id
         response = c.post(url % '', data_)
         self.assertEqual(200, response.status_code)
@@ -127,24 +131,8 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         """
 
         url = '/vm/add/%s'
-        data = dict(cluster=-1,
-                    start=True,
-                    owner=user.get_profile().id, #XXX remove this
-                    hostname='new.vm.hostname',
-                    disk_template='plain',
-                    disk_size=1000,
-                    memory=256,
-                    vcpus=2,
-                    root_path='/',
-                    nic_type='paravirtual',
-                    disk_type = 'paravirtual',
-                    nic_link = 'br43',
-                    nic_mode='routed',
-                    boot_order='disk',
-                    os='image+ubuntu-lucid',
-                    pnode=cluster.nodes.all()[0],
-                    snode=cluster.nodes.all()[1])
-
+        data = self.data
+        data['cluster'] = -1,
         self.assert_(c.login(username=user.username, password='secret'))
 
         user.grant('create_vm', cluster)
@@ -162,23 +150,8 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         url = '/vm/add/%s'
         cluster1 = Cluster(hostname='test2.osuosl.bak', slug='OSL_TEST2')
         cluster1.save()
-        data = dict(cluster=cluster.id,
-                    start=True,
-                    owner=user.get_profile().id, #XXX remove this
-                    hostname='new.vm.hostname',
-                    disk_template='plain',
-                    disk_size=1000,
-                    memory=256,
-                    vcpus=2,
-                    root_path='/',
-                    nic_type='paravirtual',
-                    disk_type = 'paravirtual',
-                    nic_link = 'br43',
-                    nic_mode='routed',
-                    boot_order='disk',
-                    os='image+ubuntu-lucid',
-                    pnode=cluster.nodes.all()[0],
-                    snode=cluster.nodes.all()[1])
+        data = self.data
+        data['cluster'] = cluster.id
 
         self.assert_(c.login(username=user.username, password='secret'))
 
@@ -197,29 +170,13 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         """
 
         url = '/vm/add/%s'
-        data = dict(cluster=cluster.id,
-                    start=True,
-                    owner=user.get_profile().id, #XXX remove this
-                    hostname='new.vm.hostname',
-                    disk_template='plain',
-                    disk_size=1000,
-                    memory=256,
-                    vcpus=2,
-                    root_path='/',
-                    nic_type='paravirtual',
-                    disk_type = 'paravirtual',
-                    nic_link = 'br43',
-                    nic_mode='routed',
-                    boot_order='disk',
-                    os='image+ubuntu-lucid',
-                    pnode=cluster.nodes.all()[0],
-                    snode=cluster.nodes.all()[1])
-
+        data = self.data
+        
         # Login and grant user.
         self.assert_(c.login(username=user.username, password='secret'))
         user.grant('create_vm', cluster)
 
-        for prop in ['cluster', 'hostname', 'disk_size', 'disk_type',
+        for prop in ['cluster', 'hostname', 'disk_size_0', 'disk_type',
                      'nic_type', 'nic_mode', 'vcpus', 'pnode', 'os',
                      'disk_template', 'boot_order']:
             data_ = data.copy()
@@ -236,24 +193,9 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         """
 
         url = '/vm/add/%s'
-        data = dict(cluster=cluster.id,
-                    start=True,
-                    owner=user.get_profile().id,
-                    hostname='new.vm.hostname',
-                    disk_template='plain',
-                    disk_size=1000,
-                    memory=2048,
-                    vcpus=2,
-                    root_path='/',
-                    nic_type='paravirtual',
-                    disk_type = 'paravirtual',
-                    nic_link = 'br43',
-                    nic_mode='routed',
-                    boot_order='disk',
-                    os='image+ubuntu-lucid',
-                    pnode=cluster.nodes.all()[0],
-                    snode=cluster.nodes.all()[1])
-
+        data = self.data
+        data['memory'] = 2048
+        
         # Login and grant user.
         self.assert_(c.login(username=user.username, password='secret'))
         user.grant('create_vm', cluster)
@@ -271,24 +213,9 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         """
 
         url = '/vm/add/%s'
-        data = dict(cluster=cluster.id,
-                    start=True,
-                    owner=user.get_profile().id,
-                    hostname='new.vm.hostname',
-                    disk_template='plain',
-                    disk_size=4000,
-                    memory=256,
-                    vcpus=2,
-                    root_path='/',
-                    nic_type='paravirtual',
-                    disk_type = 'paravirtual',
-                    nic_link = 'br43',
-                    nic_mode='routed',
-                    boot_order='disk',
-                    os='image+ubuntu-lucid',
-                    pnode=cluster.nodes.all()[0],
-                    snode=cluster.nodes.all()[1])
-
+        data = self.data
+        data['disk_size_0'] = 4000
+        
         # Login and grant user.
         self.assert_(c.login(username=user.username, password='secret'))
         user.grant('create_vm', cluster)
@@ -308,24 +235,9 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         """
 
         url = '/vm/add/%s'
-        data = dict(cluster=cluster.id,
-                    start=True,
-                    owner=user.get_profile().id,
-                    hostname='new.vm.hostname',
-                    disk_template='plain',
-                    disk_size=1000,
-                    memory=256,
-                    vcpus=200,
-                    root_path='/',
-                    nic_type='paravirtual',
-                    disk_type = 'paravirtual',
-                    nic_link = 'br43',
-                    nic_mode='routed',
-                    boot_order='disk',
-                    os='image+ubuntu-lucid',
-                    pnode=cluster.nodes.all()[0],
-                    snode=cluster.nodes.all()[1])
-
+        data = self.data
+        data['vcpus'] = 200
+        
         # Login and grant user.
         self.assert_(c.login(username=user.username, password='secret'))
         user.grant('create_vm', cluster)
@@ -341,26 +253,10 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         """
         Obviously bogus owners should cause form errors.
         """
-
         url = '/vm/add/%s'
-        data = dict(cluster=cluster.id,
-                    start=True,
-                    owner=-1,
-                    hostname='new.vm.hostname',
-                    disk_template='plain',
-                    disk_size=1000,
-                    memory=256,
-                    vcpus=2,
-                    root_path='/',
-                    nic_type='paravirtual',
-                    disk_type = 'paravirtual',
-                    nic_link = 'br43',
-                    nic_mode='routed',
-                    boot_order='disk',
-                    os='image+ubuntu-lucid',
-                    pnode=cluster.nodes.all()[0],
-                    snode=cluster.nodes.all()[1])
-
+        data = self.data
+        data['owner'] = -1
+        
         # Login and grant user.
         self.assert_(c.login(username=user.username, password='secret'))
         user.grant('create_vm', cluster)
@@ -377,23 +273,9 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         """
 
         url = '/vm/add/%s'
-        data = dict(cluster=cluster.id,
-                    start=True,
-                    owner=user.get_profile().id, #XXX remove this
-                    hostname='new.vm.hostname',
-                    disk_template='plain',
-                    disk_size=1000,
-                    memory=256,
-                    vcpus=2,
-                    root_path='/',
-                    nic_type='paravirtual',
-                    disk_type = 'paravirtual',
-                    nic_link = 'br43',
-                    nic_mode='routed',
-                    boot_order='disk',
-                    os='image+ubuntu-lucid',
-                    iallocator=True,
-                    iallocator_hostname="hail")
+        data = self.data
+        data['iallocator'] = True
+        data['iallocator_hostname'] = "hail"
 
         # Login and grant user.
         self.assert_(c.login(username=user.username, password='secret'))
@@ -413,24 +295,8 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         """
 
         url = '/vm/add/%s'
-        data = dict(cluster=cluster.id,
-                    start=True,
-                    owner=user.get_profile().id, #XXX remove this
-                    hostname='new.vm.hostname',
-                    disk_template='plain',
-                    disk_size=1000,
-                    memory=256,
-                    vcpus=2,
-                    root_path='/',
-                    nic_type='paravirtual',
-                    disk_type = 'paravirtual',
-                    nic_link = 'br43',
-                    nic_mode='routed',
-                    boot_order='disk',
-                    os='image+ubuntu-lucid',
-                    pnode=cluster.nodes.all()[0],
-                    snode=cluster.nodes.all()[1],
-                    iallocator=True)
+        data = self.data
+        data['iallocator'] = True
 
         # Login and grant user.
         self.assert_(c.login(username=user.username, password='secret'))
@@ -452,23 +318,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         group1.save()
         cluster1 = Cluster(hostname='test2.osuosl.bak', slug='OSL_TEST2')
         cluster1.save()
-        data = dict(cluster=cluster.id,
-                    start=True,
-                    owner=user.get_profile().id, #XXX remove this
-                    hostname='new.vm.hostname',
-                    disk_template='plain',
-                    disk_size=1000,
-                    memory=256,
-                    vcpus=2,
-                    root_path='/',
-                    nic_type='paravirtual',
-                    disk_type = 'paravirtual',
-                    nic_link = 'br43',
-                    nic_mode='routed',
-                    boot_order='disk',
-                    os='image+ubuntu-lucid',
-                    pnode=cluster.nodes.all()[0],
-                    snode=cluster.nodes.all()[1])
+        data = self.data
 
         # Login and grant user.
         self.assert_(c.login(username=user.username, password='secret'))
@@ -715,7 +565,8 @@ class TestVirtualMachineRecoverView(TestVirtualMachineViewsBase):
                     owner=user.get_profile().id, #XXX remove this
                     hostname=failed_vm.hostname,
                     disk_template='plain',
-                    disk_size=1000,
+                    disk_count=1,
+                    disk_size_0=1000,
                     memory=256,
                     vcpus=2,
                     root_path='/',
