@@ -171,6 +171,11 @@
     <div id="overview" class="tab_content">
         <ul id="actions">
             {% with instance.cluster.username as username %}
+                    <li>
+                        <a class="button add" href="{% url template-create-from-instance instance.hostname %}">
+                            {% trans "Create Template" %}
+                        </a>
+                    </li>
                 {% if modify and username %}
                     <li>
                         <a class="button edit" href="{% url instance-modify cluster.slug instance.hostname %}">

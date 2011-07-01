@@ -478,7 +478,16 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
         """
         Do not use the NewVirtualMachineForm init
         """
+        hv = kwargs.pop('hypervisor', None)
         super(VirtualMachineForm, self).__init__(*args, **kwargs)
+        
+        if hv == 'kvm':
+            for k, v in constants.KVM_CHOICES.items():
+                self.fields[k].choices = v
+        elif hv == 'xen-hvm':
+            for k, v in constants.HVM_CHOICES.items():
+                self.fields[k].choices = v
+            
         # XXX Remove fields explicitly set in NewVirtualMachineForm
         #  Django ticket #8620
         for field in self.Meta.exclude:
