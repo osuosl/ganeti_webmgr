@@ -1282,8 +1282,8 @@ class VirtualMachineTemplate(models.Model):
                 validators=[MinValueValidator(1)], null=True, blank=True)
     memory = models.IntegerField(verbose_name=_('Memory'), \
                 validators=[MinValueValidator(100)],null=True, blank=True)
-    disk_size = models.IntegerField(verbose_name=_('Disk Size'), null=True, \
-                validators=[MinValueValidator(100)], blank=True)
+    disk_size = models.CharField(verbose_name=_('Disk Size'), null=True, \
+                 blank=True, max_length=255)
     disk_type = models.CharField(verbose_name=_('Disk Type'), max_length=255, \
                                  null=True, blank=True)
     nic_mode = models.CharField(verbose_name=_('NIC Mode'), max_length=255, \

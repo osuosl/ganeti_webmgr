@@ -51,10 +51,9 @@
             {% vmfield form.os %}
         </fieldset>
         <fieldset>
-            <legend>{% trans "General Parameters" %}</legend>
+            <legend>{% trans "General Parameters" %} </legend>
             {% vmfield form.vcpus %}
             {% vmfield form.memory %}
-            {% vmfield form.disk_size %}
             {% if form.disk_type %}
             {% vmfield form.disk_type %}
             {% endif %}
@@ -64,6 +63,15 @@
             {% vmfield form.nic_type %}
             {% endif %}
         </fieldset>
+
+        <fieldset id="disks">
+            <h3>{% trans "Disks" %}<div class="icon add"></div></h3>
+            {{ form.disk_count }}
+            {% for index in form.disk_fields %}
+                {% vmfield_disk form index %}
+            {% endfor %}
+        </fieldset>
+
         <fieldset>
             <legend>{% trans "Hypervisor Parameters" %}</legend>
             {% vmfield form.kernel_path %}
