@@ -127,20 +127,21 @@ urlpatterns += patterns('ganeti_web.views.node',
     url(r'^%s/evacuate/?$' % node_prefix, 'evacuate', name="node-evacuate"),
 )
 
+template_id = '(?P<template_id>\d+)'
 # VirtualMachineTemplates
 urlpatterns += patterns('ganeti_web.views.vm_template',
     # List
     url(r'^templates/$', 'templates', name='template-list'),
     # Detail
-    url(r'^template/(?P<template_id>\d+)/?$', 'detail', name='template-detail'),
+    url(r'^template/%s/?$' % template_id, 'detail', name='template-detail'),
     # Delete
-    url(r'^template/(?P<template_id>\d+)/delete/?$', 'delete', name='template-delete'),
+    url(r'^template/%s/delete/?$' % template_id, 'delete', name='template-delete'),
     # Create
     url(r'^template/create/$', 'create', name='template-create'),
     # Edit
-    url(r'^template/edit/(?P<template_id>\d+)/?$', 'create', name='template-edit'),
+    url(r'^template/edit/%s/?$' % template_id, 'create', name='template-edit'),
     # Copy
-    url(r'^template/copy/(?P<template_id>\d+)/?$', 'copy', name='template-copy'),
+    url(r'^template/copy/%s/?$' % template_id, 'copy', name='template-copy'),
 )
 
 # VirtualMachines
