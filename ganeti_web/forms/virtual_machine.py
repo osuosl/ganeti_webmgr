@@ -21,14 +21,17 @@ from django.forms import ValidationError
 # Per #6579, do not change this import without discussion.
 from django.utils import simplejson as json
 
-from ganeti_web import constants
+from ganeti_web.constants import EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES, \
+    HV_NIC_MODES, HV_DISK_TYPES, HV_NIC_TYPES, KVM_NIC_TYPES, HVM_DISK_TYPES, \
+    KVM_DISK_TYPES, KVM_BOOT_ORDER, HVM_BOOT_ORDER, KVM_CHOICES, HV_USB_MICE, \
+    HV_SECURITY_MODELS, KVM_FLAGS, HV_DISK_CACHES, MODE_CHOICES, HVM_CHOICES
 from ganeti_web.fields import DataVolumeField
 from ganeti_web.models import (Cluster, ClusterUser, Organization,
                            VirtualMachineTemplate, VirtualMachine)
 from ganeti_web.utilities import cluster_default_info, cluster_os_list, contains, get_hypervisor
 from django.utils.translation import ugettext_lazy as _
-from ganeti_web.util.client import REPLACE_DISK_AUTO, REPLACE_DISK_PRI, REPLACE_DISK_CHG, \
-    REPLACE_DISK_SECONDARY
+from ganeti_web.util.client import REPLACE_DISK_AUTO, REPLACE_DISK_PRI, \
+    REPLACE_DISK_CHG, REPLACE_DISK_SECONDARY
 
 
 class VirtualMachineForm(forms.ModelForm):
@@ -438,19 +441,19 @@ class NewVirtualMachineForm(VirtualMachineForm):
         nic_type = data.get('nic_type')
 
         # Check disk_type
-        if (hv == 'kvm' and not (contains(disk_type, constants.KVM_DISK_TYPES) or contains(disk_type, constants.HV_DISK_TYPES))) or \
-           (hv == 'xen-hvm' and not (contains(disk_type, constants.HVM_DISK_TYPES) or contains(disk_type, constants.HV_DISK_TYPES))):
+        if (hv == 'kvm' and not (contains(disk_type, KVM_DISK_TYPES) or contains(disk_type, HV_DISK_TYPES))) or \
+           (hv == 'xen-hvm' and not (contains(disk_type, HVM_DISK_TYPES) or contains(disk_type, HV_DISK_TYPES))):
             msg = '%s is not a valid option for Disk Template on this cluster.' % disk_type
             self._errors['disk_type'] = self.error_class([msg])
         # Check nic_type
-        if (hv == 'kvm' and not (contains(nic_type, constants.KVM_NIC_TYPES) or \
-           contains(nic_type, constants.HV_NIC_TYPES))) or \
-           (hv == 'xen-hvm' and not contains(nic_type, constants.HV_NIC_TYPES)):
+        if (hv == 'kvm' and not (contains(nic_type, KVM_NIC_TYPES) or \
+           contains(nic_type, HV_NIC_TYPES))) or \
+           (hv == 'xen-hvm' and not contains(nic_type, HV_NIC_TYPES)):
             msg = '%s is not a valid option for Nic Type on this cluster.' % nic_type
             self._errors['nic_type'] = self.error_class([msg])
         # Check boot_order 
-        if (hv == 'kvm' and not contains(boot_order, constants.KVM_BOOT_ORDER)) or \
-           (hv == 'xen-hvm' and not contains(boot_order, constants.HVM_BOOT_ORDER)):
+        if (hv == 'kvm' and not contains(boot_order, KVM_BOOT_ORDER)) or \
+           (hv == 'xen-hvm' and not contains(boot_order, HVM_BOOT_ORDER)):
             msg = '%s is not a valid option for Boot Device on this cluster.' % boot_order
             self._errors['boot_order'] = self.error_class([msg])
 
@@ -500,7 +503,7 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
         value in vm.info.hvparams
     """
     always_required = ('vcpus', 'memory')
-    empty_field = constants.EMPTY_CHOICE_FIELD
+    empty_field = EMPTY_CHOICE_FIELD
 
     nic_mac = forms.CharField(label=_('NIC Mac'), required=False)
     os = forms.ChoiceField(label=_('Operating System'), choices=[empty_field])
@@ -590,10 +593,10 @@ class HvmModifyVirtualMachineForm(ModifyVirtualMachineForm):
     hvparam_fields = ('boot_order', 'cdrom_image_path', 'nic_type', 
         'disk_type', 'vnc_bind_address', 'acpi', 'use_localtime')
     required = ('disk_type', 'boot_order', 'nic_type')
-    empty_field = constants.EMPTY_CHOICE_FIELD
-    disk_types = constants.HVM_CHOICES['disk_type']
-    nic_types = constants.HVM_CHOICES['nic_type']
-    boot_devices = constants.HVM_CHOICES['boot_order']
+    empty_field = EMPTY_CHOICE_FIELD
+    disk_types = HVM_CHOICES['disk_type']
+    nic_types = HVM_CHOICES['nic_type']
+    boot_devices = HVM_CHOICES['boot_order']
 
     acpi = forms.BooleanField(label='ACPI', required=False)
     use_localtime = forms.BooleanField(label='Use Localtime', required=False)
@@ -638,13 +641,13 @@ class KvmModifyVirtualMachineForm(PvmModifyVirtualMachineForm,
         'kernel_path', 'serial_console', 
         'cdrom_image_path',
     )
-    disk_caches = constants.HV_DISK_CACHES
-    kvm_flags = constants.KVM_FLAGS
-    security_models = constants.HV_SECURITY_MODELS
-    usb_mice = constants.HV_USB_MICE
-    disk_types = constants.KVM_CHOICES['disk_type']
-    nic_types = constants.KVM_CHOICES['nic_type']
-    boot_devices = constants.KVM_CHOICES['boot_order']
+    disk_caches = HV_DISK_CACHES
+    kvm_flags = KVM_FLAGS
+    security_models = HV_SECURITY_MODELS
+    usb_mice = HV_USB_MICE
+    disk_types = KVM_CHOICES['disk_type']
+    nic_types = KVM_CHOICES['nic_type']
+    boot_devices = KVM_CHOICES['boot_order']
 
     disk_cache = forms.ChoiceField(label='Disk Cache', required=False,
         choices=disk_caches)
@@ -692,7 +695,7 @@ class ModifyConfirmForm(forms.Form):
 
 class MigrateForm(forms.Form):
     """ Form used for migrating a Virtual Machine """
-    mode = forms.ChoiceField(choices=constants.MODE_CHOICES)
+    mode = forms.ChoiceField(choices=MODE_CHOICES)
     cleanup = forms.BooleanField(initial=False, required=False,
                                  label=_("Attempt recovery from failed migration"))
 
@@ -725,7 +728,7 @@ class ReplaceDisksForm(forms.Form):
     """
     Form used when replacing disks for a virtual machine
     """
-    empty_field = constants.EMPTY_CHOICE_FIELD
+    empty_field = EMPTY_CHOICE_FIELD
 
     MODE_CHOICES = (
         (REPLACE_DISK_AUTO, _('Automatic')),
