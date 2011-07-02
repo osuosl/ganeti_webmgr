@@ -57,8 +57,6 @@
             {% if form.disk_type %}
             {% vmfield form.disk_type %}
             {% endif %}
-            {% vmfield form.nic_mode %}
-            {% vmfield form.nic_link %}
             {% if form.nic_type %}
             {% vmfield form.nic_type %}
             {% endif %}
@@ -69,6 +67,14 @@
             {{ form.disk_count }}
             {% for index in form.disk_fields %}
                 {% vmfield_disk form index %}
+            {% endfor %}
+        </fieldset>
+
+        <fieldset id="nics">
+            <h3>{% trans "Network Devices" %}<div class="icon add"></div></h3>
+            {{ form.nic_count }}
+            {% for index in form.nic_fields %}
+                {% vmfield_nic form index %}
             {% endfor %}
         </fieldset>
 

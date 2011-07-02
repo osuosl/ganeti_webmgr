@@ -1,0 +1,6 @@
+{% load i18n %}
+{{ field.errors }}
+<p>
+    <label>{% trans "Nic" %}/{{ index }}</label> {{ mode }} {{ link }}
+</p>
+{% if index %}<div class="icon delete"></div>{% endif %}

@@ -47,6 +47,13 @@ def vmfield_disk(form, index):
     return {'field':form['disk_size_%s' % index], 'index':index}
 
 
+@register.inclusion_tag('ganeti/virtual_machine/vmfield_nic.html')
+def vmfield_nic(form, index):
+    return {'mode':form['nic_mode_%s' % index],
+            'link':form['nic_link_%s' % index],
+            'index':index}
+
+
 @register.filter
 def class_name(obj):
     """ returns the modelname of the objects class """

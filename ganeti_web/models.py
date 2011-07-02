@@ -1306,10 +1306,7 @@ class VirtualMachineTemplate(models.Model):
     disks = PickleField(verbose_name=_('Disks'), null=True, blank=True)
     disk_type = models.CharField(verbose_name=_('Disk Type'), max_length=255, \
                                  null=True, blank=True)
-    nic_mode = models.CharField(verbose_name=_('NIC Mode'), max_length=255, \
-                                null=True, blank=True)
-    nic_link = models.CharField(verbose_name=_('NIC Link'), max_length=255, \
-                null=True, blank=True)
+    nics = PickleField(verbose_name=_('NICs'), null=True, blank=True)
     nic_type = models.CharField(verbose_name=_('NIC Type'), max_length=255, \
                                 null=True, blank=True)
     # HVPARAMS
