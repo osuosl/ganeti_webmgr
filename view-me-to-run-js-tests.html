@@ -1,0 +1,51 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+"http://www.w3.org/TR/html4/loose.dtd">
+
+<html>
+    <head>
+        <script
+            src="http://code.jquery.com/jquery-latest.js"></script>
+        <link rel="stylesheet"
+        href="http://code.jquery.com/qunit/git/qunit.css"
+        type="text/css" media="screen" />
+        <script type="text/javascript"
+            src="http://code.jquery.com/qunit/git/qunit.js"></script>
+
+        <!-- Files to be tested. -->
+        <script
+            src="ganeti_web/media/js/job_status.js"></script>
+
+        <!-- Tests. -->
+        <script>
+            $(document).ready(function() {
+
+                module("job_status");
+
+                test("cap_first single word", 1, function() {
+                    strictEqual(cap_first("test"), "Test");
+                });
+
+                test("cap_first multiple words", 1, function() {
+                    strictEqual(cap_first("test string"), "Test String");
+                });
+
+                test("format_op no replacements", 1, function() {
+                    strictEqual(format_op("OP_TEST"), "Test");
+                });
+
+                test("format_op no replacements", 1, function() {
+                    strictEqual(format_op("OP_TEST_STRING"), "Test String");
+                });
+            });
+        </script>
+
+    </head>
+    <body>
+        <h1 id="qunit-header">GWM JS Tests</h1>
+        <h2 id="qunit-banner"></h2>
+        <div id="qunit-testrunner-toolbar"></div>
+        <h2 id="qunit-userAgent"></h2>
+        <ol id="qunit-tests"></ol>
+        <div id="qunit-fixture"></div>
+    </body>
+</html>
