@@ -172,7 +172,8 @@ class NewVirtualMachineForm(VirtualMachineForm):
                 nics = initial['nics']
                 initial['nic_count'] = nic_count = len(nics)
                 for i, disk in enumerate(nics):
-                    initial['disk_size_%s' % i] = disk['size']
+                    initial['nic_mode_%s' % i] = disk['mode']
+                    initial['nic_link_%s' % i] = disk['link']
             else:
                 nic_count = int(initial.get('nic_count', 1))
         else:

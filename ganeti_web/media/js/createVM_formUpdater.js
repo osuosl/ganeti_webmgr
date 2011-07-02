@@ -14,10 +14,14 @@ function formUpdater(url_choices, url_options, url_defaults){
     var disk_count =            $("#id_disk_count");
     var disk_add =              $("#disks .add");
     var disk_delete =           $("#disks .delete");
+    var nics =                  $("#nics");
+    var nic_count =             $("#id_nic_count");
+    var nic_add =               $("#nics .add");
+    var nic_delete =            $("#nics .delete");
     var nic_type =              $("#id_nic_type");
-    var nic_link =              $("#id_nic_link");
+    var nic_link =              $("#nics input[name^=nic_link]");
     var disk_template =         $("#id_disk_template");
-    var nic_mode =              $("#id_nic_mode");
+    var nic_mode =              $("#nics select[name^=nic_mode]");
     var iallocator =            $("#id_iallocator");
     var iallocator_hostname =   $("#id_iallocator_hostname");
     var boot_order =            $("#id_boot_order");
@@ -230,6 +234,8 @@ function formUpdater(url_choices, url_options, url_defaults){
 
         disk_add.click(_add_disk);
         disk_delete.live("click",_remove_disk);
+        nic_add.click(_add_nic);
+        nic_delete.live("click",_remove_nic);
     }
 
     // ----------------
@@ -485,7 +491,43 @@ function formUpdater(url_choices, url_options, url_defaults){
             $(this).html("Disk/" + i + " Size");
             i++;
         });
+    }
 
+    function _add_nic() {
+        var count = nic_count.val();
+        nic_count.val(parseInt(count)+1);
+        var p = $('<p></p>');
+        var label = $("<label>NIC/" + count +"</label>");
+        var mode = $("#nics select[name^=nic_mode]").first();
+        var val = mode.val();
+        mode = mode.clone();
+        mode.attr("name", "nic_mode_" + count);
+        mode.attr("id", "id_nic_mode_" + count);
+        mode.val(val);
+        var link = $("#nics input[name^=nic_link]").first().clone();
+        link.attr("name", "nic_link_" + count);
+        link.attr("id", "id_nic_link_" + count);
+        p.append(label);
+        p.append(mode);
+        p.append(link);
+        nics.append(p);
+        nics.append('<div class="icon delete"></div>');
+    }
+
+    function _remove_nic() {
+        var count = nic_count.val();
+        nic_count.val(parseInt(count)-1);
+        var button = $(this);
+        button.prev("p").remove();
+        button.prev("ul").remove();
+        button.remove();
+
+        // renumber remaining disks
+        var i = 0;
+        $('#nics label').each(function(){
+            $(this).html("NIC/" + i);
+            i++;
+        });
     }
 
 

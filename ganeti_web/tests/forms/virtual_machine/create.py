@@ -56,7 +56,7 @@ class TestNewVirtualMachineFormInit(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual([(u'', u'---------'),
             (u'routed', u'routed'),
             (u'bridged', u'bridged')],
-            form.fields['nic_mode'].choices)
+            form.fields['nic_mode_0'].choices)
         self.assertEqual([(u'', u'---------')],
             form.fields['boot_order'].choices)
         self.assertEqual([(u'', u'---------'),
@@ -260,7 +260,7 @@ class TestNewVirtualMachineFormInit(TestCase, VirtualMachineTestCaseMixin):
         self.assertTrue('disk_size_0' in form.fields)
         self.assertTrue('disk_size_1' in form.fields)
 
-    def test_multiple_disks(self):
+    def test_multiple_disks_from_dict(self):
         user.grant('admin', cluster0)
         initial = dict(disks=[dict(size=123), dict(size=456)])
         form = NewVirtualMachineForm(user, initial)
@@ -271,6 +271,54 @@ class TestNewVirtualMachineFormInit(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual(2, data['disk_count'])
         self.assertEqual(123, data['disk_size_0'])
         self.assertEqual(456, data['disk_size_1'])
+
+    def test_default_nics(self):
+        user.grant('admin', cluster0)
+        form = NewVirtualMachineForm(user)
+        self.assertTrue('nic_mode_0' in form.fields)
+        self.assertFalse('nic_mode_1' in form.fields)
+        self.assertTrue('nic_link_0' in form.fields)
+        self.assertFalse('nic_link_1' in form.fields)
+
+    def test_no_nics(self):
+        user.grant('admin', cluster0)
+        form = NewVirtualMachineForm(user, dict(nic_count=0))
+        self.assertFalse('nic_mode_0' in form.fields)
+        self.assertFalse('nic_mode_1' in form.fields)
+        self.assertFalse('nic_link_0' in form.fields)
+        self.assertFalse('nic_link_1' in form.fields)
+
+    def test_single_nic(self):
+        user.grant('admin', cluster0)
+        form = NewVirtualMachineForm(user, dict(nic_count=1))
+        self.assertTrue('nic_mode_0' in form.fields)
+        self.assertFalse('nic_mode_1' in form.fields)
+        self.assertTrue('nic_link_0' in form.fields)
+        self.assertFalse('nic_link_1' in form.fields)
+
+    def test_multiple_nics(self):
+        user.grant('admin', cluster0)
+        form = NewVirtualMachineForm(user, dict(nic_count=2))
+        self.assertTrue('nic_mode_0' in form.fields)
+        self.assertTrue('nic_mode_1' in form.fields)
+        self.assertTrue('nic_link_0' in form.fields)
+        self.assertTrue('nic_link_1' in form.fields)
+
+    def test_multiple_nics_from_dict(self):
+        user.grant('admin', cluster0)
+        initial = dict(nics=[dict(mode=123, link='br0'), dict(mode=456, link='br1')])
+        form = NewVirtualMachineForm(user, initial)
+        self.assertTrue('nic_mode_0' in form.fields)
+        self.assertTrue('nic_mode_1' in form.fields)
+        self.assertTrue('nic_link_0' in form.fields)
+        self.assertTrue('nic_link_1' in form.fields)
+
+        data = form.data
+        self.assertEqual(2, data['nic_count'])
+        self.assertEqual(123, data['nic_mode_0'])
+        self.assertEqual(456, data['nic_mode_1'])
+        self.assertEqual('br0', data['nic_link_0'])
+        self.assertEqual('br1', data['nic_link_1'])
 
 
 class TestNewVirtualMachineFormValidation(TestVirtualMachineViewsBase):
@@ -292,8 +340,9 @@ class TestNewVirtualMachineFormValidation(TestVirtualMachineViewsBase):
                         root_path='/',
                         nic_type='paravirtual',
                         disk_type = 'paravirtual',
-                        nic_link = 'br43',
-                        nic_mode='routed',
+                        nic_count=1,
+                        nic_link_0 = 'br43',
+                        nic_mode_0='routed',
                         boot_order='disk',
                         os='image+ubuntu-lucid',
                         pnode=cluster.nodes.all()[0],
@@ -336,7 +385,7 @@ class TestNewVirtualMachineFormValidation(TestVirtualMachineViewsBase):
         user.grant('create_vm', cluster)
 
         for prop in ['cluster', 'hostname', 'disk_size_0', 'disk_type',
-                     'nic_type', 'nic_mode', 'vcpus', 'pnode', 'os',
+                     'nic_type', 'nic_mode_0', 'vcpus', 'pnode', 'os',
                      'disk_template', 'boot_order']:
             data_ = data.copy()
             del data_[prop]
@@ -467,3 +516,34 @@ class TestNewVirtualMachineFormValidation(TestVirtualMachineViewsBase):
         form = NewVirtualMachineForm(user, self.data)
         self.assertTrue(form.is_valid())
         self.assertEqual(4836, form.cleaned_data['disk_size'])
+
+    def test_no_nics(self):
+        """
+        test vm with no networking
+        """
+        self.data['nic_count'] = 0
+        user.grant('create_vm', cluster)
+        form = NewVirtualMachineForm(user, self.data)
+        self.assertTrue(form.is_valid())
+
+    def test_multiple_nics_missing_nic_link(self):
+        """
+        tests submitting multiple nics, and that one is missing nic_link
+        """
+        self.data['nic_count'] = 2
+        self.data['nic_mode_0'] = 'br0'
+        self.data['nic_mode_1'] = 'br1'
+        user.grant('create_vm', cluster)
+        form = NewVirtualMachineForm(user, self.data)
+        self.assertFalse(form.is_valid())
+
+    def test_multiple_nics_missing_nic_mode(self):
+        """
+        tests submitting multiple nics, and that one is missing nic_mode
+        """
+        self.data['nic_count'] = 2
+        self.data['nic_link_0'] = 'br0'
+        self.data['nic_link_1'] = 'br1'
+        user.grant('create_vm', cluster)
+        form = NewVirtualMachineForm(user, self.data)
+        self.assertFalse(form.is_valid())

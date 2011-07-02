@@ -645,9 +645,8 @@ def create(request, cluster_slug=None):
             vcpus = data.get('vcpus')
             disks = data.get('disks')
             disk_size = data.get('disk_size')
+            nics = data.get('nics')
             memory = data.get('memory')
-            nic_mode = data.get('nic_mode')
-            nic_link = data.get('nic_link')
             # If iallocator was not checked do not pass in the iallocator
             #  name. If iallocator was checked don't pass snode,pnode.
             if not iallocator:
@@ -696,7 +695,7 @@ def create(request, cluster_slug=None):
 
                 job_id = cluster.rapi.CreateInstance('create', hostname,
                         disk_template,
-                        disks,[{'mode':nic_mode, 'link':nic_link, }],
+                        disks,nics,
                         start=start, os=os,
                         pnode=pnode, snode=snode,
                         name_check=name_check, ip_check=name_check,
