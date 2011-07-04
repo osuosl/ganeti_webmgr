@@ -180,7 +180,7 @@ class MACAddressField(CharField):
 
     def validate(self, value):
         super(MACAddressField, self).validate(value)
-        if value is not None and not self.PATTERN.match(value):
+        if value not in (None,'') and not self.PATTERN.match(value):
             raise ValidationError(_('Invalid MAC Address'))
 
 
