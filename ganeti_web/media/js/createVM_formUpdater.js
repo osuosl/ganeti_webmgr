@@ -487,8 +487,15 @@ function formUpdater(url_choices, url_options, url_defaults){
 
         // renumber remaining disks
         var i = 0;
-        $('#disks label').each(function(){
-            $(this).html("Disk/" + i + " Size");
+        $('#disks p').each(function(){
+            $(this).children('label')
+                    .html("Disk/" + i + " Size")
+                    .attr("for", "id_disk_size_" + i);
+            $(this).children('#disks input[name^=disk_size]').each(function(){
+                $(this)
+                    .attr("name", "disk_size_" + i)
+                    .attr("id", "id_disk_size_" + i);
+            });
             i++;
         });
     }
@@ -526,10 +533,18 @@ function formUpdater(url_choices, url_options, url_defaults){
         var i = 0;
         $('#nics label').each(function(){
             $(this).html("NIC/" + i);
+            $(this).children('#nics input[name^=nic_link]').each(function(){
+                $(this)
+                    .attr("name", "nic_link_" + i)
+                    .attr("id", "id_nic_link_" + i);
+            });
+            $(this).children('#nics select[name^=nic_mode]').each(function(){
+                $(this)
+                    .attr("name", "nic_mode_" + i)
+                    .attr("id", "id_nic_mode_" + i);
+            });
             i++;
         });
     }
-
-
 }
 
