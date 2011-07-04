@@ -102,7 +102,7 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
             nic_type='paravirtual',
             nic_count=1,
             nic_link_0='br0',
-            nic_ma_0c='aa:bb:00:00:33:d2',
+            nic_mac_0='aa:bb:00:00:33:d2',
             root_path='/dev/vda1',
             kernel_path='/boot/vmlinuz-2.32.6-27-generic',
             serial_console=True,
