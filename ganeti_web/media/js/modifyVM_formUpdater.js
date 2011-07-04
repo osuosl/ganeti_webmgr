@@ -15,13 +15,22 @@ function modifyFormUpdater() {
     var tmp_vnc_x509_path = "";
     var tmp_vnc_x509_verify = false;
 
+    // NICs
+    var nic_count = $("#id_nic_count");
+    var nic_count_original = nic_count.val();
+    var nics = $("#nics");
+    var nic_add =    $("#nics .add");
+    var nic_delete = $("#nics .delete");
+
     this.init = function() {
         // Hide vnc_x509_path and verify if checkbox enabled
         if( !vnc_tls.is(':checked')) {
             vnc_x509_path_field.hide();
             vnc_x509_verify.parent().hide();
         }
-    }
+
+        _initChangeHooks();
+    };
 
     /**
      * If security model is anything other than user
@@ -36,7 +45,7 @@ function modifyFormUpdater() {
     }).trigger('change');
 
     /**
-     * Deselecting VNC TLS will save the state of 
+     * Deselecting VNC TLS will save the state of
      *  vnc_x509_verify, and value of vnc_x509_path,
      *  before clearing both fields.
      * Selecting VNC TLS will set these values back
@@ -57,7 +66,7 @@ function modifyFormUpdater() {
             // Show Error Messages
             prev = vnc_x509_path_field.prev();
             if (prev[0].tagName == 'UL') {
-               prev.show(); 
+               prev.show();
             }
         } else {
             // Save path and checkbox state
@@ -72,9 +81,64 @@ function modifyFormUpdater() {
             // Hide Error messages
             prev = vnc_x509_path_field.prev();
             if (prev[0].tagName == 'UL') {
-               prev.hide(); 
+               prev.hide();
             }
         }
     });
+
+    function _initChangeHooks(){
+        /* setup change hooks for the form elements */
+
+        nic_add.click(_add_nic);
+        nic_delete.live("click",_remove_nic);
+    }
+
+    function _add_nic() {
+        var count = nic_count.val();
+        nic_count.val(parseInt(count)+1);
+        var p = $('<p></p>');
+        var label = $("<label>NIC/" + count +"</label>");
+        var mac = $('<input type="text"/>');
+        mac.attr("name", "nic_mac_" + count);
+        mac.attr("id", "id_nic_mac_" + count);
+        var link = $("#nics input[name^=nic_link]").first().clone();
+        link.attr("name", "nic_link_" + count);
+        link.attr("id", "id_nic_link_" + count);
+        p.append(label);
+        p.append(mac);
+        p.append(link);
+        nics.append(p);
+        nics.append('<div class="icon delete"></div>');
+    }
+
+    function _remove_nic() {
+        /**
+         * Delete a nic.  If this is a nic currently on the virtualmachine it is
+         * just disabled.  Even if a new nic is added
+         */
+        var count = nic_count.val();
+        nic_count.val(parseInt(count)-1);
+        var button = $(this);
+        button.prev("p").remove();
+        button.prev("ul").remove();
+        button.remove();
+
+        // renumber remaining disks
+        var i = 0;
+        $('#nics p').each(function(){
+            $(this).children('label').html("NIC/" + i);
+            $(this).children('input[name^=nic_link]').each(function(){
+                $(this)
+                    .attr("name", "nic_link_" + i)
+                    .attr("id", "id_nic_link_" + i);
+            });
+            $(this).children('input[name^=nic_mac]').each(function(){
+                $(this)
+                    .attr("name", "nic_mac_" + i)
+                    .attr("id", "id_nic_mac_" + i);
+            });
+            i++;
+        });
+    }
 }
 
