@@ -76,15 +76,15 @@ class TestKvmModifyVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         """
         Test that the form does not contain any extra fields.
         """
-        modify_fields = ('vcpus', 'memory', 'nic_link', 'nic_mac', 'os')
+        modify_fields = ('vcpus', 'memory', 'nic_link_0', 'nic_mac_0', 'os')
         hv_fields = KvmModifyVirtualMachineForm.hvparam_fields
+        kvm_vm.refresh()
         form = KvmModifyVirtualMachineForm(kvm_vm)
-
         for field in chain(modify_fields, hv_fields):
-            self.assertTrue(field in form.fields)
+            self.assertTrue(field in form.fields, field)
 
         for field in form.Meta.exclude:
-            self.assertFalse(field in form.fields)
+            self.assertFalse(field in form.fields, field)
 
 
 class TestHvmModifyVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
@@ -131,15 +131,15 @@ class TestHvmModifyVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         """
         Test that the form does not contain any extra fields.
         """
-        modify_fields = ('vcpus', 'memory', 'nic_link', 'nic_mac', 'os')
+        modify_fields = ('vcpus', 'memory', 'nic_link_0', 'nic_mac_0', 'os')
         hv_fields = HvmModifyVirtualMachineForm.hvparam_fields
         form = HvmModifyVirtualMachineForm(hvm_vm)
 
         for field in chain(modify_fields, hv_fields):
-            self.assertTrue(field in form.fields)
+            self.assertTrue(field in form.fields, field)
 
         for field in form.Meta.exclude:
-            self.assertFalse(field in form.fields)
+            self.assertFalse(field in form.fields, field)
         """
         # Uncomment to see if modify contains all available hvparam fields
         hvparam_fields = HvmModifyVirtualMachineForm.hvparam_fields
@@ -190,21 +190,23 @@ class TestPvmModifyVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         """
         Test that the form does not contain any extra fields.
         """
-        modify_fields = ('vcpus', 'memory', 'nic_link', 'nic_mac', 'os')
+        modify_fields = ('vcpus', 'memory', 'nic_link_0', 'nic_mac_0', 'os')
         hv_fields = PvmModifyVirtualMachineForm.hvparam_fields
         form = PvmModifyVirtualMachineForm(pvm_vm)
 
         for field in chain(modify_fields, hv_fields):
-            self.assertTrue(field in form.fields)
+            self.assertTrue(field in form.fields, field)
 
         for field in form.Meta.exclude:
-            self.assertFalse(field in form.fields)
+            self.assertFalse(field in form.fields, field)
 
     def test_bound_form(self):
         data = dict(
             os = 'image+default',
             vcpus = 2,
             memory = 200,
+            nic_count=1,
+            nic_link_0='br0'
         )
         form = PvmModifyVirtualMachineForm(pvm_vm, data)
         self.assertTrue(form.is_bound)

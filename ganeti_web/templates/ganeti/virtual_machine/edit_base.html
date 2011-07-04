@@ -32,9 +32,16 @@
             {% vmfield form.vcpus %}
             {% vmfield form.memory %}
             {% block beparams %}{% endblock %}
-            {% vmfield form.nic_link %}
-            {% vmfield form.nic_mac %}
         </fieldset>
+
+        <fieldset id="nics">
+            <h3>{% trans "Network Devices" %}<div class="icon add"></div></h3>
+            {{ form.nic_count }}
+            {% for index in form.nic_fields %}
+                {% vmfield_nic form index %}
+            {% endfor %}
+        </fieldset>
+
         <fieldset>
             <legend>{% trans "Operating System Parameters" %}</legend>
             {% vmfield form.os %}

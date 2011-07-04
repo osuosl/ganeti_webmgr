@@ -25,7 +25,7 @@ from ganeti_web.constants import EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES, \
     HV_NIC_MODES, HV_DISK_TYPES, HV_NIC_TYPES, KVM_NIC_TYPES, HVM_DISK_TYPES, \
     KVM_DISK_TYPES, KVM_BOOT_ORDER, HVM_BOOT_ORDER, KVM_CHOICES, HV_USB_MICE, \
     HV_SECURITY_MODELS, KVM_FLAGS, HV_DISK_CACHES, MODE_CHOICES, HVM_CHOICES
-from ganeti_web.fields import DataVolumeField
+from ganeti_web.fields import DataVolumeField, MACAddressField
 from ganeti_web.models import (Cluster, ClusterUser, Organization,
                            VirtualMachineTemplate, VirtualMachine)
 from ganeti_web.utilities import cluster_default_info, cluster_os_list, contains, get_hypervisor
@@ -538,14 +538,14 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
     always_required = ('vcpus', 'memory')
     empty_field = EMPTY_CHOICE_FIELD
 
-    nic_mac = forms.CharField(label=_('NIC Mac'), required=False)
+    nic_count = forms.IntegerField(initial=1, widget=forms.HiddenInput())
     os = forms.ChoiceField(label=_('Operating System'), choices=[empty_field])
 
     class Meta:
         model = VirtualMachineTemplate
         exclude = ('start', 'owner', 'cluster', 'hostname', 'name_check',
-        'iallocator', 'iallocator_hostname', 'disk_template', 'pnode', 
-        'snode','disk_size', 'nic_mode', 'template_name', 'hypervisor')
+        'iallocator', 'iallocator_hostname', 'disk_template', 'pnode', 'nics',
+        'snode','disk_size', 'nic_mode', 'template_name', 'hypervisor', 'disks')
 
     def __init__(self, vm, *args, **kwargs):
         super(VirtualMachineForm, self).__init__(*args, **kwargs)
@@ -580,8 +580,17 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
             #  ints.
             self.fields['vcpus'].initial = info['beparams']['vcpus']
             self.fields['memory'].initial = str(info['beparams']['memory'])
-            self.fields['nic_link'].initial = info['nic.links'][0]
-            self.fields['nic_mac'].initial = info['nic.macs'][0]
+
+            self.fields['nic_count'].initial = nic_count = len(info['nic.links'])
+            self.nic_fields = xrange(nic_count)
+            for i in xrange(nic_count):
+                link = forms.CharField(label=_('NIC/%s Link' % i), max_length=255)
+                link.initial = info['nic.links'][i]
+                self.fields['nic_link_%s' % i] = link
+                mac = MACAddressField(label=_('NIC/%s Mac' % i), required=False)
+                mac.initial = info['nic.macs'][i]
+                self.fields['nic_mac_%s' % i] = mac
+
             self.fields['os'].initial = info['os']
             
             try:
@@ -618,6 +627,8 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
             data['start'] = 'reboot' in self.data or self.vm.is_running
             check_quota_modify(self)
             del data['start']
+
+        
 
         return data
 
@@ -718,10 +729,20 @@ class ModifyConfirmForm(forms.Form):
 
         cleaned = self.cleaned_data
         cleaned['rapi_dict'] = data
+
+        # XXX copy properties into cleaned data so that check_quota_modify can
+        # be used
         cleaned['memory'] = data['memory']
         cleaned['vcpus'] = data['vcpus']
         cleaned['start'] = 'reboot' in data or self.vm.is_running
         check_quota_modify(self)
+
+        # build nics dictionaries
+        nics = []
+        for i in xrange(data.pop('nic_count')):
+            nics.append(dict(mac=data.pop('nic_mac_%s' % i),
+                             link=data.pop('nic_link_%s' % i)))
+        data['nics'] = nics
         
         return cleaned
 

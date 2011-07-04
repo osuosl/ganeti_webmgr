@@ -303,7 +303,6 @@ def replace_disks(request, cluster_slug, instance):
     view used for initiating a Replace Disks job
     """
     vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
-    print vm.info
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','replace_disks'])):
         return render_403(request, _("You do not have sufficient privileges"))
@@ -863,16 +862,10 @@ def modify_confirm(request, cluster_slug, instance):
             if form.is_valid():
                 data = form.cleaned_data
                 rapi_dict = data['rapi_dict']
-                niclink = rapi_dict.pop('nic_link')
-                nicmac = rapi_dict.pop('nic_mac', None)
+                nics = rapi_dict.pop('nics')
                 vcpus = rapi_dict.pop('vcpus')
                 memory = rapi_dict.pop('memory')
                 os_name = rapi_dict.pop('os')
-                # Modify Instance rapi call
-                if nicmac is None:
-                    nics=[(0, {'link':niclink,}),]
-                else:
-                    nics=[(0, {'link':niclink, 'mac':nicmac,}),]
                 job_id = cluster.rapi.ModifyInstance(instance,
                     nics=nics, os_name=os_name, hvparams=rapi_dict,
                     beparams={'vcpus':vcpus,'memory':memory}
@@ -917,17 +910,23 @@ def modify_confirm(request, cluster_slug, instance):
     hvparams = info['hvparams']
 
     old_set = dict(
-        nic_link=info['nic.links'][0],
-        nic_mac=info['nic.macs'][0],
+
         memory=info['beparams']['memory'],
         vcpus=info['beparams']['vcpus'],
         os=info['os'],
     )
+
+    nic_count = len(info['nic.links'])
+    for i in xrange(nic_count):
+        old_set['nic_link_%s' % i] = info['nic.links'][i]
+        old_set['nic_mac_%s' % i] = info['nic.macs'][i]
+
     # Add hvparams to the old_set
     old_set.update(hvparams)
 
     instance_diff = {}
     fields = hv_form(vm).fields
+    
     for key in data.keys():
         if key == 'memory':
             diff = compare(render_storage(old_set[key]),
@@ -957,7 +956,7 @@ def modify_confirm(request, cluster_slug, instance):
             #diff = compare(oses[0][1], oses[1][1])
         elif key not in old_set.keys():
             diff = ""
-            instance_diff[key] = 'Key missing'
+            instance_diff[key] = _('Key missing')
         else:
             diff = compare(old_set[key], data[key])
 
@@ -965,9 +964,13 @@ def modify_confirm(request, cluster_slug, instance):
             label = fields[key].label
             instance_diff[label] = diff
 
+    # remove nic_count
+    del instance_diff['nic_count']
+
     # Remove NIC MAC from data if it does not change
-    if fields['nic_mac'].label not in instance_diff:
-        del data['nic_mac']
+    for i in xrange(nic_count):
+        if fields['nic_mac_%s' % i].label not in instance_diff:
+            del data['nics'][i]['mac']
     # Repopulate form with changed values
     form.fields['rapi_dict'] = CharField(widget=HiddenInput,
         initial=json.dumps(data))
