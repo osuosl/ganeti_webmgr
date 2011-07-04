@@ -505,13 +505,13 @@ function formUpdater(url_choices, url_options, url_defaults){
         nic_count.val(parseInt(count)+1);
         var p = $('<p></p>');
         var label = $("<label>NIC/" + count +"</label>");
-        var mode = $("#nics select[name^=nic_mode]").first();
+        var mode = $("select[name^=nic_mode]").first();
         var val = mode.val();
         mode = mode.clone();
         mode.attr("name", "nic_mode_" + count);
         mode.attr("id", "id_nic_mode_" + count);
         mode.val(val);
-        var link = $("#nics input[name^=nic_link]").first().clone();
+        var link = $("input[name^=nic_link]").first().clone();
         link.attr("name", "nic_link_" + count);
         link.attr("id", "id_nic_link_" + count);
         p.append(label);
@@ -531,14 +531,15 @@ function formUpdater(url_choices, url_options, url_defaults){
 
         // renumber remaining disks
         var i = 0;
-        $('#nics label').each(function(){
-            $(this).html("NIC/" + i);
-            $(this).children('#nics input[name^=nic_link]').each(function(){
+        $('#nics p').each(function(){
+            $(this).children('label')
+                .html("NIC/" + i);
+            $(this).children('input[name^=nic_link]').each(function(){
                 $(this)
                     .attr("name", "nic_link_" + i)
                     .attr("id", "id_nic_link_" + i);
             });
-            $(this).children('#nics select[name^=nic_mode]').each(function(){
+            $(this).children('select[name^=nic_mode]').each(function(){
                 $(this)
                     .attr("name", "nic_mode_" + i)
                     .attr("id", "id_nic_mode_" + i);
