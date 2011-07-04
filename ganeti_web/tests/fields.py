@@ -110,7 +110,6 @@ class TestMACAddressField(TestCase):
         self.f.required = False
         self.f.validate(None)
 
-
     def test_valid(self):
         self.f.validate("aa:bb:cc:dd:ee:ff")
 

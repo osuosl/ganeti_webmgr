@@ -966,11 +966,7 @@ def modify_confirm(request, cluster_slug, instance):
 
     # remove nic_count
     del instance_diff['nic_count']
-
-    # Remove NIC MAC from data if it does not change
-    for i in xrange(nic_count):
-        if fields['nic_mac_%s' % i].label not in instance_diff:
-            del data['nics'][i]['mac']
+    
     # Repopulate form with changed values
     form.fields['rapi_dict'] = CharField(widget=HiddenInput,
         initial=json.dumps(data))

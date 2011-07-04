@@ -547,8 +547,9 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
         'iallocator', 'iallocator_hostname', 'disk_template', 'pnode', 'nics',
         'snode','disk_size', 'nic_mode', 'template_name', 'hypervisor', 'disks')
 
-    def __init__(self, vm, *args, **kwargs):
-        super(VirtualMachineForm, self).__init__(*args, **kwargs)
+    def __init__(self, vm, initial=None, *args, **kwargs):
+        super(VirtualMachineForm, self).__init__(initial, *args, **kwargs)
+
         # Set owner on form
         try:
             self.owner
@@ -581,15 +582,21 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
             self.fields['vcpus'].initial = info['beparams']['vcpus']
             self.fields['memory'].initial = str(info['beparams']['memory'])
 
-            self.fields['nic_count'].initial = nic_count = len(info['nic.links'])
+            # always take the larger nic count.  this ensures that if nics are
+            # being removed that they will be in the form as Nones
+            nic_count_original = len(info['nic.links'])
+            nic_count = int(initial.get('nic_count', 1)) if initial else 1
+            nic_count = nic_count_original if nic_count_original > nic_count else nic_count
+            self.fields['nic_count'].initial = nic_count
             self.nic_fields = xrange(nic_count)
             for i in xrange(nic_count):
-                link = forms.CharField(label=_('NIC/%s Link' % i), max_length=255)
-                link.initial = info['nic.links'][i]
+                link = forms.CharField(label=_('NIC/%s Link' % i), max_length=255, required=False)
                 self.fields['nic_link_%s' % i] = link
                 mac = MACAddressField(label=_('NIC/%s Mac' % i), required=False)
-                mac.initial = info['nic.macs'][i]
                 self.fields['nic_mac_%s' % i] = mac
+                if i < nic_count_original:
+                    mac.initial = info['nic.macs'][i]
+                    link.initial = info['nic.links'][i]
 
             self.fields['os'].initial = info['os']
             
@@ -628,7 +635,15 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
             check_quota_modify(self)
             del data['start']
 
-        
+        for i in xrange(data['nic_count']):
+            mac_field = 'nic_mac_%s' % i
+            link_field = 'nic_link_%s' % i
+            mac = data[mac_field] if mac_field in data else None
+            link = data[link_field] if link_field in data else None
+            if mac and not link:
+                self._errors[link_field] = self.error_class([_('This field is required')])
+            elif link and not mac:
+                self._errors[mac_field] = self.error_class([_('This field is required')])
 
         return data
 

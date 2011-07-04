@@ -8,7 +8,8 @@ from ganeti_web import constants
 from ganeti_web.forms.virtual_machine import \
     HvmModifyVirtualMachineForm, KvmModifyVirtualMachineForm, \
     PvmModifyVirtualMachineForm, ReplaceDisksForm, ModifyVirtualMachineForm
-from ganeti_web.tests.rapi_proxy import RapiProxy, XenRapiProxy, XEN_INFO, XEN_HVM_INSTANCE, XEN_PVM_INSTANCE
+from ganeti_web.tests.rapi_proxy import RapiProxy, XenRapiProxy, XEN_INFO, \
+    XEN_HVM_INSTANCE, XEN_PVM_INSTANCE
 from ganeti_web.tests.views.virtual_machine.base import VirtualMachineTestCaseMixin
 
 __all__ = [
@@ -38,17 +39,17 @@ class TestModifyVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
             disk_cache='default',
             initrd_path='',
             kernel_args='ro',
-            kvm_flag='',
-            mem_path='',
+            kvm_flag=None,
+            mem_path=None,
             migration_downtime=30,
             security_domain='',
             security_model='none',
-            usb_mouse='',
+            usb_mouse=None,
             use_chroot=False,
             use_localtime=False,
             vnc_bind_addres='0.0.0.0',
             vnc_tls=False,
-            vnc_x509_path='',
+            vnc_x509_path=None,
             vnc_x509_verify=False,
             memory=512,
             os='image+debian-osgeo',
@@ -78,15 +79,9 @@ class TestModifyVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         self.assertTrue("nic_mac_1" in form.fields)
         self.assertTrue("nic_link_0" in form.fields)
         self.assertTrue("nic_link_1" in form.fields)
-        self.assertTrue(form.is_valid())
-
-    def test_validate_valid(self):
-        form = self.Form(vm)
-        print 'wtf [%s]' % form.is_valid()
-        print form.data
         self.assertTrue(form.is_valid(), form.errors)
 
-    def test_validate_valid_data(self):
+    def test_validate_data(self):
         form = self.Form(vm, self.data)
         self.assertTrue(form.is_valid(), form.errors)
 
@@ -110,7 +105,7 @@ class TestModifyVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         data = self.data
         del data['nic_mac_0']
         form = self.Form(vm, data)
-        self.assertTrue(form.is_valid(), form.errors)
+        self.assertFalse(form.is_valid(), form.errors)
 
     def test_validate_missing_nic_link(self):
         data = self.data
@@ -197,6 +192,10 @@ class TestHvmModifyVirtualMachineForm(TestModifyVirtualMachineForm):
         cluster.info['default_hypervisor'] = 'xen-hvm'
         vm.info = XEN_HVM_INSTANCE
 
+        # data custom to HVM
+        self.data['os'] ='debootstrap+default'
+        self.data['boot_order'] = 'cd'
+
     def tearDown(self):
         User.objects.all().delete()
         Group.objects.all().delete()
@@ -207,7 +206,7 @@ class TestHvmModifyVirtualMachineForm(TestModifyVirtualMachineForm):
         self.assertEqual(models.client.GanetiRapiClient, XenRapiProxy)
 
     def test_meta_default_hypervisor(self):
-        self.assertEqual(hvm_cluster.info['default_hypervisor'], 'xen-hvm')
+        self.assertEqual(cluster.info['default_hypervisor'], 'xen-hvm')
 
     def test_form_defaults(self):
         choices = constants.HVM_CHOICES
@@ -239,7 +238,7 @@ class TestHvmModifyVirtualMachineForm(TestModifyVirtualMachineForm):
         """
         # Uncomment to see if modify contains all available hvparam fields
         hvparam_fields = HvmModifyVirtualMachineForm.hvparam_fields
-        hvparams = hvm_cluster.info['hvparams']['xen-hvm']
+        hvparams = cluster.info['hvparams']['xen-hvm']
         self.assertEqual(set(hvparams), set(hvparam_fields))
         """
 
@@ -248,7 +247,7 @@ class TestHvmModifyVirtualMachineForm(TestModifyVirtualMachineForm):
         Test that fields contain the correct initial values taken from a vm.
         """
         hvparam_fields = HvmModifyVirtualMachineForm.hvparam_fields
-        hvparams = hvm_vm.info['hvparams']
+        hvparams = vm.info['hvparams']
         form = HvmModifyVirtualMachineForm(vm)
 
         for field in hvparam_fields:
@@ -265,6 +264,7 @@ class TestPvmModifyVirtualMachineForm(TestModifyVirtualMachineForm):
         super(TestPvmModifyVirtualMachineForm, self).setUp()
         cluster.info = XEN_INFO
         vm.info = XEN_PVM_INSTANCE
+        self.data['os'] ='debootstrap+default'
 
     def tearDown(self):
         User.objects.all().delete()
@@ -273,13 +273,13 @@ class TestPvmModifyVirtualMachineForm(TestModifyVirtualMachineForm):
         Cluster.objects.all().delete()
 
     def test_meta_default_hypervisor(self):
-        self.assertEqual(pvm_cluster.info['default_hypervisor'], 'xen-pvm')
+        self.assertEqual(cluster.info['default_hypervisor'], 'xen-pvm')
 
     def test_meta_xenrapiproxy_set(self):
         self.assertEqual(models.client.GanetiRapiClient, XenRapiProxy)
 
     def test_form_defaults(self):
-        form = PvmModifyVirtualMachineForm(pvm_vm)
+        form = PvmModifyVirtualMachineForm(vm)
 
     def test_initial_form_fields(self):
         """
@@ -301,7 +301,8 @@ class TestPvmModifyVirtualMachineForm(TestModifyVirtualMachineForm):
             vcpus = 2,
             memory = 200,
             nic_count=1,
-            nic_link_0='br0'
+            nic_link_0='br0',
+            nic_mac_0='aa:bb:cc:dd:ee:ff'
         )
         form = PvmModifyVirtualMachineForm(vm, data)
         self.assertTrue(form.is_bound)
@@ -312,7 +313,7 @@ class TestPvmModifyVirtualMachineForm(TestModifyVirtualMachineForm):
         Test that fields contain the correct initial values taken from a vm.
         """
         hvparam_fields = PvmModifyVirtualMachineForm.hvparam_fields
-        hvparams = pvm_vm.info['hvparams']
+        hvparams = vm.info['hvparams']
         form = PvmModifyVirtualMachineForm(vm)
 
         for field in hvparam_fields:
