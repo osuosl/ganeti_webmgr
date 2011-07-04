@@ -179,9 +179,8 @@ class MACAddressField(CharField):
         super(MACAddressField, self).__init__(**kwargs)
 
     def validate(self, value):
-        if value is None and not self.required:
-            return
-        if not self.PATTERN.match(value):
+        super(MACAddressField, self).validate(value)
+        if value is not None and not self.PATTERN.match(value):
             raise ValidationError(_('Invalid MAC Address'))
 
 
