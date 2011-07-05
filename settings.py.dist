@@ -170,8 +170,7 @@ INSTALLED_APPS = (
 )
 
 # Search settings
-ROOT_DIR_NAME = DOC_ROOT.split('/')[-1]
-HAYSTACK_SITECONF = ROOT_DIR_NAME + '.search_sites'
+HAYSTACK_SITECONF = 'search_sites'
 HAYSTACK_SEARCH_ENGINE = 'whoosh'
 HAYSTACK_WHOOSH_PATH = os.path.join(DOC_ROOT, 'whoosh_index')
 
