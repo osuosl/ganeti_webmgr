@@ -138,7 +138,6 @@ urlpatterns += patterns('ganeti_web.views.vm_template',
     url(r'^template/%s/delete/?$' % template, 'delete', name='template-delete'),
     # Create
     url(r'^template/create/$', 'create', name='template-create'),
-    url(r'^template/create/%s/$' % instance, 'create_from_instance', name='template-create-from-instance'),
     # Edit
     url(r'^template/edit/%s/?$' % template, 'create', name='template-edit'),
     # Copy
@@ -155,7 +154,6 @@ urlpatterns += patterns('ganeti_web.views.virtual_machine',
     url(r'^vm/add/choices/$', 'cluster_choices', name="instance-create-cluster-choices"),
     url(r'^vm/add/options/$', 'cluster_options', name="instance-create-cluster-options"),
     url(r'^vm/add/defaults/$', 'cluster_defaults', name="instance-create-cluster-defaults"),
-    url(r'^vm/add/template/%s/$' % template, 'create_from_template', name="instance-create-from-template"),
     url(r'^vm/add/%s/?$' % cluster_slug, 'create', name="instance-create"),
     url(r'^%s/recover/?$' % vm_prefix, 'recover_failed_deploy', name="instance-create-recover"),
 

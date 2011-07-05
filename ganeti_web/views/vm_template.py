@@ -23,9 +23,9 @@ from django.http import HttpResponse, HttpResponseRedirect, \
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 
-from ganeti_web.models import VirtualMachine, VirtualMachineTemplate
+from ganeti_web.models import VirtualMachineTemplate
 from ganeti_web.forms.virtual_machine import VirtualMachineTemplateForm, \
-    VirtualMachineTemplateCopyForm, NewVirtualMachineForm
+    VirtualMachineTemplateCopyForm
 
 
 @login_required
@@ -71,47 +71,6 @@ def create(request, template=None):
         },
         context_instance = RequestContext(request)
     )
-
-
-@login_required
-def create_from_instance(request, instance):
-    """
-    View used to create a template from a virtual machine instance.
-    """
-    vm = get_object_or_404(VirtualMachine, hostname=instance)
-    initial = instance_to_template(vm)
-
-    if request.method == "GET":
-        form = VirtualMachineTemplateForm(initial=initial, hypervisor='kvm')
-    elif request.method == "POST":
-        form = VirtualMachineTemplateForm(request.POST)
-    else:
-        return HttpResponseNotAllowed(["GET","POST"])
-
-    return render_to_response('ganeti/vm_template/create.html', {
-        'form': form,
-        'action':reverse('template-create-from-instance', args=[instance]),
-        },
-        context_instance = RequestContext(request)
-    )
-
-
-def instance_to_template(instance):
-    tmp = VirtualMachineTemplate()
-    initial = dict(
-        disk_size = instance.disk_size,
-    )
-    if isinstance(instance, VirtualMachine):
-        for k, v in instance.info.items():
-            if isinstance(v, dict):
-                for i, j in v.items():
-                    if hasattr(tmp, i):
-                        initial[i] = j
-            else:
-                if hasattr(tmp, k):
-                    initial[k] = v
-
-    return initial
 
 
 @login_required

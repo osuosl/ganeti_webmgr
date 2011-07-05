@@ -31,11 +31,6 @@ $(document).ready(function() {
 </h1>
 <ul id="actions">
     <li>
-        <a class="button add" href="{% url instance-create-from-template template %}">
-            {% trans "Create VM" %}
-        </a>
-    </li>
-    <li>
         <a class="button edit" href="{% url template-edit template %}">
             {% trans "Edit" %}
         </a>
@@ -52,7 +47,7 @@ $(document).ready(function() {
     </li>
 </ul>
 
-<table class="horizontal overview">
+<table class="horizontal">
     <tr><th>{% trans "Description" %}</th><td>{{ template.description }}</td></tr>
     <tr>
         <th>{% trans "Operating System" %}</th>
@@ -116,5 +111,6 @@ $(document).ready(function() {
         <td>{{ template.serial_console|checkmark }}</td>
     </tr>
 </table>
+
 {% endblock content %}
 

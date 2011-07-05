@@ -949,18 +949,6 @@ def modify_confirm(request, cluster_slug, instance):
 
 
 @login_required
-def create_from_template(request, template):
-    vm_template = get_object_or_404(VirtualMachineTemplate, template_name=template)
-    form = NewVirtualMachineForm(request.user, instance=vm_template)
-
-    return render_to_response('ganeti/virtual_machine/create.html', {
-        'form': form,
-        },
-        context_instance=RequestContext(request),
-    )
-
-
-@login_required
 def recover_failed_deploy(request, cluster_slug, instance):
     """
     Loads a vm that failed to deploy back into the edit form
