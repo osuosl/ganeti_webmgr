@@ -910,7 +910,6 @@ def modify_confirm(request, cluster_slug, instance):
     hvparams = info['hvparams']
 
     old_set = dict(
-
         memory=info['beparams']['memory'],
         vcpus=info['beparams']['vcpus'],
         os=info['os'],
@@ -966,7 +965,12 @@ def modify_confirm(request, cluster_slug, instance):
 
     # remove nic_count
     del instance_diff['nic_count']
-    
+
+    # remove mac if it has not changed
+    for i in xrange(nic_count):
+        if fields['nic_mac_%s' % i].label not in instance_diff:
+            del data['nic_mac_%s' % i]
+
     # Repopulate form with changed values
     form.fields['rapi_dict'] = CharField(widget=HiddenInput,
         initial=json.dumps(data))

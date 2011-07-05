@@ -755,10 +755,11 @@ class ModifyConfirmForm(forms.Form):
         # build nics dictionaries
         nics = []
         for i in xrange(data.pop('nic_count')):
-            nics.append(dict(mac=data.pop('nic_mac_%s' % i),
-                             link=data.pop('nic_link_%s' % i)))
+            nic = dict(link=data.pop('nic_link_%s' % i))
+            if 'nic_mac_%s' % i in data:
+                nic['mac'] = data.pop('nic_mac_%s' % i)
+            nics.append((i, nic))
         data['nics'] = nics
-        
         return cleaned
 
 
