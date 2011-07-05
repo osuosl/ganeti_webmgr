@@ -13,7 +13,15 @@
     <tbody>
         {% for cluster, res in resources.items %}
         <tr>
-            <td>{{ cluster|abbreviate_fqdn }}</td>
+            <td>
+            {% if admin %} 
+                <a href="{% url cluster-detail cluster.slug %}">
+                    {{ cluster|abbreviate_fqdn }}
+                </a>
+            {% else %}
+                {{ cluster|abbreviate_fqdn }}
+            {% endif %}
+            </td>
             <td title="Running / total">{{ res.running }} / {{ res.total }}</td>
 
             {% if not res.set.disk %}
