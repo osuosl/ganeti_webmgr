@@ -5,11 +5,11 @@
 {% block title %}{% trans "Copy Template" %}{% endblock title %}
 {% block content %}
 <h1>
-    <a class="breadcrumb" href="{% url template-detail template.id %}">{{template.template_name}}</a>
+    <a class="breadcrumb" href="{% url template-detail template %}">{{template.template_name}}</a>
      : {% trans "Copy" %}
 </h1>
 <div id="virtualmachineform">
-    <form method="post" action="{% url template-copy template.id %}">
+    <form method="post" action="{% url template-copy template %}">
         <fieldset class="first_fieldset">
             {% vmfield form.template_name %}
             {% vmfield form.description %}

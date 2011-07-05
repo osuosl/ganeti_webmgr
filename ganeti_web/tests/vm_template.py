@@ -58,10 +58,10 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
         """
         Test viewing details of a virtual machine template.
         """
-        self.assertTrue(VirtualMachineTemplate.objects.filter(pk=template1.id).exists())
+        self.assertTrue(VirtualMachineTemplate.objects.filter(template_name=template1).exists())
 
         url = '/template/%s'
-        args = (template1.id,)
+        args = (template1,)
         self.assert_standard_fails(url, args, authorized=False)
 
     def test_create_view(self):

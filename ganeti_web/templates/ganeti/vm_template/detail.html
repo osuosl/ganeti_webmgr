@@ -14,7 +14,7 @@ $(document).ready(function() {
             $("a.delete").addClass("deleting");
             $("a.delete").removeClass("delete");
 
-            var href = "{% url template-delete template.id %}";
+            var href = "{% url template-delete template %}";
             $.delete_(href, function(data){
                 window.location = "{% url template-list %}";
             });
@@ -31,22 +31,22 @@ $(document).ready(function() {
 </h1>
 <ul id="actions">
     <li>
-        <a class="button add" href="{% url instance-create-from-template template.id %}">
+        <a class="button add" href="{% url instance-create-from-template template %}">
             {% trans "Create VM" %}
         </a>
     </li>
     <li>
-        <a class="button edit" href="{% url template-edit template.id %}">
+        <a class="button edit" href="{% url template-edit template %}">
             {% trans "Edit" %}
         </a>
     </li>
     <li>
-        <a class="button edit" href="{% url template-copy template.id %}">
+        <a class="button edit" href="{% url template-copy template %}">
             {% trans "Copy" %}
         </a>
     </li>
     <li>
-        <a class="button delete" href="{% url template-delete template.id %}">
+        <a class="button delete" href="{% url template-delete template %}">
             {% trans "Delete" %}
         </a>
     </li>

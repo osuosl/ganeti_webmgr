@@ -39,15 +39,15 @@ def templates(request):
 
 
 @login_required
-def create(request, template_id=None):
+def create(request, template=None):
     """
     View to create or edit a new VirtualMachineTemplate.
 
-    @param template_id Will populate the form with data from a template.
+    @param template Will populate the form with data from a template.
     """
     obj = None
-    if template_id:
-        obj = VirtualMachineTemplate.objects.get(pk=template_id)
+    if template:
+        obj = VirtualMachineTemplate.objects.get(template_name=template)
 
     if request.method == "GET":
         form = VirtualMachineTemplateForm(instance=obj)
@@ -56,12 +56,12 @@ def create(request, template_id=None):
         if form.is_valid():
             template = form.save()
             return HttpResponseRedirect(reverse('template-detail', 
-                args=[template.id]))
+                args=[template]))
     else:
         return HttpResponseNotAllowed(["GET","POST"])
 
     if obj:
-        action = reverse('template-edit', args=[template_id])
+        action = reverse('template-edit', args=[template])
     else:
         action = reverse('template-create')
 
@@ -115,8 +115,8 @@ def instance_to_template(instance):
 
 
 @login_required
-def detail(request, template_id):
-    vm_template = get_object_or_404(VirtualMachineTemplate, pk=template_id)
+def detail(request, template):
+    vm_template = get_object_or_404(VirtualMachineTemplate, template_name=template)
     return render_to_response('ganeti/vm_template/detail.html', {
         'template':vm_template,
         },
@@ -125,11 +125,11 @@ def detail(request, template_id):
 
 
 @login_required
-def copy(request, template_id):
+def copy(request, template):
     """
     View used to create a copy of a VirtualMachineTemplate
     """
-    obj = get_object_or_404(VirtualMachineTemplate, pk=template_id)
+    obj = get_object_or_404(VirtualMachineTemplate, template_name=template)
     if request.method == "GET":
         form = VirtualMachineTemplateCopyForm()
         return render_to_response('ganeti/vm_template/copy.html', {
@@ -156,10 +156,10 @@ def copy(request, template_id):
 
 
 @login_required
-def delete(request, template_id):
+def delete(request, template):
     if request.method == "DELETE":
         try:
-            vm_template = VirtualMachineTemplate.objects.get(pk=template_id)
+            vm_template = VirtualMachineTemplate.objects.get(template_name=template)
             vm_template.delete()
         except VirtualMachineTemplate.DoesNotExist:
             return HttpResponse('-1', mimetype='application/json')

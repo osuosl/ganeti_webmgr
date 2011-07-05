@@ -949,9 +949,9 @@ def modify_confirm(request, cluster_slug, instance):
 
 
 @login_required
-def create_from_template(request, template_id):
-    template = get_object_or_404(VirtualMachineTemplate, pk=template_id)
-    form = NewVirtualMachineForm(request.user, instance=template)
+def create_from_template(request, template):
+    vm_template = get_object_or_404(VirtualMachineTemplate, template_name=template)
+    form = NewVirtualMachineForm(request.user, instance=vm_template)
 
     return render_to_response('ganeti/virtual_machine/create.html', {
         'form': form,
