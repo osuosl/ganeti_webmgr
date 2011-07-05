@@ -178,6 +178,10 @@ class MACAddressField(CharField):
         kwargs['max_length'] = 17
         super(MACAddressField, self).__init__(**kwargs)
 
+    def to_python(self, value):
+        val = super(MACAddressField, self).to_python(value)
+        return None if '' == val else val
+
     def validate(self, value):
         super(MACAddressField, self).validate(value)
         if value not in (None,'') and not self.PATTERN.match(value):
