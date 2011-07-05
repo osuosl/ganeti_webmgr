@@ -59,7 +59,7 @@ class TestClusterUser(TestCase):
         
         # profile created
         profile = user.get_profile()
-        self.assert_(profile, 'profile was not created')
+        self.assertTrue(profile, 'profile was not created')
         
         # profile deleted
         user.delete()
@@ -77,7 +77,7 @@ class TestClusterUser(TestCase):
         
         # org created
         org = group.organization
-        self.assert_(group.organization, 'profile was not created')
+        self.assertTrue(group.organization, 'profile was not created')
         
         # org deleted
         group.delete()
@@ -93,7 +93,7 @@ class TestClusterUser(TestCase):
         cluster_user = ClusterUser.objects.all()[0]
         profile = cluster_user.cast()
         
-        self.assert_(isinstance(profile, (Profile,)))
+        self.assertTrue(isinstance(profile, (Profile,)))
     
     def test_casting_organization(self):
         """
@@ -105,7 +105,7 @@ class TestClusterUser(TestCase):
         cluster_user = ClusterUser.objects.all()[0]
         organization = cluster_user.cast()
         
-        self.assert_(isinstance(organization, (Organization,)))
+        self.assertTrue(isinstance(organization, (Organization,)))
     
     def test_used_resources(self):
         """
@@ -153,9 +153,9 @@ class TestClusterUser(TestCase):
         
         # multiple clusters - every VM
         result = owner.used_resources(cluster=None, only_running=False)
-        self.assert_(c1.id in result.keys())
-        self.assert_(c2.id in result.keys())
-        self.assert_(c3.id in result.keys())
+        self.assertTrue(c1.id in result.keys())
+        self.assertTrue(c2.id in result.keys())
+        self.assertTrue(c3.id in result.keys())
         self.assertEqual(result[c1.id]["disk"], 12)
         self.assertEqual(result[c1.id]["ram"], 2)
         self.assertEqual(result[c1.id]["virtual_cpus"], 6)
@@ -163,9 +163,9 @@ class TestClusterUser(TestCase):
         
         # multiple clusters - only running VMs
         result = owner.used_resources(cluster=None, only_running=True)
-        self.assert_(c1.id in result.keys())
-        self.assert_(c2.id in result.keys())
-        self.assert_(c3.id in result.keys())
+        self.assertTrue(c1.id in result.keys())
+        self.assertTrue(c2.id in result.keys())
+        self.assertTrue(c3.id in result.keys())
         self.assertEqual(result[c1.id]["disk"], 12)
         self.assertEqual(result[c1.id]["ram"], 1)
         self.assertEqual(result[c1.id]["virtual_cpus"], 3)

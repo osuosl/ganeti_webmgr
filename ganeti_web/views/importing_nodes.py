@@ -1,19 +1,29 @@
-from django import forms
+# Copyright (C) 2010 Oregon State University et al.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
+# USA.
+
+
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render_to_response
 from django.template.context import RequestContext
 from django.utils.translation import ugettext as _
 
+from ganeti_web.forms.importing import NodeForm
 from ganeti_web.models import Cluster, Node, VirtualMachine
 from ganeti_web.views import render_403
-
-
-class NodeForm(forms.Form):
-    nodes = forms.MultipleChoiceField()
-
-    def __init__(self, choices, *args, **kwargs):
-        super(NodeForm, self).__init__(*args, **kwargs)
-        self.fields['nodes'].choices = choices
 
 
 @login_required
@@ -25,7 +35,7 @@ def importing(request):
     if not user.is_superuser or user.get_objects_any_perms(Cluster, ['admin']):
         return render_403(request, _('You do not have sufficient privileges'))
 
-    return render_to_response('importing/nodes/main.html',
+    return render_to_response('ganeti/importing/nodes/main.html',
               context_instance=RequestContext(request))
 
 
@@ -73,7 +83,8 @@ def missing_ganeti(request):
 
     nodes = node_tuple_list
 
-    return render_to_response("importing/nodes/missing.html", {
+    return render_to_response("ganeti/importing/nodes/missing.html"
+                              , {
         'nodes': nodes,
         'form':form,
         },
@@ -140,7 +151,7 @@ def missing_db(request):
 
     nodes = nodes_tuple_list
 
-    return render_to_response("importing/nodes/import.html", {
+    return render_to_response("ganeti/importing/nodes/import.html", {
         'nodes': nodes,
         'form':form,
         },

@@ -49,7 +49,7 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/edit_kvm.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/edit_kvm.html')
         user.revoke_all(vm)
         c.logout()
 
@@ -60,7 +60,7 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/edit_kvm.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/edit_kvm.html')
         user.revoke_all(vm)
         c.logout()
 
@@ -71,7 +71,7 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/edit_kvm.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/edit_kvm.html')
         c.logout()
         user.is_superuser = False
         user.save()
@@ -125,7 +125,7 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
             self.assertNotEqual(response.context['form'][property].errors, [], msg=property)
             self.assertEqual(200, response.status_code) # 302 if success (BAD)
             self.assertEqual('text/html; charset=utf-8', response['content-type'])
-            self.assertTemplateUsed(response, 'virtual_machine/edit_kvm.html')
+            self.assertTemplateUsed(response, 'ganeti/virtual_machine/edit_kvm.html')
         c.logout()
         user.revoke_all(vm)
 
@@ -247,7 +247,7 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/edit_confirm.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/edit_confirm.html')
 
         #session['os_list'] = os_list
         #session.save()
@@ -272,7 +272,7 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/edit_confirm.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/edit_confirm.html')
         user.revoke_all(vm)
         c.logout()
 
@@ -287,7 +287,7 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/edit_confirm.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/edit_confirm.html')
         user.revoke_all(vm)
         c.logout()
 
@@ -302,7 +302,7 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/edit_confirm.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/edit_confirm.html')
         c.logout()
         user.is_superuser = False
         user.save()
@@ -427,7 +427,7 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         session.save()
         response = c.post(url, data)
         self.assertEqual(200, response.status_code) # 302 if success (BAD)
-        self.assertTemplateUsed(response, 'virtual_machine/edit_kvm.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/edit_kvm.html')
         user.revoke_all(vm)
         c.logout()
 
@@ -486,7 +486,7 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         response = c.post(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/edit_confirm.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/edit_confirm.html')
         c.logout()
 
         
@@ -506,7 +506,7 @@ class TestVirtualMachineDeleteViews(TestVirtualMachineViewsBase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.post(url % args)
         self.assertEqual(403, response.status_code)
 
@@ -519,8 +519,8 @@ class TestVirtualMachineDeleteViews(TestVirtualMachineViewsBase):
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/delete.html')
-        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/delete.html')
+        self.assertTrue(VirtualMachine.objects.filter(id=vm.id).exists())
         user.revoke_all(vm)
 
         # authorized GET (vm admin permissions)
@@ -528,8 +528,8 @@ class TestVirtualMachineDeleteViews(TestVirtualMachineViewsBase):
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/delete.html')
-        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/delete.html')
+        self.assertTrue(VirtualMachine.objects.filter(id=vm.id).exists())
         user.revoke_all(cluster)
 
         # authorized GET (cluster admin permissions)
@@ -537,8 +537,8 @@ class TestVirtualMachineDeleteViews(TestVirtualMachineViewsBase):
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/delete.html')
-        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/delete.html')
+        self.assertTrue(VirtualMachine.objects.filter(id=vm.id).exists())
         user.revoke_all(cluster)
 
         # authorized GET (superuser)
@@ -547,8 +547,8 @@ class TestVirtualMachineDeleteViews(TestVirtualMachineViewsBase):
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/delete.html')
-        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/delete.html')
+        self.assertTrue(VirtualMachine.objects.filter(id=vm.id).exists())
 
         #authorized POST (superuser)
         user1.grant('power', vm)
@@ -556,11 +556,11 @@ class TestVirtualMachineDeleteViews(TestVirtualMachineViewsBase):
         response = c.post(url % args, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/delete_status.html')
-        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/delete_status.html')
+        self.assertTrue(VirtualMachine.objects.filter(id=vm.id).exists())
         pending_delete, job_id = VirtualMachine.objects.filter(id=vm.id).values('pending_delete','last_job_id')[0]
-        self.assert_(pending_delete)
-        self.assert_(job_id)
+        self.assertTrue(pending_delete)
+        self.assertTrue(job_id)
         user.is_superuser = False
         user.save()
         vm.save()
@@ -571,11 +571,11 @@ class TestVirtualMachineDeleteViews(TestVirtualMachineViewsBase):
         response = c.post(url % args, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/delete_status.html')
-        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/delete_status.html')
+        self.assertTrue(VirtualMachine.objects.filter(id=vm.id).exists())
         pending_delete, job_id = VirtualMachine.objects.filter(id=vm.id).values('pending_delete','last_job_id')[0]
-        self.assert_(pending_delete)
-        self.assert_(job_id)
+        self.assertTrue(pending_delete)
+        self.assertTrue(job_id)
         user.revoke_all(cluster)
 
         #authorized POST (vm admin)
@@ -585,11 +585,11 @@ class TestVirtualMachineDeleteViews(TestVirtualMachineViewsBase):
         response = c.post(url % args, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/delete_status.html')
-        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/delete_status.html')
+        self.assertTrue(VirtualMachine.objects.filter(id=vm.id).exists())
         pending_delete, job_id = VirtualMachine.objects.filter(id=vm.id).values('pending_delete','last_job_id')[0]
-        self.assert_(pending_delete)
-        self.assert_(job_id)
+        self.assertTrue(pending_delete)
+        self.assertTrue(job_id)
         vm.save()
         user.revoke_all(vm)
 
@@ -600,11 +600,11 @@ class TestVirtualMachineDeleteViews(TestVirtualMachineViewsBase):
         response = c.post(url % args, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/delete_status.html')
-        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/delete_status.html')
+        self.assertTrue(VirtualMachine.objects.filter(id=vm.id).exists())
         pending_delete, job_id = VirtualMachine.objects.filter(id=vm.id).values('pending_delete','last_job_id')[0]
-        self.assert_(pending_delete)
-        self.assert_(job_id)
+        self.assertTrue(pending_delete)
+        self.assertTrue(job_id)
         vm.save()
         user.revoke_all(vm)
 
@@ -626,7 +626,7 @@ class TestVirtualMachineReinstallViews(TestVirtualMachineViewsBase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.post(url % args)
         self.assertEqual(403, response.status_code)
 
@@ -639,8 +639,8 @@ class TestVirtualMachineReinstallViews(TestVirtualMachineViewsBase):
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/reinstall.html')
-        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/reinstall.html')
+        self.assertTrue(VirtualMachine.objects.filter(id=vm.id).exists())
         user.revoke_all(vm)
 
         # authorized GET (vm admin permissions)
@@ -648,8 +648,8 @@ class TestVirtualMachineReinstallViews(TestVirtualMachineViewsBase):
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/reinstall.html')
-        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/reinstall.html')
+        self.assertTrue(VirtualMachine.objects.filter(id=vm.id).exists())
         user.revoke_all(cluster)
 
         # authorized GET (cluster admin permissions)
@@ -657,8 +657,8 @@ class TestVirtualMachineReinstallViews(TestVirtualMachineViewsBase):
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/reinstall.html')
-        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/reinstall.html')
+        self.assertTrue(VirtualMachine.objects.filter(id=vm.id).exists())
         user.revoke_all(cluster)
 
         # authorized GET (superuser)
@@ -667,8 +667,8 @@ class TestVirtualMachineReinstallViews(TestVirtualMachineViewsBase):
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/reinstall.html')
-        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/reinstall.html')
+        self.assertTrue(VirtualMachine.objects.filter(id=vm.id).exists())
 
         #authorized POST (superuser)
         response = c.post(url % args)
@@ -711,7 +711,7 @@ class TestVirtualMachineRenameViews(TestVirtualMachineViewsBase):
 
         url = "/cluster/%s/%s/rename/"
         args = (cluster.slug, vm.hostname)
-        template = 'virtual_machine/rename.html'
+        template = 'ganeti/virtual_machine/rename.html'
         users =[superuser, cluster_admin, vm_admin, vm_modify]
         denied = [cluster_migrate]
 
@@ -727,7 +727,7 @@ class TestVirtualMachineRenameViews(TestVirtualMachineViewsBase):
 
         url = "/cluster/%s/%s/rename/"
         args = (cluster.slug, vm.hostname)
-        template_success = 'virtual_machine/detail.html'
+        template_success = 'ganeti/virtual_machine/detail.html'
         users = [superuser, cluster_admin, vm_admin, vm_modify]
         denied = [cluster_migrate]
         data = {'hostname':'foo.arg.different', 'ip_check':False, 'name_check':False}
@@ -749,7 +749,7 @@ class TestVirtualMachineRenameViews(TestVirtualMachineViewsBase):
 
         url = "/cluster/%s/%s/rename/"
         args = (cluster.slug, vm.hostname)
-        template = 'virtual_machine/rename.html'
+        template = 'ganeti/virtual_machine/rename.html'
         data = {'hostname':'foo.arg.different', 'ip_check':False, 'name_check':False}
         errors = ({'hostname':vm.hostname},)
 
@@ -773,7 +773,7 @@ class TestVirtualMachineReparentViews(TestVirtualMachineViewsBase):
 
         url = "/cluster/%s/%s/reparent/"
         args = (cluster.slug, vm.hostname)
-        template = 'virtual_machine/reparent.html'
+        template = 'ganeti/virtual_machine/reparent.html'
         users =[superuser, cluster_admin]
         denied = [vm_admin, vm_modify, cluster_migrate]
 
@@ -792,7 +792,7 @@ class TestVirtualMachineReparentViews(TestVirtualMachineViewsBase):
 
         url = "/cluster/%s/%s/reparent/"
         args = (cluster.slug, vm.hostname)
-        template_success = 'virtual_machine/detail.html'
+        template_success = 'ganeti/virtual_machine/detail.html'
         users = [superuser, cluster_admin]
         denied = [vm_admin, vm_modify, cluster_migrate]
         data = {'owner':vm_modify.get_profile().pk}

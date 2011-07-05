@@ -1,0 +1,20 @@
+<!-- autocomplete search box -->
+
+{%  if user.is_superuser %}
+{% load i18n %}
+<script type="text/javascript" src="{{SITE_ROOT}}/ganeti_web_media/js/autocomplete_search.js"></script>
+<script type="text/javascript">
+    $(function(){
+        // initialize the autocomplete search box
+        if ($('#search_box').length == 1) {
+            autocomplete_search($('#search_box'), $('#search_form'),
+                    '{% url search-suggestions %}',
+                    '{% url search-detail-lookup %}');
+        }
+    });
+</script>
+<h3>{% trans "Search" %}</h3>
+<form id="search_form" action="{% url search %}" method="get">
+    <input id="search_box" type="text" name="q" />
+</form>
+{% endif %}

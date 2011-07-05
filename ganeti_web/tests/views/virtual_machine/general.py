@@ -39,11 +39,11 @@ class TestVirtualMachineViewList(TestVirtualMachineViewsBase):
 
         self.create_virtual_machine(cluster, 'test1')
 
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/list.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/list.html')
         vms = response.context['vms'].object_list
         # There is (at least) one VM in the list; fail if we can see it.
         self.assertFalse(vms)
@@ -62,11 +62,11 @@ class TestVirtualMachineViewList(TestVirtualMachineViewsBase):
         user1.grant('admin', vm1)
 
         # user with some perms
-        self.assert_(c.login(username=user1.username, password='secret'))
+        self.assertTrue(c.login(username=user1.username, password='secret'))
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/list.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/list.html')
         vms = response.context['vms'].object_list
         self.assertEqual(set(vms), set([vm, vm1]))
 
@@ -87,11 +87,11 @@ class TestVirtualMachineViewList(TestVirtualMachineViewsBase):
         vm3, cluster1 = self.create_virtual_machine(cluster, 'test3')
 
         # authorized (superuser)
-        self.assert_(c.login(username=user2.username, password='secret'))
+        self.assertTrue(c.login(username=user2.username, password='secret'))
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'virtual_machine/list.html')
+        self.assertTemplateUsed(response, 'ganeti/virtual_machine/list.html')
         vms = response.context['vms'].object_list
         self.assertEqual(set(vms), set([vm, vm1, vm2, vm3]))
 
@@ -108,7 +108,7 @@ class TestVirtualMachineDetailView(TestVirtualMachineViewsBase):
         args = (cluster.slug, vm.hostname)
 
         self.assert_standard_fails(url, args)
-        self.assert_200(url, args, [superuser, vm_admin, cluster_admin], template='virtual_machine/detail.html')
+        self.assert_200(url, args, [superuser, vm_admin, cluster_admin], template='ganeti/virtual_machine/detail.html')
 
 
 class TestVirtualMachineSSHKeysView(TestVirtualMachineViewsBase):

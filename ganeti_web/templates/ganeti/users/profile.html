@@ -3,6 +3,6 @@
 {% block detail %}
     {%  with user.ssh_keys.all as keyslist %}
     <h3>SSH keys</h3>
-    {% include "ssh_keys/list.html" %}
+    {% include "ganeti/ssh_keys/list.html" %}
     {% endwith %}
 {% endblock %}

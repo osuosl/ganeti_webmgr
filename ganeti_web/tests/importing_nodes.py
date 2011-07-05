@@ -93,7 +93,7 @@ class NodeImportBase(TestCase):
 
     def test_unauthorized(self):
         """ unauthorized user """
-        self.assert_(self.c.login(username=self.unauthorized.username, password='secret'))
+        self.assertTrue(self.c.login(username=self.unauthorized.username, password='secret'))
         response = self.c.get(self.url)
         self.assertEqual(403, response.status_code)
 
@@ -108,7 +108,7 @@ class NodeMissingDBTests(NodeImportBase):
         response = self.c.get(self.url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'importing/nodes/import.html')
+        self.assertTemplateUsed(response, 'ganeti/importing/nodes/import.html')
         self.assertEqual([('%s:node2'%self.cluster0.pk,'test0','node2')], response.context['nodes'])
 
     def test_get_form_superuser(self):
@@ -117,7 +117,7 @@ class NodeMissingDBTests(NodeImportBase):
         response = self.c.get(self.url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'importing/nodes/import.html')
+        self.assertTemplateUsed(response, 'ganeti/importing/nodes/import.html')
         self.assertEqual([('%s:node2'%self.cluster0.pk,'test0','node2'), ('%s:node5'%self.cluster1.pk,'test1','node5')], response.context['nodes'])
 
     def test_invalid_node(self):
@@ -127,7 +127,7 @@ class NodeMissingDBTests(NodeImportBase):
         response = self.c.post(self.url, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'importing/nodes/import.html')
+        self.assertTemplateUsed(response, 'ganeti/importing/nodes/import.html')
         self.assertTrue(response.context['form'].errors)
 
     def test_unauthorized_post(self):
@@ -137,7 +137,7 @@ class NodeMissingDBTests(NodeImportBase):
         response = self.c.post(self.url, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'importing/nodes/import.html')
+        self.assertTemplateUsed(response, 'ganeti/importing/nodes/import.html')
         self.assertTrue(response.context['form'].errors)
 
     def test_successful_import(self):
@@ -147,7 +147,7 @@ class NodeMissingDBTests(NodeImportBase):
         response = self.c.post(self.url, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'importing/nodes/import.html')
+        self.assertTemplateUsed(response, 'ganeti/importing/nodes/import.html')
         self.assertFalse(response.context['form'].errors)
         self.assertTrue(Node.objects.filter(hostname='node2').exists())
         self.assertEqual([], response.context['nodes'])
@@ -168,7 +168,7 @@ class NodeMissingTests(NodeImportBase):
         response = self.c.get(self.url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'importing/nodes/missing.html')
+        self.assertTemplateUsed(response, 'ganeti/importing/nodes/missing.html')
         self.assertEqual([('node1','test0','node1')], response.context['nodes'])
 
     def test_get_form_superuser(self):
@@ -177,7 +177,7 @@ class NodeMissingTests(NodeImportBase):
         response = self.c.get(self.url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'importing/nodes/missing.html')
+        self.assertTemplateUsed(response, 'ganeti/importing/nodes/missing.html')
         self.assertEqual([('node1','test0','node1'), ('node4','test1','node4')], response.context['nodes'])
 
     def test_invalid_node(self):
@@ -187,7 +187,7 @@ class NodeMissingTests(NodeImportBase):
         response = self.c.post(self.url, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'importing/nodes/missing.html')
+        self.assertTemplateUsed(response, 'ganeti/importing/nodes/missing.html')
         self.assertTrue(response.context['form'].errors)
 
     def test_post_unauthorized(self):
@@ -197,7 +197,7 @@ class NodeMissingTests(NodeImportBase):
         response = self.c.post(self.url, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'importing/nodes/missing.html')
+        self.assertTemplateUsed(response, 'ganeti/importing/nodes/missing.html')
         self.assertTrue(response.context['form'].errors)
 
     def test_successful_deletion(self):
@@ -207,7 +207,7 @@ class NodeMissingTests(NodeImportBase):
         response = self.c.post(self.url, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'importing/nodes/missing.html')
+        self.assertTemplateUsed(response, 'ganeti/importing/nodes/missing.html')
         self.assertFalse(response.context['form'].errors)
         self.assertFalse(Node.objects.filter(hostname='node1').exists())
         self.assertEqual([], response.context['nodes'])

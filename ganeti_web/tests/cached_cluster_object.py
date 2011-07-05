@@ -22,7 +22,7 @@ import time
 from django.conf import settings
 from django.test import TestCase
 
-from util import client
+from ganeti_web.util import client
 from ganeti_web.tests.rapi_proxy import RapiProxy
 from ganeti_web.tests.call_proxy import CallProxy
 from ganeti_web import models
@@ -190,9 +190,9 @@ class CachedClusterObjectBase(TestCase):
         object.parse_transient_info.assertCalled(self)
         object.parse_persistent_info.assertCalled(self)
         self.assertEqual(1, len(object.parse_persistent_info.calls))
-        self.assert_(object.id)
+        self.assertTrue(object.id)
         self.assertNotEqual(None, object.cached)
-        self.assert_(now < object.cached, "Cache time should be newer")
+        self.assertTrue(now < object.cached, "Cache time should be newer")
     
     def test_refresh_error(self):
         """

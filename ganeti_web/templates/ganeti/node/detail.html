@@ -1,0 +1,232 @@
+{% extends "menu_base.html" %}
+{% load webmgr_tags %}
+{% load i18n %}
+{% block head %}
+    <!-- "import" the CSS and javascript for this template -->
+    <link href="{{MEDIA_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
+    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.form.js"></script>
+    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
+    <script type="text/javascript" src="{{SITE_ROOT}}/ganeti_web_media/js/job_status.js"></script>
+    <script type="text/javascript">
+        var actions_enabled = true;
+        var PBAR_CONF = {
+            steps: 0,
+            showText: true,
+            textFormat: 'fraction',
+            boxImage: '/media/images/progressbar/progressbar.gif',
+            barImage: {
+                0: '{{MEDIA_URL}}/images/progressbar/progressbg_green.gif',
+                30: '{{MEDIA_URL}}/images/progressbar/progressbg_yellow.gif',
+                50: '{{MEDIA_URL}}/images/progressbar/progressbg_orange.gif',
+                75:  '{{MEDIA_URL}}/images/progressbar/progressbg_red.gif'
+            }
+        };
+        
+        $(document).ready(function() {
+            $('#tabs').tabs({
+                spinner: false,
+                cache: false, // no-cache b/c we want data to update
+                //cache: true,
+                select: function(event, ui) {
+                    window.location.hash = ui.tab.hash;
+                },
+                ajaxOptions: {
+                    error: function(xhr, status, index, anchor) {
+                        $(anchor.hash).html("{% trans "Couldn't load this tab. We'll try to fix this as soon as possible" %}.");
+                    }
+                }
+            });
+            
+            $(".ram, .disk").progressBar(PBAR_CONF);
+
+            $(".modify, .migrate, .evacuate").click(function(event){
+                event.preventDefault();
+                if (actions_enabled) {
+                    $('.qtip').qtip('destroy');
+                    var $this = $(this);
+                    var title;
+
+                    if ($this.hasClass("modify")) {
+                        title = "{% trans "Modify Role" %}";
+                    } else if ($this.hasClass("migrate")) {
+                        title = "{% trans "Migrate Primary Virtual Machines" %}";
+                     } else {
+                        title = "{% trans "Evacuate Secondary Virtual Machines" %}";
+                    }
+
+                    $(this).qtip({
+                        content: {
+                           url: this.href,
+                           title: {text:title, button:"close"}
+                        },
+                        position: {
+                            corner:{
+                                target:'center', tooltip:'center'
+                            }
+                        },
+                        style: {
+                            name: 'dark', 
+                            border:{radius:5}, 
+                            width:400, 
+                            background:'#eeeeee'
+                        },
+                        show: {when:false, ready:true},
+                        hide: {fixed: true, when:false},
+                        api:{onShow:function(){
+                            $(".ajax_form input[type!=hidden], " +
+                                    ".ajax_form select").first().focus();
+                        }}
+                    });
+                }
+            });
+
+            $(".node_role_form, .node_migrate_form, .node_evacuate_form")
+                .live("submit", function(event){
+                    event.preventDefault();
+                    $("#errors").empty();
+                    $(this).ajaxSubmit({success: node_form_response});
+            });
+
+            {% if node.last_job_id %}
+                {# there is a running job, display it and poll for status #}
+                get_job_status("{% url cluster-detail cluster.slug %}",
+                        {{node.last_job.job_id}}, job_complete);
+                poll_job_status("{% url cluster-detail cluster.slug %}",
+                        {{node.last_job.job_id}}, job_complete);
+            {% else %}
+                {% if node.error %}
+                    display_ganeti_error("{{node.error}}");
+                {% endif %}
+            {% endif %}
+        });
+
+        function node_action_response(result) {
+            if (result.ops == undefined) {
+                display_ganeti_error(result[1]);
+                actions_enabled = true;
+                $('#actions a').removeClass('disabled');
+            } else {
+                poll_job_status("{% url cluster-detail cluster.slug %}",
+                        result['id'], job_complete);
+                display_job("{% url cluster-detail cluster.slug %}", result);
+            }
+        }
+
+        function job_complete() {
+            window.location.reload();
+        }
+
+        function node_form_response(responseText, statusText, xhr, $form) {
+            if (responseText["opstatus"] == undefined) {
+                // no opstatus, must be an error
+                // parse errors
+                for (var key in responseText) {
+                    $("#errors").append("<li>"+ responseText[key] +"</li>");
+                }
+            } else {
+                $('.qtip').qtip("hide");
+                poll_job_status("{% url cluster-detail cluster.slug %}",
+                        responseText['id'], job_complete);
+                display_job("{% url cluster-detail cluster.slug %}",
+                        responseText);
+            }
+        }
+
+        function display_ganeti_error(msg) {
+            $("#messages").empty();
+            var html = "<li class='error'>{% trans "Error" %}:<p>" + msg + "</p></li>";
+            $("#messages").append(html);
+        }
+    </script>
+{% endblock %}
+
+{% block content %}
+<h1 class="breadcrumb">
+    <a href="{% url cluster-detail cluster.slug %}">
+        {{cluster.hostname}}
+    </a>
+    : {{node.hostname}}
+</h1>
+
+<ul id="messages"></ul>
+<div id="tabs">
+    <ul>
+        <li><a href="#detail"><span>{% trans "Detail" %}</span></a></li>
+        <li>
+            <a title="primary"
+                    href="{% url node-primary-vms cluster.slug node.hostname %}">
+                <span>{% trans "Primary" %}</span>
+            </a>
+        </li>
+        <li>
+            <a title="secondary" 
+                    href="{% url node-secondary-vms cluster.slug node.hostname %}">
+                <span>{% trans "Secondary" %}</span>
+            </a>
+        </li>
+        <li>
+            <a title="log"
+                    href="{% url node-object_log cluster.slug node.hostname %}">
+                <span>{% trans "Log" %}</span>
+            </a>
+        </li>
+    </ul>
+    <div id="detail">
+        <ul id="actions">
+            {% if node_count > 1 %}
+            <li>
+                <a class="button modify" title="modifies the role of this node"
+                        href="{% url node-role cluster.slug node.hostname %}">
+                    {% trans "Change Role" %}
+                </a>
+            </li>
+            <li>
+                <a class="button migrate" 
+                        title="migrates all primary instances of this node" 
+                        href="{% url node-migrate cluster.slug node.hostname %}">
+                    {% trans "Migrate" %}
+                </a>
+            </li>
+            {% comment %}
+            Disabling this button for now till this is fixed upstream
+
+            <li>
+                <a class="button evacuate"
+                        title="migrates all secondary instances off this node"
+                        href="{% url node-evacuate cluster.slug node.hostname %}">
+                    {% trans "Evacuate" %}
+                </a>
+            </li>
+            {% endcomment %}
+            {% endif %}
+        </ul>
+        <table id="nodes" class="overview horizontal">
+            <tr><th>Status</th><td class="status">
+                {% if node.info.offline %}
+                    <div class="icon_stopped" title="Offline"></div>
+                {% else %}
+                    <div class="icon_running" title="Online"></div>
+                {% endif %}
+                </td>
+            </tr>
+            <tr><th>{% trans "Primary IP" %}</th><td>{{node.info.pip}}</td></tr>
+            <tr><th>{% trans "Secondary IP" %}</th><td>{{node.info.sip}}</td></tr>
+            <tr><th>{% trans "Role" %}</th><td>{{node.info.role|node_role}}</td></tr>
+            <tr>
+                <th>{% trans "Master Candidate" %}</th>
+                <td>{{node.info.master_candidate|checkmark}}</td>
+            </tr>
+            <tr><th>{% trans "Drained" %}</th><td>{{node.info.drained|checkmark}}</td></tr>
+            <tr><th>{% trans "Ram Allocated [GiB]" %}</th><td class="ram">{% node_memory node %}</td></tr>
+            <tr><th>{% trans "Ram Used [GiB]" %}</th><td class="ram">{% node_memory node 0 %}</td></tr>
+            <tr><th>{% trans "Disk Allocated [GiB]" %}</th><td class="disk">{% node_disk node %}</td></tr>
+            <tr><th>{% trans "Disk Used [GiB]" %}</th><td class="disk">{% node_disk node 0 %}</td></tr>
+            <tr>
+                <th>{% trans "Virtual Machines" %}</th>
+                <td>{{ node.info.pinst_cnt }} / {{ node.info.sinst_cnt }}</td>
+            </tr>
+        </table>
+    </div>
+</div>
+{% endblock %}

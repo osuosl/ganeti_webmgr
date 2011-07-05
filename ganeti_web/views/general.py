@@ -34,7 +34,7 @@ from django.utils.translation import ugettext as _
 from ganeti_web.constants import VERSION
 
 def about(request):
-    return render_to_response("about.html", {
+    return render_to_response("ganeti/about.html", {
         'version':VERSION
         },
         context_instance=RequestContext(request),
@@ -256,7 +256,7 @@ def overview(request):
     # get resources used per cluster from the first persona in the list
     resources = get_used_resources(personas[0])
     
-    return render_to_response("overview.html", {
+    return render_to_response("ganeti/overview.html", {
         'admin':admin,
         'cluster_list': clusters,
         'user': request.user,
@@ -295,7 +295,8 @@ def used_resources(request):
                 return render_403(request, _('You are not authorized to view this page'))
     
     resources = get_used_resources(cu.cast())
-    return render_to_response("overview/used_resources.html", {
+    return render_to_response("ganeti/overview/used_resources.html"
+                              , {
         'resources':resources
     }, context_instance=RequestContext(request))
     
