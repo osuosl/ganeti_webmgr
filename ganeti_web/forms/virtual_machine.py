@@ -122,9 +122,9 @@ class NewVirtualMachineForm(VirtualMachineForm):
     pvm_exclude_fields = ('disk_type','nic_type', 'boot_order', 'serial_console',
         'cdrom_image_path')
 
-    empty_field = constants.EMPTY_CHOICE_FIELD
-    templates = constants.HV_DISK_TEMPLATES
-    nicmodes = constants.HV_NIC_MODES
+    empty_field = EMPTY_CHOICE_FIELD
+    templates = HV_DISK_TEMPLATES
+    nicmodes = HV_NIC_MODES
 
     disk_count = forms.IntegerField(initial=1,  widget=forms.HiddenInput())
     #nic_count = forms.IntegerField(initial=1, widget=forms.HiddenInput())
