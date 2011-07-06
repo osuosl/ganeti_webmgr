@@ -112,7 +112,15 @@
     <tbody>
         {% for hostname, dict in vm_summary.items %}
             <tr>
-                <td>{{hostname|abbreviate_fqdn}}</td>
+                <td>
+                {% if admin %}
+                    <a href="{% url cluster-detail dict.cluster__slug %}"> 
+                        {{hostname|abbreviate_fqdn}}
+                    </a>
+                {% else %}
+                    {{hostname|abbreviate_fqdn}}
+                {% endif %}
+                </td>
                 <td>{{dict.running}}</td>
                 <td>{{dict.total}}</td>
             </tr>
