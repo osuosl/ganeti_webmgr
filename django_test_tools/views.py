@@ -113,11 +113,9 @@ class ViewTestMixin():
             mime=None, tests=None, setup=False, data=dict(), method='get',
             follow=False):
         """
-        all users given to this function must fail access
-        
         @param url - url to test
         @param args - args for the url string
-        @param users - list of users, all of which must result in 403
+        @param users - list of users, all of which should result in 200 
         @param template - if given, template that responses should use
         @param mime - if given, mime for response
         @param tests - a function that executes additional tests
