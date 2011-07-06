@@ -473,7 +473,7 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
     class Meta(VirtualMachineForm.Meta):
         exclude = ('pnode','snode','iallocator','iallocator_hostname',
             'owner', 'hypervisor', 'hostname')
-        required = ('template_name')
+        required = ('template_name', 'cluster')
 
     def __init__(self, *args, **kwargs):
         """
