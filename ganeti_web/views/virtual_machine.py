@@ -924,8 +924,7 @@ def modify_confirm(request, cluster_slug, instance):
     old_set.update(hvparams)
 
     instance_diff = {}
-    fields = hv_form(vm).fields
-    
+    fields = hv_form(vm, data).fields
     for key in data.keys():
         if key == 'memory':
             diff = compare(render_storage(old_set[key]),
@@ -953,18 +952,17 @@ def modify_confirm(request, cluster_slug, instance):
                 oses = oses[0][1]
                 diff = compare(oses[0][1], oses[1][1])
             #diff = compare(oses[0][1], oses[1][1])
+        if key in ['nic_count','nic_count_original']:
+            continue
         elif key not in old_set.keys():
             diff = ""
-            instance_diff[key] = _('Key missing')
+            instance_diff[fields[key].label] = _('Added')
         else:
             diff = compare(old_set[key], data[key])
 
         if diff != "":
             label = fields[key].label
             instance_diff[label] = diff
-
-    # remove nic_count
-    del instance_diff['nic_count']
 
     # remove mac if it has not changed
     for i in xrange(nic_count):

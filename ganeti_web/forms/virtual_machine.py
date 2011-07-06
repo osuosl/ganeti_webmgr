@@ -584,9 +584,9 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
 
             # always take the larger nic count.  this ensures that if nics are
             # being removed that they will be in the form as Nones
-            nic_count_original = len(info['nic.links'])
+            self.nic_count = len(info['nic.links'])
             nic_count = int(initial.get('nic_count', 1)) if initial else 1
-            nic_count = nic_count_original if nic_count_original > nic_count else nic_count
+            nic_count = self.nic_count if self.nic_count > nic_count else nic_count
             self.fields['nic_count'].initial = nic_count
             self.nic_fields = xrange(nic_count)
             for i in xrange(nic_count):
@@ -594,7 +594,7 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
                 self.fields['nic_link_%s' % i] = link
                 mac = MACAddressField(label=_('NIC/%s Mac' % i), required=False)
                 self.fields['nic_mac_%s' % i] = mac
-                if i < nic_count_original:
+                if i < self.nic_count:
                     mac.initial = info['nic.macs'][i]
                     link.initial = info['nic.links'][i]
 
@@ -644,6 +644,7 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
                 self._errors[link_field] = self.error_class([_('This field is required')])
             elif link and not mac:
                 self._errors[mac_field] = self.error_class([_('This field is required')])
+        data['nic_count_original'] = self.nic_count
 
         return data
 
@@ -752,13 +753,23 @@ class ModifyConfirmForm(forms.Form):
         cleaned['start'] = 'reboot' in data or self.vm.is_running
         check_quota_modify(self)
 
-        # build nics dictionaries
+        # Build NICs dicts.  Add changes for existing nics and mark new or
+        # removed nics
+        #
+        # XXX Ganeti only allows a single remove or add but this code will
+        # format properly for unlimited adds or removes in the hope that this
+        # limitation is removed sometime in the future.
         nics = []
-        for i in xrange(data.pop('nic_count')):
+        nic_count_original = data.pop('nic_count_original')
+        nic_count = data.pop('nic_count')
+        for i in xrange(nic_count):
             nic = dict(link=data.pop('nic_link_%s' % i))
             if 'nic_mac_%s' % i in data:
                 nic['mac'] = data.pop('nic_mac_%s' % i)
-            nics.append((i, nic))
+            index = i if i < nic_count_original else 'add'
+            nics.append((index, nic))
+        for i in xrange(nic_count_original-nic_count):
+            nics.append(('remove',{}))
         data['nics'] = nics
         return cleaned
 

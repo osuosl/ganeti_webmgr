@@ -47,7 +47,7 @@ class TestModifyVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
             usb_mouse=None,
             use_chroot=False,
             use_localtime=False,
-            vnc_bind_addres='0.0.0.0',
+            vnc_bind_address='0.0.0.0',
             vnc_tls=False,
             vnc_x509_path=None,
             vnc_x509_verify=False,
@@ -57,6 +57,7 @@ class TestModifyVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
             boot_order='disk',
             nic_type='paravirtual',
             nic_count=1,
+            nic_count_original=1,
             nic_link_0='br0',
             nic_mac_0='aa:bb:00:00:33:d2',
             root_path='/dev/vda1',
@@ -301,6 +302,7 @@ class TestPvmModifyVirtualMachineForm(TestModifyVirtualMachineForm):
             vcpus = 2,
             memory = 200,
             nic_count=1,
+            nic_count_original=1,
             nic_link_0='br0',
             nic_mac_0='aa:bb:cc:dd:ee:ff'
         )
