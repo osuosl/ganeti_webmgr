@@ -1294,6 +1294,9 @@ class VirtualMachineTemplate(models.Model):
     cdrom_image_path = models.CharField(verbose_name=_('CD-ROM Image Path'), null=True, \
                 blank=True, max_length=512)
 
+    class Meta:
+        unique_together = (("cluster", "template_name"),)
+
     def __str__(self):
         if self.template_name is None:
             return 'unnamed'
