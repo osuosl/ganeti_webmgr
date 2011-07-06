@@ -96,7 +96,8 @@ class TestModifyVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
 
     def test_validate_remove_nic(self):
         data = self.data
-        data['nic_count'] = 2
+        data['nic_count'] = 1
+        data['nic_original'] = 2
         data['nic_mac_1'] = None
         data['nic_link_1'] = None
         form = self.Form(vm, data)
