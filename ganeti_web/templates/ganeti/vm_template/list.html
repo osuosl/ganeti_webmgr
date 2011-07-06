@@ -23,7 +23,7 @@
     <tbody>
         {% for template in templates %}
         <tr>
-            <td><a href="{% url template-detail template %}">{{ template.template_name }}</a></td>
+            <td><a href="{% url template-detail template.cluster.slug template %}">{{ template.template_name }}</a></td>
             <td>{{template.id}}</td>
             <td>{{template.vcpus}}</td>
             <td>{{template.memory}}</td>

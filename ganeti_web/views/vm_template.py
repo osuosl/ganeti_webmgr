@@ -39,29 +39,32 @@ def templates(request):
 
 
 @login_required
-def create(request, template=None):
+def create(request, cluster_slug=None, template=None):
     """
     View to create or edit a new VirtualMachineTemplate.
 
     @param template Will populate the form with data from a template.
     """
+    user = request.user
     obj = None
-    if template:
-        obj = VirtualMachineTemplate.objects.get(template_name=template)
+    if cluster_slug and template:
+        obj = get_object_or_404(VirtualMachineTemplate, template_name=template,
+                                cluster__slug=cluster_slug)
 
     if request.method == "GET":
-        form = VirtualMachineTemplateForm(instance=obj)
+        form = VirtualMachineTemplateForm(instance=obj, user=user)
     elif request.method == "POST":
-        form = VirtualMachineTemplateForm(request.POST, instance=obj)
+        form = VirtualMachineTemplateForm(request.POST, user=user, 
+                                          instance=obj)
         if form.is_valid():
-            template = form.save()
+            form_obj = form.save()
             return HttpResponseRedirect(reverse('template-detail', 
-                args=[template]))
+                args=[form_obj.cluster.slug, form_obj]))
     else:
         return HttpResponseNotAllowed(["GET","POST"])
 
     if obj:
-        action = reverse('template-edit', args=[template])
+        action = reverse('template-edit', args=[obj.cluster.slug, obj])
     else:
         action = reverse('template-create')
 
@@ -74,26 +77,31 @@ def create(request, template=None):
 
 
 @login_required
-def detail(request, template):
-    vm_template = get_object_or_404(VirtualMachineTemplate, template_name=template)
+def detail(request, cluster_slug, template):
+    vm_template = get_object_or_404(VirtualMachineTemplate, 
+                                    template_name=template, 
+                                    cluster__slug=cluster_slug)
     return render_to_response('ganeti/vm_template/detail.html', {
         'template':vm_template,
+        'cluster':cluster_slug,
         },
         context_instance = RequestContext(request)
     )
 
 
 @login_required
-def copy(request, template):
+def copy(request, cluster_slug, template):
     """
     View used to create a copy of a VirtualMachineTemplate
     """
-    obj = get_object_or_404(VirtualMachineTemplate, template_name=template)
+    obj = get_object_or_404(VirtualMachineTemplate, template_name=template, 
+                                    cluster__slug=cluster_slug)
     if request.method == "GET":
         form = VirtualMachineTemplateCopyForm()
         return render_to_response('ganeti/vm_template/copy.html', {
             'form':form,
             'template':obj,
+            'cluster':cluster_slug,
             },
             context_instance = RequestContext(request)
         )
@@ -110,15 +118,16 @@ def copy(request, template):
             obj.description = desc
             obj.save()
         return HttpResponseRedirect(reverse('template-detail', 
-                            args=[obj.id]))
+                            args=[cluster_slug, obj]))
     return HttpResponseNotAllowed(["GET", "POST"])
 
 
 @login_required
-def delete(request, template):
+def delete(request, cluster_slug, template):
     if request.method == "DELETE":
         try:
-            vm_template = VirtualMachineTemplate.objects.get(template_name=template)
+            vm_template = VirtualMachineTemplate.objects.get(template_name=template,
+                                                             cluster__slug=cluster_slug)
             vm_template.delete()
         except VirtualMachineTemplate.DoesNotExist:
             return HttpResponse('-1', mimetype='application/json')

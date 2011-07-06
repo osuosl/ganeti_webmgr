@@ -32,6 +32,8 @@ secondary_node = 'secondary_node/(?P<secondary_node>.+)'
 instance = '(?P<instance>[^/]+)'
 host = '(?P<host>[^/]+)'
 
+template = '(?P<template>[^/]+)'
+
 # General
 urlpatterns = patterns('ganeti_web.views.general',
     #   Index page - it's status page
@@ -127,23 +129,6 @@ urlpatterns += patterns('ganeti_web.views.node',
     url(r'^%s/evacuate/?$' % node_prefix, 'evacuate', name="node-evacuate"),
 )
 
-template = '(?P<template>[^/]+)'
-# VirtualMachineTemplates
-urlpatterns += patterns('ganeti_web.views.vm_template',
-    # List
-    url(r'^templates/$', 'templates', name='template-list'),
-    # Detail
-    url(r'^template/%s/?$' % template, 'detail', name='template-detail'),
-    # Delete
-    url(r'^template/%s/delete/?$' % template, 'delete', name='template-delete'),
-    # Create
-    url(r'^template/create/$', 'create', name='template-create'),
-    # Edit
-    url(r'^template/edit/%s/?$' % template, 'create', name='template-edit'),
-    # Copy
-    url(r'^template/copy/%s/?$' % template, 'copy', name='template-copy'),
-)
-
 # VirtualMachines
 vm_prefix = '%s/%s' %  (cluster, instance)
 urlpatterns += patterns('ganeti_web.views.virtual_machine',
@@ -196,6 +181,23 @@ urlpatterns += patterns('ganeti_web.views.virtual_machine',
     
     # object log
     url(r'^%s/object_log/?$' % vm_prefix, 'object_log', name="vm-object_log"),
+)
+
+# VirtualMachineTemplates
+template_prefix = '%s/template/%s' % (cluster, template)
+urlpatterns += patterns('ganeti_web.views.vm_template',
+    # List
+    url(r'^templates/$', 'templates', name='template-list'),
+    # Create
+    url(r'^template/create/$', 'create', name='template-create'),
+    # Detail
+    url(r'^%s/?$' % template_prefix, 'detail', name='template-detail'),
+    # Delete
+    url(r'^%s/delete/?$' % template_prefix, 'delete', name='template-delete'),
+    # Edit
+    url(r'^%s/edit/?$' % template_prefix, 'create', name='template-edit'),
+    # Copy
+    url(r'^%s/copy/?$' % template_prefix, 'copy', name='template-copy'),
 )
 
 

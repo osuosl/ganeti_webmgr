@@ -22,7 +22,7 @@ from django.test.client import Client
 from django_test_tools.users import UserTestMixin
 from django_test_tools.views import ViewTestMixin
 
-from ganeti_web.models import VirtualMachineTemplate
+from ganeti_web.models import Cluster, VirtualMachineTemplate
 
 
 __all__ = ('TestTemplateViews', )
@@ -37,11 +37,15 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
     def setUp(self):
         self.tearDown()
 
+        cluster1 = Cluster(hostname='test.cluster', slug='test')
+        cluster1.save()
         template1 = VirtualMachineTemplate(template_name="Template1")
+        template1.cluster = cluster1
         template1.save()
 
         dict_ = globals()
         dict_['template1'] = template1
+        dict_['cluster'] = cluster1
 
     def tearDown(self):
         VirtualMachineTemplate.objects.all().delete()
@@ -58,10 +62,8 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
         """
         Test viewing details of a virtual machine template.
         """
-        self.assertTrue(VirtualMachineTemplate.objects.filter(template_name=template1).exists())
-
-        url = '/template/%s'
-        args = (template1,)
+        url = '/cluster/%s/template/%s'
+        args = (cluster.slug,template1)
         self.assert_standard_fails(url, args, authorized=False)
 
     def test_create_view(self):

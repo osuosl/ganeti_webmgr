@@ -468,9 +468,10 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
     """
     Form to edit/create VirtualMachineTemplates
     """
+    cluster = forms.ModelChoiceField(queryset=Cluster.objects.none(), label=_('Cluster'))
 
     class Meta(VirtualMachineForm.Meta):
-        exclude = ('cluster','pnode','snode','iallocator','iallocator_hostname',
+        exclude = ('pnode','snode','iallocator','iallocator_hostname',
             'owner', 'hypervisor', 'hostname')
         required = ('template_name')
 
@@ -478,7 +479,17 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
         """
         Do not use the NewVirtualMachineForm init
         """
+        user = kwargs.pop('user', None)
         super(VirtualMachineForm, self).__init__(*args, **kwargs)
+
+        # Set cluster choices
+        if user.is_superuser:
+            clusters = Cluster.objects.all()
+        else:
+            clusters = user.get_objects_any_perms(Cluster, ['admin','create_vm'])
+
+        self.fields['cluster'].queryset = clusters
+
         # XXX Remove fields explicitly set in NewVirtualMachineForm
         #  Django ticket #8620
         for field in self.Meta.exclude:
