@@ -590,9 +590,9 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
             self.fields['nic_count'].initial = nic_count
             self.nic_fields = xrange(nic_count)
             for i in xrange(nic_count):
-                link = forms.CharField(label=_('NIC/%s Link' % i), max_length=255, required=False)
+                link = forms.CharField(label=_('NIC/%s Link' % i), max_length=255, required=True)
                 self.fields['nic_link_%s' % i] = link
-                mac = MACAddressField(label=_('NIC/%s Mac' % i), required=False)
+                mac = MACAddressField(label=_('NIC/%s Mac' % i), required=True)
                 self.fields['nic_mac_%s' % i] = mac
                 if i < self.nics:
                     mac.initial = info['nic.macs'][i]
