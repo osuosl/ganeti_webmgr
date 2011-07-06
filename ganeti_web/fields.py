@@ -24,6 +24,7 @@ from django.core.exceptions import ValidationError
 from django.db.models.fields import DecimalField
 from django.db import models
 from django.forms.fields import CharField
+from django.utils.translation import ugettext as _
 
 class PreciseDateTimeField(DecimalField):
     """
@@ -164,6 +165,27 @@ class DataVolumeField(CharField):
 
         intvalue = int(float(matches.group(1)) * multiplier)
         return intvalue
+
+
+class MACAddressField(CharField):
+    """
+    Form field that validates MAC Addresses.  Is a simple extension over a
+    CharField.  It locks field size to 17 characters
+    """
+    PATTERN = re.compile('^([0-9a-f]{2}([:-]|$)){6}$')
+
+    def __init__(self, *args, **kwargs):
+        kwargs['max_length'] = 17
+        super(MACAddressField, self).__init__(**kwargs)
+
+    def to_python(self, value):
+        val = super(MACAddressField, self).to_python(value)
+        return None if '' == val else val
+
+    def validate(self, value):
+        super(MACAddressField, self).validate(value)
+        if value not in (None,'') and not self.PATTERN.match(value):
+            raise ValidationError(_('Invalid MAC Address'))
 
 
 # Field rule used by South for database migrations

@@ -47,6 +47,19 @@ def vmfield_disk(form, index):
     return {'field':form['disk_size_%s' % index], 'index':index}
 
 
+@register.inclusion_tag('ganeti/virtual_machine/vmfield_nic.html')
+def vmfield_nic(form, index):
+    """
+    Render a set of form fields for creating or editing a network card
+    """
+    data = {'link':form['nic_link_%s' % index],'index':index}
+    if 'nic_mode_%s' % index in form.fields:
+        data['mode'] = form['nic_mode_%s' % index]
+    if 'nic_mac_%s' % index in form.fields:
+        data['mac'] = form['nic_mac_%s' % index]
+    return data
+
+
 @register.filter
 def class_name(obj):
     """ returns the modelname of the objects class """

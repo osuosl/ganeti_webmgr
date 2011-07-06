@@ -17,10 +17,13 @@
 
 from django.test import TestCase
 
-from ganeti_web.fields import DataVolumeField
+from ganeti_web.fields import DataVolumeField, MACAddressField
 from django.core.exceptions import ValidationError
 
-__all__ = ('TestDataVolumeFieldToPython',)
+__all__ = [
+            'TestDataVolumeFieldToPython',
+            'TestMACAddressField'
+        ]
 
 
 class TestDataVolumeFieldToPython(TestCase):
@@ -83,3 +86,35 @@ class TestDataVolumeFieldToPython(TestCase):
         self.assertEquals(self.f.clean('100.00MB'), 100)
         self.assertEquals(self.f.clean('100.000 M'), 100)
         self.assertEquals(self.f.clean('100M'), 100)
+
+
+class TestMACAddressField(TestCase):
+
+    def setUp(self):
+        self.f = MACAddressField(required=True)
+
+    def test_trivial(self):
+        """
+        Check that setUp() is sane.
+        """
+        pass
+
+    def test_required(self):
+        # implicit success, should not throw error
+        self.f.validate("aa:bb:cc:dd:ee:ff")
+
+        # required, not given
+        self.assertRaises(ValidationError, self.f.validate, None)
+
+        # not required, not given
+        self.f.required = False
+        self.f.validate(None)
+
+    def test_valid(self):
+        self.f.validate("aa:bb:cc:dd:ee:ff")
+
+    def test_invalid(self):
+        self.assertRaises(ValidationError, self.f.validate, "aa:bb:cc:dd:ee")
+        self.assertRaises(ValidationError, self.f.validate, "aa:bb:cc:dd:ee:ff:00")
+        self.assertRaises(ValidationError, self.f.validate, "aa:bb:cc:dd:ee:gg")
+        self.assertRaises(ValidationError, self.f.validate, "aabbccddeeffaabbc")

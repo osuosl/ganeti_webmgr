@@ -139,7 +139,7 @@ XEN_HVM_INSTANCE = {
     'br42'
   ],
   'nic.macs': [
-    'aa:00:00:20:8d:41'
+    'aa:00:00:c5:47:2e'
   ],
   'nic.modes': [
     'bridged'
@@ -205,7 +205,7 @@ XEN_PVM_INSTANCE = {
     'br42'
   ],
   'nic.macs': [
-    'aa:00:00:1f:33:6e'
+    'aa:00:00:c5:47:2e'
   ],
   'nic.modes': [
     'bridged'
