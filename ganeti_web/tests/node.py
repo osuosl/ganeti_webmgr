@@ -16,11 +16,11 @@
 # USA.
 
 from datetime import datetime
-import json
-
 
 from django.contrib.auth.models import User
 from django.test import TestCase
+# Per #6579, do not change this import without discussion.
+from django.utils import simplejson as json
 
 from django_test_tools.users import UserTestMixin
 from django_test_tools.views import ViewTestMixin
@@ -108,12 +108,12 @@ class TestNodeModel(TestCase, NodeTestCaseMixin):
             * Hash is copied from cluster
         """
         node, cluster = self.create_node()
-        self.assert_(node.id)
+        self.assertTrue(node.id)
         self.assertFalse(node.error)
         self.assertEqual(node.cluster_hash, cluster.hash)
         
         node = Node.objects.get(id=node.id)
-        self.assert_(node.info)
+        self.assertTrue(node.info)
         self.assertFalse(node.error)
     
     def test_hash_update(self):

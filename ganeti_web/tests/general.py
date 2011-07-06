@@ -20,6 +20,9 @@ from django.contrib.auth.models import User, Group
 from django.core.cache import cache
 from django.test import TestCase
 from django.test.client import Client
+# Per #6579, do not change this import without discussion.
+from django.utils import simplejson as json
+
 from django_test_tools.views import ViewTestMixin
 from ganeti_web.models import SSHKey
 
@@ -123,15 +126,15 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         self.clear_cache()
         user.grant("admin", vm)
         user.save()
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.get(url % args)
         self.assertEqual(status, response.status_code)
         self.assertEqual(mimetype, response['content-type'])
         self.assertTemplateUsed(response, template)
         clusters = response.context['cluster_list']
-        self.assert_(cluster not in clusters)
+        self.assertTrue(cluster not in clusters)
         self.assertEqual(0, len(clusters))
-        self.assert_((False, job) in response.context["errors"]) # due to no clusters
+        self.assertTrue((False, job) in response.context["errors"]) # due to no clusters
         self.assertFalse((False, job1) in response.context["errors"]) # due to no clusters
         self.assertEqual(1, len(response.context["errors"]))
         self.assertEqual(0, response.context["orphaned"])
@@ -140,15 +143,15 @@ class TestGeneralViews(TestCase, ViewTestMixin):
 
         # authorized user (admin on one cluster)
         self.clear_cache()
-        self.assert_(c.login(username=user1.username, password='secret'))
+        self.assertTrue(c.login(username=user1.username, password='secret'))
         response = c.get(url % args)
         self.assertEqual(status, response.status_code)
         self.assertEqual(mimetype, response['content-type'])
         self.assertTemplateUsed(response, template)
         clusters = response.context['cluster_list']
-        self.assert_(cluster in clusters)
+        self.assertTrue(cluster in clusters)
         self.assertEqual(1, len(clusters))
-        self.assert_((False, job) in response.context["errors"])
+        self.assertTrue((False, job) in response.context["errors"])
         self.assertFalse((False, job1) in response.context["errors"]) # due to no clusters
         self.assertEqual(1, len(response.context["errors"]))
         self.assertEqual(1, response.context["orphaned"])
@@ -157,17 +160,17 @@ class TestGeneralViews(TestCase, ViewTestMixin):
 
         # authorized user (superuser)
         self.clear_cache()
-        self.assert_(c.login(username=user2.username, password='secret'))
+        self.assertTrue(c.login(username=user2.username, password='secret'))
         response = c.get(url % args)
         self.assertEqual(status, response.status_code)
         self.assertEqual(mimetype, response['content-type'])
         self.assertTemplateUsed(response, template)
         clusters = response.context['cluster_list']
-        self.assert_(cluster in clusters)
-        self.assert_(cluster1 in clusters)
+        self.assertTrue(cluster in clusters)
+        self.assertTrue(cluster1 in clusters)
         self.assertEqual(2, len(clusters))
-        self.assert_((False, job) in response.context["errors"])
-        self.assert_((False, job1) in response.context["errors"])
+        self.assertTrue((False, job) in response.context["errors"])
+        self.assertTrue((False, job1) in response.context["errors"])
         self.assertEqual(2, len(response.context["errors"]))
         self.assertEqual(2, response.context["orphaned"])
         self.assertEqual(2, response.context["missing"])
@@ -192,7 +195,7 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         self.assertTemplateUsed(response, 'registration/login.html')
         
         # 404 - no id
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.get(url, {})
         self.assertEqual(404, response.status_code)
         
@@ -205,7 +208,7 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         self.assertEqual(403, response.status_code)
         
         # unauthorized user (in different group)
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.get(url, {'id':group1.organization.pk})
         self.assertEqual(403, response.status_code)
         
@@ -222,14 +225,14 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         self.assertTemplateUsed(response, template)
         
         # authorized user (superuser)
-        self.assert_(c.login(username=user2.username, password='secret'))
+        self.assertTrue(c.login(username=user2.username, password='secret'))
         response = c.get(url, {'id':user.get_profile().pk})
         self.assertEqual(200, response.status_code)
         self.assertEqual(mimetype, response['content-type'])
         self.assertTemplateUsed(response, template)
         
         # authorized user (superuser)
-        self.assert_(c.login(username=user2.username, password='secret'))
+        self.assertTrue(c.login(username=user2.username, password='secret'))
         response = c.get(url, {'id':group1.organization.pk})
         self.assertEqual(200, response.status_code)
         self.assertEqual(mimetype, response['content-type'])
@@ -261,8 +264,8 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         # update orphaned
         update_vm_counts('orphaned', update)
         cached = cache.get_many(ids)
-        self.assert_('cluster_admin_0' in cached)
-        self.assert_('cluster_admin_1' in cached)
+        self.assertTrue('cluster_admin_0' in cached)
+        self.assertTrue('cluster_admin_1' in cached)
         self.assertFalse('cluster_admin_2' in cached)
         self.assertEqual(5, cached['cluster_admin_0']['orphaned'])
         self.assertEqual(2, cached['cluster_admin_0']['missing'])
@@ -274,8 +277,8 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         # update orphaned
         update_vm_counts('missing', update)
         cached = cache.get_many(ids)
-        self.assert_('cluster_admin_0' in cached)
-        self.assert_('cluster_admin_1' in cached)
+        self.assertTrue('cluster_admin_0' in cached)
+        self.assertTrue('cluster_admin_1' in cached)
         self.assertFalse('cluster_admin_2' in cached)
         self.assertEqual(5, cached['cluster_admin_0']['orphaned'])
         self.assertEqual(6, cached['cluster_admin_0']['missing'])
@@ -287,8 +290,8 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         # update ready_to_import
         update_vm_counts('ready_to_import', update)
         cached = cache.get_many(ids)
-        self.assert_('cluster_admin_0' in cached)
-        self.assert_('cluster_admin_1' in cached)
+        self.assertTrue('cluster_admin_0' in cached)
+        self.assertTrue('cluster_admin_1' in cached)
         self.assertFalse('cluster_admin_2' in cached)
         self.assertEqual(5, cached['cluster_admin_0']['orphaned'])
         self.assertEqual(6, cached['cluster_admin_0']['missing'])
@@ -313,7 +316,7 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         user2.revoke_all(cluster)
 
         # get API key
-        import settings, json
+        import settings
         key = settings.WEB_MGR_API_KEY
 
         url = '/keys/%s/'

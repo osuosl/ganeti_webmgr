@@ -112,12 +112,20 @@
     <tbody>
         {% for hostname, dict in vm_summary.items %}
             <tr>
-                <td>{{hostname|abbreviate_fqdn}}</td>
+                <td>
+                {% if admin %}
+                    <a href="{% url cluster-detail dict.cluster__slug %}"> 
+                        {{hostname|abbreviate_fqdn}}
+                    </a>
+                {% else %}
+                    {{hostname|abbreviate_fqdn}}
+                {% endif %}
+                </td>
                 <td>{{dict.running}}</td>
                 <td>{{dict.total}}</td>
             </tr>
         {% empty %}
-            <tr><td colspan="100%" class="none">{% trans "You do have access to any virtual machines" %}</td></tr>
+            <tr><td colspan="100%" class="none">{% trans "You do not have access to any virtual machines" %}</td></tr>
         {% endfor %}
     </tbody>
 </table>

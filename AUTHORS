@@ -26,6 +26,10 @@ Release Tarballs include noVNC by Joel Martin
 https://github.com/kanaka/noVNC
 Search function uses Haystack by Daniel Lindsley
 https://github.com/toastdriven/django-haystack/
+Haystack search uses Whoosh by Matt Chaput
+https://bitbucket.org/mchaput/whoosh/wiki/Home
+Icons are from Silk set by Mark James
+http://www.famfamfam.com/lab/icons/silk/ 
 
 ===== Internally Created Add-Ons: =====
 Django Object Permissions

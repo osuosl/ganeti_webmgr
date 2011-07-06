@@ -1,0 +1,1 @@
+from ganeti_web.tests.forms.virtual_machine import *

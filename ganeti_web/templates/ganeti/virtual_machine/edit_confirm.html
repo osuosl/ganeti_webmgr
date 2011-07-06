@@ -13,13 +13,13 @@ form input.save_reboot {width:10em;margin:1em .5em 0px 0px;}
 </style>
 {% endblock %}
 {% block content %}
-<h1>
+<h1 class="breadcrumb">
     {% if cluster_admin %}
-    <a class="breadcrumb" href="{% url cluster-detail cluster.slug %}#virtual_machines">{{cluster.hostname|abbreviate_fqdn}}</a>
+    <a href="{% url cluster-detail cluster.slug %}#virtual_machines">{{cluster.hostname|abbreviate_fqdn}}</a>
     {% else %}
-    <span class="breadcrumb">{{cluster.hostname|abbreviate_fqdn}}</span>
+    <span>{{cluster.hostname|abbreviate_fqdn}}</span>
     {% endif %}
-    : <a class="breadcrumb" href="{% url instance-detail cluster.slug instance.hostname %}">{{ instance.hostname }}</a>
+    : <a href="{% url instance-detail cluster.slug instance.hostname %}">{{ instance.hostname }}</a>
     : {% trans "Confirm Changes" %}
 </h1>
 

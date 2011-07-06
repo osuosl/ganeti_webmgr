@@ -260,9 +260,9 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
         object.parse_transient_info.assertCalled(self)
         object.parse_persistent_info.assertCalled(self)
         self.assertEqual(1, len(object.parse_persistent_info.calls))
-        self.assert_(object.id)
+        self.assertTrue(object.id)
         self.assertNotEqual(None, object.cached)
-        self.assert_(now < object.cached, "Cache time should be newer")
+        self.assertTrue(now < object.cached, "Cache time should be newer")
     
     def test_refresh_error(self):
         """
@@ -389,7 +389,7 @@ class TestErrorViews(TestGanetiErrorBase, TestCase):
         self.assertFalse(vm_error.cleared)
         
         # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.post(url % vm_error.id)
         self.assertEqual(403, response.status_code)
         vm_error = GanetiError.objects.get(pk=vm_error.pk)
@@ -404,14 +404,14 @@ class TestErrorViews(TestGanetiErrorBase, TestCase):
         response = c.post(url % c_error.id)
         self.assertEqual(200, response.status_code)
         c_error = GanetiError.objects.get(pk=c_error.pk)
-        self.assert_(c_error.cleared)
+        self.assertTrue(c_error.cleared)
         GanetiError.objects.all().update(cleared=False)
         
         # authorized for vm (cluster admin)
         response = c.post(url % vm_error.id)
         self.assertEqual(200, response.status_code)
         vm_error = GanetiError.objects.get(pk=vm_error.pk)
-        self.assert_(vm_error.cleared)
+        self.assertTrue(vm_error.cleared)
         GanetiError.objects.all().update(cleared=False)
         user.revoke_all(cluster)
         
@@ -421,7 +421,7 @@ class TestErrorViews(TestGanetiErrorBase, TestCase):
         response = c.post(url % vm_error.id)
         self.assertEqual(200, response.status_code)
         vm_error = GanetiError.objects.get(pk=vm_error.pk)
-        self.assert_(vm_error.cleared)
+        self.assertTrue(vm_error.cleared)
         GanetiError.objects.all().update(cleared=False)
         vm.owner = None
         vm.save()
@@ -432,5 +432,5 @@ class TestErrorViews(TestGanetiErrorBase, TestCase):
         response = c.post(url % vm_error.id)
         self.assertEqual(200, response.status_code)
         vm_error = GanetiError.objects.get(pk=vm_error.pk)
-        self.assert_(vm_error.cleared)
+        self.assertTrue(vm_error.cleared)
         GanetiError.objects.all().update(cleared=False)

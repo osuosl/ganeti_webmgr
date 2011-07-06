@@ -114,13 +114,13 @@ class TestJobModel(TestJobMixin, TestCase):
         
         # load with running status, should refresh
         job.load_info()
-        self.assert_(job.ignore_cache)
+        self.assertTrue(job.ignore_cache)
         job._refresh.assertCalled(self)
         job._refresh.reset()
         
         # load again with running status, should refresh
         job.load_info()
-        self.assert_(job.ignore_cache)
+        self.assertTrue(job.ignore_cache)
         job._refresh.assertCalled(self)
         job._refresh.reset()
         
@@ -152,13 +152,13 @@ class TestJobModel(TestJobMixin, TestCase):
         
         # load with running status, should refresh
         job.load_info()
-        self.assert_(job.ignore_cache)
+        self.assertTrue(job.ignore_cache)
         job._refresh.assertCalled(self)
         job._refresh.reset()
         
         # load again with running status, should refresh
         job.load_info()
-        self.assert_(job.ignore_cache)
+        self.assertTrue(job.ignore_cache)
         job._refresh.assertCalled(self)
         job._refresh.reset()
         

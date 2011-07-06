@@ -110,7 +110,7 @@
 {% endblock %}
 
 {% block content %}
-<h1><a class="breadcrumb" href="{% url cluster-list %}">{% trans "Cluster" %}</a> : {{ cluster.hostname }}</h1>
+<h1 class="breadcrumb"><a href="{% url cluster-list %}">{% trans "Cluster" %}</a> : {{ cluster.hostname }}</h1>
 
 <ul id="messages">
     {%if cluster.error%}<li class="error">{% trans "Error in Ganeti API" %}:<p>{{cluster.error}}</p></li>{%endif%}
@@ -130,7 +130,9 @@
             {% if admin %}
                 <li><a class="button edit" title="edit cluster" href="{% url cluster-edit cluster.slug %}">{% trans "Edit" %}</a></li>
                 <li><a class="button delete" title="delete cluster" href="{% url cluster-edit cluster.slug %}">{% trans "Delete" %}</a></li>
-                <li><a class="button redistribute-config" title="redistribute cluster config" href="{% url cluster-redistribute-config cluster.slug %}">{% trans "Redistribute Config" %}</a></li>
+				{% if instance.username %}
+                	<li><a class="button redistribute-config" title="redistribute cluster config" href="{% url cluster-redistribute-config cluster.slug %}">{% trans "Redistribute Config" %}</a></li>
+				{% endif %}
             {% endif %}
         </ul>
         <table class="overview horizontal">

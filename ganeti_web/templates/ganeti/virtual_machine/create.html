@@ -36,7 +36,7 @@
 <div id="virtualmachineform">
     <form method="post" action="{% url instance-create %}">
         <fieldset class="first_fieldset">
-            <h1><span class="breadcrumb">{% trans "Virtual Machine" %}</span> : {% trans "Create" %}</h1>
+            <h1 class="breadcrumb"><span>{% trans "Virtual Machine" %}</span> : {% trans "Create" %}</h1>
             {% vmfield form.owner %}
             {% vmfield form.cluster %}
             {% vmfield form.hypervisor %}
@@ -51,19 +51,33 @@
             {% vmfield form.os %}
         </fieldset>
         <fieldset>
-            <legend>{% trans "General Parameters" %}</legend>
+            <legend>{% trans "General Parameters" %} </legend>
             {% vmfield form.vcpus %}
             {% vmfield form.memory %}
-            {% vmfield form.disk_size %}
             {% if form.disk_type %}
             {% vmfield form.disk_type %}
             {% endif %}
-            {% vmfield form.nic_mode %}
-            {% vmfield form.nic_link %}
             {% if form.nic_type %}
             {% vmfield form.nic_type %}
             {% endif %}
         </fieldset>
+
+        <fieldset id="disks">
+            <h3>{% trans "Disks" %}<div class="icon add"></div></h3>
+            {{ form.disk_count }}
+            {% for index in form.disk_fields %}
+                {% vmfield_disk form index %}
+            {% endfor %}
+        </fieldset>
+
+        <fieldset id="nics">
+            <h3>{% trans "Network Devices" %}<div class="icon add"></div></h3>
+            {{ form.nic_count }}
+            {% for index in form.nic_fields %}
+                {% vmfield_nic form index %}
+            {% endfor %}
+        </fieldset>
+
         <fieldset>
             <legend>{% trans "Hypervisor Parameters" %}</legend>
             {% vmfield form.kernel_path %}

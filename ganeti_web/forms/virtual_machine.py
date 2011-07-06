@@ -18,15 +18,20 @@ import copy
 
 from django import forms
 from django.forms import ValidationError
-from django.utils import simplejson
+# Per #6579, do not change this import without discussion.
+from django.utils import simplejson as json
 
-from ganeti_web import constants
-from ganeti_web.fields import DataVolumeField
+from ganeti_web.constants import EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES, \
+    HV_NIC_MODES, HV_DISK_TYPES, HV_NIC_TYPES, KVM_NIC_TYPES, HVM_DISK_TYPES, \
+    KVM_DISK_TYPES, KVM_BOOT_ORDER, HVM_BOOT_ORDER, KVM_CHOICES, HV_USB_MICE, \
+    HV_SECURITY_MODELS, KVM_FLAGS, HV_DISK_CACHES, MODE_CHOICES, HVM_CHOICES
+from ganeti_web.fields import DataVolumeField, MACAddressField
 from ganeti_web.models import (Cluster, ClusterUser, Organization,
                            VirtualMachineTemplate, VirtualMachine)
-from ganeti_web.utilities import cluster_default_info, cluster_os_list, contains
+from ganeti_web.utilities import cluster_default_info, cluster_os_list, contains, get_hypervisor
 from django.utils.translation import ugettext_lazy as _
-
+from ganeti_web.util.client import REPLACE_DISK_AUTO, REPLACE_DISK_PRI, \
+    REPLACE_DISK_CHG, REPLACE_DISK_SECONDARY
 
 class VirtualMachineForm(forms.ModelForm):
     """
@@ -116,10 +121,12 @@ class NewVirtualMachineForm(VirtualMachineForm):
     pvm_exclude_fields = ('disk_type','nic_type', 'boot_order', 'serial_console',
         'cdrom_image_path')
 
-    empty_field = constants.EMPTY_CHOICE_FIELD
-    templates = constants.HV_DISK_TEMPLATES
-    nicmodes = constants.HV_NIC_MODES
+    empty_field = EMPTY_CHOICE_FIELD
+    templates = HV_DISK_TEMPLATES
+    nicmodes = HV_NIC_MODES
 
+    disk_count = forms.IntegerField(initial=1,  widget=forms.HiddenInput())
+    nic_count = forms.IntegerField(initial=1, widget=forms.HiddenInput())
     owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label=_('Owner'))
     cluster = forms.ModelChoiceField(queryset=Cluster.objects.none(), label=_('Cluster'))
     hypervisor = forms.ChoiceField(required=False, choices=[empty_field])
@@ -129,9 +136,8 @@ class NewVirtualMachineForm(VirtualMachineForm):
     os = forms.ChoiceField(label=_('Operating System'), choices=[empty_field])
     disk_template = forms.ChoiceField(label=_('Disk Template'),
                                       choices=templates)
-    disk_size = DataVolumeField(label=_('Disk Size'), min_value=100)
     disk_type = forms.ChoiceField(label=_('Disk Type'), choices=[empty_field])
-    nic_mode = forms.ChoiceField(label=_('NIC Mode'), choices=nicmodes)
+    #nic_mode = forms.ChoiceField(label=_('NIC Mode'), choices=nicmodes)
     nic_type = forms.ChoiceField(label=_('NIC Type'), choices=[empty_field])
     boot_order = forms.ChoiceField(label=_('Boot Device'), choices=[empty_field])
 
@@ -150,6 +156,29 @@ class NewVirtualMachineForm(VirtualMachineForm):
                 except Cluster.DoesNotExist:
                     # defer to clean function to return errors
                     pass
+
+            # Load disks and nics. Prefer raw fields, but unpack from dicts
+            # if the raw fields are not available.  This allows modify and
+            # API calls to use a cleaner syntax
+            if 'disks' in initial and not 'disk_count' in initial:
+                disks = initial['disks']
+                initial['disk_count'] = disk_count = len(disks)
+                for i, disk in enumerate(disks):
+                    initial['disk_size_%s' % i] = disk['size']
+            else:
+                disk_count = int(initial.get('disk_count', 1))
+            if 'nics' in initial and not 'nic_count' in initial:
+                nics = initial['nics']
+                initial['nic_count'] = nic_count = len(nics)
+                for i, disk in enumerate(nics):
+                    initial['nic_mode_%s' % i] = disk['mode']
+                    initial['nic_link_%s' % i] = disk['link']
+            else:
+                nic_count = int(initial.get('nic_count', 1))
+        else:
+            disk_count = 1
+            nic_count = 1
+        
         if cluster is not None and cluster.info is not None:
             # set choices based on selected cluster if given
             oslist = cluster_os_list(cluster)
@@ -175,12 +204,13 @@ class NewVirtualMachineForm(VirtualMachineForm):
                                         widget = forms.HiddenInput())
             self.fields['vcpus'].initial = defaults['vcpus']
             self.fields['memory'].initial = defaults['memory']
-            self.fields['nic_link'].initial = defaults['nic_link']
             self.fields['hypervisor'].choices = defaults['hypervisors']
             self.fields['hypervisor'].initial = hv
-            
+            self.create_nic_fields(nic_count, defaults)
+
             if hv == 'kvm':
                 self.fields['serial_console'].initial = defaults['serial_console']
+
 
             # Set field choices and hypervisor
             if hv == 'kvm' or hv == 'xen-pvm':
@@ -190,13 +220,17 @@ class NewVirtualMachineForm(VirtualMachineForm):
                 self.fields['nic_type'].choices = defaults['nic_types']
                 self.fields['disk_type'].choices = defaults['disk_types']
                 self.fields['boot_order'].choices = defaults['boot_devices']
-                
+
                 self.fields['nic_type'].initial = defaults['nic_type']
                 self.fields['disk_type'].initial = defaults['disk_type']
                 self.fields['boot_order'].initial = defaults['boot_order']
             if hv == 'xen-pvm':
                 for field in self.pvm_exclude_fields:
                     del self.fields[field]
+        else:
+            self.create_nic_fields(nic_count)
+
+        self.create_disk_fields(disk_count)
 
         # set cluster choices based on the given owner
         if initial and 'owner' in initial and initial['owner']:
@@ -233,6 +267,29 @@ class NewVirtualMachineForm(VirtualMachineForm):
             else:
                 q = user.get_objects_any_perms(Cluster, ['admin','create_vm'])
             self.fields['cluster'].queryset = q
+    
+    def create_disk_fields(self, count):
+        """
+        dynamically add fields for disks
+        """
+        self.disk_fields = range(count)
+        for i in range(count):
+            disk_size = DataVolumeField(min_value=100, required=True,
+                                        label=_("Disk/%s Size" % i))
+            self.fields['disk_size_%s'%i] = disk_size
+
+    def create_nic_fields(self, count, defaults=None):
+        """
+        dynamically add fields for nics
+        """
+        self.nic_fields = range(count)
+        for i in range(count):
+            nic_mode = forms.ChoiceField(label=_('NIC/%s Mode' % i), choices=HV_NIC_MODES)
+            nic_link = forms.CharField(label=_('NIC/%s Link' % i), max_length=255)
+            if defaults is not None:
+                nic_link.initial = defaults['nic_link']
+            self.fields['nic_mode_%s'%i] = nic_mode
+            self.fields['nic_link_%s'%i] = nic_link
 
     def clean_cluster(self):
         # Invalid or unavailable cluster
@@ -242,19 +299,12 @@ class NewVirtualMachineForm(VirtualMachineForm):
                 cluster detail page")
             self._errors['cluster'] = self.error_class([msg])
         return cluster
-
+    
     def clean(self):
         data = self.cleaned_data
 
         # First things first. Let's do any error-checking and validation which
         # requires combinations of data but doesn't require hitting the DB.
-
-        # Check that, if we are on any disk template but diskless, our
-        # disk_size is set and greater than zero.
-        if data.get("disk_template") != "diskless":
-            if not data.get("disk_size", 0):
-                self._errors["disk_size"] = self.error_class(
-                    [u"Disk size must be set and greater than zero"])
 
         pnode = data.get("pnode", '')
         snode = data.get("snode", '')
@@ -312,6 +362,19 @@ class NewVirtualMachineForm(VirtualMachineForm):
             else:
                 grantee = owner.user
             data['grantee'] = grantee
+
+        # sum disk sizes and build disks param for input into ganeti
+        disk_sizes = [data.get('disk_size_%s' % i) for i in xrange(data.get('disk_count'))]
+        disk_size = sum(disk_sizes)
+        data['disk_size'] = disk_size
+        data['disks'] = [dict(size=size) for size in disk_sizes]
+
+        # build nics dictionaries
+        nics = []
+        for i in xrange(data.get('nic_count')):
+            nics.append(dict(mode=data.get('nic_mode_%s' % i),
+                             link=data.get('nic_link_%s' % i)))
+        data['nics'] = nics
 
         # superusers bypass all permission and quota checks
         if not self.user.is_superuser and owner:
@@ -403,26 +466,26 @@ class NewVirtualMachineForm(VirtualMachineForm):
                 msg = u"%s." % _("Automatic Allocation was selected, but there is no \
                       IAllocator available.")
                 self._errors['iallocator'] = self.error_class([msg])
-        
+
         # Check options which depend on the the hypervisor type
         hv = data.get('hypervisor')
         disk_type = data.get('disk_type')
         nic_type = data.get('nic_type')
 
         # Check disk_type
-        if (hv == 'kvm' and not (contains(disk_type, constants.KVM_DISK_TYPES) or contains(disk_type, constants.HV_DISK_TYPES))) or \
-           (hv == 'xen-hvm' and not (contains(disk_type, constants.HVM_DISK_TYPES) or contains(disk_type, constants.HV_DISK_TYPES))):
+        if (hv == 'kvm' and not (contains(disk_type, KVM_DISK_TYPES) or contains(disk_type, HV_DISK_TYPES))) or \
+           (hv == 'xen-hvm' and not (contains(disk_type, HVM_DISK_TYPES) or contains(disk_type, HV_DISK_TYPES))):
             msg = '%s is not a valid option for Disk Template on this cluster.' % disk_type
             self._errors['disk_type'] = self.error_class([msg])
         # Check nic_type
-        if (hv == 'kvm' and not (contains(nic_type, constants.KVM_NIC_TYPES) or \
-           contains(nic_type, constants.HV_NIC_TYPES))) or \
-           (hv == 'xen-hvm' and not contains(nic_type, constants.HV_NIC_TYPES)):
+        if (hv == 'kvm' and not (contains(nic_type, KVM_NIC_TYPES) or \
+           contains(nic_type, HV_NIC_TYPES))) or \
+           (hv == 'xen-hvm' and not contains(nic_type, HV_NIC_TYPES)):
             msg = '%s is not a valid option for Nic Type on this cluster.' % nic_type
             self._errors['nic_type'] = self.error_class([msg])
         # Check boot_order 
-        if (hv == 'kvm' and not contains(boot_order, constants.KVM_BOOT_ORDER)) or \
-           (hv == 'xen-hvm' and not contains(boot_order, constants.HVM_BOOT_ORDER)):
+        if (hv == 'kvm' and not contains(boot_order, KVM_BOOT_ORDER)) or \
+           (hv == 'xen-hvm' and not contains(boot_order, HVM_BOOT_ORDER)):
             msg = '%s is not a valid option for Boot Device on this cluster.' % boot_order
             self._errors['boot_order'] = self.error_class([msg])
 
@@ -526,19 +589,20 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
         value in vm.info.hvparams
     """
     always_required = ('vcpus', 'memory')
-    empty_field = constants.EMPTY_CHOICE_FIELD
+    empty_field = EMPTY_CHOICE_FIELD
 
-    nic_mac = forms.CharField(label=_('NIC Mac'), required=False)
+    nic_count = forms.IntegerField(initial=1, widget=forms.HiddenInput())
     os = forms.ChoiceField(label=_('Operating System'), choices=[empty_field])
 
     class Meta:
         model = VirtualMachineTemplate
         exclude = ('start', 'owner', 'cluster', 'hostname', 'name_check',
-        'iallocator', 'iallocator_hostname', 'disk_template', 'pnode', 
-        'snode','disk_size', 'nic_mode', 'template_name', 'hypervisor')
+        'iallocator', 'iallocator_hostname', 'disk_template', 'pnode', 'nics',
+        'snode','disk_size', 'nic_mode', 'template_name', 'hypervisor', 'disks')
 
-    def __init__(self, vm, *args, **kwargs):
-        super(VirtualMachineForm, self).__init__(*args, **kwargs)
+    def __init__(self, vm, initial=None, *args, **kwargs):
+        super(VirtualMachineForm, self).__init__(initial, *args, **kwargs)
+
         # Set owner on form
         try:
             self.owner
@@ -570,8 +634,23 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
             #  ints.
             self.fields['vcpus'].initial = info['beparams']['vcpus']
             self.fields['memory'].initial = str(info['beparams']['memory'])
-            self.fields['nic_link'].initial = info['nic.links'][0]
-            self.fields['nic_mac'].initial = info['nic.macs'][0]
+
+            # always take the larger nic count.  this ensures that if nics are
+            # being removed that they will be in the form as Nones
+            self.nics = len(info['nic.links'])
+            nic_count = int(initial.get('nic_count', 1)) if initial else 1
+            nic_count = self.nics if self.nics > nic_count else nic_count
+            self.fields['nic_count'].initial = nic_count
+            self.nic_fields = xrange(nic_count)
+            for i in xrange(nic_count):
+                link = forms.CharField(label=_('NIC/%s Link' % i), max_length=255, required=True)
+                self.fields['nic_link_%s' % i] = link
+                mac = MACAddressField(label=_('NIC/%s Mac' % i), required=True)
+                self.fields['nic_mac_%s' % i] = mac
+                if i < self.nics:
+                    mac.initial = info['nic.macs'][i]
+                    link.initial = info['nic.links'][i]
+
             self.fields['os'].initial = info['os']
             
             try:
@@ -609,6 +688,17 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
             check_quota_modify(self)
             del data['start']
 
+        for i in xrange(data['nic_count']):
+            mac_field = 'nic_mac_%s' % i
+            link_field = 'nic_link_%s' % i
+            mac = data[mac_field] if mac_field in data else None
+            link = data[link_field] if link_field in data else None
+            if mac and not link:
+                self._errors[link_field] = self.error_class([_('This field is required')])
+            elif link and not mac:
+                self._errors[mac_field] = self.error_class([_('This field is required')])
+        data['nic_count_original'] = self.nics
+
         return data
 
 
@@ -616,10 +706,10 @@ class HvmModifyVirtualMachineForm(ModifyVirtualMachineForm):
     hvparam_fields = ('boot_order', 'cdrom_image_path', 'nic_type', 
         'disk_type', 'vnc_bind_address', 'acpi', 'use_localtime')
     required = ('disk_type', 'boot_order', 'nic_type')
-    empty_field = constants.EMPTY_CHOICE_FIELD
-    disk_types = constants.HVM_CHOICES['disk_type']
-    nic_types = constants.HVM_CHOICES['nic_type']
-    boot_devices = constants.HVM_CHOICES['boot_order']
+    empty_field = EMPTY_CHOICE_FIELD
+    disk_types = HVM_CHOICES['disk_type']
+    nic_types = HVM_CHOICES['nic_type']
+    boot_devices = HVM_CHOICES['boot_order']
 
     acpi = forms.BooleanField(label='ACPI', required=False)
     use_localtime = forms.BooleanField(label='Use Localtime', required=False)
@@ -635,6 +725,7 @@ class HvmModifyVirtualMachineForm(ModifyVirtualMachineForm):
 
     def __init__(self, vm, *args, **kwargs):
         super(HvmModifyVirtualMachineForm, self).__init__(vm, *args, **kwargs)
+
 
 class PvmModifyVirtualMachineForm(ModifyVirtualMachineForm):
     hvparam_fields = ('root_path', 'kernel_path', 'kernel_args', 
@@ -663,13 +754,13 @@ class KvmModifyVirtualMachineForm(PvmModifyVirtualMachineForm,
         'kernel_path', 'serial_console', 
         'cdrom_image_path',
     )
-    disk_caches = constants.HV_DISK_CACHES
-    kvm_flags = constants.KVM_FLAGS
-    security_models = constants.HV_SECURITY_MODELS
-    usb_mice = constants.HV_USB_MICE
-    disk_types = constants.KVM_CHOICES['disk_type']
-    nic_types = constants.KVM_CHOICES['nic_type']
-    boot_devices = constants.KVM_CHOICES['boot_order']
+    disk_caches = HV_DISK_CACHES
+    kvm_flags = KVM_FLAGS
+    security_models = HV_SECURITY_MODELS
+    usb_mice = HV_USB_MICE
+    disk_types = KVM_CHOICES['disk_type']
+    nic_types = KVM_CHOICES['nic_type']
+    boot_devices = KVM_CHOICES['boot_order']
 
     disk_cache = forms.ChoiceField(label='Disk Cache', required=False,
         choices=disk_caches)
@@ -703,21 +794,48 @@ class ModifyConfirmForm(forms.Form):
 
     def clean(self):
         raw = self.data['rapi_dict']
-        data = simplejson.loads(raw)
+        data = json.loads(raw)
 
         cleaned = self.cleaned_data
         cleaned['rapi_dict'] = data
+
+        # XXX copy properties into cleaned data so that check_quota_modify can
+        # be used
         cleaned['memory'] = data['memory']
         cleaned['vcpus'] = data['vcpus']
         cleaned['start'] = 'reboot' in data or self.vm.is_running
         check_quota_modify(self)
-        
+
+        # Build NICs dicts.  Add changes for existing nics and mark new or
+        # removed nics
+        #
+        # XXX Ganeti only allows a single remove or add but this code will
+        # format properly for unlimited adds or removes in the hope that this
+        # limitation is removed sometime in the future.
+        nics = []
+        nic_count_original = data.pop('nic_count_original')
+        nic_count = data.pop('nic_count')
+        for i in xrange(nic_count):
+            nic = dict(link=data.pop('nic_link_%s' % i))
+            if 'nic_mac_%s' % i in data:
+                nic['mac'] = data.pop('nic_mac_%s' % i)
+            index = i if i < nic_count_original else 'add'
+            nics.append((index, nic))
+        for i in xrange(nic_count_original-nic_count):
+            nics.append(('remove',{}))
+            try:
+                del data['nic_mac_%s' % (nic_count+i)]
+            except KeyError:
+                pass
+            del data['nic_link_%s' % (nic_count+i)]
+            
+        data['nics'] = nics
         return cleaned
 
 
 class MigrateForm(forms.Form):
     """ Form used for migrating a Virtual Machine """
-    mode = forms.ChoiceField(choices=constants.MODE_CHOICES)
+    mode = forms.ChoiceField(choices=MODE_CHOICES)
     cleanup = forms.BooleanField(initial=False, required=False,
                                  label=_("Attempt recovery from failed migration"))
 
@@ -745,3 +863,85 @@ class ChangeOwnerForm(forms.Form):
     """ Form used when modifying the owner of a virtual machine """
     owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label=_('Owner'))
 
+
+class ReplaceDisksForm(forms.Form):
+    """
+    Form used when replacing disks for a virtual machine
+    """
+    empty_field = EMPTY_CHOICE_FIELD
+
+    MODE_CHOICES = (
+        (REPLACE_DISK_AUTO, _('Automatic')),
+        (REPLACE_DISK_PRI, _('Replace disks on primary')),
+        (REPLACE_DISK_SECONDARY, _('Replace disks secondary')),
+        (REPLACE_DISK_CHG, _('Replace secondary with new disk')),
+    )
+
+    mode = forms.ChoiceField(choices=MODE_CHOICES, label=_('Mode'))
+    disks = forms.MultipleChoiceField(label=_('Disks'), required=False)
+    node = forms.ChoiceField(label=_('Node'), choices=[empty_field], required=False)
+    iallocator = forms.BooleanField(initial=False, label=_('Iallocator'), required=False)
+    
+    def __init__(self, instance, *args, **kwargs):
+        super(ReplaceDisksForm, self).__init__(*args, **kwargs)
+        self.instance = instance
+
+        # set disk choices based on the instance
+        disk_choices = [(i, 'disk/%s' % i) for i,v in enumerate(instance.info['disk.sizes'])]
+        self.fields['disks'].choices = disk_choices
+
+        # set choices based on the instances cluster
+        cluster = instance.cluster
+        nodelist = [str(h) for h in cluster.nodes.values_list('hostname', flat=True)]
+        nodes = zip(nodelist, nodelist)
+        nodes.insert(0, self.empty_field)
+        self.fields['node'].choices = nodes
+
+        defaults = cluster_default_info(cluster, get_hypervisor(instance))
+        if defaults['iallocator'] != '' :
+            self.fields['iallocator'].initial = True
+            self.fields['iallocator_hostname'] = forms.CharField(
+                                    initial=defaults['iallocator'],
+                                    required=False,
+                                    widget = forms.HiddenInput())
+    
+    def clean(self):
+        data = self.cleaned_data
+        mode = data.get('mode')
+        if mode == REPLACE_DISK_CHG:
+            iallocator = data.get('iallocator')
+            node = data.get('node')
+            if not (iallocator or node):
+                msg = _('Node or iallocator is required when replacing secondary with new disk')
+                self._errors['mode'] = self.error_class([msg])
+
+            elif iallocator and node:
+                msg = _('Choose either node or iallocator')
+                self._errors['mode'] = self.error_class([msg])
+                
+        return data
+
+    def clean_disks(self):
+        """ format disks into a comma delimited string """
+        disks = self.cleaned_data.get('disks')
+        if disks is not None:
+            disks = ','.join(disks)
+        return disks
+
+    def clean_node(self):
+        node = self.cleaned_data.get('node')
+        return node if node else None
+
+    def save(self):
+        """
+        Start a replace disks job using the data in this form.
+        """
+        data = self.cleaned_data
+        mode = data['mode']
+        disks = data['disks']
+        node = data['node']
+        if data['iallocator']:
+            iallocator = data['iallocator_hostname']
+        else:
+            iallocator = None
+        return self.instance.replace_disks(mode, disks, node, iallocator)

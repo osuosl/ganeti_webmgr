@@ -91,7 +91,7 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
             usb_mouse='',
             use_chroot=False,
             use_localtime=False,
-            vnc_bind_addres='0.0.0.0',
+            vnc_bind_address='0.0.0.0',
             vnc_tls=False,
             vnc_x509_path='',
             vnc_x509_verify=False,
@@ -100,8 +100,10 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
             disk_type='paravirtual',
             boot_order='disk',
             nic_type='paravirtual',
-            nic_link='br0',
-            nic_mac='aa:bb:00:00:33:d2',
+            nic_count=1,
+            nic_count_original=1,
+            nic_link_0='br0',
+            nic_mac_0='aa:bb:00:00:33:d2',
             root_path='/dev/vda1',
             kernel_path='/boot/vmlinuz-2.32.6-27-generic',
             serial_console=True,
@@ -217,7 +219,7 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
             usb_mouse='',
             use_chroot=False,
             use_localtime=False,
-            vnc_bind_addres='0.0.0.0',
+            vnc_bind_address='0.0.0.0',
             vnc_tls=False,
             vnc_x509_path='',
             vnc_x509_verify=False,
@@ -226,8 +228,10 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
             disk_type='paravirtual',
             boot_order='disk',
             nic_type='paravirtual',
-            nic_link='br0',
-            nic_mac='aa:bb:00:00:33:d2',
+            nic_count=1,
+            nic_count_original=1,
+            nic_link_0='br0',
+            nic_mac_0='aa:bb:00:00:33:d2',
             root_path='/dev/vda1',
             kernel_path='/boot/vmlinuz-2.32.6-27-generic',
             serial_console=True,
@@ -403,7 +407,7 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
             usb_mouse='',
             use_chroot=False,
             use_localtime=False,
-            vnc_bind_addres='0.0.0.0',
+            vnc_bind_address='0.0.0.0',
             vnc_tls=False,
             vnc_x509_path='',
             vnc_x509_verify=False,
@@ -412,8 +416,10 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
             disk_type='paravirtual',
             boot_order='disk',
             nic_type='paravirtual',
-            nic_link='br0',
-            nic_mac='aa:bb:00:00:33:d2',
+            nic_count=1,
+            nic_count_original=1,
+            nic_link_0='br0',
+            nic_mac_0='aa:bb:00:00:33:d2',
             root_path='/dev/vda1',
             kernel_path='/boot/vmlinuz-2.32.6-27-generic',
             serial_console=True,
@@ -460,7 +466,7 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
             usb_mouse='',
             use_chroot=False,
             use_localtime=False,
-            vnc_bind_addres='0.0.0.0',
+            vnc_bind_address='0.0.0.0',
             vnc_tls=False,
             vnc_x509_path='',
             vnc_x509_verify=False,
@@ -469,8 +475,10 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
             disk_type='paravirtual',
             boot_order='disk',
             nic_type='paravirtual',
-            nic_link='br0',
-            nic_mac='aa:bb:00:00:33:d2',
+            nic_count=1,
+            nic_count_original=1,
+            nic_link_0='br0',
+            nic_mac_0='aa:bb:00:00:33:d2',
             root_path='/dev/vda1',
             kernel_path='/boot/vmlinuz-2.32.6-27-generic',
             serial_console=True,
@@ -506,7 +514,7 @@ class TestVirtualMachineDeleteViews(TestVirtualMachineViewsBase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.post(url % args)
         self.assertEqual(403, response.status_code)
 
@@ -520,7 +528,7 @@ class TestVirtualMachineDeleteViews(TestVirtualMachineViewsBase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/virtual_machine/delete.html')
-        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        self.assertTrue(VirtualMachine.objects.filter(id=vm.id).exists())
         user.revoke_all(vm)
 
         # authorized GET (vm admin permissions)
@@ -529,7 +537,7 @@ class TestVirtualMachineDeleteViews(TestVirtualMachineViewsBase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/virtual_machine/delete.html')
-        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        self.assertTrue(VirtualMachine.objects.filter(id=vm.id).exists())
         user.revoke_all(cluster)
 
         # authorized GET (cluster admin permissions)
@@ -538,7 +546,7 @@ class TestVirtualMachineDeleteViews(TestVirtualMachineViewsBase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/virtual_machine/delete.html')
-        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        self.assertTrue(VirtualMachine.objects.filter(id=vm.id).exists())
         user.revoke_all(cluster)
 
         # authorized GET (superuser)
@@ -548,7 +556,7 @@ class TestVirtualMachineDeleteViews(TestVirtualMachineViewsBase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/virtual_machine/delete.html')
-        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        self.assertTrue(VirtualMachine.objects.filter(id=vm.id).exists())
 
         #authorized POST (superuser)
         user1.grant('power', vm)
@@ -557,10 +565,10 @@ class TestVirtualMachineDeleteViews(TestVirtualMachineViewsBase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/virtual_machine/delete_status.html')
-        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        self.assertTrue(VirtualMachine.objects.filter(id=vm.id).exists())
         pending_delete, job_id = VirtualMachine.objects.filter(id=vm.id).values('pending_delete','last_job_id')[0]
-        self.assert_(pending_delete)
-        self.assert_(job_id)
+        self.assertTrue(pending_delete)
+        self.assertTrue(job_id)
         user.is_superuser = False
         user.save()
         vm.save()
@@ -572,10 +580,10 @@ class TestVirtualMachineDeleteViews(TestVirtualMachineViewsBase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/virtual_machine/delete_status.html')
-        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        self.assertTrue(VirtualMachine.objects.filter(id=vm.id).exists())
         pending_delete, job_id = VirtualMachine.objects.filter(id=vm.id).values('pending_delete','last_job_id')[0]
-        self.assert_(pending_delete)
-        self.assert_(job_id)
+        self.assertTrue(pending_delete)
+        self.assertTrue(job_id)
         user.revoke_all(cluster)
 
         #authorized POST (vm admin)
@@ -586,10 +594,10 @@ class TestVirtualMachineDeleteViews(TestVirtualMachineViewsBase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/virtual_machine/delete_status.html')
-        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        self.assertTrue(VirtualMachine.objects.filter(id=vm.id).exists())
         pending_delete, job_id = VirtualMachine.objects.filter(id=vm.id).values('pending_delete','last_job_id')[0]
-        self.assert_(pending_delete)
-        self.assert_(job_id)
+        self.assertTrue(pending_delete)
+        self.assertTrue(job_id)
         vm.save()
         user.revoke_all(vm)
 
@@ -601,10 +609,10 @@ class TestVirtualMachineDeleteViews(TestVirtualMachineViewsBase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/virtual_machine/delete_status.html')
-        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        self.assertTrue(VirtualMachine.objects.filter(id=vm.id).exists())
         pending_delete, job_id = VirtualMachine.objects.filter(id=vm.id).values('pending_delete','last_job_id')[0]
-        self.assert_(pending_delete)
-        self.assert_(job_id)
+        self.assertTrue(pending_delete)
+        self.assertTrue(job_id)
         vm.save()
         user.revoke_all(vm)
 
@@ -626,7 +634,7 @@ class TestVirtualMachineReinstallViews(TestVirtualMachineViewsBase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.post(url % args)
         self.assertEqual(403, response.status_code)
 
@@ -640,7 +648,7 @@ class TestVirtualMachineReinstallViews(TestVirtualMachineViewsBase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/virtual_machine/reinstall.html')
-        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        self.assertTrue(VirtualMachine.objects.filter(id=vm.id).exists())
         user.revoke_all(vm)
 
         # authorized GET (vm admin permissions)
@@ -649,7 +657,7 @@ class TestVirtualMachineReinstallViews(TestVirtualMachineViewsBase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/virtual_machine/reinstall.html')
-        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        self.assertTrue(VirtualMachine.objects.filter(id=vm.id).exists())
         user.revoke_all(cluster)
 
         # authorized GET (cluster admin permissions)
@@ -658,7 +666,7 @@ class TestVirtualMachineReinstallViews(TestVirtualMachineViewsBase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/virtual_machine/reinstall.html')
-        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        self.assertTrue(VirtualMachine.objects.filter(id=vm.id).exists())
         user.revoke_all(cluster)
 
         # authorized GET (superuser)
@@ -668,7 +676,7 @@ class TestVirtualMachineReinstallViews(TestVirtualMachineViewsBase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/virtual_machine/reinstall.html')
-        self.assert_(VirtualMachine.objects.filter(id=vm.id).exists())
+        self.assertTrue(VirtualMachine.objects.filter(id=vm.id).exists())
 
         #authorized POST (superuser)
         response = c.post(url % args)

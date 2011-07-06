@@ -101,19 +101,19 @@ class TestSSHKeys(TestCase):
 
         # test unauthorized access (== not owner)
         for i in [ urls["get_existing"], urls["save_existing"], urls["delete"] ]:
-            self.assert_( c.login(username=user1.username, password="secret") )
+            self.assertTrue( c.login(username=user1.username, password="secret") )
             response = c.get(i)
             self.assertEqual(403, response.status_code)
 
         # test owner access
         for i in [ urls["get_existing"], urls["save_existing"], urls["delete"] ]:
-            self.assert_( c.login(username=user.username, password="secret") )
+            self.assertTrue( c.login(username=user.username, password="secret") )
             response = c.get(i)
             self.assertEqual(200, response.status_code)
 
         # test admin access
         for i in [ urls["get_existing"], urls["save_existing"], urls["delete"] ]:
-            self.assert_( c.login(username=admin.username, password="secret") )
+            self.assertTrue( c.login(username=admin.username, password="secret") )
             response = c.get(i)
             self.assertEqual(200, response.status_code)
 

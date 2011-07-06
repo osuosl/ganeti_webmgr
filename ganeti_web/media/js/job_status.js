@@ -101,23 +101,27 @@ function display_job(cluster, data) {
     }
 }
 
-function format_op(str){
-    str = str.substring(3).toLowerCase();
-    while(str.indexOf('_')!=-1) {
-        str = str.replace('_',' ')
+/* Capitalize the first letter of every word in a string. */
+function cap_first(str) {
+    var a = str.split(" ");
+    var len = a.length;
+
+    for (var i = 0; i < len; i++) {
+        a[i] = a[i][0].toUpperCase() + a[i].substring(1);
     }
-    str = cap_first(str);
-    return str
+
+    return a.join(" ");
 }
 
-function cap_first(str) {
-    var new_str = '';
-    str = str.split(' ');
-    for(var i=0; i < str.length; i++) {
-        new_str += str[i].substring(0,1).toUpperCase() +
-        str[i].substring(1,str[i].length) + ' ';
-    }
-    return new_str;
+/* Format an operation string.
+ *
+ * Operation strings look like "OP_DO_SOMETHING". They should be formatted to
+ * appear as "Do Something". */
+function format_op(str) {
+    str = str.substring(3).toLowerCase();
+    str = str.replace(/_/g, " ");
+    str = cap_first(str);
+    return str;
 }
 
 $("#messages a.clear").live("click", function(event){

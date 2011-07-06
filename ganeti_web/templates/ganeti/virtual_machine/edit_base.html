@@ -1,13 +1,12 @@
 {% extends "menu_base.html" %}
 {% load webmgr_tags i18n %}
 {% block head %}
-    <link rel="stylesheet" type="text/css"
-            href="{{MEDIA_URL}}/css/virtual_machine_create.css"/>
-    <script src="{{MEDIA_URL}}/js/modifyVM_formUpdater.js"></script>
-    <script src="{{MEDIA_URL}}/js/helpTips.js"></script>
+    <link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}/css/virtual_machine_create.css"/>
+    <script src="{{SITE_ROOT}}/ganeti_web_media/js/modifyVM_formUpdater.js"></script>
+    <script src="{{SITE_ROOT}}/ganeti_web_media/js/helpTips.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
-            var formUpdate = new modifyFormUpdater();
+            var formUpdate = new modifyFormUpdater({{ form.nics }});
             formUpdate.init();
             initHelpTips("#vmeditform");
         });
@@ -15,13 +14,13 @@
 {% endblock %}
 
 {% block content %}
-<h1>
+<h1 class="breadcrumb">
     {% if cluster_admin %}
-    <a class="breadcrumb" href="{% url cluster-detail cluster.slug %}#virtual_machines">{{cluster.hostname|abbreviate_fqdn}}</a>
+    <a href="{% url cluster-detail cluster.slug %}#virtual_machines">{{cluster.hostname|abbreviate_fqdn}}</a>
     {% else %}
-    <span class="breadcrumb">{{cluster.hostname|abbreviate_fqdn}}</span>
+    <span>{{cluster.hostname|abbreviate_fqdn}}</span>
     {% endif %}
-    : <a class="breadcrumb" href="{% url instance-detail cluster.slug instance.hostname %}">{{ instance.hostname }}</a>
+    : <a href="{% url instance-detail cluster.slug instance.hostname %}">{{ instance.hostname }}</a>
     : {% trans "Edit" %}
 </h1>
 
@@ -32,9 +31,16 @@
             {% vmfield form.vcpus %}
             {% vmfield form.memory %}
             {% block beparams %}{% endblock %}
-            {% vmfield form.nic_link %}
-            {% vmfield form.nic_mac %}
         </fieldset>
+
+        <fieldset id="nics">
+            <h3>{% trans "Network Devices" %}<a class="icon add"></a></h3>
+            {{ form.nic_count }}
+            {% for index in form.nic_fields %}
+                {% vmfield_nic form index %}
+            {% endfor %}
+        </fieldset>
+
         <fieldset>
             <legend>{% trans "Operating System Parameters" %}</legend>
             {% vmfield form.os %}

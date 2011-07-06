@@ -46,7 +46,7 @@ from ganeti_web.views import render_403
 from ganeti_web.forms.virtual_machine import NewVirtualMachineForm, \
     KvmModifyVirtualMachineForm, PvmModifyVirtualMachineForm, \
     HvmModifyVirtualMachineForm, ModifyConfirmForm, MigrateForm, RenameForm, \
-    ChangeOwnerForm
+    ChangeOwnerForm, ReplaceDisksForm
 from ganeti_web.templatetags.webmgr_tags import render_storage
 from ganeti_web.utilities import cluster_default_info, cluster_os_list, \
     compare, os_prettify, get_hypervisor
@@ -265,8 +265,7 @@ def migrate(request, cluster_slug, instance):
     """
     view used for initiating a Node Migrate job
     """
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    vm = get_object_or_404(VirtualMachine, hostname=instance)
+    vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
 
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
@@ -293,6 +292,42 @@ def migrate(request, cluster_slug, instance):
         form = MigrateForm()
 
     return render_to_response('ganeti/virtual_machine/migrate.html'
+                              ,
+        {'form':form, 'vm':vm, 'cluster':cluster},
+        context_instance=RequestContext(request))
+
+
+@login_required
+def replace_disks(request, cluster_slug, instance):
+    """
+    view used for initiating a Replace Disks job
+    """
+    vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
+    user = request.user
+    if not (user.is_superuser or user.has_any_perms(cluster, ['admin','replace_disks'])):
+        return render_403(request, _("You do not have sufficient privileges"))
+
+    if request.method == 'POST':
+        form = ReplaceDisksForm(vm, request.POST)
+        if form.is_valid():
+            try:
+                job = form.save()
+                job.refresh()
+                content = json.dumps(job.info)
+
+                # log information
+                log_action('VM_REPLACE_DISKS', user, vm, job)
+            except GanetiApiError, e:
+                content = json.dumps({'__all__':[str(e)]})
+        else:
+            # error in form return ajax response
+            content = json.dumps(form.errors)
+        return HttpResponse(content, mimetype='application/json')
+
+    else:
+        form = ReplaceDisksForm(vm)
+
+    return render_to_response('ganeti/virtual_machine/replace_disks.html'
                               ,
         {'form':form, 'vm':vm, 'cluster':cluster},
         context_instance=RequestContext(request))
@@ -607,10 +642,10 @@ def create(request, cluster_slug=None):
                 iallocator_hostname = data.get('iallocator_hostname')
             # BEPARAMS
             vcpus = data.get('vcpus')
+            disks = data.get('disks')
             disk_size = data.get('disk_size')
+            nics = data.get('nics')
             memory = data.get('memory')
-            nic_mode = data.get('nic_mode')
-            nic_link = data.get('nic_link')
             # If iallocator was not checked do not pass in the iallocator
             #  name. If iallocator was checked don't pass snode,pnode.
             if not iallocator:
@@ -659,7 +694,7 @@ def create(request, cluster_slug=None):
 
                 job_id = cluster.rapi.CreateInstance('create', hostname,
                         disk_template,
-                        [{"size": disk_size, }],[{'mode':nic_mode, 'link':nic_link, }],
+                        disks,nics,
                         start=start, os=os,
                         pnode=pnode, snode=snode,
                         name_check=name_check, ip_check=name_check,
@@ -827,16 +862,10 @@ def modify_confirm(request, cluster_slug, instance):
             if form.is_valid():
                 data = form.cleaned_data
                 rapi_dict = data['rapi_dict']
-                niclink = rapi_dict.pop('nic_link')
-                nicmac = rapi_dict.pop('nic_mac', None)
+                nics = rapi_dict.pop('nics')
                 vcpus = rapi_dict.pop('vcpus')
                 memory = rapi_dict.pop('memory')
                 os_name = rapi_dict.pop('os')
-                # Modify Instance rapi call
-                if nicmac is None:
-                    nics=[(0, {'link':niclink,}),]
-                else:
-                    nics=[(0, {'link':niclink, 'mac':nicmac,}),]
                 job_id = cluster.rapi.ModifyInstance(instance,
                     nics=nics, os_name=os_name, hvparams=rapi_dict,
                     beparams={'vcpus':vcpus,'memory':memory}
@@ -881,17 +910,21 @@ def modify_confirm(request, cluster_slug, instance):
     hvparams = info['hvparams']
 
     old_set = dict(
-        nic_link=info['nic.links'][0],
-        nic_mac=info['nic.macs'][0],
         memory=info['beparams']['memory'],
         vcpus=info['beparams']['vcpus'],
         os=info['os'],
     )
+
+    nic_count = len(info['nic.links'])
+    for i in xrange(nic_count):
+        old_set['nic_link_%s' % i] = info['nic.links'][i]
+        old_set['nic_mac_%s' % i] = info['nic.macs'][i]
+
     # Add hvparams to the old_set
     old_set.update(hvparams)
 
     instance_diff = {}
-    fields = hv_form(vm).fields
+    fields = hv_form(vm, data).fields
     for key in data.keys():
         if key == 'memory':
             diff = compare(render_storage(old_set[key]),
@@ -919,9 +952,11 @@ def modify_confirm(request, cluster_slug, instance):
                 oses = oses[0][1]
                 diff = compare(oses[0][1], oses[1][1])
             #diff = compare(oses[0][1], oses[1][1])
+        if key in ['nic_count','nic_count_original']:
+            continue
         elif key not in old_set.keys():
             diff = ""
-            instance_diff[key] = 'Key missing'
+            instance_diff[fields[key].label] = _('Added')
         else:
             diff = compare(old_set[key], data[key])
 
@@ -929,9 +964,11 @@ def modify_confirm(request, cluster_slug, instance):
             label = fields[key].label
             instance_diff[label] = diff
 
-    # Remove NIC MAC from data if it does not change
-    if fields['nic_mac'].label not in instance_diff:
-        del data['nic_mac']
+    # remove mac if it has not changed
+    for i in xrange(nic_count):
+        if fields['nic_mac_%s' % i].label not in instance_diff:
+            del data['nic_mac_%s' % i]
+
     # Repopulate form with changed values
     form.fields['rapi_dict'] = CharField(widget=HiddenInput,
         initial=json.dumps(data))
