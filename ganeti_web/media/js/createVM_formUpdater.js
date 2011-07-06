@@ -35,6 +35,12 @@ function formUpdater(url_choices, url_options, url_defaults){
     var oldid; // global for hypervisor.change function
 
     // ------------
+    // cluster defaults
+    // ------------
+    var DEFAULT_NIC_MODE = undefined;
+    var DEFAULT_NIC_LINK = undefined;
+
+    // ------------
     // init stuffs
     // ------------
     this.init = function(cluster_defaults){
@@ -321,6 +327,7 @@ function formUpdater(url_choices, url_options, url_defaults){
                 nic_mode.find(":selected").removeAttr("selected");
                 nic_mode.find("[value=" + d["nic_mode"] + "]")
                     .attr("selected","selected");
+                DEFAULT_NIC_MODE = d["nic_mode"];
             } else { 
                 nic_mode.find(":first-child")
                     .attr("selected", "selected");
@@ -329,6 +336,7 @@ function formUpdater(url_choices, url_options, url_defaults){
             // nic link text box
             if(d["nic_link"]){
                 nic_link.val(d["nic_link"]);
+                DEFAULT_NIC_LINK = d["nic_link"];
             }
             
             // nic type dropdown
@@ -505,15 +513,26 @@ function formUpdater(url_choices, url_options, url_defaults){
         nic_count.val(parseInt(count)+1);
         var p = $('<p></p>');
         var label = $("<label>NIC/" + count +"</label>");
-        var mode = $("select[name^=nic_mode]").first();
-        var val = mode.val();
-        mode = mode.clone();
+        
+        // create mode select box
+        var mode = $('<select></select>');
+        mode.append('<option>----------</option>');
+        mode.append('<option value="bridged">bridged</option>');
+        mode.append('<option value="routed">routed</option>');
         mode.attr("name", "nic_mode_" + count);
         mode.attr("id", "id_nic_mode_" + count);
-        mode.val(val);
-        var link = $("input[name^=nic_link]").first().clone();
+        if (DEFAULT_NIC_LINK != undefined) {
+            mode.val(DEFAULT_NIC_MODE);
+        }
+
+        // create link input
+        var link = $("<input type='text'/>");
+        link.val(DEFAULT_NIC_LINK);
         link.attr("name", "nic_link_" + count);
         link.attr("id", "id_nic_link_" + count);
+        if (DEFAULT_NIC_LINK != undefined) {
+            mode.val(DEFAULT_NIC_MODE);
+        }
         p.append(label);
         p.append(mode);
         p.append(link);
