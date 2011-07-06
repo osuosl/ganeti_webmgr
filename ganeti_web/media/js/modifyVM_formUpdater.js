@@ -1,4 +1,4 @@
-function modifyFormUpdater() {
+function modifyFormUpdater(nic_count_original) {
     /* Functions for the modify form */
 
     // Security Model and Domain
@@ -17,7 +17,6 @@ function modifyFormUpdater() {
 
     // NICs
     var nic_count = $("#id_nic_count");
-    var nic_count_original = nic_count.val();
     var nics = $("#nics");
     var nic_add =    $("#nics .add");
     var nic_delete = $("#nics .delete");
@@ -91,24 +90,35 @@ function modifyFormUpdater() {
 
         nic_add.click(_add_nic);
         nic_delete.live("click",_remove_nic);
+
+        //XXX reset nic count, sometimes the browser remembers old values.
+        nic_count.val(nics.children('p').length);
+        //XXX hide delete buttons for everything but the last element
+        nics.children('.delete').not(':last').hide();
     }
 
     function _add_nic() {
         var count = nic_count.val();
-        nic_count.val(parseInt(count)+1);
-        var p = $('<p></p>');
-        var label = $("<label>NIC/" + count +"</label>");
-        var mac = $('<input type="text"/>');
-        mac.attr("name", "nic_mac_" + count);
-        mac.attr("id", "id_nic_mac_" + count);
-        var link = $("#nics input[name^=nic_link]").first().clone();
-        link.attr("name", "nic_link_" + count);
-        link.attr("id", "id_nic_link_" + count);
-        p.append(label);
-        p.append(mac);
-        p.append(link);
-        nics.append(p);
-        nics.append('<div class="icon delete"></div>');
+        if (count < nic_count_original+1) {
+            nic_count.val(parseInt(count)+1);
+            var p = $('<p></p>');
+            var label = $("<label>NIC/" + count +"</label>");
+            var mac = $('<input type="text"/>');
+            mac.attr("name", "nic_mac_" + count);
+            mac.attr("id", "id_nic_mac_" + count);
+            var link = $("#nics input[name^=nic_link]").first().clone();
+            link.attr("name", "nic_link_" + count);
+            link.attr("id", "id_nic_link_" + count);
+            p.append(label);
+            p.append(mac);
+            p.append(link);
+            nics.append(p);
+            nics.append('<div class="icon delete"></div>');
+            
+            if (count == nic_count_original){
+                nic_add.addClass('disabled');
+            }
+        }
     }
 
     function _remove_nic() {
@@ -122,6 +132,10 @@ function modifyFormUpdater() {
         button.prev("p").remove();
         button.prev("ul").remove();
         button.remove();
+
+        if (count < nic_count_original+2){
+            nic_add.removeClass('disabled');
+        }
 
         // renumber remaining disks
         var i = 0;

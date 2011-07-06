@@ -584,9 +584,9 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
 
             # always take the larger nic count.  this ensures that if nics are
             # being removed that they will be in the form as Nones
-            self.nic_count = len(info['nic.links'])
+            self.nics = len(info['nic.links'])
             nic_count = int(initial.get('nic_count', 1)) if initial else 1
-            nic_count = self.nic_count if self.nic_count > nic_count else nic_count
+            nic_count = self.nics if self.nics > nic_count else nic_count
             self.fields['nic_count'].initial = nic_count
             self.nic_fields = xrange(nic_count)
             for i in xrange(nic_count):
@@ -594,7 +594,7 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
                 self.fields['nic_link_%s' % i] = link
                 mac = MACAddressField(label=_('NIC/%s Mac' % i), required=False)
                 self.fields['nic_mac_%s' % i] = mac
-                if i < self.nic_count:
+                if i < self.nics:
                     mac.initial = info['nic.macs'][i]
                     link.initial = info['nic.links'][i]
 
@@ -644,7 +644,7 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
                 self._errors[link_field] = self.error_class([_('This field is required')])
             elif link and not mac:
                 self._errors[mac_field] = self.error_class([_('This field is required')])
-        data['nic_count_original'] = self.nic_count
+        data['nic_count_original'] = self.nics
 
         return data
 
@@ -770,6 +770,12 @@ class ModifyConfirmForm(forms.Form):
             nics.append((index, nic))
         for i in xrange(nic_count_original-nic_count):
             nics.append(('remove',{}))
+            try:
+                del data['nic_mac_%s' % (nic_count+i)]
+            except KeyError:
+                pass
+            del data['nic_link_%s' % (nic_count+i)]
+            
         data['nics'] = nics
         return cleaned
 

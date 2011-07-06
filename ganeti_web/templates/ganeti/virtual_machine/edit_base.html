@@ -6,7 +6,7 @@
     <script src="{{SITE_ROOT}}/ganeti_web_media/js/helpTips.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
-            var formUpdate = new modifyFormUpdater({{ form.nic_count }});
+            var formUpdate = new modifyFormUpdater({{ form.nics }});
             formUpdate.init();
             initHelpTips("#vmeditform");
         });
@@ -34,7 +34,7 @@
         </fieldset>
 
         <fieldset id="nics">
-            <h3>{% trans "Network Devices" %}<div class="icon add"></div></h3>
+            <h3>{% trans "Network Devices" %}<a class="icon add"></a></h3>
             {{ form.nic_count }}
             {% for index in form.nic_fields %}
                 {% vmfield_nic form index %}

@@ -21,6 +21,7 @@ from ganeti_web import constants
 
 from ganeti_web.util.client import GanetiApiError
 
+
 def cluster_default_info(cluster, hypervisor=None):
     """
     Returns a dictionary containing the following
@@ -96,6 +97,7 @@ def cluster_os_list(cluster):
     except GanetiApiError:
         return []
 
+
 def os_prettify(oses):
     """
     Pretty-print and format a list of operating systems.
@@ -143,6 +145,8 @@ def compare(x, y):
         difference
     """
     i = cmp(x,y)
+    if y is None and i != 0:
+        return "removed"
     if isinstance(x, basestring) and i != 0:
         if x == "":
             return "set to %s" % (y)
@@ -161,11 +165,13 @@ def compare(x, y):
     else:
         return ""
 
+
 def contains(e, t):
     """
     Determine whether or not the element e is contained within the list of tuples t
     """
     return any(e == v[0] for v in t)
+
 
 def get_hypervisor(vm):
     """
