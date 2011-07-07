@@ -26,6 +26,7 @@ from django.db import models
 from django.forms.fields import CharField
 from django.utils.translation import ugettext as _
 
+
 class PreciseDateTimeField(DecimalField):
     """
     Custom model field for dealing with timestamps requiring precision greater
@@ -74,7 +75,7 @@ class PreciseDateTimeField(DecimalField):
         if isinstance(value, (float,)):
             return datetime.fromtimestamp(value)
         
-        raise ValidationError('Unable to convert %s to datetime.' % value)
+        raise ValidationError(_('Unable to convert %s to datetime.') % value)
 
     def get_db_prep_value(self, value, **kwargs):
         if value:
@@ -104,6 +105,7 @@ class PreciseDateTimeField(DecimalField):
         elif  engine == 'django.db.backends.sqlite3':
             return 'character'
 
+
 class DataVolumeField(CharField):
     min_value = None
     max_value = None
@@ -119,9 +121,9 @@ class DataVolumeField(CharField):
         if value == None and not self.required:
             return
         if self.min_value != None and value < self.min_value:
-            raise ValidationError('Must be at least ' + str(self.min_value))
+            raise ValidationError(_('Must be at least ') + str(self.min_value))
         if self.max_value != None and value > self.max_value:
-            raise ValidationError('Must be at less than ' + str(self.min_value))
+            raise ValidationError(_('Must be less than ') + str(self.min_value))
 
     # this gets called before validate
     def to_python(self, value):
@@ -144,13 +146,13 @@ class DataVolumeField(CharField):
 
         if len(value) == 0:
             if self.required:
-                raise ValidationError('Empty.')
+                raise ValidationError(_('Empty.'))
             else:
                 return None
 
         matches = re.match(r'([0-9]+(?:\.[0-9]+)?)\s*(M|G|T|MB|GB|TB)?$', value)
         if matches == None:
-            raise ValidationError('Invalid format.')
+            raise ValidationError(_('Invalid format.'))
 
         multiplier = 1.
         unit = matches.group(2)
