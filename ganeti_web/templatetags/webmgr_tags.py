@@ -27,6 +27,7 @@ from django.db.models import Count
 from django.template import Library, Node, TemplateSyntaxError
 from django.template.defaultfilters import stringfilter
 from django.utils.safestring import mark_safe
+from django.utils.translation import ugettext_lazy as _
 
 from ganeti_web.constants import NODE_ROLE_MAP
 from ganeti_web.models import Cluster
@@ -179,9 +180,9 @@ These filters were taken from Russel Haering's GanetiWeb project
 @stringfilter
 def render_node_status(status):
     if status:
-        return "Offline"
+        return _("Offline")
     else:
-        return "Online"
+        return _("Online")
 
 
 @register.filter
@@ -248,7 +249,7 @@ def format_part_total(part, total):
     Pretty-print a quantity out of a given total.
     """
     if total < 0 or part < 0:
-        return "unknown"
+        return _("unknown")
 
     if total > 0:
         total = float(total) / 1024
@@ -416,7 +417,7 @@ def render_os(os):
         flavor = " ".join(i.capitalize() for i in flavor.split("-"))
         return mark_safe("%s (<em>%s</em>)" % (flavor, t))
     except ValueError:
-        return mark_safe("<em>Unknown or invalid OS</em>")
+        return mark_safe(_("<em>Unknown or invalid OS</em>"))
 
 
 @register.filter
