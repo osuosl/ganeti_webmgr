@@ -138,7 +138,6 @@ class NewVirtualMachineForm(VirtualMachineForm):
     disk_template = forms.ChoiceField(label=_('Disk Template'),
                                       choices=templates)
     disk_type = forms.ChoiceField(label=_('Disk Type'), choices=[empty_field])
-    #nic_mode = forms.ChoiceField(label=_('NIC Mode'), choices=nicmodes)
     nic_type = forms.ChoiceField(label=_('NIC Type'), choices=[empty_field])
     boot_order = forms.ChoiceField(label=_('Boot Device'), choices=[empty_field])
 

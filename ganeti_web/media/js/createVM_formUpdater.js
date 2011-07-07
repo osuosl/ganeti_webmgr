@@ -155,6 +155,16 @@ function formUpdater(url_choices, url_options, url_defaults){
                     snode.hide();
                 }
             }
+
+            if (disk_template.val() == 'diskless') {
+                disks.hide();
+                disk_count.val(0);
+                disks.find('input[name^=disk_size]').attr('disabled','disabled');
+            } else if (!disks.is(":visible") || true) {
+                disks.show();
+                disks.find('input[name^=disk_size]').removeAttr('disabled');
+                disk_count.val(disks.find('input[name^=disk_size]').length);
+            }
         });
 
         // owner change
