@@ -73,9 +73,9 @@ class VirtualMachineForm(forms.ModelForm):
         return hostname
 
     def clean_vcpus(self):
-        vcpus = self.cleaned_data.get("vcpus")
+        vcpus = self.cleaned_data.get("vcpus", None)
 
-        if vcpus is None or vcpus < 1:
+        if vcpus is not None and vcpus < 1:
             self._errors["vcpus"] = self.error_class(
                 ["At least one CPU must be present"])
         else:
@@ -147,6 +147,10 @@ class NewVirtualMachineForm(VirtualMachineForm):
     def __init__(self, user, initial=None, *args, **kwargs):
         self.user = user
         super(NewVirtualMachineForm, self).__init__(initial, *args, **kwargs)
+
+        # Make sure vcpus is required for this form. Don't want to go through
+        #  the trouble of overriding the model field.
+        self.fields['vcpus'].required = True
 
         cluster = None
         if initial:
