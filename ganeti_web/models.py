@@ -101,8 +101,8 @@ def get_rapi(hash, cluster):
     # decrypt password
     # XXX django-fields only stores str, convert to None if needed
     password = Cluster.decrypt_password(password) if password else None
-    password = None if password == 'None' else password
-
+    password = None if password in ('None', '') else password
+    
     # now that we know hash is fresh, check cache again. The original hash could
     # have been stale.  This avoids constructing a new RAPI that already exists.
     if hash in RAPI_CACHE:
