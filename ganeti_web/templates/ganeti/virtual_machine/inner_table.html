@@ -81,6 +81,7 @@
 </tbody>
 </table>
 
+{% if vms.paginator.num_pages > 1 %}
 <ul class="pagination">
     {% if vms.has_previous %}
     <li class="previous">
@@ -98,3 +99,5 @@
     </li>
     {% endif %}
 </ul>
+{% endif %}
+
