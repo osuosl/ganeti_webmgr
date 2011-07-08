@@ -277,7 +277,7 @@ def overview(request, rest=False):
 
 
 @login_required
-def used_resources(request):
+def used_resources(request, rest = False):
     """ view for returning used resources for a given cluster user """
     try:
         cluster_user_id = request.GET['id']
@@ -299,9 +299,12 @@ def used_resources(request):
                 return render_403(request, _('You are not authorized to view this page'))
     
     resources = get_used_resources(cu.cast())
-    return render_to_response("overview/used_resources.html", {
-        'resources':resources
-    }, context_instance=RequestContext(request))
+    if (rest):
+        return resources
+    else:
+        return render_to_response("overview/used_resources.html", {
+            'resources':resources
+        }, context_instance=RequestContext(request))
     
 
 @login_required

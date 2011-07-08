@@ -348,7 +348,6 @@ def render_vms(request, query):
     count = GET['count'] if 'count' in GET else settings.ITEMS_PER_PAGE
     paginator = Paginator(query, count)
     page = request.GET.get('page', 1)
-
     try:
         vms = paginator.page(page)
     except (EmptyPage, InvalidPage):
@@ -358,7 +357,7 @@ def render_vms(request, query):
 
 
 @login_required
-def list_(request):
+def list_(request, rest = False):
     """
     View for displaying a list of VirtualMachines
     """
@@ -378,15 +377,18 @@ def list_(request):
         can_create = user.has_any_perms(Cluster, ['create_vm', ])
 
     vms = vms.select_related()
-
     # paginate, sort
-    vms = render_vms(request, vms)
+    if (not rest):
+        vms = render_vms(request, vms)
 
-    return render_to_response('virtual_machine/list.html', {
-        'vms':vms,
-        'can_create':can_create,
-        },
-        context_instance=RequestContext(request),
+    if (rest):
+        return vms
+    else:
+        return render_to_response('virtual_machine/list.html', {
+            'vms':vms,
+            'can_create':can_create,
+            },
+            context_instance=RequestContext(request),
     )
 
 
@@ -451,7 +453,7 @@ def detail_by_id(request, id):
 
 
 @login_required
-def detail(request, cluster_slug, instance):
+def detail(request, cluster_slug, instance, rest = False):
     """
     Display details of virtual machine.
     """
@@ -509,9 +511,12 @@ def detail(request, cluster_slug, instance):
     else:
         template = 'virtual_machine/detail.html'
 
-    return render_to_response(template, context,
-        context_instance=RequestContext(request),
-    )
+    if (rest):
+        return context
+    else:
+        return render_to_response(template, context,
+            context_instance=RequestContext(request),
+        )
 
 
 @login_required

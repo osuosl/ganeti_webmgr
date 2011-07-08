@@ -19,7 +19,7 @@ import json
 from django.template.context import RequestContext
 
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response
 
 from ganeti_web.models import Job, Cluster, VirtualMachine, Node
@@ -27,29 +27,35 @@ from ganeti_web.views import render_403
 from django.utils.translation import ugettext as _
 
 @login_required
-def status(request, cluster_slug, job_id):
+def status(request, cluster_slug, job_id, rest = False):
     """
     returns the raw info of a job
     """
     job = get_object_or_404(Job, cluster__slug=cluster_slug, job_id=job_id)
-    return HttpResponse(json.dumps(job.info), mimetype='application/json')
+    if (rest):
+        return job
+    else:
+        return HttpResponse(json.dumps(job.info), mimetype='application/json')
 
 
 @login_required
-def detail(request, cluster_slug, job_id):
+def detail(request, cluster_slug, job_id, rest = False):
     job = get_object_or_404(Job, cluster__slug=cluster_slug, job_id=job_id)
 
     user = request.user
     cluster_admin = True if user.is_superuser else user.has_perm('admin', job.cluster)
 
-    return render_to_response("job/detail.html",{
-        'job':job,
-        'cluster_admin':cluster_admin
-    } ,context_instance=RequestContext(request))
+    if (rest):
+        return {'job': job, 'cluster_admin':cluster_admin}
+    else:
+        return render_to_response("job/detail.html",{
+            'job':job,
+            'cluster_admin':cluster_admin
+        } ,context_instance=RequestContext(request))
 
 
 @login_required
-def clear(request, cluster_slug, job_id):
+def clear(request, cluster_slug, job_id, rest = False):
     """
     Clear a single failed job error message
     """
@@ -64,13 +70,19 @@ def clear(request, cluster_slug, job_id):
 
     if not cluster_admin:
         if isinstance(obj, (Cluster, Node)):
-            return render_403(request, _("You do not have sufficient privileges"))
+            if (rest):
+                return HttpResponseForbidden
+            else:
+                return render_403(request, _("You do not have sufficient privileges"))
         elif isinstance(obj, (VirtualMachine,)):
             # object is a virtual machine, check perms on VM and on Cluster
             if not (obj.owner_id == user.get_profile().pk  \
                 or user.has_perm('admin', obj) \
                 or user.has_perm('admin', obj.cluster)):
-                    return render_403(request, _("You do not have sufficient privileges"))
+                    if (rest):
+                        return HttpResponseForbidden
+                    else:
+                        return render_403(request, _("You do not have sufficient privileges"))
 
     
     # clear the error.
@@ -85,5 +97,8 @@ def clear(request, cluster_slug, job_id):
         ObjectModel = obj.__class__
         ObjectModel.objects.filter(pk=job.object_id, last_job=job)  \
             .update(last_job=None, ignore_cache=False)
-    
-    return HttpResponse('1', mimetype='application/json')
+
+    if (rest):
+        return 1
+    else:
+        return HttpResponse('1', mimetype='application/json')

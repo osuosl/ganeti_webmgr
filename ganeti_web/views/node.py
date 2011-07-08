@@ -64,7 +64,7 @@ def detail_by_id(request, id):
 
 
 @login_required
-def detail(request, cluster_slug, host):
+def detail(request, cluster_slug, host, rest = False):
     """
     Renders a detail view for a Node
     """
@@ -75,16 +75,23 @@ def detail(request, cluster_slug, host):
     modify = True if admin else user.has_perm('migrate', cluster)
     if not (admin or modify):
         return render_403(request, _("You do not have sufficient privileges"))
-    
-    return render_to_response("node/detail.html", {
-        'cluster':cluster,
+
+    if (rest):
+        return {'cluster':cluster,
         'node_count':cluster.nodes.all().count(),
-        'node':node, 
+        'node':node,
         'admin':admin,
-        'modify':modify,
-        },
-        context_instance=RequestContext(request),
-    )
+        'modify':modify}
+    else:
+        return render_to_response("node/detail.html", {
+            'cluster':cluster,
+            'node_count':cluster.nodes.all().count(),
+            'node':node,
+            'admin':admin,
+            'modify':modify,
+            },
+            context_instance=RequestContext(request),
+            )
 
 
 @login_required
