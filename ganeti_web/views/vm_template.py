@@ -25,7 +25,7 @@ from django.template import RequestContext
 from django.utils.translation import ugettext as _
 
 from ganeti_web.models import Cluster, VirtualMachineTemplate
-from ganeti_web.forms.virtual_machine import VirtualMachineTemplateForm, \
+from ganeti_web.forms.vm_template import VirtualMachineTemplateForm, \
     VirtualMachineTemplateCopyForm
 from ganeti_web.views import render_403
 
