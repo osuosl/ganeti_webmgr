@@ -43,6 +43,29 @@ class VirtualMachineForm(forms.ModelForm):
     class Meta:
         model = VirtualMachineTemplate
 
+    def create_disk_fields(self, count):
+        """
+        dynamically add fields for disks
+        """
+        self.disk_fields = range(count)
+        for i in range(count):
+            disk_size = DataVolumeField(min_value=100, required=True,
+                                        label=_("Disk/%s Size" % i))
+            self.fields['disk_size_%s'%i] = disk_size
+
+    def create_nic_fields(self, count, defaults=None):
+        """
+        dynamically add fields for nics
+        """
+        self.nic_fields = range(count)
+        for i in range(count):
+            nic_mode = forms.ChoiceField(label=_('NIC/%s Mode' % i), choices=HV_NIC_MODES)
+            nic_link = forms.CharField(label=_('NIC/%s Link' % i), max_length=255)
+            if defaults is not None:
+                nic_link.initial = defaults['nic_link']
+            self.fields['nic_mode_%s'%i] = nic_mode
+            self.fields['nic_link_%s'%i] = nic_link
+
     def clean_hostname(self):
         data = self.cleaned_data
         hostname = data.get('hostname')
@@ -271,29 +294,6 @@ class NewVirtualMachineForm(VirtualMachineForm):
                 q = user.get_objects_any_perms(Cluster, ['admin','create_vm'])
             self.fields['cluster'].queryset = q
     
-    def create_disk_fields(self, count):
-        """
-        dynamically add fields for disks
-        """
-        self.disk_fields = range(count)
-        for i in range(count):
-            disk_size = DataVolumeField(min_value=100, required=True,
-                                        label=_("Disk/%s Size" % i))
-            self.fields['disk_size_%s'%i] = disk_size
-
-    def create_nic_fields(self, count, defaults=None):
-        """
-        dynamically add fields for nics
-        """
-        self.nic_fields = range(count)
-        for i in range(count):
-            nic_mode = forms.ChoiceField(label=_('NIC/%s Mode' % i), choices=HV_NIC_MODES)
-            nic_link = forms.CharField(label=_('NIC/%s Link' % i), max_length=255)
-            if defaults is not None:
-                nic_link.initial = defaults['nic_link']
-            self.fields['nic_mode_%s'%i] = nic_mode
-            self.fields['nic_link_%s'%i] = nic_link
-
     def clean_cluster(self):
         # Invalid or unavailable cluster
         cluster = self.cleaned_data.get('cluster', None)
@@ -535,6 +535,8 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
     Form to edit/create VirtualMachineTemplates
     """
     cluster = forms.ModelChoiceField(queryset=Cluster.objects.none(), label=_('Cluster'))
+    disk_count = forms.IntegerField(initial=1,  widget=forms.HiddenInput())
+    nic_count = forms.IntegerField(initial=1, widget=forms.HiddenInput())
 
     class Meta(VirtualMachineForm.Meta):
         exclude = ('pnode','snode','iallocator','iallocator_hostname',
@@ -546,7 +548,70 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
         Do not use the NewVirtualMachineForm init
         """
         user = kwargs.pop('user', None)
+        initial = None
+        if len(args) > 0:
+            initial = args[0]
         super(VirtualMachineForm, self).__init__(*args, **kwargs)
+
+        # START COPY FROM NewVirtualMachineForm
+        cluster = None
+        if initial:
+            if initial.get('cluster', None):
+                try:
+                    cluster = Cluster.objects.get(pk=initial['cluster'])
+                except Cluster.DoesNotExist:
+                    # defer to clean function to return errors
+                    pass
+
+            # Load disks and nics. Prefer raw fields, but unpack from dicts
+            # if the raw fields are not available.  This allows modify and
+            # API calls to use a cleaner syntax
+            if 'disks' in initial and not 'disk_count' in initial:
+                print "DISKS"
+                disks = initial['disks']
+                initial['disk_count'] = disk_count = len(disks)
+                for i, disk in enumerate(disks):
+                    initial['disk_size_%s' % i] = disk['size']
+            else:
+                disk_count = int(initial.get('disk_count', 1))
+            if 'nics' in initial and not 'nic_count' in initial:
+                nics = initial['nics']
+                initial['nic_count'] = nic_count = len(nics)
+                for i, disk in enumerate(nics):
+                    initial['nic_mode_%s' % i] = disk['mode']
+                    initial['nic_link_%s' % i] = disk['link']
+            else:
+                nic_count = int(initial.get('nic_count', 1))
+        else:
+            disk_count = 1
+            nic_count = 1
+
+        if cluster and getattr(cluster, 'info', None):
+            # Get choices based on hypervisor passed to the form.
+            hv = initial.get('hypervisor', None)
+            if hv:
+                defaults = cluster_default_info(cluster, hv)
+            else:
+                defaults = cluster_default_info(cluster)
+                hv = defaults['hypervisor']
+            # Set field choices and hypervisor
+            if hv == 'kvm' or hv == 'xen-hvm':
+                self.fields['nic_type'].choices = defaults['nic_types']
+                self.fields['disk_type'].choices = defaults['disk_types']
+                self.fields['boot_order'].choices = defaults['boot_devices']
+
+            # Set os choices
+            oslist = cluster_os_list(cluster)
+            oslist.insert(0, self.empty_field)
+            self.fields['os'].choices = oslist
+
+            # Create nic fields using the nic count passed to the form
+            self.create_nic_fields(nic_count, defaults)
+        else:
+            self.create_nic_fields(nic_count)
+
+        self.create_disk_fields(disk_count)
+        ## END COPY FROM NewVirtualMachineForm
 
         # Set cluster choices
         if user.is_superuser:
@@ -573,6 +638,21 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
         """
         super(VirtualMachineForm, self).clean()
         data = self.cleaned_data
+
+        # sum disk sizes and build disks param for input into ganeti
+        x = lambda y: data.get('disk_size_%s' % y)
+        # Ignore empty disk fields
+        disk_sizes = [ x(i) for i in xrange(data.get('disk_count')) if x(i) != None]
+        disk_size = sum(disk_sizes)
+        data['disk_size'] = disk_size
+        data['disks'] = [dict(size=size) for size in disk_sizes]
+
+        # build nics dictionaries
+        nics = []
+        for i in xrange(data.get('nic_count',0)):
+            nics.append(dict(mode=data.get('nic_mode_%s' % i),
+                             link=data.get('nic_link_%s' % i)))
+        data['nics'] = nics
         return data
 
 

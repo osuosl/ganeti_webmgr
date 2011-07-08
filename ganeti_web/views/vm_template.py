@@ -82,6 +82,7 @@ def create(request, cluster_slug=None, template=None):
     return render_to_response('ganeti/vm_template/create.html', {
         'form':form,
         'action':action,
+        'template':obj,
         },
         context_instance = RequestContext(request)
     )

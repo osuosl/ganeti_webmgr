@@ -2,10 +2,11 @@
 {% load i18n %}
 {% load webmgr_tags %}
 
-{% block title %}{% trans "Copy Template" %}{% endblock title %}
+{% block title %}{% trans "Copy Template" %} : {{ template }}{% endblock title %}
 {% block content %}
-<h1>
-    <a class="breadcrumb" href="{% url template-detail template.cluster.slug template %}">{{template.template_name}}</a>
+<h1 class="breadcrumb">
+    <span><a href="{% url template-list %}">{% trans "Template" %}</a></span>
+     : <a href="{% url template-detail template.cluster.slug template %}">{{ template }}</a>
      : {% trans "Copy" %}
 </h1>
 <div id="virtualmachineform">

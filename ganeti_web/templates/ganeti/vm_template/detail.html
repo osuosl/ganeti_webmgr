@@ -25,8 +25,8 @@ $(document).ready(function() {
 </script>
 {% endblock head %}
 {% block content %}
-<h1>
-    <a class="breadcrumb" href="{% url template-list %}">{% trans "Template" %}</a>
+<h1 class="breadcrumb">
+    <a href="{% url template-list %}">{% trans "Template" %}</a>
      : {{template.template_name}}
 </h1>
 <ul id="actions">
@@ -59,10 +59,11 @@ $(document).ready(function() {
 <h3>Hardware</h3>
 <table class="horizontal">
     <tr><th>{% trans "VCPUs" %}</th><td>{{ template.vcpus }}</td></tr>
-    <tr><th>{% trans "Memory" %}</th><td>{{ template.memory }}</td></tr>
+    <tr><th>{% trans "Memory" %}</th><td>{{ template.memory|render_storage }}</td></tr>
     <tr><th>{% trans "NIC type" %}</th><td>{{ template.nic_type }}</td></tr>
 </table>
 
+{% if template.disks %}
 <h3>{% trans "Disks" %}</h3>
 <table>
     <tr>
@@ -70,13 +71,17 @@ $(document).ready(function() {
         <th>{% trans "Type" %}</th>
         <th>{% trans "Size" %}</th>
     </tr>
+    {% for disk in template.disks %}
     <tr>
-        <td>{% trans "disk" %}/0</td>
-        <td>{{ template.disk_type }}</td>
-        <td>{{ template.disk_size }}</td>
+        <td>{% trans "disk/" %}{{ forloop.counter0 }}</td>
+        <td>{{ template.disk_type|default:"None" }}</td>
+        <td>{{ disk.size|render_storage }}</td>
     </tr>
+    {% endfor %}
 </table>
+{% endif %}
 
+{% if template.nics %}
 <h3>{% trans "Network Devices" %}</h3>
 <table>
     <tr>
@@ -86,14 +91,17 @@ $(document).ready(function() {
         <th>{% trans "Mode" %}</th>
         <th>{% trans "Link" %}</th>
     </tr>
+    {% for nic in template.nics %}
     <tr>
-        <td>{% trans "nic" %}/0</td>
-        <td>{{ template.nic_mac }}</td>
-        <td></td>
-        <td>{{ template.nic_mode }}</td>
-        <td>{{ template.nic_type }}</td>
+        <td>{% trans "nic" %}{{ forloop.counter0 }}</td>
+        <td>{{ nic.mac|default:"None" }}</td>
+        <td>{{ nic.ip|default:"None" }}</td>
+        <td>{{ nic.mode }}</td>
+        <td>{{ nic.link }}</td>
     </tr>
+    {% endfor %}
 </table>
+{% endif %}
 
 <h3>Hypervisor</h3>
 <table class="horizontal">

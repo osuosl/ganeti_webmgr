@@ -1,34 +1,57 @@
 {% extends "menu_base.html" %}
 {% load i18n %}
 {% load webmgr_tags %}
+{% block title %}
+    {% if template %}
+        {% trans "Edit Template" %} {{ template }}
+    {% else %}
+        {% trans "Create a new Virtual Machine Template" %}
+    {% endif %}
+{% endblock %}
 
 {% block head %}
     <link rel="stylesheet" type="text/css"
             href="{{MEDIA_URL}}/css/virtual_machine_create.css"/>
     <!-- javascript includes -->
+    <script src="{{SITE_ROOT}}/ganeti_web_media/js/disableSingletonDropdown.js"></script>
+    <script src="{{SITE_ROOT}}/ganeti_web_media/js/createTemplate_formUpdater.js"></script>
     <script src="{{SITE_ROOT}}/ganeti_web_media/js/helpTips.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
+            /* run when document is fully loaded */
+           
+            // init the live-form updater
+            var frmUpdater = new formUpdater(
+                '{% url instance-create-cluster-options %}',
+                '{% url instance-create-cluster-defaults %}'
+            );
+            frmUpdater.init();
+
             // init help tips
             initHelpTips('#virtualmachineform');
         });
     </script>
 {% endblock %}
 
-{% block title %}{% trans "Create Template" %}{% endblock title %}
 
 {% block content %}
 <div id="virtualmachineform">
     <form method="post" action="{{ action }}">
         <fieldset class="first_fieldset">
-            <h1>{% trans "Create Template" %}</h1>
+            <h1 class="breadcrumb">
+                <span>
+                    <a href="{% url template-list %}">{% trans "Template" %}</a>
+                </span>
+                {% if template %}
+                   : <a href="{% url template-detail template.cluster.slug template %}">{{ template }}</a>
+                   : {% trans "Edit" %}
+                {% else %}
+                    : {% trans "Create" %}
+                {% endif %}
+            </h1>
             {% vmfield form.template_name %}
             {% vmfield form.description %}
             {% vmfield form.cluster %}
-        </fieldset>
-        <fieldset>
-            <legend>{% trans "Operating System" %}</legend>
-            {% vmfield form.os %}
         </fieldset>
         <fieldset>
             <legend>{% trans "Instance Options" %}</legend>
@@ -37,11 +60,30 @@
             {% vmfield form.disk_template %}
         </fieldset>
         <fieldset>
+            <legend>{% trans "Operating System" %}</legend>
+            {% vmfield form.os %}
+        </fieldset>
+        <fieldset>
             <legend>{% trans "General Parameters" %}</legend>
             {% vmfield form.vcpus %}
             {% vmfield form.memory %}
             {% vmfield form.disk_type %}
             {% vmfield form.nic_type %}
+        </fieldset>
+        <fieldset id="disks">
+            <h3>{% trans "Disks" %}<div class="icon add"></div></h3>
+            {{ form.disk_count }}
+            {% for index in form.disk_fields %}
+                {% vmfield_disk form index %}
+                <div class="icon delete"></div>
+            {% endfor %}
+        </fieldset>
+        <fieldset id="nics">
+            <h3>{% trans "Network Devices" %}<div class="icon add"></div></h3>
+            {{ form.nic_count }}
+            {% for index in form.nic_fields %}
+                {% vmfield_nic form index %}
+            {% endfor %}
         </fieldset>
         <fieldset>
             <legend>{% trans "Hypervisor Parameters" %}</legend>
