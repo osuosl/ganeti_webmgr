@@ -639,19 +639,24 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
         super(VirtualMachineForm, self).clean()
         data = self.cleaned_data
 
+        disk_count = data.get('disk_count', 0)
         # sum disk sizes and build disks param for input into ganeti
-        x = lambda y: data.get('disk_size_%s' % y)
-        # Ignore empty disk fields
-        disk_sizes = [ x(i) for i in xrange(data.get('disk_count')) if x(i) != None]
+        disk_sizes= []
+        if disk_count > 0:
+            x = lambda y: data.get('disk_size_%s' % y)
+            # Ignore empty disk fields
+            disk_sizes = [ x(i) for i in xrange(disk_count) if x(i) != None]
         disk_size = sum(disk_sizes)
         data['disk_size'] = disk_size
         data['disks'] = [dict(size=size) for size in disk_sizes]
 
         # build nics dictionaries
+        nic_count = data.get('nic_count', 0)
         nics = []
-        for i in xrange(data.get('nic_count',0)):
-            nics.append(dict(mode=data.get('nic_mode_%s' % i),
-                             link=data.get('nic_link_%s' % i)))
+        if nic_count > 0:
+            for i in xrange(data.get('nic_count',0)):
+                nics.append(dict(mode=data.get('nic_mode_%s' % i),
+                                 link=data.get('nic_link_%s' % i)))
         data['nics'] = nics
         return data
 

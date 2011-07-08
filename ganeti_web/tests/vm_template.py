@@ -40,9 +40,6 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
     create_template_data = dict(
         template_name='foo_bar',
         memory=512,
-        #TODO: Make sure form does not require at least 1 vcpu when they 
-        #  are not required at all
-        vcpus=1,
         )
 
     def setUp(self):
