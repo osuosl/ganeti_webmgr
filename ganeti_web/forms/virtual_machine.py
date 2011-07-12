@@ -164,9 +164,16 @@ class NewVirtualMachineForm(VirtualMachineForm):
     class Meta(VirtualMachineForm.Meta):
         exclude = ('template_name')
 
-    def __init__(self, user, initial=None, *args, **kwargs):
+    def __init__(self, user, *args, **kwargs):
         self.user = user
-        super(NewVirtualMachineForm, self).__init__(initial, *args, **kwargs)
+        initial = kwargs.get('initial', None)
+        super(NewVirtualMachineForm, self).__init__(*args, **kwargs)
+
+        # If data is not passed by initial kwarg (as in POST data)
+        #   assign initial to self.data as self.data contains POST
+        #   data.
+        if initial is None:
+            initial = self.data
 
         # Make sure vcpus is required for this form. Don't want to go through
         #  the trouble of overriding the model field.
