@@ -66,6 +66,20 @@ class TestNewVirtualMachineFormInit(TestCase, VirtualMachineTestCaseMixin):
             (u'diskless', u'diskless')],
             form.fields['disk_template'].choices)
 
+    def test_init_and_data_params(self):
+        """
+        Tests that passing initial does not trigger validation
+
+        Verifies:
+            * Passing data (arg[0]) will trigger validation
+            * Passing initial will not trigger validation
+        """
+        form = NewVirtualMachineForm(user, initial={})
+        self.assertEqual({}, form.errors)
+
+        form = NewVirtualMachineForm(user, {})
+        self.assertNotEqual({}, form.errors)
+
     def test_cluster_init(self):
         """
         Tests initializing a form with a Cluster
