@@ -31,6 +31,11 @@ $(document).ready(function() {
 </h1>
 <ul id="actions">
     <li>
+        <a class="button add" href="{% url instance-create-from-template cluster template %}">
+            {% trans "Create VM" %}
+        </a>
+    </li>
+    <li>
         <a class="button edit" href="{% url template-edit cluster template %}">
             {% trans "Edit" %}
         </a>
@@ -51,7 +56,7 @@ $(document).ready(function() {
     <tr><th>{% trans "Description" %}</th><td>{{ template.description }}</td></tr>
     <tr>
         <th>{% trans "Operating System" %}</th>
-        <td>{{ template.operating_system|render_os }}</td>
+        <td>{{ template.os|render_os }}</td>
     </tr>
     <tr><th>{% trans "Autostart" %}</th><td>{{ template.start|checkmark }}</td></tr>
     <tr><th>{% trans "DNS Name Check" %}</th><td>{{ template.name_check|checkmark }}</td></tr>
@@ -63,6 +68,7 @@ $(document).ready(function() {
     <tr><th>{% trans "Memory" %}</th><td>{{ template.memory|render_storage }}</td></tr>
     {% endif %}
     <tr><th>{% trans "NIC type" %}</th><td>{{ template.nic_type }}</td></tr>
+    <tr><th>{% trans "Disk Template" %}</th><td>{{ template.disk_template }}</td></tr>
 </table>
 
 {% if template.disks %}

@@ -22,11 +22,14 @@ from django.http import HttpResponse, HttpResponseRedirect, \
     HttpResponseNotAllowed, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
+from django.utils import simplejson as json
 from django.utils.translation import ugettext as _
 
 from ganeti_web.models import Cluster, VirtualMachineTemplate
 from ganeti_web.forms.vm_template import VirtualMachineTemplateForm, \
     VirtualMachineTemplateCopyForm
+from ganeti_web.forms.virtual_machine import NewVirtualMachineForm
+from ganeti_web.utilities import cluster_default_info
 from ganeti_web.views import render_403
 
 
@@ -83,6 +86,51 @@ def create(request, cluster_slug=None, template=None):
         'form':form,
         'action':action,
         'template':obj,
+        },
+        context_instance = RequestContext(request)
+    )
+
+
+@login_required
+def create_instance_from_template(request, cluster_slug, template):
+    """
+    View to create a new instance from a given template.
+      Post method is handled by virtual_machine create view.
+    """
+    user = request.user
+    if cluster_slug:
+        cluster = get_object_or_404(Cluster, slug=cluster_slug)
+        if not (
+            user.is_superuser or 
+            user.has_perm('admin', cluster) or
+            user.has_perm('create_vm', cluster)
+            ):
+            return render_403(request, _("You do not have sufficient privileges"))
+
+    vm_template = get_object_or_404(VirtualMachineTemplate, 
+                                    template_name=template, 
+                                    cluster__slug=cluster_slug)
+    if request.method == "GET":
+        # Work with vm_template vars here
+        initial = dict(
+            hostname=vm_template.template_name,
+            cluster=vm_template.cluster_id,
+            operating_system=vm_template.os
+        )
+        initial.update(vars(vm_template))
+        ignore_fields = ('nics', '_state', 'pnode', 'snode',
+            'description')
+        for field in ignore_fields:
+            del initial[field]
+        print initial
+        form = NewVirtualMachineForm(user, initial=initial)
+        cluster_defaults = {} #cluster_default_info(cluster)
+    else:
+        return HttpResponseNotAllowed(["GET"])
+
+    return render_to_response('ganeti/virtual_machine/create.html', {
+        'form':form,
+        'cluster_defaults':json.dumps(cluster_defaults),
         },
         context_instance = RequestContext(request)
     )
