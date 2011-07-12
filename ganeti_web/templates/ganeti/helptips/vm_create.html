@@ -56,11 +56,11 @@
     {% blocktrans %}Automatically select primary and secondary node to allocate disks
     on.{% endblocktrans %}
     </p>
-    <p>
+    <p>{% blocktrans %}
     When selected it will use the cluster default 
     <a href="http://docs.ganeti.org/ganeti/current/html/iallocator.html">
     iallocator</a> (if set by the cluster). The iallocator being used
-    will be displayed after the checkbox.
+    will be displayed after the checkbox.{% endblocktrans %}
     </p>
 </div>
 <div id="help-disk_template">
@@ -128,7 +128,7 @@
         no units are given, megabytes is assumed.{% endblocktrans %}
     </p>
     <p>
-        Acceptable Formats: 
+       {% trans "Acceptable Formats:" %} 
     </p>
     <ul>
         <li>
