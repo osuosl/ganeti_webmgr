@@ -26,7 +26,7 @@ from tastypie.fields import ForeignKey
 from django.contrib.auth.models import User
 from ganeti_web.models import VirtualMachine, SSHKey, Cluster, Node, CachedClusterObject, Job, ClusterUser
 from tastypie import fields
-from tastypie.authentication import Authentication, BasicAuthentication
+from tastypie.authentication import Authentication, BasicAuthentication, ApiKeyAuthentication
 from tastypie.authorization import Authorization, DjangoAuthorization
 from tastypie.bundle import Bundle
 from tastypie.exceptions import NotFound
@@ -58,7 +58,7 @@ class UserResource(ModelResource):
         queryset = User.objects.all()
         resource_name = 'user'
         allowed_methods = ['get', 'put', 'post', 'delete']
-        authentication = BasicAuthentication()
+        authentication = ApiKeyAuthentication()
         authorization = SuperuserAuthorization()
         validation = UserValidation()
 
@@ -91,7 +91,7 @@ class SSHKeyResource(ModelResource):
         queryset = SSHKey.objects.all()
         resource_name = 'ssh_key'
         allowed_methods = ['get']
-        authentication = BasicAuthentication()
+        authentication = ApiKeyAuthentication()
         authorization = SuperuserAuthorization()
 
 
@@ -199,7 +199,7 @@ class ClusterUserResource(ModelResource):
         object_class = ClusterUser
         resource_name = 'cluster_user'
         allowed_methods = ['get']
-        authentication = BasicAuthentication()
+        authentication = ApiKeyAuthentication()
         authorization = DjangoAuthorization()
 
 
@@ -225,7 +225,7 @@ class NodeResource(ModelResource):
         resource_name = 'node'
         allowed_methods = ['get']
         fields = {'ram_total', 'ram_free', 'disk_total', 'disk_free', 'role', 'offline', 'id'}
-        authentication = BasicAuthentication()
+        authentication = ApiKeyAuthentication()
         authorization = DjangoAuthorization()
 
     def dehydrate(self, bundle):
@@ -248,15 +248,6 @@ class NodeResource(ModelResource):
 
 class JobResource(ModelResource):
     cluster = fields.ForeignKey(ClusterResource, 'cluster', full=False)
-    
-    class Meta:
-        queryset = Job.objects.all()
-        object_class = Job
-        resource_name = 'job'
-        allowed_methods = ['get', 'delete']
-        fields = {'status', 'finished', 'job_id', 'cleared'}
-        authentication = BasicAuthentication()
-        authorization = DjangoAuthorization()
 
     def dehydrate(self, bundle):
         job = bundle.obj
@@ -268,7 +259,18 @@ class JobResource(ModelResource):
         print bundle.obj.info
         return bundle
 
+    class Meta:
+        queryset = Job.objects.all()
+        object_class = Job
+        resource_name = 'job'
+        allowed_methods = ['get', 'delete']
+        fields = {'status', 'finished', 'job_id', 'cleared'}
+        authentication = ApiKeyAuthentication()
+        authorization = DjangoAuthorization()
+
     def obj_get(self, request, **kwargs):
+        print "?KWARGS?"
+        print kwargs
         job = super(JobResource, self).obj_get(request, **kwargs)
         job_status = status(request, job.cluster.slug, job.job_id, True)
         return job_status
