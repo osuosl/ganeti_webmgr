@@ -131,6 +131,18 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertFalse(VirtualMachineTemplate.objects.filter(
             template_name=self.create_template_data['template_name']).exists())
 
+    def test_create_instance_from_template_view(self):
+        """
+        Tests creating an instance from a template
+        """
+        url = '/cluster/%s/template/%s/vm/'
+        args = (cluster.slug, template)
+
+        # GET
+        self.assert200(url, args,
+            users = [superuser, cluster_admin, create_vm],
+            template='ganeti/virtual_machine/create.html')
+
     def test_delete_view(self):
         """
         Test deleting a template using the view
