@@ -37,6 +37,7 @@ v1_api.register(NodeResource())
 v1_api.register(JobResource())
 v1_api.register(ClusterUserResource())
 
+# the keys for new users will be automatically generated on first start
 create_api_keys()
 
 urlpatterns = patterns('',

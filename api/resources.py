@@ -45,6 +45,7 @@ from tastypie.http import HttpMultipleChoices, HttpGone
 from ganeti_web.views.cluster import list_, detail
 from ganeti_web.views.virtual_machine import list_
 from ganeti_web.views.jobs import status, detail, clear
+from tastypie.models import ApiKey
 import ganeti_web.views.jobs
 import ganeti_web.views.node
 import ganeti_web.views.virtual_machine
@@ -68,6 +69,7 @@ class UserResource(ModelResource):
         for key in SSHKey.objects.filter(user__pk=bundle.obj.id):
             ssh_keys.append(key.key)
         bundle.data['ssh_keys'] = ssh_keys
+        bundle.data['api_key'] = ApiKey.objects.get(user__pk=bundle.obj.id).key
         return bundle
 
     def put_detail(self, request, **kwargs):
