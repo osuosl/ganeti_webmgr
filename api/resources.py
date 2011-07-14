@@ -80,8 +80,37 @@ class UserResource(ModelResource):
         deserialized = self.alter_deserialized_detail_data(request, deserialized)
         bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized))
         self.is_valid(bundle, request)
+        if (bundle.data.has_key('api_key')):
+            return HttpBadRequest()
         updated_bundle = self.obj_update(bundle, request=request, pk=kwargs.get('pk'))
         return HttpAccepted
+
+    def post_list(self, request, **kwargs):
+        print "post"
+        try:
+            deserialized = self.deserialize(request, request.raw_post_data, format=request.META.get('CONTENT_TYPE', 'application/json'))
+        except (Exception):
+            return HttpBadRequest()
+        deserialized = self.alter_deserialized_detail_data(request, deserialized)
+        bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized))
+
+        # action: generate api key for particular user
+        if (bundle.data.has_key('action')) & (bundle.data.get('action')=='generate_api_key') & (bundle.data.has_key('userid')):
+            api_key = None
+            try:
+                api_key = ApiKey.objects.get(user=bundle.data.get('userid'))
+                api_key.key = api_key.generate_key()
+                api_key.save()
+            except ApiKey.DoesNotExist:
+                api_key = ApiKey.objects.create(user=bundle.data.get('userid'))
+
+            # return created key info
+            if (api_key != None):
+                bun = Bundle()
+                bun.data['userid'] = bundle.data.get('userid')
+                bun.data['api_key'] = api_key.key
+                return HttpResponse(status=201, content=self.serialize(request, bun, self.determine_format(request)))
+        return HttpResponse(status=200)
 
 
 class SSHKeyResource(ModelResource):
