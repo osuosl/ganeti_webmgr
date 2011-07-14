@@ -93,10 +93,15 @@ function display_job(cluster, data) {
     }
 
     // XXX hack to ensure log area is same width as error area.
+    var width = undefined;
     if (log_html != undefined) {
-        var width = $(html).find('.scrollable .detector').width();
+        width = $(html).find('.scrollable .detector').width();
         width -= (log_html.innerWidth() - log_html.width()); // subtract padding
         log_html.width(width);
+        $(html).find('.scrollable').css('display', 'block')
+    } else if (error != undefined) {
+        width = error.width();
+        $(html).find('.scrollable .detector').width(width);
         $(html).find('.scrollable').css('display', 'block')
     }
 }
