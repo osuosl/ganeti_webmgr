@@ -38,6 +38,9 @@
             <tr><td>{% trans "Status" %}:</td><td>{{ info.opstatus|index:forloop.counter0 }}</td></tr>
             <tr><td>{% trans "Started" %}:</td><td>{{ info.start_ts|index:forloop.counter0|timestamp|date }}</td></tr>
             <tr><td>{% trans "Finished" %}:</td>
+            {% for field, value in op|job_fields %}
+                <tr><td>{{ field }}</td><td>{{ value }}</td>
+            {% endfor %}
                 {% with info.end_ts|index:forloop.counter0 as finished %}
                     <td>{% if finished %}{{ finished|timestamp|date }}{% endif %}</td></tr>
                 {% endwith %}
