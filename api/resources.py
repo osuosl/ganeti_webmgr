@@ -69,8 +69,12 @@ class UserResource(ModelResource):
         for key in SSHKey.objects.filter(user__pk=bundle.obj.id):
             ssh_keys.append(key.key)
         bundle.data['ssh_keys'] = ssh_keys
-        bundle.data['api_key'] = ApiKey.objects.get(user__pk=bundle.obj.id).key
+        try:
+            bundle.data['api_key'] = ApiKey.objects.get(user__pk=bundle.obj.id).key
+        except(ApiKey.DoesNotExist):
+            {}
         return bundle
+
 
     def put_detail(self, request, **kwargs):
         try:
@@ -86,7 +90,6 @@ class UserResource(ModelResource):
         return HttpAccepted
 
     def post_list(self, request, **kwargs):
-        print "post"
         try:
             deserialized = self.deserialize(request, request.raw_post_data, format=request.META.get('CONTENT_TYPE', 'application/json'))
         except (Exception):
@@ -110,6 +113,23 @@ class UserResource(ModelResource):
                 bun.data['userid'] = bundle.data.get('userid')
                 bun.data['api_key'] = api_key.key
                 return HttpResponse(status=201, content=self.serialize(request, bun, self.determine_format(request)))
+
+        # clean users api key
+        if (bundle.data.has_key('action')) & (bundle.data.get('action')=='clean_api_key') & (bundle.data.has_key('userid')):
+            api_key = None
+            print "cleaning"
+            try:
+                api_key = ApiKey.objects.get(user=bundle.data.get('userid'))
+                api_key.key = None
+                api_key.save()
+                api_key.delete()
+            except ApiKey.DoesNotExist:
+                api_key = None
+            if (api_key == None):
+                return HttpResponse(status=201)
+            else:
+                return HttpApplicationError
+
         return HttpResponse(status=200)
 
 
