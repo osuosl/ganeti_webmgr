@@ -119,7 +119,10 @@ def delete(request, cluster_slug, instance, rest = False):
         else:
             return HttpNoContent()
 
-    return HttpResponseNotAllowed(["GET","POST"])
+    if (not rest):
+        return HttpResponseNotAllowed(["GET","POST"])
+    else:
+        return HttpResponseNotAllowed
 
 
 @login_required
