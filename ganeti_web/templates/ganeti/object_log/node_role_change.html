@@ -1,3 +1,4 @@
+{% with log_item.data as data %}
     {% if log_item.object_id2 %}
         <a href="{% url job-detail data.cluster_slug data.job_id %}">Job #{{ data.job_id }}</a> -
     {% endif %}
@@ -6,4 +7,5 @@
     {% else %}
         {{ log_item.user }}
     {% endif %}
-change the role of node <a href="{% url node-detail data.cluster_slug data.hostname %}">{{data.hostname}}</a>
+change the role of node {% if log_item.object_id1 %}<a href="{% url node-detail data.cluster_slug data.hostname %}">{{data.hostname}}</a>{% else %}[unknown]{% endif %}
+{% endwith %}
