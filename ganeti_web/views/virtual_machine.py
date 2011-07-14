@@ -29,6 +29,7 @@ from django.http import HttpResponse, HttpResponseRedirect, \
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.conf import settings
+from tastypie.http import HttpNoContent
 
 from object_log.views import list_for_object
 
@@ -67,7 +68,7 @@ def get_vm_and_cluster_or_404(cluster_slug, instance):
 
 
 @login_required
-def delete(request, cluster_slug, instance):
+def delete(request, cluster_slug, instance, rest = False):
     """
     Delete a VM.
     """
@@ -81,15 +82,18 @@ def delete(request, cluster_slug, instance):
         user.has_any_perms(instance, ["remove", "admin"]) or
         user.has_perm("admin", cluster)
         ):
-        return render_403(request, _('You do not have sufficient privileges'))
+        if (not rest):
+            return render_403(request, _('You do not have sufficient privileges'))
+        else:
+            return HttpResponseForbidden()
 
-    if request.method == 'GET':
+    if (request.method == 'GET') & (not rest):
         return render_to_response("virtual_machine/delete.html",
             {'vm': instance, 'cluster':cluster},
             context_instance=RequestContext(request),
         )
 
-    elif request.method == 'POST':
+    elif (request.method == 'POST') | (rest):
         # verify that this instance actually exists in ganeti.  If it doesn't
         # exist it can just be deleted.
         try:
@@ -97,7 +101,10 @@ def delete(request, cluster_slug, instance):
         except GanetiApiError, e:
             if e.code == 404:
                 instance.delete()
-                return HttpResponseRedirect(reverse('virtualmachine-list'))
+                if (not rest):
+                    return HttpResponseRedirect(reverse('virtualmachine-list'))
+                else:
+                    return HttpNoContent()
 
         # start deletion job and mark the VirtualMachine as pending_delete and
         # disable the cache for this VM.
@@ -106,8 +113,11 @@ def delete(request, cluster_slug, instance):
         VirtualMachine.objects.filter(id=instance.id) \
             .update(last_job=job, ignore_cache=True, pending_delete=True)
 
-        return HttpResponseRedirect(
-            reverse('instance-detail', args=[cluster_slug, instance.hostname]))
+        if (not rest):
+            return HttpResponseRedirect(
+                reverse('instance-detail', args=[cluster_slug, instance.hostname]))
+        else:
+            return HttpNoContent()
 
     return HttpResponseNotAllowed(["GET","POST"])
 

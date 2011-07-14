@@ -211,8 +211,10 @@ class VMResource(ModelResource):
         queryset = VirtualMachine.objects.all()
         object_class = VirtualMachine
         resource_name = 'vm'
-        allowed_methods = ['get']
+        allowed_methods = ['get','delete']
         fields = {'slug','cluster', 'id', 'ram','disk_size','hostname','operating_system', 'virtual_cpus','status', 'pending_delete', 'deleted'}
+        authentication = ApiKeyAuthentication()
+        authorization = DjangoAuthorization()
 
     def dehydrate(self, bundle):
         vm = bundle.obj
@@ -230,13 +232,22 @@ class VMResource(ModelResource):
     def obj_get(self, request=None, **kwargs):
         vm = super(VMResource, self).obj_get(request=request, **kwargs)
         vm_detail = ganeti_web.views.virtual_machine.detail(request, vm.cluster.slug, vm.hostname, True)
-        print vm_detail
         return vm_detail['instance']
-
 
     def obj_get_list(self, request=None, **kwargs):
         vms = list_(request, True)
-        return vms 
+        return vms
+
+    def obj_delete(self, request, **kwargs):
+        try:
+            vm = self.obj_get(request, **kwargs)
+        except NotFound:
+            raise NotFound("Object not found")
+        vm_detail = ganeti_web.views.virtual_machine.detail(request, vm.cluster.slug, vm.hostname, True)
+        response = ganeti_web.views.virtual_machine.delete(request, vm.cluster.slug, vm_detail['instance'], True)
+        return response
+        
+
 
 
 
