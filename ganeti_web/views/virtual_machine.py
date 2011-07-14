@@ -29,7 +29,7 @@ from django.http import HttpResponse, HttpResponseRedirect, \
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.conf import settings
-from tastypie.http import HttpNoContent
+from tastypie.http import HttpNoContent, HttpAccepted
 
 from object_log.views import list_for_object
 
@@ -104,7 +104,7 @@ def delete(request, cluster_slug, instance, rest = False):
                 if (not rest):
                     return HttpResponseRedirect(reverse('virtualmachine-list'))
                 else:
-                    return HttpNoContent()
+                    return HttpAccepted()
 
         # start deletion job and mark the VirtualMachine as pending_delete and
         # disable the cache for this VM.
@@ -117,7 +117,7 @@ def delete(request, cluster_slug, instance, rest = False):
             return HttpResponseRedirect(
                 reverse('instance-detail', args=[cluster_slug, instance.hostname]))
         else:
-            return HttpNoContent()
+            return HttpAccepted()
 
     if (not rest):
         return HttpResponseNotAllowed(["GET","POST"])
@@ -309,13 +309,17 @@ def migrate(request, cluster_slug, instance):
 
 
 @login_required
-def reboot(request, cluster_slug, instance):
+def reboot(request, cluster_slug, instance, rest = False):
     vm = get_object_or_404(VirtualMachine, hostname=instance,
                            cluster__slug=cluster_slug)
     user = request.user
     if not (user.is_superuser or user.has_any_perms(vm, ['admin','power']) or
         user.has_perm('admin', vm.cluster)):
-            return render_403(request, _('You do not have permission to reboot this virtual machine'))
+
+            if (not rest):
+                return render_403(request, _('You do not have permission to reboot this virtual machine'))
+            else:
+                return HttpResponseForbidden
 
     if request.method == 'POST':
         try:
@@ -327,7 +331,10 @@ def reboot(request, cluster_slug, instance):
             log_action('VM_REBOOT', user, vm, job)
         except GanetiApiError, e:
             msg = {'__all__':[str(e)]}
-        return HttpResponse(json.dumps(msg), mimetype='application/json')
+        if (not rest):
+            return HttpResponse(json.dumps(msg), mimetype='application/json')
+        else:
+            return HttpAccepted
     return HttpResponseNotAllowed(['POST'])
 
 

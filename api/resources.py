@@ -211,7 +211,7 @@ class VMResource(ModelResource):
         queryset = VirtualMachine.objects.all()
         object_class = VirtualMachine
         resource_name = 'vm'
-        allowed_methods = ['get','delete']
+        allowed_methods = ['get','delete', 'post']
         fields = {'slug','cluster', 'id', 'ram','disk_size','hostname','operating_system', 'virtual_cpus','status', 'pending_delete', 'deleted'}
         authentication = ApiKeyAuthentication()
         authorization = DjangoAuthorization()
@@ -232,7 +232,8 @@ class VMResource(ModelResource):
     def obj_get(self, request=None, **kwargs):
         vm = super(VMResource, self).obj_get(request=request, **kwargs)
         vm_detail = ganeti_web.views.virtual_machine.detail(request, vm.cluster.slug, vm.hostname, True)
-        return vm_detail['instance']
+        return vm_detail['instance'] #TODO CHECK
+        #return vm
 
     def obj_get_list(self, request=None, **kwargs):
         vms = list_(request, True)
@@ -246,7 +247,28 @@ class VMResource(ModelResource):
         vm_detail = ganeti_web.views.virtual_machine.detail(request, vm.cluster.slug, vm.hostname, True)
         response = ganeti_web.views.virtual_machine.delete(request, vm.cluster.slug, vm_detail['instance'], True)
         return response
-        
+
+    def post_detail(self, request, **kwargs):
+        try:
+            deserialized = self.deserialize(request, request.raw_post_data, format=request.META.get('CONTENT_TYPE', 'application/json'))
+        except (Exception):
+            return HttpBadRequest()
+        try:
+            vm = self.obj_get(request,id=kwargs.get('pk'))
+            #vm = self.obj_get(request,hostname='derpers.gwm.osuosl.org') TODO name manipulation
+            vm_detail = ganeti_web.views.virtual_machine.detail(request, vm.cluster.slug, vm.hostname, True)
+        except NotFound:
+            raise NotFound("Object not found")
+
+        deserialized = self.alter_deserialized_detail_data(request, deserialized)
+        bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized))
+
+        # action: instance reboot TODO: test rebooting extensively
+        if (bundle.data.has_key('action')) & (bundle.data.get('action')=='reboot'):
+            response = ganeti_web.views.virtual_machine.reboot(request, vm.cluster.slug, vm_detail['instance'], True)
+            return response
+
+        return HttpAccepted
 
 
 
