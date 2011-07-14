@@ -117,15 +117,12 @@ class UserResource(ModelResource):
         # clean users api key
         if (bundle.data.has_key('action')) & (bundle.data.get('action')=='clean_api_key') & (bundle.data.has_key('userid')):
             api_key = None
-            print "cleaning"
             try:
                 api_key = ApiKey.objects.get(user=bundle.data.get('userid'))
-                api_key.key = None
-                api_key.save()
                 api_key.delete()
             except ApiKey.DoesNotExist:
                 api_key = None
-            if (api_key == None):
+            if (not api_key):
                 return HttpResponse(status=201)
             else:
                 return HttpApplicationError
