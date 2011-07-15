@@ -257,7 +257,7 @@
                 {% if admin or power and username %}
                     {% ifequal instance.info.status "running" %}
                     <li>
-                        <a class="button shutdown power" title="shutdown" href="{% url instance-shutdown cluster.slug instance.hostname %}">
+                        <a class="button shutdown power" title="shut down" href="{% url instance-shutdown cluster.slug instance.hostname %}">
                             {% trans "Shutdown" %}
                         </a>
                     </li>

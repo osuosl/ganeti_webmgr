@@ -172,6 +172,34 @@ def current_domain():
     return Site.objects.get_current().domain
 
 
+@register.filter
+def job_fields(info):
+    """
+    returns tuples of field:value for every field in the job excluding the
+    OP_ID
+
+    @param info: dictionary containing op info for this sub-op
+    """
+    print info
+    fields = info.copy()
+    del fields['OP_ID']
+
+    # repackage job specific dictionaries if present
+    if 'hvparams' in fields:
+        fields.update(fields.pop('hvparams'))
+    if 'beparams' in fields:
+        fields.update(fields.pop('beparams'))
+    if 'osparams' in fields:
+        fields.update(fields.pop('osparams'))
+
+    # repackage disks
+    if 'disks' in fields:
+        for i, disk in enumerate(fields.pop('disks')):
+            fields['disk/%s' % i] = disk['size']
+
+    return fields.items()
+
+
 """
 These filters were taken from Russel Haering's GanetiWeb project
 """
