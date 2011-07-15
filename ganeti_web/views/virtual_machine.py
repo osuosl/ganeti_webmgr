@@ -1007,7 +1007,7 @@ def recover_failed_deploy(request, cluster_slug, instance):
 
 
 @login_required
-def rename(request, cluster_slug, instance):
+def rename(request, cluster_slug, instance, rest = False, extracted_params = None):
     """
     Rename an existing instance
     """
@@ -1021,12 +1021,23 @@ def rename(request, cluster_slug, instance):
 
     if request.method == 'POST':
         form = RenameForm(vm, request.POST)
-        if form.is_valid():
+        params_ok = False
+        if ((rest) & (extracted_params != None)):
+            if ((extracted_params.has_key('hostname')) & (extracted_params.has_key('ip_check')) & (extracted_params.has_key('name_check'))):
+                hostname = extracted_params.get('hostname')
+                ip_check = extracted_params.get('ip_check')
+                name_check = extracted_params.get('name_check')
+                params_ok = True
+            else:
+                return HttpResponseBadRequest
+
+        if (form.is_valid()):
             data = form.cleaned_data
             hostname = data['hostname']
             ip_check = data['ip_check']
             name_check = data['name_check']
 
+        if (form.is_valid() | params_ok):
             try:
                 job_id = vm.rapi.RenameInstance(vm.hostname, hostname,
                                                 ip_check, name_check)
@@ -1037,12 +1048,17 @@ def rename(request, cluster_slug, instance):
                 # log information about creating the machine
                 log_action('VM_RENAME', user, vm, job)
 
-                return HttpResponseRedirect(
-                reverse('instance-detail', args=[cluster.slug, hostname]))
+                if (not rest):
+                    return HttpResponseRedirect(
+                    reverse('instance-detail', args=[cluster.slug, hostname]))
+                else:
+                    return HttpAccepted
 
             except GanetiApiError, e:
                 msg = 'Error renaming virtual machine: %s' % e
                 form._errors["cluster"] = form.error_class([msg])
+                if (rest):
+                    return HttpResponse(400, content=msg)
 
     elif request.method == 'GET':
         form = RenameForm(vm)

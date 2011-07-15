@@ -269,6 +269,18 @@ class VMResource(ModelResource):
             response = ganeti_web.views.virtual_machine.reboot(request, vm.cluster.slug, vm_detail['instance'], True)
             return response
 
+        #action: instance rename
+        if (bundle.data.has_key('action')) & (bundle.data.get('action')=='rename'):
+            print bundle.data
+            print bundle
+
+            if ((bundle.data.has_key('hostname')) & (bundle.data.has_key('ip_check')) & (bundle.data.has_key('name_check'))):
+                extracted_params = {'hostname':bundle.data.get('hostname'), 'ip_check':bundle.data.get('ip_check'), 'name_check':bundle.data.get('name_check')}
+            else:
+                return HttpBadRequest
+            response = ganeti_web.views.virtual_machine.rename(request, vm.cluster.slug, vm_detail['instance'], True, extracted_params)
+            return response
+
         return HttpAccepted
 
 
