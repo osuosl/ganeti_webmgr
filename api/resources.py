@@ -41,7 +41,7 @@ from api.validation import UserValidation
 from ganeti_web.views.general import overview
 from django.core.context_processors import request
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
-from tastypie.http import HttpMultipleChoices, HttpGone
+from tastypie.http import HttpMultipleChoices, HttpGone, HttpNoContent
 from ganeti_web.views.cluster import list_, detail
 from ganeti_web.views.virtual_machine import list_
 from ganeti_web.views.jobs import status, detail, clear
@@ -50,6 +50,8 @@ import ganeti_web.views.jobs
 import ganeti_web.views.node
 import ganeti_web.views.virtual_machine
 from ganeti_web.views.general import get_used_resources, used_resources
+import api.utils
+
 
 class UserResource(ModelResource):
     """
@@ -89,6 +91,23 @@ class UserResource(ModelResource):
         updated_bundle = self.obj_update(bundle, request=request, pk=kwargs.get('pk'))
         return HttpAccepted
 
+    def post_detail(self, request, **kwargs):
+        print kwargs
+        print kwargs.get('pk')
+        try:
+            deserialized = self.deserialize(request, request.raw_post_data, format=request.META.get('CONTENT_TYPE', 'application/json'))
+        except (Exception):
+            return HttpBadRequest()
+        deserialized = self.alter_deserialized_detail_data(request, deserialized)
+        bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized))
+
+        # action: generate api key for particular user
+        if (bundle.data.has_key('action')) & (bundle.data.get('action')=='generate_api_key'):
+            return api.utils.generate_api_key(request, kwargs.get('pk'))
+
+        return HttpResponse(status=204)
+
+
     def post_list(self, request, **kwargs):
         try:
             deserialized = self.deserialize(request, request.raw_post_data, format=request.META.get('CONTENT_TYPE', 'application/json'))
@@ -99,20 +118,7 @@ class UserResource(ModelResource):
 
         # action: generate api key for particular user
         if (bundle.data.has_key('action')) & (bundle.data.get('action')=='generate_api_key') & (bundle.data.has_key('userid')):
-            api_key = None
-            try:
-                api_key = ApiKey.objects.get(user=bundle.data.get('userid'))
-                api_key.key = api_key.generate_key()
-                api_key.save()
-            except ApiKey.DoesNotExist:
-                api_key = ApiKey.objects.create(user=bundle.data.get('userid'))
-
-            # return created key info
-            if (api_key != None):
-                bun = Bundle()
-                bun.data['userid'] = bundle.data.get('userid')
-                bun.data['api_key'] = api_key.key
-                return HttpResponse(status=201, content=self.serialize(request, bun, self.determine_format(request)))
+            return api.utils.generate_api_key(request, bundle.data.get('userid'))
 
         # clean users api key
         if (bundle.data.has_key('action')) & (bundle.data.get('action')=='clean_api_key') & (bundle.data.has_key('userid')):
@@ -127,7 +133,7 @@ class UserResource(ModelResource):
             else:
                 return HttpApplicationError
 
-        return HttpResponse(status=200)
+        return HttpResponse(status=204)
 
 
 class SSHKeyResource(ModelResource):
@@ -255,7 +261,7 @@ class VMResource(ModelResource):
             return HttpBadRequest()
         try:
             vm = self.obj_get(request,id=kwargs.get('pk'))
-            #vm = self.obj_get(request,hostname='derpers.gwm.osuosl.org') TODO name manipulation
+            #vm = self.obj_get(request,hostname='derpers.gwm.osuosl.org') TODO name manipulationex
             vm_detail = ganeti_web.views.virtual_machine.detail(request, vm.cluster.slug, vm.hostname, True)
         except NotFound:
             raise NotFound("Object not found")
