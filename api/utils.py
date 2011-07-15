@@ -1,3 +1,4 @@
+from tastypie.http import HttpApplicationError
 
 __author__ = 'bojan'
 
@@ -24,3 +25,16 @@ def generate_api_key(request, userid):
         bun.data['api_key'] = api_key.key
         ur = api.resources.UserResource()
         return HttpResponse(status=201, content=ur.serialize(request, bun, ur.determine_format(request)))
+
+def clean_api_key(request, userid):
+    api_key = None
+    try:
+        api_key = ApiKey.objects.get(user=userid)
+        api_key.delete()
+    except ApiKey.DoesNotExist:
+        api_key = None
+    if (not api_key):
+        return HttpResponse(status=201)
+    else:
+        return HttpApplicationError
+    

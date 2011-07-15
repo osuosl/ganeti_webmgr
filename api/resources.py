@@ -105,6 +105,10 @@ class UserResource(ModelResource):
         if (bundle.data.has_key('action')) & (bundle.data.get('action')=='generate_api_key'):
             return api.utils.generate_api_key(request, kwargs.get('pk'))
 
+        # clean users api key
+        if (bundle.data.has_key('action')) & (bundle.data.get('action')=='clean_api_key'):
+            return api.utils.clean_api_key(request, kwargs.get('pk'))
+
         return HttpResponse(status=204)
 
 
@@ -122,16 +126,7 @@ class UserResource(ModelResource):
 
         # clean users api key
         if (bundle.data.has_key('action')) & (bundle.data.get('action')=='clean_api_key') & (bundle.data.has_key('userid')):
-            api_key = None
-            try:
-                api_key = ApiKey.objects.get(user=bundle.data.get('userid'))
-                api_key.delete()
-            except ApiKey.DoesNotExist:
-                api_key = None
-            if (not api_key):
-                return HttpResponse(status=201)
-            else:
-                return HttpApplicationError
+            return api.utils.clean_api_key(request, bundle.data.get('userid'))
 
         return HttpResponse(status=204)
 
