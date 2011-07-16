@@ -24,7 +24,8 @@ from django.utils import simplejson as json
 from ganeti_web.constants import EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES, \
     HV_NIC_MODES, HV_DISK_TYPES, HV_NIC_TYPES, KVM_NIC_TYPES, HVM_DISK_TYPES, \
     KVM_DISK_TYPES, KVM_BOOT_ORDER, HVM_BOOT_ORDER, KVM_CHOICES, HV_USB_MICE, \
-    HV_SECURITY_MODELS, KVM_FLAGS, HV_DISK_CACHES, MODE_CHOICES, HVM_CHOICES
+    HV_SECURITY_MODELS, KVM_FLAGS, HV_DISK_CACHES, MODE_CHOICES, HVM_CHOICES, \
+    HV_DISK_TEMPLATES_SINGLE_NODE
 from ganeti_web.fields import DataVolumeField, MACAddressField
 from ganeti_web.models import (Cluster, ClusterUser, Organization,
                            VirtualMachineTemplate, VirtualMachine)
@@ -124,6 +125,7 @@ class NewVirtualMachineForm(VirtualMachineForm):
 
     empty_field = EMPTY_CHOICE_FIELD
     templates = HV_DISK_TEMPLATES
+    templates_single = HV_DISK_TEMPLATES_SINGLE_NODE
     nicmodes = HV_NIC_MODES
 
     disk_count = forms.IntegerField(initial=1,  widget=forms.HiddenInput())
@@ -201,6 +203,10 @@ class NewVirtualMachineForm(VirtualMachineForm):
             self.fields['pnode'].choices = nodes
             self.fields['snode'].choices = nodes
             self.fields['os'].choices = oslist
+
+            # must have at least two nodes to use drbd
+            if len(nodes) == 2:
+                choices = self.fields['disk_template'].choices = self.templates_single
 
             hv = initial.get('hypervisor', None)
             if hv is not None:
