@@ -16,7 +16,7 @@ function ajaxTable(URL, TABLE_ID){
     this.getID = function(){
         /* Get this table's CSS ID, complete with the '#' */
         return '#' + TABLE_ID;
-    }
+    };
 
     // ===========
     // Initialize
@@ -50,8 +50,7 @@ function ajaxTable(URL, TABLE_ID){
 
         function paginator_jumpTo(){
             /* Paginator jump-to button handler. Sets page to specific page */
-            var page = parseInt($(this).html());
-            FETCH_ARGS["page"] = page;
+            FETCH_ARGS["page"] = parseInt($(this).html());
             THIS_TABLE.update();
         }
         $(TABLE_ID + ' .pagination .page:not(.active)')
@@ -61,9 +60,9 @@ function ajaxTable(URL, TABLE_ID){
         // Table sorting
         // --------------
         $(TABLE_ID + ' #vmlist th').live("click", function(){
-            $this = $(this)
-            field = $this.html();
-            order_by = $this.attr("order_by");
+            var $this = $(this);
+            var field = $this.html();
+            var order_by = $this.attr("order_by");
             if(field == current_order_by && $this.hasClass("ascending")){
                 $this.addClass("descending").removeClass("ascending");
                 order_by = "-" + order_by;
@@ -80,7 +79,7 @@ function ajaxTable(URL, TABLE_ID){
 
         // hide the spinner initially
         spinner.hide();
-    }
+    };
 
     // =============
     // Update table
@@ -99,14 +98,14 @@ function ajaxTable(URL, TABLE_ID){
 
         // AJAX load the table contents, push results into table
         $.get(URL, FETCH_ARGS, function(results){
-            $results = $(results);
-            tbody = $results.children("tbody");
-            pagination = $results[2];
+            var $results = $(results);
+            var tbody = $results.children("tbody");
+            var pagination = $results[2];
             $(TABLE_ID + ' #vm-wrapper .pagination').replaceWith(pagination);
             $(TABLE_ID + ' #vmlist tbody').replaceWith(tbody);
 
             // Hide load spinner thing
-            spinner.hide();;
+            spinner.hide();
         }, "html");
     }
 }
