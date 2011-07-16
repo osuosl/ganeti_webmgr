@@ -147,17 +147,12 @@ class NewVirtualMachineForm(VirtualMachineForm):
     def __init__(self, user, *args, **kwargs):
         self.user = user
         initial = kwargs.get('initial', None)
-        super(NewVirtualMachineForm, self).__init__(*args, **kwargs)
 
         # If data is not passed by initial kwarg (as in POST data)
         #   assign initial to self.data as self.data contains POST
         #   data.
-        if initial is None:
-            initial = self.data
-
-        # Make sure vcpus is required for this form. Don't want to go through
-        #  the trouble of overriding the model field.
-        self.fields['vcpus'].required = True
+        if initial is None and args:
+            initial = args[0]
 
         cluster = None
         if initial:
@@ -189,7 +184,13 @@ class NewVirtualMachineForm(VirtualMachineForm):
         else:
             disk_count = 1
             nic_count = 1
-        
+
+        super(NewVirtualMachineForm, self).__init__(*args, **kwargs)
+
+        # Make sure vcpus is required for this form. Don't want to go through
+        #  the trouble of overriding the model field.
+        self.fields['vcpus'].required = True
+
         if cluster is not None and cluster.info is not None:
             # set choices based on selected cluster if given
             oslist = cluster_os_list(cluster)
