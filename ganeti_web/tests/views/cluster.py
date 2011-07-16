@@ -270,31 +270,14 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
                     ram=3
                     )
         
-        # test required fields
-        required = ['hostname', 'port']
-        for property in required:
-            data_ = data.copy()
-            del data_[property]
-            response = c.post(url, data_)
-            self.assertEqual(200, response.status_code)
-            self.assertEquals('text/html; charset=utf-8', response['content-type'])
-            self.assertTemplateUsed(response, 'ganeti/cluster/edit.html')
-        
-        # test not-requireds
-        non_required = ['slug','description','virtual_cpus','disk','ram']
-        for property in non_required:
-            data_ = data.copy()
-            del data_[property]
-            response = c.post(url, data_, follow=True)
-            self.assertEqual(200, response.status_code)
-            self.assertEquals('text/html; charset=utf-8', response['content-type'])
-            self.assertTemplateUsed(response, 'ganeti/cluster/detail.html')
-            cluster = response.context['cluster']
-            for k, v in data_.items():
-                self.assertEqual(v, getattr(cluster, k))
-            Cluster.objects.all().delete()
-        
-        
+        # test error
+        data_ = data.copy()
+        del data_['hostname']
+        response = c.post(url, data_)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'ganeti/cluster/edit.html')
+
         # success
         response = c.post(url, data, follow=True)
         self.assertEqual(200, response.status_code)
@@ -305,38 +288,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
             self.assertEqual(v, getattr(cluster, k))
         Cluster.objects.all().delete()
         
-        # success without username or password
-        data_ = data.copy()
-        del data_['username']
-        del data_['password']
-        response = c.post(url, data_, follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'ganeti/cluster/detail.html')
-        cluster = response.context['cluster']
-        for k, v in data_.items():
-            self.assertEqual(v, getattr(cluster, k))
-        Cluster.objects.all().delete()
-        
-        #test username/password/confirm_password relationships
-        relation = ['username', 'password']
-        for property in relation:
-            data_ = data.copy()
-            del data_[property]
-            response = c.post(url, data_, follow=True)
-            self.assertEqual(200, response.status_code)
-            self.assertEquals('text/html; charset=utf-8', response['content-type'])
-            self.assertTemplateUsed(response, 'ganeti/cluster/edit.html')
-        
-        # test unique fields
-        response = c.post(url, data)
-        for property in ['hostname','slug']:
-            data_ = data.copy()
-            data_[property] = 'different'
-            response = c.post(url, data_)
-            self.assertEqual(200, response.status_code)
-            self.assertEquals('text/html; charset=utf-8', response['content-type'])
-            self.assertTemplateUsed(response, 'ganeti/cluster/edit.html')
+
     
     def test_view_edit(self):
         """
@@ -384,9 +336,15 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
                     disk=2,
                     ram=3
                     )
-        
-        # success
+        # error
         data_ = data.copy()
+        del data_['hostname']
+        response = c.post(url, data_)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'ganeti/cluster/edit.html')
+
+        # success
         response = c.post(url, data, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
