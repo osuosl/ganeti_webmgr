@@ -61,7 +61,6 @@ $(function () {
         });
 
     if (POPOUT_URL != undefined) {
-        popout.show();
         popout.click(function(event) {
             event.preventDefault();
             var url;
@@ -74,8 +73,6 @@ $(function () {
             window.open(url, 'popout', 'height=450,width=812,status=no,toolbar=no,menubar=no,location=no');
         });
     }
-
-
 
     // users exits the page by following link or closing the tab or sth else
     $(window).bind("unload", stop);

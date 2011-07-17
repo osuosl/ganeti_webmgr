@@ -2,7 +2,6 @@
 <style>
     #VNC_status_bar.VNC_status_bar {background-color:#ddd; margin-top:5px;}
     #actions {margin-bottom:30px;}
-    .button.popout {display:none;}
 </style>
 <script type="text/javascript">
     // Set include path for noVNC scripts
@@ -25,7 +24,9 @@
     <li><a class="button startup power" href="{% url instance-startup cluster_slug instance.hostname %}">Start</a></li>
     {% endifequal %}
     <li><a id="ctrlaltdelete" href="#" class="button reboot disabled" title="Send Ctrl-Alt-Delete">Ctrl-Alt-Delete</a></li>
-    <li><a id="popout" href="#" class="button popout" title="Send Ctrl-Alt-Delete"></a></li>
+    {% if not popout %}
+    <li><a id="popout" href="#" class="button popout" title="popout vnc window"></a></li>
+    {% endif %}
 </ul>
 
 <input type="checkbox" id="encrypt_check" />
