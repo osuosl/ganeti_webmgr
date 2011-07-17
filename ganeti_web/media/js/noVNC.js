@@ -70,7 +70,7 @@ $(function () {
                 url = POPOUT_URL + '?auto_connect=1';
                 stop();
             }
-            window.open(url, 'popout', 'height=450,width=812,status=no,toolbar=no,menubar=no,location=no');
+            window.open(url, 'popout', 'height=491,width=775,status=no,toolbar=no,menubar=no,location=no');
         });
     }
 
@@ -117,7 +117,19 @@ $(function () {
                 .addClass('enabled')
                 .html('Disconnect');
             $('#ctrlaltdelete').removeClass('disabled')
+            $('#VNC_canvas').addClass("connected");
+            if (POPOUT_URL == undefined) {
+                // resize window
+                var display = rfb.get_display();
+                var width = display.get_width();
+                var height = display.get_height()+64;
+                if (width < 775) {
+                    width = 775;
+                }
+                window.resizeTo(width, height);
+            }
         } else {
+            $('#VNC_canvas').removeClass("connected");
             connected = false;
             $('#connect')
                 .removeClass('enabled')
