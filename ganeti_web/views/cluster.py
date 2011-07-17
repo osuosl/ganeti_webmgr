@@ -132,7 +132,7 @@ def edit(request, cluster_slug=None):
                     # info for an offline cluster.
                     pass
 
-            log_action('EDIT', user, cluster)
+            log_action('EDIT' if cluster_slug else 'CREATE', user, cluster)
 
             return HttpResponseRedirect(reverse('cluster-detail', \
                                                 args=[cluster.slug]))
