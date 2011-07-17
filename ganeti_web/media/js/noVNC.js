@@ -5,13 +5,17 @@
  */
 
 var PROXY_REQUEST_URI;
+var POPOUT_URL;
 
-(function () {
+$(function () {
+
+    var popout = $('#popout');
+
     // XXX remap document.write to a dom function so that it works after DOM is
     // loaded function will be reset after noVNC scripts are loaded.
     var old = document.write;
     document.write = function(str) {$(document).append(str)};
-    document.write('<script type="text/javascript" src="'+INCLUDE_URI+'/vnc.js"><//script>');
+    document.write('<script type="text/javascript" src="'+INCLUDE_URI+'vnc.js"><//script>');
     document.write = old;
 
     // XXX manually call __initialize().  This normally happens onload, but
@@ -56,12 +60,25 @@ var PROXY_REQUEST_URI;
             return false;
         });
 
+    if (POPOUT_URL != undefined) {
+        popout.show();
+        popout.click(function(event) {
+            event.preventDefault();
+            var url;
+            if (rfb == undefined) {
+                url = POPOUT_URL;
+            } else {
+                url = POPOUT_URL + '?auto_connect=1';
+                stop();
+            }
+            window.open(url, 'popout', 'height=450,width=812,status=no,toolbar=no,menubar=no,location=no');
+        });
+    }
+
+
+
     // users exits the page by following link or closing the tab or sth else
-    $(window).bind("unload", function(){
-        if (rfb != undefined) {
-            rfb.disconnect();
-        }
-    });
+    $(window).bind("unload", stop);
 
 
     function show_errors() {
@@ -118,6 +135,13 @@ var PROXY_REQUEST_URI;
         }
     }
 
+    function stop() {
+        if (rfb != undefined) {
+            rfb.disconnect();
+            rfb = undefined;
+        }
+    }
+
     function start() {
         $("#vnc_errors").hide();
         $.ajax({
@@ -145,4 +169,4 @@ var PROXY_REQUEST_URI;
         rfb.connect(host, port, password);
         return false;
     }
-}());
+});

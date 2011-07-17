@@ -2,12 +2,16 @@
 <style>
     #VNC_status_bar.VNC_status_bar {background-color:#ddd; margin-top:5px;}
     #actions {margin-bottom:30px;}
+    .button.popout {display:none;}
 </style>
 <script type="text/javascript">
     // Set include path for noVNC scripts
     var INCLUDE_URI = "{{SITE_ROOT}}/novnc/";
     // Set path for proxy requests
     var PROXY_REQUEST_URI = "{% url instance-vnc-proxy cluster_slug instance.hostname %}";
+    {% if not popout %}
+    var POPOUT_URL = "{% url instance-vnc-popout cluster_slug instance.hostname %}";
+    {% endif %}
 </script>
 <script type="text/javascript" src="{{ SITE_ROOT }}/ganeti_web_media/js/noVNC.js"></script>
 
@@ -21,6 +25,7 @@
     <li><a class="button startup power" href="{% url instance-startup cluster_slug instance.hostname %}">Start</a></li>
     {% endifequal %}
     <li><a id="ctrlaltdelete" href="#" class="button reboot disabled" title="Send Ctrl-Alt-Delete">Ctrl-Alt-Delete</a></li>
+    <li><a id="popout" href="#" class="button popout" title="Send Ctrl-Alt-Delete"></a></li>
 </ul>
 
 <input type="checkbox" id="encrypt_check" />

@@ -166,7 +166,7 @@ def reinstall(request, cluster_slug, instance):
 
 
 @login_required
-def novnc(request, cluster_slug, instance):
+def novnc(request, cluster_slug, instance, template="ganeti/virtual_machine/novnc.html"):
     vm = get_object_or_404(VirtualMachine, hostname=instance,
                            cluster__slug=cluster_slug)
     user = request.user
@@ -175,7 +175,7 @@ def novnc(request, cluster_slug, instance):
             or user.has_perm('admin', vm.cluster)):
         return HttpResponseForbidden(_('You do not have permission to vnc on this'))
 
-    return render_to_response("ganeti/virtual_machine/novnc.html",
+    return render_to_response(template,
                               {'cluster_slug': cluster_slug,
                                'instance': vm,
                                },
