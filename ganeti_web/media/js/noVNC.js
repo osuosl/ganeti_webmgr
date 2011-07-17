@@ -9,7 +9,14 @@ var POPOUT_URL;
 
 $(function () {
 
-    var popout = $('#popout');
+    var popout =            $('#popout');
+    var connect =           $('#connect');
+    var encrypt =           $('#encrypt');
+    var encrypt_check =     $('#encrypt_check');
+    var ctrlaltdelete =     $('#ctrlaltdelete');
+    var vnc_errors =        $("#vnc_errors");
+    var vnc_status_bar =    $("#VNC_status_bar");
+    var vnc_canvas =        $('#VNC_canvas');
 
     // XXX remap document.write to a dom function so that it works after DOM is
     // loaded function will be reset after noVNC scripts are loaded.
@@ -26,7 +33,8 @@ $(function () {
     var host, port, password; // VNC proxy connection settings
     var connected = false;
 
-    $('#connect').click(function() {
+    connect.click(function(event) {
+        event.preventDefault();
         var $this = $(this);
         if($this.hasClass('enabled')) {
             rfb.disconnect();
@@ -35,29 +43,28 @@ $(function () {
             connected = true;
             start();
         }
-        return false;
     });
 
-    $('#encrypt').click(function(){
+    encrypt.click(function(event){
+        event.preventDefault();
         var $this = $(this);
         if (!connected) {
             if ($this.hasClass('enabled')){
-                $('#encrypt_check').attr('checked',false);
+                encrypt_check.attr('checked',false);
                 $this.removeClass('enabled')
             } else {
-                $('#encrypt_check').attr('checked',true);
+                encrypt_check.attr('checked',true);
                 $this.addClass('enabled')
             }
         }
-        return false;
     });
 
-    $('#ctrlaltdelete')
-        .click(function(){
+    ctrlaltdelete
+        .click(function(event){
+            event.preventDefault();
             if (!$(this).hasClass('disabled')) {
                 rfb.sendCtrlAltDel();
             }
-            return false;
         });
 
     if (POPOUT_URL != undefined) {
@@ -81,7 +88,7 @@ $(function () {
     function show_errors() {
         if (host===false || port===false || password===false) {
             connected = false;
-            $("#VNC_status_bar")
+            vnc_status_bar
                 .attr("class", "VNC_status_error")
                 .html("Probably your proxy is not running or some errors occured. Try again.");
             return false;
@@ -113,11 +120,11 @@ $(function () {
 
         if (state == "normal") {
             connected = true;
-            $('#connect')
+            connect
                 .addClass('enabled')
                 .html('Disconnect');
-            $('#ctrlaltdelete').removeClass('disabled')
-            $('#VNC_canvas').addClass("connected");
+            ctrlaltdelete.removeClass('disabled');
+            vnc_canvas.addClass("connected");
             if (POPOUT_URL == undefined) {
                 // resize window
                 var display = rfb.get_display();
@@ -129,16 +136,16 @@ $(function () {
                 window.resizeTo(width, height);
             }
         } else {
-            $('#VNC_canvas').removeClass("connected");
+            vnc_canvas.removeClass("connected");
             connected = false;
-            $('#connect')
+            connect
                 .removeClass('enabled')
                 .html('Connect');
-            $('#ctrlaltdelete').addClass('disabled')
+            ctrlaltdelete.addClass('disabled')
         }
 
         if (msg != undefined) {
-            $('#VNC_status_bar')
+            vnc_status_bar
                 .attr("class", klass)
                 .html(msg);
         }
@@ -152,12 +159,12 @@ $(function () {
     }
 
     function start() {
-        $("#vnc_errors").hide();
+        vnc_errors.hide();
         $.ajax({
             "async": false,
             "url": PROXY_REQUEST_URI,
             "dataType": "json",
-            "success": function(data, s, x){
+            "success": function(data){
                 host = data[0];
                 port = data[1];
                 password = data[2];
@@ -169,7 +176,7 @@ $(function () {
                             // jQuery doesn't work with that, need to stick
                             // to pure DOM
             'target':       document.getElementById('VNC_canvas'),
-            'encrypt':      $('#encrypt_check').attr('checked') ? true : false,
+            'encrypt':      encrypt_check.attr('checked') ? true : false,
             'true_color':   true,
             'local_cursor': true,
             'shared':       true,
