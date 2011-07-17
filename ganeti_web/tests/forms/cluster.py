@@ -166,8 +166,8 @@ class TestClusterFormEdit(TestClusterFormBase):
         password available.  assumes username is the same
         """
         global cluster
-        cluster.username = 'foo'
-        cluster.password = 'bar'
+        cluster.username = 'tester'
+        cluster.password = 'secret'
         cluster.save()
 
         data = self.data
@@ -175,8 +175,8 @@ class TestClusterFormEdit(TestClusterFormBase):
         form = EditClusterForm(data, instance=cluster)
         self.assertTrue(form.is_valid())
         cluster = form.save()
-        self.assertEqual('foo', cluster.username)
-        self.assertEqual('bar', cluster.password)
+        self.assertEqual('tester', cluster.username)
+        self.assertEqual('secret', cluster.password)
 
     def test_no_password_for_writeable_new_username(self):
         """
@@ -189,6 +189,7 @@ class TestClusterFormEdit(TestClusterFormBase):
 
         data = self.data
         del data['password']
+        data['username'] = 'different'
         form = EditClusterForm(data, instance=cluster)
         self.assertFalse(form.is_valid())
 
