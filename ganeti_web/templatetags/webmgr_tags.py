@@ -180,7 +180,6 @@ def job_fields(info):
 
     @param info: dictionary containing op info for this sub-op
     """
-    print info
     fields = info.copy()
     del fields['OP_ID']
 

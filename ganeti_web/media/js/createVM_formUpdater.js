@@ -34,6 +34,21 @@ function formUpdater(url_choices, url_options, url_defaults){
     var nodes =                 null; // nodes available
     var oldid; // global for hypervisor.change function
 
+    var template_choices = $(<>
+            <option value=''>---------</option>
+            <option value='plain'>plain</option>
+            <option value='drbd'>drbd</option>
+            <option value='file'>file</option>
+            <option value='diskless'>diskless</option>
+        </>.toString());
+
+    var single_node_template_choices = $(<>
+            <option value=''>---------</option>
+            <option value='plain'>plain</option>
+            <option value='file'>file</option>
+            <option value='diskless'>diskless</option>
+        </>.toString());
+
     // ------------
     // cluster defaults
     // ------------
@@ -207,6 +222,7 @@ function formUpdater(url_choices, url_options, url_defaults){
                     var oldpnode = pnode.val();
                     var oldsnode = snode.val();
                     var oldos = oslist.val();
+                    var old_template = disk_template.val();
 
                     pnode.children().not(":first").remove();
                     snode.children().not(":first").remove();
@@ -230,10 +246,19 @@ function formUpdater(url_choices, url_options, url_defaults){
                     // make nodes publically available
                     nodes = data["nodes"];
 
+                    // update disk template choices
+                    disk_template.empty();
+                    if (nodes.length == 1){
+                        disk_template.html(single_node_template_choices);
+                    } else {
+                        disk_template.html(template_choices);
+                    }
+
                     // Restore old choices from before, if possible.
                     pnode.val(oldpnode);
                     snode.val(oldsnode);
                     oslist.val(oldos);
+                    disk_template.val(old_template);
 
                     // And finally, do the singleton dance.
                     disableSingletonDropdown(pnode, blankOptStr);

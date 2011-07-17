@@ -24,7 +24,8 @@ from django.utils import simplejson as json
 from ganeti_web.constants import EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES, \
     HV_NIC_MODES, HV_DISK_TYPES, HV_NIC_TYPES, KVM_NIC_TYPES, HVM_DISK_TYPES, \
     KVM_DISK_TYPES, KVM_BOOT_ORDER, HVM_BOOT_ORDER, KVM_CHOICES, HV_USB_MICE, \
-    HV_SECURITY_MODELS, KVM_FLAGS, HV_DISK_CACHES, MODE_CHOICES, HVM_CHOICES
+    HV_SECURITY_MODELS, KVM_FLAGS, HV_DISK_CACHES, MODE_CHOICES, HVM_CHOICES, \
+    HV_DISK_TEMPLATES_SINGLE_NODE
 from ganeti_web.fields import DataVolumeField, MACAddressField
 from ganeti_web.models import (Cluster, ClusterUser, Organization,
                            VirtualMachineTemplate, VirtualMachine)
@@ -124,6 +125,7 @@ class NewVirtualMachineForm(VirtualMachineForm):
 
     empty_field = EMPTY_CHOICE_FIELD
     templates = HV_DISK_TEMPLATES
+    templates_single = HV_DISK_TEMPLATES_SINGLE_NODE
     nicmodes = HV_NIC_MODES
 
     disk_count = forms.IntegerField(initial=1,  widget=forms.HiddenInput())
@@ -147,17 +149,12 @@ class NewVirtualMachineForm(VirtualMachineForm):
     def __init__(self, user, *args, **kwargs):
         self.user = user
         initial = kwargs.get('initial', None)
-        super(NewVirtualMachineForm, self).__init__(*args, **kwargs)
 
         # If data is not passed by initial kwarg (as in POST data)
         #   assign initial to self.data as self.data contains POST
         #   data.
-        if initial is None:
-            initial = self.data
-
-        # Make sure vcpus is required for this form. Don't want to go through
-        #  the trouble of overriding the model field.
-        self.fields['vcpus'].required = True
+        if initial is None and args:
+            initial = args[0]
 
         cluster = None
         if initial:
@@ -189,7 +186,13 @@ class NewVirtualMachineForm(VirtualMachineForm):
         else:
             disk_count = 1
             nic_count = 1
-        
+
+        super(NewVirtualMachineForm, self).__init__(*args, **kwargs)
+
+        # Make sure vcpus is required for this form. Don't want to go through
+        #  the trouble of overriding the model field.
+        self.fields['vcpus'].required = True
+
         if cluster is not None and cluster.info is not None:
             # set choices based on selected cluster if given
             oslist = cluster_os_list(cluster)
@@ -200,6 +203,10 @@ class NewVirtualMachineForm(VirtualMachineForm):
             self.fields['pnode'].choices = nodes
             self.fields['snode'].choices = nodes
             self.fields['os'].choices = oslist
+
+            # must have at least two nodes to use drbd
+            if len(nodes) == 2:
+                choices = self.fields['disk_template'].choices = self.templates_single
 
             hv = initial.get('hypervisor', None)
             if hv is not None:

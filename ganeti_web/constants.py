@@ -99,6 +99,14 @@ HV_DISK_TEMPLATES = [
     (u'diskless', u'diskless')
 ]
 
+# HV Choices
+HV_DISK_TEMPLATES_SINGLE_NODE = [
+    EMPTY_CHOICE_FIELD,
+    (u'plain', u'plain'),
+    (u'file', u'file'),
+    (u'diskless', u'diskless')
+]
+
 HV_DISK_TYPES = [
     EMPTY_CHOICE_FIELD,
     (u'paravirtual',u'paravirtual'),

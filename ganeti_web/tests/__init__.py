@@ -18,7 +18,6 @@
 from ganeti_web.tests.accounts import *
 #from ganeti_web.tests.cache_updater import *
 from ganeti_web.tests.cached_cluster_object import *
-from ganeti_web.tests.cluster import *
 from ganeti_web.tests.cluster_user import *
 from ganeti_web.tests.fields import *
 from ganeti_web.tests.ganeti_errors import *

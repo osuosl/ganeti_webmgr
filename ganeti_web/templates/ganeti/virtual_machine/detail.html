@@ -16,20 +16,19 @@
                         window.location.hash = ui.tab.hash;
                     }
 		});
+
         {% if admin %}
             {% ifnotequal instance.info.status "running" %}
                 $('#tabs .ui-tabs-nav a[title=console]').parent()
                     .addClass('ui-state-disabled');
             {% endifnotequal %}
         {% endif %}
-        
+
+        // confirmation dialogs for delete, start, reinstall   
         $("#actions a.power").live("click", function(event) {
             event.preventDefault();
             if(!$(this).hasClass('disabled')) {
-                if((this.className == 'button shutdown' || 
-                        this.className == 'button reboot') &&
-                        !confirm('Are you sure you want to ' 
-                                + this.title + '?')) {
+                if(!confirm('Are you sure you want to '+ this.title + ' this VM?')) {
                     return false;
                 }
                 $.post(this.href, action_response);
@@ -227,12 +226,12 @@
                 {% endif %}
                {% if remove and username %}
                     <li>
-                        <a class="button delete" href="{% url instance-delete cluster.slug instance.hostname %}">
+                        <a class="button delete"  title="delete" href="{% url instance-delete cluster.slug instance.hostname %}">
                             {% trans "Delete" %}
                         </a>
                     </li>
                     <li>
-                        <a class="button reinstall" href="{% url instance-reinstall cluster.slug instance.hostname %}">
+                        <a class="button reinstall" title="reinstall" href="{% url instance-reinstall cluster.slug instance.hostname %}">
                             {% trans "Reinstall" %}
                         </a>
                     </li>
@@ -240,7 +239,7 @@
                 {% if cluster_admin or replace_disks %}
                     {% if instance|is_drbd %}
                     <li>
-                        <a class="button replace_disks" href="{% url instance-replace-disks cluster.slug instance.hostname %}">
+                        <a class="button replace_disks" title="replace disks" href="{% url instance-replace-disks cluster.slug instance.hostname %}">
                             {% trans "Replace Disks" %}
                         </a>
                     </li>
@@ -249,7 +248,7 @@
                 {% if cluster_admin or migrate %}
                     {% if instance|is_drbd %}
                     <li>
-                        <a class="button migrate" href="{% url instance-migrate cluster.slug instance.hostname %}">
+                        <a class="button migrate" title="migrate" href="{% url instance-migrate cluster.slug instance.hostname %}">
                             {% trans "Migrate" %}
                         </a>
                     </li>
@@ -258,7 +257,7 @@
                 {% if admin or power and username %}
                     {% ifequal instance.info.status "running" %}
                     <li>
-                        <a class="button shutdown power" title="shutdown" href="{% url instance-shutdown cluster.slug instance.hostname %}">
+                        <a class="button shutdown power" title="shut down" href="{% url instance-shutdown cluster.slug instance.hostname %}">
                             {% trans "Shutdown" %}
                         </a>
                     </li>
@@ -269,7 +268,7 @@
                     </li>
                     {% else %}
                     <li>
-                        <a class="button startup power" href="{% url instance-startup cluster.slug instance.hostname %}">
+                        <a class="button startup power" title="start" href="{% url instance-startup cluster.slug instance.hostname %}">
                             {% trans "Start" %}
                         </a>
                     </li>
