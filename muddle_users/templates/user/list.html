@@ -21,7 +21,7 @@
 {% endblock %}
 
 {% block content %}
-<h1>{% trans "Users" %}</h1>
+<h1 class="breadcrumb">{% trans "Users" %}</h1>
 <a class="button add" href="{% url user-create %}">{% trans "Add User" %}</a>
 {% include "user/table.html" %}
 {% endblock %}

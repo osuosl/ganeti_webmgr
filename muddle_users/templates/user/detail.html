@@ -29,7 +29,7 @@
 {% endblock %}
 
 {% block content %}
-<h1><a class="breadcrumb" href="{%url user-list %}">{% trans "Users" %}</a> : {{ user_detail.username }}</h1>
+<h1 class="breadcrumb"><a href="{%url user-list %}">{% trans "Users" %}</a> : {{ user_detail.username }}</h1>
 <div id="tabs">
     <ul>
         <li><a href="#detail"><span>{% trans "Detail" %}</span></a></li>
