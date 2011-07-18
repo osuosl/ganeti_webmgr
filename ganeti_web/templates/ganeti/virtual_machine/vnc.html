@@ -10,6 +10,7 @@
             return true;
         }
 
+        // XXX merge me with my buddy in noVNC.js please!
         function start() {
             $("#vnc_errors").hide();
 
@@ -17,6 +18,7 @@
             $.ajax({
                 "async": false,
                 "url": url1,
+                "type": "POST",
                 "dataType": "json",
                 "success": function(data, s, x){
                     host = data[0];
