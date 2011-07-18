@@ -137,6 +137,7 @@ class TestNodeModel(TestCase, NodeTestCaseMixin):
         self.assertEqual(node.ctime, datetime.fromtimestamp(1285799513.4741000))
         self.assertEqual(node.mtime, datetime.fromtimestamp(1285883187.8692000))
         self.assertFalse(node.offline)
+        self.assertEqual(3, node.cpus)
     
     def test_ram(self):
         """
@@ -183,3 +184,23 @@ class TestNodeModel(TestCase, NodeTestCaseMixin):
         self.assertEqual(5064, disk['free'])
         self.assertEqual(4444, disk['used'])
         self.assertEqual(1602, disk['allocated'])
+    
+    def test_allocated_cpus(self):
+        """
+        tests Node.allocated_cpus property
+        """
+        node, c = self.create_node()
+        node2, c = self.create_node(cluster=c, hostname='two')
+        node.refresh()
+        node2.refresh()
+
+        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='foo', virtual_cpus=123, status='running')
+        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='foo2', virtual_cpus=7, status='running')
+        VirtualMachine.objects.create(cluster=c, secondary_node=node, hostname='bar', virtual_cpus=456, status='running')
+        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='xoo', virtual_cpus=789, status='admin_down')
+        VirtualMachine.objects.create(cluster=c, secondary_node=node, hostname='xar', virtual_cpus=234, status='stopped')
+        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='boo', status='running')
+        VirtualMachine.objects.create(cluster=c, primary_node=node2, hostname='gar', virtual_cpus=888, status='running')
+        VirtualMachine.objects.create(cluster=c, primary_node=node2, hostname='yoo', virtual_cpus=999, status='admin_down')
+
+        self.assertEqual(130, node.allocated_cpus)

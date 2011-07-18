@@ -302,7 +302,7 @@ NODES_BULK = [
 
 
 NODE = {'cnodes': 1,
-    'csockets': 1,
+    'csockets': 3,
     'ctime': 1285799513.4741000,
     'ctotal': 2,
     'dfree': 2222,

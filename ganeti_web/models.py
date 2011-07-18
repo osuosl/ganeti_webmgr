@@ -777,6 +777,7 @@ class Node(CachedClusterObject):
     ram_free = models.IntegerField(default=-1)
     disk_total = models.IntegerField(default=-1)
     disk_free = models.IntegerField(default=-1)
+    cpus = models.IntegerField(null=True)
 
     # The last job reference indicates that there is at least one pending job
     # for this virtual machine.  There may be more than one job, and that can
@@ -826,6 +827,7 @@ class Node(CachedClusterObject):
         data['ram_free'] = info['mfree'] if info['mfree'] is not None else 0
         data['disk_total'] = info['dtotal'] if info['dtotal'] is not None else 0
         data['disk_free'] = info['dfree'] if info['dfree'] is not None else 0
+        data['cpus'] = info['csockets'] if 'csockets' in info else None
         data['offline'] = info['offline']
         data['role'] = info['role']
         return data
@@ -892,6 +894,14 @@ class Node(CachedClusterObject):
         free = total-allocated if allocated >= 0 and total >=0  else -1
 
         return {'total':total, 'free': free, 'allocated':allocated, 'used':used}
+
+    @property
+    def allocated_cpus(self):
+        values = VirtualMachine.objects \
+            .filter(primary_node=self, status='running') \
+            .exclude(virtual_cpus=-1).order_by() \
+            .aggregate(cpus=Sum('virtual_cpus'))
+        return 0 if 'cpus' not in values or values['cpus'] is None else values['cpus']
     
     def set_role(self, role, force=False):
         """

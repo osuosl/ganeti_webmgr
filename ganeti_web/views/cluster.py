@@ -23,7 +23,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
-from django.db.models.query_utils import Q
+from django.db.models import Q, Sum
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
@@ -39,7 +39,7 @@ from object_log.views import list_for_object
 log_action = LogItem.objects.log_action
 
 from ganeti_web.util.client import GanetiApiError
-from ganeti_web.models import Cluster, ClusterUser, Profile, SSHKey
+from ganeti_web.models import Cluster, ClusterUser, Profile, SSHKey, VirtualMachine
 from ganeti_web.views import render_403, render_404
 from ganeti_web.views.virtual_machine import render_vms
 from ganeti_web.forms.cluster import EditClusterForm, QuotaForm
@@ -74,9 +74,25 @@ def nodes(request, cluster_slug):
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
         return render_403(request, _("You do not have sufficient privileges"))
-    
+
+    # query allocated CPUS for all nodes in this list.  Must be done here to
+    # avoid querying Node.allocated_cpus for each node in the list.  Repackage
+    # list so it is easier to retrieve the values in the template
+    values = VirtualMachine.objects \
+            .filter(cluster=cluster, status='running') \
+            .exclude(virtual_cpus=-1) \
+            .order_by() \
+            .values('primary_node') \
+            .annotate(cpus=Sum('virtual_cpus'))
+    cpus = {}
+    for d in values:
+        cpus[d['primary_node']] = d['cpus']
+
     return render_to_response("ganeti/node/table.html",
-                        {'cluster': cluster, 'nodes':cluster.nodes.all()},
+        {'cluster': cluster,
+         'nodes':cluster.nodes.all(),
+         'cpus':cpus
+        },
         context_instance=RequestContext(request),
     )
 
