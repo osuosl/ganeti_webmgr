@@ -717,7 +717,7 @@ class VirtualMachine(CachedClusterObject):
             .update(last_job=job, ignore_cache=True)
         return job
 
-    def setup_vnc_forwarding(self, sport=''):
+    def setup_vnc_forwarding(self, sport="0", tls=False):
         password = ''
         info_ = self.info
         port = info_['network_port']
@@ -727,7 +727,8 @@ class VirtualMachine(CachedClusterObject):
         if settings.VNC_PROXY:
             proxy_server = settings.VNC_PROXY.split(":")
             password = generate_random_password()
-            result = request_forwarding(proxy_server, sport, node, port, password)
+            result = request_forwarding(proxy_server, node, port, password,
+                                        sport=int(sport), tls=tls)
             if not result:
                 return False, False, False
             else:

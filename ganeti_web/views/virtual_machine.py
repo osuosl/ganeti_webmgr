@@ -185,6 +185,9 @@ def novnc(request, cluster_slug, instance, template="ganeti/virtual_machine/novn
 
 @login_required
 def vnc_proxy(request, cluster_slug, instance):
+    if request.method != "POST":
+        return HttpResponseNotAllowed(['POST'])
+
     vm = get_object_or_404(VirtualMachine, hostname=instance,
                                  cluster__slug=cluster_slug)
     user = request.user
@@ -193,7 +196,8 @@ def vnc_proxy(request, cluster_slug, instance):
         or user.has_perm('admin', vm.cluster)):
             return HttpResponseForbidden(_('You do not have permission to vnc on this'))
 
-    result = json.dumps(vm.setup_vnc_forwarding())
+    use_tls = bool(request.POST.get("tls"))
+    result = json.dumps(vm.setup_vnc_forwarding(tls=use_tls))
 
     return HttpResponse(result, mimetype="application/json")
 

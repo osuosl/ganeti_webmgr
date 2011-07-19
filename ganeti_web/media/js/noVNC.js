@@ -160,9 +160,20 @@ $(function () {
 
     function start() {
         vnc_errors.hide();
+
+        if (encrypt_check.attr('checked')) {
+            is_encrypted = true;
+            data = {"tls": true};
+        } else {
+            is_encrypted = false;
+            data = {};
+        }
+
         $.ajax({
             "async": false,
             "url": PROXY_REQUEST_URI,
+            "type": "POST",
+            "data": data,
             "dataType": "json",
             "success": function(data){
                 host = data[0];
@@ -176,7 +187,7 @@ $(function () {
                             // jQuery doesn't work with that, need to stick
                             // to pure DOM
             'target':       document.getElementById('VNC_canvas'),
-            'encrypt':      encrypt_check.attr('checked') ? true : false,
+            'encrypt':      is_encrypted,
             'true_color':   true,
             'local_cursor': true,
             'shared':       true,
