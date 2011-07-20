@@ -346,11 +346,12 @@ class JobResource(ModelResource):
     def dehydrate(self, bundle):
         job = bundle.obj
         job_detail = ganeti_web.views.jobs.detail(bundle.request, job.cluster.slug, job.job_id, True)
-        bundle.data['opresult'] = bundle.obj.info['opresult']
-        bundle.data['summary'] = bundle.obj.info['summary']
-        bundle.data['ops'] = bundle.obj.info['ops']
+        if (bundle.obj.info):
+            bundle.data['opresult'] = bundle.obj.info['opresult']
+            bundle.data['summary'] = bundle.obj.info['summary']
+            bundle.data['ops'] = bundle.obj.info['ops']
         bundle.data['cluster_admin'] = job_detail['cluster_admin']
-        print bundle.obj.info
+        #print bundle.obj.info
         return bundle
 
     class Meta:

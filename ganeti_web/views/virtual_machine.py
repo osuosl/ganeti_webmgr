@@ -500,7 +500,7 @@ def detail(request, cluster_slug, instance, rest = False):
         tags = 'tags' in perms
         migrate = 'migrate' in perms
 
-    if not (admin or power or remove or modify or tags):
+    if not (admin or power or remove or modify or tags): #TODO REST
         return render_403(request, _('You do not have permission to view this virtual machines\'s details'))
 
     context = {
@@ -526,8 +526,12 @@ def detail(request, cluster_slug, instance, rest = False):
             context['job'] = vm.last_job
         else:
             ct = ContentType.objects.get_for_model(vm)
-            context['job'] = Job.objects.order_by('-finished') \
-                .filter(content_type=ct, object_id=vm.pk)[0]
+            jobs_loc = Job.objects.order_by('-finished') \
+                .filter(content_type=ct, object_id=vm.pk)
+            if (jobs_loc.count() > 0):
+                context['job'] = jobs_loc[0]
+            else:
+                context['job'] = None
     else:
         template = 'virtual_machine/detail.html'
 
