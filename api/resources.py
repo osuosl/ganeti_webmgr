@@ -228,6 +228,9 @@ class VMResource(ModelResource):
         bundle.data['migrate'] = vm_detail['migrate']
         if (vm_detail.has_key('job')):
             bundle.data['job'] = vm_detail['job']
+            if (vm_detail['job'] != None):
+                bundle.data['job'] = JobResource().get_resource_uri(vm_detail['job'])
+            
         return bundle
 
     def obj_get(self, request=None, **kwargs):
@@ -271,8 +274,6 @@ class VMResource(ModelResource):
 
         #action: instance rename
         if (bundle.data.has_key('action')) & (bundle.data.get('action')=='rename'):
-            print bundle.data
-            print bundle
 
             if ((bundle.data.has_key('hostname')) & (bundle.data.has_key('ip_check')) & (bundle.data.has_key('name_check'))):
                 extracted_params = {'hostname':bundle.data.get('hostname'), 'ip_check':bundle.data.get('ip_check'), 'name_check':bundle.data.get('name_check')}
@@ -351,7 +352,6 @@ class JobResource(ModelResource):
             bundle.data['summary'] = bundle.obj.info['summary']
             bundle.data['ops'] = bundle.obj.info['ops']
         bundle.data['cluster_admin'] = job_detail['cluster_admin']
-        #print bundle.obj.info
         return bundle
 
     class Meta:
