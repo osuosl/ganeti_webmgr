@@ -29,8 +29,8 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
     Form to edit/create VirtualMachineTemplates
     """
     cluster = forms.ModelChoiceField(queryset=Cluster.objects.none(), label=_('Cluster'))
-    disk_count = forms.IntegerField(initial=1,  widget=forms.HiddenInput())
-    nic_count = forms.IntegerField(initial=1, widget=forms.HiddenInput())
+    disk_count = forms.IntegerField(initial=0,  widget=forms.HiddenInput())
+    nic_count = forms.IntegerField(initial=0, widget=forms.HiddenInput())
 
     class Meta(VirtualMachineForm.Meta):
         exclude = ('pnode','snode','iallocator','iallocator_hostname',
@@ -39,16 +39,19 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
 
     def __init__(self, *args, **kwargs):
         """
-        Do not use the NewVirtualMachineForm init
+        Initialize VirtualMachineTemplateForm
         """
+        cluster = None
+        initial = kwargs.get('initial', None)
+        disk_count = 0
+        nic_count = 0
         user = kwargs.pop('user', None)
-        initial = None
-        if len(args) > 0:
-            initial = args[0]
+
         super(VirtualMachineForm, self).__init__(*args, **kwargs)
 
-        # START COPY FROM NewVirtualMachineForm
-        cluster = None
+        if not initial:
+            initial = dict(self.data.items())
+
         if initial:
             if initial.get('cluster', None):
                 try:
@@ -57,30 +60,34 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
                     # defer to clean function to return errors
                     pass
 
-            # Load disks and nics. Prefer raw fields, but unpack from dicts
-            # if the raw fields are not available.  This allows modify and
-            # API calls to use a cleaner syntax
-            if 'disks' in initial and not 'disk_count' in initial:
-                print "DISKS"
+            # Load disks and nics.
+            if 'disks' in initial and not 'disk_count' in initial: 
                 disks = initial['disks']
-                initial['disk_count'] = disk_count = len(disks)
+                disk_count = len(disks)
+                self.create_disk_fields(disk_count)
                 for i, disk in enumerate(disks):
-                    initial['disk_size_%s' % i] = disk['size']
+                    self.fields['disk_size_%s' % i].initial = disk['size']
             else:
-                disk_count = int(initial.get('disk_count', 1))
-            if 'nics' in initial and not 'nic_count' in initial:
-                nics = initial['nics']
-                initial['nic_count'] = nic_count = len(nics)
-                for i, disk in enumerate(nics):
-                    initial['nic_mode_%s' % i] = disk['mode']
-                    initial['nic_link_%s' % i] = disk['link']
-            else:
-                nic_count = int(initial.get('nic_count', 1))
-        else:
-            disk_count = 1
-            nic_count = 1
+                disk_count = int(initial['disk_count'])
+                self.create_disk_fields(disk_count)
+                for i in xrange(disk_count):
+                    self.fields['disk_size_%s' %i].initial = initial['disk_size_%s'%i]
 
-        if cluster and getattr(cluster, 'info', None):
+            if 'nics' in initial:
+                nics = initial['nics']
+                nic_count = len(nics)
+                self.create_nic_fields(nic_count)
+                for i, nic in enumerate(nics):
+                    self.fields['nic_mode_%s' % i].initial = nic['mode']
+                    self.fields['nic_link_%s' % i].initial = nic['link']
+            else:
+                nic_count = int(initial['nic_count'])
+                self.create_nic_fields(nic_count)
+                for i in xrange(nic_count):
+                    self.fields['nic_mode_%s' % i].initial = initial['nic_mode_%s'%i]
+                    self.fields['nic_link_%s' % i].initial = initial['nic_link_%s'%i]
+
+        if cluster and hasattr(cluster, 'info'):
             # Get choices based on hypervisor passed to the form.
             hv = initial.get('hypervisor', None)
             if hv:
@@ -98,14 +105,6 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
             oslist = cluster_os_list(cluster)
             oslist.insert(0, self.empty_field)
             self.fields['os'].choices = oslist
-
-            # Create nic fields using the nic count passed to the form
-            self.create_nic_fields(nic_count, defaults)
-        else:
-            self.create_nic_fields(nic_count)
-
-        self.create_disk_fields(disk_count)
-        ## END COPY FROM NewVirtualMachineForm
 
         # Set cluster choices
         if user.is_superuser:
@@ -127,10 +126,6 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
                 self.fields[field].required = True
 
     def clean(self):
-        """
-        Do not use the NewVirtualMachineFrom clean method
-        """
-        super(VirtualMachineForm, self).clean()
         data = self.cleaned_data
 
         disk_count = data.get('disk_count', 0)

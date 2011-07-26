@@ -14,8 +14,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
-
-
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, \
@@ -42,11 +40,51 @@ def templates(request):
         context_instance = RequestContext(request)
     )
 
+@login_required
+def edit(request, cluster_slug=None, template=None):
+    """
+    View to edit a new VirtualMachineTemplate.
+    """
+    user = request.user
+    if cluster_slug:
+        cluster = get_object_or_404(Cluster, slug=cluster_slug)
+        if not (
+            user.is_superuser or 
+            user.has_perm('admin', cluster) or
+            user.has_perm('create_vm', cluster)
+            ):
+            return render_403(request, _("You do not have sufficient privileges"))
+
+    if cluster_slug and template:
+        obj = get_object_or_404(VirtualMachineTemplate, template_name=template,
+                                cluster__slug=cluster_slug)
+
+    if request.method == "GET":
+        initial = vars(obj)
+        initial['cluster'] = cluster.id
+        form = VirtualMachineTemplateForm(user=user, initial=initial)
+    elif request.method == "POST":
+        form = VirtualMachineTemplateForm(request.POST, user=user)
+        if form.is_valid():
+            form.instance.pk = obj.pk
+            form_obj = form.save()
+            return HttpResponseRedirect(reverse('template-detail', 
+                args=[form_obj.cluster.slug, form_obj]))
+    else:
+        return HttpResponseNotAllowed(["GET","POST"])
+
+    return render_to_response('ganeti/vm_template/create.html', {
+        'form':form,
+        'action':reverse('template-edit', args=[cluster_slug, obj]),
+        'template':obj,
+        },
+        context_instance = RequestContext(request)
+    )
 
 @login_required
 def create(request, cluster_slug=None, template=None):
     """
-    View to create or edit a new VirtualMachineTemplate.
+    View to create a new VirtualMachineTemplate.
 
     @param template Will populate the form with data from a template.
     """
@@ -60,16 +98,10 @@ def create(request, cluster_slug=None, template=None):
             ):
             return render_403(request, _("You do not have sufficient privileges"))
 
-    obj = None
-    if cluster_slug and template:
-        obj = get_object_or_404(VirtualMachineTemplate, template_name=template,
-                                cluster__slug=cluster_slug)
-
     if request.method == "GET":
-        form = VirtualMachineTemplateForm(instance=obj, user=user)
+        form = VirtualMachineTemplateForm(user=user)
     elif request.method == "POST":
-        form = VirtualMachineTemplateForm(request.POST, user=user, 
-                                          instance=obj)
+        form = VirtualMachineTemplateForm(request.POST, user=user)
         if form.is_valid():
             form_obj = form.save()
             return HttpResponseRedirect(reverse('template-detail', 
@@ -77,15 +109,9 @@ def create(request, cluster_slug=None, template=None):
     else:
         return HttpResponseNotAllowed(["GET","POST"])
 
-    if obj:
-        action = reverse('template-edit', args=[obj.cluster.slug, obj])
-    else:
-        action = reverse('template-create')
-
     return render_to_response('ganeti/vm_template/create.html', {
         'form':form,
-        'action':action,
-        'template':obj,
+        'action':reverse('template-create'),
         },
         context_instance = RequestContext(request)
     )

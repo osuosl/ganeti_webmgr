@@ -196,7 +196,7 @@ urlpatterns += patterns('ganeti_web.views.vm_template',
     # Delete
     url(r'^%s/delete/?$' % template_prefix, 'delete', name='template-delete'),
     # Edit
-    url(r'^%s/edit/?$' % template_prefix, 'create', name='template-edit'),
+    url(r'^%s/edit/?$' % template_prefix, 'edit', name='template-edit'),
     # Copy
     url(r'^%s/copy/?$' % template_prefix, 'copy', name='template-copy'),
     # Create Instance from Template

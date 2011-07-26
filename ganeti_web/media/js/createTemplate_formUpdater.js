@@ -157,7 +157,7 @@ function formUpdater(url_options, url_defaults){
             if(d["boot_order"]) {
                 boot_order.find(":selected").removeAttr(
                     "selected");
-                boot_order.find("[value=" + d["boot_order"][0] + "]")
+                boot_order.find("[value=" + d["boot_order"] + "]")
                     .attr("selected","selected");
                 boot_order.change();
             }
@@ -185,8 +185,6 @@ function formUpdater(url_options, url_defaults){
             // kernel path text box
             if(d["kernel_path"]){
                 kernel_path.val(d["kernel_path"]);
-            } else {
-                kernel_path.val("");
             }
 
             // nic mode dropdown

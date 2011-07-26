@@ -75,7 +75,9 @@
             {{ form.disk_count }}
             {% for index in form.disk_fields %}
                 {% vmfield_disk form index %}
-                <div class="icon delete"></div>
+                {% if forloop.first %}
+                    <div class="icon delete"></div>
+                {% endif %}
             {% endfor %}
         </fieldset>
         <fieldset id="nics">
