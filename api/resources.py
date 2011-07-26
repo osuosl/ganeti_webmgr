@@ -230,7 +230,6 @@ class VMResource(ModelResource):
             bundle.data['job'] = vm_detail['job']
             if (vm_detail['job'] != None):
                 bundle.data['job'] = JobResource().get_resource_uri(vm_detail['job'])
-            
         return bundle
 
     def obj_get(self, request=None, **kwargs):
@@ -284,6 +283,30 @@ class VMResource(ModelResource):
 
         return HttpAccepted
 
+    def post_list(self, request, **kwargs):
+        try:
+            deserialized = self.deserialize(request, request.raw_post_data, format=request.META.get('CONTENT_TYPE', 'application/json'))
+        except (Exception):
+            return HttpBadRequest()
+        deserialized = self.alter_deserialized_detail_data(request, deserialized)
+
+
+        if (deserialized.has_key('action')):
+            if (deserialized.has_key('id')):
+                try:
+                    vm = self.obj_get(request,id=deserialized.get('id'))
+                    vm_detail = ganeti_web.views.virtual_machine.detail(request, vm.cluster.slug, vm.hostname, True)
+                except NotFound:
+                    raise NotFound("Object not found")
+
+                if (deserialized.get('action')=='reboot'):
+                    response = ganeti_web.views.virtual_machine.reboot(request, vm.cluster.slug, vm_detail['instance'], True)
+                    return response
+
+
+
+        
+        
 
 
 
