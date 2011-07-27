@@ -14,12 +14,16 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
+
 from django.core.paginator import Page
+from django.core.serializers import json
 from tastypie.utils.urls import trailing_slash
 
 
 __author__ = 'bojan'
-
+import json
+import utils
+from django.core import serializers
 from tastypie.resources import ModelResource, Resource, HttpAccepted, HttpBadRequest, HttpApplicationError, HttpCreated, HttpResponseNotFound, ResourceOptions
 from sets import Set
 from tastypie.fields import ForeignKey
@@ -271,7 +275,7 @@ class VMResource(ModelResource):
             response = ganeti_web.views.virtual_machine.reboot(request, vm.cluster.slug, vm_detail['instance'], True)
             return response
 
-        #action: instance rename
+        # action: instance rename
         if (bundle.data.has_key('action')) & (bundle.data.get('action')=='rename'):
 
             if ((bundle.data.has_key('hostname')) & (bundle.data.has_key('ip_check')) & (bundle.data.has_key('name_check'))):
@@ -280,6 +284,13 @@ class VMResource(ModelResource):
                 return HttpBadRequest
             response = ganeti_web.views.virtual_machine.rename(request, vm.cluster.slug, vm_detail['instance'], True, extracted_params)
             return response
+
+        # action: instance startup
+        if (deserialized.has_key('action')) & (deserialized.get('action')=='startup'):
+            response = ganeti_web.views.virtual_machine.startup(request, vm.cluster.slug, vm_detail['instance'], True);
+            return utils.serialize_and_reply(request, response['msg'], code=response['code']) #SERIALIZATION
+            
+
 
         return HttpAccepted
 
@@ -298,15 +309,23 @@ class VMResource(ModelResource):
                     vm_detail = ganeti_web.views.virtual_machine.detail(request, vm.cluster.slug, vm.hostname, True)
                 except NotFound:
                     raise NotFound("Object not found")
-
+                # reboot instance
                 if (deserialized.get('action')=='reboot'):
                     response = ganeti_web.views.virtual_machine.reboot(request, vm.cluster.slug, vm_detail['instance'], True)
                     return response
 
+                # rename instance
+                if ((deserialized.has_key('hostname')) & (deserialized.has_key('ip_check')) & (deserialized.has_key('name_check'))):
+                    extracted_params = {'hostname':deserialized.get('hostname'), 'ip_check':deserialized.get('ip_check'), 'name_check':deserialized.get('name_check')}
+                else:
+                    return HttpBadRequest
+                response = ganeti_web.views.virtual_machine.rename(request, vm.cluster.slug, vm_detail['instance'], True, extracted_params)
+                return response
+
 
 
         
-        
+
 
 
 

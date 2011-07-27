@@ -234,13 +234,16 @@ def shutdown(request, cluster_slug, instance):
 
 
 @login_required
-def startup(request, cluster_slug, instance):
+def startup(request, cluster_slug, instance, rest = False):
     vm = get_object_or_404(VirtualMachine, hostname=instance,
                            cluster__slug=cluster_slug)
     user = request.user
     if not (user.is_superuser or user.has_any_perms(vm, ['admin','power']) or
         user.has_perm('admin', vm.cluster)):
-            return render_403(request, _('You do not have permission to start up this virtual machine'))
+            if (not rest):
+                return render_403(request, _('You do not have permission to start up this virtual machine'))
+            else:
+                return {"msg":"You do not have permission to start up this virtual machine", "code":401}
 
     # superusers bypass quota checks
     if not user.is_superuser and vm.owner:
@@ -251,13 +254,19 @@ def startup(request, cluster_slug, instance):
 
             if quota['ram'] is not None and (used['ram'] + vm.ram) > quota['ram']:
                 msg = _('Owner does not have enough RAM remaining on this cluster to start the virtual machine.')
-                return HttpResponse(json.dumps([0, msg]), mimetype='application/json')
+                if (not rest):
+                    return HttpResponse(json.dumps([0, msg]), mimetype='application/json')
+                else:
+                    return {"msg":msg, "code":500}
 
             if quota['virtual_cpus'] and (used['virtual_cpus'] + vm.virtual_cpus) > quota['virtual_cpus']:
                 msg = _('Owner does not have enough Virtual CPUs remaining on this cluster to start the virtual machine.')
-                return HttpResponse(json.dumps([0, msg]), mimetype='application/json')
+                if (not rest):
+                    return HttpResponse(json.dumps([0, msg]), mimetype='application/json')
+                else:
+                    return {"msg":msg, "code":500}
 
-    if request.method == 'POST':
+    if ((request.method == 'POST') | rest):
         try:
             job = vm.startup()
             job.refresh()
@@ -267,7 +276,10 @@ def startup(request, cluster_slug, instance):
             log_action('VM_START', user, vm, job)
         except GanetiApiError, e:
             msg = {'__all__':[str(e)]}
-        return HttpResponse(json.dumps(msg), mimetype='application/json')
+        if (not rest):
+            return HttpResponse(json.dumps(msg), mimetype='application/xml')
+        else:
+            return {"msg": msg,"code":"200"}
     return HttpResponseNotAllowed(['POST'])
 
 
