@@ -210,16 +210,19 @@ def vnc_proxy(request, cluster_slug, instance):
 
 
 @login_required
-def shutdown(request, cluster_slug, instance):
+def shutdown(request, cluster_slug, instance, rest = False):
     vm = get_object_or_404(VirtualMachine, hostname=instance,
                            cluster__slug=cluster_slug)
     user = request.user
 
     if not (user.is_superuser or user.has_any_perms(vm, ['admin','power']) or
         user.has_perm('admin', vm.cluster)):
-        return render_403(request, _('You do not have permission to shut down this virtual machine'))
+        if (not rest):
+            return render_403(request, _('You do not have permission to shut down this virtual machine'))
+        else:
+            return {"msg":'You do not have permission to shut down this virtual machine', 'code': 403}
 
-    if request.method == 'POST':
+    if ((request.method == 'POST') | rest):
         try:
             job = vm.shutdown()
             job.refresh()
@@ -229,7 +232,10 @@ def shutdown(request, cluster_slug, instance):
             log_action('VM_STOP', user, vm, job)
         except GanetiApiError, e:
             msg = {'__all__':[str(e)]}
-        return HttpResponse(json.dumps(msg), mimetype='application/json')
+        if (not rest):
+            return HttpResponse(json.dumps(msg), mimetype='application/json')
+        else:
+            return {'msg':msg, 'code':200}
     return HttpResponseNotAllowed(['POST'])
 
 
@@ -243,7 +249,7 @@ def startup(request, cluster_slug, instance, rest = False):
             if (not rest):
                 return render_403(request, _('You do not have permission to start up this virtual machine'))
             else:
-                return {"msg":"You do not have permission to start up this virtual machine", "code":401}
+                return {"msg":"You do not have permission to start up this virtual machine", "code":403}
 
     # superusers bypass quota checks
     if not user.is_superuser and vm.owner:
@@ -556,7 +562,7 @@ def detail(request, cluster_slug, instance, rest = False):
 
 
 @login_required
-def users(request, cluster_slug, instance):
+def users(request, cluster_slug, instance, rest = False):
     """
     Display all of the Users of a VirtualMachine
     """
@@ -565,10 +571,13 @@ def users(request, cluster_slug, instance):
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', vm) or
         user.has_perm('admin', cluster)):
-        return render_403(request, _("You do not have sufficient privileges"))
+        if (not rest):
+            return render_403(request, _("You do not have sufficient privileges"))
+        else:
+            return {'msg':'You do not have sufficient privileges', 'code':403}
 
     url = reverse('vm-permissions', args=[cluster.slug, vm.hostname])
-    return view_users(request, vm, url)
+    return view_users(request, vm, url, rest = True)
 
 
 @login_required

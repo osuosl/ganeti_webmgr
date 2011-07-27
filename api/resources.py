@@ -35,7 +35,7 @@ from tastypie.authorization import Authorization, DjangoAuthorization
 from tastypie.bundle import Bundle
 from tastypie.exceptions import NotFound
 from authorization import SuperuserAuthorization
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, Http404
 import ganeti_web.views.users
 from django import forms
 from tastypie.validation import Validation, FormValidation
@@ -234,6 +234,7 @@ class VMResource(ModelResource):
             bundle.data['job'] = vm_detail['job']
             if (vm_detail['job'] != None):
                 bundle.data['job'] = JobResource().get_resource_uri(vm_detail['job'])
+        bundle.data['users'] = ganeti_web.views.virtual_machine.users(bundle.request, vm.cluster.slug, vm_detail['instance'], rest = True)
         return bundle
 
     def obj_get(self, request=None, **kwargs):
@@ -256,30 +257,30 @@ class VMResource(ModelResource):
         return response
 
     def post_detail(self, request, **kwargs):
+        
         try:
             deserialized = self.deserialize(request, request.raw_post_data, format=request.META.get('CONTENT_TYPE', 'application/json'))
         except (Exception):
             return HttpBadRequest()
         try:
             vm = self.obj_get(request,id=kwargs.get('pk'))
-            #vm = self.obj_get(request,hostname='derpers.gwm.osuosl.org') TODO name manipulationex
+            #vm = self.obj_get(request,hostname='derpers.gwm.osuosl.org') TODO name manipulations
             vm_detail = ganeti_web.views.virtual_machine.detail(request, vm.cluster.slug, vm.hostname, True)
-        except NotFound:
-            raise NotFound("Object not found")
+        except NotFound, Exception:
+            return utils.serialize_and_reply(request, "Could not find object", 404)
 
         deserialized = self.alter_deserialized_detail_data(request, deserialized)
-        bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized))
 
         # action: instance reboot TODO: test rebooting extensively
-        if (bundle.data.has_key('action')) & (bundle.data.get('action')=='reboot'):
+        if (deserialized.has_key('action')) & (deserialized.get('action')=='reboot'):
             response = ganeti_web.views.virtual_machine.reboot(request, vm.cluster.slug, vm_detail['instance'], True)
             return response
 
         # action: instance rename
-        if (bundle.data.has_key('action')) & (bundle.data.get('action')=='rename'):
+        if (deserialized.has_key('action')) & (deserialized.get('action')=='rename'):
 
-            if ((bundle.data.has_key('hostname')) & (bundle.data.has_key('ip_check')) & (bundle.data.has_key('name_check'))):
-                extracted_params = {'hostname':bundle.data.get('hostname'), 'ip_check':bundle.data.get('ip_check'), 'name_check':bundle.data.get('name_check')}
+            if ((deserialized.has_key('hostname')) & (deserialized.has_key('ip_check')) & (deserialized.has_key('name_check'))):
+                extracted_params = {'hostname':deserialized.get('hostname'), 'ip_check':deserialized.get('ip_check'), 'name_check':deserialized.get('name_check')}
             else:
                 return HttpBadRequest
             response = ganeti_web.views.virtual_machine.rename(request, vm.cluster.slug, vm_detail['instance'], True, extracted_params)
@@ -287,10 +288,19 @@ class VMResource(ModelResource):
 
         # action: instance startup
         if (deserialized.has_key('action')) & (deserialized.get('action')=='startup'):
-            response = ganeti_web.views.virtual_machine.startup(request, vm.cluster.slug, vm_detail['instance'], True);
+            try:
+                response = ganeti_web.views.virtual_machine.startup(request, vm.cluster.slug, vm_detail['instance'], True);
+            except Http404:
+                return utils.serialize_and_reply(request, "Could not find resource", code=404)
             return utils.serialize_and_reply(request, response['msg'], code=response['code']) #SERIALIZATION
-            
 
+        # action: instance shutdown
+        if (deserialized.has_key('action')) & (deserialized.get('action')=='shutdown'):
+            try:
+                response = ganeti_web.views.virtual_machine.shutdown(request, vm.cluster.slug, vm_detail['instance'], True);
+            except Http404:
+                return utils.serialize_and_reply(request, "Could not find resource", code=404)
+            return utils.serialize_and_reply(request, response['msg'], code=response['code'])
 
         return HttpAccepted
 
@@ -302,6 +312,7 @@ class VMResource(ModelResource):
         deserialized = self.alter_deserialized_detail_data(request, deserialized)
 
 
+        # TODO: move detail and list code in separate place and call it from both detail/list functions
         if (deserialized.has_key('action')):
             if (deserialized.has_key('id')):
                 try:
