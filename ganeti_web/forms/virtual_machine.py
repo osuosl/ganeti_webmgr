@@ -14,7 +14,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
-import copy
 
 from django import forms
 from django.forms import ValidationError
@@ -206,7 +205,7 @@ class NewVirtualMachineForm(VirtualMachineForm):
 
             # must have at least two nodes to use drbd
             if len(nodes) == 2:
-                choices = self.fields['disk_template'].choices = self.templates_single
+                self.fields['disk_template'].choices = self.templates_single
 
             hv = initial.get('hypervisor', None)
             if hv is not None:
