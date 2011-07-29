@@ -89,7 +89,10 @@
             {% vmfield form.boot_order %}
             {% endif %}
             {% if form.cdrom_image_path %}
-            {% vmfield form.cdrom_image_path %}
+                {% vmfield form.cdrom_image_path %}
+            {% endif %}
+            {% if form.cdrom2_image_path %}
+                {% vmfield form.cdrom2_image_path %}
             {% endif %}
         </fieldset>
         <input class="submit" type="submit" value="{% trans "Create" %}">
