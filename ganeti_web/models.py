@@ -1330,6 +1330,9 @@ class VirtualMachineTemplate(models.Model):
                                   null=True, blank=True)
     cdrom_image_path = models.CharField(verbose_name=_('CD-ROM Image Path'), null=True, \
                 blank=True, max_length=512)
+    cdrom2_image_path = models.CharField(
+        verbose_name=_('CD-ROM 2 Image Path'), null=True, blank=True,
+        max_length=512)
 
     def __str__(self):
         if self.template_name is None:
