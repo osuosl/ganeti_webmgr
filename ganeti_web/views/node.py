@@ -33,7 +33,6 @@ from ganeti_web.util.client import GanetiApiError
 from ganeti_web import constants
 from ganeti_web.forms.node import RoleForm, MigrateForm, EvacuateForm
 from ganeti_web.models import Node
-from ganeti_web.utilities import cluster_default_info
 from ganeti_web.views import render_403
 from ganeti_web.views.virtual_machine import render_vms
 
