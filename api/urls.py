@@ -5,7 +5,7 @@ __author__ = 'bojan'
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.conf.urls.defaults import *
-from api.resources import UserResource, VMResource, SSHKeyResource, ClusterResource, NodeResource, JobResource, ClusterUserResource
+from api.resources import UserResource, VMResource, SSHKeyResource, ClusterResource, NodeResource, JobResource, ClusterUserResource, GroupResource
 from tastypie.api import Api
 from tastypie.models import create_api_key
 from django.db import models
@@ -36,6 +36,7 @@ v1_api.register(ClusterResource())
 v1_api.register(NodeResource())
 v1_api.register(JobResource())
 v1_api.register(ClusterUserResource())
+v1_api.register(GroupResource())
 
 # the keys for new users will be automatically generated on first start
 create_api_keys()

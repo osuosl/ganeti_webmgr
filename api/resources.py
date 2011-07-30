@@ -18,6 +18,7 @@
 from django.core.paginator import Page
 from django.core.serializers import json
 from tastypie.utils.urls import trailing_slash
+import object_permissions
 
 
 __author__ = 'bojan'
@@ -27,7 +28,7 @@ from django.core import serializers
 from tastypie.resources import ModelResource, Resource, HttpAccepted, HttpBadRequest, HttpApplicationError, HttpCreated, HttpResponseNotFound, ResourceOptions
 from sets import Set
 from tastypie.fields import ForeignKey
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from ganeti_web.models import VirtualMachine, SSHKey, Cluster, Node, CachedClusterObject, Job, ClusterUser
 from tastypie import fields
 from tastypie.authentication import Authentication, BasicAuthentication, ApiKeyAuthentication
@@ -55,6 +56,9 @@ import ganeti_web.views.node
 import ganeti_web.views.virtual_machine
 from ganeti_web.views.general import get_used_resources, used_resources
 import api.utils
+import object_permissions.views.groups
+import object_permissions.views.permissions
+from object_permissions.registration import get_group_perms
 
 
 class UserResource(ModelResource):
@@ -65,9 +69,9 @@ class UserResource(ModelResource):
         queryset = User.objects.all()
         resource_name = 'user'
         allowed_methods = ['get', 'put', 'post', 'delete']
-        authentication = ApiKeyAuthentication()
-        authorization = SuperuserAuthorization()
-        validation = UserValidation()
+        #authentication = ApiKeyAuthentication()
+        #authorization = SuperuserAuthorization()
+        #validation = UserValidation()
 
 
     def dehydrate(self, bundle):
@@ -79,6 +83,9 @@ class UserResource(ModelResource):
             bundle.data['api_key'] = ApiKey.objects.get(user__pk=bundle.obj.id).key
         except(ApiKey.DoesNotExist):
             {}
+        cluster_user = ClusterUser.objects.get(name=bundle.obj.name)
+        perms_info = object_permissions.views.groups.all_permissions(bundle.request, bundle.data['id'], rest=True)
+        
         return bundle
 
 
@@ -133,6 +140,50 @@ class UserResource(ModelResource):
             return api.utils.clean_api_key(request, bundle.data.get('userid'))
 
         return HttpResponse(status=204)
+
+
+class GroupResource(ModelResource):
+    """
+    Defines group resource
+    """
+    class Meta:
+        queryset = Group.objects.all()
+        resource_name = 'group'
+        allowed_methods = ['get', 'put', 'post', 'delete']
+        authentication = ApiKeyAuthentication()
+        authorization = SuperuserAuthorization()
+
+    def dehydrate(self, bundle):
+
+        # permissions on virtual machines and clusters
+        perms_info = object_permissions.views.groups.all_permissions(bundle.request, bundle.data['id'], rest=True)
+        if (perms_info.has_key('error')):
+            return bundle
+        bundle.data['permissions']={'vm':[], 'cluster':[]}
+        bundle.data['users']=[]
+        bundle.data['used_resources']=[]
+        used_resources = []
+        cluster_user = ClusterUser.objects.get(name=bundle.obj.name)
+
+        if (perms_info.has_key('perm_dict') and len(perms_info['perm_dict']) > 0):
+            if (perms_info.get('perm_dict').has_key('Cluster')):
+                for cl in perms_info.get('perm_dict').get('Cluster'):
+                    bundle.data['permissions']['cluster'].append({'object':ClusterResource().get_resource_uri(cl), 'permissions':get_group_perms(bundle.obj, cl)})
+                    used_resources.append({'object':ClusterResource().get_resource_uri(cl), 'resources_used':cluster_user.used_resources(cl,only_running = False)})
+
+            if (perms_info.get('perm_dict').has_key('VirtualMachine')):
+                for vm in perms_info.get('perm_dict').get('VirtualMachine'):
+                    bundle.data['permissions']['vm'].append({'object':VMResource().get_resource_uri(vm), 'permissions':get_group_perms(bundle.obj, vm)})
+
+        # group users
+        users = User.objects.filter(groups=bundle.obj.id)
+        for user in users:
+            bundle.data['users'].append(UserResource().get_resource_uri(user))
+
+        # used resources by group objects
+        bundle.data['used_resources'] = used_resources
+        return bundle
+
 
 
 class SSHKeyResource(ModelResource):
@@ -234,7 +285,16 @@ class VMResource(ModelResource):
             bundle.data['job'] = vm_detail['job']
             if (vm_detail['job'] != None):
                 bundle.data['job'] = JobResource().get_resource_uri(vm_detail['job'])
-        bundle.data['users'] = ganeti_web.views.virtual_machine.users(bundle.request, vm.cluster.slug, vm_detail['instance'], rest = True)
+        perms = ganeti_web.views.virtual_machine.users(bundle.request, vm.cluster.slug, vm_detail['instance'], rest = True)
+        permissions = {'users':[], 'groups':[]}
+        if (perms['users'].__len__() > 0):
+            for user in perms['users']:
+                print (user)
+                print UserResource().get_resource_uri(user)
+                permissions['users'].append(UserResource().get_resource_uri(user))
+            
+        #bundle.data['users']
+
         return bundle
 
     def obj_get(self, request=None, **kwargs):
