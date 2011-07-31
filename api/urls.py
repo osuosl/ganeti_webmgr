@@ -5,7 +5,8 @@ __author__ = 'bojan'
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.conf.urls.defaults import *
-from api.resources import UserResource, VMResource, SSHKeyResource, ClusterResource, NodeResource, JobResource, ClusterUserResource, GroupResource
+from api.resources import UserResource, SSHKeyResource, ClusterResource, NodeResource, JobResource, ClusterUserResource, GroupResource
+from api.VMResource import VMResource
 from tastypie.api import Api
 from tastypie.models import create_api_key
 from django.db import models
