@@ -598,7 +598,7 @@ def permissions(request, cluster_slug, instance, user_id=None, group_id=None):
 
 
 @login_required
-def object_log(request, cluster_slug, instance):
+def object_log(request, cluster_slug, instance, rest = False):
     """
     Display all of the Users of a VirtualMachine
     """
@@ -610,7 +610,10 @@ def object_log(request, cluster_slug, instance):
         user.has_perm('admin', cluster)):
         return render_403(request, _("You do not have sufficient privileges"))
 
-    return list_for_object(request, vm)
+    if not rest:
+        return list_for_object(request, vm)
+    else:
+        return list_for_object(request, vm, True)
 
 
 @login_required

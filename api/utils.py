@@ -1,5 +1,6 @@
 from tastypie.http import HttpApplicationError, HttpBadRequest
 from tastypie.serializers import Serializer
+import object_log.views
 
 __author__ = 'bojan'
 
@@ -51,3 +52,41 @@ def serialize_and_reply(request, response, code = 200):
     else:
         return HttpResponse(content="Please select either json or xml, in query or header", status=400)
 
+
+def extract_log_actions(request, id, log):
+    """
+    Extracts log action items, links them to the related resources
+    and return accordingly
+    """
+    # relation base class -> resource
+    obj_res_instances = {'VirtualMachine': api.resources.VMResource, 'User': api.resources.UserResource, 'Group': api.resources.GroupResource, 'Cluster': api.resources.ClusterResource
+                         , 'Node': api.resources.NodeResource, 'Job': api.resources.JobResource}
+    glob_action_data = []
+    
+    # populate log with entries
+    for entry in log:
+        action_data = {}
+        action_data.update({'action_name':entry.action.name})
+        action_data.update({'user': api.resources.UserResource().get_resource_uri(entry.user)})
+        action_data.update({'timestamp':entry.timestamp})
+
+        try:
+            if obj_res_instances.has_key(entry.object1.__class__.__name__):
+                action_data.update({'obj1':obj_res_instances.get(entry.object1.__class__.__name__)().get_resource_uri(entry.object1)})
+        except Exception:
+            {}
+
+        try:
+            if obj_res_instances.has_key(entry.object2.__class__.__name__):
+                action_data.update({'obj2':obj_res_instances.get(entry.object2.__class__.__name__)().get_resource_uri(entry.object2)})
+        except Exception:
+            {}
+
+        try:
+            if obj_res_instances.has_key(entry.object3.__class__.__name__):
+                action_data.update({'obj3':obj_res_instances.get(entry.object3.__class__.__name__)().get_resource_uri(entry.object3)})
+        except Exception:
+            {}
+
+        glob_action_data.append(action_data)
+    return glob_action_data

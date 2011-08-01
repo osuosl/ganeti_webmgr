@@ -3,14 +3,9 @@ from ganeti_web.models import log_action
 __author__ = 'bojan'
 
 from django.contrib.auth.models import User
-from django.conf import settings
 from django.conf.urls.defaults import *
-from api.resources import UserResource, SSHKeyResource, ClusterResource, NodeResource, JobResource, ClusterUserResource, GroupResource
-from api.VMResource import VMResource
+from api.resources import SSHKeyResource, NodeResource, ClusterUserResource, GroupResource, VMResource, ClusterResource, UserResource, JobResource
 from tastypie.api import Api
-from tastypie.models import create_api_key
-from django.db import models
-from django.core.management import call_command
 from tastypie.models import ApiKey
 
 def create_api_keys():
