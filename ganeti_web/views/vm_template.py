@@ -146,14 +146,15 @@ def create_instance_from_template(request, cluster_slug, template):
         initial = dict(
             hostname=vm_template.template_name,
             cluster=vm_template.cluster_id,
-            operating_system=vm_template.os
         )
         initial.update(vars(vm_template))
-        ignore_fields = ('nics', '_state', 'pnode', 'snode',
+        ignore_fields = ('disks', '_state', 'pnode', 'snode',
             'description')
         for field in ignore_fields:
             del initial[field]
-        print initial
+        initial['disk_count'] = len(vm_template.disks)
+        for i,disk in enumerate(vm_template.disks):
+            initial['disk_size_%s'%i] = disk['size']
         form = NewVirtualMachineForm(user, initial=initial)
         cluster_defaults = {} #cluster_default_info(cluster)
     else:
