@@ -26,6 +26,7 @@ function formUpdater(url_choices, url_options, url_defaults){
     var iallocator_hostname =   $("#id_iallocator_hostname");
     var boot_order =            $("#id_boot_order");
     var image_path =            $("#id_cdrom_image_path").parent("p");
+    var image2_path =           $("id_cdrom2_image_path").parent("p");
     var root_path =             $("#id_root_path");
     var kernel_path =           $("#id_kernel_path");
     var serial_console =        $("#id_serial_console").parent("p");
@@ -34,20 +35,20 @@ function formUpdater(url_choices, url_options, url_defaults){
     var nodes =                 null; // nodes available
     var oldid; // global for hypervisor.change function
 
-    var template_choices = $(<>
-            <option value=''>---------</option>
-            <option value='plain'>plain</option>
-            <option value='drbd'>drbd</option>
-            <option value='file'>file</option>
-            <option value='diskless'>diskless</option>
-        </>.toString());
+    var template_choices = $("\
+            <option value=''>---------</option>\
+            <option value='plain'>plain</option>\
+            <option value='drbd'>drbd</option>\
+            <option value='file'>file</option>\
+            <option value='diskless'>diskless</option>\
+        ".toString());
 
-    var single_node_template_choices = $(<>
-            <option value=''>---------</option>
-            <option value='plain'>plain</option>
-            <option value='file'>file</option>
-            <option value='diskless'>diskless</option>
-        </>.toString());
+    var single_node_template_choices = $("\
+            <option value=''>---------</option>\
+            <option value='plain'>plain</option>\
+            <option value='file'>file</option>\
+            <option value='diskless'>diskless</option>\
+        ".toString());
 
     // ------------
     // cluster defaults
@@ -83,6 +84,7 @@ function formUpdater(url_choices, url_options, url_defaults){
         
         // hide CD-ROM Image Path stuffs by default
         _imagePathHide();
+        _image2PathHide();
         
         // setup form element change hooks
         _initChangeHooks();
@@ -136,8 +138,10 @@ function formUpdater(url_choices, url_options, url_defaults){
             var id = $(this).children("option:selected").val();
             if(id == "cdrom"){
                 _imagePathShow();
+                _image2PathShow();
             } else {
                 _imagePathHide();
+                _image2PathHide();
             }
         });
 
@@ -427,6 +431,10 @@ function formUpdater(url_choices, url_options, url_defaults){
             if(d["cdrom_image_path"]){
                 image_path.find("input").val(d["cdrom_image_path"]);
             }
+            //second cdrom
+            if(d["cdrom2_image_path"]){
+                image2_path.find("input").val(d["cdrom2_image_path"]);
+            }
             disableSingletonDropdown(hypervisor, blankOptStr);
         });
     }
@@ -438,6 +446,16 @@ function formUpdater(url_choices, url_options, url_defaults){
     function _imagePathShow(){
         image_path.show();
     }
+
+    //second cdrom hidden/shown independent of first
+    function _image2PathHide(){
+        image2_path.hide();
+    }
+
+    function _image2PathShow(){
+        image2_path.show();
+    }
+
 
     function _iallocatorDisable(){
         /* Disable and hide all of the iallocator stuffs */
@@ -470,7 +488,8 @@ function formUpdater(url_choices, url_options, url_defaults){
     function _hideHvmKvmElements() {
         // Hide hvm + kvm specific hypervisor fields
         boot_order.parent("p").hide();
-        image_path.hide(); 
+        image_path.hide();
+        image2_path.hide(); 
         nic_type.parent("p").hide();
         disk_type.parent("p").hide();
     }
