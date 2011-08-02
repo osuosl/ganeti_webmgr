@@ -120,7 +120,7 @@ class NewVirtualMachineForm(VirtualMachineForm):
     Virtual Machine Creation form
     """
     pvm_exclude_fields = ('disk_type','nic_type', 'boot_order', 'serial_console',
-        'cdrom_image_path')
+        'cdrom_image_path', 'cdrom2_image_path')
 
     empty_field = EMPTY_CHOICE_FIELD
     templates = HV_DISK_TEMPLATES
@@ -345,14 +345,19 @@ class NewVirtualMachineForm(VirtualMachineForm):
                 del self._errors["snode"]
 
         # If boot_order = CD-ROM make sure imagepath is set as well.
+        # Path ends up in image_path regardless of where it was entered. 
         boot_order = data.get('boot_order', '')
         image_path = data.get('cdrom_image_path', '')
+        image2_path = data.get('cdrom2_image_path','')
         if boot_order == 'cdrom':
             if image_path == '':
-                msg = u"%s." % _("Image path required if boot device is CD-ROM")
-                self._errors["cdrom_image_path"] = self.error_class([msg])
-                del data["cdrom_image_path"]
-
+                if image2_path == '':
+                    msg = u"%s." % _("Image path required if boot device is CD-ROM")
+                    self._errors["cdrom_image_path"] = self.error_class([msg])
+                    del data["cdrom_image_path"]
+                else:
+                    image_path, image2_path = image2_path, image_path
+ 
         if iallocator:
             # If iallocator is checked,
             #  don't display error messages for nodes
@@ -446,43 +451,6 @@ class NewVirtualMachineForm(VirtualMachineForm):
         iallocator = data.get('iallocator', False)
         iallocator_hostname = data.get('iallocator_hostname', '')
         disk_template = data.get("disk_template")
-
-        # Need to have pnode != snode
-        if disk_template == "drbd" and not iallocator:
-            if pnode == snode and (pnode != '' or snode != ''):
-                # We know these are not in self._errors now
-                msg = u"%s." % _("Primary and Secondary Nodes must not match")
-                self._errors["pnode"] = self.error_class([msg])
-
-                # These fields are no longer valid. Remove them from the
-                # cleaned data.
-                del data["pnode"]
-                del data["snode"]
-        else:
-            if "snode" in self._errors:
-                del self._errors["snode"]
-
-        # If boot_order = CD-ROM make sure imagepath is set as well.
-        boot_order = data.get('boot_order', '')
-        image_path = data.get('cdrom_image_path', '')
-        if boot_order == 'cdrom':
-            if image_path == '':
-                msg = u"%s." % _("Image path required if boot device is CD-ROM")
-                self._errors["cdrom_image_path"] = self.error_class([msg])
-                del data["cdrom_image_path"]
-
-        if iallocator:
-            # If iallocator is checked,
-            #  don't display error messages for nodes
-            if iallocator_hostname != '':
-                if 'pnode' in self._errors:
-                    del self._errors['pnode']
-                if 'snode' in self._errors:
-                    del self._errors['snode']
-            else:
-                msg = u"%s." % _("Automatic Allocation was selected, but there is no \
-                      IAllocator available.")
-                self._errors['iallocator'] = self.error_class([msg])
 
         # Check options which depend on the the hypervisor type
         hv = data.get('hypervisor')
@@ -716,6 +684,7 @@ class KvmModifyVirtualMachineForm(PvmModifyVirtualMachineForm,
         'boot_order', 'nic_type', 'root_path', 
         'kernel_path', 'serial_console', 
         'cdrom_image_path',
+        'cdrom2_image_path',
     )
     disk_caches = HV_DISK_CACHES
     kvm_flags = KVM_FLAGS
