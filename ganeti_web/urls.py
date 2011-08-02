@@ -202,6 +202,9 @@ urlpatterns += patterns('ganeti_web.views.vm_template',
     # Create Instance from Template
     url(r'^%s/vm/?$' % template_prefix, 'create_instance_from_template', 
         name='instance-create-from-template'),
+    url(r'^%s/template/?$' % vm_prefix, 'create_template_from_instance', 
+        name='template-create-from-instance'),
+
 )
 
 

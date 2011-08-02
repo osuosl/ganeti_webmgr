@@ -35,20 +35,29 @@
 
 
 {% block content %}
+<h1 class="breadcrumb">
+    {% if from_vm %}
+        <a href="{% url cluster-detail from_vm.cluster.slug %}">{{from_vm.cluster|abbreviate_fqdn}}</a> :
+        <a href="{% url instance-detail from_vm.cluster.slug from_vm.hostname %}">{{from_vm}}</a>
+    {% else %}
+        <span>
+            <a href="{% url template-list %}">{% trans "Template" %}</a>
+        </span>    
+    {% endif %}
+    {% if template %}
+       : <a href="{% url template-detail template.cluster.slug template %}">{{ template }}</a>
+       : {% trans "Edit" %}
+    {% else %}
+        {% if from_vm %}
+            : {% trans "Template" %}
+        {% else %}
+            : {% trans "Create" %}
+        {% endif %}
+    {% endif %}
+</h1>
 <div id="virtualmachineform">
     <form method="post" action="{{ action }}">
         <fieldset class="first_fieldset">
-            <h1 class="breadcrumb">
-                <span>
-                    <a href="{% url template-list %}">{% trans "Template" %}</a>
-                </span>
-                {% if template %}
-                   : <a href="{% url template-detail template.cluster.slug template %}">{{ template }}</a>
-                   : {% trans "Edit" %}
-                {% else %}
-                    : {% trans "Create" %}
-                {% endif %}
-            </h1>
             {% vmfield form.template_name %}
             {% vmfield form.description %}
             {% vmfield form.cluster %}

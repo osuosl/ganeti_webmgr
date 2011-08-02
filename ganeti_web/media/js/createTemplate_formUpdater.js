@@ -183,7 +183,7 @@ function formUpdater(url_options, url_defaults){
             }
 
             // kernel path text box
-            if(d["kernel_path"]){
+            if(d["kernel_path"] && kernel_path == ""){
                 kernel_path.val(d["kernel_path"]);
             }
 
@@ -205,6 +205,7 @@ function formUpdater(url_options, url_defaults){
             }
             
             // nic type dropdown
+            old_nic_type = nic_type.val();
             if(d["nic_types"]) {
                 nic_type.children().remove();
                 $.each(d["nic_types"], function(i, item){
@@ -215,15 +216,18 @@ function formUpdater(url_options, url_defaults){
                 nic_type.find(":selected").removeAttr("selected");
                 nic_type.find("[value=" + d["nic_type"] + "]")
                     .attr("selected","selected");
+                nic_type.val(old_nic_type);
             }
 
             // memory text box
-            if(d["memory"]){
+            if(d["memory"] && $("#id_memory") == ""){
                 $("#id_memory").val(d["memory"]);
             }
 
             // disk type dropdown
             if(d["disk_types"]){
+                old_disk_type = disk_type.val();
+                //console.log(old_disk_type);
                 disk_type.children().remove();
                 $.each(d["disk_types"], function(i, item){
                     disk_type.append(_newOpt(item[0], item[1]));
@@ -231,6 +235,7 @@ function formUpdater(url_options, url_defaults){
                 if(d["disk_type"]){
                     disk_type.val(d["disk_type"]);
                 }
+                disk_type.val(old_disk_type);
             }
             
             // root path text box
@@ -249,7 +254,7 @@ function formUpdater(url_options, url_defaults){
             }
             
             // virtual CPUs text box
-            if(d["vcpus"]){
+            if(d["vcpus"] && $("#id_vcpus") == ""){
                 $("#id_vcpus").val(d["vcpus"]);
             }
             

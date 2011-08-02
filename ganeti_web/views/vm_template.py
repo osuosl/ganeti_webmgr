@@ -23,7 +23,7 @@ from django.template import RequestContext
 from django.utils import simplejson as json
 from django.utils.translation import ugettext as _
 
-from ganeti_web.models import Cluster, VirtualMachineTemplate
+from ganeti_web.models import Cluster, VirtualMachineTemplate, VirtualMachine
 from ganeti_web.forms.vm_template import VirtualMachineTemplateForm, \
     VirtualMachineTemplateCopyForm
 from ganeti_web.forms.virtual_machine import NewVirtualMachineForm
@@ -116,6 +116,59 @@ def create(request, cluster_slug=None, template=None):
 
     return render_to_response('ganeti/vm_template/create.html', {
         'form':form,
+        'action':reverse('template-create'),
+        },
+        context_instance = RequestContext(request)
+    )
+
+
+@login_required
+def create_template_from_instance(request, cluster_slug, instance):
+    """
+    View to create a new template from a given instance.
+      Post method is handled by template create view.
+    """
+    user = request.user
+    if cluster_slug:
+        cluster = get_object_or_404(Cluster, slug=cluster_slug)
+        if not (
+            user.is_superuser or 
+            user.has_perm('admin', cluster) or
+            user.has_perm('create_vm', cluster)
+            ):
+            return render_403(request, _("You do not have sufficient privileges"))
+
+    vm = get_object_or_404(VirtualMachine, hostname=instance, 
+        cluster__slug=cluster_slug)
+
+    if request.method == "GET":
+        # Work with vm vars here
+        info = vm.info
+        links = info['nic.links']
+        modes = info['nic.modes']
+        sizes = info['disk.sizes']
+        
+        initial = dict(
+            template_name=instance,
+            cluster=cluster.id,
+            start=info['admin_state'],
+            disk_template=info['disk_template'],
+            disk_type=info['hvparams']['disk_type'],
+            nic_type=info['hvparams']['nic_type'],
+            os=vm.operating_system,
+            vcpus=vm.virtual_cpus,
+            memory=vm.ram,
+            disks=[{'size':size} for size in sizes],
+            nics=[{'mode':mode, 'link':link} for mode, link in zip(modes, links)],
+            nic_count=len(links),
+        )
+        form = VirtualMachineTemplateForm(user=user, initial=initial)
+    else:
+        return HttpResponseNotAllowed(["GET"])
+
+    return render_to_response('ganeti/vm_template/create.html', {
+        'form':form,
+        'from_vm':vm,
         'action':reverse('template-create'),
         },
         context_instance = RequestContext(request)
