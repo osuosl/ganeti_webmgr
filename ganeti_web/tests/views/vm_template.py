@@ -40,6 +40,8 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
     create_template_data = dict(
         template_name='foo_bar',
         memory=512,
+        disk_count=0,
+        nic_count=0,
         )
 
     def setUp(self):
@@ -50,6 +52,8 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
         cluster.save()
         template = VirtualMachineTemplate(template_name="Template1")
         template.cluster = cluster
+        template.disks = []
+        template.nics = []
         template.save()
 
         # unathorized and superuser added to globals 
@@ -139,7 +143,7 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
         args = (cluster.slug, template)
 
         # GET
-        self.assert200(url, args,
+        self.assert_200(url, args,
             users = [superuser, cluster_admin, create_vm],
             template='ganeti/virtual_machine/create.html')
 
@@ -215,7 +219,10 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
 
         # POST
         data_=self.create_template_data.copy()
-        data_['vcpus'] = 4
+        update = dict(
+            vcpus=4,
+        )
+        data_.update(update)
         def test_vcpus(user, request):
             vm = VirtualMachineTemplate.objects.get(pk=template.pk)
             self.assertEqual(4, vm.vcpus)
