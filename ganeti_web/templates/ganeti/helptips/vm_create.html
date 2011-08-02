@@ -122,7 +122,7 @@
     </p>
 {% endblock %}
 </div>
-<div id="help-disk_size">
+<div id="help-disk_size_0">
     <p>
         {% blocktrans %}Size of the system disk to allocate to this virtual machine. If
         no units are given, megabytes is assumed.{% endblocktrans %}
@@ -240,4 +240,9 @@
        machine.{% endblocktrans %}
     </p>
     <p>{% trans "Valid for the Xen HVM and KVM hypervisors" %}.</p>
+</div>
+<div id="help-cdrom2_image_path">
+    <p>
+        {% blocktrans %}The path to the second CDROM image, if multiple CDROMs are supported by the selected hypervisor.{% endblocktrans %}
+    </p>
 </div>
