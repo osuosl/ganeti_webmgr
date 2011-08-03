@@ -741,7 +741,33 @@ class VirtualMachine(CachedClusterObject):
             .update(last_job=job, ignore_cache=True)
         return job
 
-    def setup_vnc_forwarding(self, sport="0", tls=False):
+    def setup_ssh_forwarding(self, sport=0):
+        """
+        Poke a proxy to start SSH forwarding.
+
+        Returns None if no proxy is configured, or if there was an error
+        contacting the proxy.
+        """
+
+        command = self.rapi.GetInstanceConsole(self.hostname)["command"]
+
+        if settings.VNC_PROXY:
+            proxy_server = settings.VNC_PROXY.split(":")
+            password = generate_random_password()
+            sport = request_ssh(proxy, sport, self.info["pnode"],
+                                self.info["network_port"], password, command)
+
+            if sport:
+                return proxy[0], sport, password
+
+    def setup_vnc_forwarding(self, sport=0, tls=False):
+        """
+        Obtain VNC forwarding information, optionally configuring a proxy.
+
+        Returns None if a proxy is configured and there was an error
+        contacting the proxy.
+        """
+
         password = ''
         info_ = self.info
         port = info_['network_port']
@@ -752,12 +778,9 @@ class VirtualMachine(CachedClusterObject):
             proxy_server = settings.VNC_PROXY.split(":")
             password = generate_random_password()
             result = request_forwarding(proxy_server, node, port, password,
-                                        sport=int(sport), tls=tls)
-            if not result:
-                return False, False, False
-            else:
+                                        sport=sport, tls=tls)
+            if result:
                 return proxy_server[0], int(result), password
-
         else:
             return node, port, password
 

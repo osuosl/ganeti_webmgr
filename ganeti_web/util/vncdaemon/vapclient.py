@@ -69,5 +69,37 @@ def request_forwarding(server, daddr, dport, password, sport=None, tls=False):
     except:
         return False
 
+def request_ssh(proxy, sport, daddr, dport, password, command):
+    """
+    Ask TVAP/VNCAP for an SSH port.
+    """
+
+    host, port = proxy
+    if not password or not command:
+        return False
+
+    request = {
+        "daddr": daddr,
+        "dport": dport,
+        "password": password,
+        "command": command,
+    }
+
+    if sport:
+        request["sport"] = sport
+
+    request = json.dumps(request)
+
+    ctrl = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    ctrl.connect((host, port))
+    ctrl.send("%s\r\n" % request)
+    response = ctrl.recv(1024).strip()
+    ctrl.close()
+
+    if response.startswith("FAIL"):
+        return False
+    else:
+        return response
+
 if __name__ == '__main__':
     print request_forwarding(sys.argv[1].split(":"), *sys.argv[2:])
