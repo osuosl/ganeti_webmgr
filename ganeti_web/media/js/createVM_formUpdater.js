@@ -555,7 +555,7 @@ function formUpdater(url_choices, url_options, url_defaults){
         nic_count.val(parseInt(count)+1);
         var p = $('<p></p>');
         var label = $("<label>NIC/" + count +"</label>");
-        
+
         // create mode select box
         var mode = $('<select></select>');
         mode.append('<option>----------</option>');
