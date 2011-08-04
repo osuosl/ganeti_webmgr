@@ -1,13 +1,10 @@
-from tastypie.http import HttpApplicationError, HttpBadRequest
-from tastypie.serializers import Serializer
-import object_log.views
 
 __author__ = 'bojan'
 
+from tastypie.http import HttpApplicationError, HttpBadRequest
+from tastypie.serializers import Serializer
 from tastypie.models import ApiKey
-from django.http import HttpResponse
 from tastypie.bundle import Bundle
-from django.core.context_processors import request
 import api.resources
 from django.http import HttpRequest, HttpResponse
 
@@ -51,6 +48,8 @@ def serialize_and_reply(request, response, code = 200):
         return HttpResponse(content=Serializer().serialize(response, format='application/xml'), content_type='application/xml', status= code)
     else:
         return HttpResponse(content="Please select either json or xml, in query or header", status=400)
+
+
 
 
 def extract_log_actions(request, id, log):

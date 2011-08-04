@@ -77,6 +77,15 @@ class UserResource(ModelResource):
         #cluster_user = ClusterUser.objects.get(name=bundle.obj.name)
         #perms_info = object_permissions.views.groups.all_permissions(bundle.request, bundle.data['id'], rest=True)
 
+        # group memberships
+        bundle.data['groups'] = []
+        groups = bundle.obj.groups
+        for group in groups.all():
+            bundle.data['groups'].append(GroupResource().get_resource_uri(group))
+
+        user_actions = object_log.views.list_user_actions(bundle.request, bundle.obj.id, rest=True)
+        bundle.data['user_actions'] = api.utils.extract_log_actions(bundle.request, bundle.obj.id, user_actions)
+        
         return bundle
 
 
