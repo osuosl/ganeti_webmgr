@@ -83,9 +83,14 @@ class UserResource(ModelResource):
         for group in groups.all():
             bundle.data['groups'].append(GroupResource().get_resource_uri(group))
 
+        # user actions
         user_actions = object_log.views.list_user_actions(bundle.request, bundle.obj.id, rest=True)
         bundle.data['user_actions'] = api.utils.extract_log_actions(bundle.request, bundle.obj.id, user_actions)
-        
+
+        # actions on user
+        actions_on_user = object_log.views.list_for_user(bundle.request, bundle.obj.id, rest=True)
+        bundle.data['actions_on_user'] = api.utils.extract_log_actions(bundle.request, bundle.obj.id, actions_on_user)
+
         return bundle
 
 
