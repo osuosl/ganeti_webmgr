@@ -71,13 +71,6 @@ urlpatterns += patterns('ganeti_web.views.general',
     url(r'^keys/(?P<api_key>\w+)/$', 'ssh_keys', name="key-list"),
 )
 
-#Groups
-urlpatterns += patterns('muddle_users.views.group',
-    url(r'^group/(?P<id>\d+)/?$', 'detail',
-            {'template':'ganeti/group/detail.html'},
-            name="group-detail"),
-)
-
 # Clusters
 urlpatterns += patterns('ganeti_web.views.cluster',
     #   List
