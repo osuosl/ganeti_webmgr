@@ -21,13 +21,24 @@ function modifyFormUpdater(nic_count_original) {
     var nic_add =    $("#nics .add");
     var nic_delete = $("#nics .delete");
 
+    // Disks
+    var image_path = $("#id_cdrom_image_path").parent("p");
+    var image2_path = $("#id_cdrom2_image_path").parent("p");
+
+    // Boot order 
+    var boot_order =            $("#id_boot_order");
+
+
     this.init = function() {
         // Hide vnc_x509_path and verify if checkbox enabled
         if( !vnc_tls.is(':checked')) {
             vnc_x509_path_field.hide();
             vnc_x509_verify.parent().hide();
         }
-
+        //hide CDROM image paths unless boot device is CDROM
+        if ($(boot_order).children("option:selected").val()!="cdrom"){
+            _imagePathHide();
+        }
         _initChangeHooks();
     };
 
@@ -95,6 +106,22 @@ function modifyFormUpdater(nic_count_original) {
         nic_count.val(nics.children('p').length);
         //XXX hide delete buttons for everything but the last element
         nics.children('.delete').not(':last').hide();
+
+        // boot device change
+        boot_order.live("change", function(){
+            /* 
+            Only show image path stuffs if CD-ROM is selected in the boot 
+            order dropdown.
+            */
+            var id = $(this).children("option:selected").val();
+            if(id == "cdrom"){
+                _imagePathShow();
+            } else {
+                _imagePathHide();
+            }
+        });
+
+
     }
 
     function _add_nic() {
@@ -154,5 +181,16 @@ function modifyFormUpdater(nic_count_original) {
             i++;
         });
     }
+
+    function _imagePathHide(){
+        image_path.hide();
+        image2_path.hide();
+    }
+
+    function _imagePathShow(){
+        image_path.show();
+        image2_path.show();
+    }
+
 }
 
