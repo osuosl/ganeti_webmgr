@@ -74,8 +74,7 @@ class UserResource(ModelResource):
             bundle.data['api_key'] = ApiKey.objects.get(user__pk=bundle.obj.id).key
         except(ApiKey.DoesNotExist):
             {}
-        #cluster_user = ClusterUser.objects.get(name=bundle.obj.name)
-        #perms_info = object_permissions.views.groups.all_permissions(bundle.request, bundle.data['id'], rest=True)
+        used_resources = []
 
         # group memberships
         bundle.data['groups'] = []
@@ -95,6 +94,8 @@ class UserResource(ModelResource):
         perm_objects = bundle.obj.get_all_objects_any_perms(groups=False)
         obj_res_instances = {VirtualMachine:VMResource, Group:GroupResource, Cluster:ClusterResource}
 
+        cluster_user = ClusterUser.objects.get(name=bundle.obj.username)
+
         perm_results = {}
         for key in perm_objects.keys():
             objects = perm_objects.get(key)
@@ -105,8 +106,12 @@ class UserResource(ModelResource):
                     for loc_perm in bundle.obj.get_all_permissions(object):
                         temp_obj_perms.append(loc_perm)
                     temp_obj.append({'object':obj_res_instances.get(key)().get_resource_uri(object),'permissions':temp_obj_perms})
+                    used_resources.append({'object':obj_res_instances.get(key)().get_resource_uri(object), 'resources_used':cluster_user.used_resources(object,only_running = False)})
             perm_results[key.__name__]=temp_obj
         bundle.data['permissions'] = perm_results
+
+        bundle.data['used_resources'] = used_resources
+
         return bundle
 
 
@@ -181,21 +186,34 @@ class GroupResource(ModelResource):
 
         if (perms_info.has_key('error')):
             return bundle
-        bundle.data['permissions']={'vm':[], 'cluster':[]}
+        bundle.data['permissions']={}
         bundle.data['users']=[]
         bundle.data['used_resources']=[]
         used_resources = []
+        
         cluster_user = ClusterUser.objects.get(name=bundle.obj.name)
+        obj_res_instances = {'VirtualMachine':VMResource, 'Group':GroupResource, 'Cluster':ClusterResource}
 
-        if (perms_info.has_key('perm_dict') and len(perms_info['perm_dict']) > 0):
-            if (perms_info.get('perm_dict').has_key('Cluster')):
-                for cl in perms_info.get('perm_dict').get('Cluster'):
-                    bundle.data['permissions']['cluster'].append({'object':ClusterResource().get_resource_uri(cl), 'permissions':get_group_perms(bundle.obj, cl)})
-                    used_resources.append({'object':ClusterResource().get_resource_uri(cl), 'resources_used':cluster_user.used_resources(cl,only_running = False)})
+        perm_results = {}
+        if (perms_info.has_key('perm_dict')):
+            for key in perms_info.get('perm_dict').keys():
+                objects = perms_info.get('perm_dict').get(key)
+                temp_obj = []
+                for object in objects:
+                    if obj_res_instances.has_key(key):
+                        temp_obj_perms = []
+                        #for loc_perm in bundle.obj.get_all_permissions(object):
+                        #    temp_obj_perms.append(loc_perm)
+                        temp_obj.append({'object':obj_res_instances.get(key)().get_resource_uri(object),'permissions':get_group_perms(bundle.obj, object)})
+                        used_resources.append({'object':obj_res_instances.get(key)().get_resource_uri(object), 'resources_used':cluster_user.used_resources(object,only_running = False)})
+                perm_results[key]=temp_obj
+        bundle.data['permissions'] = perm_results
 
-            if (perms_info.get('perm_dict').has_key('VirtualMachine')):
-                for vm in perms_info.get('perm_dict').get('VirtualMachine'):
-                    bundle.data['permissions']['vm'].append({'object':VMResource().get_resource_uri(vm), 'permissions':get_group_perms(bundle.obj, vm)})
+
+        bundle.data['permissions'] = perm_results
+
+        bundle.data['used_resources'] = used_resources
+
 
         # group users
         users = User.objects.filter(groups=bundle.obj.id)
@@ -233,28 +251,6 @@ class CachedCluster(ModelResource):
         object_class = CachedClusterObject
         #queryset = CachedClusterObject.objects.all()
         resource_name='cco'
-
-
-class ClusterUserResource(ModelResource):
-
-    class Meta:
-        queryset = ClusterUser.objects.all()
-        object_class = ClusterUser
-        resource_name = 'cluster_user'
-        allowed_methods = ['get']
-        authentication = ApiKeyAuthentication()
-        authorization = DjangoAuthorization()
-
-
-    def dehydrate(self, bundle):
-        cluster_user = bundle.obj
-        x = cluster_user.used_resources()
-        ug = {}
-        for y in x:
-            vm = VirtualMachine.objects.get(pk=y)
-            ug[vm.hostname]=x[y] # TODO integrate vm with link relation
-        bundle.data['vms'] = ug
-        return bundle
 
 
 class ClusterResource(ModelResource):
