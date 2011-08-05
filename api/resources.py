@@ -91,6 +91,22 @@ class UserResource(ModelResource):
         actions_on_user = object_log.views.list_for_user(bundle.request, bundle.obj.id, rest=True)
         bundle.data['actions_on_user'] = api.utils.extract_log_actions(bundle.request, bundle.obj.id, actions_on_user)
 
+        # user permissions
+        perm_objects = bundle.obj.get_all_objects_any_perms(groups=False)
+        obj_res_instances = {VirtualMachine:VMResource, Group:GroupResource, Cluster:ClusterResource}
+
+        perm_results = {}
+        for key in perm_objects.keys():
+            objects = perm_objects.get(key)
+            temp_obj = []
+            for object in objects:
+                if obj_res_instances.has_key(key):
+                    temp_obj_perms = []
+                    for loc_perm in bundle.obj.get_all_permissions(object):
+                        temp_obj_perms.append(loc_perm)
+                    temp_obj.append({'object':obj_res_instances.get(key)().get_resource_uri(object),'permissions':temp_obj_perms})
+            perm_results[key.__name__]=temp_obj
+        bundle.data['permissions'] = perm_results
         return bundle
 
 
@@ -162,6 +178,7 @@ class GroupResource(ModelResource):
 
         # permissions on virtual machines and clusters
         perms_info = object_permissions.views.groups.all_permissions(bundle.request, bundle.data['id'], rest=True)
+
         if (perms_info.has_key('error')):
             return bundle
         bundle.data['permissions']={'vm':[], 'cluster':[]}
@@ -188,9 +205,9 @@ class GroupResource(ModelResource):
         # used resources by group objects
         bundle.data['used_resources'] = used_resources
 
-        # get log items
-        log = object_log.views.list_for_group(bundle.request, bundle.obj.id, True)
-        bundle.data['log'] = api.utils.extract_log_actions(bundle.request, bundle.obj.id, log)
+        # actions on group
+        actions_on_group = object_log.views.list_for_group(bundle.request, bundle.obj.id, True)
+        bundle.data['actions_on_group'] = api.utils.extract_log_actions(bundle.request, bundle.obj.id, actions_on_group)
 
         return bundle
 
