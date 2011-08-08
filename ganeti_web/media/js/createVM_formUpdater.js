@@ -97,6 +97,7 @@ function formUpdater(url_choices, url_options, url_defaults){
         // process the owner dropdown, i.e., if it only has a single option, 
         // select it, and make the dropdown read-only
         disableSingletonDropdown(owner, blankOptStr);
+        disableSingletonDropdown(hypervisor, blankOptStr);
     };
     
     function _initChangeHooks(){
