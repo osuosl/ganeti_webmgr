@@ -73,14 +73,3 @@ class TestVirtualMachineTemplateCopyForm(TestCase):
         non_req_fields = [f for f in form.fields if f not in fields]
         for field in non_req_fields:
             self.assertFalse(form.fields[field].required)
-        
-
-    def test_copy_success(self):
-        """
-        Test form succeeds in creating a template copy
-        
-        Verifies:
-            * New template created
-            * All old template values copied
-        """
-        raise NotImplementedError
