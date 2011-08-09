@@ -61,6 +61,7 @@ class TemplateTestCase(TestCase, UserTestMixin):
 
         self.users = users
         self.template = template
+        self.cluster = cluster
         self.template_data = template_data
         self.template_fields = fields
         

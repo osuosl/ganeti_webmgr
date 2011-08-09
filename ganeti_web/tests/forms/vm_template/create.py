@@ -18,22 +18,6 @@ class TestVirtualMachineTemplateForm(TemplateTestCase):
             form = VirtualMachineTemplateForm(user=user)
             self.assertFalse(form.is_bound)
 
-    def test_form_from_instance(self):
-        """
-        Test form instantiation from an instance.
-
-        Verifies:
-            * Correct instance set
-            * All instance fields set
-        """
-        for user in self.users.values():
-            form = VirtualMachineTemplateForm(user=user, instance=self.template)
-            self.assertFalse(form.is_bound)
-            self.assertTrue(form.is_valid())
-            self.assertEqual(form.instance, self.template)
-            for field in self.template_fields:
-                self.assertEqual(field, form.fields[field].initial)
-
     def test_form_from_initial(self):
         """
         Test form instantiation from initial kwarg.
@@ -43,11 +27,15 @@ class TestVirtualMachineTemplateForm(TemplateTestCase):
             * Form validation is not run
         """
         for user in self.users.values():
-            form = VirtualMachineTemplateForm(user=user, initial=self.template_data)
+            initial = self.template_data
+            form = VirtualMachineTemplateForm(initial=initial, user=user)
             self.assertFalse(form.is_bound)
-            for field in form.fields:#self.template_fields:
+            self.assertEqual(form.errors, {})
+            # A form cannot be validated without being 
+            #  instantiated with data (arg[0])
+            self.assertFalse(form.is_valid())
+            for field in initial:
                 self.assertTrue(field in form.fields)
-                self.assertEqual(self.template_data[field], form.fields[field].initial)
 
     def test_form_from_data(self):
         """
@@ -58,9 +46,14 @@ class TestVirtualMachineTemplateForm(TemplateTestCase):
             * Form validation is run
         """
         for user in self.users.values():
+            data = self.template_data.copy()
+            data['cluster'] = self.cluster
             form = VirtualMachineTemplateForm(self.template_data, user=user)
             self.assertTrue(form.is_bound)
             self.assertTrue(form.is_valid())
+            for field in self.template_data:
+                self.assertTrue(field in form.fields)
+                self.assertEqual(data[field], form.cleaned_data[field])
 
 
     def test_form_required_fields(self):
