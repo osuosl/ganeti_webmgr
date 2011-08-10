@@ -99,6 +99,7 @@ function formUpdater(url_choices, url_options, url_defaults){
         // select it, and make the dropdown read-only
         disableSingletonDropdown(owner, blankOptStr);
         disableSingletonDropdown(hypervisor, blankOptStr);
+        disableSingletonDropdown(cluster, blankOptStr);
     };
     
     function _initChangeHooks(){
