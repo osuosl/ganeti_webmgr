@@ -90,6 +90,11 @@ function formUpdater(url_choices, url_options, url_defaults){
         // setup form element change hooks
         _initChangeHooks();
 
+        //recover from form error
+        if(no_install.is(":checked")){
+            start.hide();
+        }
+
         // fire off some initial changes
         iallocator.change();
         disk_template.change();
