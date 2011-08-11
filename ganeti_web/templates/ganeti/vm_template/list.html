@@ -34,6 +34,8 @@
             <td>{{template.disk_size|render_storage}}</td>
             <td>{{template.vcpus}}</td>
         </tr>
+        {% empty %}
+        <tr class="none"><td colspan="100%">{% trans "No Templates" %}</td></tr>
         {% endfor %}
     </tbody>
 </table>
