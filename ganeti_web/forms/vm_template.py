@@ -125,6 +125,12 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
             else:
                 self.fields[field].required = True
 
+    def clean_template_name(self):
+        name = self.cleaned_data['template_name']
+        if name.strip(' ') == '':
+            raise forms.ValidationError(_("Name cannot consist of spaces."))
+        return name
+
     def clean(self):
         data = self.cleaned_data
 
