@@ -34,6 +34,10 @@
     after creation. If you do so, you can start it manually on the
     virtual machine detail page.{% endblocktrans %}
     </p>
+    <p>
+    {% blocktrans %}This option is only available if you choose to install an operating
+    system when creating the virtual machine. {% endblocktrans %}
+    </p>
 </div>
 <div id="help-name_check">
     <p>
@@ -246,4 +250,17 @@
         {% blocktrans %}The path to the second CDROM image, if multiple CDROMs are supported by the selected hypervisor.{% endblocktrans %}
     </p>
 </div>
-
+<div id="help-no_install">
+    <p>
+        {% blocktrans%}Skip installing the operating system when creating the 
+            VM. Use this option if you plan to manually set up the virtual machine.
+        {% endblocktrans %} 
+    </p>
+    <p>
+        {% blocktrans %}
+            Note that even if you aren't installing an operating system, you must select one
+            from the list to fulfill Ganeti's parameter requirements. The selected OS will 
+            be associated with the VM, but not installed.
+        {% endblocktrans %}
+    </p>
+</div>

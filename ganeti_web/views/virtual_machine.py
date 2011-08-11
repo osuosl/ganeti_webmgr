@@ -628,6 +628,7 @@ def create(request, cluster_slug=None):
         if form.is_valid():
             data = form.cleaned_data
             start = data.get('start')
+            no_install = data.get('no_install')
             owner = data.get('owner')
             grantee = data.get('grantee')
             cluster = data.get('cluster')
@@ -703,6 +704,7 @@ def create(request, cluster_slug=None):
                 job_id = cluster.rapi.CreateInstance('create', hostname,
                         disk_template,
                         disks,nics,
+                        no_install=no_install,
                         start=start, os=os,
                         pnode=pnode, snode=snode,
                         name_check=name_check, ip_check=name_check,

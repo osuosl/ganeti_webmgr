@@ -529,7 +529,7 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
         model = VirtualMachineTemplate
         exclude = ('start', 'owner', 'cluster', 'hostname', 'name_check',
         'iallocator', 'iallocator_hostname', 'disk_template', 'pnode', 'nics',
-        'snode','disk_size', 'nic_mode', 'template_name', 'hypervisor', 'disks')
+        'snode','disk_size', 'nic_mode', 'template_name', 'hypervisor', 'disks', 'no_install')
 
     def __init__(self, vm, initial=None, *args, **kwargs):
         super(VirtualMachineForm, self).__init__(initial, *args, **kwargs)
@@ -596,7 +596,7 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
         kernel_path = data.get('kernel_path')
         initrd_path = data.get('initrd_path')
 
-        # Makesure if initrd_path is set, kernel_path is aswell
+        # Make sure if initrd_path is set, kernel_path is aswell
         if initrd_path and not kernel_path:
             msg = u"%s." % _("Kernel Path must be specified along with Initrd Path")
             self._errors['kernel_path'] = self.error_class([msg])

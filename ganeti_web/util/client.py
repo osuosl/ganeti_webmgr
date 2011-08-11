@@ -627,6 +627,8 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
     @param nics: List of NIC definitions
     @type dry_run: bool
     @keyword dry_run: whether to perform a dry run
+    @type no_install: bool
+    @keyword no_install: whether to create without installing OS(true=don't install)
 
     @rtype: int
     @return: job id
@@ -636,6 +638,8 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
 
     if kwargs.get("dry_run"):
       query.append(("dry-run", 1))
+    if kwargs.get("no_install"):
+      query.append(("no-install",1))
 
     if _INST_CREATE_REQV1 in self.GetFeatures():
       # All required fields for request data version 1

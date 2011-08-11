@@ -30,6 +30,8 @@ function formUpdater(url_choices, url_options, url_defaults){
     var root_path =             $("#id_root_path");
     var kernel_path =           $("#id_kernel_path");
     var serial_console =        $("#id_serial_console").parent("p");
+    var no_install =            $("#id_no_install");
+    var start =                 $("#id_start").parent("p");
     var using_str =             " Using: ";
     var blankOptStr =           "---------";
     var nodes =                 null; // nodes available
@@ -209,6 +211,16 @@ function formUpdater(url_choices, url_options, url_defaults){
                     // trigger a change in the cluster
                     cluster.change();
                 });
+            }
+        });
+
+        //no-install change
+        no_install.live("change",function() {
+            if(no_install.is(":checked")){
+                start.hide();
+            } 
+            else{
+                start.show();
             }
         });
 
