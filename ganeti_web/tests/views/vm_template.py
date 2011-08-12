@@ -23,8 +23,9 @@ from django.contrib.auth.models import User
 from django_test_tools.users import UserTestMixin
 from django_test_tools.views import ViewTestMixin
 
-from ganeti_web.models import Cluster, VirtualMachineTemplate
-from ganeti_web.tests.rapi_proxy import INFO
+from ganeti_web import models
+from ganeti_web.models import Cluster, VirtualMachineTemplate, VirtualMachine
+from ganeti_web.tests.rapi_proxy import INFO, INSTANCE, RapiProxy
 
 
 __all__ = ('TestTemplateViews', )
@@ -36,47 +37,77 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
     """
     Test the views for VirtualMachineTemplates
     """
-
-    create_template_data = dict(
-        template_name='foo_bar',
-        memory=512,
-        disk_count=0,
-        nic_count=0,
-        )
-
     def setUp(self):
         self.tearDown()
+        models.client.GanetiRapiClient = RapiProxy
 
-        cluster = Cluster(hostname='test.cluster', slug='test')
-        cluster.info = INFO
+        cluster = Cluster(hostname='test.cluster', slug='test', username='tester', password='secret')
         cluster.save()
-        template = VirtualMachineTemplate(template_name="Template1")
-        template.cluster = cluster
+        cluster.sync_nodes()
+
+        template = VirtualMachineTemplate(template_name="Template1", cluster=cluster)
         template.disks = []
         template.nics = []
         template.save()
 
-        # unathorized and superuser added to globals 
+        instance = VirtualMachine(hostname='new.vm.hostname', cluster=cluster)
+        instance.info = INSTANCE
+        instance.disks = []
+        instance.nics = []
+        instance.save()
+
+        # Users
         self.create_users([
             ('superuser', {'is_superuser':True}), 
-            'unauthorized',
             'cluster_admin',
-            'create_vm'
+            'create_vm',
+            'unauthorized',
             ], globals())
         cluster_admin.grant('admin', cluster)
         create_vm.grant('create_vm', cluster)
 
-        self.create_template_data['cluster'] = cluster.pk
+        self.create_template_data = dict(
+            cluster=cluster.pk,
+            template_name='foo_bar',
+            memory=512,
+            disk_template = 'plain',
+            disk_count=0,
+            nic_count=0,
+        )
+
+        self.instance_data = dict(
+            start=True,
+            owner=unauthorized.pk,
+            cluster=cluster.pk,
+            hostname='new.vm.hostname2',
+            disk_template='plain',
+            disk_count=1,
+            disk_size_0=1000,
+            memory=256,
+            vcpus=2,
+            root_path='/',
+            pnode=cluster.nodes.all()[0],
+            snode=cluster.nodes.all()[1],
+            nic_type='paravirtual',
+            disk_type = 'paravirtual',
+            nic_count=1,
+            nic_link_0 = 'br43',
+            nic_mode_0='routed',
+            boot_order='disk',
+            os='image+ubuntu-lucid',
+        )
 
         context = dict(
             cluster=cluster,
             template=template,
+            instance=instance,
             c=Client()
         )
         globals().update(context)
 
     def tearDown(self):
         VirtualMachineTemplate.objects.all().delete()
+        VirtualMachine.objects.all().delete()
         Cluster.objects.all().delete()
         User.objects.all().delete()
     
@@ -239,3 +270,93 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assert_403(url, args, method='post',
             data=data_,
             users=[unauthorized])
+
+    def test_create_template_from_instance(self):
+        """
+        Test the create_template_from_instance view
+
+        Verifies:
+            * Only users authorized are able to view page
+            * Correct fields are set on the template
+        """
+        url = '/cluster/%s/%s/template/'
+        args = (cluster.slug, instance)
+        self.assert_standard_fails(url, args)
+
+        # Copied from create_template_from_instance view
+        # TODO figure out good way to associate the keys
+        #  of VirtualMachine to VirtualMachineTemplate
+        info = instance.info
+        links = info['nic.links']
+        modes = info['nic.modes']
+        sizes = info['disk.sizes']
+
+        data = dict(
+            template_name=instance.hostname,
+            cluster=cluster.id,
+            start=info['admin_state'],
+            disk_template=info['disk_template'],
+            disk_type=info['hvparams']['disk_type'],
+            nic_type=info['hvparams']['nic_type'],
+            os=instance.operating_system,
+            vcpus=instance.virtual_cpus,
+            memory=instance.ram,
+            disks=[{'size':size} for size in sizes],
+            nics=[{'mode':mode, 'link':link} for mode, link in zip(modes, links)],
+            nic_count=len(links),
+        )
+
+        def test_fields(user, response):
+            self.assertContains(response, instance)
+            form = response.context['form']
+            for field in data:
+                self.assertEqual(data[field], form.initial[field])
+
+        # GET
+        self.assert_200(url, args, 
+            users = [superuser, create_vm, cluster_admin],
+            tests = test_fields,
+            template='ganeti/vm_template/create.html')
+        self.assert_403(url, args,
+            users = [unauthorized])
+
+    def test_create_instance_from_template(self):
+        """
+        Test the create_instance_from_template view
+
+        Verifies:
+            * Only authorized users are able to access view
+            * Correct fields are set on the template
+        """
+        url = '/cluster/%s/template/%s/vm/'
+        args = (cluster.slug, template)
+        self.assert_standard_fails(url, args)
+
+        # Copied from create_instance_from_template
+        data = dict(
+            hostname=template.template_name,
+            cluster=template.cluster_id,
+        )
+        data.update(vars(template))
+        ignore_fields = ('disks', '_state', 'pnode', 'snode',
+            'description', '_cluster_cache')
+        for field in ignore_fields:
+            del data[field]
+        data['disk_count'] = len(template.disks)
+        for i,disk in enumerate(template.disks):
+            data['disk_size_%s'%i] = disk['size']
+
+        def test_fields(user, response):
+            self.assertContains(response, template)
+            form = response.context['form']
+            for field in data:
+                self.assertEqual(data[field], form.initial[field])
+
+        # GET
+        self.assert_200(url, args, 
+            users = [superuser, create_vm, cluster_admin],
+            tests = test_fields,
+            template='ganeti/virtual_machine/create.html')
+        self.assert_403(url, args,
+            users = [unauthorized])
+
