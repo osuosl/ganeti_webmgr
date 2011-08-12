@@ -255,6 +255,7 @@ function formUpdater(url_choices, url_options, url_defaults){
     }
 
     function _update_options(data) {
+        var pnode       = $("#id_pnode");
         var snode       = $("#id_snode");
         var oslist      = $("#id_os");
         var child, child2;
