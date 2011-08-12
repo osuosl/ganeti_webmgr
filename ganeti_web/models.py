@@ -1297,6 +1297,8 @@ class VirtualMachineTemplate(models.Model):
     cluster = models.ForeignKey('Cluster', null=True)
     start = models.BooleanField(verbose_name=_('Start up After Creation'), \
                 default=True)
+    no_install = models.BooleanField(verbose_name=_('Do not install OS'), \
+                default=False)
     name_check = models.BooleanField(verbose_name=_('DNS Name Check'), \
                 default=True)
     iallocator = models.BooleanField(verbose_name=_('Automatic Allocation'), \
