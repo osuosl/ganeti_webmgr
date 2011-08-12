@@ -619,13 +619,14 @@ function formUpdater(url_choices, url_options, url_defaults){
 
     var AJAX_CACHE = {};
     function _cached_get(url, data, callback) {
-        var response = AJAX_CACHE[url];
+        var key = _encode_url(url, data);
+        var response = AJAX_CACHE[key];
         if (response == undefined ) {
 
             // create a callback function that will execute for all calls to
             // this url.  helps deal with multiple simultaneous calls to a url
             var _callback = function(response, status, xhr) {
-                AJAX_CACHE[url] = response;
+                AJAX_CACHE[key] = response;
                 var callbacks = _callback.callbacks;
                 for (var i in callbacks) {
                     callbacks[i](response, status, xhr);
@@ -639,10 +640,9 @@ function formUpdater(url_choices, url_options, url_defaults){
             }
             
             $.getJSON(url, data, _callback);
-            AJAX_CACHE[url] = _callback;
+            AJAX_CACHE[key] = _callback;
         } else if (callback != undefined) {
             if (response.callbacks != undefined) {
-                //response.callbacks.push(callback);
                 _push_unique(response.callbacks, callback);
             } else {
                 callback(response);
@@ -658,5 +658,14 @@ function formUpdater(url_choices, url_options, url_defaults){
        }
        array.push(item);
     }
+
+    function _encode_url(url, data)
+    {
+       var ret = [];
+       for (var d in data)
+          ret.push(encodeURIComponent(d) + "=" + encodeURIComponent(data[d]));
+       return url+'?'+ret.join("&");
+    }
+
 }
 
