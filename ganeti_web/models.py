@@ -717,7 +717,7 @@ class VirtualMachine(CachedClusterObject):
             .update(last_job=job, ignore_cache=True)
         return job
 
-    def setup_vnc_forwarding(self, sport=''):
+    def setup_vnc_forwarding(self, sport="0", tls=False):
         password = ''
         info_ = self.info
         port = info_['network_port']
@@ -727,7 +727,8 @@ class VirtualMachine(CachedClusterObject):
         if settings.VNC_PROXY:
             proxy_server = settings.VNC_PROXY.split(":")
             password = generate_random_password()
-            result = request_forwarding(proxy_server, sport, node, port, password)
+            result = request_forwarding(proxy_server, node, port, password,
+                                        sport=int(sport), tls=tls)
             if not result:
                 return False, False, False
             else:
@@ -777,6 +778,7 @@ class Node(CachedClusterObject):
     ram_free = models.IntegerField(default=-1)
     disk_total = models.IntegerField(default=-1)
     disk_free = models.IntegerField(default=-1)
+    cpus = models.IntegerField(null=True)
 
     # The last job reference indicates that there is at least one pending job
     # for this virtual machine.  There may be more than one job, and that can
@@ -826,6 +828,7 @@ class Node(CachedClusterObject):
         data['ram_free'] = info['mfree'] if info['mfree'] is not None else 0
         data['disk_total'] = info['dtotal'] if info['dtotal'] is not None else 0
         data['disk_free'] = info['dfree'] if info['dfree'] is not None else 0
+        data['cpus'] = info['csockets'] if 'csockets' in info else None
         data['offline'] = info['offline']
         data['role'] = info['role']
         return data
@@ -892,6 +895,14 @@ class Node(CachedClusterObject):
         free = total-allocated if allocated >= 0 and total >=0  else -1
 
         return {'total':total, 'free': free, 'allocated':allocated, 'used':used}
+
+    @property
+    def allocated_cpus(self):
+        values = VirtualMachine.objects \
+            .filter(primary_node=self, status='running') \
+            .exclude(virtual_cpus=-1).order_by() \
+            .aggregate(cpus=Sum('virtual_cpus'))
+        return 0 if 'cpus' not in values or values['cpus'] is None else values['cpus']
     
     def set_role(self, role, force=False):
         """
@@ -1287,6 +1298,8 @@ class VirtualMachineTemplate(models.Model):
     cluster = models.ForeignKey('Cluster', null=True)
     start = models.BooleanField(verbose_name=_('Start up After Creation'), \
                 default=True)
+    no_install = models.BooleanField(verbose_name=_('Do not install OS'), \
+                default=False)
     name_check = models.BooleanField(verbose_name=_('DNS Name Check'), \
                 default=True)
     iallocator = models.BooleanField(verbose_name=_('Automatic Allocation'), \
@@ -1320,6 +1333,9 @@ class VirtualMachineTemplate(models.Model):
                                   null=True, blank=True)
     cdrom_image_path = models.CharField(verbose_name=_('CD-ROM Image Path'), null=True, \
                 blank=True, max_length=512)
+    cdrom2_image_path = models.CharField(
+        verbose_name=_('CD-ROM 2 Image Path'), null=True, blank=True,
+        max_length=512)
 
     class Meta:
         unique_together = (("cluster", "template_name"),)

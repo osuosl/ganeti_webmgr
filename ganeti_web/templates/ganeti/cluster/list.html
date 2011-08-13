@@ -30,7 +30,7 @@
 {% endblock %}
 
 {% block content %}
-<h1>Clusters</h1>
+<h1 class="breadcrumb">Clusters</h1>
 
 {% if user.is_superuser %}
 <a class="button add" href="{% url cluster-create %}">{% trans "Add Cluster" %}</a>

@@ -26,13 +26,31 @@ function formUpdater(url_choices, url_options, url_defaults){
     var iallocator_hostname =   $("#id_iallocator_hostname");
     var boot_order =            $("#id_boot_order");
     var image_path =            $("#id_cdrom_image_path").parent("p");
+    var image2_path =           $("#id_cdrom2_image_path").parent("p");
     var root_path =             $("#id_root_path");
     var kernel_path =           $("#id_kernel_path");
     var serial_console =        $("#id_serial_console").parent("p");
+    var no_install =            $("#id_no_install");
+    var start =                 $("#id_start").parent("p");
     var using_str =             " Using: ";
     var blankOptStr =           "---------";
     var nodes =                 null; // nodes available
     var oldid; // global for hypervisor.change function
+
+    var template_choices = $("\
+            <option value=''>---------</option>\
+            <option value='plain'>plain</option>\
+            <option value='drbd'>drbd</option>\
+            <option value='file'>file</option>\
+            <option value='diskless'>diskless</option>\
+        ".toString());
+
+    var single_node_template_choices = $("\
+            <option value=''>---------</option>\
+            <option value='plain'>plain</option>\
+            <option value='file'>file</option>\
+            <option value='diskless'>diskless</option>\
+        ".toString());
 
     // ------------
     // cluster defaults
@@ -72,15 +90,23 @@ function formUpdater(url_choices, url_options, url_defaults){
         // setup form element change hooks
         _initChangeHooks();
 
+        //recover from form error
+        if(no_install.is(":checked")){
+            start.hide();
+        }
+
         // fire off some initial changes
         iallocator.change();
         disk_template.change();
         boot_order.change();
         hypervisor.change();
-        
+
+        disableSingletonDropdown($("#id_pnode"), blankOptStr);
         // process the owner dropdown, i.e., if it only has a single option, 
         // select it, and make the dropdown read-only
         disableSingletonDropdown(owner, blankOptStr);
+        disableSingletonDropdown(hypervisor, blankOptStr);
+        disableSingletonDropdown(cluster, blankOptStr);
     };
     
     function _initChangeHooks(){
@@ -193,6 +219,16 @@ function formUpdater(url_choices, url_options, url_defaults){
             }
         });
 
+        //no-install change
+        no_install.live("change",function() {
+            if(no_install.is(":checked")){
+                start.hide();
+            } 
+            else{
+                start.show();
+            }
+        });
+
         // cluster change
         cluster.live("change", function() {
             var child, child2;
@@ -207,6 +243,7 @@ function formUpdater(url_choices, url_options, url_defaults){
                     var oldpnode = pnode.val();
                     var oldsnode = snode.val();
                     var oldos = oslist.val();
+                    var old_template = disk_template.val();
 
                     pnode.children().not(":first").remove();
                     snode.children().not(":first").remove();
@@ -230,10 +267,19 @@ function formUpdater(url_choices, url_options, url_defaults){
                     // make nodes publically available
                     nodes = data["nodes"];
 
+                    // update disk template choices
+                    disk_template.empty();
+                    if (nodes.length == 1){
+                        disk_template.html(single_node_template_choices);
+                    } else {
+                        disk_template.html(template_choices);
+                    }
+
                     // Restore old choices from before, if possible.
                     pnode.val(oldpnode);
                     snode.val(oldsnode);
                     oslist.val(oldos);
+                    disk_template.val(old_template);
 
                     // And finally, do the singleton dance.
                     disableSingletonDropdown(pnode, blankOptStr);
@@ -400,16 +446,22 @@ function formUpdater(url_choices, url_options, url_defaults){
             if(d["cdrom_image_path"]){
                 image_path.find("input").val(d["cdrom_image_path"]);
             }
+            //second cdrom
+            if(d["cdrom2_image_path"]){
+                image2_path.find("input").val(d["cdrom2_image_path"]);
+            }
             disableSingletonDropdown(hypervisor, blankOptStr);
         });
     }
 
     function _imagePathHide(){
         image_path.hide();
+        image2_path.hide();
     }
 
     function _imagePathShow(){
         image_path.show();
+        image2_path.show();
     }
 
     function _iallocatorDisable(){
@@ -443,7 +495,7 @@ function formUpdater(url_choices, url_options, url_defaults){
     function _hideHvmKvmElements() {
         // Hide hvm + kvm specific hypervisor fields
         boot_order.parent("p").hide();
-        image_path.hide(); 
+        image_path.hide();
         nic_type.parent("p").hide();
         disk_type.parent("p").hide();
     }
@@ -521,7 +573,7 @@ function formUpdater(url_choices, url_options, url_defaults){
         nic_count.val(parseInt(count)+1);
         var p = $('<p></p>');
         var label = $("<label>NIC/" + count +"</label>");
-        
+
         // create mode select box
         var mode = $('<select></select>');
         mode.append('<option>----------</option>');

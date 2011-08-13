@@ -11,11 +11,11 @@
     <p><b><i>{% trans "This will be deducted from the owner's quota" %}.</i></b></p>
 </div>
 <div id="help-nic_link">
-    <p>
+    <p>{% comment %}Translators: The word *bridged* should remain in English {% endcomment %}
         {% blocktrans %}In <b>bridged</b> mode, it specifies the bridge interface to
         attach this NIC to on the node <i>(e.g. br0)</i>.{% endblocktrans %}
     </p>
-    <p>
+    <p>{% comment %}Translators: The word *routed* should remain in English {% endcomment %}
         {% blocktrans %}In <b>routed</b> mode it's intended to differentiate between 
         different routing tables/virtual machine groups (but the 
         meaning is dependant on the network script, see 

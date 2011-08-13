@@ -1,7 +1,6 @@
 # Custom Haystack search form for autocomplete searches
 
 from haystack.forms import SearchForm
-from haystack.query import SearchQuerySet
 
 
 class autocomplete_search_form(SearchForm):

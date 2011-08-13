@@ -218,10 +218,13 @@
                 <td>{{node.info.master_candidate|checkmark}}</td>
             </tr>
             <tr><th>{% trans "Drained" %}</th><td>{{node.info.drained|checkmark}}</td></tr>
+            <tr><th>{% trans "CPUs" %}</th><td>{{ node.cpus|default:"unknown" }}</td></tr>
+            <tr><th>{% trans "Allocated CPUs" %}</th><td>{{ node.allocated_cpus }}</td></tr>
             <tr><th>{% trans "Ram Allocated [GiB]" %}</th><td class="ram">{% node_memory node %}</td></tr>
             <tr><th>{% trans "Ram Used [GiB]" %}</th><td class="ram">{% node_memory node 0 %}</td></tr>
             <tr><th>{% trans "Disk Allocated [GiB]" %}</th><td class="disk">{% node_disk node %}</td></tr>
             <tr><th>{% trans "Disk Used [GiB]" %}</th><td class="disk">{% node_disk node 0 %}</td></tr>
+
             <tr>
                 <th>{% trans "Virtual Machines" %}</th>
                 <td>{{ node.info.pinst_cnt }} / {{ node.info.sinst_cnt }}</td>

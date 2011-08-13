@@ -34,6 +34,10 @@
     after creation. If you do so, you can start it manually on the
     virtual machine detail page.{% endblocktrans %}
     </p>
+    <p>
+    {% blocktrans %}This option is only available if you choose to install an operating
+    system when creating the virtual machine. {% endblocktrans %}
+    </p>
 </div>
 <div id="help-name_check">
     <p>
@@ -56,11 +60,11 @@
     {% blocktrans %}Automatically select primary and secondary node to allocate disks
     on.{% endblocktrans %}
     </p>
-    <p>
+    <p>{% blocktrans %}
     When selected it will use the cluster default 
     <a href="http://docs.ganeti.org/ganeti/current/html/iallocator.html">
     iallocator</a> (if set by the cluster). The iallocator being used
-    will be displayed after the checkbox.
+    will be displayed after the checkbox.{% endblocktrans %}
     </p>
 </div>
 <div id="help-disk_template">
@@ -90,7 +94,7 @@
     <p>
         {% blocktrans %}If drbd is selected, then a primary and secondary node will
         need to be chosen unless automatic allocation has been 
-        selection. DRBD will allow the virtual machine to use live 
+        selected as well. DRBD will allow the virtual machine to use live 
         migration and failover in case one of the nodes goes offline.{% endblocktrans %}
     </p>
 </div>
@@ -128,7 +132,7 @@
         no units are given, megabytes is assumed.{% endblocktrans %}
     </p>
     <p>
-        Acceptable Formats: 
+       {% trans "Acceptable Formats:" %} 
     </p>
     <ul>
         <li>
@@ -240,4 +244,23 @@
        machine.{% endblocktrans %}
     </p>
     <p>{% trans "Valid for the Xen HVM and KVM hypervisors" %}.</p>
+</div>
+<div id="help-cdrom2_image_path">
+    <p>
+        {% blocktrans %}The path to the second CDROM image, if multiple CDROMs are supported by the selected hypervisor.{% endblocktrans %}
+    </p>
+</div>
+<div id="help-no_install">
+    <p>
+        {% blocktrans%}Skip installing the operating system when creating the 
+            VM. Use this option if you plan to manually set up the virtual machine.
+        {% endblocktrans %} 
+    </p>
+    <p>
+        {% blocktrans %}
+            Note that even if you aren't installing an operating system, you must select one
+            from the list to fulfill Ganeti's parameter requirements. The selected OS will 
+            be associated with the VM, but not installed.
+        {% endblocktrans %}
+    </p>
 </div>

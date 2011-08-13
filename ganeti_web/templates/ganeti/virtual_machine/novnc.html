@@ -1,6 +1,6 @@
+{% load i18n %}
 <link rel="stylesheet" href="{{SITE_ROOT}}/novnc/plain.css" title="plain">
 <style>
-    #VNC_status_bar.VNC_status_bar {background-color:#ddd; margin-top:5px;}
     #actions {margin-bottom:30px;}
 </style>
 <script type="text/javascript">
@@ -8,19 +8,25 @@
     var INCLUDE_URI = "{{SITE_ROOT}}/novnc/";
     // Set path for proxy requests
     var PROXY_REQUEST_URI = "{% url instance-vnc-proxy cluster_slug instance.hostname %}";
+    {% if not popout %}
+    var POPOUT_URL = "{% url instance-vnc-popout cluster_slug instance.hostname %}";
+    {% endif %}
 </script>
 <script type="text/javascript" src="{{ SITE_ROOT }}/ganeti_web_media/js/noVNC.js"></script>
 
 <ul id="actions" class="horizontal">
-    <li><a id="encrypt" href="#" class="button encrypt">Encrypt</a></li>
-    <li><a id="connect" href="#" class="button connect">Connect</a></li>
+    <li><a id="encrypt" href="#" title="encrypt" class="button encrypt">{% trans "Encrypt" %}</a></li>
+    <li><a id="connect" href="#" title="connect to"class="button connect">{% trans "Connect" %}</a></li>
     {% ifequal instance.info.status "running" %}
-    <li><a class="button shutdown power" href="{% url instance-shutdown cluster_slug instance.hostname %}">Shutdown</a></li>
-    <li><a class="button reboot power" href="{% url instance-reboot cluster_slug instance.hostname %}">Reboot</a></li>
+    <li><a class="button shutdown power" title="shut down" href="{% url instance-shutdown cluster_slug instance.hostname %}">{% trans "Shutdown" %}</a></li>
+    <li><a class="button reboot power" title="reboot" href="{% url instance-reboot cluster_slug instance.hostname %}">{% trans "Reboot" %}</a></li>
     {% else %}
-    <li><a class="button startup power" href="{% url instance-startup cluster_slug instance.hostname %}">Start</a></li>
+    <li><a class="button startup power" href="{% url instance-startup cluster_slug instance.hostname %}">{% trans "Start" %}</a></li>
     {% endifequal %}
-    <li><a id="ctrlaltdelete" href="#" class="button reboot disabled" title="Send Ctrl-Alt-Delete">Ctrl-Alt-Delete</a></li>
+    <li><a id="ctrlaltdelete" href="#" class="button reboot disabled power" title="Send Ctrl-Alt-Delete">Ctrl-Alt-Delete</a></li>
+    {% if not popout %}
+    <li><a id="popout" href="#" class="button popout" title="popout vnc window"></a></li>
+    {% endif %}
 </ul>
 
 <input type="checkbox" id="encrypt_check" />
@@ -29,8 +35,8 @@
     <div id="VNC_status_bar" class="VNC_status_bar" style="margin-top: 5px;">
         noVNC client
     </div>
-    <canvas id="VNC_canvas" width="812px" height="400px">
-        Canvas is not supported in your browser. Please use new versions
-        of Chrome or Firefox.
+    <canvas id="VNC_canvas">
+        {% blocktrans %}Canvas is not supported in your browser. Please use new versions
+        of Chrome or Firefox.{% endblocktrans %}
     </canvas>
 </div>

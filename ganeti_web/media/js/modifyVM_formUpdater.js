@@ -27,7 +27,6 @@ function modifyFormUpdater(nic_count_original) {
             vnc_x509_path_field.hide();
             vnc_x509_verify.parent().hide();
         }
-
         _initChangeHooks();
     };
 
@@ -95,7 +94,6 @@ function modifyFormUpdater(nic_count_original) {
         nic_count.val(nics.children('p').length);
         //XXX hide delete buttons for everything but the last element
         nics.children('.delete').not(':last').hide();
-    }
 
     function _add_nic() {
         var count = nic_count.val();

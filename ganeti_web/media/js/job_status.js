@@ -14,20 +14,20 @@ function poll_job_status(cluster, job_id, callback, errback) {
 // The cluster should be the URL corresponding to a cluster slug.
 function get_job_status(cluster, job_id, callback, errback) {
     /* On success, clear the interval and run the callback. */
-    on_success = function() {
+    var on_success = function() {
         clearInterval(checkInterval);
         if (callback != undefined) {
             callback();
         }
-    }
+    };
 
     /* On error, clear the interval and run the errback. */
-    on_error = function() {
+    var on_error = function() {
         clearInterval(checkInterval);
         if (errback != undefined) {
             errback();
         }
-    }
+    };
 
     /* Run the AJAX call. */
     $.ajax({
@@ -93,10 +93,15 @@ function display_job(cluster, data) {
     }
 
     // XXX hack to ensure log area is same width as error area.
+    var width = undefined;
     if (log_html != undefined) {
-        var width = $(html).find('.scrollable .detector').width()
-        width -= (log_html.innerWidth() - log_html.width()) // subtract padding
+        width = $(html).find('.scrollable .detector').width();
+        width -= (log_html.innerWidth() - log_html.width()); // subtract padding
         log_html.width(width);
+        $(html).find('.scrollable').css('display', 'block')
+    } else if (error != undefined) {
+        width = error.width();
+        $(html).find('.scrollable .detector').width(width);
         $(html).find('.scrollable').css('display', 'block')
     }
 }

@@ -20,17 +20,77 @@ import cPickle
 # Per #6579, do not change this import without discussion.
 from django.utils import simplejson as json
 
-from twisted.internet import reactor
 from twisted.internet.defer import DeferredList, Deferred
 from twisted.web import client
-from ganeti_web.cacher import Timer, Counter
-from ganeti_web.models import Cluster, VirtualMachine
+from ganeti_web.cache import Timer, Counter
+from ganeti_web.models import Cluster, Node, VirtualMachine, Job
 
 
 JOBS_URL = 'https://%s:%s/2/jobs'
-JOB_URL = 'https://%s/%s/2/jobs/%s'
+JOB_URL = 'https://%s:%s/2/jobs/%s'
+COMPLETE_STATUS = ('success', 'error', 'unknown')
+IMPORTABLE_JOBS = {
+    'OP_CLUSTER_REDIST_CONF':[Cluster, 'cluster_name'],
+    'OP_NODE_MIGRATE':[Node, 'node_name'],
+    'OP_INSTANCE_ADD':[VirtualMachine, 'instance_name'],
+    'OP_INSTANCE_ADD_MDDRBD':[VirtualMachine, 'instance_name'],
+    'OP_INSTANCE_FAILOVER':[VirtualMachine, 'instance_name'],
+    'OP_INSTANCE_GROW_DISK':[VirtualMachine, 'instance_name'],
+    'OP_INSTANCE_MIGRATE':[VirtualMachine, 'instance_name'],
+    'OP_INSTANCE_MODIFY':[VirtualMachine, 'instance_name'],
+    'OP_INSTANCE_MOVE':[VirtualMachine, 'instance_name'],
+    'OP_INSTANCE_REBOOT':[VirtualMachine, 'instance_name'],
+    'OP_INSTANCE_RECREATE_DISKS':[VirtualMachine, 'instance_name'],
+    'OP_INSTANCE_REMOVE':[VirtualMachine, 'instance_name'],
+    'OP_INSTANCE_REMOVE_MDDRBD':[VirtualMachine, 'instance_name'],
+    'OP_INSTANCE_RENAME':[VirtualMachine, 'instance_name'],
+    'OP_INSTANCE_REPLACE_DISKS':[VirtualMachine, 'instance_name'],
+    'OP_INSTANCE_START':[VirtualMachine, 'instance_name'],
+    'OP_INSTANCE_SHUTDOWN':[VirtualMachine, 'instance_name'],
+}
+
+# excluded op codes.
+# 'OP_CLUSTER_POST_INIT':
+# 'OP_CLUSTER_DESTROY'
+# 'OP_CLUSTER_QUERY'
+# 'OP_CLUSTER_VERIFY'
+# 'OP_CLUSTER_VERIFY_DISKS'
+# 'OP_CLUSTER_REPAIR_DISK_SIZES'
+# 'OP_CLUSTER_CONFIG_QUERY'
+# 'OP_CLUSTER_RENAME'
+# 'OP_CLUSTER_SET_PARAMS'
+# 'OP_NODE_REMOVE'
+# 'OP_NODE_ADD'
+# 'OP_NODE_QUERY'
+# 'OP_NODE_QUERYVOLS'
+# 'OP_NODE_QUERY_STORAGE'
+# 'OP_NODE_MODIFY_STORAGE'
+# 'OP_NODE_SET_PARAMS'
+# 'OP_NODE_POWERCYCLE'
+# 'OP_NODE_EVAC_STRATEGY'
+# 'OP_TAGS_SET'
+# 'OP_TAGS_DEL'
 
 class JobCacheUpdater(object):
+
+    def update_sync(self):
+        """
+        TODO: make this into an async method.  this method is just a test to see
+        if an efficient update algorithm is possible
+
+        1) query job ids from cluster
+
+        Running Jobs:
+        2) create base query of jobs with those ids
+        3) filter jobs based on those not yet finished
+        4) query running jobs individually, updating the job and related object as needed
+        5) remove id from list
+
+        New Jobs:
+        6) any job leftover in the list is not yet in the database
+        """
+        #for cluster in Cluster.objects.all()
+        pass
 
     def update(self):
         """
@@ -60,91 +120,174 @@ class JobCacheUpdater(object):
         process data received from ganeti.
         """
         print '%s:' % cluster.hostname
-        ids = json.loads(info)
+        # parse json and repackage ids as a list
+        ids = set((int(d['id']) for d in json.loads(info)))
+        print ids
+
         self.timer.tick('info fetched from ganeti     ')
         updated = Counter()
 
-        # only import new jobs
-        db_ids = set(cluster.jobs.values_list('pk', flat=True))
-        new_ids = (id for id in ids if id not in db_ids)
-        deferreds = [self.update_job(cluster, pk, updated) for pk in new_ids]
-        deferred_list = DeferredList(deferreds)
+        # fetch list of jobs in the cluster that are not yet finished.  if the
+        # job is already finished then we don't need to update it
+        db_ids = set(cluster.jobs \
+                            .exclude(status__in=COMPLETE_STATUS) \
+                            .values_list('job_id', flat=True))
 
-        # batch update the cache updated time for all VMs in this cluster. This
-        # will set the last updated time for both VMs that were modified and for
-        # those that weren't.  even if it wasn't modified we want the last
-        # updated time to be up to date.
-        #
-        # XXX don't bother checking to see whether this query needs to run.  It
-        # normal usage it will almost always need to
-        # XXX undefined name "infos"
-        def update_timestamps(result):
-            print '    updated: %s out of %s' % (updated, len(infos))
-            self.timer.tick('records or timestamps updated')
-        deferred_list.addCallback(update_timestamps)
+        print 'running: ', db_ids
+
+        # update all running jobs and archive any that aren't found
+        # XXX this could be a choke point if there are many running jobs.  each
+        # job will be a separate ganeti query
+        current = db_ids & ids
+        archived = db_ids - ids
+        deferreds = [self.update_job(cluster, id, updated) for id in current]
+        ids -= current
+
+
+        print ids, current, archived
+
+        # get list of jobs that are finished.  use this to filter the list of
+        # ids further
+        # XXX this could be a joke point if there are a lot of IDs that are have
+        # completed but have not yet been archived by ganeti.
+        db_ids = cluster.jobs \
+                            .filter(job_id__in=ids, status__in=COMPLETE_STATUS) \
+                            .values_list('job_id', flat=True)
+        print 'completed: ', db_ids
+
+        ids -= set(db_ids)
+
+        print 'new: ', ids
+        
+        # any job id still left in the list is a new job.  Create the job and
+        # associate it with the object it relates to
+        for id in ids:
+            deferreds.append(self.import_job(cluster, id, updated))
+
+        # archive any jobs that we do not yet have a complete status for but
+        # were not found in list of jobs returned by ganeti
+        if archived:
+            self.archive_jobs(cluster, archived, updated)
 
         # XXX it would be nice if the deferred list could be returned and this
         # callback hooked up outside of the method, but that doesn't seem
         # possible
+        deferred_list = DeferredList(deferreds)
         deferred_list.addCallback(callback)
 
-    def get_job(self, cluster, id, updated):
-        """ gets a job """
+    def archive_jobs(self, cluster, archived, updated):
+        """
+        updates a job that has been archived
+        """
+        print 'archiving!'
+        updated += len(archived)
+        # XXX clear all archived jobs
+        Job.objects.filter(cluster=cluster, job_id__in=archived) \
+            .update(ignore_cache=True, status='unknown')
+
+        # XXX load all related objects to trigger their specific cleanup code.
+        len(VirtualMachine.objects.filter(cluster=cluster, last_job_id__in=archived))
+        len(Node.objects.filter(cluster=cluster, last_job_id__in=archived))
+        len(Cluster.objects.filter(cluster=cluster, last_job_id__in=archived))
+
+    def update_job(self, cluster, id, updated):
+        """
+        updates an individual Job
+
+        @param cluster - cluster this node is on
+        @param updated - counter object
+        @return Deferred chained to _update_job() call
+        """
         deferred = Deferred()
         d = client.getPage(str(JOB_URL % (cluster.hostname, cluster.port, id)))
-        d.addCallback(self.update_job, cluster, updated, deferred.callback)
+        d.addCallback(self._update_job, cluster, id, updated, deferred.callback)
+        d.addErrback(self._update_error, deferred.callback)
         return deferred
 
-    def update_job(self, cluster, id, updated, callback):
-        """
-        updates an individual Job: this just sets up the work in a
-        deferred by using callLater.  Actual work is done in _update_job().
+    def _update_error(self, error, callback):
+        print 'Error updating: %s' % error
+        callback(-1)
+        
 
-        @param cluster - cluster this node is on
+    def _update_job(self, info, cluster, id, updated, callback):
+        """
+        updates an individual Job, this is the actual work function.  Jobs that
+        have a complete state (success or error) are updated.  All other jobs
+        are ignored since job state is never cached.
+
         @param info - info from ganeti
-        @param data - data from database
-        @param updated - counter object
-        @return Deferred chained to _update_node() call
-        """
-        deferred = Deferred()
-        args = (cluster, id, updated, deferred.callback)
-        reactor.callLater(0, self._update_job, *args)
-        return deferred
-
-    def _update_job(self, cluster, info, data, updated, callback):
-        """
-        updates an individual Job, this is the actual work function
-
-        @param cluster - cluster this node is on
-        @param info - info from ganeti
-        @param data - data from database
+        @param cluster - cluster this job is on
+        @param id - job_id for job
         @param updated - counter object
         @param callback - callback fired when method is complete.
         """
-        name = info['name']
-        if name in data:
-            id, mtime, status = data[name]
-            if not mtime or mtime < info['mtime'] \
-            or status != info['status']:
-                print '    Virtual Machine (updated) : %s' % name
-                #print '        %s :: %s' % (mtime, datetime.fromtimestamp(info['mtime']))
-                # only update the whole object if it is new or modified.
-                #
-                # XXX status changes will not always be reflected in mtime
-                # explicitly check status to see if it has changed.  failing
-                # to check this would result in state changes being lost
-                parsed = VirtualMachine.parse_persistent_info(info)
-                VirtualMachine.objects.filter(pk=id) \
-                    .update(serialized_info=cPickle.dumps(info), **parsed)
-                updated += 1
-        else:
-            # new vm
-            vm = VirtualMachine(cluster=cluster, hostname=info['name'])
-            vm.info = info
-            vm.save()
+        if info['status'] in COMPLETE_STATUS:
+            parsed = Job.parse_persistent_info(info)
+            Job.objects.filter(job_id=id).update(
+                serialized_info=cPickle.dumps(info), **parsed)
 
+            # get related model and query the object.  Loading it will trigger
+            # any logic in check_job_status
+            op = info['ops'][0]
+            model, hostname_key = IMPORTABLE_JOBS[op['OP_ID']]
+            hostname = op[hostname_key]
+            if not isinstance(model, Cluster):
+                base = model.objects.filter(cluster=cluster)
+            else:
+                base = model.objects.all()
+            obj = base.get(hostname=hostname)
+
+            updated += 1
         callback(id)
 
+    def import_job(self, cluster, id, updated):
+        """
+        import an individual Job
+
+        @param cluster - cluster this job is on
+        @param id - job_id of job
+        @param updated - counter object
+        @return Deferred chained to _import_job() call
+        """
+        print 'importing : ', cluster, id
+        deferred = Deferred()
+        d = client.getPage(str(JOB_URL % (cluster.hostname, cluster.port, id)))
+        d.addCallback(self._import_job, cluster, id, updated, deferred.callback)
+        d.addErrback(self._update_error, deferred.callback)
+        return deferred
+
+    def _import_job(self, info, cluster, id, updated, callback):
+        """
+        import an individual Job, this is the actual work function.  Jobs that
+        have a complete state (success or error) are updated.  All other jobs
+        are ignored since job state is never cached.
+
+        @param info - info from ganeti
+        @param cluster - cluster this job is on
+        @param id - job_id for job
+        @param updated - counter object
+        @param callback - callback fired when method is complete.
+        """
+        print 'importing >>> : ', info, cluster, id
+        info = json.loads(info)
+        if any((op['OP_ID'] in IMPORTABLE_JOBS for op in info['ops'])):
+            # get related mode and object
+            op = info['ops'][0]
+            model, hostname_key = IMPORTABLE_JOBS[op['OP_ID']]
+            hostname = op[hostname_key]
+            base = model.objects.filter(hostname=hostname)
+            if not isinstance(base, Cluster):
+                base = base.filter(cluster=cluster)
+            (obj_id,) = base.values_list('pk', flat=True)
+
+            # create job
+            job = Job(cluster=cluster, job_id=id, obj_type=model, obj_id=obj_id)
+            job.cleared = info['status'] in COMPLETE_STATUS
+            job.info = info
+            job.save()
+            updated += 1
+        callback(id)
+    
     def complete(self, result):
         """ callback fired when everything is complete """
         self.timer.stop()

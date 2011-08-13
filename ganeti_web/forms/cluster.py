@@ -68,19 +68,36 @@ class EditClusterForm(forms.ModelForm):
         password = data.get('password', None)
         hostname = data.get("hostname", None)
 
-        if user and not password:
-            msg = _('Enter a password')
-            self._errors['password'] = self.error_class([msg])
+        if self.instance is None or not self.instance.username:
+            # new cluster or a cluster without a username set
+            if user and not password:
+                msg = _('Enter a password')
+                self._errors['password'] = self.error_class([msg])
 
-        elif password and not user:
-            msg = _('Enter a username')
-            self._errors['username'] = self.error_class([msg])
+            elif password and not user:
+                msg = _('Enter a username')
+                self._errors['username'] = self.error_class([msg])
 
-        # Automatically set the slug on cluster creation, based on the
-        # hostname, if no slug was provided.
-        if hostname and 'slug' not in data:
-            data['slug'] = slugify(hostname.split('.')[0])
-            del self._errors['slug']
+            # Automatically set the slug on cluster creation, based on the
+            # hostname, if no slug was provided.
+            if hostname and 'slug' not in data:
+                data['slug'] = slugify(hostname.split('.')[0])
+                del self._errors['slug']
+        
+        elif self.instance.username:
+            # cluster had a username set.  password is not required unless the
+            # username is changed
+            if user:
+                if user != self.instance.username and not password:
+                    msg = _('Enter a password')
+                    self._errors['password'] = self.error_class([msg])
+                elif not password:
+                    # user didn't enter a password and it wasn't required
+                    # retain existing password instead of setting to empty string
+                    data['password'] = self.instance.password
+
+            elif password:
+                msg = _('Enter a username')
+                self._errors['username'] = self.error_class([msg])
 
         return data
-

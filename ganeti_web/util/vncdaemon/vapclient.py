@@ -24,16 +24,35 @@ import json
 
 CTRL_SOCKET = "/tmp/vncproxy.sock"
 
-def request_forwarding(server, sport, daddr, dport, password):
+def request_forwarding(server, daddr, dport, password, sport=None, tls=False):
+    """
+    Ask TVAP/VNCAP for a forwarding port.
+
+    The control socket on TVAP wants a JSON dictionary containing at least the
+    destination port and address, and VNC password. It optionally can accept a
+    requested source port, whether WebSockets should be used, and whether TLS
+    (SSL/WSS) should be used.
+    """
+
     try:
         host, port = server
         port = int(port)
-        sport = int(sport) if sport else None
         dport = int(dport)
         if not password:
             return False
 
-        request = json.dumps({"sport":sport, "daddr":daddr, "dport":dport, "password":password})
+        request = {
+            "daddr":daddr,
+            "dport":dport,
+            "password":password,
+            "ws": True,
+            "tls": tls,
+        }
+
+        if sport:
+            request["sport"] = sport
+
+        request = json.dumps(request)
 
         ctrl = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         ctrl.connect( (host, port) )
@@ -46,6 +65,7 @@ def request_forwarding(server, sport, daddr, dport, password):
         else:
             return response
 
+    # XXX bare except
     except:
         return False
 

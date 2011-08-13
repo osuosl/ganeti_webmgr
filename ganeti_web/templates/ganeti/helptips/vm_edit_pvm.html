@@ -2,8 +2,8 @@
 <div id="help-initrd_path">
     <p>
         {% blocktrans %}This option specifies the path (on the node) to the initrd 
-        to boot the instance with. Xen PVM instances can use this 
-        always, while for KVM if this option is only used if the 
+        to boot the instance with. Xen PVM instances can always use this, 
+        while for KVM this option is only used if the 
         Kernel Path option is also specified.{% endblocktrans %} 
     </p>
     <p>
@@ -15,13 +15,13 @@
 </div>
 <div id="help-kernel_args">
     <p>
-        {% blocktrans %}This options specifies extra arguments to the kernel that will 
-        be loaded. device. This is always used for Xen PVM, while for
+        {% blocktrans %}This option specifies extra arguments to the kernel that will 
+        be loaded to the device. This is always used for Xen PVM, while for
         KVM it is only used if the kernel_path option is also specified.{% endblocktrans %}
     </p>
     <p>
         {% blocktrans %}The default setting for this value is simply "ro", which mounts
-        the root disk (initially) in read-only one. For example, setting
+        the root disk (initially) in read-only mode. For example, setting
         this to single will cause the instance to start in single-user mode.{% endblocktrans %}
     </p>
     <p>{% trans "Valid for the Xen PVM and KVM hypervisors" %}.</p>

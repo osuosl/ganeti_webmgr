@@ -73,13 +73,6 @@ urlpatterns += patterns('ganeti_web.views.general',
     url(r'^keys/(?P<api_key>\w+)/$', 'ssh_keys', name="key-list"),
 )
 
-#Groups
-urlpatterns += patterns('muddle_users.views.group',
-    url(r'^group/(?P<id>\d+)/?$', 'detail',
-            {'template':'ganeti/group/detail.html'},
-            name="group-detail"),
-)
-
 # Clusters
 urlpatterns += patterns('ganeti_web.views.cluster',
     #   List
@@ -158,6 +151,9 @@ urlpatterns += patterns('ganeti_web.views.virtual_machine',
     
     #  Start, Stop, Reboot, VNC
     url(r'^%s/vnc/?$' % vm_prefix, 'novnc', name="instance-vnc"),
+    url(r'^%s/vnc/popout/?$' % vm_prefix, 'novnc',
+                        {'template':'ganeti/virtual_machine/vnc_popout.html'},
+                        name="instance-vnc-popout"),
     url(r'^%s/vnc_proxy/?$' % vm_prefix, 'vnc_proxy', name="instance-vnc-proxy"),
     url(r'^%s/shutdown/?$' % vm_prefix, 'shutdown', name="instance-shutdown"),
     url(r'^%s/startup/?$' % vm_prefix, 'startup', name="instance-startup"),

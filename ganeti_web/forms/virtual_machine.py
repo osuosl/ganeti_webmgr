@@ -14,6 +14,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
+
 from django import forms
 from django.forms import ValidationError
 # Per #6579, do not change this import without discussion.
@@ -22,7 +23,8 @@ from django.utils import simplejson as json
 from ganeti_web.constants import EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES, \
     HV_NIC_MODES, HV_DISK_TYPES, HV_NIC_TYPES, KVM_NIC_TYPES, HVM_DISK_TYPES, \
     KVM_DISK_TYPES, KVM_BOOT_ORDER, HVM_BOOT_ORDER, KVM_CHOICES, HV_USB_MICE, \
-    HV_SECURITY_MODELS, KVM_FLAGS, HV_DISK_CACHES, MODE_CHOICES, HVM_CHOICES
+    HV_SECURITY_MODELS, KVM_FLAGS, HV_DISK_CACHES, MODE_CHOICES, HVM_CHOICES, \
+    HV_DISK_TEMPLATES_SINGLE_NODE
 from ganeti_web.fields import DataVolumeField, MACAddressField
 from ganeti_web.models import (Cluster, ClusterUser, Organization,
                            VirtualMachineTemplate, VirtualMachine)
@@ -140,10 +142,11 @@ class NewVirtualMachineForm(VirtualMachineForm):
     Virtual Machine Creation form
     """
     pvm_exclude_fields = ('disk_type','nic_type', 'boot_order', 'serial_console',
-        'cdrom_image_path')
+        'cdrom_image_path', 'cdrom2_image_path')
 
     empty_field = EMPTY_CHOICE_FIELD
     templates = HV_DISK_TEMPLATES
+    templates_single = HV_DISK_TEMPLATES_SINGLE_NODE
     nicmodes = HV_NIC_MODES
 
     disk_count = forms.IntegerField(initial=1,  widget=forms.HiddenInput())
@@ -167,6 +170,7 @@ class NewVirtualMachineForm(VirtualMachineForm):
     def __init__(self, user, *args, **kwargs):
         self.user = user
         initial = kwargs.get('initial', None)
+
         super(NewVirtualMachineForm, self).__init__(*args, **kwargs)
 
         # If data is not passed by initial kwarg (as in POST data)
@@ -174,10 +178,6 @@ class NewVirtualMachineForm(VirtualMachineForm):
         #   data.
         if initial is None:
             initial = self.data
-
-        # Make sure vcpus is required for this form. Don't want to go through
-        #  the trouble of overriding the model field.
-        self.fields['vcpus'].required = True
 
         cluster = None
         if initial:
@@ -209,7 +209,11 @@ class NewVirtualMachineForm(VirtualMachineForm):
         else:
             disk_count = 1
             nic_count = 1
-        
+
+        # Make sure vcpus is required for this form. Don't want to go through
+        #  the trouble of overriding the model field.
+        self.fields['vcpus'].required = True
+
         if cluster is not None and cluster.info is not None:
             # set choices based on selected cluster if given
             oslist = cluster_os_list(cluster)
@@ -220,6 +224,10 @@ class NewVirtualMachineForm(VirtualMachineForm):
             self.fields['pnode'].choices = nodes
             self.fields['snode'].choices = nodes
             self.fields['os'].choices = oslist
+
+            # must have at least two nodes to use drbd
+            if len(nodes) == 2:
+                self.fields['disk_template'].choices = self.templates_single
 
             hv = initial.get('hypervisor', None)
             if hv is not None:
@@ -338,12 +346,16 @@ class NewVirtualMachineForm(VirtualMachineForm):
         # If boot_order = CD-ROM make sure imagepath is set as well.
         boot_order = data.get('boot_order', '')
         image_path = data.get('cdrom_image_path', '')
+        image2_path = data.get('cdrom2_image_path','')
         if boot_order == 'cdrom':
             if image_path == '':
-                msg = u"%s." % _("Image path required if boot device is CD-ROM")
-                self._errors["cdrom_image_path"] = self.error_class([msg])
-                del data["cdrom_image_path"]
-
+                if image2_path == '':
+                    msg = u"%s." % _("Image path required if boot device is CD-ROM")
+                    self._errors["cdrom_image_path"] = self.error_class([msg])
+                    del data["cdrom_image_path"]
+                else:
+                    image_path, image2_path = image2_path, image_path
+ 
         if iallocator:
             # If iallocator is checked,
             #  don't display error messages for nodes
@@ -438,43 +450,6 @@ class NewVirtualMachineForm(VirtualMachineForm):
         iallocator_hostname = data.get('iallocator_hostname', '')
         disk_template = data.get("disk_template")
 
-        # Need to have pnode != snode
-        if disk_template == "drbd" and not iallocator:
-            if pnode == snode and (pnode != '' or snode != ''):
-                # We know these are not in self._errors now
-                msg = u"%s." % _("Primary and Secondary Nodes must not match")
-                self._errors["pnode"] = self.error_class([msg])
-
-                # These fields are no longer valid. Remove them from the
-                # cleaned data.
-                del data["pnode"]
-                del data["snode"]
-        else:
-            if "snode" in self._errors:
-                del self._errors["snode"]
-
-        # If boot_order = CD-ROM make sure imagepath is set as well.
-        boot_order = data.get('boot_order', '')
-        image_path = data.get('cdrom_image_path', '')
-        if boot_order == 'cdrom':
-            if image_path == '':
-                msg = u"%s." % _("Image path required if boot device is CD-ROM")
-                self._errors["cdrom_image_path"] = self.error_class([msg])
-                del data["cdrom_image_path"]
-
-        if iallocator:
-            # If iallocator is checked,
-            #  don't display error messages for nodes
-            if iallocator_hostname != '':
-                if 'pnode' in self._errors:
-                    del self._errors['pnode']
-                if 'snode' in self._errors:
-                    del self._errors['snode']
-            else:
-                msg = u"%s." % _("Automatic Allocation was selected, but there is no \
-                      IAllocator available.")
-                self._errors['iallocator'] = self.error_class([msg])
-
         # Check options which depend on the the hypervisor type
         hv = data.get('hypervisor')
         disk_type = data.get('disk_type')
@@ -553,7 +528,7 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
         exclude = ('start', 'owner', 'cluster', 'hostname', 'name_check',
         'iallocator', 'iallocator_hostname', 'disk_template', 'pnode', 'nics',
         'snode','disk_size', 'nic_mode', 'template_name', 'hypervisor', 'disks',
-        'description')
+        'description', 'no_install')
 
     def __init__(self, vm, initial=None, *args, **kwargs):
         super(VirtualMachineForm, self).__init__(initial, *args, **kwargs)
@@ -620,7 +595,7 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
         kernel_path = data.get('kernel_path')
         initrd_path = data.get('initrd_path')
 
-        # Makesure if initrd_path is set, kernel_path is aswell
+        # Make sure if initrd_path is set, kernel_path is aswell
         if initrd_path and not kernel_path:
             msg = u"%s." % _("Kernel Path must be specified along with Initrd Path")
             self._errors['kernel_path'] = self.error_class([msg])
@@ -708,6 +683,7 @@ class KvmModifyVirtualMachineForm(PvmModifyVirtualMachineForm,
         'boot_order', 'nic_type', 'root_path', 
         'kernel_path', 'serial_console', 
         'cdrom_image_path',
+        'cdrom2_image_path',
     )
     disk_caches = HV_DISK_CACHES
     kvm_flags = KVM_FLAGS

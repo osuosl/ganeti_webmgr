@@ -35,7 +35,7 @@ CLUSTER_PARAMS = {
         },
         'replace_disks':{
             'label':'Replace Disks',
-            'description':'Can replace the disks of a virtual machines.'
+            'description':'Can replace the disks of a virtual machine.'
         },
         'tags':{
             'label':'Tags',
@@ -60,7 +60,7 @@ VIRTUAL_MACHINE_PARAMS = {
         },
         'modify':{
             'label':'Modify',
-            'description':'Can modify the settings for this virtual machine, including reinstallation'
+            'description':'Can modify the settings for this virtual machine, including reinstallation.'
         },
         'tags':{
             'label':'Tags',

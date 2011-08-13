@@ -5,13 +5,24 @@
  */
 
 var PROXY_REQUEST_URI;
+var POPOUT_URL;
 
-(function () {
+$(function () {
+
+    var popout =            $('#popout');
+    var connect =           $('#connect');
+    var encrypt =           $('#encrypt');
+    var encrypt_check =     $('#encrypt_check');
+    var ctrlaltdelete =     $('#ctrlaltdelete');
+    var vnc_errors =        $("#vnc_errors");
+    var vnc_status_bar =    $("#VNC_status_bar");
+    var vnc_canvas =        $('#VNC_canvas');
+
     // XXX remap document.write to a dom function so that it works after DOM is
     // loaded function will be reset after noVNC scripts are loaded.
     var old = document.write;
     document.write = function(str) {$(document).append(str)};
-    document.write('<script type="text/javascript" src="'+INCLUDE_URI+'/vnc.js"><//script>');
+    document.write('<script type="text/javascript" src="'+INCLUDE_URI+'vnc.js"><//script>');
     document.write = old;
 
     // XXX manually call __initialize().  This normally happens onload, but
@@ -22,7 +33,8 @@ var PROXY_REQUEST_URI;
     var host, port, password; // VNC proxy connection settings
     var connected = false;
 
-    $('#connect').click(function() {
+    connect.click(function(event) {
+        event.preventDefault();
         var $this = $(this);
         if($this.hasClass('enabled')) {
             rfb.disconnect();
@@ -31,43 +43,52 @@ var PROXY_REQUEST_URI;
             connected = true;
             start();
         }
-        return false;
     });
 
-    $('#encrypt').click(function(){
+    encrypt.click(function(event){
+        event.preventDefault();
         var $this = $(this);
         if (!connected) {
             if ($this.hasClass('enabled')){
-                $('#encrypt_check').attr('checked',false);
+                encrypt_check.attr('checked',false);
                 $this.removeClass('enabled')
             } else {
-                $('#encrypt_check').attr('checked',true);
+                encrypt_check.attr('checked',true);
                 $this.addClass('enabled')
             }
         }
-        return false;
     });
 
-    $('#ctrlaltdelete')
-        .click(function(){
+    ctrlaltdelete
+        .click(function(event){
+            event.preventDefault();
             if (!$(this).hasClass('disabled')) {
                 rfb.sendCtrlAltDel();
             }
-            return false;
         });
 
+    if (POPOUT_URL != undefined) {
+        popout.click(function(event) {
+            event.preventDefault();
+            var url;
+            if (rfb == undefined) {
+                url = POPOUT_URL;
+            } else {
+                url = POPOUT_URL + '?auto_connect=1';
+                stop();
+            }
+            window.open(url, 'popout', 'height=491,width=775,status=no,toolbar=no,menubar=no,location=no');
+        });
+    }
+
     // users exits the page by following link or closing the tab or sth else
-    $(window).bind("unload", function(){
-        if (rfb != undefined) {
-            rfb.disconnect();
-        }
-    });
+    $(window).bind("unload", stop);
 
 
     function show_errors() {
         if (host===false || port===false || password===false) {
             connected = false;
-            $("#VNC_status_bar")
+            vnc_status_bar
                 .attr("class", "VNC_status_error")
                 .html("Probably your proxy is not running or some errors occured. Try again.");
             return false;
@@ -99,32 +120,62 @@ var PROXY_REQUEST_URI;
 
         if (state == "normal") {
             connected = true;
-            $('#connect')
+            connect
                 .addClass('enabled')
                 .html('Disconnect');
-            $('#ctrlaltdelete').removeClass('disabled')
+            ctrlaltdelete.removeClass('disabled');
+            vnc_canvas.addClass("connected");
+            if (POPOUT_URL == undefined) {
+                // resize window
+                var display = rfb.get_display();
+                var width = display.get_width();
+                var height = display.get_height()+64;
+                if (width < 775) {
+                    width = 775;
+                }
+                window.resizeTo(width, height);
+            }
         } else {
+            vnc_canvas.removeClass("connected");
             connected = false;
-            $('#connect')
+            connect
                 .removeClass('enabled')
                 .html('Connect');
-            $('#ctrlaltdelete').addClass('disabled')
+            ctrlaltdelete.addClass('disabled')
         }
 
         if (msg != undefined) {
-            $('#VNC_status_bar')
+            vnc_status_bar
                 .attr("class", klass)
                 .html(msg);
         }
     }
 
+    function stop() {
+        if (rfb != undefined) {
+            rfb.disconnect();
+            rfb = undefined;
+        }
+    }
+
     function start() {
-        $("#vnc_errors").hide();
+        vnc_errors.hide();
+
+        if (encrypt_check.attr('checked')) {
+            is_encrypted = true;
+            data = {"tls": true};
+        } else {
+            is_encrypted = false;
+            data = {};
+        }
+
         $.ajax({
             "async": false,
             "url": PROXY_REQUEST_URI,
+            "type": "POST",
+            "data": data,
             "dataType": "json",
-            "success": function(data, s, x){
+            "success": function(data){
                 host = data[0];
                 port = data[1];
                 password = data[2];
@@ -136,7 +187,7 @@ var PROXY_REQUEST_URI;
                             // jQuery doesn't work with that, need to stick
                             // to pure DOM
             'target':       document.getElementById('VNC_canvas'),
-            'encrypt':      $('#encrypt_check').attr('checked') ? true : false,
+            'encrypt':      is_encrypted,
             'true_color':   true,
             'local_cursor': true,
             'shared':       true,
@@ -145,4 +196,4 @@ var PROXY_REQUEST_URI;
         rfb.connect(host, port, password);
         return false;
     }
-}());
+});

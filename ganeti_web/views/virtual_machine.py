@@ -166,7 +166,7 @@ def reinstall(request, cluster_slug, instance):
 
 
 @login_required
-def novnc(request, cluster_slug, instance):
+def novnc(request, cluster_slug, instance, template="ganeti/virtual_machine/novnc.html"):
     vm = get_object_or_404(VirtualMachine, hostname=instance,
                            cluster__slug=cluster_slug)
     user = request.user
@@ -175,7 +175,7 @@ def novnc(request, cluster_slug, instance):
             or user.has_perm('admin', vm.cluster)):
         return HttpResponseForbidden(_('You do not have permission to vnc on this'))
 
-    return render_to_response("ganeti/virtual_machine/novnc.html",
+    return render_to_response(template,
                               {'cluster_slug': cluster_slug,
                                'instance': vm,
                                },
@@ -185,6 +185,9 @@ def novnc(request, cluster_slug, instance):
 
 @login_required
 def vnc_proxy(request, cluster_slug, instance):
+    if request.method != "POST":
+        return HttpResponseNotAllowed(['POST'])
+
     vm = get_object_or_404(VirtualMachine, hostname=instance,
                                  cluster__slug=cluster_slug)
     user = request.user
@@ -193,7 +196,8 @@ def vnc_proxy(request, cluster_slug, instance):
         or user.has_perm('admin', vm.cluster)):
             return HttpResponseForbidden(_('You do not have permission to vnc on this'))
 
-    result = json.dumps(vm.setup_vnc_forwarding())
+    use_tls = bool(request.POST.get("tls"))
+    result = json.dumps(vm.setup_vnc_forwarding(tls=use_tls))
 
     return HttpResponse(result, mimetype="application/json")
 
@@ -624,6 +628,7 @@ def create(request, cluster_slug=None):
         if form.is_valid():
             data = form.cleaned_data
             start = data.get('start')
+            no_install = data.get('no_install')
             owner = data.get('owner')
             grantee = data.get('grantee')
             cluster = data.get('cluster')
@@ -666,7 +671,9 @@ def create(request, cluster_slug=None):
                     'boot_order',
                     'disk_type',
                     'nic_type',
-                    'cdrom_image_path') 
+                    'cdrom_image_path',
+                    'cdrom2_image_path',
+                )
             elif hv == 'kvm':
                 hvparam_fields = (
                     'kernel_path',
@@ -675,7 +682,9 @@ def create(request, cluster_slug=None):
                     'boot_order',
                     'disk_type',
                     'cdrom_image_path',
-                    'nic_type')
+                    'cdrom2_image_path',
+                    'nic_type',
+                )
             else:
                 hvparam_fields = None
 
@@ -695,6 +704,7 @@ def create(request, cluster_slug=None):
                 job_id = cluster.rapi.CreateInstance('create', hostname,
                         disk_template,
                         disks,nics,
+                        no_install=no_install,
                         start=start, os=os,
                         pnode=pnode, snode=snode,
                         name_check=name_check, ip_check=name_check,
