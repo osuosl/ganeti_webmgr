@@ -1,4 +1,4 @@
-# Copyright (C) 2010 Oregon State University et al.
+# Copyright (C) 2011 Oregon State University et al.
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -107,7 +107,7 @@ class UserResource(ModelResource):
                     for loc_perm in bundle.obj.get_all_permissions(object):
                         temp_obj_perms.append(loc_perm)
                     temp_obj.append({'object':obj_res_instances.get(key)().get_resource_uri(object),'permissions':temp_obj_perms})
-                    used_resources.append({'object':obj_res_instances.get(key)().get_resource_uri(object), 'type':key.__name__ ,'resource':cluster_user.used_resources(object,only_running = False)})
+                    used_resources.append({'object':obj_res_instances.get(key)().get_resource_uri(object), 'type':key.__name__ ,'resource':cluster_user.used_resources(object,only_running = True)})
             perm_results[key.__name__]=temp_obj
         bundle.data['permissions'] = perm_results
 
@@ -259,7 +259,7 @@ class GroupResource(ModelResource):
         resource_name = 'group'
         allowed_methods = ['get', 'put', 'post', 'delete']
         authentication = ApiKeyAuthentication()
-        authorization = SuperuserAuthorization()
+        authorization = DjangoAuthorization()
 
     def dehydrate(self, bundle):
 
@@ -287,7 +287,7 @@ class GroupResource(ModelResource):
                         #for loc_perm in bundle.obj.get_all_permissions(object):
                         #    temp_obj_perms.append(loc_perm)
                         temp_obj.append({'object':obj_res_instances.get(key)().get_resource_uri(object),'permissions':get_group_perms(bundle.obj, object)})
-                        used_resources.append({'object':obj_res_instances.get(key)().get_resource_uri(object), 'resources_used':cluster_user.used_resources(object,only_running = False)})
+                        used_resources.append({'object':obj_res_instances.get(key)().get_resource_uri(object), 'type':key, 'resource':cluster_user.used_resources(object,only_running = False)})
                 perm_results[key]=temp_obj
         bundle.data['permissions'] = perm_results
 
@@ -310,6 +310,54 @@ class GroupResource(ModelResource):
         bundle.data['actions_on_group'] = api.utils.extract_log_actions(bundle.request, bundle.obj.id, actions_on_group)
 
         return bundle
+
+    def build_schema(self):
+        dict = super(GroupResource, self).build_schema()
+
+        dict['fields']['actions_on_group'] = { 'help_text': 'Returns the actions done on the group. The list is composed of objects, containing elements as described here.',
+                                    'read_only': True,
+                                    'type': 'list',
+                                    'object' : {
+                                        'obj1': {'help_text':'Describes action object', 'read_only':True, 'type':'related', 'nullable':True},
+                                        'obj2': {'help_text':'Describes action object', 'read_only':True, 'type':'related', 'nullable':True},
+                                        'user': {'help_text':'User performed the action', 'read_only':True, 'type':'related', 'nullable':True},
+                                        'timestamp': {'help_text':'A date and time of action', 'read_only':True, 'type':'datetime', 'nullable':True},
+                                        'action_name': {'help_text':'Describes action name using internal descriptions', 'read_only':True, 'type':'string', 'nullable':True}
+                                    },
+                                    'nullable': False }
+
+        dict['fields']['users'] = { 'help_text': 'Returns a list of the users belonging to the group.',
+                                    'read_only' : False,'type': 'related', 'nullable':True }
+        dict['fields']['used_resources'] = { 'help_text': 'Returns the resources used by the objects the group has access to in the form of the list.',
+                                    'read_only': True,
+                                    'type': 'list',
+                                    'object' :{
+                                        'object': {'help_text':'Describes object consuming resources', 'read_only':True, 'type':'related', 'nullable':False},
+                                        'type': {'help_text':'Describes type of the object consuming resources', 'read_only':True, 'type':'string', 'nullable':False},
+                                        'resource': {'help_text':'Contains a list of particular resources consumed by the object', 'read_only':True, 'type':'list',
+                                                           'virtual_cpus' : {'help_text':'Virtual CPUs used by the object', 'read_only':True, 'type':'integer', 'nullable':True},
+                                                           'disk' : {'help_text':'Disk space used by the object', 'read_only':True, 'type':'integer', 'nullable':True},
+                                                           'ram' : {'help_text':'Memory (RAM) used by the object', 'read_only':True, 'type':'integer', 'nullable':True},
+                                                           'nullable':False},
+
+                                        },
+                                    'nullable': True }
+        dict['fields']['permissions'] = { 'help_text': 'Returns the status of users permissions on different families of objects',
+                                    'read_only': True,
+                                    'type': 'list',
+                                    'Cluster': {'help_text': 'Contains the list of Cluster objects user has permissions on.', 'type':'list', 'nullable':False, 'read_only':True,
+                                    'object': {'help_text': 'Related cluster object user has permissions on.', 'type':'related', 'nullable':False, 'read_only':True},
+                                    'permissions': {'help_text': 'List containing particular permissions on designated cluster object. Permissions are described by value fields, using internal string notation.', 'type':'string', 'nullable':False, 'read_only':True}
+                                    },
+                                    'VirtualMachine': {'help_text': 'Contains the list of VirtualMachine objects user has permissions on.', 'type':'list', 'nullable':False, 'read_only':True,
+                                    'object': {'help_text': 'Related VirtualMachine object user has permissions on.', 'type':'related', 'nullable':False, 'read_only':True},
+                                    'permissions': {'help_text': 'List containing particular permissions on designated VirtualMachine object. Permissions are described by value fields, using internal string notation.', 'type':'string', 'nullable':False, 'read_only':True}
+                                    },
+                                    'Group': {'help_text': 'Contains the list of Group objects user has permissions on.', 'type':'list', 'nullable':False, 'read_only':True},
+                                    'nullable': True }
+
+        return dict
+    
 
 
 
