@@ -1118,6 +1118,12 @@ def rename(request, cluster_slug, instance, rest=False, extracted_params=None):
 
         if (form.is_valid() | params_ok):
             try:
+                # In order for rename to work correctly, the vm must first be
+                #   shutdown.
+                if vm.is_running:
+                    job1 = vm.shutdown()
+                    log_action('VM_STOP', user, vm, job1)
+
                 job_id = vm.rapi.RenameInstance(vm.hostname, hostname,
                                                 ip_check, name_check)
                 job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
