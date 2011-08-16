@@ -69,7 +69,7 @@ class UserResource(ModelResource):
     def dehydrate(self, bundle):
         ssh_keys = []
         for key in SSHKey.objects.filter(user__pk=bundle.obj.id):
-            ssh_keys.append(key.key)
+            ssh_keys.append({ 'key':key.key, 'id':key.id })
         bundle.data['ssh_keys'] = ssh_keys
         try:
             bundle.data['api_key'] = ApiKey.objects.get(user__pk=bundle.obj.id).key
@@ -208,10 +208,9 @@ class UserResource(ModelResource):
                                     },
                                     'nullable': False }
 
-        dict['fields']['ssh_keys'] = { 'help_text': 'SSH keys for user\'s account. The list may be composed of several objects.',
+        dict['fields']['ssh_keys'] = { 'help_text': 'SSH keys for user\'s account. The list may be composed of several objects, each designed by unique id.',
                                     'read_only': False,
                                     'type': 'list',
-                                    'value': {'help_text':'Particular ssh key', 'read_only':True, 'type':'string', 'nullable':False},
                                     'nullable': True }
         dict['fields']['api_key'] = { 'help_text': 'Returns the api key of the user',
                                     'read_only': True,
@@ -246,7 +245,7 @@ class UserResource(ModelResource):
                                     'nullable': True }
 
         #print dict
-        utils.generate_wiki_basic_table(dict['fields'])
+        #utils.generate_wiki_basic_table(dict['fields'])
         return dict
 
     
@@ -355,36 +354,9 @@ class GroupResource(ModelResource):
                                     },
                                     'Group': {'help_text': 'Contains the list of Group objects user has permissions on.', 'type':'list', 'nullable':False, 'read_only':True},
                                     'nullable': True }
-
+        #utils.generate_wiki_basic_table(dict['fields'])
         return dict
     
-
-
-
-
-
-
-class SSHKeyResource(ModelResource):
-    """
-    Defines ssh key resource, providing user_id additionally
-    """
-    print globals()
-    user = fields.ToOneField(UserResource, 'user')
-    class Meta:
-        queryset = SSHKey.objects.all()
-        resource_name = 'ssh_key'
-        allowed_methods = ['get']
-        authentication = ApiKeyAuthentication()
-        authorization = SuperuserAuthorization()
-
-
-
-class CachedCluster(ModelResource):
-    class Meta:
-        object_class = CachedClusterObject
-        #queryset = CachedClusterObject.objects.all()
-        resource_name='cco'
-
 
 class ClusterResource(ModelResource):
 
@@ -401,22 +373,8 @@ class ClusterResource(ModelResource):
         bundle.data['master'] = bundle.obj.info['master']
         bundle.data['nodes_count'] = bundle.obj.nodes.count()
         bundle.data['vm_count'] = bundle.obj.virtual_machines.count()
-        return bundle
-
-    def get_detail(self, request, **kwargs):
-        print kwargs
-        obj = Bundle()
-        try:
-           obj = self.cached_obj_get(request=request, **self.remove_api_resource_names(kwargs))
-        except ObjectDoesNotExist:
-           return HttpResponseNotFound()
-        except MultipleObjectsReturned:
-           return HttpMultipleChoices("More than one resource is found at this URI.")
-
-        bundle = self.full_dehydrate(obj)
-        bundle = self.alter_detail_data_to_serialize(request, bundle)
         bundle.data['info'] = bundle.obj.info
-        bundle.data['quota'] = bundle.obj.get_quota(user=User.objects.get(username=request.META['USER']).id if (request.META.has_key("USER")) else None)
+        bundle.data['quota'] = bundle.obj.get_quota(user=User.objects.get(username=bundle.request.META['USER']).id if (bundle.request.META.has_key("USER")) else None)
         bundle.data['default_quota'] = bundle.obj.get_default_quota()
         bundle.data['available_ram'] = bundle.obj.available_ram
         bundle.data['available_disk'] = bundle.obj.available_disk
@@ -424,7 +382,7 @@ class ClusterResource(ModelResource):
         bundle.data['missing_ganeti'] = bundle.obj.missing_in_ganeti
         bundle.data['nodes_missing_db'] = bundle.obj.nodes_missing_in_db
         bundle.data['nodes_missing_ganeti'] = bundle.obj.nodes_missing_in_ganeti
-        return self.create_response(request, bundle)
+        return bundle
 
     def get_object_list(self, request):
         objects = Cluster.objects.all()
@@ -432,6 +390,35 @@ class ClusterResource(ModelResource):
 
     def obj_get_list(self, request=None, **kwargs):
         return self.get_object_list(request)
+
+    def build_schema(self):
+        dict = super(ClusterResource, self).build_schema()
+        dict['fields']['software_version'] = { 'help_text': 'Returns a software version.',
+                                    'read_only' : True,'type': 'string', 'nullable':False }
+        dict['fields']['default_hypervisor'] = { 'help_text': 'Returns a default hypervisor for the cluster.',
+                                    'read_only' : True,'type': 'string', 'nullable':False }
+        dict['fields']['master'] = { 'help_text': 'Returns master node',
+                                    'read_only' : True,'type': 'string', 'nullable':False }
+        dict['fields']['nodes_count'] = { 'help_text': 'Returns nodes count for the cluster.',
+                                    'read_only' : True,'type': 'Integer', 'nullable':True }
+        dict['fields']['vm_count'] = { 'help_text': 'Returns a number of virtual machines on the cluster.',
+                                    'read_only' : True,'type': 'Integer', 'nullable':True }
+        dict['fields']['info'] = { 'help_text': 'Complex container exposing many information related to the cluster. More details with example can be found in documentation/wiki.',
+                                    'read_only' : True,'type': 'list', 'nullable':True }
+        dict['fields']['quota'] = { 'help_text': 'Returns a list containing objects describing quotas for the user performing the request.',
+                                    'read_only' : True,'type': 'list', 'nullable':True }
+        dict['fields']['default_quota'] = { 'help_text': 'Returns a list containing objects describing default quotas.',
+                                    'read_only' : True,'type': 'list', 'nullable':True }
+        dict['fields']['available_ram'] = { 'help_text': 'Returns a list with elements describing RAM status, including total, allocated, used and free memory.',
+                                    'read_only' : True,'type': 'list', 'nullable':True }
+        dict['fields']['available_disk'] = { 'help_text': 'Returns a list with elements describing disk status, including total, allocated, used and free disk space.',
+                                    'read_only' : True,'type': 'list', 'nullable':True }
+        dict['fields']['missing_db'] = { 'help_text': 'Returns a list with names of missing nodes in DB.',
+                                    'read_only' : True,'type': 'list', 'nullable':True }
+        dict['fields']['missing_ganeti'] = { 'help_text': 'Returns a list with names of missing nodes in ganeti.',
+                                    'read_only' : True,'type': 'list', 'nullable':True }
+        #utils.generate_wiki_basic_table(dict['fields'])
+        return dict
 
 
 class NodeResource(ModelResource):
