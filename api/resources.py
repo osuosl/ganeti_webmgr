@@ -439,7 +439,7 @@ class NodeResource(ModelResource):
     def dehydrate(self, bundle):
         node = bundle.obj
         node_detail = ganeti_web.views.node.detail(bundle.request, node.cluster.slug, node.hostname, True)
-        bundle.data['cluster'] = node_detail['cluster']
+        bundle.data['cluster'] = ClusterResource().get_resource_uri(node_detail['cluster'])
         bundle.data['node_count'] = node_detail['node_count']
         bundle.data['admin'] = node_detail['admin']
         bundle.data['modify'] = node_detail['modify']
@@ -452,6 +452,25 @@ class NodeResource(ModelResource):
         node = super(NodeResource, self).obj_get(request, **kwargs)
         node_detail = ganeti_web.views.node.detail(request, node.cluster.slug, node.hostname, True)
         return node_detail['node']
+
+    def build_schema(self):
+        dict = super(NodeResource, self).build_schema()
+        dict['fields']['cluster'] = { 'help_text': 'Cluster the node belongs to',
+                                    'read_only' : True,'type': 'related', 'nullable':False }
+        dict['fields']['node_count'] = { 'help_text': 'Number of the nodes in the cluster',
+                                    'read_only' : True,'type': 'Integer', 'nullable':False }
+        dict['fields']['Admin'] = { 'help_text': 'Determines if the user has admin status on the node',
+                                    'read_only' : True,'type': 'boolean', 'nullable':False }
+        dict['fields']['modify'] = { 'help_text': 'Determines if the user is able to modify node parameters',
+                                    'read_only' : True,'type': 'boolean', 'nullable':False }
+        dict['fields']['info'] = { 'help_text': 'This complex field returns various information related to the node.',
+                                    'read_only' : True,'type': 'list', 'nullable':False }
+        dict['fields']['hostname'] = { 'help_text': 'Hostname of the node',
+                                    'read_only' : True,'type': 'string', 'nullable':False }
+
+
+        #utils.generate_wiki_basic_table(dict['fields'])
+        return dict
 
 
 class VMResource(ModelResource):
