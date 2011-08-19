@@ -205,6 +205,11 @@
         <ul id="actions">
              {% if cluster_admin %}
                 <li>
+                    <a class="button add" href="{% url template-create-from-instance cluster.slug instance.hostname %}">
+                        {% trans "Create Template" %}
+                    </a>
+                </li>
+                <li>
                     <a class="button edit" href="{% url instance-reparent cluster.slug instance.hostname %}">
                         {% trans "Change Owner" %}
                     </a>

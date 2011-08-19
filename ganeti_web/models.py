@@ -1294,9 +1294,12 @@ class VirtualMachineTemplate(models.Model):
       form so that they can automatically be used or edited by a user.
     """
     template_name = models.CharField(max_length=255, null=True, blank=True)
+    description = models.CharField(max_length=255, null=True, blank=True)
     cluster = models.ForeignKey('Cluster', null=True)
     start = models.BooleanField(verbose_name=_('Start up After Creation'), \
                 default=True)
+    no_install = models.BooleanField(verbose_name=_('Do not install OS'), \
+                default=False)
     name_check = models.BooleanField(verbose_name=_('DNS Name Check'), \
                 default=True)
     iallocator = models.BooleanField(verbose_name=_('Automatic Allocation'), \
@@ -1333,6 +1336,9 @@ class VirtualMachineTemplate(models.Model):
     cdrom2_image_path = models.CharField(
         verbose_name=_('CD-ROM 2 Image Path'), null=True, blank=True,
         max_length=512)
+
+    class Meta:
+        unique_together = (("cluster", "template_name"),)
 
     def __str__(self):
         if self.template_name is None:

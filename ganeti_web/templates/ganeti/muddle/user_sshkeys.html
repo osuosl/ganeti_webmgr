@@ -1,0 +1,4 @@
+{%  with user_detail.ssh_keys.all as keyslist %}
+    <h3>SSH keys</h3>
+    {% include "ganeti/ssh_keys/list.html" %}
+{% endwith %}

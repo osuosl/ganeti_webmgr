@@ -228,8 +228,13 @@ def render_storage(value):
 
     The value should be in mibibytes.
     """
+    try:
+        amount = float(value)
+    except ValueError:
+        return "---"
 
-    amount = float(value)
+    if amount == 0:
+        return "---"
 
     if amount >= 1024:
         amount /= 1024

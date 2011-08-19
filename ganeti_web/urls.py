@@ -29,8 +29,10 @@ cluster = 'cluster/%s' % cluster_slug
 primary_node = 'primary_node/(?P<primary_node>.+)'
 secondary_node = 'secondary_node/(?P<secondary_node>.+)'
 
-instance = '/(?P<instance>[^/]+)'
+instance = '(?P<instance>[^/]+)'
 host = '(?P<host>[^/]+)'
+
+template = '(?P<template>[^/]+)'
 
 # General
 urlpatterns = patterns('ganeti_web.views.general',
@@ -69,13 +71,6 @@ urlpatterns += patterns('ganeti_web.views.users',
 # All SSH Keys
 urlpatterns += patterns('ganeti_web.views.general',
     url(r'^keys/(?P<api_key>\w+)/$', 'ssh_keys', name="key-list"),
-)
-
-#Groups
-urlpatterns += patterns('muddle_users.views.group',
-    url(r'^group/(?P<id>\d+)/?$', 'detail',
-            {'template':'ganeti/group/detail.html'},
-            name="group-detail"),
 )
 
 # Clusters
@@ -127,9 +122,8 @@ urlpatterns += patterns('ganeti_web.views.node',
     url(r'^%s/evacuate/?$' % node_prefix, 'evacuate', name="node-evacuate"),
 )
 
-
 # VirtualMachines
-vm_prefix = '%s%s' %  (cluster, instance)
+vm_prefix = '%s/%s' %  (cluster, instance)
 urlpatterns += patterns('ganeti_web.views.virtual_machine',
     #  List
     url(r'^vms/$', 'list_', name="virtualmachine-list"),
@@ -184,6 +178,29 @@ urlpatterns += patterns('ganeti_web.views.virtual_machine',
     
     # object log
     url(r'^%s/object_log/?$' % vm_prefix, 'object_log', name="vm-object_log"),
+)
+
+# VirtualMachineTemplates
+template_prefix = '%s/template/%s' % (cluster, template)
+urlpatterns += patterns('ganeti_web.views.vm_template',
+    # List
+    url(r'^templates/$', 'templates', name='template-list'),
+    # Create
+    url(r'^template/create/$', 'create', name='template-create'),
+    # Detail
+    url(r'^%s/?$' % template_prefix, 'detail', name='template-detail'),
+    # Delete
+    url(r'^%s/delete/?$' % template_prefix, 'delete', name='template-delete'),
+    # Edit
+    url(r'^%s/edit/?$' % template_prefix, 'edit', name='template-edit'),
+    # Copy
+    url(r'^%s/copy/?$' % template_prefix, 'copy', name='template-copy'),
+    # Create Instance from Template
+    url(r'^%s/vm/?$' % template_prefix, 'create_instance_from_template', 
+        name='instance-create-from-template'),
+    url(r'^%s/template/?$' % vm_prefix, 'create_template_from_instance', 
+        name='template-create-from-instance'),
+
 )
 
 

@@ -1,13 +1,10 @@
-function formUpdater(url_choices, url_options, url_defaults){
+function formUpdater(url_options, url_defaults){
     /* Live form updating for the create VM template */
     
     // -----------
     // class data
     // -----------
     var cluster =               $("#id_cluster");
-    var owner =                 $("#id_owner");
-    var snode =                 $("#id_snode").parent("p");
-    var pnode =                 $("#id_pnode").parent("p");
     var hypervisor =            $("#id_hypervisor");
     var disk_type =             $("#id_disk_type");
     var disks =                 $("#disks");
@@ -22,35 +19,13 @@ function formUpdater(url_choices, url_options, url_defaults){
     var nic_link =              $("#nics input[name^=nic_link]");
     var disk_template =         $("#id_disk_template");
     var nic_mode =              $("#nics select[name^=nic_mode]");
-    var iallocator =            $("#id_iallocator");
-    var iallocator_hostname =   $("#id_iallocator_hostname");
     var boot_order =            $("#id_boot_order");
     var image_path =            $("#id_cdrom_image_path").parent("p");
-    var image2_path =           $("#id_cdrom2_image_path").parent("p");
     var root_path =             $("#id_root_path");
     var kernel_path =           $("#id_kernel_path");
     var serial_console =        $("#id_serial_console").parent("p");
-    var no_install =            $("#id_no_install");
-    var start =                 $("#id_start").parent("p");
-    var using_str =             " Using: ";
     var blankOptStr =           "---------";
-    var nodes =                 null; // nodes available
     var oldid; // global for hypervisor.change function
-
-    var template_choices = $("\
-            <option value=''>---------</option>\
-            <option value='plain'>plain</option>\
-            <option value='drbd'>drbd</option>\
-            <option value='file'>file</option>\
-            <option value='diskless'>diskless</option>\
-        ".toString());
-
-    var single_node_template_choices = $("\
-            <option value=''>---------</option>\
-            <option value='plain'>plain</option>\
-            <option value='file'>file</option>\
-            <option value='diskless'>diskless</option>\
-        ".toString());
 
     // ------------
     // cluster defaults
@@ -61,51 +36,18 @@ function formUpdater(url_choices, url_options, url_defaults){
     // ------------
     // init stuffs
     // ------------
-    this.init = function(cluster_defaults){
+    this.init = function(){
         /* initialize the live form updater */
 
-        // disable the iallocator stuff by default
-        if(!iallocator_hostname.attr("value")){
-            iallocator.attr("readonly", "readonly");
-        } else{
-            iallocator.after(
-                "<span>" + 
-                    using_str + iallocator_hostname.val() +
-                "</span>"
-            );
-        }
-
-        // only disable iallocator by default if there is no cluster selected
-        // or the cluster already selected does not support iallocator
-        var def_iallocator = cluster_defaults['iallocator'];
-        if (!iallocator.is(":checked")
-            && (def_iallocator == undefined|| def_iallocator == '')
-        ){
-            _iallocatorDisable();
-        }
-        
-        // hide CD-ROM Image Path stuffs by default
-        _imagePathHide();
-        
         // setup form element change hooks
         _initChangeHooks();
 
-        //recover from form error
-        if(no_install.is(":checked")){
-            start.hide();
-        }
-
         // fire off some initial changes
-        iallocator.change();
         disk_template.change();
         boot_order.change();
-        hypervisor.change();
+        hypervisor.change(); 
+        cluster.change();
 
-        disableSingletonDropdown($("#id_pnode"), blankOptStr);
-        // process the owner dropdown, i.e., if it only has a single option, 
-        // select it, and make the dropdown read-only
-        disableSingletonDropdown(owner, blankOptStr);
-        disableSingletonDropdown(hypervisor, blankOptStr);
         disableSingletonDropdown(cluster, blankOptStr);
     };
     
@@ -138,50 +80,8 @@ function formUpdater(url_choices, url_options, url_defaults){
             oldid = id;
         });
 
-        // boot device change
-        boot_order.live("change", function(){
-            /* 
-            Only show image path stuffs if CD-ROM is selected in the boot 
-            order dropdown.
-            */
-            var id = $(this).children("option:selected").val();
-            if(id == "cdrom"){
-                _imagePathShow();
-            } else {
-                _imagePathHide();
-            }
-        });
-
-        // iallocator change
-        iallocator.live("change", function() {
-            if(!iallocator.attr("readonly")) {
-                if(iallocator.is(":checked")) {
-                    pnode.hide();
-                    snode.hide();
-                } else {
-                    pnode.show();
-                    disk_template.change();
-                }
-            } else {
-                if(!iallocator.is(":checked")){
-                    pnode.show();
-                    disk_template.change();
-                }
-            }
-        });
-
         // disk_template change
         disk_template.live("change", function() {
-            if(!iallocator.is(":checked") || 
-                    iallocator.attr("readonly")) {
-
-                if(disk_template.val() == "drbd" && nodes && nodes.length > 1){
-                    snode.show();
-                } else {
-                    snode.hide();
-                }
-            }
-
             if (disk_template.val() == 'diskless') {
                 disks.hide();
                 disk_count.val(0);
@@ -193,70 +93,21 @@ function formUpdater(url_choices, url_options, url_defaults){
             }
         });
 
-        // owner change
-        owner.live("change", function() {
-            var id = $(this).children("option:selected").val();
-
-            if(id != "") {
-                // JSON update the cluster when the owner changes
-                $.getJSON(url_choices, {"clusteruser_id":id}, function(data){
-                    var oldcluster = cluster.val();
-
-                    cluster.children().not(":first").remove();
-                    $.each(data, function(i, item) {
-                        cluster.append(_newOpt(item[0], item[1]));
-                    });
-
-                    // Try to re-select the previous cluster, if possible.
-                    cluster.val(oldcluster);
-
-                    // process dropdown if its a singleton
-                    disableSingletonDropdown(cluster, blankOptStr);
-
-                    // trigger a change in the cluster
-                    cluster.change();
-                });
-            }
-        });
-
-        //no-install change
-        no_install.live("change",function() {
-            if(no_install.is(":checked")){
-                start.hide();
-            } 
-            else{
-                start.show();
-            }
-        });
-
         // cluster change
         cluster.live("change", function() {
-            var child, child2;
-            var pnode       = $("#id_pnode");
-            var snode       = $("#id_snode");
+            var child;
             var oslist      = $("#id_os");
             var id = $(this).children("option:selected").val();
             
             if( id != "" ) {
                 // JSON update oslist, pnode, and snode when cluster changes
                 $.getJSON(url_options, {"cluster_id":id}, function(data){
-                    var oldpnode = pnode.val();
-                    var oldsnode = snode.val();
                     var oldos = oslist.val();
-                    var old_template = disk_template.val();
 
-                    pnode.children().not(":first").remove();
-                    snode.children().not(":first").remove();
                     oslist.children().not(":first").remove();
                     $.each(data, function(i, items) {
                         $.each(items, function(key, value) {
-                            if( i == "nodes" ) {
-                                child = _newOpt(value, value);
-                                child2 = child.clone();
-                                pnode.append(child);
-                                snode.append(child2);
-                            }
-                            else if (i == "os") {
+                            if (i == "os") {
                                 child = _newOptGroup(value[0],
                                         value[1]);
                                 oslist.append(child);
@@ -264,26 +115,10 @@ function formUpdater(url_choices, url_options, url_defaults){
                         });
                     });
 
-                    // make nodes publically available
-                    nodes = data["nodes"];
-
-                    // update disk template choices
-                    disk_template.empty();
-                    if (nodes.length == 1){
-                        disk_template.html(single_node_template_choices);
-                    } else {
-                        disk_template.html(template_choices);
-                    }
-
                     // Restore old choices from before, if possible.
-                    pnode.val(oldpnode);
-                    snode.val(oldsnode);
                     oslist.val(oldos);
-                    disk_template.val(old_template);
 
                     // And finally, do the singleton dance.
-                    disableSingletonDropdown(pnode, blankOptStr);
-                    disableSingletonDropdown(snode, blankOptStr);
                     disableSingletonDropdown(oslist, blankOptStr);
                 });
 
@@ -347,32 +182,8 @@ function formUpdater(url_choices, url_options, url_defaults){
                 }
             }
 
-            // iallocator checkbox
-            if(d["iallocator"] != "" && 
-                    d["iallocator"] != undefined){
-                if(!iallocator_hostname.attr("value")) {
-                    iallocator_hostname.attr("value",
-                            d["iallocator"]);
-                    if(iallocator.siblings("span").length == 0){
-                        iallocator.after(
-                            "<span>" + using_str +
-                                d["iallocator"] + 
-                            "</span>"
-                        );
-                    }
-                }
-                // Check iallocator checkbox
-                iallocator.parent("p").show();
-                iallocator.removeAttr("disabled")
-                    .removeAttr("readonly")
-                    .attr("checked", "checked")
-                    .change();
-            } else {
-                _iallocatorDisable();
-            }
-
             // kernel path text box
-            if(d["kernel_path"]){
+            if(d["kernel_path"] && kernel_path == ""){
                 kernel_path.val(d["kernel_path"]);
             }
 
@@ -394,6 +205,7 @@ function formUpdater(url_choices, url_options, url_defaults){
             }
             
             // nic type dropdown
+            old_nic_type = nic_type.val();
             if(d["nic_types"]) {
                 nic_type.children().remove();
                 $.each(d["nic_types"], function(i, item){
@@ -404,15 +216,18 @@ function formUpdater(url_choices, url_options, url_defaults){
                 nic_type.find(":selected").removeAttr("selected");
                 nic_type.find("[value=" + d["nic_type"] + "]")
                     .attr("selected","selected");
+                nic_type.val(old_nic_type);
             }
 
             // memory text box
-            if($("#id_memory") == "" && d["memory"]){
+            if(d["memory"] && $("#id_memory") == ""){
                 $("#id_memory").val(d["memory"]);
             }
 
             // disk type dropdown
             if(d["disk_types"]){
+                old_disk_type = disk_type.val();
+                //console.log(old_disk_type);
                 disk_type.children().remove();
                 $.each(d["disk_types"], function(i, item){
                     disk_type.append(_newOpt(item[0], item[1]));
@@ -420,6 +235,7 @@ function formUpdater(url_choices, url_options, url_defaults){
                 if(d["disk_type"]){
                     disk_type.val(d["disk_type"]);
                 }
+                disk_type.val(old_disk_type);
             }
             
             // root path text box
@@ -438,7 +254,7 @@ function formUpdater(url_choices, url_options, url_defaults){
             }
             
             // virtual CPUs text box
-            if($("#id_vcpus").val() == "" && d["vcpus"]){
+            if(d["vcpus"] && $("#id_vcpus") == ""){
                 $("#id_vcpus").val(d["vcpus"]);
             }
             
@@ -446,32 +262,8 @@ function formUpdater(url_choices, url_options, url_defaults){
             if(d["cdrom_image_path"]){
                 image_path.find("input").val(d["cdrom_image_path"]);
             }
-            //second cdrom
-            if(d["cdrom2_image_path"]){
-                image2_path.find("input").val(d["cdrom2_image_path"]);
-            }
             disableSingletonDropdown(hypervisor, blankOptStr);
         });
-    }
-
-    function _imagePathHide(){
-        image_path.hide();
-        image2_path.hide();
-    }
-
-    function _imagePathShow(){
-        image_path.show();
-        image2_path.show();
-    }
-
-    function _iallocatorDisable(){
-        /* Disable and hide all of the iallocator stuffs */
-        iallocator.parent("p").hide();
-        iallocator_hostname.removeAttr("value")
-            .parent("p").hide();
-        iallocator.attr("disabled", "disabled")
-            .removeAttr("checked")
-            .change();
     }
 
     function _newOpt(value, text) {
@@ -495,7 +287,7 @@ function formUpdater(url_choices, url_options, url_defaults){
     function _hideHvmKvmElements() {
         // Hide hvm + kvm specific hypervisor fields
         boot_order.parent("p").hide();
-        image_path.hide();
+        image_path.hide(); 
         nic_type.parent("p").hide();
         disk_type.parent("p").hide();
     }
@@ -573,7 +365,7 @@ function formUpdater(url_choices, url_options, url_defaults){
         nic_count.val(parseInt(count)+1);
         var p = $('<p></p>');
         var label = $("<label>NIC/" + count +"</label>");
-
+        
         // create mode select box
         var mode = $('<select></select>');
         mode.append('<option>----------</option>');
