@@ -22,6 +22,7 @@ import binascii
 import cPickle
 from datetime import datetime, timedelta
 from hashlib import sha1
+import re
 
 from django.conf import settings
 
@@ -35,7 +36,6 @@ from django.core.validators import RegexValidator, MinValueValidator
 from django.utils.encoding import force_unicode
 from django.utils.translation import ugettext_lazy as _
 from django_fields.fields import PickleField
-import re
 
 from django.db import models
 from django.db.models import Q, Sum
@@ -250,7 +250,17 @@ class CachedClusterObject(models.Model):
                         .update(cached=self.cached)
                 
         except GanetiApiError, e:
-            self.error = str(e)
+            # Use regular expressions to match the quoted message
+            #  given by GanetiApiError. '\\1' is a group substitution
+            #  which places the first group '('|\")' in it's place.
+            comp = re.compile("('|\")(?P<msg>.*)\\1")
+            err = comp.search(str(e))
+            # Any search that has 0 results will just return None.
+            #   That is why we must check for err before proceeding.
+            if err:
+                self.error = err.groupdict()['msg']
+            else:
+                self.error = str(e)
             GanetiError.objects.store_error(str(e), obj=self, code=e.code)
 
         else:
