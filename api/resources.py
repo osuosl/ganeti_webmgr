@@ -310,6 +310,31 @@ class GroupResource(ModelResource):
 
         return bundle
 
+
+    def put_detail(self, request, **kwargs):
+        try:
+            deserialized = self.deserialize(request, request.raw_post_data, format=request.META.get('CONTENT_TYPE', 'application/json'))
+        except (Exception):
+            return HttpBadRequest()
+        deserialized = self.alter_deserialized_detail_data(request, deserialized)
+        bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized))
+        self.is_valid(bundle, request)
+        if (bundle.data.has_key('api_key')):
+            return HttpBadRequest()
+        updated_bundle = self.obj_update(bundle, request=request, pk=kwargs.get('pk'))
+
+#        if (bundle.data.has_key('groups')):
+#            groups = []
+#            for group in bundle.data.get('groups'):
+#                groups.append(GroupResource().get_via_uri(group))
+#
+#            GroupResource().get_via_uri(group).user_set.add(User.objects.get(id=kwargs.get('pk')))
+
+
+
+        return HttpAccepted
+
+
     def build_schema(self):
         dict = super(GroupResource, self).build_schema()
 

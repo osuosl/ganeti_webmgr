@@ -91,17 +91,20 @@ def extract_log_actions(request, id, log):
     return glob_action_data
 
 def generate_wiki_basic_table(dict):
-        print "|_. Name |_. Type |_. ReadOnly |_. Nullable |_. Description |_."
-        for key in dict:
-            ro = ""
-            nl = ""
-            if (dict[key].get('read_only')):
-                ro = "=. x"
-            else:
-                ro = " "
-            if (dict[key].get('nullable')):
-                nl = "=. gx"
-            else:
-                nl = " "
-            print "|<code>" + key + "</code>|<code>" + dict[key]['type'] + "</code>|" + ro + "|" + nl + "|" + dict[key]['help_text'].__str__() + "|"
+    """
+    Generate table for documentation purposes in the wiki
+    """
+    print "|_. Name |_. Type |_. ReadOnly |_. Nullable |_. Description |_."
+    for key in dict:
+        ro = ""
+        nl = ""
+        if (dict[key].get('read_only')):
+            ro = "=. x"
+        else:
+            ro = " "
+        if (dict[key].get('nullable')):
+            nl = "=. gx"
+        else:
+            nl = " "
+        print "|<code>" + key + "</code>|<code>" + dict[key]['type'] + "</code>|" + ro + "|" + nl + "|" + dict[key]['help_text'].__str__() + "|"
     
