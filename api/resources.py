@@ -50,7 +50,7 @@ from django.contrib.auth.models import User, Group
 from ganeti_web.models import VirtualMachine, SSHKey, Cluster, Node, CachedClusterObject, Job, ClusterUser
 from tastypie.bundle import Bundle
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
-from tastypie.http import HttpMultipleChoices, HttpGone, HttpNoContent
+from tastypie.http import HttpMultipleChoices, HttpGone, HttpNoContent, HttpNotFound
 
 class UserResource(ModelResource):
     """
@@ -467,8 +467,6 @@ class NodeResource(ModelResource):
                                     'read_only' : True,'type': 'list', 'nullable':False }
         dict['fields']['hostname'] = { 'help_text': 'Hostname of the node',
                                     'read_only' : True,'type': 'string', 'nullable':False }
-
-
         #utils.generate_wiki_basic_table(dict['fields'])
         return dict
 
@@ -489,33 +487,6 @@ class VMResource(ModelResource):
         authorization = DjangoAuthorization()
 
     def dehydrate(self, bundle):
-        vm = bundle.obj
-        vm_detail = ganeti_web.views.virtual_machine.detail(bundle.request, vm.cluster.slug, vm.hostname, True)
-        bundle.data['admin'] = vm_detail['admin']
-        bundle.data['cluster_admin'] = vm_detail['cluster_admin']
-        bundle.data['remove'] = vm_detail['remove']
-        bundle.data['power'] = vm_detail['power']
-        bundle.data['modify'] = vm_detail['modify']
-        bundle.data['migrate'] = vm_detail['migrate']
-        permissions = {'users':[], 'groups':[]}
-
-        if (vm_detail.has_key('job')):
-            bundle.data['job'] = vm_detail['job']
-            if (vm_detail['job'] != None):
-                bundle.data['job'] = JobResource().get_resource_uri(vm_detail['job'])
-
-        perms = ganeti_web.views.virtual_machine.users(bundle.request, vm.cluster.slug, vm_detail['instance'], rest = True)
-
-        if (perms['users'].__len__() > 0):
-            for user in perms['users']:
-                permissions['users'].append(UserResource().get_resource_uri(user))
-
-        bundle.data['permissions'] = permissions
-
-        log = ganeti_web.views.virtual_machine.object_log(bundle.request, vm.cluster.slug, vm_detail['instance'], True)
-        #obj_res_instances = {'VirtualMachine':VMResource, 'User':UserResource, 'Group':GroupResource, 'Cluster':ClusterResource, 'Node':NodeResource, 'Job':JobResource}
-        bundle.data['log'] = api.utils.extract_log_actions(bundle.request, bundle.obj.id, log)
-
         return bundle
 
     def obj_get(self, request=None, **kwargs):
@@ -536,6 +507,47 @@ class VMResource(ModelResource):
         vm_detail = ganeti_web.views.virtual_machine.detail(request, vm.cluster.slug, vm.hostname, True)
         response = ganeti_web.views.virtual_machine.delete(request, vm.cluster.slug, vm_detail['instance'], True)
         return response
+
+    def get_detail(self, request, **kwargs):
+        try:
+            obj = self.cached_obj_get(request=request, **self.remove_api_resource_names(kwargs))
+        except ObjectDoesNotExist:
+            return HttpNotFound()
+        except MultipleObjectsReturned:
+            return HttpMultipleChoices("More than one resource is found at this URI.")
+
+        bundle = self.build_bundle(obj=obj, request=request)
+        bundle = self.full_dehydrate(bundle)
+        bundle = self.alter_detail_data_to_serialize(request, bundle)
+
+        vm = bundle.obj
+        vm_detail = ganeti_web.views.virtual_machine.detail(bundle.request, vm.cluster.slug, vm.hostname, True)
+        bundle.data['admin'] = vm_detail['admin']
+        log = ganeti_web.views.virtual_machine.object_log(bundle.request, vm.cluster.slug, vm_detail['instance'], True)
+        ##obj_res_instances = {'VirtualMachine':VMResource, 'User':UserResource, 'Group':GroupResource, 'Cluster':ClusterResource, 'Node':NodeResource, 'Job':JobResource}
+        bundle.data['actions_on_vm'] = api.utils.extract_log_actions(bundle.request, bundle.obj.id, log)
+
+        bundle.data['cluster_admin'] = vm_detail['cluster_admin']
+        bundle.data['remove'] = vm_detail['remove']
+        bundle.data['power'] = vm_detail['power']
+        bundle.data['modify'] = vm_detail['modify']
+        bundle.data['migrate'] = vm_detail['migrate']
+        permissions = {'users':[], 'groups':[]}
+
+        if (vm_detail.has_key('job')):
+            bundle.data['job'] = vm_detail['job']
+            if (vm_detail['job'] != None):
+                bundle.data['job'] = JobResource().get_resource_uri(vm_detail['job'])
+
+        perms = ganeti_web.views.virtual_machine.users(bundle.request, vm.cluster.slug, vm_detail['instance'], rest = True)
+
+        if (perms['users'].__len__() > 0):
+            for user in perms['users']:
+                permissions['users'].append(UserResource().get_resource_uri(user))
+
+        bundle.data['permissions'] = permissions
+
+        return self.create_response(request, bundle)
 
     def post_detail(self, request, **kwargs):
 
@@ -614,7 +626,40 @@ class VMResource(ModelResource):
                 response = ganeti_web.views.virtual_machine.rename(request, vm.cluster.slug, vm_detail['instance'], True, extracted_params)
                 return response
 
+    def build_schema(self):
+        dict = super(VMResource, self).build_schema()
+        dict['fields']['admin'] = { 'help_text': 'Determines if the current user has admin permissions over vm.',
+                                    'read_only' : True,'type': 'Boolean', 'nullable':False }
+        dict['fields']['actions_on_vm'] = { 'help_text': 'Returns the actions done on the user. The list is composed of objects, containing elements as described here.',
+                                    'read_only': True,
+                                    'type': 'list',
+                                    'object' : {
+                                        'obj1': {'help_text':'Describes action object', 'read_only':True, 'type':'related', 'nullable':True},
+                                        'obj2': {'help_text':'Describes action object', 'read_only':True, 'type':'related', 'nullable':True},
+                                        'user': {'help_text':'User performed the action', 'read_only':True, 'type':'related', 'nullable':True},
+                                        'timestamp': {'help_text':'A date and time of action', 'read_only':True, 'type':'datetime', 'nullable':True},
+                                        'action_name': {'help_text':'Describes action name using internal descriptions', 'read_only':True, 'type':'string', 'nullable':True}
+                                    },
+                                    'nullable': True }
+        dict['fields']['cluster_admin'] = { 'help_text': 'Determines if the current user has admin permissions over cluster.',
+                                    'read_only' : True,'type': 'Boolean', 'nullable':False }
+        dict['fields']['remove'] = { 'help_text': 'Determines if the current user has permissions to remove vm.',
+                                    'read_only' : True,'type': 'Boolean', 'nullable':False }
+        dict['fields']['power'] = { 'help_text': 'Determines if the current user has admin permissions to power vm.',
+                                    'read_only' : True,'type': 'Boolean', 'nullable':False }
+        dict['fields']['modify'] = { 'help_text': 'Determines if the current user has admin permissions to modify vm.',
+                                    'read_only' : True,'type': 'Boolean', 'nullable':False }
+        dict['fields']['migrate'] = { 'help_text': 'Determines if the current user has admin permissions to migrate.',
+                                    'read_only' : True,'type': 'Boolean', 'nullable':False }
+        dict['fields']['permissions'] = { 'help_text': 'Lists the objects (users and groups) having permissions over vm. Contains sublists users and groups, each having objects pointing to related user/group.',
+                                    'read_only' : True,'type': 'list', 'nullable':False }
+        dict['fields']['job'] = { 'help_text': 'Points to the jobs related to the vm, if any.',
+                                    'read_only' : True,'type': 'Boolean', 'nullable':True }
 
+        #utils.generate_wiki_basic_table(dict['fields'])
+        return dict
+
+    
 class JobResource(ModelResource):
     cluster = fields.ForeignKey(ClusterResource, 'cluster', full=False)
 
@@ -622,8 +667,20 @@ class JobResource(ModelResource):
         job = bundle.obj
         job_detail = ganeti_web.views.jobs.detail(bundle.request, job.cluster.slug, job.job_id, True)
         if (bundle.obj.info):
-            bundle.data['opresult'] = bundle.obj.info['opresult']
-            bundle.data['summary'] = bundle.obj.info['summary']
+            try:
+                locError = {}
+                if (len(bundle.obj.info['opresult'][0][1])>1):
+                    locError = {'error_type':bundle.obj.info['opresult'][0][0],'error_message':bundle.obj.info['opresult'][0][1][0], 'error_family':bundle.obj.info['opresult'][0][1][1]}
+                else:
+                    locError = {'error_type':bundle.obj.info['opresult'][0][0],'error_message':bundle.obj.info['opresult'][0][1][0]}
+                bundle.data['opresult'] = locError
+            except:
+                {}
+
+            try:
+                bundle.data['summary'] = bundle.obj.info['summary'][0]
+            except:
+                {}
             bundle.data['ops'] = bundle.obj.info['ops']
         bundle.data['cluster_admin'] = job_detail['cluster_admin']
         return bundle
@@ -638,8 +695,6 @@ class JobResource(ModelResource):
         authorization = DjangoAuthorization()
 
     def obj_get(self, request, **kwargs):
-        print "?KWARGS?"
-        print kwargs
         job = super(JobResource, self).obj_get(request, **kwargs)
         job_status = status(request, job.cluster.slug, job.job_id, True)
         return job_status
@@ -653,3 +708,19 @@ class JobResource(ModelResource):
         res = clear(request, job.cluster.slug, job.job_id, True)
         if (res):
             job.delete()
+
+    def build_schema(self):
+        dict = super(JobResource, self).build_schema()
+        dict['fields']['cluster_admin'] = { 'help_text': 'Determines if the current user has admin permissions over related cluster.',
+                                    'read_only' : True,'type': 'Boolean', 'nullable':False }
+        dict['fields']['opresult'] = { 'help_text': 'Describes the error occurred during job execution.',
+                                    'error_type':{ 'help_text': 'Describes the error type', 'read_only' : True,'type': 'string', 'nullable':False},
+                                    'error_message':{ 'help_text': 'Error message', 'read_only' : True,'type': 'string', 'nullable':True},
+                                    'error_family':{ 'help_text': 'Error family', 'read_only' : True,'type': 'string', 'nullable':True},
+                                    'read_only' : True,'type': 'list', 'nullable':True }
+        dict['fields']['summarys'] = { 'help_text': 'Describes the job summary.',
+                                    'read_only' : True,'type': 'string', 'nullable':True }
+        dict['fields']['ops'] = { 'help_text': 'Complex field containing details about job. The field contents depend on the job type. More details can be found in the wiki.',
+                            'read_only' : True,'type': 'list', 'nullable':False }
+        utils.generate_wiki_basic_table(dict['fields'])
+        return dict
