@@ -182,7 +182,7 @@ def list_(request, rest = False):
     else:
         cluster_list = user.get_objects_all_perms(Cluster, ['admin',])
 
-    if rest:
+    if (rest):
         return cluster_list
     else:
         return render_to_response("ganeti/cluster/list.html", {

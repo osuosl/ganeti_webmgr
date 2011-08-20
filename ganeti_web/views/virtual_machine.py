@@ -82,7 +82,7 @@ def delete(request, cluster_slug, instance, rest = False):
         user.has_any_perms(instance, ["remove", "admin"]) or
         user.has_perm("admin", cluster)
         ):
-        if (not rest):
+        if not (rest):
             return render_403(request, _('You do not have sufficient privileges'))
         else:
             return HttpResponseForbidden()
@@ -113,7 +113,7 @@ def delete(request, cluster_slug, instance, rest = False):
         VirtualMachine.objects.filter(id=instance.id) \
             .update(last_job=job, ignore_cache=True, pending_delete=True)
 
-        if (not rest):
+        if not (rest):
             return HttpResponseRedirect(
                 reverse('instance-detail', args=[cluster_slug, instance.hostname]))
         else:
@@ -251,7 +251,7 @@ def startup(request, cluster_slug, instance, rest = False):
     user = request.user
     if not (user.is_superuser or user.has_any_perms(vm, ['admin','power']) or
         user.has_perm('admin', vm.cluster)):
-            if (not rest):
+            if not (rest):
                 return render_403(request, _('You do not have permission to start up this virtual machine'))
             else:
                 return {"msg":"You do not have permission to start up this virtual machine", "code":403}
@@ -265,14 +265,14 @@ def startup(request, cluster_slug, instance, rest = False):
 
             if quota['ram'] is not None and (used['ram'] + vm.ram) > quota['ram']:
                 msg = _('Owner does not have enough RAM remaining on this cluster to start the virtual machine.')
-                if (not rest):
+                if not (rest):
                     return HttpResponse(json.dumps([0, msg]), mimetype='application/json')
                 else:
                     return {"msg":msg, "code":500}
 
             if quota['virtual_cpus'] and (used['virtual_cpus'] + vm.virtual_cpus) > quota['virtual_cpus']:
                 msg = _('Owner does not have enough Virtual CPUs remaining on this cluster to start the virtual machine.')
-                if (not rest):
+                if not (rest):
                     return HttpResponse(json.dumps([0, msg]), mimetype='application/json')
                 else:
                     return {"msg":msg, "code":500}
@@ -375,7 +375,7 @@ def reboot(request, cluster_slug, instance, rest = False):
     if not (user.is_superuser or user.has_any_perms(vm, ['admin','power']) or
         user.has_perm('admin', vm.cluster)):
 
-            if (not rest):
+            if not (rest):
                 return render_403(request, _('You do not have permission to reboot this virtual machine'))
             else:
                 return HttpResponseForbidden
@@ -390,7 +390,7 @@ def reboot(request, cluster_slug, instance, rest = False):
             log_action('VM_REBOOT', user, vm, job)
         except GanetiApiError, e:
             msg = {'__all__':[str(e)]}
-        if (not rest):
+        if not (rest):
             return HttpResponse(json.dumps(msg), mimetype='application/json')
         else:
             return HttpAccepted
@@ -457,7 +457,7 @@ def list_(request, rest = False):
 
     vms = vms.select_related()
     # paginate, sort
-    if (not rest):
+    if not (rest):
         vms = render_vms(request, vms)
 
     if (rest):
@@ -613,7 +613,7 @@ def users(request, cluster_slug, instance, rest = False):
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', vm) or
         user.has_perm('admin', cluster)):
-        if (not rest):
+        if not (rest):
             return render_403(request, _("You do not have sufficient privileges"))
         else:
             return {'msg':'You do not have sufficient privileges', 'code':403}
@@ -652,7 +652,7 @@ def object_log(request, cluster_slug, instance, rest = False):
         user.has_perm('admin', cluster)):
         return render_403(request, _("You do not have sufficient privileges"))
 
-    if not rest:
+    if not (rest):
         return list_for_object(request, vm)
     else:
         return list_for_object(request, vm, True)
@@ -1125,7 +1125,7 @@ def rename(request, cluster_slug, instance, rest = False, extracted_params = Non
                 # log information about creating the machine
                 log_action('VM_RENAME', user, vm, job)
 
-                if (not rest):
+                if not (rest):
                     return HttpResponseRedirect(
                     reverse('instance-detail', args=[cluster.slug, hostname]))
                 else:
