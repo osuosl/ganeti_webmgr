@@ -45,7 +45,7 @@ from ganeti_web.views.virtual_machine import list_
 import ganeti_web.views.jobs
 import ganeti_web.views.node
 import ganeti_web.views.virtual_machine
-from tastypie.resources import ModelResource, Resource, HttpAccepted, HttpBadRequest, HttpApplicationError, HttpCreated, HttpResponseNotFound, ResourceOptions
+from tastypie.resources import ModelResource, Resource, HttpAccepted, HttpBadRequest, HttpApplicationError, HttpCreated, HttpResponseNotFound, ResourceOptions, ALL
 from django.contrib.auth.models import User, Group
 from ganeti_web.models import VirtualMachine, SSHKey, Cluster, Node, CachedClusterObject, Job, ClusterUser
 from tastypie.bundle import Bundle
@@ -64,6 +64,7 @@ class UserResource(ModelResource):
         authorization = DjangoAuthorization()
         #authorization = SuperuserAuthorization()
         #validation = UserValidation()
+        filtering = {}
 
 
     def dehydrate(self, bundle):
