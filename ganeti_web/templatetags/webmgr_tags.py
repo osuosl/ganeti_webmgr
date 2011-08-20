@@ -21,13 +21,13 @@ from datetime import datetime
 
 from math import log10
 import re
-import json as json_lib
 from django.contrib.sites.models import Site
 
 from django.db.models import Count
 from django.template import Library, Node, TemplateSyntaxError
 from django.template.defaultfilters import stringfilter
 from django.utils.safestring import mark_safe
+from django.utils.translation import ugettext_lazy as _
 
 from ganeti_web.constants import NODE_ROLE_MAP
 from ganeti_web.models import Cluster
@@ -38,9 +38,27 @@ register = Library()
 These filters were created specifically
 for the Ganeti Web Manager project
 """
-@register.inclusion_tag('virtual_machine/vmfield.html')
+@register.inclusion_tag('ganeti/virtual_machine/vmfield.html')
 def vmfield(field):
     return {'field':field}
+
+
+@register.inclusion_tag('ganeti/virtual_machine/vmfield_disk.html')
+def vmfield_disk(form, index):
+    return {'field':form['disk_size_%s' % index], 'index':index}
+
+
+@register.inclusion_tag('ganeti/virtual_machine/vmfield_nic.html')
+def vmfield_nic(form, index):
+    """
+    Render a set of form fields for creating or editing a network card
+    """
+    data = {'link':form['nic_link_%s' % index],'index':index}
+    if 'nic_mode_%s' % index in form.fields:
+        data['mode'] = form['nic_mode_%s' % index]
+    if 'nic_mac_%s' % index in form.fields:
+        data['mac'] = form['nic_mac_%s' % index]
+    return data
 
 
 @register.filter
@@ -154,6 +172,33 @@ def current_domain():
     return Site.objects.get_current().domain
 
 
+@register.filter
+def job_fields(info):
+    """
+    returns tuples of field:value for every field in the job excluding the
+    OP_ID
+
+    @param info: dictionary containing op info for this sub-op
+    """
+    fields = info.copy()
+    del fields['OP_ID']
+
+    # repackage job specific dictionaries if present
+    if 'hvparams' in fields:
+        fields.update(fields.pop('hvparams'))
+    if 'beparams' in fields:
+        fields.update(fields.pop('beparams'))
+    if 'osparams' in fields:
+        fields.update(fields.pop('osparams'))
+
+    # repackage disks
+    if 'disks' in fields:
+        for i, disk in enumerate(fields.pop('disks')):
+            fields['disk/%s' % i] = disk['size']
+
+    return fields.items()
+
+
 """
 These filters were taken from Russel Haering's GanetiWeb project
 """
@@ -162,9 +207,9 @@ These filters were taken from Russel Haering's GanetiWeb project
 @stringfilter
 def render_node_status(status):
     if status:
-        return "Offline"
+        return _("Offline")
     else:
-        return "Online"
+        return _("Online")
 
 
 @register.filter
@@ -231,7 +276,7 @@ def format_part_total(part, total):
     Pretty-print a quantity out of a given total.
     """
     if total < 0 or part < 0:
-        return "unknown"
+        return _("unknown")
 
     if total > 0:
         total = float(total) / 1024
@@ -334,11 +379,6 @@ def format_online_nodes(cluster):
     return "%d/%d" % (online, offline+online)
 
 
-@register.filter
-def json(obj):
-    return mark_safe(json_lib.dumps(obj))
-
-
 @register.tag
 def get_nics(parser, token):
     try:
@@ -404,7 +444,7 @@ def render_os(os):
         flavor = " ".join(i.capitalize() for i in flavor.split("-"))
         return mark_safe("%s (<em>%s</em>)" % (flavor, t))
     except ValueError:
-        return mark_safe("<em>Unknown or invalid OS</em>")
+        return mark_safe(_("<em>Unknown or invalid OS</em>"))
 
 
 @register.filter

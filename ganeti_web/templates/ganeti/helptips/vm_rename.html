@@ -1,0 +1,26 @@
+{% load i18n %}
+<div id="help-hostname">
+    {% blocktrans %}Domain name or host name to assign to this virtual
+    machine; e.g. <tt>example.org</tt> or
+    <tt>subdomain.example.org</tt>.{% endblocktrans %}
+</div>
+<div id="help-ip_check">
+    {% trans "Whether to ensure instance’s IP address is inactive." %}
+</div>
+<div id="help-name_check">
+    <p>{% blocktrans %}
+    Check the virtual machine DNS name via the resolver <i>(e.g. in DNS
+    or /etc/hosts, depending on your setup)</i>. Since the name check
+    is used to compute the IP address this also enables/disables IP
+    checks <i>(e.g.  if the IP is pingable)</i>.{% endblocktrans %}
+    </p>
+    <p>{% blocktrans %}
+    This is useful for setups that deploy virtual machines using
+    dynamic DNS and thus the name is not resolvable yet. {% endblocktrans %}
+    </p>
+    <p>{% blocktrans %}
+    <b>Use with caution!</b> If left unchecked you may run into name/ip
+    collisions.{% endblocktrans %}
+    </p>
+</div>
+

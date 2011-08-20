@@ -1,0 +1,103 @@
+{% load webmgr_tags %}
+{% load i18n %}
+<table id="vmlist" class="sorted">
+<thead>
+    <tr>
+      <th class="status" order_by="status"></th>
+      <th order_by="hostname">{% trans "Name" %}</th>
+      {% if not cluster %}
+      <th order_by="cluster__hostname">{% trans "Cluster" %}</th>
+      {% endif %}
+      <th order_by="cluster__hostname">{% trans "Node" %}</th>
+      <th order_by="operating_system">{% trans "OS" %}</th>
+      <th order_by="ram">{% trans "RAM" %}</th>
+      <th order_by="disk_size">{% trans "Disk Space" %}</th>
+      <th order_by="virtual_cpus">{% trans "vCPUs" %}</th>
+    </tr>
+</thead>
+<tbody id="vms">
+    {% for vm in vms.object_list %}
+    {% if not vm.deleted %}
+    {% with vm.info as info %}
+    <tr>
+        <td class="status">
+            {% if vm.error %}
+                <div class="icon_error" title="{% trans "Ganeti API Error" %}: {{vm.error}}, last status was {{ vm.status|render_instance_status }}"></div>
+            {% else %}
+                {% if vm.pending_delete %}
+                    <div class="icon_deleting" title="delete in progress"></div>
+                {% else %}
+                    {% if info.admin_state %}
+                        {% if info.oper_state %}
+                            <div class="icon_running" title="running"></div>
+                        {% else %}
+                            <div class="icon_error" title="{{ vm.status|render_instance_status }}"></div>
+                        {% endif %}
+                    {% else %}
+                        {% if info.oper_state %}
+                            <div class="icon_error" title="{{ vm.status|render_instance_status }}"></div>
+                        {% else %}
+                            <div class="icon_stopped" title="stopped"></div>
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
+            {% endif %}
+        </td>
+        
+        <td class="name">
+            <a href="{% url instance-detail vm.cluster.slug vm.hostname %}">
+                {{ vm.hostname }}
+            </a>
+        </td>
+        {% if not cluster %}
+            <td>
+                {% if view_cluster %}
+                    <a href="{% url cluster-detail vm.cluster.slug %}">
+                    {{ vm.cluster|abbreviate_fqdn }}
+                    </a>
+                {% else %}
+                    {{ vm.cluster|abbreviate_fqdn }}
+                {% endif %}
+            </td>
+        {% endif %}
+        <td>
+            {% if view_cluster and info.pnode %}
+                <a href="{% url node-detail vm.cluster.slug info.pnode %}">
+                {{ info.pnode|abbreviate_fqdn }}
+                </a>
+            {% else %}
+                {{ info.pnode|abbreviate_fqdn }}
+            {% endif %}
+        </td>
+        <td>{{ vm.operating_system|render_os }}</td>
+        <td>{{ vm.ram|render_storage }}</td>
+        <td>{{ vm.disk_size|render_storage }}</td>
+        <td>{{ vm.virtual_cpus }}</td>
+    {% endwith %}
+    {% endif %}
+    {% empty %}
+        <tr class="none"><td colspan="100%">{% trans "No Virtual Machines" %}</td></tr>
+    {% endfor %}
+</tbody>
+</table>
+
+{% if vms.paginator.num_pages > 1 %}
+<ul class="pagination">
+    {% if vms.has_previous %}
+    <li class="previous">
+        <a href="{% url virtualmachine-table %}?page={{ vms.previous_page_number }}">&laquo; {% trans "Previous" %}</a>
+    </li>
+    {% endif %}
+
+    {% for page in vms.paginator.page_range %}
+    <li class="{%if page == vms.number%}active{%endif%} page">{{ page }}</li>
+    {% endfor %}
+
+    {% if vms.has_next %}
+    <li class="next">
+        <a href="{% url virtualmachine-table %}?page={{ vms.next_page_number }}">{% trans "Next" %} &raquo;</a>
+    </li>
+    {% endif %}
+</ul>
+{% endif %}
+

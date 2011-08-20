@@ -40,14 +40,14 @@ from object_permissions import signals as op_signals
 from object_log.models import LogItem
 log_action = LogItem.objects.log_action
 
-from util.client import GanetiApiError
+from ganeti_web.util.client import GanetiApiError
 from ganeti_web.models import Cluster, ClusterUser, Organization, VirtualMachine, \
         Job, SSHKey, VirtualMachineTemplate, Node
 from ganeti_web.views import render_403
 from ganeti_web.forms.virtual_machine import NewVirtualMachineForm, \
     KvmModifyVirtualMachineForm, PvmModifyVirtualMachineForm, \
     HvmModifyVirtualMachineForm, ModifyConfirmForm, MigrateForm, RenameForm, \
-    ChangeOwnerForm
+    ChangeOwnerForm, ReplaceDisksForm
 from ganeti_web.templatetags.webmgr_tags import render_storage
 from ganeti_web.utilities import cluster_default_info, cluster_os_list, \
     compare, os_prettify, get_hypervisor
@@ -88,7 +88,7 @@ def delete(request, cluster_slug, instance, rest = False):
             return HttpResponseForbidden()
 
     if (request.method == 'GET') & (not rest):
-        return render_to_response("virtual_machine/delete.html",
+        return render_to_response("ganeti/virtual_machine/delete.html",
             {'vm': instance, 'cluster':cluster},
             context_instance=RequestContext(request),
         )
@@ -145,7 +145,8 @@ def reinstall(request, cluster_slug, instance):
         return render_403(request, _('You do not have sufficient privileges'))
 
     if request.method == 'GET':
-        return render_to_response("virtual_machine/reinstall.html",
+        return render_to_response(
+            "ganeti/virtual_machine/reinstall.html",
             {'vm': instance, 'oschoices': cluster_os_list(cluster),
              'current_os': instance.operating_system,
              'cluster':cluster},
@@ -177,7 +178,7 @@ def reinstall(request, cluster_slug, instance):
 
 
 @login_required
-def novnc(request, cluster_slug, instance):
+def novnc(request, cluster_slug, instance, template="ganeti/virtual_machine/novnc.html"):
     vm = get_object_or_404(VirtualMachine, hostname=instance,
                            cluster__slug=cluster_slug)
     user = request.user
@@ -186,7 +187,7 @@ def novnc(request, cluster_slug, instance):
             or user.has_perm('admin', vm.cluster)):
         return HttpResponseForbidden(_('You do not have permission to vnc on this'))
 
-    return render_to_response("virtual_machine/novnc.html",
+    return render_to_response(template,
                               {'cluster_slug': cluster_slug,
                                'instance': vm,
                                },
@@ -196,6 +197,9 @@ def novnc(request, cluster_slug, instance):
 
 @login_required
 def vnc_proxy(request, cluster_slug, instance):
+    if request.method != "POST":
+        return HttpResponseNotAllowed(['POST'])
+
     vm = get_object_or_404(VirtualMachine, hostname=instance,
                                  cluster__slug=cluster_slug)
     user = request.user
@@ -204,7 +208,8 @@ def vnc_proxy(request, cluster_slug, instance):
         or user.has_perm('admin', vm.cluster)):
             return HttpResponseForbidden(_('You do not have permission to vnc on this'))
 
-    result = json.dumps(vm.setup_vnc_forwarding())
+    use_tls = bool(request.POST.get("tls"))
+    result = json.dumps(vm.setup_vnc_forwarding(tls=use_tls))
 
     return HttpResponse(result, mimetype="application/json")
 
@@ -294,8 +299,7 @@ def migrate(request, cluster_slug, instance):
     """
     view used for initiating a Node Migrate job
     """
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    vm = get_object_or_404(VirtualMachine, hostname=instance)
+    vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
 
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
@@ -321,7 +325,44 @@ def migrate(request, cluster_slug, instance):
     else:
         form = MigrateForm()
 
-    return render_to_response('virtual_machine/migrate.html',
+    return render_to_response('ganeti/virtual_machine/migrate.html'
+                              ,
+        {'form':form, 'vm':vm, 'cluster':cluster},
+        context_instance=RequestContext(request))
+
+
+@login_required
+def replace_disks(request, cluster_slug, instance):
+    """
+    view used for initiating a Replace Disks job
+    """
+    vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
+    user = request.user
+    if not (user.is_superuser or user.has_any_perms(cluster, ['admin','replace_disks'])):
+        return render_403(request, _("You do not have sufficient privileges"))
+
+    if request.method == 'POST':
+        form = ReplaceDisksForm(vm, request.POST)
+        if form.is_valid():
+            try:
+                job = form.save()
+                job.refresh()
+                content = json.dumps(job.info)
+
+                # log information
+                log_action('VM_REPLACE_DISKS', user, vm, job)
+            except GanetiApiError, e:
+                content = json.dumps({'__all__':[str(e)]})
+        else:
+            # error in form return ajax response
+            content = json.dumps(form.errors)
+        return HttpResponse(content, mimetype='application/json')
+
+    else:
+        form = ReplaceDisksForm(vm)
+
+    return render_to_response('ganeti/virtual_machine/replace_disks.html'
+                              ,
         {'form':form, 'vm':vm, 'cluster':cluster},
         context_instance=RequestContext(request))
 
@@ -422,7 +463,7 @@ def list_(request, rest = False):
     if (rest):
         return vms
     else:
-        return render_to_response('virtual_machine/list.html', {
+        return render_to_response('ganeti/virtual_machine/list.html', {
             'vms':vms,
             'can_create':can_create,
             },
@@ -470,7 +511,8 @@ def vm_table(request, cluster_slug=None, primary_node=None,
 
     vms = render_vms(request, vms)
 
-    return render_to_response('virtual_machine/inner_table.html', {
+    return render_to_response(
+        'ganeti/virtual_machine/inner_table.html', {
             'vms':vms,
             'can_create':can_create,
             'cluster':cluster
@@ -537,9 +579,9 @@ def detail(request, cluster_slug, instance, rest = False):
     # something strange like rebooting a VM that is being deleted or is not
     # fully created yet.
     if vm.pending_delete:
-        template = 'virtual_machine/delete_status.html'
+        template = 'ganeti/virtual_machine/delete_status.html'
     elif vm.template:
-        template = 'virtual_machine/create_status.html'
+        template = 'ganeti/virtual_machine/create_status.html'
         if vm.last_job:
             context['job'] = vm.last_job
         else:
@@ -551,7 +593,7 @@ def detail(request, cluster_slug, instance, rest = False):
             else:
                 context['job'] = None
     else:
-        template = 'virtual_machine/detail.html'
+        template = 'ganeti/virtual_machine/detail.html'
 
     if (rest):
         return context
@@ -656,10 +698,10 @@ def create(request, cluster_slug=None):
                 iallocator_hostname = data.get('iallocator_hostname')
             # BEPARAMS
             vcpus = data.get('vcpus')
+            disks = data.get('disks')
             disk_size = data.get('disk_size')
+            nics = data.get('nics')
             memory = data.get('memory')
-            nic_mode = data.get('nic_mode')
-            nic_link = data.get('nic_link')
             # If iallocator was not checked do not pass in the iallocator
             #  name. If iallocator was checked don't pass snode,pnode.
             if not iallocator:
@@ -680,7 +722,9 @@ def create(request, cluster_slug=None):
                     'boot_order',
                     'disk_type',
                     'nic_type',
-                    'cdrom_image_path') 
+                    'cdrom_image_path',
+                    'cdrom2_image_path',
+                )
             elif hv == 'kvm':
                 hvparam_fields = (
                     'kernel_path',
@@ -689,7 +733,9 @@ def create(request, cluster_slug=None):
                     'boot_order',
                     'disk_type',
                     'cdrom_image_path',
-                    'nic_type')
+                    'cdrom2_image_path',
+                    'nic_type',
+                )
             else:
                 hvparam_fields = None
 
@@ -708,7 +754,7 @@ def create(request, cluster_slug=None):
 
                 job_id = cluster.rapi.CreateInstance('create', hostname,
                         disk_template,
-                        [{"size": disk_size, }],[{'mode':nic_mode, 'link':nic_link, }],
+                        disks,nics,
                         start=start, os=os,
                         pnode=pnode, snode=snode,
                         name_check=name_check, ip_check=name_check,
@@ -774,7 +820,7 @@ def create(request, cluster_slug=None):
         form = NewVirtualMachineForm(user)
         cluster_defaults = {}
 
-    return render_to_response('virtual_machine/create.html', {
+    return render_to_response('ganeti/virtual_machine/create.html', {
         'form': form,
         'cluster_defaults':json.dumps(cluster_defaults)
         },
@@ -824,13 +870,13 @@ def modify(request, cluster_slug, instance):
     # Select template depending on hypervisor
     # Default to edit_base
     if hv == 'kvm':
-        template = 'virtual_machine/edit_kvm.html'
+        template = 'ganeti/virtual_machine/edit_kvm.html'
     elif hv == 'xen-hvm':
-        template = 'virtual_machine/edit_hvm.html'
+        template = 'ganeti/virtual_machine/edit_hvm.html'
     elif hv == 'xen-pvm':
-        template = 'virtual_machine/edit_pvm.html'
+        template = 'ganeti/virtual_machine/edit_pvm.html'
     else:
-        template = 'virtual_machine/edit_base.html'
+        template = 'ganeti/virtual_machine/edit_base.html'
 
     return render_to_response(template, {
         'cluster': cluster,
@@ -876,16 +922,10 @@ def modify_confirm(request, cluster_slug, instance):
             if form.is_valid():
                 data = form.cleaned_data
                 rapi_dict = data['rapi_dict']
-                niclink = rapi_dict.pop('nic_link')
-                nicmac = rapi_dict.pop('nic_mac', None)
+                nics = rapi_dict.pop('nics')
                 vcpus = rapi_dict.pop('vcpus')
                 memory = rapi_dict.pop('memory')
                 os_name = rapi_dict.pop('os')
-                # Modify Instance rapi call
-                if nicmac is None:
-                    nics=[(0, {'link':niclink,}),]
-                else:
-                    nics=[(0, {'link':niclink, 'mac':nicmac,}),]
                 job_id = cluster.rapi.ModifyInstance(instance,
                     nics=nics, os_name=os_name, hvparams=rapi_dict,
                     beparams={'vcpus':vcpus,'memory':memory}
@@ -930,17 +970,21 @@ def modify_confirm(request, cluster_slug, instance):
     hvparams = info['hvparams']
 
     old_set = dict(
-        nic_link=info['nic.links'][0],
-        nic_mac=info['nic.macs'][0],
         memory=info['beparams']['memory'],
         vcpus=info['beparams']['vcpus'],
         os=info['os'],
     )
+
+    nic_count = len(info['nic.links'])
+    for i in xrange(nic_count):
+        old_set['nic_link_%s' % i] = info['nic.links'][i]
+        old_set['nic_mac_%s' % i] = info['nic.macs'][i]
+
     # Add hvparams to the old_set
     old_set.update(hvparams)
 
     instance_diff = {}
-    fields = hv_form(vm).fields
+    fields = hv_form(vm, data).fields
     for key in data.keys():
         if key == 'memory':
             diff = compare(render_storage(old_set[key]),
@@ -968,9 +1012,11 @@ def modify_confirm(request, cluster_slug, instance):
                 oses = oses[0][1]
                 diff = compare(oses[0][1], oses[1][1])
             #diff = compare(oses[0][1], oses[1][1])
+        if key in ['nic_count','nic_count_original']:
+            continue
         elif key not in old_set.keys():
             diff = ""
-            instance_diff[key] = 'Key missing'
+            instance_diff[fields[key].label] = _('Added')
         else:
             diff = compare(old_set[key], data[key])
 
@@ -978,14 +1024,17 @@ def modify_confirm(request, cluster_slug, instance):
             label = fields[key].label
             instance_diff[label] = diff
 
-    # Remove NIC MAC from data if it does not change
-    if fields['nic_mac'].label not in instance_diff:
-        del data['nic_mac']
+    # remove mac if it has not changed
+    for i in xrange(nic_count):
+        if fields['nic_mac_%s' % i].label not in instance_diff:
+            del data['nic_mac_%s' % i]
+
     # Repopulate form with changed values
     form.fields['rapi_dict'] = CharField(widget=HiddenInput,
         initial=json.dumps(data))
 
-    return render_to_response('virtual_machine/edit_confirm.html', {
+    return render_to_response(
+        'ganeti/virtual_machine/edit_confirm.html', {
         'cluster': cluster,
         'form': form,
         'instance': vm,
@@ -1028,7 +1077,7 @@ def recover_failed_deploy(request, cluster_slug, instance):
     form = NewVirtualMachineForm(request.user, initial=initial)
     cluster_defaults = cluster_default_info(cluster)
 
-    return render_to_response('virtual_machine/create.html',
+    return render_to_response('ganeti/virtual_machine/create.html',
         {'form': form, 'cluster_defaults':json.dumps(cluster_defaults)},
         context_instance=RequestContext(request),
     )
@@ -1091,7 +1140,7 @@ def rename(request, cluster_slug, instance, rest = False, extracted_params = Non
     elif request.method == 'GET':
         form = RenameForm(vm)
 
-    return render_to_response('virtual_machine/rename.html', {
+    return render_to_response('ganeti/virtual_machine/rename.html', {
         'cluster': cluster,
         'vm': vm,
         'form': form
@@ -1127,7 +1176,8 @@ def reparent(request, cluster_slug, instance):
     else:
         form = ChangeOwnerForm()
 
-    return render_to_response('virtual_machine/reparent.html', {
+    return render_to_response(
+        'ganeti/virtual_machine/reparent.html', {
         'cluster': cluster,
         'vm': vm,
         'form': form

@@ -25,11 +25,13 @@ from django.conf.urls.defaults import *
 #admin.autodiscover()
 
 urlpatterns = patterns('',
+    (r'^', include('ganeti_web_layout.urls')),
     (r'^', include('ganeti_web.urls')),
     (r'^', include('object_permissions.urls')),
     (r'^', include('object_log.urls')),
     (r'^', include('muddle_users.urls')),
     (r'^', include('api.urls')),
+    (r'^', include('muddle.urls')),
 
     # user management
     # account/activate/<key>/ - Activate a user
@@ -63,9 +65,6 @@ handler500 = 'ganeti_web.views.view_500'
 #if settings.LOCAL_DEV:
 if settings.DEBUG:
     urlpatterns += patterns('',
-        (r'^media/(?P<path>.*)', 'django.views.static.serve',\
-            {'document_root':  settings.MEDIA_ROOT}),
-
         (r'^favicon.ico', 'django.views.static.serve',
             {'document_root':  settings.MEDIA_ROOT, 'path': 'favicon.ico'}),
         

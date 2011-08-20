@@ -38,7 +38,7 @@ class TestVirtualMachinePermissionsViews(TestVirtualMachineViewsBase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.get(url % args)
         self.assertEqual(403, response.status_code)
 
@@ -106,7 +106,7 @@ class TestVirtualMachinePermissionsViews(TestVirtualMachineViewsBase):
         response = c.post(url % args, data)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'object_permissions/permissions/user_row.html')
-        self.assert_(user1.has_perm('admin', vm))
+        self.assertTrue(user1.has_perm('admin', vm))
         self.assertFalse(user1.has_perm('power', vm))
 
         # valid POST group has permissions
@@ -143,7 +143,7 @@ class TestVirtualMachinePermissionsViews(TestVirtualMachineViewsBase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.get(url % args)
         self.assertEqual(403, response.status_code)
 
@@ -202,7 +202,7 @@ class TestVirtualMachinePermissionsViews(TestVirtualMachineViewsBase):
         response = c.post(url_post % args_post, data)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'object_permissions/permissions/user_row.html')
-        self.assert_(user1.has_perm('admin', vm))
+        self.assertTrue(user1.has_perm('admin', vm))
         self.assertFalse(user1.has_perm('power', vm))
 
         # valid POST user has no permissions left
@@ -228,7 +228,7 @@ class TestVirtualMachinePermissionsViews(TestVirtualMachineViewsBase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.get(url % args)
         self.assertEqual(403, response.status_code)
 

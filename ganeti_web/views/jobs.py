@@ -48,7 +48,7 @@ def detail(request, cluster_slug, job_id, rest = False):
     if (rest):
         return {'job': job, 'cluster_admin':cluster_admin}
     else:
-        return render_to_response("job/detail.html",{
+        return render_to_response("ganeti/job/detail.html",{
             'job':job,
             'cluster_admin':cluster_admin
         } ,context_instance=RequestContext(request))

@@ -114,13 +114,13 @@ class TestJobModel(TestJobMixin, TestCase):
         
         # load with running status, should refresh
         job.load_info()
-        self.assert_(job.ignore_cache)
+        self.assertTrue(job.ignore_cache)
         job._refresh.assertCalled(self)
         job._refresh.reset()
         
         # load again with running status, should refresh
         job.load_info()
-        self.assert_(job.ignore_cache)
+        self.assertTrue(job.ignore_cache)
         job._refresh.assertCalled(self)
         job._refresh.reset()
         
@@ -152,13 +152,13 @@ class TestJobModel(TestJobMixin, TestCase):
         
         # load with running status, should refresh
         job.load_info()
-        self.assert_(job.ignore_cache)
+        self.assertTrue(job.ignore_cache)
         job._refresh.assertCalled(self)
         job._refresh.reset()
         
         # load again with running status, should refresh
         job.load_info()
-        self.assert_(job.ignore_cache)
+        self.assertTrue(job.ignore_cache)
         job._refresh.assertCalled(self)
         job._refresh.reset()
         
@@ -281,4 +281,4 @@ class TestJobViews(TestJobMixin, TestCase, UserTestMixin, ViewTestMixin):
         args = (cluster.slug, c_error.job_id)
 
         self.assert_standard_fails(url, args, authorized=False)
-        self.assert_200(url, args, users=[superuser, cluster_admin], template='job/detail.html')
+        self.assert_200(url, args, users=[superuser, cluster_admin], template='ganeti/job/detail.html')

@@ -93,7 +93,7 @@ class ImportViews(TestCase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.get(url)
         self.assertEqual(403, response.status_code)
 
@@ -102,7 +102,7 @@ class ImportViews(TestCase):
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'importing/orphans.html')
+        self.assertTemplateUsed(response, 'ganeti/importing/orphans.html')
         self.assertEqual([(vm0.id, 'test0', 'vm0')], response.context['vms'])
         user.revoke_all(cluster0)
 
@@ -112,7 +112,7 @@ class ImportViews(TestCase):
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'importing/orphans.html')
+        self.assertTemplateUsed(response, 'ganeti/importing/orphans.html')
         self.assertEqual([(vm0.id, 'test0', 'vm0'), (vm3.id, 'test1', 'vm3')], response.context['vms'])
         user.is_superuser = False
         user.save()
@@ -123,31 +123,31 @@ class ImportViews(TestCase):
         response = c.post(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'importing/orphans.html')
-        self.assert_(response.context['form'].errors)
+        self.assertTemplateUsed(response, 'ganeti/importing/orphans.html')
+        self.assertTrue(response.context['form'].errors)
 
         # POST - invalid owner
         data = {'virtual_machines':[vm0.id], 'owner':-1}
         response = c.post(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'importing/orphans.html')
-        self.assert_(response.context['form'].errors)
+        self.assertTemplateUsed(response, 'ganeti/importing/orphans.html')
+        self.assertTrue(response.context['form'].errors)
 
         # POST - user does not have perms for cluster
         data = {'virtual_machines':[vm3.id], 'owner':owner.id}
         response = c.post(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'importing/orphans.html')
-        self.assert_(response.context['form'].errors)
+        self.assertTemplateUsed(response, 'ganeti/importing/orphans.html')
+        self.assertTrue(response.context['form'].errors)
 
         # POST - success
         data = {'virtual_machines':[vm0.id], 'owner':owner.id}
         response = c.post(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'importing/orphans.html')
+        self.assertTemplateUsed(response, 'ganeti/importing/orphans.html')
         self.assertFalse(response.context['form'].errors)
         self.assertEqual([], response.context['vms'])
 
@@ -165,7 +165,7 @@ class ImportViews(TestCase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.get(url)
         self.assertEqual(403, response.status_code)
 
@@ -174,7 +174,7 @@ class ImportViews(TestCase):
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'importing/missing.html')
+        self.assertTemplateUsed(response, 'ganeti/importing/missing.html')
         self.assertEqual([('vm1','test0','vm1')], response.context['vms'])
         user.revoke_all(cluster0)
 
@@ -184,7 +184,7 @@ class ImportViews(TestCase):
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'importing/missing.html')
+        self.assertTemplateUsed(response, 'ganeti/importing/missing.html')
         self.assertEqual([('vm1','test0','vm1'), ('vm4','test1','vm4')], response.context['vms'])
         user.is_superuser = False
         user.save()
@@ -195,23 +195,23 @@ class ImportViews(TestCase):
         response = c.post(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'importing/missing.html')
-        self.assert_(response.context['form'].errors)
+        self.assertTemplateUsed(response, 'ganeti/importing/missing.html')
+        self.assertTrue(response.context['form'].errors)
 
         # POST - user does not have perms for cluster
         data = {'virtual_machines':[vm3.hostname]}
         response = c.post(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'importing/missing.html')
-        self.assert_(response.context['form'].errors)
+        self.assertTemplateUsed(response, 'ganeti/importing/missing.html')
+        self.assertTrue(response.context['form'].errors)
 
         # POST - success
         data = {'virtual_machines':['vm1']}
         response = c.post(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'importing/missing.html')
+        self.assertTemplateUsed(response, 'ganeti/importing/missing.html')
         self.assertFalse(response.context['form'].errors)
         self.assertEqual([], response.context['vms'])
 
@@ -229,7 +229,7 @@ class ImportViews(TestCase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assert_(c.login(username=user.username, password='secret'))
+        self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.get(url)
         self.assertEqual(403, response.status_code)
 
@@ -238,7 +238,7 @@ class ImportViews(TestCase):
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'importing/missing_db.html')
+        self.assertTemplateUsed(response, 'ganeti/importing/missing_db.html')
         self.assertEqual([('1:vm2','test0','vm2')], response.context['vms'])
         user.revoke_all(cluster0)
 
@@ -248,7 +248,7 @@ class ImportViews(TestCase):
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'importing/missing_db.html')
+        self.assertTemplateUsed(response, 'ganeti/importing/missing_db.html')
         self.assertEqual([('1:vm2','test0','vm2'), ('2:vm5','test1','vm5')], response.context['vms'])
         user.is_superuser = False
         user.save()
@@ -259,31 +259,31 @@ class ImportViews(TestCase):
         response = c.post(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'importing/missing_db.html')
-        self.assert_(response.context['form'].errors)
+        self.assertTemplateUsed(response, 'ganeti/importing/missing_db.html')
+        self.assertTrue(response.context['form'].errors)
 
         # POST - invalid owner
         data = {'virtual_machines':[vm0.id], 'owner':-1}
         response = c.post(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'importing/missing_db.html')
-        self.assert_(response.context['form'].errors)
+        self.assertTemplateUsed(response, 'ganeti/importing/missing_db.html')
+        self.assertTrue(response.context['form'].errors)
 
         # POST - user does not have perms for cluster
         data = {'virtual_machines':[vm3.hostname], 'owner':owner.id}
         response = c.post(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'importing/missing_db.html')
-        self.assert_(response.context['form'].errors)
+        self.assertTemplateUsed(response, 'ganeti/importing/missing_db.html')
+        self.assertTrue(response.context['form'].errors)
 
         # POST - success
         data = {'virtual_machines':['1:vm2'], 'owner':owner.id}
         response = c.post(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'importing/missing_db.html')
+        self.assertTemplateUsed(response, 'ganeti/importing/missing_db.html')
         self.assertFalse(response.context['form'].errors)
         self.assertEqual([], response.context['vms'])
-        self.assert_(VirtualMachine.objects.filter(hostname='vm2').exists())
+        self.assertTrue(VirtualMachine.objects.filter(hostname='vm2').exists())

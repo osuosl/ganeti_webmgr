@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-
+import binascii
 import cPickle
 from datetime import datetime, timedelta
 from hashlib import sha1
@@ -32,7 +32,9 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import GenericForeignKey
 
 from django.core.validators import RegexValidator, MinValueValidator
+from django.utils.encoding import force_unicode
 from django.utils.translation import ugettext_lazy as _
+from django_fields.fields import PickleField
 import re
 
 from django.db import models
@@ -42,22 +44,23 @@ from django.db.models.signals import post_save, post_syncdb
 from django.db.utils import DatabaseError
 from ganeti_web.logs import register_log_actions
 
+from django_fields.fields import EncryptedCharField
+
 from object_log.models import LogItem
 log_action = LogItem.objects.log_action
 
 from object_permissions.registration import register
-from object_permissions import signals as op_signals
 
 from muddle_users import signals as muddle_user_signals
 
 from ganeti_web import constants, management
 from ganeti_web.fields import PreciseDateTimeField, SumIf
 from ganeti_web import permissions
-from util import client
-from util.client import GanetiApiError
+from ganeti_web.util import client
+from ganeti_web.util.client import GanetiApiError, REPLACE_DISK_AUTO
 
 if settings.VNC_PROXY:
-    from util.vncdaemon.vapclient import request_forwarding
+    from ganeti_web.util.vncdaemon.vapclient import request_forwarding
 import random
 import string
 
@@ -95,8 +98,11 @@ def get_rapi(hash, cluster):
         .values_list('hash','hostname','port','username','password')
     hash, host, port, user, password = credentials
     user = user if user else None
-    password = password if password else None
-
+    # decrypt password
+    # XXX django-fields only stores str, convert to None if needed
+    password = Cluster.decrypt_password(password) if password else None
+    password = None if password in ('None', '') else password
+    
     # now that we know hash is fresh, check cache again. The original hash could
     # have been stale.  This avoids constructing a new RAPI that already exists.
     if hash in RAPI_CACHE:
@@ -701,7 +707,17 @@ class VirtualMachine(CachedClusterObject):
             .update(last_job=job, ignore_cache=True)
         return job
 
-    def setup_vnc_forwarding(self, sport=''):
+    def replace_disks(self, mode=REPLACE_DISK_AUTO, disks=None, node=None,
+                      iallocator=None):
+        id = self.rapi.ReplaceInstanceDisks(self.hostname, disks, mode, node,
+                                            iallocator)
+        job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
+        self.last_job = job
+        VirtualMachine.objects.filter(pk=self.id) \
+            .update(last_job=job, ignore_cache=True)
+        return job
+
+    def setup_vnc_forwarding(self, sport="0", tls=False):
         password = ''
         info_ = self.info
         port = info_['network_port']
@@ -711,7 +727,8 @@ class VirtualMachine(CachedClusterObject):
         if settings.VNC_PROXY:
             proxy_server = settings.VNC_PROXY.split(":")
             password = generate_random_password()
-            result = request_forwarding(proxy_server, sport, node, port, password)
+            result = request_forwarding(proxy_server, node, port, password,
+                                        sport=int(sport), tls=tls)
             if not result:
                 return False, False, False
             else:
@@ -761,6 +778,7 @@ class Node(CachedClusterObject):
     ram_free = models.IntegerField(default=-1)
     disk_total = models.IntegerField(default=-1)
     disk_free = models.IntegerField(default=-1)
+    cpus = models.IntegerField(null=True)
 
     # The last job reference indicates that there is at least one pending job
     # for this virtual machine.  There may be more than one job, and that can
@@ -810,6 +828,7 @@ class Node(CachedClusterObject):
         data['ram_free'] = info['mfree'] if info['mfree'] is not None else 0
         data['disk_total'] = info['dtotal'] if info['dtotal'] is not None else 0
         data['disk_free'] = info['dfree'] if info['dfree'] is not None else 0
+        data['cpus'] = info['csockets'] if 'csockets' in info else None
         data['offline'] = info['offline']
         data['role'] = info['role']
         return data
@@ -876,6 +895,14 @@ class Node(CachedClusterObject):
         free = total-allocated if allocated >= 0 and total >=0  else -1
 
         return {'total':total, 'free': free, 'allocated':allocated, 'used':used}
+
+    @property
+    def allocated_cpus(self):
+        values = VirtualMachine.objects \
+            .filter(primary_node=self, status='running') \
+            .exclude(virtual_cpus=-1).order_by() \
+            .aggregate(cpus=Sum('virtual_cpus'))
+        return 0 if 'cpus' not in values or values['cpus'] is None else values['cpus']
     
     def set_role(self, role, force=False):
         """
@@ -931,7 +958,7 @@ class Cluster(CachedClusterObject):
     port = models.PositiveIntegerField(_('port'), default=5080)
     description = models.CharField(_('description'), max_length=128, blank=True, null=True)
     username = models.CharField(_('username'), max_length=128, blank=True, null=True)
-    password = models.CharField(_('password'), max_length=128, blank=True, null=True)
+    password = EncryptedCharField(_('password'), max_length=128, blank=True, null=True)
     hash = models.CharField(_('hash'), max_length=40, editable=False)
     
     # quota properties
@@ -951,6 +978,20 @@ class Cluster(CachedClusterObject):
 
     def __unicode__(self):
         return self.hostname
+
+    @classmethod
+    def decrypt_password(cls, value):
+        """
+        Convenience method for decrypted a password without an instance.
+        This was partly cribbed from django-fields which only allows decrypting
+        from a model instance.
+        """
+        field, chaff, chaff, chaff = Cluster._meta.get_field_by_name('password')
+        return force_unicode(
+            field.cipher.decrypt(
+                binascii.a2b_hex(value[len(field.prefix):])
+            ).split('\0')[0]
+        )
 
     def save(self, *args, **kwargs):
         self.hash = self.create_hash()
@@ -1053,8 +1094,7 @@ class Cluster(CachedClusterObject):
                 quotas[cluster] = custom
 
         return quotas
-    
-    
+
     def sync_virtual_machines(self, remove=False):
         """
         Synchronizes the VirtualMachines in the database with the information
@@ -1067,7 +1107,8 @@ class Cluster(CachedClusterObject):
 
         # add VMs missing from the database
         for hostname in filter(lambda x: unicode(x) not in db, ganeti):
-            VirtualMachine(cluster=self, hostname=hostname).save()
+            vm = VirtualMachine.objects.create(cluster=self, hostname=hostname)
+            vm.refresh()
 
         # deletes VMs that are no longer in ganeti
         if remove:
@@ -1088,7 +1129,8 @@ class Cluster(CachedClusterObject):
         
         # add Nodes missing from the database
         for hostname in filter(lambda x: unicode(x) not in db, ganeti):
-            Node(cluster=self, hostname=hostname).save()
+            node = Node.objects.create(cluster=self, hostname=hostname)
+            node.refresh()
         
         # deletes Nodes that are no longer in ganeti
         if remove:
@@ -1272,14 +1314,10 @@ class VirtualMachineTemplate(models.Model):
                 validators=[MinValueValidator(1)], null=True, blank=True)
     memory = models.IntegerField(verbose_name=_('Memory'), \
                 validators=[MinValueValidator(100)],null=True, blank=True)
-    disk_size = models.IntegerField(verbose_name=_('Disk Size'), null=True, \
-                validators=[MinValueValidator(100)], blank=True)
+    disks = PickleField(verbose_name=_('Disks'), null=True, blank=True)
     disk_type = models.CharField(verbose_name=_('Disk Type'), max_length=255, \
                                  null=True, blank=True)
-    nic_mode = models.CharField(verbose_name=_('NIC Mode'), max_length=255, \
-                                null=True, blank=True)
-    nic_link = models.CharField(verbose_name=_('NIC Link'), max_length=255, \
-                null=True, blank=True)
+    nics = PickleField(verbose_name=_('NICs'), null=True, blank=True)
     nic_type = models.CharField(verbose_name=_('NIC Type'), max_length=255, \
                                 null=True, blank=True)
     # HVPARAMS
@@ -1292,6 +1330,9 @@ class VirtualMachineTemplate(models.Model):
                                   null=True, blank=True)
     cdrom_image_path = models.CharField(verbose_name=_('CD-ROM Image Path'), null=True, \
                 blank=True, max_length=512)
+    cdrom2_image_path = models.CharField(
+        verbose_name=_('CD-ROM 2 Image Path'), null=True, blank=True,
+        max_length=512)
 
     def __str__(self):
         if self.template_name is None:

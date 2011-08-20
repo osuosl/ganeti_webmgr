@@ -100,7 +100,7 @@ def generate_wiki_basic_table(dict):
             else:
                 ro = " "
             if (dict[key].get('nullable')):
-                nl = "=. x"
+                nl = "=. gx"
             else:
                 nl = " "
             print "|<code>" + key + "</code>|<code>" + dict[key]['type'] + "</code>|" + ro + "|" + nl + "|" + dict[key]['help_text'].__str__() + "|"

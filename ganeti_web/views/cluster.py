@@ -19,16 +19,14 @@
 
 import json
 
-from django import forms
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
-from django.db.models.query_utils import Q
+from django.db.models import Q, Sum
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
-from django.template.defaultfilters import slugify
 
 from object_permissions import get_users_any
 from object_permissions.views.permissions import view_users, view_permissions
@@ -37,14 +35,14 @@ from muddle_users import signals as muddle_user_signals
 
 from object_log.models import LogItem
 from object_log.views import list_for_object
-from util.client import GanetiApiError
 
 log_action = LogItem.objects.log_action
 
-from ganeti_web.models import Cluster, ClusterUser, Profile, SSHKey
+from ganeti_web.util.client import GanetiApiError
+from ganeti_web.models import Cluster, ClusterUser, Profile, SSHKey, VirtualMachine
 from ganeti_web.views import render_403, render_404
 from ganeti_web.views.virtual_machine import render_vms
-from ganeti_web.fields import DataVolumeField
+from ganeti_web.forms.cluster import EditClusterForm, QuotaForm
 from django.utils.translation import ugettext as _
 
 
@@ -58,12 +56,14 @@ def detail(request, cluster_slug, rest=False):
     admin = True if user.is_superuser else user.has_perm('admin', cluster)
     if not admin:
         return render_403(request, _("You do not have sufficient privileges"))
-    if (rest == True):
+
+    if (rest):
         return {'cluster':cluster,'admin':admin}
     else:
-        return render_to_response("cluster/detail.html", {
+        return render_to_response("ganeti/cluster/detail.html", {
             'cluster':cluster,
             'admin':admin
+
         },
         context_instance=RequestContext(request),
     )
@@ -78,9 +78,25 @@ def nodes(request, cluster_slug):
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
         return render_403(request, _("You do not have sufficient privileges"))
-    
-    return render_to_response("node/table.html", \
-                        {'cluster': cluster, 'nodes':cluster.nodes.all()}, \
+
+    # query allocated CPUS for all nodes in this list.  Must be done here to
+    # avoid querying Node.allocated_cpus for each node in the list.  Repackage
+    # list so it is easier to retrieve the values in the template
+    values = VirtualMachine.objects \
+            .filter(cluster=cluster, status='running') \
+            .exclude(virtual_cpus=-1) \
+            .order_by() \
+            .values('primary_node') \
+            .annotate(cpus=Sum('virtual_cpus'))
+    cpus = {}
+    for d in values:
+        cpus[d['primary_node']] = d['cpus']
+
+    return render_to_response("ganeti/node/table.html",
+        {'cluster': cluster,
+         'nodes':cluster.nodes.all(),
+         'cpus':cpus
+        },
         context_instance=RequestContext(request),
     )
 
@@ -100,8 +116,8 @@ def virtual_machines(request, cluster_slug):
     vms = cluster.virtual_machines.select_related('cluster').all()
     vms = render_vms(request, vms)
 
-    return render_to_response("virtual_machine/table.html", \
-                {'cluster': cluster, 'vms':vms}, \
+    return render_to_response("ganeti/virtual_machine/table.html",
+                {'cluster': cluster, 'vms':vms},
                 context_instance=RequestContext(request))
 
 
@@ -135,9 +151,9 @@ def edit(request, cluster_slug=None):
                     # info for an offline cluster.
                     pass
 
-            log_action('EDIT', user, cluster)
+            log_action('EDIT' if cluster_slug else 'CREATE', user, cluster)
 
-            return HttpResponseRedirect(reverse('cluster-detail', \
+            return HttpResponseRedirect(reverse('cluster-detail', 
                                                 args=[cluster.slug]))
     
     elif request.method == 'DELETE':
@@ -147,7 +163,7 @@ def edit(request, cluster_slug=None):
     else:
         form = EditClusterForm(instance=cluster)
     
-    return render_to_response("cluster/edit.html", {
+    return render_to_response("ganeti/cluster/edit.html", {
         'form' : form,
         'cluster': cluster,
         },
@@ -165,10 +181,11 @@ def list_(request, rest = False):
         cluster_list = Cluster.objects.all()
     else:
         cluster_list = user.get_objects_all_perms(Cluster, ['admin',])
+
     if rest:
         return cluster_list
     else:
-        return render_to_response("cluster/list.html", {
+        return render_to_response("ganeti/cluster/list.html", {
         'cluster_list': cluster_list,
         'user': request.user,
         },
@@ -188,7 +205,7 @@ def users(request, cluster_slug):
         return render_403(request, _("You do not have sufficient privileges"))
     
     url = reverse('cluster-permissions', args=[cluster.slug])
-    return view_users(request, cluster, url, template='cluster/users.html')
+    return view_users(request, cluster, url, template='ganeti/cluster/users.html')
 
 
 @login_required
@@ -204,8 +221,8 @@ def permissions(request, cluster_slug, user_id=None, group_id=None):
 
     url = reverse('cluster-permissions', args=[cluster.slug])
     return view_permissions(request, cluster, url, user_id, group_id,
-                            user_template='cluster/user_row.html',
-                            group_template='cluster/group_row.html')
+                            user_template='ganeti/cluster/user_row.html',
+                            group_template='ganeti/cluster/group_row.html')
 
 
 @login_required
@@ -254,21 +271,6 @@ def ssh_keys(request, cluster_slug, api_key):
     return HttpResponse(json.dumps(keys_list), mimetype="application/json")
 
 
-class QuotaForm(forms.Form):
-    """
-    Form for editing user quota on a cluster
-    """
-    input = forms.TextInput(attrs={'size':5})
-    
-    user = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), \
-                                  widget=forms.HiddenInput)
-    ram = DataVolumeField(label='Memory', required=False, min_value=0)
-    virtual_cpus = forms.IntegerField(label='Virtual CPUs', required=False, \
-                                    min_value=0, widget=input)
-    disk = DataVolumeField(label='Disk Space', required=False, min_value=0)
-    delete = forms.BooleanField(required=False, widget=forms.HiddenInput)
-
-
 @login_required
 def quota(request, cluster_slug, user_id):
     """
@@ -301,11 +303,13 @@ def quota(request, cluster_slug, user_id):
             cluster_user = cluster_user.cast()
             url = reverse('cluster-permissions', args=[cluster.slug])
             if isinstance(cluster_user, (Profile,)):
-                return render_to_response("cluster/user_row.html",
+                return render_to_response(
+                    "ganeti/cluster/user_row.html",
                     {'object':cluster, 'user_detail':cluster_user.user, 'url':url},
                     context_instance=RequestContext(request))
             else:
-                return render_to_response("cluster/group_row.html",
+                return render_to_response(
+                    "ganeti/cluster/group_row.html",
                     {'object':cluster, 'group':cluster_user.group, 'url':url},
                     context_instance=RequestContext(request))
         
@@ -323,53 +327,9 @@ def quota(request, cluster_slug, user_id):
         return render_404(request, _('User was not found'))
     
     form = QuotaForm(data)
-    return render_to_response("cluster/quota.html", \
-                        {'form':form, 'cluster':cluster, 'user_id':user_id}, \
+    return render_to_response("ganeti/cluster/quota.html",
+                        {'form':form, 'cluster':cluster, 'user_id':user_id},
                         context_instance=RequestContext(request))
-
-
-class EditClusterForm(forms.ModelForm):
-    class Meta:
-        model = Cluster
-        widgets = {
-            'password' : forms.PasswordInput(),
-        }
-        
-    ram = DataVolumeField(label=_('Memory'), required=False, min_value=0)
-    disk = DataVolumeField(label=_('Disk Space'), required=False, min_value=0)
-    
-    def clean(self):
-        self.cleaned_data = super(EditClusterForm, self).clean()
-        data = self.cleaned_data
-        host = data.get('hostname', None)
-        user = data.get('username', None)
-        new = data.get('password', None)
-        
-        # Automatically set the slug on cluster creation
-        if not host:
-            msg = _('Enter a hostname')
-            self._errors['hostname'] = self.error_class([msg])
-            
-        if user: 
-            if not new:
-                if 'password' in data: del data['password']
-                msg = _('Enter a password')
-                self._errors['password'] = self.error_class([msg])
-            
-        elif new:
-            msg = _('Enter a username')
-            self._errors['username'] = self.error_class([msg])
-            
-            if not new:
-                if 'password' in data: del data['password']
-                msg = _('Enter a password')
-                self._errors['password'] = self.error_class([msg])
-
-        if 'hostname' in data and data['hostname'] and 'slug' not in data:
-            data['slug'] = slugify(data['hostname'].split('.')[0])
-            del self._errors['slug']
-        
-        return data
 
 
 @login_required

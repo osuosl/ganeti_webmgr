@@ -1,13 +1,13 @@
-import json
-
 from django.contrib.auth.models import User, Group
 from django.test import TestCase, Client
+# Per #6579, do not change this import without discussion.
+from django.utils import simplejson as json
 
 from django_test_tools.views import ViewTestMixin
 from django_test_tools.users import UserTestMixin
 from ganeti_web.models import VirtualMachineTemplate
 
-from util import client
+from ganeti_web.util import client
 from ganeti_web.tests.rapi_proxy import RapiProxy
 from ganeti_web import models
 

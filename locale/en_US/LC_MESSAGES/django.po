@@ -1147,15 +1147,15 @@ msgstr ""
 
 #: ganeti_web/templates/helptips/vm_edit_pvm.html:18
 msgid ""
-"This options specifies extra arguments to the kernel that will \n"
-"        be loaded. device. This is always used for Xen PVM, while for\n"
+"This option specifies extra arguments to the kernel that will \n"
+"        be loaded to the device. This is always used for Xen PVM, while for\n"
 "        KVM it is only used if the kernel_path option is also specified."
 msgstr ""
 
 #: ganeti_web/templates/helptips/vm_edit_pvm.html:23
 msgid ""
 "The default setting for this value is simply \"ro\", which mounts\n"
-"        the root disk (initially) in read-only one. For example, setting\n"
+"        the root disk (initially) in read-only mode. For example, setting\n"
 "        this to single will cause the instance to start in single-user mode."
 msgstr ""
 

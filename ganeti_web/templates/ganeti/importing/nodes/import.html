@@ -1,0 +1,46 @@
+{% extends "menu_base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Import Nodes" %}{% endblock %}
+{% block head %}
+    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.multi_checkbox_selector.js"></script>
+    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.tablesorter.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("#import_form").select_all();
+            $("#node_list").tablesorter({
+                    headers: {
+                            0: { sorter: 'false' },
+                    }
+            });
+        });
+    </script>
+{% endblock %}
+{% block content %}
+    <h1 class="breadcrumb"><span>{% trans "Admin" %}</span> : {% trans "Import Nodes" %}</h1>
+
+    <p class="info">
+        {% trans "When you add nodes to ganeti they must be manually imported into Ganeti Web Manager." %}.
+    </p>
+
+    <form id="import_form" action="{% url import-nodes-missing_db %}" method="post">
+        {{form.errors}}
+        {{form.owner.label}} {{form.owner}}
+        <input type="submit" value="{% trans "Import Selected" %}" {%if not nodes%}disabled{%endif%}>
+        <table id="node_list" class="sorted">
+        <thead>
+            <tr>
+                <th></th>
+                <th>{% trans "Cluster" %}</th>
+                <th>{% trans "Hostname" %}</th>
+            </tr>
+        </thead>
+        <tbody id="nodes">
+                {% for node in nodes %}
+                    <tr><td><input type="checkbox" name="nodes" value="{{node.0}}" /></td><td>{{node.1}}</td><td>{{node.2}}</td></tr>
+                {% empty %}
+                    <tr><td colspan="3">{% trans "All nodes are synchronized" %}.</td></tr>
+                {% endfor %}
+        </tbody>
+        </table>
+    </form>
+{% endblock %}

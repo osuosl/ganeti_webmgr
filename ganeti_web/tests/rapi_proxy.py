@@ -18,7 +18,7 @@
 
 
 from ganeti_web.tests.call_proxy import CallProxy, ResponseMap
-from util import client
+from ganeti_web.util import client
 
 
 class MethodProxy(object):
@@ -139,7 +139,7 @@ XEN_HVM_INSTANCE = {
     'br42'
   ],
   'nic.macs': [
-    'aa:00:00:20:8d:41'
+    'aa:00:00:c5:47:2e'
   ],
   'nic.modes': [
     'bridged'
@@ -205,7 +205,7 @@ XEN_PVM_INSTANCE = {
     'br42'
   ],
   'nic.macs': [
-    'aa:00:00:1f:33:6e'
+    'aa:00:00:c5:47:2e'
   ],
   'nic.modes': [
     'bridged'
@@ -302,7 +302,7 @@ NODES_BULK = [
 
 
 NODE = {'cnodes': 1,
-    'csockets': 1,
+    'csockets': 3,
     'ctime': 1285799513.4741000,
     'ctotal': 2,
     'dfree': 2222,
@@ -702,6 +702,7 @@ class RapiProxy(client.GanetiRapiClient):
         CallProxy.patch(instance, 'MigrateInstance', False, 1)
         CallProxy.patch(instance, 'RenameInstance', False, 1)
         CallProxy.patch(instance, 'RedistributeConfig', False, 1)
+        CallProxy.patch(instance, 'ReplaceInstanceDisks', False, 1)
         CallProxy.patch(instance, 'SetNodeRole', False, 1)
         CallProxy.patch(instance, 'EvacuateNode', False, 1)
         CallProxy.patch(instance, 'MigrateNode', False, 1)

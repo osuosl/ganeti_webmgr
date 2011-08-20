@@ -1,0 +1,64 @@
+{% extends "menu_base.html" %}
+{% load webmgr_tags i18n %}
+{% block head %}
+    <link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}/css/virtual_machine_create.css"/>
+    <script src="{{SITE_ROOT}}/ganeti_web_media/js/modifyVM_formUpdater.js"></script>
+    <script src="{{SITE_ROOT}}/ganeti_web_media/js/helpTips.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var formUpdate = new modifyFormUpdater({{ form.nics }});
+            formUpdate.init();
+            initHelpTips("#vmeditform");
+        });
+    </script>
+{% endblock %}
+
+{% block content %}
+<h1 class="breadcrumb">
+    {% if cluster_admin %}
+    <a href="{% url cluster-detail cluster.slug %}#virtual_machines">{{cluster.hostname|abbreviate_fqdn}}</a>
+    {% else %}
+    <span>{{cluster.hostname|abbreviate_fqdn}}</span>
+    {% endif %}
+    : <a href="{% url instance-detail cluster.slug instance.hostname %}">{{ instance.hostname }}</a>
+    : {% trans "Edit" %}
+</h1>
+
+<div id="vmeditform">
+    <form method="post">
+        <fieldset class="first_fieldset">
+            <legend>{% trans "General Parameters" %}</legend>
+            {% vmfield form.vcpus %}
+            {% vmfield form.memory %}
+            {% block beparams %}{% endblock %}
+        </fieldset>
+
+        <fieldset id="nics">
+            <h3>{% trans "Network Devices" %}<a class="icon add"></a></h3>
+            {{ form.nic_count }}
+            {% for index in form.nic_fields %}
+                {% vmfield_nic form index %}
+            {% endfor %}
+        </fieldset>
+
+        <fieldset>
+            <legend>{% trans "Operating System Parameters" %}</legend>
+            {% vmfield form.os %}
+        </fieldset>
+        <fieldset>
+            <legend>{% trans "Hypervisor Parameters" %}</legend>
+            {% block hvparams %}{% endblock %}
+        </fieldset>
+        <input class="submit" type="submit" value="{% trans "Continue" %}" />
+    </form>
+</div>
+<div id="help">
+    <h3></h3>
+    <div></div>
+</div>
+<div id="help-contents">
+    {% include "ganeti/helptips/vm.html" %}
+    {% include "ganeti/helptips/vm_edit.html" %}
+    {% block helptips %}{% endblock %}
+</div>
+{% endblock %}

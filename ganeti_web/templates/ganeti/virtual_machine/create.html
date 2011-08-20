@@ -1,0 +1,111 @@
+{% extends "menu_base.html" %}
+{% load i18n %}
+{% load webmgr_tags %}
+{% block title %}{% trans "Create a new Virtual Machine" %}{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" type="text/css"
+            href="{{MEDIA_URL}}/css/virtual_machine_create.css"/>
+    <!-- javascript includes -->
+    <script src="{{SITE_ROOT}}/ganeti_web_media/js/disableSingletonDropdown.js"></script>
+    <script src="{{SITE_ROOT}}/ganeti_web_media/js/createVM_formUpdater.js"></script>
+    <script src="{{SITE_ROOT}}/ganeti_web_media/js/helpTips.js"></script>
+    <script type="text/javascript">
+        
+        // -------
+        // "main"
+        // -------
+        $(document).ready(function() {
+            /* run when document is fully loaded */
+           
+            // init the live-form updater
+            var frmUpdater = new formUpdater(
+                    '{% url instance-create-cluster-choices %}',
+                    '{% url instance-create-cluster-options %}',
+                    '{% url instance-create-cluster-defaults %}');
+            frmUpdater.init({{ cluster_defaults|safe }});
+ 
+            // init the help tips for the individ. form objects
+            initHelpTips('#virtualmachineform');
+        });
+
+    </script>
+{% endblock %}
+
+{% block content %}
+<div id="virtualmachineform">
+    <form method="post" action="{% url instance-create %}">
+        <fieldset class="first_fieldset">
+            <h1 class="breadcrumb"><span>{% trans "Virtual Machine" %}</span> : {% trans "Create" %}</h1>
+            {% vmfield form.owner %}
+            {% vmfield form.cluster %}
+            {% vmfield form.hypervisor %}
+            {% vmfield form.hostname %}
+            {% vmfield form.start %}
+            {% vmfield form.name_check %}
+            {% vmfield form.iallocator %}
+            {% vmfield form.iallocator_hostname.as_hidden %}
+            {% vmfield form.disk_template %}
+            {% vmfield form.pnode %}
+            {% vmfield form.snode %}
+            {% vmfield form.os %}
+        </fieldset>
+        <fieldset>
+            <legend>{% trans "General Parameters" %} </legend>
+            {% vmfield form.vcpus %}
+            {% vmfield form.memory %}
+            {% if form.disk_type %}
+            {% vmfield form.disk_type %}
+            {% endif %}
+            {% if form.nic_type %}
+            {% vmfield form.nic_type %}
+            {% endif %}
+        </fieldset>
+
+        <fieldset id="disks">
+            <h3>{% trans "Disks" %}<div class="icon add"></div></h3>
+            {{ form.disk_count }}
+            {% for index in form.disk_fields %}
+                {% vmfield_disk form index %}
+            {% endfor %}
+        </fieldset>
+
+        <fieldset id="nics">
+            <h3>{% trans "Network Devices" %}<div class="icon add"></div></h3>
+            {{ form.nic_count }}
+            {% for index in form.nic_fields %}
+                {% vmfield_nic form index %}
+            {% endfor %}
+        </fieldset>
+
+        <fieldset>
+            <legend>{% trans "Hypervisor Parameters" %}</legend>
+            {% vmfield form.kernel_path %}
+            {% vmfield form.root_path %}
+            {% if form.serial_console %}
+            {% vmfield form.serial_console %}
+            {% endif %}
+            {% if form.boot_order %}
+            {% vmfield form.boot_order %}
+            {% endif %}
+            {% if form.cdrom_image_path %}
+                {% vmfield form.cdrom_image_path %}
+            {% endif %}
+            {% if form.cdrom2_image_path %}
+                {% vmfield form.cdrom2_image_path %}
+            {% endif %}
+        </fieldset>
+        <input class="submit" type="submit" value="{% trans "Create" %}">
+    </form>
+</div>
+
+<div id="help">
+    <h3></h3>
+    <div></div>
+</div>
+<div id="help-contents">
+    {% include "ganeti/helptips/vm.html" %}
+    {% include "ganeti/helptips/vm_create.html" %}
+</div>
+
+{% endblock %}

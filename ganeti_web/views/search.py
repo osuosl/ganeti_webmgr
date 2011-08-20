@@ -2,7 +2,6 @@ import json
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect, \
         HttpResponseNotFound
-from django.core.urlresolvers import reverse
 from haystack.query import SearchQuerySet
 from ganeti_web.models import VirtualMachine, Cluster, Node
 

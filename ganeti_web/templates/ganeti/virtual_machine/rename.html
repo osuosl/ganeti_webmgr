@@ -1,0 +1,41 @@
+{% extends "menu_base.html" %}
+{% load webmgr_tags %}
+{% load i18n %}
+{% block title %}{% trans "Rename" %} Virtual Machine{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" type="text/css"
+            href="{{MEDIA_URL}}/css/virtual_machine_create.css"/>
+    <script src="{{SITE_ROOT}}/ganeti_web_media/js/helpTips.js"></script>
+    <script type="text/javascript">initHelpTips('#virtualmachineform');</script>
+{% endblock %}
+
+{% block content %}
+    <h1 class="breadcrumb">
+        {% if cluster_admin %}
+        <a href="{% url cluster-detail cluster.slug %}#virtual_machines">{{cluster.hostname|abbreviate_fqdn}}</a>
+        {% else %}
+        <span>{{cluster.hostname|abbreviate_fqdn}}</span>
+        {% endif %}
+        : <a href="{% url instance-detail cluster.slug vm.hostname %}">{{ vm.hostname }}</a>
+        : {% trans "Rename" %}
+    </h1>
+
+    <div id="virtualmachineform">
+        <form method="post">
+            {% vmfield form.hostname %}
+            {% vmfield form.ip_check %}
+            {% vmfield form.name_check %}
+            <input class="submit" type="submit" value="Rename">
+        </form>
+    </div>
+
+    <div id="help">
+        <h3></h3>
+        <div></div>
+    </div>
+
+    <div id="help-contents">
+        {% include "ganeti/helptips/vm_rename.html" %}
+    </div>
+{% endblock %}

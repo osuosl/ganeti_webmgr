@@ -24,6 +24,8 @@ from django.core.exceptions import ValidationError
 from django.db.models.fields import DecimalField
 from django.db import models
 from django.forms.fields import CharField
+from django.utils.translation import ugettext as _
+
 
 class PreciseDateTimeField(DecimalField):
     """
@@ -73,7 +75,7 @@ class PreciseDateTimeField(DecimalField):
         if isinstance(value, (float,)):
             return datetime.fromtimestamp(value)
         
-        raise ValidationError('Unable to convert %s to datetime.' % value)
+        raise ValidationError(_('Unable to convert %s to datetime.') % value)
 
     def get_db_prep_value(self, value, **kwargs):
         if value:
@@ -103,6 +105,7 @@ class PreciseDateTimeField(DecimalField):
         elif  engine == 'django.db.backends.sqlite3':
             return 'character'
 
+
 class DataVolumeField(CharField):
     min_value = None
     max_value = None
@@ -118,9 +121,9 @@ class DataVolumeField(CharField):
         if value == None and not self.required:
             return
         if self.min_value != None and value < self.min_value:
-            raise ValidationError('Must be at least ' + str(self.min_value))
+            raise ValidationError(_('Must be at least ') + str(self.min_value))
         if self.max_value != None and value > self.max_value:
-            raise ValidationError('Must be at less than ' + str(self.min_value))
+            raise ValidationError(_('Must be less than ') + str(self.min_value))
 
     # this gets called before validate
     def to_python(self, value):
@@ -143,13 +146,13 @@ class DataVolumeField(CharField):
 
         if len(value) == 0:
             if self.required:
-                raise ValidationError('Empty.')
+                raise ValidationError(_('Empty.'))
             else:
                 return None
 
         matches = re.match(r'([0-9]+(?:\.[0-9]+)?)\s*(M|G|T|MB|GB|TB)?$', value)
         if matches == None:
-            raise ValidationError('Invalid format.')
+            raise ValidationError(_('Invalid format.'))
 
         multiplier = 1.
         unit = matches.group(2)
@@ -164,6 +167,27 @@ class DataVolumeField(CharField):
 
         intvalue = int(float(matches.group(1)) * multiplier)
         return intvalue
+
+
+class MACAddressField(CharField):
+    """
+    Form field that validates MAC Addresses.  Is a simple extension over a
+    CharField.  It locks field size to 17 characters
+    """
+    PATTERN = re.compile('^([0-9a-f]{2}([:-]|$)){6}$')
+
+    def __init__(self, *args, **kwargs):
+        kwargs['max_length'] = 17
+        super(MACAddressField, self).__init__(**kwargs)
+
+    def to_python(self, value):
+        val = super(MACAddressField, self).to_python(value)
+        return None if '' == val else val
+
+    def validate(self, value):
+        super(MACAddressField, self).validate(value)
+        if value not in (None,'') and not self.PATTERN.match(value):
+            raise ValidationError(_('Invalid MAC Address'))
 
 
 # Field rule used by South for database migrations

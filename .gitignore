@@ -30,6 +30,7 @@ settings.py*
 
 # files that might exist in dev environment
 django
+ganeti_web_layout
 object_log
 object_permissions
 noVNC
@@ -43,6 +44,7 @@ dependencies
 include
 lib
 pysqlite2-doc
+build
 
 # whoosh index files (used by haystack search)
 whoosh_index

@@ -1,0 +1,27 @@
+{# template used when resources data is included in another page #}
+
+{% include "ganeti/overview/used_resources_data.html" %}
+
+<script type="text/javascript">
+    var USED_RESOURCES_PBAR;
+    $(function(){
+        if (USED_RESOURCES_PBAR == undefined){
+            // only request script if not already available
+            requireOnce('{{MEDIA_URL}}/js/jquery.progressbar.js');
+            USED_RESOURCES_PBAR = {
+                steps: 0,
+                showText: true,
+                textFormat: 'fraction',
+                width: 120,
+                boxImage: '{{MEDIA_URL}}/images/progressbar/progressbar.gif',
+                barImage: {
+                    0: '{{MEDIA_URL}}/images/progressbar/progressbg_green.gif',
+                    30: '{{MEDIA_URL}}/images/progressbar/progressbg_yellow.gif',
+                    50: '{{MEDIA_URL}}/images/progressbar/progressbg_orange.gif',
+                    75:  '{{MEDIA_URL}}/images/progressbar/progressbg_red.gif'
+                }
+            };
+        }
+        $(".used_resources .ram, .used_resources .disk, .used_resources .vcpus").progressBar(USED_RESOURCES_PBAR);
+    });
+</script>

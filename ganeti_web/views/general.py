@@ -34,7 +34,7 @@ from django.utils.translation import ugettext as _
 from ganeti_web.constants import VERSION
 
 def about(request):
-    return render_to_response("about.html", {
+    return render_to_response("ganeti/about.html", {
         'version':VERSION
         },
         context_instance=RequestContext(request),
@@ -260,7 +260,7 @@ def overview(request, rest=False):
         print "rest\n"
         return clusters
     else:
-        return render_to_response("overview.html", {
+        return render_to_response("ganeti/overview.html", {
             'admin':admin,
             'cluster_list': clusters,
             'user': request.user,
@@ -302,9 +302,10 @@ def used_resources(request, rest = False):
     if (rest):
         return resources
     else:
-        return render_to_response("overview/used_resources.html", {
+        return render_to_response("ganeti/overview/used_resources.html", {
             'resources':resources
         }, context_instance=RequestContext(request))
+
     
 
 @login_required
