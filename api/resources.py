@@ -16,7 +16,7 @@
 # USA.
 
 __author__ = 'bojan'
-from authorization import SuperuserAuthorization
+
 import ganeti_web.views.users
 import ganeti_web.views.jobs
 import ganeti_web.views.node
@@ -24,7 +24,7 @@ import ganeti_web.views.virtual_machine
 from object_permissions.registration import get_group_perms
 import object_log.views
 import ganeti_web.views.users
-from ganeti_web.views.jobs import status, detail, clear
+from ganeti_web.views.jobs import status, clear
 import ganeti_web.views.jobs
 import ganeti_web.views.node
 import ganeti_web.views.virtual_machine
@@ -36,21 +36,20 @@ import object_permissions.views.groups
 import object_permissions.views.permissions
 import utils
 from tastypie import fields
-from tastypie.authentication import Authentication, BasicAuthentication, ApiKeyAuthentication
-from tastypie.authorization import Authorization, DjangoAuthorization
+from tastypie.authentication import ApiKeyAuthentication
+from tastypie.authorization import DjangoAuthorization
 from tastypie.exceptions import NotFound
-from django.http import HttpRequest, HttpResponse, Http404
+from django.http import HttpResponse, Http404
 import ganeti_web.views.users
 from ganeti_web.views.virtual_machine import list_
 import ganeti_web.views.jobs
 import ganeti_web.views.node
 import ganeti_web.views.virtual_machine
-from tastypie.resources import ModelResource, Resource, HttpAccepted, HttpBadRequest, HttpApplicationError, HttpCreated, HttpResponseNotFound, ResourceOptions, ALL
+from tastypie.resources import ModelResource, HttpAccepted, HttpBadRequest
 from django.contrib.auth.models import User, Group
-from ganeti_web.models import VirtualMachine, SSHKey, Cluster, Node, CachedClusterObject, Job, ClusterUser
-from tastypie.bundle import Bundle
+from ganeti_web.models import VirtualMachine, SSHKey, Cluster, Node, Job, ClusterUser
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
-from tastypie.http import HttpMultipleChoices, HttpGone, HttpNoContent, HttpNotFound
+from tastypie.http import HttpMultipleChoices, HttpNotFound
 
 class UserResource(ModelResource):
     """
