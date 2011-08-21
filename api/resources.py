@@ -318,13 +318,6 @@ class GroupResource(ModelResource):
         if bundle.data.has_key('api_key'):
             return HttpBadRequest()
         self.obj_update(bundle, request=request, pk=kwargs.get('pk')) # updated_bundle = ...
-
-#        if (bundle.data.has_key('groups')):
-#            groups = []
-#            for group in bundle.data.get('groups'):
-#                groups.append(GroupResource().get_via_uri(group))
-#
-#            GroupResource().get_via_uri(group).user_set.add(User.objects.get(id=kwargs.get('pk')))
         return HttpAccepted
 
     def post_detail(self, request, **kwargs):
