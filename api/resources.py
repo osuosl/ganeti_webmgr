@@ -131,8 +131,6 @@ class UserResource(ModelResource):
         return HttpAccepted
 
     def post_detail(self, request, **kwargs):
-        #print kwargs
-        #print kwargs.get('pk')
         try:
             deserialized = self.deserialize(request, request.raw_post_data, format=request.META.get('CONTENT_TYPE', 'application/json'))
         except Exception:
@@ -147,6 +145,16 @@ class UserResource(ModelResource):
         # clean users api key
         if (bundle.data.has_key('action')) & (bundle.data.get('action')=='clean_api_key'):
             return api.utils.clean_api_key(request, kwargs.get('pk'))
+
+        # action: add user to group
+        if (bundle.data.has_key('action')) & bundle.data.has_key('group') & (bundle.data.get('action')=='add_to_group'):
+            #print GroupResource().get_via_uri(bundle.data.get('group'))
+            User.objects.get(id=kwargs.get('pk')).groups.add(GroupResource().get_via_uri(bundle.data.get('group')))
+
+        # action: remove user from the group
+        if (bundle.data.has_key('action')) & bundle.data.has_key('group') & (bundle.data.get('action')=='remove_from_group'):
+            User.objects.get(id=kwargs.get('pk')).groups.remove(GroupResource().get_via_uri(bundle.data.get('group')))
+
 
         return HttpResponse(status=204)
 
@@ -317,10 +325,28 @@ class GroupResource(ModelResource):
 #                groups.append(GroupResource().get_via_uri(group))
 #
 #            GroupResource().get_via_uri(group).user_set.add(User.objects.get(id=kwargs.get('pk')))
-
-
-
         return HttpAccepted
+
+    def post_detail(self, request, **kwargs):
+        #print kwargs
+        #print kwargs.get('pk')
+        try:
+            deserialized = self.deserialize(request, request.raw_post_data, format=request.META.get('CONTENT_TYPE', 'application/json'))
+        except Exception:
+            return HttpBadRequest()
+        deserialized = self.alter_deserialized_detail_data(request, deserialized)
+        bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized))
+
+        # action: add user to group
+        if (bundle.data.has_key('action')) & bundle.data.has_key('user') & (bundle.data.get('action')=='add_user'):
+            Group.objects.get(id=kwargs.get('pk')).user_set.add(UserResource().get_via_uri(bundle.data.get('user')))
+
+        # action: remove user from the group
+        if (bundle.data.has_key('action')) & bundle.data.has_key('user') & (bundle.data.get('action')=='remove_user'):
+            Group.objects.get(id=kwargs.get('pk')).user_set.remove(UserResource().get_via_uri(bundle.data.get('user')))
+
+        return HttpResponse(status=204)
+
 
 
     def build_schema(self):
