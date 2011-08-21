@@ -73,8 +73,8 @@ class UserResource(ModelResource):
         bundle.data['ssh_keys'] = ssh_keys
         try:
             bundle.data['api_key'] = ApiKey.objects.get(user__pk=bundle.obj.id).key
-        except(ApiKey.DoesNotExist):
-            {}
+        except ApiKey.DoesNotExist:
+            bundle.data['api_key'] = {}
         used_resources = []
 
         # group memberships
@@ -119,23 +119,14 @@ class UserResource(ModelResource):
     def put_detail(self, request, **kwargs):
         try:
             deserialized = self.deserialize(request, request.raw_post_data, format=request.META.get('CONTENT_TYPE', 'application/json'))
-        except (Exception):
+        except Exception:
             return HttpBadRequest()
         deserialized = self.alter_deserialized_detail_data(request, deserialized)
         bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized))
         self.is_valid(bundle, request)
-        if (bundle.data.has_key('api_key')):
+        if bundle.data.has_key('api_key'):
             return HttpBadRequest()
-        updated_bundle = self.obj_update(bundle, request=request, pk=kwargs.get('pk'))
-
-#        if (bundle.data.has_key('groups')):
-#            groups = []
-#            for group in bundle.data.get('groups'):
-#                groups.append(GroupResource().get_via_uri(group))
-#
-#            GroupResource().get_via_uri(group).user_set.add(User.objects.get(id=kwargs.get('pk')))
-        
-
+        self.obj_update(bundle, request=request, pk=kwargs.get('pk'))
 
         return HttpAccepted
 
@@ -144,7 +135,7 @@ class UserResource(ModelResource):
         #print kwargs.get('pk')
         try:
             deserialized = self.deserialize(request, request.raw_post_data, format=request.META.get('CONTENT_TYPE', 'application/json'))
-        except (Exception):
+        except Exception:
             return HttpBadRequest()
         deserialized = self.alter_deserialized_detail_data(request, deserialized)
         bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized))
@@ -163,7 +154,7 @@ class UserResource(ModelResource):
     def post_list(self, request, **kwargs):
         try:
             deserialized = self.deserialize(request, request.raw_post_data, format=request.META.get('CONTENT_TYPE', 'application/json'))
-        except (Exception):
+        except Exception:
             return HttpBadRequest()
         deserialized = self.alter_deserialized_detail_data(request, deserialized)
         bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized))
@@ -265,7 +256,7 @@ class GroupResource(ModelResource):
         # permissions on virtual machines and clusters
         perms_info = object_permissions.views.groups.all_permissions(bundle.request, bundle.data['id'], rest=True)
 
-        if (perms_info.has_key('error')):
+        if perms_info.has_key('error'):
             return bundle
         bundle.data['permissions']={}
         bundle.data['users']=[]
@@ -276,15 +267,12 @@ class GroupResource(ModelResource):
         obj_res_instances = {'VirtualMachine':VMResource, 'Group':GroupResource, 'Cluster':ClusterResource}
 
         perm_results = {}
-        if (perms_info.has_key('perm_dict')):
+        if perms_info.has_key('perm_dict'):
             for key in perms_info.get('perm_dict').keys():
                 objects = perms_info.get('perm_dict').get(key)
                 temp_obj = []
                 for object in objects:
                     if obj_res_instances.has_key(key):
-                        temp_obj_perms = []
-                        #for loc_perm in bundle.obj.get_all_permissions(object):
-                        #    temp_obj_perms.append(loc_perm)
                         temp_obj.append({'object':obj_res_instances.get(key)().get_resource_uri(object),'permissions':get_group_perms(bundle.obj, object)})
                         used_resources.append({'object':obj_res_instances.get(key)().get_resource_uri(object), 'type':key, 'resource':cluster_user.used_resources(object,only_running = False)})
                 perm_results[key]=temp_obj
@@ -314,14 +302,14 @@ class GroupResource(ModelResource):
     def put_detail(self, request, **kwargs):
         try:
             deserialized = self.deserialize(request, request.raw_post_data, format=request.META.get('CONTENT_TYPE', 'application/json'))
-        except (Exception):
+        except Exception:
             return HttpBadRequest()
         deserialized = self.alter_deserialized_detail_data(request, deserialized)
         bundle = self.build_bundle(data=dict_strip_unicode_keys(deserialized))
         self.is_valid(bundle, request)
-        if (bundle.data.has_key('api_key')):
+        if bundle.data.has_key('api_key'):
             return HttpBadRequest()
-        updated_bundle = self.obj_update(bundle, request=request, pk=kwargs.get('pk'))
+        self.obj_update(bundle, request=request, pk=kwargs.get('pk')) # updated_bundle = ...
 
 #        if (bundle.data.has_key('groups')):
 #            groups = []
@@ -447,8 +435,8 @@ class ClusterResource(ModelResource):
 
 
 class NodeResource(ModelResource):
-    cluster = fields.ForeignKey(ClusterResource, 'cluster', full=False, null=True)
-    last_job = fields.ForeignKey('api.resource.JobResource', 'last_job', full=False, null=True)
+    cluster = fields.ForeignKey(ClusterResource, 'cluster', null=True)
+    last_job = fields.ForeignKey('api.resource.JobResource', 'last_job', null=True)
 
     # TODO: Node actions: migrate, evacuate, role
 
@@ -497,10 +485,10 @@ class NodeResource(ModelResource):
 
 
 class VMResource(ModelResource):
-    cluster = fields.ForeignKey('api.resources.ClusterResource', 'cluster', full=False, null=True)
-    primary_node = fields.ForeignKey('api.resources.NodeResource', 'primary_node', full=False, null=True)
-    secondary_node = fields.ForeignKey('api.resources.NodeResource', 'secondary_node', full=False, null=True)
-    last_job = fields.ForeignKey('api.resources.JobResource', 'last_job', full=False, null=True)
+    cluster = fields.ForeignKey('api.resources.ClusterResource', 'cluster', null=True)
+    primary_node = fields.ForeignKey('api.resources.NodeResource', 'primary_node', null=True)
+    secondary_node = fields.ForeignKey('api.resources.NodeResource', 'secondary_node', null=True)
+    last_job = fields.ForeignKey('api.resources.JobResource', 'last_job', null=True)
 
     class Meta:
         queryset = VirtualMachine.objects.all()
@@ -559,14 +547,14 @@ class VMResource(ModelResource):
         bundle.data['migrate'] = vm_detail['migrate']
         permissions = {'users':[], 'groups':[]}
 
-        if (vm_detail.has_key('job')):
+        if vm_detail.has_key('job'):
             bundle.data['job'] = vm_detail['job']
-            if (vm_detail['job'] != None):
+            if vm_detail['job'] is not None:
                 bundle.data['job'] = JobResource().get_resource_uri(vm_detail['job'])
 
         perms = ganeti_web.views.virtual_machine.users(bundle.request, vm.cluster.slug, vm_detail['instance'], rest = True)
 
-        if (perms['users'].__len__() > 0):
+        if perms['users'].__len__() > 0:
             for user in perms['users']:
                 permissions['users'].append(UserResource().get_resource_uri(user))
 
@@ -578,13 +566,13 @@ class VMResource(ModelResource):
 
         try:
             deserialized = self.deserialize(request, request.raw_post_data, format=request.META.get('CONTENT_TYPE', 'application/json'))
-        except (Exception):
+        except Exception:
             return HttpBadRequest()
         try:
             vm = self.obj_get(request,id=kwargs.get('pk'))
             #vm = self.obj_get(request,hostname='derpers.gwm.osuosl.org') TODO name manipulations
             vm_detail = ganeti_web.views.virtual_machine.detail(request, vm.cluster.slug, vm.hostname, True)
-        except NotFound, Exception:
+        except NotFound:
             return utils.serialize_and_reply(request, "Could not find object", 404)
 
         deserialized = self.alter_deserialized_detail_data(request, deserialized)
@@ -597,7 +585,7 @@ class VMResource(ModelResource):
         # action: instance rename
         if (deserialized.has_key('action')) & (deserialized.get('action')=='rename'):
 
-            if ((deserialized.has_key('hostname')) & (deserialized.has_key('ip_check')) & (deserialized.has_key('name_check'))):
+            if (deserialized.has_key('hostname')) & (deserialized.has_key('ip_check')) & (deserialized.has_key('name_check')):
                 extracted_params = {'hostname':deserialized.get('hostname'), 'ip_check':deserialized.get('ip_check'), 'name_check':deserialized.get('name_check')}
             else:
                 return HttpBadRequest
@@ -607,7 +595,7 @@ class VMResource(ModelResource):
         # action: instance startup
         if (deserialized.has_key('action')) & (deserialized.get('action')=='startup'):
             try:
-                response = ganeti_web.views.virtual_machine.startup(request, vm.cluster.slug, vm_detail['instance'], True);
+                response = ganeti_web.views.virtual_machine.startup(request, vm.cluster.slug, vm_detail['instance'], True)
             except Http404:
                 return utils.serialize_and_reply(request, "Could not find resource", code=404)
             return utils.serialize_and_reply(request, response['msg'], code=response['code']) #SERIALIZATION
@@ -615,7 +603,7 @@ class VMResource(ModelResource):
         # action: instance shutdown
         if (deserialized.has_key('action')) & (deserialized.get('action')=='shutdown'):
             try:
-                response = ganeti_web.views.virtual_machine.shutdown(request, vm.cluster.slug, vm_detail['instance'], True);
+                response = ganeti_web.views.virtual_machine.shutdown(request, vm.cluster.slug, vm_detail['instance'], True)
             except Http404:
                 return utils.serialize_and_reply(request, "Could not find resource", code=404)
             return utils.serialize_and_reply(request, response['msg'], code=response['code'])
@@ -625,26 +613,26 @@ class VMResource(ModelResource):
     def post_list(self, request, **kwargs):
         try:
             deserialized = self.deserialize(request, request.raw_post_data, format=request.META.get('CONTENT_TYPE', 'application/json'))
-        except (Exception):
+        except Exception:
             return HttpBadRequest()
         deserialized = self.alter_deserialized_detail_data(request, deserialized)
 
 
         # TODO: move detail and list code in separate place and call it from both detail/list functions
-        if (deserialized.has_key('action')):
-            if (deserialized.has_key('id')):
+        if deserialized.has_key('action'):
+            if deserialized.has_key('id'):
                 try:
                     vm = self.obj_get(request,id=deserialized.get('id'))
                     vm_detail = ganeti_web.views.virtual_machine.detail(request, vm.cluster.slug, vm.hostname, True)
                 except NotFound:
                     raise NotFound("Object not found")
                 # reboot instance
-                if (deserialized.get('action')=='reboot'):
+                if deserialized.get('action')=='reboot':
                     response = ganeti_web.views.virtual_machine.reboot(request, vm.cluster.slug, vm_detail['instance'], True)
                     return response
 
                 # rename instance
-                if ((deserialized.has_key('hostname')) & (deserialized.has_key('ip_check')) & (deserialized.has_key('name_check'))):
+                if (deserialized.has_key('hostname')) & (deserialized.has_key('ip_check')) & (deserialized.has_key('name_check')):
                     extracted_params = {'hostname':deserialized.get('hostname'), 'ip_check':deserialized.get('ip_check'), 'name_check':deserialized.get('name_check')}
                 else:
                     return HttpBadRequest
@@ -686,26 +674,25 @@ class VMResource(ModelResource):
 
     
 class JobResource(ModelResource):
-    cluster = fields.ForeignKey(ClusterResource, 'cluster', full=False)
+    cluster = fields.ForeignKey(ClusterResource, 'cluster')
 
     def dehydrate(self, bundle):
         job = bundle.obj
         job_detail = ganeti_web.views.jobs.detail(bundle.request, job.cluster.slug, job.job_id, True)
-        if (bundle.obj.info):
+        if bundle.obj.info is not None:
             try:
-                locError = {}
-                if (len(bundle.obj.info['opresult'][0][1])>1):
+                if len(bundle.obj.info['opresult'][0][1])>1:
                     locError = {'error_type':bundle.obj.info['opresult'][0][0],'error_message':bundle.obj.info['opresult'][0][1][0], 'error_family':bundle.obj.info['opresult'][0][1][1]}
                 else:
                     locError = {'error_type':bundle.obj.info['opresult'][0][0],'error_message':bundle.obj.info['opresult'][0][1][0]}
                 bundle.data['opresult'] = locError
-            except:
-                {}
+            except Exception:
+                bundle.data['opresult'] = {}
 
             try:
                 bundle.data['summary'] = bundle.obj.info['summary'][0]
-            except:
-                {}
+            except Exception:
+                bundle.data['summary'] = {}
             bundle.data['ops'] = bundle.obj.info['ops']
         bundle.data['cluster_admin'] = job_detail['cluster_admin']
         return bundle
@@ -731,7 +718,7 @@ class JobResource(ModelResource):
             raise NotFound("Object not found")
         print job.info
         res = clear(request, job.cluster.slug, job.job_id, True)
-        if (res):
+        if res:
             job.delete()
 
     def build_schema(self):
