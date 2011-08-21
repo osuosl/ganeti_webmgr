@@ -328,8 +328,6 @@ class GroupResource(ModelResource):
         return HttpAccepted
 
     def post_detail(self, request, **kwargs):
-        #print kwargs
-        #print kwargs.get('pk')
         try:
             deserialized = self.deserialize(request, request.raw_post_data, format=request.META.get('CONTENT_TYPE', 'application/json'))
         except Exception:
