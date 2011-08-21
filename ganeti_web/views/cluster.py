@@ -57,7 +57,7 @@ def detail(request, cluster_slug, rest=False):
     if not admin:
         return render_403(request, _("You do not have sufficient privileges"))
 
-    if (rest):
+    if rest:
         return {'cluster':cluster,'admin':admin}
     else:
         return render_to_response("ganeti/cluster/detail.html", {
@@ -182,7 +182,7 @@ def list_(request, rest = False):
     else:
         cluster_list = user.get_objects_all_perms(Cluster, ['admin',])
 
-    if (rest):
+    if rest:
         return cluster_list
     else:
         return render_to_response("ganeti/cluster/list.html", {

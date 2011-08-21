@@ -74,7 +74,7 @@ def detail(request, cluster_slug, host, rest = False):
     if not (admin or modify):
         return render_403(request, _("You do not have sufficient privileges"))
 
-    if (rest):
+    if rest:
         return {'cluster':cluster,
         'node_count':cluster.nodes.all().count(),
         'node':node,

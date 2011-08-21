@@ -32,7 +32,7 @@ def status(request, cluster_slug, job_id, rest = False):
     returns the raw info of a job
     """
     job = get_object_or_404(Job, cluster__slug=cluster_slug, job_id=job_id)
-    if (rest):
+    if rest:
         return job
     else:
         return HttpResponse(json.dumps(job.info), mimetype='application/json')
@@ -45,7 +45,7 @@ def detail(request, cluster_slug, job_id, rest = False):
     user = request.user
     cluster_admin = True if user.is_superuser else user.has_perm('admin', job.cluster)
 
-    if (rest):
+    if rest:
         return {'job': job, 'cluster_admin':cluster_admin}
     else:
         return render_to_response("ganeti/job/detail.html",{
@@ -70,7 +70,7 @@ def clear(request, cluster_slug, job_id, rest = False):
 
     if not cluster_admin:
         if isinstance(obj, (Cluster, Node)):
-            if (rest):
+            if rest:
                 return HttpResponseForbidden
             else:
                 return render_403(request, _("You do not have sufficient privileges"))
@@ -79,7 +79,7 @@ def clear(request, cluster_slug, job_id, rest = False):
             if not (obj.owner_id == user.get_profile().pk  \
                 or user.has_perm('admin', obj) \
                 or user.has_perm('admin', obj.cluster)):
-                    if (rest):
+                    if rest:
                         return HttpResponseForbidden
                     else:
                         return render_403(request, _("You do not have sufficient privileges"))
@@ -98,7 +98,7 @@ def clear(request, cluster_slug, job_id, rest = False):
         ObjectModel.objects.filter(pk=job.object_id, last_job=job)  \
             .update(last_job=None, ignore_cache=False)
 
-    if (rest):
+    if rest:
         return 1
     else:
         return HttpResponse('1', mimetype='application/json')

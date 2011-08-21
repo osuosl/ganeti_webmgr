@@ -1,12 +1,12 @@
 
 __author__ = 'bojan'
 
-from tastypie.http import HttpApplicationError, HttpBadRequest
+from tastypie.http import HttpApplicationError
 from tastypie.serializers import Serializer
 from tastypie.models import ApiKey
 from tastypie.bundle import Bundle
 import api.resources
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpResponse
 
 def generate_api_key(request, userid):
     api_key = None
@@ -18,7 +18,7 @@ def generate_api_key(request, userid):
         api_key = ApiKey.objects.create(user=userid)
 
     # return created key info
-    if (api_key != None):
+    if api_key is not None:
         bun = Bundle()
         bun.data['userid'] = userid
         bun.data['api_key'] = api_key.key
@@ -32,19 +32,19 @@ def clean_api_key(request, userid):
         api_key.delete()
     except ApiKey.DoesNotExist:
         api_key = None
-    if (not api_key):
+    if not api_key:
         return HttpResponse(status=201)
     else:
         return HttpApplicationError
     
 def serialize_and_reply(request, response, code = 200):
-    if ('format=xml' in request.META['QUERY_STRING']):
+    if 'format=xml' in request.META['QUERY_STRING']:
         return HttpResponse(Serializer().serialize(response, format='application/xml'), content_type='application/xml', status = code)
-    elif ("format=json" in request.META['QUERY_STRING']):
+    elif "format=json" in request.META['QUERY_STRING']:
         return HttpResponse(content=Serializer().serialize(response, format='application/json'), content_type='application/json', status = code)
-    elif ('application/json' in request.META['HTTP_ACCEPT']):
+    elif 'application/json' in request.META['HTTP_ACCEPT']:
         return HttpResponse(content=Serializer().serialize(response, format='application/json'), content_type='application/json', status = code)
-    elif ('application/xml' in request.META['HTTP_ACCEPT']):
+    elif 'application/xml' in request.META['HTTP_ACCEPT']:
         return HttpResponse(content=Serializer().serialize(response, format='application/xml'), content_type='application/xml', status= code)
     else:
         return HttpResponse(content="Please select either json or xml, in query or header", status=400)
@@ -96,13 +96,11 @@ def generate_wiki_basic_table(dict):
     """
     print "|_. Name |_. Type |_. ReadOnly |_. Nullable |_. Description |_."
     for key in dict:
-        ro = ""
-        nl = ""
-        if (dict[key].get('read_only')):
+        if dict[key].get('read_only'):
             ro = "=. x"
         else:
             ro = " "
-        if (dict[key].get('nullable')):
+        if dict[key].get('nullable'):
             nl = "=. gx"
         else:
             nl = " "

@@ -25,8 +25,6 @@ from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.utils.translation import ugettext as _
 from ganeti_web.models import SSHKey
-#from ganeti.models import SSHKey
-from ganeti_web.views import render_403
 
 @login_required
 def key_get(request, key_id=None, user_id=None):

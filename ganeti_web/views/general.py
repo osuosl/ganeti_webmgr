@@ -256,8 +256,7 @@ def overview(request, rest=False):
     # get resources used per cluster from the first persona in the list
     resources = get_used_resources(personas[0])
     
-    if (rest):
-        print "rest\n"
+    if rest:
         return clusters
     else:
         return render_to_response("ganeti/overview.html", {
@@ -299,7 +298,7 @@ def used_resources(request, rest = False):
                 return render_403(request, _('You are not authorized to view this page'))
     
     resources = get_used_resources(cu.cast())
-    if (rest):
+    if rest:
         return resources
     else:
         return render_to_response("ganeti/overview/used_resources.html", {
