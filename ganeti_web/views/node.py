@@ -93,7 +93,7 @@ def detail(request, cluster_slug, host, rest = False):
 
 
 @login_required
-def primary(request, cluster_slug, host):
+def primary(request, cluster_slug, host, rest=False):
     """
     Renders a list of primary VirtualMachines on the given node
     """
@@ -101,19 +101,25 @@ def primary(request, cluster_slug, host):
     
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
-        return render_403(request, _("You do not have sufficient privileges"))
+        if not rest:
+            return render_403(request, _("You do not have sufficient privileges"))
+        else:
+            return {'error':'You do not have sufficient privileges'}
 
     vms = node.primary_vms.all()
-    vms = render_vms(request, vms)
-
-    return render_to_response("ganeti/virtual_machine/table.html",
-                {'tableID': 'table_primary', 'primary_node':True,
-                        'node': node, 'vms':vms},
-                context_instance=RequestContext(request))
+    
+    if not rest:
+        vms = render_vms(request, vms)
+        return render_to_response("ganeti/virtual_machine/table.html",
+                    {'tableID': 'table_primary', 'primary_node':True,
+                            'node': node, 'vms':vms},
+                    context_instance=RequestContext(request))
+    else:
+        return vms
 
 
 @login_required
-def secondary(request, cluster_slug, host):
+def secondary(request, cluster_slug, host, rest=False):
     """
     Renders a list of secondary VirtualMachines on the given node
     """
@@ -121,18 +127,24 @@ def secondary(request, cluster_slug, host):
     
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
-        return render_403(request, _("You do not have sufficient privileges"))
+        if not rest:
+            return render_403(request, _("You do not have sufficient privileges"))
+        else:
+            return {'error':"You do not have sufficient privileges"}
 
     vms = node.secondary_vms.all()
-    vms = render_vms(request, vms)
 
-    return render_to_response("ganeti/virtual_machine/table.html",
+    if not rest:
+        vms = render_vms(request, vms)
+        return render_to_response("ganeti/virtual_machine/table.html",
                 {'tableID': 'table_secondary', 'secondary_node':True, 
                         'node': node, 'vms':vms},
                 context_instance=RequestContext(request))
+    else:
+        return vms
 
 @login_required
-def object_log(request, cluster_slug, host):
+def object_log(request, cluster_slug, host, rest=False):
     """
     Display object log for this node
     """
@@ -140,9 +152,12 @@ def object_log(request, cluster_slug, host):
 
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
-        return render_403(request, _("You do not have sufficient privileges"))
+        if not rest:
+            return render_403(request, _("You do not have sufficient privileges"))
+        else:
+            return {'error':'You do not have sufficient privileges'}
 
-    return list_for_object(request, node)
+    return list_for_object(request, node, rest)
 
 
 @login_required

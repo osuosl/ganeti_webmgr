@@ -475,6 +475,16 @@ class NodeResource(ModelResource):
         bundle.data['modify'] = node_detail['modify']
         bundle.data['info'] = node_detail['node'].info
         bundle.data['hostname'] = node_detail['node'].hostname
+        primary_list = ganeti_web.views.node.primary(bundle.request, node.cluster.slug, node.hostname, True)
+        secondary_list = ganeti_web.views.node.secondary(bundle.request, node.cluster.slug, node.hostname, True)
+        plist = []
+        slist = []
+        for vms in primary_list:
+            plist.append({'resource':VMResource().get_resource_uri(vms),'hostname':vms.hostname})
+        for vms in secondary_list:
+            slist.append({'resource':VMResource().get_resource_uri(vms),'hostname':vms.hostname})
+        bundle.data['primary_list'] = plist
+        bundle.data['secondary_list'] = slist
         return bundle
 
 
@@ -587,14 +597,13 @@ class VMResource(ModelResource):
             return HttpBadRequest()
         try:
             vm = self.obj_get(request,id=kwargs.get('pk'))
-            #vm = self.obj_get(request,hostname='derpers.gwm.osuosl.org') TODO name manipulations
             vm_detail = ganeti_web.views.virtual_machine.detail(request, vm.cluster.slug, vm.hostname, True)
         except NotFound:
             return utils.serialize_and_reply(request, "Could not find object", 404)
 
         deserialized = self.alter_deserialized_detail_data(request, deserialized)
 
-        # action: instance reboot TODO: test rebooting extensively
+        # action: instance reboot
         if (deserialized.has_key('action')) & (deserialized.get('action')=='reboot'):
             response = ganeti_web.views.virtual_machine.reboot(request, vm.cluster.slug, vm_detail['instance'], True)
             return response
