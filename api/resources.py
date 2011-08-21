@@ -485,6 +485,9 @@ class NodeResource(ModelResource):
             slist.append({'resource':VMResource().get_resource_uri(vms),'hostname':vms.hostname})
         bundle.data['primary_list'] = plist
         bundle.data['secondary_list'] = slist
+        log = ganeti_web.views.node.object_log(bundle.request, node.cluster.slug, node.hostname, True)
+        bundle.data['actions_on_node'] = api.utils.extract_log_actions(bundle.request, bundle.obj.id, log)
+
         return bundle
 
 
@@ -507,6 +510,22 @@ class NodeResource(ModelResource):
                                     'read_only' : True,'type': 'list', 'nullable':False }
         dict['fields']['hostname'] = { 'help_text': 'Hostname of the node',
                                     'read_only' : True,'type': 'string', 'nullable':False }
+        dict['fields']['primary_list'] = { 'help_text': 'List of virtual machines (primary node). Contains vm link (related) and hostname for particular object.',
+                                    'read_only' : True,'type': 'list', 'nullable':True }
+        dict['fields']['secondary_list'] = { 'help_text': 'List of virtual machines (secondary node). Contains vm link (related) and hostname for particular object.',
+                                    'read_only' : True,'type': 'list', 'nullable':True }
+
+        dict['fields']['actions_on_node'] = { 'help_text': 'Returns the actions done on the node. The list is composed of objects, containing elements as described here.',
+                            'read_only': True,
+                            'type': 'list',
+                            'object' : {
+                                'obj1': {'help_text':'Describes action object', 'read_only':True, 'type':'related', 'nullable':True},
+                                'obj2': {'help_text':'Describes action object', 'read_only':True, 'type':'related', 'nullable':True},
+                                'user': {'help_text':'User performed the action', 'read_only':True, 'type':'related', 'nullable':True},
+                                'timestamp': {'help_text':'A date and time of action', 'read_only':True, 'type':'datetime', 'nullable':True},
+                                'action_name': {'help_text':'Describes action name using internal descriptions', 'read_only':True, 'type':'string', 'nullable':True}
+                            },
+                            'nullable': False }
         #utils.generate_wiki_basic_table(dict['fields'])
         return dict
 
