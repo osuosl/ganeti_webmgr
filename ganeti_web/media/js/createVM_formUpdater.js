@@ -26,28 +26,30 @@ function formUpdater(url_choices, url_options, url_defaults){
     var iallocator_hostname =   $("#id_iallocator_hostname");
     var boot_order =            $("#id_boot_order");
     var image_path =            $("#id_cdrom_image_path").parent("p");
+    var image2_path =           $("#id_cdrom2_image_path").parent("p");
     var root_path =             $("#id_root_path");
     var kernel_path =           $("#id_kernel_path");
     var serial_console =        $("#id_serial_console").parent("p");
+    var no_install =            $("#id_no_install");
+    var start =                 $("#id_start").parent("p");
     var using_str =             " Using: ";
     var blankOptStr =           "---------";
     var nodes =                 null; // nodes available
-    var oldid; // global for hypervisor.change function
 
-    var template_choices = $(<>
-            <option value=''>---------</option>
-            <option value='plain'>plain</option>
-            <option value='drbd'>drbd</option>
-            <option value='file'>file</option>
-            <option value='diskless'>diskless</option>
-        </>.toString());
+    var template_choices = $("\
+            <option value=''>---------</option>\
+            <option value='plain'>plain</option>\
+            <option value='drbd'>drbd</option>\
+            <option value='file'>file</option>\
+            <option value='diskless'>diskless</option>\
+        ".toString());
 
-    var single_node_template_choices = $(<>
-            <option value=''>---------</option>
-            <option value='plain'>plain</option>
-            <option value='file'>file</option>
-            <option value='diskless'>diskless</option>
-        </>.toString());
+    var single_node_template_choices = $("\
+            <option value=''>---------</option>\
+            <option value='plain'>plain</option>\
+            <option value='file'>file</option>\
+            <option value='diskless'>diskless</option>\
+        ".toString());
 
     // ------------
     // cluster defaults
@@ -87,15 +89,23 @@ function formUpdater(url_choices, url_options, url_defaults){
         // setup form element change hooks
         _initChangeHooks();
 
+        //recover from form error
+        if(no_install.is(":checked")){
+            start.hide();
+        }
+
         // fire off some initial changes
         iallocator.change();
         disk_template.change();
         boot_order.change();
         hypervisor.change();
-        
+
+        disableSingletonDropdown($("#id_pnode"), blankOptStr);
         // process the owner dropdown, i.e., if it only has a single option, 
         // select it, and make the dropdown read-only
         disableSingletonDropdown(owner, blankOptStr);
+        disableSingletonDropdown(hypervisor, blankOptStr);
+        disableSingletonDropdown(cluster, blankOptStr);
     };
     
     function _initChangeHooks(){
@@ -118,13 +128,7 @@ function formUpdater(url_choices, url_options, url_defaults){
                 _showKvmElements();
                 _showHvmKvmElements();
                 _showPvmKvmElements();
-            } else {
-                return;
             } 
-            if(id != oldid && oldid != undefined) {
-                _fillDefaultOptions(cluster.val(), id);
-            }
-            oldid = id;
         });
 
         // boot device change
@@ -185,90 +189,32 @@ function formUpdater(url_choices, url_options, url_defaults){
         // owner change
         owner.live("change", function() {
             var id = $(this).children("option:selected").val();
-
             if(id != "") {
                 // JSON update the cluster when the owner changes
-                $.getJSON(url_choices, {"clusteruser_id":id}, function(data){
-                    var oldcluster = cluster.val();
+                _cached_get(url_choices, {"clusteruser_id":id}, _update_cluster_choices);
+            }
+        });
 
-                    cluster.children().not(":first").remove();
-                    $.each(data, function(i, item) {
-                        cluster.append(_newOpt(item[0], item[1]));
-                    });
-
-                    // Try to re-select the previous cluster, if possible.
-                    cluster.val(oldcluster);
-
-                    // process dropdown if its a singleton
-                    disableSingletonDropdown(cluster, blankOptStr);
-
-                    // trigger a change in the cluster
-                    cluster.change();
-                });
+        //no-install change
+        no_install.live("change",function() {
+            if(no_install.is(":checked")){
+                start.hide();
+            } 
+            else{
+                start.show();
             }
         });
 
         // cluster change
         cluster.live("change", function() {
-            var child, child2;
-            var pnode       = $("#id_pnode");
-            var snode       = $("#id_snode");
-            var oslist      = $("#id_os");
             var id = $(this).children("option:selected").val();
-            
             if( id != "" ) {
                 // JSON update oslist, pnode, and snode when cluster changes
-                $.getJSON(url_options, {"cluster_id":id}, function(data){
-                    var oldpnode = pnode.val();
-                    var oldsnode = snode.val();
-                    var oldos = oslist.val();
-                    var old_template = disk_template.val();
-
-                    pnode.children().not(":first").remove();
-                    snode.children().not(":first").remove();
-                    oslist.children().not(":first").remove();
-                    $.each(data, function(i, items) {
-                        $.each(items, function(key, value) {
-                            if( i == "nodes" ) {
-                                child = _newOpt(value, value);
-                                child2 = child.clone();
-                                pnode.append(child);
-                                snode.append(child2);
-                            }
-                            else if (i == "os") {
-                                child = _newOptGroup(value[0],
-                                        value[1]);
-                                oslist.append(child);
-                            }
-                        });
-                    });
-
-                    // make nodes publically available
-                    nodes = data["nodes"];
-
-                    // update disk template choices
-                    disk_template.empty();
-                    if (nodes.length == 1){
-                        disk_template.html(single_node_template_choices);
-                    } else {
-                        disk_template.html(template_choices);
-                    }
-
-                    // Restore old choices from before, if possible.
-                    pnode.val(oldpnode);
-                    snode.val(oldsnode);
-                    oslist.val(oldos);
-                    disk_template.val(old_template);
-
-                    // And finally, do the singleton dance.
-                    disableSingletonDropdown(pnode, blankOptStr);
-                    disableSingletonDropdown(snode, blankOptStr);
-                    disableSingletonDropdown(oslist, blankOptStr);
-                });
+                _cached_get(url_options, {"cluster_id":id}, _update_options);
 
                 // only load the defaults if errors are not present 
                 if($(".errorlist").length == 0){
-                    _fillDefaultOptions(id);   
+                    _fillDefaultOptions(id);
                 }
             }
         });
@@ -282,65 +228,130 @@ function formUpdater(url_choices, url_options, url_defaults){
     // ----------------
     // private helpers
     // ----------------
-    function _fillDefaultOptions(cluster_id, hypervisor_id) {
-        var args = new Object();
-        args["cluster_id"] = cluster_id;
-        if(typeof hypervisor_id != undefined) {
-            args["hypervisor"] = hypervisor_id;
+
+    function _update_cluster_choices(data){
+        var old_cluster = cluster.val();
+
+        cluster.children().not(":first").remove();
+        $.each(data, function(i, item) {
+            cluster.append(_newOpt(item[0], item[1]));
+        });
+
+        // Try to re-select the previous cluster, if possible. else just trigger
+        // a change so cluster update logic is run
+        if (cluster.children('option[value='+old_cluster+']').length) {
+            cluster.val(old_cluster);
+        } else {
+            cluster.change();
         }
-        $.getJSON(url_defaults, args, function(d){
-            /* fill default options */
 
-            // boot device dropdown
-            if(d["boot_devices"]) {
-                boot_order.children().remove();
-                $.each(d["boot_devices"], function(i, item){
-                    boot_order.append(_newOpt(item[0], item[1]));
-                }); 
-            }
-            if(d["boot_order"]) {
-                boot_order.find(":selected").removeAttr(
-                    "selected");
-                boot_order.find("[value=" + d["boot_order"][0] + "]")
-                    .attr("selected","selected");
-                boot_order.change();
-            }
-            
-            // hypervisors dropdown
-            if(typeof hypervisor_id != undefined) {
-                if(d["hypervisors"]) {
-                    hypervisor.children().remove();
-                    $.each(d["hypervisors"], function(i, item){
-                        hypervisor.append(_newOpt(item[0], item[1]));
-                    });
-                    if(d["hypervisor"]) {
-                        if (d["hypervisor"] != "" &&
-                            d["hypervisor"] != undefined) {
-                            hypervisor.find(":selected").removeAttr(
-                                    "selected");
-                            hypervisor.find("[value=" + d["hypervisor"] + "]")
-                                .attr("selected", "selected");     
-                            hypervisor.change();
-                        }
-                    }
+        // process dropdown if its a singleton
+        disableSingletonDropdown(cluster, blankOptStr);
+    }
+
+    function _update_options(data) {
+        var pnode       = $("#id_pnode");
+        var snode       = $("#id_snode");
+        var oslist      = $("#id_os");
+        var child, child2;
+        var oldpnode = pnode.val();
+        var oldsnode = snode.val();
+        var oldos = oslist.val();
+        var old_template = disk_template.val();
+
+        pnode.children().not(":first").remove();
+        snode.children().not(":first").remove();
+        oslist.children().not(":first").remove();
+        $.each(data, function(i, items) {
+            $.each(items, function(key, value) {
+                if( i == "nodes" ) {
+                    child = _newOpt(value, value);
+                    child2 = child.clone();
+                    pnode.append(child);
+                    snode.append(child2);
+                }
+                else if (i == "os") {
+                    child = _newOptGroup(value[0],
+                            value[1]);
+                    oslist.append(child);
+                }
+            });
+        });
+
+        // make nodes publically available
+        nodes = data["nodes"];
+
+        // update disk template choices
+        disk_template.empty();
+        if (nodes.length == 1){
+            disk_template.html(single_node_template_choices);
+        } else {
+            disk_template.html(template_choices);
+        }
+
+        // Restore old choices from before, if possible.
+        pnode.val(oldpnode);
+        snode.val(oldsnode);
+        oslist.val(oldos);
+        disk_template.val(old_template);
+
+        // And finally, do the singleton dance.
+        disableSingletonDropdown(pnode, blankOptStr);
+        disableSingletonDropdown(snode, blankOptStr);
+        disableSingletonDropdown(oslist, blankOptStr);
+    }
+
+    function _update_cluster_defaults(d){
+        /* fill default options */
+
+        // boot device dropdown
+        if(d["boot_devices"]) {
+            boot_order.children().remove();
+            $.each(d["boot_devices"], function(i, item){
+                boot_order.append(_newOpt(item[0], item[1]));
+            });
+        }
+        if(d["boot_order"]) {
+            boot_order.find(":selected").removeAttr(
+                "selected");
+            boot_order.find("[value=" + d["boot_order"] + "]")
+                .attr("selected","selected");
+            boot_order.change();
+        }
+
+        // hypervisors dropdown
+        if(d["hypervisors"]) {
+            hypervisor.children().remove();
+            $.each(d["hypervisors"], function(i, item){
+                hypervisor.append(_newOpt(item[0], item[1]));
+            });
+            if(d["hypervisor"]) {
+                if (d["hypervisor"] != "" &&
+                    d["hypervisor"] != undefined) {
+                    hypervisor.find(":selected").removeAttr("selected");
+                    hypervisor.find("[value=" + d["hypervisor"] + "]")
+                        .attr("selected", "selected");
+                    hypervisor.change();
                 }
             }
+            disableSingletonDropdown(hypervisor, blankOptStr);
+        }
 
-            // iallocator checkbox
-            if(d["iallocator"] != "" && 
-                    d["iallocator"] != undefined){
-                if(!iallocator_hostname.attr("value")) {
-                    iallocator_hostname.attr("value",
-                            d["iallocator"]);
-                    if(iallocator.siblings("span").length == 0){
-                        iallocator.after(
-                            "<span>" + using_str +
-                                d["iallocator"] + 
-                            "</span>"
-                        );
-                    }
+        // iallocator checkbox
+        if(d["iallocator"] != "" &&
+                d["iallocator"] != undefined){
+            if(!iallocator_hostname.attr("value")) {
+                iallocator_hostname.attr("value",
+                        d["iallocator"]);
+                if(iallocator.siblings("span").length == 0){
+                    iallocator.after(
+                        "<span>" + using_str +
+                            d["iallocator"] +
+                        "</span>"
+                    );
                 }
-                // Check iallocator checkbox
+            }
+            // Check iallocator checkbox
                 iallocator.parent("p").show();
                 iallocator.removeAttr("disabled")
                     .removeAttr("readonly")
@@ -353,8 +364,6 @@ function formUpdater(url_choices, url_options, url_defaults){
             // kernel path text box
             if(d["kernel_path"]){
                 kernel_path.val(d["kernel_path"]);
-            } else {
-                kernel_path.val("");
             }
 
             // nic mode dropdown
@@ -363,7 +372,7 @@ function formUpdater(url_choices, url_options, url_defaults){
                 nic_mode.find("[value=" + d["nic_mode"] + "]")
                     .attr("selected","selected");
                 DEFAULT_NIC_MODE = d["nic_mode"];
-            } else { 
+            } else {
                 nic_mode.find(":first-child")
                     .attr("selected", "selected");
             }
@@ -373,13 +382,13 @@ function formUpdater(url_choices, url_options, url_defaults){
                 nic_link.val(d["nic_link"]);
                 DEFAULT_NIC_LINK = d["nic_link"];
             }
-            
+
             // nic type dropdown
             if(d["nic_types"]) {
                 nic_type.children().remove();
                 $.each(d["nic_types"], function(i, item){
                     nic_type.append(_newOpt(item[0], item[1]));
-                }); 
+                });
             }
             if(d["nic_type"]) {
                 nic_type.find(":selected").removeAttr("selected");
@@ -388,7 +397,7 @@ function formUpdater(url_choices, url_options, url_defaults){
             }
 
             // memory text box
-            if(d["memory"]){
+            if($("#id_memory") == "" && d["memory"]){
                 $("#id_memory").val(d["memory"]);
             }
 
@@ -402,14 +411,14 @@ function formUpdater(url_choices, url_options, url_defaults){
                     disk_type.val(d["disk_type"]);
                 }
             }
-            
+
             // root path text box
             if(d["root_path"]){
                 root_path.val(d["root_path"]);
             } else {
                 root_path.val("/");
             }
-            
+
             // enable serial console checkbox
             if(d["serial_console"]){
                 $("#id_serial_console")
@@ -417,26 +426,43 @@ function formUpdater(url_choices, url_options, url_defaults){
             } else {
                 $("#id_serial_console").removeAttr("checked");
             }
-            
+
             // virtual CPUs text box
-            if(d["vcpus"]){
+            if($("#id_vcpus").val() == "" && d["vcpus"]){
                 $("#id_vcpus").val(d["vcpus"]);
             }
-            
+
             // image path text box
             if(d["cdrom_image_path"]){
                 image_path.find("input").val(d["cdrom_image_path"]);
             }
-            disableSingletonDropdown(hypervisor, blankOptStr);
-        });
+            //second cdrom
+            if(d["cdrom2_image_path"]){
+                image2_path.find("input").val(d["cdrom2_image_path"]);
+            }
+
+        }
+
+    function _fillDefaultOptions(cluster_id) {
+        var args = new Object();
+        args["cluster_id"] = cluster_id;
+        var _hypervisor = hypervisor.val();
+        if (_hypervisor != '') {
+            args["hypervisor"] = _hypervisor;
+        }
+        _cached_get(url_defaults, args, _update_cluster_defaults);
     }
+
+
 
     function _imagePathHide(){
         image_path.hide();
+        image2_path.hide();
     }
 
     function _imagePathShow(){
         image_path.show();
+        image2_path.show();
     }
 
     function _iallocatorDisable(){
@@ -470,7 +496,7 @@ function formUpdater(url_choices, url_options, url_defaults){
     function _hideHvmKvmElements() {
         // Hide hvm + kvm specific hypervisor fields
         boot_order.parent("p").hide();
-        image_path.hide(); 
+        image_path.hide();
         nic_type.parent("p").hide();
         disk_type.parent("p").hide();
     }
@@ -548,7 +574,7 @@ function formUpdater(url_choices, url_options, url_defaults){
         nic_count.val(parseInt(count)+1);
         var p = $('<p></p>');
         var label = $("<label>NIC/" + count +"</label>");
-        
+
         // create mode select box
         var mode = $('<select></select>');
         mode.append('<option>----------</option>');
@@ -601,5 +627,56 @@ function formUpdater(url_choices, url_options, url_defaults){
             i++;
         });
     }
+
+    var AJAX_CACHE = {};
+    function _cached_get(url, data, callback) {
+        var key = _encode_url(url, data);
+        var response = AJAX_CACHE[key];
+        if (response == undefined ) {
+
+            // create a callback function that will execute for all calls to
+            // this url.  helps deal with multiple simultaneous calls to a url
+            var _callback = function(response, status, xhr) {
+                AJAX_CACHE[key] = response;
+                var callbacks = _callback.callbacks;
+                for (var i in callbacks) {
+                    callbacks[i](response, status, xhr);
+                }
+            };
+
+            // add callback to generic callback function
+            _callback.callbacks = [];
+            if (callback != undefined) {
+                _callback.callbacks.push(callback);
+            }
+            
+            $.getJSON(url, data, _callback);
+            AJAX_CACHE[key] = _callback;
+        } else if (callback != undefined) {
+            if (response.callbacks != undefined) {
+                _push_unique(response.callbacks, callback);
+            } else {
+                callback(response);
+            }
+        }
+    }
+
+    function _push_unique(array, item) {
+       for (var i in array) {
+           if (array[i] == item) {
+               return;
+           }
+       }
+       array.push(item);
+    }
+
+    function _encode_url(url, data)
+    {
+       var ret = [];
+       for (var d in data)
+          ret.push(encodeURIComponent(d) + "=" + encodeURIComponent(data[d]));
+       return url+'?'+ret.join("&");
+    }
+
 }
 

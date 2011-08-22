@@ -22,6 +22,7 @@ import binascii
 import cPickle
 from datetime import datetime, timedelta
 from hashlib import sha1
+import re
 
 from django.conf import settings
 
@@ -35,7 +36,6 @@ from django.core.validators import RegexValidator, MinValueValidator
 from django.utils.encoding import force_unicode
 from django.utils.translation import ugettext_lazy as _
 from django_fields.fields import PickleField
-import re
 
 from django.db import models
 from django.db.models import Q, Sum
@@ -250,7 +250,17 @@ class CachedClusterObject(models.Model):
                         .update(cached=self.cached)
                 
         except GanetiApiError, e:
-            self.error = str(e)
+            # Use regular expressions to match the quoted message
+            #  given by GanetiApiError. '\\1' is a group substitution
+            #  which places the first group '('|\")' in it's place.
+            comp = re.compile("('|\")(?P<msg>.*)\\1")
+            err = comp.search(str(e))
+            # Any search that has 0 results will just return None.
+            #   That is why we must check for err before proceeding.
+            if err:
+                self.error = err.groupdict()['msg']
+            else:
+                self.error = str(e)
             GanetiError.objects.store_error(str(e), obj=self, code=e.code)
 
         else:
@@ -1294,9 +1304,12 @@ class VirtualMachineTemplate(models.Model):
       form so that they can automatically be used or edited by a user.
     """
     template_name = models.CharField(max_length=255, null=True, blank=True)
+    description = models.CharField(max_length=255, null=True, blank=True)
     cluster = models.ForeignKey('Cluster', null=True)
     start = models.BooleanField(verbose_name=_('Start up After Creation'), \
                 default=True)
+    no_install = models.BooleanField(verbose_name=_('Do not install OS'), \
+                default=False)
     name_check = models.BooleanField(verbose_name=_('DNS Name Check'), \
                 default=True)
     iallocator = models.BooleanField(verbose_name=_('Automatic Allocation'), \
@@ -1333,6 +1346,9 @@ class VirtualMachineTemplate(models.Model):
     cdrom2_image_path = models.CharField(
         verbose_name=_('CD-ROM 2 Image Path'), null=True, blank=True,
         max_length=512)
+
+    class Meta:
+        unique_together = (("cluster", "template_name"),)
 
     def __str__(self):
         if self.template_name is None:
