@@ -33,7 +33,6 @@ from django.utils.translation import ugettext_lazy as _
 from ganeti_web.util.client import REPLACE_DISK_AUTO, REPLACE_DISK_PRI, \
     REPLACE_DISK_CHG, REPLACE_DISK_SECONDARY
 
-
 class VirtualMachineForm(forms.ModelForm):
     """
     Parent class that holds all vm clean methods
@@ -43,6 +42,29 @@ class VirtualMachineForm(forms.ModelForm):
 
     class Meta:
         model = VirtualMachineTemplate
+
+    def create_disk_fields(self, count):
+        """
+        dynamically add fields for disks
+        """
+        self.disk_fields = range(count)
+        for i in range(count):
+            disk_size = DataVolumeField(min_value=100, required=True,
+                                        label=_("Disk/%s Size" % i))
+            self.fields['disk_size_%s'%i] = disk_size
+
+    def create_nic_fields(self, count, defaults=None):
+        """
+        dynamically add fields for nics
+        """
+        self.nic_fields = range(count)
+        for i in range(count):
+            nic_mode = forms.ChoiceField(label=_('NIC/%s Mode' % i), choices=HV_NIC_MODES)
+            nic_link = forms.CharField(label=_('NIC/%s Link' % i), max_length=255)
+            if defaults is not None:
+                nic_link.initial = defaults['nic_link']
+            self.fields['nic_mode_%s'%i] = nic_mode
+            self.fields['nic_link_%s'%i] = nic_link
 
     def clean_hostname(self):
         data = self.cleaned_data
@@ -143,17 +165,19 @@ class NewVirtualMachineForm(VirtualMachineForm):
     boot_order = forms.ChoiceField(label=_('Boot Device'), choices=[empty_field])
 
     class Meta(VirtualMachineForm.Meta):
-        exclude = ('template_name')
+        exclude = ('template_name', 'description')
 
     def __init__(self, user, *args, **kwargs):
         self.user = user
         initial = kwargs.get('initial', None)
 
+        super(NewVirtualMachineForm, self).__init__(*args, **kwargs)
+
         # If data is not passed by initial kwarg (as in POST data)
         #   assign initial to self.data as self.data contains POST
         #   data.
-        if initial is None and args:
-            initial = args[0]
+        if initial is None:
+            initial = self.data
 
         cluster = None
         if initial:
@@ -185,8 +209,6 @@ class NewVirtualMachineForm(VirtualMachineForm):
         else:
             disk_count = 1
             nic_count = 1
-
-        super(NewVirtualMachineForm, self).__init__(*args, **kwargs)
 
         # Make sure vcpus is required for this form. Don't want to go through
         #  the trouble of overriding the model field.
@@ -285,29 +307,6 @@ class NewVirtualMachineForm(VirtualMachineForm):
                 q = user.get_objects_any_perms(Cluster, ['admin','create_vm'])
             self.fields['cluster'].queryset = q
     
-    def create_disk_fields(self, count):
-        """
-        dynamically add fields for disks
-        """
-        self.disk_fields = range(count)
-        for i in range(count):
-            disk_size = DataVolumeField(min_value=100, required=True,
-                                        label=_("Disk/%s Size" % i))
-            self.fields['disk_size_%s'%i] = disk_size
-
-    def create_nic_fields(self, count, defaults=None):
-        """
-        dynamically add fields for nics
-        """
-        self.nic_fields = range(count)
-        for i in range(count):
-            nic_mode = forms.ChoiceField(label=_('NIC/%s Mode' % i), choices=HV_NIC_MODES)
-            nic_link = forms.CharField(label=_('NIC/%s Link' % i), max_length=255)
-            if defaults is not None:
-                nic_link.initial = defaults['nic_link']
-            self.fields['nic_mode_%s'%i] = nic_mode
-            self.fields['nic_link_%s'%i] = nic_link
-
     def clean_cluster(self):
         # Invalid or unavailable cluster
         cluster = self.cleaned_data.get('cluster', None)
@@ -345,7 +344,6 @@ class NewVirtualMachineForm(VirtualMachineForm):
                 del self._errors["snode"]
 
         # If boot_order = CD-ROM make sure imagepath is set as well.
-        # Path ends up in image_path regardless of where it was entered. 
         boot_order = data.get('boot_order', '')
         image_path = data.get('cdrom_image_path', '')
         image2_path = data.get('cdrom2_image_path','')
@@ -529,7 +527,8 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
         model = VirtualMachineTemplate
         exclude = ('start', 'owner', 'cluster', 'hostname', 'name_check',
         'iallocator', 'iallocator_hostname', 'disk_template', 'pnode', 'nics',
-        'snode','disk_size', 'nic_mode', 'template_name', 'hypervisor', 'disks', 'no_install')
+        'snode','disk_size', 'nic_mode', 'template_name', 'hypervisor', 'disks',
+        'description', 'no_install')
 
     def __init__(self, vm, initial=None, *args, **kwargs):
         super(VirtualMachineForm, self).__init__(initial, *args, **kwargs)

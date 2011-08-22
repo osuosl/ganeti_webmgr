@@ -314,7 +314,7 @@ function formUpdater(url_choices, url_options, url_defaults){
         if(d["boot_order"]) {
             boot_order.find(":selected").removeAttr(
                 "selected");
-            boot_order.find("[value=" + d["boot_order"][0] + "]")
+            boot_order.find("[value=" + d["boot_order"] + "]")
                 .attr("selected","selected");
             boot_order.change();
         }
@@ -364,8 +364,6 @@ function formUpdater(url_choices, url_options, url_defaults){
             // kernel path text box
             if(d["kernel_path"]){
                 kernel_path.val(d["kernel_path"]);
-            } else {
-                kernel_path.val("");
             }
 
             // nic mode dropdown
@@ -399,7 +397,7 @@ function formUpdater(url_choices, url_options, url_defaults){
             }
 
             // memory text box
-            if(d["memory"]){
+            if($("#id_memory") == "" && d["memory"]){
                 $("#id_memory").val(d["memory"]);
             }
 
@@ -430,7 +428,7 @@ function formUpdater(url_choices, url_options, url_defaults){
             }
 
             // virtual CPUs text box
-            if(d["vcpus"]){
+            if($("#id_vcpus").val() == "" && d["vcpus"]){
                 $("#id_vcpus").val(d["vcpus"]);
             }
 

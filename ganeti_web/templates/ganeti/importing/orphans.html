@@ -2,8 +2,11 @@
 {% load i18n %}
 {% block title %}Orphan VMs{% endblock %}
 {% block head %}
+    <link rel="stylesheet" type="text/css" href="{{SITE_ROOT}}/object_permissions_media/css/form.css"/>
     <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.multi_checkbox_selector.js"></script>
     <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.tablesorter.min.js"></script>
+    <script type="text/javascript" src="{{SITE_ROOT}}/object_permissions_media/js/jquery.form.js"></script>
+    <script type="text/javascript" src="{{SITE_ROOT}}/ganeti_web_media/js/autocomplete_user_search.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
             $("#orphans_form").select_all();
@@ -12,6 +15,7 @@
                     0: { sorter: 'false' },
                 }
             });
+            autocomplete_user_search($("#id_owner"),'{% url owner-search %}');
         });
     </script>
 {% endblock %}
@@ -24,7 +28,7 @@
 
     <form id="orphans_form" action="{% url import-orphans %}" method="post">
         {{form.errors}}
-        {{form.owner.label}} {{form.owner}}
+        <div class="owner">{{form.owner.label}}: {{form.owner}}</div>
         <input type="submit" value="{% trans "Update Selected" %}" {%if not vms%}disabled{%endif%}>
         <table id="orphanlist" class="sorted">
         <thead>
