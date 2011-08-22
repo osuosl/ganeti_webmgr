@@ -35,7 +35,6 @@ function formUpdater(url_choices, url_options, url_defaults){
     var using_str =             " Using: ";
     var blankOptStr =           "---------";
     var nodes =                 null; // nodes available
-    var oldid; // global for hypervisor.change function
 
     var template_choices = $("\
             <option value=''>---------</option>\
@@ -129,13 +128,7 @@ function formUpdater(url_choices, url_options, url_defaults){
                 _showKvmElements();
                 _showHvmKvmElements();
                 _showPvmKvmElements();
-            } else {
-                return;
             } 
-            if(id != oldid && oldid != undefined) {
-                _fillDefaultOptions(cluster.val(), id);
-            }
-            oldid = id;
         });
 
         // boot device change
@@ -237,21 +230,23 @@ function formUpdater(url_choices, url_options, url_defaults){
     // ----------------
 
     function _update_cluster_choices(data){
-        var oldcluster = cluster.val();
+        var old_cluster = cluster.val();
 
         cluster.children().not(":first").remove();
         $.each(data, function(i, item) {
             cluster.append(_newOpt(item[0], item[1]));
         });
 
-        // Try to re-select the previous cluster, if possible.
-        cluster.val(oldcluster);
+        // Try to re-select the previous cluster, if possible. else just trigger
+        // a change so cluster update logic is run
+        if (cluster.children('option[value='+old_cluster+']').length) {
+            cluster.val(old_cluster);
+        } else {
+            cluster.change();
+        }
 
         // process dropdown if its a singleton
         disableSingletonDropdown(cluster, blankOptStr);
-
-        // trigger a change in the cluster
-        cluster.change();
     }
 
     function _update_options(data) {
@@ -306,7 +301,7 @@ function formUpdater(url_choices, url_options, url_defaults){
         disableSingletonDropdown(oslist, blankOptStr);
     }
 
-    function _update_cluster_defaults(d, status, xhr){
+    function _update_cluster_defaults(d){
         /* fill default options */
 
         // boot device dropdown
@@ -325,23 +320,21 @@ function formUpdater(url_choices, url_options, url_defaults){
         }
 
         // hypervisors dropdown
-        if(typeof hypervisor_id != undefined) {
-            if(d["hypervisors"]) {
-                hypervisor.children().remove();
-                $.each(d["hypervisors"], function(i, item){
-                    hypervisor.append(_newOpt(item[0], item[1]));
-                });
-                if(d["hypervisor"]) {
-                    if (d["hypervisor"] != "" &&
-                        d["hypervisor"] != undefined) {
-                        hypervisor.find(":selected").removeAttr(
-                                "selected");
-                        hypervisor.find("[value=" + d["hypervisor"] + "]")
-                            .attr("selected", "selected");
-                        hypervisor.change();
-                    }
+        if(d["hypervisors"]) {
+            hypervisor.children().remove();
+            $.each(d["hypervisors"], function(i, item){
+                hypervisor.append(_newOpt(item[0], item[1]));
+            });
+            if(d["hypervisor"]) {
+                if (d["hypervisor"] != "" &&
+                    d["hypervisor"] != undefined) {
+                    hypervisor.find(":selected").removeAttr("selected");
+                    hypervisor.find("[value=" + d["hypervisor"] + "]")
+                        .attr("selected", "selected");
+                    hypervisor.change();
                 }
             }
+            disableSingletonDropdown(hypervisor, blankOptStr);
         }
 
         // iallocator checkbox
@@ -449,14 +442,15 @@ function formUpdater(url_choices, url_options, url_defaults){
             if(d["cdrom2_image_path"]){
                 image2_path.find("input").val(d["cdrom2_image_path"]);
             }
-            disableSingletonDropdown(hypervisor, blankOptStr);
+
         }
 
-    function _fillDefaultOptions(cluster_id, hypervisor_id) {
+    function _fillDefaultOptions(cluster_id) {
         var args = new Object();
         args["cluster_id"] = cluster_id;
-        if(typeof hypervisor_id != undefined) {
-            args["hypervisor"] = hypervisor_id;
+        var _hypervisor = hypervisor.val();
+        if (_hypervisor != '') {
+            args["hypervisor"] = _hypervisor;
         }
         _cached_get(url_defaults, args, _update_cluster_defaults);
     }
