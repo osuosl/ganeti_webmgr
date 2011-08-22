@@ -30,7 +30,7 @@
 {% endblock %}
 
 {% block content %}
-    <h1>Groups</h1>
+    <h1 class="breadcrumb">Groups</h1>
 
     {% if user.is_superuser %}<a id="add_group" href="{% url group-add %}" class="button add">Add Group</a>{% endif %}
     <table id="groups">

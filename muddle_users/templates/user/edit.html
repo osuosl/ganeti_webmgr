@@ -5,9 +5,9 @@
 {% endblock %}
 
 {% block content %}
-<h1><a class="breadcrumb" href="{%url user-list %}">{% trans "Users" %}</a>
+<h1 class="breadcrumb"><a href="{%url user-list %}">{% trans "Users" %}</a>
     {% if user_edit %}
-    : <a class="breadcrumb" href="{% url user-detail user_edit.id %}">{{ user_edit.username }}</a> : {% trans "Edit" %}
+    : <a href="{% url user-detail user_edit.id %}">{{ user_edit.username }}</a> : {% trans "Edit" %}
     {% else %}
     : {%  trans "Create" %}
     {% endif %}
