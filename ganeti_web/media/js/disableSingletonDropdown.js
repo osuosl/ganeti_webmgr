@@ -17,6 +17,7 @@ function disableSingletonDropdown(dropdown, ignoreOpt){
     var opts = [];
     var PROCESSED_OP_ID = 'singleOptionDropdown';
     var processedOpElems = dropdown.siblings().filter('.'+PROCESSED_OP_ID);
+    var old_value = dropdown.val();
 
     // create a new list of options sans any "blanks", if specified
     if(ignoreOpt != undefined){
@@ -36,7 +37,9 @@ function disableSingletonDropdown(dropdown, ignoreOpt){
     if(opts.length == 1){
         $(opts).attr('selected', 'selected');
         dropdown.hide();
-        dropdown.change();
+        if (dropdown.val()!=old_value) {
+            dropdown.change();
+        }
 
         // if there're no processed options (disabled dropdown versions) make
         // the disabled dropdown
