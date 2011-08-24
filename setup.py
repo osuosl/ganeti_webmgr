@@ -13,7 +13,7 @@ setup(name='django-muddle-users',
       maintainer="Peter Krenesky",
       maintainer_email="peter@osuosl.org",
       url='http://code.osuosl.org/projects/muddle-users',
-      packages=['muddle-users'],
+      packages=['muddle_users'],
       include_package_data=True,
       classifiers=[
           "License :: OSI Approved :: MIT License",
