@@ -178,6 +178,8 @@ INSTALLED_APPS = (
     'muddle',
     'muddle.shots',
     'muddle_users',
+    'api',
+    'tastypie',
 )
 
 # Search settings

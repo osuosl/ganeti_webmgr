@@ -67,6 +67,11 @@ GIT_INSTALL =  {
         'url':'git://git.osuosl.org/gitolite/ganeti/twisted_vncauthproxy',
         'development':'develop',
         'virtualenv':True
+    },
+    'django-tastypie':{
+        'url':'https://github.com/toastdriven/django-tastypie.git',
+        'development':'master',
+        'virtualenv':True
     }
 }
 
