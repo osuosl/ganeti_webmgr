@@ -287,8 +287,8 @@ def startup(request, cluster_slug, instance, rest = False):
             log_action('VM_START', user, vm, job)
         except GanetiApiError, e:
             msg = {'__all__':[str(e)]}
-        if (not rest):
-            return HttpResponse(json.dumps(msg), mimetype='application/xml')
+        if not rest:
+            return HttpResponse(json.dumps(msg), mimetype='application/json')
         else:
             return {"msg": msg,"code":"200"}
     return HttpResponseNotAllowed(['POST'])
