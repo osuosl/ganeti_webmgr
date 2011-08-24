@@ -17,3 +17,6 @@ settings.py
 
 #patches
 *.patch
+
+# egg file created by setup.pyy
+*.egg-info
