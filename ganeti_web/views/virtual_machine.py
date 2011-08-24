@@ -619,7 +619,7 @@ def users(request, cluster_slug, instance, rest = False):
             return {'msg':'You do not have sufficient privileges', 'code':403}
 
     url = reverse('vm-permissions', args=[cluster.slug, vm.hostname])
-    return view_users(request, vm, url, rest = True)
+    return view_users(request, vm, url, rest=rest)
 
 
 @login_required
