@@ -34,9 +34,8 @@
     // show list of errors from XHR object request
     function fail(responseText) {
         // parse errors
-        errors = responseText;
-        for (key in errors) {
-            $(".qtip #errors").append("<li>"+ errors[key] +"</li>");
+        for (var key in responseText) {
+            $(".qtip #errors").append("<li>"+ responseText[key] +"</li>");
         }
     } 
 
@@ -61,7 +60,7 @@
         });
     }
 
-    $(document).ready(function() {
+    $(function() {
 
         // "Add" button clicked
         $("#add_key").live("click", function() {
@@ -72,13 +71,14 @@
         });
 
         // "Delete" link clicked
-        $("a.delete").live("click", function(){
-            host = $(this).parents("tr").children("[name=\"host\"]").html();
-            key = $(this).parents("tr").children("[name=\"key\"]").html();
-            _id = $(this).parents("tr").attr("id").substring(7);
+        $("a.delete").live("click", function(event){
+            event.preventDefault();
+            var host = $(this).parents("tr").children("[name=\"host\"]").html();
+            var key = $(this).parents("tr").children("[name=\"key\"]").html();
+            var _id = $(this).parents("tr").attr("id").substring(7);
 
             if (confirm("Remove key \""+key+"\" with comment "+host + "?")) {
-                parent = this.parentNode.parentNode;
+                var parent = this.parentNode.parentNode;
                 $.delete_(this.href, function(){
                     $(parent).remove();
                 });
@@ -89,26 +89,24 @@
                 $(".qtip").qtip("destroy");
                 id = null;
             }
-            return false;
         });
 
         // "Edit" link clicked
-        $("a.edit").live("click", function(){
+        $("a.edit").live("click", function(event){
+            event.preventDefault();
             id = $(this).parents("tr").attr("id").substring(7);
 
             // popup new qtip window
             popup_qtip(this, this.href);
-
-            return false;
         });
 
         // Form submitted
-        $(".ajax_form").live("submit", function() {
+        $(".ajax_form").live("submit", function(event) {
+            event.preventDefault();
             //makes sure no errors are presented
             $(".qtip #errors").empty();
 
             $(this).ajaxSubmit({success: update});
-            return false;
         });
     });
 </script>

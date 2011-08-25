@@ -22,6 +22,7 @@ import binascii
 import cPickle
 from datetime import datetime, timedelta
 from hashlib import sha1
+import re
 
 from django.conf import settings
 
@@ -35,7 +36,6 @@ from django.core.validators import RegexValidator, MinValueValidator
 from django.utils.encoding import force_unicode
 from django.utils.translation import ugettext_lazy as _
 from django_fields.fields import PickleField
-import re
 
 from django.db import models
 from django.db.models import Q, Sum
@@ -217,6 +217,7 @@ class CachedClusterObject(models.Model):
         Failure while loading the remote class will result in an incomplete
         object.  The error will be stored to self.error
         """
+        job_data = self.check_job_status()
         try:
             info_ = self._refresh()
             if info_:
@@ -232,7 +233,6 @@ class CachedClusterObject(models.Model):
             if self.mtime is None or mtime > self.mtime:
                 # there was an update. Set info and save the object
                 self.info = info_
-                job_data = self.check_job_status()
                 if job_data:
                     for k, v in job_data.items():
                         setattr(self, k, v)
@@ -241,16 +241,25 @@ class CachedClusterObject(models.Model):
                 # There was no change on the server.  Only update the cache
                 # time. This bypasses the info serialization mechanism and
                 # uses a smaller query.
-                updates = self.check_job_status()
-                if updates:
+                if job_data:
                     self.__class__.objects.filter(pk=self.id) \
-                        .update(cached=self.cached, **updates)
+                        .update(cached=self.cached, **job_data)
                 elif self.id is not None:
                     self.__class__.objects.filter(pk=self.id) \
                         .update(cached=self.cached)
                 
         except GanetiApiError, e:
-            self.error = str(e)
+            # Use regular expressions to match the quoted message
+            #  given by GanetiApiError. '\\1' is a group substitution
+            #  which places the first group '('|\")' in it's place.
+            comp = re.compile("('|\")(?P<msg>.*)\\1")
+            err = comp.search(str(e))
+            # Any search that has 0 results will just return None.
+            #   That is why we must check for err before proceeding.
+            if err:
+                self.error = err.groupdict()['msg']
+            else:
+                self.error = str(e)
             GanetiError.objects.store_error(str(e), obj=self, code=e.code)
 
         else:
@@ -664,7 +673,7 @@ class VirtualMachine(CachedClusterObject):
 
     def _refresh(self):
         # XXX if delete is pending then no need to refresh this object.
-        if self.pending_delete:
+        if self.pending_delete or self.template_id:
             return None
         return self.rapi.GetInstance(self.hostname)
 
@@ -1294,9 +1303,12 @@ class VirtualMachineTemplate(models.Model):
       form so that they can automatically be used or edited by a user.
     """
     template_name = models.CharField(max_length=255, null=True, blank=True)
+    description = models.CharField(max_length=255, null=True, blank=True)
     cluster = models.ForeignKey('Cluster', null=True)
     start = models.BooleanField(verbose_name=_('Start up After Creation'), \
                 default=True)
+    no_install = models.BooleanField(verbose_name=_('Do not install OS'), \
+                default=False)
     name_check = models.BooleanField(verbose_name=_('DNS Name Check'), \
                 default=True)
     iallocator = models.BooleanField(verbose_name=_('Automatic Allocation'), \
@@ -1333,6 +1345,9 @@ class VirtualMachineTemplate(models.Model):
     cdrom2_image_path = models.CharField(
         verbose_name=_('CD-ROM 2 Image Path'), null=True, blank=True,
         max_length=512)
+
+    class Meta:
+        unique_together = (("cluster", "template_name"),)
 
     def __str__(self):
         if self.template_name is None:

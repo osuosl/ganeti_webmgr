@@ -1,82 +1,94 @@
 {% extends "menu_base.html" %}
 {% load i18n %}
 {% load webmgr_tags %}
-{% block title %}{% trans "Create a new Virtual Machine" %}{% endblock %}
+{% block title %}
+    {% if template %}
+        {% trans "Edit Template" %} {{ template }}
+    {% else %}
+        {% trans "Create a new Virtual Machine Template" %}
+    {% endif %}
+{% endblock %}
 
 {% block head %}
     <link rel="stylesheet" type="text/css"
             href="{{MEDIA_URL}}/css/virtual_machine_create.css"/>
-    <link rel="stylesheet" type="text/css" href="{{SITE_ROOT}}/object_permissions_media/css/form.css"/>
-
     <!-- javascript includes -->
     <script src="{{SITE_ROOT}}/ganeti_web_media/js/disableSingletonDropdown.js"></script>
-    <script src="{{SITE_ROOT}}/ganeti_web_media/js/createVM_formUpdater.js"></script>
+    <script src="{{SITE_ROOT}}/ganeti_web_media/js/createTemplate_formUpdater.js"></script>
     <script src="{{SITE_ROOT}}/ganeti_web_media/js/helpTips.js"></script>
-    <script type="text/javascript" src="{{SITE_ROOT}}/ganeti_web_media/js/autocomplete_user_search.js"></script>
-
     <script type="text/javascript">
-        
-        // -------
-        // "main"
-        // -------
         $(document).ready(function() {
             /* run when document is fully loaded */
            
             // init the live-form updater
             var frmUpdater = new formUpdater(
-                    '{% url instance-create-cluster-choices %}',
-                    '{% url instance-create-cluster-options %}',
-                    '{% url instance-create-cluster-defaults %}');
-            frmUpdater.init({{ cluster_defaults|safe }});
- 
-            // init the help tips for the individ. form objects
-            initHelpTips('#virtualmachineform');
-            
-            autocomplete_user_search($("#id_owner"),'{% url owner-search %}');
-        });
+                '{% url instance-create-cluster-options %}',
+                '{% url instance-create-cluster-defaults %}'
+            );
+            frmUpdater.init();
 
+            // init help tips
+            initHelpTips('#virtualmachineform');
+        });
     </script>
 {% endblock %}
 
+
 {% block content %}
+<h1 class="breadcrumb">
+    {% if from_vm %}
+        <a href="{% url cluster-detail from_vm.cluster.slug %}">{{from_vm.cluster|abbreviate_fqdn}}</a> :
+        <a href="{% url instance-detail from_vm.cluster.slug from_vm.hostname %}">{{from_vm}}</a>
+    {% else %}
+        <span>
+            <a href="{% url template-list %}">{% trans "Template" %}</a>
+        </span>    
+    {% endif %}
+    {% if template %}
+       : <a href="{% url template-detail template.cluster.slug template %}">{{ template }}</a>
+       : {% trans "Edit" %}
+    {% else %}
+        {% if from_vm %}
+            : {% trans "Template" %}
+        {% else %}
+            : {% trans "Create" %}
+        {% endif %}
+    {% endif %}
+</h1>
 <div id="virtualmachineform">
-    <form method="post" action="{% url instance-create %}">
+    <form method="post" action="{{ action }}">
         <fieldset class="first_fieldset">
-            <h1 class="breadcrumb"><span>{% trans "Virtual Machine" %}</span> : {% trans "Create" %}</h1>
-            {% vmfield form.owner %}
+            {% vmfield form.template_name %}
+            {% vmfield form.description %}
             {% vmfield form.cluster %}
-            {% vmfield form.hypervisor %}
-            {% vmfield form.hostname %}
+        </fieldset>
+        <fieldset>
+            <legend>{% trans "Instance Options" %}</legend>
             {% vmfield form.start %}
-            {% vmfield form.no_install %}
             {% vmfield form.name_check %}
-            {% vmfield form.iallocator %}
-            {% vmfield form.iallocator_hostname.as_hidden %}
             {% vmfield form.disk_template %}
-            {% vmfield form.pnode %}
-            {% vmfield form.snode %}
+        </fieldset>
+        <fieldset>
+            <legend>{% trans "Operating System" %}</legend>
             {% vmfield form.os %}
         </fieldset>
         <fieldset>
-            <legend>{% trans "General Parameters" %} </legend>
+            <legend>{% trans "General Parameters" %}</legend>
             {% vmfield form.vcpus %}
             {% vmfield form.memory %}
-            {% if form.disk_type %}
             {% vmfield form.disk_type %}
-            {% endif %}
-            {% if form.nic_type %}
             {% vmfield form.nic_type %}
-            {% endif %}
         </fieldset>
-
         <fieldset id="disks">
             <h3>{% trans "Disks" %}<div class="icon add"></div></h3>
             {{ form.disk_count }}
             {% for index in form.disk_fields %}
                 {% vmfield_disk form index %}
+                {% if forloop.first %}
+                    <div class="icon delete"></div>
+                {% endif %}
             {% endfor %}
         </fieldset>
-
         <fieldset id="nics">
             <h3>{% trans "Network Devices" %}<div class="icon add"></div></h3>
             {{ form.nic_count }}
@@ -84,25 +96,15 @@
                 {% vmfield_nic form index %}
             {% endfor %}
         </fieldset>
-
         <fieldset>
             <legend>{% trans "Hypervisor Parameters" %}</legend>
             {% vmfield form.kernel_path %}
             {% vmfield form.root_path %}
-            {% if form.serial_console %}
             {% vmfield form.serial_console %}
-            {% endif %}
-            {% if form.boot_order %}
             {% vmfield form.boot_order %}
-            {% endif %}
-            {% if form.cdrom_image_path %}
-                {% vmfield form.cdrom_image_path %}
-            {% endif %}
-            {% if form.cdrom2_image_path %}
-                {% vmfield form.cdrom2_image_path %}
-            {% endif %}
+            {% vmfield form.cdrom_image_path %}
         </fieldset>
-        <input class="submit" type="submit" value="{% trans "Create" %}">
+        <input class="submit" type="submit" value="{% trans "Save" %}">
     </form>
 </div>
 
@@ -114,5 +116,5 @@
     {% include "ganeti/helptips/vm.html" %}
     {% include "ganeti/helptips/vm_create.html" %}
 </div>
+{% endblock content %}
 
-{% endblock %}

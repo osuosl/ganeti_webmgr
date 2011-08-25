@@ -66,6 +66,8 @@ class TestVirtualMachineViewsBase(TestCase, VirtualMachineTestCaseMixin, ViewTes
         context['group'] = group
         context['vm'] = vm
         context['cluster'] = cluster
+        context['cluster_admin'] = cluster_admin
+        context['vm_admin'] = vm_admin
         globals().update(context)
         self.context.update(context)
 

@@ -33,7 +33,6 @@ from django.utils.translation import ugettext_lazy as _
 from ganeti_web.util.client import REPLACE_DISK_AUTO, REPLACE_DISK_PRI, \
     REPLACE_DISK_CHG, REPLACE_DISK_SECONDARY
 
-
 class VirtualMachineForm(forms.ModelForm):
     """
     Parent class that holds all vm clean methods
@@ -43,6 +42,29 @@ class VirtualMachineForm(forms.ModelForm):
 
     class Meta:
         model = VirtualMachineTemplate
+
+    def create_disk_fields(self, count):
+        """
+        dynamically add fields for disks
+        """
+        self.disk_fields = range(count)
+        for i in range(count):
+            disk_size = DataVolumeField(min_value=100, required=True,
+                                        label=_("Disk/%s Size" % i))
+            self.fields['disk_size_%s'%i] = disk_size
+
+    def create_nic_fields(self, count, defaults=None):
+        """
+        dynamically add fields for nics
+        """
+        self.nic_fields = range(count)
+        for i in range(count):
+            nic_mode = forms.ChoiceField(label=_('NIC/%s Mode' % i), choices=HV_NIC_MODES)
+            nic_link = forms.CharField(label=_('NIC/%s Link' % i), max_length=255)
+            if defaults is not None:
+                nic_link.initial = defaults['nic_link']
+            self.fields['nic_mode_%s'%i] = nic_mode
+            self.fields['nic_link_%s'%i] = nic_link
 
     def clean_hostname(self):
         data = self.cleaned_data
@@ -120,7 +142,7 @@ class NewVirtualMachineForm(VirtualMachineForm):
     Virtual Machine Creation form
     """
     pvm_exclude_fields = ('disk_type','nic_type', 'boot_order', 'serial_console',
-        'cdrom_image_path')
+        'cdrom_image_path', 'cdrom2_image_path')
 
     empty_field = EMPTY_CHOICE_FIELD
     templates = HV_DISK_TEMPLATES
@@ -143,17 +165,19 @@ class NewVirtualMachineForm(VirtualMachineForm):
     boot_order = forms.ChoiceField(label=_('Boot Device'), choices=[empty_field])
 
     class Meta(VirtualMachineForm.Meta):
-        exclude = ('template_name')
+        exclude = ('template_name', 'description')
 
     def __init__(self, user, *args, **kwargs):
         self.user = user
         initial = kwargs.get('initial', None)
 
+        super(NewVirtualMachineForm, self).__init__(*args, **kwargs)
+
         # If data is not passed by initial kwarg (as in POST data)
         #   assign initial to self.data as self.data contains POST
         #   data.
-        if initial is None and args:
-            initial = args[0]
+        if initial is None:
+            initial = self.data
 
         cluster = None
         if initial:
@@ -185,8 +209,6 @@ class NewVirtualMachineForm(VirtualMachineForm):
         else:
             disk_count = 1
             nic_count = 1
-
-        super(NewVirtualMachineForm, self).__init__(*args, **kwargs)
 
         # Make sure vcpus is required for this form. Don't want to go through
         #  the trouble of overriding the model field.
@@ -285,29 +307,6 @@ class NewVirtualMachineForm(VirtualMachineForm):
                 q = user.get_objects_any_perms(Cluster, ['admin','create_vm'])
             self.fields['cluster'].queryset = q
     
-    def create_disk_fields(self, count):
-        """
-        dynamically add fields for disks
-        """
-        self.disk_fields = range(count)
-        for i in range(count):
-            disk_size = DataVolumeField(min_value=100, required=True,
-                                        label=_("Disk/%s Size" % i))
-            self.fields['disk_size_%s'%i] = disk_size
-
-    def create_nic_fields(self, count, defaults=None):
-        """
-        dynamically add fields for nics
-        """
-        self.nic_fields = range(count)
-        for i in range(count):
-            nic_mode = forms.ChoiceField(label=_('NIC/%s Mode' % i), choices=HV_NIC_MODES)
-            nic_link = forms.CharField(label=_('NIC/%s Link' % i), max_length=255)
-            if defaults is not None:
-                nic_link.initial = defaults['nic_link']
-            self.fields['nic_mode_%s'%i] = nic_mode
-            self.fields['nic_link_%s'%i] = nic_link
-
     def clean_cluster(self):
         # Invalid or unavailable cluster
         cluster = self.cleaned_data.get('cluster', None)
@@ -347,12 +346,16 @@ class NewVirtualMachineForm(VirtualMachineForm):
         # If boot_order = CD-ROM make sure imagepath is set as well.
         boot_order = data.get('boot_order', '')
         image_path = data.get('cdrom_image_path', '')
+        image2_path = data.get('cdrom2_image_path','')
         if boot_order == 'cdrom':
             if image_path == '':
-                msg = u"%s." % _("Image path required if boot device is CD-ROM")
-                self._errors["cdrom_image_path"] = self.error_class([msg])
-                del data["cdrom_image_path"]
-
+                if image2_path == '':
+                    msg = u"%s." % _("Image path required if boot device is CD-ROM")
+                    self._errors["cdrom_image_path"] = self.error_class([msg])
+                    del data["cdrom_image_path"]
+                else:
+                    image_path, image2_path = image2_path, image_path
+ 
         if iallocator:
             # If iallocator is checked,
             #  don't display error messages for nodes
@@ -447,43 +450,6 @@ class NewVirtualMachineForm(VirtualMachineForm):
         iallocator_hostname = data.get('iallocator_hostname', '')
         disk_template = data.get("disk_template")
 
-        # Need to have pnode != snode
-        if disk_template == "drbd" and not iallocator:
-            if pnode == snode and (pnode != '' or snode != ''):
-                # We know these are not in self._errors now
-                msg = u"%s." % _("Primary and Secondary Nodes must not match")
-                self._errors["pnode"] = self.error_class([msg])
-
-                # These fields are no longer valid. Remove them from the
-                # cleaned data.
-                del data["pnode"]
-                del data["snode"]
-        else:
-            if "snode" in self._errors:
-                del self._errors["snode"]
-
-        # If boot_order = CD-ROM make sure imagepath is set as well.
-        boot_order = data.get('boot_order', '')
-        image_path = data.get('cdrom_image_path', '')
-        if boot_order == 'cdrom':
-            if image_path == '':
-                msg = u"%s." % _("Image path required if boot device is CD-ROM")
-                self._errors["cdrom_image_path"] = self.error_class([msg])
-                del data["cdrom_image_path"]
-
-        if iallocator:
-            # If iallocator is checked,
-            #  don't display error messages for nodes
-            if iallocator_hostname != '':
-                if 'pnode' in self._errors:
-                    del self._errors['pnode']
-                if 'snode' in self._errors:
-                    del self._errors['snode']
-            else:
-                msg = u"%s." % _("Automatic Allocation was selected, but there is no \
-                      IAllocator available.")
-                self._errors['iallocator'] = self.error_class([msg])
-
         # Check options which depend on the the hypervisor type
         hv = data.get('hypervisor')
         disk_type = data.get('disk_type')
@@ -561,7 +527,8 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
         model = VirtualMachineTemplate
         exclude = ('start', 'owner', 'cluster', 'hostname', 'name_check',
         'iallocator', 'iallocator_hostname', 'disk_template', 'pnode', 'nics',
-        'snode','disk_size', 'nic_mode', 'template_name', 'hypervisor', 'disks')
+        'snode','disk_size', 'nic_mode', 'template_name', 'hypervisor', 'disks',
+        'description', 'no_install')
 
     def __init__(self, vm, initial=None, *args, **kwargs):
         super(VirtualMachineForm, self).__init__(initial, *args, **kwargs)
@@ -628,7 +595,7 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
         kernel_path = data.get('kernel_path')
         initrd_path = data.get('initrd_path')
 
-        # Makesure if initrd_path is set, kernel_path is aswell
+        # Make sure if initrd_path is set, kernel_path is aswell
         if initrd_path and not kernel_path:
             msg = u"%s." % _("Kernel Path must be specified along with Initrd Path")
             self._errors['kernel_path'] = self.error_class([msg])
@@ -716,6 +683,7 @@ class KvmModifyVirtualMachineForm(PvmModifyVirtualMachineForm,
         'boot_order', 'nic_type', 'root_path', 
         'kernel_path', 'serial_console', 
         'cdrom_image_path',
+        'cdrom2_image_path',
     )
     disk_caches = HV_DISK_CACHES
     kvm_flags = KVM_FLAGS
