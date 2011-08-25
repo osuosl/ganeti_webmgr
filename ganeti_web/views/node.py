@@ -62,7 +62,7 @@ def detail_by_id(request, id):
 
 
 @login_required
-def detail(request, cluster_slug, host, rest = False):
+def detail(request, cluster_slug, host, rest=False):
     """
     Renders a detail view for a Node
     """

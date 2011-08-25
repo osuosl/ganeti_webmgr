@@ -68,7 +68,7 @@ def get_vm_and_cluster_or_404(cluster_slug, instance):
 
 
 @login_required
-def delete(request, cluster_slug, instance, rest = False):
+def delete(request, cluster_slug, instance, rest=False):
     """
     Delete a VM.
     """
@@ -215,7 +215,7 @@ def vnc_proxy(request, cluster_slug, instance):
 
 
 @login_required
-def shutdown(request, cluster_slug, instance, rest = False):
+def shutdown(request, cluster_slug, instance, rest=False):
     vm = get_object_or_404(VirtualMachine, hostname=instance,
                            cluster__slug=cluster_slug)
     user = request.user
@@ -245,7 +245,7 @@ def shutdown(request, cluster_slug, instance, rest = False):
 
 
 @login_required
-def startup(request, cluster_slug, instance, rest = False):
+def startup(request, cluster_slug, instance, rest=False):
     vm = get_object_or_404(VirtualMachine, hostname=instance,
                            cluster__slug=cluster_slug)
     user = request.user
@@ -368,7 +368,7 @@ def replace_disks(request, cluster_slug, instance):
 
 
 @login_required
-def reboot(request, cluster_slug, instance, rest = False):
+def reboot(request, cluster_slug, instance, rest=False):
     vm = get_object_or_404(VirtualMachine, hostname=instance,
                            cluster__slug=cluster_slug)
     user = request.user
@@ -533,7 +533,7 @@ def detail_by_id(request, id):
 
 
 @login_required
-def detail(request, cluster_slug, instance, rest = False):
+def detail(request, cluster_slug, instance, rest=False):
     """
     Display details of virtual machine.
     """
@@ -604,7 +604,7 @@ def detail(request, cluster_slug, instance, rest = False):
 
 
 @login_required
-def users(request, cluster_slug, instance, rest = False):
+def users(request, cluster_slug, instance, rest=False):
     """
     Display all of the Users of a VirtualMachine
     """
@@ -640,7 +640,7 @@ def permissions(request, cluster_slug, instance, user_id=None, group_id=None):
 
 
 @login_required
-def object_log(request, cluster_slug, instance, rest = False):
+def object_log(request, cluster_slug, instance, rest=False):
     """
     Display all of the Users of a VirtualMachine
     """
@@ -1084,7 +1084,7 @@ def recover_failed_deploy(request, cluster_slug, instance):
 
 
 @login_required
-def rename(request, cluster_slug, instance, rest = False, extracted_params = None):
+def rename(request, cluster_slug, instance, rest=False, extracted_params=None):
     """
     Rename an existing instance
     """
