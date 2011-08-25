@@ -71,7 +71,7 @@
         });
 
         // "Delete" link clicked
-        $("a.delete").live("click", function(event){
+        $("#key_list a.delete").live("click", function(event){
             event.preventDefault();
             var host = $(this).parents("tr").children("[name=\"host\"]").html();
             var key = $(this).parents("tr").children("[name=\"key\"]").html();
@@ -92,7 +92,7 @@
         });
 
         // "Edit" link clicked
-        $("a.edit").live("click", function(event){
+        $("#key_list a.edit").live("click", function(event){
             event.preventDefault();
             id = $(this).parents("tr").attr("id").substring(7);
 
