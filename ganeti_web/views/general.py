@@ -276,7 +276,7 @@ def overview(request, rest=False):
 
 
 @login_required
-def used_resources(request, rest = False):
+def used_resources(request, rest=False):
     """ view for returning used resources for a given cluster user """
     try:
         cluster_user_id = request.GET['id']

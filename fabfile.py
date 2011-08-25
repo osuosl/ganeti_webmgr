@@ -36,7 +36,6 @@ GIT_INSTALL =  {
     'ganeti_webmgr_layout':{
         'url':'git://git.osuosl.org/gitolite/ganeti/ganeti_webmgr_layout',
         'development':'develop',
-        'symlink':'ganeti_web_layout'
         },
     'noVNC':{
         'url':'git://github.com/kanaka/noVNC.git',
@@ -46,32 +45,26 @@ GIT_INSTALL =  {
     'django_object_permissions':{
         'url':'git://git.osuosl.org/gitolite/django/django_object_permissions',
         'development':'develop',
-        'symlink':'object_permissions',
         },
     'django_object_log':{
         'url':'git://git.osuosl.org/gitolite/django/django_object_log',
         'development':'develop',
-        'symlink':'object_log'
         },
     'django_muddle_users':{
         'url':'git://git.osuosl.org/gitolite/django/django_muddle_users',
         'development':'develop',
-        'symlink':'muddle_users'
         },
     'muddle':{
         'url':'git://git.osuosl.org/gitolite/django/muddle',
         'development':'develop',
-        'symlink':'muddle'
         },
     'twisted_vncauthproxy':{
         'url':'git://git.osuosl.org/gitolite/ganeti/twisted_vncauthproxy',
         'development':'develop',
-        'virtualenv':True
     },
     'django-tastypie':{
         'url':'https://github.com/toastdriven/django-tastypie.git',
         'development':'master',
-        'virtualenv':True
     }
 }
 
@@ -234,8 +227,9 @@ def install_dependencies_git():
                     with settings(hide('warnings','stderr'), warn_only=True):
                             local('git pull')
 
-        # install using virtualenv if configured to do so
-        if 'virtualenv' in opts and opts['virtualenv']:
+        # install to virtualenv using setup.py if it exists.  Some repos might
+        # not have it and will need to be symlinked into the project
+        if _exists('%(doc_root)s/dependencies/%(git_repo)s/setup.py' % env):
             with lcd(env.doc_root):
                 local('pip install -E %(virtualenv)s -e dependencies/%(git_repo)s' % env)
 
@@ -251,6 +245,7 @@ def install_dependencies_git():
 
                 with settings(hide('warnings','stderr'), warn_only=True):
                     local('ln -sf %(symlink_path)s %(doc_root)s' % env)
+
 
 
 def tarball():

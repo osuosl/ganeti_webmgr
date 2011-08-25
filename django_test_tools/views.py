@@ -89,7 +89,7 @@ class ViewTestMixin():
             self.assert_403(url, args, [unauthorized], data, method)
 
         # test 404s - replace each argument one at a time with a nonexistent value
-        self.assert_404(url, args)
+        self.assert_404(url, args, method=method)
 
     def assert_403(self, url, args, users, data=dict(), method='get'):
         """

@@ -27,7 +27,7 @@ from ganeti_web.views import render_403
 from django.utils.translation import ugettext as _
 
 @login_required
-def status(request, cluster_slug, job_id, rest = False):
+def status(request, cluster_slug, job_id, rest=False):
     """
     returns the raw info of a job
     """
@@ -39,7 +39,7 @@ def status(request, cluster_slug, job_id, rest = False):
 
 
 @login_required
-def detail(request, cluster_slug, job_id, rest = False):
+def detail(request, cluster_slug, job_id, rest=False):
     job = get_object_or_404(Job, cluster__slug=cluster_slug, job_id=job_id)
 
     user = request.user
@@ -55,7 +55,7 @@ def detail(request, cluster_slug, job_id, rest = False):
 
 
 @login_required
-def clear(request, cluster_slug, job_id, rest = False):
+def clear(request, cluster_slug, job_id, rest=False):
     """
     Clear a single failed job error message
     """

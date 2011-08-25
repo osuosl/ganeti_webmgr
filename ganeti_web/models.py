@@ -217,6 +217,7 @@ class CachedClusterObject(models.Model):
         Failure while loading the remote class will result in an incomplete
         object.  The error will be stored to self.error
         """
+        job_data = self.check_job_status()
         try:
             info_ = self._refresh()
             if info_:
@@ -232,7 +233,6 @@ class CachedClusterObject(models.Model):
             if self.mtime is None or mtime > self.mtime:
                 # there was an update. Set info and save the object
                 self.info = info_
-                job_data = self.check_job_status()
                 if job_data:
                     for k, v in job_data.items():
                         setattr(self, k, v)
@@ -241,10 +241,9 @@ class CachedClusterObject(models.Model):
                 # There was no change on the server.  Only update the cache
                 # time. This bypasses the info serialization mechanism and
                 # uses a smaller query.
-                updates = self.check_job_status()
-                if updates:
+                if job_data:
                     self.__class__.objects.filter(pk=self.id) \
-                        .update(cached=self.cached, **updates)
+                        .update(cached=self.cached, **job_data)
                 elif self.id is not None:
                     self.__class__.objects.filter(pk=self.id) \
                         .update(cached=self.cached)
@@ -674,7 +673,7 @@ class VirtualMachine(CachedClusterObject):
 
     def _refresh(self):
         # XXX if delete is pending then no need to refresh this object.
-        if self.pending_delete:
+        if self.pending_delete or self.template_id:
             return None
         return self.rapi.GetInstance(self.hostname)
 
