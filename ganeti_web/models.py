@@ -257,10 +257,12 @@ class CachedClusterObject(models.Model):
             # Any search that has 0 results will just return None.
             #   That is why we must check for err before proceeding.
             if err:
-                self.error = err.groupdict()['msg']
+                msg = err.groupdict()['msg']
+                self.error = msg
             else:
+                msg = str(e)
                 self.error = str(e)
-            GanetiError.objects.store_error(str(e), obj=self, code=e.code)
+            GanetiError.objects.store_error(msg, obj=self, code=e.code)
 
         else:
             if self.error:
