@@ -285,13 +285,13 @@ def format_part_total(part, total):
 
     if total > 0:
         total = float(total) / 1024
-        total_decimals =  int(3 - log10(total))
+        total_decimals = 2
     else:
         total_decimals = 0
     
     if part > 0:
         part = float(part) / 1024
-        part_decimals =  int(3 - log10(part))
+        part_decimals = 2
     else:
         part = 0
         part_decimals = 0
