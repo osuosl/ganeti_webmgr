@@ -68,6 +68,8 @@ def generate_random_password(length=12):
     "Generate random sequence of specified length"
     return "".join( random.sample(string.letters + string.digits, length) )
 
+FINISHED_JOBS = ('success', 'unknown','error')
+
 RAPI_CACHE = {}
 RAPI_CACHE_HASHES = {}
 def get_rapi(hash, cluster):
@@ -142,7 +144,8 @@ class CachedClusterObject(models.Model):
     mtime = PreciseDateTimeField(null=True, editable=False)
     cached = PreciseDateTimeField(null=True, editable=False)
     ignore_cache = models.BooleanField(default=False)
-    
+
+    last_job_id = None
     __info = None
     error = None
     ctime = None
@@ -218,6 +221,10 @@ class CachedClusterObject(models.Model):
         object.  The error will be stored to self.error
         """
         job_data = self.check_job_status()
+        if job_data:
+            for k, v in job_data.items():
+                setattr(self, k, v)
+        
         try:
             info_ = self._refresh()
             if info_:
@@ -233,9 +240,6 @@ class CachedClusterObject(models.Model):
             if self.mtime is None or mtime > self.mtime:
                 # there was an update. Set info and save the object
                 self.info = info_
-                if job_data:
-                    for k, v in job_data.items():
-                        setattr(self, k, v)
                 self.save()
             else:
                 # There was no change on the server.  Only update the cache
@@ -275,8 +279,58 @@ class CachedClusterObject(models.Model):
         raise NotImplementedError
 
     def check_job_status(self):
-        pass
+        if self.last_job_id:
+            ct = ContentType.objects.get_for_model(self)
+            job_ids = Job.objects\
+                .filter(content_type=ct, object_id=self.pk, processed=False) \
+                .order_by('job_id') \
+                .values_list('job_id', flat=True)
 
+            updates = {}
+            status = None
+            for job_id in job_ids:
+                try:
+                    data = self.rapi.GetJobStatus(job_id)
+                    status = data['status']
+                    op = data['ops'][-1]['OP_ID']
+
+                    if status in ('success', 'error'):
+                        finished = Job.parse_end_timestamp(data)
+                        Job.objects.filter(pk=self.last_job_id) \
+                            .update(status=status, ignore_cache=False,
+                                    finished=finished, processed=True)
+                except GanetiApiError:
+                    status = 'unknown'
+                    op = None
+
+                if status == 'unknown':
+                    Job.objects.filter(pk=self.last_job_id) \
+                        .update(status=status, ignore_cache=False, processed=True)
+
+                if status in ('success','error','unknown'):
+                    _updates = self._complete_job(self.cluster_id,
+                                                  self.hostname, op, status)
+                    if _updates: updates.update(_updates)
+
+            # we only care about the very last job for resetting the cache flags
+            if status in ('success','error','unknown') or not job_ids:
+                updates['ignore_cache'] = False
+                updates['last_job'] = None
+
+            return updates
+
+    @classmethod
+    def _complete_job(cls, cluster_id, hostname, op, status):
+        """
+        Process a completed job.  This method will make any updates to related
+        classes (like deleting an instance template) and return any data that
+        should be updated.  This is a class method so that this processing can
+        be done without a full instance.
+
+        @returns dict of updated values
+        """
+        return
+    
     def parse_transient_info(self):
         """
         Parse properties from cached info that is stored on the class but not in
@@ -344,6 +398,7 @@ class Job(CachedClusterObject):
     cluster = models.ForeignKey('Cluster', editable=False, related_name='jobs')
     cluster_hash = models.CharField(max_length=40, editable=False)
     
+    processed = models.BooleanField(default=False, null=True)
     cleared = models.BooleanField(default=False)
     finished = models.DateTimeField(null=True)
     status = models.CharField(max_length=10)
@@ -496,7 +551,7 @@ class VirtualMachine(CachedClusterObject):
 
     # Template temporarily stores parameters used to create this virtual machine
     # This template is used to recreate the values entered into the form.
-    template = models.ForeignKey("VirtualMachineTemplate", null=True)
+    template = models.ForeignKey("VirtualMachineTemplate", null=True, related_name="instances")
 
     class Meta:
         ordering = ["hostname", ]
@@ -586,90 +641,42 @@ class VirtualMachine(CachedClusterObject):
         
         return data
 
-    def check_job_status(self):
+    @classmethod
+    def _complete_job(cls, cluster_id, hostname, op, status):
         """
         if the cache bypass is enabled then check the status of the last job
         when the job is complete we can reenable the cache.
         
         @returns - dictionary of values that were updates
         """
-        if self.last_job_id:
-            (job_id,) = Job.objects.filter(pk=self.last_job_id)\
-                            .values_list('job_id', flat=True)
-            try:
-                data = self.rapi.GetJobStatus(job_id)
-                status = data['status']
-            except GanetiApiError:
-                status = 'unknown'
 
-            if status in ('success', 'error'):
-                finished = Job.parse_end_timestamp(data)
-                Job.objects.filter(pk=self.last_job_id) \
-                    .update(status=status, ignore_cache=False, finished=finished)
-                self.ignore_cache = False
+        if status == 'unknown':
+            # unknown status, the job was archived before it's final status
+            # was polled.  Impossible to tell what happened.  Clear the job
+            # so it is no longer polled.
+            #
+            # XXX This VM might be added by the CLI and be in an invalid
+            # pending_delete state.  clearing pending_delete prevents this
+            # but will result in "missing" vms in some cases.
+            return dict(pending_delete=False)
 
-            if status == 'unknown':
-                Job.objects.filter(pk=self.last_job_id) \
-                    .update(status=status, ignore_cache=False)
-                self.ignore_cache = False
-            else:
-                op_id = data['ops'][-1]['OP_ID']
-
+        base = VirtualMachine.objects.filter(cluster=cluster_id, hostname=hostname)
+        if op == 'OP_INSTANCE_REMOVE':
             if status == 'success':
-                self.last_job = None
-                # job cleanups
-                #   - if the job was a deletion, then delete this vm
-                #   - if the job was creation, then delete temporary template
-                # XXX return a None to prevent refresh() from trying to update
-                #     the cache setting for this VM
-                # XXX delete may have multiple ops in it, but delete is always
-                #     the last command run.
-                if op_id == 'OP_INSTANCE_REMOVE':
-                    self.delete()
-                    self.deleted = True
-                    return None
-                elif op_id == 'OP_INSTANCE_CREATE':
-                    # XXX must update before deleting the template to maintain
-                    # referential integrity.  as a consequence return no other
-                    # updates.
-                    VirtualMachine.objects.filter(pk=self.pk) \
-                        .update(ignore_cache=False, last_job=None, template=None)
-
-                    VirtualMachineTemplate.objects.filter(pk=self.template_id) \
-                        .delete()
-                    self.template=None
-                    return dict(template=None)
-
-                return dict(ignore_cache=False, last_job=None)
-            
-            elif status == 'error':
-                if op_id == 'OP_INSTANCE_CREATE' and self.info:
-                    # create failed but vm was deployed, template is no longer
-                    # needed
-                    #
-                    # XXX must update before deleting the template to maintain
-                    # referential integrity.  as a consequence return no other
-                    # updates.
-                    VirtualMachine.objects.filter(pk=self.pk) \
-                        .update(ignore_cache=False, template=None)
-
-                    VirtualMachineTemplate.objects.filter(pk=self.template_id) \
-                        .delete()
-                    self.template=None
-                    return dict(template=None)
-                else:
-                    return dict(ignore_cache=False)
-
-            elif status == 'unknown':
-                # unknown status, the job was archived before it's final status
-                # was polled.  Impossible to tell what happened.  Clear the job
-                # so it is no longer polled.
-                #
-                # XXX This VM might be added by the CLI and be in an invalid
-                # pending_delete state.  clearing pending_delete prevents this
-                # but will result in "missing" vms in some cases.
-                self.last_job=None
-                return dict(ignore_cache=False, last_job=None, pending_delete=False)
+                base.delete()
+            return
+        
+        elif op == 'OP_INSTANCE_CREATE' and status == 'success':
+            # XXX must update before deleting the template to maintain
+            # referential integrity.  as a consequence return no other
+            # updates.
+            base.update(template=None)
+            VirtualMachineTemplate.objects \
+                .filter(instances__hostname=hostname,
+                        instances__cluster=cluster_id) \
+                .delete()
+            return dict(template=None)
+        return
 
     def _refresh(self):
         # XXX if delete is pending then no need to refresh this object.
@@ -794,7 +801,7 @@ class Node(CachedClusterObject):
     # never be prevented.  This just indicates that job(s) are pending and the
     # job related code should be run (status, cleanup, etc).
     last_job = models.ForeignKey('Job', null=True)
-    
+
     def _refresh(self):
         """ returns node info from the ganeti server """
         return self.rapi.GetNode(self.hostname)
@@ -841,40 +848,7 @@ class Node(CachedClusterObject):
         data['offline'] = info['offline']
         data['role'] = info['role']
         return data
-
-    def check_job_status(self):
-        """
-        if the cache bypass is enabled then check the status of the last job
-        when the job is complete we can reenable the cache.
-
-        @returns - dictionary of values that were updates
-        """
-        if self.last_job_id:
-            (job_id,) = Job.objects.filter(pk=self.last_job_id)\
-                            .values_list('job_id', flat=True)
-            try:
-                data = self.rapi.GetJobStatus(job_id)
-                status = data['status']
-            except GanetiApiError:
-                status = 'unknown'
-
-            if status in ('success', 'error'):
-                finished = Job.parse_end_timestamp(data)
-                Job.objects.filter(pk=self.last_job_id) \
-                    .update(status=status, ignore_cache=False, finished=finished)
-                self.ignore_cache = False
-            elif status == 'unknown':
-                Job.objects.filter(pk=self.last_job_id) \
-                    .update(status=status, ignore_cache=False)
-                self.ignore_cache = False
-
-            if status in ('success', 'unknown'):
-                self.last_job = None
-                return dict(ignore_cache=False, last_job=None)
-
-            elif status == 'error':
-                return dict(ignore_cache=False)
-
+    
     @property
     def ram(self):
         """ returns dict of free and total ram """
@@ -904,7 +878,7 @@ class Node(CachedClusterObject):
         free = total-allocated if allocated >= 0 and total >=0  else -1
 
         return {'total':total, 'free': free, 'allocated':allocated, 'used':used}
-
+    
     @property
     def allocated_cpus(self):
         values = VirtualMachine.objects \
@@ -981,12 +955,16 @@ class Cluster(CachedClusterObject):
     # job related code should be run (status, cleanup, etc).
     last_job = models.ForeignKey('Job', null=True, blank=True, \
                                  related_name='cluster_last_job')
-    
+
     class Meta:
         ordering = ["hostname", "description"]
 
     def __unicode__(self):
         return self.hostname
+
+    @property
+    def cluster_id(self):
+        return self.id
 
     @classmethod
     def decrypt_password(cls, value):
@@ -1247,41 +1225,6 @@ class Cluster(CachedClusterObject):
             return self.rapi.GetInstance(instance)
         except GanetiApiError:
             return None
-
-    def check_job_status(self):
-        """
-        if the cache bypass is enabled then check the status of the last job
-        when the job is complete we can reenable the cache.
-        @returns - dictionary of values that were updates
-        """
-        if self.last_job_id:
-            (job_id,) = Job.objects.filter(pk=self.last_job_id)\
-                            .values_list('job_id', flat=True)
-            data = self.rapi.GetJobStatus(job_id)
-            status = data['status']
-
-            try:
-                data = self.rapi.GetJobStatus(job_id)
-                status = data['status']
-            except GanetiApiError:
-                status = 'unknown'
-
-            if status in ('success', 'error'):
-                finished = Job.parse_end_timestamp(data)
-                Job.objects.filter(pk=self.last_job_id) \
-                    .update(status=status, ignore_cache=False, finished=finished)
-                self.ignore_cache = False
-            elif status == 'unknown':
-                Job.objects.filter(pk=self.last_job_id) \
-                    .update(status=status, ignore_cache=False)
-                self.ignore_cache = False
-
-            if status in ('success','unknown'):
-                self.last_job = None
-                return dict(ignore_cache=False, last_job=None)
-
-            elif status == 'error':
-                return dict(ignore_cache=False)
 
     def redistribute_config(self):
         """
