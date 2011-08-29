@@ -18,6 +18,7 @@
 import cPickle
 
 # Per #6579, do not change this import without discussion.
+from django.contrib.contenttypes.models import ContentType
 from django.utils import simplejson as json
 
 from twisted.internet.defer import DeferredList, Deferred
@@ -119,10 +120,8 @@ class JobCacheUpdater(object):
         """
         process data received from ganeti.
         """
-        print '%s:' % cluster.hostname
         # parse json and repackage ids as a list
         ids = set((int(d['id']) for d in json.loads(info)))
-        print ids
 
         self.timer.tick('info fetched from ganeti     ')
         updated = Counter()
@@ -133,8 +132,6 @@ class JobCacheUpdater(object):
                             .exclude(status__in=COMPLETE_STATUS) \
                             .values_list('job_id', flat=True))
 
-        print 'running: ', db_ids
-
         # update all running jobs and archive any that aren't found
         # XXX this could be a choke point if there are many running jobs.  each
         # job will be a separate ganeti query
@@ -143,9 +140,6 @@ class JobCacheUpdater(object):
         deferreds = [self.update_job(cluster, id, updated) for id in current]
         ids -= current
 
-
-        print ids, current, archived
-
         # get list of jobs that are finished.  use this to filter the list of
         # ids further
         # XXX this could be a joke point if there are a lot of IDs that are have
@@ -153,12 +147,8 @@ class JobCacheUpdater(object):
         db_ids = cluster.jobs \
                             .filter(job_id__in=ids, status__in=COMPLETE_STATUS) \
                             .values_list('job_id', flat=True)
-        print 'completed: ', db_ids
-
         ids -= set(db_ids)
 
-        print 'new: ', ids
-        
         # any job id still left in the list is a new job.  Create the job and
         # associate it with the object it relates to
         for id in ids:
@@ -179,7 +169,6 @@ class JobCacheUpdater(object):
         """
         updates a job that has been archived
         """
-        print 'archiving!'
         updated += len(archived)
         # XXX clear all archived jobs
         Job.objects.filter(cluster=cluster, job_id__in=archived) \
@@ -221,6 +210,7 @@ class JobCacheUpdater(object):
         @param updated - counter object
         @param callback - callback fired when method is complete.
         """
+        info = json.loads(info)
         if info['status'] in COMPLETE_STATUS:
             parsed = Job.parse_persistent_info(info)
             Job.objects.filter(job_id=id).update(
@@ -231,11 +221,14 @@ class JobCacheUpdater(object):
             op = info['ops'][0]
             model, hostname_key = IMPORTABLE_JOBS[op['OP_ID']]
             hostname = op[hostname_key]
-            if not isinstance(model, Cluster):
-                base = model.objects.filter(cluster=cluster)
+
+            if isinstance(model, Cluster):
+                base = model.objects.filter(hostname=hostname)
             else:
-                base = model.objects.all()
-            obj = base.get(hostname=hostname)
+                base = model.objects.filter(cluster=cluster, hostname=hostname)
+            updates = model._complete_job(cluster.id, hostname, op, info['status'])
+            if updates:
+                base.update(**updates)
 
             updated += 1
         callback(id)
@@ -249,7 +242,6 @@ class JobCacheUpdater(object):
         @param updated - counter object
         @return Deferred chained to _import_job() call
         """
-        print 'importing : ', cluster, id
         deferred = Deferred()
         d = client.getPage(str(JOB_URL % (cluster.hostname, cluster.port, id)))
         d.addCallback(self._import_job, cluster, id, updated, deferred.callback)
@@ -268,7 +260,7 @@ class JobCacheUpdater(object):
         @param updated - counter object
         @param callback - callback fired when method is complete.
         """
-        print 'importing >>> : ', info, cluster, id
+
         info = json.loads(info)
         if any((op['OP_ID'] in IMPORTABLE_JOBS for op in info['ops'])):
             # get related mode and object
@@ -279,9 +271,10 @@ class JobCacheUpdater(object):
             if not isinstance(base, Cluster):
                 base = base.filter(cluster=cluster)
             (obj_id,) = base.values_list('pk', flat=True)
+            ct = ContentType.objects.get_for_model(model)
 
             # create job
-            job = Job(cluster=cluster, job_id=id, obj_type=model, obj_id=obj_id)
+            job = Job(cluster=cluster, job_id=id, content_type=ct, object_id=obj_id)
             job.cleared = info['status'] in COMPLETE_STATUS
             job.info = info
             job.save()
