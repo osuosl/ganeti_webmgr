@@ -49,3 +49,17 @@ class TestFilters(unittest.TestCase):
         self.assertEqual(tags.render_storage(1), "1 MiB")
         self.assertEqual(tags.render_storage(1025), "1.00 GiB")
         self.assertEqual(tags.render_storage(1049600), "1.0010 TiB")
+
+    def test_format_part_total(self):
+        fpt = tags.format_part_total
+        self.assertEqual(fpt(-1, 1), "unknown")
+        self.assertEqual(fpt(0, -4), "unknown")
+        self.assertEqual(fpt(4000, 100), "3.91 / 0.1")
+        self.assertEqual(fpt(1000, 2000), "0.98 / 1.95")
+        self.assertEqual(fpt(3000, 5000), "2.93 / 4.88")
+        self.assertEqual(fpt(10000, 30000), "9.77 / 29.3")
+        self.assertEqual(fpt(500000, 700000), "488.28 / 683.59")
+        self.assertEqual(fpt(1024, 2048), "1 / 2")
+        self.assertEqual(fpt(5120, 8192), "5 / 8")
+        self.assertEqual(fpt(512, 2048), "0.5 / 2")
+        self.assertEqual(fpt(510972, 870910), "499 / 850.5")

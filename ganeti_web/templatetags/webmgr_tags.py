@@ -283,21 +283,25 @@ def format_part_total(part, total):
     if total < 0 or part < 0:
         return _("unknown")
 
-    if total > 0:
-        total = float(total) / 1024
-        total_decimals =  int(3 - log10(total))
-    else:
-        total_decimals = 0
-    
-    if part > 0:
-        part = float(part) / 1024
-        part_decimals =  int(3 - log10(part))
-    else:
-        part = 0
-        part_decimals = 0
-    
-    return "%.*f / %.*f" % (
-        part_decimals, part, total_decimals, total)
+    # Represent a number in terms of GigaBytes up to 2
+    #  decimal places.
+    gig = lambda x: "%.2f" % (float(x) / 1024)
+
+    total = gig(total)
+    part = gig(part)
+
+    # Remove all trailing 0s after the decimal point
+    #  and the decimal point as well if a number ends
+    #  in only trailing zeros (ex. 1.000 => 1).
+    for i, tmp in enumerate((part, total)):
+        while tmp.endswith(("0", ".")):
+            tmp = tmp[:-1]
+        if i == 0:
+            part = tmp
+        elif i == 1:
+            total = tmp
+
+    return "%s / %s" % (part, total)
 
 
 @register.simple_tag
