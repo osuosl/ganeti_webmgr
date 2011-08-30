@@ -6,6 +6,7 @@ from django.test import TestCase
 from object_permissions import grant
 
 from ganeti_web import models, constants
+from ganeti_web.tests.rapi_proxy import INFO
 from ganeti_web.tests.views.virtual_machine.base import TestVirtualMachineViewsBase
 from ganeti_web.utilities import os_prettify
 
@@ -40,6 +41,13 @@ class TestVirtualMachineCreateHelpers(TestVirtualMachineViewsBase):
         cluster5 = Cluster(hostname='no.perms.on.this.group', slug='no_perms')
         cluster5.save()
         # cluster ids are 1 through 6
+
+        # Set each cluster info and update
+        for cluster in (cluster0, cluster1, cluster2, cluster3, cluster4, cluster5):
+            cluster.username = user.username
+            cluster.password = 'foobar'
+            cluster.info = INFO
+            cluster.save()
 
         group.user_set.add(user)
         group1 = Group(id=43, name='testing_group2')

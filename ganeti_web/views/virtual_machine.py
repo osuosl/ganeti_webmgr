@@ -22,7 +22,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
-from django.db.models.query_utils import Q
+from django.db.models import Q
 from django.forms import CharField, HiddenInput
 from django.http import HttpResponse, HttpResponseRedirect, \
     HttpResponseNotAllowed, HttpResponseForbidden, HttpResponseBadRequest, Http404
@@ -1215,6 +1215,10 @@ def cluster_choices(request):
         q = target.get_objects_any_perms(Cluster, ["admin", "create_vm"])
     else:
         q = user.get_objects_any_perms(Cluster, ['admin','create_vm'], False)
+
+    # Exclude all read-only clusters
+    # TODO Add exclude for clusters with errors
+    q = q.exclude(Q(username='') | Q(mtime__isnull=True))
 
     clusters = list(q.values_list('id', 'hostname'))
     content = json.dumps(clusters)

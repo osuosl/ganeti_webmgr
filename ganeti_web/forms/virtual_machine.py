@@ -16,6 +16,7 @@
 # USA.
 
 from django import forms
+from django.db.models import Q
 from django.forms import ValidationError
 # Per #6579, do not change this import without discussion.
 from django.utils import simplejson as json
@@ -32,6 +33,8 @@ from ganeti_web.utilities import cluster_default_info, cluster_os_list, contains
 from django.utils.translation import ugettext_lazy as _
 from ganeti_web.util.client import REPLACE_DISK_AUTO, REPLACE_DISK_PRI, \
     REPLACE_DISK_CHG, REPLACE_DISK_SECONDARY
+
+username_or_mtime = Q(username='') | Q(mtime__isnull=True)
 
 class VirtualMachineForm(forms.ModelForm):
     """
@@ -284,7 +287,7 @@ class NewVirtualMachineForm(VirtualMachineForm):
         if user.is_superuser:
             # Superusers may do whatever they like.
             self.fields['owner'].queryset = ClusterUser.objects.all()
-            self.fields['cluster'].queryset = Cluster.objects.all()
+            self.fields['cluster'].queryset = Cluster.objects.exclude(username_or_mtime)
         else:
             # Fill out owner choices. Remember, the list of owners is a list
             # of tuple(ClusterUser.id, label). If you put ids from other
@@ -305,7 +308,7 @@ class NewVirtualMachineForm(VirtualMachineForm):
                 q = self.owner.get_objects_any_perms(Cluster, ['admin','create_vm'])
             else:
                 q = user.get_objects_any_perms(Cluster, ['admin','create_vm'])
-            self.fields['cluster'].queryset = q
+            self.fields['cluster'].queryset = q.exclude(username_or_mtime)
     
     def clean_cluster(self):
         # Invalid or unavailable cluster

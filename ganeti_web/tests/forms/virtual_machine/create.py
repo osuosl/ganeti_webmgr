@@ -23,14 +23,6 @@ class TestNewVirtualMachineFormInit(TestCase, VirtualMachineTestCaseMixin):
     def setUp(self):
         global user, user1, group, cluster0, cluster1, cluster2, cluster3
 
-        models.client.GanetiRapiClient = RapiProxy
-        cluster0 = Cluster.objects.create(hostname='test0', slug='test0')
-        cluster1 = Cluster.objects.create(hostname='test1', slug='test1')
-        cluster2 = Cluster.objects.create(hostname='test2', slug='test2')
-        cluster3 = Cluster.objects.create(hostname='test3', slug='test3')
-        cluster0.sync_nodes()
-        cluster0.info = INFO
-
         user = User(id=67, username='tester0')
         user.set_password('secret')
         user.save()
@@ -39,6 +31,20 @@ class TestNewVirtualMachineFormInit(TestCase, VirtualMachineTestCaseMixin):
         user1.save()
         group = Group(id=45, name='testing_group')
         group.save()
+
+        models.client.GanetiRapiClient = RapiProxy
+        cluster0 = Cluster.objects.create(hostname='test0', slug='test0')
+        cluster1 = Cluster.objects.create(hostname='test1', slug='test1')
+        cluster2 = Cluster.objects.create(hostname='test2', slug='test2')
+        cluster3 = Cluster.objects.create(hostname='test3', slug='test3')
+        cluster0.sync_nodes()
+
+        # Give each cluster write permissions, and set it's info
+        for cluster in (cluster0, cluster1, cluster2, cluster3):
+            cluster.username = user.username
+            cluster.password = 'foobar'
+            cluster.info = INFO
+            cluster.save()
 
     def tearDown(self):
         User.objects.all().delete()
