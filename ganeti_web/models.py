@@ -295,16 +295,15 @@ class CachedClusterObject(models.Model):
                     op = data['ops'][-1]['OP_ID']
 
                     if status in ('success', 'error'):
-                        finished = Job.parse_end_timestamp(data)
-                        Job.objects.filter(pk=self.last_job_id) \
-                            .update(status=status, ignore_cache=False,
-                                    finished=finished, processed=True)
+                        job_updates = Job.parse_persistent_info(data)
+                        Job.objects.filter(pk=job_id) \
+                            .update(processed=True, **job_updates)
                 except GanetiApiError:
                     status = 'unknown'
                     op = None
 
                 if status == 'unknown':
-                    Job.objects.filter(pk=self.last_job_id) \
+                    Job.objects.filter(pk=job_id) \
                         .update(status=status, ignore_cache=False, processed=True)
 
                 if status in ('success','error','unknown'):
@@ -398,10 +397,11 @@ class Job(CachedClusterObject):
     cluster = models.ForeignKey('Cluster', editable=False, related_name='jobs')
     cluster_hash = models.CharField(max_length=40, editable=False)
     
-    processed = models.BooleanField(default=False, null=True)
+    processed = models.BooleanField(default=False)
     cleared = models.BooleanField(default=False)
     finished = models.DateTimeField(null=True)
     status = models.CharField(max_length=10)
+    op = models.CharField(max_length=50)
     
     objects = JobManager()
 
@@ -440,7 +440,8 @@ class Job(CachedClusterObject):
         """
         Parse status and turn off cache bypass flag if job has finished
         """
-        data = {'status': info['status']}
+        data = {'status': info['status'],
+                'op':info['ops'][-1]['OP_ID']}
         if data['status'] in ('error','success'):
             data['ignore_cache'] = False
         if info['end_ts']:
