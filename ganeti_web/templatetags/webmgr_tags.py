@@ -280,7 +280,7 @@ def format_part_total(part, total):
     """
     Pretty-print a quantity out of a given total.
     """
-    if total < 0 or part < 0:
+    if total <= 0 or part < 0:
         return _("unknown")
 
     # Represent a number in terms of GigaBytes up to 2
