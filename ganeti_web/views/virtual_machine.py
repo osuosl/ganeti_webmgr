@@ -1189,6 +1189,22 @@ def reparent(request, cluster_slug, instance):
 
 
 @login_required
+def job_status(request, id, rest=False):
+    """
+    Return a list of basic info for running jobs.
+    """
+    q = Q(status__in=('running','waiting')) | Q(status='error', cleared=False)
+    ct = ContentType.objects.get_for_model(VirtualMachine)
+    jobs = Job.objects.filter(q, content_type=ct, object_id=id).order_by('job_id')
+    jobs = [j.info for j in jobs]
+
+    if rest:
+        return jobs
+    else:
+        return HttpResponse(json.dumps(jobs), mimetype='application/json')
+
+
+@login_required
 def cluster_choices(request):
     """
     Ajax view for looking up list of choices a user or usergroup has.  Returns
