@@ -9,6 +9,7 @@
     <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
     <script type="text/javascript" src="{{SITE_ROOT}}/ganeti_web_media/js/job_status.js"></script>
     <script type="text/javascript">
+        var job_poller;
         var actions_enabled = true;
         var PBAR_CONF = {
             steps: 0,
@@ -88,13 +89,15 @@
                     $(this).ajaxSubmit({success: node_form_response});
             });
 
+
             var job_status_url = "{% url node-job-status node.id %}";
             var cluster_detail_url = "{% url cluster-detail cluster.slug %}";
-            init_job_polling(job_status_url, cluster_detail_url, job_complete);
+            job_poller = new JobPoller();
+            job_poller.init(job_status_url, cluster_detail_url, job_complete);
             {% if node.last_job_id %}
-                get_jobs();
+                job_poller.get_jobs();
             {% else %}
-                poll_job_status(SLOW);
+                job_poller.poll();
                 {% if node.error %}
                     display_ganeti_error("{{node.error}}");
                 {% endif %}
@@ -107,8 +110,8 @@
                 actions_enabled = true;
                 $('#actions a').removeClass('disabled');
             } else {
-                render_job(result);
-                poll_job_status(FAST);
+                job_poller.render_job(result);
+                job_poller.poll(FAST);
             }
         }
 
@@ -125,7 +128,7 @@
                 }
             } else {
                 $('.qtip').qtip("hide");
-                poll_job_status(FAST);
+                job_poller.poll(job_poller.FAST);
             }
         }
 
