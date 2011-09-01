@@ -184,12 +184,16 @@ def job_fields(info):
     del fields['OP_ID']
 
     # repackage job specific dictionaries if present
-    if 'hvparams' in fields:
-        fields.update(fields.pop('hvparams'))
-    if 'beparams' in fields:
-        fields.update(fields.pop('beparams'))
-    if 'osparams' in fields:
-        fields.update(fields.pop('osparams'))
+    hvparams = fields.get('hvparams')
+    beparams = fields.get('beparams')
+    osparams = fields.get('osparams')
+
+    if hvparams is not None:
+        fields.update(hvparams)
+    if beparams is not None:
+        fields.update(beparams)
+    if osparams is not None:
+        fields.update(osparams)
 
     # repackage disks
     if 'disks' in fields:
