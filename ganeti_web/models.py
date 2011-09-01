@@ -441,6 +441,11 @@ class Job(CachedClusterObject):
     def __str__(self):
         return repr(self)
 
+    @models.permalink
+    def get_absolute_url(self):
+        job = '%s/job/(?P<job_id>\d+)' % self.cluster
+
+        return ('ganeti_web.views.jobs.detail', (), {'job':job})
 
 class VirtualMachine(CachedClusterObject):
     """
@@ -1621,6 +1626,9 @@ class Profile(ClusterUser):
         """ returns an object that can be granted permissions """
         return self.user
 
+    @models.permalink
+    def get_absolute_url(self):
+        return ('muddle_users.views.user')
 
 class Organization(ClusterUser):
     """
