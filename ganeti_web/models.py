@@ -1156,7 +1156,7 @@ class Cluster(CachedClusterObject):
         but present in the database
         """
         ganeti = self.instances()
-        db = self.virtual_machines.all().values_list('hostname', flat=True)
+        db = self.virtual_machines.exclude(template__isnull=False).values_list('hostname', flat=True)
         return filter(lambda x: str(x) not in ganeti, db)
 
     @property
