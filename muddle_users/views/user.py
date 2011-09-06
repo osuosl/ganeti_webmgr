@@ -85,12 +85,15 @@ def user_add(request, template="user/edit.html"):
 
 
 @login_required
-def user_detail(request, user_id=None, template="user/detail.html"):
+def user_detail(request, username=None, user_id=None, template="user/detail.html"):
     user = request.user
     if not user.is_superuser:
         return render_403(request, _('Only a superuser may view a user.'))
 
-    user = get_object_or_404(User, id=user_id)
+    if username:
+        user = get_object_or_404(User, username=username)
+    elif user_id:
+        user = get_object_or_404(User, id=user_id)
 
     return render_to_response(template, {
             'user_detail':user,
