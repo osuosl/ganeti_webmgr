@@ -119,8 +119,20 @@ def delete(request, cluster_slug, instance, rest=False):
         else:
             return HttpAccepted()
 
+    elif request.method == 'DELETE':
+        # start deletion job and mark the VirtualMachine as pending_delete and
+        # disable the cache for this VM.
+        job_id = instance.rapi.DeleteInstance(instance.hostname)
+        job = Job.objects.create(job_id=job_id, obj=instance, cluster_id=instance.cluster_id)
+        VirtualMachine.objects.filter(id=instance.id) \
+            .update(last_job=job, ignore_cache=True, pending_delete=True)
+
+        # No need to call instance.delete() as the job processing will delete
+        #   it automatically in its cleanup phase.
+        return HttpResponse('1', mimetype='application/json')
+
     if not rest:
-        return HttpResponseNotAllowed(["GET","POST"])
+        return HttpResponseNotAllowed(["GET","POST","DELETE"])
     else:
         return HttpResponseNotAllowed
 
