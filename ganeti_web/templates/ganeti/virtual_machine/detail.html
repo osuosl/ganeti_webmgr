@@ -202,86 +202,96 @@
     </ul>
     <div id="overview" class="tab_content">
 		{% if instance.cluster.username %}
+        {% with instance.cluster.username as username %}
         <ul id="actions">
-             {% if cluster_admin %}
+            {# Start, Shutdown, Reboot #}
+            {% if admin or power %}
+                {% ifequal instance.info.status "running" %}
                 <li>
-                    <a class="button add" href="{% url template-create-from-instance cluster.slug instance.hostname %}">
-                        {% trans "Create Template" %}
+                    <a class="button shutdown power" title="shut down" href="{% url instance-shutdown cluster.slug instance.hostname %}">
+                        {% trans "Shutdown" %}
                     </a>
                 </li>
+                <li>
+                    <a class="button reboot power" title="reboot" href="{% url instance-reboot cluster.slug instance.hostname %}">
+                        {% trans "Reboot" %}
+                    </a>
+                </li>
+                {% else %}
+                <li>
+                    <a class="button startup power" title="start" href="{% url instance-startup cluster.slug instance.hostname %}">
+                        {% trans "Start" %}
+                    </a>
+                </li>
+                {% endifequal %}
+            {% endif %}
+            {# Reinstall #}
+            {% if remove %}
+                <li>
+                    <a class="button reinstall" title="reinstall" href="{% url instance-reinstall cluster.slug instance.hostname %}">
+                        {% trans "Reinstall" %}
+                    </a>
+                </li>
+            {% endif %}
+            {# Edit #}
+            {% if modify %}
+                <li>
+                    <a class="button edit" href="{% url instance-modify cluster.slug instance.hostname %}">
+                        {% trans "Edit" %}
+                    </a>
+                </li>
+            {% endif %}
+            {# Change Owner #}
+            {% if cluster_admin %}
                 <li>
                     <a class="button edit" href="{% url instance-reparent cluster.slug instance.hostname %}">
                         {% trans "Change Owner" %}
                     </a>
                 </li>
             {% endif %}
-            {% with instance.cluster.username as username %}
-			{% if username %}
-                {% if modify and username %}
-                    <li>
-                        <a class="button edit" href="{% url instance-modify cluster.slug instance.hostname %}">
-                            {% trans "Edit" %}
-                        </a>
-                    </li>
-                    <li>
-                        <a class="button edit" href="{% url instance-rename cluster.slug instance.hostname %}">
-                            {% trans "Rename" %}
-                        </a>
-                    </li>
-                {% endif %}
-               {% if remove and username %}
-                    <li>
-                        <a class="button delete"  title="delete" href="{% url instance-delete cluster.slug instance.hostname %}">
-                            {% trans "Delete" %}
-                        </a>
-                    </li>
-                    <li>
-                        <a class="button reinstall" title="reinstall" href="{% url instance-reinstall cluster.slug instance.hostname %}">
-                            {% trans "Reinstall" %}
-                        </a>
-                    </li>
-                {% endif %}
-                {% if cluster_admin or replace_disks %}
-                    {% if instance|is_drbd %}
+            {# Rename #}
+            {% if modify %}
+                <li>
+                    <a class="button edit" href="{% url instance-rename cluster.slug instance.hostname %}">
+                        {% trans "Rename" %}
+                    </a>
+                </li>
+            {% endif %}
+            {# Replace Disks and Migrate #}
+            {% if cluster_admin and instance|is_drbd %}
+                {% if replace_disks %}
                     <li>
                         <a class="button replace_disks" title="replace disks" href="{% url instance-replace-disks cluster.slug instance.hostname %}">
                             {% trans "Replace Disks" %}
                         </a>
                     </li>
-                    {% endif %}
                 {% endif %}
-                {% if cluster_admin or migrate %}
-                    {% if instance|is_drbd %}
+                {% if migrate %}
                     <li>
                         <a class="button migrate" title="migrate" href="{% url instance-migrate cluster.slug instance.hostname %}">
                             {% trans "Migrate" %}
                         </a>
                     </li>
-                    {% endif %}
                 {% endif %}
-                {% if admin or power and username %}
-                    {% ifequal instance.info.status "running" %}
-                    <li>
-                        <a class="button shutdown power" title="shut down" href="{% url instance-shutdown cluster.slug instance.hostname %}">
-                            {% trans "Shutdown" %}
-                        </a>
-                    </li>
-                    <li>
-                        <a class="button reboot power" title="reboot" href="{% url instance-reboot cluster.slug instance.hostname %}">
-                            {% trans "Reboot" %}
-                        </a>
-                    </li>
-                    {% else %}
-                    <li>
-                        <a class="button startup power" title="start" href="{% url instance-startup cluster.slug instance.hostname %}">
-                            {% trans "Start" %}
-                        </a>
-                    </li>
-                    {% endifequal %}
-                {% endif %}
-			{% endif %}
-            {% endwith %}
+            {% endif %}
+            {# Create Template #}
+            {% if cluster_admin %}
+                <li>
+                    <a class="button add" href="{% url template-create-from-instance cluster.slug instance.hostname %}">
+                        {% trans "Create Template" %}
+                    </a>
+                </li>
+            {% endif %}
+            {# Delete #}
+            {% if remove %}
+                <li>
+                    <a class="button delete"  title="delete" href="{% url instance-delete cluster.slug instance.hostname %}">
+                        {% trans "Delete" %}
+                    </a>
+                </li>
+            {% endif %}
         </ul>
+        {% endwith %}
 		{% endif %}
 
         {% with instance.info as info %}

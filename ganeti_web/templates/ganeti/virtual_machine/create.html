@@ -31,8 +31,11 @@
  
             // init the help tips for the individ. form objects
             initHelpTips('#virtualmachineform');
-            
-            autocomplete_user_search($("#id_owner"),'{% url owner-search %}');
+
+            // Only display the owner search box if there is more than one valid choice
+            if( $("#id_owner").attr("style") != "display: none;" )             
+            {   autocomplete_user_search($("#id_owner"),'{% url owner-search %}');
+            }
         });
 
     </script>
