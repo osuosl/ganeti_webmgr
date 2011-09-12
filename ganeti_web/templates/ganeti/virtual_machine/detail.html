@@ -7,6 +7,7 @@
 <script src="{{MEDIA_URL}}/js/jquery-ui.min.js"></script>
 <script src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
 <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.form.js"></script>
+<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
 <script type="text/javascript">
      $(document).ready(function() {
         $('#tabs').tabs({ 
@@ -36,8 +37,23 @@
         });
 
         // disable buttons that are actually links to other pages
-        $("#actions .edit, #actions .delete").live("click", function(event) {
+        $("#actions .edit").live("click", function(event) {
             return !$(this).hasClass('disabled');
+        });
+
+        $("#actions a.delete").live("click", function(){
+            if (confirm("{% trans 'Are you sure you want to delete this virtual machine' %}?")) {
+                $("a.delete").text("{% trans 'Deleting' %}...");
+                $("a.delete").removeAttr("href");
+                $("a.delete").addClass("deleting");
+                $("a.delete").removeClass("delete");
+
+                var href = "{% url instance-delete cluster.slug instance.hostname %}";
+                $.delete_(href, function(){
+                    window.location = "{% url cluster-detail cluster.slug %}#virtual_machines";
+                });
+            }
+            return false;
         });
 
         $(".migrate").click(function(event){
