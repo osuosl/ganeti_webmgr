@@ -2,7 +2,7 @@
 {% load object_log_tags %}
 {% with log_item.data as data %}
     {% if user.is_superuser %}
-        <a href="{% url user-detail log_item.user.pk %}">{{log_item.user}}</a>
+        <a href="{{ log_item.user.get_absolute_url }}">{{log_item.user}}</a>
     {% else %}
         {{ log_item.user }}
     {% endif %}
