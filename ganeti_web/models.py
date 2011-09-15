@@ -1015,6 +1015,11 @@ class Cluster(CachedClusterObject):
     # job related code should be run (status, cleanup, etc).
     last_job = models.ForeignKey('Job', null=True, blank=True, \
                                  related_name='cluster_last_job')
+    
+    # Default Properties
+    kernel_path = models.ForeignKey('Choice', \
+        verbose_name=_('Kernel Path'), null=True, \
+        blank=True, on_delete=models.SET_NULL)
 
     class Meta:
         ordering = ["hostname", "description"]
@@ -1686,6 +1691,25 @@ class SSHKey(models.Model):
     #filename = models.CharField(max_length=128) # saves key file's name
     user = models.ForeignKey(User, related_name='ssh_keys')
 
+
+class Choice(models.Model):
+    """
+    Model holding a default choice for cluster
+    options.
+    """
+    KERNEL_PATH = 0
+    ROOT_PATH = 1
+    CDROM_IMAGE_PATH = 2
+    CATEGORIES = (
+        (KERNEL_PATH, 'Kernel Path'),
+        (ROOT_PATH, 'Root Path'),
+        (CDROM_IMAGE_PATH, 'CDROM Image Path'),
+    )
+    choice = models.CharField(max_length=255)
+    category = models.IntegerField(choices=CATEGORIES)
+
+    def __unicode__(self):
+        return "%s: %s" % (CATEGORIES[0][self.category], self.choice)
 
 def create_profile(sender, instance, **kwargs):
     """
