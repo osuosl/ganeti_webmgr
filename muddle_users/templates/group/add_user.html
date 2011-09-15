@@ -4,11 +4,16 @@
 <script type="text/javascript" src="{{SITE_ROOT}}/object_permissions_media/js/jquery.form.js"></script>
 <script type="text/javascript" src="{{SITE_ROOT}}/object_permissions_media/js/autocomplete_user_search.js"></script>
 
-<script>
-     $(function(){
-       autocomplete_user_search($("#id_user"),'{% url user-search %}?groups=False');
-     });
-</script>
+{# only run autocomplete script if a user needs to be selected #}
+{% if user_id %}
+    <script> </script>
+{% else %}
+    <script>
+         $(function(){
+           autocomplete_user_search($("#id_user"),'{% url user-search %}?groups=False');
+         });
+    </script>
+{% endif %}
 
 <form class="add_user_form" method="post" action="{% url group-add-user group.id %}">
     <ul id="errors"></ul>
