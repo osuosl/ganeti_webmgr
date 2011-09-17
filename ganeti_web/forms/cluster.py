@@ -54,6 +54,17 @@ class EditClusterForm(forms.ModelForm):
     ram = DataVolumeField(label=_('Memory'), required=False, min_value=0)
     disk = DataVolumeField(label=_('Disk Space'), required=False, min_value=0)
 
+    kernel_path = forms.ChoiceField(label=_('Kernel Path'), required=False)
+
+    def __init__(self, *args, **kwargs):
+        super(EditClusterForm, self).__init__(*args, **kwargs)
+        cluster = self.instance if self.instance else None
+
+        if cluster:
+            defaults = cluster.defaults.all()
+            choices = ((choice.choice, choice.choice) for choice in defaults.filter(category='kernel path'))
+            self.fields['kernel_path'].choices = choices
+
     def clean(self):
         """
         Validate this form.

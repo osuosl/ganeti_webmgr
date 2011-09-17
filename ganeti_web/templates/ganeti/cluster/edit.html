@@ -8,6 +8,50 @@
 {% endif %}
 {% endblock %}
 
+{% block head %}
+    <style>
+    #id_kernel_path {
+        float:left;
+    }
+    span.icon, span.add {
+        float:left;
+        cursor:pointer;
+    }
+    .submit {
+        margin-top:1em;
+    }
+    </style>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $(".add").live("click", function(event) {
+                event.preventDefault();
+                $('.qtip').qtip('destroy');
+                $(this).qtip({
+                    content: {
+                       url: $(this).attr('href'),
+                       title: {text: $(this).siblings("label").html(), button:"close"}
+                    },
+                    position: {  corner:{target:'topMiddle', tooltip:'bottomLeft'}},
+                    style: {
+                        name: 'dark', 
+                        border:{radius:5}, 
+                        width:400, 
+                        background:'#eeeeee'
+                    },
+                    show: {when:false, ready:true},
+                    hide: {fixed: true, when:false},
+                    api:{onShow:function(){
+                        $(".ajax_form input[type!=hidden], .ajax_form select")
+                            .first().focus();
+                    }}
+                });
+                return false;
+            });
+        });
+    </script>
+{% endblock head %}
+
+
 {% block content %}
 
 <h1 class="breadcrumb"><a href="{% url cluster-list %}">{% trans "Cluster" %}</a> :
@@ -46,6 +90,16 @@
         <p><label for="id_ram">{{form.ram.label}}:</label> {{form.ram}}</p>
     </fieldset>
     
+    <fieldset>
+        <legend>{% trans "Cluster Defaults" %}</legend>
+        {% if form.kernel_path.errors %}<p class="error">{{form.kernel_path.errors}}</p>{%endif%}
+        <p>
+            <label for="id_kernel_path">{{form.kernel_path.label}}:</label> 
+            {{form.kernel_path}}
+            <span href="{% url choice-add cluster.slug form.kernel_path.html_name %}" class="icon add"></span>
+        </p>
+    </fieldset>
+
     {% if cluster %}
     <input class="submit" type="submit" value="{% trans 'Save' %}">
     {% else %}
