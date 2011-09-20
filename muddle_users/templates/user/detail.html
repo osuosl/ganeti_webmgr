@@ -6,6 +6,8 @@
 
 {% block head %}
     <link href="{{MEDIA_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
+    <script type="text/javascript" src="{{SITE_ROOT}}/object_permissions_media/js/jquery.form.js"></script>
+    <script type="text/javascript" src="{{SITE_ROOT}}/object_permissions_media/js/groups.js"></script>
     <style>
     #detail h3 {margin-top:30px;}
     </style>
@@ -49,6 +51,34 @@
         </table>
 
         {% block detail %}{% endblock %}
+
+        {% block groups_detail %}
+        {% load object_permission_tags %}
+        <h3>Groups</h3>
+        <table id="op_users">
+            <tr>
+                <th>Group</th>
+                <th>Permissions</th>
+                <th></th>
+            </tr>
+            {% for group in groups %}
+                <tr id="user_{{group.id}}" >
+                    <td class="name"><a href="{% url group-detail group.id %}">{{group.name}}</a></td>
+                    <td class="permissions">
+                        <a href="{% url group-permissions group.id %}/user/{{user_detail.id}}" class="permissions" title="click to edit">
+                            {% for permission in user_detail|permissions:group %}
+                                {{permission}}{%if not forloop.last%}, {%endif%}
+                            {% empty %}
+                                <span class="none">None</span>
+                            {% endfor %}
+                        </a>
+                    </td>
+                    <td></td>
+                </tr>
+            {% endfor %}
+        </table>
+        {% endblock %}
+
     </div>
 </div>
 {% endblock %}

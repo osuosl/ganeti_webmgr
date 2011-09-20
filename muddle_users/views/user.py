@@ -19,7 +19,7 @@ from django import forms
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm, SetPasswordForm
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response
@@ -92,11 +92,14 @@ def user_detail(request, username=None, user_id=None, template="user/detail.html
 
     if username:
         user = get_object_or_404(User, username=username)
+        user_id = user.id
     elif user_id:
         user = get_object_or_404(User, id=user_id)
 
+    groups = Group.objects.filter(user=user_id)
     return render_to_response(template, {
             'user_detail':user,
+            'groups':groups,
         },
         context_instance=RequestContext(request),
     )
