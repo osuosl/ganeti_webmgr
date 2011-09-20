@@ -462,7 +462,7 @@ class NodeResource(ModelResource):
         object_class = Node
         resource_name = 'node'
         allowed_methods = ['get']
-        fields = {'ram_total', 'ram_free', 'disk_total', 'disk_free', 'role', 'offline', 'id'}
+        fields = {'cpus', 'ram_total', 'ram_free', 'disk_total', 'disk_free', 'role', 'offline', 'id'}
         authentication = ApiKeyAuthentication()
         authorization = DjangoAuthorization()
 
