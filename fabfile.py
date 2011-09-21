@@ -36,6 +36,7 @@ GIT_INSTALL =  {
     'ganeti_webmgr_layout':{
         'url':'git://git.osuosl.org/gitolite/ganeti/ganeti_webmgr_layout',
         'development':'develop',
+        'symlink':'ganeti_web_layout',
         },
     'noVNC':{
         'url':'git://github.com/kanaka/noVNC.git',
