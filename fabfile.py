@@ -209,7 +209,7 @@ def install_dependencies_git():
         # set git head to check out
         if env.environment in opts:
             opts['head'] = opts[env.environment]
-        elif env.environment == 'dev' and 'production' in opts:
+        elif env.environment == 'development' and 'production' in opts:
             opts['head'] = opts['production']
         else:
             opts['head'] = 'master'
