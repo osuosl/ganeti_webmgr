@@ -22,7 +22,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
-from django.db.models.query_utils import Q
+from django.db.models import Q
 from django.forms import CharField, HiddenInput
 from django.http import HttpResponse, HttpResponseRedirect, \
     HttpResponseNotAllowed, HttpResponseForbidden, HttpResponseBadRequest, Http404
@@ -119,8 +119,20 @@ def delete(request, cluster_slug, instance, rest=False):
         else:
             return HttpAccepted()
 
+    elif request.method == 'DELETE':
+        # start deletion job and mark the VirtualMachine as pending_delete and
+        # disable the cache for this VM.
+        job_id = instance.rapi.DeleteInstance(instance.hostname)
+        job = Job.objects.create(job_id=job_id, obj=instance, cluster_id=instance.cluster_id)
+        VirtualMachine.objects.filter(id=instance.id) \
+            .update(last_job=job, ignore_cache=True, pending_delete=True)
+
+        # No need to call instance.delete() as the job processing will delete
+        #   it automatically in its cleanup phase.
+        return HttpResponse('1', mimetype='application/json')
+
     if not rest:
-        return HttpResponseNotAllowed(["GET","POST"])
+        return HttpResponseNotAllowed(["GET","POST","DELETE"])
     else:
         return HttpResponseNotAllowed
 
@@ -1118,6 +1130,12 @@ def rename(request, cluster_slug, instance, rest=False, extracted_params=None):
 
         if (form.is_valid() | params_ok):
             try:
+                # In order for rename to work correctly, the vm must first be
+                #   shutdown.
+                if vm.is_running:
+                    job1 = vm.shutdown()
+                    log_action('VM_STOP', user, vm, job1)
+
                 job_id = vm.rapi.RenameInstance(vm.hostname, hostname,
                                                 ip_check, name_check)
                 job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
@@ -1225,6 +1243,10 @@ def cluster_choices(request):
         q = target.get_objects_any_perms(Cluster, ["admin", "create_vm"])
     else:
         q = user.get_objects_any_perms(Cluster, ['admin','create_vm'], False)
+
+    # Exclude all read-only clusters
+    # TODO Add exclude for clusters with errors
+    q = q.exclude(Q(username='') | Q(mtime__isnull=True))
 
     clusters = list(q.values_list('id', 'hostname'))
     content = json.dumps(clusters)

@@ -261,10 +261,12 @@ class CachedClusterObject(models.Model):
             # Any search that has 0 results will just return None.
             #   That is why we must check for err before proceeding.
             if err:
-                self.error = err.groupdict()['msg']
+                msg = err.groupdict()['msg']
+                self.error = msg
             else:
+                msg = str(e)
                 self.error = str(e)
-            GanetiError.objects.store_error(str(e), obj=self, code=e.code)
+            GanetiError.objects.store_error(msg, obj=self, code=e.code)
 
         else:
             if self.error:
@@ -495,6 +497,11 @@ class Job(CachedClusterObject):
     def __str__(self):
         return repr(self)
 
+    @models.permalink
+    def get_absolute_url(self):
+        job = '%s/job/(?P<job_id>\d+)' % self.cluster
+
+        return ('ganeti_web.views.jobs.detail', (), {'job':job})
 
 class VirtualMachine(CachedClusterObject):
     """
@@ -1133,7 +1140,7 @@ class Cluster(CachedClusterObject):
         but present in the database
         """
         ganeti = self.instances()
-        db = self.virtual_machines.all().values_list('hostname', flat=True)
+        db = self.virtual_machines.exclude(template__isnull=False).values_list('hostname', flat=True)
         return filter(lambda x: str(x) not in ganeti, db)
 
     @property
@@ -1563,6 +1570,9 @@ class Profile(ClusterUser):
         """ returns an object that can be granted permissions """
         return self.user
 
+    @models.permalink
+    def get_absolute_url(self):
+        return ('muddle_users.views.user')
 
 class Organization(ClusterUser):
     """

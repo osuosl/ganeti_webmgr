@@ -190,7 +190,7 @@ HAYSTACK_WHOOSH_PATH = os.path.join(DOC_ROOT, 'whoosh_index')
 AUTH_PROFILE_MODULE = 'ganeti_web.Profile'
 LOGIN_REDIRECT_URL = '/'
 
-DATE_FORMAT = "d/m/Y H:i"
+DATE_FORMAT = "d/m/Y"
 DATETIME_FORMAT = "d/m/Y H:i"
 
 ACCOUNT_ACTIVATION_DAYS = 7

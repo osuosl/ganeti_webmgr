@@ -36,6 +36,7 @@ GIT_INSTALL =  {
     'ganeti_webmgr_layout':{
         'url':'git://git.osuosl.org/gitolite/ganeti/ganeti_webmgr_layout',
         'development':'develop',
+        'symlink':'ganeti_web_layout',
         },
     'noVNC':{
         'url':'git://github.com/kanaka/noVNC.git',
@@ -208,7 +209,7 @@ def install_dependencies_git():
         # set git head to check out
         if env.environment in opts:
             opts['head'] = opts[env.environment]
-        elif env.environment == 'dev' and 'production' in opts:
+        elif env.environment == 'development' and 'production' in opts:
             opts['head'] = opts['production']
         else:
             opts['head'] = 'master'
