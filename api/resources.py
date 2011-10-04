@@ -463,7 +463,8 @@ class NodeResource(ModelResource):
         object_class = Node
         resource_name = 'node'
         allowed_methods = ['get']
-        fields = {'ram_total', 'ram_free', 'disk_total', 'disk_free', 'role', 'offline', 'id'}
+        fields = ('ram_total', 'ram_free', 'disk_total', 'disk_free', 'role',
+                  'offline', 'id')
         authentication = ApiKeyAuthentication()
         authorization = DjangoAuthorization()
 
@@ -542,7 +543,9 @@ class VMResource(ModelResource):
         object_class = VirtualMachine
         resource_name = 'vm'
         allowed_methods = ['get','delete', 'post']
-        fields = {'slug','cluster', 'id', 'ram','disk_size','hostname','operating_system', 'virtual_cpus','status', 'pending_delete', 'deleted'}
+        fields = ('slug', 'cluster', 'id', 'ram', 'disk_size', 'hostname',
+                  'operating_system', 'virtual_cpus', 'status',
+                  'pending_delete', 'deleted')
         authentication = ApiKeyAuthentication()
         authorization = DjangoAuthorization()
 
@@ -748,7 +751,7 @@ class JobResource(ModelResource):
         object_class = Job
         resource_name = 'job'
         allowed_methods = ['get', 'delete']
-        fields = {'status', 'finished', 'job_id', 'cleared'}
+        fields = ('status', 'finished', 'job_id', 'cleared')
         authentication = ApiKeyAuthentication()
         authorization = DjangoAuthorization()
 
