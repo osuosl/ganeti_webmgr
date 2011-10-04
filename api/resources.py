@@ -45,7 +45,8 @@ from ganeti_web.views.virtual_machine import list_
 import ganeti_web.views.jobs
 import ganeti_web.views.node
 import ganeti_web.views.virtual_machine
-from tastypie.resources import ModelResource, HttpAccepted, HttpBadRequest
+from tastypie.resources import ModelResource
+from tastypie.http import HttpAccepted, HttpBadRequest
 from django.contrib.auth.models import User, Group
 from ganeti_web.models import VirtualMachine, SSHKey, Cluster, Node, Job, ClusterUser
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
