@@ -233,10 +233,12 @@ def overview(request, rest=False):
     
     # get vm summary - running and totals need to be done as separate queries
     # and then merged into a single list
-    vms_running = vms.filter(status='running')\
-                        .values('cluster__hostname','cluster__slug')\
+    vms_running = vms.filter(status='running') \
+                        .order_by() \
+                        .values('cluster__hostname','cluster__slug') \
                         .annotate(running=Count('pk'))
-    vms_total = vms.order_by().values('cluster__hostname','cluster__slug') \
+    vms_total = vms.order_by()\
+                        .values('cluster__hostname','cluster__slug') \
                         .annotate(total=Count('pk'))
     vm_summary = {}
     for cluster in vms_total:
