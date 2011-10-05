@@ -19,6 +19,8 @@
 import json
 
 from django.contrib.auth.decorators import login_required
+from django.contrib.contenttypes.models import ContentType
+from django.db.models.query_utils import Q
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound, Http404
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -32,7 +34,7 @@ log_action = LogItem.objects.log_action
 from ganeti_web.util.client import GanetiApiError
 from ganeti_web import constants
 from ganeti_web.forms.node import RoleForm, MigrateForm, EvacuateForm
-from ganeti_web.models import Node
+from ganeti_web.models import Node, Job
 from ganeti_web.views import render_403
 from ganeti_web.views.virtual_machine import render_vms
 
@@ -280,3 +282,18 @@ def evacuate(request, cluster_slug, host):
         {'form':form, 'node':node, 'cluster':cluster}, \
         context_instance=RequestContext(request))
 
+
+@login_required
+def job_status(request, id, rest=False):
+    """
+    Return a list of basic info for running jobs.
+    """
+    q = Q(status__in=('running','waiting')) | Q(status='error', cleared=False)
+    ct = ContentType.objects.get_for_model(Node)
+    jobs = Job.objects.filter(q, content_type=ct, object_id=id).order_by('job_id')
+    jobs = [j.info for j in jobs]
+
+    if rest:
+        return jobs
+    else:
+        return HttpResponse(json.dumps(jobs), mimetype='application/json')

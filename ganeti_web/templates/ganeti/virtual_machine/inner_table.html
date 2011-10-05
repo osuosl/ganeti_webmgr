@@ -17,7 +17,7 @@
 </thead>
 <tbody id="vms">
     {% for vm in vms.object_list %}
-    {% if not vm.deleted %}
+    {% if not vm.pending_delete or vm.last_job_id %}
     {% with vm.info as info %}
     <tr>
         <td class="status">

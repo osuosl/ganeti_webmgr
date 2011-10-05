@@ -3,7 +3,7 @@
         <a href="{% url job-detail data.cluster_slug data.job_id %}">Job #{{ data.job_id }}</a> -
     {% endif %}
     {% if user.is_superuser %}
-        <a href="{% url user-detail log_item.user.pk %}">{{log_item.user}}</a>
+        <a href="{{ log_item.user.get_absolute_url }}">{{log_item.user}}</a>
     {% else %}
         {{ log_item.user }}
     {% endif %}

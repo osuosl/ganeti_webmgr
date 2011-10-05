@@ -312,7 +312,6 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         # Test loading vm, delete job is finished
         vm.rapi.GetJobStatus.response = JOB_DELETE_SUCCESS
         vm = VirtualMachine.objects.get(pk=vm.pk)
-        self.assertFalse(vm.id)
         self.assertTrue(vm.pending_delete)
-        self.assertTrue(vm.deleted)
+        self.assertFalse(vm.last_job_id)
         self.assertFalse(VirtualMachine.objects.filter(pk=vm.pk).exists())

@@ -12,7 +12,7 @@
     <script src="{{SITE_ROOT}}/ganeti_web_media/js/disableSingletonDropdown.js"></script>
     <script src="{{SITE_ROOT}}/ganeti_web_media/js/createVM_formUpdater.js"></script>
     <script src="{{SITE_ROOT}}/ganeti_web_media/js/helpTips.js"></script>
-    <script type="text/javascript" src="{{SITE_ROOT}}/ganeti_web_media/js/autocomplete_user_search.js"></script>
+    <script type="text/javascript" src="{{SITE_ROOT}}/object_permissions_media/js/autocomplete_user_search.js"></script>
 
     <script type="text/javascript">
         
@@ -31,8 +31,11 @@
  
             // init the help tips for the individ. form objects
             initHelpTips('#virtualmachineform');
-            
-            autocomplete_user_search($("#id_owner"),'{% url owner-search %}');
+
+            // Only display the owner search box if there is more than one valid choice
+            if( $("#id_owner").attr("style") != "display: none;" )             
+            {   autocomplete_user_search($("#id_owner"),'{% url owner-search %}');
+            }
         });
 
     </script>

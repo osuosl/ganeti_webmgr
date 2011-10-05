@@ -119,8 +119,20 @@ def delete(request, cluster_slug, instance, rest=False):
         else:
             return HttpAccepted()
 
+    elif request.method == 'DELETE':
+        # start deletion job and mark the VirtualMachine as pending_delete and
+        # disable the cache for this VM.
+        job_id = instance.rapi.DeleteInstance(instance.hostname)
+        job = Job.objects.create(job_id=job_id, obj=instance, cluster_id=instance.cluster_id)
+        VirtualMachine.objects.filter(id=instance.id) \
+            .update(last_job=job, ignore_cache=True, pending_delete=True)
+
+        # No need to call instance.delete() as the job processing will delete
+        #   it automatically in its cleanup phase.
+        return HttpResponse('1', mimetype='application/json')
+
     if not rest:
-        return HttpResponseNotAllowed(["GET","POST"])
+        return HttpResponseNotAllowed(["GET","POST","DELETE"])
     else:
         return HttpResponseNotAllowed
 
@@ -1192,6 +1204,22 @@ def reparent(request, cluster_slug, instance):
         },
         context_instance=RequestContext(request),
     )
+
+
+@login_required
+def job_status(request, id, rest=False):
+    """
+    Return a list of basic info for running jobs.
+    """
+    q = Q(status__in=('running','waiting')) | Q(status='error', cleared=False)
+    ct = ContentType.objects.get_for_model(VirtualMachine)
+    jobs = Job.objects.filter(q, content_type=ct, object_id=id).order_by('job_id')
+    jobs = [j.info for j in jobs]
+
+    if rest:
+        return jobs
+    else:
+        return HttpResponse(json.dumps(jobs), mimetype='application/json')
 
 
 @login_required

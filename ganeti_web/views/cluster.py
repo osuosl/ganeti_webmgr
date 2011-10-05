@@ -22,6 +22,7 @@ import json
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.db.models import Q, Sum
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotAllowed
@@ -39,7 +40,7 @@ from object_log.views import list_for_object
 log_action = LogItem.objects.log_action
 
 from ganeti_web.util.client import GanetiApiError
-from ganeti_web.models import Cluster, ClusterUser, Profile, SSHKey, VirtualMachine
+from ganeti_web.models import Cluster, ClusterUser, Profile, SSHKey, VirtualMachine, Job
 from ganeti_web.views import render_403, render_404
 from ganeti_web.views.virtual_machine import render_vms
 from ganeti_web.forms.cluster import EditClusterForm, QuotaForm
@@ -330,6 +331,22 @@ def quota(request, cluster_slug, user_id):
     return render_to_response("ganeti/cluster/quota.html",
                         {'form':form, 'cluster':cluster, 'user_id':user_id},
                         context_instance=RequestContext(request))
+
+
+@login_required
+def job_status(request, id, rest=False):
+    """
+    Return a list of basic info for running jobs.
+    """
+    q = Q(status__in=('running','waiting')) | Q(status='error', cleared=False)
+    ct = ContentType.objects.get_for_model(Cluster)
+    jobs = Job.objects.filter(q, content_type=ct, object_id=id).order_by('job_id')
+    jobs = [j.info for j in jobs]
+
+    if rest:
+        return jobs
+    else:
+        return HttpResponse(json.dumps(jobs), mimetype='application/json')
 
 
 @login_required
