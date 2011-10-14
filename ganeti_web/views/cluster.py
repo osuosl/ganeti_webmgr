@@ -55,16 +55,17 @@ def detail(request, cluster_slug, rest=False):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     user = request.user
     admin = True if user.is_superuser else user.has_perm('admin', cluster)
-    if not admin:
-        return render_403(request, _("You do not have sufficient privileges"))
-
+    readonly = False if admin else True
+    # if not admin:
+        # return render_403(request, _("You do not have sufficient privileges"))
+       
     if rest:
         return {'cluster':cluster,'admin':admin}
     else:
         return render_to_response("ganeti/cluster/detail.html", {
             'cluster':cluster,
-            'admin':admin
-
+            'admin':admin,
+            'readonly':readonly
         },
         context_instance=RequestContext(request),
     )
@@ -181,7 +182,8 @@ def list_(request, rest=False):
     if user.is_superuser:
         cluster_list = Cluster.objects.all()
     else:
-        cluster_list = user.get_objects_all_perms(Cluster, ['admin',])
+        cluster_list = user.get_objects_any_perms(Cluster, ['admin','migrate','export','replace_disks','tags'])
+        # List all clusters for which user has view_cluster perm
 
     if rest:
         return cluster_list

@@ -62,7 +62,7 @@
                 <td>{{ cluster.description }}</td>
                 <td>{{ info.software_version }}</td>
                 <td>{{ info.default_hypervisor }}</td>
-                <td>{{ info.master }}</td>
+                <td><a href="{% url node-detail cluster.slug info.master %}">{{ info.master }}</a></td>
                 <td>{{ nodes.count }}</td>
                 <td>{{ cluster.virtual_machines.count }}</td>
             </tr>

@@ -73,15 +73,18 @@ def detail(request, cluster_slug, host, rest=False):
     user = request.user
     admin = True if user.is_superuser else user.has_perm('admin', cluster)
     modify = True if admin else user.has_perm('migrate', cluster)
+    readonly = False
     if not (admin or modify):
-        return render_403(request, _("You do not have sufficient privileges"))
+        # return render_403(request, _("You do not have sufficient privileges"))
+        readonly = True
 
     if rest:
         return {'cluster':cluster,
         'node_count':cluster.nodes.all().count(),
         'node':node,
         'admin':admin,
-        'modify':modify}
+        'modify':modify,
+        'readonly':readonly}
     else:
         return render_to_response("ganeti/node/detail.html", {
             'cluster':cluster,
@@ -89,6 +92,7 @@ def detail(request, cluster_slug, host, rest=False):
             'node':node,
             'admin':admin,
             'modify':modify,
+            'readonly':readonly,
             },
             context_instance=RequestContext(request),
             )

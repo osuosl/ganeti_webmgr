@@ -152,24 +152,26 @@
 <div id="tabs">
     <ul>
         <li><a href="#detail"><span>{% trans "Detail" %}</span></a></li>
-        <li>
-            <a title="primary"
-                    href="{% url node-primary-vms cluster.slug node.hostname %}">
-                <span>{% trans "Primary" %}</span>
-            </a>
+        {% if not readonly %}
+            <li>
+                <a title="primary"
+                        href="{% url node-primary-vms cluster.slug node.hostname %}">
+                    <span>{% trans "Primary" %}</span>
+                </a>
+            </li>
+            <li>
+                <a title="secondary" 
+                        href="{% url node-secondary-vms cluster.slug node.hostname %}">
+                    <span>{% trans "Secondary" %}</span>
+                </a>
+            </li>
+            <li>
+                <a title="log"
+                        href="{% url node-object_log cluster.slug node.hostname %}">
+                    <span>{% trans "Log" %}</span>
+                </a>
         </li>
-        <li>
-            <a title="secondary" 
-                    href="{% url node-secondary-vms cluster.slug node.hostname %}">
-                <span>{% trans "Secondary" %}</span>
-            </a>
-        </li>
-        <li>
-            <a title="log"
-                    href="{% url node-object_log cluster.slug node.hostname %}">
-                <span>{% trans "Log" %}</span>
-            </a>
-        </li>
+        {% endif %}
     </ul>
     <div id="detail">
         <ul id="actions">

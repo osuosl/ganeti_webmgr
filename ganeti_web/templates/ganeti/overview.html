@@ -113,7 +113,7 @@
         {% for hostname, dict in vm_summary.items %}
             <tr>
                 <td>
-                {% if admin %}
+                {% if view_cluster %}
                     <a href="{% url cluster-detail dict.cluster__slug %}"> 
                         {{hostname|abbreviate_fqdn}}
                     </a>

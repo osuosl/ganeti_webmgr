@@ -14,7 +14,7 @@
         {% for cluster, res in resources.items %}
         <tr>
             <td>
-            {% if admin %} 
+            {% if view_cluster %} 
                 <a href="{% url cluster-detail cluster.slug %}">
                     {{ cluster|abbreviate_fqdn }}
                 </a>
