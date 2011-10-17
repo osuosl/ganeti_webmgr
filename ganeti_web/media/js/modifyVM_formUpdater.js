@@ -94,6 +94,7 @@ function modifyFormUpdater(nic_count_original) {
         nic_count.val(nics.children('p').length);
         //XXX hide delete buttons for everything but the last element
         nics.children('.delete').not(':last').hide();
+    }
 
     function _add_nic() {
         var count = nic_count.val();
