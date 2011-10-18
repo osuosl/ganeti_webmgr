@@ -17,12 +17,6 @@ class Migration(SchemaMigration):
         # Changing field 'VirtualMachine.status'
         db.alter_column('ganeti_web_virtualmachine', 'status', self.gf('django.db.models.fields.CharField')(max_length=14))
 
-        # Adding field 'Node.ram_free'
-        db.add_column('ganeti_web_node', 'ram_free', self.gf('django.db.models.fields.IntegerField')(default=-1), keep_default=False)
-
-        # Adding field 'Node.disk_free'
-        db.add_column('ganeti_web_node', 'disk_free', self.gf('django.db.models.fields.IntegerField')(default=-1), keep_default=False)
-
         # Adding field 'Node.cpus'
         db.add_column('ganeti_web_node', 'cpus', self.gf('django.db.models.fields.IntegerField')(null=True), keep_default=False)
 
@@ -70,12 +64,6 @@ class Migration(SchemaMigration):
 
         # Changing field 'VirtualMachine.status'
         db.alter_column('ganeti_web_virtualmachine', 'status', self.gf('django.db.models.fields.CharField')(max_length=10))
-
-        # Deleting field 'Node.ram_free'
-        db.delete_column('ganeti_web_node', 'ram_free')
-
-        # Deleting field 'Node.disk_free'
-        db.delete_column('ganeti_web_node', 'disk_free')
 
         # Deleting field 'Node.cpus'
         db.delete_column('ganeti_web_node', 'cpus')
