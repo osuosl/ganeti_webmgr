@@ -42,6 +42,7 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
         models.client.GanetiRapiClient = RapiProxy
 
         cluster = Cluster(hostname='test.cluster', slug='test', username='tester', password='secret')
+        cluster.id = 23 # XXX MySQL DB does not reset auto-increment IDs when an object is removed
         cluster.save()
         cluster.sync_nodes()
 
@@ -75,28 +76,6 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
             nic_count=0,
         )
 
-        self.instance_data = dict(
-            start=True,
-            owner=unauthorized.pk,
-            cluster=cluster.pk,
-            hostname='new.vm.hostname2',
-            disk_template='plain',
-            disk_count=1,
-            disk_size_0=1000,
-            memory=256,
-            vcpus=2,
-            root_path='/',
-            pnode=cluster.nodes.all()[0],
-            snode=cluster.nodes.all()[1],
-            nic_type='paravirtual',
-            disk_type = 'paravirtual',
-            nic_count=1,
-            nic_link_0 = 'br43',
-            nic_mode_0='routed',
-            boot_order='disk',
-            os='image+ubuntu-lucid',
-        )
-
         context = dict(
             cluster=cluster,
             template=template,
@@ -110,7 +89,7 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
         VirtualMachine.objects.all().delete()
         Cluster.objects.all().delete()
         User.objects.all().delete()
-    
+
     def test_list_view(self):
         """
         Test viewing a list of virtual machine templates.
