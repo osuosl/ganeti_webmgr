@@ -89,22 +89,13 @@ def edit(request, cluster_slug=None, template=None):
     )
 
 @login_required
-def create(request, cluster_slug=None, template=None):
+def create(request):
     """
     View to create a new VirtualMachineTemplate.
 
     @param template Will populate the form with data from a template.
     """
     user = request.user
-    if cluster_slug:
-        cluster = get_object_or_404(Cluster, slug=cluster_slug)
-        if not (
-            user.is_superuser or 
-            user.has_perm('admin', cluster) or
-            user.has_perm('create_vm', cluster)
-            ):
-            return render_403(request, _("You do not have sufficient privileges"))
-
     if request.method == "GET":
         form = VirtualMachineTemplateForm(user=user)
     elif request.method == "POST":
