@@ -143,9 +143,9 @@ function JobPoller() {
             html.children('h3').html(op);
 
             // append log messages that are not already displayed
-            var current_log_count = $("#log ul li").length;
+            var current_log_count = html.find(".op_log ul li").length;
             if (data['oplog'][op_index].length != 0) {
-                var log_html = html.children('.op_log');
+                var log_html = html.find('.op_log');
                 if (log_html.length==0){
                     log_html = $("<pre class='op_log'><ul></ul></pre>");
                     scrollable.append(log_html);
