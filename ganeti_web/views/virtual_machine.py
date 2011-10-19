@@ -16,7 +16,9 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
+from functools import partial
 import json
+
 from django.contrib.contenttypes.models import ContentType
 
 from django.contrib.auth.decorators import login_required
@@ -189,8 +191,16 @@ def reinstall(request, cluster_slug, instance):
     return HttpResponseNotAllowed(["GET","POST"])
 
 
+# SSH/VNC functionality.
+# Since the codepaths are all so similar, they are implemented from the same
+# base code.
+
 @login_required
-def novnc(request, cluster_slug, instance, template="ganeti/virtual_machine/novnc.html"):
+def console(request, cluster_slug, instance, template=None):
+    """
+    Create a canvas with an embedded JS console of some sort.
+    """
+
     vm = get_object_or_404(VirtualMachine, hostname=instance,
                            cluster__slug=cluster_slug)
     user = request.user
@@ -206,9 +216,19 @@ def novnc(request, cluster_slug, instance, template="ganeti/virtual_machine/novn
         context_instance=RequestContext(request),
     )
 
+gateone = partial(console, template="ganeti/virtual_machine/gateone.html")
+novnc = partial(console, template="ganeti/virtual_machine/novnc.html")
+
 
 @login_required
-def vnc_proxy(request, cluster_slug, instance):
+def proxy(request, cluster_slug, instance, protocol=None):
+    """
+    Open a port on the proxy.
+
+    This function queries the proxy and asks it to open a port, returning the
+    port information as a JSON object.
+    """
+
     if request.method != "POST":
         return HttpResponseNotAllowed(['POST'])
 
@@ -221,9 +241,12 @@ def vnc_proxy(request, cluster_slug, instance):
             return HttpResponseForbidden(_('You do not have permission to vnc on this'))
 
     use_tls = bool(request.POST.get("tls"))
-    result = json.dumps(vm.setup_vnc_forwarding(tls=use_tls))
+    result = json.dumps(vm.setup_forwarding(protocol=protocol, tls=use_tls))
 
     return HttpResponse(result, mimetype="application/json")
+
+ssh_proxy = partial(proxy, protocol="ssh")
+vnc_proxy = partial(proxy, protocol="vnc")
 
 
 @login_required

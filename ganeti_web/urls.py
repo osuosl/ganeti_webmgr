@@ -152,13 +152,17 @@ urlpatterns += patterns('ganeti_web.views.virtual_machine',
     url(r'^%s/permissions/?$' % vm_prefix, 'permissions', name="vm-permissions"),
     url(r'^%s/permissions/user/(?P<user_id>\d+)/?$' % vm_prefix, 'permissions', name="vm-permissions-user"),
     url(r'^%s/permissions/group/(?P<group_id>\d+)/?$' % vm_prefix, 'permissions', name="vm-permissions-user"),
-    
-    #  Start, Stop, Reboot, VNC
+
+    #  Start, Stop, Reboot, VNC, SSH
+    url(r'^%s/ssh/?$' % vm_prefix, 'gateone', name="instance-ssh"),
+    url(r'^%s/ssh_proxy/?$' % vm_prefix, 'ssh_proxy', name="instance-ssh-proxy"),
+
     url(r'^%s/vnc/?$' % vm_prefix, 'novnc', name="instance-vnc"),
     url(r'^%s/vnc/popout/?$' % vm_prefix, 'novnc',
                         {'template':'ganeti/virtual_machine/vnc_popout.html'},
                         name="instance-vnc-popout"),
     url(r'^%s/vnc_proxy/?$' % vm_prefix, 'vnc_proxy', name="instance-vnc-proxy"),
+
     url(r'^%s/shutdown/?$' % vm_prefix, 'shutdown', name="instance-shutdown"),
     url(r'^%s/startup/?$' % vm_prefix, 'startup', name="instance-startup"),
     url(r'^%s/reboot/?$' % vm_prefix, 'reboot', name="instance-reboot"),

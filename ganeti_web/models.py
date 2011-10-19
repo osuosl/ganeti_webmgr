@@ -741,48 +741,41 @@ class VirtualMachine(CachedClusterObject):
             .update(last_job=job, ignore_cache=True)
         return job
 
-    def setup_ssh_forwarding(self, sport=0):
+    def setup_forwarding(self, protocol="", sport=0, tls=False):
         """
-        Poke a proxy to start SSH forwarding.
+        Poke a proxy to start SSH or VNC forwarding.
 
         Returns None if no proxy is configured, or if there was an error
         contacting the proxy.
+
+        ``protocol`` must be either "ssh" or "vnc".
         """
 
-        command = self.rapi.GetInstanceConsole(self.hostname)["command"]
 
         if settings.VNC_PROXY:
-            proxy_server = settings.VNC_PROXY.split(":")
+            proxy = settings.VNC_PROXY.split(":")
             password = generate_random_password()
-            sport = request_ssh(proxy, sport, self.info["pnode"],
-                                self.info["network_port"], password, command)
+            dport = self.info["network_port"]
+            node = self.info["pnode"]
+
+            if protocol == "ssh":
+                kwargs = {
+                    "command":
+                    self.rapi.GetInstanceConsole(self.hostname)["command"],
+                }
+            else:
+                kwargs = {}
+
+            sport = request_forwarding(proxy, protocol, node, dport, password,
+                                       sport=sport, tls=tls, **kwargs)
 
             if sport:
                 return proxy[0], sport, password
 
-    def setup_vnc_forwarding(self, sport=0, tls=False):
-        """
-        Obtain VNC forwarding information, optionally configuring a proxy.
-
-        Returns None if a proxy is configured and there was an error
-        contacting the proxy.
-        """
-
-        password = ''
-        info_ = self.info
-        port = info_['network_port']
-        node = info_['pnode']
-
-        # use proxy for VNC connection
-        if settings.VNC_PROXY:
-            proxy_server = settings.VNC_PROXY.split(":")
-            password = generate_random_password()
-            result = request_forwarding(proxy_server, node, port, password,
-                                        sport=sport, tls=tls)
-            if result:
-                return proxy_server[0], int(result), password
-        else:
-            return node, port, password
+        elif protocol == "vnc":
+            # VNC fallback w/o proxy. Return the port and node information
+            # directly. The VNC fallback has an empty password.
+            return self.info["pnode"], self.info["network_port"], ""
 
     @models.permalink
     def get_absolute_url(self):
