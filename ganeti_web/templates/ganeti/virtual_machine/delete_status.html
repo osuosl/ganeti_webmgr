@@ -9,22 +9,18 @@
     </style>
 
     <script type="text/javascript">
+        var job_poller;
         $(document).ready(function() {
-            job_id = '{{instance.last_job.job_id}}';
-            if (job_id == '') {
-                {# job was finished before we loaded the page #}
-                job_complete();
-            } else {
-                get_job_status("{% url cluster-detail cluster.slug %}",
-                    job_id, job_complete);
-                poll_job_status("{% url cluster-detail cluster.slug %}",
-                    job_id, job_complete);
-            }
+            job_poller = new JobPoller();
+            var job_status_url = "{% url instance-job-status instance.id %}";
+            var cluster_detail_url = "{% url cluster-detail cluster.slug %}";
+            job_poller.init(job_status_url, cluster_detail_url, job_complete);
+            job_poller.get_jobs();
         });
-        
+
         function job_complete() {
-            $('#messages').hide()
-            $('#success').show()
+            $('#messages').hide();
+            $('#success').show();
         }
     </script>
 {% endblock %}
