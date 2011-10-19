@@ -10,7 +10,7 @@ function JobPoller() {
     var errback;
     var cluster;
     this.FAST = 3000;
-    this.SLOW = 5000;
+    this.SLOW = 60000;
     var get_xhr = undefined;
     var poller;
 
