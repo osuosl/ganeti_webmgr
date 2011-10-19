@@ -142,8 +142,11 @@ class VirtualMachineCacheUpdater(object):
                 # explicitly check status to see if it has changed.  failing
                 # to check this would result in state changes being lost
                 parsed = VirtualMachine.parse_persistent_info(info)
-                VirtualMachine.objects.filter(pk=id) \
-                    .update(serialized_info=cPickle.dumps(info), **parsed)
+                if 'delete' in parsed:
+                    VirtualMachine.objects.filter(pk=id).delete()
+                else:
+                    VirtualMachine.objects.filter(pk=id) \
+                        .update(serialized_info=cPickle.dumps(info), **parsed)
                 updated += 1
         else:
             # new vm

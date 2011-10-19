@@ -149,6 +149,7 @@ class CachedClusterObject(models.Model):
     __info = None
     error = None
     ctime = None
+    deleted = False
 
     def __init__(self, *args, **kwargs):
         super(CachedClusterObject, self).__init__(*args, **kwargs)
@@ -237,7 +238,7 @@ class CachedClusterObject(models.Model):
                 # no info retrieved, use current mtime
                 mtime = self.mtime
             
-            if self.mtime is None or mtime > self.mtime:
+            if self.id and (self.mtime is None or mtime > self.mtime):
                 # there was an update. Set info and save the object
                 self.info = info_
                 self.save()
@@ -311,6 +312,12 @@ class CachedClusterObject(models.Model):
                 if status in ('success','error','unknown'):
                     _updates = self._complete_job(self.cluster_id,
                                                   self.hostname, op, status)
+                    # XXX if the delete flag is set in updates then delete this model
+                    # this happens here because _complete_job cannot delete this model
+                    if _updates and 'deleted' in _updates:
+                        #del _updates['deleted']
+                        self.delete()
+                        _updates = None
                     if _updates: updates.update(_updates)
 
             # we only care about the very last job for resetting the cache flags
@@ -671,8 +678,8 @@ class VirtualMachine(CachedClusterObject):
         base = VirtualMachine.objects.filter(cluster=cluster_id, hostname=hostname)
         if op == 'OP_INSTANCE_REMOVE':
             if status == 'success':
-                base.delete()
-            return
+                # XXX can't actually delete here since it would cause a recursive loop
+                return dict(deleted=True)
         
         elif op == 'OP_INSTANCE_CREATE' and status == 'success':
             # XXX must update before deleting the template to maintain

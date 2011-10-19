@@ -123,6 +123,8 @@ def delete(request, cluster_slug, instance, rest=False):
         # start deletion job and mark the VirtualMachine as pending_delete and
         # disable the cache for this VM.
         job_id = instance.rapi.DeleteInstance(instance.hostname)
+        ct = ContentType.objects.get_for_model(VirtualMachine)
+        Job.objects.filter(content_type=ct, object_id=instance.id).update(cleared=True)
         job = Job.objects.create(job_id=job_id, obj=instance, cluster_id=instance.cluster_id)
         VirtualMachine.objects.filter(id=instance.id) \
             .update(last_job=job, ignore_cache=True, pending_delete=True)
@@ -1215,7 +1217,6 @@ def job_status(request, id, rest=False):
     ct = ContentType.objects.get_for_model(VirtualMachine)
     jobs = Job.objects.filter(q, content_type=ct, object_id=id).order_by('job_id')
     jobs = [j.info for j in jobs]
-
     if rest:
         return jobs
     else:

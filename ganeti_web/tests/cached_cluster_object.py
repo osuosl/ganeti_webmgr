@@ -183,6 +183,7 @@ class CachedClusterObjectBase(TestCase):
             * Cache time is updated
         """
         object = object if object else self.create_model()
+        object.save()
         now = datetime.now()
         object.refresh()
         
