@@ -126,16 +126,16 @@ function JobPoller() {
         var error = undefined;
         var scrollable = html.children('.scrollable');
 
-        if (status=='running' || (status=='error' && new_job)) {
+        if (status=='running' || status=='error') {
             html.addClass(status);
 
-            if (data.status == 'error') {
+            if (data.status == 'error' && html.find('pre.error').length==0) {
                 var reason = data.opresult[op_index][1][0];
                 var href = cluster + "/job/" + job_id + "/clear/";
                 html.children('h3')
                 .append("<a class='clear' title='clear error' href='"+href+"'></a>");
                 error = $("<pre class='error'>" + reason + "</pre>");
-                scrollable.append(error);
+                scrollable.prepend(error);
                 actions_enabled = true;
                 $('#actions a').removeClass('disabled');
             }
