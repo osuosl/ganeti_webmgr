@@ -3,16 +3,22 @@
 <style>
     #actions {margin-bottom:30px;}
 </style>
+<script type="text/javascript" src="{{ SITE_ROOT }}/gateone/gateone.js"></script>
 <script type="text/javascript">
-    // Set include path for noVNC scripts
-    var INCLUDE_URI = "{{SITE_ROOT}}/novnc/";
-    // Set path for proxy requests
-    var PROXY_REQUEST_URI = "{% url instance-vnc-proxy cluster_slug instance.hostname %}";
-    {% if not popout %}
-    var POPOUT_URL = "{% url instance-vnc-popout cluster_slug instance.hostname %}";
-    {% endif %}
+    $(document).ready(function(){
+        $.ajax({
+            "async": false,
+            "url": "{% url instance-ssh-proxy cluster_slug instance.hostname %}",
+            "type": "POST",
+            "data": {},
+            "dataType": "json",
+            "success": function(data) {
+                /* data is a list of host, port, password */
+                GateOne.init({"url": data[0]});
+            },
+        });
+    });
 </script>
-<script type="text/javascript" src="{{ SITE_ROOT }}/ganeti_web_media/js/noVNC.js"></script>
 
 <ul id="actions" class="horizontal">
     <li><a id="encrypt" href="#" title="encrypt" class="button encrypt">{% trans "Encrypt" %}</a></li>
@@ -31,12 +37,4 @@
 
 <input type="checkbox" id="encrypt_check" />
 
-<div id="VNC_screen">
-    <div id="VNC_status_bar" class="VNC_status_bar" style="margin-top: 5px;">
-        noVNC client
-    </div>
-    <canvas id="VNC_canvas">
-        {% blocktrans %}Canvas is not supported in your browser. Please use new versions
-        of Chrome or Firefox.{% endblocktrans %}
-    </canvas>
-</div>
+<div id="gateone"></div>
