@@ -20,7 +20,6 @@
 
 import json
 import socket
-import sys
 
 def request_forwarding(server, protocol, daddr, dport, password, sport=None,
                        tls=False, **kwargs):
