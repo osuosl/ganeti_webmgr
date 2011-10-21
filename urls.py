@@ -67,7 +67,11 @@ if settings.DEBUG:
     urlpatterns += patterns('',
         (r'^favicon.ico', 'django.views.static.serve',
             {'document_root':  settings.MEDIA_ROOT, 'path': 'favicon.ico'}),
-        
+
+        # GateOne SSH/telnet terminal files
+        (r'^gateone/(?P<path>.*)', 'django.views.static.serve',\
+            {'document_root':  '%s/gateone/static' % settings.DOC_ROOT}),
+
         # noVNC files
         (r'^novnc/(?P<path>.*)', 'django.views.static.serve',\
             {'document_root':  '%s/noVNC/include' % settings.DOC_ROOT}),
