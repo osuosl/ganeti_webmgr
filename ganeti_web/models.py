@@ -759,9 +759,12 @@ class VirtualMachine(CachedClusterObject):
             node = self.info["pnode"]
 
             if protocol == "ssh":
+                ic = self.rapi.GetInstanceConsole(self.hostname)
+                if "command" not in ic:
+                    return
+
                 kwargs = {
-                    "command":
-                    self.rapi.GetInstanceConsole(self.hostname)["command"],
+                    "command": ic["command"]
                 }
             else:
                 kwargs = {}
