@@ -431,7 +431,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         # unauthorized user
         self.assertTrue(c.login(username=user.username, password='secret'))
         response = c.get(url % args)
-        self.assertEqual(403, response.status_code)
+        self.assertEqual(200, response.status_code) # Ticket 6891
         
         # invalid cluster
         response = c.get(url % "DoesNotExist")

@@ -76,7 +76,7 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
         args = (cluster.slug, node.hostname)
         url = '/cluster/%s/node/%s/'
         users = [superuser, user_migrate, user_admin]
-        self.assert_standard_fails(url, args)
+        self.assert_standard_fails(url, args, authorized=False)
         self.assert_200(url, args, users, 'ganeti/node/detail.html')
 
     def test_primary_vms(self):
