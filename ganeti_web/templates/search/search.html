@@ -85,16 +85,20 @@
                                 <div class='result_title'>{{cluster.hostname}}</div>
                             </a>
                             <p>
-                                <b>Cluster</b> on master node 
-                                <a href='{% url node-detail cluster.slug cluster.info.master %}'>
-                                    {{cluster.info.master|abbreviate_fqdn}}
-                                </a> |
+                                <b>Cluster</b> 
+                                {% if cluster.info.master %}
+                                    on master node
+                                    <a href='{% url node-detail cluster.slug cluster.info.master %}'>
+                                        {{cluster.info.master|abbreviate_fqdn}}
+                                    </a> |
+                                {% endif %}
                                 {% if cluster.description %}
                                     {{cluster.description}} |
                                 {% endif %} 
-                                v{{cluster.info.software_version}} |
-                                {{cluster.info.default_hypervisor}} hypervisor |
-
+                                {% if cluster.info %}
+                                    v{{cluster.info.software_version}} |
+                                    {{cluster.info.default_hypervisor}} hypervisor |
+                                {% endif %}
                                 {% if cluster.nodes.count == 1 %}
                                     1 node
                                 {% else %}

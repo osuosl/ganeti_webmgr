@@ -54,15 +54,24 @@
         {% with cluster.nodes as nodes %}
             <tr id="cluster_{{cluster.id}}">
                 <td class="name">
-                    {% if cluster.error %}<div class="icon_error" title="{% trans 'Ganeti API Error' %}: {{cluster.error}}"></div>{% endif %}
+                    {% if cluster.error %}
+                        <div class="icon_error" title="{% trans 'Ganeti API Error' %}: {{cluster.error}}"></div>
+                    {% endif %}
+
                     <a href="{% url cluster-detail cluster.slug %}">
                         {{ cluster.hostname|abbreviate_fqdn }}
                     </a>
                 </td>
                 <td>{{ cluster.description }}</td>
-                <td>{{ info.software_version }}</td>
-                <td>{{ info.default_hypervisor }}</td>
-                <td><a href="{% url node-detail cluster.slug info.master %}">{{ info.master }}</a></td>
+                {% if info %}
+                    <td>{{ info.software_version }}</td>
+                    <td>{{ info.default_hypervisor }}</td>
+                    <td><a href="{% url node-detail cluster.slug info.master %}">{{ info.master }}</a></td>
+                {% else %}
+                    <td><i>unknown</i></td>
+                    <td><i>unknown</i></td>
+                    <td><i>unknown</i></td>
+                {% endif %}
                 <td>{{ nodes.count }}</td>
                 <td>{{ cluster.virtual_machines.count }}</td>
             </tr>
