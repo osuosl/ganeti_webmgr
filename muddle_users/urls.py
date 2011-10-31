@@ -40,7 +40,7 @@ urlpatterns = patterns('muddle_users.views.user',
     url(r'^users/?$', 'user_list', name="user-list"),
     url(r'^user/add/?$', 'user_add', name="user-create"),
     url(r'^user/(?P<user_id>\d+)/?$', 'user_detail', {'template':USER_TEMPLATE}, name="user-detail"),
-    url(r'^users/(?P<username>\w+)/?$', 'user_detail', {'template':USER_TEMPLATE}, name="user-detail-name"),
+    url(r'^users/(?P<username>[\w@.+-]+)/?$', 'user_detail', {'template':USER_TEMPLATE}, name="user-detail-name"),
     url(r'^user/(?P<user_id>\d+)/edit/?$', 'user_edit', name="user-edit"),
     url(r'^user/(?P<user_id>\d+)/password/?$', 'user_password', name="user-password"),
 )
