@@ -29,6 +29,9 @@
             if ($this.html() != 'unknown') {
                 $this.progressBar(CLUSTER_RESOURCES_PBAR);
             }
+            else
+            {   $this.html("<div align='center'><i>unknown</i></div>");
+            }
         });
         $("#clusters").tablesorter();
         $("#errors_list table").tablesorter();
@@ -84,7 +87,7 @@
                         {{ cluster.hostname|abbreviate_fqdn }}
                     </a>
                 </td>
-                <td>{{ info.software_version }}</td>
+                <td>{{ info.software_version|default:"<i>unknown</i>" }}</td>
                 <td class="ram">{% cluster_memory cluster %}</td>
                 <td class="disk">{% cluster_disk cluster %}</td>
                 <td title="Running/All">{% format_online_nodes cluster %}</td>
