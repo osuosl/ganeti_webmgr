@@ -77,12 +77,18 @@ env.remote = False
 
 
 def dev():
-    """ configure development deployment """
+    """
+    Configure development deployment.
+    """
+
     env.environment = 'development'
 
 
 def prod():
-    """ configure a production deployment """
+    """
+    Configure production deployment.
+    """
+
     env.environment = 'production'
 
 
@@ -114,17 +120,20 @@ env.MANIFEST = [
 
 def deploy():
     """
-    Install all dependencies from git and pip
+    Install all dependencies from git and pip.
     """
+
     install_dependencies_pip()
     install_dependencies_git()
 
 
 def _exists(path):
     """
-    helper to see if a path exists.  uses either os.exists or exists depending
-    on if the environment is remote or local
+    A helper function to determine whether a path exists.
+
+    This function does the right thing in both remote and local environments.
     """
+
     if env.remote:
         return exists(path)
     else:
@@ -132,7 +141,16 @@ def _exists(path):
 
 
 def create_virtualenv(virtualenv=None, force=False):
-    """ create a virtualenv for pip installs """
+    """
+    Create a virtualenv for pip installations.
+
+    By default, the environment will be placed in the document root. Pass a
+    path to override the location.
+
+    If ``force`` is False, then the environment will not be recreated if it
+    already exists.
+    """
+
     require('environment', provided_by=[dev, prod])
     env.virtualenv = virtualenv if virtualenv else env.doc_root
 
@@ -140,13 +158,16 @@ def create_virtualenv(virtualenv=None, force=False):
         if not force and _exists('%(virtualenv)s/lib' % env):
             print 'virtualenv already created'
         else:
+            # XXX does this actually create a new environment if one already
+            # exists there?
             local('virtualenv %(virtualenv)s' % env)
 
 
 def create_env():
     """
-    setup environment for git dependencies
+    Setup environment for git dependencies.
     """
+
     require('environment', provided_by=[dev, prod])
 
     with lcd(env.doc_root):
@@ -158,8 +179,9 @@ def create_env():
 
 def install_dependencies_pip():
     """
-    Install all dependencies available from pip
+    Install all dependencies available from pip.
     """
+
     require('environment', provided_by=[dev, prod])
     create_virtualenv()
 
@@ -185,7 +207,10 @@ def install_dependencies_pip():
 
 
 def install_dependencies_git():
-    """ Install all dependencies available from git """
+    """
+    Install all dependencies available from git.
+    """
+
     require('environment', provided_by=[dev, prod])
 
     # if this is a production install then install everything that pip that
@@ -250,7 +275,10 @@ def install_dependencies_git():
 
 
 def tarball():
-    """ package a release tarball """
+    """
+    Package a release tarball.
+    """
+
     tarball = prompt('tarball name', default='ganeti-webmgr-tar.gz')
     files = ['ganeti_webmgr/%s' % file for file in env.MANIFEST]
     files = ' '.join(files)
