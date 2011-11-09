@@ -1,4 +1,7 @@
 import os
+
+from pkg_resources import parse_requirements
+
 from fabric.api import env
 from fabric.context_managers import settings, hide, lcd
 from fabric.contrib.files import exists
@@ -18,19 +21,8 @@ from fabric.operations import local, require, prompt
 # Packages from git are given preference for dev environment. PIP is given
 # preference for production environments
 
-PIP_INSTALL = {
-    'django'                    :'>=1.3',
-    'django-registration'       :'',
-    'south'                     :'',
-    'django-haystack'           :'==1.2.1',
-    'whoosh'                    :'>=1.8.1',
-    'pycurl'                    :'',
-    'pyopenssl'                 :'',
-    'django_object_permissions' :'==1.4.1',
-    'django_object_log'         :'==0.6',
-    'twisted'                   :'>=11.0.0',
-    'django-fields'             :''
-}
+PIP_INSTALL = dict((r.project_name, str(r)) for r in
+                   parse_requirements(open("requirements.txt").read()))
 
 GIT_INSTALL =  {
     'ganeti_webmgr_layout':{
@@ -114,7 +106,8 @@ env.MANIFEST = [
     "search_sites.py",
     "settings.py.dist",
     "UPGRADING",
-    "urls.py"
+    "urls.py",
+    "requirements.txt",
 ]
 
 
@@ -196,14 +189,8 @@ def install_dependencies_pip():
         return
 
     with lcd(env.doc_root):
-        #XXX create temp requirements file text from list of requirements
-        #    it will be destroyed after install is complete
-        requirements = '\n'.join([''.join(p) for p in pips_.items()])
-        with settings(hide('running')):
-            local("echo '%s' > requirements.txt" % requirements)
-
+        # Run the installation with pip, passing in our requirements.txt.
         local('pip install -E %(virtualenv)s -r requirements.txt' % env)
-        local('rm requirements.txt')
 
 
 def install_dependencies_git():
