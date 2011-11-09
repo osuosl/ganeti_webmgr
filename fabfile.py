@@ -1,6 +1,6 @@
 import os
 from fabric.api import env
-from fabric.context_managers import cd, settings, hide, lcd
+from fabric.context_managers import settings, hide, lcd
 from fabric.contrib.files import exists
 from fabric.operations import local, require, prompt
 
@@ -135,7 +135,7 @@ def create_virtualenv(virtualenv=None, force=False):
     """ create a virtualenv for pip installs """
     require('environment', provided_by=[dev, prod])
     env.virtualenv = virtualenv if virtualenv else env.doc_root
-    
+
     with lcd(env.doc_root):
         if not force and _exists('%(virtualenv)s/lib' % env):
             print 'virtualenv already created'
@@ -168,7 +168,7 @@ def install_dependencies_pip():
     pips_ = PIP_INSTALL.copy()
     if env.environment == 'development':
         map(pips_.pop, [k for k in GIT_INSTALL if k in PIP_INSTALL])
-    
+
     if not pips_:
         print 'No git repos to install'
         return
@@ -219,7 +219,7 @@ def install_dependencies_git():
             env.git_repo = name
             if not _exists('%(doc_root)s/dependencies/%(git_repo)s' % env):
                 local('git clone %(url)s' % opts)
-            
+
             # create branch if not using master
             if opts['head'] != 'master':
                 with lcd(name):
