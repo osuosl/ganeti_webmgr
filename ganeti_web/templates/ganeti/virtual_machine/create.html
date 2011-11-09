@@ -33,7 +33,7 @@
             initHelpTips('#virtualmachineform');
 
             // Only display the owner search box if there is more than one valid choice
-            if( $("#id_owner").attr("style") != "display: none;" )             
+            if( $.trim($("#id_owner").attr("style")) != "display: none;" )             
             {   autocomplete_user_search($("#id_owner"),'{% url owner-search %}');
             }
         });
