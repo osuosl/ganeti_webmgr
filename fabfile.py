@@ -1,6 +1,6 @@
 import os
 
-from pkg_resources import parse_requirements
+import pkg_resources
 
 from fabric.api import env
 from fabric.context_managers import settings, hide, lcd
@@ -22,7 +22,7 @@ from fabric.operations import local, require, prompt
 # preference for production environments
 
 PIP_INSTALL = dict((r.project_name, str(r)) for r in
-                   parse_requirements(open("requirements.txt").read()))
+                   pkg_resources.parse_requirements(open("requirements.txt").read()))
 
 GIT_INSTALL =  {
     'ganeti_webmgr_layout':{
