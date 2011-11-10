@@ -178,16 +178,6 @@ def install_dependencies_pip():
     require('environment', provided_by=[dev, prod])
     create_virtualenv()
 
-    # if this is a development install then filter out anything we have a
-    # git repo for.
-    pips_ = PIP_INSTALL.copy()
-    if env.environment == 'development':
-        map(pips_.pop, [k for k in GIT_INSTALL if k in PIP_INSTALL])
-
-    if not pips_:
-        print 'No git repos to install'
-        return
-
     with lcd(env.doc_root):
         # Run the installation with pip, passing in our requirements.txt.
         local('pip install -E %(virtualenv)s -r requirements.txt' % env)
@@ -200,15 +190,12 @@ def install_dependencies_git():
 
     require('environment', provided_by=[dev, prod])
 
-    # if this is a production install then install everything that pip that
-    # can be installed
-    gits_ = GIT_INSTALL.copy()
     if env.environment != 'development':
-        map(gits_.pop, (k for k in PIP_INSTALL if k in GIT_INSTALL))
-
-    if not gits_:
-        print 'No git repos to install'
-        return
+        # If we can satisfy all of our dependencies from pip alone, then don't
+        # bother running the git installation.
+        if all(p in PIP_INSTALL for p in GIT_INSTALL):
+            print 'No git repos to install'
+            return
 
     create_env()
 
