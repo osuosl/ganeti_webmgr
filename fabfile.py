@@ -32,6 +32,7 @@ GIT_INSTALL =  {
         },
     'noVNC':{
         'url':'git://github.com/kanaka/noVNC.git',
+        "checkout": "commit",
         'development':'3859e1d35cf',
         'production':'3859e1d35cf',
         },
@@ -223,8 +224,16 @@ def install_dependencies_git():
             if opts['head'] != 'master':
                 with lcd(name):
                     local('git fetch')
-                    local('git checkout %(head)s' % opts)
-                    with settings(hide('warnings','stderr'), warn_only=True):
+
+                    # If we're supposed to affix ourselves to a certain
+                    # commit, then do so. Otherwise, attempt to create a
+                    # tracked branch and update it.
+                    if opts.get("checkout", "") == "commit":
+                        local("git checkout %(head)s" % opts)
+                    else:
+                        with settings(hide('warnings','stderr'),
+                                      warn_only=True):
+                            local('git checkout -t origin/%(head)s' % opts)
                             local('git pull')
 
         # install to virtualenv using setup.py if it exists.  Some repos might
