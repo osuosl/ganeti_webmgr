@@ -85,30 +85,28 @@ def prod():
     env.environment = 'production'
 
 
-# Files and directories that will be included in tarball when packaged
+# List of stuff to include in the tarball, recursive.
 env.MANIFEST = [
-    "django_test_tools",
+    # Directories
     "deprecated",
+    "django_test_tools",
     "ganeti_web",
-    #"i18n",
     "locale",
-    "media",
-    "templates",
     "twisted",
-    "util",
-    "__init__.py",
+    # Files
     "AUTHORS",
     "CHANGELOG",
     "COPYING",
-    "fabfile.py",
     "LICENSE",
-    "manage.py",
     "README",
+    "UPGRADING",
+    "__init__.py",
+    "fabfile.py",
+    "manage.py",
+    "requirements.txt",
     "search_sites.py",
     "settings.py.dist",
-    "UPGRADING",
     "urls.py",
-    "requirements.txt",
 ]
 
 
