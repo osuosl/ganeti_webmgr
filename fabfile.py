@@ -260,7 +260,7 @@ def tarball():
     Package a release tarball.
     """
 
-    tarball = prompt('tarball name', default='ganeti-webmgr-tar.gz')
+    tarball = prompt('tarball name', default='ganeti-webmgr.tar.gz')
     files = ['ganeti_webmgr/%s' % file for file in env.MANIFEST]
     files = ' '.join(files)
 
@@ -269,5 +269,5 @@ def tarball():
             tarball=tarball,
             files=files
         )
-        local('tar cfz %(tarball)s %(files)s --exclude=*.pyc' % data)
+        local('tar zcf %(tarball)s %(files)s --exclude=*.pyc' % data)
         local('mv %(tarball)s ./ganeti_webmgr/' % data)
