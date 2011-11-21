@@ -128,7 +128,8 @@ class TestUsersViews(TestCase):
         # POST - Superuser
         self.assertTrue(c.login(username=superuser.username, password='sudome'))
         response = c.post(url, data)
-        self.assertRedirects(response, reverse('user-list'))
+        test_user = User.objects.latest('id')
+        self.assertRedirects(response, test_user.get_absolute_url())
         self.assertTrue(User.objects.filter(username=data['username']).exists())
         c.logout()
 
@@ -182,16 +183,15 @@ class TestUsersViews(TestCase):
 
         # POST - Superuser
         self.assertTrue(c.login(username=superuser.username, password='sudome'))
-        response = c.post(url, data, follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'user/list.html')
+        response = c.post(url, data)
         usercheck = User.objects.get(id=test_user.id)
+        self.assertRedirects(response, usercheck.get_absolute_url())
         self.assertEqual(usercheck.email, 'test@example.org')
         self.assertTrue(usercheck.check_password('testpassword'))
 
         data['new_password1'] = 'ahahaha'
         data['new_password2'] = ''
-        response = c.post(url, data, follow=True)
+        response = c.post(url, data)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'user/edit.html')
         usercheck = User.objects.get(id=test_user.id)
@@ -199,7 +199,7 @@ class TestUsersViews(TestCase):
 
         data['new_password1'] = ''
         data['new_password2'] = 'ahahahaha'
-        response = c.post(url, data, follow=True)
+        response = c.post(url, data)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'user/edit.html')
         usercheck = User.objects.get(id=test_user.id)
@@ -207,7 +207,7 @@ class TestUsersViews(TestCase):
 
         data['new_password1'] = 'oeudoeuid'
         data['new_password2'] = 'uidhp'
-        response = c.post(url, data, follow=True)
+        response = c.post(url, data)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'user/edit.html')
         usercheck = User.objects.get(id=test_user.id)
@@ -215,9 +215,8 @@ class TestUsersViews(TestCase):
 
         data['new_password1'] = 'passwordshouldchange'
         data['new_password2'] = 'passwordshouldchange'
-        response = c.post(url, data, follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'user/list.html')
+        response = c.post(url, data)
+        self.assertRedirects(response, test_user.get_absolute_url())
         usercheck = User.objects.get(id=test_user.id)
         self.assertTrue(usercheck.check_password('passwordshouldchange'))
 

@@ -19,7 +19,7 @@ from django import forms
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm, SetPasswordForm
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response
@@ -72,7 +72,7 @@ def user_add(request, template="user/edit.html"):
             new_user.set_password(data['password2'])
             new_user.email=data['email']
             new_user.save()
-            return HttpResponseRedirect(reverse('user-list'))
+            return HttpResponseRedirect(new_user.get_absolute_url())
 
     else:
         form = CustomUserCreationForm()
@@ -85,15 +85,21 @@ def user_add(request, template="user/edit.html"):
 
 
 @login_required
-def user_detail(request, user_id=None, template="users/detail.html"):
+def user_detail(request, username=None, user_id=None, template="user/detail.html"):
     user = request.user
     if not user.is_superuser:
         return render_403(request, _('Only a superuser may view a user.'))
 
-    user = get_object_or_404(User, id=user_id)
+    if username:
+        user = get_object_or_404(User, username=username)
+        user_id = user.id
+    elif user_id:
+        user = get_object_or_404(User, id=user_id)
 
+    groups = Group.objects.filter(user=user_id)
     return render_to_response(template, {
             'user_detail':user,
+            'groups':groups,
         },
         context_instance=RequestContext(request),
     )
@@ -111,7 +117,7 @@ def user_edit(request, user_id=None, template="user/edit.html"):
         form = UserEditForm(data=request.POST, instance=user_edit)
         if form.is_valid():
             form.save()
-            return HttpResponseRedirect(reverse('user-list'))
+            return HttpResponseRedirect(user_edit.get_absolute_url())
 
     elif request.method == "DELETE":
         user_edit.delete()
@@ -238,9 +244,9 @@ class UserProfileForm(forms.Form):
         Overridden to add password change verification
         """
         data = self.cleaned_data
-        old = data.get('old_password', None)
-        new = data.get('new_password', None)
-        confirm = data.get('confirm_password', None)
+        old = data.get('old_password')
+        new = data.get('new_password')
+        confirm = data.get('confirm_password')
 
         if new or confirm:
             if not self.user.check_password(old):

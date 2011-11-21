@@ -1,12 +1,8 @@
-{% load muddle_users %}
 <tr id="group_{{group.id}}" class="group_row">
     <td class="name"><a href="{% url group-detail group.id %}">{{group.name}}</a></td>
     <td>{{ group.user_set.count }}</td>
-    <td>{% number_group_admins group %}</td>
+    {% block table_cells %}{% endblock %}
     <td class="actions">
-        <div class="edit" title="edit"></div>
-    </td>
-    <td class="actions">
-        <div class="delete" title="delete"></div>
+        <a class="delete icon" title="delete" href="{% url group-edit group.id %}"></a>
     </td>
 </tr>

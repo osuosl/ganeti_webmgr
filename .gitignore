@@ -13,3 +13,10 @@ settings.py
 
 # vim swap files
 *.swp
+
+
+#patches
+*.patch
+
+# egg file created by setup.pyy
+*.egg-info

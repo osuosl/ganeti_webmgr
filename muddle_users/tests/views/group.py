@@ -1,10 +1,8 @@
 from django.conf import settings
 from django.contrib.auth.models import User, Group
-from django.core.urlresolvers import reverse
 from django.test import TestCase, Client
 from object_permissions.registration import grant, revoke
 from muddle_users.signals import view_remove_user, view_group_edited, view_group_created, view_group_deleted, view_add_user
-from muddle_users.templatetags.muddle_users import number_group_admins
 
 global user0, user1
 
@@ -37,27 +35,6 @@ class TestGroupViews(TestCase):
         group.save()
         return group
 
-    def test_number_of_group_admins(self):
-        """
-        Test template tag used in list of Groups view
-        """
-
-        group0 = self.test_save(name='group1')
-        group1 = self.test_save(name='group2')
-
-        group0.user_set.add(user0)
-        group0.user_set.add(user1)
-        user0.grant("admin", group0)
-        group1.user_set.add(user0)
-        group1.user_set.add(user1)
-
-        self.assertEqual(number_group_admins(group0), 1)
-        self.assertEqual(number_group_admins(group1), 0)
-        user1.grant("admin", group1)
-        self.assertEqual(number_group_admins(group1), 1)
-        user1.grant("admin", group0)
-        self.assertEqual(number_group_admins(group0), 2)
-
     def test_view_list(self):
         """
         Test viewing list of Groups
@@ -75,7 +52,7 @@ class TestGroupViews(TestCase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user (user with admin on no groups)
-        self.assert_(c.login(username=user0.username, password='secret'))
+        self.assertTrue(c.login(username=user0.username, password='secret'))
         response = c.get(url)
         self.assertEqual(403, response.status_code)
 
@@ -87,8 +64,8 @@ class TestGroupViews(TestCase):
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'group/list.html')
         groups = response.context['groups']
-        self.assert_(group in groups)
-        self.assert_(group1 in groups)
+        self.assertTrue(group in groups)
+        self.assertTrue(group1 in groups)
         self.assertEqual(2, len(groups))
 
         # authorized (superuser)
@@ -101,10 +78,10 @@ class TestGroupViews(TestCase):
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'group/list.html')
         groups = response.context['groups']
-        self.assert_(group in groups)
-        self.assert_(group0 in groups)
-        self.assert_(group1 in groups)
-        self.assert_(group2 in groups)
+        self.assertTrue(group in groups)
+        self.assertTrue(group0 in groups)
+        self.assertTrue(group1 in groups)
+        self.assertTrue(group2 in groups)
         self.assertEqual(4, len(groups))
 
     def test_view_detail(self):
@@ -126,7 +103,7 @@ class TestGroupViews(TestCase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assert_(c.login(username=user0.username, password='secret'))
+        self.assertTrue(c.login(username=user0.username, password='secret'))
         response = c.get(url % args)
         self.assertEqual(403, response.status_code)
 
@@ -139,18 +116,18 @@ class TestGroupViews(TestCase):
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'object_permissions/group/detail.html')
+        self.assertTemplateUsed(response, 'group/detail.html')
 
         # authorized (superuser)
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'object_permissions/group/detail.html')
+        self.assertTemplateUsed(response, 'group/detail.html')
 
     def test_view_edit(self):
         group = self.test_save()
         c = Client()
-        url = '/group/%s/'
+        url = '/group/%s/edit/'
 
         # anonymous user
         response = c.post(url % group.id, follow=True)
@@ -158,7 +135,7 @@ class TestGroupViews(TestCase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assert_(c.login(username=user0.username, password='secret'))
+        self.assertTrue(c.login(username=user0.username, password='secret'))
         response = c.post(url % group.id)
         self.assertEqual(403, response.status_code)
 
@@ -194,7 +171,7 @@ class TestGroupViews(TestCase):
         data = {'id':group.id}
         response = c.post(url % group.id, data)
         self.assertEqual(200, response.status_code)
-        self.assertEquals('application/json', response['content-type'])
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
 
         # setup signal
         self.signal_editor = self.signal_group = None
@@ -207,9 +184,7 @@ class TestGroupViews(TestCase):
         data = {'id':group.id, 'name':'EDITED_NAME'}
 
         response = c.post(url % group.id, data)
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'object_permissions/group/group_row.html')
+        self.assertRedirects(response, '/group/%s' % group.pk)
         group = Group.objects.get(id=group.id)
         self.assertEqual('EDITED_NAME', group.name)
 
@@ -223,7 +198,7 @@ class TestGroupViews(TestCase):
         """
         group = self.test_save()
         c = Client()
-        url = '/group/'
+        url = '/group/add/'
 
         # anonymous user
         response = c.post(url, follow=True)
@@ -231,7 +206,7 @@ class TestGroupViews(TestCase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assert_(c.login(username=user0.username, password='secret'))
+        self.assertTrue(c.login(username=user0.username, password='secret'))
         response = c.post(url)
         self.assertEqual(403, response.status_code)
 
@@ -255,7 +230,8 @@ class TestGroupViews(TestCase):
         # missing name
         response = c.post(url, {'name':''})
         self.assertEqual(200, response.status_code)
-        self.assertEquals('application/json', response['content-type'])
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'group/edit.html')
 
         # setup signal
         self.signal_editor = self.signal_group = None
@@ -266,14 +242,14 @@ class TestGroupViews(TestCase):
 
         # successful edit
         data = {'name':'ADD_NEW_GROUP'}
-        response = c.post(url, data, follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'object_permissions/group/group_row.html')
-        self.assert_(Group.objects.filter(name='ADD_NEW_GROUP').exists())
+        response = c.post(url, data)
+        group = Group.objects.get(name='ADD_NEW_GROUP')
+        self.assertRedirects(response, '/group/%s' % group.pk)
+
+        self.assertTrue(Group.objects.filter(name='ADD_NEW_GROUP').exists())
 
         # check signal set properties
-        self.assertEqual(Group.objects.get(name='ADD_NEW_GROUP'), self.signal_group)
+        self.assertEqual(group, self.signal_group)
         self.assertEqual(user0, self.signal_user)
 
     def test_view_delete(self):
@@ -287,7 +263,7 @@ class TestGroupViews(TestCase):
         group0 = self.test_save()
         group1 = self.test_save(name='test2')
         c = Client()
-        url = '/group/%s/'
+        url = '/group/%s/edit/'
 
         # anonymous user
         response = c.delete(url % group0.id, follow=True)
@@ -295,7 +271,7 @@ class TestGroupViews(TestCase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assert_(c.login(username=user0.username, password='secret'))
+        self.assertTrue(c.login(username=user0.username, password='secret'))
         response = c.delete(url % group0.id)
         self.assertEqual(403, response.status_code)
 
@@ -354,7 +330,7 @@ class TestGroupViews(TestCase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized
-        self.assert_(c.login(username=user0.username, password='secret'))
+        self.assertTrue(c.login(username=user0.username, password='secret'))
         response = c.get(url % args)
         self.assertEqual(403, response.status_code)
         response = c.post(url % args)
@@ -399,8 +375,8 @@ class TestGroupViews(TestCase):
         response = c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'object_permissions/permissions/user_row.html')
-        self.assert_(group.user_set.filter(id=user0.id).exists())
+        self.assertTemplateUsed(response, 'muddle/group/user_row.html')
+        self.assertTrue(group.user_set.filter(id=user0.id).exists())
 
         # check signal fired
         self.assertEqual(self.signal_sender, user0)
@@ -439,7 +415,7 @@ class TestGroupViews(TestCase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # invalid permissions
-        self.assert_(c.login(username=user0.username, password='secret'))
+        self.assertTrue(c.login(username=user0.username, password='secret'))
         response = c.get(url % args)
         self.assertEqual(403, response.status_code)
         response = c.post(url % args)
