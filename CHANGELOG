@@ -2,6 +2,16 @@
 Changelog
 ==================
 
+v0.8
+----
+
+Notable Changes:
+  * VM Templates
+  * Multiple Disks and Nics for VM Creation
+  * 'No Install' option for VM Creation
+  * cdrom2_image_path
+  * User auto-complete anytime a username is needed
+  * Rework and stabilisation of Jobs
 
 v0.7.2
 ----
