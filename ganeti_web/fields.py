@@ -26,6 +26,8 @@ from django.db import models
 from django.forms.fields import CharField
 from django.utils.translation import ugettext as _
 
+from south.modelsinspector import add_introspection_rules
+
 
 class PreciseDateTimeField(DecimalField):
     """
@@ -106,6 +108,11 @@ class PreciseDateTimeField(DecimalField):
             return 'character'
 
 
+# Migration rules for PDTField. PDTField's serialization is surprisingly
+# straightforward and doesn't need any help here.
+add_introspection_rules([], ["^ganeti_web\.fields\.PreciseDateTimeField"])
+
+
 class DataVolumeField(CharField):
     min_value = None
     max_value = None
@@ -169,6 +176,11 @@ class DataVolumeField(CharField):
         return intvalue
 
 
+# Migration rules for DVField. DVField doesn't do anything fancy, so the
+# default rules will work.
+add_introspection_rules([], ["^ganeti_web\.fields\.DataVolumeField"])
+
+
 class MACAddressField(CharField):
     """
     Form field that validates MAC Addresses.  Is a simple extension over a
@@ -190,9 +202,9 @@ class MACAddressField(CharField):
             raise ValidationError(_('Invalid MAC Address'))
 
 
-# Field rule used by South for database migrations
-from south.modelsinspector import add_introspection_rules
-add_introspection_rules([], ["^ganeti_web\.fields\.PreciseDateTimeField"])
+# Migration rules for MAField. MAField doesn't do anything fancy, so the
+# default rules will work.
+add_introspection_rules([], ["^ganeti_web\.fields\.MACAddressField"])
 
 
 class SQLSumIf(models.sql.aggregates.Aggregate):
@@ -209,4 +221,4 @@ class SumIf(models.Aggregate):
 
     def add_to_query(self, query, alias, col, source, is_summary):
         aggregate = SQLSumIf(col, source=source, is_summary=is_summary, **self.extra)
-        query.aggregates[alias] = aggregate 
+        query.aggregates[alias] = aggregate
