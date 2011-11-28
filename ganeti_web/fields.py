@@ -79,7 +79,7 @@ class PreciseDateTimeField(DecimalField):
         
         raise ValidationError(_('Unable to convert %s to datetime.') % value)
 
-    def get_db_prep_value(self, value, **kwargs):
+    def get_db_prep_value(self, value, connection, prepared=False):
         if value:
             return time.mktime(value.timetuple()) + value.microsecond/(10**self.decimal_places)
         return None
