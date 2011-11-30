@@ -1007,16 +1007,27 @@ class Cluster(CachedClusterObject):
     @classmethod
     def decrypt_password(cls, value):
         """
-        Convenience method for decrypted a password without an instance.
+        Convenience method for decrypting a password without an instance.
         This was partly cribbed from django-fields which only allows decrypting
         from a model instance.
+
+        If the password appears to be encrypted, this method will decrypt it;
+        otherwise, it will return the password unchanged.
+
+        This method is bonghits.
         """
-        field, chaff, chaff, chaff = Cluster._meta.get_field_by_name('password')
-        return force_unicode(
-            field.cipher.decrypt(
-                binascii.a2b_hex(value[len(field.prefix):])
-            ).split('\0')[0]
-        )
+
+        field, chaff, chaff, chaff = cls._meta.get_field_by_name('password')
+        prefix = field.prefix
+
+        if value.startswith(field.prefix):
+            ciphertext = value[len(field.prefix):]
+            plaintext = field.cipher.decrypt(binascii.a2b_hex(ciphertext))
+            password = plaintext.split('\0')[0]
+        else:
+            password = value
+
+        return force_unicode(password)
 
     def save(self, *args, **kwargs):
         self.hash = self.create_hash()
