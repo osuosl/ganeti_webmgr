@@ -23,6 +23,7 @@ import cPickle
 from datetime import datetime, timedelta
 from hashlib import sha1
 import re
+import sys
 
 from django.conf import settings
 
@@ -58,6 +59,8 @@ from ganeti_web.fields import PreciseDateTimeField, SumIf
 from ganeti_web import permissions
 from ganeti_web.util import client
 from ganeti_web.util.client import GanetiApiError, REPLACE_DISK_AUTO
+
+from south.signals import post_migrate
 
 if settings.VNC_PROXY:
     from ganeti_web.util.vncdaemon.vapclient import request_forwarding
@@ -1751,6 +1754,54 @@ def log_group_edit(sender, editor, **kwargs):
 muddle_user_signals.view_group_created.connect(log_group_create)
 muddle_user_signals.view_group_edited.connect(log_group_edit)
 
+def refresh_objects(sender, **kwargs):
+    """
+    This was originally the code in the 0009
+    and then 0010 'force_object_refresh' migration
+
+    Force a refresh of all Cluster, Nodes, and VirtualMachines, and
+    import any new Nodes.
+    """
+
+    if kwargs.get('app', False) and kwargs['app'] == 'ganeti_web':
+        Cluster.objects.all().update(mtime=None)
+        Node.objects.all().update(mtime=None)
+        VirtualMachine.objects.all().update(mtime=None)
+
+        write = sys.stdout.write
+        flush = sys.stdout.flush
+        def wf(str, newline=False):
+            if newline:
+                write('\n')
+            write(str)
+            flush()
+
+        wf('- Refresh Cached Cluster Objects')
+        wf(' > Synchronizing Cluster Nodes', True)
+        flush()
+        for cluster in Cluster.objects.all().iterator():
+            try:
+                cluster.sync_nodes()
+                wf('.')
+            except GanetiApiError:
+                wf('E')
+
+        wf(' > Refreshing Node Caches', True)
+        for node in Node.objects.all().iterator():
+            wf('.')
+
+
+        wf(' > Refreshing Instance Caches', True)
+        for instance in VirtualMachine.objects.all().iterator():
+            try:
+                wf('.')
+            except Exception, e:
+                wf('E')
+        wf('\n')
+
+
+# Set this as post_migrate hook.
+post_migrate.connect(refresh_objects)
 
 # Register permissions on our models.
 # These are part of the DB schema and should not be changed without serious
