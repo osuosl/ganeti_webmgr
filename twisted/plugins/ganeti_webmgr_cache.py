@@ -23,11 +23,10 @@ class CacheUpdaterServiceMaker(object):
         """
         Setup django environment and start cache service
         """
+        # Make sure ganeti_webmgr settings are being used.
+        #  This ensures installed apps are properly imported.
         if not os.environ.has_key('DJANGO_SETTINGS_MODULE'):
-            sys.path.insert(0, os.getcwd())
-            from django.core.management import setup_environ
-            import settings
-            setup_environ(settings)
+            os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 
         from ganeti_web.cache.service import CacheService
         return CacheService()
