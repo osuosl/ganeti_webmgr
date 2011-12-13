@@ -29,7 +29,6 @@ from django.http import HttpResponse, HttpResponseRedirect, \
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.conf import settings
-from tastypie.http import HttpAccepted
 
 from object_log.views import list_for_object
 
@@ -53,6 +52,17 @@ from ganeti_web.utilities import cluster_default_info, cluster_os_list, \
     compare, os_prettify, get_hypervisor
 from django.utils.translation import ugettext as _
 
+
+
+#XXX No more need for tastypie dependency for 0.8
+class HttpAccepted(HttpResponse):
+    """
+    Take from tastypie.http
+
+    In 0.9 when we reorganize the RestAPI, change this back
+     to an import.
+    """
+    status_code = 202
 
 def get_vm_and_cluster_or_404(cluster_slug, instance):
     """
@@ -407,7 +417,7 @@ def reboot(request, cluster_slug, instance, rest=False):
         if not rest:
             return HttpResponse(json.dumps(msg), mimetype='application/json')
         else:
-            return HttpAccepted
+            return HttpAccepted()
     return HttpResponseNotAllowed(['POST'])
 
 
@@ -1151,7 +1161,7 @@ def rename(request, cluster_slug, instance, rest=False, extracted_params=None):
                     return HttpResponseRedirect(
                     reverse('instance-detail', args=[cluster.slug, hostname]))
                 else:
-                    return HttpAccepted
+                    return HttpAccepted()
 
             except GanetiApiError, e:
                 msg = 'Error renaming virtual machine: %s' % e
