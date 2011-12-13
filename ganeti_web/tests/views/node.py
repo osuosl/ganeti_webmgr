@@ -24,21 +24,14 @@ from django_test_tools.users import UserTestMixin
 from django_test_tools.views import ViewTestMixin
 from ganeti_web.tests.models.node import NodeTestCaseMixin
 
-from ganeti_web.tests.rapi_proxy import RapiProxy, NODE
+from ganeti_web.tests.rapi_proxy import RapiProxy
 from ganeti_web import models
 from ganeti_web.util.client import GanetiApiError
 
 from ganeti_web.views import node as view_node
 
-VirtualMachine = models.VirtualMachine
-Cluster = models.Cluster
-Node = models.Node
-
 
 __all__ = ['TestNodeViews']
-
-global user_admin, user_migrate, superuser
-global cluster, node
 
 def cluster_default_info_proxy(cluster):
     return {
@@ -53,147 +46,201 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
     def setUp(self):
         models.client.GanetiRapiClient = RapiProxy
 
-        node, cluster = self.create_node()
-        node2, cluster = self.create_node(cluster, 'node2.osuosl.bak')
+        self.node, cluster = self.create_node()
+        self.node2, self.cluster = self.create_node(cluster, 'node2.osuosl.bak')
 
-        d = globals()
-        d['cluster'] = cluster
-        d['node'] = node
+        context = {"cluster": self.cluster, "node": self.node}
 
-        self.create_standard_users(d)
-        self.create_users(['user_migrate', 'user_admin'], d)
+        self.create_standard_users(context)
+        self.create_users(['user_migrate', 'user_admin'], context)
 
-        user_migrate.grant('migrate', cluster)
-        user_admin.grant('admin', cluster)
+        self.user_migrate.grant('migrate', cluster)
+        self.user_admin.grant('admin', cluster)
 
     def tearDown(self):
-        VirtualMachine.objects.all().delete()
-        Node.objects.all().delete()
-        Cluster.objects.all().delete()
+        models.VirtualMachine.objects.all().delete()
+        models.Node.objects.all().delete()
+        models.Cluster.objects.all().delete()
         User.objects.all().delete()
 
+    def test_trivial(self):
+        pass
+
     def test_detail(self):
-        args = (cluster.slug, node.hostname)
+        args = (self.cluster.slug, self.node.hostname)
         url = '/cluster/%s/node/%s/'
-        users = [superuser, user_migrate, user_admin]
+        users = [self.superuser, self.user_migrate, self.user_admin]
         self.assert_standard_fails(url, args, authorized=False)
         self.assert_200(url, args, users, 'ganeti/node/detail.html')
 
     def test_primary_vms(self):
-        args = (cluster.slug, node.hostname)
+        args = (self.cluster.slug, self.node.hostname)
         url = '/cluster/%s/node/%s/primary'
-        users = [superuser, user_migrate, user_admin]
+        users = [self.superuser, self.user_migrate, self.user_admin]
         self.assert_standard_fails(url, args)
         self.assert_200(url, args, users, 'ganeti/virtual_machine/table.html')
 
     def test_secondary_vms(self):
-        args = (cluster.slug, node.hostname)
+        args = (self.cluster.slug, self.node.hostname)
         url = '/cluster/%s/node/%s/secondary'
-        users = [superuser, user_migrate, user_admin]
+        users = [self.superuser, self.user_migrate, self.user_admin]
         self.assert_standard_fails(url, args)
         self.assert_200(url, args, users, 'ganeti/virtual_machine/table.html')
 
     def test_object_log(self):
-        args = (cluster.slug, node.hostname)
+        args = (self.cluster.slug, self.node.hostname)
         url = '/cluster/%s/node/%s/object_log'
-        users = [superuser, user_migrate, user_admin]
+        users = [self.superuser, self.user_migrate, self.user_admin]
         self.assert_standard_fails(url, args)
         self.assert_200(url, args, users)
 
     def test_role(self):
-        args = (cluster.slug, node.hostname)
+        args = (self.cluster.slug, self.node.hostname)
         url = '/cluster/%s/node/%s/role'
-        users = [superuser, user_migrate, user_admin]
+        users = [self.superuser, self.user_migrate, self.user_admin]
         self.assert_standard_fails(url, args)
         self.assert_200(url, args, users, 'ganeti/node/role.html')
 
-        # test posts
+    def test_role_post(self):
+        args = (self.cluster.slug, self.node.hostname)
+        url = '/cluster/%s/node/%s/role'
+        users = [self.superuser, self.user_migrate, self.user_admin]
+
         def test(user, response):
             data = json.loads(response.content)
             self.assertTrue('opstatus' in data)
         data = {'role':'master-candidate'}
-        self.assert_200(url, args, users, method='post', data=data, mime='application/json', tests=test)
+        self.assert_200(url, args, users, method='post', data=data,
+                        mime='application/json', tests=test)
 
-        #test form error
+    def test_role_error_form(self):
+        args = (self.cluster.slug, self.node.hostname)
+        url = '/cluster/%s/node/%s/role'
+
         def test(user, response):
             data = json.loads(response.content)
             self.assertFalse('opstatus' in data)
-        self.assert_200(url, args, [superuser], method='post', \
-                mime='application/json', data={}, tests=test)
+        self.assert_200(url, args, [self.superuser], method='post',
+                        mime='application/json', data={}, tests=test)
 
-        #test ganeti error
+    def test_role_error_ganeti(self):
+        args = (self.cluster.slug, self.node.hostname)
+        url = '/cluster/%s/node/%s/role'
+
         def test(user, response):
             data = json.loads(response.content)
             self.assertFalse('opstatus' in data)
-        node.rapi.SetNodeRole.error = GanetiApiError("Testing Error")
-        self.assert_200(url, args, [superuser], method='post', mime='application/json', data=data, tests=test)
-        node.rapi.SetNodeRole.error = None
+        data = {'role':'master-candidate'}
+        self.node.rapi.SetNodeRole.error = GanetiApiError("Testing Error")
+        self.assert_200(url, args, [self.superuser], method='post',
+                        mime='application/json', data=data, tests=test)
+        self.node.rapi.SetNodeRole.error = None
 
     def test_migrate(self):
-        args = (cluster.slug, node.hostname)
+        args = (self.cluster.slug, self.node.hostname)
         url = '/cluster/%s/node/%s/migrate'
-        users = [superuser, user_migrate, user_admin]
+        users = [self.superuser, self.user_migrate, self.user_admin]
         self.assert_standard_fails(url, args)
         self.assert_200(url, args, users, 'ganeti/node/migrate.html')
 
-        #test posts
+    def test_migrate_post(self):
+        args = (self.cluster.slug, self.node.hostname)
+        url = '/cluster/%s/node/%s/migrate'
+        users = [self.superuser, self.user_migrate, self.user_admin]
+
         def test(user, response):
             data = json.loads(response.content)
             self.assertTrue('opstatus' in data)
-        data = {'mode':'live'}
-        self.assert_200(url, args, users, method='post', data=data, mime='application/json', tests=test)
+        data = {'mode': 'live'}
+        self.assert_200(url, args, users, method='post', data=data,
+                        mime='application/json', tests=test)
 
-        #test form error
+    def test_migrate_error_form(self):
+        args = (self.cluster.slug, self.node.hostname)
+        url = '/cluster/%s/node/%s/migrate'
+
         def test(user, response):
             data = json.loads(response.content)
             self.assertFalse('opstatus' in data)
-        self.assert_200(url, args, [superuser], method='post', \
-                mime='application/json', data={}, tests=test)
+        self.assert_200(url, args, [self.superuser], method='post',
+                        mime='application/json', data={}, tests=test)
 
-        #test ganeti error
+    def test_migrate_error_ganeti(self):
+        args = (self.cluster.slug, self.node.hostname)
+        url = '/cluster/%s/node/%s/migrate'
+
         def test(user, response):
             data = json.loads(response.content)
             self.assertFalse('opstatus' in data)
-        node.rapi.MigrateNode.error = GanetiApiError("Testing Error")
-        self.assert_200(url, args, [superuser], method='post', mime='application/json', data=data, tests=test)
-        node.rapi.MigrateNode.error = None
+        data = {'mode': 'live'}
+        self.node.rapi.MigrateNode.error = GanetiApiError("Testing Error")
+        self.assert_200(url, args, [self.superuser], method='post',
+                        mime='application/json', data=data, tests=test)
+        self.node.rapi.MigrateNode.error = None
 
     def test_evacuate(self):
-        args = (cluster.slug, node.hostname)
+        args = (self.cluster.slug, self.node.hostname)
         url = '/cluster/%s/node/%s/evacuate'
-        users = [superuser, user_migrate, user_admin]
+        users = [self.superuser, self.user_migrate, self.user_admin]
 
         self.assert_standard_fails(url, args, method='post')
         self.assert_200(url, args, users, template='ganeti/node/evacuate.html')
 
-        # Test iallocator
-        data = {'iallocator':True, 'iallocator_hostname':'foo', 'node':''}
+    def test_evacuate_iallocator(self):
+        args = (self.cluster.slug, self.node.hostname)
+        url = '/cluster/%s/node/%s/evacuate'
+        users = [self.superuser, self.user_migrate, self.user_admin]
+
+        data = {'iallocator': True, 'iallocator_hostname': 'foo', 'node': ''}
         def tests(user, response):
             data = json.loads(response.content)
             self.assertTrue('status' in data, data)
             self.assertEqual('1', data['id'], data)
-        self.assert_200(url, args, users, method='post', data=data, \
-            tests=tests, mime="application/json")
+        self.assert_200(url, args, users, method='post', data=data,
+                        tests=tests, mime="application/json")
 
-        # Test node selection
-        data = {'iallocator':False, 'iallocator_hostname':'foo', 'node':'node2.osuosl.bak'}
-        self.assert_200(url, args, users, method='post', data=data, \
-            tests=tests, mime="application/json")
+    def test_evacuate_select_node(self):
+        args = (self.cluster.slug, self.node.hostname)
+        url = '/cluster/%s/node/%s/evacuate'
+        users = [self.superuser, self.user_migrate, self.user_admin]
 
-        # Test form errors
+        data = {'iallocator': False, 'iallocator_hostname': 'foo',
+                'node': 'node2.osuosl.bak'}
+        def tests(user, response):
+            data = json.loads(response.content)
+            self.assertTrue('status' in data, data)
+            self.assertEqual('1', data['id'], data)
+        self.assert_200(url, args, users, method='post', data=data,
+                        tests=tests, mime="application/json")
+
+    def test_evacuate_error_form(self):
+        args = (self.cluster.slug, self.node.hostname)
+        url = '/cluster/%s/node/%s/evacuate'
+
         def test(user, response):
             data = json.loads(response.content)
             self.assertFalse('status' in data, data)
+        data = {'iallocator': False, 'iallocator_hostname': 'foo',
+                'node': 'node2.osuosl.bak'}
 
         errors = [
-            {'iallocator':False, 'iallocator_hostname':'foo', 'node':''} # must choose iallocator or a node
+            # must choose iallocator or a node
+            # XXX what does that even mean?
+            {'iallocator': False, 'iallocator_hostname': 'foo', 'node': ''}
         ]
-        self.assert_view_values(url, args, data, errors, mime='application/json', tests=test)
+        self.assert_view_values(url, args, data, errors,
+                                mime='application/json', tests=test)
 
-        # Test GanetiError
+    def test_evacuate_error_ganeti(self):
+        args = (self.cluster.slug, self.node.hostname)
+        url = '/cluster/%s/node/%s/evacuate'
+
         def test(user, response):
             data = json.loads(response.content)
             self.assertFalse('opstatus' in data)
-        node.rapi.EvacuateNode.error = GanetiApiError("Testing Error")
-        self.assert_200(url, args, [superuser], data=data, method='post', mime='application/json', tests=test)
-        node.rapi.EvacuateNode.error = None
+        data = {'iallocator': False, 'iallocator_hostname': 'foo',
+                'node': 'node2.osuosl.bak'}
+        self.node.rapi.EvacuateNode.error = GanetiApiError("Testing Error")
+        self.assert_200(url, args, [self.superuser], data=data, method='post',
+                        mime='application/json', tests=test)
+        self.node.rapi.EvacuateNode.error = None
