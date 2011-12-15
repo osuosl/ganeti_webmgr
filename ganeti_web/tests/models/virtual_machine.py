@@ -19,7 +19,6 @@
 from datetime import datetime
 
 from django.contrib.auth.models import User, Group
-from django.db.utils import IntegrityError
 from django.test import TestCase
 
 from ganeti_web.tests.rapi_proxy import (RapiProxy, INSTANCE, JOB, JOB_RUNNING,
