@@ -36,16 +36,13 @@ Job = models.Job
 class TestJobMixin(VirtualMachineTestCaseMixin):
 
     def setUp(self):
-        self.tearDown()
-
         models.client.GanetiRapiClient = RapiProxy
 
         self.vm, self.cluster = self.create_virtual_machine()
 
     def tearDown(self):
-        VirtualMachine.objects.all().delete()
-        Cluster.objects.all().delete()
-        Job.objects.all().delete()
+        self.vm.delete()
+        self.cluster.delete()
 
     def test_trivial(self):
         """
