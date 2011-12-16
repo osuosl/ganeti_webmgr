@@ -20,7 +20,6 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.test.client import Client
 
-
 from ganeti_web.models import Profile
 
 
@@ -29,18 +28,11 @@ __all__ = ('TestProfileModel', 'TestAccountViews',)
 
 class TestProfileModel(TestCase):
 
-    def tearDown(self):
-        Profile.objects.all().delete()
-        User.objects.all().delete()
-
-    def test_trivial(self):
-        """ Tests that object can be created """
-        Profile()
-
     def test_signal_listeners(self):
         """
-        Test automatic creation and deletion of profile objects
+        Test automatic creation and deletion of profile objects.
         """
+
         user = User(username='tester')
         user.save()
 
@@ -65,9 +57,6 @@ class TestAccountViews(TestCase):
 
     def tearDown(self):
         self.user.delete()
-
-        Profile.objects.all().delete()
-        User.objects.all().delete()
 
     def test_view_login_anonymous(self):
         """
