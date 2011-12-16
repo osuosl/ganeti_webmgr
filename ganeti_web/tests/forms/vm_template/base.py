@@ -6,8 +6,7 @@ from django_test_tools.users import UserTestMixin
 from ganeti_web.models import VirtualMachineTemplate
 from ganeti_web import models
 from ganeti_web.models import Cluster
-from ganeti_web.forms.vm_template import VirtualMachineTemplateForm
-from ganeti_web.tests.rapi_proxy import RapiProxy, INFO
+from ganeti_web.tests.rapi_proxy import RapiProxy
 
 
 class TemplateTestCase(TestCase, UserTestMixin):
@@ -15,7 +14,8 @@ class TemplateTestCase(TestCase, UserTestMixin):
         models.client.GanetiRapiClient = RapiProxy
 
         # Cluster
-        cluster = Cluster(hostname='test.cluster.gwm', slug='test', username='foo', password='bar')
+        cluster = Cluster(hostname='test.cluster.gwm', slug='test',
+                          username='foo', password='bar')
         #cluster.info = INFO
         cluster.save()
 
@@ -40,7 +40,7 @@ class TemplateTestCase(TestCase, UserTestMixin):
             nic_count=0,
             boot_order='disk',
             os='image+ubuntu-lucid',
-         )   
+         )
         data = template_data.copy()
         data['cluster'] = cluster
         del data['disk_count']
@@ -52,9 +52,9 @@ class TemplateTestCase(TestCase, UserTestMixin):
         fields = vars(template).keys()
 
         # Users
-        users = {} 
+        users = {}
         self.create_users([
-            ('superuser', {'is_superuser':True}), 
+            ('superuser', {'is_superuser':True}),
             'cluster_admin',
             ], users)
         users['cluster_admin'].grant('admin', cluster)
@@ -64,8 +64,8 @@ class TemplateTestCase(TestCase, UserTestMixin):
         self.cluster = cluster
         self.template_data = template_data
         self.template_fields = fields
-        
-    
+
+
     def tearDown(self):
         User.objects.all().delete()
         Cluster.objects.all().delete()
