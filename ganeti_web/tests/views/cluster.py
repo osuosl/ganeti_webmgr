@@ -38,7 +38,7 @@ Quota = models.Quota
 Job = models.Job
 
 
-__all__ = ['TestClusterViews']
+__all__ = ['TestClusterViews', "TestClusterQuotaViews"]
 
 
 class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
@@ -117,128 +117,6 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, template)
-
-    def validate_quota(self, cluster_user, template):
-        """
-        Generic tests for validating quota views
-
-        Verifies:
-            * lack of permissions returns 403
-            * nonexistent cluster returns 404
-            * invalid user returns 404
-            * missing user returns error as json
-            * GET returns html for form
-            * successful POST returns html for user row
-            * successful DELETE removes user quota
-        """
-        default_quota = {'default':1, 'ram':1, 'virtual_cpus':None, 'disk':3}
-        user_quota = {'default':0, 'ram':4, 'virtual_cpus':5, 'disk':None}
-        user_unlimited = {'default':0, 'ram':None, 'virtual_cpus':None, 'disk':None}
-        self.cluster.__dict__.update(default_quota)
-        self.cluster.save()
-
-        args = (self.cluster.slug, cluster_user.id)
-        args_post = self.cluster.slug
-        url = '/cluster/%s/quota/%s'
-        url_post = '/cluster/%s/quota/'
-
-        # anonymous user
-        response = self.c.get(url % args, follow=True)
-        self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'registration/login.html')
-
-        # unauthorized user
-        self.assertTrue(self.c.login(username=self.user.username,
-                                     password='secret'))
-        response = self.c.get(url % args)
-        self.assertEqual(403, response.status_code)
-
-        # nonexisent cluster
-        response = self.c.get("/cluster/%s/user/quota/?user=%s" %
-                         ("DOES_NOT_EXIST", self.user1.id))
-        self.assertEqual(404, response.status_code)
-
-        # valid GET authorized user (perm)
-        self.user.grant('admin', self.cluster)
-        response = self.c.get(url % args)
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'ganeti/cluster/quota.html')
-        self.user.revoke('admin', self.cluster)
-
-        # valid GET authorized user (superuser)
-        self.user.is_superuser = True
-        self.user.save()
-        response = self.c.get(url % args)
-        self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'ganeti/cluster/quota.html')
-
-        # invalid user
-        response = self.c.get(url % (self.cluster.slug, 0))
-        self.assertEqual(404, response.status_code)
-
-        # no user (GET)
-        response = self.c.get(url_post % args_post)
-        self.assertEqual(404, response.status_code)
-
-        # no user (POST)
-        data = {'ram':'', 'virtual_cpus':'', 'disk':''}
-        response = self.c.post(url_post % args_post, data)
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('application/json', response['content-type'])
-
-        # valid POST - setting unlimited values (nones)
-        data = {'user':cluster_user.id, 'ram':'', 'virtual_cpus':'', 'disk':''}
-        response = self.c.post(url_post % args_post, data)
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, template)
-        self.assertEqual(user_unlimited, self.cluster.get_quota(cluster_user))
-        query = Quota.objects.filter(cluster=self.cluster, user=cluster_user)
-        self.assertTrue(query.exists())
-
-        # valid POST - setting values
-        data = {'user':cluster_user.id, 'ram':4, 'virtual_cpus':5, 'disk':''}
-        response = self.c.post(url_post % args_post, data)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, template)
-        self.assertEqual(user_quota, self.cluster.get_quota(cluster_user))
-        self.assertTrue(query.exists())
-
-        # valid POST - same as default values (should delete)
-        data = {'user':cluster_user.id, 'ram':1, 'disk':3}
-        response = self.c.post(url_post % args_post, data)
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, template)
-        self.assertEqual(default_quota, self.cluster.get_quota(cluster_user))
-        self.assertFalse(query.exists())
-
-        # valid POST - same as default values (should do nothing)
-        data = {'user':cluster_user.id, 'ram':1, 'disk':3}
-        response = self.c.post(url_post % args_post, data)
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, template)
-        self.assertEqual(default_quota, self.cluster.get_quota(cluster_user))
-        self.assertFalse(query.exists())
-
-        # valid POST - setting implicit unlimited (values are excluded)
-        data = {'user':cluster_user.id}
-        response = self.c.post(url_post % args_post, data)
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, template)
-        self.assertEqual(user_unlimited, self.cluster.get_quota(cluster_user))
-        self.assertTrue(query.exists())
-
-        # valid DELETE - returns to default values
-        data = {'user':cluster_user.id, 'delete':True}
-        response = self.c.post(url_post % args_post, data)
-        self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, template)
-        self.assertEqual(default_quota, self.cluster.get_quota(cluster_user))
-        self.assertFalse(query.exists())
 
     def test_trivial(self):
         """
@@ -950,20 +828,6 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
                          self.cluster.get_quota(self.group.organization)['default'])
         self.assertFalse(self.group.organization.quotas.all().exists())
 
-    def test_view_user_quota(self):
-        """
-        Tests updating users quota
-        """
-        self.validate_quota(self.user1.get_profile(),
-                            template='ganeti/cluster/user_row.html')
-
-    def test_view_group_quota(self):
-        """
-        Tests updating a Group's quota
-        """
-        self.validate_quota(self.group.organization,
-                            template='ganeti/cluster/group_row.html')
-
     def test_sync_virtual_machines_in_edit_view(self):
         """
         Test if sync_virtual_machines is run after editing a cluster
@@ -1082,3 +946,218 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertEquals('application/json', response['content-type'])
         self.assertTrue('status' in response.content)
         self.assertTrue(Cluster.objects.filter(id=self.cluster.id).exists())
+
+class TestClusterQuotaViews(TestCase, ViewTestMixin, UserTestMixin):
+    """
+    Test quota views on clusters.
+    """
+
+    def setUp(self):
+        models.client.GanetiRapiClient = RapiProxy
+
+        self.anonymous = User(id=1, username='anonymous')
+        self.anonymous.save()
+        settings.ANONYMOUS_USER_ID = self.anonymous.id
+
+        user = User(id=2, username='tester0')
+        user.set_password('secret')
+        user.save()
+        user1 = User(id=3, username='tester1')
+        user1.set_password('secret')
+        user1.save()
+
+        group = Group(name='testing_group')
+        group.save()
+
+        cluster = Cluster(hostname='test.osuosl.test', slug='OSL_TEST')
+        cluster.save()
+
+        self.create_standard_users()
+        self.create_users(['cluster_admin'])
+        self.cluster_admin.grant('admin', cluster)
+
+        self.user = user
+        self.user1 = user1
+        self.group = group
+        self.cluster = cluster
+        self.c = Client()
+
+    def tearDown(self):
+        # Tear down users.
+        self.anonymous.delete()
+        self.user.delete()
+        self.user1.delete()
+        self.unauthorized.delete()
+        self.superuser.delete()
+        self.cluster_admin.delete()
+
+        # Tear down the other stuff, too.
+        self.group.delete()
+        self.cluster.delete()
+
+    def validate_anonymous(self, cluster_user):
+        url = '/cluster/%s/quota/%s'
+        args = (self.cluster.slug, cluster_user.id)
+
+        response = self.c.get(url % args, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'registration/login.html')
+
+    def validate_unauthorized(self, cluster_user):
+        url = '/cluster/%s/quota/%s'
+        args = (self.cluster.slug, cluster_user.id)
+
+        self.assertTrue(self.c.login(username=self.user.username,
+                                     password='secret'))
+        response = self.c.get(url % args)
+        self.assertEqual(403, response.status_code)
+
+    def validate_quota(self, cluster_user, template):
+        """
+        Generic tests for validating quota views
+
+        Verifies:
+            * lack of permissions returns 403
+            * nonexistent cluster returns 404
+            * invalid user returns 404
+            * missing user returns error as json
+            * GET returns html for form
+            * successful POST returns html for user row
+            * successful DELETE removes user quota
+        """
+
+        default_quota = {'default':1, 'ram':1, 'virtual_cpus':None, 'disk':3}
+        user_quota = {'default':0, 'ram':4, 'virtual_cpus':5, 'disk':None}
+        user_unlimited = {'default':0, 'ram':None, 'virtual_cpus':None, 'disk':None}
+        self.cluster.__dict__.update(default_quota)
+        self.cluster.save()
+
+        args = (self.cluster.slug, cluster_user.id)
+        args_post = self.cluster.slug
+        url = '/cluster/%s/quota/%s'
+        url_post = '/cluster/%s/quota/'
+
+        self.assertTrue(self.c.login(username=self.user.username,
+                                     password='secret'))
+
+        # valid GET authorized user (perm)
+        self.user.grant('admin', self.cluster)
+        response = self.c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, 'ganeti/cluster/quota.html')
+        self.user.revoke('admin', self.cluster)
+
+        # valid GET authorized user (superuser)
+        self.user.is_superuser = True
+        self.user.save()
+        response = self.c.get(url % args)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, 'ganeti/cluster/quota.html')
+
+        # no user (GET)
+        response = self.c.get(url_post % args_post)
+        self.assertEqual(404, response.status_code)
+
+        # no user (POST)
+        data = {'ram':'', 'virtual_cpus':'', 'disk':''}
+        response = self.c.post(url_post % args_post, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('application/json', response['content-type'])
+
+        # valid POST - setting unlimited values (nones)
+        data = {'user':cluster_user.id, 'ram':'', 'virtual_cpus':'', 'disk':''}
+        response = self.c.post(url_post % args_post, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, template)
+        self.assertEqual(user_unlimited, self.cluster.get_quota(cluster_user))
+        query = Quota.objects.filter(cluster=self.cluster, user=cluster_user)
+        self.assertTrue(query.exists())
+
+        # valid POST - setting values
+        data = {'user':cluster_user.id, 'ram':4, 'virtual_cpus':5, 'disk':''}
+        response = self.c.post(url_post % args_post, data)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, template)
+        self.assertEqual(user_quota, self.cluster.get_quota(cluster_user))
+        self.assertTrue(query.exists())
+
+        # valid POST - same as default values (should delete)
+        data = {'user':cluster_user.id, 'ram':1, 'disk':3}
+        response = self.c.post(url_post % args_post, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, template)
+        self.assertEqual(default_quota, self.cluster.get_quota(cluster_user))
+        self.assertFalse(query.exists())
+
+        # valid POST - same as default values (should do nothing)
+        data = {'user':cluster_user.id, 'ram':1, 'disk':3}
+        response = self.c.post(url_post % args_post, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, template)
+        self.assertEqual(default_quota, self.cluster.get_quota(cluster_user))
+        self.assertFalse(query.exists())
+
+        # valid POST - setting implicit unlimited (values are excluded)
+        data = {'user':cluster_user.id}
+        response = self.c.post(url_post % args_post, data)
+        self.assertEqual(200, response.status_code)
+        self.assertEquals('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response, template)
+        self.assertEqual(user_unlimited, self.cluster.get_quota(cluster_user))
+        self.assertTrue(query.exists())
+
+        # valid DELETE - returns to default values
+        data = {'user':cluster_user.id, 'delete':True}
+        response = self.c.post(url_post % args_post, data)
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, template)
+        self.assertEqual(default_quota, self.cluster.get_quota(cluster_user))
+        self.assertFalse(query.exists())
+
+    def test_trivial(self):
+        """
+        Verify that setUp() and tearDown() work.
+        """
+
+        pass
+
+    def test_view_user_quota(self):
+        """
+        Tests updating users quota
+        """
+
+        self.validate_quota(self.user1.get_profile(),
+                            template='ganeti/cluster/user_row.html')
+
+    def test_view_group_quota(self):
+        """
+        Tests updating a Group's quota
+        """
+
+        self.validate_quota(self.group.organization,
+                            template='ganeti/cluster/group_row.html')
+
+    def test_quota_nonexistent(self):
+        """
+        Quotas for nonexistent clusters should result in not-found errors.
+        """
+
+        response = self.c.get("/cluster/%s/user/quota/?user=%s" %
+                         ("DOES_NOT_EXIST", self.user1.id))
+        self.assertEqual(404, response.status_code)
+
+    def test_user_quota_anonymous(self):
+        self.validate_anonymous(self.user1.get_profile())
+
+    def test_user_quota_unauthorized(self):
+        self.validate_unauthorized(self.user1.get_profile())
+
+    def test_group_quota_anonymous(self):
+        self.validate_anonymous(self.group.organization)
+
+    def test_group_quota_unauthorized(self):
+        self.validate_unauthorized(self.group.organization)
