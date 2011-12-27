@@ -25,11 +25,11 @@ from django.utils import simplejson as json
 
 from django_test_tools.users import UserTestMixin
 from django_test_tools.views import ViewTestMixin
-from ganeti_web.models import SSHKey, Profile
+from ganeti_web.models import SSHKey
 
-from object_permissions import *
+from object_permissions import get_user_perms
 
-from ganeti_web.tests.rapi_proxy import RapiProxy, INFO, NODES, NODES_BULK, JOB_RUNNING, JOB
+from ganeti_web.tests.rapi_proxy import RapiProxy, NODES, NODES_BULK
 from ganeti_web import models
 Cluster = models.Cluster
 VirtualMachine = models.VirtualMachine
@@ -41,19 +41,15 @@ Job = models.Job
 __all__ = ['TestClusterViews']
 
 
-global user, user1, group, cluster_admin, superuser
-global cluster, c
-
-
 class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
-    
+
     def setUp(self):
         self.tearDown()
         models.client.GanetiRapiClient = RapiProxy
-        
+
         User(id=1, username='anonymous').save()
         settings.ANONYMOUS_USER_ID=1
-        
+
         user = User(id=2, username='tester0')
         user.set_password('secret')
         user.save()
@@ -63,20 +59,19 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
 
         group = Group(name='testing_group')
         group.save()
-        
+
         cluster = Cluster(hostname='test.osuosl.test', slug='OSL_TEST')
         cluster.save()
 
-        self.create_standard_users(globals())
-        self.create_users(['cluster_admin'], globals())
-        cluster_admin.grant('admin', cluster)
-        
-        dict_ = globals()
-        dict_['user'] = user
-        dict_['user1'] = user1
-        dict_['group'] = group
-        dict_['cluster'] = cluster
-        dict_['c'] = Client()
+        self.create_standard_users()
+        self.create_users(['cluster_admin'])
+        self.cluster_admin.grant('admin', cluster)
+
+        self.user = user
+        self.user1 = user1
+        self.group = group
+        self.cluster = cluster
+        self.c = Client()
 
     def tearDown(self):
         VirtualMachine.objects.all().delete()
@@ -87,31 +82,32 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
 
     def validate_get(self, url, args, template):
         # anonymous user
-        response = c.get(url % args, follow=True)
+        response = self.c.get(url % args, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'registration/login.html')
-        
+
         # unauthorized user
-        self.assertTrue(c.login(username=user.username, password='secret'))
-        response = c.get(url % args)
+        self.assertTrue(self.c.login(username=self.user.username,
+                                     password='secret'))
+        response = self.c.get(url % args)
         self.assertEqual(403, response.status_code)
-        
+
         # nonexisent cluster
-        response = c.get(url % "DOES_NOT_EXIST")
+        response = self.c.get(url % "DOES_NOT_EXIST")
         self.assertEqual(404, response.status_code)
-        
+
         # authorized user (perm)
-        grant(user, 'admin', cluster)
-        response = c.get(url % args)
+        self.user.grant('admin', self.cluster)
+        response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, template)
-        
+        self.user.revoke('admin', self.cluster)
+
         # authorized user (superuser)
-        user.revoke('admin', cluster)
-        user.is_superuser = True
-        user.save()
-        response = c.get(url % args)
+        self.user.is_superuser = True
+        self.user.save()
+        response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, template)
@@ -130,27 +126,29 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         @return    response content
         """
         # anonymous user
-        response = c.get(url % args, follow=True)
+        response = self.c.get(url % args, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'registration/login.html')
-        
+
         # unauthorized user
-        self.assertTrue(c.login(username=user.username, password='secret'))
-        response = c.get(url % args)
+        self.assertTrue(self.c.login(username=self.user.username,
+                                     password='secret'))
+        response = self.c.get(url % args)
         self.assertEqual(403, response.status_code)
-        
+
         # nonexisent cluster
         if args:
-            response = c.get(url % "DOES_NOT_EXIST")
+            response = self.c.get(url % "DOES_NOT_EXIST")
             self.assertEqual(404, response.status_code)
-        
+
         result = []
 
         # authorized user (perm)
         if perms:
             for perm in perms:
-                grant(user, perm, cluster)
-        response = c.get(url % args)
+                # XXX deadcode
+                self.user.grant(perm, self.cluster)
+        response = self.c.get(url % args)
         if status:
             self.assertEqual(status, response.status_code)
         if mimetype:
@@ -159,12 +157,13 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
             self.assertTemplateUsed(response, template)
 
         result.append(response)
-        
+
         # authorized user (superuser)
-        user.revoke_all(cluster)
-        user.is_superuser = True
-        user.save()
-        response = c.get(url % args)
+        # XXX deadcode
+        self.user.revoke_all(self.cluster)
+        self.user.is_superuser = True
+        self.user.save()
+        response = self.c.get(url % args)
         if status:
             self.assertEqual(200, response.status_code)
         if mimetype:
@@ -176,12 +175,19 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
 
         return result
 
+    def test_trivial(self):
+        """
+        The setUp() and tearDown() methods should work.
+        """
+
+        pass
+
     def test_view_list(self):
         """
         Tests displaying the list of clusters
         """
         url = '/clusters/'
-        
+
         # create extra user and tests
         user2 = User(id=4, username='tester2', is_superuser=True)
         user2.set_password('secret')
@@ -192,44 +198,47 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         cluster1.save()
         cluster2.save()
         cluster3.save()
-        
+
         # grant some perms
-        user1.grant('admin', cluster)
-        user1.grant('create_vm', cluster1)
-        
+        self.user1.grant('admin', self.cluster)
+        self.user1.grant('create_vm', cluster1)
+
         # anonymous user
-        response = c.get(url, follow=True)
+        response = self.c.get(url, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'registration/login.html')
-        
+
         # unauthorized user
-        self.assertTrue(c.login(username=user.username, password='secret'))
-        response = c.get(url)
+        self.assertTrue(self.c.login(username=self.user.username,
+                                     password='secret'))
+        response = self.c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/cluster/list.html')
         clusters = response.context['cluster_list']
         self.assertFalse(clusters)
-        
+
         # authorized permissions
-        self.assertTrue(c.login(username=user1.username, password='secret'))
-        response = c.get(url)
+        self.assertTrue(self.c.login(username=self.user1.username,
+                                     password='secret'))
+        response = self.c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/cluster/list.html')
         clusters = response.context['cluster_list']
-        self.assertTrue(cluster in clusters)
+        self.assertTrue(self.cluster in clusters)
         self.assertTrue(cluster1 not in clusters)
         self.assertEqual(1, len(clusters))
-        
+
         # authorized (superuser)
-        self.assertTrue(c.login(username=user2.username, password='secret'))
-        response = c.get(url)
+        self.assertTrue(self.c.login(username=user2.username,
+                                     password='secret'))
+        response = self.c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/cluster/list.html')
         clusters = response.context['cluster_list']
-        self.assertTrue(cluster in clusters)
+        self.assertTrue(self.cluster in clusters)
         self.assertTrue(cluster1 in clusters)
         self.assertTrue(cluster2 in clusters)
         self.assertTrue(cluster3 in clusters)
@@ -240,25 +249,26 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         Tests adding a new cluster
         """
         url = '/cluster/add/'
-        
+
         # anonymous user
-        response = c.get(url, follow=True)
+        response = self.c.get(url, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'registration/login.html')
-        
+
         # unauthorized user
-        self.assertTrue(c.login(username=user.username, password='secret'))
-        response = c.get(url)
+        self.assertTrue(self.c.login(username=self.user.username,
+                                     password='secret'))
+        response = self.c.get(url)
         self.assertEqual(403, response.status_code)
-        
+
         # authorized (GET)
-        user.is_superuser = True
-        user.save()
-        response = c.get(url)
+        self.user.is_superuser = True
+        self.user.save()
+        response = self.c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/cluster/edit.html')
-        
+
         data = dict(hostname='new-host3.hostname',
                     slug='new-host3',
                     port=5080,
@@ -269,17 +279,17 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
                     disk=2,
                     ram=3
                     )
-        
+
         # test error
         data_ = data.copy()
         del data_['hostname']
-        response = c.post(url, data_)
+        response = self.c.post(url, data_)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/cluster/edit.html')
 
         # success
-        response = c.post(url, data, follow=True)
+        response = self.c.post(url, data, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/cluster/detail.html')
@@ -287,44 +297,44 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         for k, v in data_.items():
             self.assertEqual(v, getattr(cluster, k))
         Cluster.objects.all().delete()
-        
 
-    
+
+
     def test_view_edit(self):
         """
         Tests editing a cluster
         """
-        cluster = globals()['cluster']
-        url = '/cluster/%s/edit/' % cluster.slug
-        
+        url = '/cluster/%s/edit/' % self.cluster.slug
+
         # anonymous user
-        response = c.get(url, follow=True)
+        response = self.c.get(url, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'registration/login.html')
-        
+
         # unauthorized user
-        self.assertTrue(c.login(username=user.username, password='secret'))
-        response = c.get(url)
+        self.assertTrue(self.c.login(username=self.user.username,
+                                     password='secret'))
+        response = self.c.get(url)
         self.assertEqual(403, response.status_code)
-        
+
         # authorized (permission)
-        user.grant('admin', cluster)
-        response = c.get(url)
+        self.user.grant('admin', self.cluster)
+        response = self.c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/cluster/edit.html')
-        self.assertEqual(cluster, response.context['cluster'])
-        user.revoke('admin', cluster)
-        
+        self.assertEqual(self.cluster, response.context['cluster'])
+        self.user.revoke('admin', self.cluster)
+
         # authorized (GET)
-        user.is_superuser = True
-        user.save()
-        response = c.get(url)
+        self.user.is_superuser = True
+        self.user.save()
+        response = self.c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/cluster/edit.html')
-        self.assertEqual(None, cluster.info)
-        
+        self.assertEqual(None, self.cluster.info)
+
         data = dict(hostname='new-host-1.hostname',
                     slug='new-host-1',
                     port=5080,
@@ -339,13 +349,13 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         # error
         data_ = data.copy()
         del data_['hostname']
-        response = c.post(url, data_)
+        response = self.c.post(url, data_)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/cluster/edit.html')
 
         # success
-        response = c.post(url, data, follow=True)
+        response = self.c.post(url, data, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/cluster/detail.html')
@@ -364,7 +374,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         cluster.save()
         url = '/cluster/%s/edit/' % cluster.slug
 
-        response = c.delete(url, follow=True)
+        response = self.c.delete(url, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'registration/login.html')
 
@@ -377,8 +387,9 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         cluster.save()
         url = '/cluster/%s/edit/' % cluster.slug
 
-        self.assertTrue(c.login(username=user.username, password='secret'))
-        response = c.delete(url)
+        self.assertTrue(self.c.login(username=self.user.username,
+                                     password='secret'))
+        response = self.c.delete(url)
         self.assertEqual(403, response.status_code)
 
     def test_view_delete_authorized(self):
@@ -390,9 +401,10 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         cluster.save()
         url = '/cluster/%s/edit/' % cluster.slug
 
-        user.grant('admin', cluster)
-        self.assertTrue(c.login(username=user.username, password='secret'))
-        response = c.delete(url, follow=True)
+        self.user.grant('admin', cluster)
+        self.assertTrue(self.c.login(username=self.user.username,
+                                     password='secret'))
+        response = self.c.delete(url, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertEquals('1', response.content)
@@ -407,10 +419,11 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         cluster.save()
         url = '/cluster/%s/edit/' % cluster.slug
 
-        user.is_superuser = True
-        user.save()
-        self.assertTrue(c.login(username=user.username, password='secret'))
-        response = c.delete(url, follow=True)
+        self.user.is_superuser = True
+        self.user.save()
+        self.assertTrue(self.c.login(username=self.user.username,
+                                     password='secret'))
+        response = self.c.delete(url, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertEquals('1', response.content)
@@ -421,34 +434,35 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         Tests displaying detailed view for a Cluster
         """
         url = '/cluster/%s/'
-        args = cluster.slug
-        
+        args = self.cluster.slug
+
         # anonymous user
-        response = c.get(url % args, follow=True)
+        response = self.c.get(url % args, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'registration/login.html')
-        
+
         # unauthorized user
-        self.assertTrue(c.login(username=user.username, password='secret'))
-        response = c.get(url % args)
+        self.assertTrue(self.c.login(username=self.user.username,
+                                     password='secret'))
+        response = self.c.get(url % args)
         self.assertEqual(200, response.status_code) # Ticket 6891
-        
+
         # invalid cluster
-        response = c.get(url % "DoesNotExist")
+        response = self.c.get(url % "DoesNotExist")
         self.assertEqual(404, response.status_code)
-        
+
         # authorized (permission)
-        grant(user, 'admin', cluster)
-        response = c.get(url % args)
+        self.user.grant('admin', self.cluster)
+        response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/cluster/detail.html')
-        
+        self.user.revoke('admin', self.cluster)
+
         # authorized (superuser)
-        user.revoke('admin', cluster)
-        user.is_superuser = True
-        user.save()
-        response = c.get(url % args)
+        self.user.is_superuser = True
+        self.user.save()
+        response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/cluster/detail.html')
@@ -456,120 +470,145 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
     def test_view_users(self):
         """
         Tests view for cluster users:
-        
+
         Verifies:
             * lack of permissions returns 403
             * nonexistent cluster returns 404
         """
         url = "/cluster/%s/users/"
-        args = cluster.slug
+        args = self.cluster.slug
         self.validate_get(url, args, 'ganeti/cluster/users.html')
 
     def test_view_virtual_machines(self):
         """
         Tests view for cluster users:
-        
+
         Verifies:
             * lack of permissions returns 403
             * nonexistent cluster returns 404
         """
         url = "/cluster/%s/virtual_machines/"
-        args = cluster.slug
+        args = self.cluster.slug
         self.validate_get(url, args, 'ganeti/virtual_machine/table.html')
 
     def test_view_nodes(self):
         """
         Tests view for cluster users:
-        
+
         Verifies:
             * lack of permissions returns 403
             * nonexistent cluster returns 404
         """
         url = "/cluster/%s/nodes/"
-        args = cluster.slug
-        cluster.rapi.GetNodes.response = NODES_BULK
+        args = self.cluster.slug
+        self.cluster.rapi.GetNodes.response = NODES_BULK
         self.validate_get(url, args, 'ganeti/node/table.html')
-        cluster.rapi.GetNodes.response = NODES
+        self.cluster.rapi.GetNodes.response = NODES
 
     def test_view_add_permissions(self):
         """
         Test adding permissions to a new User or Group
         """
         url = '/cluster/%s/permissions/'
-        args = cluster.slug
-        
+        args = self.cluster.slug
+
         # anonymous user
-        response = c.get(url % args, follow=True)
+        response = self.c.get(url % args, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'registration/login.html')
-        
+
         # unauthorized user
-        self.assertTrue(c.login(username=user.username, password='secret'))
-        response = c.get(url % args)
+        self.assertTrue(self.c.login(username=self.user.username,
+                                     password='secret'))
+        response = self.c.get(url % args)
         self.assertEqual(403, response.status_code)
-        
+
         # nonexisent cluster
-        response = c.get(url % "DOES_NOT_EXIST")
+        response = self.c.get(url % "DOES_NOT_EXIST")
         self.assertEqual(404, response.status_code)
-        
+
         # valid GET authorized user (perm)
-        grant(user, 'admin', cluster)
-        response = c.get(url % args)
+        self.user.grant('admin', self.cluster)
+        response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
-        
+        self.user.revoke('admin', self.cluster)
+
         # valid GET authorized user (superuser)
-        user.revoke('admin', cluster)
-        user.is_superuser = True
-        user.save()
-        response = c.get(url % args)
+        self.user.is_superuser = True
+        self.user.save()
+        response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
-        
+
         # no user or group
-        data = {'permissions':['admin'], 'obj':cluster.pk}
-        response = c.post(url % args, data)
+        data = {
+            'permissions': ['admin'],
+            'obj': self.cluster.pk,
+        }
+        response = self.c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
-        
+
         # both user and group
-        data = {'permissions':['admin'], 'group':group.id, 'user':user1.id, 'cluster':cluster.pk}
-        response = c.post(url % args, data)
+        data = {
+            'permissions': ['admin'],
+            'group': self.group.id,
+            'user': self.user1.id,
+            'cluster': self.cluster.pk,
+        }
+        response = self.c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
-        
+
         # no permissions specified - user
-        data = {'permissions':[], 'user':user1.id, 'obj':cluster.pk}
-        response = c.post(url % args, data)
+        data = {
+            'permissions': [],
+            'user': self.user1.id,
+            'obj': self.cluster.pk,
+        }
+        response = self.c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
-        
+
         # no permissions specified - group
-        data = {'permissions':[], 'group':group.id, 'obj':cluster.pk}
-        response = c.post(url % args, data)
+        data = {
+            'permissions': [],
+            'group': self.group.id,
+            'obj': self.cluster.pk,
+        }
+        response = self.c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
-        
+
         # valid POST user has permissions
-        user1.grant('create_vm', cluster)
-        data = {'permissions':['admin'], 'user':user1.id, 'obj':cluster.pk}
-        response = c.post(url % args, data)
+        self.user1.grant('create_vm', self.cluster)
+        data = {
+            'permissions': ["admin"],
+            'user': self.user1.id,
+            'obj': self.cluster.pk,
+        }
+        response = self.c.post(url % args, data)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/cluster/user_row.html')
-        self.assertTrue(user1.has_perm('admin', cluster))
-        self.assertFalse(user1.has_perm('create_vm', cluster))
-        
+        self.assertTrue(self.user1.has_perm('admin', self.cluster))
+        self.assertFalse(self.user1.has_perm('create_vm', self.cluster))
+
         # valid POST group has permissions
-        group.grant('create_vm', cluster)
-        data = {'permissions':['admin'], 'group':group.id, 'obj':cluster.pk}
-        response = c.post(url % args, data)
+        self.group.grant('create_vm', self.cluster)
+        data = {
+            'permissions': ["admin"],
+            'group': self.group.id,
+            'obj': self.cluster.pk,
+        }
+        response = self.c.post(url % args, data)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/cluster/group_row.html')
-        self.assertEqual(['admin'], group.get_perms(cluster))
+        self.assertEqual(['admin'], self.group.get_perms(self.cluster))
 
     def test_view_object_log(self):
         """
@@ -580,14 +619,14 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
             * cluster specific log actions can be rendered properly
         """
         url = "/cluster/%s/object_log/"
-        args = (cluster.slug,)
+        args = (self.cluster.slug,)
         self.assert_standard_fails(url, args)
-        self.assert_200(url, args, users=[superuser, cluster_admin])
+        self.assert_200(url, args, users=[self.superuser, self.cluster_admin])
 
     def test_view_user_permissions(self):
         """
         Tests updating users permissions
-        
+
         Verifies:
             * anonymous user returns 403
             * lack of permissions returns 403
@@ -599,197 +638,246 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
             * If user/group has permissions no html is returned
             * If user/group has no permissions a json response of -1 is returned
         """
-        args = (cluster.slug, user1.id)
-        args_post = cluster.slug
+        args = (self.cluster.slug, self.user1.id)
+        args_post = self.cluster.slug
         url = "/cluster/%s/permissions/user/%s"
         url_post = "/cluster/%s/permissions/"
-        
+
         # anonymous user
-        response = c.get(url % args, follow=True)
+        response = self.c.get(url % args, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'registration/login.html')
-        
+
         # unauthorized user
-        self.assertTrue(c.login(username=user.username, password='secret'))
-        response = c.get(url % args)
+        self.assertTrue(self.c.login(username=self.user.username,
+                                     password='secret'))
+        response = self.c.get(url % args)
         self.assertEqual(403, response.status_code)
-        
+
         # nonexisent cluster
-        response = c.get(url % ("DOES_NOT_EXIST", user1.id))
+        response = self.c.get(url % ("DOES_NOT_EXIST", self.user1.id))
         self.assertEqual(404, response.status_code)
-        
+
         # valid GET authorized user (perm)
-        grant(user, 'admin', cluster)
-        response = c.get(url % args)
+        self.user.grant('admin', self.cluster)
+        response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
-        
+        self.user.revoke('admin', self.cluster)
+
         # valid GET authorized user (superuser)
-        user.revoke('admin', cluster)
-        user.is_superuser = True
-        user.save()
-        response = c.get(url % args)
+        self.user.is_superuser = True
+        self.user.save()
+        response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
-        
+
         # invalid user
-        response = c.get(url % (cluster.slug, -1))
+        response = self.c.get(url % (self.cluster.slug, -1))
         self.assertEqual(404, response.status_code)
-        
+
         # invalid user (POST)
-        user1.grant('create_vm', cluster)
-        data = {'permissions':['admin'], 'user':-1, 'obj':cluster.pk}
-        response = c.post(url_post % args_post, data)
+        self.user1.grant('create_vm', self.cluster)
+        data = {
+            'permissions': ['admin'],
+            'user': -1,
+            'obj': self.cluster.pk,
+        }
+        response = self.c.post(url_post % args_post, data)
         self.assertEquals('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
-        
+
         # no user (POST)
-        user1.grant('create_vm', cluster)
-        data = {'permissions':['admin'], 'obj':cluster.pk}
-        response = c.post(url_post % args_post, data)
+        # XXX double-grant?
+        self.user1.grant('create_vm', self.cluster)
+        data = {
+            'permissions': ['admin'],
+            'obj': self.cluster.pk,
+        }
+        response = self.c.post(url_post % args_post, data)
         self.assertEquals('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
-        
+
         # valid POST user has permissions
-        user1.grant('create_vm', cluster)
-        data = {'permissions':['admin'], 'user':user1.id, 'obj':cluster.pk}
-        response = c.post(url_post % args_post, data)
+        # XXX triple-grant?!
+        self.user1.grant('create_vm', self.cluster)
+        data = {
+            'permissions': ['admin'],
+            'user': self.user1.id,
+            'obj': self.cluster.pk,
+        }
+        response = self.c.post(url_post % args_post, data)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/cluster/user_row.html')
-        self.assertTrue(user1.has_perm('admin', cluster))
-        self.assertFalse(user1.has_perm('create_vm', cluster))
-        
+        self.assertTrue(self.user1.has_perm('admin', self.cluster))
+        self.assertFalse(self.user1.has_perm('create_vm', self.cluster))
+
         # add quota to the user
         user_quota = {'default':0, 'ram':51, 'virtual_cpus':10, 'disk':3000}
-        quota = Quota(cluster=cluster, user=user1.get_profile())
+        quota = Quota(cluster=self.cluster, user=self.user1.get_profile())
         quota.__dict__.update(user_quota)
         quota.save()
-        self.assertEqual(user_quota, cluster.get_quota(user1.get_profile()))
-        
+        self.assertEqual(user_quota,
+                         self.cluster.get_quota(self.user1.get_profile()))
+
         # valid POST user has no permissions left
-        data = {'permissions':[], 'user':user1.id, 'obj':cluster.pk}
-        response = c.post(url_post % args_post, data)
+        data = {
+            'permissions': [],
+            'user': self.user1.id,
+            'obj': self.cluster.pk,
+        }
+        response = self.c.post(url_post % args_post, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
-        self.assertEqual([], get_user_perms(user, cluster))
+        self.assertEqual([], get_user_perms(self.user, self.cluster))
         self.assertEqual('"user_3"', response.content)
-        
+
         # quota should be deleted (and showing default)
-        self.assertEqual(1, cluster.get_quota(user1.get_profile())['default'])
-        self.assertFalse(user1.get_profile().quotas.all().exists())
-        
+        self.assertEqual(1,
+                         self.cluster.get_quota(self.user1.get_profile())['default'])
+        self.assertFalse(self.user1.get_profile().quotas.all().exists())
+
         # no permissions specified - user with no quota
-        user1.grant('create_vm', cluster)
-        cluster.set_quota(user1.get_profile(), None)
-        data = {'permissions':[], 'user':user1.id, 'obj':cluster.pk}
-        response = c.post(url % args, data)
+        # XXX quadra-grant!!!
+        self.user1.grant('create_vm', self.cluster)
+        self.cluster.set_quota(self.user1.get_profile(), None)
+        data = {
+            'permissions': [],
+            'user': self.user1.id,
+            'obj': self.cluster.pk,
+        }
+        response = self.c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
-        
+
         # quota should be deleted (and showing default)
-        self.assertEqual(1, cluster.get_quota(user1.get_profile())['default'])
-        self.assertFalse(user1.get_profile().quotas.all().exists())
+        self.assertEqual(1,
+                         self.cluster.get_quota(self.user1.get_profile())['default'])
+        self.assertFalse(self.user1.get_profile().quotas.all().exists())
 
     def test_view_group_permissions(self):
         """
         Test editing Group permissions on a Cluster
         """
-        args = (cluster.slug, group.id)
-        args_post = cluster.slug
+        args = (self.cluster.slug, self.group.id)
+        args_post = self.cluster.slug
         url = "/cluster/%s/permissions/group/%s"
         url_post = "/cluster/%s/permissions/"
-        
+
         # anonymous user
-        response = c.get(url % args, follow=True)
+        response = self.c.get(url % args, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'registration/login.html')
-        
+
         # unauthorized user
-        self.assertTrue(c.login(username=user.username, password='secret'))
-        response = c.get(url % args)
+        self.assertTrue(self.c.login(username=self.user.username,
+                                     password='secret'))
+        response = self.c.get(url % args)
         self.assertEqual(403, response.status_code)
-        
+
         # nonexisent cluster
-        response = c.get(url % ("DOES_NOT_EXIST", group.id))
+        response = self.c.get(url % ("DOES_NOT_EXIST", self.group.id))
         self.assertEqual(404, response.status_code)
-        
+
         # valid GET authorized user (perm)
-        grant(user, 'admin', cluster)
-        response = c.get(url % args)
+        self.user.grant('admin', self.cluster)
+        response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
-        
+        self.user.revoke('admin', self.cluster)
+
         # valid GET authorized user (superuser)
-        user.revoke('admin', cluster)
-        user.is_superuser = True
-        user.save()
-        response = c.get(url % args)
+        self.user.is_superuser = True
+        self.user.save()
+        response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
-        
+
         # invalid group
-        response = c.get(url % (cluster.slug, 0))
+        response = self.c.get(url % (self.cluster.slug, 0))
         self.assertEqual(404, response.status_code)
-        
+
         # invalid group (POST)
-        data = {'permissions':['admin'], 'group':-1, 'obj':cluster.pk}
-        response = c.post(url_post % args_post, data)
+        data = {
+            'permissions': ['admin'],
+            'group': -1,
+            'obj': self.cluster.pk,
+        }
+        response = self.c.post(url_post % args_post, data)
         self.assertEquals('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
-        
+
         # no group (POST)
-        data = {'permissions':['admin'], 'obj':cluster.pk}
-        response = c.post(url_post % args_post, data)
+        data = {
+            'permissions': ['admin'],
+            'obj': self.cluster.pk,
+        }
+        response = self.c.post(url_post % args_post, data)
         self.assertEquals('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
-        
+
         # valid POST group has permissions
-        group.grant('create_vm', cluster)
-        data = {'permissions':['admin'], 'group':group.id, 'obj':cluster.pk}
-        response = c.post(url_post % args_post, data)
+        self.group.grant('create_vm', self.cluster)
+        data = {
+            'permissions': ['admin'],
+            'group': self.group.id,
+            'obj': self.cluster.pk,
+        }
+        response = self.c.post(url_post % args_post, data)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/cluster/group_row.html')
-        self.assertEqual(['admin'], group.get_perms(cluster))
-        
+        self.assertEqual(['admin'], self.group.get_perms(self.cluster))
+
         # add quota to the group
         user_quota = {'default':0, 'ram':51, 'virtual_cpus':10, 'disk':3000}
-        quota = Quota(cluster=cluster, user=group.organization)
+        quota = Quota(cluster=self.cluster, user=self.group.organization)
         quota.__dict__.update(user_quota)
         quota.save()
-        self.assertEqual(user_quota, cluster.get_quota(group.organization))
-        
+        self.assertEqual(user_quota,
+                         self.cluster.get_quota(self.group.organization))
+
         # valid POST group has no permissions left
-        data = {'permissions':[], 'group':group.id, 'obj':cluster.pk}
-        response = c.post(url_post % args_post, data)
+        data = {
+            'permissions': [],
+            'group': self.group.id,
+            'obj': self.cluster.pk,
+        }
+        response = self.c.post(url_post % args_post, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
-        self.assertEqual([], group.get_perms(cluster))
-        self.assertEqual('"group_%s"'%group.id, response.content)
-        
+        self.assertEqual([], self.group.get_perms(self.cluster))
+        self.assertEqual('"group_%s"' % self.group.id, response.content)
+
         # quota should be deleted (and showing default)
-        self.assertEqual(1, cluster.get_quota(group.organization)['default'])
-        self.assertFalse(group.organization.quotas.all().exists())
-        
+        self.assertEqual(1,
+                         self.cluster.get_quota(self.group.organization)['default'])
+        self.assertFalse(self.group.organization.quotas.all().exists())
+
         # no permissions specified - user with no quota
-        group.grant('create_vm', cluster)
-        cluster.set_quota(group.organization, None)
-        data = {'permissions':[], 'group':group.id, 'obj':cluster.pk}
-        response = c.post(url % args, data)
+        self.group.grant('create_vm', self.cluster)
+        self.cluster.set_quota(self.group.organization, None)
+        data = {
+            'permissions': [],
+            'group': self.group.id,
+            'obj': self.cluster.pk,
+        }
+        response = self.c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertNotEqual('0', response.content)
-        
+
         # quota should be deleted (and showing default)
-        self.assertEqual(1, cluster.get_quota(group.organization)['default'])
-        self.assertFalse(group.organization.quotas.all().exists())
-    
+        self.assertEqual(1,
+                         self.cluster.get_quota(self.group.organization)['default'])
+        self.assertFalse(self.group.organization.quotas.all().exists())
+
     def validate_quota(self, cluster_user, template):
         """
         Generic tests for validating quota views
-        
+
         Verifies:
             * lack of permissions returns 403
             * nonexistent cluster returns 404
@@ -797,126 +885,130 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
             * missing user returns error as json
             * GET returns html for form
             * successful POST returns html for user row
-            * successful DELETE removes user quota        
+            * successful DELETE removes user quota
         """
         default_quota = {'default':1, 'ram':1, 'virtual_cpus':None, 'disk':3}
         user_quota = {'default':0, 'ram':4, 'virtual_cpus':5, 'disk':None}
         user_unlimited = {'default':0, 'ram':None, 'virtual_cpus':None, 'disk':None}
-        cluster.__dict__.update(default_quota)
-        cluster.save()
-        
-        args = (cluster.slug, cluster_user.id)
-        args_post = cluster.slug
+        self.cluster.__dict__.update(default_quota)
+        self.cluster.save()
+
+        args = (self.cluster.slug, cluster_user.id)
+        args_post = self.cluster.slug
         url = '/cluster/%s/quota/%s'
         url_post = '/cluster/%s/quota/'
-        
+
         # anonymous user
-        response = c.get(url % args, follow=True)
+        response = self.c.get(url % args, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'registration/login.html')
-        
+
         # unauthorized user
-        self.assertTrue(c.login(username=user.username, password='secret'))
-        response = c.get(url % args)
+        self.assertTrue(self.c.login(username=self.user.username,
+                                     password='secret'))
+        response = self.c.get(url % args)
         self.assertEqual(403, response.status_code)
-        
+
         # nonexisent cluster
-        response = c.get("/cluster/%s/user/quota/?user=%s" % ("DOES_NOT_EXIST", user1.id))
+        response = self.c.get("/cluster/%s/user/quota/?user=%s" %
+                         ("DOES_NOT_EXIST", self.user1.id))
         self.assertEqual(404, response.status_code)
-        
+
         # valid GET authorized user (perm)
-        grant(user, 'admin', cluster)
-        response = c.get(url % args)
+        self.user.grant('admin', self.cluster)
+        response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/cluster/quota.html')
-        
+        self.user.revoke('admin', self.cluster)
+
         # valid GET authorized user (superuser)
-        user.revoke('admin', cluster)
-        user.is_superuser = True
-        user.save()
-        response = c.get(url % args)
+        self.user.is_superuser = True
+        self.user.save()
+        response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'ganeti/cluster/quota.html')
-        
+
         # invalid user
-        response = c.get(url % (cluster.slug, 0))
+        response = self.c.get(url % (self.cluster.slug, 0))
         self.assertEqual(404, response.status_code)
-        
+
         # no user (GET)
-        response = c.get(url_post % args_post)
+        response = self.c.get(url_post % args_post)
         self.assertEqual(404, response.status_code)
-        
+
         # no user (POST)
         data = {'ram':'', 'virtual_cpus':'', 'disk':''}
-        response = c.post(url_post % args_post, data)
+        response = self.c.post(url_post % args_post, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
-        
+
         # valid POST - setting unlimited values (nones)
         data = {'user':cluster_user.id, 'ram':'', 'virtual_cpus':'', 'disk':''}
-        response = c.post(url_post % args_post, data)
+        response = self.c.post(url_post % args_post, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, template)
-        self.assertEqual(user_unlimited, cluster.get_quota(cluster_user))
-        query = Quota.objects.filter(cluster=cluster, user=cluster_user)
+        self.assertEqual(user_unlimited, self.cluster.get_quota(cluster_user))
+        query = Quota.objects.filter(cluster=self.cluster, user=cluster_user)
         self.assertTrue(query.exists())
-        
+
         # valid POST - setting values
         data = {'user':cluster_user.id, 'ram':4, 'virtual_cpus':5, 'disk':''}
-        response = c.post(url_post % args_post, data)
+        response = self.c.post(url_post % args_post, data)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, template)
-        self.assertEqual(user_quota, cluster.get_quota(cluster_user))
+        self.assertEqual(user_quota, self.cluster.get_quota(cluster_user))
         self.assertTrue(query.exists())
-        
+
         # valid POST - same as default values (should delete)
         data = {'user':cluster_user.id, 'ram':1, 'disk':3}
-        response = c.post(url_post % args_post, data)
+        response = self.c.post(url_post % args_post, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, template)
-        self.assertEqual(default_quota, cluster.get_quota(cluster_user))
+        self.assertEqual(default_quota, self.cluster.get_quota(cluster_user))
         self.assertFalse(query.exists())
-        
+
         # valid POST - same as default values (should do nothing)
         data = {'user':cluster_user.id, 'ram':1, 'disk':3}
-        response = c.post(url_post % args_post, data)
+        response = self.c.post(url_post % args_post, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, template)
-        self.assertEqual(default_quota, cluster.get_quota(cluster_user))
+        self.assertEqual(default_quota, self.cluster.get_quota(cluster_user))
         self.assertFalse(query.exists())
-        
+
         # valid POST - setting implicit unlimited (values are excluded)
         data = {'user':cluster_user.id}
-        response = c.post(url_post % args_post, data)
+        response = self.c.post(url_post % args_post, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, template)
-        self.assertEqual(user_unlimited, cluster.get_quota(cluster_user))
+        self.assertEqual(user_unlimited, self.cluster.get_quota(cluster_user))
         self.assertTrue(query.exists())
-        
+
         # valid DELETE - returns to default values
         data = {'user':cluster_user.id, 'delete':True}
-        response = c.post(url_post % args_post, data)
+        response = self.c.post(url_post % args_post, data)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, template)
-        self.assertEqual(default_quota, cluster.get_quota(cluster_user))
+        self.assertEqual(default_quota, self.cluster.get_quota(cluster_user))
         self.assertFalse(query.exists())
-    
+
     def test_view_user_quota(self):
         """
         Tests updating users quota
         """
-        self.validate_quota(user1.get_profile(), template='ganeti/cluster/user_row.html')
-    
+        self.validate_quota(self.user1.get_profile(),
+                            template='ganeti/cluster/user_row.html')
+
     def test_view_group_quota(self):
         """
         Tests updating a Group's quota
         """
-        self.validate_quota(group.organization, template='ganeti/cluster/group_row.html')
+        self.validate_quota(self.group.organization,
+                            template='ganeti/cluster/group_row.html')
 
     def test_sync_virtual_machines_in_edit_view(self):
         """
@@ -924,11 +1016,12 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         for the second time
         """
         #configuring stuff needed to test edit view
-        user.is_superuser = True
-        user.save()
-        self.assertTrue(c.login(username=user.username, password='secret'))
-        cluster.virtual_machines.all().delete()
-        url = '/cluster/%s/edit/' % cluster.slug
+        self.user.is_superuser = True
+        self.user.save()
+        self.assertTrue(self.c.login(username=self.user.username,
+                                     password='secret'))
+        self.cluster.virtual_machines.all().delete()
+        url = '/cluster/%s/edit/' % self.cluster.slug
 
         data = dict(hostname='new-host-1.hostname',
                     slug='new-host-1',
@@ -940,43 +1033,45 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
                     disk=2,
                     ram=3
                     )
-        
+
         # run view once to create cluster
-        c.post(url, data, follow=True)
-        
+        self.c.post(url, data, follow=True)
+
         # ensure there are VMs ready for sync
-        cluster.virtual_machines.all().delete()
-        
+        self.cluster.virtual_machines.all().delete()
+
         #run view_edit again..
-        c.post(url, data, follow=True)
-        
+        self.c.post(url, data, follow=True)
+
         # assert that no VMs were created
-        self.assertFalse(cluster.virtual_machines.all().exists())
-    
+        self.assertFalse(self.cluster.virtual_machines.all().exists())
+
     def test_view_ssh_keys(self):
         """
         Test getting SSH keys belonging to users, who have admin permission on
         specified cluster
         """
-        vm = VirtualMachine.objects.create(cluster=cluster, hostname='vm1.osuosl.bak')
+        vm = VirtualMachine.objects.create(cluster=self.cluster,
+                                           hostname='vm1.osuosl.bak')
 
         # add some keys
-        SSHKey.objects.create(key="ssh-rsa test test@test", user=user)
-        SSHKey.objects.create(key="ssh-dsa test asd@asd", user=user)
-        SSHKey.objects.create(key="ssh-dsa test foo@bar", user=user1)
+        SSHKey.objects.create(key="ssh-rsa test test@test", user=self.user)
+        SSHKey.objects.create(key="ssh-dsa test asd@asd", user=self.user)
+        SSHKey.objects.create(key="ssh-dsa test foo@bar", user=self.user1)
 
         # get API key
+        # XXX agh oh god what why are you doing this argfl
         import settings
         key = settings.WEB_MGR_API_KEY
 
         url = '/cluster/%s/keys/%s/'
-        args = (cluster.slug, key)
+        args = (self.cluster.slug, key)
 
         self.assert_standard_fails(url, args, login_required=False, authorized=False)
 
         # cluster without users who have admin perms
-        response = c.get(url % args)
-        self.assertEqual(200, response.status_code )
+        response = self.c.get(url % args)
+        self.assertEqual(200, response.status_code)
         self.assertEquals("application/json", response["content-type"])
         self.assertEqual(len(json.loads(response.content)), 0 )
         self.assertNotContains(response, "test@test")
@@ -984,11 +1079,11 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
 
         # vm with users who have admin perms
         # grant admin permission to first user
-        user.grant("admin", vm)
-        user1.grant("admin", cluster)
+        self.user.grant("admin", vm)
+        self.user1.grant("admin", self.cluster)
 
-        response = c.get(url % args)
-        self.assertEqual(200, response.status_code )
+        response = self.c.get(url % args)
+        self.assertEqual(200, response.status_code)
         self.assertEquals("application/json", response["content-type"])
         self.assertEqual(len(json.loads(response.content)), 3 )
         self.assertContains(response, "test@test", count=1)
@@ -999,36 +1094,37 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         """
         Tests cluster's config redistribution
         """
-        cluster = globals()['cluster']
-        url = '/cluster/%s/redistribute-config/' % cluster.slug
+
+        url = '/cluster/%s/redistribute-config/' % self.cluster.slug
 
         # anonymous user
-        response = c.get(url, follow=True)
+        response = self.c.get(url, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assertTrue(c.login(username=user.username, password='secret'))
-        response = c.delete(url)
+        self.assertTrue(self.c.login(username=self.user.username,
+                                     password='secret'))
+        response = self.c.delete(url)
         self.assertEqual(403, response.status_code)
 
         # authorized (permission)
-        user.grant('admin', cluster)
-        response = c.post(url)
+        self.user.grant('admin', self.cluster)
+        response = self.c.post(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertTrue('status' in response.content)
-        self.assertTrue(Cluster.objects.filter(id=cluster.id).exists())
-        user.revoke('admin', cluster)
+        self.assertTrue(Cluster.objects.filter(id=self.cluster.id).exists())
+        self.user.revoke('admin', self.cluster)
 
         # recreate cluster
-        cluster.save()
+        self.cluster.save()
 
         # authorized (GET)
-        user.is_superuser = True
-        user.save()
-        response = c.post(url)
+        self.user.is_superuser = True
+        self.user.save()
+        response = self.c.post(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertTrue('status' in response.content)
-        self.assertTrue(Cluster.objects.filter(id=cluster.id).exists())
+        self.assertTrue(Cluster.objects.filter(id=self.cluster.id).exists())
