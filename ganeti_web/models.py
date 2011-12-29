@@ -22,7 +22,9 @@ import binascii
 import cPickle
 from datetime import datetime, timedelta
 from hashlib import sha1
+import random
 import re
+import string
 import sys
 
 from django.conf import settings
@@ -63,9 +65,8 @@ from ganeti_web.util.client import GanetiApiError, REPLACE_DISK_AUTO
 from south.signals import post_migrate
 
 if settings.VNC_PROXY:
-    from ganeti_web.util.vncdaemon.vapclient import request_forwarding
-import random
-import string
+    from ganeti_web.util.vncdaemon.vapclient import (request_forwarding,
+                                                     request_ssh)
 
 def generate_random_password(length=12):
     "Generate random sequence of specified length"
@@ -764,11 +765,11 @@ class VirtualMachine(CachedClusterObject):
         if settings.VNC_PROXY:
             proxy_server = settings.VNC_PROXY.split(":")
             password = generate_random_password()
-            sport = request_ssh(proxy, sport, self.info["pnode"],
+            sport = request_ssh(proxy_server, sport, self.info["pnode"],
                                 self.info["network_port"], password, command)
 
             if sport:
-                return proxy[0], sport, password
+                return proxy_server[0], sport, password
 
     def setup_vnc_forwarding(self, sport=0, tls=False):
         """
@@ -1021,7 +1022,6 @@ class Cluster(CachedClusterObject):
         """
 
         field, chaff, chaff, chaff = cls._meta.get_field_by_name('password')
-        prefix = field.prefix
 
         if value.startswith(field.prefix):
             ciphertext = value[len(field.prefix):]
@@ -1795,7 +1795,8 @@ def refresh_objects(sender, **kwargs):
         for instance in VirtualMachine.objects.all().iterator():
             try:
                 wf('.')
-            except Exception, e:
+            # XXX bare except!?
+            except Exception:
                 wf('E')
         wf('\n')
 
