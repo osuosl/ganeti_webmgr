@@ -25,7 +25,7 @@
         deleted or renamed a virtual machine using ganeti command line tools.
     </p>
     
-    <form id="missing_form" action="{% url import-missing %}" method="post">
+    <form id="missing_form" action="{% url import-missing %}" method="post">{% csrf_token %}
         {{form.errors}}
         <input type="submit" value="{% trans "Delete Selected" %}" {%if not vms%}disabled{%endif%}>
         <table id="orphanlist" class="sorted">

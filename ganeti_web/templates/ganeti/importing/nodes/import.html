@@ -22,7 +22,7 @@
         {% trans "When you add nodes to ganeti they must be manually imported into Ganeti Web Manager." %}.
     </p>
 
-    <form id="import_form" action="{% url import-nodes-missing_db %}" method="post">
+    <form id="import_form" action="{% url import-nodes-missing_db %}" method="post">{% csrf_token %}
         {{form.errors}}
         {{form.owner.label}} {{form.owner}}
         <input type="submit" value="{% trans "Import Selected" %}" {%if not nodes%}disabled{%endif%}>

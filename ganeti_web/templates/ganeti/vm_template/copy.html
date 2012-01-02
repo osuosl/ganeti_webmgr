@@ -10,7 +10,7 @@
      : {% trans "Copy" %}
 </h1>
 <div id="virtualmachineform">
-    <form method="post" action="{% url template-copy template.cluster.slug template %}">
+    <form method="post" action="{% url template-copy template.cluster.slug template %}">{% csrf_token %}
         <fieldset class="first_fieldset">
             {% vmfield form.template_name %}
             {% vmfield form.description %}

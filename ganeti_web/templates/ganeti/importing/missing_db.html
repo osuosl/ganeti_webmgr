@@ -25,7 +25,7 @@
         {% trans "If you manually create virtual machines they will exist only in the ganeti cluster, and must be manually imported into Ganeti Web Manager's database." %}.
     </p>
     
-    <form id="missing_form" action="{% url import-missing_db %}" method="post">
+    <form id="missing_form" action="{% url import-missing_db %}" method="post">{% csrf_token %}
         {{form.errors}}
         <div class="owner">{{form.owner.label}}: {{form.owner}}</div>
         <input type="submit" value="{% trans "Import Selected" %}" {%if not vms%}disabled{%endif%}>
