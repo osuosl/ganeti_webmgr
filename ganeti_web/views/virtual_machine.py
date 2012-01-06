@@ -91,18 +91,18 @@ def delete(request, cluster_slug, instance, rest=False):
         user.has_any_perms(instance, ["remove", "admin"]) or
         user.has_perm("admin", cluster)
         ):
-        if not rest:
-            return render_403(request, _('You do not have sufficient privileges'))
-        else:
+        if rest:
             return HttpResponseForbidden()
+        else:
+            return render_403(request, _('You do not have sufficient privileges'))
 
-    if (request.method == 'GET') & (not rest):
+    if request.method == 'GET' and not rest:
         return render_to_response("ganeti/virtual_machine/delete.html",
             {'vm': instance, 'cluster':cluster},
             context_instance=RequestContext(request),
         )
 
-    elif (request.method == 'POST') | rest:
+    elif request.method == 'POST' or rest:
         # verify that this instance actually exists in ganeti.  If it doesn't
         # exist it can just be deleted.
         try:
@@ -110,10 +110,10 @@ def delete(request, cluster_slug, instance, rest=False):
         except GanetiApiError, e:
             if e.code == 404:
                 instance.delete()
-                if not rest:
-                    return HttpResponseRedirect(reverse('virtualmachine-list'))
-                else:
+                if rest:
                     return HttpAccepted()
+                else:
+                    return HttpResponseRedirect(reverse('virtualmachine-list'))
 
         # start deletion job and mark the VirtualMachine as pending_delete and
         # disable the cache for this VM.
