@@ -53,7 +53,6 @@ from ganeti_web.utilities import cluster_default_info, cluster_os_list, \
 from django.utils.translation import ugettext as _
 
 
-
 #XXX No more need for tastypie dependency for 0.8
 class HttpAccepted(HttpResponse):
     """
@@ -832,7 +831,7 @@ def create(request, cluster_slug=None):
             except GanetiApiError, e:
                 msg = '%s: %s' % (_('Error creating virtual machine on this cluster'),e)
                 form._errors["cluster"] = form.error_class([msg])
-        
+
         cluster_defaults = {}
         if 'cluster' in request.POST and request.POST['cluster'] != '':
             try:
@@ -841,7 +840,7 @@ def create(request, cluster_slug=None):
                     cluster_defaults = cluster_default_info(cluster)
             except Cluster.DoesNotExist:
                 pass
-                
+
     elif request.method == 'GET':
         form = NewVirtualMachineForm(user)
         cluster_defaults = {}
@@ -863,7 +862,7 @@ def modify(request, cluster_slug, instance):
         or user.has_perm('admin', cluster)):
         return render_403(request,
             'You do not have permissions to edit this virtual machine')
-    
+
     hv_form = None
     hv = get_hypervisor(vm)
     if hv == 'kvm':
@@ -874,9 +873,9 @@ def modify(request, cluster_slug, instance):
         hv_form = HvmModifyVirtualMachineForm
 
     if request.method == 'POST':
-        
+
         form = hv_form(vm, request.POST)
-        
+
         form.owner = vm.owner
         form.vm = vm
         form.cluster = cluster
@@ -892,7 +891,7 @@ def modify(request, cluster_slug, instance):
             form = hv_form(vm, request.session['edit_form'])
         else:
             form = hv_form(vm)
- 
+
     # Select template depending on hypervisor
     # Default to edit_base
     if hv == 'kvm':
@@ -982,7 +981,7 @@ def modify_confirm(request, cluster_slug, instance):
             # Redirect to instance-detail
             return HttpResponseRedirect(
                 reverse("instance-detail", args=[cluster.slug, vm.hostname]))
-        
+
     elif request.method == "GET":
         form = ModifyConfirmForm()
 
@@ -1020,11 +1019,11 @@ def modify_confirm(request, cluster_slug, instance):
             if len(oses) > 1:
                 """
                 XXX - Special case for a cluster with two different types of
-                  optgroups (i.e. Image, Debootstrap). 
+                  optgroups (i.e. Image, Debootstrap).
                   The elements at 00 and 10:
                     The optgroups
                   The elements at 010 and 110:
-                    Tuple containing the OS Name and OS value. 
+                    Tuple containing the OS Name and OS value.
                   The elements at 0101 and 1101:
                     String containing the OS Name
                 """
