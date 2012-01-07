@@ -863,14 +863,23 @@ def modify(request, cluster_slug, instance):
         return render_403(request,
             'You do not have permissions to edit this virtual machine')
 
-    hv_form = None
     hv = get_hypervisor(vm)
     if hv == 'kvm':
         hv_form = KvmModifyVirtualMachineForm
+        template = 'ganeti/virtual_machine/edit_kvm.html'
     elif hv == 'xen-pvm':
         hv_form = PvmModifyVirtualMachineForm
+        template = 'ganeti/virtual_machine/edit_pvm.html'
     elif hv == 'xen-hvm':
         hv_form = HvmModifyVirtualMachineForm
+        template = 'ganeti/virtual_machine/edit_hvm.html'
+    else:
+        hv_form = None
+        template = 'ganeti/virtual_machine/edit_base.html'
+        # XXX no matter what, we're gonna call hv_form() and die. Let's do it
+        # louder than usual. >:3
+        msg = "Hey, guys, implementation error in views/vm.py:modify"
+        raise RuntimeError(msg)
 
     if request.method == 'POST':
 
@@ -892,17 +901,6 @@ def modify(request, cluster_slug, instance):
         else:
             form = hv_form(vm)
 
-    # Select template depending on hypervisor
-    # Default to edit_base
-    if hv == 'kvm':
-        template = 'ganeti/virtual_machine/edit_kvm.html'
-    elif hv == 'xen-hvm':
-        template = 'ganeti/virtual_machine/edit_hvm.html'
-    elif hv == 'xen-pvm':
-        template = 'ganeti/virtual_machine/edit_pvm.html'
-    else:
-        template = 'ganeti/virtual_machine/edit_base.html'
-
     return render_to_response(template, {
         'cluster': cluster,
         'instance': vm,
@@ -916,7 +914,6 @@ def modify(request, cluster_slug, instance):
 def modify_confirm(request, cluster_slug, instance):
     vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
 
-    hv_form = None
     hv = get_hypervisor(vm)
     if hv == 'kvm':
         hv_form = KvmModifyVirtualMachineForm
@@ -924,6 +921,12 @@ def modify_confirm(request, cluster_slug, instance):
         hv_form = PvmModifyVirtualMachineForm
     elif hv == 'xen-hvm':
         hv_form = HvmModifyVirtualMachineForm
+    else:
+        hv_form = None
+        # XXX no matter what, we're gonna call hv_form() and die. Let's do it
+        # louder than usual. >:3
+        msg = "Hey, guys, implementation error in views/vm.py:modify_confirm"
+        raise RuntimeError(msg)
 
     user = request.user
     power = user.is_superuser or user.has_any_perms(vm, ['admin','power'])
