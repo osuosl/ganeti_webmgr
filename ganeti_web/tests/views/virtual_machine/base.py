@@ -107,7 +107,8 @@ class TestVirtualMachineViewsBase(TestCase, VirtualMachineTestCaseMixin, ViewTes
             user.set_perms(perms, vm)
         self.assert_200(url, args, [superuser, user], mime=mimetype, template=template)
 
-    def validate_post_only_url(self, url, args=None, data=dict(), users=None, get_allowed=False):
+    def validate_post_only_url(self, url, args=None, data=dict(), users=None,
+                               get_allowed=False):
         """
         Generic function for POSTing to URLs.
 
@@ -119,7 +120,16 @@ class TestVirtualMachineViewsBase(TestCase, VirtualMachineTestCaseMixin, ViewTes
         vm = globals()['vm']
         args = args if args else (cluster.slug, vm.hostname)
         users = users if users else [superuser, vm_admin, cluster_admin]
-        self.assert_standard_fails(url, args)
+
+        # Only do the standard assertions if GET is allowed. POST-only URLs
+        # generally don't give a shit about any GET requests and will 405 all
+        # of them.
+        if get_allowed:
+            self.assert_standard_fails(url, args)
+        else:
+            self.assertTrue(c.login(username=superuser.username, password='secret'))
+            response = c.get(url % args, data)
+            self.assertEqual(405, response.status_code)
 
         def test_json(user, response):
             content = json.loads(response.content)
@@ -141,10 +151,3 @@ class TestVirtualMachineViewsBase(TestCase, VirtualMachineTestCaseMixin, ViewTes
         self.assert_200(url, args, [superuser], data=data,
                         tests=test_json_error, mime='application/json',
                         method='post')
-
-        # If GET is supposed to be forbidden on this URL, make sure that GET
-        # 405s.
-        if not get_allowed:
-            self.assertTrue(c.login(username=superuser.username, password='secret'))
-            response = c.get(url % args, data)
-            self.assertEqual(405, response.status_code)
