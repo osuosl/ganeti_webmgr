@@ -24,8 +24,9 @@ from django.core.urlresolvers import reverse
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.db.models import Q
 from django.forms import CharField, HiddenInput
-from django.http import HttpResponse, HttpResponseRedirect, \
-    HttpResponseNotAllowed, HttpResponseForbidden, HttpResponseBadRequest, Http404
+from django.http import (HttpResponse, HttpResponseRedirect,
+                         HttpResponseForbidden, HttpResponseBadRequest,
+                         Http404)
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.conf import settings
@@ -906,6 +907,7 @@ def modify(request, cluster_slug, instance):
     )
 
 
+# XXX mother, did it need to be so long?
 @login_required
 def modify_confirm(request, cluster_slug, instance):
     vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
@@ -1123,22 +1125,22 @@ def rename(request, cluster_slug, instance, rest=False, extracted_params=None):
     if request.method == 'POST':
         form = RenameForm(vm, request.POST)
         params_ok = False
-        if ((rest) & (extracted_params != None)):
-            if ((extracted_params.has_key('hostname')) & (extracted_params.has_key('ip_check')) & (extracted_params.has_key('name_check'))):
-                hostname = extracted_params.get('hostname')
-                ip_check = extracted_params.get('ip_check')
-                name_check = extracted_params.get('name_check')
+        if rest and extracted_params is not None:
+            if all(k in extracted_params for k in ("hostname", "ip_check", "name_check")):
+                hostname = extracted_params['hostname']
+                ip_check = extracted_params['ip_check']
+                name_check = extracted_params['name_check']
                 params_ok = True
             else:
-                return HttpResponseBadRequest
+                return HttpResponseBadRequest()
 
-        if (form.is_valid()):
+        if form.is_valid():
             data = form.cleaned_data
             hostname = data['hostname']
             ip_check = data['ip_check']
             name_check = data['name_check']
 
-        if (form.is_valid() | params_ok):
+        if form.is_valid() or params_ok:
             try:
                 # In order for rename to work correctly, the vm must first be
                 #   shutdown.
@@ -1225,6 +1227,7 @@ def job_status(request, id, rest=False):
     ct = ContentType.objects.get_for_model(VirtualMachine)
     jobs = Job.objects.filter(q, content_type=ct, object_id=id).order_by('job_id')
     jobs = [j.info for j in jobs]
+
     if rest:
         return jobs
     else:
