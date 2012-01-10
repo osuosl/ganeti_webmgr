@@ -2,10 +2,7 @@ from ganeti_web.tests.views.virtual_machine.base import TestVirtualMachineViewsB
 
 __all__ = ['TestVirtualMachineLogViews']
 
-global cluster, vm
-
 class TestVirtualMachineLogViews(TestVirtualMachineViewsBase):
-    context = globals()
 
     def test_view_object_log(self):
         """
@@ -17,5 +14,5 @@ class TestVirtualMachineLogViews(TestVirtualMachineViewsBase):
             * nonexistent VirtualMachine returns 404
         """
         url = "/cluster/%s/%s/object_log/"
-        args = (cluster.slug, vm.hostname)
+        args = (self.cluster.slug, self.vm.hostname)
         self.validate_get(url, args, 'object_log/log.html')
