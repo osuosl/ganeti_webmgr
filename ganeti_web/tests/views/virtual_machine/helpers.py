@@ -1,7 +1,7 @@
-import json
-
 from django.contrib.auth.models import Group
 from django.test import TestCase
+# Per #6579, do not change this import without discussion.
+from django.utils import simplejson as json
 
 from object_permissions import grant
 
