@@ -40,6 +40,8 @@ class TestVirtualMachineViewsBase(TestCase, VirtualMachineTestCaseMixin, ViewTes
     def setUp(self):
         models.client.GanetiRapiClient = RapiProxy
         vm, cluster = self.create_virtual_machine()
+        self.vm = vm
+        self.cluster = cluster
 
         context = {}
         self.create_standard_users(context)
@@ -70,6 +72,9 @@ class TestVirtualMachineViewsBase(TestCase, VirtualMachineTestCaseMixin, ViewTes
         context['vm_admin'] = vm_admin
         globals().update(context)
         self.context.update(context)
+
+        self.group = group
+        self.c = c
 
     def tearDown(self):
         if vm is not None:
