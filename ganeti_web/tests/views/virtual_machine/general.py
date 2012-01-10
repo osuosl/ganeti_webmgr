@@ -1,7 +1,7 @@
-import json
-
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
+# #6579.
+from django.utils import simplejson as json
 
 from ganeti_web.models import SSHKey
 from ganeti_web.tests.views.virtual_machine.base import TestVirtualMachineViewsBase
