@@ -263,7 +263,7 @@ def shutdown(request, cluster_slug, instance, rest=False):
         return HttpResponse(json.dumps(msg), mimetype='application/json')
 
 
-@require_http_methods(["GET", "POST"])
+@require_POST
 @login_required
 def startup(request, cluster_slug, instance, rest=False):
     vm = get_object_or_404(VirtualMachine, hostname=instance,
@@ -287,7 +287,7 @@ def startup(request, cluster_slug, instance, rest=False):
             if quota['ram'] is not None and (used['ram'] + vm.ram) > quota['ram']:
                 msg = _('Owner does not have enough RAM remaining on this cluster to start the virtual machine.')
                 if rest:
-                    return {"msg":msg, "code":500}
+                    return {"msg": msg, "code": 500}
                 else:
                     return HttpResponse(json.dumps([0, msg]),
                                         mimetype='application/json')
@@ -295,25 +295,24 @@ def startup(request, cluster_slug, instance, rest=False):
             if quota['virtual_cpus'] and (used['virtual_cpus'] + vm.virtual_cpus) > quota['virtual_cpus']:
                 msg = _('Owner does not have enough Virtual CPUs remaining on this cluster to start the virtual machine.')
                 if rest:
-                    return {"msg":msg, "code":500}
+                    return {"msg": msg, "code": 500}
                 else:
                     return HttpResponse(json.dumps([0, msg]),
                                         mimetype='application/json')
 
-    if (request.method == 'POST') or rest:
-        try:
-            job = vm.startup()
-            job.refresh()
-            msg = job.info
+    try:
+        job = vm.startup()
+        job.refresh()
+        msg = job.info
 
-            # log information about starting up the machine
-            log_action('VM_START', user, vm, job)
-        except GanetiApiError, e:
-            msg = {'__all__':[str(e)]}
-        if not rest:
-            return HttpResponse(json.dumps(msg), mimetype='application/json')
-        else:
-            return {"msg": msg,"code":"200"}
+        # log information about starting up the machine
+        log_action('VM_START', user, vm, job)
+    except GanetiApiError, e:
+        msg = {'__all__':[str(e)]}
+    if rest:
+        return {"msg": msg,"code": 200}
+    else:
+        return HttpResponse(json.dumps(msg), mimetype='application/json')
 
 
 @login_required
