@@ -26,20 +26,21 @@ __all__ = ('TestRapiCache',)
 
 
 class TestRapiCache(TestCase):
-    
+
     def setUp(self):
-        self.tearDown()
         self.cluster = Cluster(hostname='ganeti.osuosl.test')
         self.cluster.save()
-    
+
     def tearDown(self):
+        # Teardown our cluster.
+        self.cluster.delete()
+
         clear_rapi_cache()
-        Cluster.objects.all().delete()
-    
+
     def test_get_with_cluster(self):
         """
         Test getting a new rapi for a cluster
-        
+
         Verifies:
             * rapi is returned
         """
@@ -47,7 +48,7 @@ class TestRapiCache(TestCase):
         rapi = get_rapi(cluster.hash, cluster)
         self.assertTrue(rapi)
         self.assertTrue(isinstance(rapi, (client.GanetiRapiClient,)))
-    
+
     def test_get_with_id(self):
         """
         Test getting a new rapi for a cluster by cluster ID
@@ -58,11 +59,11 @@ class TestRapiCache(TestCase):
         rapi = get_rapi(cluster.hash, cluster.id)
         self.assertTrue(rapi)
         self.assertTrue(isinstance(rapi, (client.GanetiRapiClient,)))
-    
+
     def test_get_cached_client(self):
         """
         Test getting a cached rapi
-        
+
         Verifies:
             * rapi returned is the same as the cached rapi
         """
@@ -70,17 +71,17 @@ class TestRapiCache(TestCase):
         rapi = get_rapi(cluster.hash, cluster.id)
         self.assertTrue(rapi)
         self.assertTrue(isinstance(rapi, (client.GanetiRapiClient,)))
-        
+
         cached_rapi = get_rapi(cluster.hash, cluster)
         self.assertEqual(rapi, cached_rapi)
-        
+
         cached_rapi = get_rapi(cluster.hash, cluster.id)
         self.assertEqual(rapi, cached_rapi)
-    
+
     def test_get_changed_hash(self):
         """
         Test getting rapi after hash has changed
-        
+
         Verifies:
             * a new rapi is created and returned
             * old rapi is removed from cache
@@ -89,7 +90,7 @@ class TestRapiCache(TestCase):
         cluster = self.cluster
         old_hash = cluster.hash
         rapi = get_rapi(cluster.hash, cluster)
-        
+
         cluster.hostname = 'a.different.hostname'
         cluster.save()
         self.assertNotEqual(old_hash, cluster.hash, "new hash was not created")
@@ -98,11 +99,11 @@ class TestRapiCache(TestCase):
         self.assertTrue(isinstance(rapi, (client.GanetiRapiClient,)))
         self.assertNotEqual(rapi, new_rapi)
         self.assertFalse(old_hash in RAPI_CACHE, "old rapi client was not removed")
-    
+
     def test_stale_hash(self):
         """
         Tests an object with a stale hash
-        
+
         Verifies:
             * a rapi is created and stored using the current credentials
         """
@@ -114,15 +115,15 @@ class TestRapiCache(TestCase):
         stale_rapi = get_rapi(stale_cluster.hash, stale_cluster)
         self.assertTrue(stale_rapi)
         self.assertTrue(isinstance(stale_rapi, (client.GanetiRapiClient,)))
-        
+
         fresh_rapi = get_rapi(cluster.hash, cluster)
         self.assertEqual(stale_rapi, fresh_rapi)
-    
+
     def test_stale_hash_new_already_created(self):
         """
         Tests an object with a stale hash, but the new client was already
         created
-        
+
         Verifies:
             * Existing client, with current hash, is returned
         """
