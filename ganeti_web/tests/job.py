@@ -197,8 +197,15 @@ class TestJobViews(TestJobMixin, TestCase, UserTestMixin, ViewTestMixin):
         self.c = Client()
 
     def tearDown(self):
+        # Tear down users.
+        self.unauthorized.delete()
+        self.superuser.delete()
+        self.user.delete()
+        self.vm_owner.delete()
+        self.cluster_admin.delete()
+        self.vm_admin.delete()
+
         super(TestJobViews, self).tearDown()
-        User.objects.all().delete()
 
     def test_clear_job(self):
 
