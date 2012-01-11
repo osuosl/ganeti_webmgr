@@ -33,7 +33,6 @@ __all__ = ['TestClusterFormNew', 'TestClusterFormEdit']
 class TestClusterFormBase(TestCase):
 
     def setUp(self):
-        self.tearDown()
         models.client.GanetiRapiClient = RapiProxy
 
         self.cluster = Cluster(hostname='test.osuosl.test', slug='OSL_TEST')
@@ -51,9 +50,8 @@ class TestClusterFormBase(TestCase):
                     )
 
     def tearDown(self):
-        VirtualMachine.objects.all().delete()
-        Quota.objects.all().delete()
-        Cluster.objects.all().delete()
+        # Tear down the cluster.
+        self.cluster.delete()
 
 
 class TestClusterFormNew(TestClusterFormBase):
@@ -88,7 +86,7 @@ class TestClusterFormNew(TestClusterFormBase):
             cluster = form.save()
             for k, v in data_.items():
                 self.assertEqual(v, getattr(cluster, k))
-            Cluster.objects.all().delete()
+            cluster.delete()
 
     def test_read_only(self):
         """ success without username or password """
@@ -100,6 +98,7 @@ class TestClusterFormNew(TestClusterFormBase):
         cluster = form.save()
         for k, v in data_.items():
             self.assertEqual(v, getattr(cluster, k))
+        cluster.delete()
 
     def test_password_required(self):
         """ if either username or password are entered both are required """
