@@ -1,6 +1,5 @@
-import json
-
 from django.contrib.auth.models import User
+from django.utils import simplejson as json
 
 from ganeti_web import models
 from ganeti_web.tests.rapi_proxy import JOB_RUNNING
