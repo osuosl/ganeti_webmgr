@@ -21,8 +21,6 @@ from datetime import datetime
 from django.contrib.auth.models import User
 from django.test import TestCase
 
-from ganeti_web.models import Profile
-
 from ganeti_web.tests.rapi_proxy import RapiProxy, INFO, JOB_RUNNING, JOB
 from ganeti_web import models
 Cluster = models.Cluster
@@ -38,18 +36,9 @@ __all__ = ['TestClusterModel']
 class TestClusterModel(TestCase):
 
     def setUp(self):
-        self.tearDown()
         models.client.GanetiRapiClient = RapiProxy
 
-    def tearDown(self):
-        Profile.objects.all().delete()
-        User.objects.all().delete()
-        Quota.objects.all().delete()
-        VirtualMachine.objects.all().delete()
-        Node.objects.all().delete()
-        Cluster.objects.all().delete()
-
-    def test_trivial(self):
+    def test_instantiation(self):
         """
         Test creating a Cluster Object
         """
@@ -63,13 +52,17 @@ class TestClusterModel(TestCase):
             * object is saved and queryable
             * hash is updated
         """
+
+        # XXX any reason why these are in a single test?
         cluster = Cluster()
         cluster.save()
         self.assertTrue(cluster.hash)
+        cluster.delete()
 
         cluster = Cluster(hostname='foo.fake.hostname', slug='different')
         cluster.save()
         self.assertTrue(cluster.hash)
+        cluster.delete()
 
     def test_parse_info(self):
         """
@@ -85,6 +78,8 @@ class TestClusterModel(TestCase):
 
         self.assertEqual(cluster.ctime, datetime.fromtimestamp(1270685309.818239))
         self.assertEqual(cluster.mtime, datetime.fromtimestamp(1283552454.2998919))
+
+        cluster.delete()
 
     def test_get_quota(self):
         """
@@ -115,6 +110,10 @@ class TestClusterModel(TestCase):
         quota.__dict__.update(user_quota)
         quota.save()
         self.assertEqual(user_quota, cluster.get_quota(user.get_profile()))
+
+        quota.delete()
+        cluster.delete()
+        user.delete()
 
     def test_set_quota(self):
         """
@@ -154,6 +153,9 @@ class TestClusterModel(TestCase):
         self.assertFalse(query.exists())
         self.assertEqual(default_quota, cluster.get_quota(user.get_profile()))
 
+        cluster.delete()
+        user.delete()
+
     def test_sync_virtual_machines(self):
         """
         Tests synchronizing cached virtuals machines (stored in db) with info
@@ -172,12 +174,24 @@ class TestClusterModel(TestCase):
         vm_removed.save()
 
         cluster.sync_virtual_machines()
-        self.assertTrue(VirtualMachine.objects.get(cluster=cluster, hostname=vm_missing), 'missing vm was not created')
-        self.assertTrue(VirtualMachine.objects.get(cluster=cluster, hostname=vm_current.hostname), 'previously existing vm was not created')
-        self.assertTrue(VirtualMachine.objects.filter(cluster=cluster, hostname=vm_removed.hostname), 'vm not present in ganeti was not removed from db, even though remove flag was false')
+        self.assertTrue(VirtualMachine.objects.get(cluster=cluster,
+                                                   hostname=vm_missing),
+                        'missing vm was not created')
+        self.assertTrue(VirtualMachine.objects.get(cluster=cluster,
+                                                   hostname=vm_current.hostname),
+                        'previously existing vm was not created')
+        self.assertTrue(VirtualMachine.objects.filter(cluster=cluster,
+                                                      hostname=vm_removed.hostname),
+                        "vm not in ganeti was not removed from db")
 
         cluster.sync_virtual_machines(True)
-        self.assertFalse(VirtualMachine.objects.filter(cluster=cluster, hostname=vm_removed.hostname), 'vm not present in ganeti was not removed from db')
+        self.assertFalse(VirtualMachine.objects.filter(cluster=cluster,
+                                                       hostname=vm_removed.hostname),
+                         'vm not present in ganeti was not removed from db')
+
+        vm_removed.delete()
+        vm_current.delete()
+        cluster.delete()
 
     def test_sync_nodes(self):
         """
@@ -201,6 +215,10 @@ class TestClusterModel(TestCase):
         cluster.sync_nodes(True)
         self.assertFalse(Node.objects.filter(cluster=cluster, hostname=node_removed.hostname), 'node not present in ganeti was not removed from db')
 
+        node_current.delete()
+        node_removed.delete()
+        cluster.delete()
+
 
     def test_missing_in_database(self):
         """
@@ -215,6 +233,10 @@ class TestClusterModel(TestCase):
 
         self.assertEqual([u'gimager.osuosl.bak'], cluster.missing_in_db)
 
+        vm_current.delete()
+        vm_removed.delete()
+        cluster.delete()
+
     def test_missing_in_ganeti(self):
         """
         Tests missing_in_ganeti property
@@ -228,6 +250,10 @@ class TestClusterModel(TestCase):
 
         self.assertEqual([u'does.not.exist.org'], cluster.missing_in_ganeti)
 
+        vm_current.delete()
+        vm_removed.delete()
+        cluster.delete()
+
     def test_available_ram(self):
         """
         Tests that the available_ram property returns the correct values
@@ -237,13 +263,26 @@ class TestClusterModel(TestCase):
         node = Node.objects.create(cluster=c, hostname='node.osuosl.test')
         node1 = Node.objects.create(cluster=c2, hostname='node1.osuosl.test')
 
-        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='foo', ram=123, status='running')
-        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='bar', ram=456, status='running')
-        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='xoo', ram=789, status='admin_down')
-        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='xar', ram=234, status='stopped')
-        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='boo', status='running')
-        VirtualMachine.objects.create(cluster=c2, primary_node=node1, hostname='gar', ram=888, status='running')
-        VirtualMachine.objects.create(cluster=c2, primary_node=node1, hostname='yoo', ram=999, status='admin_down')
+        foo = VirtualMachine.objects.create(cluster=c, primary_node=node,
+                                            hostname='foo', ram=123,
+                                            status='running')
+        bar = VirtualMachine.objects.create(cluster=c, primary_node=node,
+                                            hostname='bar', ram=456,
+                                            status='running')
+        xoo = VirtualMachine.objects.create(cluster=c, primary_node=node,
+                                            hostname='xoo', ram=789,
+                                            status='admin_down')
+        xar = VirtualMachine.objects.create(cluster=c, primary_node=node,
+                                            hostname='xar', ram=234,
+                                            status='stopped')
+        boo = VirtualMachine.objects.create(cluster=c, primary_node=node,
+                                            hostname='boo', status='running')
+        gar = VirtualMachine.objects.create(cluster=c2, primary_node=node1,
+                                            hostname='gar', ram=888,
+                                            status='running')
+        yoo = VirtualMachine.objects.create(cluster=c2, primary_node=node1,
+                                            hostname='yoo', ram=999,
+                                            status='admin_down')
 
         # test with no nodes, should result in zeros since nodes info isn't cached yet
         ram = c.available_ram
@@ -261,6 +300,18 @@ class TestClusterModel(TestCase):
         self.assertEqual(8888, ram['used'])
         self.assertEqual(579, ram['allocated'])
 
+        foo.delete()
+        bar.delete()
+        xoo.delete()
+        xar.delete()
+        boo.delete()
+        gar.delete()
+        yoo.delete()
+
+        node.delete()
+        node1.delete()
+        c.delete()
+        c2.delete()
 
     def test_available_disk(self):
         """
@@ -271,13 +322,26 @@ class TestClusterModel(TestCase):
         node = Node.objects.create(cluster=c, hostname='node.osuosl.test')
         node1 = Node.objects.create(cluster=c2, hostname='node1.osuosl.test')
 
-        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='foo', disk_size=123, status='running')
-        VirtualMachine.objects.create(cluster=c, primary_node=node,hostname='bar', disk_size=456, status='running')
-        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='xoo', disk_size=789, status='admin_down')
-        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='xar', disk_size=234, status='stopped')
-        VirtualMachine.objects.create(cluster=c, primary_node=node, hostname='boo', status='running')
-        VirtualMachine.objects.create(cluster=c2, primary_node=node1, hostname='gar', disk_size=888, status='running')
-        VirtualMachine.objects.create(cluster=c2, primary_node=node1, hostname='yoo', disk_size=999, status='admin_down')
+        foo = VirtualMachine.objects.create(cluster=c, primary_node=node,
+                                            hostname='foo', disk_size=123,
+                                            status='running')
+        bar = VirtualMachine.objects.create(cluster=c,
+                                            primary_node=node,hostname='bar',
+                                            disk_size=456, status='running')
+        xoo = VirtualMachine.objects.create(cluster=c, primary_node=node,
+                                            hostname='xoo', disk_size=789,
+                                            status='admin_down')
+        xar = VirtualMachine.objects.create(cluster=c, primary_node=node,
+                                            hostname='xar', disk_size=234,
+                                            status='stopped')
+        boo = VirtualMachine.objects.create(cluster=c, primary_node=node,
+                                            hostname='boo', status='running')
+        gar = VirtualMachine.objects.create(cluster=c2, primary_node=node1,
+                                            hostname='gar', disk_size=888,
+                                            status='running')
+        yoo = VirtualMachine.objects.create(cluster=c2, primary_node=node1,
+                                            hostname='yoo', disk_size=999,
+                                            status='admin_down')
 
         # test with no nodes, should result in zeros since nodes info isn't cached yet
         disk = c.available_disk
@@ -294,6 +358,19 @@ class TestClusterModel(TestCase):
         self.assertEqual(5064, disk['free'])
         self.assertEqual(4444, disk['used'])
         self.assertEqual(1602, disk['allocated'])
+
+        foo.delete()
+        bar.delete()
+        xoo.delete()
+        xar.delete()
+        boo.delete()
+        gar.delete()
+        yoo.delete()
+
+        node.delete()
+        node1.delete()
+        c.delete()
+        c2.delete()
 
     def test_redistribute_config(self):
         """
@@ -322,3 +399,5 @@ class TestClusterModel(TestCase):
         self.assertFalse(cluster.last_job_id)
         self.assertFalse(Job.objects.filter(id=job_id).values()[0]['ignore_cache'])
         self.assertTrue(Job.objects.get(id=job_id).finished)
+
+        cluster.delete()
