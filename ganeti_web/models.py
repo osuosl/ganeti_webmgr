@@ -60,7 +60,8 @@ from ganeti_web import constants, management
 from ganeti_web.fields import PreciseDateTimeField, SumIf
 from ganeti_web import permissions
 from ganeti_web.util import client
-from ganeti_web.util.client import GanetiApiError, REPLACE_DISK_AUTO
+from ganeti_web.util.client import (GenericCurlConfig, GanetiApiError,
+                                    REPLACE_DISK_AUTO)
 
 from south.signals import post_migrate
 
@@ -118,7 +119,11 @@ def get_rapi(hash, cluster):
     if cluster in RAPI_CACHE_HASHES:
         del RAPI_CACHE[RAPI_CACHE_HASHES[cluster]]
 
-    rapi = client.GanetiRapiClient(host, port, user, password)
+    # Set connect timeout in settings.py so that you do not learn patience.
+    curl_config = GenericCurlConfig(
+                      connect_timeout=settings.RAPI_CONNECT_TIMEOUT)
+    rapi = client.GanetiRapiClient(host, port, user, password, 
+                                   curl_config_fn=curl_config) 
     RAPI_CACHE[hash] = rapi
     RAPI_CACHE_HASHES[cluster] = hash
     return rapi
@@ -1790,7 +1795,7 @@ def refresh_objects(sender, **kwargs):
             flush()
 
         wf('- Refresh Cached Cluster Objects')
-        wf(' > Synchronizing Cluster Nodes', True)
+        wf(' > Synchronizing Cluster Nodes ', True)
         flush()
         for cluster in Cluster.objects.all().iterator():
             try:
@@ -1799,17 +1804,18 @@ def refresh_objects(sender, **kwargs):
             except GanetiApiError:
                 wf('E')
 
-        wf(' > Refreshing Node Caches', True)
+        wf(' > Refreshing Node Caches ', True)
         for node in Node.objects.all().iterator():
-            wf('.')
+            try:
+                wf('.')
+            except GanetiApiError:
+                wf('E')
 
-
-        wf(' > Refreshing Instance Caches', True)
+        wf(' > Refreshing Instance Caches ', True)
         for instance in VirtualMachine.objects.all().iterator():
             try:
                 wf('.')
-            # XXX bare except!?
-            except Exception:
+            except GanetiApiError:
                 wf('E')
         wf('\n')
 
