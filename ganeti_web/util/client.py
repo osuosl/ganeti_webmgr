@@ -123,7 +123,7 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
     _json_encoder = json.JSONEncoder(sort_keys=True)
 
     def __init__(self, host, port=GANETI_RAPI_PORT, username=None,
-                 password=None, logger=logging):
+                 password=None, timeout=60, logger=logging):
         """
         Initializes this class.
 
@@ -140,6 +140,7 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
 
         self.username = username
         self.password = password
+        self.timeout = timeout
         self._logger = logger
 
         try:
@@ -185,6 +186,7 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
 
         kwargs = {
             "verify": False,
+            "timeout": self.timeout,
         }
 
         if self.username and self.password:

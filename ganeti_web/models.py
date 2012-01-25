@@ -60,8 +60,7 @@ from ganeti_web import constants, management
 from ganeti_web.fields import PreciseDateTimeField, SumIf
 from ganeti_web import permissions
 from ganeti_web.util import client
-from ganeti_web.util.client import (GenericCurlConfig, GanetiApiError,
-                                    REPLACE_DISK_AUTO)
+from ganeti_web.util.client import GanetiApiError, REPLACE_DISK_AUTO
 
 from south.signals import post_migrate
 
@@ -120,10 +119,8 @@ def get_rapi(hash, cluster):
         del RAPI_CACHE[RAPI_CACHE_HASHES[cluster]]
 
     # Set connect timeout in settings.py so that you do not learn patience.
-    curl_config = GenericCurlConfig(
-                      connect_timeout=settings.RAPI_CONNECT_TIMEOUT)
-    rapi = client.GanetiRapiClient(host, port, user, password, 
-                                   curl_config_fn=curl_config) 
+    rapi = client.GanetiRapiClient(host, port, user, password,
+                                   timeout=settings.RAPI_CONNECT_TIMEOUT)
     RAPI_CACHE[hash] = rapi
     RAPI_CACHE_HASHES[cluster] = hash
     return rapi
