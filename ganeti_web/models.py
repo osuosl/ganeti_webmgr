@@ -101,65 +101,6 @@ def generate_random_password(length=12):
 
 FINISHED_JOBS = ('success', 'unknown','error')
 
-RAPI_CACHE = {}
-RAPI_CACHE_HASHES = {}
-def get_rapi(hash, cluster):
-    """
-    Retrieves the cached Ganeti RAPI client for a given hash.  The Hash is
-    derived from the connection credentials required for a cluster.  If the
-    client is not yet cached, it will be created and added.
-
-    If a hash does not correspond to any cluster then Cluster.DoesNotExist will
-    be raised.
-
-    @param cluster - either a cluster object, or ID of object.  This is used for
-        resolving the cluster if the client is not already found.  The id is
-        used rather than the hash, because the hash is mutable.
-
-    @return a Ganeti RAPI client.
-    """
-    if hash in RAPI_CACHE:
-        return RAPI_CACHE[hash]
-
-    # always look up the instance, even if we were given a Cluster instance
-    # it ensures we are retrieving the latest credentials.  This helps avoid
-    # stale credentials.  Retrieve only the values because we don't actually
-    # need another Cluster instance here.
-    if isinstance(cluster, (Cluster,)):
-        cluster = cluster.id
-    (credentials,) = Cluster.objects.filter(id=cluster) \
-        .values_list('hash','hostname','port','username','password')
-    hash, host, port, user, password = credentials
-    user = user if user else None
-    # decrypt password
-    # XXX django-fields only stores str, convert to None if needed
-    password = Cluster.decrypt_password(password) if password else None
-    password = None if password in ('None', '') else password
-
-    # now that we know hash is fresh, check cache again. The original hash could
-    # have been stale.  This avoids constructing a new RAPI that already exists.
-    if hash in RAPI_CACHE:
-        return RAPI_CACHE[hash]
-
-    # delete any old version of the client that was cached.
-    if cluster in RAPI_CACHE_HASHES:
-        del RAPI_CACHE[RAPI_CACHE_HASHES[cluster]]
-
-    # Set connect timeout in settings.py so that you do not learn patience.
-    rapi = client.GanetiRapiClient(host, port, user, password,
-                                   timeout=settings.RAPI_CONNECT_TIMEOUT)
-    RAPI_CACHE[hash] = rapi
-    RAPI_CACHE_HASHES[cluster] = hash
-    return rapi
-
-
-def clear_rapi_cache():
-    """
-    clears the rapi cache
-    """
-    RAPI_CACHE.clear()
-    RAPI_CACHE_HASHES.clear()
-
 
 ssh_public_key_re = re.compile(
     r'^ssh-(rsa|dsa|dss) [A-Z0-9+/=]+ .+$', re.IGNORECASE)
@@ -462,7 +403,7 @@ class Job(CachedClusterObject):
 
     @property
     def rapi(self):
-        return get_rapi(self.cluster_hash, self.cluster_id)
+        return self.cluster.rapi
 
     def _refresh(self):
         return self.rapi.GetJobStatus(self.job_id)
@@ -620,7 +561,7 @@ class VirtualMachine(CachedClusterObject):
 
     @property
     def rapi(self):
-        return get_rapi(self.cluster_hash, self.cluster_id)
+        return self.cluster.rapi
 
     @property
     def is_running(self):
@@ -913,7 +854,7 @@ class Node(CachedClusterObject):
 
     @property
     def rapi(self):
-        return get_rapi(self.cluster_hash, self.cluster_id)
+        return self.cluster.rapi
 
     @classmethod
     def parse_persistent_info(cls, info):
@@ -1041,6 +982,10 @@ class Cluster(CachedClusterObject):
     last_job = models.ForeignKey('Job', null=True, blank=True, \
                                  related_name='cluster_last_job')
 
+    # Internal lazy cached RAPI client for certain pathological views that
+    # repeatedly look it up.
+    _rapi = None
+
     class Meta:
         ordering = ["hostname", "description"]
 
@@ -1086,12 +1031,17 @@ class Cluster(CachedClusterObject):
     @property
     def rapi(self):
         """
-        retrieves the rapi client for this cluster.
+        Retrieve an RAPI client for this cluster.
         """
-        # XXX always pass self in.  not only does it avoid querying this object
-        # from the DB a second time, it also prevents a recursion loop caused
-        # by __init__ fetching info from the Cluster
-        return get_rapi(self.hash, self)
+
+        # Simple straightforward cache.
+        if self._rapi is None:
+            self._rapi = client.GanetiRapiClient(self.hostname,
+                                                 port=self.port,
+                                                 username=self.username,
+                                                 password=self.password,
+                                                 timeout=settings.RAPI_CONNECT_TIMEOUT)
+        return self._rapi
 
     def create_hash(self):
         """
