@@ -1,4 +1,4 @@
-# Copyright (C) 2010 Google Inc.
+# Copyright (C) 2010, 2011 Google Inc.
 # Copyright (c) 2012 Oregon State University Open Source Lab
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,11 +34,14 @@ import requests
 GANETI_RAPI_PORT = 5080
 GANETI_RAPI_VERSION = 2
 
-# Internal constants
 REPLACE_DISK_PRI = "replace_on_primary"
 REPLACE_DISK_SECONDARY = "replace_on_secondary"
 REPLACE_DISK_CHG = "replace_new_secondary"
 REPLACE_DISK_AUTO = "replace_auto"
+
+NODE_EVAC_PRI = "primary-only"
+NODE_EVAC_SEC = "secondary-only"
+NODE_EVAC_ALL = "all"
 
 NODE_ROLE_DRAINED = "drained"
 NODE_ROLE_MASTER_CANDIATE = "master-candidate"
@@ -46,16 +49,49 @@ NODE_ROLE_MASTER = "master"
 NODE_ROLE_OFFLINE = "offline"
 NODE_ROLE_REGULAR = "regular"
 
+JOB_STATUS_QUEUED = "queued"
+JOB_STATUS_WAITING = "waiting"
+JOB_STATUS_CANCELING = "canceling"
+JOB_STATUS_RUNNING = "running"
+JOB_STATUS_CANCELED = "canceled"
+JOB_STATUS_SUCCESS = "success"
+JOB_STATUS_ERROR = "error"
+JOB_STATUS_FINALIZED = frozenset([
+  JOB_STATUS_CANCELED,
+  JOB_STATUS_SUCCESS,
+  JOB_STATUS_ERROR,
+  ])
+JOB_STATUS_ALL = frozenset([
+  JOB_STATUS_QUEUED,
+  JOB_STATUS_WAITING,
+  JOB_STATUS_CANCELING,
+  JOB_STATUS_RUNNING,
+  ]) | JOB_STATUS_FINALIZED
+
+# Legacy name
+JOB_STATUS_WAITLOCK = JOB_STATUS_WAITING
+
+# Internal constants
 _REQ_DATA_VERSION_FIELD = "__version__"
-_INST_CREATE_REQV1 = "instance-create-reqv1"
-_INST_REINSTALL_REQV1 = "instance-reinstall-reqv1"
-_INST_NIC_PARAMS = frozenset(["mac", "ip", "mode", "link", "bridge"])
+_INST_NIC_PARAMS = frozenset(["mac", "ip", "mode", "link"])
 _INST_CREATE_V0_DISK_PARAMS = frozenset(["size"])
 _INST_CREATE_V0_PARAMS = frozenset([
     "os", "pnode", "snode", "iallocator", "start", "ip_check", "name_check",
     "hypervisor", "file_storage_dir", "file_driver", "dry_run",
-    ])
+])
 _INST_CREATE_V0_DPARAMS = frozenset(["beparams", "hvparams"])
+
+# Feature strings
+INST_CREATE_REQV1 = "instance-create-reqv1"
+INST_REINSTALL_REQV1 = "instance-reinstall-reqv1"
+NODE_MIGRATE_REQV1 = "node-migrate-reqv1"
+NODE_EVAC_RES1 = "node-evac-res1"
+
+# Old feature constant names in case they're references by users of this module
+_INST_CREATE_REQV1 = INST_CREATE_REQV1
+_INST_REINSTALL_REQV1 = INST_REINSTALL_REQV1
+_NODE_MIGRATE_REQV1 = NODE_MIGRATE_REQV1
+_NODE_EVAC_RES1 = NODE_EVAC_RES1
 
 headers = {
     "accept": "application/json",
@@ -202,7 +238,7 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         url = self._base_url + path
 
         self._logger.debug("Sending request to %s %s", url, kwargs)
-        print "Sending request to %s %s" % (url, kwargs)
+        # print "Sending request to %s %s" % (url, kwargs)
 
         r = requests.request(method, url, **kwargs)
 
@@ -564,6 +600,30 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         return self._SendRequest("put", ("/%s/instances/%s/deactivate-disks" %
                                          (GANETI_RAPI_VERSION, instance)))
 
+    def RecreateInstanceDisks(self, instance, disks=None, nodes=None):
+        """Recreate an instance's disks.
+
+        @type instance: string
+        @param instance: Instance name
+        @type disks: list of int
+        @param disks: List of disk indexes
+        @type nodes: list of string
+        @param nodes: New instance nodes, if relocation is desired
+        @rtype: string
+        @return: job id
+        """
+
+        body = {}
+
+        if disks is not None:
+            body["disks"] = disks
+        if nodes is not None:
+            body["nodes"] = nodes
+
+        return self._SendRequest("post", ("/%s/instances/%s/recreate-disks" %
+                                          (GANETI_RAPI_VERSION, instance)),
+                                 content=body)
+
     def GrowInstanceDisk(self, instance, disk, amount, wait_for_sync=False):
         """
         Grows a disk of an instance.
@@ -622,7 +682,7 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
 
         query = {
             "tag": tags,
-            "dry_run": dry_run,
+            "dry-run": dry_run,
         }
 
         return self._SendRequest("put", ("/%s/instances/%s/tags" %
@@ -643,7 +703,7 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
 
         query = {
             "tag": tags,
-            "dry_run": dry_run,
+            "dry-run": dry_run,
         }
 
         return self._SendRequest("delete", ("/%s/instances/%s/tags" %
@@ -681,7 +741,7 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
                                           (GANETI_RAPI_VERSION, instance)),
                                  query=query)
 
-    def ShutdownInstance(self, instance, dry_run=False):
+    def ShutdownInstance(self, instance, dry_run=False, no_remember=False):
         """
         Shuts down an instance.
 
@@ -689,13 +749,22 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         @param instance: the instance to shut down
         @type dry_run: bool
         @param dry_run: whether to perform a dry run
+        @type no_remember: bool
+        @param no_remember: if true, will not record the state change
+        @rtype: string
+        @return: job id
         """
+
+        query = {
+            "dry-run": dry_run,
+            "no-remember": no_remember,
+        }
 
         return self._SendRequest("put", ("/%s/instances/%s/shutdown" %
                                          (GANETI_RAPI_VERSION, instance)),
-                                 query={"dry-run": dry_run})
+                                 query=query)
 
-    def StartupInstance(self, instance, dry_run=False):
+    def StartupInstance(self, instance, dry_run=False, no_remember=False):
         """
         Starts up an instance.
 
@@ -703,11 +772,20 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         @param instance: the instance to start up
         @type dry_run: bool
         @param dry_run: whether to perform a dry run
+        @type no_remember: bool
+        @param no_remember: if true, will not record the state change
+        @rtype: string
+        @return: job id
         """
+
+        query = {
+            "dry-run": dry_run,
+            "no-remember": no_remember,
+        }
 
         return self._SendRequest("put", ("/%s/instances/%s/startup" %
                                          (GANETI_RAPI_VERSION, instance)),
-                                 query={"dry-run": dry_run})
+                                 query=query)
 
     def ReinstallInstance(self, instance, os=None, no_startup=False,
                           osparams=None):
@@ -869,6 +947,37 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
                                          (GANETI_RAPI_VERSION, instance)),
                                  content=body)
 
+    def FailoverInstance(self, instance, iallocator=None,
+                         ignore_consistency=False, target_node=None):
+        """Does a failover of an instance.
+
+        @type instance: string
+        @param instance: Instance name
+        @type iallocator: string
+        @param iallocator: Iallocator for deciding the target node for
+            shared-storage instances
+        @type ignore_consistency: bool
+        @param ignore_consistency: Whether to ignore disk consistency
+        @type target_node: string
+        @param target_node: Target node for shared-storage instances
+        @rtype: string
+        @return: job id
+        """
+
+        body = {
+            "ignore_consistency": ignore_consistency,
+        }
+
+        if iallocator is not None:
+            body["iallocator"] = iallocator
+        if target_node is not None:
+            body["target_node"] = target_node
+
+
+        return self._SendRequest("put", ("/%s/instances/%s/failover" %
+                                         (GANETI_RAPI_VERSION, instance)),
+                                 content=body)
+
     def RenameInstance(self, instance, new_name, ip_check=None,
                        name_check=None):
         """
@@ -1001,7 +1110,8 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
                                                           node))
 
     def EvacuateNode(self, node, iallocator=None, remote_node=None,
-                     dry_run=False, early_release=False):
+                     dry_run=False, early_release=False, mode=None,
+                     accept_old=False):
         """
         Evacuates instances from a Ganeti node.
 
@@ -1015,11 +1125,15 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         @param dry_run: whether to perform a dry run
         @type early_release: bool
         @param early_release: whether to enable parallelization
+        @type accept_old: bool
+        @param accept_old: Whether caller is ready to accept old-style
+            (pre-2.5) results
 
-        @rtype: list
-        @return: list of (job ID, instance name, new secondary node); if
-                dry_run was specified, then the actual move jobs were not
-                submitted and the job IDs will be C{None}
+        @rtype: string, or a list for pre-2.5 results
+        @return: Job ID or, if C{accept_old} is set and server is pre-2.5,
+            list of (job ID, instance name, new secondary node); if dry_run
+            was specified, then the actual move jobs were not submitted and
+            the job IDs will be C{None}
 
         @raises GanetiApiError: if an iallocator and remote_node are both
                 specified
@@ -1031,7 +1145,6 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
 
         query = {
             "dry-run": dry_run,
-            "early_release": early_release,
         }
 
         if iallocator:
@@ -1039,11 +1152,44 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         if remote_node:
             query["remote_node"] = remote_node
 
+        if _NODE_EVAC_RES1 in self.GetFeatures():
+            # Server supports body parameters
+            body = {
+                "early_release": early_release,
+            }
+
+            if iallocator is not None:
+                body["iallocator"] = iallocator
+            if remote_node is not None:
+                body["remote_node"] = remote_node
+            if mode is not None:
+                body["mode"] = mode
+        else:
+            # Pre-2.5 request format
+            body = None
+
+            if not accept_old:
+                raise GanetiApiError("Server is version 2.4 or earlier and"
+                                     " caller does not accept old-style"
+                                     " results (parameter accept_old)")
+
+            # Pre-2.5 servers can only evacuate secondaries
+            if mode is not None and mode != NODE_EVAC_SEC:
+                raise GanetiApiError("Server can only evacuate secondary instances")
+
+            if iallocator is not None:
+                query["iallocator"] = iallocator
+            if remote_node is not None:
+                query["remote_node"] = remote_node
+            if query:
+                query["early_release"] = 1
+
         return self._SendRequest("post", ("/%s/nodes/%s/evacuate" %
                                           (GANETI_RAPI_VERSION, node)),
-                                 query=query)
+                                 query=query, content=body)
 
-    def MigrateNode(self, node, mode=None, dry_run=False):
+    def MigrateNode(self, node, mode=None, dry_run=False, iallocator=None,
+                    target_node=None):
         """
         Migrates all primary instances from a node.
 
@@ -1054,21 +1200,43 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
                 otherwise the hypervisor default will be used
         @type dry_run: bool
         @param dry_run: whether to perform a dry run
+        @type iallocator: string
+        @param iallocator: instance allocator to use
+        @type target_node: string
+        @param target_node: Target node for shared-storage instances
 
         @rtype: int
         @return: job id
         """
 
         query = {
-            "dry_run": dry_run,
+            "dry-run": dry_run,
         }
 
-        if mode is not None:
-            query["mode"] = mode
+        if _NODE_MIGRATE_REQV1 in self.GetFeatures():
+            body = {}
+
+            if mode is not None:
+                body["mode"] = mode
+            if iallocator is not None:
+                body["iallocator"] = iallocator
+            if target_node is not None:
+                body["target_node"] = target_node
+
+        else:
+            # Use old request format
+            if target_node is not None:
+                raise GanetiApiError("Server does not support specifying"
+                                     " target node for node migration")
+
+            body = None
+
+            if mode is not None:
+                query["mode"] = mode
 
         return self._SendRequest("post", ("/%s/nodes/%s/migrate" %
                                           (GANETI_RAPI_VERSION, node)),
-                                 query=query)
+                                 query=query, content=body)
 
     def GetNodeRole(self, node):
         """
@@ -1084,7 +1252,7 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         return self._SendRequest("get", ("/%s/nodes/%s/role" %
                                          (GANETI_RAPI_VERSION, node)))
 
-    def SetNodeRole(self, node, role, force=False):
+    def SetNodeRole(self, node, role, force=False, auto_promote=False):
         """
         Sets the role for a node.
 
@@ -1094,14 +1262,58 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         @param role: the role to set for the node
         @type force: bool
         @param force: whether to force the role change
+        @type auto_promote: bool
+        @param auto_promote: Whether node(s) should be promoted to master
+            candidate if necessary
 
         @rtype: int
         @return: job id
         """
 
+        query = {
+            "force": force,
+            "auto_promote": auto_promote,
+        }
+
         return self._SendRequest("put", ("/%s/nodes/%s/role" %
                                          (GANETI_RAPI_VERSION, node)),
-                                 query={"force": force}, content=role)
+                                 query=query, content=role)
+
+    def PowercycleNode(self, node, force=False):
+        """
+        Powercycles a node.
+
+        @type node: string
+        @param node: Node name
+        @type force: bool
+        @param force: Whether to force the operation
+        @rtype: string
+        @return: job id
+        """
+
+        query = {
+            "force": force,
+        }
+
+        return self._SendRequest("post", ("/%s/nodes/%s/powercycle" %
+                                          (GANETI_RAPI_VERSION, node)),
+                                 query=query)
+
+    def ModifyNode(self, node, **kwargs):
+        """
+        Modifies a node.
+
+        More details for parameters can be found in the RAPI documentation.
+
+        @type node: string
+        @param node: Node name
+        @rtype: string
+        @return: job id
+        """
+
+        return self._SendRequest("post", ("/%s/nodes/%s/modify" %
+                                          (GANETI_RAPI_VERSION, node)),
+                                 content=kwargs)
 
     def GetNodeStorageUnits(self, node, storage_type, output_fields):
         """
@@ -1390,3 +1602,112 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         return self._SendRequest("put", ("/%s/groups/%s/assign-nodes" %
                                          (GANETI_RAPI_VERSION, group)),
                                  query=query, content=body)
+
+    def GetGroupTags(self, group):
+        """
+        Gets tags for a node group.
+
+        @type group: string
+        @param group: Node group whose tags to return
+
+        @rtype: list of strings
+        @return: tags for the group
+        """
+
+        return self._SendRequest("get", ("/%s/groups/%s/tags" %
+                                         (GANETI_RAPI_VERSION, group)))
+
+    def AddGroupTags(self, group, tags, dry_run=False):
+        """
+        Adds tags to a node group.
+
+        @type group: str
+        @param group: group to add tags to
+        @type tags: list of string
+        @param tags: tags to add to the group
+        @type dry_run: bool
+        @param dry_run: whether to perform a dry run
+
+        @rtype: string
+        @return: job id
+        """
+
+        query = {
+            "dry-run": dry_run,
+            "tag": tags,
+        }
+
+        return self._SendRequest("put", ("/%s/groups/%s/tags" %
+                                         (GANETI_RAPI_VERSION, group)),
+                                 query=query)
+
+    def DeleteGroupTags(self, group, tags, dry_run=False):
+        """
+        Deletes tags from a node group.
+
+        @type group: str
+        @param group: group to delete tags from
+        @type tags: list of string
+        @param tags: tags to delete
+        @type dry_run: bool
+        @param dry_run: whether to perform a dry run
+        @rtype: string
+        @return: job id
+        """
+
+        query = {
+            "dry-run": dry_run,
+            "tag": tags,
+        }
+
+        return self._SendRequest("delete", ("/%s/groups/%s/tags" %
+                                            (GANETI_RAPI_VERSION, group)),
+                                 query=query)
+
+    def Query(self, what, fields, qfilter=None):
+        """
+        Retrieves information about resources.
+
+        @type what: string
+        @param what: Resource name, one of L{constants.QR_VIA_RAPI}
+        @type fields: list of string
+        @param fields: Requested fields
+        @type qfilter: None or list
+        @param qfilter: Query filter
+
+        @rtype: string
+        @return: job id
+        """
+
+        body = {
+            "fields": fields,
+        }
+
+        if qfilter is not None:
+            body["qfilter"] = body["filter"] = qfilter
+
+        return self._SendRequest("put", ("/%s/query/%s" %
+                                         (GANETI_RAPI_VERSION, what)),
+                                 content=body)
+
+    def QueryFields(self, what, fields=None):
+        """
+        Retrieves available fields for a resource.
+
+        @type what: string
+        @param what: Resource name, one of L{constants.QR_VIA_RAPI}
+        @type fields: list of string
+        @param fields: Requested fields
+
+        @rtype: string
+        @return: job id
+        """
+
+        query = {}
+
+        if fields is not None:
+            query["fields"] = ",".join(fields)
+
+        return self._SendRequest("get", ("/%s/query/%s/fields" %
+                                         (GANETI_RAPI_VERSION, what)),
+                                 query=query)
