@@ -178,7 +178,7 @@
                 {% else %}{% trans "unlimited" %}{% endif %}
                 </td></tr>
             <tr><th>{% trans "Memory" %}</th><td>{% if cluster.ram %}{{ cluster.ram|mult:"1048576"|filesizeformat }}{% else %}{% trans "unlimited" %}{% endif %}</td></tr>
-            <tr><th>{% trans "Virtual CPUs" %}</th><td>{% if cluster.virtual_cpus %}{{ cluster.virtual_cpus|mult:"1048576"|filesizeformat }}{% else %}{% trans "unlimited" %}{% endif %}</td></tr>
+            <tr><th>{% trans "Virtual CPUs" %}</th><td>{% if cluster.virtual_cpus %}{{ cluster.virtual_cpus }}{% else %}{% trans "unlimited" %}{% endif %}</td></tr>
         </table>
     </div>
 </div>
