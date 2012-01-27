@@ -174,6 +174,11 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         @param logger: Logging object
         """
 
+        if username is not None and password is None:
+            raise ClientError("Password not specified")
+        elif password is not None and username is None:
+            raise ClientError("Specified password without username")
+
         self.username = username
         self.password = password
         self.timeout = timeout
@@ -188,11 +193,6 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
             address = "%s:%s" % (host, port)
 
         self._base_url = "https://%s" % address
-
-        if username is not None and password is None:
-            raise ClientError("Password not specified")
-        elif password is not None and username is None:
-            raise ClientError("Specified password without username")
 
     def _SendRequest(self, method, path, query=None, content=None):
         """
