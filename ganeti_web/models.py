@@ -29,22 +29,22 @@ import sys
 
 from django.conf import settings
 
+from django.contrib.auth.models import User, Group
+from django.contrib.contenttypes.generic import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites import models as sites_app
 from django.contrib.sites.management import create_default_site
-from django.contrib.auth.models import User, Group
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes.generic import GenericForeignKey
-
 from django.core.validators import RegexValidator, MinValueValidator
-from django.utils.encoding import force_unicode
-from django.utils.translation import ugettext_lazy as _
-from django_fields.fields import PickleField
-
 from django.db import models
 from django.db.models import Q, Sum
 from django.db.models.query import QuerySet
 from django.db.models.signals import post_save, post_syncdb
 from django.db.utils import DatabaseError
+from django.utils.encoding import force_unicode
+from django.utils.translation import ugettext_lazy as _
+
+from django_fields.fields import PickleField
+
 from ganeti_web.logs import register_log_actions
 
 from object_log.models import LogItem
@@ -54,9 +54,8 @@ from object_permissions.registration import register
 
 from muddle_users import signals as muddle_user_signals
 
-from ganeti_web import constants, management
+from ganeti_web import constants, management, permissions
 from ganeti_web.fields import PatchedEncryptedCharField, PreciseDateTimeField, SumIf
-from ganeti_web import permissions
 from ganeti_web.util import client
 from ganeti_web.util.client import GanetiApiError, REPLACE_DISK_AUTO
 
