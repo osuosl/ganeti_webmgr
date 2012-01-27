@@ -28,6 +28,28 @@ from django.utils.translation import ugettext as _
 
 from south.modelsinspector import add_introspection_rules
 
+from django_fields.fields import EncryptedCharField
+
+class PatchedEncryptedCharField(EncryptedCharField):
+    """
+    django_fields upstream refuses to fix a bug, so we get to do it ourselves.
+
+    Feel free to destroy this class and switch back to upstream if
+    https://github.com/svetlyak40wt/django-fields/pull/12 is ever merged into
+    a released version of django_fields.
+    """
+
+    def get_db_prep_value(self, value, connection=None, prepared=False):
+        if value is None:
+            return None
+
+        return EncryptedCharField.get_db_prep_value(self, value,
+                                                    connection=connection,
+                                                    prepared=prepared)
+
+
+add_introspection_rules([], ["^ganeti_web\.fields\.PatchedEncryptedCharField"])
+
 
 class PreciseDateTimeField(DecimalField):
     """

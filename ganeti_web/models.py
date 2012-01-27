@@ -47,8 +47,6 @@ from django.db.models.signals import post_save, post_syncdb
 from django.db.utils import DatabaseError
 from ganeti_web.logs import register_log_actions
 
-from django_fields.fields import EncryptedCharField
-
 from object_log.models import LogItem
 log_action = LogItem.objects.log_action
 
@@ -57,7 +55,7 @@ from object_permissions.registration import register
 from muddle_users import signals as muddle_user_signals
 
 from ganeti_web import constants, management
-from ganeti_web.fields import PreciseDateTimeField, SumIf
+from ganeti_web.fields import PatchedEncryptedCharField, PreciseDateTimeField, SumIf
 from ganeti_web import permissions
 from ganeti_web.util import client
 from ganeti_web.util.client import GanetiApiError, REPLACE_DISK_AUTO
@@ -998,7 +996,8 @@ class Cluster(CachedClusterObject):
     port = models.PositiveIntegerField(_('port'), default=5080)
     description = models.CharField(_('description'), max_length=128, blank=True, null=True)
     username = models.CharField(_('username'), max_length=128, blank=True, null=True)
-    password = EncryptedCharField(_('password'), max_length=128, blank=True, null=True)
+    password = PatchedEncryptedCharField(_('password'), max_length=128,
+                                         blank=True, null=True)
     hash = models.CharField(_('hash'), max_length=40, editable=False)
 
     # quota properties
