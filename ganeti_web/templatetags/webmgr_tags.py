@@ -279,7 +279,7 @@ def format_job_log(log):
     formatted = log.replace('\n','<br/>')
     return mark_safe(formatted)
 
-
+@register.simple_tag
 def format_part_total(part, total):
     """
     Pretty-print a quantity out of a given total.
