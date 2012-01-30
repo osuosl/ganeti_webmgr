@@ -61,5 +61,6 @@ class TestFilters(unittest.TestCase):
         self.assertEqual(fpt(500000, 700000), "488.28 / 683.59")
         self.assertEqual(fpt(1024, 2048), "1 / 2")
         self.assertEqual(fpt(5120, 8192), "5 / 8")
+        self.assertEqual(fpt(51200, 81920), "50 / 80")
         self.assertEqual(fpt(512, 2048), "0.5 / 2")
         self.assertEqual(fpt(510972, 870910), "499 / 850.5")

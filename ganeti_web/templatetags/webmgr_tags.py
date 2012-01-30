@@ -287,11 +287,22 @@ def format_part_total(part, total):
     if total <= 0 or part < 0:
         return _("unknown")
 
-    # Represent a number in terms of GigaBytes up to 2
-    #  decimal places.
-    gig = lambda x: "%.3g" % (float(x) / 1024)
+    try:
+        part = float(part) / 1024
+        total = float(total) / 1024
+    except ValueError:
+        return _("unknown")
 
-    return "%s / %s" % (gig(part), gig(total))
+    for i, num in enumerate((part, total)):
+        num = "%.2f" % num
+        if "." in num:
+            num = num.rstrip("0").rstrip(".")
+        if i == 0:
+            part = num
+        elif i == 1:
+            total = num
+
+    return _("%s / %s") % (part, total)
 
 
 @register.simple_tag
