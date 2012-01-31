@@ -91,8 +91,12 @@ def nodes(request, cluster_slug):
             .values('primary_node') \
             .annotate(cpus=Sum('virtual_cpus'))
     cpus = {}
-    for d in values:
-        cpus[d['primary_node']] = d['cpus']
+    nodes = cluster.nodes.all()
+    for node, d in zip(nodes, values):
+        if node.pk == d['primary_node']:
+            cpus[d['primary_node']] = d['cpus']
+        else:
+            cpus[node.pk] = 0
 
     return render_to_response("ganeti/node/table.html",
         {'cluster': cluster,
