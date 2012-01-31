@@ -43,7 +43,7 @@
 
 {% block content %}
 <div id="virtualmachineform">
-    <form method="post" action="{% url instance-create %}">
+    <form method="post" action="{% url instance-create %}">{% csrf_token %}
         <fieldset class="first_fieldset">
             <h1 class="breadcrumb"><span>{% trans "Virtual Machine" %}</span> : {% trans "Create" %}</h1>
             {% vmfield form.owner %}

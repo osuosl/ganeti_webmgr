@@ -56,7 +56,7 @@
     {% endif %}
 </h1>
 <div id="virtualmachineform">
-    <form method="post" action="{{ action }}">
+    <form method="post" action="{{ action }}">{% csrf_token %}
         <fieldset class="first_fieldset">
             {% vmfield form.template_name %}
             {% vmfield form.description %}

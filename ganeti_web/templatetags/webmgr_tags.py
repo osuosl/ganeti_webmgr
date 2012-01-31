@@ -279,7 +279,7 @@ def format_job_log(log):
     formatted = log.replace('\n','<br/>')
     return mark_safe(formatted)
 
-
+@register.simple_tag
 def format_part_total(part, total):
     """
     Pretty-print a quantity out of a given total.
@@ -287,25 +287,22 @@ def format_part_total(part, total):
     if total <= 0 or part < 0:
         return _("unknown")
 
-    # Represent a number in terms of GigaBytes up to 2
-    #  decimal places.
-    gig = lambda x: "%.2f" % (float(x) / 1024)
+    try:
+        part = float(part) / 1024
+        total = float(total) / 1024
+    except ValueError:
+        return _("unknown")
 
-    total = gig(total)
-    part = gig(part)
-
-    # Remove all trailing 0s after the decimal point
-    #  and the decimal point as well if a number ends
-    #  in only trailing zeros (ex. 1.000 => 1).
-    for i, tmp in enumerate((part, total)):
-        while tmp.endswith(("0", ".")):
-            tmp = tmp[:-1]
+    for i, num in enumerate((part, total)):
+        num = "%.2f" % num
+        if "." in num:
+            num = num.rstrip("0").rstrip(".")
         if i == 0:
-            part = tmp
+            part = num
         elif i == 1:
-            total = tmp
+            total = num
 
-    return "%s / %s" % (part, total)
+    return _("%s / %s") % (part, total)
 
 
 @register.simple_tag

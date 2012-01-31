@@ -33,7 +33,7 @@
                     {% trans "Exceeded by" %} {% diff_render_storage res.used.disk res.set.disk %}
                 </td>
                 {% else %}
-                <td class="disk">{{ res.used.disk }} / {{ res.set.disk }}</td>
+                <td class="disk">{% format_part_total res.used.disk res.set.disk %}</td>
                 {% endif %}
             {% endif %}
 
@@ -46,7 +46,7 @@
                     {% trans "Exceeded by" %} {% diff_render_storage res.used.ram res.set.ram %}
                 </td>
                 {% else %}
-                <td class="ram">{{ res.used.ram }} / {{ res.set.ram }}</td>
+                <td class="ram">{% format_part_total res.used.ram res.set.ram %}</td>
                 {% endif %}
             {% endif %}
 

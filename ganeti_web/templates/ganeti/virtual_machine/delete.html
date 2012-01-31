@@ -27,7 +27,7 @@
         can not be undone.  The virtual machine will be removed from the cluster.
         <ul><li>{{vm.hostname}}</li></ul>
     </div>
-    <form method="post" action="{% url instance-delete vm.cluster.slug vm.hostname %}">
+    <form method="post" action="{% url instance-delete vm.cluster.slug vm.hostname %}">{% csrf_token %}
         <input id="delete" type="submit" value="Delete" />
     </form>
 </div>
