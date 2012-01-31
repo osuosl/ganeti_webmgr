@@ -92,16 +92,18 @@ def nodes(request, cluster_slug):
             .annotate(cpus=Sum('virtual_cpus'))
     cpus = {}
     nodes = cluster.nodes.all()
-    for node, d in zip(nodes, values):
-        if node.pk == d['primary_node']:
-            cpus[d['primary_node']] = d['cpus']
-        else:
+    for d in values:
+        cpus[d['primary_node']] = d['cpus']
+
+    # Include nodes that do not have any virtual machines on them.
+    for node in nodes:
+        if node.pk not in cpus:
             cpus[node.pk] = 0
 
     return render_to_response("ganeti/node/table.html",
         {'cluster': cluster,
-         'nodes':cluster.nodes.all(),
-         'cpus':cpus
+         'nodes':nodes,
+         'cpus':cpus,
         },
         context_instance=RequestContext(request),
     )
