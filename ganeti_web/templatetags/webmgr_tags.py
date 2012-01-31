@@ -302,7 +302,7 @@ def format_part_total(part, total):
         elif i == 1:
             total = num
 
-    return _("%s / %s") % (part, total)
+    return "%s / %s" % (part, total)
 
 
 @register.simple_tag
