@@ -57,7 +57,7 @@ class TemplateTestCase(TestCase, UserTestMixin):
             ('superuser', {'is_superuser':True}),
             'cluster_admin',
             ], users)
-        users['cluster_admin'].grant('admin', cluster)
+        self.cluster_admin.grant('admin', cluster)
 
         self.users = users
         self.template = template

@@ -50,8 +50,6 @@ class UserTestMixin():
         for name in users:
             name, kwargs = name if isinstance(name, (tuple,)) else (name, {})
             user = self.create_user(name, **kwargs)
-            # Old behavior: Add the user to the dict.
-            context[name] = user
             # New behavior: Add the user directly to this class.
             setattr(self, name, user)
 

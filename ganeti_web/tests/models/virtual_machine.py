@@ -39,7 +39,9 @@ __all__ = (
 
 class VirtualMachineTestCaseMixin():
     def create_virtual_machine(self, cluster=None, hostname='vm1.osuosl.bak'):
-        cluster = cluster if cluster else Cluster(hostname='test.osuosl.bak', slug='OSL_TEST', username='foo', password='bar')
+        if cluster is None:
+            cluster = Cluster(hostname='test.osuosl.bak', slug='OSL_TEST',
+                              username='foo', password='bar')
         cluster.save()
         cluster.sync_nodes()
         vm = VirtualMachine(cluster=cluster, hostname=hostname)
