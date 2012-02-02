@@ -33,13 +33,10 @@ from ganeti_web.views import render_403
 
 @login_required
 def templates(request):
-    templates = VirtualMachineTemplate.objects.exclude(
-        template_name=None
-        )
+    templates = VirtualMachineTemplate.objects.exclude(template_name=None)
     # Because templates do not have 'disk_size' this value
     #  is computed here to be easily displayed.
     for template in templates:
-        template.disk_size = 0
         template.disk_size = sum([disk['size'] for disk in template.disks])
     return render_to_response('ganeti/vm_template/list.html', {
         'templates':templates,
