@@ -916,14 +916,14 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         url = '/cluster/%s/redistribute-config/' % self.cluster.slug
 
         # anonymous user
-        response = self.c.get(url, follow=True)
+        response = self.c.post(url, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
         self.assertTrue(self.c.login(username=self.user.username,
                                      password='secret'))
-        response = self.c.delete(url)
+        response = self.c.post(url)
         self.assertEqual(403, response.status_code)
 
         # authorized (permission)

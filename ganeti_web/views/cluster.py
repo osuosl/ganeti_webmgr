@@ -25,9 +25,11 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.db.models import Q, Sum
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotAllowed
+from django.http import (HttpResponse, HttpResponseRedirect,
+                         HttpResponseForbidden)
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
+from django.views.decorators.http import require_POST
 
 from object_permissions import get_users_any
 from object_permissions.views.permissions import view_users, view_permissions
@@ -58,7 +60,7 @@ def detail(request, cluster_slug, rest=False):
     readonly = False if admin else True
     # if not admin:
         # return render_403(request, _("You do not have sufficient privileges"))
-       
+
     if rest:
         return {'cluster':cluster,'admin':admin}
     else:
@@ -138,11 +140,11 @@ def edit(request, cluster_slug=None):
         cluster = get_object_or_404(Cluster, slug=cluster_slug)
     else:
         cluster = None
-    
+
     user = request.user
     if not (user.is_superuser or (cluster and user.has_perm('admin', cluster))):
         return render_403(request, _("You do not have sufficient privileges"))
-    
+
     if request.method == 'POST':
         form = EditClusterForm(request.POST, instance=cluster)
         if form.is_valid():
@@ -161,16 +163,16 @@ def edit(request, cluster_slug=None):
 
             log_action('EDIT' if cluster_slug else 'CREATE', user, cluster)
 
-            return HttpResponseRedirect(reverse('cluster-detail', 
+            return HttpResponseRedirect(reverse('cluster-detail',
                                                 args=[cluster.slug]))
-    
+
     elif request.method == 'DELETE':
         cluster.delete()
         return HttpResponse('1', mimetype='application/json')
-    
+
     else:
         form = EditClusterForm(instance=cluster)
-    
+
     return render_to_response("ganeti/cluster/edit.html", {
         'form' : form,
         'cluster': cluster,
@@ -208,11 +210,11 @@ def users(request, cluster_slug):
     Display all of the Users of a Cluster
     """
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    
+
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
         return render_403(request, _("You do not have sufficient privileges"))
-    
+
     url = reverse('cluster-permissions', args=[cluster.slug])
     return view_users(request, cluster, url, template='ganeti/cluster/users.html')
 
@@ -234,6 +236,7 @@ def permissions(request, cluster_slug, user_id=None, group_id=None):
                             group_template='ganeti/cluster/group_row.html')
 
 
+@require_POST
 @login_required
 def redistribute_config(request, cluster_slug):
     """
@@ -245,17 +248,15 @@ def redistribute_config(request, cluster_slug):
     if not (user.is_superuser or user.has_perm('admin', cluster)):
         return render_403(request, "You do not have sufficient privileges")
 
-    if request.method == 'POST':
-        try:
-            job = cluster.redistribute_config()
-            job.refresh()
-            msg = job.info
+    try:
+        job = cluster.redistribute_config()
+        job.refresh()
+        msg = job.info
 
-            log_action('CLUSTER_REDISTRIBUTE', user, cluster, job)
-        except GanetiApiError, e:
-            msg = {'__all__':[str(e)]}
-        return HttpResponse(json.dumps(msg), mimetype='application/json')
-    return HttpResponseNotAllowed(['POST'])
+        log_action('CLUSTER_REDISTRIBUTE', user, cluster, job)
+    except GanetiApiError, e:
+        msg = {'__all__':[str(e)]}
+    return HttpResponse(json.dumps(msg), mimetype='application/json')
 
 
 def ssh_keys(request, cluster_slug, api_key):
@@ -264,7 +265,7 @@ def ssh_keys(request, cluster_slug, api_key):
     """
     if settings.WEB_MGR_API_KEY != api_key:
         return HttpResponseForbidden(_("You're not allowed to view keys."))
-    
+
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
 
     users = set(get_users_any(cluster).values_list("id", flat=True))
@@ -289,7 +290,7 @@ def quota(request, cluster_slug, user_id):
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
         return render_403(request, _("You do not have sufficient privileges"))
-    
+
     if request.method == 'POST':
         form = QuotaForm(request.POST)
         if form.is_valid():
@@ -307,7 +308,7 @@ def quota(request, cluster_slug, user_id):
                     cluster.set_quota(cluster_user)
                 else:
                     cluster.set_quota(cluster_user, data)
-            
+
             # return updated html
             cluster_user = cluster_user.cast()
             url = reverse('cluster-permissions', args=[cluster.slug])
@@ -321,11 +322,11 @@ def quota(request, cluster_slug, user_id):
                     "ganeti/cluster/group_row.html",
                     {'object':cluster, 'group':cluster_user.group, 'url':url},
                     context_instance=RequestContext(request))
-        
+
         # error in form return ajax response
         content = json.dumps(form.errors)
         return HttpResponse(content, mimetype='application/json')
-    
+
     if user_id:
         cluster_user = get_object_or_404(ClusterUser, id=user_id)
         quota = cluster.get_quota(cluster_user)
@@ -334,7 +335,7 @@ def quota(request, cluster_slug, user_id):
             data.update(quota)
     else:
         return render_404(request, _('User was not found'))
-    
+
     form = QuotaForm(data)
     return render_to_response("ganeti/cluster/quota.html",
                         {'form':form, 'cluster':cluster, 'user_id':user_id},
@@ -379,7 +380,7 @@ def recv_user_remove(sender, editor, user, obj, **kwargs):
     receiver for object_permissions.signals.view_remove_user, Logs action
     """
     log_action('REMOVE_USER', editor, obj, user)
-    
+
     # remove custom quota user may have had.
     if isinstance(user, (User,)):
         cluster_user = user.get_profile()
