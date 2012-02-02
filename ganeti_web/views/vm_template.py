@@ -14,10 +14,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
+
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, HttpResponseRedirect, \
-    HttpResponseNotAllowed, HttpResponseForbidden
+from django.http import (HttpResponse, HttpResponseRedirect,
+                         HttpResponseNotAllowed)
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.utils import simplejson as json
@@ -27,7 +28,6 @@ from ganeti_web.models import Cluster, VirtualMachineTemplate, VirtualMachine
 from ganeti_web.forms.vm_template import VirtualMachineTemplateForm, \
     VirtualMachineTemplateCopyForm
 from ganeti_web.forms.virtual_machine import NewVirtualMachineForm
-from ganeti_web.utilities import cluster_default_info
 from ganeti_web.views import render_403
 
 
@@ -56,7 +56,7 @@ def edit(request, cluster_slug=None, template=None):
     if cluster_slug:
         cluster = get_object_or_404(Cluster, slug=cluster_slug)
         if not (
-            user.is_superuser or 
+            user.is_superuser or
             user.has_perm('admin', cluster) or
             user.has_perm('create_vm', cluster)
             ):
@@ -75,7 +75,7 @@ def edit(request, cluster_slug=None, template=None):
         if form.is_valid():
             form.instance.pk = obj.pk
             form_obj = form.save()
-            return HttpResponseRedirect(reverse('template-detail', 
+            return HttpResponseRedirect(reverse('template-detail',
                 args=[form_obj.cluster.slug, form_obj]))
     else:
         return HttpResponseNotAllowed(["GET","POST"])
@@ -102,7 +102,7 @@ def create(request):
         form = VirtualMachineTemplateForm(request.POST, user=user)
         if form.is_valid():
             form_obj = form.save()
-            return HttpResponseRedirect(reverse('template-detail', 
+            return HttpResponseRedirect(reverse('template-detail',
                 args=[form_obj.cluster.slug, form_obj]))
     else:
         return HttpResponseNotAllowed(["GET","POST"])
@@ -125,13 +125,13 @@ def create_template_from_instance(request, cluster_slug, instance):
     if cluster_slug:
         cluster = get_object_or_404(Cluster, slug=cluster_slug)
         if not (
-            user.is_superuser or 
+            user.is_superuser or
             user.has_perm('admin', cluster) or
             user.has_perm('create_vm', cluster)
             ):
             return render_403(request, _("You do not have sufficient privileges"))
 
-    vm = get_object_or_404(VirtualMachine, hostname=instance, 
+    vm = get_object_or_404(VirtualMachine, hostname=instance,
         cluster__slug=cluster_slug)
 
     if request.method == "GET":
@@ -140,7 +140,7 @@ def create_template_from_instance(request, cluster_slug, instance):
         links = info['nic.links']
         modes = info['nic.modes']
         sizes = info['disk.sizes']
-        
+
         initial = dict(
             template_name=instance,
             cluster=cluster.id,
@@ -178,14 +178,14 @@ def create_instance_from_template(request, cluster_slug, template):
     if cluster_slug:
         cluster = get_object_or_404(Cluster, slug=cluster_slug)
         if not (
-            user.is_superuser or 
+            user.is_superuser or
             user.has_perm('admin', cluster) or
             user.has_perm('create_vm', cluster)
             ):
             return render_403(request, _("You do not have sufficient privileges"))
 
-    vm_template = get_object_or_404(VirtualMachineTemplate, 
-                                    template_name=template, 
+    vm_template = get_object_or_404(VirtualMachineTemplate,
+                                    template_name=template,
                                     cluster__slug=cluster_slug)
     if request.method == "GET":
         # Work with vm_template vars here
@@ -220,14 +220,14 @@ def detail(request, cluster_slug, template):
     if cluster_slug:
         cluster = get_object_or_404(Cluster, slug=cluster_slug)
         if not (
-            user.is_superuser or 
+            user.is_superuser or
             user.has_perm('admin', cluster) or
             user.has_perm('create_vm', cluster)
             ):
             return render_403(request, _("You do not have sufficient privileges"))
 
-    vm_template = get_object_or_404(VirtualMachineTemplate, 
-                                    template_name=template, 
+    vm_template = get_object_or_404(VirtualMachineTemplate,
+                                    template_name=template,
                                     cluster__slug=cluster_slug)
     return render_to_response('ganeti/vm_template/detail.html', {
         'template':vm_template,
@@ -246,13 +246,13 @@ def copy(request, cluster_slug, template):
     if cluster_slug:
         cluster = get_object_or_404(Cluster, slug=cluster_slug)
         if not (
-            user.is_superuser or 
+            user.is_superuser or
             user.has_perm('admin', cluster) or
             user.has_perm('create_vm', cluster)
             ):
             return render_403(request, _("You do not have sufficient privileges"))
 
-    obj = get_object_or_404(VirtualMachineTemplate, template_name=template, 
+    obj = get_object_or_404(VirtualMachineTemplate, template_name=template,
                                     cluster__slug=cluster_slug)
     if request.method == "GET":
         form = VirtualMachineTemplateCopyForm()
@@ -275,7 +275,7 @@ def copy(request, cluster_slug, template):
             obj.template_name = name
             obj.description = desc
             obj.save()
-        return HttpResponseRedirect(reverse('template-detail', 
+        return HttpResponseRedirect(reverse('template-detail',
                             args=[cluster_slug, obj]))
     return HttpResponseNotAllowed(["GET", "POST"])
 
@@ -286,7 +286,7 @@ def delete(request, cluster_slug, template):
     if cluster_slug:
         cluster = get_object_or_404(Cluster, slug=cluster_slug)
         if not (
-            user.is_superuser or 
+            user.is_superuser or
             user.has_perm('admin', cluster) or
             user.has_perm('create_vm', cluster)
             ):
