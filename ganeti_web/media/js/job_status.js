@@ -1,5 +1,38 @@
 /** @namespace data.opresult */
 
+/* Determine whether an object is in an array. */
+function contains(a, v) {
+    for (var i=0; i < a.length; i++) {
+        if (a[i] == v) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/* Capitalize the first letter of every word in a string. */
+function cap_first(str) {
+    var a = str.split(" ");
+    var len = a.length;
+
+    for (var i = 0; i < len; i++) {
+        a[i] = a[i][0].toUpperCase() + a[i].substring(1);
+    }
+
+    return a.join(" ");
+}
+
+/* Format an operation string.
+ *
+ * Operation strings look like "OP_DO_SOMETHING". They should be formatted to
+ * appear as "Do Something". */
+function format_op(str) {
+    str = str.substring(3).toLowerCase();
+    str = str.replace(/_/g, " ");
+    str = cap_first(str);
+    return str;
+}
+
 function JobPoller() {
     var actions_enabled;
     var get_interval;
@@ -13,13 +46,6 @@ function JobPoller() {
     this.SLOW = 60000;
     var get_xhr = undefined;
     var poller;
-
-    function contains(a, v){
-        for (var i=0;i<a.length;i++){
-            if (a[i]==v) return true;
-        }
-        return false;
-    }
 
 
     this.init = function (url, new_cluster, new_callback, new_errback) {
@@ -171,29 +197,6 @@ function JobPoller() {
             }
         }
     };
-
-    /* Capitalize the first letter of every word in a string. */
-    function cap_first(str) {
-        var a = str.split(" ");
-        var len = a.length;
-
-        for (var i = 0; i < len; i++) {
-            a[i] = a[i][0].toUpperCase() + a[i].substring(1);
-        }
-
-        return a.join(" ");
-    }
-
-    /* Format an operation string.
-     *
-     * Operation strings look like "OP_DO_SOMETHING". They should be formatted to
-     * appear as "Do Something". */
-    function format_op(str) {
-        str = str.substring(3).toLowerCase();
-        str = str.replace(/_/g, " ");
-        str = cap_first(str);
-        return str;
-    }
 
     $("#messages a.clear").live("click", function(event){
         event.preventDefault();
