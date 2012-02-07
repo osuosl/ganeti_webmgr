@@ -1,15 +1,5 @@
 /** @namespace data.opresult */
 
-/* Determine whether an object is in an array. */
-function contains(a, v) {
-    for (var i=0; i < a.length; i++) {
-        if (a[i] == v) {
-            return true;
-        }
-    }
-    return false;
-}
-
 /* Capitalize the first letter of every word in a string. */
 function cap_first(str) {
     var a = str.split(" ");
@@ -106,7 +96,7 @@ function JobPoller() {
         // clear any jobs that weren't in the active list any more
         $('#messages').children('.job').each(function(){
             var job_id = this.id.substring(4);
-            if (!contains(active, job_id)) {
+            if (active.indexOf(job_id) == -1) {
                 if (!$(this).hasClass('error')) {
                     callback();
                 }

@@ -36,22 +36,6 @@
                 test("format_op one replacement", 1, function() {
                     strictEqual(format_op("OP_TEST_STRING"), "Test String");
                 });
-
-                test("contains singleton", 1, function() {
-                    strictEqual(contains([1], 1), true);
-                });
-
-                test("contains multiple", 1, function() {
-                    strictEqual(contains([2, 1], 1), true);
-                });
-
-                test("contains empty", 1, function() {
-                    strictEqual(contains([], 1), false);
-                });
-
-                test("contains fail", 1, function() {
-                    strictEqual(contains([2, 3], 1), false);
-                });
             });
         </script>
 
