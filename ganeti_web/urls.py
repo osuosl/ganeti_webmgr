@@ -22,6 +22,8 @@ from django.contrib.auth.decorators import login_required
 import os
 from forms.autocomplete_search_form import autocomplete_search_form
 
+from ganeti_web.views.cluster import ClusterDetailView, ClusterListView
+
 
 cluster_slug = '(?P<cluster_slug>[-_A-Za-z0-9]+)'
 cluster = 'cluster/%s' % cluster_slug
@@ -76,11 +78,12 @@ urlpatterns += patterns('ganeti_web.views.general',
 # Clusters
 urlpatterns += patterns('ganeti_web.views.cluster',
     #   List
-    url(r'^clusters/?$', 'list_', name="cluster-list"),
+    url(r'^clusters/?$', ClusterListView.as_view(), name="cluster-list"),
     #   Add
     url(r'^cluster/add/?$', 'edit', name="cluster-create"),
     #   Detail
-    url(r'^%s/?$' % cluster, 'detail', name="cluster-detail"),
+    url(r'^%s/?$' % cluster, ClusterDetailView.as_view(),
+        name="cluster-detail"),
     #   Edit
     url(r'^%s/edit/?$' % cluster, 'edit', name="cluster-edit"),
     #   Redistribute config

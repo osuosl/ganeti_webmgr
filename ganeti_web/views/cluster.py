@@ -29,7 +29,11 @@ from django.http import (HttpResponse, HttpResponseRedirect,
                          HttpResponseForbidden)
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
+from django.utils.decorators import method_decorator
+from django.utils.translation import ugettext as _
 from django.views.decorators.http import require_POST
+from django.views.generic.detail import DetailView
+from django.views.generic.list import ListView
 
 from object_permissions import get_users_any
 from object_permissions.views.permissions import view_users, view_permissions
@@ -42,35 +46,55 @@ from object_log.views import list_for_object
 log_action = LogItem.objects.log_action
 
 from ganeti_web.util.client import GanetiApiError
-from ganeti_web.models import Cluster, ClusterUser, Profile, SSHKey, VirtualMachine, Job
+from ganeti_web.models import (Cluster, ClusterUser, Profile, SSHKey,
+                               VirtualMachine, Job)
 from ganeti_web.views import render_403, render_404
 from ganeti_web.views.virtual_machine import render_vms
 from ganeti_web.forms.cluster import EditClusterForm, QuotaForm
-from django.utils.translation import ugettext as _
 
 
-@login_required
-def detail(request, cluster_slug, rest=False):
-    """
-    Display details of a cluster
-    """
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    user = request.user
-    admin = True if user.is_superuser else user.has_perm('admin', cluster)
-    readonly = False if admin else True
-    # if not admin:
-        # return render_403(request, _("You do not have sufficient privileges"))
+class ClusterDetailView(DetailView):
 
-    if rest:
-        return {'cluster':cluster,'admin':admin}
-    else:
-        return render_to_response("ganeti/cluster/detail.html", {
-            'cluster':cluster,
-            'admin':admin,
-            'readonly':readonly
-        },
-        context_instance=RequestContext(request),
-    )
+    template_name = "ganeti/cluster/detail.html"
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(ClusterDetailView, self).dispatch(*args, **kwargs)
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(Cluster, slug=self.kwargs["cluster_slug"])
+
+    def get_context_data(self, **kwargs):
+        cluster = kwargs["object"]
+        user = self.request.user
+        admin = user.is_superuser or user.has_perm("admin", cluster)
+
+        return {
+            "cluster": cluster,
+            "admin": admin,
+            "readonly": not admin,
+        }
+
+class ClusterListView(ListView):
+
+    template_name = "ganeti/cluster/list.html"
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(ClusterListView, self).dispatch(*args, **kwargs)
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return Cluster.objects.all()
+        else:
+            perms = ['admin', 'migrate', 'export', 'replace_disks', 'tags']
+            return self.request.user.get_objects_any_perms(Cluster, perms)
+
+    def get_context_data(self, **kwargs):
+        return {
+            "cluster_list": kwargs["object_list"],
+            "user": self.request.user,
+        }
 
 
 @login_required
@@ -176,29 +200,6 @@ def edit(request, cluster_slug=None):
     return render_to_response("ganeti/cluster/edit.html", {
         'form' : form,
         'cluster': cluster,
-        },
-        context_instance=RequestContext(request),
-    )
-
-
-@login_required
-def list_(request, rest=False):
-    """
-    List all clusters
-    """
-    user = request.user
-    if user.is_superuser:
-        cluster_list = Cluster.objects.all()
-    else:
-        cluster_list = user.get_objects_any_perms(Cluster, ['admin','migrate','export','replace_disks','tags'])
-        # List all clusters for which user has view_cluster perm
-
-    if rest:
-        return cluster_list
-    else:
-        return render_to_response("ganeti/cluster/list.html", {
-        'cluster_list': cluster_list,
-        'user': request.user,
         },
         context_instance=RequestContext(request),
     )
