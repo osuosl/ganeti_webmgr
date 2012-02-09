@@ -43,15 +43,17 @@ urlpatterns = patterns('',
     # account/logout - logout page
     # account/password/reset/ - send password reset email
     # account/password/change/ - change current user password
-    
+
     # Authentication
-    url(r'^accounts/login/?', 'django.contrib.auth.views.login',  name="login",),
-    url(r'^accounts/logout/?', 'django.contrib.auth.views.logout', \
-                        {'next_page':'/'}, name="logout"),
+    url(r'^accounts/login/?', 'django.contrib.auth.views.login',
+        name="login",),
+    url(r'^accounts/logout/?', 'django.contrib.auth.views.logout',
+        {'next_page':'/'}, name="logout"),
     (r'^accounts/', include('registration.urls')),
 
-
-    (r'^500/$', 'django.views.generic.simple.direct_to_template', {'template':"500.html"})
+    # Explicit 500 test route
+    (r'^500/$', 'django.views.generic.simple.direct_to_template',
+     {'template':"500.html"})
 )
 # Language settings
 urlpatterns += patterns('',
@@ -61,13 +63,11 @@ handler500 = 'ganeti_web.views.view_500'
 
 
 #The following is used to serve up local media files like images
-#if settings.LOCAL_DEV:
-if settings.DEBUG:
-    urlpatterns += patterns('',
-        (r'^favicon.ico', 'django.views.static.serve',
-            {'document_root':  settings.MEDIA_ROOT, 'path': 'favicon.ico'}),
-        
-        # noVNC files
-        (r'^novnc/(?P<path>.*)', 'django.views.static.serve',\
-            {'document_root':  '%s/noVNC/include' % settings.DOC_ROOT}),
-    )
+urlpatterns += patterns('',
+    (r'^favicon.ico', 'django.views.static.serve',
+        {'document_root':  settings.MEDIA_ROOT, 'path': 'favicon.ico'}),
+
+    # noVNC files
+    (r'^novnc/(?P<path>.*)', 'django.views.static.serve',
+        {'document_root':  '%s/noVNC/include' % settings.DOC_ROOT}),
+)
