@@ -30,11 +30,12 @@
                 });
 
                 test("format_op no replacements", 1, function() {
-                    strictEqual(format_op("OP_TEST"), "Test");
+                    strictEqual(format_op("OP_TEST", "Status"), "Test: Status");
                 });
 
                 test("format_op one replacement", 1, function() {
-                    strictEqual(format_op("OP_TEST_STRING"), "Test String");
+                    strictEqual(format_op("OP_TEST_STRING", "derps"),
+                        "Test String: Derps");
                 });
             });
         </script>

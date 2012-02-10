@@ -16,10 +16,10 @@ function cap_first(str) {
  *
  * Operation strings look like "OP_DO_SOMETHING". They should be formatted to
  * appear as "Do Something". */
-function format_op(str) {
-    str = str.substring(3).toLowerCase();
-    str = str.replace(/_/g, " ");
-    str = cap_first(str);
+function format_op(op, stat) {
+    op = op.substring(3).toLowerCase();
+    op = op.replace(/_/g, " ");
+    str = cap_first(op) + ": " + cap_first(stat);
     return str;
 }
 
@@ -127,8 +127,8 @@ function JobPoller() {
         var job_id = data['id'];
         var html = $('#job_'+job_id);
         var op_index = active_op(data);
-        var op = format_op(data['ops'][op_index]['OP_ID']);
         var status = data['status'];
+        var op = format_op(data['ops'][op_index]['OP_ID'], status);
         var new_job = (html.length==0);
 
         if (new_job) {
@@ -156,6 +156,7 @@ function JobPoller() {
                 $('#actions a').removeClass('disabled');
             }
 
+            /* Update the title of the job to reflect the change in status. */
             html.children('h3').html(op);
 
             // append log messages that are not already displayed
