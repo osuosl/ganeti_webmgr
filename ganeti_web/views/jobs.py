@@ -16,15 +16,38 @@
 # USA.
 
 import json
-from django.template.context import RequestContext
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
-from django.shortcuts import get_object_or_404, render_to_response
+from django.shortcuts import get_object_or_404
+from django.utils.decorators import method_decorator
+from django.utils.translation import ugettext as _
+from django.views.generic.detail import DetailView
 
 from ganeti_web.models import Job, Cluster, VirtualMachine, Node
 from ganeti_web.views import render_403
-from django.utils.translation import ugettext as _
+
+class JobDetailView(DetailView):
+
+    template_name = "ganeti/job/detail.html"
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(JobDetailView, self).dispatch(*args, **kwargs)
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(Job, job_id=self.kwargs["job_id"],
+                                 cluster__slug=self.kwargs["cluster_slug"])
+
+    def get_context_data(self, **kwargs):
+        job = kwargs["object"]
+        user = self.request.user
+        admin = user.is_superuser or user.has_perm("admin", job.cluster)
+
+        return {
+            "job": job,
+            "cluster_admin": admin,
+        }
 
 @login_required
 def status(request, cluster_slug, job_id, rest=False):
@@ -36,22 +59,6 @@ def status(request, cluster_slug, job_id, rest=False):
         return job
     else:
         return HttpResponse(json.dumps(job.info), mimetype='application/json')
-
-
-@login_required
-def detail(request, cluster_slug, job_id, rest=False):
-    job = get_object_or_404(Job, cluster__slug=cluster_slug, job_id=job_id)
-
-    user = request.user
-    cluster_admin = True if user.is_superuser else user.has_perm('admin', job.cluster)
-
-    if rest:
-        return {'job': job, 'cluster_admin':cluster_admin}
-    else:
-        return render_to_response("ganeti/job/detail.html",{
-            'job':job,
-            'cluster_admin':cluster_admin
-        } ,context_instance=RequestContext(request))
 
 
 @login_required
