@@ -221,8 +221,9 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
                               % path)
 
         kwargs = {
-            "verify": False,
+            "headers": headers,
             "timeout": self.timeout,
+            "verify": False,
         }
 
         if self.username and self.password:
