@@ -810,9 +810,13 @@ def create(request, cluster_slug=None):
 
                 vm.template = vm_template
                 vm.ignore_cache = True
+
+                # Do a dance to get the VM and the job referencing each other.
                 vm.save()
                 job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
-                VirtualMachine.objects.filter(pk=vm.pk).update(last_job=job)
+                job.save()
+                vm.last_job = job
+                vm.save()
 
                 # grant admin permissions to the owner.  Only do this for new
                 # VMs.  otherwise we run the risk of granting perms to a
