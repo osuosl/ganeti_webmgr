@@ -763,15 +763,15 @@ def create(request, cluster_slug=None):
                 for field in hvparam_fields:
                     hvparams[field] = data[field]
 
+            # XXX attempt to load the virtual machine.  This ensure that if
+            # there was a previous vm with the same hostname, but had not
+            # successfully been deleted, then it will be deleted now
             try:
-                # XXX attempt to load the virtual machine.  This ensure that if
-                # there was a previous vm with the same hostname, but had not
-                # successfully been deleted, then it will be deleted now
-                try:
-                    VirtualMachine.objects.get(cluster=cluster, hostname=hostname)
-                except VirtualMachine.DoesNotExist:
-                    pass
+                VirtualMachine.objects.get(cluster=cluster, hostname=hostname)
+            except VirtualMachine.DoesNotExist:
+                pass
 
+            try:
                 job_id = cluster.rapi.CreateInstance('create', hostname,
                         disk_template,
                         disks,nics,
@@ -783,7 +783,10 @@ def create(request, cluster_slug=None):
                         hypervisor=hv,
                         hvparams=hvparams,
                         beparams={"memory": memory, "vcpus":vcpus})
-
+            except GanetiApiError, e:
+                msg = '%s: %s' % (_('Error creating virtual machine on this cluster'),e)
+                form._errors["cluster"] = form.error_class([msg])
+            else:
                 # Check for a vm recovery, If it is not found then
                 if 'vm_recovery' in data:
                     vm = data['vm_recovery']
@@ -807,9 +810,13 @@ def create(request, cluster_slug=None):
 
                 vm.template = vm_template
                 vm.ignore_cache = True
+
+                # Do a dance to get the VM and the job referencing each other.
                 vm.save()
                 job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
-                VirtualMachine.objects.filter(pk=vm.pk).update(last_job=job)
+                job.save()
+                vm.last_job = job
+                vm.save()
 
                 # grant admin permissions to the owner.  Only do this for new
                 # VMs.  otherwise we run the risk of granting perms to a
@@ -823,10 +830,6 @@ def create(request, cluster_slug=None):
 
                 return HttpResponseRedirect(
                 reverse('instance-detail', args=[cluster.slug, vm.hostname]))
-
-            except GanetiApiError, e:
-                msg = '%s: %s' % (_('Error creating virtual machine on this cluster'),e)
-                form._errors["cluster"] = form.error_class([msg])
 
         cluster_defaults = {}
         if 'cluster' in request.POST and request.POST['cluster'] != '':

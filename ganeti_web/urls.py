@@ -22,6 +22,9 @@ from django.contrib.auth.decorators import login_required
 import os
 from forms.autocomplete_search_form import autocomplete_search_form
 
+from ganeti_web.views.cluster import ClusterDetailView, ClusterListView
+from ganeti_web.views.jobs import JobDetailView
+
 
 cluster_slug = '(?P<cluster_slug>[-_A-Za-z0-9]+)'
 cluster = 'cluster/%s' % cluster_slug
@@ -76,11 +79,12 @@ urlpatterns += patterns('ganeti_web.views.general',
 # Clusters
 urlpatterns += patterns('ganeti_web.views.cluster',
     #   List
-    url(r'^clusters/?$', 'list_', name="cluster-list"),
+    url(r'^clusters/?$', ClusterListView.as_view(), name="cluster-list"),
     #   Add
     url(r'^cluster/add/?$', 'edit', name="cluster-create"),
     #   Detail
-    url(r'^%s/?$' % cluster, 'detail', name="cluster-detail"),
+    url(r'^%s/?$' % cluster, ClusterDetailView.as_view(),
+        name="cluster-detail"),
     #   Edit
     url(r'^%s/edit/?$' % cluster, 'edit', name="cluster-edit"),
     #   Redistribute config
@@ -226,7 +230,7 @@ job = '%s/job/(?P<job_id>\d+)' % cluster
 urlpatterns += patterns('ganeti_web.views.jobs',
     url(r'^%s/status/?' % job, 'status', name='job-status'),
     url(r'^%s/clear/?' % job, 'clear', name='job-clear'),
-    url(r'^%s/?' % job, 'detail', name='job-detail'),
+    url(r'^%s/?' % job, JobDetailView.as_view(), name='job-detail'),
 )
 
 # Search

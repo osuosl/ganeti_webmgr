@@ -46,16 +46,9 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
     def setUp(self):
         models.client.GanetiRapiClient = RapiProxy
 
-        self.anonymous = User(id=1, username='anonymous')
-        self.anonymous.save()
-        settings.ANONYMOUS_USER_ID = self.anonymous.id
-
         user = User(id=2, username='tester0')
         user.set_password('secret')
         user.save()
-        user1 = User(id=3, username='tester1')
-        user1.set_password('secret')
-        user1.save()
 
         group = Group(name='testing_group')
         group.save()
@@ -68,16 +61,13 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.cluster_admin.grant('admin', cluster)
 
         self.user = user
-        self.user1 = user1
         self.group = group
         self.cluster = cluster
         self.c = Client()
 
     def tearDown(self):
         # Tear down users.
-        self.anonymous.delete()
         self.user.delete()
-        self.user1.delete()
         self.unauthorized.delete()
         self.superuser.delete()
         self.cluster_admin.delete()
@@ -93,7 +83,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assertTrue(self.c.login(username=self.user.username,
+        self.assertTrue(self.c.login(username=self.unauthorized.username,
                                      password='secret'))
         response = self.c.get(url % args)
         self.assertEqual(403, response.status_code)
@@ -103,16 +93,16 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertEqual(404, response.status_code)
 
         # authorized user (perm)
-        self.user.grant('admin', self.cluster)
+        self.assertTrue(self.c.login(username=self.cluster_admin.username,
+                                     password="secret"))
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, template)
-        self.user.revoke('admin', self.cluster)
 
         # authorized user (superuser)
-        self.user.is_superuser = True
-        self.user.save()
+        self.assertTrue(self.c.login(username=self.superuser.username,
+                                     password="secret"))
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
@@ -132,19 +122,8 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         url = '/clusters/'
 
         # create extra user and tests
-        user2 = User(id=4, username='tester2', is_superuser=True)
-        user2.set_password('secret')
-        user2.save()
         cluster1 = Cluster(hostname='cluster1', slug='cluster1')
-        cluster2 = Cluster(hostname='cluster2', slug='cluster2')
-        cluster3 = Cluster(hostname='cluster3', slug='cluster3')
         cluster1.save()
-        cluster2.save()
-        cluster3.save()
-
-        # grant some perms
-        self.user1.grant('admin', self.cluster)
-        self.user1.grant('create_vm', cluster1)
 
         # anonymous user
         response = self.c.get(url, follow=True)
@@ -152,7 +131,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assertTrue(self.c.login(username=self.user.username,
+        self.assertTrue(self.c.login(username=self.unauthorized.username,
                                      password='secret'))
         response = self.c.get(url)
         self.assertEqual(200, response.status_code)
@@ -162,7 +141,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertFalse(clusters)
 
         # authorized permissions
-        self.assertTrue(self.c.login(username=self.user1.username,
+        self.assertTrue(self.c.login(username=self.cluster_admin.username,
                                      password='secret'))
         response = self.c.get(url)
         self.assertEqual(200, response.status_code)
@@ -174,7 +153,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertEqual(1, len(clusters))
 
         # authorized (superuser)
-        self.assertTrue(self.c.login(username=user2.username,
+        self.assertTrue(self.c.login(username=self.superuser.username,
                                      password='secret'))
         response = self.c.get(url)
         self.assertEqual(200, response.status_code)
@@ -183,14 +162,9 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         clusters = response.context['cluster_list']
         self.assertTrue(self.cluster in clusters)
         self.assertTrue(cluster1 in clusters)
-        self.assertTrue(cluster2 in clusters)
-        self.assertTrue(cluster3 in clusters)
-        self.assertEqual(4, len(clusters))
+        self.assertEqual(2, len(clusters))
 
-        user2.delete()
         cluster1.delete()
-        cluster2.delete()
-        cluster3.delete()
 
     def test_view_add(self):
         """
@@ -204,14 +178,14 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assertTrue(self.c.login(username=self.user.username,
+        self.assertTrue(self.c.login(username=self.unauthorized.username,
                                      password='secret'))
         response = self.c.get(url)
         self.assertEqual(403, response.status_code)
 
         # authorized (GET)
-        self.user.is_superuser = True
-        self.user.save()
+        self.assertTrue(self.c.login(username=self.superuser.username,
+                                     password='secret'))
         response = self.c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
@@ -260,23 +234,23 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assertTrue(self.c.login(username=self.user.username,
+        self.assertTrue(self.c.login(username=self.unauthorized.username,
                                      password='secret'))
         response = self.c.get(url)
         self.assertEqual(403, response.status_code)
 
         # authorized (permission)
-        self.user.grant('admin', self.cluster)
+        self.assertTrue(self.c.login(username=self.cluster_admin.username,
+                                     password='secret'))
         response = self.c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/cluster/edit.html')
         self.assertEqual(self.cluster, response.context['cluster'])
-        self.user.revoke('admin', self.cluster)
 
         # authorized (GET)
-        self.user.is_superuser = True
-        self.user.save()
+        self.assertTrue(self.c.login(username=self.superuser.username,
+                                     password='secret'))
         response = self.c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
@@ -318,33 +292,23 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         Random people shouldn't be able to delete clusters.
         """
 
-        # XXX do we really need to make a new cluster?
-        cluster = Cluster(hostname='test.cluster.bak', slug='cluster1')
-        cluster.save()
-        url = '/cluster/%s/edit/' % cluster.slug
+        url = '/cluster/%s/edit/' % self.cluster.slug
 
         response = self.c.delete(url, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'registration/login.html')
-
-        cluster.delete()
 
     def test_view_delete_unauthorized(self):
         """
         Unauthorized people shouldn't be able to delete clusters.
         """
 
-        # XXX do we really need to make a new cluster?
-        cluster = Cluster(hostname='test.cluster.bak', slug='cluster1')
-        cluster.save()
-        url = '/cluster/%s/edit/' % cluster.slug
+        url = '/cluster/%s/edit/' % self.cluster.slug
 
-        self.assertTrue(self.c.login(username=self.user.username,
+        self.assertTrue(self.c.login(username=self.unauthorized.username,
                                      password='secret'))
         response = self.c.delete(url)
         self.assertEqual(403, response.status_code)
-
-        cluster.delete()
 
     def test_view_delete_authorized(self):
         """
@@ -373,9 +337,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         cluster.save()
         url = '/cluster/%s/edit/' % cluster.slug
 
-        self.user.is_superuser = True
-        self.user.save()
-        self.assertTrue(self.c.login(username=self.user.username,
+        self.assertTrue(self.c.login(username=self.superuser.username,
                                      password='secret'))
         response = self.c.delete(url, follow=True)
         self.assertEqual(200, response.status_code)
@@ -396,7 +358,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assertTrue(self.c.login(username=self.user.username,
+        self.assertTrue(self.c.login(username=self.unauthorized.username,
                                      password='secret'))
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code) # Ticket 6891
@@ -406,16 +368,16 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertEqual(404, response.status_code)
 
         # authorized (permission)
-        self.user.grant('admin', self.cluster)
+        self.assertTrue(self.c.login(username=self.cluster_admin.username,
+                                     password='secret'))
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/cluster/detail.html')
-        self.user.revoke('admin', self.cluster)
 
         # authorized (superuser)
-        self.user.is_superuser = True
-        self.user.save()
+        self.assertTrue(self.c.login(username=self.superuser.username,
+                                     password='secret'))
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
@@ -472,7 +434,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assertTrue(self.c.login(username=self.user.username,
+        self.assertTrue(self.c.login(username=self.unauthorized.username,
                                      password='secret'))
         response = self.c.get(url % args)
         self.assertEqual(403, response.status_code)
@@ -482,16 +444,16 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertEqual(404, response.status_code)
 
         # valid GET authorized user (perm)
-        self.user.grant('admin', self.cluster)
+        self.assertTrue(self.c.login(username=self.cluster_admin.username,
+                                     password='secret'))
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
-        self.user.revoke('admin', self.cluster)
 
         # valid GET authorized user (superuser)
-        self.user.is_superuser = True
-        self.user.save()
+        self.assertTrue(self.c.login(username=self.superuser.username,
+                                     password='secret'))
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
@@ -510,7 +472,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         data = {
             'permissions': ['admin'],
             'group': self.group.id,
-            'user': self.user1.id,
+            'user': self.user.id,
             'cluster': self.cluster.pk,
         }
         response = self.c.post(url % args, data)
@@ -521,7 +483,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         # no permissions specified - user
         data = {
             'permissions': [],
-            'user': self.user1.id,
+            'user': self.user.id,
             'obj': self.cluster.pk,
         }
         response = self.c.post(url % args, data)
@@ -540,17 +502,17 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertEquals('application/json', response['content-type'])
 
         # valid POST user has permissions
-        self.user1.grant('create_vm', self.cluster)
+        self.user.grant('create_vm', self.cluster)
         data = {
             'permissions': ["admin"],
-            'user': self.user1.id,
+            'user': self.user.id,
             'obj': self.cluster.pk,
         }
         response = self.c.post(url % args, data)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/cluster/user_row.html')
-        self.assertTrue(self.user1.has_perm('admin', self.cluster))
-        self.assertFalse(self.user1.has_perm('create_vm', self.cluster))
+        self.assertTrue(self.user.has_perm('admin', self.cluster))
+        self.assertFalse(self.user.has_perm('create_vm', self.cluster))
 
         # valid POST group has permissions
         self.group.grant('create_vm', self.cluster)
@@ -592,7 +554,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
             * If user/group has permissions no html is returned
             * If user/group has no permissions a json response of -1 is returned
         """
-        args = (self.cluster.slug, self.user1.id)
+        args = (self.cluster.slug, self.user.id)
         args_post = self.cluster.slug
         url = "/cluster/%s/permissions/user/%s"
         url_post = "/cluster/%s/permissions/"
@@ -603,26 +565,26 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assertTrue(self.c.login(username=self.user.username,
+        self.assertTrue(self.c.login(username=self.unauthorized.username,
                                      password='secret'))
         response = self.c.get(url % args)
         self.assertEqual(403, response.status_code)
 
         # nonexisent cluster
-        response = self.c.get(url % ("DOES_NOT_EXIST", self.user1.id))
+        response = self.c.get(url % ("DOES_NOT_EXIST", self.user.id))
         self.assertEqual(404, response.status_code)
 
         # valid GET authorized user (perm)
-        self.user.grant('admin', self.cluster)
+        self.assertTrue(self.c.login(username=self.cluster_admin.username,
+                                     password='secret'))
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
-        self.user.revoke('admin', self.cluster)
 
         # valid GET authorized user (superuser)
-        self.user.is_superuser = True
-        self.user.save()
+        self.assertTrue(self.c.login(username=self.superuser.username,
+                                     password='secret'))
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
@@ -632,7 +594,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertEqual(404, response.status_code)
 
         # invalid user (POST)
-        self.user1.grant('create_vm', self.cluster)
+        self.user.grant('create_vm', self.cluster)
         data = {
             'permissions': ['admin'],
             'user': -1,
@@ -644,7 +606,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
 
         # no user (POST)
         # XXX double-grant?
-        self.user1.grant('create_vm', self.cluster)
+        self.user.grant('create_vm', self.cluster)
         data = {
             'permissions': ['admin'],
             'obj': self.cluster.pk,
@@ -655,50 +617,51 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
 
         # valid POST user has permissions
         # XXX triple-grant?!
-        self.user1.grant('create_vm', self.cluster)
+        self.user.grant('create_vm', self.cluster)
         data = {
             'permissions': ['admin'],
-            'user': self.user1.id,
+            'user': self.user.id,
             'obj': self.cluster.pk,
         }
         response = self.c.post(url_post % args_post, data)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/cluster/user_row.html')
-        self.assertTrue(self.user1.has_perm('admin', self.cluster))
-        self.assertFalse(self.user1.has_perm('create_vm', self.cluster))
+        self.assertTrue(self.user.has_perm('admin', self.cluster))
+        self.assertFalse(self.user.has_perm('create_vm', self.cluster))
 
         # add quota to the user
         user_quota = {'default':0, 'ram':51, 'virtual_cpus':10, 'disk':3000}
-        quota = Quota(cluster=self.cluster, user=self.user1.get_profile())
+        quota = Quota(cluster=self.cluster, user=self.user.get_profile())
         quota.__dict__.update(user_quota)
         quota.save()
         self.assertEqual(user_quota,
-                         self.cluster.get_quota(self.user1.get_profile()))
+                         self.cluster.get_quota(self.user.get_profile()))
 
         # valid POST user has no permissions left
         data = {
             'permissions': [],
-            'user': self.user1.id,
+            'user': self.user.id,
             'obj': self.cluster.pk,
         }
         response = self.c.post(url_post % args_post, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertEqual([], get_user_perms(self.user, self.cluster))
-        self.assertEqual('"user_3"', response.content)
+        # XXX this is too hardcoded and can spuriously fail
+        self.assertEqual('"user_2"', response.content)
 
         # quota should be deleted (and showing default)
         self.assertEqual(1,
-                         self.cluster.get_quota(self.user1.get_profile())['default'])
-        self.assertFalse(self.user1.get_profile().quotas.all().exists())
+                         self.cluster.get_quota(self.user.get_profile())['default'])
+        self.assertFalse(self.user.get_profile().quotas.all().exists())
 
         # no permissions specified - user with no quota
         # XXX quadra-grant!!!
-        self.user1.grant('create_vm', self.cluster)
-        self.cluster.set_quota(self.user1.get_profile(), None)
+        self.user.grant('create_vm', self.cluster)
+        self.cluster.set_quota(self.user.get_profile(), None)
         data = {
             'permissions': [],
-            'user': self.user1.id,
+            'user': self.user.id,
             'obj': self.cluster.pk,
         }
         response = self.c.post(url % args, data)
@@ -708,8 +671,8 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
 
         # quota should be deleted (and showing default)
         self.assertEqual(1,
-                         self.cluster.get_quota(self.user1.get_profile())['default'])
-        self.assertFalse(self.user1.get_profile().quotas.all().exists())
+                         self.cluster.get_quota(self.user.get_profile())['default'])
+        self.assertFalse(self.user.get_profile().quotas.all().exists())
 
     def test_view_group_permissions(self):
         """
@@ -726,7 +689,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assertTrue(self.c.login(username=self.user.username,
+        self.assertTrue(self.c.login(username=self.unauthorized.username,
                                      password='secret'))
         response = self.c.get(url % args)
         self.assertEqual(403, response.status_code)
@@ -736,7 +699,8 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertEqual(404, response.status_code)
 
         # valid GET authorized user (perm)
-        self.user.grant('admin', self.cluster)
+        self.assertTrue(self.c.login(username=self.cluster_admin.username,
+                                     password='secret'))
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
@@ -744,8 +708,8 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.user.revoke('admin', self.cluster)
 
         # valid GET authorized user (superuser)
-        self.user.is_superuser = True
-        self.user.save()
+        self.assertTrue(self.c.login(username=self.superuser.username,
+                                     password='secret'))
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
@@ -834,9 +798,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         for the second time
         """
         #configuring stuff needed to test edit view
-        self.user.is_superuser = True
-        self.user.save()
-        self.assertTrue(self.c.login(username=self.user.username,
+        self.assertTrue(self.c.login(username=self.superuser.username,
                                      password='secret'))
         self.cluster.virtual_machines.all().delete()
         url = '/cluster/%s/edit/' % self.cluster.slug
@@ -872,10 +834,14 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         vm = VirtualMachine.objects.create(cluster=self.cluster,
                                            hostname='vm1.osuosl.bak')
 
+        user1 = User(id=3, username='tester1')
+        user1.set_password('secret')
+        user1.save()
+
         # add some keys
         SSHKey.objects.create(key="ssh-rsa test test@test", user=self.user)
         SSHKey.objects.create(key="ssh-dsa test asd@asd", user=self.user)
-        SSHKey.objects.create(key="ssh-dsa test foo@bar", user=self.user1)
+        SSHKey.objects.create(key="ssh-dsa test foo@bar", user=user1)
 
         # get API key
         # XXX agh oh god what why are you doing this argfl
@@ -897,8 +863,9 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
 
         # vm with users who have admin perms
         # grant admin permission to first user
+        # XXX ...but we aren't using these users anywhere after this...
         self.user.grant("admin", vm)
-        self.user1.grant("admin", self.cluster)
+        user1.grant("admin", self.cluster)
 
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
@@ -907,6 +874,8 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertContains(response, "test@test", count=1)
         self.assertContains(response, "asd@asd", count=1)
         self.assertContains(response, "foo@bar", count=1)
+
+        user1.delete()
 
     def test_view_redistribute_config(self):
         """
@@ -921,13 +890,14 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assertTrue(self.c.login(username=self.user.username,
+        self.assertTrue(self.c.login(username=self.unauthorized.username,
                                      password='secret'))
         response = self.c.post(url)
         self.assertEqual(403, response.status_code)
 
         # authorized (permission)
-        self.user.grant('admin', self.cluster)
+        self.assertTrue(self.c.login(username=self.cluster_admin.username,
+                                     password='secret'))
         response = self.c.post(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
@@ -939,8 +909,8 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.cluster.save()
 
         # authorized (GET)
-        self.user.is_superuser = True
-        self.user.save()
+        self.assertTrue(self.c.login(username=self.superuser.username,
+                                     password='secret'))
         response = self.c.post(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
@@ -955,16 +925,9 @@ class TestClusterQuotaViews(TestCase, ViewTestMixin, UserTestMixin):
     def setUp(self):
         models.client.GanetiRapiClient = RapiProxy
 
-        self.anonymous = User(id=1, username='anonymous')
-        self.anonymous.save()
-        settings.ANONYMOUS_USER_ID = self.anonymous.id
-
         user = User(id=2, username='tester0')
         user.set_password('secret')
         user.save()
-        user1 = User(id=3, username='tester1')
-        user1.set_password('secret')
-        user1.save()
 
         group = Group(name='testing_group')
         group.save()
@@ -977,17 +940,13 @@ class TestClusterQuotaViews(TestCase, ViewTestMixin, UserTestMixin):
         self.cluster_admin.grant('admin', cluster)
 
         self.user = user
-        self.user1 = user1
         self.group = group
         self.cluster = cluster
         self.c = Client()
 
     def tearDown(self):
         # Tear down users.
-        self.anonymous.delete()
         self.user.delete()
-        self.user1.delete()
-        self.unauthorized.delete()
         self.superuser.delete()
         self.cluster_admin.delete()
 
@@ -1037,20 +996,17 @@ class TestClusterQuotaViews(TestCase, ViewTestMixin, UserTestMixin):
         url = '/cluster/%s/quota/%s'
         url_post = '/cluster/%s/quota/'
 
-        self.assertTrue(self.c.login(username=self.user.username,
-                                     password='secret'))
-
         # valid GET authorized user (perm)
-        self.user.grant('admin', self.cluster)
+        self.assertTrue(self.c.login(username=self.cluster_admin.username,
+                                     password='secret'))
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/cluster/quota.html')
-        self.user.revoke('admin', self.cluster)
 
         # valid GET authorized user (superuser)
-        self.user.is_superuser = True
-        self.user.save()
+        self.assertTrue(self.c.login(username=self.superuser.username,
+                                     password='secret'))
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'ganeti/cluster/quota.html')
@@ -1130,7 +1086,7 @@ class TestClusterQuotaViews(TestCase, ViewTestMixin, UserTestMixin):
         Tests updating users quota
         """
 
-        self.validate_quota(self.user1.get_profile(),
+        self.validate_quota(self.user.get_profile(),
                             template='ganeti/cluster/user_row.html')
 
     def test_view_group_quota(self):
@@ -1147,14 +1103,14 @@ class TestClusterQuotaViews(TestCase, ViewTestMixin, UserTestMixin):
         """
 
         response = self.c.get("/cluster/%s/user/quota/?user=%s" %
-                         ("DOES_NOT_EXIST", self.user1.id))
+                         ("DOES_NOT_EXIST", self.user.id))
         self.assertEqual(404, response.status_code)
 
     def test_user_quota_anonymous(self):
-        self.validate_anonymous(self.user1.get_profile())
+        self.validate_anonymous(self.user.get_profile())
 
     def test_user_quota_unauthorized(self):
-        self.validate_unauthorized(self.user1.get_profile())
+        self.validate_unauthorized(self.user.get_profile())
 
     def test_group_quota_anonymous(self):
         self.validate_anonymous(self.group.organization)
