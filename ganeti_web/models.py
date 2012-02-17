@@ -1385,12 +1385,6 @@ if settings.TESTING:
 
 class GanetiErrorManager(models.Manager):
 
-    def clear_error(self, id):
-        """
-        Clear one particular error (used in overview template).
-        """
-        return self.filter(pk=id).update(cleared=True)
-
     def clear_errors(self, *args, **kwargs):
         """
         Clear errors instead of deleting them.

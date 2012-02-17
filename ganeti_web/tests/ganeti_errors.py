@@ -131,7 +131,6 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
         self.assertEqual(len(errors), 2)
 
         # test clear_error(s)
-        clear_error = GanetiError.objects.clear_error
         clear_errors = GanetiError.objects.clear_errors
 
         errors = get_errors()
@@ -139,23 +138,17 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
         errors = get_errors(cleared=False).order_by("id")
         self.assertEqual(len(errors), 5)
 
-        clear_error(errors[0].id)
+        clear_errors(obj=cluster2)
         errors = get_errors()
         self.assertEqual(len(errors), 5)
         errors = get_errors(cleared=False)
         self.assertEqual(len(errors), 4)
 
-        clear_errors(obj=cluster2)
-        errors = get_errors()
-        self.assertEqual(len(errors), 5)
-        errors = get_errors(cleared=False)
-        self.assertEqual(len(errors), 3)
-
         clear_errors(obj=vm1)
         errors = get_errors()
         self.assertEqual(len(errors), 5)
         errors = get_errors(cleared=False)
-        self.assertEqual(len(errors), 2)
+        self.assertEqual(len(errors), 3)
 
         clear_errors(msg=str(msg))
         errors = get_errors()
