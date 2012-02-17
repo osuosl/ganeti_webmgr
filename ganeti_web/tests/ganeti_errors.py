@@ -156,21 +156,15 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
         errors = get_errors(cleared=False)
         self.assertEqual(len(errors), 0)
 
-        # test remove_errors
-        remove_errors = GanetiError.objects.remove_errors
-
-        errors = get_errors()
-        self.assertEqual(len(errors), 5)
-
-        remove_errors(obj=cluster2)
+        get_errors(obj=cluster2).delete()
         errors = get_errors()
         self.assertEqual(len(errors), 4)
 
-        remove_errors(obj=vm1)
+        get_errors(obj=vm1).delete()
         errors = get_errors()
         self.assertEqual(len(errors), 3)
 
-        remove_errors(msg=str(msg))
+        get_errors(msg=str(msg)).delete()
         errors = get_errors()
         self.assertEqual(len(errors), 0)
 
@@ -191,7 +185,6 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
 
         store_error = GanetiError.objects.store_error
         get_errors = GanetiError.objects.get_errors
-        remove_errors = GanetiError.objects.remove_errors
 
         # 401 - cluster
         store_error(str(msg0), obj=cluster0, code=msg0.code)
@@ -199,7 +192,7 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
         self.assertEqual(len(errors), 1)
         errors = get_errors(obj=vm0)
         self.assertEqual(len(errors), 0)
-        remove_errors(obj=cluster0)
+        get_errors(obj=cluster0).delete()
 
         # 401 - VM
         store_error(str(msg0), obj=vm0, code=msg0.code)
@@ -207,8 +200,8 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
         self.assertEqual(len(errors), 1)
         errors = get_errors(obj=vm0)
         self.assertEqual(len(errors), 0)
-        remove_errors(obj=cluster0)
-        remove_errors(obj=vm0)
+        get_errors(obj=cluster0).delete()
+        get_errors(obj=vm0).delete()
 
         # 404 - VM
         store_error(str(msg1), obj=vm0, code=msg1.code)
@@ -216,8 +209,8 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
         self.assertEqual(len(errors), 1)
         errors = get_errors(obj=vm0)
         self.assertEqual(len(errors), 1)
-        remove_errors(obj=cluster0)
-        remove_errors(obj=vm0)
+        get_errors(obj=cluster0).delete()
+        get_errors(obj=vm0).delete()
 
         # 404 - cluster
         store_error(str(msg1), obj=cluster0, code=msg1.code)
@@ -232,7 +225,7 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
         self.assertEqual(len(errors), 1)
         errors = get_errors(obj=vm0)
         self.assertEqual(len(errors), 0)
-        remove_errors(obj=cluster0)
+        get_errors(obj=cluster0).delete()
 
     def refresh(self, object):
         """

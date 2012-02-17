@@ -1392,12 +1392,6 @@ class GanetiErrorManager(models.Manager):
         return self.get_errors(cleared=False, *args, **kwargs) \
             .update(cleared=True)
 
-    def remove_errors(self, *args, **kwargs):
-        """
-        Just shortcut if someone wants to remove some errors.
-        """
-        return self.get_errors(*args, **kwargs).delete()
-
     def get_errors(self, obj=None, **kwargs):
         """
         Manager method used for getting QuerySet of all errors depending on
