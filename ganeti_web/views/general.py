@@ -24,6 +24,7 @@ from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.contrib.contenttypes.models import ContentType
+from django.views.generic.base import TemplateView
 
 from object_permissions import get_users_any
 
@@ -33,12 +34,13 @@ from ganeti_web.views import render_403, render_404
 from django.utils.translation import ugettext as _
 from ganeti_web.constants import VERSION
 
-def about(request):
-    return render_to_response("ganeti/about.html", {
-        'version':VERSION
-        },
-        context_instance=RequestContext(request),
-    )
+class AboutView(TemplateView):
+
+    template_name = "ganeti/about.html"
+
+    def render_to_response(self, context, **kwargs):
+        context["version"] = VERSION
+        return super(AboutView, self).render_to_response(context, **kwargs)
 
 def merge_errors(errors, jobs):
     """ helper function for merging queryset of GanetiErrors and Job Errors """
@@ -59,7 +61,7 @@ def merge_errors(errors, jobs):
                     job = job_iter.next()
                 except StopIteration:
                     job = None
-                    
+
     # append any left over jobs
     while job is not None:
         merged.append((False, job))
@@ -109,7 +111,7 @@ def update_vm_counts(key, data):
 
     If the cluster's data is not in cache it is ignored.  This is only for
     updating the cache with information we already have.
-    
+
     @param key - admin data key that is being updated: orphaned, ready_to_import,
         or missing
     @param data - dict of data stored by cluster.pk
@@ -117,14 +119,14 @@ def update_vm_counts(key, data):
     format_key = 'cluster_admin_%d'
     keys = [format_key % k for k in data.keys()]
     cached = cache.get_many(keys)
-    
+
     for k, v in data.items():
         try:
             values = cached[format_key % k]
             values[key] += v
         except KeyError:
             pass
-    
+
     cache.set_many(cached, 600)
 
 
@@ -132,7 +134,7 @@ def get_vm_counts(clusters, timeout=600):
     """
     Helper for getting the list of orphaned/ready to import/missing VMs.
     Caches by the way.
-    
+
     This caches data under the keys:   cluster_admin_<cluster_id>
 
     @param clusters the list of clusters, for which numbers of VM are counted.
@@ -157,23 +159,23 @@ def get_vm_counts(clusters, timeout=600):
         base = VirtualMachine.objects.filter(cluster__in=cluster_list,
                 owner=None).order_by()
         annotated = base.values("cluster__pk").annotate(orphaned=Count("id"))
-        
+
         result = {}
         for i in annotated:
             result[format_key % i["cluster__pk"]] = {"orphaned": i["orphaned"]}
             orphaned += i["orphaned"]
         for cluster in cluster_list:
             key = format_key % cluster.pk
-            
+
             if key not in result:
                 result[key] = {"orphaned": 0}
-            
+
             result[key]["import_ready"] = len(cluster.missing_in_db)
             result[key]["missing"] = len(cluster.missing_in_ganeti)
-            
+
             import_ready += result[key]["import_ready"]
             missing += result[key]["missing"]
-        
+
         # add all results into cache
         cache.set_many(result, timeout)
 
@@ -219,7 +221,7 @@ def overview(request, rest=False):
         select_clause |= Q(cluster__in=clusters)
     job_errors = Job.objects.filter(error_clause & select_clause) \
         .order_by("-finished")[:5]
-    
+
     # build list of job errors.  Include jobs from any vm the user has access to
     # If the user has admin on any cluster then those clusters and it's objects
     # must be included too.
@@ -227,10 +229,10 @@ def overview(request, rest=False):
     if admin:
         ganeti_errors |= GanetiError.objects.get_errors(obj=clusters, \
                                                         cleared=False)
-    
+
     # merge error lists
     errors = merge_errors(ganeti_errors, job_errors)
-    
+
     # get vm summary - running and totals need to be done as separate queries
     # and then merged into a single list
     vms_running = vms.filter(status='running') \
@@ -245,7 +247,7 @@ def overview(request, rest=False):
         vm_summary[cluster.pop('cluster__hostname')] = cluster
     for cluster in vms_running:
         vm_summary[cluster['cluster__hostname']]['running'] = cluster['running']
-    
+
     # get list of personas for the user:  All groups, plus the user.
     # include the user only if it owns a vm or has perms on at least one cluster
     profile = user.get_profile()
@@ -254,10 +256,10 @@ def overview(request, rest=False):
         or user.has_any_perms(Cluster, ['admin', 'create_vm'], groups=False) \
         or not personas:
             personas.insert(0, profile)
-    
+
     # get resources used per cluster from the first persona in the list
     resources = get_used_resources(personas[0])
-    
+
     if rest:
         return clusters
     else:
@@ -285,7 +287,7 @@ def used_resources(request, rest=False):
     except KeyError:
         return render_404(request, 'requested user was not found')
     cu = get_object_or_404(ClusterUser, pk=cluster_user_id)
-    
+
     # must be a super user, the user in question, or a member of the group
     user = request.user
     if not user.is_superuser:
@@ -298,7 +300,7 @@ def used_resources(request, rest=False):
             if not Organization.objects.filter(clusteruser_ptr=cu.pk, \
                                                group__user=user).exists():
                 return render_403(request, _('You are not authorized to view this page'))
-    
+
     resources = get_used_resources(cu.cast())
     if rest:
         return resources
@@ -307,7 +309,7 @@ def used_resources(request, rest=False):
             'resources':resources
         }, context_instance=RequestContext(request))
 
-    
+
 
 @login_required
 def clear_ganeti_error(request, pk):
@@ -317,7 +319,7 @@ def clear_ganeti_error(request, pk):
     user = request.user
     error = get_object_or_404(GanetiError, pk=pk)
     obj = error.obj
-    
+
     # if not a superuser, check permissions on the object itself
     if not user.is_superuser:
         if isinstance(obj, (Cluster,)) and not user.has_perm('admin', obj):
@@ -327,10 +329,10 @@ def clear_ganeti_error(request, pk):
             if not (obj.owner_id == user.get_profile().pk or \
                 user.has_perm('admin', obj.cluster)):
                     return render_403(request, _("You do not have sufficient privileges"))
-    
+
     # clear the error
     GanetiError.objects.filter(pk=error.pk).update(cleared=True)
-    
+
     return HttpResponse('1', mimetype='application/json')
 
 

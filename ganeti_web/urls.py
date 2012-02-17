@@ -23,6 +23,7 @@ import os
 from forms.autocomplete_search_form import autocomplete_search_form
 
 from ganeti_web.views.cluster import ClusterDetailView, ClusterListView
+from ganeti_web.views.general import AboutView
 from ganeti_web.views.jobs import JobDetailView
 
 
@@ -49,7 +50,7 @@ urlpatterns = patterns('ganeti_web.views.general',
     url(r'^error/clear/(?P<pk>\d+)/?$', 'clear_ganeti_error', name="error-clear"),
 
     #About page
-    url(r'^about/?$', 'about', name="about"),
+    url(r'^about/?$', AboutView.as_view(), name="about"),
 )
 
 
