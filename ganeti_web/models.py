@@ -1777,7 +1777,7 @@ def refresh_objects(sender, **kwargs):
             flush()
 
         wf('- Refresh Cached Cluster Objects')
-        wf(' > Synchronizing Cluster Nodes', True)
+        wf(' > Synchronizing Cluster Nodes ', True)
         flush()
         for cluster in Cluster.objects.all().iterator():
             try:
@@ -1786,16 +1786,18 @@ def refresh_objects(sender, **kwargs):
             except GanetiApiError:
                 wf('E')
 
-        wf(' > Refreshing Node Caches', True)
+        wf(' > Refreshing Node Caches ', True)
         for node in Node.objects.all().iterator():
-            wf('.')
+            try:
+                wf('.')
+            except GanetiApiError:
+                wf('E')
 
-
-        wf(' > Refreshing Instance Caches', True)
+        wf(' > Refreshing Instance Caches ', True)
         for instance in VirtualMachine.objects.all().iterator():
             try:
                 wf('.')
-            except Exception, e:
+            except GanetiApiError:
                 wf('E')
         wf('\n')
 
