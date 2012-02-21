@@ -28,9 +28,10 @@ from django.views.generic.base import TemplateView
 
 from object_permissions import get_users_any
 
+from ganeti_web.middleware import Http403
 from ganeti_web.models import Cluster, VirtualMachine, Job, GanetiError, \
     ClusterUser, Profile, Organization, SSHKey
-from ganeti_web.views import render_403, render_404
+from ganeti_web.views import render_404
 from django.utils.translation import ugettext as _
 from ganeti_web.constants import VERSION
 
@@ -296,11 +297,11 @@ def used_resources(request, rest=False):
         if cu.real_type_id == user_type.pk:
             if not Profile.objects.filter(clusteruser_ptr=cu.pk, user=user)\
                 .exists():
-                return render_403(request, _('You are not authorized to view this page'))
+                raise Http403(_('You are not authorized to view this page'))
         else:
             if not Organization.objects.filter(clusteruser_ptr=cu.pk, \
                                                group__user=user).exists():
-                return render_403(request, _('You are not authorized to view this page'))
+                raise Http403(_('You are not authorized to view this page'))
 
     resources = get_used_resources(cu.cast())
     if rest:
@@ -324,12 +325,12 @@ def clear_ganeti_error(request, pk):
     # if not a superuser, check permissions on the object itself
     if not user.is_superuser:
         if isinstance(obj, (Cluster,)) and not user.has_perm('admin', obj):
-            return render_403(request, _("You do not have sufficient privileges"))
+            raise Http403(_("You do not have sufficient privileges"))
         elif isinstance(obj, (VirtualMachine,)):
             # object is a virtual machine, check perms on VM and on Cluster
             if not (obj.owner_id == user.get_profile().pk or \
                 user.has_perm('admin', obj.cluster)):
-                    return render_403(request, _("You do not have sufficient privileges"))
+                    raise Http403(_("You do not have sufficient privileges"))
 
     # clear the error
     GanetiError.objects.filter(pk=error.pk).update(cleared=True)

@@ -24,11 +24,11 @@ from django.utils import simplejson as json
 from django.utils.translation import ugettext as _
 from django.views.decorators.http import require_http_methods, require_GET
 
+from ganeti_web.middleware import Http403
 from ganeti_web.models import Cluster, VirtualMachineTemplate, VirtualMachine
 from ganeti_web.forms.vm_template import (VirtualMachineTemplateForm,
                                           VirtualMachineTemplateCopyForm)
 from ganeti_web.forms.virtual_machine import NewVirtualMachineForm
-from ganeti_web.views import render_403
 
 
 @login_required
@@ -58,7 +58,7 @@ def edit(request, cluster_slug=None, template=None):
             user.has_perm('admin', cluster) or
             user.has_perm('create_vm', cluster)
             ):
-            return render_403(request, _("You do not have sufficient privileges"))
+            raise Http403(_("You do not have sufficient privileges"))
 
     if cluster_slug and template:
         obj = get_object_or_404(VirtualMachineTemplate, template_name=template,
@@ -125,7 +125,7 @@ def create_template_from_instance(request, cluster_slug, instance):
             user.has_perm('admin', cluster) or
             user.has_perm('create_vm', cluster)
             ):
-            return render_403(request, _("You do not have sufficient privileges"))
+            raise Http403(_("You do not have sufficient privileges"))
 
     vm = get_object_or_404(VirtualMachine, hostname=instance,
         cluster__slug=cluster_slug)
@@ -176,7 +176,7 @@ def create_instance_from_template(request, cluster_slug, template):
             user.has_perm('admin', cluster) or
             user.has_perm('create_vm', cluster)
             ):
-            return render_403(request, _("You do not have sufficient privileges"))
+            raise Http403(_("You do not have sufficient privileges"))
 
     vm_template = get_object_or_404(VirtualMachineTemplate,
                                     template_name=template,
@@ -227,7 +227,7 @@ def detail(request, cluster_slug, template):
             user.has_perm('admin', cluster) or
             user.has_perm('create_vm', cluster)
             ):
-            return render_403(request, _("You do not have sufficient privileges"))
+            raise Http403(_("You do not have sufficient privileges"))
 
     vm_template = get_object_or_404(VirtualMachineTemplate,
                                     template_name=template,
@@ -254,7 +254,7 @@ def copy(request, cluster_slug, template):
             user.has_perm('admin', cluster) or
             user.has_perm('create_vm', cluster)
             ):
-            return render_403(request, _("You do not have sufficient privileges"))
+            raise Http403(_("You do not have sufficient privileges"))
 
     obj = get_object_or_404(VirtualMachineTemplate, template_name=template,
                                     cluster__slug=cluster_slug)
@@ -294,7 +294,7 @@ def delete(request, cluster_slug, template):
             user.has_perm('admin', cluster) or
             user.has_perm('create_vm', cluster)
             ):
-            return render_403(request, _("You do not have sufficient privileges"))
+            raise Http403(_("You do not have sufficient privileges"))
 
     try:
         vm_template = VirtualMachineTemplate.objects.get(template_name=template,

@@ -34,8 +34,8 @@ log_action = LogItem.objects.log_action
 from ganeti_web.util.client import GanetiApiError
 from ganeti_web import constants
 from ganeti_web.forms.node import RoleForm, MigrateForm, EvacuateForm
+from ganeti_web.middleware import Http403
 from ganeti_web.models import Node, Job
-from ganeti_web.views import render_403
 from ganeti_web.views.virtual_machine import render_vms
 
 
@@ -69,13 +69,13 @@ def detail(request, cluster_slug, host, rest=False):
     Renders a detail view for a Node
     """
     node, cluster = get_node_and_cluster_or_404(cluster_slug, host)
-    
+
     user = request.user
     admin = True if user.is_superuser else user.has_perm('admin', cluster)
     modify = True if admin else user.has_perm('migrate', cluster)
     readonly = False
     if not (admin or modify):
-        # return render_403(request, _("You do not have sufficient privileges"))
+        # raise Http403(_("You do not have sufficient privileges"))
         readonly = True
 
     if rest:
@@ -104,16 +104,16 @@ def primary(request, cluster_slug, host, rest=False):
     Renders a list of primary VirtualMachines on the given node
     """
     node, cluster = get_node_and_cluster_or_404(cluster_slug, host)
-    
+
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
         if not rest:
-            return render_403(request, _("You do not have sufficient privileges"))
+            raise Http403(_("You do not have sufficient privileges"))
         else:
             return {'error':'You do not have sufficient privileges'}
 
     vms = node.primary_vms.all()
-    
+
     if not rest:
         vms = render_vms(request, vms)
         return render_to_response("ganeti/virtual_machine/table.html",
@@ -130,11 +130,11 @@ def secondary(request, cluster_slug, host, rest=False):
     Renders a list of secondary VirtualMachines on the given node
     """
     node, cluster = get_node_and_cluster_or_404(cluster_slug, host)
-    
+
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
         if not rest:
-            return render_403(request, _("You do not have sufficient privileges"))
+            raise Http403(_("You do not have sufficient privileges"))
         else:
             return {'error':"You do not have sufficient privileges"}
 
@@ -143,7 +143,7 @@ def secondary(request, cluster_slug, host, rest=False):
     if not rest:
         vms = render_vms(request, vms)
         return render_to_response("ganeti/virtual_machine/table.html",
-                {'tableID': 'table_secondary', 'secondary_node':True, 
+                {'tableID': 'table_secondary', 'secondary_node':True,
                         'node': node, 'vms':vms},
                 context_instance=RequestContext(request))
     else:
@@ -159,7 +159,7 @@ def object_log(request, cluster_slug, host, rest=False):
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
         if not rest:
-            return render_403(request, _("You do not have sufficient privileges"))
+            raise Http403(_("You do not have sufficient privileges"))
         else:
             return {'error':'You do not have sufficient privileges'}
 
@@ -172,11 +172,11 @@ def role(request, cluster_slug, host):
     view used for setting node role
     """
     node, cluster = get_node_and_cluster_or_404(cluster_slug, host)
-    
+
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
-        return render_403(request, _("You do not have sufficient privileges"))
-    
+        raise Http403(_("You do not have sufficient privileges"))
+
     if request.method == 'POST':
         form = RoleForm(request.POST)
         if form.is_valid():
@@ -194,15 +194,15 @@ def role(request, cluster_slug, host):
             # error in form return ajax response
             content = json.dumps(form.errors)
         return HttpResponse(content, mimetype='application/json')
-        
+
     elif node.role == 'M':
         # XXX master isn't a possible choice for changing role
         form = RoleForm()
-        
+
     else:
         data = {'role':constants.ROLE_MAP[node.role]}
         form = RoleForm(data)
-    
+
     return render_to_response('ganeti/node/role.html', \
         {'form':form, 'node':node, 'cluster':cluster}, \
         context_instance=RequestContext(request))
@@ -214,11 +214,11 @@ def migrate(request, cluster_slug, host):
     view used for initiating a Node Migrate job
     """
     node, cluster = get_node_and_cluster_or_404(cluster_slug, host)
-    
+
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
-        return render_403(request, _("You do not have sufficient privileges"))
-    
+        raise Http403(_("You do not have sufficient privileges"))
+
     if request.method == 'POST':
         form = MigrateForm(request.POST)
         if form.is_valid():
@@ -237,10 +237,10 @@ def migrate(request, cluster_slug, host):
             # error in form return ajax response
             content = json.dumps(form.errors)
         return HttpResponse(content, mimetype='application/json')
-        
+
     else:
         form = MigrateForm()
-    
+
     return render_to_response('ganeti/node/migrate.html', \
         {'form':form, 'node':node, 'cluster':cluster}, \
         context_instance=RequestContext(request))
@@ -252,10 +252,10 @@ def evacuate(request, cluster_slug, host):
     view used for initiating a node evacuate job
     """
     node, cluster = get_node_and_cluster_or_404(cluster_slug, host)
-    
+
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
-        return render_403(request, _("You do not have sufficient privileges"))
+        raise Http403(_("You do not have sufficient privileges"))
 
     if request.method == 'POST':
         form = EvacuateForm(cluster, node, request.POST)

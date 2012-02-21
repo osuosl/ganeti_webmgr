@@ -24,8 +24,8 @@ from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _
 from django.views.generic.detail import DetailView
 
+from ganeti_web.middleware import Http403
 from ganeti_web.models import Job, Cluster, VirtualMachine, Node
-from ganeti_web.views import render_403
 
 class JobDetailView(DetailView):
 
@@ -66,7 +66,7 @@ def clear(request, cluster_slug, job_id, rest=False):
     """
     Clear a single failed job error message
     """
-    
+
     user = request.user
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     job = get_object_or_404(Job, cluster__slug=cluster_slug, job_id=job_id)
@@ -80,18 +80,15 @@ def clear(request, cluster_slug, job_id, rest=False):
             if rest:
                 return HttpResponseForbidden
             else:
-                return render_403(request, _("You do not have sufficient privileges"))
+                raise Http403(_("You do not have sufficient privileges"))
         elif isinstance(obj, (VirtualMachine,)):
             # object is a virtual machine, check perms on VM and on Cluster
             if not (obj.owner_id == user.get_profile().pk  \
                 or user.has_perm('admin', obj) \
                 or user.has_perm('admin', obj.cluster)):
-                    if rest:
-                        return HttpResponseForbidden
-                    else:
-                        return render_403(request, _("You do not have sufficient privileges"))
+                    raise Http403(_("You do not have sufficient privileges"))
 
-    
+
     # clear the error.
     Job.objects.filter(pk=job.pk).update(cleared=True)
 

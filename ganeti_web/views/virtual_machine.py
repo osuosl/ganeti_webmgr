@@ -42,9 +42,9 @@ from object_log.models import LogItem
 log_action = LogItem.objects.log_action
 
 from ganeti_web.util.client import GanetiApiError
+from ganeti_web.middleware import Http403
 from ganeti_web.models import Cluster, ClusterUser, Organization, VirtualMachine, \
         Job, SSHKey, VirtualMachineTemplate, Node
-from ganeti_web.views import render_403
 from ganeti_web.forms.virtual_machine import NewVirtualMachineForm, \
     KvmModifyVirtualMachineForm, PvmModifyVirtualMachineForm, \
     HvmModifyVirtualMachineForm, ModifyConfirmForm, MigrateForm, RenameForm, \
@@ -97,7 +97,7 @@ def delete(request, cluster_slug, instance, rest=False):
         if rest:
             return HttpResponseForbidden()
         else:
-            return render_403(request, _('You do not have sufficient privileges'))
+            raise Http403(_('You do not have sufficient privileges'))
 
     if request.method == 'GET' and not rest:
         return render_to_response("ganeti/virtual_machine/delete.html",
@@ -164,7 +164,7 @@ def reinstall(request, cluster_slug, instance):
         user.has_any_perms(instance, ["remove", "admin"]) or
         user.has_perm("admin", cluster)
         ):
-        return render_403(request, _('You do not have sufficient privileges'))
+        raise Http403(_('You do not have sufficient privileges'))
 
     if request.method == 'GET':
         return render_to_response(
@@ -245,7 +245,7 @@ def shutdown(request, cluster_slug, instance, rest=False):
         if rest:
             return {"msg": msg, 'code': 403}
         else:
-            return render_403(request, msg)
+            raise Http403(msg)
 
     try:
         job = vm.shutdown()
@@ -275,7 +275,7 @@ def startup(request, cluster_slug, instance, rest=False):
             if rest:
                 return {"msg": msg, "code": 403}
             else:
-                return render_403(request, msg)
+                raise Http403(msg)
 
     # superusers bypass quota checks
     if not user.is_superuser and vm.owner:
@@ -324,7 +324,7 @@ def migrate(request, cluster_slug, instance):
 
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
-        return render_403(request, _("You do not have sufficient privileges"))
+        raise Http403(_("You do not have sufficient privileges"))
 
     if request.method == 'POST':
         form = MigrateForm(request.POST)
@@ -359,7 +359,7 @@ def replace_disks(request, cluster_slug, instance):
     vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','replace_disks'])):
-        return render_403(request, _("You do not have sufficient privileges"))
+        raise Http403(_("You do not have sufficient privileges"))
 
     if request.method == 'POST':
         form = ReplaceDisksForm(vm, request.POST)
@@ -398,7 +398,7 @@ def reboot(request, cluster_slug, instance, rest=False):
             if rest:
                 return HttpResponseForbidden()
             else:
-                return render_403(request, _('You do not have permission to reboot this virtual machine'))
+                raise Http403(_('You do not have permission to reboot this virtual machine'))
 
     try:
         job = vm.reboot()
@@ -579,7 +579,7 @@ def detail(request, cluster_slug, instance, rest=False):
         migrate = 'migrate' in perms
 
     if not (admin or power or remove or modify or tags): #TODO REST
-        return render_403(request, _('You do not have permission to view this virtual machines\'s details'))
+        raise Http403(_('You do not have permission to view this virtual machines\'s details'))
 
     context = {
         'cluster': cluster,
@@ -634,7 +634,7 @@ def users(request, cluster_slug, instance, rest=False):
         if rest:
             return {'msg':'You do not have sufficient privileges', 'code':403}
         else:
-            return render_403(request, _("You do not have sufficient privileges"))
+            raise Http403(_("You do not have sufficient privileges"))
 
     url = reverse('vm-permissions', args=[cluster.slug, vm.hostname])
     return view_users(request, vm, url, rest=rest)
@@ -651,7 +651,7 @@ def permissions(request, cluster_slug, instance, user_id=None, group_id=None):
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', vm) or
         user.has_perm('admin', vm.cluster)):
-        return render_403(request, _("You do not have sufficient privileges"))
+        raise Http403(_("You do not have sufficient privileges"))
 
     url = reverse('vm-permissions', args=[cluster_slug, vm.hostname])
     return view_permissions(request, vm, url, user_id, group_id)
@@ -668,7 +668,7 @@ def object_log(request, cluster_slug, instance, rest=False):
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', vm) or
         user.has_perm('admin', cluster)):
-        return render_403(request, _("You do not have sufficient privileges"))
+        raise Http403(_("You do not have sufficient privileges"))
 
     if rest:
         return list_for_object(request, vm, True)
@@ -686,7 +686,7 @@ def create(request, cluster_slug=None):
     """
     user = request.user
     if not(user.is_superuser or user.has_any_perms(Cluster, ['admin', 'create_vm'])):
-        return render_403(request,
+        raise Http403(
             _('You do not have permission to create virtual machines'))
 
     if cluster_slug is not None:
@@ -858,7 +858,7 @@ def modify(request, cluster_slug, instance):
     user = request.user
     if not (user.is_superuser or user.has_any_perms(vm, ['admin','modify'])
         or user.has_perm('admin', cluster)):
-        return render_403(request,
+        raise Http403(
             'You do not have permissions to edit this virtual machine')
 
     hv = get_hypervisor(vm)
@@ -931,7 +931,7 @@ def modify_confirm(request, cluster_slug, instance):
     power = user.is_superuser or user.has_any_perms(vm, ['admin','power'])
     if not (user.is_superuser or user.has_any_perms(vm, ['admin','modify'])
         or user.has_perm('admin', cluster)):
-        return render_403(request,
+        raise Http403(
             _('You do not have permissions to edit this virtual machine'))
 
     if request.method == "POST":
@@ -969,7 +969,7 @@ def modify_confirm(request, cluster_slug, instance):
                         job = vm.reboot()
                         log_action('VM_REBOOT', user, vm, job)
                     else:
-                        return render_403(request,
+                        raise Http403(
                             _("Sorry, but you do not have permission to reboot this machine."))
 
                 # Redirect to instance-detail
@@ -1082,7 +1082,7 @@ def recover_failed_deploy(request, cluster_slug, instance):
     user = request.user
     if not (user.is_superuser or user.has_any_perms(vm, ['admin','modify']) \
         or user.has_perm('admin', cluster)):
-        return render_403(request, _('You do not have permissions to edit \
+        raise Http403(_('You do not have permissions to edit \
             this virtual machine'))
 
     # if there is no template, we can't recover.  redirect back to the detail
@@ -1120,7 +1120,7 @@ def rename(request, cluster_slug, instance, rest=False, extracted_params=None):
     user = request.user
     if not (user.is_superuser or user.has_any_perms(vm, ['admin','modify'])
         or user.has_perm('admin', cluster)):
-        return render_403(request,
+        raise Http403(
             _('You do not have permissions to edit this virtual machine'))
 
     if request.method == 'POST':
@@ -1191,7 +1191,7 @@ def reparent(request, cluster_slug, instance):
 
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
-        return render_403(request,
+        raise Http403(
             _('You do not have permissions to change the owner of this virtual machine'))
 
     if request.method == 'POST':
@@ -1277,7 +1277,7 @@ def cluster_options(request):
 
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin', 'create_vm'])):
-        return render_403(request,
+        raise Http403(
             _('You do not have permissions to view this cluster'))
 
     oslist = cluster_os_list(cluster)
@@ -1298,7 +1298,7 @@ def cluster_defaults(request):
 
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin', 'create_vm'])):
-        return render_403(request, _('You do not have permission to view the default cluster options'))
+        raise Http403(_('You do not have permission to view the default cluster options'))
 
     content = json.dumps(cluster_default_info(cluster, hypervisor))
     return HttpResponse(content, mimetype='application/json')
