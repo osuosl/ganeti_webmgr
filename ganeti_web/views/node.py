@@ -27,6 +27,7 @@ from django.template import RequestContext
 from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _
 from django.views.generic.detail import DetailView
+from django.views.generic.list import ListView
 
 from object_log.models import LogItem
 from object_log.views import list_for_object
@@ -38,7 +39,6 @@ from ganeti_web import constants
 from ganeti_web.forms.node import RoleForm, MigrateForm, EvacuateForm
 from ganeti_web.middleware import Http403
 from ganeti_web.models import Node, Job
-from ganeti_web.views.virtual_machine import render_vms
 
 
 def get_node_and_cluster_or_404(cluster_slug, host):
@@ -82,6 +82,66 @@ class NodeDetailView(DetailView):
             "readonly": readonly,
         }
 
+class NodePrimaryListView(ListView):
+    """
+    Renders a list of primary VirtualMachines on the given node.
+    """
+
+    template_name = "ganeti/virtual_machine/table.html"
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(NodePrimaryListView, self).dispatch(*args, **kwargs)
+
+    def get_queryset(self):
+        self.node, self.cluster = get_node_and_cluster_or_404(
+            self.kwargs["cluster_slug"], self.kwargs["host"])
+
+        user = self.request.user
+        if not (user.is_superuser or
+                user.has_any_perms(self.cluster, ["admin", "migrate"])):
+            raise Http403(_("You do not have sufficient privileges"))
+
+        return self.node.primary_vms.all()
+
+    def get_context_data(self, **kwargs):
+        kwargs.update({
+            "tableID": "table_primary",
+            "primary_node": True,
+            "node": self.node,
+        })
+        return kwargs
+
+class NodeSecondaryListView(ListView):
+    """
+    Renders a list of secondary VirtualMachines on the given node.
+    """
+
+    template_name = "ganeti/virtual_machine/table.html"
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(NodeSecondaryListView, self).dispatch(*args, **kwargs)
+
+    def get_queryset(self):
+        self.node, self.cluster = get_node_and_cluster_or_404(
+            self.kwargs["cluster_slug"], self.kwargs["host"])
+
+        user = self.request.user
+        if not (user.is_superuser or
+                user.has_any_perms(self.cluster, ["admin", "migrate"])):
+            raise Http403(_("You do not have sufficient privileges"))
+
+        return self.node.secondary_vms.all()
+
+    def get_context_data(self, **kwargs):
+        kwargs.update({
+            "tableID": "table_secondary",
+            "secondary_node": True,
+            "node": self.node,
+        })
+        return kwargs
+
 
 @login_required
 def detail_by_id(request, id):
@@ -93,57 +153,6 @@ def detail_by_id(request, id):
         return HttpResponseRedirect(query[0].get_absolute_url())
     return HttpResponseNotFound('Node does not exist')
 
-
-@login_required
-def primary(request, cluster_slug, host, rest=False):
-    """
-    Renders a list of primary VirtualMachines on the given node
-    """
-    node, cluster = get_node_and_cluster_or_404(cluster_slug, host)
-
-    user = request.user
-    if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
-        if not rest:
-            raise Http403(_("You do not have sufficient privileges"))
-        else:
-            return {'error':'You do not have sufficient privileges'}
-
-    vms = node.primary_vms.all()
-
-    if not rest:
-        vms = render_vms(request, vms)
-        return render_to_response("ganeti/virtual_machine/table.html",
-                    {'tableID': 'table_primary', 'primary_node':True,
-                            'node': node, 'vms':vms},
-                    context_instance=RequestContext(request))
-    else:
-        return vms
-
-
-@login_required
-def secondary(request, cluster_slug, host, rest=False):
-    """
-    Renders a list of secondary VirtualMachines on the given node
-    """
-    node, cluster = get_node_and_cluster_or_404(cluster_slug, host)
-
-    user = request.user
-    if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
-        if not rest:
-            raise Http403(_("You do not have sufficient privileges"))
-        else:
-            return {'error':"You do not have sufficient privileges"}
-
-    vms = node.secondary_vms.all()
-
-    if not rest:
-        vms = render_vms(request, vms)
-        return render_to_response("ganeti/virtual_machine/table.html",
-                {'tableID': 'table_secondary', 'secondary_node':True,
-                        'node': node, 'vms':vms},
-                context_instance=RequestContext(request))
-    else:
-        return vms
 
 @login_required
 def object_log(request, cluster_slug, host, rest=False):

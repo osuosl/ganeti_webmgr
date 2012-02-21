@@ -21,7 +21,6 @@ from django.contrib.contenttypes.models import ContentType
 
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
-from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.db.models import Q
 from django.forms import CharField, HiddenInput
 from django.http import (HttpResponse, HttpResponseRedirect,
@@ -30,7 +29,9 @@ from django.http import (HttpResponse, HttpResponseRedirect,
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.conf import settings
+from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_http_methods, require_POST
+from django.views.generic.list import ListView
 
 from object_log.views import list_for_object
 
@@ -76,6 +77,74 @@ def get_vm_and_cluster_or_404(cluster_slug, instance):
     if len(query):
         return query[0], query[0].cluster
     raise Http404('Virtual Machine does not exist')
+
+
+class VMListView(ListView):
+    """
+    View for displaying a list of VirtualMachines.
+    """
+
+    template_name = "ganeti/virtual_machine/list.html"
+    # XXX not caring about request.GET["count"] at the moment
+    paginate_by = settings.ITEMS_PER_PAGE
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(VMListView, self).dispatch(*args, **kwargs)
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            qs = VirtualMachine.objects.all()
+        else:
+            qs = self.request.user.get_objects_any_perms(VirtualMachine,
+                                                         groups=True,
+                                                         cluster=["admin"])
+        return qs.select_related()
+
+    def get_context_data(self, **kwargs):
+        user = self.request.user
+
+        kwargs["can_create"] = (user.is_superuser or
+                                user.has_any_perms(Cluster, ["create_vm"]))
+
+        return kwargs
+
+class VMListTableView(VMListView):
+    """
+    View for displaying the virtual machine table.
+
+    This is used for ajax calls to reload the table, usually because of a page
+    or sorting change.
+
+    It's very similar to the ``VMListView``, but has some additional filters
+    which can be applied.
+    """
+
+    def get_queryset(self):
+        qs = super(VMListTableView, self).get_queryset()
+
+        if "cluster_slug" in self.kwargs:
+            self.cluster = Cluster.objects.get(slug=self.kwargs["cluster_slug"])
+            qs = qs.filter(cluster=self.cluster)
+        else:
+            self.cluster = None
+
+        # filter the vms by primary node if applicable
+        if "primary_node" in self.kwargs:
+            inner = Node.objects.filter(hostname=self.kwargs["primary_node"])
+            qs = qs.filter(primary_node=inner)
+
+        # filter the vms by secondary node if applicable
+        if "secondary_node" in self.kwargs:
+            inner = Node.objects.filter(hostname=self.kwargs["secondary_node"])
+            qs = qs.filter(secondary_node=inner)
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super(VMListTableView, self).get_context_data(**kwargs)
+        context["cluster"] = self.cluster
+        return context
 
 
 @require_http_methods(["GET", "POST", "DELETE"])
@@ -433,110 +502,6 @@ def ssh_keys(request, cluster_slug, instance, api_key):
 
     keys_list = list(keys)
     return HttpResponse(json.dumps(keys_list), mimetype="application/json")
-
-
-def render_vms(request, query):
-    """
-    Helper function for paginating a virtual machine query
-    """
-    GET = request.GET
-    if 'order_by' in GET:
-        query = query.order_by(GET['order_by'])
-    count = GET['count'] if 'count' in GET else settings.ITEMS_PER_PAGE
-    paginator = Paginator(query, count)
-    page = request.GET.get('page', 1)
-    try:
-        vms = paginator.page(page)
-    except (EmptyPage, InvalidPage):
-        vms = paginator.page(paginator.num_pages)
-
-    return vms
-
-
-@login_required
-def list_(request, rest = False):
-    """
-    View for displaying a list of VirtualMachines
-    """
-    user = request.user
-
-    # there are 3 cases
-    #1) user is superuser
-    if user.is_superuser:
-        vms = VirtualMachine.objects.all()
-        can_create = True
-
-    #2) user has any perms on any VM
-    #3) user belongs to the group which has perms on any VM
-    else:
-        vms = user.get_objects_any_perms(VirtualMachine, groups=True,
-                                        cluster=['admin'])
-        can_create = user.has_any_perms(Cluster, ['create_vm', ])
-
-    vms = vms.select_related()
-    # paginate, sort
-    if not rest:
-        vms = render_vms(request, vms)
-
-    if rest:
-        return vms
-    else:
-        return render_to_response('ganeti/virtual_machine/list.html', {
-            'vms':vms,
-            'can_create':can_create,
-            },
-            context_instance=RequestContext(request),
-    )
-
-
-@login_required
-def vm_table(request, cluster_slug=None, primary_node=None,
-        secondary_node=None):
-    """
-    View for displaying the virtual machine table. This is used for ajax calls
-    to reload the table. Usually because of a page or sort change.
-    """
-    user = request.user
-
-    # there are 3 cases
-    #1) user is superuser
-    if user.is_superuser:
-        vms = VirtualMachine.objects.all()
-        can_create = True
-
-    #2) user has any perms on any VM
-    #3) user belongs to the group which has perms on any VM
-    else:
-        vms = user.get_objects_any_perms(VirtualMachine, groups=True,
-                cluster=['admin'])
-        can_create = user.has_any_perms(Cluster, ['create_vm'])
-
-    if cluster_slug:
-        cluster = Cluster.objects.get(slug=cluster_slug)
-        vms = vms.filter(cluster=cluster)
-    else:
-        cluster = None
-
-    # filter the vms by primary node if applicable
-    if primary_node:
-        vms = vms.filter(
-                primary_node=Node.objects.filter(hostname=primary_node))
-
-    # filter the vms by secondary node if applicable
-    if secondary_node:
-        vms = vms.filter(
-            secondary_node=Node.objects.filter(hostname=secondary_node))
-
-    vms = render_vms(request, vms)
-
-    return render_to_response(
-        'ganeti/virtual_machine/inner_table.html', {
-            'vms':vms,
-            'can_create':can_create,
-            'cluster':cluster
-        },
-        context_instance=RequestContext(request),
-    )
 
 
 @login_required

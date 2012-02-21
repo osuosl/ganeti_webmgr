@@ -22,10 +22,13 @@ from django.contrib.auth.decorators import login_required
 import os
 from forms.autocomplete_search_form import autocomplete_search_form
 
-from ganeti_web.views.cluster import ClusterDetailView, ClusterListView
+from ganeti_web.views.cluster import (ClusterDetailView, ClusterListView,
+                                      ClusterVMListView)
 from ganeti_web.views.general import AboutView
 from ganeti_web.views.jobs import JobDetailView
-from ganeti_web.views.node import NodeDetailView
+from ganeti_web.views.node import (NodeDetailView, NodePrimaryListView,
+                                   NodeSecondaryListView)
+from ganeti_web.views.virtual_machine import VMListView, VMListTableView
 
 
 cluster_slug = '(?P<cluster_slug>[-_A-Za-z0-9]+)'
@@ -93,7 +96,8 @@ urlpatterns += patterns('ganeti_web.views.cluster',
     url(r'^%s/redistribute-config/?$' % cluster, 'redistribute_config', name="cluster-redistribute-config"),
     #   User
     url(r'^%s/users/?$' % cluster, 'users', name="cluster-users"),
-    url(r'^%s/virtual_machines/?$' % cluster, 'virtual_machines', name="cluster-vms"),
+    url(r'^%s/virtual_machines/?$' % cluster, ClusterVMListView.as_view(),
+        name="cluster-vms"),
     url(r'^%s/nodes/?$' % cluster, 'nodes', name="cluster-nodes"),
     url(r'^%s/quota/(?P<user_id>\d+)?/?$'% cluster, 'quota', name="cluster-quota"),
     url(r'^%s/permissions/?$' % cluster, 'permissions', name="cluster-permissions"),
@@ -120,8 +124,10 @@ urlpatterns += patterns('ganeti_web.views.node',
     url(r'^node/(?P<id>\d+)/jobs/status/?$', "job_status", name="node-job-status"),
     
     # Primary and secondary Virtual machines
-    url(r'^%s/primary/?$' % node_prefix, 'primary', name="node-primary-vms"),
-    url(r'^%s/secondary/?$' % node_prefix, 'secondary', name="node-secondary-vms"),
+    url(r'^%s/primary/?$' % node_prefix, NodePrimaryListView.as_view(),
+        name="node-primary-vms"),
+    url(r'^%s/secondary/?$' % node_prefix, NodeSecondaryListView.as_view(),
+        name="node-secondary-vms"),
 
     #object log
     url(r'^%s/object_log/?$' % node_prefix, 'object_log', name="node-object_log"),
@@ -136,7 +142,7 @@ urlpatterns += patterns('ganeti_web.views.node',
 vm_prefix = '%s/%s' %  (cluster, instance)
 urlpatterns += patterns('ganeti_web.views.virtual_machine',
     #  List
-    url(r'^vms/$', 'list_', name="virtualmachine-list"),
+    url(r'^vms/$', VMListView.as_view(), name="virtualmachine-list"),
     #  Create
     url(r'^vm/add/?$', 'create', name="instance-create"),
     url(r'^vm/add/choices/$', 'cluster_choices', name="instance-create-cluster-choices"),
@@ -146,10 +152,14 @@ urlpatterns += patterns('ganeti_web.views.virtual_machine',
     url(r'^%s/recover/?$' % vm_prefix, 'recover_failed_deploy', name="instance-create-recover"),
 
     #  VM Table
-    url(r'^%s/vm/table/?$' % cluster, 'vm_table', name="cluster-virtualmachine-table"),
-    url(r'^vm/table/$', 'vm_table', name="virtualmachine-table"),
-    url(r'^vm/table/%s/?$' % primary_node, 'vm_table', name="vm-table-primary"),
-    url(r'^vm/table/%s/?$' % secondary_node, 'vm_table', name="vm-table-secondary"),
+    url(r'^%s/vm/table/?$' % cluster, VMListTableView.as_view(),
+        name="cluster-virtualmachine-table"),
+    url(r'^vm/table/$', VMListTableView.as_view(),
+        name="virtualmachine-table"),
+    url(r'^vm/table/%s/?$' % primary_node, VMListTableView.as_view(),
+        name="vm-table-primary"),
+    url(r'^vm/table/%s/?$' % secondary_node, VMListTableView.as_view(),
+        name="vm-table-secondary"),
 
     #  Detail
     url(r'^%s/?$' % vm_prefix, 'detail', name="instance-detail"),

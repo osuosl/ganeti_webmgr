@@ -16,7 +16,7 @@
     </tr>
 </thead>
 <tbody id="vms">
-    {% for vm in vms.object_list %}
+    {% for vm in object_list %}
     {% if not vm.pending_delete or vm.last_job_id %}
     {% with vm.info as info %}
     <tr>

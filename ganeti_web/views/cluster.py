@@ -50,7 +50,6 @@ from ganeti_web.middleware import Http403
 from ganeti_web.models import (Cluster, ClusterUser, Profile, SSHKey,
                                VirtualMachine, Job)
 from ganeti_web.views import render_404
-from ganeti_web.views.virtual_machine import render_vms
 from ganeti_web.forms.cluster import EditClusterForm, QuotaForm
 
 
@@ -97,6 +96,28 @@ class ClusterListView(ListView):
             "user": self.request.user,
         }
 
+class ClusterVMListView(ListView):
+
+    template_name = "ganeti/virtual_machine/table.html"
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(ClusterVMListView, self).dispatch(*args, **kwargs)
+
+    def get_queryset(self):
+        self.cluster = get_object_or_404(Cluster,
+                                         slug=self.kwargs["cluster_slug"])
+        user = self.request.user
+        admin = user.is_superuser or user.has_perm("admin", self.cluster)
+        if not admin:
+            raise Http403(_("You do not have sufficient privileges"))
+
+        return self.cluster.virtual_machines.select_related("cluster").all()
+
+    def get_context_data(self, **kwargs):
+        kwargs["cluster"] = self.cluster
+        return kwargs
+
 
 @login_required
 def nodes(request, cluster_slug):
@@ -134,26 +155,6 @@ def nodes(request, cluster_slug):
         },
         context_instance=RequestContext(request),
     )
-
-
-@login_required
-def virtual_machines(request, cluster_slug):
-    """
-    Display all virtual machines in a cluster.  Filtered by access the user
-    has permissions for
-    """
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    user = request.user
-    admin = True if user.is_superuser else user.has_perm('admin', cluster)
-    if not admin:
-        raise Http403(_("You do not have sufficient privileges"))
-
-    vms = cluster.virtual_machines.select_related('cluster').all()
-    vms = render_vms(request, vms)
-
-    return render_to_response("ganeti/virtual_machine/table.html",
-                {'cluster': cluster, 'vms':vms},
-                context_instance=RequestContext(request))
 
 
 @login_required

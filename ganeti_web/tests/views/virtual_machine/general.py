@@ -40,7 +40,7 @@ class TestVirtualMachineViewList(TestVirtualMachineViewsBase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/virtual_machine/list.html')
-        vms = response.context['vms'].object_list
+        vms = response.context["object_list"]
         # There is (at least) one VM in the list; fail if we can see it.
         self.assertFalse(vms)
 
@@ -64,7 +64,7 @@ class TestVirtualMachineViewList(TestVirtualMachineViewsBase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/virtual_machine/list.html')
-        vms = response.context['vms'].object_list
+        vms = response.context["object_list"]
         self.assertEqual(set(vms), set([self.vm, vm1]))
 
     def test_superuser(self):
@@ -89,7 +89,7 @@ class TestVirtualMachineViewList(TestVirtualMachineViewsBase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/virtual_machine/list.html')
-        vms = response.context['vms'].object_list
+        vms = response.context["object_list"]
         self.assertEqual(set(vms), set([self.vm, vm1, vm2, vm3]))
 
 
