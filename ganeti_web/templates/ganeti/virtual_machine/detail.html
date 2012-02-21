@@ -286,13 +286,13 @@
                         </a>
                     </li>
                 {% endif %}
-                {% if migrate %}
-                    <li>
-                        <a class="button migrate" title="migrate" href="{% url instance-migrate cluster.slug instance.hostname %}">
-                            {% trans "Migrate" %}
-                        </a>
-                    </li>
-                {% endif %}
+            {% endif %}
+            {% if migrate %}
+                <li>
+                    <a class="button migrate" title="migrate" href="{% url instance-migrate cluster.slug instance.hostname %}">
+                        {% trans "Migrate" %}
+                    </a>
+                </li>
             {% endif %}
             {# Create Template #}
             {% if cluster_admin %}
