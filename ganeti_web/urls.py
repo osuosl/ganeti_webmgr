@@ -25,6 +25,7 @@ from forms.autocomplete_search_form import autocomplete_search_form
 from ganeti_web.views.cluster import ClusterDetailView, ClusterListView
 from ganeti_web.views.general import AboutView
 from ganeti_web.views.jobs import JobDetailView
+from ganeti_web.views.node import NodeDetailView
 
 
 cluster_slug = '(?P<cluster_slug>[-_A-Za-z0-9]+)'
@@ -113,7 +114,8 @@ urlpatterns += patterns('ganeti_web.views.cluster',
 node_prefix = 'cluster/%s/node/%s' %  (cluster_slug, host)
 urlpatterns += patterns('ganeti_web.views.node',
     # Detail
-    url(r'^%s/?$' % node_prefix, 'detail', name="node-detail"),
+    url(r'^%s/?$' % node_prefix, NodeDetailView.as_view(),
+        name="node-detail"),
     url(r'^node/(?P<id>\d+)/?$', 'detail_by_id', name="node-detail-id"),
     url(r'^node/(?P<id>\d+)/jobs/status/?$', "job_status", name="node-job-status"),
     

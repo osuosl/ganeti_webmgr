@@ -24,7 +24,9 @@ from django.db.models.query_utils import Q
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound, Http404
 from django.shortcuts import render_to_response
 from django.template import RequestContext
+from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _
+from django.views.generic.detail import DetailView
 
 from object_log.models import LogItem
 from object_log.views import list_for_object
@@ -52,6 +54,35 @@ def get_node_and_cluster_or_404(cluster_slug, host):
     raise Http404('Node does not exist')
 
 
+class NodeDetailView(DetailView):
+
+    template_name = "ganeti/node/detail.html"
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(NodeDetailView, self).dispatch(*args, **kwargs)
+
+    def get_object(self, queryset=None):
+        self.node, self.cluster = get_node_and_cluster_or_404(
+            self.kwargs["cluster_slug"], self.kwargs["host"])
+        return self.node
+
+    def get_context_data(self, **kwargs):
+        user = self.request.user
+        admin = user.is_superuser or user.has_perm('admin', self.cluster)
+        modify = admin or user.has_perm('migrate', self.cluster)
+        readonly = not (admin or modify)
+
+        return {
+            "cluster": self.cluster,
+            "node_count": self.cluster.nodes.all().count(),
+            "node": self.node,
+            "admin": admin,
+            "modify": modify,
+            "readonly": readonly,
+        }
+
+
 @login_required
 def detail_by_id(request, id):
     """
@@ -61,41 +92,6 @@ def detail_by_id(request, id):
     if len(query):
         return HttpResponseRedirect(query[0].get_absolute_url())
     return HttpResponseNotFound('Node does not exist')
-
-
-@login_required
-def detail(request, cluster_slug, host, rest=False):
-    """
-    Renders a detail view for a Node
-    """
-    node, cluster = get_node_and_cluster_or_404(cluster_slug, host)
-
-    user = request.user
-    admin = True if user.is_superuser else user.has_perm('admin', cluster)
-    modify = True if admin else user.has_perm('migrate', cluster)
-    readonly = False
-    if not (admin or modify):
-        # raise Http403(_("You do not have sufficient privileges"))
-        readonly = True
-
-    if rest:
-        return {'cluster':cluster,
-        'node_count':cluster.nodes.all().count(),
-        'node':node,
-        'admin':admin,
-        'modify':modify,
-        'readonly':readonly}
-    else:
-        return render_to_response("ganeti/node/detail.html", {
-            'cluster':cluster,
-            'node_count':cluster.nodes.all().count(),
-            'node':node,
-            'admin':admin,
-            'modify':modify,
-            'readonly':readonly,
-            },
-            context_instance=RequestContext(request),
-            )
 
 
 @login_required
