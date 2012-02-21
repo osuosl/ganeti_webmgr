@@ -31,7 +31,6 @@ from django.template import RequestContext
 from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_http_methods, require_POST
-from django.views.generic.list import ListView
 
 from object_log.views import list_for_object
 
@@ -53,6 +52,7 @@ from ganeti_web.forms.virtual_machine import NewVirtualMachineForm, \
 from ganeti_web.templatetags.webmgr_tags import render_storage
 from ganeti_web.utilities import cluster_default_info, cluster_os_list, \
     compare, os_prettify, get_hypervisor
+from ganeti_web.views.generic import PagedListView
 from django.utils.translation import ugettext as _
 
 
@@ -79,14 +79,12 @@ def get_vm_and_cluster_or_404(cluster_slug, instance):
     raise Http404('Virtual Machine does not exist')
 
 
-class VMListView(ListView):
+class VMListView(PagedListView):
     """
     View for displaying a list of VirtualMachines.
     """
 
     template_name = "ganeti/virtual_machine/list.html"
-    # XXX not caring about request.GET["count"] at the moment
-    paginate_by = settings.ITEMS_PER_PAGE
 
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):

@@ -33,7 +33,6 @@ from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _
 from django.views.decorators.http import require_POST
 from django.views.generic.detail import DetailView
-from django.views.generic.list import ListView
 
 from object_permissions import get_users_any
 from object_permissions.views.permissions import view_users, view_permissions
@@ -51,6 +50,7 @@ from ganeti_web.models import (Cluster, ClusterUser, Profile, SSHKey,
                                VirtualMachine, Job)
 from ganeti_web.views import render_404
 from ganeti_web.forms.cluster import EditClusterForm, QuotaForm
+from ganeti_web.views.generic import PagedListView
 
 
 class ClusterDetailView(DetailView):
@@ -75,7 +75,7 @@ class ClusterDetailView(DetailView):
             "readonly": not admin,
         }
 
-class ClusterListView(ListView):
+class ClusterListView(PagedListView):
 
     template_name = "ganeti/cluster/list.html"
 
@@ -96,7 +96,7 @@ class ClusterListView(ListView):
             "user": self.request.user,
         }
 
-class ClusterVMListView(ListView):
+class ClusterVMListView(PagedListView):
 
     template_name = "ganeti/virtual_machine/table.html"
 

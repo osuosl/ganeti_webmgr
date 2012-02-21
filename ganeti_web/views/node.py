@@ -27,7 +27,6 @@ from django.template import RequestContext
 from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _
 from django.views.generic.detail import DetailView
-from django.views.generic.list import ListView
 
 from object_log.models import LogItem
 from object_log.views import list_for_object
@@ -39,6 +38,7 @@ from ganeti_web import constants
 from ganeti_web.forms.node import RoleForm, MigrateForm, EvacuateForm
 from ganeti_web.middleware import Http403
 from ganeti_web.models import Node, Job
+from ganeti_web.views.generic import PagedListView
 
 
 def get_node_and_cluster_or_404(cluster_slug, host):
@@ -82,7 +82,7 @@ class NodeDetailView(DetailView):
             "readonly": readonly,
         }
 
-class NodePrimaryListView(ListView):
+class NodePrimaryListView(PagedListView):
     """
     Renders a list of primary VirtualMachines on the given node.
     """
@@ -112,7 +112,7 @@ class NodePrimaryListView(ListView):
         })
         return kwargs
 
-class NodeSecondaryListView(ListView):
+class NodeSecondaryListView(PagedListView):
     """
     Renders a list of secondary VirtualMachines on the given node.
     """
