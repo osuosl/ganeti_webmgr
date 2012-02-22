@@ -144,15 +144,12 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
-    # Order matters; transaction middleware affects all middleware placed
-    # after it. You probably want it up here, very early.
-    'django.middleware.transaction.TransactionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'ganeti_web.middleware.Http403Middleware',
+    'django.middleware.csrf.CsrfResponseMiddleware'
 )
 
 ROOT_URLCONF = 'urls'
@@ -273,7 +270,7 @@ VNC_PROXY='localhost:8888'
 #     way of enabled a secure method to pull sshkeys from ganeti web manager
 WEB_MGR_API_KEY = "CHANGE_ME"
 
-# PyCurls default TIMEOUT in 7.21.6 defaults to 13 and CONNECTTIMEOUT to 78. 
+# PyCurls default TIMEOUT in 7.21.6 defaults to 13 and CONNECTTIMEOUT to 78.
 # This is way too long to wait for incorrect or unresponsive ganeti clusters
 # when using the rapi for syncing and querying.
 RAPI_CONNECT_TIMEOUT = 3
