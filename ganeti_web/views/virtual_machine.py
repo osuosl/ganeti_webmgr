@@ -743,7 +743,6 @@ def create(request, cluster_slug=None):
                     'disk_type',
                     'nic_type',
                     'cdrom_image_path',
-                    'cdrom2_image_path',
                 )
             elif hv == 'kvm':
                 hvparam_fields = (
