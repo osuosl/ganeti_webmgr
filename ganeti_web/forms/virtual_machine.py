@@ -654,7 +654,7 @@ class HvmModifyVirtualMachineForm(ModifyVirtualMachineForm):
 
     class Meta(ModifyVirtualMachineForm.Meta):
         exclude = ModifyVirtualMachineForm.Meta.exclude + ('kernel_path', 
-            'root_path', 'kernel_args', 'serial_console')
+            'root_path', 'kernel_args', 'serial_console', 'cdrom2_image_path')
 
     def __init__(self, vm, *args, **kwargs):
         super(HvmModifyVirtualMachineForm, self).__init__(vm, *args, **kwargs)
@@ -669,7 +669,8 @@ class PvmModifyVirtualMachineForm(ModifyVirtualMachineForm):
 
     class Meta(ModifyVirtualMachineForm.Meta):
         exclude = ModifyVirtualMachineForm.Meta.exclude + ('disk_type', 
-            'nic_type', 'boot_order', 'cdrom_image_path', 'serial_console')
+            'nic_type', 'boot_order', 'cdrom_image_path', 'serial_console',
+            'cdrom2_image_path')
 
     def __init__(self, vm, *args, **kwargs):
         super(PvmModifyVirtualMachineForm, self).__init__(vm, *args, **kwargs)
