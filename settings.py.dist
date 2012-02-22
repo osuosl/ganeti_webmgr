@@ -269,3 +269,8 @@ VNC_PROXY='localhost:8888'
 #     that automatically creates keys per virtual machine.  This is just a quick
 #     way of enabled a secure method to pull sshkeys from ganeti web manager
 WEB_MGR_API_KEY = "CHANGE_ME"
+
+# PyCurls default TIMEOUT in 7.21.6 defaults to 13 and CONNECTTIMEOUT to 78.
+# This is way too long to wait for incorrect or unresponsive ganeti clusters
+# when using the rapi for syncing and querying.
+RAPI_CONNECT_TIMEOUT = 3
