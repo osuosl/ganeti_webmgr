@@ -148,7 +148,6 @@ function formUpdater(url_choices, url_options, url_defaults){
 
         // iallocator change
         iallocator.live("change", function() {
-            var old_template = disk_template.val()
             if(!iallocator.attr("readonly")) {
                 if(iallocator.is(":checked")) {
                     pnode.hide();
@@ -157,7 +156,6 @@ function formUpdater(url_choices, url_options, url_defaults){
                     disk_template.change()
                 } else {
                     pnode.show();
-                    disk_template.val(old_template)
                     disk_template.parent("p").show();
                     disk_template.change();
                 }
