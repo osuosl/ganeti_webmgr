@@ -190,7 +190,7 @@ def create_instance_from_template(request, cluster_slug, template):
 
     # nics and disks need to be replaced by expected
     #  form fields of disk_size_#, nic_mode_#, and nic_link_#
-    ignore_fields = ('disks', 'nics', '_state', 'pnode', 'snode',
+    ignore_fields = ('disks', 'nics', '_state',
         'description')
     for field in ignore_fields:
         del initial[field]

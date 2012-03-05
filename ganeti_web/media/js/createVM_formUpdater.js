@@ -95,6 +95,7 @@ function formUpdater(url_choices, url_options, url_defaults){
         }
 
         // fire off some initial changes
+        cluster.change()
         iallocator.change();
         disk_template.change();
         boot_order.change();
@@ -147,17 +148,23 @@ function formUpdater(url_choices, url_options, url_defaults){
 
         // iallocator change
         iallocator.live("change", function() {
+            var old_template = disk_template.val()
             if(!iallocator.attr("readonly")) {
                 if(iallocator.is(":checked")) {
                     pnode.hide();
                     snode.hide();
+                    disk_template.parent("p").hide();
+                    disk_template.change()
                 } else {
                     pnode.show();
+                    disk_template.val(old_template)
+                    disk_template.parent("p").show();
                     disk_template.change();
                 }
             } else {
                 if(!iallocator.is(":checked")){
                     pnode.show();
+                    disk_template.parent("p").show();
                     disk_template.change();
                 }
             }
