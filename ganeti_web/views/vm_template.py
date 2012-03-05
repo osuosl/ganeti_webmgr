@@ -184,17 +184,28 @@ def create_instance_from_template(request, cluster_slug, template):
 
     # Work with vm_template vars here
     initial = dict(
-        hostname=vm_template.template_name,
         cluster=vm_template.cluster_id,
     )
     initial.update(vars(vm_template))
-    ignore_fields = ('disks', '_state', 'pnode', 'snode',
+
+    # nics and disks need to be replaced by expected
+    #  form fields of disk_size_#, nic_mode_#, and nic_link_#
+    ignore_fields = ('disks', 'nics', '_state', 'pnode', 'snode',
         'description')
     for field in ignore_fields:
         del initial[field]
+
+    # Initialize mutliple disks
     initial['disk_count'] = len(vm_template.disks)
     for i,disk in enumerate(vm_template.disks):
         initial['disk_size_%s'%i] = disk['size']
+
+    # initialize multiple nics
+    initial['nic_count'] = len(vm_template.nics)
+    for i,nic in enumerate(vm_template.nics):
+        initial['nic_mode_%s'%i] = nic['mode']
+        initial['nic_link_%s'%i] = nic['link']
+
     form = NewVirtualMachineForm(user, initial=initial)
     cluster_defaults = {} #cluster_default_info(cluster)
 
