@@ -29,7 +29,6 @@ from ganeti_web import models
 VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
 GanetiError = models.GanetiError
-GanetiErrorManager = models.GanetiErrorManager
 
 __all__ = ('TestGanetiErrorModel','TestErrorViews')
 
@@ -93,7 +92,7 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
         RapiProxy.error = msg
 
         # test store_error
-        store_error = GanetiError.objects.store_error
+        store_error = GanetiError.store_error
         store_error(str(msg), obj=cluster0, code=msg.code)
         store_error(str(msg), obj=cluster1, code=msg.code)
         store_error(str(msg), obj=cluster2, code=msg.code)
@@ -102,16 +101,6 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
 
         # test get_errors
         get_errors = GanetiError.objects.get_errors
-
-        errors = get_errors(msg=str(msg))
-        self.assertEqual(len(errors), 5)
-        errors = get_errors(msg=str(msg) + "NOTHING")
-        self.assertEqual(len(errors), 0)
-
-        errors = get_errors(code=msg.code)
-        self.assertEqual(len(errors), 5)
-        errors = get_errors(code=msg.code + 123)
-        self.assertEqual(len(errors), 0)
 
         errors = get_errors(obj=cluster0)
         self.assertEqual(len(errors), 2)
@@ -133,39 +122,28 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
         # test clear_error(s)
         clear_errors = GanetiError.objects.clear_errors
 
-        errors = get_errors()
-        self.assertEqual(len(errors), 5)
-        errors = get_errors(cleared=False).order_by("id")
-        self.assertEqual(len(errors), 5)
-
         clear_errors(obj=cluster2)
-        errors = get_errors()
-        self.assertEqual(len(errors), 5)
-        errors = get_errors(cleared=False)
+        errors = GanetiError.objects.filter(cleared=False)
         self.assertEqual(len(errors), 4)
 
         clear_errors(obj=vm1)
-        errors = get_errors()
-        self.assertEqual(len(errors), 5)
-        errors = get_errors(cleared=False)
+        errors = GanetiError.objects.filter(cleared=False)
         self.assertEqual(len(errors), 3)
 
-        clear_errors(msg=str(msg))
-        errors = get_errors()
-        self.assertEqual(len(errors), 5)
-        errors = get_errors(cleared=False)
+        GanetiError.objects.filter(msg=str(msg)).clear_errors()
+        errors = GanetiError.objects.filter(cleared=False)
         self.assertEqual(len(errors), 0)
 
         get_errors(obj=cluster2).delete()
-        errors = get_errors()
+        errors = GanetiError.objects.all()
         self.assertEqual(len(errors), 4)
 
         get_errors(obj=vm1).delete()
-        errors = get_errors()
+        errors = GanetiError.objects.all()
         self.assertEqual(len(errors), 3)
 
-        get_errors(msg=str(msg)).delete()
-        errors = get_errors()
+        GanetiError.objects.filter(msg=str(msg)).delete()
+        errors = GanetiError.objects.all()
         self.assertEqual(len(errors), 0)
 
     def test_specified_code_values(self):
@@ -183,7 +161,7 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
         msg1 = client.GanetiApiError("Simulating 404 error", 404)
         RapiProxy.error = msg0
 
-        store_error = GanetiError.objects.store_error
+        store_error = GanetiError.store_error
         get_errors = GanetiError.objects.get_errors
 
         # 401 - cluster
@@ -283,7 +261,8 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
                 self.assertEqual(errors[0].code, msg.code)
                 self.assertEqual(errors[1].code, msg.code)
 
-                cleared = GanetiError.objects.get_errors(obj=i.cluster, cleared=True)
+                qs = GanetiError.objects.filter(cleared=True)
+                cleared = qs.get_errors(obj=i.cluster)
                 self.assertEqual(0, len(cleared))
 
             else:
@@ -293,34 +272,36 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
                 self.assertEqual(errors[0].msg, str(msg))
                 self.assertEqual(errors[0].code, msg.code)
 
-                cleared = GanetiError.objects.get_errors(obj=i, cleared=True)
+                qs = GanetiError.objects.filter(cleared=True)
+                cleared = qs.get_errors(obj=i)
                 self.assertEqual(0, len(cleared))
 
         # set all errors as cleared  and test if it was a success
-        for i in (cluster0, cluster1, vm0, vm1):
-            if isinstance(i, VirtualMachine):
-                GanetiError.objects.clear_errors(obj=i.cluster)
+        for i in (cluster0, cluster1):
+            GanetiError.objects.clear_errors(obj=i)
 
-                cleared = GanetiError.objects.get_errors(obj=i.cluster, cleared=True)
-                self.assertEqual(2, len(cleared))
-                self.assertEqual(cleared[0].cleared, True)
-                self.assertEqual(cleared[1].cleared, True)
-                self.assertEqual(cleared[0].msg, str(msg))
-                self.assertEqual(cleared[1].msg, str(msg))
-                self.assertEqual(cleared[0].code, msg.code)
-                self.assertEqual(cleared[1].code, msg.code)
+            qs = GanetiError.objects.filter(cleared=True)
+            cleared = qs.get_errors(obj=i)
+            self.assertEqual(2, len(cleared))
+            self.assertEqual(cleared[0].cleared, True)
+            self.assertEqual(cleared[1].cleared, True)
+            self.assertEqual(cleared[0].msg, str(msg))
+            self.assertEqual(cleared[1].msg, str(msg))
+            self.assertEqual(cleared[0].code, msg.code)
+            self.assertEqual(cleared[1].code, msg.code)
 
-            else:
-                GanetiError.objects.clear_errors(obj=i)
+        for i in (vm0, vm1):
+            GanetiError.objects.clear_errors(obj=i.cluster)
 
-                cleared = GanetiError.objects.get_errors(obj=i, cleared=True)
-                self.assertEqual(2, len(cleared))
-                self.assertEqual(cleared[0].cleared, True)
-                self.assertEqual(cleared[1].cleared, True)
-                self.assertEqual(cleared[0].msg, str(msg))
-                self.assertEqual(cleared[1].msg, str(msg))
-                self.assertEqual(cleared[0].code, msg.code)
-                self.assertEqual(cleared[1].code, msg.code)
+            qs = GanetiError.objects.filter(cleared=True)
+            cleared = qs.get_errors(obj=i.cluster)
+            self.assertEqual(2, len(cleared))
+            self.assertEqual(cleared[0].cleared, True)
+            self.assertEqual(cleared[1].cleared, True)
+            self.assertEqual(cleared[0].msg, str(msg))
+            self.assertEqual(cleared[1].msg, str(msg))
+            self.assertEqual(cleared[0].code, msg.code)
+            self.assertEqual(cleared[1].code, msg.code)
 
         # clear the error and retry
         RapiProxy.error = None
@@ -351,15 +332,13 @@ class TestErrorViews(TestGanetiErrorBase, TestCase):
         User.objects.all().delete()
 
     def test_clear_error(self):
-
         url = '/error/clear/%s'
-
 
         msg = client.GanetiApiError("Simulating an error", 777)
         RapiProxy.error = msg
 
         # test store_error
-        store_error = GanetiError.objects.store_error
+        store_error = GanetiError.store_error
         c_error = store_error(str(msg), obj=self.cluster, code=msg.code)
         c_error = GanetiError.objects.get(pk=c_error.pk)
         self.assertFalse(c_error.cleared)

@@ -222,13 +222,14 @@ def overview(request, rest=False):
     job_errors = Job.objects.filter(error_clause & select_clause) \
         .order_by("-finished")[:5]
 
-    # build list of job errors.  Include jobs from any vm the user has access to
-    # If the user has admin on any cluster then those clusters and it's objects
-    # must be included too.
-    ganeti_errors = GanetiError.objects.get_errors(obj=vms, cleared=False)
+    # Build the list of job errors. Include jobs from any VMs for which the
+    # user has access.
+    qs = GanetiError.objects.filter(cleared=False)
+    ganeti_errors = qs.get_errors(obj=vms)
+    # If the user is an admin on any cluster, then include administrated
+    # clusters and related objects.
     if admin:
-        ganeti_errors |= GanetiError.objects.get_errors(obj=clusters, \
-                                                        cleared=False)
+        ganeti_errors |= qs.get_errors(obj=clusters)
 
     # merge error lists
     errors = merge_errors(ganeti_errors, job_errors)

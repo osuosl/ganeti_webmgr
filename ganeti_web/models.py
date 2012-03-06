@@ -65,6 +65,36 @@ if settings.VNC_PROXY:
     from ganeti_web.util.vncdaemon.vapclient import (request_forwarding,
                                                      request_ssh)
 
+class QuerySetManager(models.Manager):
+    """
+    Useful if you want to define manager methods that need to chain. In this
+    case create a QuerySet class within your model and add all of your methods
+    directly to the queryset. Example:
+
+    class Foo(models.Model):
+        enabled = fields.BooleanField()
+        dirty = fields.BooleanField()
+
+        class QuerySet:
+            def active(self):
+                return self.filter(enabled=True)
+            def clean(self):
+                return self.filter(dirty=False)
+
+    >>> Foo.objects.active().clean()
+    """
+
+    def __getattr__(self, name, *args):
+        # Cull under/dunder names to avoid certain kinds of recursion. Django
+        # isn't super-bright here.
+        if name.startswith('_'):
+            raise AttributeError
+        return getattr(self.get_query_set(), name, *args)
+
+    def get_query_set(self):
+        return self.model.QuerySet(self.model)
+
+
 def generate_random_password(length=12):
     "Generate random sequence of specified length"
     return "".join( random.sample(string.letters + string.digits, length) )
@@ -282,7 +312,7 @@ class CachedClusterObject(models.Model):
             else:
                 msg = str(e)
                 self.error = str(e)
-            GanetiError.objects.store_error(msg, obj=self, code=e.code)
+            GanetiError.store_error(msg, obj=self, code=e.code)
 
         else:
             if self.error:
@@ -1383,48 +1413,84 @@ if settings.TESTING:
             super(TestModel, self).save(*args, **kwargs)
 
 
-class GanetiErrorManager(models.Manager):
+class GanetiError(models.Model):
+    """
+    Class for storing errors which occured in Ganeti
+    """
+    cluster = models.ForeignKey(Cluster)
+    msg = models.TextField()
+    code = models.PositiveSmallIntegerField(blank=True, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
 
-    def clear_errors(self, *args, **kwargs):
-        """
-        Clear errors instead of deleting them.
-        """
-        return self.get_errors(cleared=False, *args, **kwargs) \
-            .update(cleared=True)
+    # determines if the errors still appears or not
+    cleared = models.BooleanField(default=False)
 
-    def get_errors(self, obj=None, **kwargs):
-        """
-        Manager method used for getting QuerySet of all errors depending on
-        passed arguments.
+    # cluster object (cluster, VM, Node) affected by the error (if any)
+    obj_type = models.ForeignKey(ContentType, related_name="ganeti_errors")
+    obj_id = models.PositiveIntegerField()
+    obj = GenericForeignKey("obj_type", "obj_id")
 
-        @param  obj   affected object (itself or just QuerySet)
-        @param kwargs: additional kwargs for filtering GanetiErrors
-        """
-        if obj is None:
-            return self.filter(**kwargs)
+    objects = QuerySetManager()
 
-        # Create base query of errors to return.
-        #
-        # if it's a Cluster or a queryset for Clusters, then we need to get all
-        # errors from the Clusters.  Do this by filtering on GanetiError.cluster
-        # instead of obj_id.
-        if isinstance(obj, (Cluster,)):
-            return self.filter(cluster=obj, **kwargs)
+    class QuerySet(QuerySet):
 
-        elif isinstance(obj, (QuerySet,)):
-            if obj.model == Cluster:
-                return self.filter(cluster__in=obj, **kwargs)
+        def clear_errors(self, obj=None):
+            """
+            Clear errors instead of deleting them.
+            """
+
+            qs = self.filter(cleared=False)
+
+            if obj:
+                qs = qs.get_errors(obj)
+
+            return qs.update(cleared=True)
+
+        def get_errors(self, obj):
+            """
+            Manager method used for getting QuerySet of all errors depending on
+            passed arguments.
+
+            @param  obj   affected object (itself or just QuerySet)
+            """
+
+            if obj is None:
+                raise RuntimeError("Implementation error calling get_errors()"
+                                   "with None")
+
+            # Create base query of errors to return.
+            #
+            # if it's a Cluster or a queryset for Clusters, then we need to get all
+            # errors from the Clusters.  Do this by filtering on GanetiError.cluster
+            # instead of obj_id.
+            if isinstance(obj, (Cluster,)):
+                return self.filter(cluster=obj)
+
+            elif isinstance(obj, (QuerySet,)):
+                if obj.model == Cluster:
+                    return self.filter(cluster__in=obj)
+                else:
+                    ct = ContentType.objects.get_for_model(obj.model)
+                    return self.filter(obj_type=ct, obj_id__in=obj)
+
             else:
-                ct = ContentType.objects.get_for_model(obj.model)
-                return self.filter(obj_type=ct, obj_id__in=obj, **kwargs)
+                ct = ContentType.objects.get_for_model(obj.__class__)
+                return self.filter(obj_type=ct, obj_id=obj.pk)
 
-        else:
-            ct = ContentType.objects.get_for_model(obj.__class__)
-            return self.filter(obj_type=ct, obj_id=obj.pk, **kwargs)
+    class Meta:
+        ordering = ("-timestamp", "code", "msg")
 
-    def store_error(self, msg, obj, code, **kwargs):
+    def __repr__(self):
+        return "<GanetiError '%s'>" % self.msg
+
+    def __unicode__(self):
+        base = "[%s] %s" % (self.timestamp, self.msg)
+        return base
+
+    @classmethod
+    def store_error(cls, msg, obj, code, **kwargs):
         """
-        Manager method used to store errors
+        Create and save an error with the given information.
 
         @param  msg  error's message
         @param  obj  object (i.e. cluster or vm) affected by the error
@@ -1446,18 +1512,20 @@ class GanetiErrorManager(models.Manager):
                 is_cluster = True
 
         # 404 -- object not found
-        # 404 can occur on any object, but when it occurs on a cluster, then any
-        # of its children must not see the error again
+        # 404 can occur on any object, but when it occurs on a cluster, then
+        # any of its children must not see the error again
         elif code == 404:
             if not is_cluster:
                 # return if the error exists for cluster
                 try:
                     c_ct = ContentType.objects.get_for_model(Cluster)
-                    return self.get(msg=msg, obj_type=c_ct, code=code,
-                            obj_id=obj.cluster_id, cleared=False)
+                    return cls.objects.get(msg=msg, obj_type=c_ct, code=code,
+                                           obj_id=obj.cluster_id,
+                                           cleared=False)
 
-                except GanetiError.DoesNotExist:
-                    # we want to proceed when the error is not cluster-specific
+                except cls.DoesNotExist:
+                    # we want to proceed when the error is not
+                    # cluster-specific
                     pass
 
         # XXX use a try/except instead of get_or_create().  get_or_create()
@@ -1466,44 +1534,15 @@ class GanetiErrorManager(models.Manager):
         # cluster will already be queried so use create() instead which does
         # allow cluster_id
         try:
-            return self.get(msg=msg, obj_type=ct, obj_id=obj.pk, code=code,
-                            **kwargs)
+            return cls.objects.get(msg=msg, obj_type=ct, obj_id=obj.pk,
+                                   code=code, **kwargs)
 
-        except GanetiError.DoesNotExist:
+        except cls.DoesNotExist:
             cluster_id = obj.pk if is_cluster else obj.cluster_id
 
-            return self.create(msg=msg, obj_type=ct, obj_id=obj.pk,
-                               cluster_id=cluster_id, code=code, **kwargs)
-
-
-class GanetiError(models.Model):
-    """
-    Class for storing errors which occured in Ganeti
-    """
-    cluster = models.ForeignKey(Cluster)
-    msg = models.TextField()
-    code = models.PositiveSmallIntegerField(blank=True, null=True)
-    timestamp = models.DateTimeField(auto_now_add=True)
-
-    # determines if the errors still appears or not
-    cleared = models.BooleanField(default=False)
-
-    # cluster object (cluster, VM, Node) affected by the error (if any)
-    obj_type = models.ForeignKey(ContentType, related_name="ganeti_errors")
-    obj_id = models.PositiveIntegerField()
-    obj = GenericForeignKey("obj_type", "obj_id")
-
-    objects = GanetiErrorManager()
-
-    class Meta:
-        ordering = ("-timestamp", "code", "msg")
-
-    def __repr__(self):
-        return "<GanetiError '%s'>" % self.msg
-
-    def __unicode__(self):
-        base = "[%s] %s" % (self.timestamp, self.msg)
-        return base
+            return cls.objects.create(msg=msg, obj_type=ct, obj_id=obj.pk,
+                                      cluster_id=cluster_id, code=code,
+                                      **kwargs)
 
 
 class ClusterUser(models.Model):
