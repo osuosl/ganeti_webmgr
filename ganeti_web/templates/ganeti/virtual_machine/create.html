@@ -14,8 +14,9 @@
     <script src="{{STATIC_URL}}/js/disableSingletonDropdown.js"></script>
     <script src="{{STATIC_URL}}/js/createVM_formUpdater.js"></script>
     <script src="{{STATIC_URL}}/js/helpTips.js"></script>
+    <script src="{{STATIC_URL}}/js/memorySliders.js"></script>
     <script type="text/javascript" src="{{SITE_ROOT}}/object_permissions_media/js/autocomplete_user_search.js"></script>
-
+    <style id="slider_style"></style>
     <script type="text/javascript">
         
         // -------
@@ -39,6 +40,11 @@
             if( $.trim($("#id_owner").attr("style")) != "display: none;" )             
             {   autocomplete_user_search($("#id_owner"),'{% url owner-search %}');
             }
+            if ($("script[src*=memorySliders]").length) {
+                initSlider($("#id_memory"), $("#id_memory"), 1024*10, "memorySliders");
+                // sliders for disk_sizes are initialized below
+            }
+                
         });
 
     </script>
@@ -80,6 +86,9 @@
             {{ form.disk_count }}
             {% for index in form.disk_fields %}
                 {% vmfield_disk form index %}
+                <script type="text/javascript">
+                    initSlider($("#id_disk_size_"+{{ index }}), $("#id_disk_size_0"), 1024*100, "diskSliders");
+                </script>
             {% endfor %}
         </fieldset>
 

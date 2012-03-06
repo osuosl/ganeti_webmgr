@@ -546,14 +546,28 @@ function formUpdater(url_choices, url_options, url_defaults){
         input.attr("id", "id_disk_size_" + count);
         p.append(label);
         p.append(input);
+        p.append('<div class="icon delete"></div>');
         disks.append(p);
-        disks.append('<div class="icon delete"></div>');
+        // memorySliders.js will need to be included in the HTML for this to work 
+        if ($("script[src*=memorySliders]").length) {
+            initSlider($("#id_disk_size_"+count), $("#id_disk_size_0"));
+        } else {
+            console.log("File not present");
+        }
     }
 
     function _remove_disk() {
-        var count = disk_count.val();
-        disk_count.val(parseInt(count)-1);
         var button = $(this);
+        var count = disk_count.val();
+        var disk_name = button.parent("p").children("#disks input[name^=disk_size]").attr("id");
+        disk_count.val(parseInt(count)-1);
+        
+        // memorySliders.js will need to be included in the HTML for this to work 
+        if ($("script[src*=memorySliders]").length) {
+            removeSlider($("#" + disk_name), $("#id_disk_size_0"));
+        }
+
+        button.parent("p").remove();
         button.prev("p").remove();
         button.prev("ul").remove();
         button.remove();
@@ -568,6 +582,9 @@ function formUpdater(url_choices, url_options, url_defaults){
                 $(this)
                     .attr("name", "disk_size_" + i)
                     .attr("id", "id_disk_size_" + i);
+            });
+            $(this).children('div[id$="slider"]').each(function(){
+                $(this).attr("id", "id_disk_size_" + i + "_slider");
             });
             i++;
         });
