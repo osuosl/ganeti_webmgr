@@ -1106,8 +1106,12 @@ class Cluster(CachedClusterObject):
         """
         Returns the default quota for this cluster
         """
-        return {'default':1, 'ram':self.ram, 'disk':self.disk, \
-                    'virtual_cpus':self.virtual_cpus}
+        return {
+            "default": 1,
+            "ram": self.ram,
+            "disk": self.disk,
+            "virtual_cpus": self.virtual_cpus,
+        }
 
     def get_quota(self, user=None):
         """
@@ -1116,20 +1120,18 @@ class Cluster(CachedClusterObject):
         @return user's quota, default quota, or none
         """
         if user is None:
-            return {'default':1, 'ram':self.ram, 'disk':self.disk, \
-                    'virtual_cpus':self.virtual_cpus}
+            return self.get_default_quota()
 
         # attempt to query user specific quota first.  if it does not exist then
         # fall back to the default quota
-        query = Quota.objects.filter(cluster=self, user=user) \
-                    .values('ram', 'disk', 'virtual_cpus')
-        if len(query):
-            (quota,) = query
+        query = Quota.objects.filter(cluster=self, user=user)
+        quotas = query.values('ram', 'disk', 'virtual_cpus')
+        if quotas:
+            quota = quotas[0]
             quota['default'] = 0
             return quota
 
-        return {'default':1, 'ram':self.ram, 'disk':self.disk, \
-                    'virtual_cpus':self.virtual_cpus, }
+        return self.get_default_quota()
 
     def set_quota(self, user, values=None):
         """
