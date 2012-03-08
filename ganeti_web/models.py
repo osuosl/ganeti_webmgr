@@ -81,7 +81,7 @@ class QuerySetManager(models.Manager):
             def clean(self):
                 return self.filter(dirty=False)
 
-    >>> Foo.objects.active().clean()
+    Foo.objects.active().clean()
     """
 
     def __getattr__(self, name, *args):
