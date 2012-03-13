@@ -20,17 +20,6 @@
 from ganeti_web.tests.call_proxy import CallProxy, ResponseMap
 from ganeti_web.util import client
 
-
-class MethodProxy(object):
-    """
-    simple callable that returns set data
-    """
-    def __init__(self, data=None, error=None):
-        self.data = data
-    
-    def __call__(self, *args, **kwargs):
-        return self.data
-
 INSTANCES = ['gimager.osuosl.bak', 'gimager2.osuosl.bak']
 INSTANCE = {'admin_state': False,
     'beparams': {'auto_balance': True, 'memory': 512, 'vcpus': 2},
