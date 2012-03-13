@@ -47,7 +47,7 @@
     </h1>
 
     <div id="virtualmachineform">
-        <form method="post">
+        <form method="post">{% csrf_token %}
             {% vmfield form.hostname %}
             {% vmfield form.ip_check %}
             {% vmfield form.name_check %}
