@@ -131,6 +131,8 @@ class TestVirtualMachineViewsBase(TestCase, VirtualMachineTestCaseMixin,
 
         def test_json_error(user, response):
             content = json.loads(response.content)
+            self.assertTrue("__all__" in content)
+            self.assertTrue(len(content["__all__"]))
             text = content['__all__'][0]
             self.assertEqual(msg, text)
             self.vm.rapi.error = None
