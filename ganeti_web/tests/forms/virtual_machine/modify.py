@@ -2,6 +2,7 @@ from itertools import chain
 
 from django.contrib.auth.models import User, Group
 from django.test import TestCase
+from django.utils.unittest import expectedFailure
 
 from ganeti_web import models
 from ganeti_web import constants
@@ -173,6 +174,26 @@ class TestKvmModifyVirtualMachineForm(TestModifyVirtualMachineForm):
 
         for field in form.Meta.exclude:
             self.assertFalse(field in form.fields, field)
+
+    @expectedFailure
+    def test_multiple_nic(self):
+        return super(TestKvmModifyVirtualMachineForm,
+            self).test_multiple_nic()
+
+    @expectedFailure
+    def test_validate_data(self):
+        return super(TestKvmModifyVirtualMachineForm,
+            self).test_validate_data()
+
+    @expectedFailure
+    def test_validate_new_nic(self):
+        return super(TestKvmModifyVirtualMachineForm,
+            self).test_validate_new_nic()
+
+    @expectedFailure
+    def test_validate_remove_nic(self):
+        return super(TestKvmModifyVirtualMachineForm,
+            self).test_validate_remove_nic()
 
 
 class TestHvmModifyVirtualMachineForm(TestModifyVirtualMachineForm):

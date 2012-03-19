@@ -309,12 +309,11 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
 
         # Copied from create_instance_from_template
         data = dict(
-            hostname=self.template.template_name,
             cluster=self.template.cluster_id,
         )
         data.update(vars(self.template))
-        ignore_fields = ('disks', '_state', 'pnode', 'snode',
-            'description', '_cluster_cache')
+        ignore_fields = ('template_name', 'disks', '_state', 'pnode', 'snode',
+            'description', '_cluster_cache', 'nics')
         for field in ignore_fields:
             del data[field]
         data['disk_count'] = len(self.template.disks)
@@ -322,7 +321,6 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
             data['disk_size_%s'%i] = disk['size']
 
         def test_fields(user, response):
-            self.assertContains(response, self.template)
             form = response.context['form']
             for field in data:
                 self.assertEqual(data[field], form.initial[field])
