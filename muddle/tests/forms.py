@@ -1,5 +1,6 @@
 from django import forms
 from django.test import TestCase
+from django.utils import unittest
 from muddle.core.forms.aggregate import AggregateForm
 
 
@@ -82,6 +83,7 @@ class TestAggregateForms(TestCase):
         # test property with no conflicts having its properties set by options
         self.assertFalse(Klass.base_fields['one'].required)
 
+    @unittest.skip("Not implemented")
     def test_aggregate_incompatible_fields_retype(self):
         """
         Tests creating an aggregate form when a field name is reused but has
