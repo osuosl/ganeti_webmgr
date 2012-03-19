@@ -20,20 +20,16 @@ import json
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404
-from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _
 from django.views.generic.detail import DetailView
 
 from ganeti_web.middleware import Http403
 from ganeti_web.models import Job, Cluster, VirtualMachine, Node
+from ganeti_web.views.generic import LoginRequiredMixin
 
-class JobDetailView(DetailView):
+class JobDetailView(LoginRequiredMixin, DetailView):
 
     template_name = "ganeti/job/detail.html"
-
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(JobDetailView, self).dispatch(*args, **kwargs)
 
     def get_object(self, queryset=None):
         return get_object_or_404(Job, job_id=self.kwargs["job_id"],

@@ -29,7 +29,6 @@ from django.http import (HttpResponse, HttpResponseRedirect,
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.conf import settings
-from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_http_methods, require_POST
 
 from object_log.views import list_for_object
@@ -52,7 +51,7 @@ from ganeti_web.forms.virtual_machine import NewVirtualMachineForm, \
 from ganeti_web.templatetags.webmgr_tags import render_storage
 from ganeti_web.utilities import cluster_default_info, cluster_os_list, \
     compare, os_prettify, get_hypervisor
-from ganeti_web.views.generic import PagedListView
+from ganeti_web.views.generic import LoginRequiredMixin, PagedListView
 from django.utils.translation import ugettext as _
 
 
@@ -79,16 +78,12 @@ def get_vm_and_cluster_or_404(cluster_slug, instance):
     raise Http404('Virtual Machine does not exist')
 
 
-class VMListView(PagedListView):
+class VMListView(LoginRequiredMixin, PagedListView):
     """
     View for displaying a list of VirtualMachines.
     """
 
     template_name = "ganeti/virtual_machine/list.html"
-
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(VMListView, self).dispatch(*args, **kwargs)
 
     def get_queryset(self):
         if self.request.user.is_superuser:

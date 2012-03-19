@@ -3,7 +3,23 @@
 # Generic class-based view mixins and helpers.
 
 from django.conf import settings
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 from django.views.generic.list import ListView
+
+
+class LoginRequiredMixin(object):
+    """
+    Helper mixin which applies @login_required to all methods on a view.
+
+    Meant to massively simplify the four-line prelude common to many of our
+    views.
+    """
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(LoginRequiredMixin, self).dispatch(*args, **kwargs)
+
 
 class PagedListView(ListView):
     """

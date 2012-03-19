@@ -24,7 +24,6 @@ from django.db.models.query_utils import Q
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound, Http404
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _
 from django.views.generic.detail import DetailView
 
@@ -38,7 +37,7 @@ from ganeti_web import constants
 from ganeti_web.forms.node import RoleForm, MigrateForm, EvacuateForm
 from ganeti_web.middleware import Http403
 from ganeti_web.models import Node, Job
-from ganeti_web.views.generic import PagedListView
+from ganeti_web.views.generic import LoginRequiredMixin, PagedListView
 
 
 def get_node_and_cluster_or_404(cluster_slug, host):
@@ -54,13 +53,9 @@ def get_node_and_cluster_or_404(cluster_slug, host):
     raise Http404('Node does not exist')
 
 
-class NodeDetailView(DetailView):
+class NodeDetailView(LoginRequiredMixin, DetailView):
 
     template_name = "ganeti/node/detail.html"
-
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(NodeDetailView, self).dispatch(*args, **kwargs)
 
     def get_object(self, queryset=None):
         self.node, self.cluster = get_node_and_cluster_or_404(
@@ -82,16 +77,12 @@ class NodeDetailView(DetailView):
             "readonly": readonly,
         }
 
-class NodePrimaryListView(PagedListView):
+class NodePrimaryListView(LoginRequiredMixin, PagedListView):
     """
     Renders a list of primary VirtualMachines on the given node.
     """
 
     template_name = "ganeti/virtual_machine/table.html"
-
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(NodePrimaryListView, self).dispatch(*args, **kwargs)
 
     def get_queryset(self):
         self.node, self.cluster = get_node_and_cluster_or_404(
@@ -112,16 +103,12 @@ class NodePrimaryListView(PagedListView):
         })
         return kwargs
 
-class NodeSecondaryListView(PagedListView):
+class NodeSecondaryListView(LoginRequiredMixin, PagedListView):
     """
     Renders a list of secondary VirtualMachines on the given node.
     """
 
     template_name = "ganeti/virtual_machine/table.html"
-
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(NodeSecondaryListView, self).dispatch(*args, **kwargs)
 
     def get_queryset(self):
         self.node, self.cluster = get_node_and_cluster_or_404(

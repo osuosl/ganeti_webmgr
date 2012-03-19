@@ -29,7 +29,6 @@ from django.http import (HttpResponse, HttpResponseRedirect,
                          HttpResponseForbidden)
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
-from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _
 from django.views.decorators.http import require_POST
 from django.views.generic.detail import DetailView
@@ -50,16 +49,12 @@ from ganeti_web.models import (Cluster, ClusterUser, Profile, SSHKey,
                                VirtualMachine, Job)
 from ganeti_web.views import render_404
 from ganeti_web.forms.cluster import EditClusterForm, QuotaForm
-from ganeti_web.views.generic import PagedListView
+from ganeti_web.views.generic import LoginRequiredMixin, PagedListView
 
 
-class ClusterDetailView(DetailView):
+class ClusterDetailView(LoginRequiredMixin, DetailView):
 
     template_name = "ganeti/cluster/detail.html"
-
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(ClusterDetailView, self).dispatch(*args, **kwargs)
 
     def get_object(self, queryset=None):
         return get_object_or_404(Cluster, slug=self.kwargs["cluster_slug"])
@@ -75,13 +70,9 @@ class ClusterDetailView(DetailView):
             "readonly": not admin,
         }
 
-class ClusterListView(PagedListView):
+class ClusterListView(LoginRequiredMixin, PagedListView):
 
     template_name = "ganeti/cluster/list.html"
-
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(ClusterListView, self).dispatch(*args, **kwargs)
 
     def get_queryset(self):
         if self.request.user.is_superuser:
@@ -96,13 +87,9 @@ class ClusterListView(PagedListView):
             "user": self.request.user,
         }
 
-class ClusterVMListView(PagedListView):
+class ClusterVMListView(LoginRequiredMixin, PagedListView):
 
     template_name = "ganeti/virtual_machine/table.html"
-
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(ClusterVMListView, self).dispatch(*args, **kwargs)
 
     def get_queryset(self):
         self.cluster = get_object_or_404(Cluster,
