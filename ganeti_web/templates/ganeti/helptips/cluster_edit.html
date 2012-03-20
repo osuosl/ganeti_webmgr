@@ -1,0 +1,51 @@
+{% load i18n %}
+<div id="help-hostname">
+    <p>
+   	{% trans "The host name of this cluster." %}
+    </p>
+</div>
+<div id="help-port">
+    <p>
+    {% trans "The port to connect on." %}
+    </p>    
+    <p>
+    <i>{% trans "Default is 5080" %}</i>
+    </p>
+</div>
+<div id="help-description">
+    <p>
+    {% trans "A short description of this cluster." %}
+    </p>
+</div>
+<div id="help-username">
+    <p>
+    {% trans "The admin user name for this cluster." %}
+    </p>
+</div>
+<div id="help-password">
+    <p>
+    {% trans "The admin password for this cluster." %}
+    </p>
+</div>
+<div id="help-virtual_cpus">
+    <p>
+    {% trans "The default maximum number of virtual CPUs allowed." %}
+    </p>    
+    <p>
+    <i>{% trans "If left blank, unlimted CPUs are allowed." %}</i>
+    </p>
+</div>
+<div id="help-disk">
+    <p>
+    {% trans "The default maximum disk space allowed." %}
+    </p>    
+    <p>
+    <i>{% trans "If left blank, unlimted disk space allowed." %}</i>
+    </p>
+</div><div id="help-ram">
+    <p>
+    {% trans "The default maximum RAM allowed." %}
+    </p>    <p>
+    <i>{% trans "If left blank, unlimted RAM is allowed." %}</i>
+    </p>
+</div>
