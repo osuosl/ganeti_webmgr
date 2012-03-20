@@ -14,6 +14,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
+
+from itertools import chain, izip, repeat
 import json
 
 from django.conf import settings
@@ -44,33 +46,22 @@ class AboutView(TemplateView):
         return super(AboutView, self).render_to_response(context, **kwargs)
 
 def merge_errors(errors, jobs):
-    """ helper function for merging queryset of GanetiErrors and Job Errors """
-    merged = []
-    job_iter = iter(jobs)
-    try:
-        job = job_iter.next()
-    except StopIteration:
-        job = None
-    for error in errors:
-        if job is None or error.timestamp > job.finished:
-            merged.append((True, error))
-        else:
-            # found a newer job, append jobs till the next job is older
-            while job is not None and job.finished > error.timestamp:
-                merged.append((False, job))
-                try:
-                    job = job_iter.next()
-                except StopIteration:
-                    job = None
+    """
+    Merge iterables of errors and jobs together.
 
-    # append any left over jobs
-    while job is not None:
-        merged.append((False, job))
-        try:
-            job = job_iter.next()
-        except StopIteration:
-            job = None
-    return merged
+    The resulting list contains tuples of (bool, object) where the first
+    member indicates whether the object is a ``GanetiError`` or ``Job``.
+    """
+
+    def keyfunc(x):
+        """
+        Either the "finished" or "timestamp" attribute.
+        """
+
+        return getattr(x[1], "finished", getattr(x[1], "timestamp", 0))
+
+    i = chain(izip(repeat(True), errors), izip(repeat(False), jobs))
+    return list(sorted(i, key=keyfunc))
 
 
 USED_NOTHING = dict(disk=0, ram=0, virtual_cpus=0)
