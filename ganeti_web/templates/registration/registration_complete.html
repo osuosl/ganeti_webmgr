@@ -1,0 +1,8 @@
+{% extends "no_menu_base.html" %}
+{% load i18n %}
+{% block content %}
+<h1>{% trans "Registration Email Sent" %}</h1>
+<p>{% blocktrans %}An email has been sent to your email address. 
+You must confirm your account prior to logging in by following the instructions
+in the email.{% endblocktrans %}</p>
+{% endblock %}

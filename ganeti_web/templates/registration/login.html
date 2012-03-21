@@ -1,0 +1,22 @@
+{% extends "no_menu_base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Login" %}{% endblock %}
+
+{% block content %}
+
+<div id="login">
+	
+    <fieldset>
+        <h2>{% trans "Login" %}</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <input type="hidden" name="next" value="{{ next }}" />
+            <input class="submit" type="submit" value='{% trans "Login" %}'>
+        </form>
+    </fieldset>
+    <p><a href="{% url auth_password_reset %}">{% trans "Forgot password" %}?</a></p>
+	
+</div>
+{% endblock %}
