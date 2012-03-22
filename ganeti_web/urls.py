@@ -28,7 +28,8 @@ from ganeti_web.views.general import AboutView
 from ganeti_web.views.jobs import JobDetailView
 from ganeti_web.views.node import (NodeDetailView, NodePrimaryListView,
                                    NodeSecondaryListView)
-from ganeti_web.views.virtual_machine import VMListView, VMListTableView
+from ganeti_web.views.virtual_machine import (VMDeleteView, VMListView,
+                                              VMListTableView)
 
 
 cluster_slug = '(?P<cluster_slug>[-_A-Za-z0-9]+)'
@@ -183,7 +184,8 @@ urlpatterns += patterns('ganeti_web.views.virtual_machine',
     url(r'^%s/replace_disks/?$' % vm_prefix, 'replace_disks', name="instance-replace-disks"),
 
     # Delete
-    url(r"^%s/delete/?$" % vm_prefix, "delete", name="instance-delete"),
+    url(r"^%s/delete/?$" % vm_prefix, VMDeleteView.as_view(),
+        name="instance-delete"),
 
     # Reinstall
     url(r"^%s/reinstall/?$" % vm_prefix, "reinstall", name="instance-reinstall"),
