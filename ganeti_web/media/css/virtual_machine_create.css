@@ -8,3 +8,34 @@ fieldset h3 {width:330px;}
 #disks .delete, #nics .delete {padding-top:3px; cursor:pointer;}
 #nics input {width:110px;}
 #nics p label {clear:both;}
+
+#help {
+    background-color:#eee;
+    border:1px solid #888;
+    border-radius:5px;
+    display:none;
+    float:left;
+    margin:20px 0 0 0;
+    width:390px;
+    height:inherit;
+    -moz-border-radius:5px;
+    -webkit-border-radius:5px;
+}
+
+#help h3 {
+    background-color:#c2e192;
+    border-bottom:1px solid #888;
+    color:#444;
+    margin:0 0 10px 0;
+    padding:5px;
+    -moz-border-radius-topright:5px;
+    -moz-border-radius-topleft:5px;
+    -webkit-border-top-left-radius:5px;
+    -webkit-border-top-right-radius:5px;
+}
+
+#help div {margin:0 10px 0 10px; min-height:200px;}
+#help div p {margin: 0 0 10px 0;}
+#help div ul {margin:10px 0 10px 30px;}
+#help div li {list-style:disc; }
+#help-contents {display:none}
