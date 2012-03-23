@@ -25,6 +25,11 @@ PIP_INSTALL = dict((r.project_name, str(r)) for r in
                    pkg_resources.parse_requirements(open("requirements.txt").read()))
 
 GIT_INSTALL =  {
+    'ganeti_webmgr_layout':{
+        'url':'git://git.osuosl.org/gitolite/ganeti/ganeti_webmgr_layout',
+        'development':'develop',
+        'symlink':'ganeti_web_layout',
+        },
     'noVNC':{
         'url':'git://github.com/kanaka/noVNC.git',
         "checkout": "commit",
