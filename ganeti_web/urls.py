@@ -263,4 +263,7 @@ root = '%s/media' % os.path.dirname(os.path.realpath(__file__))
 urlpatterns += patterns('',
     (r'^ganeti_web_media/(?P<path>.*)', 'django.views.static.serve',
      {'document_root':  root}),
+
+    (r'^media/(?P<path>.*)', 'django.views.static.serve',
+        {'document_root':  root, }),
 )
