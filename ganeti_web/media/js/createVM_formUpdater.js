@@ -175,7 +175,7 @@ function formUpdater(url_choices, url_options, url_defaults){
             if(!iallocator.is(":checked") || 
                     iallocator.attr("readonly")) {
 
-                if(disk_template.val() == "drbd" && nodes && nodes.length > 1){
+                if(disk_template.val() == "drbd" && nodes.length > 1){
                     snode.show();
                 } else {
                     snode.hide();
