@@ -19,11 +19,11 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render_to_response
 from django.template.context import RequestContext
-from django.utils.translation import ugettext as _
 
 from ganeti_web.forms.importing import NodeForm
 from ganeti_web.middleware import Http403
 from ganeti_web.models import Cluster, Node, VirtualMachine
+from ganeti_web.views.generic import NO_PRIVS
 
 
 @login_required
@@ -33,7 +33,7 @@ def importing(request):
     """
     user = request.user
     if not user.is_superuser or user.get_objects_any_perms(Cluster, ['admin']):
-        raise Http403(_('You do not have sufficient privileges'))
+        raise Http403(NO_PRIVS)
 
     return render_to_response('ganeti/importing/nodes/main.html',
               context_instance=RequestContext(request))
@@ -50,7 +50,7 @@ def missing_ganeti(request):
     else:
         clusters = user.get_objects_any_perms(Cluster, ['admin'])
         if not clusters:
-            raise Http403(_('You do not have sufficient privileges'))
+            raise Http403(NO_PRIVS)
 
     nodes = []
     for cluster in clusters:
@@ -103,7 +103,7 @@ def missing_db(request):
     else:
         clusters = user.get_objects_any_perms(Cluster, ['admin'])
         if not clusters:
-            raise Http403(_('You do not have sufficient privileges'))
+            raise Http403(NO_PRIVS)
 
     nodes = []
     for cluster in clusters:

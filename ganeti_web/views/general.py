@@ -34,6 +34,7 @@ from ganeti_web.middleware import Http403
 from ganeti_web.models import Cluster, VirtualMachine, Job, GanetiError, \
     ClusterUser, Profile, Organization, SSHKey
 from ganeti_web.views import render_404
+from ganeti_web.views.generic import NO_PRIVS
 from django.utils.translation import ugettext as _
 from ganeti_web.constants import VERSION
 
@@ -316,12 +317,12 @@ def clear_ganeti_error(request, pk):
     # if not a superuser, check permissions on the object itself
     if not user.is_superuser:
         if isinstance(obj, (Cluster,)) and not user.has_perm('admin', obj):
-            raise Http403(_("You do not have sufficient privileges"))
+            raise Http403(NO_PRIVS)
         elif isinstance(obj, (VirtualMachine,)):
             # object is a virtual machine, check perms on VM and on Cluster
             if not (obj.owner_id == user.get_profile().pk or \
                 user.has_perm('admin', obj.cluster)):
-                    raise Http403(_("You do not have sufficient privileges"))
+                    raise Http403(NO_PRIVS)
 
     # clear the error
     GanetiError.objects.filter(pk=error.pk).update(cleared=True)
