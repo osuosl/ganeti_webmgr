@@ -9,9 +9,18 @@ Notable Changes:
   * VM Templates
   * Multiple Disks and Nics for VM Creation
   * 'No Install' option for VM Creation
-  * cdrom2_image_path
-  * User auto-complete anytime a username is needed
+  * CDROM2 Image Path for KVM
+  * User auto-complete for all username fields
   * Rework and stabilisation of Jobs
+  * User registration is now optional
+  * CPU info added to node list and detail pages
+  * Ability to replace disks for a VM on DRBD clusters
+
+* Cached AJAX calls
+* Unified json package use (django.utils.simplejson)
+* Reduced name collisions with directory reorganizing
+* Cache refresh migration moved to post_migrate hook
+* Unified use of CSRF tokens
 
 v0.7.2
 ----
