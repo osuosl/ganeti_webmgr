@@ -5,8 +5,8 @@
     <tr>
       <th class="status" order_by="status"></th>
       <th order_by="hostname">{% trans "Name" %}</th>
-      {% if not cluster %}
       <th order_by="owner">{% trans "Owner" %}</th>
+      {% if not cluster %}
       <th order_by="cluster__hostname">{% trans "Cluster" %}</th>
       {% endif %}
       <th order_by="cluster__hostname">{% trans "Node" %}</th>
@@ -52,7 +52,7 @@
         </td>
         <td>
             {% if vm.owner %}
-                <a href="{% url user-detail-name vm.owner %}">
+                <a href="{{ vm.owner.get_absolute_url }}">
                     {{ vm.owner }}
                 </a>
             {% else %}
