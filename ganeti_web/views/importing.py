@@ -24,7 +24,7 @@ from ganeti_web.forms.importing import ImportForm, OrphanForm, VirtualMachineFor
 from ganeti_web.middleware import Http403
 from ganeti_web.models import VirtualMachine, Cluster
 from ganeti_web.views.general import update_vm_counts
-from django.utils.translation import ugettext as _
+from ganeti_web.views.generic import NO_PRIVS
 
 
 @login_required
@@ -39,7 +39,7 @@ def orphans(request):
     else:
         clusters = user.get_objects_any_perms(Cluster, ['admin'])
         if not clusters:
-            raise Http403(_('You do not have sufficient privileges'))
+            raise Http403(NO_PRIVS)
 
     vms_with_cluster = VirtualMachine.objects.filter(owner=None, cluster__in=clusters) \
                           .order_by('hostname').values_list('id','hostname','cluster')
@@ -99,7 +99,7 @@ def missing_ganeti(request):
     else:
         clusters = user.get_objects_any_perms(Cluster, ['admin'])
         if not clusters:
-            raise Http403(_('You do not have sufficient privileges'))
+            raise Http403(NO_PRIVS)
 
     vms = []
     for cluster in clusters:
@@ -161,7 +161,7 @@ def missing_db(request):
     else:
         clusters = user.get_objects_any_perms(Cluster, ['admin'])
         if not clusters:
-            raise Http403(_('You do not have sufficient privileges'))
+            raise Http403(NO_PRIVS)
 
     vms = []
     for cluster in clusters:

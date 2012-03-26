@@ -5,7 +5,12 @@
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
+from django.utils.translation import ugettext as _
 from django.views.generic.list import ListView
+
+# Standard translation messages. We use these everywhere.
+
+NO_PRIVS = _('You do not have sufficient privileges')
 
 
 class LoginRequiredMixin(object):

@@ -20,12 +20,11 @@ import json
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404
-from django.utils.translation import ugettext as _
 from django.views.generic.detail import DetailView
 
 from ganeti_web.middleware import Http403
 from ganeti_web.models import Job, Cluster, VirtualMachine, Node
-from ganeti_web.views.generic import LoginRequiredMixin
+from ganeti_web.views.generic import NO_PRIVS, LoginRequiredMixin
 
 class JobDetailView(LoginRequiredMixin, DetailView):
 
@@ -76,13 +75,13 @@ def clear(request, cluster_slug, job_id, rest=False):
             if rest:
                 return HttpResponseForbidden
             else:
-                raise Http403(_("You do not have sufficient privileges"))
+                raise Http403(NO_PRIVS)
         elif isinstance(obj, (VirtualMachine,)):
             # object is a virtual machine, check perms on VM and on Cluster
             if not (obj.owner_id == user.get_profile().pk  \
                 or user.has_perm('admin', obj) \
                 or user.has_perm('admin', obj.cluster)):
-                    raise Http403(_("You do not have sufficient privileges"))
+                    raise Http403(NO_PRIVS)
 
 
     # clear the error.

@@ -49,7 +49,8 @@ from ganeti_web.models import (Cluster, ClusterUser, Profile, SSHKey,
                                VirtualMachine, Job)
 from ganeti_web.views import render_404
 from ganeti_web.forms.cluster import EditClusterForm, QuotaForm
-from ganeti_web.views.generic import LoginRequiredMixin, PagedListView
+from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
+                                      PagedListView)
 
 
 class ClusterDetailView(LoginRequiredMixin, DetailView):
@@ -97,7 +98,7 @@ class ClusterVMListView(LoginRequiredMixin, PagedListView):
         user = self.request.user
         admin = user.is_superuser or user.has_perm("admin", self.cluster)
         if not admin:
-            raise Http403(_("You do not have sufficient privileges"))
+            raise Http403(NO_PRIVS)
 
         return self.cluster.virtual_machines.select_related("cluster").all()
 
@@ -114,7 +115,7 @@ def nodes(request, cluster_slug):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
-        raise Http403(_("You do not have sufficient privileges"))
+        raise Http403(NO_PRIVS)
 
     # query allocated CPUS for all nodes in this list.  Must be done here to
     # avoid querying Node.allocated_cpus for each node in the list.  Repackage
@@ -156,7 +157,7 @@ def edit(request, cluster_slug=None):
 
     user = request.user
     if not (user.is_superuser or (cluster and user.has_perm('admin', cluster))):
-        raise Http403(_("You do not have sufficient privileges"))
+        raise Http403(NO_PRIVS)
 
     if request.method == 'POST':
         form = EditClusterForm(request.POST, instance=cluster)
@@ -203,7 +204,7 @@ def users(request, cluster_slug):
 
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
-        raise Http403(_("You do not have sufficient privileges"))
+        raise Http403(NO_PRIVS)
 
     url = reverse('cluster-permissions', args=[cluster.slug])
     return view_users(request, cluster, url, template='ganeti/cluster/users.html')
@@ -218,7 +219,7 @@ def permissions(request, cluster_slug, user_id=None, group_id=None):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
-        raise Http403(_("You do not have sufficient privileges"))
+        raise Http403(NO_PRIVS)
 
     url = reverse('cluster-permissions', args=[cluster.slug])
     return view_permissions(request, cluster, url, user_id, group_id,
@@ -236,7 +237,7 @@ def redistribute_config(request, cluster_slug):
 
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
-        raise Http403(_("You do not have sufficient privileges"))
+        raise Http403(NO_PRIVS)
 
     try:
         job = cluster.redistribute_config()
@@ -279,7 +280,7 @@ def quota(request, cluster_slug, user_id):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
-        raise Http403(_("You do not have sufficient privileges"))
+        raise Http403(NO_PRIVS)
 
     if request.method == 'POST':
         form = QuotaForm(request.POST)
@@ -354,7 +355,7 @@ def object_log(request, cluster_slug):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
-        raise Http403(_("You do not have sufficient privileges"))
+        raise Http403(NO_PRIVS)
     return list_for_object(request, cluster)
 
 
