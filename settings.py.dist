@@ -139,7 +139,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.i18n',
     'django.core.context_processors.media',
     'ganeti_web.context_processors.site',
-    'ganeti_web.context_processors.common_permissions'
+    'ganeti_web.context_processors.common_permissions',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -152,6 +152,8 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.locale.LocaleMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    # Clickjacking protection using X-Frame-Options.
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
     'ganeti_web.middleware.Http403Middleware',
 )
 
