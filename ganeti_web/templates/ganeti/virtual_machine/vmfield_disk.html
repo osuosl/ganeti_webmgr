@@ -1,5 +1,5 @@
-{{ field.errors }}
+<object>{{ field.errors }}</object>
 <p>
     {{ field.label_tag }} {{ field }}
+    {% if index %}<object><div class="icon delete"></div></object>{% endif %}
 </p>
-{% if index %}<div class="icon delete"></div>{% endif %}
