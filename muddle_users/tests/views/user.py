@@ -174,8 +174,6 @@ class TestUsersViews(TestCase):
         data = {
             'username': self.test_user.username,
             'email': 'test@example.org',
-            'new_password1': '',
-            'new_password2': '',
         }
 
         response = self.c.post(url, data, follow=True)
@@ -190,8 +188,6 @@ class TestUsersViews(TestCase):
         data = {
             'username': self.test_user.username,
             'email': 'test@example.org',
-            'new_password1': '',
-            'new_password2': '',
         }
 
         self.assertTrue(self.c.login(username=self.user.username,
@@ -207,8 +203,6 @@ class TestUsersViews(TestCase):
         data = {
             'username': self.test_user.username,
             'email': 'test@example.org',
-            'new_password1': '',
-            'new_password2': '',
         }
 
         self.assertTrue(self.c.login(username=self.superuser.username,
@@ -217,84 +211,6 @@ class TestUsersViews(TestCase):
         usercheck = User.objects.get(id=self.test_user.id)
         self.assertRedirects(response, usercheck.get_absolute_url())
         self.assertEqual(usercheck.email, 'test@example.org')
-        self.assertTrue(usercheck.check_password('testpassword'))
-
-    def test_view_edit_post_password_first_blank(self):
-        url = self.url_edit % self.test_user.id
-
-        data = {
-            'username': self.test_user.username,
-            'email': 'test@example.org',
-            'new_password1': 'ahahaha',
-            'new_password2': '',
-        }
-
-        self.assertTrue(self.c.login(username=self.superuser.username,
-                                     password='sudome'))
-        response = self.c.post(url, data)
-        self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'user/edit.html')
-        usercheck = User.objects.get(id=self.test_user.id)
-        self.assertTrue(usercheck.check_password('testpassword'))
-
-    def test_view_edit_post_password_second_blank(self):
-        """
-        Test users edit view/form
-        """
-        url = self.url_edit % self.test_user.id
-
-        data = {
-            'username': self.test_user.username,
-            'email': 'test@example.org',
-            'new_password1': '',
-            'new_password2': 'ahahahaha',
-        }
-
-        self.assertTrue(self.c.login(username=self.superuser.username,
-                                     password='sudome'))
-        response = self.c.post(url, data)
-        self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'user/edit.html')
-        usercheck = User.objects.get(id=self.test_user.id)
-        self.assertTrue(usercheck.check_password('testpassword'))
-
-    def test_view_edit_post_password_mismatch(self):
-        """
-        Test users edit view/form
-        """
-        url = self.url_edit % self.test_user.id
-
-        data = {
-            'username': self.test_user.username,
-            'email': 'test@example.org',
-            'new_password1': 'oeudoeuid',
-            'new_password2': 'uidhp',
-        }
-
-        self.assertTrue(self.c.login(username=self.superuser.username,
-                                     password='sudome'))
-        response = self.c.post(url, data)
-        self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'user/edit.html')
-        usercheck = User.objects.get(id=self.test_user.id)
-        self.assertTrue(usercheck.check_password('testpassword'))
-
-    def test_view_edit_post_password(self):
-        url = self.url_edit % self.test_user.id
-
-        data = {
-            'username': self.test_user.username,
-            'email': 'test@example.org',
-            'new_password1': 'passwordshouldchange',
-            'new_password2': 'passwordshouldchange',
-        }
-
-        self.assertTrue(self.c.login(username=self.superuser.username,
-                                     password='sudome'))
-        response = self.c.post(url, data)
-        self.assertRedirects(response, self.test_user.get_absolute_url())
-        usercheck = User.objects.get(id=self.test_user.id)
-        self.assertTrue(usercheck.check_password('passwordshouldchange'))
 
     def test_view_delete_anonymous(self):
         """
