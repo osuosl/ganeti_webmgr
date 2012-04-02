@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.test import Client
 from django.utils import simplejson as json
 
 from ganeti_web import models
@@ -512,122 +513,166 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
 
 
 class TestVirtualMachineDeleteViews(TestVirtualMachineViewsBase):
+    """
+    Test the virtual machine deletion view in a variety of ways.
+    """
 
-    def test_view_delete(self):
-        """
-        Tests view for deleting virtual machines
-        """
-        url = '/cluster/%s/%s/delete'
-        args = (self.cluster.slug, self.vm.hostname)
+    def setUp(self):
+        super(TestVirtualMachineDeleteViews, self).setUp()
+        self.url = '/cluster/%s/%s/delete'
+        self.args = (self.cluster.slug, self.vm.hostname)
 
-        # anonymous user
-        response = self.c.get(url % args, follow=True)
+    def test_view_delete_anonymous(self):
+        response = self.c.get(self.url % self.args, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'registration/login.html')
 
-        # unauthorized user
+    def test_view_delete_unauthorized(self):
         self.assertTrue(self.c.login(username=self.user.username,
                                      password='secret'))
-        response = self.c.post(url % args)
+        response = self.c.post(self.url % self.args)
         self.assertEqual(403, response.status_code)
 
-        # invalid vm
-        response = self.c.get(url % (self.cluster.slug, "DoesNotExist"))
+    def test_view_delete_invalid_vm(self):
+        self.assertTrue(self.c.login(username=self.user.username,
+                                     password='secret'))
+        response = self.c.get(self.url % (self.cluster.slug, "DoesNotExist"))
         self.assertEqual(404, response.status_code)
 
-        # authorized GET (vm remove permissions)
+    def test_view_delete_get_authorized_remove(self):
         self.user.grant('remove', self.vm)
-        response = self.c.get(url % args)
+        self.assertTrue(self.c.login(username=self.user.username,
+                                     password='secret'))
+        response = self.c.get(self.url % self.args)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'ganeti/virtual_machine/delete.html')
+        self.assertTemplateUsed(response,
+                                'ganeti/virtual_machine/delete.html')
         self.assertTrue(VirtualMachine.objects.filter(id=self.vm.id).exists())
-        self.user.revoke_all(self.vm)
 
-        # authorized GET (vm admin permissions)
+    def test_view_delete_get_authorized_admin(self):
         self.user.grant('admin', self.vm)
-        response = self.c.get(url % args)
+        self.assertTrue(self.c.login(username=self.user.username,
+                                     password='secret'))
+        response = self.c.get(self.url % self.args)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'ganeti/virtual_machine/delete.html')
+        self.assertTemplateUsed(response,
+                                'ganeti/virtual_machine/delete.html')
         self.assertTrue(VirtualMachine.objects.filter(id=self.vm.id).exists())
-        self.user.revoke_all(self.cluster)
 
-        # authorized GET (cluster admin permissions)
+    def test_view_delete_get_authorized_cluster_admin(self):
         self.user.grant('admin', self.cluster)
-        response = self.c.get(url % args)
+        self.assertTrue(self.c.login(username=self.user.username,
+                                     password='secret'))
+        response = self.c.get(self.url % self.args)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'ganeti/virtual_machine/delete.html')
+        self.assertTemplateUsed(response,
+                                'ganeti/virtual_machine/delete.html')
         self.assertTrue(VirtualMachine.objects.filter(id=self.vm.id).exists())
-        self.user.revoke_all(self.cluster)
 
-        # authorized GET (superuser)
-        self.user.is_superuser = True
-        self.user.save()
-        response = self.c.get(url % args)
+    def test_view_delete_get_superuser(self):
+        self.assertTrue(self.c.login(username=self.superuser.username,
+                                     password='secret'))
+        response = self.c.get(self.url % self.args)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'ganeti/virtual_machine/delete.html')
+        self.assertTemplateUsed(response,
+                                'ganeti/virtual_machine/delete.html')
         self.assertTrue(VirtualMachine.objects.filter(id=self.vm.id).exists())
 
-        #authorized POST (superuser)
-        self.user1.grant('power', self.vm)
+    def test_view_delete_post_superuser(self):
+        self.assertTrue(self.c.login(username=self.superuser.username,
+                                     password='secret'))
         self.vm.rapi.GetJobStatus.response = JOB_RUNNING
-        response = self.c.post(url % args, follow=True)
+        response = self.c.post(self.url % self.args, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'ganeti/virtual_machine/delete_status.html')
+        self.assertTemplateUsed(response,
+                                'ganeti/virtual_machine/delete_status.html')
         self.assertTrue(VirtualMachine.objects.filter(id=self.vm.id).exists())
-        pending_delete, job_id = VirtualMachine.objects.filter(id=self.vm.id).values('pending_delete','last_job_id')[0]
+        qs = VirtualMachine.objects.filter(id=self.vm.id)
+        pending_delete, job_id = qs.values('pending_delete', 'last_job_id')[0]
         self.assertTrue(pending_delete)
         self.assertTrue(job_id)
-        self.user.is_superuser = False
-        self.user.save()
-        self.vm.save()
 
-        #authorized POST (cluster admin)
+    def test_view_delete_post_cluster_admin(self):
         self.user.grant('admin', self.cluster)
-        self.user1.grant('power', self.vm)
-        response = self.c.post(url % args, follow=True)
+        self.assertTrue(self.c.login(username=self.user.username,
+                                     password='secret'))
+        response = self.c.post(self.url % self.args, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'ganeti/virtual_machine/delete_status.html')
+        self.assertTemplateUsed(response,
+                                'ganeti/virtual_machine/delete_status.html')
         self.assertTrue(VirtualMachine.objects.filter(id=self.vm.id).exists())
-        pending_delete, job_id = VirtualMachine.objects.filter(id=self.vm.id).values('pending_delete','last_job_id')[0]
+        qs = VirtualMachine.objects.filter(id=self.vm.id)
+        pending_delete, job_id = qs.values('pending_delete', 'last_job_id')[0]
         self.assertTrue(pending_delete)
         self.assertTrue(job_id)
-        self.user.revoke_all(self.cluster)
 
-        #authorized POST (vm admin)
-        self.vm.save()
+    def test_view_delete_post_admin(self):
         self.user.grant('admin', self.vm)
-        self.user1.grant('power', self.vm)
-        response = self.c.post(url % args, follow=True)
+        self.assertTrue(self.c.login(username=self.user.username,
+                                     password='secret'))
+        response = self.c.post(self.url % self.args, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/virtual_machine/delete_status.html')
         self.assertTrue(VirtualMachine.objects.filter(id=self.vm.id).exists())
-        pending_delete, job_id = VirtualMachine.objects.filter(id=self.vm.id).values('pending_delete','last_job_id')[0]
+        qs = VirtualMachine.objects.filter(id=self.vm.id)
+        pending_delete, job_id = qs.values('pending_delete', 'last_job_id')[0]
         self.assertTrue(pending_delete)
         self.assertTrue(job_id)
-        self.vm.save()
-        self.user.revoke_all(self.vm)
 
-        #authorized POST (cluster admin)
-        self.vm.save()
+    def test_view_delete_post_vm_remove(self):
         self.user.grant('remove', self.vm)
-        self.user1.grant('power', self.vm)
-        response = self.c.post(url % args, follow=True)
+        self.assertTrue(self.c.login(username=self.user.username,
+                                     password='secret'))
+        response = self.c.post(self.url % self.args, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/virtual_machine/delete_status.html')
         self.assertTrue(VirtualMachine.objects.filter(id=self.vm.id).exists())
-        pending_delete, job_id = VirtualMachine.objects.filter(id=self.vm.id).values('pending_delete','last_job_id')[0]
+        qs = VirtualMachine.objects.filter(id=self.vm.id)
+        pending_delete, job_id = qs.values('pending_delete', 'last_job_id')[0]
         self.assertTrue(pending_delete)
         self.assertTrue(job_id)
-        self.vm.save()
-        self.user.revoke_all(self.vm)
+
+    def test_view_delete_strict_csrf(self):
+        """
+        The POST method is protected by a CSRF token. Attempts to delete a VM
+        without the token will fail.
+
+        See #9783 for more information.
+        """
+
+        c = Client(enforce_csrf_checks=True)
+        self.assertTrue(c.login(username=self.superuser.username,
+                                password='secret'))
+        response = c.post(self.url % self.args)
+        self.assertEqual(403, response.status_code)
+        qs = VirtualMachine.objects.filter(id=self.vm.id)
+        self.assertTrue(qs.exists())
+        self.assertFalse(qs[0].pending_delete)
+
+    def test_view_delete_strict_csrf_delete(self):
+        """
+        The DELETE method is protected by a CSRF token. Attempts to delete a
+        VM without the token will fail.
+
+        See #9783 for more information.
+        """
+
+        c = Client(enforce_csrf_checks=True)
+        self.assertTrue(c.login(username=self.superuser.username,
+                                password='secret'))
+        response = c.delete(self.url % self.args)
+        self.assertEqual(403, response.status_code)
+        qs = VirtualMachine.objects.filter(id=self.vm.id)
+        self.assertTrue(qs.exists())
+        self.assertFalse(qs[0].pending_delete)
 
 
 class TestVirtualMachineReinstallViews(TestVirtualMachineViewsBase):
