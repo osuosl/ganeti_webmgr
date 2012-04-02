@@ -2,8 +2,8 @@
 {% load webmgr_tags i18n %}
 {% block head %}
     <link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}/css/virtual_machine_create.css"/>
-    <script src="{{SITE_ROOT}}/ganeti_web_media/js/modifyVM_formUpdater.js"></script>
-    <script src="{{SITE_ROOT}}/ganeti_web_media/js/helpTips.js"></script>
+    <script src="{{MEDIA_URL}}/js/modifyVM_formUpdater.js"></script>
+    <script src="{{MEDIA_URL}}/js/helpTips.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
             var formUpdate = new modifyFormUpdater({{ form.nics }});
