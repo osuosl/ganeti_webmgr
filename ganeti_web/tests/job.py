@@ -83,26 +83,6 @@ class TestJobModel(TestJobMixin, TestCase):
         self.assertFalse(job.error)
         return job
 
-    def test_hash_update(self):
-        """
-        When cluster is saved hash for its Jobs should be updated
-        """
-        job1 = self.test_save()
-        job2 = self.test_save()
-
-        self.assertEqual(self.cluster.hash, job1.cluster_hash)
-        self.assertEqual(self.cluster.hash, job2.cluster_hash)
-
-        # change cluster's hash
-        self.cluster.hostname = 'SomethingDifferent'
-        self.cluster.save()
-        job1 = Job.objects.get(pk=job1.id)
-        job2 = Job.objects.get(pk=job2.id)
-        self.assertEqual(job1.cluster_hash, self.cluster.hash,
-                         'Job does not have updated cache')
-        self.assertEqual(job2.cluster_hash, self.cluster.hash,
-                         'Job does not have updated cache')
-
     def test_cache_reset(self):
         """
         Tests that cache reset is working properly.

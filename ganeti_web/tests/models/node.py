@@ -70,51 +70,6 @@ class TestNodeModel(TestCase, NodeTestCaseMixin):
 
         cluster.delete()
 
-    def test_save(self):
-        """
-        Test saving a VirtualMachine
-
-        Verify:
-            * Node can be saved
-            * Node can be loaded
-            * Hash is copied from cluster
-        """
-        node, cluster = self.create_node()
-        self.assertTrue(node.id)
-        self.assertFalse(node.error)
-        self.assertEqual(node.cluster_hash, cluster.hash)
-
-        node = Node.objects.get(id=node.id)
-        self.assertTrue(node.info)
-        self.assertFalse(node.error)
-
-        node.delete()
-        cluster.delete()
-
-    def test_hash_update(self):
-        """
-        When cluster is saved hash for its VirtualMachines should be updated
-        """
-        node0, cluster = self.create_node()
-        node1, cluster = self.create_node(cluster, 'test2.osuosl.bak')
-
-        self.assertEqual(node0.cluster_hash, cluster.hash)
-        self.assertEqual(node1.cluster_hash, cluster.hash)
-
-        # change cluster's hash
-        cluster.hostname = 'SomethingDifferent'
-        cluster.save()
-        node0 = Node.objects.get(pk=node0.id)
-        node1 = Node.objects.get(pk=node1.id)
-        self.assertEqual(node0.cluster_hash, cluster.hash,
-                         'VirtualMachine does not have updated cache')
-        self.assertEqual(node1.cluster_hash, cluster.hash,
-                         'VirtualMachine does not have updated cache')
-
-        node0.delete()
-        node1.delete()
-        cluster.delete()
-
     def test_parse_info(self):
         """
         Test parsing values from cached info

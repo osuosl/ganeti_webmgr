@@ -85,7 +85,6 @@ class TestModifyVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         self.data = self._data.copy()
         self.vm.delete()
         self.cluster.delete()
-        models.clear_rapi_cache()
 
     def test_multiple_nic(self):
         data = self.data.copy()

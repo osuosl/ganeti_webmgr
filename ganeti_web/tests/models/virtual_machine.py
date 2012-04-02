@@ -54,49 +54,6 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
     def setUp(self):
         models.client.GanetiRapiClient = RapiProxy
 
-    def test_save(self):
-        """
-        Test saving a VirtualMachine
-
-        Verify:
-            * VirtualMachine can be saved
-            * VirtualMachine can be loaded
-            * Hash is copied from cluster
-        """
-        vm, cluster = self.create_virtual_machine()
-        self.assertTrue(vm.id)
-        self.assertFalse(vm.error)
-        self.assertEqual(vm.cluster_hash, cluster.hash)
-
-        vm = VirtualMachine.objects.get(id=vm.id)
-        self.assertTrue(vm.info)
-        self.assertFalse(vm.error)
-
-        vm.delete()
-        cluster.delete()
-
-    def test_hash_update(self):
-        """
-        When cluster is saved hash for its VirtualMachines should be updated
-        """
-        vm0, cluster = self.create_virtual_machine()
-        vm1, cluster = self.create_virtual_machine(cluster, 'test2.osuosl.bak')
-
-        self.assertEqual(vm0.cluster_hash, cluster.hash)
-        self.assertEqual(vm1.cluster_hash, cluster.hash)
-
-        # change cluster's hash
-        cluster.hostname = 'SomethingDifferent'
-        cluster.save()
-        vm0 = VirtualMachine.objects.get(pk=vm0.id)
-        vm1 = VirtualMachine.objects.get(pk=vm1.id)
-        self.assertEqual(vm0.cluster_hash, cluster.hash, 'VirtualMachine does not have updated cache')
-        self.assertEqual(vm1.cluster_hash, cluster.hash, 'VirtualMachine does not have updated cache')
-
-        vm0.delete()
-        vm1.delete()
-        cluster.delete()
-
     def test_parse_info(self):
         """
         Test parsing values from cached info

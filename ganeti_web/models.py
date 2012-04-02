@@ -18,10 +18,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-import binascii
 import cPickle
 from datetime import datetime, timedelta
-from hashlib import sha1
 import random
 import re
 import string
@@ -40,7 +38,6 @@ from django.db.models import Q, Sum
 from django.db.models.query import QuerySet
 from django.db.models.signals import post_save, post_syncdb
 from django.db.utils import DatabaseError
-from django.utils.encoding import force_unicode
 from django.utils.translation import ugettext_lazy as _
 
 from django_fields.fields import PickleField
@@ -391,7 +388,6 @@ class Job(CachedClusterObject):
     object_id = models.IntegerField(null=False)
     obj = GenericForeignKey('content_type', 'object_id')
     cluster = models.ForeignKey('Cluster', editable=False, related_name='jobs')
-    cluster_hash = models.CharField(max_length=40, editable=False)
 
     processed = models.BooleanField(default=False)
     cleared = models.BooleanField(default=False)
@@ -451,15 +447,6 @@ class Job(CachedClusterObject):
 
     def parse_transient_info(self):
         pass
-
-    def save(self, *args, **kwargs):
-        """
-        sets the cluster_hash for newly saved instances
-        """
-        if self.id is None or self.cluster_hash == '':
-            self.cluster_hash = self.cluster.hash
-
-        super(Job, self).save(*args, **kwargs)
 
     @property
     def current_operation(self):
@@ -529,7 +516,6 @@ class VirtualMachine(CachedClusterObject):
     virtual_cpus = models.IntegerField(default=-1)
     disk_size = models.IntegerField(default=-1)
     ram = models.IntegerField(default=-1)
-    cluster_hash = models.CharField(max_length=40, editable=False)
     operating_system = models.CharField(max_length=128)
     status = models.CharField(max_length=14)
 
@@ -571,8 +557,6 @@ class VirtualMachine(CachedClusterObject):
         """
         sets the cluster_hash for newly saved instances
         """
-        if self.id is None:
-            self.cluster_hash = self.cluster.hash
 
         info_ = self.info
         if info_:
@@ -812,7 +796,6 @@ class Node(CachedClusterObject):
 
     cluster = models.ForeignKey('Cluster', related_name='nodes')
     hostname = models.CharField(max_length=128, unique=True)
-    cluster_hash = models.CharField(max_length=40, editable=False)
     offline = models.BooleanField()
     role = models.CharField(max_length=1, choices=ROLE_CHOICES)
     ram_total = models.IntegerField(default=-1)
@@ -830,14 +813,6 @@ class Node(CachedClusterObject):
     def _refresh(self):
         """ returns node info from the ganeti server """
         return self.rapi.GetNode(self.hostname)
-
-    def save(self, *args, **kwargs):
-        """
-        sets the cluster_hash for newly saved instances
-        """
-        if self.id is None:
-            self.cluster_hash = self.cluster.hash
-        super(Node, self).save(*args, **kwargs)
 
     @models.permalink
     def get_absolute_url(self):
@@ -968,7 +943,6 @@ class Cluster(CachedClusterObject):
     username = models.CharField(_('username'), max_length=128, blank=True, null=True)
     password = PatchedEncryptedCharField(_('password'), max_length=128,
                                          blank=True, null=True)
-    hash = models.CharField(_('hash'), max_length=40, editable=False)
 
     # quota properties
     virtual_cpus = models.IntegerField(_('Virtual CPUs'), null=True, blank=True)
@@ -996,34 +970,6 @@ class Cluster(CachedClusterObject):
     def cluster_id(self):
         return self.id
 
-    @classmethod
-    def decrypt_password(cls, value):
-        """
-        Convenience method for decrypting a password without an instance.
-        This was partly cribbed from django-fields which only allows decrypting
-        from a model instance.
-
-        If the password appears to be encrypted, this method will decrypt it;
-        otherwise, it will return the password unchanged.
-
-        This method is bonghits.
-        """
-
-        field, chaff, chaff, chaff = cls._meta.get_field_by_name('password')
-
-        if value.startswith(field.prefix):
-            ciphertext = value[len(field.prefix):]
-            plaintext = field.cipher.decrypt(binascii.a2b_hex(ciphertext))
-            password = plaintext.split('\0')[0]
-        else:
-            password = value
-
-        return force_unicode(password)
-
-    def save(self, *args, **kwargs):
-        self.hash = self.create_hash()
-        super(Cluster, self).save(*args, **kwargs)
-
     @models.permalink
     def get_absolute_url(self):
         return 'cluster-detail', (), {'cluster_slug':self.slug}
@@ -1042,15 +988,6 @@ class Cluster(CachedClusterObject):
                                                  password=self.password,
                                                  timeout=settings.RAPI_CONNECT_TIMEOUT)
         return self._rapi
-
-    def create_hash(self):
-        """
-        Creates a hash for this cluster based on credentials required for
-        connecting to the server
-        """
-        return sha1('%s%s%s%s' % \
-                    (self.username, self.password, self.hostname, self.port)) \
-                .hexdigest()
 
     def get_default_quota(self):
         """
@@ -1681,15 +1618,6 @@ def create_profile(sender, instance, **kwargs):
         pass
 
 
-def update_cluster_hash(sender, instance, **kwargs):
-    """
-    Updates the Cluster hash for all of it's VirtualMachines, Nodes, and Jobs
-    """
-    instance.virtual_machines.all().update(cluster_hash=instance.hash)
-    instance.jobs.all().update(cluster_hash=instance.hash)
-    instance.nodes.all().update(cluster_hash=instance.hash)
-
-
 def update_organization(sender, instance, **kwargs):
     """
     Creates a Organizations whenever a contrib.auth.models.Group is created
@@ -1699,7 +1627,6 @@ def update_organization(sender, instance, **kwargs):
     org.save()
 
 post_save.connect(create_profile, sender=User)
-post_save.connect(update_cluster_hash, sender=Cluster)
 post_save.connect(update_organization, sender=Group)
 
 # Disconnect create_default_site from django.contrib.sites so that

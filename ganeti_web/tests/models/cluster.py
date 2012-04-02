@@ -45,26 +45,6 @@ class TestClusterModel(TestCase):
         """
         Cluster()
 
-    def test_save(self):
-        """
-        test saving a cluster object
-
-        Verifies:
-            * object is saved and queryable
-            * hash is updated
-        """
-
-        # XXX any reason why these are in a single test?
-        cluster = Cluster()
-        cluster.save()
-        self.assertTrue(cluster.hash)
-        cluster.delete()
-
-        cluster = Cluster(hostname='foo.fake.hostname', slug='different')
-        cluster.save()
-        self.assertTrue(cluster.hash)
-        cluster.delete()
-
     def test_parse_info(self):
         """
         Test parsing values from cached info
