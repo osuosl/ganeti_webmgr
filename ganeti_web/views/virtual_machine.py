@@ -30,6 +30,7 @@ from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.conf import settings
 from django.views.decorators.http import require_http_methods, require_POST
+from django.views.generic.edit import DeleteView
 
 from object_log.views import list_for_object
 
@@ -141,72 +142,76 @@ class VMListTableView(VMListView):
         return context
 
 
-@require_http_methods(["GET", "POST", "DELETE"])
-@login_required
-def delete(request, cluster_slug, instance, rest=False):
+class VMDeleteView(LoginRequiredMixin, DeleteView):
     """
     Delete a VM.
     """
 
-    user = request.user
-    instance, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
+    template_name = "ganeti/virtual_machine/delete.html"
 
-    # Check permissions.
-    if not (
-        user.is_superuser or
-        user.has_any_perms(instance, ["remove", "admin"]) or
-        user.has_perm("admin", cluster)
-        ):
-        if rest:
-            return HttpResponseForbidden()
-        else:
+    def get_context_data(self, **kwargs):
+        kwargs["vm"] = self.vm
+        kwargs["cluster"] = self.cluster
+        return super(VMDeleteView, self).get_context_data(**kwargs)
+
+    def get_object(self):
+        user = self.request.user
+        vm, cluster = get_vm_and_cluster_or_404(self.kwargs["cluster_slug"],
+                                                self.kwargs["instance"])
+        if not (
+            user.is_superuser or
+            user.has_any_perms(vm, ["remove", "admin"]) or
+            user.has_perm("admin", cluster)
+            ):
             raise Http403(NO_PRIVS)
 
-    if request.method == 'GET' and not rest:
-        return render_to_response("ganeti/virtual_machine/delete.html",
-            {'vm': instance, 'cluster':cluster},
-            context_instance=RequestContext(request),
-        )
+        self.vm = vm
+        self.cluster = cluster
+        return vm
 
-    elif request.method == 'POST' or rest:
-        # verify that this instance actually exists in ganeti.  If it doesn't
-        # exist it can just be deleted.
+    def get_success_url(self):
+        return reverse('instance-detail', args=[self.kwargs["cluster_slug"],
+                                                self.vm.hostname])
+
+    def delete(self, *args, **kwargs):
+        vm = self.get_object()
+        self._destroy(vm)
+        return HttpResponseRedirect(self.get_success_url())
+
+    def _destroy(self, instance):
+        """
+        Actually destroy a VM.
+
+        Well, kind of. We won't destroy it immediately if it still exists in
+        Ganeti; in that case, we'll only mark it for later removal and start
+        the Ganeti job to destroy it.
+        """
+
+        # Check that the VM still exists in Ganeti. If it doesn't, then just
+        # delete it.
         try:
             instance._refresh()
         except GanetiApiError, e:
             if e.code == 404:
                 instance.delete()
-                if rest:
-                    return HttpAccepted()
-                else:
-                    return HttpResponseRedirect(reverse('virtualmachine-list'))
+                return
+            raise
 
-        # start deletion job and mark the VirtualMachine as pending_delete and
-        # disable the cache for this VM.
-        job_id = instance.rapi.DeleteInstance(instance.hostname)
-        job = Job.objects.create(job_id=job_id, obj=instance, cluster_id=instance.cluster_id)
-        VirtualMachine.objects.filter(id=instance.id) \
-            .update(last_job=job, ignore_cache=True, pending_delete=True)
-
-        if rest:
-            return HttpAccepted()
-        else:
-            return HttpResponseRedirect(
-                reverse('instance-detail', args=[cluster_slug, instance.hostname]))
-
-    elif request.method == 'DELETE':
-        # start deletion job and mark the VirtualMachine as pending_delete and
-        # disable the cache for this VM.
-        job_id = instance.rapi.DeleteInstance(instance.hostname)
+        # Clear any old jobs for this VM.
         ct = ContentType.objects.get_for_model(VirtualMachine)
-        Job.objects.filter(content_type=ct, object_id=instance.id).update(cleared=True)
-        job = Job.objects.create(job_id=job_id, obj=instance, cluster_id=instance.cluster_id)
-        VirtualMachine.objects.filter(id=instance.id) \
-            .update(last_job=job, ignore_cache=True, pending_delete=True)
+        Job.objects.filter(content_type=ct,
+                           object_id=instance.id).update(cleared=True)
 
-        # No need to call instance.delete() as the job processing will delete
-        #   it automatically in its cleanup phase.
-        return HttpResponse('1', mimetype='application/json')
+        # Create the deletion job.
+        job_id = instance.rapi.DeleteInstance(instance.hostname)
+        job = Job.objects.create(job_id=job_id, obj=instance,
+                                 cluster_id=instance.cluster_id)
+
+        # Mark the VM as pending deletion. Also disable its cache.
+        instance.last_job = job
+        instance.ignore_cache = True
+        instance.pending_delete = True
+        instance.save()
 
 
 @require_http_methods(["GET", "POST"])
