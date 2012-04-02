@@ -53,46 +53,6 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
     def setUp(self):
         models.client.GanetiRapiClient = RapiProxy
 
-    def test_instantiate(self):
-        VirtualMachine()
-
-    def test_non_trivial(self):
-        """
-        Test instantiating a VirtualMachine with extra parameters
-        """
-        # Define cluster for use
-        vm_hostname='vm.test.org'
-        cluster = Cluster(hostname='test.osuosl.bak', slug='OSL_TEST')
-        cluster.save()
-        owner = ClusterUser(id=32, name='foobar')
-
-        # Cluster
-        vm = VirtualMachine(cluster=cluster, hostname=vm_hostname)
-        vm.save()
-        self.assertTrue(vm.id)
-        self.assertEqual('vm.test.org', vm.hostname)
-        self.assertFalse(vm.error)
-        vm.delete()
-
-        # Multiple
-        vm = VirtualMachine(cluster=cluster, hostname=vm_hostname,
-                            virtual_cpus=3, ram=512, disk_size=5120,
-                            owner=owner)
-        vm.save()
-        self.assertTrue(vm.id)
-        self.assertEqual('vm.test.org', vm.hostname)
-        self.assertEqual(512, vm.ram)
-        self.assertEqual(5120, vm.disk_size)
-        self.assertEqual('foobar', vm.owner.name)
-        self.assertFalse(vm.error)
-
-        vm.delete()
-        cluster.delete()
-
-        # test unique constraints
-        #vm = VirtualMachine(cluster=cluster, hostname=vm_hostname)
-        #self.assertRaises(IntegrityError, vm.save)
-
     def test_save(self):
         """
         Test saving a VirtualMachine
