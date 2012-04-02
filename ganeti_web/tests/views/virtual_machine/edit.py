@@ -1,7 +1,6 @@
 from django.contrib.auth.models import User
 from django.test import Client
 from django.utils import simplejson as json
-from django.utils.unittest import expectedFailure
 
 from ganeti_web import models
 from ganeti_web.tests.rapi_proxy import JOB_RUNNING
@@ -645,6 +644,8 @@ class TestVirtualMachineDeleteViews(TestVirtualMachineViewsBase):
         """
         The POST method is protected by a CSRF token. Attempts to delete a VM
         without the token will fail.
+
+        See #9783 for more information.
         """
 
         c = Client(enforce_csrf_checks=True)
@@ -656,15 +657,10 @@ class TestVirtualMachineDeleteViews(TestVirtualMachineViewsBase):
         self.assertTrue(qs.exists())
         self.assertFalse(qs[0].pending_delete)
 
-    @expectedFailure
     def test_view_delete_strict_csrf_delete(self):
         """
         The DELETE method is protected by a CSRF token. Attempts to delete a
         VM without the token will fail.
-
-        This test fails prior to Django 1.4 because of a deficiency in
-        CsrfViewMiddleware. When Django 1.4 becomes required for GWM, revisit
-        this.
 
         See #9783 for more information.
         """
