@@ -25,7 +25,6 @@ from django.conf.urls.defaults import *
 #admin.autodiscover()
 
 urlpatterns = patterns('',
-    (r'^', include('ganeti_web_layout.urls')),
     (r'^', include('ganeti_web.urls')),
     (r'^', include('object_permissions.urls')),
     (r'^', include('object_log.urls')),
