@@ -1,6 +1,5 @@
 from django import forms
 from django.test import TestCase
-from django.utils import unittest
 from muddle.core.forms.aggregate import AggregateForm
 
 
@@ -17,85 +16,43 @@ class Bar(forms.Form):
     six = forms.CharField(required=False, initial='six!')
 
 
-class Xoo(forms.Form):
-    five = forms.BooleanField(initial=False)
-
-
-class TestAggregateForms(TestCase):
-    """ Tests for muddle Aggregate Form class """
+class TestAggregateForm(TestCase):
+    """
+    Muddle's AggregateForm can, in fact, aggregate forms.
+    """
 
     def setUp(self):
-        self.tearDown()
+        self.cls = AggregateForm.aggregate([Foo, Bar])
 
-    def tearDown(self):
-        pass
+    def test_aggregate_members(self):
+        self.assertEqual(5, len(self.cls.base_fields))
+        self.assertTrue('one' in self.cls.base_fields)
+        self.assertTrue('two' in self.cls.base_fields)
+        self.assertTrue('three' in self.cls.base_fields)
+        self.assertTrue('four' in self.cls.base_fields)
 
-    def test_aggregate(self):
+    def test_aggregate_override_required(self):
+        self.assertTrue(self.cls.base_fields['two'].required)
+        self.assertTrue(self.cls.base_fields['three'].required)
+
+    def test_aggregate_initial_merge(self):
         """
-        Some basic tests to make sure the aggregate method works as intended
+        AggregateForm merges initial values.
         """
-        Klass = AggregateForm.aggregate([Foo, Bar])
 
-        # test class members
-        self.assertEqual(5, len(Klass.base_fields))
-        self.assertTrue('one' in Klass.base_fields)
-        self.assertTrue('two' in Klass.base_fields)
-        self.assertTrue('three' in Klass.base_fields)
-        self.assertTrue('four' in Klass.base_fields)
+        self.assertEqual('two!', self.cls.base_fields['two'].initial)
 
-        # test that required=True always defaults when there are overlapping
-        # field names
-        self.assertTrue(Klass.base_fields['two'].required)
-        self.assertTrue(Klass.base_fields['three'].required)
-
-        # test aggregation of other properties
-        self.assertEqual('two!', Klass.base_fields['two'].initial)
-        self.assertEqual('three!', Klass.base_fields['three'].initial)
-
-    def test_aggregate_options(self):
+    def test_aggregate_initial_override(self):
         """
-        Test that the standard merge can be overridded with options
+        AggregateForm overrides initial values.
         """
-        options = {
-            'one':{'required':False},
-            'two': {'initial':'two overridden', 'required':False},
-            'three': {'initial':'three overridden', 'required':False}
-        }
 
-        Klass = AggregateForm.aggregate([Foo, Bar], options)
+        self.assertEqual('three!', self.cls.base_fields['three'].initial)
 
-        # test class members
-        self.assertEqual(5, len(Klass.base_fields))
-        self.assertTrue('one' in Klass.base_fields)
-        self.assertTrue('two' in Klass.base_fields)
-        self.assertTrue('three' in Klass.base_fields)
-        self.assertTrue('four' in Klass.base_fields)
-
-        # test that required=True always defaults when there are overlapping
-        # field names
-        self.assertFalse(Klass.base_fields['two'].required)
-        self.assertFalse(Klass.base_fields['three'].required)
-
-        # test aggregation of other properties
-        self.assertEqual('two overridden', Klass.base_fields['two'].initial)
-        self.assertEqual('three overridden', Klass.base_fields['three'].initial)
-
-        # test property with no conflicts having its properties set by options
-        self.assertFalse(Klass.base_fields['one'].required)
-
-    @unittest.skip("Not implemented")
-    def test_aggregate_incompatible_fields_retype(self):
+    def test_aggregate_is_valid_true(self):
         """
-        Tests creating an aggregate form when a field name is reused but has
-        and the types are not the same.
+        Test when is_valid returns successful.
         """
-        raise NotImplementedError
-
-    def test_is_valid_true(self):
-        """
-        Test when is_valid returns successful
-        """
-        Klass = AggregateForm.aggregate([Foo, Bar])
 
         data = {
             'one':True,
@@ -104,7 +61,7 @@ class TestAggregateForms(TestCase):
             'four':True,
         }
 
-        form = Klass(data)
+        form = self.cls(data)
         self.assertTrue(form.is_valid())
 
         data = form.cleaned_data
@@ -113,19 +70,63 @@ class TestAggregateForms(TestCase):
         self.assertEqual("three's value" ,data['three'])
         self.assertEqual(True ,data['four'])
 
-    def test_is_valid_false(self):
+
+class TestAggregateFormOptions(TestCase):
+    """
+    AggregateForm can have options passed into it to customize how fields are
+    created.
+    """
+
+    def setUp(self):
+        options = {
+            'one': {
+                'required': False,
+            },
+            'two': {
+                'initial': 'two overridden',
+                'required': False,
+            },
+            'three': {
+                'initial': 'three overridden',
+                'required': False,
+            },
+        }
+
+        self.cls = AggregateForm.aggregate([Foo, Bar], options)
+
+    def test_aggregate_options_initial(self):
+        self.assertFalse(self.cls.base_fields['one'].required)
+
+    def test_aggregate_options_members(self):
+        self.assertEqual(5, len(self.cls.base_fields))
+        self.assertTrue('one' in self.cls.base_fields)
+        self.assertTrue('two' in self.cls.base_fields)
+        self.assertTrue('three' in self.cls.base_fields)
+        self.assertTrue('four' in self.cls.base_fields)
+
+    def test_aggregate_options_override_required(self):
+        self.assertFalse(self.cls.base_fields['two'].required)
+        self.assertFalse(self.cls.base_fields['three'].required)
+
+    def test_aggregate_options_initial_override(self):
+        self.assertEqual('two overridden',
+                         self.cls.base_fields['two'].initial)
+        self.assertEqual('three overridden',
+                         self.cls.base_fields['three'].initial)
+
+    def test_aggregate_options_is_valid_false(self):
         """
         Test when is_valid returns not successful
         """
         options = {'two':{'required':True}, 'three':{'required':True}}
-        Klass = AggregateForm.aggregate([Foo, Bar], options)
+        cls = AggregateForm.aggregate([Foo, Bar], options)
 
         data = {
             'one':True,
             'four':True,
         }
 
-        form = Klass(data)
+        form = cls(data)
         self.assertFalse(form.is_valid())
 
         errors = form.errors

@@ -1,10 +1,12 @@
+from copy import copy
+
 from django.forms import Form
 from django.forms.util import ErrorDict
 
-
 class InvalidFieldsException(Exception):
-    pass
-
+    """
+    Fields were invalid.
+    """
 
 def merge_dict(dst, src):
     """
@@ -17,6 +19,10 @@ def merge_dict(dst, src):
 
 class AggregateForm(Form):
 
+    def __init__(self, *args, **kwargs):
+        self.forms = [cls(*args, **kwargs) for cls in self.form_classes]
+        super(AggregateForm, self).__init__(*args, **kwargs)
+
     @classmethod
     def aggregate(cls, forms, options=None):
         """
@@ -27,39 +33,28 @@ class AggregateForm(Form):
         for form in forms:
             for name, field in form.base_fields.items():
                 if name in fields:
-                    # if fields are conflicting their properties must be merged
-                    AggregateForm._merge_field(fields[name], field)
+                    # If fields are conflicting, their properties must be
+                    # merged. The "required" flag merges with a Boolean OR
+                    # over all forms; the "initial" attribute merges forward
+                    # with most recent value taking precedence.
+                    if not fields[name].required:
+                        fields[name].required = field.required
+                    if field.initial is not None:
+                        fields[name].initial = field.initial
                 else:
-                    # the first field added always retains all of its properties
-                    # just add it.
-                    fields[name] = field
+                    # The first field added always retains all of its
+                    # properties. Just copy it over.
+                    fields[name] = copy(field)
 
-        # apply options if any.
+        # Apply options, if any.
         if options:
             for name, properties in options.items():
                 if name in fields:
-                    field = fields[name]
-                    for property, value in properties.items():
-                        setattr(field, property, value)
-                
+                    for prop, value in properties.items():
+                        setattr(fields[name], prop, value)
+
         return type('AggregateForm', (AggregateForm,), fields)
 
-    @classmethod
-    def _merge_field(cls, dst, src):
-        """
-        Merge the properties of two form fields together:
-           * required must be required if either field is required
-        """
-        # basic overrides that can be determined based on value, otherwise
-        # properties are set on a first come first served basis
-        dst.required = dst.required or src.required
-        if not src.initial is None:
-            dst.initial = src.initial
-
-    def __init__(self, *args, **kwargs):
-        self.forms = [cls(*args, **kwargs) for cls in self.form_classes]
-        super(AggregateForm, self).__init__(*args, **kwargs)
-    
     def is_valid(self):
         """
         aggregates validation from all child forms.  Will run is_valid on each
