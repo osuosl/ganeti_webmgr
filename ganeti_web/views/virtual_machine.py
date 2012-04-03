@@ -57,6 +57,8 @@ from ganeti_web.utilities import cluster_default_info, cluster_os_list, \
 from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
                                       PagedListView)
 
+from ganeti_web.rapi import RAPI
+
 
 #XXX No more need for tastypie dependency for 0.8
 class HttpAccepted(HttpResponse):
@@ -314,8 +316,8 @@ def shutdown(request, cluster_slug, instance):
         raise Http403(msg)
 
     try:
-        job = vm.shutdown()
-        job.refresh()
+        rapi = RAPI(vm.cluster)
+        job = rapi.shutdown(vm)
         msg = job.info
 
         # log information about stopping the machine
