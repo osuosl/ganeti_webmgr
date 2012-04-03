@@ -21,6 +21,7 @@
     <h1>{% trans "Profile information for" %} {{user.username}}</h1>
     <fieldset id="uprofile">
         <form action="{% url profile %}" method="post">
+            {% csrf_token %}
             {{ form.as_p }}
             <input class="submit" id="save" type="submit" value="{% trans "Update" %}"/>
         </form>
