@@ -317,11 +317,8 @@ def shutdown(request, cluster_slug, instance):
 
     try:
         rapi = RAPI(vm.cluster)
-        job = rapi.shutdown(vm)
+        job = rapi.shutdown(vm, user=user)
         msg = job.info
-
-        # log information about stopping the machine
-        log_action('VM_STOP', user, vm, job)
     except GanetiApiError, e:
         msg = {'__all__':[str(e)]}
 
@@ -392,11 +389,8 @@ def startup(request, cluster_slug, instance, rest=False):
 
     try:
         rapi = RAPI(vm.cluster)
-        job = rapi.startup(vm)
+        job = rapi.startup(vm, user=user)
         msg = job.info
-
-        # log information about starting up the machine
-        log_action('VM_START', user, vm, job)
     except GanetiApiError, e:
         msg = {'__all__':[str(e)]}
     if rest:
@@ -492,11 +486,8 @@ def reboot(request, cluster_slug, instance, rest=False):
 
     try:
         rapi = RAPI(vm.cluster)
-        job = rapi.reboot(vm)
+        job = rapi.reboot(vm, user=user)
         msg = job.info
-
-        # log information about restarting the machine
-        log_action('VM_REBOOT', user, vm, job)
     except GanetiApiError, e:
         msg = {'__all__':[str(e)]}
     if rest:
@@ -944,8 +935,7 @@ def modify_confirm(request, cluster_slug, instance):
                     if power:
                         # Reboot the vm
                         rapi = RAPI(vm.cluster)
-                        job = rapi.reboot(vm)
-                        log_action('VM_REBOOT', user, vm, job)
+                        job = rapi.reboot(vm, user)
                     else:
                         raise Http403(
                             _("Sorry, but you do not have permission to reboot this machine."))
@@ -1121,24 +1111,9 @@ def rename(request, cluster_slug, instance, rest=False, extracted_params=None):
 
         if form.is_valid() or params_ok:
             try:
-                # In order for rename to work correctly, the vm must first be
-                # shutdown.
-                if vm.is_running:
-                    rapi = RAPI(vm.cluster)
-                    job1 = rapi.shutdown(vm)
-                    log_action('VM_STOP', user, vm, job1)
-
-                job_id = vm.rapi.RenameInstance(vm.hostname, hostname,
-                                                ip_check, name_check)
-                job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
-                VirtualMachine.objects.filter(pk=vm.pk) \
-                    .update(hostname=hostname, last_job=job, ignore_cache=True)
-
-                # slip the new hostname to the log action
-                vm.newname = hostname
-
-                # log information about creating the machine
-                log_action('VM_RENAME', user, vm, job)
+                rapi = RAPI(cluster)
+                job = rapi.rename(vm, hostname, user, ip_check=ip_check,
+                                  name_check=name_check)
 
                 if not rest:
                     return HttpResponseRedirect(

@@ -5,6 +5,9 @@ on objects.
 
 from django.conf import settings
 
+from object_log.models import LogItem
+log_action = LogItem.objects.log_action
+
 from ganeti_web.models import Job
 from ganeti_web.util.client import GanetiRapiClient
 
@@ -32,23 +35,27 @@ class RAPI(object):
 
         return job
 
-    def startup(self, vm):
+    def startup(self, vm, user):
         """
         Start a VM.
         """
 
         jid = int(self._client.StartupInstance(vm.hostname))
-        return self._attach_vm_job(vm, jid)
+        job = self._attach_vm_job(vm, jid)
+        log_action('VM_START', user, vm, job)
+        return job
 
-    def reboot(self, vm):
+    def reboot(self, vm, user):
         """
         Politely restart a VM.
         """
 
         jid = int(self._client.RebootInstance(vm.hostname))
-        return self._attach_vm_job(vm, jid)
+        job = self._attach_vm_job(vm, jid)
+        log_action('VM_REBOOT', user, vm, job)
+        return job
 
-    def shutdown(self, vm, timeout=None):
+    def shutdown(self, vm, user, timeout=None):
         """
         Halt a VM.
         """
@@ -60,4 +67,29 @@ class RAPI(object):
                                                 timeout=timeout)
 
         jid = int(jid)
-        return self._attach_vm_job(vm, jid)
+        job = self._attach_vm_job(vm, jid)
+        log_action('VM_STOP', user, vm, job)
+        return job
+
+    def rename(self, vm, name, user, ip_check=None, name_check=None):
+        """
+        Rename a VM.
+
+        If the VM is running, it will be shut down first.
+        """
+
+        # VMs must be shut down in order to be renamed.
+        if vm.is_running:
+            job = self.shutdown(vm, user)
+
+        jid = self._client.RenameInstance(vm.hostname, name,
+                                          ip_check=ip_check,
+                                          name_check=name_check)
+
+        # Slip the new hostname to the log before setting the new name and
+        # running the rename job.
+        vm.newname = name
+        log_action('VM_RENAME', user, vm, job)
+        vm.hostname = name
+        job = self._attach_vm_job(vm, jid)
+        return job
