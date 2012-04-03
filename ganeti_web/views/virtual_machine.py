@@ -391,8 +391,8 @@ def startup(request, cluster_slug, instance, rest=False):
                                         mimetype='application/json')
 
     try:
-        job = vm.startup()
-        job.refresh()
+        rapi = RAPI(vm.cluster)
+        job = rapi.startup(vm)
         msg = job.info
 
         # log information about starting up the machine
@@ -491,8 +491,8 @@ def reboot(request, cluster_slug, instance, rest=False):
                 raise Http403(_('You do not have permission to reboot this virtual machine'))
 
     try:
-        job = vm.reboot()
-        job.refresh()
+        rapi = RAPI(vm.cluster)
+        job = rapi.reboot(vm)
         msg = job.info
 
         # log information about restarting the machine
@@ -943,7 +943,8 @@ def modify_confirm(request, cluster_slug, instance):
                 if 'reboot' in request.POST and vm.info['status'] == 'running':
                     if power:
                         # Reboot the vm
-                        job = vm.reboot()
+                        rapi = RAPI(vm.cluster)
+                        job = rapi.reboot(vm)
                         log_action('VM_REBOOT', user, vm, job)
                     else:
                         raise Http403(
@@ -1121,9 +1122,10 @@ def rename(request, cluster_slug, instance, rest=False, extracted_params=None):
         if form.is_valid() or params_ok:
             try:
                 # In order for rename to work correctly, the vm must first be
-                #   shutdown.
+                # shutdown.
                 if vm.is_running:
-                    job1 = vm.shutdown()
+                    rapi = RAPI(vm.cluster)
+                    job1 = rapi.shutdown(vm)
                     log_action('VM_STOP', user, vm, job1)
 
                 job_id = vm.rapi.RenameInstance(vm.hostname, hostname,

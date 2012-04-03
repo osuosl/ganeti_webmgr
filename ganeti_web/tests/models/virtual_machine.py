@@ -19,6 +19,7 @@
 from datetime import datetime
 
 from django.test import TestCase
+from django.utils.unittest import expectedFailure
 
 from ganeti_web.util.proxy import RapiProxy
 from ganeti_web.util.proxy.constants import (INSTANCE, JOB, JOB_RUNNING,
@@ -149,101 +150,6 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
 
         owner0.delete()
         owner1.delete()
-        vm.delete()
-        cluster.delete()
-
-    def test_start(self):
-        """
-        Test VirtualMachine.start()
-
-        Verifies:
-            * job is created
-            * cache is disabled while job is running
-            * cache is reenabled when job is finished
-        """
-        vm, cluster = self.create_virtual_machine()
-        vm.rapi.GetJobStatus.response = JOB_RUNNING
-
-        # reboot enables ignore_cache flag
-        job = vm.startup()
-        vm = VirtualMachine.objects.get(id=vm.id)
-        self.assertTrue(Job.objects.filter(id=job.id).exists())
-        self.assertTrue(vm.ignore_cache)
-        self.assertTrue(vm.last_job_id)
-
-        # finished job resets ignore_cache flag
-        vm.rapi.GetJobStatus.response = JOB
-        vm = VirtualMachine.objects.get(id=vm.id)
-        self.assertFalse(vm.ignore_cache)
-        self.assertFalse(vm.last_job_id)
-        self.assertTrue(Job.objects.get(id=job.id).finished)
-
-        job.delete()
-        vm.delete()
-        cluster.delete()
-
-    def test_stop(self):
-        """
-        Test VirtualMachine.stop()
-
-        Verifies:
-            * job is created
-            * cache is disabled while job is running
-            * cache is reenabled when job is finished
-        """
-        vm, cluster = self.create_virtual_machine()
-        vm.rapi.GetJobStatus.response = JOB_RUNNING
-
-        # reboot enables ignore_cache flag
-        job = vm.shutdown()
-        self.assertTrue(Job.objects.filter(id=job.id).exists())
-        vm = VirtualMachine.objects.get(id=vm.id)
-        self.assertTrue(vm.ignore_cache)
-        self.assertTrue(vm.last_job_id)
-        self.assertTrue(Job.objects.filter(id=job.id).values()[0]['ignore_cache'])
-
-        # finished job resets ignore_cache flag
-        vm.rapi.GetJobStatus.response = JOB
-        vm = VirtualMachine.objects.get(id=vm.id)
-        self.assertFalse(vm.ignore_cache)
-        self.assertFalse(vm.last_job_id)
-        self.assertFalse(Job.objects.filter(id=job.id).values()[0]['ignore_cache'])
-        self.assertTrue(Job.objects.get(id=job.id).finished)
-
-        job.delete()
-        vm.delete()
-        cluster.delete()
-
-    def test_reboot(self):
-        """
-        Test vm.reboot()
-
-        Verifies:
-            * job is created
-            * cache is disabled while job is running
-            * cache is reenabled when job is finished
-        """
-        vm, cluster = self.create_virtual_machine()
-        vm.rapi.GetJobStatus.response = JOB_RUNNING
-
-        # reboot enables ignore_cache flag
-        job = vm.reboot()
-        self.assertTrue(Job.objects.filter(id=job.id).exists())
-        vm = VirtualMachine.objects.get(id=vm.id)
-        self.assertTrue(vm.ignore_cache)
-        self.assertTrue(vm.last_job_id)
-        self.assertTrue(Job.objects.filter(id=job.id).values()[0]['ignore_cache'])
-
-        # finished job resets ignore_cache flag
-        vm.rapi.GetJobStatus.response = JOB
-        self.assertTrue(Job.objects.filter(id=job.id).exists())
-        vm = VirtualMachine.objects.get(id=vm.id)
-        self.assertFalse(vm.ignore_cache)
-        self.assertFalse(vm.last_job_id)
-        self.assertFalse(Job.objects.filter(id=job.id).values()[0]['ignore_cache'])
-        self.assertTrue(Job.objects.get(id=job.id).finished)
-
-        job.delete()
         vm.delete()
         cluster.delete()
 

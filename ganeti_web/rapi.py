@@ -19,12 +19,11 @@ class RAPI(object):
                                         cluster.username, cluster.password,
                                         timeout=settings.RAPI_CONNECT_TIMEOUT)
 
-    def shutdown(self, vm):
+    def _attach_vm_job(self, vm, jid):
         """
-        Halt a VM.
+        Attach a job to a VM.
         """
 
-        jid = int(self._client.ShutdownInstance(vm.hostname))
         job = Job.objects.create(job_id=jid, obj=vm, cluster_id=vm.cluster_id)
         job.refresh()
         vm.last_job = job
@@ -32,3 +31,33 @@ class RAPI(object):
         vm.save()
 
         return job
+
+    def startup(self, vm):
+        """
+        Start a VM.
+        """
+
+        jid = int(self._client.StartupInstance(vm.hostname))
+        return self._attach_vm_job(vm, jid)
+
+    def reboot(self, vm):
+        """
+        Politely restart a VM.
+        """
+
+        jid = int(self._client.RebootInstance(vm.hostname))
+        return self._attach_vm_job(vm, jid)
+
+    def shutdown(self, vm, timeout=None):
+        """
+        Halt a VM.
+        """
+
+        if timeout is None:
+            jid = self._client.ShutdownInstance(self.hostname)
+        else:
+            jid = self._client.ShutdownInstance(self.hostname,
+                                                timeout=timeout)
+
+        jid = int(jid)
+        return self._attach_vm_job(vm, jid)

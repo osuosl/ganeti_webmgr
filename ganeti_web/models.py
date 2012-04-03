@@ -751,34 +751,6 @@ class VirtualMachine(CachedClusterObject):
             return None
         return self.rapi.GetInstance(self.hostname)
 
-    def shutdown(self, timeout=None):
-        if timeout is None:
-            id = self.rapi.ShutdownInstance(self.hostname)
-        else:
-            id = self.rapi.ShutdownInstance(self.hostname, timeout=timeout)
-
-        job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
-        self.last_job = job
-        VirtualMachine.objects.filter(pk=self.id) \
-            .update(last_job=job, ignore_cache=True)
-        return job
-
-    def startup(self):
-        id = self.rapi.StartupInstance(self.hostname)
-        job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
-        self.last_job = job
-        VirtualMachine.objects.filter(pk=self.id) \
-            .update(last_job=job, ignore_cache=True)
-        return job
-
-    def reboot(self):
-        id = self.rapi.RebootInstance(self.hostname)
-        job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
-        self.last_job = job
-        VirtualMachine.objects.filter(pk=self.id) \
-            .update(last_job=job, ignore_cache=True)
-        return job
-
     def migrate(self, mode='live', cleanup=False):
         """
         Migrates this VirtualMachine to another node.  only works if the disk
