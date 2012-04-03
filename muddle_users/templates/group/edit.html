@@ -12,6 +12,7 @@
 </h1>
 
 <form class="ajax_form" method="post">
+    {% csrf_token %}
     <ul id="errors"></ul>
     {{form.name.label}} {{form.name}}
     <input type="submit" class="submit" value="Save"/>
