@@ -14,6 +14,8 @@ from ganeti_web.util.client import REPLACE_DISK_AUTO, GanetiRapiClient
 class RAPI(object):
     """
     A high-level connector for operations on a Ganeti RAPI resource.
+
+    Each RAPI is connected to a cluster and can only operate on that cluster.
     """
 
     def __init__(self, cluster):
@@ -150,4 +152,15 @@ class RAPI(object):
         jid = self._client.MigrateNode(node.hostname, mode)
         job = self._attach_job(node, jid)
         log_action('NODE_MIGRATE', user, node)
+        return job
+
+    def redistribute_config(self, user):
+        """
+        Redistribute the configuration in a cluster from the master node to
+        all other nodes.
+        """
+
+        jid = self._client.RedistributeConfig()
+        job = self._attach_job(self.cluster, jid)
+        log_action('CLUSTER_REDISTRIBUTE', user, self.cluster, job)
         return job

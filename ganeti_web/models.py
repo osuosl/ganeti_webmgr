@@ -1245,19 +1245,6 @@ class Cluster(CachedClusterObject):
         except GanetiApiError:
             return None
 
-    def redistribute_config(self):
-        """
-        Redistribute config from cluster's master node to all
-        other nodes.
-        """
-        # no exception handling, because it's being done in a view
-        id = self.rapi.RedistributeConfig()
-        job = Job.objects.create(job_id=id, obj=self, cluster_id=self.id)
-        self.last_job = job
-        Cluster.objects.filter(pk=self.id) \
-            .update(last_job=job, ignore_cache=True)
-        return job
-
 
 class VirtualMachineTemplate(models.Model):
     """

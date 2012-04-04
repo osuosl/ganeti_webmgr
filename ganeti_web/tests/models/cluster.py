@@ -372,33 +372,3 @@ class TestClusterModel(TestCase):
         node1.delete()
         c.delete()
         c2.delete()
-
-    def test_redistribute_config(self):
-        """
-        Test Cluster.redistribute_config()
-
-        Verifies:
-            * job is created
-            * cache is disabled while job is running
-            * cache is reenabled when job is finished
-        """
-        cluster = Cluster.objects.create(hostname='ganeti.example.test')
-        cluster.rapi.GetJobStatus.response = JOB_RUNNING
-
-        # redistribute_config enables ignore_cache flag
-        job_id = cluster.redistribute_config().id
-        self.assertTrue(Job.objects.filter(id=job_id).exists())
-        cluster = Cluster.objects.get(id=cluster.id)
-        self.assertTrue(cluster.ignore_cache)
-        self.assertTrue(cluster.last_job_id)
-        self.assertTrue(Job.objects.filter(id=job_id).values()[0]['ignore_cache'])
-
-        # finished job resets ignore_cache flag
-        cluster.rapi.GetJobStatus.response = JOB
-        cluster = Cluster.objects.get(id=cluster.id)
-        self.assertFalse(cluster.ignore_cache)
-        self.assertFalse(cluster.last_job_id)
-        self.assertFalse(Job.objects.filter(id=job_id).values()[0]['ignore_cache'])
-        self.assertTrue(Job.objects.get(id=job_id).finished)
-
-        cluster.delete()

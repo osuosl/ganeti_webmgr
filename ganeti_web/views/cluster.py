@@ -46,6 +46,7 @@ from ganeti_web.util.client import GanetiApiError
 from ganeti_web.middleware import Http403
 from ganeti_web.models import (Cluster, ClusterUser, Profile, SSHKey,
                                VirtualMachine, Job)
+from ganeti_web.rapi import RAPI
 from ganeti_web.views import render_404
 from ganeti_web.forms.cluster import EditClusterForm, QuotaForm
 from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
@@ -239,11 +240,9 @@ def redistribute_config(request, cluster_slug):
         raise Http403(NO_PRIVS)
 
     try:
-        job = cluster.redistribute_config()
-        job.refresh()
+        rapi = RAPI(cluster)
+        job = rapi.redistribute_config(user)
         msg = job.info
-
-        log_action('CLUSTER_REDISTRIBUTE', user, cluster, job)
     except GanetiApiError, e:
         msg = {'__all__':[str(e)]}
     return HttpResponse(json.dumps(msg), mimetype='application/json')

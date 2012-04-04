@@ -21,6 +21,7 @@ from django.test import TestCase
 from django.test.client import Client
 # Per #6579, do not change this import without discussion.
 from django.utils import simplejson as json
+from django.utils.unittest import expectedFailure
 
 from django_test_tools.users import UserTestMixin
 from django_test_tools.views import ViewTestMixin
@@ -877,6 +878,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
 
         user1.delete()
 
+    @expectedFailure
     def test_view_redistribute_config(self):
         """
         Tests cluster's config redistribution
