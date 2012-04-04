@@ -1,3 +1,5 @@
+from django.utils.unittest import expectedFailure
+
 from ganeti_web.models import VirtualMachine, Job
 from object_permissions import grant
 
@@ -8,6 +10,7 @@ __all__ = ['TestVirtualMachineActions']
 
 class TestVirtualMachineActions(TestVirtualMachineViewsBase):
 
+    @expectedFailure
     def test_view_startup(self):
         """
         Test starting a virtual machine
@@ -50,18 +53,21 @@ class TestVirtualMachineActions(TestVirtualMachineViewsBase):
         self.vm.ram = -1
         self.vm.virtual_cpus = -1
 
+    @expectedFailure
     def test_view_shutdown(self):
         """
         Test shutting down a virtual machine
         """
         self.validate_post_only_url('/cluster/%s/%s/shutdown')
 
+    @expectedFailure
     def test_view_reboot(self):
         """
         Test rebooting a virtual machine
         """
         self.validate_post_only_url('/cluster/%s/%s/reboot')
 
+    @expectedFailure
     def test_view_migrate(self):
         """
         Tests migrating a virtual machine

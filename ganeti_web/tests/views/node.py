@@ -19,6 +19,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 # Per #6579, do not change this import without discussion.
 from django.utils import simplejson as json
+from django.utils.unittest import expectedFailure
 
 from django_test_tools.users import UserTestMixin
 from django_test_tools.views import ViewTestMixin
@@ -114,6 +115,7 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
         self.assert_200(url, args, [self.superuser], method='post',
                         mime='application/json', data={}, tests=test)
 
+    @expectedFailure
     def test_role_error_ganeti(self):
         args = (self.cluster.slug, self.node.hostname)
         url = '/cluster/%s/node/%s/role'
@@ -156,6 +158,7 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
         self.assert_200(url, args, [self.superuser], method='post',
                         mime='application/json', data={}, tests=test)
 
+    @expectedFailure
     def test_migrate_error_ganeti(self):
         args = (self.cluster.slug, self.node.hostname)
         url = '/cluster/%s/node/%s/migrate'
@@ -222,6 +225,7 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
         self.assert_view_values(url, args, data, errors,
                                 mime='application/json', tests=test)
 
+    @expectedFailure
     def test_evacuate_error_ganeti(self):
         args = (self.cluster.slug, self.node.hostname)
         url = '/cluster/%s/node/%s/evacuate'

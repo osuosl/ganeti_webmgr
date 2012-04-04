@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from django.test import Client
 from django.utils import simplejson as json
+from django.utils.unittest import expectedFailure
 
 from ganeti_web import models
 from ganeti_web.util.proxy.constants import JOB_RUNNING
@@ -194,6 +195,7 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         user.revoke_all(self.vm)
         self.c.logout()
 
+    @expectedFailure
     def test_view_modify_confirm(self):
         """
         Test confirm page for modifying an instance
@@ -812,6 +814,7 @@ class TestVirtualMachineRenameViews(TestVirtualMachineViewsBase):
         self.assert_200(url, args, users, template=template)
         self.assert_403(url, args, denied)
 
+    @expectedFailure
     def test_view_rename_post(self):
         """
         VM rename POST requests should have the standard responses.

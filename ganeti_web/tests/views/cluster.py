@@ -878,7 +878,6 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
 
         user1.delete()
 
-    @expectedFailure
     def test_view_redistribute_config(self):
         """
         Tests cluster's config redistribution
