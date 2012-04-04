@@ -751,31 +751,6 @@ class VirtualMachine(CachedClusterObject):
             return None
         return self.rapi.GetInstance(self.hostname)
 
-    def migrate(self, mode='live', cleanup=False):
-        """
-        Migrates this VirtualMachine to another node.  only works if the disk
-        type is DRDB
-
-        @param mode: live or non-live
-        @param cleanup: clean up a previous migration, default is False
-        """
-        id = self.rapi.MigrateInstance(self.hostname, mode, cleanup)
-        job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
-        self.last_job = job
-        VirtualMachine.objects.filter(pk=self.id) \
-            .update(last_job=job, ignore_cache=True)
-        return job
-
-    def replace_disks(self, mode=REPLACE_DISK_AUTO, disks=None, node=None,
-                      iallocator=None):
-        id = self.rapi.ReplaceInstanceDisks(self.hostname, disks, mode, node,
-                                            iallocator)
-        job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
-        self.last_job = job
-        VirtualMachine.objects.filter(pk=self.id) \
-            .update(last_job=job, ignore_cache=True)
-        return job
-
     def setup_ssh_forwarding(self, sport=0):
         """
         Poke a proxy to start SSH forwarding.

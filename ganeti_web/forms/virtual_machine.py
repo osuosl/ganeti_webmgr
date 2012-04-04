@@ -876,11 +876,4 @@ class ReplaceDisksForm(forms.Form):
         Start a replace disks job using the data in this form.
         """
         data = self.cleaned_data
-        mode = data['mode']
-        disks = data['disks']
-        node = data['node']
-        if data['iallocator']:
-            iallocator = data['iallocator_hostname']
-        else:
-            iallocator = None
-        return self.instance.replace_disks(mode, disks, node, iallocator)
+        return data

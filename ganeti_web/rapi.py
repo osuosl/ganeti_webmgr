@@ -9,7 +9,7 @@ from object_log.models import LogItem
 log_action = LogItem.objects.log_action
 
 from ganeti_web.models import Job
-from ganeti_web.util.client import GanetiRapiClient
+from ganeti_web.util.client import REPLACE_DISK_AUTO, GanetiRapiClient
 
 class RAPI(object):
     """
@@ -92,4 +92,28 @@ class RAPI(object):
         log_action('VM_RENAME', user, vm, job)
         vm.hostname = name
         job = self._attach_vm_job(vm, jid)
+        return job
+
+    def migrate(self, vm, user, mode='live', cleanup=False):
+        """
+        Migrate a VM to another node.
+
+        The VM's disk type must be DRDB.
+        """
+
+        jid = self._client.MigrateInstance(vm.hostname, mode, cleanup)
+        job = self._attach_vm_job(vm, jid)
+        log_action('VM_MIGRATE', user, vm, job)
+        return job
+
+    def replace_disks(self, vm, user, mode=REPLACE_DISK_AUTO, disks=None,
+                      node=None, iallocator=None):
+        """
+        Replace the disks in a VM.
+        """
+
+        jid = self._client.ReplaceInstanceDisks(vm.hostname, disks, mode,
+                                                node, iallocator)
+        job = self._attach_vm_job(vm, jid)
+        log_action('VM_REPLACE_DISKS', user, vm, job)
         return job
