@@ -415,8 +415,8 @@ def migrate(request, cluster_slug, instance):
         if form.is_valid():
             try:
                 rapi = RAPI(cluster)
-                job = rapi.migrate(vm, user, mode=form.cleaned_data['mode'])
-                job.refresh()
+                job = rapi.migrate_vm(vm, user,
+                                      mode=form.cleaned_data['mode'])
                 content = json.dumps(job.info)
             except GanetiApiError, e:
                 content = json.dumps({'__all__':[str(e)]})
@@ -453,7 +453,6 @@ def replace_disks(request, cluster_slug, instance):
                                          disks=data["disks"],
                                          node=data["node"],
                                          allocator=data["iallocator_hostname"])
-                job.refresh()
                 content = json.dumps(job.info)
             except GanetiApiError, e:
                 content = json.dumps({'__all__':[str(e)]})

@@ -928,44 +928,6 @@ class Node(CachedClusterObject):
             .aggregate(cpus=Sum('virtual_cpus'))
         return 0 if 'cpus' not in values or values['cpus'] is None else values['cpus']
 
-    def set_role(self, role, force=False):
-        """
-        Sets the role for this node
-
-        @param role - one of the following choices:
-            * master
-            * master-candidate
-            * regular
-            * drained
-            * offline
-        """
-        id = self.rapi.SetNodeRole(self.hostname, role, force)
-        job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
-        self.last_job = job
-        Node.objects.filter(pk=self.pk).update(ignore_cache=True, last_job=job)
-        return job
-
-    def evacuate(self, iallocator=None, node=None):
-        """
-        migrates all secondary instances off this node
-        """
-        id = self.rapi.EvacuateNode(self.hostname, iallocator=iallocator, remote_node=node)
-        job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
-        self.last_job = job
-        Node.objects.filter(pk=self.pk) \
-            .update(ignore_cache=True, last_job=job)
-        return job
-
-    def migrate(self, mode=None):
-        """
-        migrates all primary instances off this node
-        """
-        id = self.rapi.MigrateNode(self.hostname, mode)
-        job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
-        self.last_job = job
-        Node.objects.filter(pk=self.pk).update(ignore_cache=True, last_job=job)
-        return job
-
     def __repr__(self):
         return "<Node: '%s'>" % self.hostname
 

@@ -35,6 +35,7 @@ from ganeti_web import constants
 from ganeti_web.forms.node import RoleForm, MigrateForm, EvacuateForm
 from ganeti_web.middleware import Http403
 from ganeti_web.models import Node, Job
+from ganeti_web.rapi import RAPI
 from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
                                       PagedListView)
 
@@ -161,12 +162,9 @@ def role(request, cluster_slug, host):
         form = RoleForm(request.POST)
         if form.is_valid():
             try:
-                job = node.set_role(form.cleaned_data['role'])
-                job.refresh()
+                rapi = RAPI(cluster)
+                job = rapi.set_role(node, user, form.cleaned_data['role'])
                 msg = job.info
-
-                # log information
-                log_action('NODE_ROLE_CHANGE', user, node)
                 return HttpResponse(json.dumps(msg), mimetype='application/json')
             except GanetiApiError, e:
                 content = json.dumps({'__all__':[str(e)]})
@@ -203,13 +201,9 @@ def migrate(request, cluster_slug, host):
         form = MigrateForm(request.POST)
         if form.is_valid():
             try:
-                job = node.migrate(form.cleaned_data['mode'])
-                job.refresh()
+                rapi = RAPI(cluster)
+                job = rapi.migrate_node(node, user, form.cleaned_data['mode'])
                 msg = job.info
-
-                # log information
-                log_action('NODE_MIGRATE', user, node)
-
                 return HttpResponse(json.dumps(msg), mimetype='application/json')
             except GanetiApiError, e:
                 content = json.dumps({'__all__':[str(e)]})
@@ -244,13 +238,11 @@ def evacuate(request, cluster_slug, host):
                 data = form.cleaned_data
                 evacuate_node = data['node']
                 iallocator_hostname = data['iallocator_hostname']
-                job = node.evacuate(iallocator_hostname, evacuate_node)
-                job.refresh()
+                rapi = RAPI(cluster)
+                job = rapi.evacuate(node, user,
+                                    iallocator=iallocator_hostname,
+                                    remote_node=evacuate_node)
                 msg = job.info
-
-                # log information
-                log_action('NODE_EVACUATE', user, node, job)
-
                 return HttpResponse(json.dumps(msg), mimetype='application/json')
             except GanetiApiError, e:
                 content = json.dumps({'__all__':[str(e)]})

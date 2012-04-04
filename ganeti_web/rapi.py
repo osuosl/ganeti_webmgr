@@ -22,16 +22,16 @@ class RAPI(object):
                                         cluster.username, cluster.password,
                                         timeout=settings.RAPI_CONNECT_TIMEOUT)
 
-    def _attach_vm_job(self, vm, jid):
+    def _attach_job(self, obj, jid):
         """
         Attach a job to a VM.
         """
 
-        job = Job.objects.create(job_id=jid, obj=vm, cluster_id=vm.cluster_id)
+        job = Job.objects.create(job_id=jid, obj=obj, cluster_id=obj.cluster_id)
         job.refresh()
-        vm.last_job = job
-        vm.ignore_cache = True
-        vm.save()
+        obj.last_job = job
+        obj.ignore_cache = True
+        obj.save()
 
         return job
 
@@ -94,7 +94,7 @@ class RAPI(object):
         job = self._attach_vm_job(vm, jid)
         return job
 
-    def migrate(self, vm, user, mode='live', cleanup=False):
+    def migrate_vm(self, vm, user, mode='live', cleanup=False):
         """
         Migrate a VM to another node.
 
@@ -116,4 +116,38 @@ class RAPI(object):
                                                 node, iallocator)
         job = self._attach_vm_job(vm, jid)
         log_action('VM_REPLACE_DISKS', user, vm, job)
+        return job
+
+    def set_role(self, node, user, role, force=False):
+        """
+        Set the role for a node.
+
+        Roles may be one of: master, master-candidate, regular, drained,
+        offline.
+        """
+
+        jid = self._client.SetNodeRole(node.hostname, role, force)
+        job = self._attach_job(node, jid)
+        log_action('NODE_ROLE_CHANGE', user, node)
+        return job
+
+    def evacuate(self, node, user, iallocator=None, remote_node=None):
+        """
+        Migrate all secondary instances off of a node.
+        """
+
+        jid = self._client.EvacuateNode(node.hostname, iallocator=iallocator,
+                                       remote_node=remote_node)
+        job = self._attach_job(node, jid)
+        log_action('NODE_EVACUATE', user, node, job)
+        return job
+
+    def migrate_node(self, node, user, mode=None):
+        """
+        Migrate all primary instances off of a node.
+        """
+
+        jid = self._client.MigrateNode(node.hostname, mode)
+        job = self._attach_job(node, jid)
+        log_action('NODE_MIGRATE', user, node)
         return job
