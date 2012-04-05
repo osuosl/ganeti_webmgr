@@ -21,7 +21,6 @@ from django.test import TestCase
 
 from ganeti_web.tests.rapi_proxy import RapiProxy, NODE
 from ganeti_web import models
-from ganeti_web.views import node as view_node
 
 VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
@@ -29,13 +28,6 @@ Node = models.Node
 
 
 __all__ = ['TestNodeModel']
-
-def cluster_default_info_proxy(cluster):
-    return {
-        'iallocator':'foo'
-    }
-
-view_node.cluster_default_info = cluster_default_info_proxy
 
 
 class NodeTestCaseMixin(object):

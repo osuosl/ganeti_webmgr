@@ -28,17 +28,8 @@ from ganeti_web.tests.rapi_proxy import RapiProxy
 from ganeti_web import models
 from ganeti_web.util.client import GanetiApiError
 
-from ganeti_web.views import node as view_node
-
 
 __all__ = ['TestNodeViews']
-
-def cluster_default_info_proxy(cluster):
-    return {
-        'iallocator':'foo'
-    }
-
-view_node.cluster_default_info = cluster_default_info_proxy
 
 
 class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
