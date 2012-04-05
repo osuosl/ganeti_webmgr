@@ -76,28 +76,6 @@ class TestVirtualMachineViewsBase(TestCase, VirtualMachineTestCaseMixin,
         self.assert_200(url, args, [self.superuser, self.vm_admin],
                         template=template)
 
-    def validate_get_configurable(self, url, args, template=None,
-                                  mimetype=False, perms=None):
-        """
-        More configurable version of validate_get.
-        Additional arguments (only if set) affects only authorized user test.
-
-        @template: used template
-        @mimetype: returned mimetype
-        @perms:    set of perms granted on authorized user
-
-        @return    response content
-        """
-        perms = [] if perms is None else perms
-
-        self.assert_standard_fails(url, args)
-
-        # authorized user (perm)
-        if perms:
-            self.user.set_perms(perms, self.vm)
-        self.assert_200(url, args, [self.superuser, self.user], mime=mimetype,
-                        template=template)
-
     def validate_post_only_url(self, url, args=None, data=dict(), users=None,
                                get_allowed=False):
         """
