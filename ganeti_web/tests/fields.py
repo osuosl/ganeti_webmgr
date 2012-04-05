@@ -15,106 +15,56 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-from django.test import TestCase
+from django.test import SimpleTestCase
 
 from ganeti_web.fields import DataVolumeField, MACAddressField
 from django.core.exceptions import ValidationError
 
-__all__ = [
-            'TestDataVolumeFieldToPython',
-            'TestMACAddressField'
-        ]
+__all__ = (
+    'TestDataVolumeField',
+    'TestMACAddressField',
+)
 
 
-class TestDataVolumeFieldToPython(TestCase):
+class TestDataVolumeField(SimpleTestCase):
     """
-    Test converting DataVolumeField to Python types using the to_python()
-    method.
+    DataVolumeField should work.
     """
 
-    def setUp(self):
-        self.f = DataVolumeField(required=True, min_value=0.)
-
-    def test_trivial(self):
-        """
-        Check that setUp() is sane.
-        """
-
-        pass
-
-    def test_clean_none(self):
-        """
-        Check that a ValidationError is raised when None is passed in.
-        """
-
-        self.assertRaises(ValidationError, self.f.clean, None)
-
-    def test_validationerror(self):
-        """
-        Make sure that ValidationError is raised when appropriate.
-        """
-
-        self.assertRaises(ValidationError, self.f.clean, 'gdrcigeudr7d')
-        self.assertRaises(ValidationError, self.f.clean, '     ')
-        self.assertRaises(ValidationError, self.f.clean, '')
-
-        # Wrong units?
-        self.assertRaises(ValidationError, self.f.clean, '100.0 GMB')
-        self.assertRaises(ValidationError, self.f.clean, '250 B')
-        self.assertRaises(ValidationError, self.f.clean, '50 yogdiecidu')
-
-    def test_empty_not_required(self):
-        """
-        Make sure that empty fields clean() to None when a value isn't
-        required.
-        """
-
-        self.f.required = False
-        self.assertEquals(self.f.clean(''), None)
-        self.assertEquals(self.f.clean('     '), None)
-
-    def test_correct_values(self):
-        """
-        Make sure that correct values are generated for valid data.
-        """
-
-        self.assertEquals(self.f.clean('9001 GB'), 9217024)
-        self.assertEquals(self.f.clean('9001.000 GB'), 9217024)
-        self.assertEquals(self.f.clean('9001G'), 9217024)
-        self.assertEquals(self.f.clean('0.5G'), 512)
-        self.assertEquals(self.f.clean('100.0 MB'), 100)
-        self.assertEquals(self.f.clean('100.00MB'), 100)
-        self.assertEquals(self.f.clean('100.000 M'), 100)
-        self.assertEquals(self.f.clean('100M'), 100)
+    def test_dvfield(self):
+        valid = {
+            "9001 GB": 9217024,
+            "9001.000 GB": 9217024,
+            "9001G": 9217024,
+            "0.5G": 512,
+            "100.0 MB": 100,
+            "100.00MB": 100,
+            "100.000 M": 100,
+            "100M": 100,
+        }
+        invalid = {
+            "gdrcigeudr7d": [u"Invalid format."],
+            "100.0 GMB": [u"Invalid format."],
+            "250 B": [u"Invalid format."],
+            "50 yogdiecidu": [u"Invalid format."],
+        }
+        self.assertFieldOutput(DataVolumeField, valid, invalid,
+                               empty_value=None)
 
 
-class TestMACAddressField(TestCase):
+class TestMACAddressField(SimpleTestCase):
+    """
+    MACAddressField should work.
+    """
 
-    def setUp(self):
-        self.f = MACAddressField(required=True)
-
-    def test_trivial(self):
-        """
-        Check that setUp() is sane.
-        """
-        pass
-
-    def test_required(self):
-        # implicit success, should not throw error
-        self.f.validate("aa:bb:cc:dd:ee:ff")
-
-        # required, not given
-        self.assertRaises(ValidationError, self.f.validate, None)
-
-        # not required, not given
-        self.f.required = False
-        self.f.validate(None)
-
-    def test_valid(self):
-        self.f.validate("aa:bb:cc:dd:ee:ff")
-
-    def test_invalid(self):
-        self.assertRaises(ValidationError, self.f.validate, "aa:bb:cc:dd:ee")
-        self.assertRaises(ValidationError, self.f.validate, "aa:bb:cc:dd:ee:ff:00")
-        self.assertRaises(ValidationError, self.f.validate, "aa:bb:cc:dd:ee:gg")
-        self.assertRaises(ValidationError, self.f.validate, "aabbccddeeffaabbc")
+    def test_mafield(self):
+        valid = {
+            "aa:bb:cc:dd:ee:ff": "aa:bb:cc:dd:ee:ff",
+        }
+        invalid = {
+            "aa:bb:cc:dd:ee": [u"Enter a valid value."],
+            "aa:bb:cc:dd:ee:gg": [u"Enter a valid value."],
+            "aa:bb:cc:dd:ee:ff:00": [u"Enter a valid value."],
+            "aabbccddeeffaabbc": [u"Enter a valid value."],
+        }
+        self.assertFieldOutput(MACAddressField, valid, invalid)
