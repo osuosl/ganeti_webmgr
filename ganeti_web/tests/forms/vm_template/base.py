@@ -52,14 +52,13 @@ class TemplateTestCase(TestCase, UserTestMixin):
         fields = vars(template).keys()
 
         # Users
-        users = {}
         self.create_users([
             ('superuser', {'is_superuser':True}),
             'cluster_admin',
-            ], users)
+            ])
         self.cluster_admin.grant('admin', cluster)
 
-        self.users = users
+        self.users = [self.superuser, self.cluster_admin]
         self.template = template
         self.cluster = cluster
         self.template_data = template_data

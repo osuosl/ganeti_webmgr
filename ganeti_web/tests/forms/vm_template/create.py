@@ -9,29 +9,29 @@ class TestVirtualMachineTemplateForm(TemplateTestCase):
     def test_form_init(self):
         """
         Test sanity.
-        
+
         Verifies:
             * Form can be instantiated
             * Form is not bound
         """
-        for user in self.users.values():
+        for user in self.users:
             form = VirtualMachineTemplateForm(user=user)
             self.assertFalse(form.is_bound)
 
     def test_form_from_initial(self):
         """
         Test form instantiation from initial kwarg.
-        
+
         Verifies:
             * Form fields correctly set
             * Form validation is not run
         """
-        for user in self.users.values():
+        for user in self.users:
             initial = self.template_data
             form = VirtualMachineTemplateForm(initial=initial, user=user)
             self.assertFalse(form.is_bound)
             self.assertEqual(form.errors, {})
-            # A form cannot be validated without being 
+            # A form cannot be validated without being
             #  instantiated with data (arg[0])
             self.assertFalse(form.is_valid())
             for field in initial:
@@ -40,12 +40,12 @@ class TestVirtualMachineTemplateForm(TemplateTestCase):
     def test_form_from_data(self):
         """
         Test form instantiation from first argument (data).
-        
+
         Verifies:
             * Form fields correctly set
             * Form validation is run
         """
-        for user in self.users.values():
+        for user in self.users:
             data = self.template_data.copy()
             data['cluster'] = self.cluster
             form = VirtualMachineTemplateForm(self.template_data, user=user)
@@ -64,7 +64,7 @@ class TestVirtualMachineTemplateForm(TemplateTestCase):
             * Form requires correct fields
             * Form has errors when missing required fields
         """
-        for user in self.users.values():
+        for user in self.users:
             for field in VirtualMachineTemplateForm.Meta.required:
                 data = self.template_data.copy()
                 del data[field]
@@ -80,7 +80,7 @@ class TestVirtualMachineTemplateForm(TemplateTestCase):
             * Form has valid data
             * VirtualMachineTemplate is created
         """
-        for i, user in enumerate(self.users.values()):
+        for i, user in enumerate(self.users):
             data = self.template_data.copy()
             template_name = 'template_save_%s' % i
             data['template_name'] = template_name
