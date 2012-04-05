@@ -172,9 +172,6 @@ class DataVolumeField(CharField):
 
         value = str(value).upper().strip()
 
-        if not value:
-            return None
-
         matches = re.match(r'([0-9]+(?:\.[0-9]+)?)\s*(M|G|T|MB|GB|TB)?$', value)
         if matches == None:
             raise ValidationError(_('Invalid format.'))
@@ -205,7 +202,7 @@ class MACAddressField(RegexField):
     """
 
     def __init__(self, *args, **kwargs):
-        kwargs["regex"] = '^([0-9A-Fa-f]{2}([:-]|$)){6}$'
+        kwargs["regex"] = '^([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}$'
         super(MACAddressField, self).__init__(*args, **kwargs)
 
 

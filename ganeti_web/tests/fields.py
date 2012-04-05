@@ -43,6 +43,7 @@ class TestDataVolumeField(SimpleTestCase):
             100: 100,
             100.1: 100,
             100.9: 100,
+            "2 TB": 2097152,
         }
         invalid = {
             "gdrcigeudr7d": [u"Invalid format."],
@@ -53,6 +54,17 @@ class TestDataVolumeField(SimpleTestCase):
         self.assertFieldOutput(DataVolumeField, valid, invalid,
                                empty_value=None)
 
+    def test_dvfield_max_value(self):
+        valid = {
+            "9000 GB": 9216000,
+        }
+        invalid = {
+            "9001 GB":
+                [u"Ensure this value is less than or equal to 9216000."],
+        }
+        self.assertFieldOutput(DataVolumeField, valid, invalid,
+                               field_kwargs={"max_value": 9216000},
+                               empty_value=None)
 
 class TestMACAddressField(SimpleTestCase):
     """
@@ -63,8 +75,10 @@ class TestMACAddressField(SimpleTestCase):
         valid = {
             "aa:bb:cc:dd:ee:ff": "aa:bb:cc:dd:ee:ff",
             "AA:BB:CC:DD:EE:FF": "AA:BB:CC:DD:EE:FF",
+            "00-01-02-03-04-05": "00-01-02-03-04-05",
         }
         invalid = {
+            "aa:bb:cc:dd:ee:ff:": [u"Enter a valid value."],
             "aa:bb:cc:dd:ee": [u"Enter a valid value."],
             "aa:bb:cc:dd:ee:gg": [u"Enter a valid value."],
             "aa:bb:cc:dd:ee:ff:00": [u"Enter a valid value."],
