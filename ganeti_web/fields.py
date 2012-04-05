@@ -158,7 +158,19 @@ class DataVolumeField(CharField):
         if value in EMPTY_VALUES:
             return None
 
-        value = value.upper().strip()
+        # Make a not-unreasonable attempt to pass through numbers which don't
+        # need the formatting.
+        try:
+            return int(value)
+        except ValueError:
+            pass
+
+        try:
+            return int(float(value))
+        except ValueError:
+            pass
+
+        value = str(value).upper().strip()
 
         if not value:
             return None
@@ -193,8 +205,8 @@ class MACAddressField(RegexField):
     """
 
     def __init__(self, *args, **kwargs):
-        super(MACAddressField,
-              self).__init__(regex='^([0-9a-f]{2}([:-]|$)){6}$', *args, **kwargs)
+        kwargs["regex"] = '^([0-9A-Fa-f]{2}([:-]|$)){6}$'
+        super(MACAddressField, self).__init__(*args, **kwargs)
 
 
 # Migration rules for MAField. MAField doesn't do anything fancy, so the

@@ -18,7 +18,6 @@
 from django.test import SimpleTestCase
 
 from ganeti_web.fields import DataVolumeField, MACAddressField
-from django.core.exceptions import ValidationError
 
 __all__ = (
     'TestDataVolumeField',
@@ -41,6 +40,9 @@ class TestDataVolumeField(SimpleTestCase):
             "100.00MB": 100,
             "100.000 M": 100,
             "100M": 100,
+            100: 100,
+            100.1: 100,
+            100.9: 100,
         }
         invalid = {
             "gdrcigeudr7d": [u"Invalid format."],
@@ -60,6 +62,7 @@ class TestMACAddressField(SimpleTestCase):
     def test_mafield(self):
         valid = {
             "aa:bb:cc:dd:ee:ff": "aa:bb:cc:dd:ee:ff",
+            "AA:BB:CC:DD:EE:FF": "AA:BB:CC:DD:EE:FF",
         }
         invalid = {
             "aa:bb:cc:dd:ee": [u"Enter a valid value."],
