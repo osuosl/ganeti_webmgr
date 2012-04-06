@@ -15,19 +15,20 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-from ganeti_web.tests.accounts import *
-#from ganeti_web.tests.cache_updater import *
-from ganeti_web.tests.cached_cluster_object import *
-from ganeti_web.tests.cluster_user import *
-from ganeti_web.tests.fields import *
-from ganeti_web.tests.ganeti_errors import *
-from ganeti_web.tests.general import *
-from ganeti_web.tests.importing import *
-from ganeti_web.tests.importing_nodes import *
-from ganeti_web.tests.job import *
-from ganeti_web.tests.forms import *
-from ganeti_web.tests.models import *
-from ganeti_web.tests.ssh_keys import *
-from ganeti_web.tests.tags import *
-from ganeti_web.tests.utilities import *
-from ganeti_web.tests.views import *
+
+class ResponseMap(object):
+    """
+    An object that encapsulates return values based on parameters given to the
+    called method.
+    
+    Return Map should be initialized with a list containing tuples all possible
+    arg/kwarg combinations plus the result that should be sent for those args
+    """
+    def __init__(self, map):
+        self.map = map
+    
+    def __getitem__(self, key):
+        for k, response in self.map:
+            if key == k:
+                return response
+

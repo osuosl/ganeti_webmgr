@@ -20,7 +20,7 @@ from django.contrib.auth.models import User, Group
 from django.test import TestCase
 from django.test.client import Client
 
-from ganeti_web.util.rapi_proxy import RapiProxy
+from ganeti_web.util.proxy import RapiProxy, CallProxy
 from ganeti_web import models
 Cluster = models.Cluster
 VirtualMachine = models.VirtualMachine

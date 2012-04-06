@@ -10,8 +10,9 @@ from ganeti_web.forms.virtual_machine import (HvmModifyVirtualMachineForm,
                                               KvmModifyVirtualMachineForm,
                                               PvmModifyVirtualMachineForm,
                                               ModifyVirtualMachineForm)
-from ganeti_web.util.rapi_proxy import RapiProxy, XenRapiProxy, XEN_INFO, \
-    XEN_HVM_INSTANCE, XEN_PVM_INSTANCE
+from ganeti_web.util.proxy import RapiProxy, XenRapiProxy
+from ganeti_web.util.proxy.constants import (XEN_INFO, XEN_HVM_INSTANCE,
+    XEN_PVM_INSTANCE)
 from ganeti_web.tests.views.virtual_machine.base import VirtualMachineTestCaseMixin
 
 __all__ = [
