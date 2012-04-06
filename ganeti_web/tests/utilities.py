@@ -15,102 +15,73 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-from django.test import TestCase
+from django.test import SimpleTestCase
 
 from ganeti_web.utilities import compare, get_hypervisor
 from ganeti_web.tests.rapi_proxy import INSTANCE, XEN_PVM_INSTANCE, XEN_HVM_INSTANCE
 
-__all__ = ('TestUtilities',)
+__all__ = (
+    "TestCompare",
+    "TestGetHypervisor",
+)
 
-class TestUtilities(TestCase):
-    def test_compare(self):
-        """
-        Tests compare utility function
-        """
-        string1 = "foo"
-        string2 = "bar"
-        string3 = ""
-        int1 = 2
-        int2 = 0
-        int3 = -4
-        float1 = 53.23
-        float2 = -34.00
-        bool1 = True
-        bool2 = False
+class TestCompare(SimpleTestCase):
+    """
+    compare() is a utility function for comparing things and describing the
+    comparison.
+    """
 
-        stringRemoved = "removed"
-        stringSet = "set to %s"
-        stringChanged = "changed from %s to %s"
-        boolEnabled = "enabled"
-        boolDisabled = "disabled"
-        numIncreased = "increased from %s to %s"
-        numDecreased = "decreased from %s to %s"
+    def test_compare_string_set(self):
+        self.assertEqual(compare("", "foo"), "set to foo")
 
-        # String set
-        result = compare(string3, string1)
-        outcome = stringSet % string1
-        self.assertEqual(result, outcome)
+    def test_compare_string_removed(self):
+        self.assertEqual(compare("bar", ""), "removed")
 
-        # String removed
-        result = compare(string2, string3)
-        outcome = stringRemoved
-        self.assertEqual(result, outcome)
+    def test_compare_string_changed(self):
+        self.assertEqual(compare("foo", "bar"), "changed from foo to bar")
 
-        # String changed
-        result = compare(string1, string2)
-        outcome = stringChanged % (string1, string2)
-        self.assertEqual(result, outcome)
+    def test_compare_bool_enabled(self):
+        self.assertEqual(compare(False, True), "enabled")
+
+    def test_compare_bool_disabled(self):
+        self.assertEqual(compare(True, False), "disabled")
+
+    def test_compare_float_increased(self):
+        self.assertEqual(compare(-34.0, 53.23),
+                         "increased from -34.0 to 53.23")
+
+    def test_compare_float_decreased(self):
+        self.assertEqual(compare(53.23, -34.0),
+                         "decreased from 53.23 to -34.0")
+
+    def test_compare_int_increased(self):
+        self.assertEqual(compare(-4, 0), "increased from -4 to 0")
+
+    def test_compare_int_decreased(self):
+        self.assertEqual(compare(2, 0), "decreased from 2 to 0")
 
 
-        # Boolean enabled
-        result = compare(bool2, bool1)
-        outcome = boolEnabled
-        self.assertEqual(result, outcome)
 
-        # Boolean disabled
-        result = compare(bool1, bool2)
-        outcome = boolDisabled
-        self.assertEqual(result, outcome)
-    
+class TestGetHypervisor(SimpleTestCase):
 
-        # Num increased
-        result = compare(float2, float1)
-        outcome = numIncreased % (float2, float1)
-        self.assertEqual(result, outcome)
+    def setUp(self):
+        class InfoDispenser(object):
+            pass
 
-        result = compare(int3, int2)
-        outcome = numIncreased % (int3, int2)
-        self.assertEqual(result, outcome)
+        self.disp = InfoDispenser()
 
-        # Num decreased
-        result = compare(float1, float2)
-        outcome = numDecreased % (float1, float2)
-        self.assertEqual(result, outcome)
+    def test_get_hypervisor_kvm(self):
+        self.disp.info = INSTANCE
+        self.assertEqual(get_hypervisor(self.disp), "kvm")
 
-        result = compare(int1, int2)
-        outcome = numDecreased % (int1, int2)
-        self.assertEqual(result, outcome)
+    def test_get_hypervisor_pvm(self):
+        self.disp.info = XEN_PVM_INSTANCE
+        self.assertEqual(get_hypervisor(self.disp), "xen-pvm")
 
-    def test_get_hypervisor(self):
-        class VirtualMachineTest(object):
-            info = None
+    def test_get_hypervisor_hvm(self):
+        self.disp.info = XEN_HVM_INSTANCE
+        self.assertEqual(get_hypervisor(self.disp), "xen-hvm")
 
-            def __init__(self, info):
-                self.info = info
-
-        kvm = VirtualMachineTest(INSTANCE)
-        pvm = VirtualMachineTest(XEN_PVM_INSTANCE)
-        hvm = VirtualMachineTest(XEN_HVM_INSTANCE)
-        foo = VirtualMachineTest({'hvparams': 'asdfaf'})
-
-        hv = get_hypervisor(kvm)
-        self.assertEqual(hv, 'kvm')
-
-        hv = get_hypervisor(pvm)
-        self.assertEqual(hv, 'xen-pvm')
-
-        hv = get_hypervisor(hvm)
-        self.assertEqual(hv, 'xen-hvm')
-
-        hv = get_hypervisor(foo)
-        self.assertEqual(hv, None)
+    def test_get_hypervisor_unknown(self):
+        self.disp.info = {"hvparams": "asdfaf"}
+        self.assertEqual(get_hypervisor(self.disp), None)
