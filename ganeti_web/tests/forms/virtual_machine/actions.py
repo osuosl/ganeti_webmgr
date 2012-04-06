@@ -3,7 +3,8 @@ from django.test import TestCase
 
 from ganeti_web import models
 from ganeti_web.forms.virtual_machine import ReplaceDisksForm
-from ganeti_web.util.rapi_proxy import RapiProxy, INFO
+from ganeti_web.util.proxy import RapiProxy
+from ganeti_web.util.proxy.constants import INFO
 from ganeti_web.tests.views.virtual_machine.base import VirtualMachineTestCaseMixin
 from ganeti_web.util.client import REPLACE_DISK_CHG, REPLACE_DISK_AUTO
 

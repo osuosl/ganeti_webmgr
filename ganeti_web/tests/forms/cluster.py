@@ -19,7 +19,7 @@
 from django.test import TestCase
 from ganeti_web.forms.cluster import EditClusterForm
 
-from ganeti_web.util.rapi_proxy import RapiProxy
+from ganeti_web.util.proxy import RapiProxy
 from ganeti_web import models
 Cluster = models.Cluster
 VirtualMachine = models.VirtualMachine

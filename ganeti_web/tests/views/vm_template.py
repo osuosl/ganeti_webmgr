@@ -25,7 +25,8 @@ from django_test_tools.views import ViewTestMixin
 
 from ganeti_web import models
 from ganeti_web.models import Cluster, VirtualMachineTemplate, VirtualMachine
-from ganeti_web.util.rapi_proxy import INSTANCE, RapiProxy
+from ganeti_web.util.proxy import RapiProxy
+from ganeti_web.util.proxy.constants import INSTANCE
 
 
 __all__ = ('TestTemplateViews', )

@@ -23,8 +23,7 @@ from django.conf import settings
 from django.test import TestCase
 
 from ganeti_web.util import client
-from ganeti_web.util.rapi_proxy import RapiProxy
-from ganeti_web.util.call_proxy import CallProxy
+from ganeti_web.util.proxy import RapiProxy, CallProxy
 from ganeti_web import models
 
 Cluster = models.Cluster
