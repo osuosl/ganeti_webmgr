@@ -18,7 +18,7 @@
 from django.test import SimpleTestCase
 
 from ganeti_web.utilities import compare, get_hypervisor
-from ganeti_web.tests.rapi_proxy import INSTANCE, XEN_PVM_INSTANCE, XEN_HVM_INSTANCE
+from ganeti_web.util.rapi_proxy import INSTANCE, XEN_PVM_INSTANCE, XEN_HVM_INSTANCE
 
 __all__ = (
     "TestCompare",

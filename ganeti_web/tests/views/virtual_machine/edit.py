@@ -3,7 +3,7 @@ from django.test import Client
 from django.utils import simplejson as json
 
 from ganeti_web import models
-from ganeti_web.tests.rapi_proxy import JOB_RUNNING
+from ganeti_web.util.rapi_proxy import JOB_RUNNING
 from ganeti_web.tests.views.virtual_machine.base import TestVirtualMachineViewsBase
 from ganeti_web.utilities import cluster_os_list
 

@@ -26,7 +26,7 @@ from django.utils import simplejson as json
 from django_test_tools.views import ViewTestMixin
 from ganeti_web.models import SSHKey
 
-from ganeti_web.tests.rapi_proxy import RapiProxy, JOB_ERROR
+from ganeti_web.util.rapi_proxy import RapiProxy, JOB_ERROR
 from ganeti_web import models
 Cluster = models.Cluster
 VirtualMachine = models.VirtualMachine

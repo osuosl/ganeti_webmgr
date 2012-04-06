@@ -17,7 +17,7 @@
 
 
 
-from ganeti_web.tests.call_proxy import CallProxy, ResponseMap
+from ganeti_web.util.call_proxy import CallProxy, ResponseMap
 from ganeti_web.util import client
 
 INSTANCES = ['gimager.osuosl.bak', 'gimager2.osuosl.bak']
@@ -394,7 +394,8 @@ XEN_INFO = {'architecture': ['64bit','x86_64'],
                            'pae': True,
                            'use_localtime': False,
                            'vnc_bind_address': '0.0.0.0',
-                           'vnc_password_file': '/etc/ganeti/vnc-cluster-password'},
+                           'vnc_password_file': 
+                               '/etc/ganeti/vnc-cluster-password'},
                'xen-pvm': {'blockdev_prefix': 'sd',
                            'bootloader_args': '',
                            'bootloader_path': '',
@@ -462,7 +463,9 @@ JOB_ERROR = {'end_ts': [1291836084, 802444],
  'id': '1',
  'oplog': [[]],
  'opresult': [['OpExecError',
-               ['Could not reboot instance: Cannot reboot instance gimager.osuosl.bak that is not running']]],
+               ['Could not reboot instance: \
+                Cannot reboot instance gimager.osuosl.bak \
+                that is not running']]],
  'ops': [{'OP_ID': 'OP_INSTANCE_REBOOT',
           'debug_level': 0,
           'dry_run': False,
@@ -492,7 +495,8 @@ JOB_LOG = {'end_ts': [1292007990, 759365],
  'oplog': [[[1,
              [1292007953, 699881],
              'message',
-             ' - INFO: Selected nodes for instance gimager3.osuosl.bak via iallocator hail: gtest2.osuosl.bak'],
+             ' - INFO: Selected nodes for instance gimager3.osuosl.bak via \
+                iallocator hail: gtest2.osuosl.bak'],
             [2,
              [1292007953, 979254],
              'message',
@@ -504,7 +508,8 @@ JOB_LOG = {'end_ts': [1292007990, 759365],
             [4,
              [1292007954, 357390],
              'message',
-             ' - INFO: Waiting for instance gimager3.osuosl.bak to sync disks.'],
+             ' - INFO: Waiting for instance gimager3.osuosl.bak to sync \
+                disks.'],
             [5,
              [1292007954, 496430],
              'message',
@@ -669,15 +674,20 @@ class RapiProxy(client.GanetiRapiClient):
     """
     error = None
     
-    def __new__(klass, *args, **kwargs):
-        instance = object.__new__(klass)
+    def __new__(cls, *args, **kwargs):
+        """
+        Each time the RapiProxy is created, monkey patch
+        the GanetiRapiClient methods to return static data.
+        """
+        instance = object.__new__(cls)
         instance.__init__(*args, **kwargs)
         CallProxy.patch(instance, 'GetInstances', False, INSTANCES)
         CallProxy.patch(instance, 'GetInstance', False, INSTANCE)
         CallProxy.patch(instance, 'GetNodes', False, NODES_MAP)
         CallProxy.patch(instance, 'GetNode', False, NODE)
         CallProxy.patch(instance, 'GetInfo', False, INFO)
-        CallProxy.patch(instance, 'GetOperatingSystems', False, OPERATING_SYSTEMS)
+        CallProxy.patch(instance, 'GetOperatingSystems', False,
+            OPERATING_SYSTEMS)
         CallProxy.patch(instance, 'GetJobStatus', False, JOB_RUNNING)
         CallProxy.patch(instance, 'StartupInstance', False, 1)
         CallProxy.patch(instance, 'ShutdownInstance', False, 1)
@@ -699,25 +709,32 @@ class RapiProxy(client.GanetiRapiClient):
         return instance
     
     def fail(self, *args, **kwargs):
+        """
+        Raise the error set on this object.
+        """
         raise self.error
     
     def __setattr__(self, name, value):
         return super(RapiProxy, self).__setattr__(name, value)
      
     def __getattribute__(self, key):
-        if key in ['GetInstances','GetInstance','GetNodes','GetNode', \
+        if key in ['GetInstances', 'GetInstance', 'GetNodes', 'GetNode', \
                    'GetInfo', 'StartupInstance', 'ShutdownInstance', \
-                   'RebootInstance', 'AddInstanceTags','DeleteInstanceTags', \
+                   'RebootInstance', 'AddInstanceTags', 'DeleteInstanceTags', \
                    'GetOperatingSystems', 'GetJobStatus', 'CreateInstance', \
-                   'ReinstallInstance' ] \
+                   'ReinstallInstance'] \
                     and self.error:
             return self.fail
         return super(RapiProxy, self).__getattribute__(key)
 
 
 class XenRapiProxy(RapiProxy):
-    def __new__(klass, *args, **kwargs):
-        instance = RapiProxy.__new__(klass, *args, **kwargs)
+    def __new__(cls, *args, **kwargs):
+        """
+        Inherits from the RapiProxy and extends it to return
+        information for Xen clusters instead of Kvm clusters.
+        """
+        instance = RapiProxy.__new__(cls, *args, **kwargs)
         # Unbind functions that are to be patched
         instance.GetInstances = None
         instance.GetInstance = None
@@ -726,6 +743,7 @@ class XenRapiProxy(RapiProxy):
         CallProxy.patch(instance, 'GetInstances', False, INSTANCES)
         CallProxy.patch(instance, 'GetInstance', False, XEN_PVM_INSTANCE)
         CallProxy.patch(instance, 'GetInfo', False, XEN_INFO)
-        CallProxy.patch(instance, 'GetOperatingSystems', False, XEN_OPERATING_SYSTEMS)
+        CallProxy.patch(instance, 'GetOperatingSystems', False,
+            XEN_OPERATING_SYSTEMS)
 
         return instance

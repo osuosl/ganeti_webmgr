@@ -21,7 +21,7 @@ from datetime import datetime
 from django.contrib.auth.models import User
 from django.test import TestCase
 
-from ganeti_web.tests.rapi_proxy import RapiProxy, INFO, JOB_RUNNING, JOB
+from ganeti_web.util.rapi_proxy import RapiProxy, INFO, JOB_RUNNING, JOB
 from ganeti_web import models
 Cluster = models.Cluster
 VirtualMachine = models.VirtualMachine
