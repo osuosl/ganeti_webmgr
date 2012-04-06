@@ -29,7 +29,7 @@ from ganeti_web.models import SSHKey
 
 from object_permissions import get_user_perms
 
-from ganeti_web.tests.rapi_proxy import RapiProxy, NODES, NODES_BULK
+from ganeti_web.util.rapi_proxy import RapiProxy, NODES, NODES_BULK
 from ganeti_web import models
 Cluster = models.Cluster
 VirtualMachine = models.VirtualMachine

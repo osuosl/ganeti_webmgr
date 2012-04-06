@@ -8,7 +8,7 @@ from django_test_tools.users import UserTestMixin
 from ganeti_web.models import VirtualMachineTemplate
 
 from ganeti_web.util import client
-from ganeti_web.tests.rapi_proxy import RapiProxy
+from ganeti_web.util.rapi_proxy import RapiProxy
 from ganeti_web import models
 
 VirtualMachine = models.VirtualMachine

@@ -57,6 +57,7 @@ from muddle_users import signals as muddle_user_signals
 from ganeti_web import constants, management, permissions
 from ganeti_web.fields import PatchedEncryptedCharField, PreciseDateTimeField, SumIf
 from ganeti_web.util import client
+from ganeti_web.util.rapi_proxy import RapiProxy
 from ganeti_web.util.client import GanetiApiError, REPLACE_DISK_AUTO
 
 from south.signals import post_migrate

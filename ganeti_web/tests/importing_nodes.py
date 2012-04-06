@@ -21,7 +21,7 @@ from django.test import TestCase
 from django.test.client import Client
 from ganeti_web.models import Node
 
-from ganeti_web.tests.rapi_proxy import RapiProxy, NODES
+from ganeti_web.util.rapi_proxy import RapiProxy, NODES
 from ganeti_web import models
 Cluster = models.Cluster
 VirtualMachine = models.VirtualMachine
