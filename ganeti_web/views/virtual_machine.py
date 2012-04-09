@@ -84,7 +84,6 @@ class VMListView(LoginRequiredMixin, PagedListView):
     """
     View for displaying a list of VirtualMachines.
     """
-
     template_name = "ganeti/virtual_machine/list.html"
 
     def get_queryset(self):
@@ -94,15 +93,16 @@ class VMListView(LoginRequiredMixin, PagedListView):
             qs = self.request.user.get_objects_any_perms(VirtualMachine,
                                                          groups=True,
                                                          cluster=["admin"])
+        self.queryset = qs
+        super(VMListView, self).get_queryset()
         return qs.select_related()
 
     def get_context_data(self, **kwargs):
         user = self.request.user
-
-        kwargs["can_create"] = (user.is_superuser or
+        context = super(VMListView, self).get_context_data(object_list=kwargs["object_list"])
+        context["can_create"] = (user.is_superuser or
                                 user.has_any_perms(Cluster, ["create_vm"]))
-
-        return kwargs
+        return context
 
 class VMListTableView(VMListView):
     """
@@ -117,7 +117,7 @@ class VMListTableView(VMListView):
 
     def get_queryset(self):
         qs = super(VMListTableView, self).get_queryset()
-
+        
         if "cluster_slug" in self.kwargs:
             self.cluster = Cluster.objects.get(slug=self.kwargs["cluster_slug"])
             qs = qs.filter(cluster=self.cluster)
@@ -137,7 +137,8 @@ class VMListTableView(VMListView):
         return qs
 
     def get_context_data(self, **kwargs):
-        context = super(VMListTableView, self).get_context_data(**kwargs)
+        context = super(VMListTableView, self).get_context_data(
+            object_list=kwargs["object_list"])
         context["cluster"] = self.cluster
         return context
 

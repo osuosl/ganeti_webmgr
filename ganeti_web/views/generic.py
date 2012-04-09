@@ -42,7 +42,6 @@ class PagedListView(ListView):
         many objects should be displayed per page."
         """
 
-        print "Here!"
         return self.request.GET.get("count", settings.ITEMS_PER_PAGE)
 
     def paginate_queryset(self, queryset, page_size):
@@ -55,7 +54,6 @@ class PagedListView(ListView):
         if needed, prior to pagination since Django won't do it otherwise.
         """
 
-        print "Here too!"
         if "order_by" in self.request.GET:
             queryset = queryset.order_by(self.request.GET["order_by"])
         return super(PagedListView, self).paginate_queryset(queryset,
