@@ -270,8 +270,34 @@ class CachedClusterObject(models.Model):
             for k, v in job_data.items():
                 setattr(self, k, v)
 
+        # XXX this try/except is far too big; see if we can pare it down.
         try:
             info_ = self._refresh()
+            if info_:
+                if info_['mtime']:
+                    mtime = datetime.fromtimestamp(info_['mtime'])
+                else:
+                    mtime = None
+                self.cached = datetime.now()
+            else:
+                # no info retrieved, use current mtime
+                mtime = self.mtime
+
+            if self.id and (self.mtime is None or mtime > self.mtime):
+                # there was an update. Set info and save the object
+                self.info = info_
+                self.save()
+            else:
+                # There was no change on the server.  Only update the cache
+                # time. This bypasses the info serialization mechanism and
+                # uses a smaller query.
+                if job_data:
+                    self.__class__.objects.filter(pk=self.id) \
+                        .update(cached=self.cached, **job_data)
+                elif self.id is not None:
+                    self.__class__.objects.filter(pk=self.id) \
+                        .update(cached=self.cached)
+
         except GanetiApiError, e:
             # Use regular expressions to match the quoted message
             #  given by GanetiApiError. '\\1' is a group substitution
@@ -287,39 +313,11 @@ class CachedClusterObject(models.Model):
                 msg = str(e)
                 self.error = str(e)
             GanetiError.store_error(msg, obj=self, code=e.code)
-            return
 
-        # We made it without a GAE; time to update information.
-        if self.error:
-            self.error = None
-            GanetiError.objects.clear_errors(obj=self)
-
-        if info_:
-            if info_['mtime']:
-                mtime = datetime.fromtimestamp(info_['mtime'])
-            else:
-                mtime = None
-            self.cached = datetime.now()
         else:
-            # no info retrieved, use current mtime
-            mtime = self.mtime
-
-        newer = (mtime is None or self.mtime is None) or mtime > self.mtime
-
-        if self.id and newer:
-            # there was an update. Set info and save the object
-            self.info = info_
-            self.save()
-        else:
-            # There was no change on the server.  Only update the cache
-            # time. This bypasses the info serialization mechanism and
-            # uses a smaller query.
-            if job_data:
-                self.__class__.objects.filter(pk=self.id) \
-                    .update(cached=self.cached, **job_data)
-            elif self.id is not None:
-                self.__class__.objects.filter(pk=self.id) \
-                    .update(cached=self.cached)
+            if self.error:
+                self.error = None
+                GanetiError.objects.clear_errors(obj=self)
 
     def _refresh(self):
         """
