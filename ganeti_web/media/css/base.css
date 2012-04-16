@@ -163,6 +163,8 @@ pre.error {
 }
 #content table.sorted .ascending {background-image: url(/media/images/asc.gif);}
 #content table.sorted .descending {background-image: url(/media/images/desc.gif);}
+#content table.sorted .ascending {background-color: #7AB0DC;}
+#content table.sorted .descending {background-color: #7AB0DC;}
 
 #footer {
     background: url(/media/images/footerBack.jpg) repeat-x 0 0 #1d1d1d;
