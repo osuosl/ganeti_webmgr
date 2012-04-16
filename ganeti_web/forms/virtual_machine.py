@@ -97,9 +97,8 @@ class VirtualMachineForm(forms.ModelForm):
                 # doesn't exist, no further checks needed
                 pass
 
-        # no spaces or illegal characters allowed in hostname
-        # Hostname may contain - but not as first character
-        if not re.compile('^[\w\d]+[\w\d\.-]+$').match(hostname):
+        # Spaces in hostname will always break things. 
+        if re.compile(' ').match(hostname):
             raise ValidationError(_("Hostname contains illegal character"))
 
         return hostname
