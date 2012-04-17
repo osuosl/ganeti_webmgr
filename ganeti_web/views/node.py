@@ -142,7 +142,7 @@ def detail_by_id(request, id):
 
 
 @login_required
-def object_log(request, cluster_slug, host, rest=False):
+def object_log(request, cluster_slug, host):
     """
     Display object log for this node
     """
@@ -150,12 +150,9 @@ def object_log(request, cluster_slug, host, rest=False):
 
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
-        if not rest:
-            raise Http403(NO_PRIVS)
-        else:
-            return {'error': NO_PRIVS}
+        raise Http403(NO_PRIVS)
 
-    return list_for_object(request, node, rest)
+    return list_for_object(request, node)
 
 
 @login_required
@@ -280,7 +277,7 @@ def evacuate(request, cluster_slug, host):
 
 
 @login_required
-def job_status(request, id, rest=False):
+def job_status(request, id):
     """
     Return a list of basic info for running jobs.
     """
@@ -289,7 +286,4 @@ def job_status(request, id, rest=False):
     jobs = Job.objects.filter(q, content_type=ct, object_id=id).order_by('job_id')
     jobs = [j.info for j in jobs]
 
-    if rest:
-        return jobs
-    else:
-        return HttpResponse(json.dumps(jobs), mimetype='application/json')
+    return HttpResponse(json.dumps(jobs), mimetype='application/json')

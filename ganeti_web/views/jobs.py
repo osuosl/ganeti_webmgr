@@ -45,19 +45,17 @@ class JobDetailView(LoginRequiredMixin, DetailView):
         }
 
 @login_required
-def status(request, cluster_slug, job_id, rest=False):
+def status(request, cluster_slug, job_id):
     """
     returns the raw info of a job
     """
     job = get_object_or_404(Job, cluster__slug=cluster_slug, job_id=job_id)
-    if rest:
-        return job
-    else:
-        return HttpResponse(json.dumps(job.info), mimetype='application/json')
+
+    return HttpResponse(json.dumps(job.info), mimetype='application/json')
 
 
 @login_required
-def clear(request, cluster_slug, job_id, rest=False):
+def clear(request, cluster_slug, job_id):
     """
     Clear a single failed job error message
     """
@@ -72,10 +70,8 @@ def clear(request, cluster_slug, job_id, rest=False):
 
     if not cluster_admin:
         if isinstance(obj, (Cluster, Node)):
-            if rest:
-                return HttpResponseForbidden
-            else:
-                raise Http403(NO_PRIVS)
+            raise Http403(NO_PRIVS)
+
         elif isinstance(obj, (VirtualMachine,)):
             # object is a virtual machine, check perms on VM and on Cluster
             if not (obj.owner_id == user.get_profile().pk  \
@@ -97,7 +93,4 @@ def clear(request, cluster_slug, job_id, rest=False):
         ObjectModel.objects.filter(pk=job.object_id, last_job=job)  \
             .update(last_job=None, ignore_cache=False)
 
-    if rest:
-        return 1
-    else:
-        return HttpResponse('1', mimetype='application/json')
+    return HttpResponse('1', mimetype='application/json')

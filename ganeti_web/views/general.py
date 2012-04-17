@@ -176,7 +176,7 @@ def get_vm_counts(clusters, timeout=600):
 
 
 @login_required
-def overview(request, rest=False):
+def overview(request):
     """
     Status page
     """
@@ -254,27 +254,24 @@ def overview(request, rest=False):
     # get resources used per cluster from the first persona in the list
     resources = get_used_resources(personas[0])
 
-    if rest:
-        return clusters
-    else:
-        return render_to_response("ganeti/overview.html", {
-            'admin':admin,
-            'cluster_list': clusters,
-            'user': request.user,
-            'errors': errors,
-            'orphaned': orphaned,
-            'import_ready': import_ready,
-            'missing': missing,
-            'resources': resources,
-            'vm_summary': vm_summary,
-            'personas': personas,
-            },
-            context_instance=RequestContext(request),
-        )
+    return render_to_response("ganeti/overview.html", {
+        'admin':admin,
+        'cluster_list': clusters,
+        'user': request.user,
+        'errors': errors,
+        'orphaned': orphaned,
+        'import_ready': import_ready,
+        'missing': missing,
+        'resources': resources,
+        'vm_summary': vm_summary,
+        'personas': personas,
+        },
+        context_instance=RequestContext(request),
+    )
 
 
 @login_required
-def used_resources(request, rest=False):
+def used_resources(request):
     """ view for returning used resources for a given cluster user """
     try:
         cluster_user_id = request.GET['id']
@@ -296,13 +293,10 @@ def used_resources(request, rest=False):
                 raise Http403(_('You are not authorized to view this page'))
 
     resources = get_used_resources(cu.cast())
-    if rest:
-        return resources
-    else:
-        return render_to_response("ganeti/overview/used_resources.html", {
-            'resources':resources
-        }, context_instance=RequestContext(request))
 
+    return render_to_response("ganeti/overview/used_resources.html", {
+        'resources':resources
+    }, context_instance=RequestContext(request))
 
 
 @login_required

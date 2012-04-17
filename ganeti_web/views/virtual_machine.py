@@ -302,7 +302,7 @@ def vnc_proxy(request, cluster_slug, instance):
 
 @require_POST
 @login_required
-def shutdown(request, cluster_slug, instance, rest=False):
+def shutdown(request, cluster_slug, instance):
     vm = get_object_or_404(VirtualMachine, hostname=instance,
                            cluster__slug=cluster_slug)
     user = request.user
@@ -310,10 +310,7 @@ def shutdown(request, cluster_slug, instance, rest=False):
     if not (user.is_superuser or user.has_any_perms(vm, ['admin','power']) or
         user.has_perm('admin', vm.cluster)):
         msg = _('You do not have permission to shut down this virtual machine')
-        if rest:
-            return {"msg": msg, 'code': 403}
-        else:
-            raise Http403(msg)
+        raise Http403(msg)
 
     try:
         job = vm.shutdown()
@@ -325,25 +322,19 @@ def shutdown(request, cluster_slug, instance, rest=False):
     except GanetiApiError, e:
         msg = {'__all__':[str(e)]}
 
-    if rest:
-        return {'msg': msg, 'code': 200}
-    else:
-        return HttpResponse(json.dumps(msg), mimetype='application/json')
+    return HttpResponse(json.dumps(msg), mimetype='application/json')
 
 
 @require_POST
 @login_required
-def startup(request, cluster_slug, instance, rest=False):
+def startup(request, cluster_slug, instance):
     vm = get_object_or_404(VirtualMachine, hostname=instance,
                            cluster__slug=cluster_slug)
     user = request.user
     if not (user.is_superuser or user.has_any_perms(vm, ['admin','power']) or
         user.has_perm('admin', vm.cluster)):
             msg = _('You do not have permission to start up this virtual machine')
-            if rest:
-                return {"msg": msg, "code": 403}
-            else:
-                raise Http403(msg)
+            raise Http403(msg)
 
     # superusers bypass quota checks
     if not user.is_superuser and vm.owner:
@@ -354,19 +345,13 @@ def startup(request, cluster_slug, instance, rest=False):
 
             if quota['ram'] is not None and (used['ram'] + vm.ram) > quota['ram']:
                 msg = _('Owner does not have enough RAM remaining on this cluster to start the virtual machine.')
-                if rest:
-                    return {"msg": msg, "code": 500}
-                else:
-                    return HttpResponse(json.dumps([0, msg]),
-                                        mimetype='application/json')
+                return HttpResponse(json.dumps([0, msg]),
+                                    mimetype='application/json')
 
             if quota['virtual_cpus'] and (used['virtual_cpus'] + vm.virtual_cpus) > quota['virtual_cpus']:
                 msg = _('Owner does not have enough Virtual CPUs remaining on this cluster to start the virtual machine.')
-                if rest:
-                    return {"msg": msg, "code": 500}
-                else:
-                    return HttpResponse(json.dumps([0, msg]),
-                                        mimetype='application/json')
+                return HttpResponse(json.dumps([0, msg]),
+                                    mimetype='application/json')
 
     try:
         job = vm.startup()
@@ -377,10 +362,8 @@ def startup(request, cluster_slug, instance, rest=False):
         log_action('VM_START', user, vm, job)
     except GanetiApiError, e:
         msg = {'__all__':[str(e)]}
-    if rest:
-        return {"msg": msg,"code": 200}
-    else:
-        return HttpResponse(json.dumps(msg), mimetype='application/json')
+
+    return HttpResponse(json.dumps(msg), mimetype='application/json')
 
 
 @login_required
@@ -456,17 +439,13 @@ def replace_disks(request, cluster_slug, instance):
 
 @require_POST
 @login_required
-def reboot(request, cluster_slug, instance, rest=False):
+def reboot(request, cluster_slug, instance):
     vm = get_object_or_404(VirtualMachine, hostname=instance,
                            cluster__slug=cluster_slug)
     user = request.user
     if not (user.is_superuser or user.has_any_perms(vm, ['admin','power']) or
         user.has_perm('admin', vm.cluster)):
-
-            if rest:
-                return HttpResponseForbidden()
-            else:
-                raise Http403(_('You do not have permission to reboot this virtual machine'))
+            raise Http403(_('You do not have permission to reboot this virtual machine'))
 
     try:
         job = vm.reboot()
@@ -477,10 +456,8 @@ def reboot(request, cluster_slug, instance, rest=False):
         log_action('VM_REBOOT', user, vm, job)
     except GanetiApiError, e:
         msg = {'__all__':[str(e)]}
-    if rest:
-        return HttpAccepted()
-    else:
-        return HttpResponse(json.dumps(msg), mimetype='application/json')
+
+    return HttpResponse(json.dumps(msg), mimetype='application/json')
 
 
 def ssh_keys(request, cluster_slug, instance, api_key):
@@ -515,7 +492,7 @@ def detail_by_id(request, id):
 
 
 @login_required
-def detail(request, cluster_slug, instance, rest=False):
+def detail(request, cluster_slug, instance):
     """
     Display details of virtual machine.
     """
@@ -577,16 +554,12 @@ def detail(request, cluster_slug, instance, rest=False):
     else:
         template = 'ganeti/virtual_machine/detail.html'
 
-    if rest:
-        return context
-    else:
-        return render_to_response(template, context,
-            context_instance=RequestContext(request),
-        )
+    return render_to_response(template, context,
+                              context_instance=RequestContext(request))
 
 
 @login_required
-def users(request, cluster_slug, instance, rest=False):
+def users(request, cluster_slug, instance):
     """
     Display all of the Users of a VirtualMachine
     """
@@ -595,13 +568,10 @@ def users(request, cluster_slug, instance, rest=False):
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', vm) or
         user.has_perm('admin', cluster)):
-        if rest:
-            return {'msg': NO_PRIVS, 'code': 403}
-        else:
-            raise Http403(NO_PRIVS)
+        raise Http403(NO_PRIVS)
 
     url = reverse('vm-permissions', args=[cluster.slug, vm.hostname])
-    return view_users(request, vm, url, rest=rest)
+    return view_users(request, vm, url)
 
 
 @login_required
@@ -622,7 +592,7 @@ def permissions(request, cluster_slug, instance, user_id=None, group_id=None):
 
 
 @login_required
-def object_log(request, cluster_slug, instance, rest=False):
+def object_log(request, cluster_slug, instance):
     """
     Display all of the Users of a VirtualMachine
     """
@@ -634,10 +604,7 @@ def object_log(request, cluster_slug, instance, rest=False):
         user.has_perm('admin', cluster)):
         raise Http403(NO_PRIVS)
 
-    if rest:
-        return list_for_object(request, vm, True)
-    else:
-        return list_for_object(request, vm)
+    return list_for_object(request, vm)
 
 
 # XXX agh oh god my eyes why oh why
@@ -1075,7 +1042,7 @@ def recover_failed_deploy(request, cluster_slug, instance):
 
 
 @login_required
-def rename(request, cluster_slug, instance, rest=False, extracted_params=None):
+def rename(request, cluster_slug, instance, extracted_params=None):
     """
     Rename an existing instance
     """
@@ -1090,14 +1057,6 @@ def rename(request, cluster_slug, instance, rest=False, extracted_params=None):
     if request.method == 'POST':
         form = RenameForm(vm, request.POST)
         params_ok = False
-        if rest and extracted_params is not None:
-            if all(k in extracted_params for k in ("hostname", "ip_check", "name_check")):
-                hostname = extracted_params['hostname']
-                ip_check = extracted_params['ip_check']
-                name_check = extracted_params['name_check']
-                params_ok = True
-            else:
-                return HttpResponseBadRequest()
 
         if form.is_valid():
             data = form.cleaned_data
@@ -1122,17 +1081,13 @@ def rename(request, cluster_slug, instance, rest=False, extracted_params=None):
                 # log information about creating the machine
                 log_action('VM_RENAME', user, vm, job)
 
-                if not rest:
-                    return HttpResponseRedirect(
-                    reverse('instance-detail', args=[cluster.slug, hostname]))
-                else:
-                    return HttpAccepted()
+                return HttpResponseRedirect(reverse('instance-detail',
+                                                    args=[cluster.slug,
+                                                           hostname]))
 
             except GanetiApiError, e:
                 msg = 'Error renaming virtual machine: %s' % e
                 form._errors["cluster"] = form.error_class([msg])
-                if rest:
-                    return HttpResponse(400, content=msg)
 
     elif request.method == 'GET':
         form = RenameForm(vm)
@@ -1184,7 +1139,7 @@ def reparent(request, cluster_slug, instance):
 
 
 @login_required
-def job_status(request, id, rest=False):
+def job_status(request, id):
     """
     Return a list of basic info for running jobs.
     """
@@ -1193,10 +1148,7 @@ def job_status(request, id, rest=False):
     jobs = Job.objects.filter(q, content_type=ct, object_id=id).order_by('job_id')
     jobs = [j.info for j in jobs]
 
-    if rest:
-        return jobs
-    else:
-        return HttpResponse(json.dumps(jobs), mimetype='application/json')
+    return HttpResponse(json.dumps(jobs), mimetype='application/json')
 
 
 @login_required

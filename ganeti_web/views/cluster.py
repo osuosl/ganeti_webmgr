@@ -334,7 +334,7 @@ def quota(request, cluster_slug, user_id):
 
 
 @login_required
-def job_status(request, id, rest=False):
+def job_status(request, id):
     """
     Return a list of basic info for running jobs.
     """
@@ -343,10 +343,7 @@ def job_status(request, id, rest=False):
     jobs = Job.objects.filter(q, content_type=ct, object_id=id).order_by('job_id')
     jobs = [j.info for j in jobs]
 
-    if rest:
-        return jobs
-    else:
-        return HttpResponse(json.dumps(jobs), mimetype='application/json')
+    return HttpResponse(json.dumps(jobs), mimetype='application/json')
 
 
 @login_required
