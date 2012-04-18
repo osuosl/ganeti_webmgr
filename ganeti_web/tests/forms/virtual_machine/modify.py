@@ -1,6 +1,6 @@
 from itertools import chain
 
-from testtools.monkey import MonkeyPatcher
+from monkey import MonkeyPatcher
 
 from django.contrib.auth.models import User, Group
 from django.test import TestCase
