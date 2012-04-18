@@ -25,7 +25,7 @@ from forms.autocomplete_search_form import autocomplete_search_form
 from ganeti_web.views.cluster import (ClusterDetailView, ClusterListView,
                                       ClusterVMListView)
 from ganeti_web.views.general import AboutView
-from ganeti_web.views.jobs import JobDetailView
+from ganeti_web.views.jobs import JobDetailView, JobStatusView
 from ganeti_web.views.node import (NodeDetailView, NodePrimaryListView,
                                    NodeSecondaryListView)
 from ganeti_web.views.virtual_machine import (VMDeleteView, VMListView,
@@ -243,8 +243,8 @@ urlpatterns += patterns('ganeti_web.views.importing_nodes',
 # Jobs
 job = '%s/job/(?P<job_id>\d+)' % cluster
 urlpatterns += patterns('ganeti_web.views.jobs',
-    url(r'^%s/status/?' % job, 'status', name='job-status'),
-    url(r'^%s/clear/?' % job, 'clear', name='job-clear'),
+    url(r'^%s/status/?' % job, JobStatusView.as_view(), name='job-status'),
+    url(r'^%s/clear/?' % job, "clear", name='job-clear'),
     url(r'^%s/?' % job, JobDetailView.as_view(), name='job-detail'),
 )
 

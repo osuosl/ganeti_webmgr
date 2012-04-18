@@ -15,24 +15,29 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-import json
-
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django.views.decorators.http import require_POST
+from django.views.generic import View
 from django.views.generic.detail import DetailView
 
 from ganeti_web.middleware import Http403
 from ganeti_web.models import Job, Cluster, VirtualMachine, Node
-from ganeti_web.views.generic import NO_PRIVS, LoginRequiredMixin
+from ganeti_web.views.generic import (NO_PRIVS, JSONOnlyMixin,
+                                      LoginRequiredMixin)
 
-class JobDetailView(LoginRequiredMixin, DetailView):
 
-    template_name = "ganeti/job/detail.html"
+class JobView(object):
 
     def get_object(self, queryset=None):
         return get_object_or_404(Job, job_id=self.kwargs["job_id"],
                                  cluster__slug=self.kwargs["cluster_slug"])
+
+
+class JobDetailView(LoginRequiredMixin, JobView, DetailView):
+
+    template_name = "ganeti/job/detail.html"
 
     def get_context_data(self, **kwargs):
         job = kwargs["object"]
@@ -44,20 +49,19 @@ class JobDetailView(LoginRequiredMixin, DetailView):
             "cluster_admin": admin,
         }
 
-@login_required
-def status(request, cluster_slug, job_id):
-    """
-    returns the raw info of a job
-    """
-    job = get_object_or_404(Job, cluster__slug=cluster_slug, job_id=job_id)
 
-    return HttpResponse(json.dumps(job.info), mimetype='application/json')
+class JobStatusView(LoginRequiredMixin, JSONOnlyMixin, JobView, View):
+
+    def get_context_data(self, **kwargs):
+        job = kwargs["object"]
+        return job.info
 
 
+@require_POST
 @login_required
 def clear(request, cluster_slug, job_id):
     """
-    Clear a single failed job error message
+    Clear a single failed job error message.
     """
 
     user = request.user
@@ -65,7 +69,7 @@ def clear(request, cluster_slug, job_id):
     job = get_object_or_404(Job, cluster__slug=cluster_slug, job_id=job_id)
     obj = job.obj
 
-    # if not a superuser, check permissions on the object itself
+    # Superusers and cluster admins are both allowed to do this.
     cluster_admin = user.is_superuser or user.has_perm('admin', cluster)
 
     if not cluster_admin:
@@ -73,24 +77,21 @@ def clear(request, cluster_slug, job_id):
             raise Http403(NO_PRIVS)
 
         elif isinstance(obj, (VirtualMachine,)):
-            # object is a virtual machine, check perms on VM and on Cluster
-            if not (obj.owner_id == user.get_profile().pk  \
-                or user.has_perm('admin', obj) \
+            # The object is a VM, so check permissions on both the VM and the
+            # cluster.
+            if not (obj.owner_id == user.get_profile().pk
+                or user.has_perm('admin', obj)
                 or user.has_perm('admin', obj.cluster)):
                     raise Http403(NO_PRIVS)
 
+    # Clear the error.
+    job.cleared = True
+    job.save()
 
-    # clear the error.
-    Job.objects.filter(pk=job.pk).update(cleared=True)
-
-    # clear the job from the object, but only if it is the last job. It's
-    # possible another job was started after this job, and the error message
-    # just wasn't cleared.
-    #
-    # XXX object could be none, in which case we dont need to clear its last_job
-    if obj is not None:
-        ObjectModel = obj.__class__
-        ObjectModel.objects.filter(pk=job.object_id, last_job=job)  \
-            .update(last_job=None, ignore_cache=False)
+    # If it's the last job, clear it from the object.
+    if obj is not None and obj.last_job == job:
+        obj.last_job = None
+        obj.ignore_cache = False
+        obj.save()
 
     return HttpResponse('1', mimetype='application/json')
