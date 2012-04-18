@@ -169,7 +169,6 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'registration',
     'deprecated.ganeti', # XXX deprecated ganeti MUST come before ganeti_web
-    'ganeti_web_layout',
     'ganeti_web',        # XXX must come before object permissions for migration to 0.7
     'object_permissions', 
     'object_log',
