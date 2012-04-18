@@ -88,7 +88,6 @@ function ajaxTable(URL, TABLE_ID){
         /* Update the table using AJAX depending on current page and sorting 
          * order.
          */
-
         var TABLE_ID = this.getID();
 
         // Show load spinner thing, hide the table contents
@@ -98,8 +97,8 @@ function ajaxTable(URL, TABLE_ID){
 
         // AJAX load the table contents, push results into table
         $.get(URL, FETCH_ARGS, function(results){
-            var $results = $(results);
-            var tbody = $results.children("tbody");
+            var $results = $("<div id='results'>"+results+"</div>");
+            var tbody = $results.find("tbody");
             var pagination = $results[2];
             $(TABLE_ID + ' #vm-wrapper .pagination').replaceWith(pagination);
             $(TABLE_ID + ' #vmlist tbody').replaceWith(tbody);
