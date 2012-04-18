@@ -4,6 +4,8 @@
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
+from django.utils import simplejson as json
 from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _
 from django.views.generic.list import ListView
@@ -60,3 +62,13 @@ class PagedListView(ListView):
             queryset = queryset.order_by(self.request.GET["order_by"])
         return super(PagedListView, self).paginate_queryset(queryset,
                                                             page_size)
+
+
+class JSONOnlyMixin(object):
+    """
+    Mixin which simplifies the logic of crafting a view which returns JSON.
+    """
+
+    def render_to_response(self, context):
+        return HttpResponse(json.dumps(context),
+                            content_type="application/json")
