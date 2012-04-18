@@ -5,6 +5,7 @@ django-registration>=0.7,<0.8
 django>=1.4
 django_object_log==0.7
 django_object_permissions==1.4.2
+mimeparse
 pyopenssl
 requests>=0.9
 simplejson
