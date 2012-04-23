@@ -558,3 +558,12 @@ class TestNewVirtualMachineFormValidation(TestVirtualMachineViewsBase):
         self.user.grant('create_vm', self.cluster)
         form = NewVirtualMachineForm(self.user, self.data)
         self.assertFalse(form.is_valid())
+
+    def test_spaces_in_hostname(self):
+        """
+        make sure validation fails if hostname has spaces
+        """
+        self.data['hostname'] = 'this has spaces.vm.hostname'
+        self.user.grant('create_vm', self.cluster)
+        form = NewVirtualMachineForm(self.user, self.data)
+        self.assertFalse(form.is_valid())
