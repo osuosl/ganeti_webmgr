@@ -139,17 +139,20 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.i18n',
     'django.core.context_processors.media',
     'ganeti_web.context_processors.site',
-    'ganeti_web.context_processors.common_permissions'
+    'ganeti_web.context_processors.common_permissions',
 )
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
+    # Order matters; transaction middleware affects all middleware placed
+    # after it. You probably want it up here, very early.
+    'django.middleware.transaction.TransactionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.csrf.CsrfResponseMiddleware'
+    'ganeti_web.middleware.Http403Middleware',
 )
 
 ROOT_URLCONF = 'urls'
