@@ -20,6 +20,11 @@ from decimal import Decimal
 import time
 import re
 
+try:
+    from numbers import Real
+except ImportError:
+    Real = float, int, Decimal
+
 from django.core.exceptions import ValidationError
 from django.core.validators import (EMPTY_VALUES, MaxValueValidator,
                                     MinValueValidator)
@@ -55,79 +60,96 @@ add_introspection_rules([], ["^ganeti_web\.fields\.PatchedEncryptedCharField"])
 
 class PreciseDateTimeField(DecimalField):
     """
-    Custom model field for dealing with timestamps requiring precision greater
-    than seconds.  MySQL and other databases follow the SQL92 standard:
+    Custom field which provides sub-second precision.
+
+    MySQL and other databases follow the SQL92 standard:
 
         TIMESTAMP - contains the datetime field's YEAR, MONTH, DAY, HOUR,
                     MINUTE, and SECOND.
 
-    To support greater precisions this class will convert to and from a decimal
-    field.  There are issues dealing with this due to timezones, different
-    epochs, etc., but the alternative is using a string field to store the
-    values.
+    However, sometimes more precision is needed, and this field provides
+    arbitrarily high-precision datetimes.
 
-    By default this field will support 6 decimal places (microsceonds), but it
-    can be adjusted by adding the decimal_places kwarg.
+    Internally, this field is a DECIMAL field. The value is stored as a
+    straight UNIX timestamp, with extra digits of precision representing the
+    fraction of a second.
 
-    By default this field will support up decimal_places+12 total digits.  This
-    can be adjusted by including the max_digits kwarg.  max_digits must include
-    the total of both second and microsecond digits.
+    This field is not timezone-safe.
+
+    By default, this field supports six decimal places, for microseconds. It
+    will store a total of eighteen digits for the entire timestamp. Both of
+    these values can be adjusted.
+
+    The keyword argument ``decimal_places`` controls how many sub-second
+    decimal places will be stored. The keyword argument ``max_digits``
+    controls the total number of digits stored.
     """
 
     __metaclass__ = models.SubfieldBase
 
     def __init__(self, **kwargs):
-        # XXX set default values.  doing this here rather than as kwargs
-        # because default ordering of DecimalField.__init__ may be different
+        # Set default values.
         if not 'decimal_places' in kwargs:
             kwargs['decimal_places'] = 6
         if not 'max_digits' in kwargs:
             kwargs['max_digits'] = kwargs['decimal_places'] + 12
 
-        self.shifter = 10.0**kwargs['decimal_places']
+        self.shifter = Decimal(10)**kwargs['decimal_places']
 
         super(PreciseDateTimeField, self).__init__(**kwargs)
 
+
+    def get_prep_value(self, value):
+        """
+        Turn a datetime into a Decimal.
+        """
+
+        if value is None:
+            return None
+
+        # Use Decimal for the math to avoid floating-point loss of precision
+        # or trailing ulps. We want *exactly* as much precision as we had
+        # in the timestamp.
+        seconds = Decimal(int(time.mktime(value.timetuple())))
+        fraction = Decimal(value.microsecond)
+        return seconds + (fraction / self.shifter)
+
+
+    def get_db_prep_save(self, value, connection):
+        """
+        Prepare a value for the database.
+
+        Overridden to handle the datetime-Decimal conversion because
+        DecimalField doesn't otherwise understand our intent.
+
+        Part of the Django field API.
+        """
+
+        # Cribbed from the DecimalField implementation. Uses
+        # self.get_prep_value instead of self.to_python to ensure that only
+        # Decimals are passed here.
+        return connection.ops.value_to_db_decimal(self.get_prep_value(value),
+                                                  self.max_digits,
+                                                  self.decimal_places)
+
+
     def to_python(self, value):
         """
-        convert decimal value to a datetime
+        Turn a backend type into a Python type.
+
+        Part of the Django field API.
         """
-        if not value:
+
+        if value is None:
             return None
         if isinstance(value, (datetime,)):
             return value
-        if isinstance(value, (Decimal, str, unicode)):
-            value = float(value)
-        if isinstance(value, (float,)):
+        if isinstance(value, (Decimal, basestring)):
+            return datetime.fromtimestamp(float(value))
+        if isinstance(value, Real):
             return datetime.fromtimestamp(value)
 
         raise ValidationError(_('Unable to convert %s to datetime.') % value)
-
-    def get_db_prep_value(self, value, connection, prepared=False):
-        if value:
-            return time.mktime(value.timetuple()) + value.microsecond/(10**self.decimal_places)
-        return None
-
-    def get_db_prep_save(self, value, connection):
-        if value:
-            if isinstance(value, (datetime,)):
-                return Decimal('%f' % (time.mktime(value.timetuple()) + value.microsecond/self.shifter))
-
-            if isinstance(value, (float,)):
-                return Decimal(float)
-
-            if isinstance(value, (Decimal,)):
-                return value
-
-        return None
-
-    def db_type(self, connection):
-        # We used to care about which engine went here, but after some
-        # testing, it turns out that it just doesn't fucking matter which
-        # engine is being used; My, Pg and SQLite all respect the fuck out of
-        # NUMERIC.
-
-        return "NUMERIC(%d, %d)" % (self.max_digits, self.decimal_places)
 
 
 # Migration rules for PDTField. PDTField's serialization is surprisingly

@@ -119,8 +119,8 @@ class CachedClusterObjectBase(TestCase):
         # XXX query values only. otherwise they may be updated
         values = TestModel.objects.filter(pk=obj.id).values('mtime','cached')[0]
         
-        self.assertEqual(timestamp, float(values['mtime']))
-        self.assertEqual(timestamp, float(values['cached']))
+        self.assertAlmostEqual(timestamp, float(values['mtime']), delta=5)
+        self.assertAlmostEqual(timestamp, float(values['cached']), delta=5)
     
     def test_info(self):
         """

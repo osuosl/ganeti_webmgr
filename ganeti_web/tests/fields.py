@@ -15,13 +15,18 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
+from datetime import datetime
+from decimal import Decimal
+
 from django.test import SimpleTestCase
 
-from ganeti_web.fields import DataVolumeField, MACAddressField
+from ganeti_web.fields import (DataVolumeField, MACAddressField,
+                               PreciseDateTimeField)
 
 __all__ = (
     'TestDataVolumeField',
     'TestMACAddressField',
+    "TestPreciseDateTimeField",
 )
 
 
@@ -66,6 +71,7 @@ class TestDataVolumeField(SimpleTestCase):
                                field_kwargs={"max_value": 9216000},
                                empty_value=None)
 
+
 class TestMACAddressField(SimpleTestCase):
     """
     MACAddressField should work.
@@ -85,3 +91,34 @@ class TestMACAddressField(SimpleTestCase):
             "aabbccddeeffaabbc": [u"Enter a valid value."],
         }
         self.assertFieldOutput(MACAddressField, valid, invalid)
+
+
+class TestPreciseDateTimeField(SimpleTestCase):
+
+    def setUp(self):
+        self.f = PreciseDateTimeField()
+
+    def test_trivial(self):
+        pass
+
+    def test_to_python_none(self):
+        self.assertEqual(self.f.to_python(None), None)
+
+    def test_to_python_datetime(self):
+        dt = datetime.now()
+        self.assertEqual(self.f.to_python(dt), dt)
+
+    def test_to_python_str(self):
+        # The epoch.
+        t = "0"
+        dt = datetime.fromtimestamp(0)
+        self.assertEqual(self.f.to_python(t), dt)
+
+    def test_to_python_decimal(self):
+        t = Decimal(0)
+        dt = datetime.fromtimestamp(0)
+        self.assertEqual(self.f.to_python(t), dt)
+
+    def test_get_prep_value(self):
+        dt = datetime.fromtimestamp(0.000001)
+        self.assertEqual(self.f.get_prep_value(dt), Decimal("0.000001"))
