@@ -2,7 +2,7 @@ from django.contrib.auth.models import Group
 
 from ganeti_web import models
 from ganeti_web.models import VirtualMachineTemplate
-from ganeti_web.tests.rapi_proxy import JOB_RUNNING
+from ganeti_web.util.proxy.constants import JOB_RUNNING
 from ganeti_web.tests.views.virtual_machine.base import TestVirtualMachineViewsBase
 from ganeti_web.util import client
 

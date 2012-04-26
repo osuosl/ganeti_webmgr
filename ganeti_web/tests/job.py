@@ -22,8 +22,8 @@ from django.test.client import Client
 from django_test_tools.views import ViewTestMixin
 from django_test_tools.users import UserTestMixin
 
-from ganeti_web.tests.call_proxy import CallProxy
-from ganeti_web.tests.rapi_proxy import RapiProxy, JOB, JOB_RUNNING, JOB_ERROR
+from ganeti_web.util.proxy import RapiProxy, CallProxy
+from ganeti_web.util.proxy.constants import JOB, JOB_RUNNING, JOB_ERROR
 from ganeti_web import models
 from ganeti_web.tests.views.virtual_machine.base import VirtualMachineTestCaseMixin
 

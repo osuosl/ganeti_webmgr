@@ -6,7 +6,7 @@ from django_test_tools.users import UserTestMixin
 from ganeti_web.models import VirtualMachineTemplate
 from ganeti_web import models
 from ganeti_web.models import Cluster
-from ganeti_web.tests.rapi_proxy import RapiProxy
+from ganeti_web.util.proxy import RapiProxy
 
 
 class TemplateTestCase(TestCase, UserTestMixin):

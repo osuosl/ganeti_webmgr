@@ -23,7 +23,8 @@ from django.test import TestCase
 
 from ganeti_web import models
 from ganeti_web.cache import update_cache
-from ganeti_web.tests.rapi_proxy import RapiProxy, INSTANCES_BULK
+from ganeti_web.util.proxy import RapiProxy
+from ganeti_web.util.proxy.constants import INSTANCES_BULK
 from ganeti_web.tests.utils import MuteStdout
 from ganeti_web.tests.virtual_machine import VirtualMachineTestCaseMixin
 

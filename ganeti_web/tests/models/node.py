@@ -19,7 +19,8 @@ from datetime import datetime
 
 from django.test import TestCase
 
-from ganeti_web.tests.rapi_proxy import RapiProxy, NODE
+from ganeti_web.util.proxy import RapiProxy
+from ganeti_web.util.proxy.constants import NODE
 from ganeti_web import models
 
 VirtualMachine = models.VirtualMachine

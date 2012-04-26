@@ -3,7 +3,8 @@ from django.test import TestCase
 
 from ganeti_web import models
 from ganeti_web.forms.virtual_machine import NewVirtualMachineForm
-from ganeti_web.tests.rapi_proxy import RapiProxy, INFO
+from ganeti_web.util.proxy import RapiProxy
+from ganeti_web.util.proxy.constants import INFO
 from ganeti_web.tests.views.virtual_machine.base import (
     VirtualMachineTestCaseMixin, TestVirtualMachineViewsBase)
 

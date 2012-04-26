@@ -6,7 +6,7 @@ from django.utils import simplejson as json
 from object_permissions import grant
 
 from ganeti_web import models
-from ganeti_web.tests.rapi_proxy import INFO
+from ganeti_web.util.proxy.constants import INFO
 from ganeti_web.tests.views.virtual_machine.base import TestVirtualMachineViewsBase
 from ganeti_web.utilities import os_prettify
 

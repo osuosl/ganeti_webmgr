@@ -24,7 +24,7 @@ from django_test_tools.users import UserTestMixin
 from django_test_tools.views import ViewTestMixin
 from ganeti_web.tests.models.node import NodeTestCaseMixin
 
-from ganeti_web.tests.rapi_proxy import RapiProxy
+from ganeti_web.util.proxy import RapiProxy
 from ganeti_web import models
 from ganeti_web.util.client import GanetiApiError
 
