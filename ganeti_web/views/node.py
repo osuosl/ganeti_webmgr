@@ -21,7 +21,7 @@ import json
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.query_utils import Q
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound, Http404
+from django.http import HttpResponse, Http404
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.views.generic.detail import DetailView
@@ -128,17 +128,6 @@ class NodeSecondaryListView(LoginRequiredMixin, PagedListView):
             "node": self.node,
         })
         return kwargs
-
-
-@login_required
-def detail_by_id(request, id):
-    """
-    Node detail using a non-canonical url
-    """
-    query = Node.objects.filter(pk=id).select_related('cluster')
-    if len(query):
-        return HttpResponseRedirect(query[0].get_absolute_url())
-    return HttpResponseNotFound('Node does not exist')
 
 
 @login_required

@@ -505,17 +505,6 @@ def ssh_keys(request, cluster_slug, instance, api_key):
 
 
 @login_required
-def detail_by_id(request, id):
-    """
-    instance detail using a non-canonical url
-    """
-    query = VirtualMachine.objects.filter(pk=id).select_related('cluster')
-    if len(query):
-        return HttpResponseRedirect(query[0].get_absolute_url())
-    raise Http404('Virtual Machine does not exist')
-
-
-@login_required
 def detail(request, cluster_slug, instance, rest=False):
     """
     Display details of virtual machine.
