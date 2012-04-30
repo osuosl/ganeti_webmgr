@@ -1,6 +1,14 @@
-==================
+=========
 Changelog
-==================
+=========
+
+v0.8.1
+------
+
+Bugfix release.
+
+Bugs fixed:
+  * CsrfResponseMiddleware removed from settings.py.dist
 
 v0.8
 ----
