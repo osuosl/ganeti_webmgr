@@ -1133,18 +1133,21 @@ class Cluster(CachedClusterObject):
 
         return self.get_default_quota()
 
-    def set_quota(self, user, values=None):
+    def set_quota(self, user, data):
         """
-        set the quota for a ClusterUser
+        Set the quota for a ClusterUser.
+
+        If data is None, the quota will be removed.
 
         @param values: dictionary of values, or None to delete the quota
         """
+
         kwargs = {'cluster':self, 'user':user}
-        if values is None:
+        if data is None:
             Quota.objects.filter(**kwargs).delete()
         else:
             quota, new = Quota.objects.get_or_create(**kwargs)
-            quota.__dict__.update(values)
+            quota.__dict__.update(data)
             quota.save()
 
     @classmethod

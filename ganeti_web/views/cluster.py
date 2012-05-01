@@ -288,17 +288,9 @@ def quota(request, cluster_slug, user_id):
             data = form.cleaned_data
             cluster_user = data['user']
             if data['delete']:
-                cluster.set_quota(cluster_user)
+                cluster.set_quota(cluster_user, None)
             else:
-                quota = cluster.get_quota()
-                same = data['virtual_cpus'] == quota['virtual_cpus'] \
-                    and data['disk']==quota['disk'] \
-                    and data['ram']==quota['ram']
-                if same:
-                    # same as default, set quota to default.
-                    cluster.set_quota(cluster_user)
-                else:
-                    cluster.set_quota(cluster_user, data)
+                cluster.set_quota(cluster_user, data)
 
             # return updated html
             cluster_user = cluster_user.cast()

@@ -121,7 +121,6 @@ class TestClusterUser(TestCase):
 
         owner = user.get_profile()
         c1.set_quota(owner, quota)
-        #c2.set_quota(owner, quota)
         c3.set_quota(owner, quota)
         
         # test used_resources returns zeros for no values

@@ -16,7 +16,6 @@
 # USA.
 
 
-from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.test import TestCase
 from django.test.client import Client
@@ -1039,24 +1038,6 @@ class TestClusterQuotaViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertTemplateUsed(response, template)
         self.assertEqual(user_quota, self.cluster.get_quota(cluster_user))
         self.assertTrue(query.exists())
-
-        # valid POST - same as default values (should delete)
-        data = {'user':cluster_user.id, 'ram':1, 'disk':3}
-        response = self.c.post(url_post % args_post, data)
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, template)
-        self.assertEqual(default_quota, self.cluster.get_quota(cluster_user))
-        self.assertFalse(query.exists())
-
-        # valid POST - same as default values (should do nothing)
-        data = {'user':cluster_user.id, 'ram':1, 'disk':3}
-        response = self.c.post(url_post % args_post, data)
-        self.assertEqual(200, response.status_code)
-        self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, template)
-        self.assertEqual(default_quota, self.cluster.get_quota(cluster_user))
-        self.assertFalse(query.exists())
 
         # valid POST - setting implicit unlimited (values are excluded)
         data = {'user':cluster_user.id}
