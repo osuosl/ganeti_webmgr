@@ -31,6 +31,7 @@
         original operating system.
     </div>
     <form method="post">
+        {% csrf_token %}
         <label for="os">{% trans "Operating System" %}</label>
         <select name="os" id="os">
         {% for osgroup in oschoices %}
