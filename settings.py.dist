@@ -18,6 +18,8 @@
 
 # Django settings for ganeti_webmgr project.
 
+from ganeti_web.settings import *
+
 import os.path
 
 DEBUG = True
@@ -60,10 +62,6 @@ TIME_ZONE = 'America/Los_Angeles'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
-
-# In order to support localization the following have to be added:
-
-ugettext = lambda s: s
 
 # If no other locale is present/supported for the time leave the following as is.
 # When locales are added, place them ath the "('yourlang', ugettext('YOUR LANGUAGE')),"
@@ -125,36 +123,6 @@ AUTHENTICATION_BACKENDS = (
     'object_permissions.backend.ObjectPermBackend',
 )
 
-# List of callables that know how to import templates from various sources.
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-#     'django.template.loaders.eggs.Loader',
-)
-
-TEMPLATE_CONTEXT_PROCESSORS = (
-    'django.contrib.auth.context_processors.auth',
-    'django.contrib.messages.context_processors.messages',
-    'django.core.context_processors.debug',
-    'django.core.context_processors.i18n',
-    'django.core.context_processors.media',
-    'ganeti_web.context_processors.site',
-    'ganeti_web.context_processors.common_permissions',
-)
-
-MIDDLEWARE_CLASSES = (
-    'django.middleware.common.CommonMiddleware',
-    # Order matters; transaction middleware affects all middleware placed
-    # after it. You probably want it up here, very early.
-    'django.middleware.transaction.TransactionMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'ganeti_web.middleware.Http403Middleware',
-)
-
 ROOT_URLCONF = 'urls'
 
 TEMPLATE_DIRS = (
@@ -164,30 +132,11 @@ TEMPLATE_DIRS = (
     'templates/'
 )
 
-INSTALLED_APPS = (
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.messages',
-    'django.contrib.sessions',
-    'django.contrib.sites',
-    'registration',
-    'deprecated.ganeti', # XXX deprecated ganeti MUST come before ganeti_web
-    'ganeti_web',        # XXX must come before object permissions for migration to 0.7
-    'object_permissions', 
-    'object_log',
-    'south',
-    'haystack',
-    'muddle',
-    'muddle.shots',
-    'muddle_users',
-)
-
 # Search settings
 HAYSTACK_SITECONF = 'search_sites'
 HAYSTACK_SEARCH_ENGINE = 'whoosh'
 HAYSTACK_WHOOSH_PATH = os.path.join(DOC_ROOT, 'whoosh_index')
 
-AUTH_PROFILE_MODULE = 'ganeti_web.Profile'
 LOGIN_REDIRECT_URL = '/'
 
 DATE_FORMAT = "d/m/Y"
