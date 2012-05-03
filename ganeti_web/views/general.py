@@ -16,16 +16,16 @@
 # USA.
 
 from itertools import chain, izip, repeat
-import json
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.db.models import Q, Count
 from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
-from django.contrib.contenttypes.models import ContentType
+from django.utils import simplejson as json
 from django.views.generic.base import TemplateView
 
 from object_permissions import get_users_any

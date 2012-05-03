@@ -15,11 +15,10 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-import json
-
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404
+from django.utils import simplejson as json
 from django.views.generic.detail import DetailView
 
 from ganeti_web.middleware import Http403

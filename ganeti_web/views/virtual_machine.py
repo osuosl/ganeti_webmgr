@@ -16,10 +16,10 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-import json
-from django.contrib.contenttypes.models import ContentType
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.forms import CharField, HiddenInput
@@ -28,7 +28,8 @@ from django.http import (HttpResponse, HttpResponseRedirect,
                          Http404)
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
-from django.conf import settings
+from django.utils import simplejson as json
+from django.utils.translation import ugettext as _
 from django.views.decorators.http import require_http_methods, require_POST
 from django.views.generic.edit import DeleteView
 
@@ -54,7 +55,6 @@ from ganeti_web.utilities import cluster_default_info, cluster_os_list, \
     compare, os_prettify, get_hypervisor
 from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
                                       PagedListView)
-from django.utils.translation import ugettext as _
 
 
 #XXX No more need for tastypie dependency for 0.8

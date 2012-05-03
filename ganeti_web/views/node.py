@@ -16,14 +16,14 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-import json
-
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.query_utils import Q
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound, Http404
+from django.http import (HttpResponse, HttpResponseRedirect,
+                         HttpResponseNotFound, Http404)
 from django.shortcuts import render_to_response
 from django.template import RequestContext
+from django.utils import simplejson as json
 from django.views.generic.detail import DetailView
 
 from object_log.models import LogItem
