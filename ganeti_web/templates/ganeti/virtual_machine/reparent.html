@@ -20,6 +20,7 @@
 {% block content %}
     <div id="virtualmachineform">
         <form method="post">
+            {% csrf_token %}
             <fieldset class="first_fieldset">
                 <h1 class="breadcrumb">
                     {% if cluster_admin %}
