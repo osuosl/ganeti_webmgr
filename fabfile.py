@@ -2,8 +2,9 @@ import os
 
 import pkg_resources
 
-from fabric.api import env
+from fabric.api import env, hide, abort
 from fabric.context_managers import settings, hide, lcd
+from fabric.contrib.console import confirm
 from fabric.contrib.files import exists
 from fabric.operations import local, require, prompt
 
@@ -108,6 +109,26 @@ def deploy():
 
     install_dependencies_pip()
     install_dependencies_git()
+
+
+def update():
+    """
+    In a development environment, update all develop branches.
+    """
+    require('environment', provided_by=[dev, prod])
+
+    if env.environment != 'development':
+        raise Exception('must be in a development environment in order to'
+            'update develop branches.')
+    else:
+        with lcd('%(doc_root)s/dependencies' % env):
+            for git_dir, opts in GIT_INSTALL.items():
+                env.git_repo = git_dir
+                if (_exists('%(doc_root)s/dependencies/%(git_repo)s' % env) and
+                    'development' in opts and 'checkout' not in opts):
+                    with lcd(git_dir):
+                        print 'Updating git repo: %(git_repo)s' % env
+                        local('git pull --ff')
 
 
 def _exists(path):
