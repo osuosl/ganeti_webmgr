@@ -2,8 +2,9 @@ import os
 
 import pkg_resources
 
-from fabric.api import env
+from fabric.api import env, hide, abort
 from fabric.context_managers import settings, hide, lcd
+from fabric.contrib.console import confirm
 from fabric.contrib.files import exists
 from fabric.operations import local, require, prompt
 
@@ -109,6 +110,33 @@ def deploy():
     install_dependencies_pip()
     install_dependencies_git()
 
+def tracking():
+    """
+    Output all the current local branches that are tracking a remote branch.
+    """
+
+    tracked = []
+    untracked = []
+
+    # Grab all local branches and their upstream mates. Finds which branches
+    #  are tracking.
+    refs_raw = local('git for-each-ref --python ' \
+        '--format="%(refname:short),%(upstream:short)" refs/heads',
+        capture=True)
+    # refs_raw comes in as quoted strings. Cut it up to put into a list.
+    ref_list = [x.replace("'","").split(',') for x in refs_raw.split('\n')]
+    # Each untracked ref is added to untracked, while each tracked is added
+    #  to tracked with it's mate.
+    for i, refs in enumerate(ref_list):
+        if refs[1] is '':
+            untracked.append(refs[0])
+        else:
+            tracked.append((refs[0], refs[1]))
+    # Take the tracked and their mates and put them in a string
+    tracked_str = ["%s -> %s" % (x, y) for x,y in tracked]
+    # Output in a human readable format.
+    print("Tracked Branches:\n  %s\nUntracked Branches:\n  %s" %
+        ('\n  '.join(tracked_str), '\n  '.join(untracked)))
 
 def _exists(path):
     """
