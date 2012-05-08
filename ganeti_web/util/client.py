@@ -687,7 +687,8 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
                                           (GANETI_RAPI_VERSION, instance)),
                                  query=query)
 
-    def ShutdownInstance(self, instance, dry_run=False, no_remember=False):
+    def ShutdownInstance(self, instance, dry_run=False, no_remember=False,
+                         timeout=120):
         """
         Shuts down an instance.
 
@@ -704,6 +705,7 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         query = {
             "dry-run": dry_run,
             "no-remember": no_remember,
+            "timeout": timeout,
         }
 
         return self._SendRequest("put", ("/%s/instances/%s/shutdown" %
