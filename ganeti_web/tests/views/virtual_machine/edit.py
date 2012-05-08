@@ -597,6 +597,35 @@ class TestVirtualMachineDeleteViews(TestVirtualMachineViewsBase):
         self.assertTrue(pending_delete)
         self.assertTrue(job_id)
 
+    def test_view_delete_post_7605(self):
+        """
+        When a VM is deleted, all of its jobs should be cleared.
+
+        See #7605 for more information.
+        """
+
+        job = models.Job.objects.create(job_id=42, obj=self.vm,
+                                        cluster_id=self.vm.cluster_id,
+                                        cleared=False)
+
+        self.assertTrue(self.c.login(username=self.superuser.username,
+                                     password='secret'))
+        self.vm.rapi.GetJobStatus.response = JOB_RUNNING
+        response = self.c.post(self.url % self.args, follow=True)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/html; charset=utf-8', response['content-type'])
+        self.assertTemplateUsed(response,
+                                'ganeti/virtual_machine/delete_status.html')
+        self.assertTrue(VirtualMachine.objects.filter(id=self.vm.id).exists())
+        qs = VirtualMachine.objects.filter(id=self.vm.id)
+        pending_delete, job_id = qs.values('pending_delete', 'last_job_id')[0]
+        self.assertTrue(pending_delete)
+        self.assertTrue(job_id)
+
+        # Refresh and make sure it's cleared.
+        job = models.Job.objects.get(job_id=job.job_id)
+        self.assertTrue(job.cleared)
+
     def test_view_delete_post_cluster_admin(self):
         self.user.grant('admin', self.cluster)
         self.assertTrue(self.c.login(username=self.user.username,
