@@ -302,7 +302,7 @@ def vnc_proxy(request, cluster_slug, instance):
 
 @require_POST
 @login_required
-def shutdown(request, cluster_slug, instance, rest=False):
+def shutdown(request, cluster_slug, instance):
     vm = get_object_or_404(VirtualMachine, hostname=instance,
                            cluster__slug=cluster_slug)
     user = request.user
@@ -310,10 +310,7 @@ def shutdown(request, cluster_slug, instance, rest=False):
     if not (user.is_superuser or user.has_any_perms(vm, ['admin','power']) or
         user.has_perm('admin', vm.cluster)):
         msg = _('You do not have permission to shut down this virtual machine')
-        if rest:
-            return {"msg": msg, 'code': 403}
-        else:
-            raise Http403(msg)
+        raise Http403(msg)
 
     try:
         job = vm.shutdown()
@@ -325,10 +322,32 @@ def shutdown(request, cluster_slug, instance, rest=False):
     except GanetiApiError, e:
         msg = {'__all__':[str(e)]}
 
-    if rest:
-        return {'msg': msg, 'code': 200}
-    else:
-        return HttpResponse(json.dumps(msg), mimetype='application/json')
+    return HttpResponse(json.dumps(msg), mimetype='application/json')
+
+
+@require_POST
+@login_required
+def shutdown_now(request, cluster_slug, instance):
+    vm = get_object_or_404(VirtualMachine, hostname=instance,
+                           cluster__slug=cluster_slug)
+    user = request.user
+
+    if not (user.is_superuser or user.has_any_perms(vm, ['admin','power']) or
+        user.has_perm('admin', vm.cluster)):
+        msg = _('You do not have permission to shut down this virtual machine')
+        raise Http403(msg)
+
+    try:
+        job = vm.shutdown(timeout=0)
+        job.refresh()
+        msg = job.info
+
+        # log information about stopping the machine
+        log_action('VM_STOP', user, vm, job)
+    except GanetiApiError, e:
+        msg = {'__all__':[str(e)]}
+
+    return HttpResponse(json.dumps(msg), mimetype='application/json')
 
 
 @require_POST

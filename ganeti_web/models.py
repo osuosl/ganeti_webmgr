@@ -749,8 +749,12 @@ class VirtualMachine(CachedClusterObject):
             return None
         return self.rapi.GetInstance(self.hostname)
 
-    def shutdown(self):
-        id = self.rapi.ShutdownInstance(self.hostname)
+    def shutdown(self, timeout=None):
+        if timeout is None:
+            id = self.rapi.ShutdownInstance(self.hostname)
+        else:
+            id = self.rapi.ShutdownInstance(self.hostname, timeout=timeout)
+
         job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
         self.last_job = job
         VirtualMachine.objects.filter(pk=self.id) \
