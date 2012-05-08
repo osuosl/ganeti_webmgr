@@ -2,8 +2,9 @@ import os
 
 import pkg_resources
 
-from fabric.api import env
+from fabric.api import env, hide, abort
 from fabric.context_managers import settings, hide, lcd
+from fabric.contrib.console import confirm
 from fabric.contrib.files import exists
 from fabric.operations import local, require, prompt
 
@@ -108,6 +109,24 @@ def deploy():
 
     install_dependencies_pip()
     install_dependencies_git()
+
+def clean():
+    """
+    In a development environment, remove all installed packages and symlinks.
+    """
+    require('environment', provided_by=[dev, prod])
+
+    if env.environment != 'development':
+        abort('Must be in a development environment.')
+    else:
+        with lcd('%(doc_root)s' % env):
+            gitcmd = 'git clean -%sdx -e \!settings.py'
+            print('Files to be removed:')
+            local(gitcmd % 'n')
+            if confirm('Are you certain you would like to remove these files?'):
+                local(gitcmd % 'f')
+            else:
+                abort('Aborting clean.')
 
 
 def _exists(path):
