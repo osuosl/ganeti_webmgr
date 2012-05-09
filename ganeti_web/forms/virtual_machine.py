@@ -33,7 +33,6 @@ from ganeti_web.utilities import cluster_default_info, cluster_os_list, contains
 from django.utils.translation import ugettext_lazy as _
 from ganeti_web.util.client import REPLACE_DISK_AUTO, REPLACE_DISK_PRI, \
     REPLACE_DISK_CHG, REPLACE_DISK_SECONDARY
-import re
 
 username_or_mtime = Q(username='') | Q(mtime__isnull=True)
 
@@ -98,9 +97,9 @@ class VirtualMachineForm(forms.ModelForm):
                 pass
 
         # Spaces in hostname will always break things. 
-        if re.compile(' ').match(hostname):
-            raise ValidationError(_("Hostname contains illegal character"))
-
+        if ' ' in hostname:
+            self.errors["hostname"] = self.error_class(
+                ["Hostname contains illegal character"])
         return hostname
 
     def clean_vcpus(self):
