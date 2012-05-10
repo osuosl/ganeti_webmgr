@@ -605,8 +605,7 @@ class TestVirtualMachineDeleteViews(TestVirtualMachineViewsBase):
         """
 
         job = models.Job.objects.create(job_id=42, obj=self.vm,
-                                        cluster_id=self.vm.cluster_id,
-                                        cleared=False)
+                                        cluster_id=self.vm.cluster_id)
 
         self.assertTrue(self.c.login(username=self.superuser.username,
                                      password='secret'))
@@ -623,8 +622,8 @@ class TestVirtualMachineDeleteViews(TestVirtualMachineViewsBase):
         self.assertTrue(job_id)
 
         # Refresh and make sure it's cleared.
-        job = models.Job.objects.get(job_id=job.job_id)
-        self.assertTrue(job.cleared)
+        qs = models.Job.objects.filter(job_id=job.job_id)
+        self.assertFalse(qs.exists())
 
     def test_view_delete_post_cluster_admin(self):
         self.user.grant('admin', self.cluster)

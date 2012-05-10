@@ -200,8 +200,7 @@ class VMDeleteView(LoginRequiredMixin, DeleteView):
 
         # Clear any old jobs for this VM.
         ct = ContentType.objects.get_for_model(VirtualMachine)
-        Job.objects.filter(content_type=ct,
-                           object_id=instance.id).update(cleared=True)
+        Job.objects.filter(content_type=ct, object_id=instance.id).delete()
 
         # Create the deletion job.
         job_id = instance.rapi.DeleteInstance(instance.hostname)
@@ -1178,9 +1177,10 @@ def job_status(request, id, rest=False):
     """
     Return a list of basic info for running jobs.
     """
-    q = Q(status__in=('running','waiting')) | Q(status='error', cleared=False)
     ct = ContentType.objects.get_for_model(VirtualMachine)
-    jobs = Job.objects.filter(q, content_type=ct, object_id=id).order_by('job_id')
+    jobs = Job.objects.filter(status__in=("error", "running", "waiting"),
+                              content_type=ct,
+                              object_id=id).order_by('job_id')
     jobs = [j.info for j in jobs]
 
     if rest:

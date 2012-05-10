@@ -329,9 +329,11 @@ def job_status(request, id, rest=False):
     """
     Return a list of basic info for running jobs.
     """
-    q = Q(status__in=('running','waiting')) | Q(status='error', cleared=False)
+
     ct = ContentType.objects.get_for_model(Cluster)
-    jobs = Job.objects.filter(q, content_type=ct, object_id=id).order_by('job_id')
+    jobs = Job.objects.filter(status__in=("error", "running", "waiting"),
+                              content_type=ct,
+                              object_id=id).order_by('job_id')
     jobs = [j.info for j in jobs]
 
     if rest:

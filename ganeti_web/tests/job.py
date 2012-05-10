@@ -15,7 +15,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-from django.contrib.auth.models import User
 from django.test import TestCase
 from django.test.client import Client
 
@@ -216,7 +215,6 @@ class TestJobViews(TestJobMixin, TestCase, UserTestMixin, ViewTestMixin):
         c_error.info = JOB_ERROR
         c_error.save()
         c_error = Job.objects.get(pk=c_error.pk)
-        self.assertFalse(c_error.cleared)
         self.cluster.last_job = c_error
         self.cluster.ignore_cache = True
         self.cluster.save()
@@ -225,7 +223,6 @@ class TestJobViews(TestJobMixin, TestCase, UserTestMixin, ViewTestMixin):
         vm_error.info = JOB_ERROR
         vm_error.save()
         vm_error = Job.objects.get(pk=vm_error.pk)
-        self.assertFalse(vm_error.cleared)
         self.vm.last_job = vm_error
         self.vm.ignore_cache = True
         self.vm.save()
@@ -249,7 +246,6 @@ class TestJobViews(TestJobMixin, TestCase, UserTestMixin, ViewTestMixin):
         vm_error2.info = JOB_ERROR
         vm_error2.save()
         vm_error2 = Job.objects.get(pk=vm_error.pk)
-        self.assertFalse(vm_error.cleared)
         self.vm.last_job = vm_error
         self.vm.ignore_cache = True
         self.vm.save()
@@ -258,6 +254,32 @@ class TestJobViews(TestJobMixin, TestCase, UserTestMixin, ViewTestMixin):
         updated = VirtualMachine.objects.filter(pk=self.vm.pk).values('last_job_id','ignore_cache')[0]
         self.assertEqual(vm_error.pk, updated['last_job_id'])
         self.assertTrue(updated['ignore_cache'])
+
+    def test_clear_job_superuser(self):
+
+        url = '/cluster/%s/job/%s/clear/'
+
+        c_error = Job.objects.create(cluster=self.cluster, obj=self.cluster,
+                                     job_id=1)
+        c_error.info = JOB_ERROR
+        c_error.save()
+        c_error = Job.objects.get(pk=c_error.pk)
+        self.cluster.last_job = c_error
+        self.cluster.ignore_cache = True
+        self.cluster.save()
+
+        args = (self.cluster.slug, c_error.job_id)
+
+        # authorized for cluster
+        def tests(user, response):
+            qs = Job.objects.filter(pk=c_error.pk)
+            self.assertFalse(qs)
+            updated = Cluster.objects.filter(pk=self.cluster.pk).values('last_job_id','ignore_cache')[0]
+            self.assertEqual(None, updated['last_job_id'])
+            self.assertFalse(updated['ignore_cache'])
+        self.assert_200(url, args, users=[self.superuser],
+                        data={'id':c_error.pk}, tests=tests, method='post',
+                        mime='application/json')
 
     def test_clear_job_authorized_cluster(self):
 
@@ -268,31 +290,20 @@ class TestJobViews(TestJobMixin, TestCase, UserTestMixin, ViewTestMixin):
         c_error.info = JOB_ERROR
         c_error.save()
         c_error = Job.objects.get(pk=c_error.pk)
-        self.assertFalse(c_error.cleared)
         self.cluster.last_job = c_error
         self.cluster.ignore_cache = True
         self.cluster.save()
-        vm_error = Job.objects.create(cluster=self.cluster, obj=self.vm,
-                                      job_id=2)
-        vm_error.info = JOB_ERROR
-        vm_error.save()
-        vm_error = Job.objects.get(pk=vm_error.pk)
-        self.assertFalse(vm_error.cleared)
-        self.vm.last_job = vm_error
-        self.vm.ignore_cache = True
-        self.vm.save()
 
         args = (self.cluster.slug, c_error.job_id)
 
         # authorized for cluster
         def tests(user, response):
-            error = Job.objects.get(pk=c_error.pk)
-            self.assertTrue(error.cleared)
-            Job.objects.all().update(cleared=False)
+            qs = Job.objects.filter(pk=c_error.pk)
+            self.assertFalse(qs)
             updated = Cluster.objects.filter(pk=self.cluster.pk).values('last_job_id','ignore_cache')[0]
             self.assertEqual(None, updated['last_job_id'])
             self.assertFalse(updated['ignore_cache'])
-        self.assert_200(url, args, users=[self.superuser, self.cluster_admin],
+        self.assert_200(url, args, users=[self.cluster_admin],
                         data={'id':c_error.pk}, tests=tests, method='post',
                         mime='application/json')
 
@@ -300,38 +311,30 @@ class TestJobViews(TestJobMixin, TestCase, UserTestMixin, ViewTestMixin):
 
         url = '/cluster/%s/job/%s/clear/'
 
-        c_error = Job.objects.create(cluster=self.cluster, obj=self.cluster,
-                                     job_id=1)
-        c_error.info = JOB_ERROR
-        c_error.save()
-        c_error = Job.objects.get(pk=c_error.pk)
-        self.assertFalse(c_error.cleared)
-        self.cluster.last_job = c_error
-        self.cluster.ignore_cache = True
-        self.cluster.save()
-        vm_error = Job.objects.create(cluster=self.cluster, obj=self.vm,
-                                      job_id=2)
-        vm_error.info = JOB_ERROR
-        vm_error.save()
-        vm_error = Job.objects.get(pk=vm_error.pk)
-        self.assertFalse(vm_error.cleared)
-        self.vm.last_job = vm_error
-        self.vm.ignore_cache = True
-        self.vm.save()
+        # XXX ugh, sorry for this!
+        for user in [self.superuser, self.cluster_admin, self.vm_admin,
+                     self.vm_owner]:
 
-        # authorized for vm
-        args = (self.cluster.slug, vm_error.job_id)
-        def tests(user, response):
-            error = Job.objects.get(pk=vm_error.pk)
-            self.assertTrue(error.cleared, 'error was not marked cleared')
-            Job.objects.all().update(cleared=False)
-            updated = VirtualMachine.objects.filter(pk=self.vm.pk).values('last_job_id','ignore_cache')[0]
-            self.assertEqual(None, updated['last_job_id'])
-            self.assertFalse(updated['ignore_cache'])
-        self.assert_200(url, args, users=[self.superuser, self.cluster_admin,
-                                          self.vm_admin, self.vm_owner],
-                        data={'id':vm_error.id}, tests=tests, method='post',
-                        mime='application/json')
+            vm_error = Job.objects.create(cluster=self.cluster, obj=self.vm,
+                                          job_id=2)
+            vm_error.info = JOB_ERROR
+            vm_error.save()
+            vm_error = Job.objects.get(pk=vm_error.pk)
+            self.vm.last_job = vm_error
+            self.vm.ignore_cache = True
+            self.vm.save()
+
+            args = (self.cluster.slug, vm_error.job_id)
+
+            def tests(user, response):
+                qs = Job.objects.filter(pk=vm_error.pk)
+                self.assertFalse(qs.exists(), "job error was not deleted")
+                updated = VirtualMachine.objects.filter(pk=self.vm.pk).values('last_job_id','ignore_cache')[0]
+                self.assertEqual(None, updated['last_job_id'])
+                self.assertFalse(updated['ignore_cache'])
+            self.assert_200(url, args, users=[user], data={'id':vm_error.id},
+                            tests=tests, method='post',
+                            mime='application/json')
 
     def test_job_detail(self):
         """

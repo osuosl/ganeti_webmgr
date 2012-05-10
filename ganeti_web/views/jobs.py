@@ -56,9 +56,9 @@ def status(request, cluster_slug, job_id, rest=False):
 
 
 @login_required
-def clear(request, cluster_slug, job_id, rest=False):
+def clear(request, cluster_slug, job_id):
     """
-    Clear a single failed job error message
+    Remove a job.
     """
 
     user = request.user
@@ -71,32 +71,23 @@ def clear(request, cluster_slug, job_id, rest=False):
 
     if not cluster_admin:
         if isinstance(obj, (Cluster, Node)):
-            if rest:
-                return HttpResponseForbidden
-            else:
-                raise Http403(NO_PRIVS)
+            raise Http403(NO_PRIVS)
         elif isinstance(obj, (VirtualMachine,)):
             # object is a virtual machine, check perms on VM and on Cluster
-            if not (obj.owner_id == user.get_profile().pk  \
-                or user.has_perm('admin', obj) \
+            if not (obj.owner_id == user.get_profile().pk
+                or user.has_perm('admin', obj)
                 or user.has_perm('admin', obj.cluster)):
                     raise Http403(NO_PRIVS)
 
-
-    # clear the error.
-    Job.objects.filter(pk=job.pk).update(cleared=True)
-
-    # clear the job from the object, but only if it is the last job. It's
-    # possible another job was started after this job, and the error message
-    # just wasn't cleared.
-    #
-    # XXX object could be none, in which case we dont need to clear its last_job
+    # If the job points to an object, and the job is the most recent job on
+    # the object, then clear it from the object.
     if obj is not None:
-        ObjectModel = obj.__class__
-        ObjectModel.objects.filter(pk=job.object_id, last_job=job)  \
-            .update(last_job=None, ignore_cache=False)
+        if obj.last_job == job:
+            obj.last_job = None
+            obj.ignore_cache = False
+            obj.save()
 
-    if rest:
-        return 1
-    else:
-        return HttpResponse('1', mimetype='application/json')
+    # "Clear" the job. With extreme prejudice.
+    job.delete()
+
+    return HttpResponse('1', mimetype='application/json')

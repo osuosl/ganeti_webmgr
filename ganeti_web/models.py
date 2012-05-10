@@ -332,7 +332,7 @@ class CachedClusterObject(models.Model):
         if self.last_job_id:
             ct = ContentType.objects.get_for_model(self)
             job_ids = Job.objects\
-                .filter(content_type=ct, object_id=self.pk, processed=False) \
+                .filter(content_type=ct, object_id=self.pk) \
                 .order_by('job_id') \
                 .values_list('job_id', flat=True)
 
@@ -347,14 +347,14 @@ class CachedClusterObject(models.Model):
                     if status in ('success', 'error'):
                         job_updates = Job.parse_persistent_info(data)
                         Job.objects.filter(pk=job_id) \
-                            .update(processed=True, **job_updates)
+                            .update(**job_updates)
                 except GanetiApiError:
                     status = 'unknown'
                     op = None
 
                 if status == 'unknown':
                     Job.objects.filter(pk=job_id) \
-                        .update(status=status, ignore_cache=False, processed=True)
+                        .update(status=status, ignore_cache=False)
 
                 if status in ('success','error','unknown'):
                     _updates = self._complete_job(self.cluster_id,
@@ -452,8 +452,6 @@ class Job(CachedClusterObject):
     cluster = models.ForeignKey('Cluster', editable=False, related_name='jobs')
     cluster_hash = models.CharField(max_length=40, editable=False)
 
-    processed = models.BooleanField(default=False)
-    cleared = models.BooleanField(default=False)
     finished = models.DateTimeField(null=True)
     status = models.CharField(max_length=10)
     op = models.CharField(max_length=50)
