@@ -266,9 +266,8 @@ class CachedClusterObject(models.Model):
         """
 
         job_data = self.check_job_status()
-        if job_data:
-            for k, v in job_data.items():
-                setattr(self, k, v)
+        for k, v in job_data.items():
+            setattr(self, k, v)
 
         # XXX this try/except is far too big; see if we can pare it down.
         try:
@@ -329,50 +328,56 @@ class CachedClusterObject(models.Model):
         raise NotImplementedError
 
     def check_job_status(self):
-        if self.last_job_id:
-            ct = ContentType.objects.get_for_model(self)
-            job_ids = Job.objects\
-                .filter(content_type=ct, object_id=self.pk) \
-                .order_by('job_id') \
-                .values_list('job_id', flat=True)
+        if not self.last_job_id:
+            return {}
 
-            updates = {}
-            status = None
-            for job_id in job_ids:
-                try:
-                    data = self.rapi.GetJobStatus(job_id)
-                    status = data['status']
-                    op = data['ops'][-1]['OP_ID']
+        ct = ContentType.objects.get_for_model(self)
+        qs = Job.objects.filter(content_type=ct, object_id=self.pk)
+        jobs = qs.order_by("job_id")
 
-                    if status in ('success', 'error'):
-                        job_updates = Job.parse_persistent_info(data)
-                        Job.objects.filter(pk=job_id) \
-                            .update(**job_updates)
-                except GanetiApiError:
-                    status = 'unknown'
-                    op = None
+        updates = {}
+        for job in jobs:
+            status = 'unknown'
+            op = None
 
-                if status == 'unknown':
-                    Job.objects.filter(pk=job_id) \
-                        .update(status=status, ignore_cache=False)
+            try:
+                data = self.rapi.GetJobStatus(job.job_id)
+                status = data['status']
+                op = data['ops'][-1]['OP_ID']
+            except GanetiApiError:
+                pass
 
-                if status in ('success','error','unknown'):
-                    _updates = self._complete_job(self.cluster_id,
-                                                  self.hostname, op, status)
-                    # XXX if the delete flag is set in updates then delete this model
-                    # this happens here because _complete_job cannot delete this model
-                    if _updates and 'deleted' in _updates:
-                        #del _updates['deleted']
+            if status in ('success', 'error'):
+                for k, v in Job.parse_persistent_info(data).items():
+                    setattr(job, k, v)
+
+            if status == 'unknown':
+                job.status = "unknown"
+                job.ignore_cache = False
+
+            if status in ('success','error','unknown'):
+                _updates = self._complete_job(self.cluster_id,
+                                              self.hostname, op, status)
+                # XXX if the delete flag is set in updates then delete this model
+                # this happens here because _complete_job cannot delete this model
+                if _updates:
+                    if 'deleted' in _updates:
+                        # Delete ourselves. Also delete the job that caused us
+                        # to delete ourselves; see #8439 for "fun" details.
+                        # Order matters; the job's deletion cascades over us.
+                        # Revisit that when we finally nuke all this caching
+                        # bullshit.
                         self.delete()
-                        _updates = None
-                    if _updates: updates.update(_updates)
+                        job.delete()
+                    else:
+                        updates.update(_updates)
 
-            # we only care about the very last job for resetting the cache flags
-            if status in ('success','error','unknown') or not job_ids:
-                updates['ignore_cache'] = False
-                updates['last_job'] = None
+        # we only care about the very last job for resetting the cache flags
+        if status in ('success','error','unknown') or not jobs:
+            updates['ignore_cache'] = False
+            updates['last_job'] = None
 
-            return updates
+        return updates
 
     @classmethod
     def _complete_job(cls, cluster_id, hostname, op, status):
