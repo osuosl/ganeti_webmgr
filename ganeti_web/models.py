@@ -545,7 +545,8 @@ class Job(CachedClusterObject):
         return self.info['ops'][-1]['OP_ID']
 
     def __repr__(self):
-        return "<Job: '%s'>" % self.id
+        return "<Job %d (%d), status %r>" % (self.id, self.job_id,
+                                             self.status)
 
     def __str__(self):
         return repr(self)
