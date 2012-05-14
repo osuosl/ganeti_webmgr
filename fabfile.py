@@ -182,7 +182,7 @@ def install_dependencies_git():
         # If we can satisfy all of our dependencies from pip alone, then don't
         # bother running the git installation.
         if all(p in PIP_INSTALL for p in GIT_INSTALL):
-            print 'No git repos to install'
+            print 'No git repos to install! Yay!'
             return
 
     create_env()
@@ -212,16 +212,10 @@ def install_dependencies_git():
                 with lcd(name):
                     local('git fetch')
 
-                    # If we're supposed to affix ourselves to a certain
-                    # commit, then do so. Otherwise, attempt to create a
-                    # tracked branch and update it.
-                    if opts.get("checkout", "") == "commit":
-                        local("git checkout %(head)s" % opts)
-                    else:
-                        with settings(hide('warnings','stderr'),
-                                      warn_only=True):
-                            local('git checkout -t origin/%(head)s' % opts)
-                            local('git pull')
+                    # Attempt to create a tracked branch and update it.
+                    with settings(hide('warnings','stderr'), warn_only=True):
+                        local('git checkout -t origin/%(head)s' % opts)
+                        local('git pull')
 
         # install to virtualenv using setup.py if it exists.  Some repos might
         # not have it and will need to be symlinked into the project
