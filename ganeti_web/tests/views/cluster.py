@@ -53,7 +53,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         group = Group(name='testing_group')
         group.save()
 
-        cluster = Cluster(hostname='test.osuosl.test', slug='OSL_TEST')
+        cluster = Cluster(hostname='test.example.test', slug='OSL_TEST')
         cluster.save()
 
         self.create_standard_users()
@@ -832,7 +832,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         specified cluster
         """
         vm = VirtualMachine.objects.create(cluster=self.cluster,
-                                           hostname='vm1.osuosl.bak')
+                                           hostname='vm1.example.bak')
 
         user1 = User(id=3, username='tester1')
         user1.set_password('secret')
@@ -932,7 +932,7 @@ class TestClusterQuotaViews(TestCase, ViewTestMixin, UserTestMixin):
         group = Group(name='testing_group')
         group.save()
 
-        cluster = Cluster(hostname='test.osuosl.test', slug='OSL_TEST')
+        cluster = Cluster(hostname='test.example.test', slug='OSL_TEST')
         cluster.save()
 
         self.create_standard_users()

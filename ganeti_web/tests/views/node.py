@@ -38,7 +38,7 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
         models.client.GanetiRapiClient = RapiProxy
 
         self.node, cluster = self.create_node()
-        self.node2, self.cluster = self.create_node(cluster, 'node2.osuosl.bak')
+        self.node2, self.cluster = self.create_node(cluster, 'node2.example.bak')
 
         context = {"cluster": self.cluster, "node": self.node}
 
@@ -196,7 +196,7 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
         users = [self.superuser, self.user_migrate, self.user_admin]
 
         data = {'iallocator': False, 'iallocator_hostname': 'foo',
-                'node': 'node2.osuosl.bak'}
+                'node': 'node2.example.bak'}
         def tests(user, response):
             data = json.loads(response.content)
             self.assertTrue('status' in data, data)
@@ -212,7 +212,7 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
             data = json.loads(response.content)
             self.assertFalse('status' in data, data)
         data = {'iallocator': False, 'iallocator_hostname': 'foo',
-                'node': 'node2.osuosl.bak'}
+                'node': 'node2.example.bak'}
 
         errors = [
             # must choose iallocator or a node
@@ -230,7 +230,7 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
             data = json.loads(response.content)
             self.assertFalse('opstatus' in data)
         data = {'iallocator': False, 'iallocator_hostname': 'foo',
-                'node': 'node2.osuosl.bak'}
+                'node': 'node2.example.bak'}
         self.node.rapi.EvacuateNode.error = GanetiApiError("Testing Error")
         self.assert_200(url, args, [self.superuser], data=data, method='post',
                         mime='application/json', tests=test)

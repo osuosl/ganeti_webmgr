@@ -45,9 +45,9 @@ class TestGeneralViews(TestCase, ViewTestMixin):
 
         models.client.GanetiRapiClient = RapiProxy
 
-        cluster = Cluster(hostname='test.osuosl.test', slug='OSL_TEST')
+        cluster = Cluster(hostname='test.example.test', slug='OSL_TEST')
         cluster.save()
-        vm = VirtualMachine(hostname='vm1.osuosl.bak', cluster=cluster)
+        vm = VirtualMachine(hostname='vm1.example.bak', cluster=cluster)
         vm.save()
 
         User(id=1, username='anonymous').save()
@@ -99,7 +99,7 @@ class TestGeneralViews(TestCase, ViewTestMixin):
 
         cluster1 = Cluster(hostname='cluster1', slug='cluster1')
         cluster1.save()
-        vm1 = VirtualMachine(hostname='vm2.osuosl.bak', cluster=cluster1)
+        vm1 = VirtualMachine(hostname='vm2.example.bak', cluster=cluster1)
         vm1.save()
         job = Job(job_id=233, obj=vm, cluster=cluster,
                 finished="2011-01-07 21:59", status="error")

@@ -17,8 +17,8 @@ Node = models.Node
 Job = models.Job
 
 class VirtualMachineTestCaseMixin():
-    def create_virtual_machine(self, cluster=None, hostname='vm1.osuosl.bak'):
-        cluster = cluster if cluster else Cluster(hostname='test.osuosl.bak',
+    def create_virtual_machine(self, cluster=None, hostname='vm1.example.bak'):
+        cluster = cluster if cluster else Cluster(hostname='test.example.bak',
                                                   slug='OSL_TEST',
                                                   username='foo',
                                                   password='bar')

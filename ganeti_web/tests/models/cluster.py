@@ -166,10 +166,10 @@ class TestClusterModel(TestCase):
             * VMs no longer in ganeti are deleted
             * VMs missing from the database are added
         """
-        cluster = Cluster(hostname='ganeti.osuosl.test')
+        cluster = Cluster(hostname='ganeti.example.test')
         cluster.save()
-        vm_missing = 'gimager.osuosl.bak'
-        vm_current = VirtualMachine(cluster=cluster, hostname='gimager2.osuosl.bak')
+        vm_missing = 'gimager.example.bak'
+        vm_current = VirtualMachine(cluster=cluster, hostname='gimager2.example.bak')
         vm_removed = VirtualMachine(cluster=cluster, hostname='does.not.exist.org')
         vm_current.save()
         vm_removed.save()
@@ -203,9 +203,9 @@ class TestClusterModel(TestCase):
             * Node no longer in ganeti are deleted
             * Nodes missing from the database are added
         """
-        cluster = Cluster.objects.create(hostname='ganeti.osuosl.test')
-        node_missing = 'gtest1.osuosl.bak'
-        node_current = Node.objects.create(cluster=cluster, hostname='gtest2.osuosl.bak')
+        cluster = Cluster.objects.create(hostname='ganeti.example.test')
+        node_missing = 'gtest1.example.bak'
+        node_current = Node.objects.create(cluster=cluster, hostname='gtest2.example.bak')
         node_removed = Node.objects.create(cluster=cluster, hostname='does.not.exist.org')
 
         cluster.sync_nodes()
@@ -225,14 +225,14 @@ class TestClusterModel(TestCase):
         """
         Tests missing_in_ganeti property
         """
-        cluster = Cluster(hostname='ganeti.osuosl.test')
+        cluster = Cluster(hostname='ganeti.example.test')
         cluster.save()
-        vm_current = VirtualMachine(cluster=cluster, hostname='gimager2.osuosl.bak')
+        vm_current = VirtualMachine(cluster=cluster, hostname='gimager2.example.bak')
         vm_removed = VirtualMachine(cluster=cluster, hostname='does.not.exist.org')
         vm_current.save()
         vm_removed.save()
 
-        self.assertEqual([u'gimager.osuosl.bak'], cluster.missing_in_db)
+        self.assertEqual([u'gimager.example.bak'], cluster.missing_in_db)
 
         vm_current.delete()
         vm_removed.delete()
@@ -242,9 +242,9 @@ class TestClusterModel(TestCase):
         """
         Tests missing_in_ganeti property
         """
-        cluster = Cluster(hostname='ganeti.osuosl.test')
+        cluster = Cluster(hostname='ganeti.example.test')
         cluster.save()
-        vm_current = VirtualMachine(cluster=cluster, hostname='gimager2.osuosl.bak')
+        vm_current = VirtualMachine(cluster=cluster, hostname='gimager2.example.bak')
         vm_removed = VirtualMachine(cluster=cluster, hostname='does.not.exist.org')
         vm_current.save()
         vm_removed.save()
@@ -259,10 +259,10 @@ class TestClusterModel(TestCase):
         """
         Tests that the available_ram property returns the correct values
         """
-        c = Cluster.objects.create(hostname='ganeti.osuosl.test')
-        c2 = Cluster.objects.create(hostname='ganeti2.osuosl.test', slug='argh')
-        node = Node.objects.create(cluster=c, hostname='node.osuosl.test')
-        node1 = Node.objects.create(cluster=c2, hostname='node1.osuosl.test')
+        c = Cluster.objects.create(hostname='ganeti.example.test')
+        c2 = Cluster.objects.create(hostname='ganeti2.example.test', slug='argh')
+        node = Node.objects.create(cluster=c, hostname='node.example.test')
+        node1 = Node.objects.create(cluster=c2, hostname='node1.example.test')
 
         foo = VirtualMachine.objects.create(cluster=c, primary_node=node,
                                             hostname='foo', ram=123,
@@ -318,10 +318,10 @@ class TestClusterModel(TestCase):
         """
         Tests that the available_disk property returns the correct values
         """
-        c = Cluster.objects.create(hostname='ganeti.osuosl.test')
-        c2 = Cluster.objects.create(hostname='ganeti2.osuosl.test', slug='argh')
-        node = Node.objects.create(cluster=c, hostname='node.osuosl.test')
-        node1 = Node.objects.create(cluster=c2, hostname='node1.osuosl.test')
+        c = Cluster.objects.create(hostname='ganeti.example.test')
+        c2 = Cluster.objects.create(hostname='ganeti2.example.test', slug='argh')
+        node = Node.objects.create(cluster=c, hostname='node.example.test')
+        node1 = Node.objects.create(cluster=c2, hostname='node1.example.test')
 
         foo = VirtualMachine.objects.create(cluster=c, primary_node=node,
                                             hostname='foo', disk_size=123,
@@ -382,7 +382,7 @@ class TestClusterModel(TestCase):
             * cache is disabled while job is running
             * cache is reenabled when job is finished
         """
-        cluster = Cluster.objects.create(hostname='ganeti.osuosl.test')
+        cluster = Cluster.objects.create(hostname='ganeti.example.test')
         cluster.rapi.GetJobStatus.response = JOB_RUNNING
 
         # redistribute_config enables ignore_cache flag

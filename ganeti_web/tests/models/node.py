@@ -33,9 +33,9 @@ __all__ = ['TestNodeModel']
 
 class NodeTestCaseMixin(object):
 
-    def create_node(self, cluster=None, hostname='node1.osuosl.bak'):
+    def create_node(self, cluster=None, hostname='node1.example.bak'):
         if cluster is None:
-            cluster = Cluster.objects.create(hostname='test.osuosl.bak',
+            cluster = Cluster.objects.create(hostname='test.example.bak',
                                              slug='OSL_TEST')
         node = Node.objects.create(cluster=cluster, hostname=hostname)
         return node, cluster
@@ -59,7 +59,7 @@ class TestNodeModel(TestCase, NodeTestCaseMixin):
         """
         # Define cluster for use
         node_hostname='node.test.org'
-        cluster = Cluster.objects.create(hostname='test.osuosl.bak', slug='OSL_TEST')
+        cluster = Cluster.objects.create(hostname='test.example.bak', slug='OSL_TEST')
 
         # Cluster
         node = Node.objects.create(cluster=cluster, hostname=node_hostname)
@@ -96,7 +96,7 @@ class TestNodeModel(TestCase, NodeTestCaseMixin):
         When cluster is saved hash for its VirtualMachines should be updated
         """
         node0, cluster = self.create_node()
-        node1, cluster = self.create_node(cluster, 'test2.osuosl.bak')
+        node1, cluster = self.create_node(cluster, 'test2.example.bak')
 
         self.assertEqual(node0.cluster_hash, cluster.hash)
         self.assertEqual(node1.cluster_hash, cluster.hash)

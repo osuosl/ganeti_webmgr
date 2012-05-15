@@ -38,7 +38,7 @@ class TestReplaceDisksForm(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual([(0,'disk/0')], list(form.fields['disks'].choices) )
 
         # node choices
-        self.assertEqual(set([(u'', u'---------'), (u'gtest1.osuosl.bak', u'gtest1.osuosl.bak'), (u'gtest2.osuosl.bak', u'gtest2.osuosl.bak'), (u'gtest3.osuosl.bak', u'gtest3.osuosl.bak')]), set(form.fields['node'].choices))
+        self.assertEqual(set([(u'', u'---------'), (u'gtest1.example.bak', u'gtest1.example.bak'), (u'gtest2.example.bak', u'gtest2.example.bak'), (u'gtest3.example.bak', u'gtest3.example.bak')]), set(form.fields['node'].choices))
 
     def test_auto(self):
         data = dict(
@@ -66,7 +66,7 @@ class TestReplaceDisksForm(TestCase, VirtualMachineTestCaseMixin):
         data = dict(
             mode=REPLACE_DISK_CHG,
             disks='',
-            node='gtest1.osuosl.bak',
+            node='gtest1.example.bak',
             iallocator=''
         )
         form = ReplaceDisksForm(self.vm, data)

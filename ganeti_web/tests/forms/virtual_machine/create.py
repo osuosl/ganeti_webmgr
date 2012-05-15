@@ -99,8 +99,8 @@ class TestNewVirtualMachineFormInit(TestCase, VirtualMachineTestCaseMixin):
 
         # cluster from initial data
         form = NewVirtualMachineForm(self.user, {'cluster': self.cluster0.id})
-        self.assertEqual(set([(u'', u'---------'), (u'gtest1.osuosl.bak', u'gtest1.osuosl.bak'), (u'gtest2.osuosl.bak', u'gtest2.osuosl.bak'), (u'gtest3.osuosl.bak', u'gtest3.osuosl.bak')]), set(form.fields['pnode'].choices))
-        self.assertEqual(set([(u'', u'---------'), (u'gtest1.osuosl.bak', u'gtest1.osuosl.bak'), (u'gtest2.osuosl.bak', u'gtest2.osuosl.bak'), (u'gtest3.osuosl.bak', u'gtest3.osuosl.bak')]), set(form.fields['snode'].choices))
+        self.assertEqual(set([(u'', u'---------'), (u'gtest1.example.bak', u'gtest1.example.bak'), (u'gtest2.example.bak', u'gtest2.example.bak'), (u'gtest3.example.bak', u'gtest3.example.bak')]), set(form.fields['pnode'].choices))
+        self.assertEqual(set([(u'', u'---------'), (u'gtest1.example.bak', u'gtest1.example.bak'), (u'gtest2.example.bak', u'gtest2.example.bak'), (u'gtest3.example.bak', u'gtest3.example.bak')]), set(form.fields['snode'].choices))
         self.assertEqual(form.fields['os'].choices,
             [
                 (u'', u'---------'),
@@ -113,8 +113,8 @@ class TestNewVirtualMachineFormInit(TestCase, VirtualMachineTestCaseMixin):
 
         # cluster from initial data
         form = NewVirtualMachineForm(self.user, {'cluster':self.cluster0.id})
-        self.assertEqual(set([(u'', u'---------'), (u'gtest1.osuosl.bak', u'gtest1.osuosl.bak'), (u'gtest2.osuosl.bak', u'gtest2.osuosl.bak'), (u'gtest3.osuosl.bak', u'gtest3.osuosl.bak')]), set(form.fields['pnode'].choices))
-        self.assertEqual(set([(u'', u'---------'), (u'gtest1.osuosl.bak', u'gtest1.osuosl.bak'), (u'gtest2.osuosl.bak', u'gtest2.osuosl.bak'), (u'gtest3.osuosl.bak', u'gtest3.osuosl.bak')]), set(form.fields['snode'].choices))
+        self.assertEqual(set([(u'', u'---------'), (u'gtest1.example.bak', u'gtest1.example.bak'), (u'gtest2.example.bak', u'gtest2.example.bak'), (u'gtest3.example.bak', u'gtest3.example.bak')]), set(form.fields['pnode'].choices))
+        self.assertEqual(set([(u'', u'---------'), (u'gtest1.example.bak', u'gtest1.example.bak'), (u'gtest2.example.bak', u'gtest2.example.bak'), (u'gtest3.example.bak', u'gtest3.example.bak')]), set(form.fields['snode'].choices))
         self.assertEqual(form.fields['os'].choices,
             [
                 (u'', u'---------'),
@@ -375,7 +375,7 @@ class TestNewVirtualMachineFormValidation(TestVirtualMachineViewsBase):
         A cluster the user isn't authorized for causes a form error.
         """
 
-        self.cluster1 = Cluster(hostname='test2.osuosl.bak', slug='OSL_TEST2')
+        self.cluster1 = Cluster(hostname='test2.example.bak', slug='OSL_TEST2')
         self.cluster1.save()
         data = self.data
         data['cluster'] = self.cluster.id

@@ -59,7 +59,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         url = '/vm/add/%s'
         group1 = Group(id=81, name='testing_group2')
         group1.save()
-        cluster1 = Cluster(hostname='test2.osuosl.bak', slug='OSL_TEST2')
+        cluster1 = Cluster(hostname='test2.example.bak', slug='OSL_TEST2')
         cluster1.save()
         data = self.data
 
@@ -227,7 +227,7 @@ class TestVirtualMachineCreateView(TestVirtualMachineViewsBase):
         url = '/vm/add/%s'
         group1 = Group(id=87, name='testing_group2')
         group1.save()
-        cluster1 = Cluster(hostname='test2.osuosl.bak', slug='OSL_TEST2')
+        cluster1 = Cluster(hostname='test2.example.bak', slug='OSL_TEST2')
         cluster1.save()
 
         # anonymous user
@@ -300,7 +300,7 @@ class TestVirtualMachineRecoverView(TestVirtualMachineViewsBase):
 
         # create a failed vm
         failed_vm, cluster2 = self.create_virtual_machine(self.cluster,
-                                                          'failed.osuosl.org')
+                                                          'failed.example.com')
         failed_vm.owner=self.user.get_profile()
         failed_vm.template = template
         failed_vm.save()

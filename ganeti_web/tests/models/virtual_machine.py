@@ -38,9 +38,9 @@ __all__ = (
 )
 
 class VirtualMachineTestCaseMixin(object):
-    def create_virtual_machine(self, cluster=None, hostname='vm1.osuosl.bak'):
+    def create_virtual_machine(self, cluster=None, hostname='vm1.example.bak'):
         if cluster is None:
-            cluster = Cluster(hostname='test.osuosl.bak', slug='OSL_TEST',
+            cluster = Cluster(hostname='test.example.bak', slug='OSL_TEST',
                               username='foo', password='bar')
         cluster.save()
         cluster.sync_nodes()
@@ -80,7 +80,7 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         When cluster is saved hash for its VirtualMachines should be updated
         """
         vm0, cluster = self.create_virtual_machine()
-        vm1, cluster = self.create_virtual_machine(cluster, 'test2.osuosl.bak')
+        vm1, cluster = self.create_virtual_machine(cluster, 'test2.example.bak')
 
         self.assertEqual(vm0.cluster_hash, cluster.hash)
         self.assertEqual(vm1.cluster_hash, cluster.hash)

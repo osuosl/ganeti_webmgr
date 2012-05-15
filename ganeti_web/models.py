@@ -65,6 +65,8 @@ if settings.VNC_PROXY:
     from ganeti_web.util.vncdaemon.vapclient import (request_forwarding,
                                                      request_ssh)
 
+TESTING = settings.TESTING if hasattr(settings, 'TESTING') else False
+
 class QuerySetManager(models.Manager):
     """
     Useful if you want to define manager methods that need to chain. In this
@@ -1407,7 +1409,7 @@ class VirtualMachineTemplate(models.Model):
             return self.template_name
 
 
-if settings.TESTING:
+if TESTING:
     # XXX - if in debug mode create a model for testing cached cluster objects
     class TestModel(CachedClusterObject):
         """ simple implementation of a cached model that has been instrumented """

@@ -116,7 +116,7 @@ class TestVirtualMachineSSHKeysView(TestVirtualMachineViewsBase):
         specified virtual machine
         """
         # second virtual machine created
-        vm1, cluster1 = self.create_virtual_machine(self.cluster, 'vm2.osuosl.bak')
+        vm1, cluster1 = self.create_virtual_machine(self.cluster, 'vm2.example.bak')
 
         # grant admin permission to first user
         self.user.grant("admin", self.vm)

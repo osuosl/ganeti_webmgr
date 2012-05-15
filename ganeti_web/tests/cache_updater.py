@@ -50,7 +50,7 @@ class TestCacheUpdater(TestCase, VirtualMachineTestCaseMixin):
         Test running the updater running when no vms need to be updated
         """
         vm0, cluster = self.create_virtual_machine()
-        vm1, chaff = self.create_virtual_machine(cluster, 'vm2.osuosl.bak')
+        vm1, chaff = self.create_virtual_machine(cluster, 'vm2.example.bak')
         
         os = 'image+gentoo-hardened-cf'
         mtime_timestamp = 1285883000.8692000
@@ -88,7 +88,7 @@ class TestCacheUpdater(TestCase, VirtualMachineTestCaseMixin):
         tests that newer mtime results in update
         """
         vm0, cluster = self.create_virtual_machine()
-        vm1, chaff = self.create_virtual_machine(cluster, 'vm2.osuosl.bak')
+        vm1, chaff = self.create_virtual_machine(cluster, 'vm2.example.bak')
         
         os = 'image+gentoo-hardened-cf'
         mtime_timestamp = 1285883000.1234000
@@ -133,7 +133,7 @@ class TestCacheUpdater(TestCase, VirtualMachineTestCaseMixin):
         timestamps
         """
         vm0, cluster = self.create_virtual_machine()
-        vm1, chaff = self.create_virtual_machine(cluster, 'vm2.osuosl.bak')
+        vm1, chaff = self.create_virtual_machine(cluster, 'vm2.example.bak')
         
         os = 'image+gentoo-hardened-cf'
         mtime_timestamp = 1285883000.8692000
@@ -191,9 +191,9 @@ class TestCacheUpdater(TestCase, VirtualMachineTestCaseMixin):
         # run updater and refresh the objects from the db
         with MuteStdout():
             update_cache()
-        self.assertTrue(VirtualMachine.objects.filter(hostname='vm2.osuosl.bak').exists())
+        self.assertTrue(VirtualMachine.objects.filter(hostname='vm2.example.bak').exists())
         vm0 = VirtualMachine.objects.filter(pk=vm0.id).values('mtime','cached','status','operating_system')[0]
-        vm1 = VirtualMachine.objects.filter(hostname='vm2.osuosl.bak').values('mtime','cached','status','operating_system')[0]
+        vm1 = VirtualMachine.objects.filter(hostname='vm2.example.bak').values('mtime','cached','status','operating_system')[0]
         
         # properties should not be updated because mtime and status indicated it
         # was already up to date
@@ -215,7 +215,7 @@ class TestCacheUpdater(TestCase, VirtualMachineTestCaseMixin):
         Test that updater detects and updates status changes
         """
         vm0, cluster = self.create_virtual_machine()
-        vm1, chaff = self.create_virtual_machine(cluster, 'vm2.osuosl.bak')
+        vm1, chaff = self.create_virtual_machine(cluster, 'vm2.example.bak')
         
         os = 'image+gentoo-hardened-cf'
         mtime_timestamp = 1285883000.8692000
