@@ -110,6 +110,26 @@ def deploy():
     install_dependencies_git()
 
 
+def update():
+    """
+    In a development environment, update all develop branches.
+    """
+    require('environment', provided_by=[dev, prod])
+
+    if env.environment != 'development':
+        raise Exception('must be in a development environment in order to'
+            'update develop branches.')
+    else:
+        with lcd('%(doc_root)s/dependencies' % env):
+            for git_dir, opts in GIT_INSTALL.items():
+                env.git_repo = git_dir
+                if (_exists('%(doc_root)s/dependencies/%(git_repo)s' % env) and
+                    'development' in opts and 'checkout' not in opts):
+                    with lcd(git_dir):
+                        print 'Updating git repo: %(git_repo)s' % env
+                        local('git pull --ff')
+
+
 def _exists(path):
     """
     A helper function to determine whether a path exists.
