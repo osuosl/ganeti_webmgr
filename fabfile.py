@@ -2,9 +2,8 @@ import os
 
 import pkg_resources
 
-from fabric.api import env, hide, abort
+from fabric.api import env
 from fabric.context_managers import settings, hide, lcd
-from fabric.contrib.console import confirm
 from fabric.contrib.files import exists
 from fabric.operations import local, require, prompt
 
