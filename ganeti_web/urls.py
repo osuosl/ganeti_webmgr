@@ -121,7 +121,6 @@ urlpatterns += patterns('ganeti_web.views.node',
     # Detail
     url(r'^%s/?$' % node_prefix, NodeDetailView.as_view(),
         name="node-detail"),
-    url(r'^node/(?P<id>\d+)/?$', 'detail_by_id', name="node-detail-id"),
     url(r'^node/(?P<id>\d+)/jobs/status/?$', "job_status", name="node-job-status"),
     
     # Primary and secondary Virtual machines
@@ -165,7 +164,6 @@ urlpatterns += patterns('ganeti_web.views.virtual_machine',
     #  Detail
     url(r'^%s/?$' % vm_prefix, 'detail', name="instance-detail"),
     url(r'^vm/(?P<id>\d+)/jobs/status/?$', 'job_status', name="instance-job-status"),
-    url(r'^vm/(?P<id>\d+)/?$', 'detail_by_id', name="instance-detail-id"),
     url(r'^%s/users/?$' % vm_prefix, 'users', name="vm-users"),
     url(r'^%s/permissions/?$' % vm_prefix, 'permissions', name="vm-permissions"),
     url(r'^%s/permissions/user/(?P<user_id>\d+)/?$' % vm_prefix, 'permissions', name="vm-permissions-user"),
