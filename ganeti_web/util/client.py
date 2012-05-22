@@ -456,6 +456,9 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         @return: job id
         """
 
+        if _INST_CREATE_REQV1 not in self.GetFeatures():
+            raise GanetiApiError("Cannot create Ganeti 2.1-style instances")
+
         query = {}
 
         if kwargs.get("dry_run"):
@@ -463,87 +466,23 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         if kwargs.get("no_install"):
             query["no-install"] = 1
 
-        if _INST_CREATE_REQV1 in self.GetFeatures():
-            # All required fields for request data version 1
-            body = {
-                _REQ_DATA_VERSION_FIELD: 1,
-                "mode": mode,
-                "name": name,
-                "disk_template": disk_template,
-                "disks": disks,
-                "nics": nics,
-            }
+        # Make a version 1 request.
+        body = {
+            _REQ_DATA_VERSION_FIELD: 1,
+            "mode": mode,
+            "name": name,
+            "disk_template": disk_template,
+            "disks": disks,
+            "nics": nics,
+        }
 
-            conflicts = set(kwargs.iterkeys()) & set(body.iterkeys())
-            if conflicts:
-                raise GanetiApiError("Required fields can not be specified as"
-                                     " keywords: %s" % ", ".join(conflicts))
+        conflicts = set(kwargs.iterkeys()) & set(body.iterkeys())
+        if conflicts:
+            raise GanetiApiError("Required fields can not be specified as"
+                                 " keywords: %s" % ", ".join(conflicts))
 
-            kwargs.pop("dry_run", None)
-            body.update(kwargs)
-        else:
-            # Old request format (version 0)
-
-            # The following code must make sure that an exception is raised when an
-            # unsupported setting is requested by the caller. Otherwise this can lead
-            # to bugs difficult to find. The interface of this function must stay
-            # exactly the same for version 0 and 1 (e.g. they aren't allowed to
-            # require different data types).
-
-            # Validate disks
-            for idx, disk in enumerate(disks):
-                unsupported = set(disk.keys()) - _INST_CREATE_V0_DISK_PARAMS
-                if unsupported:
-                    raise GanetiApiError("Server supports request version 0"
-                                         "only, but disk %s specifies the"
-                                         "unsupported parameters %s, allowed"
-                                         "are %s" % (idx, unsupported,
-                                                     list(_INST_CREATE_V0_DISK_PARAMS)))
-
-            disk_sizes = [disk["size"] for disk in disks]
-
-            # Validate NICs
-            if not nics:
-                raise GanetiApiError("Server supports request version 0 only,"
-                                     " but no NIC specified")
-            elif len(nics) > 1:
-                raise GanetiApiError("Server supports request version 0 only,"
-                                     " but more than one NIC specified")
-
-            unsupported = set(nics[0].keys()) - _INST_NIC_PARAMS
-            if unsupported:
-                raise GanetiApiError("Server supports request version 0 only,"
-                                     " but NIC 0 specifies the unsupported"
-                                     " parameters %s, allowed are %s" %
-                                     (unsupported, list(_INST_NIC_PARAMS)))
-
-            # Validate other parameters
-            unsupported = (set(kwargs.keys()) - _INST_CREATE_V0_PARAMS -
-                           _INST_CREATE_V0_DPARAMS)
-            if unsupported:
-                allowed = _INST_CREATE_V0_PARAMS.union(_INST_CREATE_V0_DPARAMS)
-                raise GanetiApiError("Server supports request version 0 only,"
-                                     " but the following unsupported"
-                                     " parameters are specified: %s, allowed"
-                                     " are %s" % (unsupported, list(allowed)))
-
-            # All required fields for request data version 0
-            body = {
-                _REQ_DATA_VERSION_FIELD: 0,
-                "name": name,
-                "disk_template": disk_template,
-                "disks": disk_sizes,
-            }
-
-            # NIC fields
-            body.update(nics[0])
-
-            # Copy supported fields and merge dictionaries
-            for key in kwargs:
-                if key in _INST_CREATE_V0_PARAMS:
-                    body[key] = kwargs[key]
-                if key in _INST_CREATE_V0_DPARAMS:
-                    body.update(kwargs[key])
+        kwargs.pop("dry_run", None)
+        body.update(kwargs)
 
         return self._SendRequest("post", "/%s/instances" %
                                  GANETI_RAPI_VERSION, query=query,
@@ -985,7 +924,7 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
                                          (GANETI_RAPI_VERSION, instance)),
                                  content=body)
 
-    def RenameInstance(self, instance, new_name, ip_check=None,
+    def RenameInstance(self, instance, new_name, ip_check,
                        name_check=None):
         """
         Changes the name of an instance.
@@ -1001,11 +940,9 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
 
         body = {
+            "ip_check": ip_check,
             "new_name": new_name,
         }
-
-        if ip_check is not None:
-            body["ip_check"] = ip_check
 
         if name_check is not None:
             body["name_check"] = name_check
