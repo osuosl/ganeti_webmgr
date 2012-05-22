@@ -47,6 +47,7 @@ bin
 dependencies
 include
 lib
+local
 pysqlite2-doc
 build
 
