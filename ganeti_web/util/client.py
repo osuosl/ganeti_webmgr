@@ -705,12 +705,15 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         query = {
             "dry-run": dry_run,
             "no-remember": no_remember,
+        }
+
+        content = {
             "timeout": timeout,
         }
 
         return self._SendRequest("put", ("/%s/instances/%s/shutdown" %
                                          (GANETI_RAPI_VERSION, instance)),
-                                 query=query)
+                                 query=query, content=content)
 
     def StartupInstance(self, instance, dry_run=False, no_remember=False):
         """
