@@ -42,6 +42,7 @@ from object_permissions import signals as op_signals
 from object_log.models import LogItem
 log_action = LogItem.objects.log_action
 
+from ganeti_web.caps import has_shutdown_timeout
 from ganeti_web.forms.virtual_machine import NewVirtualMachineForm, \
     KvmModifyVirtualMachineForm, PvmModifyVirtualMachineForm, \
     HvmModifyVirtualMachineForm, ModifyConfirmForm, MigrateForm, RenameForm, \
@@ -562,6 +563,7 @@ def detail(request, cluster_slug, instance, rest=False):
         'power':power,
         'modify':modify,
         'migrate':migrate,
+        "has_immediate_shutdown": has_shutdown_timeout(cluster),
     }
 
     # check job for pending jobs that should be rendered with a different
