@@ -42,15 +42,15 @@ from object_permissions import signals as op_signals
 from object_log.models import LogItem
 log_action = LogItem.objects.log_action
 
-from ganeti_web.util.client import GanetiApiError
-from ganeti_web.middleware import Http403
-from ganeti_web.models import Cluster, ClusterUser, Organization, VirtualMachine, \
-        Job, SSHKey, VirtualMachineTemplate, Node
 from ganeti_web.forms.virtual_machine import NewVirtualMachineForm, \
     KvmModifyVirtualMachineForm, PvmModifyVirtualMachineForm, \
     HvmModifyVirtualMachineForm, ModifyConfirmForm, MigrateForm, RenameForm, \
     ChangeOwnerForm, ReplaceDisksForm
+from ganeti_web.middleware import Http403
+from ganeti_web.models import Cluster, ClusterUser, Organization, VirtualMachine, \
+        Job, SSHKey, VirtualMachineTemplate, Node
 from ganeti_web.templatetags.webmgr_tags import render_storage
+from ganeti_web.util.client import GanetiApiError
 from ganeti_web.utilities import cluster_default_info, cluster_os_list, \
     compare, os_prettify, get_hypervisor
 from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
