@@ -87,7 +87,13 @@
                         {{ cluster.hostname|abbreviate_fqdn }}
                     </a>
                 </td>
-                <td>{{ info.software_version|default:"<i>unknown</i>" }}</td>
+                <td>
+                {% if info.software_version %}
+                    v{{ info.software_version }}
+                {% else %}
+                    <i>unknown</i>
+                {% endif %}
+                </td>
                 <td class="ram">{% cluster_memory cluster %}</td>
                 <td class="disk">{% cluster_disk cluster %}</td>
                 <td title="Running/All">{% format_online_nodes cluster %}</td>
