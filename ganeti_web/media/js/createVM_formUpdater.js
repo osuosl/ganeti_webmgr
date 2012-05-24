@@ -152,13 +152,9 @@ function formUpdater(url_choices, url_options, url_defaults){
                 if(iallocator.is(":checked")) {
                     pnode.hide();
                     snode.hide();
-                    disk_template.parent("p").hide();
-                    disk_template.change()
                 } else {
                     pnode.show();
                     snode.show();
-                    disk_template.parent("p").show();
-                    disk_template.change();
                 }
             } else {
                 if(!iallocator.is(":checked")){
