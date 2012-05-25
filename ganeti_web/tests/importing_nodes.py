@@ -63,7 +63,7 @@ class NodeImportBase(TestCase):
         self.cluster0.rapi.GetNodes.response = ['node0','node2']
         self.cluster1.rapi.GetNodes.response = ['node3','node5']
 
-        self.vm = VirtualMachine.objects.createhostname='gimager.example.bak', cluster=self.cluster0)
+        self.vm = VirtualMachine.objects.create(hostname='gimager.example.bak', cluster=self.cluster0)
 
         self.node0 = Node.objects.create(hostname='node0', cluster=self.cluster0)
         self.node1 = Node.objects.create(hostname='node1', cluster=self.cluster0)
