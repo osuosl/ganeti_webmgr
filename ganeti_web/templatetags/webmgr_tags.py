@@ -19,7 +19,6 @@
 # USA.
 from datetime import datetime
 
-from math import log10
 import re
 from django.contrib.sites.models import Site
 
