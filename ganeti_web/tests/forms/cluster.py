@@ -35,7 +35,7 @@ class TestClusterFormBase(TestCase):
     def setUp(self):
         models.client.GanetiRapiClient = RapiProxy
 
-        self.cluster = Cluster(hostname='test.osuosl.test', slug='OSL_TEST')
+        self.cluster = Cluster(hostname='test.example.test', slug='OSL_TEST')
         self.cluster.save()
 
         self.data = dict(hostname='new-host3.hostname',
