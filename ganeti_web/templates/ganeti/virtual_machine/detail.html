@@ -232,6 +232,7 @@
                         {% trans "Shutdown" %}
                     </a>
                 </li>
+                {% if has_immediate_shutdown %}
                 <li>
                 <a class="button shutdown power"
                    title="Immediate Shutdown"
@@ -239,6 +240,7 @@
                    {% trans "Immediate Shutdown" %}
                 </a>
                 </li>
+                {% endif %}
                 <li>
                     <a class="button reboot power" title="reboot" href="{% url instance-reboot cluster.slug instance.hostname %}">
                         {% trans "Reboot" %}
