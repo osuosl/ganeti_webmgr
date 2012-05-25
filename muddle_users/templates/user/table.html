@@ -1,16 +1,18 @@
 {% load i18n %}
-<table>
-    <tr>
-        <th>{% trans "Username" %}</th>
-        <th>{% trans "Email" %}</th>
-        <th>{% trans "Active" %}</th>
-        <th>{% trans "Join Date" %}</th>
-        <th>{% trans "Last Login" %}</th>
-        <th></th>
-    </tr>
+<table id="userlist" class="sorted">
+    <thead>
+        <tr>
+            <th>{% trans "Username" %}</th>
+            <th>{% trans "Email" %}</th>
+            <th>{% trans "Active" %}</th>
+            <th>{% trans "Join Date" %}</th>
+            <th>{% trans "Last Login" %}</th>
+            <th></th>
+        </tr>
+    </thead>
     {% for user in userlist %}
-    <tr>
-        <td name="username"><a href="{% url user-detail user.pk %}">{{ user.username }}</a></td>
+    <tr id="user_{{user.username}}">
+        <td name="username" class="name"><a href="{% url user-detail user.pk %}">{{ user.username }}</a></td>
         <td>{{ user.email }}</td>
         <td>{{ user.is_active }}</td>
         <td>{{ user.date_joined|date }}</td>
@@ -19,3 +21,4 @@
     </tr>
     {% endfor %}
 </table>
+
