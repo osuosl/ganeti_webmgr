@@ -430,17 +430,6 @@ class CachedClusterObject(models.Model):
         super(CachedClusterObject, self).save(*args, **kwargs)
 
 
-class JobManager(models.Manager):
-    """
-    Custom manager for Ganeti Jobs model
-    """
-    def create(self, **kwargs):
-        """ helper method for creating a job with disabled cache """
-        job = Job(ignore_cache=True, **kwargs)
-        job.save(force_insert=True)
-        return job
-
-
 class Job(CachedClusterObject):
     """
     model representing a job being run on a ganeti Cluster.  This includes
@@ -462,8 +451,6 @@ class Job(CachedClusterObject):
     finished = models.DateTimeField(null=True)
     status = models.CharField(max_length=10)
     op = models.CharField(max_length=50)
-
-    objects = JobManager()
 
     @property
     def rapi(self):
