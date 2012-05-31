@@ -5,9 +5,9 @@
 {% block title %}{%trans "Overview" %}{% endblock %}
 
 {% block head %}
-<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
-<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.tablesorter.min.js"></script>
-<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}/js/jquery.ajax.delete.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}/js/jquery.tablesorter.min.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}/js/jquery.progressbar.js"></script>
 <script type="text/javascript">
     var CLUSTER_RESOURCES_PBAR = {
         steps: 0,
@@ -15,12 +15,12 @@
         textFormat: 'fraction',
         // XXX there's issue, bars doesn't scale the progress to the given width
         width: 120,
-        boxImage: '{{MEDIA_URL}}/images/progressbar/progressbar.gif',
+        boxImage: '{{STATIC_URL}}/images/progressbar/progressbar.gif',
         barImage: {
-            0: '{{MEDIA_URL}}/images/progressbar/progressbg_green.gif',
-            30: '{{MEDIA_URL}}/images/progressbar/progressbg_yellow.gif',
-            50: '{{MEDIA_URL}}/images/progressbar/progressbg_orange.gif',
-            75:  '{{MEDIA_URL}}/images/progressbar/progressbg_red.gif'
+            0: '{{STATIC_URL}}/images/progressbar/progressbg_green.gif',
+            30: '{{STATIC_URL}}/images/progressbar/progressbg_yellow.gif',
+            50: '{{STATIC_URL}}/images/progressbar/progressbg_orange.gif',
+            75:  '{{STATIC_URL}}/images/progressbar/progressbg_red.gif'
         }
     };
     $(document).ready(function() {

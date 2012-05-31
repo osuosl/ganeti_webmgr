@@ -1,6 +1,6 @@
 /* registration.css */
 #body_wrapper {
-    background: url(/media/images/background_no_menu.png) repeat-y center #eee !important;
+    background: url(/static/images/background_no_menu.png) repeat-y center #eee !important;
 }
 #content {float:none; width:699px; margin:0 auto;}
 

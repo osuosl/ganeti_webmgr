@@ -64,7 +64,7 @@ handler500 = 'ganeti_web.views.view_500'
 #The following is used to serve up local media files like images
 urlpatterns += patterns('',
     (r'^favicon.ico', 'django.views.static.serve',
-        {'document_root':  settings.MEDIA_ROOT, 'path': 'favicon.ico'}),
+        {'document_root':  settings.STATIC_ROOT, 'path': 'favicon.ico'}),
 
     # noVNC files
     (r'^novnc/(?P<path>.*)', 'django.views.static.serve',

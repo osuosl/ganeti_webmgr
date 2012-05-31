@@ -1,5 +1,5 @@
 {% comment  %} Form for replacing disks of a virtual machine {% endcomment %}
-<script type="text/javascript" src="{{MEDIA_URL}}/js/replace_disks_form.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}/js/replace_disks_form.js"></script>
 <form class="ajax_form vm_replace_disks_form" method="post" action="{% url instance-replace-disks cluster.slug vm.hostname %}">
     <ul id="errors"></ul>
     <table>

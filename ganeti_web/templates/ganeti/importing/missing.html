@@ -1,8 +1,8 @@
 {% extends "menu_base.html" %}
 {% load i18n %}
 {% block head %}
-    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.multi_checkbox_selector.js"></script>
-    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.tablesorter.min.js"></script>
+    <script type="text/javascript" src="{{STATIC_URL}}/js/jquery.multi_checkbox_selector.js"></script>
+    <script type="text/javascript" src="{{STATIC_URL}}/js/jquery.tablesorter.min.js"></script>
     <script type="text/javascript">
     $(document).ready(function() {
         $("#missing_form").select_all();
