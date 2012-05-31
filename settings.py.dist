@@ -103,12 +103,12 @@ SITE_ROOT = ''
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
-STATIC_ROOT = '%s/media' % DOC_ROOT
+STATIC_ROOT = '%s/static' % DOC_ROOT
 
 # URL that handles the media served from STATIC_ROOT.
 # XXX contrary to django docs, do not use a trailling slash.  It makes urls
 # using this url easier to read.  ie.  {{STATIC_URL}}/images/foo.png
-STATIC_URL = '%s/media' % SITE_ROOT
+STATIC_URL = '%s/static' % SITE_ROOT
 
 # URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
 # trailing slash.
