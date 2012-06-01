@@ -1,11 +1,11 @@
 {% extends "menu_base.html" %}
 {% load webmgr_tags i18n %}
 {% block head %}
-    <link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}/css/virtual_machine_create.css"/>
+    <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}/css/virtual_machine_create.css"/>
     <link rel="stylesheet" type="text/css"
-        href="{{MEDIA_URL}}/css/help_tips.css"/>
-    <script src="{{MEDIA_URL}}/js/modifyVM_formUpdater.js"></script>
-    <script src="{{MEDIA_URL}}/js/helpTips.js"></script>
+        href="{{STATIC_URL}}/css/help_tips.css"/>
+    <script src="{{STATIC_URL}}/js/modifyVM_formUpdater.js"></script>
+    <script src="{{STATIC_URL}}/js/helpTips.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
             var formUpdate = new modifyFormUpdater({{ form.nics }});

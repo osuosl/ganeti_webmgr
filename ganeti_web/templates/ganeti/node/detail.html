@@ -3,11 +3,11 @@
 {% load i18n %}
 {% block head %}
     <!-- "import" the CSS and javascript for this template -->
-    <link href="{{MEDIA_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
-    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-ui.min.js"></script>
-    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.form.js"></script>
-    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
-    <script type="text/javascript" src="{{MEDIA_URL}}/js/job_status.js"></script>
+    <link href="{{STATIC_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
+    <script type="text/javascript" src="{{STATIC_URL}}/js/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="{{STATIC_URL}}/js/jquery.form.js"></script>
+    <script type="text/javascript" src="{{STATIC_URL}}/js/jquery.progressbar.js"></script>
+    <script type="text/javascript" src="{{STATIC_URL}}/js/job_status.js"></script>
     <script type="text/javascript">
         var job_poller;
         var actions_enabled = true;
@@ -15,12 +15,12 @@
             steps: 0,
             showText: true,
             textFormat: 'fraction',
-            boxImage: '/media/images/progressbar/progressbar.gif',
+            boxImage: '/static/images/progressbar/progressbar.gif',
             barImage: {
-                0: '{{MEDIA_URL}}/images/progressbar/progressbg_green.gif',
-                30: '{{MEDIA_URL}}/images/progressbar/progressbg_yellow.gif',
-                50: '{{MEDIA_URL}}/images/progressbar/progressbg_orange.gif',
-                75:  '{{MEDIA_URL}}/images/progressbar/progressbg_red.gif'
+                0: '{{STATIC_URL}}/images/progressbar/progressbg_green.gif',
+                30: '{{STATIC_URL}}/images/progressbar/progressbg_yellow.gif',
+                50: '{{STATIC_URL}}/images/progressbar/progressbg_orange.gif',
+                75:  '{{STATIC_URL}}/images/progressbar/progressbg_red.gif'
             }
         };
         

@@ -9,7 +9,7 @@
 html {width: 100%;}
 html, body {height:100%; /* Sticky Footer */ } 
 body {
-    background:url(/media/images/body_background.png) repeat-x top #eee;
+    background:url(/static/images/body_background.png) repeat-x top #eee;
     color:#333333;
     min-width:974px;
 }
@@ -24,7 +24,7 @@ body:before {
 }
 
 #body_wrapper {
-    background: url(/media/images/background_with_menu.png) repeat-y center #eee !important;
+    background: url(/static/images/background_with_menu.png) repeat-y center #eee !important;
 }
 
 h1 {font-size: 1.5em; margin-top: 0;}
@@ -157,17 +157,17 @@ pre.error {
 
 /* tablesorter style */
 #content table.sorted th {
-    background: url(/media/images/bg.gif) no-repeat center right #eee;
+    background: url(/static/images/bg.gif) no-repeat center right #eee;
     padding-right: 15px;
     cursor: s-resize;
 }
-#content table.sorted .ascending {background-image: url(/media/images/asc.gif);}
-#content table.sorted .descending {background-image: url(/media/images/desc.gif);}
+#content table.sorted .ascending {background-image: url(/static/images/asc.gif);}
+#content table.sorted .descending {background-image: url(/static/images/desc.gif);}
 #content table.sorted .ascending {background-color: #7AB0DC;}
 #content table.sorted .descending {background-color: #7AB0DC;}
 
 #footer {
-    background: url(/media/images/footerBack.jpg) repeat-x 0 0 #1d1d1d;
+    background: url(/static/images/footerBack.jpg) repeat-x 0 0 #1d1d1d;
     border-top: 2px solid #666;
     clear:both; /* sticky footer */
     color: #C8CED3;
@@ -321,14 +321,14 @@ h1.breadcrumb a:hover {text-decoration:underline;}
 .button.disabled.enabled:hover {border-color:#999;}
 
 /** Button backgrounds **/
-div.edit, a.edit{background:url(/media/images/icons/edit.png) no-repeat;}
-div.delete, a.delete{background:url(/media/images/icons/delete.png) no-repeat;}
+div.edit, a.edit{background:url(/static/images/icons/edit.png) no-repeat;}
+div.delete, a.delete{background:url(/static/images/icons/delete.png) no-repeat;}
 
 
-.add {background:url(/media/images/icons/add.png) no-repeat;}
-.add.disabled {background:url(/media/images/icons/add-disabled.png) no-repeat;}
-div.edit.disabled, a.edit.disabled{background:url(/media/images/icons/edit-disabled.png) no-repeat;}
-div.delete.disabled, a.delete.disabled{background:url(/media/images/icons/delete-disabled.png) no-repeat;}
+.add {background:url(/static/images/icons/add.png) no-repeat;}
+.add.disabled {background:url(/static/images/icons/add-disabled.png) no-repeat;}
+div.edit.disabled, a.edit.disabled{background:url(/static/images/icons/edit-disabled.png) no-repeat;}
+div.delete.disabled, a.delete.disabled{background:url(/static/images/icons/delete-disabled.png) no-repeat;}
 
 div.delete, div.edit {
     background-repeat:no-repeat;

@@ -5,13 +5,13 @@
 
 /* tablesorter style */
 #content table.sorted th {
-    background: #eeeeee url(/media/images/bg.gif) no-repeat center right;
+    background: #eeeeee url(/static/images/bg.gif) no-repeat center right;
     border: 1px solid #ddd;
     padding-right: 15px;
     cursor: s-resize;
 }
-#content table.sorted .headerSortUp {background-image: url(/media/images/asc.gif);}
-#content table.sorted .headerSortDown {background-image: url(/media/images/desc.gif);}
+#content table.sorted .headerSortUp {background-image: url(/static/images/asc.gif);}
+#content table.sorted .headerSortDown {background-image: url(/static/images/desc.gif);}
 #content table.sorted .headerSortDown, #content table.sorted .headerSortUp {
     background-color: #7AB0DC;
 }
@@ -55,15 +55,15 @@
 #errors_list table {margin:0;}
 #errors_list td.Cluster {
     padding-left: 25px;
-    background:url(/media/images/icons/cluster.png) no-repeat 4px 4px;
+    background:url(/static/images/icons/cluster.png) no-repeat 4px 4px;
 }
 #errors_list td.VirtualMachine {
     padding-left: 25px;
-    background:url(/media/images/icons/vm.png) no-repeat 4px 4px;
+    background:url(/static/images/icons/vm.png) no-repeat 4px 4px;
 }
 #errors_list td.Node {
     padding-left: 25px;
-    background:url(/media/images/icons/node.png) no-repeat 4px 4px;
+    background:url(/static/images/icons/node.png) no-repeat 4px 4px;
 }
 
 
@@ -113,40 +113,40 @@ ul#errors {color:#AD2E2E;}
 ul.errors {list-style:square;}
 
 
-div.deleting, a.deleting{background:url(/media/images/ajax-loader_small_transparent.gif) no-repeat;}
-div.icon_error {background:url(/media/images/icons/exclamation.png);}
-div.icon_running {background:url(/media/images/icons/check.png);}
-div.icon_stopped {background:url(/media/images/icons/stop.png);}
-div.icon_deleting {background:url(/media/images/icons/check_red.png);}
-.clear {background:url(/media/images/icons/cancel-disabled.png);}
+div.deleting, a.deleting{background:url(/static/images/ajax-loader_small_transparent.gif) no-repeat;}
+div.icon_error {background:url(/static/images/icons/exclamation.png);}
+div.icon_running {background:url(/static/images/icons/check.png);}
+div.icon_stopped {background:url(/static/images/icons/stop.png);}
+div.icon_deleting {background:url(/static/images/icons/check_red.png);}
+.clear {background:url(/static/images/icons/cancel-disabled.png);}
 
-.reboot {background:url(/media/images/icons/arrow_refresh.png) no-repeat;}
-.reinstall {background:url(/media/images/icons/arrow_refresh.png) no-repeat;}
-.shutdown {background:url(/media/images/icons/stop.png) no-repeat;}
-.startup {background:url(/media/images/icons/add.png) no-repeat;}
-.encrypt {background:url(/media/images/icons/lock_open.png) no-repeat;}
-.connect {background:url(/media/images/icons/disconnect.png) no-repeat;}
-.migrate {background:url(/media/images/icons/arrow_out.png) no-repeat;}
-.evacuate {background:url(/media/images/icons/arrow_out.png) no-repeat;}
-.redistribute-config {background:url(/media/images/icons/arrow_divide.png) no-repeat;}
-.modify {background:url(/media/images/icons/edit.png) no-repeat;}
-.check {background:url(/media/images/icons/check.png) no-repeat;}
-.xmark {background:url(/media/images/icons/cross.png) no-repeat;}
-.replace_disks {background:url(/media/images/icons/drive_go.png) no-repeat;}
-.popout {background:url(/media/images/icons/shape_move_forwards.png) no-repeat;}
-.export {background:url(/media/images/icons/disk.png) no-repeat; }
+.reboot {background:url(/static/images/icons/arrow_refresh.png) no-repeat;}
+.reinstall {background:url(/static/images/icons/arrow_refresh.png) no-repeat;}
+.shutdown {background:url(/static/images/icons/stop.png) no-repeat;}
+.startup {background:url(/static/images/icons/add.png) no-repeat;}
+.encrypt {background:url(/static/images/icons/lock_open.png) no-repeat;}
+.connect {background:url(/static/images/icons/disconnect.png) no-repeat;}
+.migrate {background:url(/static/images/icons/arrow_out.png) no-repeat;}
+.evacuate {background:url(/static/images/icons/arrow_out.png) no-repeat;}
+.redistribute-config {background:url(/static/images/icons/arrow_divide.png) no-repeat;}
+.modify {background:url(/static/images/icons/edit.png) no-repeat;}
+.check {background:url(/static/images/icons/check.png) no-repeat;}
+.xmark {background:url(/static/images/icons/cross.png) no-repeat;}
+.replace_disks {background:url(/static/images/icons/drive_go.png) no-repeat;}
+.popout {background:url(/static/images/icons/shape_move_forwards.png) no-repeat;}
+.export {background:url(/static/images/icons/disk.png) no-repeat; }
 
-.reboot.disabled {background:url(/media/images/icons/arrow_refresh-disabled.png) no-repeat;}
-.reinstall.disabled {background:url(/media/images/icons/arrow_refresh-disabled.png) no-repeat;}
-.shutdown.disabled {background:url(/media/images/icons/stop-disabled.png) no-repeat;}
-.startup.disabled {background:url(/media/images/icons/add-disabled.png) no-repeat;}
-.encrypt.enabled {background:url(/media/images/icons/lock.png) no-repeat;}
-.connect.enabled {background:url(/media/images/icons/disconnect.png) no-repeat;}
-.migrate.disabled {background:url(/media/images/icons/arrow_out-disabled.png) no-repeat;}
-.evacuate.disabled {background:url(/media/images/icons/arrow_out-disabled.png) no-repeat;}
-.redistribute-config.disabled {background:url(/media/images/icons/arrow_divide-disabled.png) no-repeat;}
-.replace_disks.disabled {background:url(/media/images/icons/drive_go-disabled.png) no-repeat;}
-.modify.disabled {background:url(/media/images/icons/edit-disabled.png) no-repeat;}
+.reboot.disabled {background:url(/static/images/icons/arrow_refresh-disabled.png) no-repeat;}
+.reinstall.disabled {background:url(/static/images/icons/arrow_refresh-disabled.png) no-repeat;}
+.shutdown.disabled {background:url(/static/images/icons/stop-disabled.png) no-repeat;}
+.startup.disabled {background:url(/static/images/icons/add-disabled.png) no-repeat;}
+.encrypt.enabled {background:url(/static/images/icons/lock.png) no-repeat;}
+.connect.enabled {background:url(/static/images/icons/disconnect.png) no-repeat;}
+.migrate.disabled {background:url(/static/images/icons/arrow_out-disabled.png) no-repeat;}
+.evacuate.disabled {background:url(/static/images/icons/arrow_out-disabled.png) no-repeat;}
+.redistribute-config.disabled {background:url(/static/images/icons/arrow_divide-disabled.png) no-repeat;}
+.replace_disks.disabled {background:url(/static/images/icons/drive_go-disabled.png) no-repeat;}
+.modify.disabled {background:url(/static/images/icons/edit-disabled.png) no-repeat;}
 
 .button {background-position: center;}
 
@@ -167,7 +167,7 @@ div.delete, div.edit, div.icon_error, .icon_running, .icon_stopped, .icon_deleti
     width:16px;
 }
 
-a.clear:hover {background:url(/media/images/icons/cancel.png) no-repeat !important;}
+a.clear:hover {background:url(/static/images/icons/cancel.png) no-repeat !important;}
 .clear {cursor:pointer;}
 
 .spinner {margin:0 auto; text-align:center; width:100px}
@@ -201,7 +201,7 @@ a.clear:hover {background:url(/media/images/icons/cancel.png) no-repeat !importa
 }
 
 #messages li.job h3 {
-    background: #C2E192 url(/media/images/ajax-loader_arrows.gif) no-repeat 5px 5px;
+    background: #C2E192 url(/static/images/ajax-loader_arrows.gif) no-repeat 5px 5px;
     padding: 5px 0 5px 25px;
     margin:0;
     text-align:left;
@@ -233,7 +233,7 @@ a.clear:hover {background:url(/media/images/icons/cancel.png) no-repeat !importa
     text-align:left;
 }
 #messages a.clear {
-    background:url(/media/images/icons/cancel.png);
+    background:url(/static/images/icons/cancel.png);
     float:right;
     margin-right:5px;
 }
@@ -246,8 +246,8 @@ a.clear:hover {background:url(/media/images/icons/cancel.png) no-repeat !importa
 
 .name {text-align:left;}
 tr.user td.name, tr.group td.name { padding-left:22px !important;}
-tr.user td.name {background:url(/media/images/icons/user.png) no-repeat 0 4px;}
-tr.group td.name {background:url(/media/images/icons/group.png) no-repeat 0 4px;}
+tr.user td.name {background:url(/static/images/icons/user.png) no-repeat 0 4px;}
+tr.group td.name {background:url(/static/images/icons/group.png) no-repeat 0 4px;}
 
 .permissions a {}
 .permissions .none, .quota.default {font-style:italic;}

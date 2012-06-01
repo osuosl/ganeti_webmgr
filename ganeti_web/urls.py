@@ -260,9 +260,9 @@ urlpatterns += patterns('haystack.views',
     url(r'^search/', login_required(SearchView(form_class=autocomplete_search_form)), name='search')
 )
 
-#The following is used to serve up local media files like images
-root = '%s/media' % os.path.dirname(os.path.realpath(__file__))
+#The following is used to serve up local static files like images
+root = '%s/static' % os.path.dirname(os.path.realpath(__file__))
 urlpatterns += patterns('',
-    (r'^media/(?P<path>.*)', 'django.views.static.serve',
+    (r'^static/(?P<path>.*)', 'django.views.static.serve',
         {'document_root':  root, }),
 )
