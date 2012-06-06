@@ -26,12 +26,6 @@ PIP_INSTALL = dict((r.project_name, str(r)) for r in
                    pkg_resources.parse_requirements(open("requirements.txt").read()))
 
 GIT_INSTALL =  {
-    'noVNC':{
-        'url':'git://github.com/kanaka/noVNC.git',
-        "checkout": "commit",
-        'development':'3859e1d35cf',
-        'production':'3859e1d35cf',
-        },
     'django_object_permissions':{
         'url':'git://git.osuosl.org/gitolite/django/django_object_permissions',
         'development':'develop',
@@ -109,6 +103,7 @@ def deploy():
 
     install_dependencies_pip()
     install_dependencies_git()
+    novnc()
 
 def clean():
     """
@@ -183,7 +178,7 @@ def create_virtualenv(virtualenv=None, force=False):
             # XXX does this actually create a new environment if one already
             # exists there?
             local('virtualenv %(virtualenv)s --distribute' % env)
-            
+
             # now lets make sure the virtual env has the the newest pip
             local('%(virtualenv)s/bin/pip install --upgrade pip' % env)
 
@@ -226,7 +221,7 @@ def install_dependencies_git():
         # If we can satisfy all of our dependencies from pip alone, then don't
         # bother running the git installation.
         if all(p in PIP_INSTALL for p in GIT_INSTALL):
-            print 'No git repos to install'
+            print 'No git repos to install! Yay!'
             return
 
     create_env()
@@ -256,16 +251,10 @@ def install_dependencies_git():
                 with lcd(name):
                     local('git fetch')
 
-                    # If we're supposed to affix ourselves to a certain
-                    # commit, then do so. Otherwise, attempt to create a
-                    # tracked branch and update it.
-                    if opts.get("checkout", "") == "commit":
-                        local("git checkout %(head)s" % opts)
-                    else:
-                        with settings(hide('warnings','stderr'),
-                                      warn_only=True):
-                            local('git checkout -t origin/%(head)s' % opts)
-                            local('git pull')
+                    # Attempt to create a tracked branch and update it.
+                    with settings(hide('warnings','stderr'), warn_only=True):
+                        local('git checkout -t origin/%(head)s' % opts)
+                        local('git pull')
 
         # install to virtualenv using setup.py if it exists.  Some repos might
         # not have it and will need to be symlinked into the project
@@ -286,6 +275,22 @@ def install_dependencies_git():
                 with settings(hide('warnings','stderr'), warn_only=True):
                     local('ln -sf %(symlink_path)s %(doc_root)s' % env)
 
+
+def novnc():
+    """
+    Grab noVNC.
+    """
+
+    if _exists("%(doc_root)s/noVNC" % env):
+        return
+
+    # Grab the tarball, pass it through filters. Heavy abuse of the fact that
+    # shell=True in local().
+    with lcd(env.doc_root):
+        # -L follows redirects.
+        local("curl https://github.com/kanaka/noVNC/tarball/v0.3 -L | tar xz")
+        # The glob replaces a git revision.
+        local("mv kanaka-noVNC-*/ noVNC")
 
 
 def tarball():
