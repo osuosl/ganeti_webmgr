@@ -19,7 +19,7 @@ Note that all bets are off if the cluster's version doesn't correspond to the
 x.y.z (major.minor.patch) versioning pattern.
 """
 
-ANCIENT, GANETI23, GANETI24, GANETI25, FUTURE = range(5)
+ANCIENT, GANETI22, GANETI23, GANETI24, GANETI25, FUTURE = range(6)
 
 def classify(cluster):
     """
@@ -32,25 +32,26 @@ def classify(cluster):
     # First, try the whole splitting thing. If we can't do it that way, assume
     # it's ancient.
     try:
-        major, minor, patch = s.split(".")
+        major, minor, patch = [int(x) for x in s.split(".")]
     except ValueError:
         return ANCIENT
 
-    if major == "2":
-        if minor == "3":
-            return GANETI23
-        elif minor == "4":
-            return GANETI24
-        elif minor == "5":
-            return GANETI25
-        elif minor <= "2":
-            return ANCIENT
-        else:
-            return FUTURE
-    elif major >= "3":
-        return FUTURE
-    else:
+    version = major, minor
+
+    if version < (2, 2):
         return ANCIENT
+    elif version > (2, 5):
+        return FUTURE
+    elif minor == 2:
+        return GANETI22
+    elif minor == 3:
+        return GANETI23
+    elif minor == 4:
+        return GANETI24
+    elif minor == 5:
+        return GANETI25
+
+    raise RuntimeError("Impossible condition!")
 
 def has_shutdown_timeout(cluster):
     """
