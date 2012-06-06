@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from ganeti_web.caps import (ANCIENT, FUTURE, GANETI25, classify,
+from ganeti_web.caps import (ANCIENT, FUTURE, GANETI22, GANETI25, classify,
                              has_shutdown_timeout)
 
 class Mock(object):
@@ -15,12 +15,16 @@ def make_mock_cluster(version):
 class TestClassify(TestCase):
 
     def test_ancient(self):
-        cluster = make_mock_cluster("2.2.0")
+        cluster = make_mock_cluster("2.1.0")
         self.assertEqual(classify(cluster), ANCIENT)
 
     def test_future(self):
         cluster = make_mock_cluster("3.0.0")
         self.assertEqual(classify(cluster), FUTURE)
+
+    def test_ganeti22(self):
+        cluster = make_mock_cluster("2.2.0")
+        self.assertEqual(classify(cluster), GANETI22)
 
     def test_ganeti25(self):
         cluster = make_mock_cluster("2.5.0")
