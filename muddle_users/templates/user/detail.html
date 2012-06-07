@@ -5,13 +5,13 @@
 {% endblock %}
 
 {% block head %}
-    <link href="{{MEDIA_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
+    <link href="{{STATIC_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
     <script type="text/javascript" src="{{SITE_ROOT}}/object_permissions_media/js/jquery.form.js"></script>
     <script type="text/javascript" src="{{SITE_ROOT}}/object_permissions_media/js/groups.js"></script>
     <style>
     #detail h3 {margin-top:30px;}
     </style>
-    <script src="{{MEDIA_URL}}/js/jquery-ui.min.js"></script>
+    <script src="{{STATIC_URL}}/js/jquery-ui.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
             $('#tabs').tabs({

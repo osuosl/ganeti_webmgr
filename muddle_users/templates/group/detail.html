@@ -3,8 +3,8 @@
 {% block title %}{% trans "Group:" %}{{ object.name }}{% endblock %}
 
 {% block head %}
-    <link href="{{MEDIA_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
-    <script src="{{MEDIA_URL}}/js/jquery-ui.min.js"></script>
+    <link href="{{STATIC_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
+    <script src="{{STATICC_URL}}/js/jquery-ui.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
             $('#tabs').tabs({
