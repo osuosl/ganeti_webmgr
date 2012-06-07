@@ -50,17 +50,17 @@ SITE_ROOT=ROOT_URL
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
-MEDIA_ROOT = '%s/static' % DOC_ROOT
+STATIC_ROOT = '%s/static' % DOC_ROOT
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
-MEDIA_URL = '%s/static' % ROOT_URL
+STATIC_URL = '%s/static' % ROOT_URL
 
 # URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
 # trailing slash.
 # Examples: "http://foo.com/media/", "/media/".
-ADMIN_MEDIA_PREFIX = '/media/'
+#ADMIN_MEDIA_PREFIX = '/media/'
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = '560j+p&_tnn7czy$-8f$zq!u@1b6#67(4r$l2)ru%*z5!&9-+a'
