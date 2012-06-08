@@ -34,6 +34,17 @@
                     $("#connect").click();
                 }
             });
+
+            // confirmation dialogs for delete, start, reinstall   
+            $("#actions a.power").live("click", function(event) {
+                event.preventDefault();
+                if(!$(this).hasClass('disabled')) {
+                    if(!confirm('Are you sure you want to '+ this.title + ' this VM?')) {
+                        return false;
+                    }
+                    $.post(this.href, action_response);
+                }
+            });
         </script>
     </body>
 </html>
