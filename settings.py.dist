@@ -31,7 +31,7 @@ TEMPLATE_DEBUG = DEBUG
 # to enable or disable these items.
 #
 # If you run the unittests without this set to TRUE, you will get many errors!
-TESTING = False
+TESTING = True
 # Setting this to False disables south migrations when running tests.
 SOUTH_TESTS_MIGRATE = False
 SKIP_SOUTH_TESTS = True
@@ -60,12 +60,10 @@ DATABASES = {
 # system time zone.
 TIME_ZONE = 'America/Los_Angeles'
 
-# Language code for this installation. All choices can be found here:
-# http://www.i18nguy.com/unicode/language-identifiers.html
-
 # If no other locale is present/supported for the time leave the following as is.
 # When locales are added, place them ath the "('yourlang', ugettext('YOUR LANGUAGE')),"
 # line. E.g, for the Greek locale, it becomes: ('el', ugettext('Greek'))
+
 
 LANGUAGES = (
 #	 ('yourlang', ugettext('YOUR LANGUAGE')),
@@ -74,6 +72,8 @@ LANGUAGES = (
 )
 # end-of localization support
 
+# Language code for this installation. All choices can be found here:
+# http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = 'en-US'
 
 # Unique site id used by many modules to distinguish site from others.
@@ -110,10 +110,11 @@ STATIC_ROOT = '%s/static' % DOC_ROOT
 # using this url easier to read.  ie.  {{STATIC_URL}}/images/foo.png
 STATIC_URL = '%s/static' % SITE_ROOT
 
-# URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
-# trailing slash.
-# Examples: "http://foo.com/media/", "/media/".
-ADMIN_MEDIA_PREFIX = '/adminmedia/'
+# Path to installed locales. New translations should be added to this
+# directory.
+LOCALE_PATHS = (
+  '%s/locale' % DOC_ROOT,
+)
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = '!c&bm88vo=gby*vxf2gydv8hc!+f+eo+yu&!g&!)#n5quwsr82'
