@@ -154,12 +154,16 @@ function formUpdater(url_choices, url_options, url_defaults){
                     snode.hide();
                 } else {
                     pnode.show();
-                    snode.show();
+                    if(disk_template.val() == "drbd" && nodes.length > 1){
+                      snode.show();
+                    }
                 }
             } else {
                 if(!iallocator.is(":checked")){
                     pnode.show();
-                    snode.show();
+                    if(disk_template.val() == "drbd" && nodes.length > 1){
+                      snode.show();
+                    }
                     disk_template.parent("p").show();
                     disk_template.change();
                 }
