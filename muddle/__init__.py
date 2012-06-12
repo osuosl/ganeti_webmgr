@@ -12,7 +12,7 @@ def settings_processor(request):
     """
     return {
         'VERSION':VERSION,
-        'MEDIA':'%s/muddle_static' % django_settings.SITE_ROOT,
+        'STATIC':'%s/muddle_static' % django_settings.SITE_ROOT,
         'ROOT':django_settings.SITE_ROOT
     }
 

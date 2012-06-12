@@ -202,10 +202,10 @@
 
             .button { cursor:pointer; }
             
-            .button_close { background-image:url({{MEDIA}}/images/icons/cancel.png); }
-            .button_config { background-image:url({{MEDIA}}/images/icons/cog.png); }
-            .button_create { background-image:url({{MEDIA}}/images/icons/add.png); }
-            .button_delete { background-image:url({{MEDIA}}/images/icons/delete.png); }
-            .button_edit { background-image:url({{MEDIA}}/images/icons/page_white_edit.png); }
-            .icon_success { background-image:url({{MEDIA}}/images/icons/accept.png); }
+            .button_close { background-image:url({{STATIC}}/images/icons/cancel.png); }
+            .button_config { background-image:url({{STATIC}}/images/icons/cog.png); }
+            .button_create { background-image:url({{STATIC}}/images/icons/add.png); }
+            .button_delete { background-image:url({{STATIC}}/images/icons/delete.png); }
+            .button_edit { background-image:url({{STATIC}}/images/icons/page_white_edit.png); }
+            .icon_success { background-image:url({{STATIC}}/images/icons/accept.png); }
 
