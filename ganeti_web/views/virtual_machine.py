@@ -42,7 +42,7 @@ from object_permissions import signals as op_signals
 from object_log.models import LogItem
 log_action = LogItem.objects.log_action
 
-from ganeti_web.caps import has_shutdown_timeout
+from ganeti_web.caps import has_cdrom2, has_shutdown_timeout
 from ganeti_web.forms.virtual_machine import NewVirtualMachineForm, \
     KvmModifyVirtualMachineForm, PvmModifyVirtualMachineForm, \
     HvmModifyVirtualMachineForm, ModifyConfirmForm, MigrateForm, RenameForm, \
@@ -707,8 +707,10 @@ def create(request, cluster_slug=None):
                 snode = data.get('snode')
 
             # Create dictionary of only parameters supposed to be in hvparams
-            hv = data.get('hypervisor', '')
-            hvparams = dict()
+            hv = data.get('hypervisor')
+            hvparams = {}
+            hvparam_fields = ()
+
             if hv == 'xen-pvm':
                 hvparam_fields = ('kernel_path', 'root_path')
             elif hv == 'xen-hvm':
@@ -719,23 +721,25 @@ def create(request, cluster_slug=None):
                     'cdrom_image_path',
                 )
             elif hv == 'kvm':
-                hvparam_fields = (
+                hvparam_fields = [
                     'kernel_path',
                     'root_path',
                     'serial_console',
                     'boot_order',
                     'disk_type',
                     'cdrom_image_path',
-                    'cdrom2_image_path',
                     'nic_type',
-                )
-                hvparams['cdrom_disk_type'] = 'ide'
-            else:
-                hvparam_fields = None
+                ]
 
-            if hvparam_fields is not None:
-                for field in hvparam_fields:
-                    hvparams[field] = data[field]
+                # Check before adding cdrom2; see #11655.
+                if has_cdrom2(cluster):
+                    hvparam_fields.append('cdrom2_image_path')
+
+                # Force cdrom disk type to IDE; see #9297.
+                hvparams['cdrom_disk_type'] = 'ide'
+
+            for field in hvparam_fields:
+                hvparams[field] = data[field]
 
             # XXX attempt to load the virtual machine.  This ensure that if
             # there was a previous vm with the same hostname, but had not
