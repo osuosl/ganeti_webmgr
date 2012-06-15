@@ -70,6 +70,13 @@ class VirtualMachineForm(forms.ModelForm):
             self.fields['nic_link_%s'%i] = nic_link
 
     def clean_hostname(self):
+        """
+        The hostname is checked to see if it is being used in this cluster,
+        and if so,checked to see if the vm failed to deploy. The hostname is also
+        checked for illegal characters in it.
+ 
+        @return hostname
+        """
         data = self.cleaned_data
         hostname = data.get('hostname')
         cluster = data.get('cluster')
