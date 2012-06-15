@@ -106,6 +106,9 @@ class VirtualMachineForm(forms.ModelForm):
         return hostname
 
     def clean_vcpus(self):
+        """
+        Checks vcpu field for errors.    
+        """
         vcpus = self.cleaned_data.get("vcpus", None)
 
         if vcpus is not None and vcpus < 1:
