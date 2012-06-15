@@ -1,6 +1,5 @@
 {% extends "no_menu_base.html" %}
 {% load i18n %}
-{% load layout_tags %}
 
 {% block title %}{% trans "Login" %}{% endblock %}
 
@@ -18,9 +17,6 @@
         </form>
     </fieldset>
     <p><a href="{% url auth_password_reset %}">{% trans "Forgot password" %}?</a></p>
-    {% open_registration %}
-      <p><a href="{% url registration_register %}">Not a member?</a></p>
-    {% endopen_registration %}
 	
 </div>
 {% endblock %}
