@@ -135,6 +135,9 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
         return name
 
     def clean(self):
+        """
+        Creates/Edits a VM from the form data provided.
+        """
         data = self.cleaned_data
 
         disk_count = data.get('disk_count', 0)
