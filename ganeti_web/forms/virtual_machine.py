@@ -71,11 +71,7 @@ class VirtualMachineForm(forms.ModelForm):
 
     def clean_hostname(self):
         """
-        The hostname is checked to see if it is being used in this cluster,
-        and if so,checked to see if the vm failed to deploy. The hostname is also
-        checked for illegal characters in it.
- 
-        @return hostname
+        Handles errors in the hostname field and recovers vms that failed deployment.
         """
         data = self.cleaned_data
         hostname = data.get('hostname')
