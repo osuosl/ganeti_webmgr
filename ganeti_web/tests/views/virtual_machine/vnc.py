@@ -5,7 +5,6 @@ __all__ = ['TestVirtualMachineVNCViews']
 class TestVirtualMachineVNCViews(TestVirtualMachineViewsBase):
 
     def test_view_vnc(self):
-        pass
         """
         Tests view for cluster Ajax vnc (noVNC) script:
 
@@ -34,8 +33,8 @@ class TestVirtualMachineVNCViews(TestVirtualMachineViewsBase):
         args = (self.cluster.slug, self.vm.hostname)
 
         self.assert_standard_fails(url, args, method="post")
-        self.assert_200(url, 
-                        args, 
-                        [self.superuser, self.cluster_admin, self.vm_admin], 
+        self.assert_200(url,
+                        args,
+                        [self.superuser, self.cluster_admin, self.vm_admin],
                         method="post",
                         mime="application/json")
