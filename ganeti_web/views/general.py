@@ -185,7 +185,7 @@ def overview(request, rest=False):
     if user.is_superuser:
         clusters = Cluster.objects.all()
     else:
-        clusters = user.get_objects_all_perms(Cluster, ['admin',])
+        clusters = user.get_objects_any_perms(Cluster, ['admin', 'create_vm',])
     admin = user.is_superuser or clusters
 
     #orphaned, ready to import, missing
@@ -254,12 +254,15 @@ def overview(request, rest=False):
     # get resources used per cluster from the first persona in the list
     resources = get_used_resources(personas[0])
 
+    create_vm = user.has_perm('create_vm', clusters)
+
     if rest:
         return clusters
     else:
         return render_to_response("ganeti/overview.html", {
             'admin':admin,
             'cluster_list': clusters,
+            'create_vm': create_vm,
             'user': request.user,
             'errors': errors,
             'orphaned': orphaned,
