@@ -65,8 +65,6 @@ if settings.VNC_PROXY:
     from ganeti_web.util.vncdaemon.vapclient import (request_forwarding,
                                                      request_ssh)
 
-TESTING = settings.TESTING if hasattr(settings, 'TESTING') else False
-
 class QuerySetManager(models.Manager):
     """
     Useful if you want to define manager methods that need to chain. In this
@@ -184,7 +182,7 @@ class CachedClusterObject(models.Model):
     This model is abstract and may not be instantiated on its own.
     """
 
-    serialized_info = models.TextField(null=True, default=None, editable=False)
+    serialized_info = models.TextField(default=None, editable=False)
     mtime = PreciseDateTimeField(null=True, editable=False)
     cached = PreciseDateTimeField(null=True, editable=False)
     ignore_cache = models.BooleanField(default=False)
@@ -197,6 +195,14 @@ class CachedClusterObject(models.Model):
 
     class Meta:
         abstract = True
+
+    def save(self, *args, **kwargs):
+        """
+        overridden to ensure info is serialized prior to save
+        """
+        if self.serialized_info is None:
+            self.serialized_info = cPickle.dumps(self.__info)
+        super(CachedClusterObject, self).save(*args, **kwargs)
 
     def __init__(self, *args, **kwargs):
         super(CachedClusterObject, self).__init__(*args, **kwargs)
@@ -421,14 +427,6 @@ class CachedClusterObject(models.Model):
             return {'mtime': None}
         return {'mtime': datetime.fromtimestamp(info['mtime'])}
 
-    def save(self, *args, **kwargs):
-        """
-        overridden to ensure info is serialized prior to save
-        """
-        if self.serialized_info is None:
-            self.serialized_info = cPickle.dumps(self.__info)
-        super(CachedClusterObject, self).save(*args, **kwargs)
-
 
 class JobManager(models.Manager):
     """
@@ -452,18 +450,33 @@ class Job(CachedClusterObject):
     settning ignore_cache=True.
     """
 
-    job_id = models.IntegerField(null=False)
-    content_type = models.ForeignKey(ContentType, null=False)
-    object_id = models.IntegerField(null=False)
+    job_id = models.IntegerField()
+    content_type = models.ForeignKey(ContentType, related_name="+")
+    object_id = models.IntegerField()
     obj = GenericForeignKey('content_type', 'object_id')
-    cluster = models.ForeignKey('Cluster', editable=False, related_name='jobs')
+    cluster = models.ForeignKey('Cluster', related_name='jobs', editable=False)
     cluster_hash = models.CharField(max_length=40, editable=False)
 
-    finished = models.DateTimeField(null=True)
+    finished = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=10)
     op = models.CharField(max_length=50)
 
     objects = JobManager()
+
+    def save(self, *args, **kwargs):
+        """
+        sets the cluster_hash for newly saved instances
+        """
+        if self.id is None or self.cluster_hash == '':
+            self.cluster_hash = self.cluster.hash
+
+        super(Job, self).save(*args, **kwargs)
+
+    @models.permalink
+    def get_absolute_url(self):
+        job = '%s/job/(?P<job_id>\d+)' % self.cluster
+
+        return ('ganeti_web.views.jobs.detail', (), {'job':job})
 
     @property
     def rapi(self):
@@ -516,15 +529,6 @@ class Job(CachedClusterObject):
     def parse_transient_info(self):
         pass
 
-    def save(self, *args, **kwargs):
-        """
-        sets the cluster_hash for newly saved instances
-        """
-        if self.id is None or self.cluster_hash == '':
-            self.cluster_hash = self.cluster.hash
-
-        super(Job, self).save(*args, **kwargs)
-
     @property
     def current_operation(self):
         """
@@ -553,14 +557,8 @@ class Job(CachedClusterObject):
         return "<Job %d (%d), status %r>" % (self.id, self.job_id,
                                              self.status)
 
-    def __str__(self):
-        return repr(self)
+    __unicode__ = __repr__
 
-    @models.permalink
-    def get_absolute_url(self):
-        job = '%s/job/(?P<job_id>\d+)' % self.cluster
-
-        return ('ganeti_web.views.jobs.detail', (), {'job':job})
 
 class VirtualMachine(CachedClusterObject):
     """
@@ -585,11 +583,11 @@ class VirtualMachine(CachedClusterObject):
         limit can be determined. (Later Date, if it will optimize db)
 
     """
-    cluster = models.ForeignKey('Cluster', editable=False, default=0,
-                                related_name='virtual_machines')
+    cluster = models.ForeignKey('Cluster', related_name='virtual_machines',
+                                editable=False, default=0)
     hostname = models.CharField(max_length=128, db_index=True)
-    owner = models.ForeignKey('ClusterUser', null=True,
-                              related_name='virtual_machines',
+    owner = models.ForeignKey('ClusterUser', related_name='virtual_machines',
+                              null=True, blank=True,
                               on_delete=models.SET_NULL)
     virtual_cpus = models.IntegerField(default=-1)
     disk_size = models.IntegerField(default=-1)
@@ -599,16 +597,17 @@ class VirtualMachine(CachedClusterObject):
     status = models.CharField(max_length=14)
 
     # node relations
-    primary_node = models.ForeignKey('Node', null=True,
-            related_name='primary_vms')
-    secondary_node = models.ForeignKey('Node', null=True,
-            related_name='secondary_vms')
+    primary_node = models.ForeignKey('Node', related_name='primary_vms',
+                                     null=True, blank=True)
+    secondary_node = models.ForeignKey('Node', related_name='secondary_vms',
+                                       null=True, blank=True)
 
     # The last job reference indicates that there is at least one pending job
     # for this virtual machine.  There may be more than one job, and that can
     # never be prevented.  This just indicates that job(s) are pending and the
     # job related code should be run (status, cleanup, etc).
-    last_job = models.ForeignKey('Job', null=True)
+    last_job = models.ForeignKey('Job', related_name="+", null=True,
+                                 blank=True)
 
     # deleted flag indicates a VM is being deleted, but the job has not
     # completed yet.  VMs that have pending_delete are still displayed in lists
@@ -618,19 +617,16 @@ class VirtualMachine(CachedClusterObject):
 
     # Template temporarily stores parameters used to create this virtual machine
     # This template is used to recreate the values entered into the form.
-    template = models.ForeignKey("VirtualMachineTemplate", null=True, related_name="instances")
+    template = models.ForeignKey("VirtualMachineTemplate",
+                                 related_name="instances", null=True,
+                                 blank=True)
 
     class Meta:
-        ordering = ["hostname", ]
+        ordering = ["hostname"]
         unique_together = (("cluster", "hostname"),)
 
-    @property
-    def rapi(self):
-        return get_rapi(self.cluster_hash, self.cluster_id)
-
-    @property
-    def is_running(self):
-        return self.status == 'running'
+    def __unicode__(self):
+        return self.hostname
 
     def save(self, *args, **kwargs):
         """
@@ -665,6 +661,23 @@ class VirtualMachine(CachedClusterObject):
                     self.info['tags'].append(tag)
 
         super(VirtualMachine, self).save(*args, **kwargs)
+
+    @models.permalink
+    def get_absolute_url(self):
+        """
+        Return absolute url for this instance.
+        """
+
+        return 'instance-detail', (), {'cluster_slug':self.cluster.slug,
+                                       'instance':self.hostname}
+
+    @property
+    def rapi(self):
+        return get_rapi(self.cluster_hash, self.cluster_id)
+
+    @property
+    def is_running(self):
+        return self.status == 'running'
 
     @classmethod
     def parse_persistent_info(cls, info):
@@ -847,20 +860,8 @@ class VirtualMachine(CachedClusterObject):
         else:
             return node, port, password
 
-    @models.permalink
-    def get_absolute_url(self):
-        """
-        Return absolute url for this instance.
-        """
-
-        return 'instance-detail', (), {'cluster_slug':self.cluster.slug,
-                                       'instance':self.hostname}
-
     def __repr__(self):
         return "<VirtualMachine: '%s'>" % self.hostname
-
-    def __unicode__(self):
-        return self.hostname
 
 
 class Node(CachedClusterObject):
@@ -884,17 +885,17 @@ class Node(CachedClusterObject):
     ram_free = models.IntegerField(default=-1)
     disk_total = models.IntegerField(default=-1)
     disk_free = models.IntegerField(default=-1)
-    cpus = models.IntegerField(null=True)
+    cpus = models.IntegerField(null=True, blank=True)
 
     # The last job reference indicates that there is at least one pending job
     # for this virtual machine.  There may be more than one job, and that can
     # never be prevented.  This just indicates that job(s) are pending and the
     # job related code should be run (status, cleanup, etc).
-    last_job = models.ForeignKey('Job', null=True)
+    last_job = models.ForeignKey('Job', related_name="+", null=True,
+                                 blank=True)
 
-    def _refresh(self):
-        """ returns node info from the ganeti server """
-        return self.rapi.GetNode(self.hostname)
+    def __unicode__(self):
+        return self.hostname
 
     def save(self, *args, **kwargs):
         """
@@ -912,6 +913,10 @@ class Node(CachedClusterObject):
 
         return 'node-detail', (), {'cluster_slug':self.cluster.slug,
                                    'host':self.hostname}
+
+    def _refresh(self):
+        """ returns node info from the ganeti server """
+        return self.rapi.GetNode(self.hostname)
 
     @property
     def rapi(self):
@@ -1014,21 +1019,18 @@ class Node(CachedClusterObject):
     def __repr__(self):
         return "<Node: '%s'>" % self.hostname
 
-    def __unicode__(self):
-        return self.hostname
-
 
 class Cluster(CachedClusterObject):
     """
     A Ganeti cluster that is being tracked by this manager tool
     """
     hostname = models.CharField(_('hostname'), max_length=128, unique=True)
-    slug = models.SlugField(_('slug'), max_length=50, unique=True, db_index=True)
+    slug = models.SlugField(_('slug'), max_length=50, unique=True,
+                            db_index=True)
     port = models.PositiveIntegerField(_('port'), default=5080)
-    description = models.CharField(_('description'), max_length=128, blank=True, null=True)
-    username = models.CharField(_('username'), max_length=128, blank=True, null=True)
-    password = PatchedEncryptedCharField(_('password'), max_length=128,
-                                         blank=True, null=True)
+    description = models.CharField(_('description'), max_length=128)
+    username = models.CharField(_('username'), max_length=128)
+    password = PatchedEncryptedCharField(_('password'), max_length=128)
     hash = models.CharField(_('hash'), max_length=40, editable=False)
 
     # quota properties
@@ -1040,8 +1042,9 @@ class Cluster(CachedClusterObject):
     # for this virtual machine.  There may be more than one job, and that can
     # never be prevented.  This just indicates that job(s) are pending and the
     # job related code should be run (status, cleanup, etc).
-    last_job = models.ForeignKey('Job', null=True, blank=True, \
-                                 related_name='cluster_last_job')
+    last_job = models.ForeignKey('Job', related_name='cluster_last_job',
+                                 null=True, blank=True)
+
 
     class Meta:
         ordering = ["hostname", "description"]
@@ -1049,6 +1052,15 @@ class Cluster(CachedClusterObject):
     def __unicode__(self):
         return self.hostname
 
+    def save(self, *args, **kwargs):
+        self.hash = self.create_hash()
+        super(Cluster, self).save(*args, **kwargs)
+
+    @models.permalink
+    def get_absolute_url(self):
+        return 'cluster-detail', (), {'cluster_slug':self.slug}
+
+    # XXX probably hax
     @property
     def cluster_id(self):
         return self.id
@@ -1076,14 +1088,6 @@ class Cluster(CachedClusterObject):
             password = value
 
         return force_unicode(password)
-
-    def save(self, *args, **kwargs):
-        self.hash = self.create_hash()
-        super(Cluster, self).save(*args, **kwargs)
-
-    @models.permalink
-    def get_absolute_url(self):
-        return 'cluster-detail', (), {'cluster_slug':self.slug}
 
     @property
     def rapi(self):
@@ -1347,88 +1351,73 @@ class VirtualMachineTemplate(models.Model):
     Virtual Machine Template holds all the values for the create virtual machine
       form so that they can automatically be used or edited by a user.
     """
-    template_name = models.CharField(max_length=255, null=True, blank=True)
-    description = models.CharField(max_length=255, null=True, blank=True)
-    cluster = models.ForeignKey('Cluster', null=True)
-    start = models.BooleanField(verbose_name=_('Start up After Creation'), \
-                default=True)
-    no_install = models.BooleanField(verbose_name=_('Do not install OS'), \
-                default=False)
+
+    template_name = models.CharField(max_length=255)
+    description = models.CharField(max_length=255)
+    cluster = models.ForeignKey(Cluster, related_name="templates", null=True,
+                                blank=True)
+    start = models.BooleanField(verbose_name=_('Start up After Creation'),
+                                default=True)
+    no_install = models.BooleanField(verbose_name=_('Do not install OS'),
+                                     default=False)
     ip_check = BooleanField(verbose_name=_("IP Check"), default=True)
-    name_check = models.BooleanField(verbose_name=_('DNS Name Check'), \
-                default=True)
-    iallocator = models.BooleanField(verbose_name=_('Automatic Allocation'), \
-                default=False)
-    iallocator_hostname = models.CharField(null=True, blank=True, \
-                max_length=255)
+    name_check = models.BooleanField(verbose_name=_('DNS Name Check'),
+                                     default=True)
+    iallocator = models.BooleanField(verbose_name=_('Automatic Allocation'),
+                                     default=False)
+    iallocator_hostname = models.CharField(max_length=255)
     disk_template = models.CharField(verbose_name=_('Disk Template'), max_length=16)
-    pnode = models.CharField(verbose_name=_('Primary Node'), max_length=255, \
-                null=True, blank=True)
-    snode = models.CharField(verbose_name=_('Secondary Node'), max_length=255, \
-                null=True, blank=True)
+    pnode = models.CharField(verbose_name=_('Primary Node'), max_length=255)
+    snode = models.CharField(verbose_name=_('Secondary Node'), max_length=255)
     os = models.CharField(verbose_name=_('Operating System'), max_length=255)
-    # BEPARAMS
-    vcpus = models.IntegerField(verbose_name=_('Virtual CPUs'), \
-                validators=[MinValueValidator(1)], null=True, blank=True)
-    memory = models.IntegerField(verbose_name=_('Memory'), \
-                validators=[MinValueValidator(100)],null=True, blank=True)
-    disks = PickleField(verbose_name=_('Disks'), null=True, blank=True)
-    disk_type = models.CharField(verbose_name=_('Disk Type'), max_length=255, \
+
+    # Backend parameters (BEPARAMS)
+    vcpus = models.IntegerField(verbose_name=_('Virtual CPUs'),
+                                validators=[MinValueValidator(1)], null=True,
+                                blank=True)
+    # XXX do we really want the minimum memory to be 100MiB? This isn't
+    # strictly necessary AFAICT.
+    memory = models.IntegerField(verbose_name=_('Memory'),
+                                 validators=[MinValueValidator(100)],
                                  null=True, blank=True)
+    disks = PickleField(verbose_name=_('Disks'), null=True, blank=True)
+    disk_type = models.CharField(verbose_name=_('Disk Type'), max_length=255)
     nics = PickleField(verbose_name=_('NICs'), null=True, blank=True)
-    nic_type = models.CharField(verbose_name=_('NIC Type'), max_length=255, \
-                                null=True, blank=True)
-    # HVPARAMS
-    kernel_path = models.CharField(verbose_name=_('Kernel Path'), null=True, \
-                blank=True, max_length=255)
-    root_path = models.CharField(verbose_name=_('Root Path'), default='/', \
-                max_length=255, null=True, blank=True)
+    nic_type = models.CharField(verbose_name=_('NIC Type'), max_length=255)
+
+    # Hypervisor parameters (HVPARAMS)
+    kernel_path = models.CharField(verbose_name=_('Kernel Path'),
+                                   max_length=255)
+    root_path = models.CharField(verbose_name=_('Root Path'), default='/',
+                                 max_length=255)
     serial_console = models.BooleanField(verbose_name=_('Enable Serial Console'))
-    boot_order = models.CharField(verbose_name=_('Boot Device'), max_length=255, \
-                                  null=True, blank=True)
-    cdrom_image_path = models.CharField(verbose_name=_('CD-ROM Image Path'), null=True, \
-                blank=True, max_length=512)
+    boot_order = models.CharField(verbose_name=_('Boot Device'), max_length=255)
+    cdrom_image_path = models.CharField(verbose_name=_('CD-ROM Image Path'),
+                                        max_length=512)
     cdrom2_image_path = models.CharField(
-        verbose_name=_('CD-ROM 2 Image Path'), null=True, blank=True,
+        verbose_name=_('CD-ROM 2 Image Path'),
         max_length=512)
 
     class Meta:
         unique_together = (("cluster", "template_name"),)
 
-    def __str__(self):
+    def __unicode__(self):
         if self.template_name is None:
-            return 'unnamed'
+            return u'unnamed'
         else:
             return self.template_name
-
-
-if TESTING:
-    # XXX - if in debug mode create a model for testing cached cluster objects
-    class TestModel(CachedClusterObject):
-        """ simple implementation of a cached model that has been instrumented """
-        cluster = models.ForeignKey(Cluster)
-        saved = False
-        data = {'mtime': 1285883187.8692000, 'ctime': 1285799513.4741000}
-        throw_error = None
-
-        def _refresh(self):
-            if self.throw_error:
-                raise self.throw_error
-            return self.data
-
-        def save(self, *args, **kwargs):
-            self.saved = True
-            super(TestModel, self).save(*args, **kwargs)
 
 
 class GanetiError(models.Model):
     """
     Class for storing errors which occured in Ganeti
     """
-    cluster = models.ForeignKey(Cluster)
+    cluster = models.ForeignKey(Cluster, related_name="errors")
     msg = models.TextField()
-    code = models.PositiveSmallIntegerField(blank=True, null=True)
-    timestamp = models.DateTimeField(auto_now_add=True)
+    code = models.PositiveIntegerField(blank=True, null=True)
+
+    # XXX could be fixed with django-model-util's TimeStampedModel
+    timestamp = models.DateTimeField()
 
     # determines if the errors still appears or not
     cleared = models.BooleanField(default=False)
@@ -1439,6 +1428,13 @@ class GanetiError(models.Model):
     obj = GenericForeignKey("obj_type", "obj_id")
 
     objects = QuerySetManager()
+
+    class Meta:
+        ordering = ("-timestamp", "code", "msg")
+
+    def __unicode__(self):
+        base = u"[%s] %s" % (self.timestamp, self.msg)
+        return base
 
     class QuerySet(QuerySet):
 
@@ -1485,15 +1481,8 @@ class GanetiError(models.Model):
                 ct = ContentType.objects.get_for_model(obj.__class__)
                 return self.filter(obj_type=ct, obj_id=obj.pk)
 
-    class Meta:
-        ordering = ("-timestamp", "code", "msg")
-
     def __repr__(self):
         return "<GanetiError '%s'>" % self.msg
-
-    def __unicode__(self):
-        base = "[%s] %s" % (self.timestamp, self.msg)
-        return base
 
     @classmethod
     def store_error(cls, msg, obj, code, **kwargs):
@@ -1548,7 +1537,8 @@ class GanetiError(models.Model):
         except cls.DoesNotExist:
             cluster_id = obj.pk if is_cluster else obj.cluster_id
 
-            return cls.objects.create(msg=msg, obj_type=ct, obj_id=obj.pk,
+            return cls.objects.create(timestamp=datetime.now(), msg=msg,
+                                      obj_type=ct, obj_id=obj.pk,
                                       cluster_id=cluster_id, code=code,
                                       **kwargs)
 
@@ -1557,29 +1547,30 @@ class ClusterUser(models.Model):
     """
     Base class for objects that may interact with a Cluster or VirtualMachine.
     """
-    #clusters = models.ManyToManyField(Cluster, through='Quota',
-    #                                  related_name='users')
-    name = models.CharField(max_length=128)
-    real_type = models.ForeignKey(ContentType, editable=False, null=True)
 
-    @property
-    def permissable(self):
-        """ returns an object that can be granted permissions """
-        return self.cast().permissable
+    name = models.CharField(max_length=128)
+    real_type = models.ForeignKey(ContentType, related_name="+",
+                                  editable=False, null=True, blank=True)
+
+    def __unicode__(self):
+        return self.name
 
     def save(self, *args, **kwargs):
         if not self.id:
             self.real_type = self._get_real_type()
         super(ClusterUser, self).save(*args, **kwargs)
 
-    def _get_real_type(self):
-        return ContentType.objects.get_for_model(type(self))
+    @property
+    def permissable(self):
+        """ returns an object that can be granted permissions """
+        raise self.cast().permissable
+
+    @classmethod
+    def _get_real_type(cls):
+        return ContentType.objects.get_for_model(cls)
 
     def cast(self):
         return self.real_type.get_object_for_this_type(pk=self.pk)
-
-    def __unicode__(self):
-        return self.name
 
     def used_resources(self, cluster=None, only_running=True):
         """
@@ -1645,11 +1636,15 @@ class Profile(ClusterUser):
     """
     user = models.OneToOneField(User)
 
-    def grant(self, perm, object):
-        self.user.grant(perm, object)
+    @models.permalink
+    def get_absolute_url(self):
+        return ('muddle_users.views.user')
 
-    def set_perms(self, perms, object):
-        self.user.set_perms(perms, object)
+    def grant(self, perm, obj):
+        self.user.grant(perm, obj)
+
+    def set_perms(self, perms, obj):
+        self.user.set_perms(perms, obj)
 
     def get_objects_any_perms(self, *args, **kwargs):
         return self.user.get_objects_any_perms(*args, **kwargs)
@@ -1661,10 +1656,6 @@ class Profile(ClusterUser):
     def permissable(self):
         """ returns an object that can be granted permissions """
         return self.user
-
-    @models.permalink
-    def get_absolute_url(self):
-        return ('muddle_users.views.user')
 
 class Organization(ClusterUser):
     """
@@ -1702,9 +1693,9 @@ class Quota(models.Model):
     user = models.ForeignKey(ClusterUser, related_name='quotas')
     cluster = models.ForeignKey(Cluster, related_name='quotas')
 
-    ram = models.IntegerField(default=0, null=True)
-    disk = models.IntegerField(default=0, null=True)
-    virtual_cpus = models.IntegerField(default=0, null=True)
+    ram = models.IntegerField(default=0, null=True, blank=True)
+    disk = models.IntegerField(default=0, null=True, blank=True)
+    virtual_cpus = models.IntegerField(default=0, null=True, blank=True)
 
 
 class SSHKey(models.Model):
