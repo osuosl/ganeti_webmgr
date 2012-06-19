@@ -1367,7 +1367,7 @@ class VirtualMachineTemplate(models.Model):
                                      default=True)
     iallocator = models.BooleanField(verbose_name=_('Automatic Allocation'),
                                      default=False)
-    iallocator_hostname = models.CharField(max_length=255)
+    iallocator_hostname = models.CharField(max_length=255, blank=True)
     disk_template = models.CharField(verbose_name=_('Disk Template'), max_length=16)
     pnode = models.CharField(verbose_name=_('Primary Node'), max_length=255)
     snode = models.CharField(verbose_name=_('Secondary Node'), max_length=255)
@@ -1389,16 +1389,16 @@ class VirtualMachineTemplate(models.Model):
 
     # Hypervisor parameters (HVPARAMS)
     kernel_path = models.CharField(verbose_name=_('Kernel Path'),
-                                   max_length=255)
-    root_path = models.CharField(verbose_name=_('Root Path'), default='/',
-                                 max_length=255)
+                                   max_length=255, blank=True)
+    root_path = models.CharField(verbose_name=_('Root Path'), max_length=255,
+                                 default='/', blank=True)
     serial_console = models.BooleanField(verbose_name=_('Enable Serial Console'))
     boot_order = models.CharField(verbose_name=_('Boot Device'), max_length=255)
     cdrom_image_path = models.CharField(verbose_name=_('CD-ROM Image Path'),
-                                        max_length=512)
+                                        max_length=512, blank=True)
     cdrom2_image_path = models.CharField(
         verbose_name=_('CD-ROM 2 Image Path'),
-        max_length=512)
+        max_length=512, blank=True)
 
     class Meta:
         unique_together = (("cluster", "template_name"),)

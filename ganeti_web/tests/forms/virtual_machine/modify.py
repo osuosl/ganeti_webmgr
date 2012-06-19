@@ -2,9 +2,7 @@ from itertools import chain
 
 from monkey import MonkeyPatcher
 
-from django.contrib.auth.models import User, Group
 from django.test import TestCase
-from django.utils.unittest import expectedFailure
 
 from ganeti_web import models
 from ganeti_web import constants
@@ -13,10 +11,11 @@ from ganeti_web.forms.virtual_machine import (HvmModifyVirtualMachineForm,
     PvmModifyVirtualMachineForm,
     ModifyVirtualMachineForm)
 from ganeti_web.util.client import GanetiRapiClient
-from ganeti_web.util.proxy import CallProxy, RapiProxy
 from ganeti_web.util.proxy.constants import (INFO, INSTANCE, NODE, NODES,
-    XEN_INFO, XEN_HVM_INSTANCE, XEN_PVM_INSTANCE, OPERATING_SYSTEMS,
-    XEN_OPERATING_SYSTEMS)
+                                             XEN_INFO, XEN_HVM_INSTANCE,
+                                             XEN_PVM_INSTANCE,
+                                             OPERATING_SYSTEMS,
+                                             XEN_OPERATING_SYSTEMS)
 from ganeti_web.tests.views.virtual_machine.base import (
     VirtualMachineTestCaseMixin,)
 
