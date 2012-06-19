@@ -35,7 +35,6 @@
         });
         $("#clusters").tablesorter();
         $("#errors_list table").tablesorter();
-        
         $("#errors_list a.clear").live("click", function(event){
             event.preventDefault();
             var row = this.parentNode.parentNode;
@@ -62,8 +61,7 @@
 
 {% block content %}
 <h1>{% trans "Overview" %}</h1>
-
-{% if admin %}
+{% if admin or create_vm %}
 <div id="cluster_summary">
 <h2>{% trans "Cluster Status" %}</h2>
 <table id="clusters" class="sorted">
