@@ -30,7 +30,7 @@ class QuotaForm(forms.Form):
     Form for editing user quota on a cluster
     """
     input = forms.TextInput(attrs={'size':5})
-    
+
     user = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), \
                                   widget=forms.HiddenInput)
     ram = DataVolumeField(label='Memory', required=False, min_value=0)
@@ -54,6 +54,14 @@ class EditClusterForm(forms.ModelForm):
     ram = DataVolumeField(label=_('Memory'), required=False, min_value=0)
     disk = DataVolumeField(label=_('Disk Space'), required=False, min_value=0)
 
+    def need_username(self):
+        msg = _('Enter a username')
+        self._errors['username'] = self.error_class([msg])
+
+    def need_password(self):
+        msg = _('Enter a password')
+        self._errors['password'] = self.error_class([msg])
+
     def clean(self):
         """
         Validate this form.
@@ -64,40 +72,37 @@ class EditClusterForm(forms.ModelForm):
         """
 
         data = self.cleaned_data = super(EditClusterForm, self).clean()
-        user = data.get('username', None)
-        password = data.get('password', None)
-        hostname = data.get("hostname", None)
+
+        # Automatically set the slug on cluster creation, based on the
+        # hostname, if no slug was provided.
+        if "hostname" in data and 'slug' not in data:
+            data['slug'] = slugify(data["hostname"].split('.')[0])
+            del self._errors['slug']
+
+        username = data.get('username', "")
+        password = data.get('password', "")
 
         if self.instance is None or not self.instance.username:
-            # new cluster or a cluster without a username set
-            if user and not password:
-                msg = _('Enter a password')
-                self._errors['password'] = self.error_class([msg])
+            # This is a new cluster, or a cluster without a username.
+            if username and not password:
+                self.need_password()
+            elif password and not username:
+                self.need_username()
 
-            elif password and not user:
-                msg = _('Enter a username')
-                self._errors['username'] = self.error_class([msg])
-
-            # Automatically set the slug on cluster creation, based on the
-            # hostname, if no slug was provided.
-            if hostname and 'slug' not in data:
-                data['slug'] = slugify(hostname.split('.')[0])
-                del self._errors['slug']
-        
         elif self.instance.username:
-            # cluster had a username set.  password is not required unless the
-            # username is changed
-            if user:
-                if user != self.instance.username and not password:
-                    msg = _('Enter a password')
-                    self._errors['password'] = self.error_class([msg])
-                elif not password:
-                    # user didn't enter a password and it wasn't required
-                    # retain existing password instead of setting to empty string
+            # The cluster had a username set. Password is not required unless
+            # the username has changed.
+            if username and not password:
+                if username == self.instance.username:
+                    # The user didn't enter a password and it wasn't required;
+                    # retain the existing password instead of setting it to
+                    # the empty string.
                     data['password'] = self.instance.password
+                else:
+                    # New username; get a new password too.
+                    self.need_password()
 
-            elif password:
-                msg = _('Enter a username')
-                self._errors['username'] = self.error_class([msg])
+            elif password and not username:
+                self.need_username()
 
         return data

@@ -130,7 +130,7 @@ def get_rapi(hash, cluster):
     (credentials,) = Cluster.objects.filter(id=cluster) \
         .values_list('hash','hostname','port','username','password')
     hash, host, port, user, password = credentials
-    user = user if user else None
+    user = user or None
     # decrypt password
     # XXX django-fields only stores str, convert to None if needed
     password = Cluster.decrypt_password(password) if password else None
@@ -1028,9 +1028,11 @@ class Cluster(CachedClusterObject):
     slug = models.SlugField(_('slug'), max_length=50, unique=True,
                             db_index=True)
     port = models.PositiveIntegerField(_('port'), default=5080)
-    description = models.CharField(_('description'), max_length=128)
-    username = models.CharField(_('username'), max_length=128)
-    password = PatchedEncryptedCharField(_('password'), max_length=128)
+    description = models.CharField(_('description'), max_length=128,
+                                   blank=True)
+    username = models.CharField(_('username'), max_length=128, blank=True)
+    password = PatchedEncryptedCharField(_('password'), max_length=128,
+                                         blank=True)
     hash = models.CharField(_('hash'), max_length=40, editable=False)
 
     # quota properties
