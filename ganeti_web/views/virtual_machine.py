@@ -1130,6 +1130,9 @@ def rename(request, cluster_slug, instance, rest=False, extracted_params=None):
                 VirtualMachine.objects.filter(pk=vm.pk) \
                     .update(hostname=hostname, last_job=job, ignore_cache=True)
 
+                # slip the new hostname to the log action
+                vm.newname = hostname
+
                 # log information about creating the machine
                 log_action('VM_RENAME', user, vm, job)
 
