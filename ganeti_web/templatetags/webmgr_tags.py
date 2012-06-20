@@ -147,6 +147,12 @@ def is_drbd(vm):
     """
     return 'drbd' == vm.info['disk_template']
 
+@register.filter
+def is_shared(vm):
+    """ Simple filter for returning true or false if a virtual machine
+    has shared for disklayout
+    """
+    return 'shared' == vm.info['disk_template']
 
 @register.filter
 def checkmark(bool):
