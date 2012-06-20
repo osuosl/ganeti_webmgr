@@ -28,7 +28,8 @@ def build_vm_cache(user, object1, object2, object3, data):
     if object1 is not None:
         data['cluster_slug']=object1.cluster.slug
         data['hostname']=object1.hostname
-        data['newname'] = object1.newname
+        if hasattr(object1, 'newname'):
+            data['newname'] = object1.newname
         if object2 is not None:
             data['job_id'] = object2.job_id
     return data
