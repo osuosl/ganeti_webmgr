@@ -1,6 +1,6 @@
 function formUpdater(url_options, url_defaults){
     /* Live form updating for the create VM template */
-    
+
     // -----------
     // class data
     // -----------
@@ -19,6 +19,7 @@ function formUpdater(url_options, url_defaults){
     var nic_link =              $("#nics input[name^=nic_link]");
     var disk_template =         $("#id_disk_template");
     var nic_mode =              $("#nics select[name^=nic_mode]");
+    var check_name =            $("#id_name_check");
     var boot_order =            $("#id_boot_order");
     var image_path =            $("#id_cdrom_image_path").parent("p");
     var root_path =             $("#id_root_path");
@@ -45,12 +46,12 @@ function formUpdater(url_options, url_defaults){
         // fire off some initial changes
         disk_template.change();
         boot_order.change();
-        hypervisor.change(); 
+        hypervisor.change();
         cluster.change();
 
         disableSingletonDropdown(cluster, blankOptStr);
     };
-    
+
     function _initChangeHooks(){
         /* setup change hooks for the form elements */
 
@@ -61,11 +62,11 @@ function formUpdater(url_options, url_defaults){
                 _showHvmKvmElements();
                 _hidePvmKvmElements();
                 _hideKvmElements();
-            } 
+            }
             else if (id == "xen-pvm") {
                 _showPvmKvmElements();
                 _hideHvmKvmElements();
-                _hideKvmElements(); 
+                _hideKvmElements();
             }
             else if (id == "kvm") {
                 _showKvmElements();
@@ -73,7 +74,7 @@ function formUpdater(url_options, url_defaults){
                 _showPvmKvmElements();
             } else {
                 return;
-            } 
+            }
             if(id != oldid && oldid != undefined) {
                 _fillDefaultOptions(cluster.val(), id);
             }
@@ -98,7 +99,7 @@ function formUpdater(url_options, url_defaults){
             var child;
             var oslist      = $("#id_os");
             var id = $(this).children("option:selected").val();
-            
+
             if( id != "" ) {
                 // JSON update oslist, pnode, and snode when cluster changes
                 $.getJSON(url_options, {"cluster_id":id}, function(data){
@@ -122,9 +123,9 @@ function formUpdater(url_options, url_defaults){
                     disableSingletonDropdown(oslist, blankOptStr);
                 });
 
-                // only load the defaults if errors are not present 
+                // only load the defaults if errors are not present
                 if($(".errorlist").length == 0){
-                    _fillDefaultOptions(id);   
+                    _fillDefaultOptions(id);
                 }
             }
         });
@@ -152,7 +153,7 @@ function formUpdater(url_options, url_defaults){
                 boot_order.children().remove();
                 $.each(d["boot_devices"], function(i, item){
                     boot_order.append(_newOpt(item[0], item[1]));
-                }); 
+                });
             }
             if(d["boot_order"]) {
                 boot_order.find(":selected").removeAttr(
@@ -161,7 +162,7 @@ function formUpdater(url_options, url_defaults){
                     .attr("selected","selected");
                 boot_order.change();
             }
-            
+
             // hypervisors dropdown
             if(typeof hypervisor_id != undefined) {
                 if(d["hypervisors"]) {
@@ -175,7 +176,7 @@ function formUpdater(url_options, url_defaults){
                             hypervisor.find(":selected").removeAttr(
                                     "selected");
                             hypervisor.find("[value=" + d["hypervisor"] + "]")
-                                .attr("selected", "selected");     
+                                .attr("selected", "selected");
                             hypervisor.change();
                         }
                     }
@@ -193,7 +194,7 @@ function formUpdater(url_options, url_defaults){
                 nic_mode.find("[value=" + d["nic_mode"] + "]")
                     .attr("selected","selected");
                 DEFAULT_NIC_MODE = d["nic_mode"];
-            } else { 
+            } else {
                 nic_mode.find(":first-child")
                     .attr("selected", "selected");
             }
@@ -203,14 +204,14 @@ function formUpdater(url_options, url_defaults){
                 nic_link.val(d["nic_link"]);
                 DEFAULT_NIC_LINK = d["nic_link"];
             }
-            
+
             // nic type dropdown
             old_nic_type = nic_type.val();
             if(d["nic_types"]) {
                 nic_type.children().remove();
                 $.each(d["nic_types"], function(i, item){
                     nic_type.append(_newOpt(item[0], item[1]));
-                }); 
+                });
             }
             if(d["nic_type"]) {
                 nic_type.find(":selected").removeAttr("selected");
@@ -237,14 +238,14 @@ function formUpdater(url_options, url_defaults){
                 }
                 disk_type.val(old_disk_type);
             }
-            
+
             // root path text box
             if(d["root_path"]){
                 root_path.val(d["root_path"]);
             } else {
                 root_path.val("/");
             }
-            
+
             // enable serial console checkbox
             if(d["serial_console"]){
                 $("#id_serial_console")
@@ -252,12 +253,21 @@ function formUpdater(url_options, url_defaults){
             } else {
                 $("#id_serial_console").removeAttr("checked");
             }
-            
+
+            // DNS Name Check
+            if (d["name_check"]) {
+                $("#id_name_check")
+                    .attr("checked", "checked");
+            } else {
+                $("#id_name_check")
+                    .removeAttr("checked");
+            }
+
             // virtual CPUs text box
             if(d["vcpus"] && $("#id_vcpus") == ""){
                 $("#id_vcpus").val(d["vcpus"]);
             }
-            
+
             // image path text box
             if(d["cdrom_image_path"]){
                 image_path.find("input").val(d["cdrom_image_path"]);
@@ -283,11 +293,11 @@ function formUpdater(url_options, url_defaults){
         });
         return group;
     }
-    
+
     function _hideHvmKvmElements() {
         // Hide hvm + kvm specific hypervisor fields
         boot_order.parent("p").hide();
-        image_path.hide(); 
+        image_path.hide();
         nic_type.parent("p").hide();
         disk_type.parent("p").hide();
     }
@@ -295,7 +305,7 @@ function formUpdater(url_options, url_defaults){
     function _showHvmKvmElements() {
         // Show hvm + kvm specific hypervisor fields
         boot_order.parent("p").show();
-        boot_order.change(); 
+        boot_order.change();
         nic_type.parent("p").show();
         disk_type.parent("p").show();
     }
@@ -365,7 +375,7 @@ function formUpdater(url_options, url_defaults){
         nic_count.val(parseInt(count)+1);
         var p = $('<p></p>');
         var label = $("<label>NIC/" + count +"</label>");
-        
+
         // create mode select box
         var mode = $('<select></select>');
         mode.append('<option>----------</option>');
