@@ -8,30 +8,24 @@ from object_permissions.signals import view_add_user, view_remove_user
 from muddle_users.signals import (view_group_edited, view_group_created,
                                   view_group_deleted)
 
-global user0, user1
-
 class TestGroupViews(TestCase):
 
     def setUp(self):
-        global user0, user1, object0, object1
-        self.tearDown()
+        self.anonymous = User(id=1, username='anonymous')
+        self.anonymous.save()
+        settings.ANONYMOUS_USER_ID = 1
 
-        User(id=1, username='anonymous').save()
-        settings.ANONYMOUS_USER_ID=1
-
-        user0 = User(id=2, username='tester0')
-        user0.set_password('secret')
-        user0.save()
-        user1 = User(id=3, username='tester1')
-        user1.set_password('secret')
-        user1.save()
+        self.user0 = User(id=2, username='tester0')
+        self.user0.set_password('secret')
+        self.user0.save()
+        self.user1 = User(id=3, username='tester1')
+        self.user1.set_password('secret')
+        self.user1.save()
 
     def tearDown(self):
-        global user0, user1, object0, object1
-        User.objects.all().delete()
-        Group.objects.all().delete()
-        user0 = None
-        user1 = None
+        self.anonymous.delete()
+        self.user0.delete()
+        self.user1.delete()
 
     def test_save(self, name='test'):
         """ Test saving an Group """
@@ -56,13 +50,13 @@ class TestGroupViews(TestCase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user (user with admin on no groups)
-        self.assertTrue(c.login(username=user0.username, password='secret'))
+        self.assertTrue(c.login(username=self.user0.username, password='secret'))
         response = c.get(url)
         self.assertEqual(403, response.status_code)
 
         # authorized (permission)
-        user0.grant('admin', group)
-        user0.grant('admin', group1)
+        self.user0.grant('admin', group)
+        self.user0.grant('admin', group1)
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
@@ -73,10 +67,10 @@ class TestGroupViews(TestCase):
         self.assertEqual(2, len(groups))
 
         # authorized (superuser)
-        user0.revoke('admin', group0)
-        user0.revoke('admin', group1)
-        user0.is_superuser = True
-        user0.save()
+        self.user0.revoke('admin', group0)
+        self.user0.revoke('admin', group1)
+        self.user0.is_superuser = True
+        self.user0.save()
         response = c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
@@ -107,7 +101,7 @@ class TestGroupViews(TestCase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assertTrue(c.login(username=user0.username, password='secret'))
+        self.assertTrue(c.login(username=self.user0.username, password='secret'))
         response = c.get(url % args)
         self.assertEqual(403, response.status_code)
 
@@ -116,7 +110,7 @@ class TestGroupViews(TestCase):
         self.assertEqual(404, response.status_code)
 
         # authorized (permission)
-        grant(user0, 'admin', group)
+        grant(self.user0, 'admin', group)
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
@@ -139,7 +133,7 @@ class TestGroupViews(TestCase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assertTrue(c.login(username=user0.username, password='secret'))
+        self.assertTrue(c.login(username=self.user0.username, password='secret'))
         response = c.post(url % group.id)
         self.assertEqual(403, response.status_code)
 
@@ -156,16 +150,16 @@ class TestGroupViews(TestCase):
         #self.assertTemplateUsed(response, 'group/edit.html')
 
         # get form - authorized (permission)
-        grant(user0, 'admin', group)
+        grant(self.user0, 'admin', group)
         response = c.post(url % group.id)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'group/edit.html')
 
         # get form - authorized (superuser)
-        user0.revoke('admin', group)
-        user0.is_superuser = True
-        user0.save()
+        self.user0.revoke('admin', group)
+        self.user0.is_superuser = True
+        self.user0.save()
         response = c.post(url % group.id)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
@@ -180,7 +174,7 @@ class TestGroupViews(TestCase):
         # setup signal
         self.signal_editor = self.signal_group = None
         def callback(sender, editor, **kwargs):
-            self.signal_user = user0
+            self.signal_user = self.user0
             self.signal_group = sender
         view_group_edited.connect(callback)
 
@@ -194,7 +188,7 @@ class TestGroupViews(TestCase):
 
         # check signal set properties
         self.assertEqual(group, self.signal_group)
-        self.assertEqual(user0, self.signal_user)
+        self.assertEqual(self.user0, self.signal_user)
 
     def test_view_create(self):
         """
@@ -210,7 +204,7 @@ class TestGroupViews(TestCase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assertTrue(c.login(username=user0.username, password='secret'))
+        self.assertTrue(c.login(username=self.user0.username, password='secret'))
         response = c.post(url)
         self.assertEqual(403, response.status_code)
 
@@ -223,9 +217,9 @@ class TestGroupViews(TestCase):
         #self.assertTemplateUsed(response, 'group/edit.html')
 
         # get form - authorized (superuser)
-        user0.revoke('admin', group)
-        user0.is_superuser = True
-        user0.save()
+        self.user0.revoke('admin', group)
+        self.user0.is_superuser = True
+        self.user0.save()
         response = c.post(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
@@ -240,7 +234,7 @@ class TestGroupViews(TestCase):
         # setup signal
         self.signal_editor = self.signal_group = None
         def callback(sender, editor, **kwargs):
-            self.signal_user = user0
+            self.signal_user = self.user0
             self.signal_group = sender
         view_group_created.connect(callback)
 
@@ -254,7 +248,7 @@ class TestGroupViews(TestCase):
 
         # check signal set properties
         self.assertEqual(group, self.signal_group)
-        self.assertEqual(user0, self.signal_user)
+        self.assertEqual(self.user0, self.signal_user)
 
     def test_view_delete(self):
         """
@@ -275,7 +269,7 @@ class TestGroupViews(TestCase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assertTrue(c.login(username=user0.username, password='secret'))
+        self.assertTrue(c.login(username=self.user0.username, password='secret'))
         response = c.delete(url % group0.id)
         self.assertEqual(403, response.status_code)
 
@@ -284,7 +278,7 @@ class TestGroupViews(TestCase):
         self.assertEqual(404, response.status_code)
 
         # get form - authorized (permission)
-        grant(user0, 'admin', group0)
+        grant(self.user0, 'admin', group0)
         response = c.delete(url % group0.id)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
@@ -294,13 +288,13 @@ class TestGroupViews(TestCase):
         # setup signal
         self.signal_editor = self.signal_group = None
         def callback(sender, editor, **kwargs):
-            self.signal_user = user0
+            self.signal_user = self.user0
             self.signal_group = sender
         view_group_deleted.connect(callback)
 
         # get form - authorized (superuser)
-        user0.is_superuser = True
-        user0.save()
+        self.user0.is_superuser = True
+        self.user0.save()
         response = c.delete(url % group1.id)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
@@ -309,7 +303,7 @@ class TestGroupViews(TestCase):
 
         # check signal set properties
         self.assertEqual(group1.name, self.signal_group.name)
-        self.assertEqual(user0, self.signal_user)
+        self.assertEqual(self.user0, self.signal_user)
 
     def test_view_add_user(self):
         """
@@ -334,23 +328,23 @@ class TestGroupViews(TestCase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized
-        self.assertTrue(c.login(username=user0.username, password='secret'))
+        self.assertTrue(c.login(username=self.user0.username, password='secret'))
         response = c.get(url % args)
         self.assertEqual(403, response.status_code)
         response = c.post(url % args)
         self.assertEqual(403, response.status_code)
 
         # authorized get (perm granted)
-        grant(user0, 'admin', group)
+        grant(self.user0, 'admin', group)
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'group/add_user.html')
 
         # authorized get (superuser)
-        revoke(user0, 'admin', group)
-        user0.is_superuser = True
-        user0.save()
+        revoke(self.user0, 'admin', group)
+        self.user0.is_superuser = True
+        self.user0.save()
         response = c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
@@ -375,16 +369,16 @@ class TestGroupViews(TestCase):
         view_add_user.connect(callback)
 
         # valid post
-        data = {'user':user0.id}
+        data = {'user':self.user0.id}
         response = c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'muddle/group/user_row.html')
-        self.assertTrue(group.user_set.filter(id=user0.id).exists())
+        self.assertTrue(group.user_set.filter(id=self.user0.id).exists())
 
         # check signal fired
-        self.assertEqual(self.signal_sender, user0)
-        self.assertEqual(self.signal_user, user0)
+        self.assertEqual(self.signal_sender, self.user0)
+        self.assertEqual(self.signal_user, self.user0)
         self.assertEqual(self.signal_obj, group)
         view_add_user.disconnect(callback)
 
@@ -392,7 +386,7 @@ class TestGroupViews(TestCase):
         response = c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
-        self.assertEquals(group.user_set.filter(id=user0.id).count(), 1)
+        self.assertEquals(group.user_set.filter(id=self.user0.id).count(), 1)
 
     def test_view_remove_user(self):
         """
@@ -409,7 +403,7 @@ class TestGroupViews(TestCase):
         """
         group = self.test_save()
         c = Client()
-        group.user_set.add(user0)
+        group.user_set.add(self.user0)
         url = '/group/%d/user/remove/'
         args = group.id
 
@@ -419,27 +413,27 @@ class TestGroupViews(TestCase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # invalid permissions
-        self.assertTrue(c.login(username=user0.username, password='secret'))
+        self.assertTrue(c.login(username=self.user0.username, password='secret'))
         response = c.get(url % args)
         self.assertEqual(403, response.status_code)
         response = c.post(url % args)
         self.assertEqual(403, response.status_code)
 
         # authorize and login
-        grant(user0, 'admin', group)
+        grant(self.user0, 'admin', group)
 
         # invalid method
         response = c.get(url % args)
         self.assertEqual(405, response.status_code)
 
         # valid request (perm)
-        data = {'user':user0.id}
+        data = {'user':self.user0.id}
         response = c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertEqual('1', response.content)
-        self.assertFalse(group.user_set.filter(id=user0.id).exists())
-        self.assertEqual([], user0.get_perms(group))
+        self.assertFalse(group.user_set.filter(id=self.user0.id).exists())
+        self.assertEqual([], self.user0.get_perms(group))
 
         # setup signal
         self.signal_sender = self.signal_user = self.signal_obj = None
@@ -450,19 +444,19 @@ class TestGroupViews(TestCase):
         view_remove_user.connect(callback)
 
         # valid request (superuser)
-        revoke(user0, 'admin', group)
-        user0.is_superuser = True
-        user0.save()
-        group.user_set.add(user0)
+        revoke(self.user0, 'admin', group)
+        self.user0.is_superuser = True
+        self.user0.save()
+        group.user_set.add(self.user0)
         response = c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertEqual('1', response.content)
-        self.assertFalse(group.user_set.filter(id=user0.id).exists())
+        self.assertFalse(group.user_set.filter(id=self.user0.id).exists())
 
         # check signal fired
-        self.assertEqual(self.signal_sender, user0)
-        self.assertEqual(self.signal_user, user0)
+        self.assertEqual(self.signal_sender, self.user0)
+        self.assertEqual(self.signal_user, self.user0)
         self.assertEqual(self.signal_obj, group)
         view_remove_user.disconnect(callback)
 
@@ -470,7 +464,7 @@ class TestGroupViews(TestCase):
         response = c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
-        self.assertFalse(group.user_set.filter(id=user0.id).exists())
+        self.assertFalse(group.user_set.filter(id=self.user0.id).exists())
         self.assertNotEqual('1', response.content)
 
         # remove invalid user
