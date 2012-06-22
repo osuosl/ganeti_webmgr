@@ -1,0 +1,37 @@
+ td {border:0;}
+        
+        h2.selector {
+            border:0;
+            font-size:14px;
+            margin-bottom:0px;
+            margin-top:40px;
+        }
+        
+        ul.child_selecter {
+            border:1px solid #161650;
+            height:25px;
+            list-style:none;
+            margin-bottom:10px;
+            margin-top:0;
+        }
+        
+        ul.child_selecter li {
+            border-right:1px solid #161650;
+            color:#999999;
+            cursor:pointer;
+            float:left;
+            padding-left:5px;
+            padding-right:5px;
+        }
+        
+        ul.child_selecter li.selected {
+            background-color:#5F8DD3;
+            color:white;
+        }
+        
+        table.child {
+            display:none;
+        }
+        
+        td.label, label {font-weight:normal;}
+        

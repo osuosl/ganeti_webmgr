@@ -1,0 +1,88 @@
+
+        #plugins {
+            width:400px;
+            margin:0;
+        }
+        
+        #plugins li {
+            border: 1px solid #bbbbbb;
+            margin:1px;
+            padding:6px;
+            list-style:none;
+        }
+        
+        #plugins li, #plugins li a {
+            
+            line-height:14px;
+        }
+    
+        #plugins li.enabled {
+            background-color:#E4EFD2;
+            border-color:#222222;
+        }
+        
+        #plugins li.disabled {
+            color:#666666;
+        }
+
+        #plugins input, #plugins li a {
+            float:right;
+        }
+
+        #plugins input {
+            margin-left:5px;
+        }
+    
+        .form {
+            background-color:rgba(100, 100, 100, 0.4);
+            display:none;
+            margin-left:auto;
+            margin-right:auto;
+            margin-top:40px;
+            min-width:300px;
+            width:400px;
+            padding:8px;
+            position:absolute;
+            text-align:center;
+            top:140px;
+            -moz-border-radius: 10px;
+            -webkit-border-radius: 10px;
+        }
+
+        .inner {
+            background-color:white;
+            padding:15px;
+            border:1px solid #333333;
+            opacity: 1;
+            -moz-border-radius: 5px;
+            -webkit-border-radius: 5px;
+        }
+
+        .form h2, .form h2 span { font-size:115%; }
+        .form h2 .plugin{ font-weight:normal}
+
+        .form td { border:0px; }
+        .form .description {
+            border-bottom: 1px solid #666666;
+            border-top: 1px solid #666666;
+            color:#444444;
+            font-size:11px;
+            line-height:14px;
+            margin-bottom:15px;
+            padding-top:10px;
+            padding-bottom:10px;
+            text-align:justify;
+        }
+        .form label { color:#444444; font-size:90%; font-weight:bold }
+        .form button { margin-top:10px; }
+        .form .button_close {
+            position:absolute;
+            top:12px;
+            right:7px;
+        }
+        .messages {text-align:left;}
+        .messages ul {margin-left:30px; margin-top:0px;}
+        .messages li {line-height:20px;}
+        #enable.form h2 .label, #enable .messages li { color:green;}
+        #disable.form h2 .label, #disable .messages li { color:#c83737; }
+

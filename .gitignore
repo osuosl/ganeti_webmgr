@@ -17,6 +17,10 @@ settings.py*
 *.diff
 *.patch
 
+# Failed patches
+*.rej
+*.orig
+
 # Komodo files
 *.komodo*
 *.kpf
@@ -30,6 +34,14 @@ settings.py*
 
 # Log files
 *.log
+
+# Dunno about these; they were in Muddle's .gitignore
+*~
+*.key
+*.pid
+*.pem
+*.bak
+*.old
 
 # files that might exist in dev environment
 django
