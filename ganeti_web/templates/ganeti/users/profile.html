@@ -5,7 +5,7 @@
         <h3>SSH Keys</h3>
         {% include "ganeti/ssh_keys/list.html" %}
     {% endwith %}
-
+    <br></br>
     {% load object_permission_tags %}
     <h3>Groups</h3>
     <table id="op_users">
@@ -44,5 +44,7 @@
             </tr>
         {% endfor %}
     </table>
+    <br></br>
+    {{permissions_template|safe}}
 
 {% endblock %}
