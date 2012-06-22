@@ -1,0 +1,29 @@
+{% extends "menu_base.html" %}
+{% load i18n %}
+{% block title %}
+    {% if user_edit.username %}{% trans "Edit User" %}{% else %}{% trans "Add User" %}{% endif %}
+{% endblock %}
+
+{% block content %}
+<h1 class="breadcrumb"><a href="{%url user-list %}">{% trans "Users" %}</a>
+    {% if user_edit %}
+    : <a href="{% url user-detail user_edit.id %}">{{ user_edit.username }}</a> : {% trans "Edit" %}
+    {% else %}
+    : {%  trans "Create" %}
+    {% endif %}
+    </h1>
+
+{% if username %}
+<form id="user-edit" method="post">
+{% else %}
+<form id="user-create" method="post">
+{% endif %}
+    {% csrf_token %}
+    <fieldset>
+        {{ form.as_p }}
+        <input class="submit" type="submit" value="{% if user_edit.username %}{%trans "Save" %}{% else %}{% trans "Create" %}{% endif %}">
+    </fieldset>
+</form>
+
+{% block detail %}{% endblock %}
+{% endblock %}

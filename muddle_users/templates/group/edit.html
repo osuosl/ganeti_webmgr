@@ -1,0 +1,20 @@
+{% extends "menu_base.html" %}
+{% load i18n %}
+
+{% block content %}
+<h1 class="breadcrumb">
+    <a  href="{% url group-list %}">Group</a>
+    {% if group %}
+    : <a href="{% url group-detail group.id %}">{{ group.name }}</a> : {% trans "Edit" %}
+    {% else %}
+    : {%  trans "Create" %}
+    {% endif %}
+</h1>
+
+<form class="ajax_form" method="post">
+    {% csrf_token %}
+    <ul id="errors"></ul>
+    {{form.name.label}} {{form.name}}
+    <input type="submit" class="submit" value="Save"/>
+</form>
+{% endblock %}

@@ -1,0 +1,13 @@
+<tr id="user_{{ user_detail.id }}">
+<td class="name">
+{% if user.is_superuser %}
+    <a href="{{ user_detail.get_absolute_url }}">{{ user_detail.username }}</a>
+{% else %}
+    {{ user_detail.username }}
+{% endif %}
+</td>
+{% block table_cells %}{% endblock %}
+<td class="actions">
+    <div class="delete" title="delete"></div>
+</td>
+</tr>
