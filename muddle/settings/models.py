@@ -1,10 +1,6 @@
 import cPickle
-from datetime import datetime, timedelta
 
-from django.conf import settings
 from django.db import models
-from django.contrib.auth.models import User
-from django.db.models.signals import post_save
 
 
 class AppSettingsCategory(models.Model):
@@ -33,7 +29,7 @@ class AppSettingsValue(models.Model):
         # clear serialized data, don't know if we'll need to save it
         self.serialized_data = None
         self._data = value
-    
+
     def save(self, *args, **kwargs):
         if self.serialized_data is None:
             self.serialized_data = cPickle.dumps(self._data)

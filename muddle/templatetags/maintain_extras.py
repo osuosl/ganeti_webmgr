@@ -2,7 +2,6 @@ from django import template
 register = template.Library()
 
 from muddle.models import PluginConfig
-from muddle.plugins.registerable import PERM_NONE
 from muddle.views import manager
 
 @register.filter(name='config')

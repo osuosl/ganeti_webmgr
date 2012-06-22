@@ -3,15 +3,11 @@ from __future__ import with_statement
 from datetime import datetime, timedelta
 from threading import RLock
 
-# XXX disabling for now.  breaks 2.5 support and doesn't work anyways
-#from multiprocessing.managers import SyncManager
-
 from django.conf import settings
 
 from muddle.models import PluginConfig
-from muddle.plugins import CyclicDependencyException, UnknownPluginException
+from muddle.plugins import UnknownPluginException
 from muddle.plugins.managers.plugin_manager import PluginManager
-from muddle.plugins.plugin import Plugin
 from muddle.plugins.registerable import Registerable
 from muddle.util import path_to_class
 
@@ -122,7 +118,6 @@ class RootPluginManager(PluginManager):
         may want.
         """
         import imp
-        import inspect
         from django.conf import settings
         
         # the path someone imports is important.  import all the different

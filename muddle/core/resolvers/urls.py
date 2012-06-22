@@ -1,6 +1,6 @@
 from django.core.urlresolvers import reverse
 
-__all__ = ['register','reverse_url']
+__all__ = ['register','resolve']
 
 _MODEL_URLS = {}
 """

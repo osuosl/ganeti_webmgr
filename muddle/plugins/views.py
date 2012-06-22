@@ -1,13 +1,8 @@
-from datetime import datetime
 import simplejson
-import sys
-import traceback
 
-from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import user_passes_test
 from django.core.cache import cache
-from django.core.paginator import Paginator, InvalidPage, EmptyPage
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils.text import capfirst
@@ -15,9 +10,7 @@ from django.utils.text import capfirst
 from muddle import settings_processor
 from plugins import CyclicDependencyException
 from plugins.managers.root_plugin_manager import RootPluginManager
-from models import PluginConfig, SQLLock
-from util.list_file import ListFile
-import settings
+from models import PluginConfig
 
 # create a global manager that all views will use
 manager = RootPluginManager()

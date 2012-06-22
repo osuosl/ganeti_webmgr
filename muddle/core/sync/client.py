@@ -1,4 +1,3 @@
-from multiprocessing import RLock
 from multiprocessing.managers import SyncManager
 
 
@@ -34,5 +33,3 @@ if __name__ == '__main__':
     d[1] = 3
     print d
     print '>>> wtf %s' % wtf.get()
-    
-    

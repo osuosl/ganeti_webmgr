@@ -1,7 +1,5 @@
-from multiprocessing import RLock, Value
+from multiprocessing import RLock
 from multiprocessing.managers import SyncManager
-
-from multiprocessing.managers import BaseManager, BaseProxy
 
 
 class MultiProcessPluginManager(SyncManager):
@@ -9,8 +7,6 @@ class MultiProcessPluginManager(SyncManager):
     Syncronization manager that enables synchronization between multiple muddle
     RootPluginManagers
     """
-    def __init__(self, *args, **kwargs):
-        super(MultiProcessPluginManager, self).__init__(*args, **kwargs)
 
 duh = None
 class WTFProxy ():

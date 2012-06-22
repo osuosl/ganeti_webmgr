@@ -1,8 +1,7 @@
-from django.db.models.base import ModelBase
 from django.db.models.fields import AutoField
 from django.db.models.fields.related import *
 
-from muddle.plugins.registerable import *
+from muddle.plugins.registerable import PERM_ALL, PERM_NONE, Registerable
 
 
 class ModelWrapper(Registerable):
@@ -11,17 +10,17 @@ class ModelWrapper(Registerable):
     Much of this information is already stored internally to the the model. This
     class provides more convenient and stable api to access it.  This shields
     users of this framework from changes within the django internals.
-    
+
     Fields are cached based on their relationship to the wrapped model:
       * fields - model fields
       * one_to_many - wrappers for 1:M and M:N relationships
       * one_to_one - wrappers for 1:1 relationships
-      * children - wrappers for models that extend this model   
+      * children - wrappers for models that extend this model
     """
     target = 'ModelManager'
     _target = ('ModelManager')
     permissions = PERM_ALL
-    
+
     def __init__(self, class_):
         """
         @param class_ - model class this is wrapping.
@@ -59,23 +58,23 @@ class ModelWrapper(Registerable):
         deregister a related object.  used by other wrappers to update the other
         side of a relationship.
         @param dict_ - dictionary to add the wrapper to
-        @param wrapper - wrapper to be removed 
+        @param wrapper - wrapper to be removed
         """
         dict_ = self.__dict__[dict_]
         for key, value in dict_.items():
             if value == wrapper:
                 del dict_[key]
                 break
-    
+
     def _has_perms(self, owner, mask=None, possess=PERM_NONE, id=None):
         """
-        Perform a search for permissions.  An owner may have permissions from 
-        
+        Perform a search for permissions.  An owner may have permissions from
+
         Permissions are stored as a set of binary
         values with each bit representing a permission.  This function performs
         binary operations to compare the set of possible permissions and granted
         permissions for an object.
-        
+
         @param owner - Permissable to check permissions on
         @param model - model to get permissions on
         @param possess - permissions already possessed by the owner
@@ -111,7 +110,7 @@ class ModelWrapper(Registerable):
         introspects into the model class finding local and related fields.  This
         information is used to build a composite view of a model and its direct
         relations
-        
+
         All relations are circular and registered with both models. Both ends of
         the relationship being filled out only when the 2nd model is registered.
         This allows the models to be registered in any order without having
@@ -119,7 +118,7 @@ class ModelWrapper(Registerable):
         """
         #primary key
         self.pk = self.model._meta.pk
-        
+
         # local fields
         for field in self.model._meta.local_fields:
 
@@ -140,7 +139,7 @@ class ModelWrapper(Registerable):
                     related_wrapper.register_related('one_to_one', self)
                 continue
             self.fields[field.name] = field
-        
+
         # find related fields
         for key, field in self.model.__dict__.items():
             if isinstance(field, (ForeignRelatedObjectsDescriptor,)):
@@ -181,7 +180,7 @@ class ModelWrapper(Registerable):
             else:
                 #not a related field
                 continue
-                
+
             # register related field, only if it has already been registered.
             if related in manager:
                 related_wrapper = manager[related]
@@ -195,7 +194,7 @@ class ModelWrapper(Registerable):
         @param dict_ - dictionary to add the wrapper to
         @param key - field name on this model
         @param wrapper - wrapper that is being added
-        """        
+        """
         self.__dict__[dict_][key] = wrapper
 
     def __str__(self):

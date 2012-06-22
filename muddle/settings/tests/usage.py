@@ -1,4 +1,3 @@
-import cPickle
 from django.test import TestCase
 
 from muddle.settings import register, AppSettings

@@ -1,5 +1,3 @@
-from django.contrib.formtools.wizard import FormWizard, FormWizard
-
 __author__ = 'kreneskyp'
 
 from django import forms
@@ -90,7 +88,7 @@ class WorkflowTest(TestCase):
 
     def test_get_template_no_method(self):
         workflow = Workflow([Bar])
-        template = workflow.get_template(0)
+        workflow.get_template(0)
 
     def test_render_template(self):
         workflow = Workflow([Foo])

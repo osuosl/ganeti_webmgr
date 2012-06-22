@@ -1,5 +1,4 @@
 from django import forms
-from django.forms.extras import widgets
 from django.db.models import fields
 from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
@@ -32,20 +31,20 @@ class CompositeFormBase(forms.Form):
     A form object that contains a single form composited from multiple models.
     This is used as a base for Forms generated from a combination of
     ModelWrapper and User Permissions.
-    """    
+    """
 
     def __init__(self, initial=None):
         super(CompositeFormBase, self).__init__(initial)
-        
+
         self.form_instance = self.form(initial)
         self.one_to_one_instances = {}
         for k in self.one_to_one.keys():
             self.one_to_one_instances[k] = self.one_to_one[k](initial)
-            
+
         self.one_to_many_instances = {}
         for k in self.one_to_many.keys():
             self.one_to_many_instances[k] = self.one_to_many[k](initial)
-    
+
     def is_valid(self):
         """
         Validate form and all formsets.  This also sets self.errors to a dict
@@ -64,7 +63,7 @@ class CompositeFormBase(forms.Form):
             if not self.one_to_many_instances[k].is_valid():
                 valid = False
                 errors['one_to_many'][k] = self.one_to_many_instances[k].errors
-        
+
         # set using dict as form does something wierd to prevent setting it
         self.__dict__['errors'] = None if valid else errors
         return valid
@@ -88,7 +87,7 @@ class ModelFormBase(forms.Form):
     updating instances of the associated model.
     """
     fk_map = None
-    
+
     def __init__(self, initial, *args, **kwargs):
         if self.fk_map:
             for k in self.fk_map:
@@ -97,18 +96,18 @@ class ModelFormBase(forms.Form):
                 except KeyError:
                     continue
         super(ModelFormBase, self).__init__(initial, *args, **kwargs)
-    
+
     def save(self):
         """
         Creates or saves an instance of this forms model using the form data
-        
+
         @returns - model instance that was created or saved
         """
         data = self.cleaned_data
         instance = self.get_instance(data)
         instance.save()
         return instance
-    
+
     def get_instance(self, data):
         """
         Gets an instance of a model.  Either an existing model is retrieved or
@@ -121,7 +120,7 @@ class ModelFormBase(forms.Form):
         i = len(self.prefix_)
         for k in data:
             instance.__setattr__(k[i:], data[k])
-            
+
         return instance
 
 
@@ -133,11 +132,11 @@ class Related1To1Base(ModelFormBase):
     def __init__(self, initial=None):
         super(Related1To1Base, self).__init__(initial)
         self.form_instance = self.form(initial)
-    
+
     def is_valid(self):
         _super = super(Related1To1Base, self).is_valid()
         return self.form_instance.is_valid() and _super
-    
+
     def save(self, related):
         """
         update or create the object using the contained form's methods.  Set
@@ -163,7 +162,7 @@ class Related1ToMBase(forms.Form):
         count = initial[self.count] if initial and self.count in initial else self.extra
         count = count+self.extra if count+self.extra < self.max_num else self.max_num
         self.instances = [self.get_instance(i, initial) for i in range(count)]
-    
+
     def get_instance(self, index, initial):
         attrs = {
                 'pk':'%s_pk_%s ' % (self.prefix_, index),
@@ -214,7 +213,7 @@ class Related1ToMChildBase(forms.Form):
         for k in data:
             instance.__setattr__(k[s:-e], data[k])
         instance.save()
-    
+
     def is_valid(self):
         empty = True
         data = self.data
@@ -233,7 +232,7 @@ class ParentBase(ModelFormBase):
     """
     Base class for a form encapsulating a parent class and its descendents. Each
     child class will have a sub-form.  One of the subforms will be selected.
-    
+
     If there are several levels of children (ie. C->B->A) the tree is flattened.
     A grandchild is still a child, even if indirect.
     """
@@ -246,22 +245,22 @@ class ParentBase(ModelFormBase):
         for k in self.children:
             instances[k] = self.children[k](initial)
         self.instances = instances
-    
-    
-    
+
+
+
     def get_instance(self, data):
         key = self.data['%sselected_child' % self.prefix_]
         if key:
             form = self.instances[key]
         else:
             form = self
-        
+
         data = self.cleaned_data
         if data['%spk' % self.prefix_]:
             instance = form.model.objects.get(pk=data['%spk' % self.prefix_])
         else:
             instance = form.model()
-        
+
         # add parent data
         i = len(self.prefix_)
         for k in data:
@@ -271,9 +270,9 @@ class ParentBase(ModelFormBase):
             i = len(form.prefix_)
             for k in data:
                 instance.__setattr__(k[i:], data[k])
-        
+
         return instance
-    
+
     def is_valid(self):
         """
         validate only the selected child form
@@ -299,12 +298,12 @@ class ModelEditView(View):
         """
         self.wrapper = wrapper
         self.exclude = []
-        
+
         if self.wrapper.__class__ == ModelWrapper:
             self.regex = '^%s/(\d+)/Edit$' % self.wrapper.name()
         else:
             self.regex = '^%s/(\d+)/Edit$' % self.wrapper.__name__
-    
+
     def __call__(self, request, id=None):
         #klass = self.get_form(request.user.get_profile())
         klass = self.get_form(None)
@@ -321,7 +320,7 @@ class ModelEditView(View):
             data = {}
             data.update(instance.__dict__)
             data['pk'] = instance.__dict__[self.wrapper.pk.attname]
-            
+
             for field, fw in self.wrapper.one_to_one.items():
                 related = instance.__getattribute__(field)
                 if fw.children:
@@ -346,14 +345,14 @@ class ModelEditView(View):
                         data['%s_%s_%d' % (field, k, count)] = v
                         data['%s_pk_%d' % (field,count)] = one_to_many.__dict__[fw.pk.attname]
                     count += 1
-                
+
                 data['%s_count' % field] = len(related)
-            
+
             form = klass(data)
         else:
             # unbound form
             form = klass()
-        
+
         c = RequestContext(request, processors=[settings_processor])
         return render_to_response('edit/generic_model_edit.html', \
             {'wrapper':self.wrapper, 'form':form}
@@ -365,10 +364,10 @@ class ModelEditView(View):
         """
         # get form from cache if available, else rebuild the form
         attrs = self._get_form()
-        
+
         # filter out permissions that the user doesn't have
         # this is done here so that attrs may be cached
-        
+
         klass = type('CompositeModelForm', (CompositeFormBase,), attrs)
         return klass
 
@@ -376,7 +375,7 @@ class ModelEditView(View):
         """
         Internal function that creates the form class.  This is separate from
         get_form() to allow caching.
-        
+
         @returns dictionary of attributes for creating form class
         """
         w = self.wrapper
@@ -446,11 +445,11 @@ class ModelEditView(View):
         attrs = {'model':wrapper.model, 'pk':wrapper.pk, 'prefix_':'%s_'%prefix}
         children[wrapper.name()] = type( 'ModelForm', (ModelFormBase,), \
             self.get_fields(wrapper, attrs, path, False, prefix))
-        
+
         for parent in wrapper.parent.values():
             if parent != root and issubclass(parent.model, (root.model,)):
                 recurse[wrapper.name()] = parent.name()
-        
+
         for k in wrapper.children.keys():
             child = wrapper.children[k]
             self.get_child_form(root, k, child, children, recurse)
@@ -464,20 +463,20 @@ class ModelEditView(View):
         """
         attrs = {} if attrs == None else attrs
         prefix = '%s_' % prefix if prefix and prefix[-1]!='_' else prefix
-        
+
         # create exclude lambda, if no excludes the lambda always returns true
         exclude = path['exclude'] if path and 'exclude' in path else []
         exclude_l = lambda x: x not in exclude if exclude else lambda x: 1
-        
+
         if parent and wrapper.parent:
             # we're parsing an object starting with the child.  Get the parent
             # fields too
             for k in wrapper.parent.keys():
                 self.get_fields(wrapper.parent[k], attrs, path, prefix=prefix)
-         
+
         for k in wrapper.fields.keys():
             attrs['%s%s' % (prefix, k)] = self.get_form_field(wrapper.fields[k], path, label=k)
-        
+
         fk_map = {}
         for k in filter(exclude_l, wrapper.many_to_one):
             field = wrapper.fk[k]
@@ -498,13 +497,13 @@ class ModelEditView(View):
         #options = {} #TODO lookup options using path
         klass = options['form_class']
         del options['form_class']
-        
+
         return klass(**options)
 
     def get_fk_field(self, model, label, field, path=None):
         """
         Gets a choice field for a ForeignKey relationship.
-        
+
         @param model - related model
         """
         defaults = {
@@ -516,7 +515,7 @@ class ModelEditView(View):
         #TODO lookup options using path
         options = {}
         defaults.update(options)
-        
+
         klass = forms.ModelChoiceField
         return klass(**defaults)
 
@@ -538,14 +537,14 @@ class ModelEditView(View):
             "prefix_":prefix,
             "attrs":fields
         }
-        
+
         return type('Related1ToMForm', (Related1ToMBase,), attrs)
-    
+
     def name(self):
         if self.wrapper.__class__ == ModelWrapper:
             return 'EditView:%s' % self.wrapper.name()
         return 'EditView:%s' % self.wrapper.__name__
-    
+
     def _register(self, manager):
         if self.wrapper.__class__ != ModelWrapper:
             self.wrapper = manager.manager['ModelManager'][self.wrapper.__name__]
