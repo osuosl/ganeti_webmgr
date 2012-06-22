@@ -7,7 +7,6 @@ from django.template import RequestContext
 from muddle import settings_processor
 from muddle.plugins.models.wrapper import ModelWrapper
 from muddle.plugins.view import View
-from muddle.util import dict_key
 
 FORMFIELD_FOR_DBFIELD_DEFAULTS = {
     fields.DateTimeField: {
@@ -386,7 +385,6 @@ class ModelEditView(View):
         for k in filter(exclude, w.one_to_one.keys()):
             inner_attrs = {
                     'label':k,
-                    'fk':dict_key(w.one_to_one[k].one_to_one, w),
                     'prefix_':'%s_' % k,
                     'model':w.one_to_one[k].model,
                     'form':self.form_factory(w.one_to_one[k], prefix='%s_'%k)
@@ -524,13 +522,9 @@ class ModelEditView(View):
         Returns a Related1ToMBase class for use displaying 1:M forms
         """
         fields = None
-        fk = dict_key(wrapper.many_to_one, root)
-        options = {'exclude':[fk]}
-        fields = self.get_fields(wrapper, path=options, prefix=prefix)
         fields['%s_pk' % prefix] = self.get_form_field(wrapper.pk, path, required=False)#, widget=forms.HiddenInput())
         attrs = {
             "model":wrapper.model,
-            "fk": fk,
             "count":'%s_count' % prefix,
             "extra": 1,
             "max_num": 10,
