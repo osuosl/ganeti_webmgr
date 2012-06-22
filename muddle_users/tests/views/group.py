@@ -1,8 +1,12 @@
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.test import TestCase, Client
+
 from object_permissions.registration import grant, revoke
-from muddle_users.signals import view_remove_user, view_group_edited, view_group_created, view_group_deleted, view_add_user
+from object_permissions.signals import view_add_user, view_remove_user
+
+from muddle_users.signals import (view_group_edited, view_group_created,
+                                  view_group_deleted)
 
 global user0, user1
 

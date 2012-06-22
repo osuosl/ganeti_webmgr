@@ -35,9 +35,10 @@ from django.views.generic.edit import DeleteView
 
 from object_log.views import list_for_object
 
-from object_permissions.views.permissions import view_users, view_permissions
 from object_permissions import get_users_any
-from object_permissions import signals as op_signals
+from object_permissions.signals import (view_add_user, view_edit_user,
+                                        view_remove_user)
+from object_permissions.views.permissions import view_users, view_permissions
 
 from object_log.models import LogItem
 log_action = LogItem.objects.log_action
@@ -1300,6 +1301,6 @@ def recv_perm_edit(sender, editor, user, obj, **kwargs):
     log_action('MODIFY_PERMS', editor, obj, user)
 
 
-op_signals.view_add_user.connect(recv_user_add, sender=VirtualMachine)
-op_signals.view_remove_user.connect(recv_user_remove, sender=VirtualMachine)
-op_signals.view_edit_user.connect(recv_perm_edit, sender=VirtualMachine)
+view_add_user.connect(recv_user_add, sender=VirtualMachine)
+view_remove_user.connect(recv_user_remove, sender=VirtualMachine)
+view_edit_user.connect(recv_perm_edit, sender=VirtualMachine)
