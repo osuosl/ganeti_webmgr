@@ -156,9 +156,6 @@ function JobPoller() {
                 $('#actions a').removeClass('disabled');
             }
 
-            /* Update the title of the job to reflect the change in status. */
-            html.children('h3').html(op);
-
             // append log messages that are not already displayed
             var current_log_count = html.find(".op_log ul li").length;
             if (data['oplog'][op_index].length != 0) {
