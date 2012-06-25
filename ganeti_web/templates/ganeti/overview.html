@@ -8,6 +8,7 @@
 <script type="text/javascript" src="{{STATIC_URL}}/js/jquery.ajax.delete.js"></script>
 <script type="text/javascript" src="{{STATIC_URL}}/js/jquery.tablesorter.min.js"></script>
 <script type="text/javascript" src="{{STATIC_URL}}/js/jquery.progressbar.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}/js/disableSingletonDropdown.js"></script>
 <script type="text/javascript">
     var CLUSTER_RESOURCES_PBAR = {
         steps: 0,
@@ -55,6 +56,9 @@
                 $("#usage_summary table").replaceWith(html);
             });
         })
+	$("#usage_summary select").attr("id","user_select");
+	disableSingletonDropdown($("#user_select"));
+
     });
     
 </script>
