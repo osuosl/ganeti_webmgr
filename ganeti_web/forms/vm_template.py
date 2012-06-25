@@ -29,8 +29,8 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
     Form to edit/create VirtualMachineTemplates
     """
     cluster = forms.ModelChoiceField(queryset=Cluster.objects.none(), label=_('Cluster'))
-    disk_count = forms.IntegerField(initial=0,  widget=forms.HiddenInput())
-    nic_count = forms.IntegerField(initial=0, widget=forms.HiddenInput())
+    disk_count = forms.IntegerField(initial=1,  widget=forms.HiddenInput())
+    nic_count = forms.IntegerField(initial=1, widget=forms.HiddenInput())
 
     class Meta(VirtualMachineForm.Meta):
         exclude = ('pnode','snode','iallocator','iallocator_hostname',
@@ -43,8 +43,6 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
         """
         cluster = None
         initial = kwargs.get('initial', None)
-        disk_count = 0
-        nic_count = 0
         user = kwargs.pop('user', None)
 
         super(VirtualMachineForm, self).__init__(*args, **kwargs)
@@ -87,6 +85,10 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
                     self.fields['nic_mode_%s' % i].initial = initial['nic_mode_%s'%i]
                     self.fields['nic_link_%s' % i].initial = initial['nic_link_%s'%i]
 
+        else:
+            disk_count=1
+            nic_count=1
+       
         if cluster and hasattr(cluster, 'info'):
             # Get choices based on hypervisor passed to the form.
             hv = initial.get('hypervisor', None)
@@ -105,6 +107,10 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
             oslist = cluster_os_list(cluster)
             oslist.insert(0, self.empty_field)
             self.fields['os'].choices = oslist
+        else:
+            self.create_nic_fields(nic_count)
+        
+        self.create_disk_fields(disk_count)
 
         # Set cluster choices
         if user.is_superuser:
