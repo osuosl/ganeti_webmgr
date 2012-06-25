@@ -89,6 +89,7 @@
         $(".vm_migrate_form").live("submit", function(event){
             event.preventDefault();
             $("#errors").empty();
+            job_poller.get_jobs();
             $(this).ajaxSubmit({success: vm_form_response});
         });
 
