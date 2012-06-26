@@ -12,7 +12,7 @@
     var POPOUT_URL = "{% url instance-vnc-popout cluster_slug instance.hostname %}";
     {% endif %}
 </script>
-<script type="text/javascript" src="{{ SITE_ROOT }}/ganeti_web_media/js/noVNC.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}/js/noVNC.js"></script>
 
 <ul id="actions" class="horizontal">
     <li><a id="encrypt" href="#" title="encrypt" class="button encrypt">{% trans "Encrypt" %}</a></li>

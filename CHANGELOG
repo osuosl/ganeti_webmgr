@@ -2,6 +2,25 @@
 Changelog
 =========
 
+v0.9
+----
+Notable changes:
+  * Django 1.4
+  * Ganeti 2.5 support
+  * Pip 1.0+ support
+  * Remove PyCurl dependency
+  * Immediate Shutdown button
+  * Improved installation process and documentation
+  * Improved RAPI functionality
+
+* Simplified layout infrastructure
+* Fix CSRF Token errors
+* Transaction middleware
+* Check VM hostnames for illegal characters 
+* New Help Tips
+* Many back-end fixes to improve standards compliance and Django best practices
+* Many user interface fixes and improvements
+
 v0.8.1
 ------
 

@@ -274,10 +274,11 @@ class JobCacheUpdater(object):
             ct = ContentType.objects.get_for_model(model)
 
             # create job
-            job = Job(cluster=cluster, job_id=id, content_type=ct, object_id=obj_id)
-            job.cleared = info['status'] in COMPLETE_STATUS
-            job.info = info
-            job.save()
+            if info["status"] not in COMPLETE_STATUS:
+                job = Job(cluster=cluster, job_id=id, content_type=ct,
+                          object_id=obj_id)
+                job.info = info
+                job.save()
             updated += 1
         callback(id)
     

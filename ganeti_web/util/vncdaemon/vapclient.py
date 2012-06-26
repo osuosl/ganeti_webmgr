@@ -20,7 +20,8 @@
 
 import sys
 import socket
-import json
+
+from django.utils import simplejson as json
 
 CTRL_SOCKET = "/tmp/vncproxy.sock"
 

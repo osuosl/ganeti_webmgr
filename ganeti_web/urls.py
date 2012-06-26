@@ -22,6 +22,15 @@ from django.contrib.auth.decorators import login_required
 import os
 from forms.autocomplete_search_form import autocomplete_search_form
 
+from ganeti_web.views.cluster import (ClusterDetailView, ClusterListView,
+                                      ClusterVMListView)
+from ganeti_web.views.general import AboutView
+from ganeti_web.views.jobs import JobDetailView
+from ganeti_web.views.node import (NodeDetailView, NodePrimaryListView,
+                                   NodeSecondaryListView)
+from ganeti_web.views.virtual_machine import (VMDeleteView, VMListView,
+                                              VMListTableView)
+
 
 cluster_slug = '(?P<cluster_slug>[-_A-Za-z0-9]+)'
 cluster = 'cluster/%s' % cluster_slug
@@ -46,7 +55,7 @@ urlpatterns = patterns('ganeti_web.views.general',
     url(r'^error/clear/(?P<pk>\d+)/?$', 'clear_ganeti_error', name="error-clear"),
 
     #About page
-    url(r'^about/?$', 'about', name="about"),
+    url(r'^about/?$', AboutView.as_view(), name="about"),
 )
 
 
@@ -76,18 +85,20 @@ urlpatterns += patterns('ganeti_web.views.general',
 # Clusters
 urlpatterns += patterns('ganeti_web.views.cluster',
     #   List
-    url(r'^clusters/?$', 'list_', name="cluster-list"),
+    url(r'^clusters/?$', ClusterListView.as_view(), name="cluster-list"),
     #   Add
     url(r'^cluster/add/?$', 'edit', name="cluster-create"),
     #   Detail
-    url(r'^%s/?$' % cluster, 'detail', name="cluster-detail"),
+    url(r'^%s/?$' % cluster, ClusterDetailView.as_view(),
+        name="cluster-detail"),
     #   Edit
     url(r'^%s/edit/?$' % cluster, 'edit', name="cluster-edit"),
     #   Redistribute config
     url(r'^%s/redistribute-config/?$' % cluster, 'redistribute_config', name="cluster-redistribute-config"),
     #   User
     url(r'^%s/users/?$' % cluster, 'users', name="cluster-users"),
-    url(r'^%s/virtual_machines/?$' % cluster, 'virtual_machines', name="cluster-vms"),
+    url(r'^%s/virtual_machines/?$' % cluster, ClusterVMListView.as_view(),
+        name="cluster-vms"),
     url(r'^%s/nodes/?$' % cluster, 'nodes', name="cluster-nodes"),
     url(r'^%s/quota/(?P<user_id>\d+)?/?$'% cluster, 'quota', name="cluster-quota"),
     url(r'^%s/permissions/?$' % cluster, 'permissions', name="cluster-permissions"),
@@ -108,13 +119,15 @@ urlpatterns += patterns('ganeti_web.views.cluster',
 node_prefix = 'cluster/%s/node/%s' %  (cluster_slug, host)
 urlpatterns += patterns('ganeti_web.views.node',
     # Detail
-    url(r'^%s/?$' % node_prefix, 'detail', name="node-detail"),
-    url(r'^node/(?P<id>\d+)/?$', 'detail_by_id', name="node-detail-id"),
+    url(r'^%s/?$' % node_prefix, NodeDetailView.as_view(),
+        name="node-detail"),
     url(r'^node/(?P<id>\d+)/jobs/status/?$', "job_status", name="node-job-status"),
     
     # Primary and secondary Virtual machines
-    url(r'^%s/primary/?$' % node_prefix, 'primary', name="node-primary-vms"),
-    url(r'^%s/secondary/?$' % node_prefix, 'secondary', name="node-secondary-vms"),
+    url(r'^%s/primary/?$' % node_prefix, NodePrimaryListView.as_view(),
+        name="node-primary-vms"),
+    url(r'^%s/secondary/?$' % node_prefix, NodeSecondaryListView.as_view(),
+        name="node-secondary-vms"),
 
     #object log
     url(r'^%s/object_log/?$' % node_prefix, 'object_log', name="node-object_log"),
@@ -129,7 +142,7 @@ urlpatterns += patterns('ganeti_web.views.node',
 vm_prefix = '%s/%s' %  (cluster, instance)
 urlpatterns += patterns('ganeti_web.views.virtual_machine',
     #  List
-    url(r'^vms/$', 'list_', name="virtualmachine-list"),
+    url(r'^vms/$', VMListView.as_view(), name="virtualmachine-list"),
     #  Create
     url(r'^vm/add/?$', 'create', name="instance-create"),
     url(r'^vm/add/choices/$', 'cluster_choices', name="instance-create-cluster-choices"),
@@ -139,15 +152,18 @@ urlpatterns += patterns('ganeti_web.views.virtual_machine',
     url(r'^%s/recover/?$' % vm_prefix, 'recover_failed_deploy', name="instance-create-recover"),
 
     #  VM Table
-    url(r'^%s/vm/table/?$' % cluster, 'vm_table', name="cluster-virtualmachine-table"),
-    url(r'^vm/table/$', 'vm_table', name="virtualmachine-table"),
-    url(r'^vm/table/%s/?$' % primary_node, 'vm_table', name="vm-table-primary"),
-    url(r'^vm/table/%s/?$' % secondary_node, 'vm_table', name="vm-table-secondary"),
+    url(r'^%s/vm/table/?$' % cluster, VMListTableView.as_view(),
+        name="cluster-virtualmachine-table"),
+    url(r'^vm/table/$', VMListTableView.as_view(),
+        name="virtualmachine-table"),
+    url(r'^vm/table/%s/?$' % primary_node, VMListTableView.as_view(),
+        name="vm-table-primary"),
+    url(r'^vm/table/%s/?$' % secondary_node, VMListTableView.as_view(),
+        name="vm-table-secondary"),
 
     #  Detail
     url(r'^%s/?$' % vm_prefix, 'detail', name="instance-detail"),
     url(r'^vm/(?P<id>\d+)/jobs/status/?$', 'job_status', name="instance-job-status"),
-    url(r'^vm/(?P<id>\d+)/?$', 'detail_by_id', name="instance-detail-id"),
     url(r'^%s/users/?$' % vm_prefix, 'users', name="vm-users"),
     url(r'^%s/permissions/?$' % vm_prefix, 'permissions', name="vm-permissions"),
     url(r'^%s/permissions/user/(?P<user_id>\d+)/?$' % vm_prefix, 'permissions', name="vm-permissions-user"),
@@ -160,13 +176,16 @@ urlpatterns += patterns('ganeti_web.views.virtual_machine',
                         name="instance-vnc-popout"),
     url(r'^%s/vnc_proxy/?$' % vm_prefix, 'vnc_proxy', name="instance-vnc-proxy"),
     url(r'^%s/shutdown/?$' % vm_prefix, 'shutdown', name="instance-shutdown"),
+    url(r'^%s/shutdown-now/?$' % vm_prefix, 'shutdown_now',
+        name="instance-shutdown-now"),
     url(r'^%s/startup/?$' % vm_prefix, 'startup', name="instance-startup"),
     url(r'^%s/reboot/?$' % vm_prefix, 'reboot', name="instance-reboot"),
     url(r'^%s/migrate/?$' % vm_prefix, 'migrate', name="instance-migrate"),
     url(r'^%s/replace_disks/?$' % vm_prefix, 'replace_disks', name="instance-replace-disks"),
 
     # Delete
-    url(r"^%s/delete/?$" % vm_prefix, "delete", name="instance-delete"),
+    url(r"^%s/delete/?$" % vm_prefix, VMDeleteView.as_view(),
+        name="instance-delete"),
 
     # Reinstall
     url(r"^%s/reinstall/?$" % vm_prefix, "reinstall", name="instance-reinstall"),
@@ -226,7 +245,7 @@ job = '%s/job/(?P<job_id>\d+)' % cluster
 urlpatterns += patterns('ganeti_web.views.jobs',
     url(r'^%s/status/?' % job, 'status', name='job-status'),
     url(r'^%s/clear/?' % job, 'clear', name='job-clear'),
-    url(r'^%s/?' % job, 'detail', name='job-detail'),
+    url(r'^%s/?' % job, JobDetailView.as_view(), name='job-detail'),
 )
 
 # Search
@@ -241,9 +260,9 @@ urlpatterns += patterns('haystack.views',
     url(r'^search/', login_required(SearchView(form_class=autocomplete_search_form)), name='search')
 )
 
-#The following is used to serve up local media files like images
-root = '%s/media' % os.path.dirname(os.path.realpath(__file__))
+#The following is used to serve up local static files like images
+root = '%s/static' % os.path.dirname(os.path.realpath(__file__))
 urlpatterns += patterns('',
-    (r'^ganeti_web_media/(?P<path>.*)', 'django.views.static.serve',
-     {'document_root':  root}),
+    (r'^static/(?P<path>.*)', 'django.views.static.serve',
+        {'document_root':  root, }),
 )

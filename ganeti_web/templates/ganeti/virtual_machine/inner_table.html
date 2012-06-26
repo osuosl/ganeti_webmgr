@@ -5,6 +5,7 @@
     <tr>
       <th class="status" order_by="status"></th>
       <th order_by="hostname">{% trans "Name" %}</th>
+      <th order_by="owner">{% trans "Owner" %}</th>
       {% if not cluster %}
       <th order_by="cluster__hostname">{% trans "Cluster" %}</th>
       {% endif %}
@@ -16,7 +17,7 @@
     </tr>
 </thead>
 <tbody id="vms">
-    {% for vm in vms.object_list %}
+    {% for vm in object_list %}
     {% if not vm.pending_delete or vm.last_job_id %}
     {% with vm.info as info %}
     <tr>
@@ -43,11 +44,20 @@
                 {% endif %}
             {% endif %}
         </td>
-        
+
         <td class="name">
             <a href="{% url instance-detail vm.cluster.slug vm.hostname %}">
                 {{ vm.hostname }}
             </a>
+        </td>
+        <td>
+            {% if vm.owner %}
+                <a href="{{ vm.owner.get_absolute_url }}">
+                    {{ vm.owner }}
+                </a>
+            {% else %}
+                {% trans "None" %}
+            {% endif %}
         </td>
         {% if not cluster %}
             <td>

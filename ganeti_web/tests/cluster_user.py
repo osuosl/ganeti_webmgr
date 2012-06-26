@@ -19,7 +19,7 @@
 from django.contrib.auth.models import User, Group
 from django.test import TestCase
 
-from ganeti_web.tests.rapi_proxy import RapiProxy
+from ganeti_web.util.proxy import RapiProxy
 from ganeti_web import models
 VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
@@ -121,7 +121,6 @@ class TestClusterUser(TestCase):
 
         owner = user.get_profile()
         c1.set_quota(owner, quota)
-        #c2.set_quota(owner, quota)
         c3.set_quota(owner, quota)
         
         # test used_resources returns zeros for no values

@@ -23,8 +23,7 @@ from django.conf import settings
 from django.test import TestCase
 
 from ganeti_web.util import client
-from ganeti_web.tests.rapi_proxy import RapiProxy
-from ganeti_web.tests.call_proxy import CallProxy
+from ganeti_web.util.proxy import RapiProxy, CallProxy
 from ganeti_web import models
 
 Cluster = models.Cluster
@@ -120,8 +119,8 @@ class CachedClusterObjectBase(TestCase):
         # XXX query values only. otherwise they may be updated
         values = TestModel.objects.filter(pk=obj.id).values('mtime','cached')[0]
         
-        self.assertEqual(timestamp, float(values['mtime']))
-        self.assertEqual(timestamp, float(values['cached']))
+        self.assertAlmostEqual(timestamp, float(values['mtime']), delta=5)
+        self.assertAlmostEqual(timestamp, float(values['cached']), delta=5)
     
     def test_info(self):
         """

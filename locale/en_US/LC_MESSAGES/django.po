@@ -1375,7 +1375,7 @@ msgid "Exceeded by"
 msgstr ""
 
 #: ganeti_web/templates/overview/used_resources_data.html:59
-msgid "You do not own any virtual machines"
+msgid "No virtual machines"
 msgstr ""
 
 #: ganeti_web/templates/ssh_keys/form.html:13

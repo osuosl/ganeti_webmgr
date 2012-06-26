@@ -2,8 +2,9 @@ import os
 
 import pkg_resources
 
-from fabric.api import env
+from fabric.api import env, abort
 from fabric.context_managers import settings, hide, lcd
+from fabric.contrib.console import confirm
 from fabric.contrib.files import exists
 from fabric.operations import local, require, prompt
 
@@ -25,11 +26,6 @@ PIP_INSTALL = dict((r.project_name, str(r)) for r in
                    pkg_resources.parse_requirements(open("requirements.txt").read()))
 
 GIT_INSTALL =  {
-    'ganeti_webmgr_layout':{
-        'url':'git://git.osuosl.org/gitolite/ganeti/ganeti_webmgr_layout',
-        'development':'develop',
-        'symlink':'ganeti_web_layout',
-        },
     'django_object_permissions':{
         'url':'git://git.osuosl.org/gitolite/django/django_object_permissions',
         'development':'develop',
@@ -109,6 +105,43 @@ def deploy():
     install_dependencies_git()
     novnc()
 
+def clean():
+    """
+    In a development environment, remove all installed packages and symlinks.
+    """
+    require('environment', provided_by=[dev, prod])
+
+    if env.environment != 'development':
+        abort('Must be in a development environment.')
+    else:
+        with lcd('%(doc_root)s' % env):
+            gitcmd = 'git clean -%sdx -e \!settings.py'
+            print('Files to be removed:')
+            local(gitcmd % 'n')
+            if confirm('Are you certain you would like to remove these files?'):
+                local(gitcmd % 'f')
+            else:
+                abort('Aborting clean.')
+
+
+def update():
+    """
+    In a development environment, update all develop branches.
+    """
+    require('environment', provided_by=[dev, prod])
+
+    if env.environment != 'development':
+        raise Exception('must be in a development environment in order to'
+            'update develop branches.')
+    else:
+        with lcd('%(doc_root)s/dependencies' % env):
+            for git_dir, opts in GIT_INSTALL.items():
+                env.git_repo = git_dir
+                if (_exists('%(doc_root)s/dependencies/%(git_repo)s' % env) and
+                    'development' in opts and 'checkout' not in opts):
+                    with lcd(git_dir):
+                        print 'Updating git repo: %(git_repo)s' % env
+                        local('git pull --ff')
 
 def _exists(path):
     """

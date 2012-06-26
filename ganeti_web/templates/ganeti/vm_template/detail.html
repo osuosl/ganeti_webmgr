@@ -4,7 +4,7 @@
 
 {% block title %}{% trans "Template" %}{% endblock title %}
 {% block head %}
-<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}/js/jquery.ajax.delete.js"></script>
 <script type="text/javascript">
 $(document).ready(function() {
     $("a.delete").live("click", function(){
@@ -117,6 +117,10 @@ $(document).ready(function() {
     <tr>
         <th>{% trans "CDROM Image Path" %}</th>
         <td>{{ template.cdrom_image_path }}</td>
+    </tr>
+    <tr>
+        <th>{% trans "CDROM 2 Image Path" %}</th>
+        <td>{{ template.cdrom2_image_path }}</td>
     </tr>
     <tr>
         <th>{% trans "Kernel Path" %}</th><td>{{ template.kernel_path }}</td>

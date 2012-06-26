@@ -7,18 +7,18 @@
     $(function(){
         if (USED_RESOURCES_PBAR == undefined){
             // only request script if not already available
-            requireOnce('{{MEDIA_URL}}/js/jquery.progressbar.js');
+            requireOnce('{{STATIC_URL}}/js/jquery.progressbar.js');
             USED_RESOURCES_PBAR = {
                 steps: 0,
                 showText: true,
                 textFormat: 'fraction',
                 width: 120,
-                boxImage: '{{MEDIA_URL}}/images/progressbar/progressbar.gif',
+                boxImage: '{{STATIC_URL}}/images/progressbar/progressbar.gif',
                 barImage: {
-                    0: '{{MEDIA_URL}}/images/progressbar/progressbg_green.gif',
-                    30: '{{MEDIA_URL}}/images/progressbar/progressbg_yellow.gif',
-                    50: '{{MEDIA_URL}}/images/progressbar/progressbg_orange.gif',
-                    75:  '{{MEDIA_URL}}/images/progressbar/progressbg_red.gif'
+                    0: '{{STATIC_URL}}/images/progressbar/progressbg_green.gif',
+                    30: '{{STATIC_URL}}/images/progressbar/progressbg_yellow.gif',
+                    50: '{{STATIC_URL}}/images/progressbar/progressbg_orange.gif',
+                    75:  '{{STATIC_URL}}/images/progressbar/progressbg_red.gif'
                 }
             };
         }

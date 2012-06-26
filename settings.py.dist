@@ -18,6 +18,8 @@
 
 # Django settings for ganeti_webmgr project.
 
+from ganeti_web.settings import *
+
 import os.path
 
 DEBUG = True
@@ -58,16 +60,10 @@ DATABASES = {
 # system time zone.
 TIME_ZONE = 'America/Los_Angeles'
 
-# Language code for this installation. All choices can be found here:
-# http://www.i18nguy.com/unicode/language-identifiers.html
-
-# In order to support localization the following have to be added:
-
-ugettext = lambda s: s
-
 # If no other locale is present/supported for the time leave the following as is.
 # When locales are added, place them ath the "('yourlang', ugettext('YOUR LANGUAGE')),"
 # line. E.g, for the Greek locale, it becomes: ('el', ugettext('Greek'))
+
 
 LANGUAGES = (
 #	 ('yourlang', ugettext('YOUR LANGUAGE')),
@@ -76,6 +72,8 @@ LANGUAGES = (
 )
 # end-of localization support
 
+# Language code for this installation. All choices can be found here:
+# http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = 'en-US'
 
 # Unique site id used by many modules to distinguish site from others.
@@ -105,17 +103,18 @@ SITE_ROOT = ''
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
-MEDIA_ROOT = '%s/media' % DOC_ROOT
+STATIC_ROOT = '%s/static' % DOC_ROOT
 
-# URL that handles the media served from MEDIA_ROOT.
+# URL that handles the media served from STATIC_ROOT.
 # XXX contrary to django docs, do not use a trailling slash.  It makes urls
-# using this url easier to read.  ie.  {{MEDIA_URL}}/images/foo.png
-MEDIA_URL = '%s/media' % SITE_ROOT
+# using this url easier to read.  ie.  {{STATIC_URL}}/images/foo.png
+STATIC_URL = '%s/static' % SITE_ROOT
 
-# URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
-# trailing slash.
-# Examples: "http://foo.com/media/", "/media/".
-ADMIN_MEDIA_PREFIX = '/adminmedia/'
+# Path to installed locales. New translations should be added to this
+# directory.
+LOCALE_PATHS = (
+  '%s/locale' % DOC_ROOT,
+)
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = '!c&bm88vo=gby*vxf2gydv8hc!+f+eo+yu&!g&!)#n5quwsr82'
@@ -123,32 +122,6 @@ SECRET_KEY = '!c&bm88vo=gby*vxf2gydv8hc!+f+eo+yu&!g&!)#n5quwsr82'
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     'object_permissions.backend.ObjectPermBackend',
-)
-
-# List of callables that know how to import templates from various sources.
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-#     'django.template.loaders.eggs.Loader',
-)
-
-TEMPLATE_CONTEXT_PROCESSORS = (
-    'django.contrib.auth.context_processors.auth',
-    'django.contrib.messages.context_processors.messages',
-    'django.core.context_processors.debug',
-    'django.core.context_processors.i18n',
-    'django.core.context_processors.media',
-    'ganeti_web.context_processors.site',
-    'ganeti_web.context_processors.common_permissions'
-)
-
-MIDDLEWARE_CLASSES = (
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
 )
 
 ROOT_URLCONF = 'urls'
@@ -160,31 +133,11 @@ TEMPLATE_DIRS = (
     'templates/'
 )
 
-INSTALLED_APPS = (
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.messages',
-    'django.contrib.sessions',
-    'django.contrib.sites',
-    'registration',
-    'deprecated.ganeti', # XXX deprecated ganeti MUST come before ganeti_web
-    'ganeti_web_layout',
-    'ganeti_web',        # XXX must come before object permissions for migration to 0.7
-    'object_permissions', 
-    'object_log',
-    'south',
-    'haystack',
-    'muddle',
-    'muddle.shots',
-    'muddle_users',
-)
-
 # Search settings
 HAYSTACK_SITECONF = 'search_sites'
 HAYSTACK_SEARCH_ENGINE = 'whoosh'
 HAYSTACK_WHOOSH_PATH = os.path.join(DOC_ROOT, 'whoosh_index')
 
-AUTH_PROFILE_MODULE = 'ganeti_web.Profile'
 LOGIN_REDIRECT_URL = '/'
 
 DATE_FORMAT = "d/m/Y"

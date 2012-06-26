@@ -5,10 +5,10 @@
 # All compiled python code
 *.pyc
 
-# Settings should be setup per install
-# Install all setting files except settings.py.dist
+# Don't track the top-level settings.py, but do track the internal one.
 settings.py*
 !settings.py.dist
+!ganeti_web/settings.py
 
 # Any sqlite database files created by the project
 *.db
@@ -47,6 +47,7 @@ bin
 dependencies
 include
 lib
+local
 pysqlite2-doc
 build
 

@@ -15,106 +15,110 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-from django.test import TestCase
+from datetime import datetime
+from decimal import Decimal
 
-from ganeti_web.fields import DataVolumeField, MACAddressField
-from django.core.exceptions import ValidationError
+from django.test import SimpleTestCase
 
-__all__ = [
-            'TestDataVolumeFieldToPython',
-            'TestMACAddressField'
-        ]
+from ganeti_web.fields import (DataVolumeField, MACAddressField,
+                               PreciseDateTimeField)
+
+__all__ = (
+    'TestDataVolumeField',
+    'TestMACAddressField',
+    "TestPreciseDateTimeField",
+)
 
 
-class TestDataVolumeFieldToPython(TestCase):
+class TestDataVolumeField(SimpleTestCase):
     """
-    Test converting DataVolumeField to Python types using the to_python()
-    method.
+    DataVolumeField should work.
     """
+
+    def test_dvfield(self):
+        valid = {
+            "9001 GB": 9217024,
+            "9001.000 GB": 9217024,
+            "9001G": 9217024,
+            "0.5G": 512,
+            "100.0 MB": 100,
+            "100.00MB": 100,
+            "100.000 M": 100,
+            "100M": 100,
+            100: 100,
+            100.1: 100,
+            100.9: 100,
+            "2 TB": 2097152,
+        }
+        invalid = {
+            "gdrcigeudr7d": [u"Invalid format."],
+            "100.0 GMB": [u"Invalid format."],
+            "250 B": [u"Invalid format."],
+            "50 yogdiecidu": [u"Invalid format."],
+        }
+        self.assertFieldOutput(DataVolumeField, valid, invalid,
+                               empty_value=None)
+
+    def test_dvfield_max_value(self):
+        valid = {
+            "9000 GB": 9216000,
+        }
+        invalid = {
+            "9001 GB":
+                [u"Ensure this value is less than or equal to 9216000."],
+        }
+        self.assertFieldOutput(DataVolumeField, valid, invalid,
+                               field_kwargs={"max_value": 9216000},
+                               empty_value=None)
+
+
+class TestMACAddressField(SimpleTestCase):
+    """
+    MACAddressField should work.
+    """
+
+    def test_mafield(self):
+        valid = {
+            "aa:bb:cc:dd:ee:ff": "aa:bb:cc:dd:ee:ff",
+            "AA:BB:CC:DD:EE:FF": "AA:BB:CC:DD:EE:FF",
+            "00-01-02-03-04-05": "00-01-02-03-04-05",
+        }
+        invalid = {
+            "aa:bb:cc:dd:ee:ff:": [u"Enter a valid value."],
+            "aa:bb:cc:dd:ee": [u"Enter a valid value."],
+            "aa:bb:cc:dd:ee:gg": [u"Enter a valid value."],
+            "aa:bb:cc:dd:ee:ff:00": [u"Enter a valid value."],
+            "aabbccddeeffaabbc": [u"Enter a valid value."],
+        }
+        self.assertFieldOutput(MACAddressField, valid, invalid)
+
+
+class TestPreciseDateTimeField(SimpleTestCase):
 
     def setUp(self):
-        self.f = DataVolumeField(required=True, min_value=0.)
+        self.f = PreciseDateTimeField()
 
     def test_trivial(self):
-        """
-        Check that setUp() is sane.
-        """
-
         pass
 
-    def test_clean_none(self):
-        """
-        Check that a ValidationError is raised when None is passed in.
-        """
+    def test_to_python_none(self):
+        self.assertEqual(self.f.to_python(None), None)
 
-        self.assertRaises(ValidationError, self.f.clean, None)
+    def test_to_python_datetime(self):
+        dt = datetime.now()
+        self.assertEqual(self.f.to_python(dt), dt)
 
-    def test_validationerror(self):
-        """
-        Make sure that ValidationError is raised when appropriate.
-        """
+    def test_to_python_str(self):
+        # The epoch.
+        t = "0"
+        dt = datetime.fromtimestamp(0)
+        self.assertEqual(self.f.to_python(t), dt)
 
-        self.assertRaises(ValidationError, self.f.clean, 'gdrcigeudr7d')
-        self.assertRaises(ValidationError, self.f.clean, '     ')
-        self.assertRaises(ValidationError, self.f.clean, '')
+    def test_to_python_decimal(self):
+        t = Decimal(0)
+        dt = datetime.fromtimestamp(0)
+        self.assertEqual(self.f.to_python(t), dt)
 
-        # Wrong units?
-        self.assertRaises(ValidationError, self.f.clean, '100.0 GMB')
-        self.assertRaises(ValidationError, self.f.clean, '250 B')
-        self.assertRaises(ValidationError, self.f.clean, '50 yogdiecidu')
-
-    def test_empty_not_required(self):
-        """
-        Make sure that empty fields clean() to None when a value isn't
-        required.
-        """
-
-        self.f.required = False
-        self.assertEquals(self.f.clean(''), None)
-        self.assertEquals(self.f.clean('     '), None)
-
-    def test_correct_values(self):
-        """
-        Make sure that correct values are generated for valid data.
-        """
-
-        self.assertEquals(self.f.clean('9001 GB'), 9217024)
-        self.assertEquals(self.f.clean('9001.000 GB'), 9217024)
-        self.assertEquals(self.f.clean('9001G'), 9217024)
-        self.assertEquals(self.f.clean('0.5G'), 512)
-        self.assertEquals(self.f.clean('100.0 MB'), 100)
-        self.assertEquals(self.f.clean('100.00MB'), 100)
-        self.assertEquals(self.f.clean('100.000 M'), 100)
-        self.assertEquals(self.f.clean('100M'), 100)
-
-
-class TestMACAddressField(TestCase):
-
-    def setUp(self):
-        self.f = MACAddressField(required=True)
-
-    def test_trivial(self):
-        """
-        Check that setUp() is sane.
-        """
-        pass
-
-    def test_required(self):
-        # implicit success, should not throw error
-        self.f.validate("aa:bb:cc:dd:ee:ff")
-
-        # required, not given
-        self.assertRaises(ValidationError, self.f.validate, None)
-
-        # not required, not given
-        self.f.required = False
-        self.f.validate(None)
-
-    def test_valid(self):
-        self.f.validate("aa:bb:cc:dd:ee:ff")
-
-    def test_invalid(self):
-        self.assertRaises(ValidationError, self.f.validate, "aa:bb:cc:dd:ee")
-        self.assertRaises(ValidationError, self.f.validate, "aa:bb:cc:dd:ee:ff:00")
-        self.assertRaises(ValidationError, self.f.validate, "aa:bb:cc:dd:ee:gg")
-        self.assertRaises(ValidationError, self.f.validate, "aabbccddeeffaabbc")
+    def test_get_prep_value(self):
+        dt = datetime.fromtimestamp(0.000001)
+        self.assertEqual(self.f.get_prep_value(dt), Decimal("0.000001"))

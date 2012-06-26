@@ -96,6 +96,10 @@ class VirtualMachineForm(forms.ModelForm):
                 # doesn't exist, no further checks needed
                 pass
 
+        # Spaces in hostname will always break things. 
+        if ' ' in hostname:
+            self.errors["hostname"] = self.error_class(
+                ["Hostname contains illegal character"])
         return hostname
 
     def clean_vcpus(self):

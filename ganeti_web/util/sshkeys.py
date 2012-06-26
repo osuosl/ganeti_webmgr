@@ -4,8 +4,9 @@
 from optparse import OptionParser
 from urllib2 import urlopen
 from urlparse import urlparse, urlunparse
-import json
 import sys
+
+from django.utils import simplejson as json
 
 parser = OptionParser()
 parser.add_option("-c", "--cluster", help="cluster to retrieve keys from")

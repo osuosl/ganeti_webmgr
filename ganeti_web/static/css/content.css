@@ -1,0 +1,274 @@
+/* content.css */
+#content {float:left; width: 817px;}
+#content td.ram, td.disk {text-align:left !important;}
+#content td.status, td.actions { padding:5px 0 0 0;}
+
+/* tablesorter style */
+#content table.sorted th {
+    background: #eeeeee url(/static/images/bg.gif) no-repeat center right;
+    border: 1px solid #ddd;
+    padding-right: 15px;
+    cursor: s-resize;
+}
+#content table.sorted .headerSortUp {background-image: url(/static/images/asc.gif);}
+#content table.sorted .headerSortDown {background-image: url(/static/images/desc.gif);}
+#content table.sorted .headerSortDown, #content table.sorted .headerSortUp {
+    background-color: #7AB0DC;
+}
+
+#content th.status, #content th.actions {
+    background:none;
+    padding:0;
+}
+
+
+/**
+ * Actions (buttons Delete, Shutdown, Start, Reboot)
+ **/
+#actions.horizontal li {float: left;}
+#actions.horizontal .button {width:120px;}
+
+/**
+ * Overview/Status page
+ */
+#errors_list h2, #usage_summary h2, #cluster_summary h2, #vm_summary h2,
+#administration h2 {
+    border:1px solid #555;
+    background-color:#888;
+    color:#fff;
+    padding: 5px 10px;
+    font-size:11px;
+    margin:40px 0 0 0;
+    -moz-border-radius-topleft:5px;
+    -moz-border-radius-topright:5px;
+    -webkit-border-top-left-radius: 5px;
+    -webkit-border-top-right-radius: 5px;
+}
+#usage_summary table, #cluster_summary table, #administration table,
+#vm_summary table {margin:0;}
+
+/**
+ * Errors, failures and administration links - status page
+ **/
+#errors_list, #usage_summary, #administration { margin-top: 2em;}
+#errors_list h2 {background-color:#DB533B; border-color:#BC4631}
+#errors_list table {margin:0;}
+#errors_list td.Cluster {
+    padding-left: 25px;
+    background:url(/static/images/icons/cluster.png) no-repeat 4px 4px;
+}
+#errors_list td.VirtualMachine {
+    padding-left: 25px;
+    background:url(/static/images/icons/vm.png) no-repeat 4px 4px;
+}
+#errors_list td.Node {
+    padding-left: 25px;
+    background:url(/static/images/icons/node.png) no-repeat 4px 4px;
+}
+
+
+/*   User Profile   */
+#uprofile {margin: 0 auto 0 0; width: 50%;}
+#uprofile fieldset { margin-bottom:10px; padding:1em; }
+#uprofile fieldset h2 {margin-bottom:5px;}
+#uprofile fieldset p {padding-bottom:1.5ex;}
+#uprofile p label {width: 10.5em;}
+#uprofile input.submit {margin-left: 11em;}
+
+/* Clusters */
+#quota {
+    background:#eeeeee;
+    border:1px solid #dddddd;
+    margin:2em;
+    padding: 1em;
+    -moz-border-radius:5px;
+    -webkit-border-radius:5px;
+}
+#quota p label {width:9em;}
+
+/* Virtual Machines */
+#content .overview {width:75%; border-color:#eee;}
+
+/*  Orphans */
+#orphans {margin:1em 0 0 1em;}
+#orphans li input {margin:0 1ex 0 0;}
+
+#configuration {text-align: center;}
+#configuration form {margin: 0 auto 0 auto; max-width: 800px;}
+#configuration th {text-align: right;}
+#configuration td {text-align: left;}
+#configuration input[type="text"] {width: 30em;}
+
+.info {
+    background:#eeeeee;
+    border:1px solid #dddddd;
+    margin:20px 0 20px 0;
+    padding:10px;
+    -moz-border-radius:5px;
+    -webkit-border-radius:5px;
+}
+
+
+ul#errors {color:#AD2E2E;}
+ul.errors {list-style:square;}
+
+
+div.deleting, a.deleting{background:url(/static/images/ajax-loader_small_transparent.gif) no-repeat;}
+div.icon_error {background:url(/static/images/icons/exclamation.png);}
+div.icon_running {background:url(/static/images/icons/check.png);}
+div.icon_stopped {background:url(/static/images/icons/stop.png);}
+div.icon_deleting {background:url(/static/images/icons/check_red.png);}
+.clear {background:url(/static/images/icons/cancel-disabled.png);}
+
+.reboot {background:url(/static/images/icons/arrow_refresh.png) no-repeat;}
+.reinstall {background:url(/static/images/icons/arrow_refresh.png) no-repeat;}
+.shutdown {background:url(/static/images/icons/stop.png) no-repeat;}
+.startup {background:url(/static/images/icons/add.png) no-repeat;}
+.encrypt {background:url(/static/images/icons/lock_open.png) no-repeat;}
+.connect {background:url(/static/images/icons/disconnect.png) no-repeat;}
+.migrate {background:url(/static/images/icons/arrow_out.png) no-repeat;}
+.evacuate {background:url(/static/images/icons/arrow_out.png) no-repeat;}
+.redistribute-config {background:url(/static/images/icons/arrow_divide.png) no-repeat;}
+.modify {background:url(/static/images/icons/edit.png) no-repeat;}
+.check {background:url(/static/images/icons/check.png) no-repeat;}
+.xmark {background:url(/static/images/icons/cross.png) no-repeat;}
+.replace_disks {background:url(/static/images/icons/drive_go.png) no-repeat;}
+.popout {background:url(/static/images/icons/shape_move_forwards.png) no-repeat;}
+.export {background:url(/static/images/icons/disk.png) no-repeat; }
+
+.reboot.disabled {background:url(/static/images/icons/arrow_refresh-disabled.png) no-repeat;}
+.reinstall.disabled {background:url(/static/images/icons/arrow_refresh-disabled.png) no-repeat;}
+.shutdown.disabled {background:url(/static/images/icons/stop-disabled.png) no-repeat;}
+.startup.disabled {background:url(/static/images/icons/add-disabled.png) no-repeat;}
+.encrypt.enabled {background:url(/static/images/icons/lock.png) no-repeat;}
+.connect.enabled {background:url(/static/images/icons/disconnect.png) no-repeat;}
+.migrate.disabled {background:url(/static/images/icons/arrow_out-disabled.png) no-repeat;}
+.evacuate.disabled {background:url(/static/images/icons/arrow_out-disabled.png) no-repeat;}
+.redistribute-config.disabled {background:url(/static/images/icons/arrow_divide-disabled.png) no-repeat;}
+.replace_disks.disabled {background:url(/static/images/icons/drive_go-disabled.png) no-repeat;}
+.modify.disabled {background:url(/static/images/icons/edit-disabled.png) no-repeat;}
+
+.button {background-position: center;}
+
+.button.popout {height:16px; width:0 !important; padding-right:1px; border: 0; background-color: transparent !important;}
+
+.icon {
+    background-repeat:no-repeat;
+    height:16px;
+    padding:0;
+    width:16px;
+}
+
+div.delete, div.edit, div.icon_error, .icon_running, .icon_stopped, .icon_deleting, .clear {
+    background-repeat:no-repeat;
+    height:16px;
+    float:left;
+    padding:0;
+    width:16px;
+}
+
+a.clear:hover {background:url(/static/images/icons/cancel.png) no-repeat !important;}
+.clear {cursor:pointer;}
+
+.spinner {margin:0 auto; text-align:center; width:100px}
+.spinner image {display:block; margin:0 auto; width:32px;}
+
+
+/**
+ * Messages
+ **/
+#messages li {
+    background-color:#c2e192;
+    border: 1px solid #124612;
+    color:#124612;
+    font-weight:bold;
+    font-size:110%;
+    margin:20px auto 20px auto;
+    padding: 10px 0 10px 0;
+    text-align:center;
+    width:700px;
+}
+#messages li.error {background-color:#ee9c98; border-color: #550000; color:#550000;}
+#messages li p {font-size:12px; font-weight:normal;}
+
+
+/**
+ * Job Status Queue and Log
+ **/
+#messages li.job {
+    border-width:1px;
+    padding:0;
+}
+
+#messages li.job h3 {
+    background: #C2E192 url(/static/images/ajax-loader_arrows.gif) no-repeat 5px 5px;
+    padding: 5px 0 5px 25px;
+    margin:0;
+    text-align:left;
+}
+#messages li.job.error h3 {background: #ee9c98;}
+#messages li.job.error .scrollable {overflow:auto; display:inline-block;}
+#messages pre.error {text-align:left;}
+#messages .op_log {
+    border-top:1px solid #124612;
+    border-left:0;
+    border-right:0;
+    margin:0;
+    padding: 10px;
+    overflow:visible;
+}
+
+.scrollable .detector {
+    width: inherit;
+    height: 0px;
+}
+
+#messages .op_log  li {
+    border:0;
+    background-color:inherit;
+    color:black;
+    font: 12px monospace;
+    margin:0;
+    padding:1px 0;
+    text-align:left;
+}
+#messages a.clear {
+    background:url(/static/images/icons/cancel.png);
+    float:right;
+    margin-right:5px;
+}
+
+.ajax_form .submit {margin:10px auto 0 auto;}
+.ajax_form ul#errors li {
+    color:#AD2E2E;
+    list-style:square;
+    margin: 0 0 10px 20px;}
+
+.name {text-align:left;}
+tr.user td.name, tr.group td.name { padding-left:22px !important;}
+tr.user td.name {background:url(/static/images/icons/user.png) no-repeat 0 4px;}
+tr.group td.name {background:url(/static/images/icons/group.png) no-repeat 0 4px;}
+
+.permissions a {}
+.permissions .none, .quota.default {font-style:italic;}
+
+#vnc_errors {
+    background-color: #ee9c98;
+    border: 4px solid #ff8b87;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.ui-tabs-panel {padding-left:0 !important; padding-right:0 !important;}
+
+
+/* No VNC tab */
+#encrypt_check {display:none;}
+#VNC_status_bar.VNC_status_bar {background-color:#ddd; margin-top:5px;}
+#VNC_canvas {height:435px; width:812px;}
+#VNC_canvas.connected {background-color:#000; border: 5px solid black; height:inherit; width:inherit; }
+
+/* object log */
+.object_log .timestamp {font-weight:bold; width:4em;}
+.object_log td {text-align:left !important;}
+

@@ -11,11 +11,13 @@
 
 {% block head %}
     <link rel="stylesheet" type="text/css"
-            href="{{MEDIA_URL}}/css/virtual_machine_create.css"/>
+            href="{{STATIC_URL}}/css/virtual_machine_create.css"/>
+    <link rel="stylesheet" type="text/css"
+            href="{{STATIC_URL}}/css/help_tips.css"/>
     <!-- javascript includes -->
-    <script src="{{SITE_ROOT}}/ganeti_web_media/js/disableSingletonDropdown.js"></script>
-    <script src="{{SITE_ROOT}}/ganeti_web_media/js/createTemplate_formUpdater.js"></script>
-    <script src="{{SITE_ROOT}}/ganeti_web_media/js/helpTips.js"></script>
+    <script src="{{STATIC_URL}}/js/disableSingletonDropdown.js"></script>
+    <script src="{{STATIC_URL}}/js/createTemplate_formUpdater.js"></script>
+    <script src="{{STATIC_URL}}/js/helpTips.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
             /* run when document is fully loaded */
@@ -103,6 +105,7 @@
             {% vmfield form.serial_console %}
             {% vmfield form.boot_order %}
             {% vmfield form.cdrom_image_path %}
+            {% vmfield form.cdrom2_image_path %}
         </fieldset>
         <input class="submit" type="submit" value="{% trans "Save" %}">
     </form>

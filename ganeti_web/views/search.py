@@ -1,8 +1,10 @@
-import json
-from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseRedirect, \
-        HttpResponseNotFound
 from haystack.query import SearchQuerySet
+
+from django.contrib.auth.decorators import login_required
+from django.http import (HttpResponse, HttpResponseRedirect,
+                         HttpResponseNotFound)
+from django.utils import simplejson as json
+
 from ganeti_web.models import VirtualMachine, Cluster, Node
 
 

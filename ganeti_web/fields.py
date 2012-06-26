@@ -20,92 +20,136 @@ from decimal import Decimal
 import time
 import re
 
+try:
+    from numbers import Real
+except ImportError:
+    Real = float, int, Decimal
+
 from django.core.exceptions import ValidationError
-from django.db.models.fields import DecimalField
+from django.core.validators import (EMPTY_VALUES, MaxValueValidator,
+                                    MinValueValidator)
 from django.db import models
-from django.forms.fields import CharField
+from django.db.models.fields import DecimalField
+from django.forms.fields import CharField, RegexField
 from django.utils.translation import ugettext as _
 
 from south.modelsinspector import add_introspection_rules
 
+from django_fields.fields import EncryptedCharField
+
+class PatchedEncryptedCharField(EncryptedCharField):
+    """
+    django_fields upstream refuses to fix a bug, so we get to do it ourselves.
+
+    Feel free to destroy this class and switch back to upstream if
+    https://github.com/svetlyak40wt/django-fields/pull/12 is ever merged into
+    a released version of django_fields.
+    """
+
+    def get_db_prep_value(self, value, connection=None, prepared=False):
+        if value is None:
+            return None
+
+        return EncryptedCharField.get_db_prep_value(self, value,
+                                                    connection=connection,
+                                                    prepared=prepared)
+
+
+add_introspection_rules([], ["^ganeti_web\.fields\.PatchedEncryptedCharField"])
+
 
 class PreciseDateTimeField(DecimalField):
     """
-    Custom model field for dealing with timestamps requiring precision greater
-    than seconds.  MySQL and other databases follow the SQL92 standard:
-    
+    Custom field which provides sub-second precision.
+
+    MySQL and other databases follow the SQL92 standard:
+
         TIMESTAMP - contains the datetime field's YEAR, MONTH, DAY, HOUR,
                     MINUTE, and SECOND.
 
-    To support greater precisions this class will convert to and from a decimal
-    field.  There are issues dealing with this due to timezones, different
-    epochs, etc., but the alternative is using a string field to store the
-    values.
-    
-    By default this field will support 6 decimal places (microsceonds), but it
-    can be adjusted by adding the decimal_places kwarg.
-    
-    By default this field will support up decimal_places+12 total digits.  This
-    can be adjusted by including the max_digits kwarg.  max_digits must include
-    the total of both second and microsecond digits.
+    However, sometimes more precision is needed, and this field provides
+    arbitrarily high-precision datetimes.
+
+    Internally, this field is a DECIMAL field. The value is stored as a
+    straight UNIX timestamp, with extra digits of precision representing the
+    fraction of a second.
+
+    This field is not timezone-safe.
+
+    By default, this field supports six decimal places, for microseconds. It
+    will store a total of eighteen digits for the entire timestamp. Both of
+    these values can be adjusted.
+
+    The keyword argument ``decimal_places`` controls how many sub-second
+    decimal places will be stored. The keyword argument ``max_digits``
+    controls the total number of digits stored.
     """
-    
+
     __metaclass__ = models.SubfieldBase
-    
+
     def __init__(self, **kwargs):
-        # XXX set default values.  doing this here rather than as kwargs
-        # because default ordering of DecimalField.__init__ may be different
+        # Set default values.
         if not 'decimal_places' in kwargs:
             kwargs['decimal_places'] = 6
         if not 'max_digits' in kwargs:
             kwargs['max_digits'] = kwargs['decimal_places'] + 12
-        
-        self.shifter = 10.0**kwargs['decimal_places']
-        
+
+        self.shifter = Decimal(10)**kwargs['decimal_places']
+
         super(PreciseDateTimeField, self).__init__(**kwargs)
+
+
+    def get_prep_value(self, value):
+        """
+        Turn a datetime into a Decimal.
+        """
+
+        if value is None:
+            return None
+
+        # Use Decimal for the math to avoid floating-point loss of precision
+        # or trailing ulps. We want *exactly* as much precision as we had
+        # in the timestamp.
+        seconds = Decimal(int(time.mktime(value.timetuple())))
+        fraction = Decimal(value.microsecond)
+        return seconds + (fraction / self.shifter)
+
+
+    def get_db_prep_save(self, value, connection):
+        """
+        Prepare a value for the database.
+
+        Overridden to handle the datetime-Decimal conversion because
+        DecimalField doesn't otherwise understand our intent.
+
+        Part of the Django field API.
+        """
+
+        # Cribbed from the DecimalField implementation. Uses
+        # self.get_prep_value instead of self.to_python to ensure that only
+        # Decimals are passed here.
+        return connection.ops.value_to_db_decimal(self.get_prep_value(value),
+                                                  self.max_digits,
+                                                  self.decimal_places)
+
 
     def to_python(self, value):
         """
-        convert decimal value to a datetime
+        Turn a backend type into a Python type.
+
+        Part of the Django field API.
         """
-        if not value:
+
+        if value is None:
             return None
         if isinstance(value, (datetime,)):
             return value
-        if isinstance(value, (Decimal, str, unicode)):
-            value = float(value)
-        if isinstance(value, (float,)):
+        if isinstance(value, (Decimal, basestring)):
+            return datetime.fromtimestamp(float(value))
+        if isinstance(value, Real):
             return datetime.fromtimestamp(value)
-        
+
         raise ValidationError(_('Unable to convert %s to datetime.') % value)
-
-    def get_db_prep_value(self, value, **kwargs):
-        if value:
-            return time.mktime(value.timetuple()) + value.microsecond/(10**self.decimal_places)
-        return None
-    
-    def get_db_prep_save(self, value, connection):
-        if value:
-            if isinstance(value, (datetime,)):
-                return Decimal('%f' % (time.mktime(value.timetuple()) + value.microsecond/self.shifter))
-            
-            if isinstance(value, (float,)):
-                return Decimal(float)
-            
-            if isinstance(value, (Decimal,)):
-                return value
-            
-        return None
-    
-    def db_type(self, connection):
-        engine = connection.settings_dict['ENGINE']
-
-        if engine == 'django.db.backends.mysql':
-            return 'decimal(%s, %s)' % (self.max_digits, self.decimal_places)
-        elif engine in ('django.db.backends.postgresql', 'django.db.backends.postgresql_psycopg2'):
-            return 'numeric(%s, %s)' % (self.max_digits, self.decimal_places)
-        elif  engine == 'django.db.backends.sqlite3':
-            return 'character'
 
 
 # Migration rules for PDTField. PDTField's serialization is surprisingly
@@ -116,23 +160,14 @@ add_introspection_rules([], ["^ganeti_web\.fields\.PreciseDateTimeField"])
 class DataVolumeField(CharField):
     min_value = None
     max_value = None
-    required = True
 
-    def __init__(self, min_value=None, max_value=None, required=True, **kwargs):
+    def __init__(self, min_value=None, max_value=None, **kwargs):
         super(DataVolumeField, self).__init__(**kwargs)
-        self.min_value = min_value
-        self.max_value = max_value
-        self.required = required
+        if min_value:
+            self.validators.append(MinValueValidator(min_value))
+        if max_value:
+            self.validators.append(MaxValueValidator(max_value))
 
-    def validate(self, value):
-        if value == None and not self.required:
-            return
-        if self.min_value != None and value < self.min_value:
-            raise ValidationError(_('Must be at least ') + str(self.min_value))
-        if self.max_value != None and value > self.max_value:
-            raise ValidationError(_('Must be less than ') + str(self.min_value))
-
-    # this gets called before validate
     def to_python(self, value):
         """
         Turn a bytecount into an integer, in megabytes.
@@ -142,35 +177,37 @@ class DataVolumeField(CharField):
         XXX should round up to the next megabyte?
         """
 
-        if value is None:
-            # XXX is this the right thing?
+        if value in EMPTY_VALUES:
             return None
 
-        if isinstance(value, (int,)):
-            return value
+        # Make a not-unreasonable attempt to pass through numbers which don't
+        # need the formatting.
+        try:
+            return int(value)
+        except ValueError:
+            pass
 
-        value = value.upper().strip()
+        try:
+            return int(float(value))
+        except ValueError:
+            pass
 
-        if len(value) == 0:
-            if self.required:
-                raise ValidationError(_('Empty.'))
-            else:
-                return None
+        value = str(value).upper().strip()
 
         matches = re.match(r'([0-9]+(?:\.[0-9]+)?)\s*(M|G|T|MB|GB|TB)?$', value)
         if matches == None:
             raise ValidationError(_('Invalid format.'))
 
-        multiplier = 1.
+        multiplier = 1
         unit = matches.group(2)
         if unit != None:
             unit = unit[0]
             if unit == 'M':
-                multiplier = 1.
+                multiplier = 1
             elif unit == 'G':
-                multiplier = 1024.
+                multiplier = 1024
             elif unit == 'T':
-                multiplier = 1024. * 1024.
+                multiplier = 1024 * 1024
 
         intvalue = int(float(matches.group(1)) * multiplier)
         return intvalue
@@ -181,25 +218,14 @@ class DataVolumeField(CharField):
 add_introspection_rules([], ["^ganeti_web\.fields\.DataVolumeField"])
 
 
-class MACAddressField(CharField):
+class MACAddressField(RegexField):
     """
-    Form field that validates MAC Addresses.  Is a simple extension over a
-    CharField.  It locks field size to 17 characters
+    Form field that validates MAC Addresses.
     """
-    PATTERN = re.compile('^([0-9a-f]{2}([:-]|$)){6}$')
 
     def __init__(self, *args, **kwargs):
-        kwargs['max_length'] = 17
-        super(MACAddressField, self).__init__(**kwargs)
-
-    def to_python(self, value):
-        val = super(MACAddressField, self).to_python(value)
-        return None if '' == val else val
-
-    def validate(self, value):
-        super(MACAddressField, self).validate(value)
-        if value not in (None,'') and not self.PATTERN.match(value):
-            raise ValidationError(_('Invalid MAC Address'))
+        kwargs["regex"] = '^([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}$'
+        super(MACAddressField, self).__init__(*args, **kwargs)
 
 
 # Migration rules for MAField. MAField doesn't do anything fancy, so the

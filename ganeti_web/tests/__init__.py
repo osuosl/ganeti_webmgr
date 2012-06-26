@@ -16,6 +16,7 @@
 # USA.
 
 from ganeti_web.tests.accounts import *
+from ganeti_web.tests.caps import *
 #from ganeti_web.tests.cache_updater import *
 from ganeti_web.tests.cached_cluster_object import *
 from ganeti_web.tests.cluster_user import *
@@ -27,7 +28,6 @@ from ganeti_web.tests.importing_nodes import *
 from ganeti_web.tests.job import *
 from ganeti_web.tests.forms import *
 from ganeti_web.tests.models import *
-from ganeti_web.tests.rapi_cache import *
 from ganeti_web.tests.ssh_keys import *
 from ganeti_web.tests.tags import *
 from ganeti_web.tests.utilities import *

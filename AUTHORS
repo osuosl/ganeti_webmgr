@@ -6,6 +6,8 @@ Scott White (whiteau) - whiteau@osuosl.org
 Piotr Banaszkiewicz (pbnan) - pbnan@pbnan.pl
 Lance Albertson (ramereth) - lance@osuosl.org
 Rob McGuire-Dale (robatron) - rob@osuosl.org
+Emily Dunham (edunham) - edunham@osuosl.org
+Jonah Brooks (brookjon) - brookjon@osuosl.org
 
 ===== Google Code in 2010 =====
 Jonathan Smith (jaydez) - j.jaydez@gmail.com
@@ -30,6 +32,25 @@ Haystack search uses Whoosh by Matt Chaput
 https://bitbucket.org/mchaput/whoosh/wiki/Home
 Icons are from Silk set by Mark James
 http://www.famfamfam.com/lab/icons/silk/ 
+MonkeyPatcher is used from testtools, written by Jonathan M. Lange and the
+testtool authors. It is seperately licensed under the MIT License.
+The testtools authors are:
+ * Canonical Ltd
+ * Twisted Matrix Labs
+ * Jonathan Lange
+ * Robert Collins
+ * Andrew Bennetts
+ * Benjamin Peterson
+ * Jamu Kakar
+ * James Westby
+ * Martin [gz]
+ * Michael Hudson-Doyle
+ * Aaron Bentley
+ * Christian Kampka
+ * Gavin Panella
+ * Martin Pool
+and are collectively referred to as "testtools developers".
+https://launchpad.net/testtools
 
 ===== Internally Created Add-Ons: =====
 Django Object Permissions

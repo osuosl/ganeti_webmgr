@@ -6,13 +6,7 @@ from ganeti_web.tests.views.virtual_machine.base import TestVirtualMachineViewsB
 __all__ = ['TestVirtualMachineActions']
 
 
-global c, superuser, cluster_admin, cluster_migrate, user
-global vm, cluster
-
-
 class TestVirtualMachineActions(TestVirtualMachineViewsBase):
-
-    context = globals()
 
     def test_view_startup(self):
         """
@@ -24,33 +18,37 @@ class TestVirtualMachineActions(TestVirtualMachineViewsBase):
         """
         Test starting a virtual machine that would cause the owner to exceed quota
         """
-        vm = globals()['vm']
-        args = (cluster.slug, vm.hostname)
+        args = (self.cluster.slug, self.vm.hostname)
         url = '/cluster/%s/%s/startup'
 
         # authorized (permission)
-        self.assertTrue(c.login(username=user.username, password='secret'))
+        self.assertTrue(self.c.login(username=self.user.username,
+                                     password='secret'))
 
-        grant(user, 'admin', vm)
-        cluster.set_quota(user.get_profile(), dict(ram=10, disk=2000, virtual_cpus=10))
-        vm.owner_id = user.get_profile().id
-        vm.ram = 128
-        vm.virtual_cpus = 1
-        vm.save()
+        grant(self.user, 'admin', self.vm)
+        self.cluster.set_quota(self.user.get_profile(), dict(ram=10,
+                                                             disk=2000,
+                                                             virtual_cpus=10))
+        self.vm.owner_id = self.user.get_profile().id
+        self.vm.ram = 128
+        self.vm.virtual_cpus = 1
+        self.vm.save()
 
-        response = c.post(url % args)
+        response = self.c.post(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/json', response['content-type'])
         self.assertTrue('Owner does not have enough RAM' in response.content)
-        user.revoke('admin', vm)
+        self.user.revoke('admin', self.vm)
         VirtualMachine.objects.all().update(last_job=None)
         Job.objects.all().delete()
 
         # restore values
-        cluster.set_quota(user.get_profile(), dict(ram=10, disk=2000, virtual_cpus=10))
-        vm.owner_id = None
-        vm.ram = -1
-        vm.virtual_cpus = -1
+        # XXX wait, whoa, whoa, why do we need to do this?
+        self.cluster.set_quota(self.user.get_profile(), dict(ram=10, disk=2000,
+                                                        virtual_cpus=10))
+        self.vm.owner_id = None
+        self.vm.ram = -1
+        self.vm.virtual_cpus = -1
 
     def test_view_shutdown(self):
         """
@@ -69,9 +67,10 @@ class TestVirtualMachineActions(TestVirtualMachineViewsBase):
         Tests migrating a virtual machine
         """
         url = '/cluster/%s/%s/migrate'
-        args = (cluster.slug, vm.hostname)
+        args = (self.cluster.slug, self.vm.hostname)
         template='ganeti/virtual_machine/migrate.html'
-        authorized = [superuser, cluster_admin, cluster_migrate]
+        authorized = [self.superuser, self.cluster_admin,
+                      self.cluster_migrate]
 
         # get
         self.assert_standard_fails(url, args)
@@ -79,5 +78,5 @@ class TestVirtualMachineActions(TestVirtualMachineViewsBase):
 
         # post
         data = {'mode':'live'}
-        self.validate_post_only_url(url, args, data, users=authorized, get_allowed=True)
-
+        self.validate_post_only_url(url, args, data, users=authorized,
+                                    get_allowed=True)

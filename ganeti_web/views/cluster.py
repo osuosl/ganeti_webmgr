@@ -17,17 +17,20 @@
 # USA.
 
 
-import json
-
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.db.models import Q, Sum
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotAllowed
+from django.http import (HttpResponse, HttpResponseRedirect,
+                         HttpResponseForbidden)
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
+from django.utils import simplejson as json
+from django.utils.translation import ugettext as _
+from django.views.decorators.http import require_POST
+from django.views.generic.detail import DetailView
 
 from object_permissions import get_users_any
 from object_permissions.views.permissions import view_users, view_permissions
@@ -40,35 +43,67 @@ from object_log.views import list_for_object
 log_action = LogItem.objects.log_action
 
 from ganeti_web.util.client import GanetiApiError
-from ganeti_web.models import Cluster, ClusterUser, Profile, SSHKey, VirtualMachine, Job
-from ganeti_web.views import render_403, render_404
-from ganeti_web.views.virtual_machine import render_vms
+from ganeti_web.middleware import Http403
+from ganeti_web.models import (Cluster, ClusterUser, Profile, SSHKey,
+                               VirtualMachine, Job)
+from ganeti_web.views import render_404
 from ganeti_web.forms.cluster import EditClusterForm, QuotaForm
-from django.utils.translation import ugettext as _
+from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
+                                      PagedListView)
 
 
-@login_required
-def detail(request, cluster_slug, rest=False):
-    """
-    Display details of a cluster
-    """
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    user = request.user
-    admin = True if user.is_superuser else user.has_perm('admin', cluster)
-    readonly = False if admin else True
-    # if not admin:
-        # return render_403(request, _("You do not have sufficient privileges"))
-       
-    if rest:
-        return {'cluster':cluster,'admin':admin}
-    else:
-        return render_to_response("ganeti/cluster/detail.html", {
-            'cluster':cluster,
-            'admin':admin,
-            'readonly':readonly
-        },
-        context_instance=RequestContext(request),
-    )
+class ClusterDetailView(LoginRequiredMixin, DetailView):
+
+    template_name = "ganeti/cluster/detail.html"
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(Cluster, slug=self.kwargs["cluster_slug"])
+
+    def get_context_data(self, **kwargs):
+        cluster = kwargs["object"]
+        user = self.request.user
+        admin = user.is_superuser or user.has_perm("admin", cluster)
+
+        return {
+            "cluster": cluster,
+            "admin": admin,
+            "readonly": not admin,
+        }
+
+class ClusterListView(LoginRequiredMixin, PagedListView):
+
+    template_name = "ganeti/cluster/list.html"
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return Cluster.objects.all()
+        else:
+            perms = ['admin', 'migrate', 'export', 'replace_disks', 'tags']
+            return self.request.user.get_objects_any_perms(Cluster, perms)
+
+    def get_context_data(self, **kwargs):
+        return {
+            "cluster_list": kwargs["object_list"],
+            "user": self.request.user,
+        }
+
+class ClusterVMListView(LoginRequiredMixin, PagedListView):
+
+    template_name = "ganeti/virtual_machine/table.html"
+
+    def get_queryset(self):
+        self.cluster = get_object_or_404(Cluster,
+                                         slug=self.kwargs["cluster_slug"])
+        user = self.request.user
+        admin = user.is_superuser or user.has_perm("admin", self.cluster)
+        if not admin:
+            raise Http403(NO_PRIVS)
+
+        return self.cluster.virtual_machines.select_related("cluster").all()
+
+    def get_context_data(self, **kwargs):
+        kwargs["cluster"] = self.cluster
+        return kwargs
 
 
 @login_required
@@ -79,7 +114,7 @@ def nodes(request, cluster_slug):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
-        return render_403(request, _("You do not have sufficient privileges"))
+        raise Http403(NO_PRIVS)
 
     # query allocated CPUS for all nodes in this list.  Must be done here to
     # avoid querying Node.allocated_cpus for each node in the list.  Repackage
@@ -110,26 +145,6 @@ def nodes(request, cluster_slug):
 
 
 @login_required
-def virtual_machines(request, cluster_slug):
-    """
-    Display all virtual machines in a cluster.  Filtered by access the user
-    has permissions for
-    """
-    cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    user = request.user
-    admin = True if user.is_superuser else user.has_perm('admin', cluster)
-    if not admin:
-        return render_403(request, _("You do not have sufficient privileges"))
-
-    vms = cluster.virtual_machines.select_related('cluster').all()
-    vms = render_vms(request, vms)
-
-    return render_to_response("ganeti/virtual_machine/table.html",
-                {'cluster': cluster, 'vms':vms},
-                context_instance=RequestContext(request))
-
-
-@login_required
 def edit(request, cluster_slug=None):
     """
     Edit a cluster
@@ -138,11 +153,11 @@ def edit(request, cluster_slug=None):
         cluster = get_object_or_404(Cluster, slug=cluster_slug)
     else:
         cluster = None
-    
+
     user = request.user
     if not (user.is_superuser or (cluster and user.has_perm('admin', cluster))):
-        return render_403(request, _("You do not have sufficient privileges"))
-    
+        raise Http403(NO_PRIVS)
+
     if request.method == 'POST':
         form = EditClusterForm(request.POST, instance=cluster)
         if form.is_valid():
@@ -161,42 +176,19 @@ def edit(request, cluster_slug=None):
 
             log_action('EDIT' if cluster_slug else 'CREATE', user, cluster)
 
-            return HttpResponseRedirect(reverse('cluster-detail', 
+            return HttpResponseRedirect(reverse('cluster-detail',
                                                 args=[cluster.slug]))
-    
+
     elif request.method == 'DELETE':
         cluster.delete()
         return HttpResponse('1', mimetype='application/json')
-    
+
     else:
         form = EditClusterForm(instance=cluster)
-    
+
     return render_to_response("ganeti/cluster/edit.html", {
         'form' : form,
         'cluster': cluster,
-        },
-        context_instance=RequestContext(request),
-    )
-
-
-@login_required
-def list_(request, rest=False):
-    """
-    List all clusters
-    """
-    user = request.user
-    if user.is_superuser:
-        cluster_list = Cluster.objects.all()
-    else:
-        cluster_list = user.get_objects_any_perms(Cluster, ['admin','migrate','export','replace_disks','tags'])
-        # List all clusters for which user has view_cluster perm
-
-    if rest:
-        return cluster_list
-    else:
-        return render_to_response("ganeti/cluster/list.html", {
-        'cluster_list': cluster_list,
-        'user': request.user,
         },
         context_instance=RequestContext(request),
     )
@@ -208,11 +200,11 @@ def users(request, cluster_slug):
     Display all of the Users of a Cluster
     """
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    
+
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
-        return render_403(request, _("You do not have sufficient privileges"))
-    
+        raise Http403(NO_PRIVS)
+
     url = reverse('cluster-permissions', args=[cluster.slug])
     return view_users(request, cluster, url, template='ganeti/cluster/users.html')
 
@@ -226,7 +218,7 @@ def permissions(request, cluster_slug, user_id=None, group_id=None):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
-        return render_403(request, "You do not have sufficient privileges")
+        raise Http403(NO_PRIVS)
 
     url = reverse('cluster-permissions', args=[cluster.slug])
     return view_permissions(request, cluster, url, user_id, group_id,
@@ -234,6 +226,7 @@ def permissions(request, cluster_slug, user_id=None, group_id=None):
                             group_template='ganeti/cluster/group_row.html')
 
 
+@require_POST
 @login_required
 def redistribute_config(request, cluster_slug):
     """
@@ -243,19 +236,17 @@ def redistribute_config(request, cluster_slug):
 
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
-        return render_403(request, "You do not have sufficient privileges")
+        raise Http403(NO_PRIVS)
 
-    if request.method == 'POST':
-        try:
-            job = cluster.redistribute_config()
-            job.refresh()
-            msg = job.info
+    try:
+        job = cluster.redistribute_config()
+        job.refresh()
+        msg = job.info
 
-            log_action('CLUSTER_REDISTRIBUTE', user, cluster, job)
-        except GanetiApiError, e:
-            msg = {'__all__':[str(e)]}
-        return HttpResponse(json.dumps(msg), mimetype='application/json')
-    return HttpResponseNotAllowed(['POST'])
+        log_action('CLUSTER_REDISTRIBUTE', user, cluster, job)
+    except GanetiApiError, e:
+        msg = {'__all__':[str(e)]}
+    return HttpResponse(json.dumps(msg), mimetype='application/json')
 
 
 def ssh_keys(request, cluster_slug, api_key):
@@ -264,7 +255,7 @@ def ssh_keys(request, cluster_slug, api_key):
     """
     if settings.WEB_MGR_API_KEY != api_key:
         return HttpResponseForbidden(_("You're not allowed to view keys."))
-    
+
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
 
     users = set(get_users_any(cluster).values_list("id", flat=True))
@@ -288,26 +279,18 @@ def quota(request, cluster_slug, user_id):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
-        return render_403(request, _("You do not have sufficient privileges"))
-    
+        raise Http403(NO_PRIVS)
+
     if request.method == 'POST':
         form = QuotaForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
             cluster_user = data['user']
             if data['delete']:
-                cluster.set_quota(cluster_user)
+                cluster.set_quota(cluster_user, None)
             else:
-                quota = cluster.get_quota()
-                same = data['virtual_cpus'] == quota['virtual_cpus'] \
-                    and data['disk']==quota['disk'] \
-                    and data['ram']==quota['ram']
-                if same:
-                    # same as default, set quota to default.
-                    cluster.set_quota(cluster_user)
-                else:
-                    cluster.set_quota(cluster_user, data)
-            
+                cluster.set_quota(cluster_user, data)
+
             # return updated html
             cluster_user = cluster_user.cast()
             url = reverse('cluster-permissions', args=[cluster.slug])
@@ -321,11 +304,11 @@ def quota(request, cluster_slug, user_id):
                     "ganeti/cluster/group_row.html",
                     {'object':cluster, 'group':cluster_user.group, 'url':url},
                     context_instance=RequestContext(request))
-        
+
         # error in form return ajax response
         content = json.dumps(form.errors)
         return HttpResponse(content, mimetype='application/json')
-    
+
     if user_id:
         cluster_user = get_object_or_404(ClusterUser, id=user_id)
         quota = cluster.get_quota(cluster_user)
@@ -334,7 +317,7 @@ def quota(request, cluster_slug, user_id):
             data.update(quota)
     else:
         return render_404(request, _('User was not found'))
-    
+
     form = QuotaForm(data)
     return render_to_response("ganeti/cluster/quota.html",
                         {'form':form, 'cluster':cluster, 'user_id':user_id},
@@ -346,9 +329,11 @@ def job_status(request, id, rest=False):
     """
     Return a list of basic info for running jobs.
     """
-    q = Q(status__in=('running','waiting')) | Q(status='error', cleared=False)
+
     ct = ContentType.objects.get_for_model(Cluster)
-    jobs = Job.objects.filter(q, content_type=ct, object_id=id).order_by('job_id')
+    jobs = Job.objects.filter(status__in=("error", "running", "waiting"),
+                              content_type=ct,
+                              object_id=id).order_by('job_id')
     jobs = [j.info for j in jobs]
 
     if rest:
@@ -363,7 +348,7 @@ def object_log(request, cluster_slug):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
-        return render_403(request, _("You do not have sufficient privileges"))
+        raise Http403(NO_PRIVS)
     return list_for_object(request, cluster)
 
 
@@ -379,7 +364,7 @@ def recv_user_remove(sender, editor, user, obj, **kwargs):
     receiver for object_permissions.signals.view_remove_user, Logs action
     """
     log_action('REMOVE_USER', editor, obj, user)
-    
+
     # remove custom quota user may have had.
     if isinstance(user, (User,)):
         cluster_user = user.get_profile()

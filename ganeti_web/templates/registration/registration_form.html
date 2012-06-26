@@ -1,0 +1,17 @@
+{% extends "no_menu_base.html" %}
+{% load i18n layout_tags %}
+{% block content %}
+<div id="registration">
+    <h1>{% trans "Registration" %}</h1>
+	{% open_registration %}
+    <fieldset>
+        <form method="post">
+          {{ form.as_p }}
+          <input class="submit"type="submit" value="{% trans "Create" %}" />
+        </form>
+    </fieldset>
+	{% else %}
+		<p>Registration is not open on this server. Please contact an administrator if you require an account.</p>
+	{% endopen_registration %}
+</div>
+{% endblock %}

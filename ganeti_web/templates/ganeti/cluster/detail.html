@@ -3,22 +3,22 @@
 {% load i18n %}
 {% load webmgr_tags %}
 {% block head %}
-    <link href="{{MEDIA_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
-    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.ajax.delete.js"></script>
-    <script src="{{MEDIA_URL}}/js/jquery-ui.min.js"></script>
-    <script src="{{MEDIA_URL}}/js/jquery.progressbar.js"></script>
+    <link href="{{STATIC_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
+    <script type="text/javascript" src="{{STATIC_URL}}/js/jquery.ajax.delete.js"></script>
+    <script src="{{STATIC_URL}}/js/jquery-ui.min.js"></script>
+    <script src="{{STATIC_URL}}/js/jquery.progressbar.js"></script>
     <script type="text/javascript">
         var job_poller;
         var PBAR_CONF = {
             steps: 0,
             showText: true,
             textFormat: 'fraction',
-            boxImage: '/media/images/progressbar/progressbar.gif',
+            boxImage: '/static/images/progressbar/progressbar.gif',
             barImage: {
-                0: '{{MEDIA_URL}}/images/progressbar/progressbg_green.gif',
-                30: '{{MEDIA_URL}}/images/progressbar/progressbg_yellow.gif',
-                50: '{{MEDIA_URL}}/images/progressbar/progressbg_orange.gif',
-                75:  '{{MEDIA_URL}}/images/progressbar/progressbg_red.gif'
+                0: '{{STATIC_URL}}/images/progressbar/progressbg_green.gif',
+                30: '{{STATIC_URL}}/images/progressbar/progressbg_yellow.gif',
+                50: '{{STATIC_URL}}/images/progressbar/progressbg_orange.gif',
+                75:  '{{STATIC_URL}}/images/progressbar/progressbg_red.gif'
             }
         };
         
@@ -30,7 +30,7 @@
 					var loadingMsg = '{% trans "Loading" %}';
                     var tabID = ui.panel;
                                        if (tabID.id != "overview") {
-                                               $(tabID).html("<div class='spinner'><br/>"+loadingMsg+"...<br/><br/><img src='{{MEDIA_URL}}/images/ajax-loader.gif'></div>");
+                                               $(tabID).html("<div class='spinner'><br/>"+loadingMsg+"...<br/><br/><img src='{{STATIC_URL}}/images/ajax-loader.gif'></div>");
                                        }
                  },
                 ajaxOptions: {
@@ -107,7 +107,7 @@
         }
     </script>
 
-<script type="text/javascript" src="{{SITE_ROOT}}/ganeti_web_media/js/job_status.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}/js/job_status.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -172,13 +172,13 @@
 
         <h3>{% trans "Default Quota" %}</h3>
         <table class="horizontal">
+        <tr><th>{% trans "Virtual CPUs" %}</th><td>{% if cluster.virtual_cpus %}{{ cluster.virtual_cpus }}{% else %}{% trans "unlimited" %}{% endif %}</td></tr>
             <tr><th>{% trans "Disk Space" %}</th><td>
                 {% if cluster.disk %}
                     {{ cluster.disk|mult:"1048576"|filesizeformat }}
                 {% else %}{% trans "unlimited" %}{% endif %}
                 </td></tr>
             <tr><th>{% trans "Memory" %}</th><td>{% if cluster.ram %}{{ cluster.ram|mult:"1048576"|filesizeformat }}{% else %}{% trans "unlimited" %}{% endif %}</td></tr>
-            <tr><th>{% trans "Virtual CPUs" %}</th><td>{% if cluster.virtual_cpus %}{{ cluster.virtual_cpus }}{% else %}{% trans "unlimited" %}{% endif %}</td></tr>
         </table>
     </div>
 </div>

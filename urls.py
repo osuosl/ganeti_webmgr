@@ -25,7 +25,6 @@ from django.conf.urls.defaults import *
 #admin.autodiscover()
 
 urlpatterns = patterns('',
-    (r'^', include('ganeti_web_layout.urls')),
     (r'^', include('ganeti_web.urls')),
     (r'^', include('object_permissions.urls')),
     (r'^', include('object_log.urls')),
@@ -62,10 +61,10 @@ urlpatterns += patterns('',
 handler500 = 'ganeti_web.views.view_500'
 
 
-#The following is used to serve up local media files like images
+#The following is used to serve up local static files like images
 urlpatterns += patterns('',
     (r'^favicon.ico', 'django.views.static.serve',
-        {'document_root':  settings.MEDIA_ROOT, 'path': 'favicon.ico'}),
+        {'document_root':  settings.STATIC_ROOT, 'path': 'favicon.ico'}),
 
     # noVNC files
     (r'^novnc/(?P<path>.*)', 'django.views.static.serve',

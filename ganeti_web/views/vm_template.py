@@ -14,32 +14,29 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
+
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, HttpResponseRedirect, \
-    HttpResponseNotAllowed, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.utils import simplejson as json
-from django.utils.translation import ugettext as _
+from django.views.decorators.http import require_http_methods, require_GET
 
+from ganeti_web.middleware import Http403
 from ganeti_web.models import Cluster, VirtualMachineTemplate, VirtualMachine
-from ganeti_web.forms.vm_template import VirtualMachineTemplateForm, \
-    VirtualMachineTemplateCopyForm
+from ganeti_web.forms.vm_template import (VirtualMachineTemplateForm,
+                                          VirtualMachineTemplateCopyForm)
 from ganeti_web.forms.virtual_machine import NewVirtualMachineForm
-from ganeti_web.utilities import cluster_default_info
-from ganeti_web.views import render_403
+from ganeti_web.views.generic import NO_PRIVS
 
 
 @login_required
 def templates(request):
-    templates = VirtualMachineTemplate.objects.exclude(
-        template_name=None
-        )
+    templates = VirtualMachineTemplate.objects.exclude(template_name=None)
     # Because templates do not have 'disk_size' this value
     #  is computed here to be easily displayed.
     for template in templates:
-        template.disk_size = 0
         template.disk_size = sum([disk['size'] for disk in template.disks])
     return render_to_response('ganeti/vm_template/list.html', {
         'templates':templates,
@@ -47,6 +44,7 @@ def templates(request):
         context_instance = RequestContext(request)
     )
 
+@require_http_methods(["GET", "POST"])
 @login_required
 def edit(request, cluster_slug=None, template=None):
     """
@@ -56,11 +54,11 @@ def edit(request, cluster_slug=None, template=None):
     if cluster_slug:
         cluster = get_object_or_404(Cluster, slug=cluster_slug)
         if not (
-            user.is_superuser or 
+            user.is_superuser or
             user.has_perm('admin', cluster) or
             user.has_perm('create_vm', cluster)
             ):
-            return render_403(request, _("You do not have sufficient privileges"))
+            raise Http403(NO_PRIVS)
 
     if cluster_slug and template:
         obj = get_object_or_404(VirtualMachineTemplate, template_name=template,
@@ -75,10 +73,8 @@ def edit(request, cluster_slug=None, template=None):
         if form.is_valid():
             form.instance.pk = obj.pk
             form_obj = form.save()
-            return HttpResponseRedirect(reverse('template-detail', 
+            return HttpResponseRedirect(reverse('template-detail',
                 args=[form_obj.cluster.slug, form_obj]))
-    else:
-        return HttpResponseNotAllowed(["GET","POST"])
 
     return render_to_response('ganeti/vm_template/create.html', {
         'form':form,
@@ -88,6 +84,7 @@ def edit(request, cluster_slug=None, template=None):
         context_instance = RequestContext(request)
     )
 
+@require_http_methods(["GET", "POST"])
 @login_required
 def create(request):
     """
@@ -102,10 +99,8 @@ def create(request):
         form = VirtualMachineTemplateForm(request.POST, user=user)
         if form.is_valid():
             form_obj = form.save()
-            return HttpResponseRedirect(reverse('template-detail', 
+            return HttpResponseRedirect(reverse('template-detail',
                 args=[form_obj.cluster.slug, form_obj]))
-    else:
-        return HttpResponseNotAllowed(["GET","POST"])
 
     return render_to_response('ganeti/vm_template/create.html', {
         'form':form,
@@ -115,6 +110,7 @@ def create(request):
     )
 
 
+@require_GET
 @login_required
 def create_template_from_instance(request, cluster_slug, instance):
     """
@@ -125,39 +121,36 @@ def create_template_from_instance(request, cluster_slug, instance):
     if cluster_slug:
         cluster = get_object_or_404(Cluster, slug=cluster_slug)
         if not (
-            user.is_superuser or 
+            user.is_superuser or
             user.has_perm('admin', cluster) or
             user.has_perm('create_vm', cluster)
             ):
-            return render_403(request, _("You do not have sufficient privileges"))
+            raise Http403(NO_PRIVS)
 
-    vm = get_object_or_404(VirtualMachine, hostname=instance, 
+    vm = get_object_or_404(VirtualMachine, hostname=instance,
         cluster__slug=cluster_slug)
 
-    if request.method == "GET":
-        # Work with vm vars here
-        info = vm.info
-        links = info['nic.links']
-        modes = info['nic.modes']
-        sizes = info['disk.sizes']
-        
-        initial = dict(
-            template_name=instance,
-            cluster=cluster.id,
-            start=info['admin_state'],
-            disk_template=info['disk_template'],
-            disk_type=info['hvparams']['disk_type'],
-            nic_type=info['hvparams']['nic_type'],
-            os=vm.operating_system,
-            vcpus=vm.virtual_cpus,
-            memory=vm.ram,
-            disks=[{'size':size} for size in sizes],
-            nics=[{'mode':mode, 'link':link} for mode, link in zip(modes, links)],
-            nic_count=len(links),
-        )
-        form = VirtualMachineTemplateForm(user=user, initial=initial)
-    else:
-        return HttpResponseNotAllowed(["GET"])
+    # Work with vm vars here
+    info = vm.info
+    links = info['nic.links']
+    modes = info['nic.modes']
+    sizes = info['disk.sizes']
+
+    initial = dict(
+        template_name=instance,
+        cluster=cluster.id,
+        start=info['admin_state'],
+        disk_template=info['disk_template'],
+        disk_type=info['hvparams']['disk_type'],
+        nic_type=info['hvparams']['nic_type'],
+        os=vm.operating_system,
+        vcpus=vm.virtual_cpus,
+        memory=vm.ram,
+        disks=[{'size':size} for size in sizes],
+        nics=[{'mode':mode, 'link':link} for mode, link in zip(modes, links)],
+        nic_count=len(links),
+    )
+    form = VirtualMachineTemplateForm(user=user, initial=initial)
 
     return render_to_response('ganeti/vm_template/create.html', {
         'form':form,
@@ -168,6 +161,7 @@ def create_template_from_instance(request, cluster_slug, instance):
     )
 
 
+@require_GET
 @login_required
 def create_instance_from_template(request, cluster_slug, template):
     """
@@ -178,33 +172,42 @@ def create_instance_from_template(request, cluster_slug, template):
     if cluster_slug:
         cluster = get_object_or_404(Cluster, slug=cluster_slug)
         if not (
-            user.is_superuser or 
+            user.is_superuser or
             user.has_perm('admin', cluster) or
             user.has_perm('create_vm', cluster)
             ):
-            return render_403(request, _("You do not have sufficient privileges"))
+            raise Http403(NO_PRIVS)
 
-    vm_template = get_object_or_404(VirtualMachineTemplate, 
-                                    template_name=template, 
+    vm_template = get_object_or_404(VirtualMachineTemplate,
+                                    template_name=template,
                                     cluster__slug=cluster_slug)
-    if request.method == "GET":
-        # Work with vm_template vars here
-        initial = dict(
-            hostname=vm_template.template_name,
-            cluster=vm_template.cluster_id,
-        )
-        initial.update(vars(vm_template))
-        ignore_fields = ('disks', '_state', 'pnode', 'snode',
-            'description')
-        for field in ignore_fields:
-            del initial[field]
-        initial['disk_count'] = len(vm_template.disks)
-        for i,disk in enumerate(vm_template.disks):
-            initial['disk_size_%s'%i] = disk['size']
-        form = NewVirtualMachineForm(user, initial=initial)
-        cluster_defaults = {} #cluster_default_info(cluster)
-    else:
-        return HttpResponseNotAllowed(["GET"])
+
+    # Work with vm_template vars here
+    initial = dict(
+        cluster=vm_template.cluster_id,
+    )
+    initial.update(vars(vm_template))
+
+    # nics and disks need to be replaced by expected
+    #  form fields of disk_size_#, nic_mode_#, and nic_link_#
+    ignore_fields = ('disks', 'nics', '_state',
+        'description')
+    for field in ignore_fields:
+        del initial[field]
+
+    # Initialize mutliple disks
+    initial['disk_count'] = len(vm_template.disks)
+    for i,disk in enumerate(vm_template.disks):
+        initial['disk_size_%s'%i] = disk['size']
+
+    # initialize multiple nics
+    initial['nic_count'] = len(vm_template.nics)
+    for i,nic in enumerate(vm_template.nics):
+        initial['nic_mode_%s'%i] = nic['mode']
+        initial['nic_link_%s'%i] = nic['link']
+
+    form = NewVirtualMachineForm(user, initial=initial)
+    cluster_defaults = {} #cluster_default_info(cluster)
 
     return render_to_response('ganeti/virtual_machine/create.html', {
         'form':form,
@@ -220,14 +223,14 @@ def detail(request, cluster_slug, template):
     if cluster_slug:
         cluster = get_object_or_404(Cluster, slug=cluster_slug)
         if not (
-            user.is_superuser or 
+            user.is_superuser or
             user.has_perm('admin', cluster) or
             user.has_perm('create_vm', cluster)
             ):
-            return render_403(request, _("You do not have sufficient privileges"))
+            raise Http403(NO_PRIVS)
 
-    vm_template = get_object_or_404(VirtualMachineTemplate, 
-                                    template_name=template, 
+    vm_template = get_object_or_404(VirtualMachineTemplate,
+                                    template_name=template,
                                     cluster__slug=cluster_slug)
     return render_to_response('ganeti/vm_template/detail.html', {
         'template':vm_template,
@@ -237,6 +240,7 @@ def detail(request, cluster_slug, template):
     )
 
 
+@require_http_methods(["GET", "POST"])
 @login_required
 def copy(request, cluster_slug, template):
     """
@@ -246,13 +250,13 @@ def copy(request, cluster_slug, template):
     if cluster_slug:
         cluster = get_object_or_404(Cluster, slug=cluster_slug)
         if not (
-            user.is_superuser or 
+            user.is_superuser or
             user.has_perm('admin', cluster) or
             user.has_perm('create_vm', cluster)
             ):
-            return render_403(request, _("You do not have sufficient privileges"))
+            raise Http403(NO_PRIVS)
 
-    obj = get_object_or_404(VirtualMachineTemplate, template_name=template, 
+    obj = get_object_or_404(VirtualMachineTemplate, template_name=template,
                                     cluster__slug=cluster_slug)
     if request.method == "GET":
         form = VirtualMachineTemplateCopyForm()
@@ -275,29 +279,27 @@ def copy(request, cluster_slug, template):
             obj.template_name = name
             obj.description = desc
             obj.save()
-        return HttpResponseRedirect(reverse('template-detail', 
+        return HttpResponseRedirect(reverse('template-detail',
                             args=[cluster_slug, obj]))
-    return HttpResponseNotAllowed(["GET", "POST"])
 
 
 @login_required
+@require_http_methods(["DELETE"])
 def delete(request, cluster_slug, template):
     user = request.user
     if cluster_slug:
         cluster = get_object_or_404(Cluster, slug=cluster_slug)
         if not (
-            user.is_superuser or 
+            user.is_superuser or
             user.has_perm('admin', cluster) or
             user.has_perm('create_vm', cluster)
             ):
-            return render_403(request, _("You do not have sufficient privileges"))
+            raise Http403(NO_PRIVS)
 
-    if request.method == "DELETE":
-        try:
-            vm_template = VirtualMachineTemplate.objects.get(template_name=template,
-                                                             cluster__slug=cluster_slug)
-            vm_template.delete()
-        except VirtualMachineTemplate.DoesNotExist:
-            return HttpResponse('-1', mimetype='application/json')
-        return HttpResponse('1', mimetype='application/json')
-    return HttpResponseNotAllowed(["DELETE"])
+    try:
+        vm_template = VirtualMachineTemplate.objects.get(template_name=template,
+                                                         cluster__slug=cluster_slug)
+        vm_template.delete()
+    except VirtualMachineTemplate.DoesNotExist:
+        return HttpResponse('-1', mimetype='application/json')
+    return HttpResponse('1', mimetype='application/json')

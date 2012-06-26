@@ -21,10 +21,10 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 
 from ganeti_web.forms.importing import ImportForm, OrphanForm, VirtualMachineForm
+from ganeti_web.middleware import Http403
 from ganeti_web.models import VirtualMachine, Cluster
-from ganeti_web.views import render_403
 from ganeti_web.views.general import update_vm_counts
-from django.utils.translation import ugettext as _
+from ganeti_web.views.generic import NO_PRIVS
 
 
 @login_required
@@ -39,15 +39,15 @@ def orphans(request):
     else:
         clusters = user.get_objects_any_perms(Cluster, ['admin'])
         if not clusters:
-            return render_403(request, _('You do not have sufficient privileges'))
-    
+            raise Http403(NO_PRIVS)
+
     vms_with_cluster = VirtualMachine.objects.filter(owner=None, cluster__in=clusters) \
                           .order_by('hostname').values_list('id','hostname','cluster')
-    
+
     if request.method == 'POST':
         # strip cluster from vms
         vms = [(i[0], i[1]) for i in vms_with_cluster]
-        
+
         # process updates if this was a form submission
         form = OrphanForm(vms, request.POST)
         if form.is_valid():
@@ -55,7 +55,7 @@ def orphans(request):
             data = form.cleaned_data
             owner = data['owner']
             vm_ids = data['virtual_machines']
-            
+
             # update the owner and save the vm.  This isn't the most efficient
             # way of updating the VMs but we would otherwise need to group them
             # by cluster
@@ -66,7 +66,7 @@ def orphans(request):
                 vm.save()
                 orphaned[vm.cluster_id] -= 1
             update_vm_counts(key='orphaned', data=orphaned)
-            
+
             # remove updated vms from the list
             vms_with_cluster = [i for i in vms_with_cluster
                 if unicode(i[0]) not in vm_ids]
@@ -99,13 +99,13 @@ def missing_ganeti(request):
     else:
         clusters = user.get_objects_any_perms(Cluster, ['admin'])
         if not clusters:
-            return render_403(request, _('You do not have sufficient privileges'))
+            raise Http403(NO_PRIVS)
 
     vms = []
     for cluster in clusters:
         for vm in cluster.missing_in_ganeti:
             vms.append((vm, vm))
-    
+
     if request.method == 'POST':
         # process updates if this was a form submission
         form = VirtualMachineForm(vms, request.POST)
@@ -121,10 +121,10 @@ def missing_ganeti(request):
             update_vm_counts(key='missing', data=missing)
 
             q.delete()
-            
+
             # remove updated vms from the list
             vms = filter(lambda x: unicode(x[0]) not in vm_ids, vms)
-    
+
     else:
         form = VirtualMachineForm(vms)
 
@@ -141,7 +141,7 @@ def missing_ganeti(request):
         vms_tuplelist.append((i, vms[i][0], vms[i][1]))
 
     vms = vms_tuplelist
-        
+
     return render_to_response("ganeti/importing/missing.html", {
         'vms': vms,
         'form':form,
@@ -161,13 +161,13 @@ def missing_db(request):
     else:
         clusters = user.get_objects_any_perms(Cluster, ['admin'])
         if not clusters:
-            return render_403(request, _('You do not have sufficient privileges'))
-    
+            raise Http403(NO_PRIVS)
+
     vms = []
     for cluster in clusters:
         for hostname in cluster.missing_in_db:
             vms.append(('%s:%s' % (cluster.id, hostname), hostname))
-    
+
     if request.method == 'POST':
         # process updates if this was a form submission
         form = ImportForm(vms, request.POST)
@@ -176,7 +176,7 @@ def missing_db(request):
             data = form.cleaned_data
             owner = data['owner']
             vm_ids = data['virtual_machines']
-            
+
             import_ready = defaultdict(lambda:0)
             orphaned = defaultdict(lambda:0)
 
@@ -197,7 +197,7 @@ def missing_db(request):
 
     else:
         form = ImportForm(vms)
-    
+
     vms = {}
     for cluster in clusters:
         for hostname in cluster.missing_in_db:

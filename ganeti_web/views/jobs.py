@@ -15,16 +15,33 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-import json
-from django.template.context import RequestContext
-
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
-from django.shortcuts import get_object_or_404, render_to_response
+from django.shortcuts import get_object_or_404
+from django.utils import simplejson as json
+from django.views.generic.detail import DetailView
 
+from ganeti_web.middleware import Http403
 from ganeti_web.models import Job, Cluster, VirtualMachine, Node
-from ganeti_web.views import render_403
-from django.utils.translation import ugettext as _
+from ganeti_web.views.generic import NO_PRIVS, LoginRequiredMixin
+
+class JobDetailView(LoginRequiredMixin, DetailView):
+
+    template_name = "ganeti/job/detail.html"
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(Job, job_id=self.kwargs["job_id"],
+                                 cluster__slug=self.kwargs["cluster_slug"])
+
+    def get_context_data(self, **kwargs):
+        job = kwargs["object"]
+        user = self.request.user
+        admin = user.is_superuser or user.has_perm("admin", job.cluster)
+
+        return {
+            "job": job,
+            "cluster_admin": admin,
+        }
 
 @login_required
 def status(request, cluster_slug, job_id, rest=False):
@@ -39,27 +56,11 @@ def status(request, cluster_slug, job_id, rest=False):
 
 
 @login_required
-def detail(request, cluster_slug, job_id, rest=False):
-    job = get_object_or_404(Job, cluster__slug=cluster_slug, job_id=job_id)
-
-    user = request.user
-    cluster_admin = True if user.is_superuser else user.has_perm('admin', job.cluster)
-
-    if rest:
-        return {'job': job, 'cluster_admin':cluster_admin}
-    else:
-        return render_to_response("ganeti/job/detail.html",{
-            'job':job,
-            'cluster_admin':cluster_admin
-        } ,context_instance=RequestContext(request))
-
-
-@login_required
-def clear(request, cluster_slug, job_id, rest=False):
+def clear(request, cluster_slug, job_id):
     """
-    Clear a single failed job error message
+    Remove a job.
     """
-    
+
     user = request.user
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     job = get_object_or_404(Job, cluster__slug=cluster_slug, job_id=job_id)
@@ -70,35 +71,23 @@ def clear(request, cluster_slug, job_id, rest=False):
 
     if not cluster_admin:
         if isinstance(obj, (Cluster, Node)):
-            if rest:
-                return HttpResponseForbidden
-            else:
-                return render_403(request, _("You do not have sufficient privileges"))
+            raise Http403(NO_PRIVS)
         elif isinstance(obj, (VirtualMachine,)):
             # object is a virtual machine, check perms on VM and on Cluster
-            if not (obj.owner_id == user.get_profile().pk  \
-                or user.has_perm('admin', obj) \
+            if not (obj.owner_id == user.get_profile().pk
+                or user.has_perm('admin', obj)
                 or user.has_perm('admin', obj.cluster)):
-                    if rest:
-                        return HttpResponseForbidden
-                    else:
-                        return render_403(request, _("You do not have sufficient privileges"))
+                    raise Http403(NO_PRIVS)
 
-    
-    # clear the error.
-    Job.objects.filter(pk=job.pk).update(cleared=True)
-
-    # clear the job from the object, but only if it is the last job. It's
-    # possible another job was started after this job, and the error message
-    # just wasn't cleared.
-    #
-    # XXX object could be none, in which case we dont need to clear its last_job
+    # If the job points to an object, and the job is the most recent job on
+    # the object, then clear it from the object.
     if obj is not None:
-        ObjectModel = obj.__class__
-        ObjectModel.objects.filter(pk=job.object_id, last_job=job)  \
-            .update(last_job=None, ignore_cache=False)
+        if obj.last_job == job:
+            obj.last_job = None
+            obj.ignore_cache = False
+            obj.save()
 
-    if rest:
-        return 1
-    else:
-        return HttpResponse('1', mimetype='application/json')
+    # "Clear" the job. With extreme prejudice.
+    job.delete()
+
+    return HttpResponse('1', mimetype='application/json')

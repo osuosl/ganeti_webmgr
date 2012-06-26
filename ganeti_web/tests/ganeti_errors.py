@@ -21,15 +21,13 @@ from django.test import TestCase
 from django.test.client import Client
 
 from ganeti_web.util import client
-from ganeti_web.tests.call_proxy import CallProxy
-from ganeti_web.tests.rapi_proxy import RapiProxy
+from ganeti_web.util.proxy import RapiProxy, CallProxy
 from django.contrib.auth.models import User
 from ganeti_web import models
 
 VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
 GanetiError = models.GanetiError
-GanetiErrorManager = models.GanetiErrorManager
 
 __all__ = ('TestGanetiErrorModel','TestErrorViews')
 
@@ -37,7 +35,7 @@ class TestGanetiErrorBase():
     """
     Class for testing ganeti error storage.
     """
-    
+
     def setUp(self):
         self.tearDown()
         models.client.GanetiRapiClient = RapiProxy
@@ -93,7 +91,7 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
         RapiProxy.error = msg
 
         # test store_error
-        store_error = GanetiError.objects.store_error
+        store_error = GanetiError.store_error
         store_error(str(msg), obj=cluster0, code=msg.code)
         store_error(str(msg), obj=cluster1, code=msg.code)
         store_error(str(msg), obj=cluster2, code=msg.code)
@@ -102,16 +100,6 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
 
         # test get_errors
         get_errors = GanetiError.objects.get_errors
-        
-        errors = get_errors(msg=str(msg))
-        self.assertEqual(len(errors), 5)
-        errors = get_errors(msg=str(msg) + "NOTHING")
-        self.assertEqual(len(errors), 0)
-
-        errors = get_errors(code=msg.code)
-        self.assertEqual(len(errors), 5)
-        errors = get_errors(code=msg.code + 123)
-        self.assertEqual(len(errors), 0)
 
         errors = get_errors(obj=cluster0)
         self.assertEqual(len(errors), 2)
@@ -131,54 +119,30 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
         self.assertEqual(len(errors), 2)
 
         # test clear_error(s)
-        clear_error = GanetiError.objects.clear_error
         clear_errors = GanetiError.objects.clear_errors
 
-        errors = get_errors()
-        self.assertEqual(len(errors), 5)
-        errors = get_errors(cleared=False).order_by("id")
-        self.assertEqual(len(errors), 5)
-
-        clear_error(errors[0].id)
-        errors = get_errors()
-        self.assertEqual(len(errors), 5)
-        errors = get_errors(cleared=False)
-        self.assertEqual(len(errors), 4)
-
         clear_errors(obj=cluster2)
-        errors = get_errors()
-        self.assertEqual(len(errors), 5)
-        errors = get_errors(cleared=False)
-        self.assertEqual(len(errors), 3)
+        errors = GanetiError.objects.filter(cleared=False)
+        self.assertEqual(len(errors), 4)
 
         clear_errors(obj=vm1)
-        errors = get_errors()
-        self.assertEqual(len(errors), 5)
-        errors = get_errors(cleared=False)
-        self.assertEqual(len(errors), 2)
-
-        clear_errors(msg=str(msg))
-        errors = get_errors()
-        self.assertEqual(len(errors), 5)
-        errors = get_errors(cleared=False)
-        self.assertEqual(len(errors), 0)
-
-        # test remove_errors
-        remove_errors = GanetiError.objects.remove_errors
-
-        errors = get_errors()
-        self.assertEqual(len(errors), 5)
-
-        remove_errors(obj=cluster2)
-        errors = get_errors()
-        self.assertEqual(len(errors), 4)
-
-        remove_errors(obj=vm1)
-        errors = get_errors()
+        errors = GanetiError.objects.filter(cleared=False)
         self.assertEqual(len(errors), 3)
 
-        remove_errors(msg=str(msg))
-        errors = get_errors()
+        GanetiError.objects.filter(msg=str(msg)).clear_errors()
+        errors = GanetiError.objects.filter(cleared=False)
+        self.assertEqual(len(errors), 0)
+
+        get_errors(obj=cluster2).delete()
+        errors = GanetiError.objects.all()
+        self.assertEqual(len(errors), 4)
+
+        get_errors(obj=vm1).delete()
+        errors = GanetiError.objects.all()
+        self.assertEqual(len(errors), 3)
+
+        GanetiError.objects.filter(msg=str(msg)).delete()
+        errors = GanetiError.objects.all()
         self.assertEqual(len(errors), 0)
 
     def test_specified_code_values(self):
@@ -196,9 +160,8 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
         msg1 = client.GanetiApiError("Simulating 404 error", 404)
         RapiProxy.error = msg0
 
-        store_error = GanetiError.objects.store_error
+        store_error = GanetiError.store_error
         get_errors = GanetiError.objects.get_errors
-        remove_errors = GanetiError.objects.remove_errors
 
         # 401 - cluster
         store_error(str(msg0), obj=cluster0, code=msg0.code)
@@ -206,16 +169,16 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
         self.assertEqual(len(errors), 1)
         errors = get_errors(obj=vm0)
         self.assertEqual(len(errors), 0)
-        remove_errors(obj=cluster0)
-        
+        get_errors(obj=cluster0).delete()
+
         # 401 - VM
         store_error(str(msg0), obj=vm0, code=msg0.code)
         errors = get_errors(obj=cluster0)
         self.assertEqual(len(errors), 1)
         errors = get_errors(obj=vm0)
         self.assertEqual(len(errors), 0)
-        remove_errors(obj=cluster0)
-        remove_errors(obj=vm0)
+        get_errors(obj=cluster0).delete()
+        get_errors(obj=vm0).delete()
 
         # 404 - VM
         store_error(str(msg1), obj=vm0, code=msg1.code)
@@ -223,8 +186,8 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
         self.assertEqual(len(errors), 1)
         errors = get_errors(obj=vm0)
         self.assertEqual(len(errors), 1)
-        remove_errors(obj=cluster0)
-        remove_errors(obj=vm0)
+        get_errors(obj=cluster0).delete()
+        get_errors(obj=vm0).delete()
 
         # 404 - cluster
         store_error(str(msg1), obj=cluster0, code=msg1.code)
@@ -232,21 +195,21 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
         self.assertEqual(len(errors), 1)
         errors = get_errors(obj=vm0)
         self.assertEqual(len(errors), 0)
-        
+
         # 404 - VM, but error is really with cluster
         store_error(str(msg1), obj=vm0, code=msg1.code)
         errors = get_errors(obj=cluster0)
         self.assertEqual(len(errors), 1)
         errors = get_errors(obj=vm0)
         self.assertEqual(len(errors), 0)
-        remove_errors(obj=cluster0)
+        get_errors(obj=cluster0).delete()
 
     def refresh(self, object):
         """
         NOTE: this test is borrowed from TestCachedClusterObject.
 
         Test forced refresh of cached data
-        
+
         Verifies:
             * Object specific refresh is called
             * Info is parsed
@@ -255,7 +218,7 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
         """
         now = datetime.now()
         object.refresh()
-        
+
         object._refresh.assertCalled(self)
         object.parse_transient_info.assertCalled(self)
         object.parse_persistent_info.assertCalled(self)
@@ -263,11 +226,11 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
         self.assertTrue(object.id)
         self.assertNotEqual(None, object.cached)
         self.assertTrue(now < object.cached, "Cache time should be newer")
-    
+
     def test_refresh_error(self):
         """
         Test an error during refresh
-        
+
         Verifies:
             * error will be saved as GanetiError object
             * successful refresh after will clear error
@@ -297,7 +260,8 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
                 self.assertEqual(errors[0].code, msg.code)
                 self.assertEqual(errors[1].code, msg.code)
 
-                cleared = GanetiError.objects.get_errors(obj=i.cluster, cleared=True)
+                qs = GanetiError.objects.filter(cleared=True)
+                cleared = qs.get_errors(obj=i.cluster)
                 self.assertEqual(0, len(cleared))
 
             else:
@@ -307,34 +271,36 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
                 self.assertEqual(errors[0].msg, str(msg))
                 self.assertEqual(errors[0].code, msg.code)
 
-                cleared = GanetiError.objects.get_errors(obj=i, cleared=True)
+                qs = GanetiError.objects.filter(cleared=True)
+                cleared = qs.get_errors(obj=i)
                 self.assertEqual(0, len(cleared))
-        
+
         # set all errors as cleared  and test if it was a success
-        for i in (cluster0, cluster1, vm0, vm1):
-            if isinstance(i, VirtualMachine):
-                GanetiError.objects.clear_errors(obj=i.cluster)
+        for i in (cluster0, cluster1):
+            GanetiError.objects.clear_errors(obj=i)
 
-                cleared = GanetiError.objects.get_errors(obj=i.cluster, cleared=True)
-                self.assertEqual(2, len(cleared))
-                self.assertEqual(cleared[0].cleared, True)
-                self.assertEqual(cleared[1].cleared, True)
-                self.assertEqual(cleared[0].msg, str(msg))
-                self.assertEqual(cleared[1].msg, str(msg))
-                self.assertEqual(cleared[0].code, msg.code)
-                self.assertEqual(cleared[1].code, msg.code)
+            qs = GanetiError.objects.filter(cleared=True)
+            cleared = qs.get_errors(obj=i)
+            self.assertEqual(2, len(cleared))
+            self.assertEqual(cleared[0].cleared, True)
+            self.assertEqual(cleared[1].cleared, True)
+            self.assertEqual(cleared[0].msg, str(msg))
+            self.assertEqual(cleared[1].msg, str(msg))
+            self.assertEqual(cleared[0].code, msg.code)
+            self.assertEqual(cleared[1].code, msg.code)
 
-            else:
-                GanetiError.objects.clear_errors(obj=i)
+        for i in (vm0, vm1):
+            GanetiError.objects.clear_errors(obj=i.cluster)
 
-                cleared = GanetiError.objects.get_errors(obj=i, cleared=True)
-                self.assertEqual(2, len(cleared))
-                self.assertEqual(cleared[0].cleared, True)
-                self.assertEqual(cleared[1].cleared, True)
-                self.assertEqual(cleared[0].msg, str(msg))
-                self.assertEqual(cleared[1].msg, str(msg))
-                self.assertEqual(cleared[0].code, msg.code)
-                self.assertEqual(cleared[1].code, msg.code)
+            qs = GanetiError.objects.filter(cleared=True)
+            cleared = qs.get_errors(obj=i.cluster)
+            self.assertEqual(2, len(cleared))
+            self.assertEqual(cleared[0].cleared, True)
+            self.assertEqual(cleared[1].cleared, True)
+            self.assertEqual(cleared[0].msg, str(msg))
+            self.assertEqual(cleared[1].msg, str(msg))
+            self.assertEqual(cleared[0].code, msg.code)
+            self.assertEqual(cleared[1].code, msg.code)
 
         # clear the error and retry
         RapiProxy.error = None
@@ -345,91 +311,90 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
 
 
 class TestErrorViews(TestGanetiErrorBase, TestCase):
-    
+
     def setUp(self):
         super(TestErrorViews, self).setUp()
-        
+
         user = User(id=2, username='tester0')
         user.set_password('secret')
         user.save()
-        
-        d = globals()
-        d['user'] = user
-        d['cluster'] = self.create_model(Cluster, hostname="test0", slug="OSL_TEST0")
-        d['vm'] = self.create_model(VirtualMachine,cluster=cluster, hostname="vm0.test.org")
-        d['c'] = Client()
-        
+
+        self.user = user
+        self.cluster = self.create_model(Cluster, hostname="test0",
+                                         slug="OSL_TEST0")
+        self.vm = self.create_model(VirtualMachine, cluster=self.cluster,
+                                    hostname="vm0.test.org")
+        self.c = Client()
+
     def tearDown(self):
         super(TestErrorViews, self).tearDown()
         User.objects.all().delete()
-    
+
     def test_clear_error(self):
-        
         url = '/error/clear/%s'
 
-        
         msg = client.GanetiApiError("Simulating an error", 777)
         RapiProxy.error = msg
 
         # test store_error
-        store_error = GanetiError.objects.store_error
-        c_error = store_error(str(msg), obj=cluster, code=msg.code)
+        store_error = GanetiError.store_error
+        c_error = store_error(str(msg), obj=self.cluster, code=msg.code)
         c_error = GanetiError.objects.get(pk=c_error.pk)
         self.assertFalse(c_error.cleared)
-        
-        vm_error = store_error(str(msg), obj=vm, code=msg.code)
+
+        vm_error = store_error(str(msg), obj=self.vm, code=msg.code)
         vm_error = GanetiError.objects.get(pk=vm_error.pk)
         self.assertFalse(vm_error.cleared)
-        
+
         # anonymous user
-        response = c.post(url % vm_error.id, follow=True)
+        response = self.c.post(url % vm_error.id, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'registration/login.html')
         vm_error = GanetiError.objects.get(pk=vm_error.pk)
         self.assertFalse(vm_error.cleared)
-        
+
         # unauthorized user
-        self.assertTrue(c.login(username=user.username, password='secret'))
-        response = c.post(url % vm_error.id)
+        self.assertTrue(self.c.login(username=self.user.username, password='secret'))
+        response = self.c.post(url % vm_error.id)
         self.assertEqual(403, response.status_code)
         vm_error = GanetiError.objects.get(pk=vm_error.pk)
         self.assertFalse(vm_error.cleared)
-        
+
         # nonexisent error
-        response = c.post(url % -1)
+        response = self.c.post(url % -1)
         self.assertEqual(404, response.status_code)
-        
+
         # authorized for cluster (cluster admin)
-        user.grant('admin', cluster)
-        response = c.post(url % c_error.id)
+        self.user.grant('admin', self.cluster)
+        response = self.c.post(url % c_error.id)
         self.assertEqual(200, response.status_code)
         c_error = GanetiError.objects.get(pk=c_error.pk)
         self.assertTrue(c_error.cleared)
         GanetiError.objects.all().update(cleared=False)
-        
+
         # authorized for vm (cluster admin)
-        response = c.post(url % vm_error.id)
+        response = self.c.post(url % vm_error.id)
         self.assertEqual(200, response.status_code)
         vm_error = GanetiError.objects.get(pk=vm_error.pk)
         self.assertTrue(vm_error.cleared)
         GanetiError.objects.all().update(cleared=False)
-        user.revoke_all(cluster)
-        
+        self.user.revoke_all(self.cluster)
+
         # authorized for vm (vm owner)
-        vm.owner = user.get_profile()
-        vm.save()
-        response = c.post(url % vm_error.id)
+        self.vm.owner = self.user.get_profile()
+        self.vm.save()
+        response = self.c.post(url % vm_error.id)
         self.assertEqual(200, response.status_code)
         vm_error = GanetiError.objects.get(pk=vm_error.pk)
         self.assertTrue(vm_error.cleared)
         GanetiError.objects.all().update(cleared=False)
-        vm.owner = None
-        vm.save()
-        
+        self.vm.owner = None
+        self.vm.save()
+
         # authorized for vm (superuser)
-        user.is_superuser = True
-        user.save()
-        response = c.post(url % vm_error.id)
+        self.user.is_superuser = True
+        self.user.save()
+        response = self.c.post(url % vm_error.id)
         self.assertEqual(200, response.status_code)
         vm_error = GanetiError.objects.get(pk=vm_error.pk)
         self.assertTrue(vm_error.cleared)

@@ -19,7 +19,7 @@
 from django.test import TestCase
 from ganeti_web.forms.cluster import EditClusterForm
 
-from ganeti_web.tests.rapi_proxy import RapiProxy
+from ganeti_web.util.proxy import RapiProxy
 from ganeti_web import models
 Cluster = models.Cluster
 VirtualMachine = models.VirtualMachine
@@ -30,18 +30,13 @@ Quota = models.Quota
 __all__ = ['TestClusterFormNew', 'TestClusterFormEdit']
 
 
-global cluster
-
-
 class TestClusterFormBase(TestCase):
 
     def setUp(self):
-        global cluster
-        self.tearDown()
         models.client.GanetiRapiClient = RapiProxy
 
-        cluster = Cluster(hostname='test.osuosl.test', slug='OSL_TEST')
-        cluster.save()
+        self.cluster = Cluster(hostname='test.example.test', slug='OSL_TEST')
+        self.cluster.save()
 
         self.data = dict(hostname='new-host3.hostname',
                     slug='new-host3',
@@ -55,13 +50,12 @@ class TestClusterFormBase(TestCase):
                     )
 
     def tearDown(self):
-        VirtualMachine.objects.all().delete()
-        Quota.objects.all().delete()
-        Cluster.objects.all().delete()
+        # Tear down the cluster.
+        self.cluster.delete()
 
 
 class TestClusterFormNew(TestClusterFormBase):
-    
+
     def test_unbound(self):
         form = EditClusterForm()
 
@@ -92,7 +86,7 @@ class TestClusterFormNew(TestClusterFormBase):
             cluster = form.save()
             for k, v in data_.items():
                 self.assertEqual(v, getattr(cluster, k))
-            Cluster.objects.all().delete()
+            cluster.delete()
 
     def test_read_only(self):
         """ success without username or password """
@@ -104,6 +98,7 @@ class TestClusterFormNew(TestClusterFormBase):
         cluster = form.save()
         for k, v in data_.items():
             self.assertEqual(v, getattr(cluster, k))
+        cluster.delete()
 
     def test_password_required(self):
         """ if either username or password are entered both are required """
@@ -138,23 +133,21 @@ class TestClusterFormEdit(TestClusterFormBase):
         """
         successfully edit a cluster
         """
-        global cluster
         data = self.data
-        form = EditClusterForm(data, instance=cluster)
+        form = EditClusterForm(data, instance=self.cluster)
         self.assertTrue(form.is_valid())
         cluster = form.save()
         for k, v in data.items():
             self.assertEqual(v, getattr(cluster, k))
-    
+
     def test_no_username_or_password_for_read_only(self):
         """
         tests that username and password are optional for read only cluster
         """
-        global cluster
         data = self.data
         del data['username']
         del data['password']
-        form = EditClusterForm(data, instance=cluster)
+        form = EditClusterForm(data, instance=self.cluster)
         self.assertTrue(form.is_valid())
         cluster = form.save()
         self.assertEqual('', cluster.username)
@@ -165,14 +158,13 @@ class TestClusterFormEdit(TestClusterFormBase):
         Tests that password is not required when the cluster already has the
         password available.  assumes username is the same
         """
-        global cluster
-        cluster.username = 'tester'
-        cluster.password = 'secret'
-        cluster.save()
+        self.cluster.username = 'tester'
+        self.cluster.password = 'secret'
+        self.cluster.save()
 
         data = self.data
         del data['password']
-        form = EditClusterForm(data, instance=cluster)
+        form = EditClusterForm(data, instance=self.cluster)
         self.assertTrue(form.is_valid())
         cluster = form.save()
         self.assertEqual('tester', cluster.username)
@@ -182,29 +174,27 @@ class TestClusterFormEdit(TestClusterFormBase):
         """
         tests that the password is required when the username has changed
         """
-        global cluster
-        cluster.username = 'foo'
-        cluster.password = 'bar'
-        cluster.save()
+        self.cluster.username = 'foo'
+        self.cluster.password = 'bar'
+        self.cluster.save()
 
         data = self.data
         del data['password']
         data['username'] = 'different'
-        form = EditClusterForm(data, instance=cluster)
+        form = EditClusterForm(data, instance=self.cluster)
         self.assertFalse(form.is_valid())
 
     def test_username_required_for_writeable_new_password(self):
         """
         if password is entered for a cluster, username is required always
         """
-        global cluster
-        cluster.username = 'foo'
-        cluster.password = 'bar'
-        cluster.save()
+        self.cluster.username = 'foo'
+        self.cluster.password = 'bar'
+        self.cluster.save()
 
         data = self.data
         del data['username']
-        form = EditClusterForm(data, instance=cluster)
+        form = EditClusterForm(data, instance=self.cluster)
         self.assertFalse(form.is_valid())
 
     def test_username_and_password_change(self):
@@ -212,16 +202,15 @@ class TestClusterFormEdit(TestClusterFormBase):
         tests changing the password for a cluster that already had username and
         password set
         """
-        global cluster
-        cluster.username = 'foo'
-        cluster.password = 'bar'
-        cluster.save()
+        self.cluster.username = 'foo'
+        self.cluster.password = 'bar'
+        self.cluster.save()
 
         data = self.data
-        form = EditClusterForm(data, instance=cluster)
+        form = EditClusterForm(data, instance=self.cluster)
         self.assertTrue(form.is_valid())
         cluster = form.save()
-        
+
         self.assertEqual('tester', cluster.username)
         self.assertEqual('secret', cluster.password)
 
@@ -230,15 +219,14 @@ class TestClusterFormEdit(TestClusterFormBase):
         tests setting a username and password for a cluster that did not
         previously have a username and password
         """
-        global cluster
-        cluster.username = None
-        cluster.password = None
-        cluster.save()
+        self.cluster.username = None
+        self.cluster.password = None
+        self.cluster.save()
 
         data = self.data
         data['username'] = 'foo'
         data['password'] = 'bar'
-        form = EditClusterForm(data, instance=cluster)
+        form = EditClusterForm(data, instance=self.cluster)
         self.assertTrue(form.is_valid())
 
         cluster = form.save()

@@ -1,4 +1,4 @@
-{% extends "no_menu_base.html" %}
+{% extends "menu_base.html" %}
 {% load webmgr_tags %}
 {% load i18n %}
 {% block title %}{%trans "About" %}{% endblock %}
@@ -24,7 +24,7 @@
 
     </p>
     <div id="version">
-    <h4>{% trans "Ganeti Version: " %}{{ version }}</h4>
+    <h4>{% trans "Ganeti Web Manager Version" %}: {{ version }}</h4>
     </div>
 
     <div id="contributors" class="show_bullets">

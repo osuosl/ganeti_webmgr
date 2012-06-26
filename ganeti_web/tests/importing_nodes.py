@@ -21,7 +21,8 @@ from django.test import TestCase
 from django.test.client import Client
 from ganeti_web.models import Node
 
-from ganeti_web.tests.rapi_proxy import RapiProxy, NODES
+from ganeti_web.util.proxy import RapiProxy
+from ganeti_web.util.proxy.constants import NODES
 from ganeti_web import models
 Cluster = models.Cluster
 VirtualMachine = models.VirtualMachine
@@ -62,7 +63,7 @@ class NodeImportBase(TestCase):
         self.cluster0.rapi.GetNodes.response = ['node0','node2']
         self.cluster1.rapi.GetNodes.response = ['node3','node5']
 
-        self.vm = VirtualMachine.objects.create(hostname='gimager.osuosl.bak', cluster=self.cluster0)
+        self.vm = VirtualMachine.objects.create(hostname='gimager.example.bak', cluster=self.cluster0)
 
         self.node0 = Node.objects.create(hostname='node0', cluster=self.cluster0)
         self.node1 = Node.objects.create(hostname='node1', cluster=self.cluster0)
@@ -153,7 +154,7 @@ class NodeMissingDBTests(NodeImportBase):
         self.assertEqual([], response.context['nodes'])
 
         # check to see that vm nodes were updated
-        vm = VirtualMachine.objects.filter(hostname='gimager.osuosl.bak') \
+        vm = VirtualMachine.objects.filter(hostname='gimager.example.bak') \
             .values_list('primary_node__hostname')[0][0]
         self.assertEqual('node2', vm)
 

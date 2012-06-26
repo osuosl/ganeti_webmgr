@@ -1,0 +1,18 @@
+#confirm {
+    margin:15px auto;
+    text-align:center;
+    width:550px;
+}
+#confirm ul {margin:10px 0 0 20px;}
+#confirm ul li {list-style:disc; } 
+.message {
+    background-color:#ee9c98;
+    border:3px solid #c83737;
+    color:#550000;
+    margin-bottom:15px;
+    padding:15px;
+    text-align:left;
+}
+#success {
+    display:none;
+}
