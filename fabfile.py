@@ -143,7 +143,6 @@ def update():
                         print 'Updating git repo: %(git_repo)s' % env
                         local('git pull --ff')
 
-
 def _exists(path):
     """
     A helper function to determine whether a path exists.
