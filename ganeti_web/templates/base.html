@@ -22,7 +22,7 @@
     <div id="body_wrapper">
         <div id="header_strip"></div>
         <div id="header">
-            <a href="/" id="logo"><img src="{{STATIC_URL}}/logo.png"/></a>
+            <a href="/" id="logo"><img alt="logo" src="{{STATIC_URL}}/logo.png"/></a>
             {% if LANGUAGES|length >= 2 or user.is_authenticated %}
             <div id="user_menu">
                 {% ifnotequal LANGUAGES|length 1 %}<span id="language">{{ LANGUAGE_CODE }} &#9660;</span>{% endifnotequal %}
