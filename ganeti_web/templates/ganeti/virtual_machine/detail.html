@@ -313,14 +313,14 @@
         {% with instance.info as info %}
         {% if info %}
         <table class="overview horizontal">
-            <tr><th>{% trans "Owner" %}</th><td>{{ instance.owner.name }}</td></tr>
-            <tr><th>{% trans "Created on" %}</th><td>{{ instance.ctime|date }}</td></tr>
-            <tr><th>{% trans "Last modified" %}</th><td>{{ instance.mtime|date }}</td></tr>
+            <tr><th scope="row">{% trans "Owner" %}</th><td>{{ instance.owner.name }}</td></tr>
+            <tr><th scope="row">{% trans "Created on" %}</th><td>{{ instance.ctime|date }}</td></tr>
+            <tr><th scope="row">{% trans "Last modified" %}</th><td>{{ instance.mtime|date }}</td></tr>
             <tr>
-                <th>{% trans "Status" %}</th>
+                <th scope="row">{% trans "Status" %}</th>
                 <td>{{ info.oper_state|yesno:"Running,Stopped" }}</td>
             </tr>
-            <tr><th>{% trans "Primary node" %}</th><td>
+            <tr><th scope="row">{% trans "Primary node" %}</th><td>
                 {% if cluster_admin %}
                     <a href="{% url node-detail cluster.slug info.pnode %}">
                         {{ info.pnode }}
@@ -329,7 +329,7 @@
                     {{ info.pnode }}
                 {% endif %}
             </td></tr>
-            <tr><th>{% trans "Secondary node" %}</th><td>
+            <tr><th scope="row">{% trans "Secondary node" %}</th><td>
                 {% if cluster_admin %}
                     {% for host in info.snodes %}
                         <a href="{% url node-detail cluster.slug host %}">
@@ -342,32 +342,32 @@
                 {% endif %}
             </td></tr>
             <tr>
-                <th>{% trans "Operating System" %}</th>
+                <th scope="row">{% trans "Operating System" %}</th>
                 <td>{{ instance.operating_system|render_os }}</td>
             </tr>
             <tr>
-                <th>{% trans "Autostart" %}</th>
+                <th scope="row">{% trans "Autostart" %}</th>
                 <td>{{ info.admin_state|checkmark }}</td>
             </tr>
             <tr>
-                <th>VNC</th>
+                <th scope="row" abbr="VNC address and port">VNC</th>
                 <td>{{ info.pnode }}::{{ info.network_port }}</td>
             </tr>
         </table>
 
         <h3>Hardware</h3>
         <table class="horizontal">
-            <tr><th>{% trans "VCPUs" %}</th><td>{{ instance.virtual_cpus }}</td></tr>
-            <tr><th>{% trans "Memory" %}</th><td>{{ instance.ram|render_storage }}</td></tr>
-            <tr><th>{% trans "NIC type" %}</th><td>{{ info.hvparams.nic_type }}</td></tr>
+            <tr><th scope="row">{% trans "VCPUs" %}</th><td>{{ instance.virtual_cpus }}</td></tr>
+            <tr><th scope="row">{% trans "Memory" %}</th><td>{{ instance.ram|render_storage }}</td></tr>
+            <tr><th scope="row">{% trans "NIC type" %}</th><td>{{ info.hvparams.nic_type }}</td></tr>
         </table>
 
         <h3>{% trans "Disks" %}</h3>
         <table>
             <tr>
-                <th>{% trans "Disk" %}</th>
-                <th>{% trans "Type" %}</th>
-                <th>{% trans "Size" %}</th>
+                <th scope="col">{% trans "Disk" %}</th>
+                <th scope="col">{% trans "Type" %}</th>
+                <th scope="col">{% trans "Size" %}</th>
             </tr>
             {% for size in  info|index:"disk.sizes" %}
                 <tr>
@@ -381,11 +381,11 @@
         <h3>{% trans "Network Devices" %}</h3>
         <table>
             <tr>
-                <th>Nic</th>
-                <th>Mac</th>
-                <th>IP</th>
-                <th>Mode</th>
-                <th>Link</th>
+                <th scope="col">Nic</th>
+                <th scope="col">Mac</th>
+                <th scope="col">IP</th>
+                <th scope="col">Mode</th>
+                <th scope="col">Link</th>
             </tr>
             {% for mac in info|index:'nic.macs' %}
                 <tr>
@@ -404,74 +404,74 @@
 
         <h3>Hypervisor</h3>
         <table class="horizontal">
-            <tr><th>ACPI</th><td>{{ info.hvparams.acpi|checkmark }}</td></tr>
-            <tr><th>{% trans "Boot Order" %}</th><td>{{ info.hvparams.boot_order }}</td></tr>
+            <tr><th scope="row">ACPI</th><td>{{ info.hvparams.acpi|checkmark }}</td></tr>
+            <tr><th scope="row">{% trans "Boot Order" %}</th><td>{{ info.hvparams.boot_order }}</td></tr>
             <tr>
-                <th>{% trans "CDROM Image Path" %}</th>
+                <th scope="row">{% trans "CDROM Image Path" %}</th>
                 <td>{{ info.hvparams.cdrom_image_path }}</td>
             </tr>
             <tr>
-                <th>{% trans "CDROM 2 Image Path" %}</th>
+                <th scope="row">{% trans "CDROM 2 Image Path" %}</th>
                 <td>{{ info.hvparams.cdrom2_image_path }}</td>
             </tr>
-            <tr><th>Disk Cache</th><td>{{ info.hvparams.disk_cache }}</td></tr>
+            <tr><th scope="row">Disk Cache</th><td>{{ info.hvparams.disk_cache }}</td></tr>
             <tr>
-                <th>initrd Path</th><td>{{ info.hvparams.initrd_path }}</td>
+                <th scope="row">initrd Path</th><td>{{ info.hvparams.initrd_path }}</td>
             </tr>
             <tr>
-                <th>Kernel Args</th><td>{{ info.hvparams.kernel_args }}</td>
+                <th scope="row">Kernel Args</th><td>{{ info.hvparams.kernel_args }}</td>
             </tr>
             <tr>
-                <th>Kernel Path</th><td>{{ info.hvparams.kernel_path }}</td>
+                <th scope="row">Kernel Path</th><td>{{ info.hvparams.kernel_path }}</td>
             </tr>
-            <tr><th>KVM Flag</th><td>{{ info.hvparams.kvm_flag }}</td></tr>
-            <tr><th>Mem Path</th><td>{{ info.hvparams.mem_path }}</td></tr>
+            <tr><th scope="row">KVM Flag</th><td>{{ info.hvparams.kvm_flag }}</td></tr>
+            <tr><th scope="row">Mem Path</th><td>{{ info.hvparams.mem_path }}</td></tr>
             <tr>
-                <th>Migration Downtime</th>
+                <th scope="row">Migration Downtime</th>
                 <td>{{ info.hvparams.migration_downtime }}</td>
             </tr>
-            <tr><th>Nic Type</th><td>{{ info.hvparams.nic_type }}</td></tr>
-            <tr><th>Network Port</th><td>{{ info.network_port }}</td></tr>
-            <tr><th>Root Path</th><td>{{ info.hvparams.root_path }}</td></tr>
+            <tr><th scope="row">Nic Type</th><td>{{ info.hvparams.nic_type }}</td></tr>
+            <tr><th scope="row">Network Port</th><td>{{ info.network_port }}</td></tr>
+            <tr><th scope="row">Root Path</th><td>{{ info.hvparams.root_path }}</td></tr>
             <tr>
-                <th>Security Domain</th>
+                <th scope="row">Security Domain</th>
                 <td>{{ info.hvparams.security_domain }}</td>
             </tr>
             <tr>
-                <th>Security Model</th>
+                <th scope="row">Security Model</th>
                 <td>{{ info.hvparams.security_model }}</td>
             </tr>
             <tr>
-                <th>Serial Console</th>
+                <th scope="row">Serial Console</th>
                 <td>{{ info.hvparams.serial_console|checkmark }}</td>
             </tr>
-            <tr><th>USB Mouse</th><td>{{ info.hvparams.usb_mouse }}</td></tr>
+            <tr><th scope="row">USB Mouse</th><td>{{ info.hvparams.usb_mouse }}</td></tr>
             <tr>
-                <th>Use Chroot</th>
+                <th scope="row">Use Chroot</th>
                 <td>{{ info.hvparams.use_chroot|checkmark }}</td>
             </tr>
             <tr>
-                <th>Use Localtime</th>
+                <th scope="row">Use Localtime</th>
                 <td>{{ info.hvparams.use_localtime|checkmark }}</td>
             </tr>
             <tr>
-                <th>VNC Bind Address</th>
+                <th scope="row">VNC Bind Address</th>
                 <td>{{ info.hvparams.vnc_bind_address }}</td>
             </tr>
             <tr>
-                <th>VNC Password File</th>
+                <th scope="row">VNC Password File</th>
                 <td>{{ info.hvparams.vnc_password_file }}</td>
             </tr>
             <tr>
-                <th>VNC TLS</th>
+                <th scope="row">VNC TLS</th>
                 <td>{{ info.hvparams.vnc_tls|checkmark }}</td>
             </tr>
             <tr>
-                <th>VNC x509 Path</th>
+                <th scope="row">VNC x509 Path</th>
                 <td>{{ info.hvparams.vnc_x509_path }}</td>
             </tr>
             <tr>
-                <th>VNC x509 Verify</th>
+                <th scope="row">VNC x509 Verify</th>
                 <td>{{ info.hvparams.vnc_x509_verify|checkmark }}</td>
             </tr>
         </table>

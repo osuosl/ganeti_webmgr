@@ -139,47 +139,47 @@
         </ul>
         <table class="overview horizontal">
             {% with cluster.info as info %}
-            <tr><th>{% trans "Architecture" %}</th><td>{{ info.architecture.0 }}</td></tr>
-            <tr><th>{% trans "Ganeti Version" %}</th><td>{{info.software_version}}</td></tr>
-            <tr><th>{% trans "Default hypervisor" %}</th><td>{{ info.default_hypervisor }}</td></tr>
-            <tr><th>{% trans "Available hypervisors" %}</th><td>{{ info.enabled_hypervisors|join:", " }}</td></tr>
-            <tr><th>{% trans "Master node" %}</th><td>
+            <tr><th scope="col">{% trans "Architecture" %}</th><td>{{ info.architecture.0 }}</td></tr>
+            <tr><th scope="col">{% trans "Ganeti Version" %}</th><td>{{info.software_version}}</td></tr>
+            <tr><th scope="col">{% trans "Default hypervisor" %}</th><td>{{ info.default_hypervisor }}</td></tr>
+            <tr><th scope="col">{% trans "Available hypervisors" %}</th><td>{{ info.enabled_hypervisors|join:", " }}</td></tr>
+            <tr><th scope="col">{% trans "Master node" %}</th><td>
             {% if info.master %}
                 <a href="{% url node-detail cluster.slug info.master %}">{{ info.master }}</a>
             {% else %}
                 <em>{% trans "unknown" %}</em>
             </td></tr>
             {% endif %}
-            <tr><th>{% trans "Created" %}</th><td>
+            <tr><th scope="col">{% trans "Created" %}</th><td>
             {% if cluster.ctime %}
                 {{ cluster.ctime|date }}
             {% else %}
                 <em>{% trans "unknown" %}</em>
             {% endif %}
             </td></tr>
-            <tr><th>{% trans "Last modified" %}</th><td >{{ cluster.mtime|date }}</td></tr>
-            <tr><th>{% trans "Virtual Machines" %}</th><td>{{ cluster.virtual_machines.count }}</td></tr>
-            <tr><th>{% trans "Nodes" %}</th><td>{{ cluster.nodes.count }}</td></tr>
+            <tr><th scope="col">{% trans "Last modified" %}</th><td >{{ cluster.mtime|date }}</td></tr>
+            <tr><th scope="col">{% trans "Virtual Machines" %}</th><td>{{ cluster.virtual_machines.count }}</td></tr>
+            <tr><th scope="col">{% trans "Nodes" %}</th><td>{{ cluster.nodes.count }}</td></tr>
             {% endwith %}
         </table>
 
         <h3>{% trans "Resource Usage" %}</h3>
         <table id="resources" class="horizontal">
-            <tr><th>{%trans "Ram Allocated "%}{% cluster_memory cluster 1 1 %}</th><td class="ram">{% cluster_memory cluster %}</td></tr>
-            <tr><th>{% trans "Ram Used " %}{% cluster_memory cluster 0 1%}</th><td class="ram">{% cluster_memory cluster 0 %}</td></tr>
-            <tr><th>{% trans "Disk Allocated " %}{% cluster_disk cluster 1 1 %}</th><td class="disk">{% cluster_disk cluster %}</td></tr>
-            <tr><th>{% trans "Disk Used " %}{% cluster_disk cluster 0 1%}</th><td class="disk">{% cluster_disk cluster 0 %}</td></tr>
+            <tr><th scope="col">{%trans "Ram Allocated "%}{% cluster_memory cluster 1 1 %}</th><td class="ram">{% cluster_memory cluster %}</td></tr>
+            <tr><th scope="col">{% trans "Ram Used " %}{% cluster_memory cluster 0 1%}</th><td class="ram">{% cluster_memory cluster 0 %}</td></tr>
+            <tr><th scope="col">{% trans "Disk Allocated " %}{% cluster_disk cluster 1 1 %}</th><td class="disk">{% cluster_disk cluster %}</td></tr>
+            <tr><th scope="col">{% trans "Disk Used " %}{% cluster_disk cluster 0 1%}</th><td class="disk">{% cluster_disk cluster 0 %}</td></tr>
         </table>
 
         <h3>{% trans "Default Quota" %}</h3>
         <table class="horizontal">
-        <tr><th>{% trans "Virtual CPUs" %}</th><td>{% if cluster.virtual_cpus %}{{ cluster.virtual_cpus }}{% else %}{% trans "unlimited" %}{% endif %}</td></tr>
-            <tr><th>{% trans "Disk Space" %}</th><td>
+        <tr><th scope="col">{% trans "Virtual CPUs" %}</th><td>{% if cluster.virtual_cpus %}{{ cluster.virtual_cpus }}{% else %}{% trans "unlimited" %}{% endif %}</td></tr>
+            <tr><th scope="col">{% trans "Disk Space" %}</th><td>
                 {% if cluster.disk %}
                     {{ cluster.disk|mult:"1048576"|filesizeformat }}
                 {% else %}{% trans "unlimited" %}{% endif %}
                 </td></tr>
-            <tr><th>{% trans "Memory" %}</th><td>{% if cluster.ram %}{{ cluster.ram|mult:"1048576"|filesizeformat }}{% else %}{% trans "unlimited" %}{% endif %}</td></tr>
+            <tr><th scope="col">{% trans "Memory" %}</th><td>{% if cluster.ram %}{{ cluster.ram|mult:"1048576"|filesizeformat }}{% else %}{% trans "unlimited" %}{% endif %}</td></tr>
         </table>
     </div>
 </div>

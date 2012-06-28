@@ -4,7 +4,7 @@
 <form class="ajax_form node_role_form" method="post" action="{% url node-role cluster.slug node.hostname %}">
     <ul id="errors"></ul>
     <table>
-        <tr><th>{% trans "Current Role" %}: </th><td>{{ node.role|node_role }}</td></tr>
+        <tr><th scope="row">{% trans "Current Role" %}: </th><td>{{ node.role|node_role }}</td></tr>
         {{form}}
     </table>
     <input type="submit" class="submit" value="{% trans "Save" %}"/>

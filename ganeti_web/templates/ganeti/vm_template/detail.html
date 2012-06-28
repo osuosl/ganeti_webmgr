@@ -55,29 +55,29 @@ $(document).ready(function() {
 <table class="horizontal overview">
     <tr><th>{% trans "Description" %}</th><td>{{ template.description }}</td></tr>
     <tr>
-        <th>{% trans "Operating System" %}</th>
+        <th scope="row">{% trans "Operating System" %}</th>
         <td>{{ template.os|render_os }}</td>
     </tr>
-    <tr><th>{% trans "Autostart" %}</th><td>{{ template.start|checkmark }}</td></tr>
-    <tr><th>{% trans "DNS Name Check" %}</th><td>{{ template.name_check|checkmark }}</td></tr>
+    <tr><th scope="row">{% trans "Autostart" %}</th><td>{{ template.start|checkmark }}</td></tr>
+    <tr><th scope="row">{% trans "DNS Name Check" %}</th><td>{{ template.name_check|checkmark }}</td></tr>
 </table>
 <h3>Hardware</h3>
 <table class="horizontal">
-    <tr><th>{% trans "VCPUs" %}</th><td>{{ template.vcpus }}</td></tr>
+    <tr><th scope="row">{% trans "VCPUs" %}</th><td>{{ template.vcpus }}</td></tr>
     {% if template.memory %}
-    <tr><th>{% trans "Memory" %}</th><td>{{ template.memory|render_storage }}</td></tr>
+    <tr><th scope="row">{% trans "Memory" %}</th><td>{{ template.memory|render_storage }}</td></tr>
     {% endif %}
-    <tr><th>{% trans "NIC type" %}</th><td>{{ template.nic_type }}</td></tr>
-    <tr><th>{% trans "Disk Template" %}</th><td>{{ template.disk_template }}</td></tr>
+    <tr><th scope="row">{% trans "NIC type" %}</th><td>{{ template.nic_type }}</td></tr>
+    <tr><th scope="row">{% trans "Disk Template" %}</th><td>{{ template.disk_template }}</td></tr>
 </table>
 
 {% if template.disks %}
 <h3>{% trans "Disks" %}</h3>
 <table>
     <tr>
-        <th>{% trans "Disk" %}</th>
-        <th>{% trans "Type" %}</th>
-        <th>{% trans "Size" %}</th>
+        <th scope="col">{% trans "Disk" %}</th>
+        <th scope="col">{% trans "Type" %}</th>
+        <th scope="col">{% trans "Size" %}</th>
     </tr>
     {% for disk in template.disks %}
     <tr>
@@ -93,11 +93,11 @@ $(document).ready(function() {
 <h3>{% trans "Network Devices" %}</h3>
 <table>
     <tr>
-        <th>{% trans "Nic" %}</th>
-        <th>{% trans "Mac" %}</th>
-        <th>{% trans "IP" %}</th>
-        <th>{% trans "Mode" %}</th>
-        <th>{% trans "Link" %}</th>
+        <th scope="col">{% trans "Nic" %}</th>
+        <th scope="col">{% trans "Mac" %}</th>
+        <th scope="col">{% trans "IP" %}</th>
+        <th scope="col">{% trans "Mode" %}</th>
+        <th scope="col">{% trans "Link" %}</th>
     </tr>
     {% for nic in template.nics %}
     <tr>
@@ -113,21 +113,21 @@ $(document).ready(function() {
 
 <h3>Hypervisor</h3>
 <table class="horizontal">
-    <tr><th>{% trans "Boot Order" %}</th><td>{{ template.boot_order }}</td></tr>
+    <tr><th scope="row">{% trans "Boot Order" %}</th><td>{{ template.boot_order }}</td></tr>
     <tr>
-        <th>{% trans "CDROM Image Path" %}</th>
+        <th scope="row">{% trans "CDROM Image Path" %}</th>
         <td>{{ template.cdrom_image_path }}</td>
     </tr>
     <tr>
-        <th>{% trans "CDROM 2 Image Path" %}</th>
+        <th scope="row">{% trans "CDROM 2 Image Path" %}</th>
         <td>{{ template.cdrom2_image_path }}</td>
     </tr>
     <tr>
-        <th>{% trans "Kernel Path" %}</th><td>{{ template.kernel_path }}</td>
+        <th scope="row">{% trans "Kernel Path" %}</th><td>{{ template.kernel_path }}</td>
     </tr>
-    <tr><th>{% trans "Root Path" %}</th><td>{{ template.root_path }}</td></tr>
+    <tr><th scope="row">{% trans "Root Path" %}</th><td>{{ template.root_path }}</td></tr>
     <tr>
-        <th>{% trans "Serial Console" %}</th>
+        <th scope="row">{% trans "Serial Console" %}</th>
         <td>{{ template.serial_console|checkmark }}</td>
     </tr>
 </table>

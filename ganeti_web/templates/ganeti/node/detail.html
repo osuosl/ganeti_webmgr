@@ -203,7 +203,7 @@
             {% endif %}
         </ul>
         <table id="nodes" class="overview horizontal">
-            <tr><th>Status</th><td class="status">
+            <tr><th scope="row">Status</th><td class="status">
                 {% if node.info.offline %}
                     <div class="icon_stopped" title="Offline"></div>
                 {% else %}
@@ -211,23 +211,23 @@
                 {% endif %}
                 </td>
             </tr>
-            <tr><th>{% trans "Primary IP" %}</th><td>{{node.info.pip}}</td></tr>
-            <tr><th>{% trans "Secondary IP" %}</th><td>{{node.info.sip}}</td></tr>
-            <tr><th>{% trans "Role" %}</th><td>{{node.info.role|node_role}}</td></tr>
+            <tr><th scope="row">{% trans "Primary IP" %}</th><td>{{node.info.pip}}</td></tr>
+            <tr><th scope="row">{% trans "Secondary IP" %}</th><td>{{node.info.sip}}</td></tr>
+            <tr><th scope="row">{% trans "Role" %}</th><td>{{node.info.role|node_role}}</td></tr>
             <tr>
-                <th>{% trans "Master Candidate" %}</th>
+                <th scope="row">{% trans "Master Candidate" %}</th>
                 <td>{{node.info.master_candidate|checkmark}}</td>
             </tr>
-            <tr><th>{% trans "Drained" %}</th><td>{{node.info.drained|checkmark}}</td></tr>
-            <tr><th>{% trans "CPUs" %}</th><td>{{ node.cpus|default:"unknown" }}</td></tr>
-            <tr><th>{% trans "Allocated CPUs" %}</th><td>{{ node.allocated_cpus }}</td></tr>
-            <tr><th>{% trans "Ram Allocated [GiB]" %}</th><td class="ram">{% node_memory node %}</td></tr>
-            <tr><th>{% trans "Ram Used [GiB]" %}</th><td class="ram">{% node_memory node 0 %}</td></tr>
-            <tr><th>{% trans "Disk Allocated [GiB]" %}</th><td class="disk">{% node_disk node %}</td></tr>
-            <tr><th>{% trans "Disk Used [GiB]" %}</th><td class="disk">{% node_disk node 0 %}</td></tr>
+            <tr><th scope="row">{% trans "Drained" %}</th><td>{{node.info.drained|checkmark}}</td></tr>
+            <tr><th scope="row">{% trans "CPUs" %}</th><td>{{ node.cpus|default:"unknown" }}</td></tr>
+            <tr><th scope="row">{% trans "Allocated CPUs" %}</th><td>{{ node.allocated_cpus }}</td></tr>
+            <tr><th scope="row">{% trans "Ram Allocated [GiB]" %}</th><td class="ram">{% node_memory node %}</td></tr>
+            <tr><th scope="row">{% trans "Ram Used [GiB]" %}</th><td class="ram">{% node_memory node 0 %}</td></tr>
+            <tr><th scope="row">{% trans "Disk Allocated [GiB]" %}</th><td class="disk">{% node_disk node %}</td></tr>
+            <tr><th scope="row">{% trans "Disk Used [GiB]" %}</th><td class="disk">{% node_disk node 0 %}</td></tr>
 
             <tr>
-                <th>{% trans "Virtual Machines" %}</th>
+                <th scope="row">{% trans "Virtual Machines" %}</th>
                 <td>{{ node.info.pinst_cnt }} / {{ node.info.sinst_cnt }}</td>
             </tr>
         </table>

@@ -73,12 +73,12 @@
 <table id="clusters" class="sorted">
     <thead>
         <tr>
-            <th>{% trans "Cluster" %}</th>
-            <th>{% trans "Version" %}</th>
-            <th>{% trans "Memory Allocated [GiB]" %}</th>
-            <th>{% trans "Disk Allocated [GiB]" %}</th>
-            <th>{% trans "Nodes" %}</th>
-            <th>{% trans "VMs" %}</th>
+            <th scope="col">{% trans "Cluster" %}</th>
+            <th scope="col">{% trans "Version" %}</th>
+            <th scope="col">{% trans "Memory Allocated [GiB]" %}</th>
+            <th scope="col">{% trans "Disk Allocated [GiB]" %}</th>
+            <th scope="col">{% trans "Nodes" %}</th>
+            <th scope="col">{% trans "VMs" %}</th>
         </tr>
     </thead>
     <tbody>
@@ -117,9 +117,9 @@
 <table>
     <thead>
         <tr>
-            <th>{% trans "Cluster" %}</th>
-            <th>{% trans "Running" %}</th>
-            <th>{% trans "Total" %}</th>
+            <th scope="col">{% trans "Cluster" %}</th>
+            <th scope="col">{% trans "Running" %}</th>
+            <th scope="col">{% trans "Total" %}</th>
         </tr>
     </thead>
     <tbody>
@@ -161,6 +161,12 @@
 <div id="errors_list">
     <h2>{% trans "Recent Errors" %}</h2>
     <table>
+    <thead>
+        <th scope="col" abbr="Type">Error Type</th>
+        <th scope="col" abbr="Message">Error Message</th>
+        <th scope="col">Timestamp</th>
+        <th scope="col" abbr="Clear"></th>
+    </thead>
     {% for tuple in errors %}
         {% with tuple.0 as is_ganeti_error %}
         {% with tuple.1 as error %}
@@ -192,21 +198,21 @@
     <table style="width: auto;">
     {% if orphaned %}
         <tr>
-            <th>Orphaned VMs</th>
+            <th scope="row">Orphaned VMs</th>
             <td><a href="{% url import-orphans %}">{% trans "Adopt" %} {{ orphaned }}</a></td>
         </tr>
     {% endif %}
 
     {% if import_ready %}
         <tr>
-            <th>{% trans "VMs ready to import" %}</th>
+            <th scope="row">{% trans "VMs ready to import" %}</th>
             <td><a href="{% url import-missing_db %}">{% trans "Import" %} {{ import_ready }}</a></td>
         </tr>
     {% endif %}
 
     {% if missing %}
         <tr>
-            <th>{% trans "VMs missing from ganeti" %}</th>
+            <th scope="row">{% trans "VMs missing from ganeti" %}</th>
             <td><a href="{% url import-missing %}">{% trans "Remove" %} {{ missing }}</a></td>
         </tr>
     {% endif %}

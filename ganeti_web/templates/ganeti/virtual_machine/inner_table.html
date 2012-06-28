@@ -3,17 +3,17 @@
 <table id="vmlist" class="sorted">
 <thead>
     <tr>
-      <th class="status" order_by="status"></th>
-      <th order_by="hostname">{% trans "Name" %}</th>
-      <th order_by="owner">{% trans "Owner" %}</th>
+      <th scope="col" order_by="status" class="status"></th>
+      <th scope="col" order_by="hostname">{% trans "Name" %}</th>
+      <th scope="col" order_by="owner">{% trans "Owner" %}</th>
       {% if not cluster %}
-      <th order_by="cluster__hostname">{% trans "Cluster" %}</th>
+      <th scope="col" order_by="cluster__hostname">{% trans "Cluster" %}</th>
       {% endif %}
-      <th order_by="cluster__hostname">{% trans "Node" %}</th>
-      <th order_by="operating_system">{% trans "OS" %}</th>
-      <th order_by="ram">{% trans "RAM" %}</th>
-      <th order_by="disk_size">{% trans "Disk Space" %}</th>
-      <th order_by="virtual_cpus">{% trans "vCPUs" %}</th>
+      <th scope="col" order_by="cluster__hostname">{% trans "Node" %}</th>
+      <th scope="col" order_by="operating_system">{% trans "OS" %}</th>
+      <th scope="col" order_by="ram">{% trans "RAM" %}</th>
+      <th scope="col" order_by="disk_size">{% trans "Disk Space" %}</th>
+      <th scope="col" order_by="virtual_cpus">{% trans "vCPUs" %}</th>
     </tr>
 </thead>
 <tbody id="vms">
