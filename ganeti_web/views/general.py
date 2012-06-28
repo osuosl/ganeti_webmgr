@@ -68,6 +68,58 @@ def merge_errors(errors, jobs):
 USED_NOTHING = dict(disk=0, ram=0, virtual_cpus=0)
 
 
+@login_required
+def get_errors(request): 
+    """ Returns all errors that have ever been generated for clusters/vms
+    and then sends them to the errors page.
+    """
+    user = request.user
+
+    if user.is_superuser:
+        clusters = Cluster.objects.all()
+    else:
+        clusters = user.get_objects_all_perms(Cluster, ['admin',])
+    admin = user.is_superuser or clusters
+
+    if user.is_superuser:
+        vms = VirtualMachine.objects.all()
+    else:
+        # Get query containing any virtual machines the user has permissions for
+        vms = user.get_objects_any_perms(VirtualMachine, groups=True, cluster=['admin']).values('pk')
+
+    # build list of job errors.  Include jobs from any vm the user has access to
+    # If the user has admin on any cluster then those clusters and it's objects
+    # must be included too.
+    #
+    # XXX all jobs have the cluster listed, filtering by cluster includes jobs
+    # for both the cluster itself and any of its VMs or Nodes
+    error_clause = Q(status='error')
+    vm_type = ContentType.objects.get_for_model(VirtualMachine)
+    select_clause = Q(content_type=vm_type, object_id__in=vms)
+    if admin:
+        select_clause |= Q(cluster__in=clusters)
+    job_errors = Job.objects.filter(error_clause & select_clause)
+
+    # Build the list of job errors. Include jobs from any VMs for which the
+    # user has access.
+    qs = GanetiError.objects
+    ganeti_errors = qs.get_errors(obj=vms)
+    # If the user is an admin on any cluster, then include administrated
+    # clusters and related objects.
+    if admin:
+        ganeti_errors |= qs.get_errors(obj=clusters)
+
+    # merge error lists
+    errors = merge_errors(ganeti_errors, job_errors)
+
+    return render_to_response("ganeti/errors.html", {
+        'admin':admin,
+        'cluster_list': clusters,
+        'user': request.user,
+        'errors':errors,
+            },
+            context_instance=RequestContext(request),
+        )
 def get_used_resources(cluster_user):
     """ help function for querying resources used for a given cluster_user """
     resources = {}
