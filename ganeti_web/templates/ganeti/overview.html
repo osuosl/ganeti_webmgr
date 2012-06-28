@@ -62,7 +62,6 @@
 
 {% block content %}
 <h1>{% trans "Overview" %}</h1>
-<a href="{% url cluster-errors %}"><h1>{% trans "Errors" %} </h1></a>
 
 {% if admin %}
 <div id="cluster_summary">
@@ -156,7 +155,7 @@
 
 {% if errors %}
 <div id="errors_list">
-    <h2>{% trans "Errors and Failures" %}</h2>
+    <h2>{% trans "Recent Errors" %}</h2>
     <table>
     {% for tuple in errors %}
         {% with tuple.0 as is_ganeti_error %}
