@@ -62,6 +62,7 @@
 
 {% block content %}
 <h1>{% trans "Overview" %}</h1>
+<a href="{% url cluster-errors %}"><h1>{% trans "Errors" %} </h1></a>
 
 {% if admin %}
 <div id="cluster_summary">

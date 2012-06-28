@@ -1,0 +1,41 @@
+{% extends "menu_base.html" %}
+{% load i18n %}
+{% load webmgr_tags %}
+
+{% block title %} {%trans "Errors" %} {% endblock %}
+{% block content %}
+{% if errors  %}
+<div id="errors_list">
+    <h2>Errors and Failures</h2>
+    <table>
+    <thead><tr>
+        <th>{% trans "Object" %}</th>
+        <th>{% trans "Error Message" %}</th>
+        <th>{% trans "Date" %}</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for tuple in errors %}
+        {% with tuple.0 as is_ganeti_error %}
+        {% with tuple.1 as error %}
+            {% if is_ganeti_error %}
+                <tr class="gerror" id="gerror_{{error.pk}}">
+                    {% include "ganeti/overview/object_link.html" %}
+                    <td>{{ error.msg }}</td>
+                    <td>{{ error.timestamp|date }}</td>
+                </tr>
+            {% else %}
+                <tr class="jerror" id="jerror_{{error.pk}}">
+                    {% include "ganeti/overview/object_link.html" %}
+                    <td><a href="{% url job-detail error.cluster.slug error.job_id %}">{% trans "Job" noop %}#{{error.job_id}}: {{ error.current_operation|format_job_op }}</a></td>
+                    <td>{{ error.finished|date }}</td>
+                </tr>
+            {% endif %}
+        {% endwith %}
+        {% endwith %}
+    {% endfor %}
+    </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}
