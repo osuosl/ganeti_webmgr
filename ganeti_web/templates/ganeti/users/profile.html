@@ -49,4 +49,7 @@
     {% endif %}
     {{permissions_template|safe}}
     
+    <h3> Permissions </h3>
+            
+    {% include "object_permissions/muddle/user_permissions.html"%}
 {% endblock %}
