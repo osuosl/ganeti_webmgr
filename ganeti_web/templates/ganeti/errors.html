@@ -2,12 +2,14 @@
 {% load i18n %}
 {% load webmgr_tags %}
 
+<script type="text/javascript" src="{{STATIC_URL}}/js/jquery.tablesorter.min.js"></script>
+
 {% block title %} {%trans "Errors" %} {% endblock %}
 {% block content %}
-{% if errors  %}
+{% if errors %}
 <div id="errors_list">
     <h2>Errors and Failures</h2>
-    <table>
+    <table class="sorted">
     <thead><tr>
         <th>{% trans "Object" %}</th>
         <th>{% trans "Error Message" %}</th>
