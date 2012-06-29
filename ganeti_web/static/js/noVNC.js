@@ -77,7 +77,7 @@ $(function () {
                 url = POPOUT_URL + '?auto_connect=1';
                 stop();
             }
-            window.open(url, 'popout', 'height=491,width=775,status=no,toolbar=no,menubar=no,location=no');
+            window.open(url, 'popout', 'height=768,width=1024,status=no,toolbar=no,menubar=no,location=no');
         });
     }
 
