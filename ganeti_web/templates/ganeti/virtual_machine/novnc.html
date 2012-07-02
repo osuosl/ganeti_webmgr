@@ -16,7 +16,7 @@
 
 <ul id="actions" class="horizontal">
     <li><a id="encrypt" href="#" title="encrypt" class="button encrypt">{% trans "Encrypt" %}</a></li>
-    <li><a id="connect" href="#" title="connect to"class="button connect">{% trans "Connect" %}</a></li>
+    <li><a id="connect" href="#" title="connect to" class="button connect">{% trans "Connect" %}</a></li>
     {% ifequal instance.info.status "running" %}
     <li><a class="button shutdown power" title="shut down" href="{% url instance-shutdown cluster_slug instance.hostname %}">{% trans "Shutdown" %}</a></li>
     <li><a class="button reboot power" title="reboot" href="{% url instance-reboot cluster_slug instance.hostname %}">{% trans "Reboot" %}</a></li>
