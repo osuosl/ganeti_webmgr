@@ -77,7 +77,7 @@ $(function () {
                 url = POPOUT_URL + '?auto_connect=1';
                 stop();
             }
-            window.open(url, 'popout', 'height=768,width=1024,status=no,toolbar=no,menubar=no,location=no');
+            window.open(url, 'popout', 'height=550,width=775,status=no,toolbar=no,menubar=no,location=no');
         });
     }
 
@@ -122,14 +122,17 @@ $(function () {
             connected = true;
             connect
                 .addClass('enabled')
-                .html('Disconnect');
+                .text('Disconnect');
             ctrlaltdelete.removeClass('disabled');
             vnc_canvas.addClass("connected");
             if (POPOUT_URL == undefined) {
                 // resize window
                 var display = rfb.get_display();
-                var width = display.get_width();
-                var height = display.get_height()+64;
+                // vnc display width + a little room
+                var width = display.get_width() + 20;
+                // vnc display height + action list height + a little room
+                // +100 and +20 seem arbitrary, but they are 'what look right'
+                var height = display.get_height() + $("#actions").height() + 100;
                 if (width < 775) {
                     width = 775;
                 }
@@ -140,7 +143,7 @@ $(function () {
             connected = false;
             connect
                 .removeClass('enabled')
-                .html('Connect');
+                .text('Connect');
             ctrlaltdelete.addClass('disabled')
         }
 
