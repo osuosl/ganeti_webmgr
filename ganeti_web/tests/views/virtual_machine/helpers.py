@@ -216,6 +216,7 @@ class TestVirtualMachineCreateHelpers(TestVirtualMachineViewsBase):
             migration_downtime=30,
             nic_types=[
                 ['', '---------'],
+                ['e1000', 'e1000'],
                 ['rtl8139', 'rtl8139'],
                 ['ne2k_isa', 'ne2k_isa'],
                 ['ne2k_pci', 'ne2k_pci'],
@@ -289,7 +290,7 @@ class TestVirtualMachineCreateHelpers(TestVirtualMachineViewsBase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('application/json', response['content-type'])
         content = json.loads(response.content)
-        self.assertEqual(expected, content, msg=content)
+        self.assertEqual(expected, content)
         self.user.revoke_all(self.cluster)
 
         #authorized (admin)

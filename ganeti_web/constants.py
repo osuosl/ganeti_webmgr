@@ -121,6 +121,7 @@ HV_NIC_MODES = [
 
 HV_NIC_TYPES = [
     EMPTY_CHOICE_FIELD,
+    (u'e1000',u'e1000'),
     (u'rtl8139',u'rtl8139'),
     (u'ne2k_isa',u'ne2k_isa'),
     (u'ne2k_pci',u'ne2k_pci'),

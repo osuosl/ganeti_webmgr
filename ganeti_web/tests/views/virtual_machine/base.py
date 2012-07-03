@@ -35,6 +35,8 @@ class TestVirtualMachineViewsBase(TestCase, VirtualMachineTestCaseMixin,
     Tests for views showing virtual machines
     """
 
+    maxDiff = None
+
     def setUp(self):
         models.client.GanetiRapiClient = RapiProxy
         self.vm, self.cluster = self.create_virtual_machine()
