@@ -18,7 +18,7 @@ from django import forms
 from django.utils.translation import ugettext_lazy as _
 
 from ganeti_web.forms.virtual_machine import (VirtualMachineForm,
-    NewVirtualMachineForm)
+                                              NewVirtualMachineForm)
 from ganeti_web.models import Cluster 
 from ganeti_web.utilities import cluster_default_info, cluster_os_list 
 
@@ -42,6 +42,8 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
         Initialize VirtualMachineTemplateForm
         """
         cluster = None
+        disk_count = 1
+        nic_count = 1
         initial = kwargs.get('initial', None)
         user = kwargs.pop('user', None)
 
@@ -67,6 +69,8 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
                     self.fields['disk_size_%s' % i].initial = disk['size']
             else:
                 disk_count = int(initial['disk_count'])
+                if disk_count == 0:
+                    initial['disk_count'] = 1
                 self.create_disk_fields(disk_count)
                 for i in xrange(disk_count):
                     self.fields['disk_size_%s' %i].initial = initial['disk_size_%s'%i]
@@ -80,14 +84,13 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
                     self.fields['nic_link_%s' % i].initial = nic['link']
             else:
                 nic_count = int(initial['nic_count'])
+                if nic_count == 0:
+                    initial['nic_count'] = 1        
                 self.create_nic_fields(nic_count)
                 for i in xrange(nic_count):
                     self.fields['nic_mode_%s' % i].initial = initial['nic_mode_%s'%i]
                     self.fields['nic_link_%s' % i].initial = initial['nic_link_%s'%i]
 
-        else:
-            disk_count=1
-            nic_count=1
        
         if cluster and hasattr(cluster, 'info'):
             # Get choices based on hypervisor passed to the form.
@@ -107,10 +110,10 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
             oslist = cluster_os_list(cluster)
             oslist.insert(0, self.empty_field)
             self.fields['os'].choices = oslist
-        else:
-            self.create_nic_fields(nic_count)
         
-        self.create_disk_fields(disk_count)
+        if not initial:
+            self.create_disk_fields(disk_count)
+            self.create_nic_fields(nic_count)
 
         # Set cluster choices
         if user.is_superuser:
