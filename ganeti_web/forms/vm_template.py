@@ -29,8 +29,8 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
     Form to edit/create VirtualMachineTemplates
     """
     cluster = forms.ModelChoiceField(queryset=Cluster.objects.none(), label=_('Cluster'))
-    disk_count = forms.IntegerField(initial=1,  widget=forms.HiddenInput())
-    nic_count = forms.IntegerField(initial=1, widget=forms.HiddenInput())
+    disk_count = forms.IntegerField(initial=0,  widget=forms.HiddenInput())
+    nic_count = forms.IntegerField(initial=0, widget=forms.HiddenInput())
 
     class Meta(VirtualMachineForm.Meta):
         exclude = ('pnode','snode','iallocator','iallocator_hostname',
@@ -69,8 +69,6 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
                     self.fields['disk_size_%s' % i].initial = disk['size']
             else:
                 disk_count = int(initial['disk_count'])
-                if disk_count == 0:
-                    initial['disk_count'] = 1
                 self.create_disk_fields(disk_count)
                 for i in xrange(disk_count):
                     self.fields['disk_size_%s' %i].initial = initial['disk_size_%s'%i]
@@ -84,8 +82,6 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
                     self.fields['nic_link_%s' % i].initial = nic['link']
             else:
                 nic_count = int(initial['nic_count'])
-                if nic_count == 0:
-                    initial['nic_count'] = 1        
                 self.create_nic_fields(nic_count)
                 for i in xrange(nic_count):
                     self.fields['nic_mode_%s' % i].initial = initial['nic_mode_%s'%i]
