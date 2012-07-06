@@ -24,7 +24,7 @@ from django.contrib.sites.models import Site
 
 from django.db.models import Count
 from django.template import Library, Node, TemplateSyntaxError
-from django.template.defaultfilters import stringfilter
+from django.template.defaultfilters import stringfilter,filesizeformat
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
@@ -340,29 +340,54 @@ def node_disk(node, allocated=True):
     if allocated:
         return format_part_total(d['allocated'], d['total'])
     return format_part_total(d['used'], d['total'])
-
-
 @register.simple_tag
-def cluster_memory(cluster, allocated=True):
+def num_reducer(num1,num2,size_tag):
+	"""
+	Formats number percentages for progress bars takes in bytes
+	"""
+	print size_tag
+	if size_tag == "bytes":
+		return "%.2f / %.2f" % (num1,num2)
+	elif size_tag == "KB":
+		return "%.2f / %.2f" % (num1/1024,num2/1024)
+	elif size_tag == "MB":
+		return "%.2f / %.2f" % (num1/1024**2,num2/1024**2)
+	elif size_tag == "GB":
+		return "%.2f / %.2f" % (num1/1024**3,num2/1024**3)
+	elif size_tag == "TB":
+		return "%.2f / %.2f" % (num1/1024**4,num2/1024**4)
+	elif size_tag == "PB":
+		return "%.2f / %.2f" % (num1/1024**5,num2/1024**5)
+	
+    
+@register.simple_tag
+def cluster_memory(cluster, allocated=True,tag=False):
     """
-    Pretty-print a memory quantity of the whole cluster [GiB]
+    Pretty-print a memory quantity of the whole cluster in a dynamic unit based on filesizeformat
     """
     d = cluster.available_ram
+    size_tag = (filesizeformat(d["total"]*1024**2)).split(" ")[1]
+    if tag == True:
+	return "[%s]" % size_tag
     if allocated:
-        return format_part_total(d['allocated'], d['total'])
-    return format_part_total(d['used'], d['total'])
+        return num_reducer(float(d['allocated']*1024**2), float(d['total']*1024**2),size_tag.strip())
+    return num_reducer(float(d['used']*1024**2), float(d['total']*1024**2),size_tag.strip())
+
+
     
 
 @register.simple_tag
-def cluster_disk(cluster, allocated=True):
+def cluster_disk(cluster, allocated=True,tag=False):
     """
-    Pretty-print a memory quantity of the whole cluster [GiB]
+    Pretty-print a memory quantity of the whole cluster in a dyanmic unit based on filesizeformat
     """
     d = cluster.available_disk
+    size_tag = (filesizeformat(d["total"]*1024**2)).split(" ")[1]
+    if tag == True:
+	return "[%s]" % (size_tag)
     if allocated:
-        return format_part_total(d['allocated'], d['total'])
-    return format_part_total(d['used'], d['total'])
-
+	return num_reducer(float(d['allocated']*1024**2),float(d['total']*1024**2),size_tag.strip())
+    return num_reducer(float(d['used']*1024**2),float(d['total']*1024**2),size_tag.strip())
 
 @register.simple_tag
 def format_running_vms(cluster):
