@@ -345,7 +345,7 @@ def num_reducer(num1,num2,size_tag):
 	"""
 	Formats number percentages for progress bars takes in bytes
 	"""
-	print size_tag
+
 	if size_tag == "bytes":
 		return "%.2f / %.2f" % (num1,num2)
 	elif size_tag == "KB":
@@ -358,8 +358,8 @@ def num_reducer(num1,num2,size_tag):
 		return "%.2f / %.2f" % (num1/1024**4,num2/1024**4)
 	elif size_tag == "PB":
 		return "%.2f / %.2f" % (num1/1024**5,num2/1024**5)
-	
-    
+
+
 @register.simple_tag
 def cluster_memory(cluster, allocated=True,tag=False):
     """
