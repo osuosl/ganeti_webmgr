@@ -729,6 +729,7 @@ def create(request, cluster_slug=None):
                     'cdrom2_image_path',
                     'nic_type',
                 )
+                hvparams['cdrom_disk_type'] = 'ide'
             else:
                 hvparam_fields = None
 
