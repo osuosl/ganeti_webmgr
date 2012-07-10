@@ -330,6 +330,29 @@ def node_memory(node, allocated=True):
         return format_part_total(d['allocated'], d['total'])
     return format_part_total(d['used'], d['total'])
 
+@register.simple_tag
+def node_memory_values(node):
+    """
+    Feed a template the percentages of used and allocated RAM.
+    """
+    r = node.ram
+    nid = node.id
+    allocated = float(r['allocated']) / r['total'] * 100
+    used = float(r['used']) / r['total'] * 100
+    percentages = "{'primary':%f, 'secondary':%f}" % (used, allocated)
+    return percentages
+
+@register.simple_tag
+def node_disk_values(node):
+    """
+    Feed a template the percentages of used and allocated disk space.
+    """
+    d = node.disk
+    nid = node.id
+    allocated = float(d['allocated']) / d['total'] * 100
+    used = float(d['allocated']) / d['total'] * 100
+    percentages = "{'primary':%f, 'secondary':%f}" % (used, allocated)
+    return percentages
 
 @register.simple_tag
 def node_disk(node, allocated=True):
@@ -340,6 +363,7 @@ def node_disk(node, allocated=True):
     if allocated:
         return format_part_total(d['allocated'], d['total'])
     return format_part_total(d['used'], d['total'])
+
 @register.simple_tag
 def num_reducer(num1,num2,size_tag):
 	"""
