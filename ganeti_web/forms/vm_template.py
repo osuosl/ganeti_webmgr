@@ -18,7 +18,7 @@ from django import forms
 from django.utils.translation import ugettext_lazy as _
 
 from ganeti_web.forms.virtual_machine import (VirtualMachineForm,
-    NewVirtualMachineForm)
+                                              NewVirtualMachineForm)
 from ganeti_web.models import Cluster 
 from ganeti_web.utilities import cluster_default_info, cluster_os_list 
 
@@ -42,9 +42,9 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
         Initialize VirtualMachineTemplateForm
         """
         cluster = None
+        disk_count = 1
+        nic_count = 1
         initial = kwargs.get('initial', None)
-        disk_count = 0
-        nic_count = 0
         user = kwargs.pop('user', None)
 
         super(VirtualMachineForm, self).__init__(*args, **kwargs)
@@ -87,6 +87,7 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
                     self.fields['nic_mode_%s' % i].initial = initial['nic_mode_%s'%i]
                     self.fields['nic_link_%s' % i].initial = initial['nic_link_%s'%i]
 
+       
         if cluster and hasattr(cluster, 'info'):
             # Get choices based on hypervisor passed to the form.
             hv = initial.get('hypervisor', None)
@@ -105,6 +106,10 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
             oslist = cluster_os_list(cluster)
             oslist.insert(0, self.empty_field)
             self.fields['os'].choices = oslist
+        
+        if not initial:
+            self.create_disk_fields(disk_count)
+            self.create_nic_fields(nic_count)
 
         # Set cluster choices
         if user.is_superuser:
