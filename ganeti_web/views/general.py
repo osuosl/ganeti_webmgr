@@ -120,6 +120,8 @@ def get_errors(request):
             },
             context_instance=RequestContext(request),
         )
+
+
 def get_used_resources(cluster_user):
     """ help function for querying resources used for a given cluster_user """
     resources = {}
