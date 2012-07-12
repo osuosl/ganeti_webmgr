@@ -8,6 +8,10 @@
         {{ log_item.user }}
     {% endif %}
     renamed virtual machine
-    {% if log_item.object_id1 %}<a href="{% url instance-detail data.cluster_slug data.hostname %}">{{data.hostname}}</a>
+    {% if log_item.object_id1 %}
+        {{data.hostname}}
+        {% if data.newname %}
+             to {{data.newname}}
+        {% endif %}
     {% else %}[deleted]{% endif %}
 {% endwith %}
