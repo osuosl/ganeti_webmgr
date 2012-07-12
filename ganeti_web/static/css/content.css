@@ -188,8 +188,15 @@ a.clear:hover {background:url(/static/images/icons/cancel.png) no-repeat !import
     text-align:center;
     width:700px;
 }
-#messages li.error {background-color:#ee9c98; border-color: #550000; color:#550000;}
-#messages li p {font-size:12px; font-weight:normal;}
+#messages li.error {
+    background-color:#ee9c98;
+    border-color: #550000;
+    color:#550000;
+}
+#messages li p {
+    font-size:12px;
+    font-weight:normal;
+}
 
 
 /**
@@ -216,6 +223,7 @@ a.clear:hover {background:url(/static/images/icons/cancel.png) no-repeat !import
     margin:0;
     padding: 10px;
     overflow:visible;
+    display: inline-block;
 }
 
 .scrollable .detector {
