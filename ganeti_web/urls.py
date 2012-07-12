@@ -53,7 +53,9 @@ urlpatterns = patterns('ganeti_web.views.general',
     
     # clear errors
     url(r'^error/clear/(?P<pk>\d+)/?$', 'clear_ganeti_error', name="error-clear"),
-
+    
+    # Errors
+    url(r'clusters/errors', 'get_errors', name="cluster-errors"),
     #About page
     url(r'^about/?$', AboutView.as_view(), name="about"),
 )
