@@ -46,6 +46,11 @@ GIT_INSTALL =  {
         'url':'git://git.osuosl.org/gitolite/ganeti/twisted_vncauthproxy',
         'development':'develop',
     },
+    # TODO: in 0.10 this should be completely optional
+    'django_collectd_webdaemon': {
+        'url': 'git://github.com/pbanaszkiewicz/django-collectd-webdaemon.git',
+        'development': 'master',
+    }
 }
 
 
