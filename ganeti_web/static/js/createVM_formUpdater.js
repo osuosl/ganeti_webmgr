@@ -35,6 +35,7 @@ function formUpdater(url_choices, url_options, url_defaults){
     var using_str =             " Using: ";
     var blankOptStr =           "---------";
     var nodes =                 null; // nodes available
+    var recovery_flag =         false;// for retaining nics after setting defaults on vm recovery page
 
     var template_choices = $("\
             <option value=''>---------</option>\
@@ -60,9 +61,9 @@ function formUpdater(url_choices, url_options, url_defaults){
     // ------------
     // init stuffs
     // ------------
-    this.init = function(cluster_defaults){
+    this.init = function(cluster_defaults,recover){
         /* initialize the live form updater */
-
+        if(recover == true) {recovery_flag = true;}
         // disable the iallocator stuff by default
         if(!iallocator_hostname.attr("value")){
             iallocator.attr("readonly", "readonly");
@@ -211,7 +212,6 @@ function formUpdater(url_choices, url_options, url_defaults){
         // cluster change
         cluster.live("change", function() {
             var id = $(this).children("option:selected").val();
-            if( id != "" ) {
                 // JSON update oslist, pnode, and snode when cluster changes
                 _cached_get(url_options, {"cluster_id":id}, _update_options);
 
@@ -219,7 +219,6 @@ function formUpdater(url_choices, url_options, url_defaults){
                 if($(".errorlist").length == 0){
                     _fillDefaultOptions(id);
                 }
-            }
         });
 
         disk_add.click(_add_disk);
@@ -369,36 +368,41 @@ function formUpdater(url_choices, url_options, url_defaults){
             kernel_path.val(d["kernel_path"]);
         }
 
-        // nic mode dropdown
-        if(d["nic_mode"]) {
-            nic_mode.find(":selected").removeAttr("selected");
-            nic_mode.find("[value=" + d["nic_mode"] + "]")
-                .attr("selected","selected");
-            DEFAULT_NIC_MODE = d["nic_mode"];
-        } else {
-            nic_mode.find(":first-child")
-                .attr("selected", "selected");
-        }
+        if(recovery_flag != true) {
+            // nic mode dropdown
+            if(d["nic_mode"]) {
+                nic_mode.find(":selected").removeAttr("selected");
+                nic_mode.find("[value=" + d["nic_mode"] + "]")
+                    .attr("selected","selected");
+                DEFAULT_NIC_MODE = d["nic_mode"];
+            } else {
+                nic_mode.find(":first-child")
+                    .attr("selected", "selected");
+            }
 
-        // nic link text box
-        if(d["nic_link"]){
-            nic_link.val(d["nic_link"]);
-            DEFAULT_NIC_LINK = d["nic_link"];
-        }
+            // nic link text box
+            if(d["nic_link"]){
+                nic_link.val(d["nic_link"]);
+                DEFAULT_NIC_LINK = d["nic_link"];
+            }
 
-        // nic type dropdown
-        if(d["nic_types"]) {
-            nic_type.children().remove();
-            $.each(d["nic_types"], function(i, item){
-                nic_type.append(_newOpt(item[0], item[1]));
-            });
+            // nic type dropdown
+            if(d["nic_types"]) {
+                nic_type.children().remove();
+                $.each(d["nic_types"], function(i, item){
+                    nic_type.append(_newOpt(item[0], item[1]));
+                });
+            }
+            if(d["nic_type"]) {
+                nic_type.find(":selected").removeAttr("selected");
+                nic_type.find("[value=" + d["nic_type"] + "]")
+                    .attr("selected","selected");
+            }
         }
-        if(d["nic_type"]) {
-            nic_type.find(":selected").removeAttr("selected");
-            nic_type.find("[value=" + d["nic_type"] + "]")
-                .attr("selected","selected");
+        else {
+            DEFAULT_NIC_MODE = d['nic_mode'];
+            DEFAULT_NIC_LINK = d['nic_link'];
         }
-
         // memory text box
         if($("#id_memory") == "" && d["memory"]){
             $("#id_memory").val(d["memory"]);
