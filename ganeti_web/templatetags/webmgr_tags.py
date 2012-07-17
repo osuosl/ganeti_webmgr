@@ -17,14 +17,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
-from datetime import datetime
 
+from datetime import datetime
 import re
-from django.contrib.sites.models import Site
 
 from django.db.models import Count
 from django.template import Library, Node, TemplateSyntaxError
-from django.template.defaultfilters import stringfilter,filesizeformat
+from django.template.defaultfilters import stringfilter, filesizeformat
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
@@ -71,22 +70,6 @@ def index(obj, index):
     """ returns index of given object """
     if obj:
         return obj[index]
-
-
-@register.filter
-@stringfilter
-def truncate(value, count):
-    """
-    Truncates a string to be a certain length.
-
-    If the string is shorter than the specified length, it will returned
-    as-is.
-    """
-
-    if len(value) > count:
-        return value[:count - 1] + u"…"
-
-    return value
 
 
 @register.filter
@@ -171,12 +154,6 @@ def node_role(code):
     return NODE_ROLE_MAP[str(code)]
 
 
-@register.simple_tag
-def current_domain():
-    """ returns the domain of the current Site """
-    return Site.objects.get_current().domain
-
-
 @register.filter
 def job_fields(info):
     """
@@ -211,14 +188,6 @@ def job_fields(info):
 """
 These filters were taken from Russel Haering's GanetiWeb project
 """
-
-@register.filter
-@stringfilter
-def render_node_status(status):
-    if status:
-        return _("Offline")
-    else:
-        return _("Online")
 
 
 @register.filter
@@ -346,6 +315,8 @@ def node_disk(node, allocated=True):
     if allocated:
         return format_part_total(d['allocated'], d['total'])
     return format_part_total(d['used'], d['total'])
+
+
 @register.simple_tag
 def num_reducer(num1,num2,size_tag):
 	"""
@@ -380,8 +351,6 @@ def cluster_memory(cluster, allocated=True,tag=False):
     return num_reducer(float(d['used']*1024**2), float(d['total']*1024**2),size_tag.strip())
 
 
-    
-
 @register.simple_tag
 def cluster_disk(cluster, allocated=True,tag=False):
     """
@@ -394,6 +363,7 @@ def cluster_disk(cluster, allocated=True,tag=False):
     if allocated:
 	return num_reducer(float(d['allocated']*1024**2),float(d['total']*1024**2),size_tag.strip())
     return num_reducer(float(d['used']*1024**2),float(d['total']*1024**2),size_tag.strip())
+
 
 @register.simple_tag
 def format_running_vms(cluster):
