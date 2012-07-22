@@ -35,7 +35,8 @@ __all__ = (
     "ugettext",
 )
 
-# Horrible Django hack for convincing Django that we are i18n'd.
+
+# XXX: Horrible Django hack for convincing Django that we are i18n'd.
 def ugettext(s):
     return s
 
@@ -86,6 +87,7 @@ INSTALLED_APPS = (
     'muddle',
     'muddle.shots',
     'muddle_users',
+    'collectd_webdaemon',
 )
 
 # The model that contains extra user profile stuff.

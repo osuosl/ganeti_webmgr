@@ -1,0 +1,6 @@
+{% load metrics_tags %}
+{% if metrics %}
+{% embed_metrics metrics %}
+{% else %}
+<h3>No metrics available</h3>
+{% endif %}

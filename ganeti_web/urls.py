@@ -50,10 +50,10 @@ urlpatterns = patterns('ganeti_web.views.general',
     #   Status page
     url(r'^overview/?$', 'overview', name="overview"),
     url(r'^used_resources/?$', 'used_resources', name="used_resources"),
-    
+
     # clear errors
     url(r'^error/clear/(?P<pk>\d+)/?$', 'clear_ganeti_error', name="error-clear"),
-    
+
     # Errors
     url(r'clusters/errors', 'get_errors', name="cluster-errors"),
     #About page
@@ -64,7 +64,7 @@ urlpatterns = patterns('ganeti_web.views.general',
 # Users - overridden from users app to use custom templates
 urlpatterns += patterns('muddle_users.views.user',
     url(r'^accounts/profile/?', 'user_profile', name='profile',
-        kwargs={'template':'ganeti/users/profile.html'}),
+        kwargs={'template': 'ganeti/users/profile.html'}),
 )
 
 # Users
@@ -102,7 +102,7 @@ urlpatterns += patterns('ganeti_web.views.cluster',
     url(r'^%s/virtual_machines/?$' % cluster, ClusterVMListView.as_view(),
         name="cluster-vms"),
     url(r'^%s/nodes/?$' % cluster, 'nodes', name="cluster-nodes"),
-    url(r'^%s/quota/(?P<user_id>\d+)?/?$'% cluster, 'quota', name="cluster-quota"),
+    url(r'^%s/quota/(?P<user_id>\d+)?/?$' % cluster, 'quota', name="cluster-quota"),
     url(r'^%s/permissions/?$' % cluster, 'permissions', name="cluster-permissions"),
     url(r'^%s/permissions/user/(?P<user_id>\d+)/?$' % cluster, 'permissions', name="cluster-permissions-user"),
     url(r'^%s/permissions/group/(?P<group_id>\d+)/?$' % cluster, 'permissions', name="cluster-permissions-group"),
@@ -118,13 +118,13 @@ urlpatterns += patterns('ganeti_web.views.cluster',
 
 
 # Nodes
-node_prefix = 'cluster/%s/node/%s' %  (cluster_slug, host)
+node_prefix = 'cluster/%s/node/%s' % (cluster_slug, host)
 urlpatterns += patterns('ganeti_web.views.node',
     # Detail
     url(r'^%s/?$' % node_prefix, NodeDetailView.as_view(),
         name="node-detail"),
     url(r'^node/(?P<id>\d+)/jobs/status/?$', "job_status", name="node-job-status"),
-    
+
     # Primary and secondary Virtual machines
     url(r'^%s/primary/?$' % node_prefix, NodePrimaryListView.as_view(),
         name="node-primary-vms"),
@@ -141,7 +141,7 @@ urlpatterns += patterns('ganeti_web.views.node',
 )
 
 # VirtualMachines
-vm_prefix = '%s/%s' %  (cluster, instance)
+vm_prefix = '%s/%s' % (cluster, instance)
 urlpatterns += patterns('ganeti_web.views.virtual_machine',
     #  List
     url(r'^vms/$', VMListView.as_view(), name="virtualmachine-list"),
@@ -170,11 +170,11 @@ urlpatterns += patterns('ganeti_web.views.virtual_machine',
     url(r'^%s/permissions/?$' % vm_prefix, 'permissions', name="vm-permissions"),
     url(r'^%s/permissions/user/(?P<user_id>\d+)/?$' % vm_prefix, 'permissions', name="vm-permissions-user"),
     url(r'^%s/permissions/group/(?P<group_id>\d+)/?$' % vm_prefix, 'permissions', name="vm-permissions-user"),
-    
+
     #  Start, Stop, Reboot, VNC
     url(r'^%s/vnc/?$' % vm_prefix, 'novnc', name="instance-vnc"),
     url(r'^%s/vnc/popout/?$' % vm_prefix, 'novnc',
-                        {'template':'ganeti/virtual_machine/vnc_popout.html'},
+                        {'template': 'ganeti/virtual_machine/vnc_popout.html'},
                         name="instance-vnc-popout"),
     url(r'^%s/vnc_proxy/?$' % vm_prefix, 'vnc_proxy', name="instance-vnc-proxy"),
     url(r'^%s/shutdown/?$' % vm_prefix, 'shutdown', name="instance-shutdown"),
@@ -191,16 +191,16 @@ urlpatterns += patterns('ganeti_web.views.virtual_machine',
 
     # Reinstall
     url(r"^%s/reinstall/?$" % vm_prefix, "reinstall", name="instance-reinstall"),
-    
+
     # Edit / Modify
     url(r"^%s/edit/?$" % vm_prefix, "modify", name="instance-modify"),
     url(r'^%s/edit/confirm/?$' % vm_prefix, "modify_confirm", name="instance-modify-confirm"),
     url(r"^%s/rename/?$" % vm_prefix, "rename", name="instance-rename"),
     url(r"^%s/reparent/?$" % vm_prefix, "reparent", name="instance-reparent"),
-    
+
     # SSH Keys
     url(r'^%s/keys/(?P<api_key>\w+)/?$' % vm_prefix, "ssh_keys", name="instance-keys"),
-    
+
     # object log
     url(r'^%s/object_log/?$' % vm_prefix, 'object_log', name="vm-object_log"),
 )
@@ -221,9 +221,9 @@ urlpatterns += patterns('ganeti_web.views.vm_template',
     # Copy
     url(r'^%s/copy/?$' % template_prefix, 'copy', name='template-copy'),
     # Create Instance from Template
-    url(r'^%s/vm/?$' % template_prefix, 'create_instance_from_template', 
+    url(r'^%s/vm/?$' % template_prefix, 'create_instance_from_template',
         name='instance-create-from-template'),
-    url(r'^%s/template/?$' % vm_prefix, 'create_template_from_instance', 
+    url(r'^%s/template/?$' % vm_prefix, 'create_template_from_instance',
         name='template-create-from-instance'),
 
 )
@@ -256,10 +256,15 @@ urlpatterns += patterns('ganeti_web.views.search',
     url(r'^search/detail_lookup', 'detail_lookup', name='search-detail-lookup')
 )
 urlpatterns += patterns('ganeti_web.views.user_search',
-	url(r'^search/owners/?$', 'search_owners', name="owner-search")
+    url(r'^search/owners/?$', 'search_owners', name="owner-search")
 )
 urlpatterns += patterns('haystack.views',
     url(r'^search/', login_required(SearchView(form_class=autocomplete_search_form)), name='search')
+)
+
+# Metrics
+urlpatterns += patterns('ganeti_web.views.metrics',
+    url(r'^metrics/', 'metrics_general', name='metrics-general'),
 )
 
 #The following is used to serve up local static files like images

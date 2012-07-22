@@ -7,7 +7,7 @@
 }
 
 html {width: 100%;}
-html, body {height:100%; /* Sticky Footer */ } 
+html, body {height:100%; /* Sticky Footer */ }
 body {
     background:url(/static/images/body_background.png) repeat-x top #eee;
     color:#333333;
@@ -226,7 +226,7 @@ pre.error {
  **/
  .menu {
 
-     
+
     float:left;
     color:#555555;
     padding:30px 10px 0 0;

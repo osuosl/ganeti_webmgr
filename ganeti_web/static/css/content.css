@@ -135,6 +135,8 @@ div.icon_deleting {background:url(/static/images/icons/check_red.png);}
 .replace_disks {background:url(/static/images/icons/drive_go.png) no-repeat;}
 .popout {background:url(/static/images/icons/shape_move_forwards.png) no-repeat;}
 .export {background:url(/static/images/icons/disk.png) no-repeat; }
+.chart {background:url(/static/images/icons/chart_curve.png) no-repeat;}
+.overview_page {background:url(/static/images/icons/house.png) no-repeat;}
 
 .reboot.disabled {background:url(/static/images/icons/arrow_refresh-disabled.png) no-repeat;}
 .reinstall.disabled {background:url(/static/images/icons/arrow_refresh-disabled.png) no-repeat;}
@@ -280,3 +282,5 @@ tr.group td.name {background:url(/static/images/icons/group.png) no-repeat 0 4px
 .object_log .timestamp {font-weight:bold; width:4em;}
 .object_log td {text-align:left !important;}
 
+/* metrics */
+#metrics_choice_table select {min-width: 150px;}

@@ -40,6 +40,7 @@ noVNC
 muddle
 haystack
 muddle_users
+django_collectd_webdaemon
 twisted_vncauthproxy
 
 # files/dirs created by Fabric and or VirtualEnv

@@ -1,0 +1,185 @@
+{% extends "menu_base.html" %}
+{% load i18n %}
+{% load webmgr_tags %}
+
+{% block title %}{%trans "Metrics" %}{% endblock %}
+
+{% block head %}
+<script type="text/javascript" src="{{STATIC_URL}}/js/jquery-ui.min.js"></script>
+<script type="text/javascript">
+    var tree = $.parseJSON('{{ tree_json|safe }}');
+
+    $(document).ready(function () {
+        // when user selects specified host from <select>
+        $("#host").change(function() {
+            host = $(this).val();
+            $("#plugin").empty();
+            $("#type").empty();
+
+            $.each(tree[host], function(k, v) {
+                $("<option/>", {"html": k}).appendTo("#plugin");
+            });
+        });
+
+
+        // when user selects specified plugin from <select>
+        $("#plugin").change(function() {
+            host = $("#host").val();
+            plugin = $(this).val();
+            $("#type").empty();
+
+            $.each(tree[host][plugin], function(k, v) {
+                $("<option/>", {"html": v}).appendTo("#type");
+            });
+        });
+
+        // when user clicks "Add metrics"
+        $("#add_metrics").click(function() {
+            host = $("#host").val();
+            plugin = $("#plugin").val();
+
+            if (host && plugin) {
+                // we support multiple choices in "Types" select
+                $("#type option:selected").each(function() {
+                    li = $("<li/>");
+                    li.append($("<input/>",
+                        {
+                            "type": "checkbox",
+                            "value": host +"/"+ plugin +"/"+ $(this).text(),
+                            "id": host + plugin + $(this).text(),
+                            "checked": "checked"
+                        }));
+                    li.append($("<label/>",
+                        {
+                            "for": host + plugin + $(this).text(),
+                            "html": host + "/" + plugin + "/" + $(this).text()
+                        }));
+                    $("#selected_metrics > ul").append(li);
+                });
+            }
+        });
+
+        // when user decides to remove specified metrics from the list
+        // and clicks "X"
+        $("#selected_metrics").delegate("input", "change", function(e) {
+            if (!e.target.checked) {
+                $(e.target).parent().remove();
+            }
+        });
+
+        // we bind date picker to two input fields
+        $("#start_date").datepicker({dateFormat: "dd.mm.yy"});
+        $("#end_date").datepicker({dateFormat: "dd.mm.yy"});
+
+        // when user changes the time range
+        $("#time_range").change(function() {
+            if ($(this).val() == "0") {
+                // show calendar
+                $(this).parent().find("div").show();
+            } else {
+                // hide calendar
+                $(this).parent().find("div").hide();
+            }
+        });
+
+        // when user clicks "Plot"
+        $("#plot_btn").click(function() {
+            var paths = Array();
+            start = $("#time_range").val();
+            end = "now";
+
+            if (start == "0") {
+                // we have to read start/end values from calendar
+                start = $.trim($("#start_date").val());
+                end = $.trim($("#end_date").val());
+            }
+
+            $("#selected_metrics > ul input:checked").each(function() {
+                paths.push($(this).val());
+            });
+
+            $("#chart").load("{% url metrics-general %}",
+                {
+                    paths: paths,
+                    start: start,
+                    end: end
+                }
+            );
+        });
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<h1>{% trans "Metrics" %}</h1>
+
+<div>
+    <table id="metrics_choice_table">
+        <tr>
+            <th>{% trans "Host" %}</th>
+            <th>{% trans "Plugin" %}</th>
+            <th>{% trans "Type" %}</th>
+            <th></th>
+        </tr>
+        <tr>
+            <td>
+                <select name="host" id="host" size=7>
+                    {% for host in tree.keys %}
+                    <option>{{ host }}</option>
+                    {% endfor %}
+                </select>
+            </td>
+            <td>
+                <select name="plugin" id="plugin" size=7>
+                    <option></option>
+                </select>
+            </td>
+            <td>
+                <select name="type" id="type" multiple="multiple" size=7>
+                    <option></option>
+                </select>
+            </td>
+            <td>
+                <button id="add_metrics" class="button add">{% trans "Add to the metrics list" %}</button>
+            </td>
+        </tr>
+    </table>
+
+    <div id="selected_metrics">
+        <h3>{% trans "Selected metrics" %}</h3>
+        <ul></ul>
+    </div>
+
+    <div style="margin-top: 20px;">
+        {% trans "Time range:" %}
+        <select id="time_range">
+            <option selected="selected" value="-1h">{% trans "Last hour" %}</option>
+            <option value="-1d">{% trans "Last day" %}</option>
+            <option value="-1w">{% trans "Last week" %}</option>
+            <option value="-1month">{% trans "Last month" %}</option>
+            <option value="-1y">{% trans "Last year" %}</option>
+            <option value="0">{% trans "Specified range" %}</option>
+        </select>
+        <div style="display: none; width: auto;">
+            <table class="horizontal" style="width: auto">
+                <tr>
+                    <td>{% trans "Start date:" %}</td>
+                    <td><input type="text" id="start_date" /></td>
+                </tr>
+                <tr>
+                    <td>{% trans "End date:" %}</td>
+                    <td><input type="text" id="end_date" /></td>
+                </tr>
+            </table>
+        </div>
+
+        <button class="button chart" id="plot_btn">{% trans "Plot!" %}</button>
+        <button class="button overview_page">{% trans "Display on the overview page" %}</button>
+    </div>
+</div>
+
+<div>
+    <div id="chart"></div>
+</div>
+
+{% endblock %}
