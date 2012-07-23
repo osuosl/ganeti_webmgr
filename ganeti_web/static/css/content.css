@@ -283,4 +283,10 @@ tr.group td.name {background:url(/static/images/icons/group.png) no-repeat 0 4px
 .object_log td {text-align:left !important;}
 
 /* metrics */
-#metrics_choice_table select {min-width: 150px;}
+#metrics_choice_table select {min-width: 160px;}
+#metrics_menu {width: 160px; float: right; text-align: right; padding-top: 15px;}
+#metrics_menu table {margin: 2px 0;}
+#selected_metrics ul {max-height: 110px; overflow-y: scroll; background-color:#EEE;}
+#selected_metrics li {padding: 2px 0;}
+#selected_metrics li input {vertical-align: middle;}
+#selected_metrics li span {vertical-align: middle;}

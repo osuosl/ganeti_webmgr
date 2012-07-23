@@ -39,31 +39,31 @@
             plugin = $("#plugin").val();
 
             if (host && plugin) {
-                // we support multiple choices in "Types" select
+                // we support multiple choices in the "Types" select
                 $("#type option:selected").each(function() {
                     li = $("<li/>");
-                    li.append($("<input/>",
+                    label = $("<label/>");
+                    label.append($("<input/>",
                         {
                             "type": "checkbox",
                             "value": host +"/"+ plugin +"/"+ $(this).text(),
-                            "id": host + plugin + $(this).text(),
                             "checked": "checked"
                         }));
-                    li.append($("<label/>",
+                    label.append($("<span/>",
                         {
-                            "for": host + plugin + $(this).text(),
+                            "title": '{% trans "Click to remove" %}',
                             "html": host + "/" + plugin + "/" + $(this).text()
                         }));
+                    li.append(label);
                     $("#selected_metrics > ul").append(li);
                 });
             }
         });
 
         // when user decides to remove specified metrics from the list
-        // and clicks "X"
         $("#selected_metrics").delegate("input", "change", function(e) {
             if (!e.target.checked) {
-                $(e.target).parent().remove();
+                $(e.target).parent().parent().remove();
             }
         });
 
@@ -145,14 +145,9 @@
         </tr>
     </table>
 
-    <div id="selected_metrics">
-        <h3>{% trans "Selected metrics" %}</h3>
-        <ul></ul>
-    </div>
-
-    <div style="margin-top: 20px;">
-        {% trans "Time range:" %}
-        <select id="time_range">
+    <div id="metrics_menu">
+        <h4>{% trans "Time range:" %}</h4>
+        <select id="time_range" style="width: 140px; margin: 2px;">
             <option selected="selected" value="-1h">{% trans "Last hour" %}</option>
             <option value="-1d">{% trans "Last day" %}</option>
             <option value="-1w">{% trans "Last week" %}</option>
@@ -176,6 +171,13 @@
         <button class="button chart" id="plot_btn">{% trans "Plot!" %}</button>
         <button class="button overview_page">{% trans "Display on the overview page" %}</button>
     </div>
+
+    <div id="selected_metrics" class="overview">
+        <h3>{% trans "Selected metrics" %}</h3>
+        <ul></ul>
+    </div>
+
+
 </div>
 
 <div>
