@@ -1077,16 +1077,14 @@ def recover_failed_deploy(request, cluster_slug, instance):
     initial['pnode'] = vm.template.pnode
     initial['owner'] = vm.owner_id
 
-    count = 0
-    for index in initial['disks']:
-        initial['disk_size_%s' % count] = str(index['size'])+"MB"
-        count+=1
+    if "disks" in initial:
+        for i, disk in enumerate(initial['disks']):
+            initial['disk_size_%s' % i] = "%dMB" % disk["size"]
 
-    count = 0
-    for index in initial['nics']:
-        initial['nic_link_%s' % count] = index['link']
-        initial['nic_mode_%s' % count] = index['mode']
-        count+=1
+    if "nics" in initial:
+        for i, nic in enumerate(initial['nics']):
+            initial['nic_link_%s' % i] = nic['link']
+            initial['nic_mode_%s' % i] = nic['mode']
 
     form = NewVirtualMachineForm(request.user, initial=initial)
     cluster_defaults = cluster_default_info(cluster)
