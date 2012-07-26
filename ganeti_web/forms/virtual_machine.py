@@ -16,8 +16,9 @@
 # USA.
 
 from django import forms
+from django.contrib.formtools.wizard.views import CookieWizardView
 from django.db.models import Q
-from django.forms import ValidationError
+from django.forms import Form, ModelChoiceField, ValidationError
 # Per #6579, do not change this import without discussion.
 from django.utils import simplejson as json
 
@@ -886,3 +887,47 @@ class ReplaceDisksForm(forms.Form):
         else:
             iallocator = None
         return self.instance.replace_disks(mode, disks, node, iallocator)
+
+
+class VMWizardClusterForm(Form):
+    cluster = ModelChoiceField(queryset=Cluster.objects.all(),
+                               label=_('Cluster'))
+
+
+class VMWizardOwnerForm(Form):
+    owner = ModelChoiceField(queryset=ClusterUser.objects.all(),
+                             label=_('Owner'))
+
+
+class VMWizardBasicsForm(Form):
+    memory = DataVolumeField(label=_('Memory'), min_value=100)
+    disk_count = forms.IntegerField(initial=1,  widget=forms.HiddenInput())
+    nic_count = forms.IntegerField(initial=1, widget=forms.HiddenInput())
+    hostname = forms.CharField(label=_('Instance Name'), max_length=255)
+    pnode = forms.ChoiceField(label=_('Primary Node'), choices=[])
+    snode = forms.ChoiceField(label=_('Secondary Node'), choices=[])
+    os = forms.ChoiceField(label=_('Operating System'), choices=[])
+    disk_template = forms.ChoiceField(label=_('Disk Template'),
+                                      choices=HV_DISK_TEMPLATES)
+    disk_type = forms.ChoiceField(label=_('Disk Type'), choices=[])
+    nic_type = forms.ChoiceField(label=_('NIC Type'), choices=[])
+    boot_order = forms.ChoiceField(label=_('Boot Device'), choices=[])
+
+
+class VMWizardView(CookieWizardView):
+    template_name = "ganeti/forms/vm_wizard.html"
+
+    def done(self, forms):
+        for form in forms:
+            print form
+            print form.cleaned_data
+            raise RuntimeError("Yarrgfh!")
+
+
+def vm_wizard():
+    forms = (
+        VMWizardClusterForm,
+        VMWizardOwnerForm,
+        VMWizardBasicsForm,
+    )
+    return VMWizardView.as_view(forms)

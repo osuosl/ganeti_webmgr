@@ -1,0 +1,31 @@
+{% extends "menu_base.html" %}
+{% load i18n %}
+{% load webmgr_tags %}
+
+{% block title %}{%trans "Overview" %}{% endblock %}
+
+{% block head %}
+{{ wizard.form.media }}
+{% endblock %}
+
+{% block content %}
+<h1>VM Wizard</h1>
+<form action="" method="POST">
+    {% csrf_token %}
+    <table>
+        {{ wizard.management_form }}
+        {{ wizard.form.as_table }}
+    </table>
+    {% if wizard.steps.prev %}
+        <button name="wizard_goto_step" type="submit"
+            value="{{ wizard.steps.first }}">
+            {% trans "Start Over" %}
+        </button>
+        <button name="wizard_goto_step" type="submit"
+            value="{{ wizard.steps.prev }}">
+            {% trans "Previous Step" %}
+        </button>
+    {% endif %}
+    <input type="submit" value="{% trans "Submit" %}" />
+</form>
+{% endblock %}
