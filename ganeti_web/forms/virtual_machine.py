@@ -914,8 +914,36 @@ class VMWizardBasicsForm(Form):
     boot_order = forms.ChoiceField(label=_('Boot Device'), choices=[])
 
 
+def cluster_qs_for_user(user):
+    if user.is_superuser:
+        qs = Cluster.objects.all()
+    else:
+        qs = user.get_objects_any_perms(Cluster, ['admin','create_vm'], False)
+
+    # Exclude all read-only clusters.
+    qs = qs.exclude(Q(username='') | Q(mtime__isnull=True))
+
+    return qs
+
+
 class VMWizardView(CookieWizardView):
     template_name = "ganeti/forms/vm_wizard.html"
+
+    def get_form(self, step=None, data=None, files=None):
+        s = int(self.steps.current) if step is None else int(step)
+        user = self.request.user
+
+        print "At step %r" % s
+        print "Called with %r, %r, %r" % (step, data, files)
+
+        if s == 0:
+            form = VMWizardClusterForm(data=data, files=files)
+            qs = cluster_qs_for_user(user)
+            form.fields["cluster"].queryset = qs
+        else:
+            form = super(VMWizardView, self).get_form(step, data, files)
+
+        return form
 
     def done(self, forms):
         for form in forms:
