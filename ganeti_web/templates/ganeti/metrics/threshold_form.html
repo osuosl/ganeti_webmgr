@@ -1,0 +1,97 @@
+{% extends "menu_base.html" %}
+{% load i18n %}
+{% load webmgr_tags %}
+
+{% block title %}{% if action == "add" %}{% trans "Add threshold" %}{% elif action == "edit" %}{% trans "Edit threshold" %}{% endif %}{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" type="text/css"
+            href="{{STATIC_URL}}/css/help_tips.css"/>
+    <script src="{{STATIC_URL}}/js/helpTips.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            // init the help tips for the individ. form objects
+            initHelpTips('#threshold_form');
+        });
+    </script>
+{% endblock %}
+
+{% block content %}
+{% if messages %}
+<ul id="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+<div id="threshold_form">
+    <form method="post">{% csrf_token %}
+        <fieldset class="first_fieldset">
+            <h1 class="breadcrumb"><span>{% trans "Threshold" %}</span> : {% if action == "add" %}{% trans "Add" %}{% elif action == "edit" %}{% trans "Edit" %}{% endif %}</h1>
+            {% for field in form %}
+                {% vmfield field %}
+            {% endfor %}
+        </fieldset>
+        {% if action == "add" %}
+        <input class="submit" type="submit" value='{% trans "Add threshold" %}' />
+        {% elif action == "edit" %}
+        <input class="submit" type="submit" value='{% trans "Update threshold" %}' />
+        {% endif %}
+    </form>
+</div>
+
+<div id="help">
+    <h3></h3>
+    <div></div>
+</div>
+<div id="help-contents">
+    <div id="help-host">
+        <p>{% blocktrans %}Either node's full hostname or Virtual Machine's full hostname (prefixed with "kvm_" or "xen_").{% endblocktrans %}</p>
+    </div>
+    <div id="help-plugin">
+        <p>{% blocktrans %}Collectd's plugin name.{% endblocktrans %}</p>
+    </div>
+    <div id="help-plugin_instance">
+        <p>{% blocktrans %}Specific instance of the plugin. For example, if a machine has 2 cores, plugin <b>cpu</b> should have 2 instances: 0 and 1.{% endblocktrans %}</p>
+        <p>{% blocktrans %}<b>If you don't know, what this is, you should not change it.{% endblocktrans %}</p>
+    </div>
+    <div id="help-type">
+        <p>{% blocktrans %}Actual chart type, that plugin makes. For <b>cpu</b> plugin this may be <b>cpu</b>, too, but for <b>interface</b> it may be <b>if_packets</b>, <b>if_octets</b> or <b>if_errors</b>.{% endblocktrans %}</p>
+        <p>{% blocktrans %}<b>This field is mandatory.{% endblocktrans %}</p>
+    </div>
+    <div id="help-type_instance">
+        <p>{% blocktrans %}Works similar to <b>plugin instance</b>. In case of <b>cpu</b> plugin, it can have these type instances: <b>idle</b>, <b>nice</b>, <b>softirq</b>, <b>wait</b>, <b>steal</b>, <b>system</b>, <b>user</b> or <b>interrupt</b>. For <b>interface</b> plugin, type instances are all your machine's interfaces, like <b>eth0</b>, <b>lo</b> and so on.{% endblocktrans %}</p>
+    </div>
+    <div id="help-datasource">
+        <p>{% blocktrans %}Some RRD files, where collectd stores its data, have multiple simultaneuos data sets. For example <b>load</b> plugin has <b>shortterm</b>, <b>midterm</b> and <b>longterm</b>.{% endblocktrans %}</p>
+    </div>
+    <div id="help-warning_min">
+        <p>{% blocktrans %}Minimal value, for which threshold applies and raises a warning.{% endblocktrans %}</p>
+    </div>
+    <div id="help-warning_max">
+        <p>{% blocktrans %}Maximal value, for which threshold applies and raises a warning.{% endblocktrans %}</p>
+    </div>
+    <div id="help-failure_min">
+        <p>{% blocktrans %}Minimal failure value.{% endblocktrans %}</p>
+    </div>
+    <div id="help-failure_max">
+        <p>{% blocktrans %}Maximal failure value.{% endblocktrans %}</p>
+    </div>
+    <div id="help-percentage">
+        <p>{% blocktrans %}Specifies if the minimal/maximal failure and warning values are relative. Useful with <b>df</b>.{% endblocktrans %}</p>
+    </div>
+    <div id="help-persist">
+        <p>{% blocktrans %}Specifies if the warnings/failures are generated for every incorrect value (checked) or only when previous value was correct (unchecked).{% endblocktrans %}</p>
+        <p>{% blocktrans %}<b>If you check this, you will receive lots of notifications.</b>{% endblocktrans %}</p>
+    </div>
+    <div id="help-invert">
+        <p>{% blocktrans %}If checked, collectd will yield notifications for values outside of [min, max] range.{% endblocktrans %}</p>
+    </div>
+    <div id="help-hits">
+        <p>{% blocktrans %}Delays yielding notification until for a <i>number</i> of times. More information <a href="http://collectd.org/documentation/manpages/collectd.conf.5.shtml#threshold_configuration">here</a>.{% endblocktrans %}</p>
+    </div>
+    <div id="help-hysteresis">
+        <p>{% blocktrans %}Specifies how much a value can fluctuate until a notification is yielded.{% endblocktrans %}</p>
+    </div>
+</div>
+{% endblock %}

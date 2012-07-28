@@ -131,7 +131,7 @@ def ssh_keypart_truncate(value, count):
         if (pos0==-1 or pos1==-1) or (pos0==pos1):
             raise BaseException
         value = value[pos0+1:pos1+1]
-        
+
         if len(value) > count:
             value = "%s ... %s" % (value[:(count/2)], value[(-count/2):])
     except BaseException:
@@ -346,6 +346,8 @@ def node_disk(node, allocated=True):
     if allocated:
         return format_part_total(d['allocated'], d['total'])
     return format_part_total(d['used'], d['total'])
+
+
 @register.simple_tag
 def num_reducer(num1,num2,size_tag):
 	"""
@@ -380,8 +382,6 @@ def cluster_memory(cluster, allocated=True,tag=False):
     return num_reducer(float(d['used']*1024**2), float(d['total']*1024**2),size_tag.strip())
 
 
-    
-
 @register.simple_tag
 def cluster_disk(cluster, allocated=True,tag=False):
     """
@@ -394,6 +394,7 @@ def cluster_disk(cluster, allocated=True,tag=False):
     if allocated:
 	return num_reducer(float(d['allocated']*1024**2),float(d['total']*1024**2),size_tag.strip())
     return num_reducer(float(d['used']*1024**2),float(d['total']*1024**2),size_tag.strip())
+
 
 @register.simple_tag
 def format_running_vms(cluster):

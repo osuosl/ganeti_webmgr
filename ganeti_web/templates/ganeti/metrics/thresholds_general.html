@@ -1,0 +1,78 @@
+{% extends "menu_base.html" %}
+{% load i18n %}
+{% load webmgr_tags %}
+
+{% block title %}{% trans "Thresholds" %}{% endblock %}
+
+{% block head %}
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("a.delete").click(function() {
+                answer = confirm('{% trans "Do you really want to delete this threshold?" %}');
+                if (!answer) {
+                    return false;
+                }
+            });
+        });
+    </script>
+{% endblock %}
+
+{% block content %}
+<h1>{% trans "Thresholds" %}</h1>
+{% if messages %}
+<ul id="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+{% if thresholds %}
+    <table id="threshold_list">
+        <thead>
+            <tr>
+                <th>{% trans "Host" %}</th>
+                <th>{% trans "Path" %}</th>
+                <th>{% trans "Data source" %}</th>
+                <th>{% trans "Warning" %}</th>
+                <th>{% trans "Failure" %}</th>
+                <th>{% trans "Percentage" %}</th>
+                <th>{% trans "Persist" %}</th>
+                <th>{% trans "Invert" %}</th>
+                <th>{% trans "Hits" %}</th>
+                <th>{% trans "Hysteresis" %}</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for threshold in thresholds %}
+            <tr>
+                <td>{{ threshold.host|default:"any" }}</td>
+                <td class="left"><b>{% trans "Plugin:" %}</b> {{ threshold.plugin|default:"any" }}<br>
+                    <b>{% trans "Plugin instance:" %}</b> {{ threshold.plugin_instance|default:"any" }}<br>
+                    <b>{% trans "Type:" %}</b> {{ threshold.type }}<br>
+                    <b>{% trans "Type instance:" %}</b> {{ threshold.type_instance|default:"any" }}</td>
+                <td>{{ threshold.datasource|default:"any" }}</td>
+                <td>{% trans "Min:" %} {{ threshold.warning_min|default:"-" }}<br>
+                    {% trans "Max:" %} {{ threshold.warning_max|default:"-" }}</td>
+                <td>{% trans "Min:" %} {{ threshold.failure_min|default:"-" }}<br>
+                    {% trans "Max:" %} {{ threshold.failure_max|default:"-" }}</td>
+                <td class="center">{{ threshold.percentage|checkmark }}</td>
+                <td class="center">{{ threshold.invert|checkmark }}</td>
+                <td class="center">{{ threshold.persist|checkmark }}</td>
+                <td class="center">{{ threshold.hits|checkmark }}</td>
+                <td class="center">{{ threshold.hysteresis|checkmark }}</td>
+                <td><a href="{% url threshold-edit threshold.id %}" title='{% trans "Edit threshold" %}'><img src="/static/images/icons/edit.png"></a>&nbsp;<a class="delete" href="{% url threshold-delete threshold.id %}" title='{% trans "Remove threshold" %}'><img src="/static/images/icons/delete.png"></a></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <h3>{% trans "No thresholds were defined." %}</h3>
+{% endif %}
+
+<ul>
+    <li><a href="{% url threshold-add %}">{% trans "Add new threshold" %}</a></li>
+    <li><a href="/nowhere">{% trans "Save and restart" %}</a>
+</ul>
+
+{% endblock %}

@@ -232,9 +232,10 @@ pre.error {
     padding:30px 10px 0 0;
     width:130px;
 }
-.menu ul {float:left; list-style-type: none; padding-left: 20px; width:110px;}
-.menu ul li { height:18px; margin: 0px; }
-.menu ul li a {color: #666666 !important; text-decoration: none;}
+.menu ul {float:left; list-style: none; padding-left: 20px; width:110px;}
+.menu ul li { margin: 0px; }
+.menu ul li a {color: #666666 !important; text-decoration: none; display: block;
+               padding: 2px 0 0 0;}
 .menu ul li a:hover {color: black !important;}
 .menu ul li:hover {list-style: disc;}
 .menu h3 {

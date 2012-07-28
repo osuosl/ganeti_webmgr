@@ -290,3 +290,9 @@ tr.group td.name {background:url(/static/images/icons/group.png) no-repeat 0 4px
 #selected_metrics li {padding: 2px 0;}
 #selected_metrics li input {vertical-align: middle;}
 #selected_metrics li span {vertical-align: middle;}
+
+/* thresholds */
+#threshold_form {float: left; width: 400px;}
+#threshold_list td.left {text-align: left;}
+#threshold_list td.center {text-align: center;}
+#threshold_list td.center div {margin: 0 auto;}
