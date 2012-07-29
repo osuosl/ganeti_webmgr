@@ -1,0 +1,41 @@
+{% load i18n %}
+{% load webmgr_tags %}
+    <table id="threshold_list">
+        <thead>
+            <tr>
+                <th>{% trans "Host" %}</th>
+                <th>{% trans "Path" %}</th>
+                <th>{% trans "Data source" %}</th>
+                <th>{% trans "Warning" %}</th>
+                <th>{% trans "Failure" %}</th>
+                <th>{% trans "Percentage" %}</th>
+                <th>{% trans "Persist" %}</th>
+                <th>{% trans "Invert" %}</th>
+                <th>{% trans "Hits" %}</th>
+                <th>{% trans "Hysteresis" %}</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for threshold in thresholds %}
+            <tr>
+                <td>{{ threshold.host|default:"any" }}</td>
+                <td class="left"><b>{% trans "Plugin:" %}</b> {{ threshold.plugin|default:"any" }}<br>
+                    <b>{% trans "Plugin instance:" %}</b> {{ threshold.plugin_instance|default:"any" }}<br>
+                    <b>{% trans "Type:" %}</b> {{ threshold.type }}<br>
+                    <b>{% trans "Type instance:" %}</b> {{ threshold.type_instance|default:"any" }}</td>
+                <td>{{ threshold.datasource|default:"any" }}</td>
+                <td>{% trans "Min:" %} {{ threshold.warning_min|default:"-" }}<br>
+                    {% trans "Max:" %} {{ threshold.warning_max|default:"-" }}</td>
+                <td>{% trans "Min:" %} {{ threshold.failure_min|default:"-" }}<br>
+                    {% trans "Max:" %} {{ threshold.failure_max|default:"-" }}</td>
+                <td class="center">{{ threshold.percentage|checkmark }}</td>
+                <td class="center">{{ threshold.invert|checkmark }}</td>
+                <td class="center">{{ threshold.persist|checkmark }}</td>
+                <td class="center">{{ threshold.hits|checkmark }}</td>
+                <td class="center">{{ threshold.hysteresis|checkmark }}</td>
+                <td><a href="{% url threshold-edit threshold.id %}" title='{% trans "Edit threshold" %}'><img src="/static/images/icons/edit.png"></a>&nbsp;<a class="delete" href="{% url threshold-delete threshold.id %}" title='{% trans "Remove threshold" %}'><img src="/static/images/icons/delete.png"></a></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>

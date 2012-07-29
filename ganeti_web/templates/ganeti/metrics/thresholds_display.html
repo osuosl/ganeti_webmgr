@@ -8,10 +8,7 @@
 {% endblock %}
 
 {% block content %}
-<h1>{% trans "Thresholds" %}</h1>
-{% for threshold in thresholds %}
-{{ threshold }}
-{% empty %}
-I will add some.
-{% endfor %}
+<h1>{% trans "Similar thresholds" %}</h1>
+    <p>These thresholds might be similar to the one you want to change.</p>
+{% include "ganeti/metrics/thresholds_table.html" %}
 {% endblock %}

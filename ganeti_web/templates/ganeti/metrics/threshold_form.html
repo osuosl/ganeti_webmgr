@@ -25,7 +25,7 @@
 </ul>
 {% endif %}
 <div id="threshold_form">
-    <form method="post">{% csrf_token %}
+    <form method="post" action="{% url threshold-add %}">{% csrf_token %}
         <fieldset class="first_fieldset">
             <h1 class="breadcrumb"><span>{% trans "Threshold" %}</span> : {% if action == "add" %}{% trans "Add" %}{% elif action == "edit" %}{% trans "Edit" %}{% endif %}</h1>
             {% for field in form %}

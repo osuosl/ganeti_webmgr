@@ -83,17 +83,36 @@ def thresholds_general(request, host=None, plugin=None, type=None):
     General UI for changing thresholds.
 
     If arguments are provided, it will display a UI specifically for changing
-    given thresholds or similar thresholds.
+    given thresholds or similar thresholds. Otherwise it'll display a list of
+    all defined thresholds.
     """
     if any([host, plugin, type]):
         # for the beginning we display similar thresholds if they exist.
         # Otherwise we display form to add new threshold.
-        results = similar_thresholds(DAEMON_HOST, str(host), str(plugin),
+        result = similar_thresholds(DAEMON_HOST, str(host), str(plugin),
             str(type))
 
-        return render_to_response("ganeti/metrics/thresholds_display.html",
-            results.json,
-            context_instance=RequestContext(request))
+        if "thresholds" in result.json.keys() and len(
+                result.json["thresholds"]):
+            return render_to_response(
+                "ganeti/metrics/thresholds_display.html",
+                result.json,
+                context_instance=RequestContext(request))
+        else:
+            # 3) add new threshold
+            plugin = plugin.split("-")
+            type = type.split("-")
+            form = ThresholdForm(initial={
+                "host": host,
+                "plugin": plugin[0],
+                "type": type[0],
+                "plugin_instance": plugin[1] if len(plugin) >= 2 else "",
+                "type_instance": type[1] if len(type) >= 2 else "",
+            })
+
+            return render_to_response("ganeti/metrics/threshold_form.html",
+                {"form": form, "action": "add"},
+                context_instance=RequestContext(request))
     else:
         result = all_thresholds(DAEMON_HOST)
         return render_to_response("ganeti/metrics/thresholds_general.html",
