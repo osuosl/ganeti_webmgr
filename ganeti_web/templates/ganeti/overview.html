@@ -48,7 +48,7 @@
                 });
             });
         });
-        
+
         $("#usage_summary select").change(function(){
             var val = $(this).val();
             $.get("{% url used_resources %}", {id:val}, function(html){
@@ -59,7 +59,7 @@
 	disableSingletonDropdown($("#user_select"));
 
     });
-    
+
 </script>
 {% endblock %}
 
@@ -127,7 +127,7 @@
             <tr>
                 <td>
                 {% if view_cluster %}
-                    <a href="{% url cluster-detail dict.cluster__slug %}"> 
+                    <a href="{% url cluster-detail dict.cluster__slug %}">
                         {{hostname|abbreviate_fqdn}}
                     </a>
                 {% else %}
@@ -168,14 +168,14 @@
                 <tr class="gerror" id="gerror_{{error.pk}}">
                     {% include "ganeti/overview/object_link.html" %}
                     <td>{{ error.msg }}</td>
-                    <td>{{ error.timestamp|date }}</td>
+                    <td>{{ error.timestamp|date:"DATETIME_FORMAT" }}</td>
                     <td><a class="clear" title="clear message" href="{% url error-clear error.pk %}"></a></td>
                 </tr>
             {% else %}
                 <tr class="jerror" id="jerror_{{error.pk}}">
                     {% include "ganeti/overview/object_link.html" %}
                     <td><a href="{% url job-detail error.cluster.slug error.job_id %}">{% trans "Job" noop %}#{{error.job_id}}: {{ error.current_operation|format_job_op }}</a></td>
-                    <td>{{ error.finished|date }}</td>
+                    <td>{{ error.finished|date:"DATETIME_FORMAT" }}</td>
                     <td><a class="clear" title="clear message" href="{% url job-clear error.cluster.slug error.job_id %}"></a></td>
                 </tr>
             {% endif %}
