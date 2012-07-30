@@ -1,0 +1,10 @@
+{% extends "user/detail.html" %}
+{% load shots %}
+
+{% block tabs %}
+{% shot user-detail-tab %}<li>{{ mixer }}</li>{% endshot %}
+{% endblock %}
+
+{% block detail %}
+{% shot user-detail-content %}{{ mixer }}{% endshot %}
+{% endblock %}
