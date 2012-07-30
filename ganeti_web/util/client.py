@@ -27,6 +27,7 @@ Ganeti RAPI client.
 import logging
 import simplejson as json
 import socket
+import time
 
 import requests
 
@@ -159,7 +160,7 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
     _json_encoder = json.JSONEncoder(sort_keys=True)
 
     def __init__(self, host, port=GANETI_RAPI_PORT, username=None,
-                 password=None, timeout=60, logger=logging):
+                 password=None, timeout=60, logger=logging.getLogger("rapi")):
         """
         Initializes this class.
 
@@ -239,7 +240,7 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         url = self._base_url + path
 
         self._logger.debug("Sending request to %s %s", url, kwargs)
-        # print "Sending request to %s %s" % (url, kwargs)
+        before = time.time()
 
         try:
             r = requests.request(method, url, **kwargs)
@@ -248,6 +249,8 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         except requests.Timeout:
             raise GanetiApiError("Timed out connecting to %s" %
                                  self._base_url)
+
+        self._logger.debug("Request took %dms", time.time() - before)
 
         if r.status_code != requests.codes.ok:
             raise GanetiApiError(str(r.status_code), code=r.status_code)
