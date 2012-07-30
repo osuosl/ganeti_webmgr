@@ -1636,6 +1636,7 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         }
 
         if qfilter is not None:
+            # Note: "filter" as a body key will be removed after Ganeti 2.7.
             body["qfilter"] = body["filter"] = qfilter
 
         return self._SendRequest("put", ("/%s/query/%s" %
