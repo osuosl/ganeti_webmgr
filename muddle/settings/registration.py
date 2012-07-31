@@ -1,7 +1,6 @@
 import cPickle
 from django.conf import settings
 from muddle.core.apps.plugins import load_app_plugin
-from muddle.core.forms.aggregate import AggregateForm
 from muddle.settings.models import AppSettingsValue
 
 __all__ = ['initialize', 'register', 'AppSettings']
@@ -46,14 +45,8 @@ def register(category, form, subcategory=DEFAULT_CATEGORY):
             category[subcategory] = form
         else:
             forms = category[subcategory]
-            if issubclass(forms, (AggregateForm, )):
-                # is already an aggregate form.  aggregate the form into this
-                # a new aggregate form
-                forms = forms.form_classes
-            else:
-                forms = [forms]
+            forms = [forms]
             forms.append(form)
-            category[subcategory] = AggregateForm.aggregate(forms)
 
 
 class AppSettingsLoader(object):

@@ -14,11 +14,3 @@ base_url_regex = r'^muddle_static/(?P<path>.*)$'
 urlpatterns += patterns('',
     (base_url_regex, 'django.views.static.serve', {'document_root': static_root})
 )
-
-
-# URLS used for testing model glue urls
-if settings.TESTING:
-    urlpatterns += patterns('muddle.tests.resolvers',
-        url(r'^model_resolve_test/(\d+)/(\d+)/$', 'noop_view', name='resolve-test-args'),
-        url(r'^model_resolve_test/(?P<one>\d+)/(?P<two>\d+)/$', 'noop_view', name='resolve-test-kwargs'),
-    )

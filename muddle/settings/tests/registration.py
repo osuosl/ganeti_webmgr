@@ -1,6 +1,5 @@
 from django.test import TestCase
 
-from muddle.core.forms.aggregate import AggregateForm
 from muddle.settings import register
 from muddle.settings.registration import SETTINGS
 from muddle.tests.forms import Foo, Bar, Xoo
@@ -77,7 +76,6 @@ class AppSettingsRegistration(TestCase):
         self.assertTrue('general' in SETTINGS['general'])
 
         form = SETTINGS['general']['general']
-        self.assertTrue(issubclass(form, (AggregateForm,)))
         self.assertTrue(Foo in form.form_classes)
         self.assertTrue(Bar in form.form_classes)
 
@@ -93,7 +91,6 @@ class AppSettingsRegistration(TestCase):
         self.assertTrue('general' in SETTINGS['general'])
 
         form = SETTINGS['general']['general']
-        self.assertTrue(issubclass(form, (AggregateForm,)))
         self.assertTrue(Foo in form.form_classes)
         self.assertTrue(Bar in form.form_classes)
         self.assertTrue(Xoo in form.form_classes)
