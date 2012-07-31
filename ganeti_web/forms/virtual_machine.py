@@ -22,6 +22,8 @@ from django.forms import Form, ModelChoiceField, ValidationError
 # Per #6579, do not change this import without discussion.
 from django.utils import simplejson as json
 
+from object_permissions import get_users_any
+
 from ganeti_web.constants import EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES, \
     HV_NIC_MODES, HV_DISK_TYPES, HV_NIC_TYPES, KVM_NIC_TYPES, HVM_DISK_TYPES, \
     KVM_DISK_TYPES, KVM_BOOT_ORDER, HVM_BOOT_ORDER, KVM_CHOICES, HV_USB_MICE, \
@@ -900,18 +902,11 @@ class VMWizardOwnerForm(Form):
 
 
 class VMWizardBasicsForm(Form):
-    memory = DataVolumeField(label=_('Memory'), min_value=100)
-    disk_count = forms.IntegerField(initial=1,  widget=forms.HiddenInput())
-    nic_count = forms.IntegerField(initial=1, widget=forms.HiddenInput())
+    memory = DataVolumeField(label=_('Memory'))
     hostname = forms.CharField(label=_('Instance Name'), max_length=255)
-    pnode = forms.ChoiceField(label=_('Primary Node'), choices=[])
-    snode = forms.ChoiceField(label=_('Secondary Node'), choices=[])
     os = forms.ChoiceField(label=_('Operating System'), choices=[])
     disk_template = forms.ChoiceField(label=_('Disk Template'),
                                       choices=HV_DISK_TEMPLATES)
-    disk_type = forms.ChoiceField(label=_('Disk Type'), choices=[])
-    nic_type = forms.ChoiceField(label=_('NIC Type'), choices=[])
-    boot_order = forms.ChoiceField(label=_('Boot Device'), choices=[])
 
 
 def cluster_qs_for_user(user):
@@ -926,8 +921,25 @@ def cluster_qs_for_user(user):
     return qs
 
 
+def owner_qs_for_cluster(cluster):
+    # Get all superusers.
+    qs = ClusterUser.objects.filter(profile__user__is_superuser=True)
+
+    # Get all users who have the given permissions on the given cluster.
+    users = get_users_any(cluster, ["admin"], True)
+    qs |= ClusterUser.objects.filter(profile__user__in=users)
+
+    return qs
+
+
 class VMWizardView(CookieWizardView):
     template_name = "ganeti/forms/vm_wizard.html"
+
+    def _get_cluster(self):
+        data = self.get_cleaned_data_for_step("0")
+        if data:
+            return data["cluster"]
+        return None
 
     def get_form(self, step=None, data=None, files=None):
         s = int(self.steps.current) if step is None else int(step)
@@ -940,6 +952,10 @@ class VMWizardView(CookieWizardView):
             form = VMWizardClusterForm(data=data, files=files)
             qs = cluster_qs_for_user(user)
             form.fields["cluster"].queryset = qs
+        elif s == 1:
+            form = VMWizardOwnerForm(data=data, files=files)
+            qs = owner_qs_for_cluster(self._get_cluster())
+            form.fields["owner"].queryset = qs
         else:
             form = super(VMWizardView, self).get_form(step, data, files)
 
