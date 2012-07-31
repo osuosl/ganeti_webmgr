@@ -32,7 +32,8 @@ from ganeti_web.constants import EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES, \
 from ganeti_web.fields import DataVolumeField, MACAddressField
 from ganeti_web.models import (Cluster, ClusterUser, Organization,
                            VirtualMachineTemplate, VirtualMachine)
-from ganeti_web.utilities import cluster_default_info, cluster_os_list, contains, get_hypervisor
+from ganeti_web.utilities import (cluster_default_info, cluster_os_list,
+                                  contains, get_hypervisor)
 from django.utils.translation import ugettext_lazy as _
 from ganeti_web.util.client import REPLACE_DISK_AUTO, REPLACE_DISK_PRI, \
     REPLACE_DISK_CHG, REPLACE_DISK_SECONDARY
@@ -908,6 +909,9 @@ class VMWizardBasicsForm(Form):
     disk_template = forms.ChoiceField(label=_('Disk Template'),
                                       choices=HV_DISK_TEMPLATES)
 
+    def _configure_for_cluster(self, cluster):
+        self.fields["os"].choices = cluster_os_list(cluster)
+
 
 def cluster_qs_for_user(user):
     if user.is_superuser:
@@ -956,6 +960,9 @@ class VMWizardView(CookieWizardView):
             form = VMWizardOwnerForm(data=data, files=files)
             qs = owner_qs_for_cluster(self._get_cluster())
             form.fields["owner"].queryset = qs
+        elif s == 2:
+            form = VMWizardBasicsForm(data=data, files=files)
+            form._configure_for_cluster(self._get_cluster())
         else:
             form = super(VMWizardView, self).get_form(step, data, files)
 
@@ -963,9 +970,8 @@ class VMWizardView(CookieWizardView):
 
     def done(self, forms):
         for form in forms:
-            print form
             print form.cleaned_data
-            raise RuntimeError("Yarrgfh!")
+        raise RuntimeError("Yarrgfh!")
 
 
 def vm_wizard():
