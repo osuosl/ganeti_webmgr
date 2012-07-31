@@ -190,9 +190,7 @@ function JobPoller() {
         event.preventDefault();
         var error = $(this).parent().parent();
         $.post(this.href, function(){
-            error.fadeOut(1000, function(){
-                error.remove();
-            });
+            error.remove();
         });
     });
 }
