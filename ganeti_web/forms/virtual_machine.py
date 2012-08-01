@@ -18,7 +18,8 @@
 from django import forms
 from django.contrib.formtools.wizard.views import CookieWizardView
 from django.db.models import Q
-from django.forms import Form, ModelChoiceField, ValidationError
+from django.forms import (Form, CharField, ChoiceField, IntegerField,
+                          ModelChoiceField, ValidationError)
 # Per #6579, do not change this import without discussion.
 from django.utils import simplejson as json
 
@@ -903,14 +904,36 @@ class VMWizardOwnerForm(Form):
 
 
 class VMWizardBasicsForm(Form):
+    hostname = CharField(label=_('Instance Name'), max_length=255)
+    os = ChoiceField(label=_('Operating System'), choices=[])
+    vcpus = IntegerField(label=_("Virtual CPU Count"), min_value=1)
     memory = DataVolumeField(label=_('Memory'))
-    hostname = forms.CharField(label=_('Instance Name'), max_length=255)
-    os = forms.ChoiceField(label=_('Operating System'), choices=[])
-    disk_template = forms.ChoiceField(label=_('Disk Template'),
-                                      choices=HV_DISK_TEMPLATES)
+    disk_template = ChoiceField(label=_('Disk Template'),
+                                choices=HV_DISK_TEMPLATES)
 
     def _configure_for_cluster(self, cluster):
+        self.cluster = cluster
         self.fields["os"].choices = cluster_os_list(cluster)
+
+    def clean_hostname(self):
+        hostname = self.cleaned_data.get('hostname')
+        if hostname:
+            # Confirm that the hostname is not already in use.
+            try:
+                vm = VirtualMachine.objects.get(cluster=self.cluster,
+                                                hostname=hostname)
+            except VirtualMachine.DoesNotExist:
+                # Well, *I'm* convinced.
+                pass
+            else:
+                raise ValidationError(
+                    _("Hostname is already in use for this cluster"))
+
+        # Spaces in hostname will always break things.
+        if ' ' in hostname:
+            self.errors["hostname"] = self.error_class(
+                ["Hostname contains spaces."])
+        return hostname
 
 
 def cluster_qs_for_user(user):
