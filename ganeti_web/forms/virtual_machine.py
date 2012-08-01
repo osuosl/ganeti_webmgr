@@ -17,11 +17,16 @@
 
 from django import forms
 from django.contrib.formtools.wizard.views import CookieWizardView
+from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.forms import (Form, CharField, ChoiceField, IntegerField,
                           ModelChoiceField, ValidationError)
+from django.http import HttpResponseRedirect
 # Per #6579, do not change this import without discussion.
 from django.utils import simplejson as json
+
+from object_log.models import LogItem
+log_action = LogItem.objects.log_action
 
 from object_permissions import get_users_any
 
@@ -31,8 +36,8 @@ from ganeti_web.constants import EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES, \
     HV_SECURITY_MODELS, KVM_FLAGS, HV_DISK_CACHES, MODE_CHOICES, HVM_CHOICES, \
     HV_DISK_TEMPLATES_SINGLE_NODE
 from ganeti_web.fields import DataVolumeField, MACAddressField
-from ganeti_web.models import (Cluster, ClusterUser, Organization,
-                           VirtualMachineTemplate, VirtualMachine)
+from ganeti_web.models import (Cluster, ClusterUser, Job, Organization,
+                               VirtualMachineTemplate, VirtualMachine)
 from ganeti_web.utilities import (cluster_default_info, cluster_os_list,
                                   contains, get_hypervisor)
 from django.utils.translation import ugettext_lazy as _
@@ -910,6 +915,7 @@ class VMWizardBasicsForm(Form):
     memory = DataVolumeField(label=_('Memory'))
     disk_template = ChoiceField(label=_('Disk Template'),
                                 choices=HV_DISK_TEMPLATES)
+    disk_size = DataVolumeField(label=_("Disk Size"))
 
     def _configure_for_cluster(self, cluster):
         self.cluster = cluster
@@ -934,6 +940,12 @@ class VMWizardBasicsForm(Form):
             self.errors["hostname"] = self.error_class(
                 ["Hostname contains spaces."])
         return hostname
+
+
+class VMWizardAdvancedForm(Form):
+
+    def _configure_for_cluster(self, cluster):
+        self.cluster = cluster
 
 
 def cluster_qs_for_user(user):
@@ -970,13 +982,13 @@ class VMWizardView(CookieWizardView):
 
     def get_form(self, step=None, data=None, files=None):
         s = int(self.steps.current) if step is None else int(step)
-        user = self.request.user
 
         print "At step %r" % s
         print "Called with %r, %r, %r" % (step, data, files)
 
         if s == 0:
             form = VMWizardClusterForm(data=data, files=files)
+            user = self.request.user
             qs = cluster_qs_for_user(user)
             form.fields["cluster"].queryset = qs
         elif s == 1:
@@ -986,15 +998,77 @@ class VMWizardView(CookieWizardView):
         elif s == 2:
             form = VMWizardBasicsForm(data=data, files=files)
             form._configure_for_cluster(self._get_cluster())
+        elif s == 3:
+            form = VMWizardAdvancedForm(data=data, files=files)
+            form._configure_for_cluster(self._get_cluster())
         else:
             form = super(VMWizardView, self).get_form(step, data, files)
 
         return form
 
     def done(self, forms):
-        for form in forms:
-            print form.cleaned_data
-        raise RuntimeError("Yarrgfh!")
+        user = self.request.user
+
+        cluster = forms[0].cleaned_data["cluster"]
+        owner = forms[1].cleaned_data["owner"]
+        hostname = forms[2].cleaned_data["hostname"]
+        memory = forms[2].cleaned_data["memory"]
+        vcpus = forms[2].cleaned_data["vcpus"]
+        disk_template = forms[2].cleaned_data["disk_template"]
+        disk_size = forms[2].cleaned_data["disk_size"]
+
+        disks = [
+            {
+                "size": disk_size,
+            },
+        ]
+
+        nics = [
+            {
+                "link": "br0",
+                "mode": "bridged",
+            }
+        ]
+
+        beparams = {
+            "memory": memory,
+            "vcpus": vcpus,
+        }
+
+        kwargs = {
+            "beparams": beparams,
+        }
+
+        job_id = cluster.rapi.CreateInstance('create', hostname,
+                                             disk_template, disks, nics,
+                                             **kwargs)
+        vm = VirtualMachine()
+
+        vm.cluster = cluster
+        vm.hostname = hostname
+        vm.ram = memory
+        vm.virtual_cpus = vcpus
+        vm.disk_size = disk_size
+
+        vm.owner = owner
+        vm.ignore_cache = True
+
+        # Do a dance to get the VM and the job referencing each other.
+        vm.save()
+        job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
+        job.save()
+        vm.last_job = job
+        vm.save()
+
+        # grant admin permissions to the owner.  Only do this for new
+        # VMs.  otherwise we run the risk of granting perms to a
+        # different owner.  We should be preventing that elsewhere, but
+        # lets be extra careful since this check is cheap.
+        owner.grant('admin', vm)
+        log_action('CREATE', user, vm)
+
+        return HttpResponseRedirect(reverse('instance-detail',
+                                            args=[cluster.slug, vm.hostname]))
 
 
 def vm_wizard():
@@ -1002,5 +1076,6 @@ def vm_wizard():
         VMWizardClusterForm,
         VMWizardOwnerForm,
         VMWizardBasicsForm,
+        VMWizardAdvancedForm,
     )
     return VMWizardView.as_view(forms)
