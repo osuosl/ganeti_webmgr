@@ -19,8 +19,8 @@ from django import forms
 from django.contrib.formtools.wizard.views import CookieWizardView
 from django.core.urlresolvers import reverse
 from django.db.models import Q
-from django.forms import (Form, CharField, ChoiceField, IntegerField,
-                          ModelChoiceField, ValidationError)
+from django.forms import (Form, BooleanField, CharField, ChoiceField,
+                          IntegerField, ModelChoiceField, ValidationError)
 from django.http import HttpResponseRedirect
 # Per #6579, do not change this import without discussion.
 from django.utils import simplejson as json
@@ -899,22 +899,24 @@ class ReplaceDisksForm(forms.Form):
 
 
 class VMWizardClusterForm(Form):
-    cluster = ModelChoiceField(queryset=Cluster.objects.all(),
-                               label=_('Cluster'))
+    cluster = ModelChoiceField(label=_('Cluster'),
+                               queryset=Cluster.objects.all(),
+                               empty_label=None)
 
 
 class VMWizardOwnerForm(Form):
-    owner = ModelChoiceField(queryset=ClusterUser.objects.all(),
-                             label=_('Owner'))
+    owner = ModelChoiceField(label=_('Owner'),
+                             queryset=ClusterUser.objects.all(),
+                             empty_label=None)
 
 
 class VMWizardBasicsForm(Form):
     hostname = CharField(label=_('Instance Name'), max_length=255)
     os = ChoiceField(label=_('Operating System'), choices=[])
-    vcpus = IntegerField(label=_("Virtual CPU Count"), min_value=1)
+    vcpus = IntegerField(label=_("Virtual CPU Count"), initial=1, min_value=1)
     memory = DataVolumeField(label=_('Memory'))
     disk_template = ChoiceField(label=_('Disk Template'),
-                                choices=HV_DISK_TEMPLATES)
+                                choices=HV_DISK_TEMPLATES[1:])
     disk_size = DataVolumeField(label=_("Disk Size"))
 
     def _configure_for_cluster(self, cluster):
@@ -943,6 +945,10 @@ class VMWizardBasicsForm(Form):
 
 
 class VMWizardAdvancedForm(Form):
+    ip_check = BooleanField(label=_('Verify IP'), initial=False,
+                            required=False)
+    name_check = BooleanField(label=_('Verify hostname through DNS'),
+                              initial=False, required=False)
 
     def _configure_for_cluster(self, cluster):
         self.cluster = cluster
@@ -1036,6 +1042,9 @@ class VMWizardView(CookieWizardView):
         }
 
         kwargs = {
+            "os": forms[2].cleaned_data["os"],
+            "ip_check": forms[3].cleaned_data["ip_check"],
+            "name_check": forms[3].cleaned_data["name_check"],
             "beparams": beparams,
         }
 
@@ -1064,7 +1073,7 @@ class VMWizardView(CookieWizardView):
         # VMs.  otherwise we run the risk of granting perms to a
         # different owner.  We should be preventing that elsewhere, but
         # lets be extra careful since this check is cheap.
-        owner.grant('admin', vm)
+        owner.permissable.grant('admin', vm)
         log_action('CREATE', user, vm)
 
         return HttpResponseRedirect(reverse('instance-detail',
