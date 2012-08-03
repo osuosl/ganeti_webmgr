@@ -36,12 +36,12 @@ def cluster_default_info(cluster, hypervisor=None):
 
     if hypervisor is not None:
         if hypervisor not in hvs:
-            return -1
+            raise RuntimeError("Was asked to deal with a cluster/HV mismatch")
         else:
             hv = hypervisor
     else:
         hv = info['default_hypervisor']
-    
+
     hvparams = info['hvparams'][hv]
     if hv == 'kvm':
         c = constants.KVM_CHOICES
@@ -55,7 +55,7 @@ def cluster_default_info(cluster, hypervisor=None):
             hvparams['nic_type'] = info['hvparams']['xen-hvm']['nic_type']
     else:
         c = constants.NO_CHOICES
-    
+
     disktypes = c['disk_type']
     nictypes = c['nic_type']
     bootdevices = c['boot_order']
@@ -83,7 +83,7 @@ def cluster_default_info(cluster, hypervisor=None):
         'nic_link': nic_link,
         'memory': beparams['memory'],
         'vcpus': beparams['vcpus'],
-        }   
+        }
     return dict(hvparams, **extraparams)
 
 
