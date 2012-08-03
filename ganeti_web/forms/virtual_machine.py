@@ -912,6 +912,17 @@ class VMWizardOwnerForm(Form):
     owner = ModelChoiceField(label=_('Owner'),
                              queryset=ClusterUser.objects.all(),
                              empty_label=None)
+    hv = ChoiceField(label=_("Hypervisor"),
+                     choices=[])
+
+    def _configure_for_cluster(self, cluster):
+        qs = owner_qs_for_cluster(cluster)
+        self.fields["owner"].queryset = qs
+
+        hvs = cluster.info["enabled_hypervisors"]
+        hv = cluster.info["default_hypervisor"]
+        self.fields["hv"].choices = zip(hvs, hvs)
+        self.fields["hv"].initial = hv
 
 
 class VMWizardBasicsForm(Form):
@@ -958,6 +969,39 @@ class VMWizardAdvancedForm(Form):
                             required=False)
     name_check = BooleanField(label=_('Verify hostname through DNS'),
                               initial=False, required=False)
+
+
+class VMWizardPVMForm(Form):
+    kernel_path = CharField(label=_("Kernel path"), max_length=255)
+    root_path = CharField(label=_("Root path"), max_length=255)
+
+    def _configure_for_cluster(self, cluster):
+        self.cluster = cluster
+        params = cluster.info["hvparams"]["xen-pvm"]
+
+        self.fields["kernel_path"].initial = params["kernel_path"]
+        self.fields["root_path"].initial = params["root_path"]
+
+
+class VMWizardHVMForm(Form):
+    boot_order = CharField(label=_("Preferred boot device"), max_length=255,
+                           required=False)
+    cdrom_image_path = CharField(label=_("CD-ROM image path"), max_length=512,
+                                required=False)
+    # XXX fix constants here to not suck
+    disk_type = ChoiceField(label=_("Disk type"),
+                            choices=HVM_CHOICES["disk_type"])
+    # XXX here too plz
+    nic_type = ChoiceField(label=_("NIC type"),
+                           choices=HVM_CHOICES["nic_type"])
+
+    def _configure_for_cluster(self, cluster):
+        self.cluster = cluster
+        params = cluster.info["hvparams"]["xen-pvm"]
+
+        self.fields["boot_order"].initial = params["boot_order"]
+        self.fields["disk_type"].initial = params["disk_type"]
+        self.fields["nic_type"].initial = params["nic_type"]
 
 
 class VMWizardKVMForm(Form):
@@ -1034,6 +1078,12 @@ class VMWizardView(CookieWizardView):
             return data["cluster"]
         return None
 
+    def _get_hv(self):
+        data = self.get_cleaned_data_for_step("1")
+        if data:
+            return data["hv"]
+        return None
+
     def get_form(self, step=None, data=None, files=None):
         s = int(self.steps.current) if step is None else int(step)
 
@@ -1047,8 +1097,7 @@ class VMWizardView(CookieWizardView):
             form.fields["cluster"].queryset = qs
         elif s == 1:
             form = VMWizardOwnerForm(data=data)
-            qs = owner_qs_for_cluster(self._get_cluster())
-            form.fields["owner"].queryset = qs
+            form._configure_for_cluster(self._get_cluster())
         elif s == 2:
             form = VMWizardBasicsForm(data=data)
             form._configure_for_cluster(self._get_cluster())
@@ -1056,13 +1105,21 @@ class VMWizardView(CookieWizardView):
             form = VMWizardAdvancedForm(data=data)
         elif s == 4:
             cluster = self._get_cluster()
-            if cluster:
-                hv = cluster.info["default_hypervisor"]
+            hv = self._get_hv()
+            form = None
+
+            if cluster and hv:
                 if hv == "kvm":
                     form = VMWizardKVMForm(data=data)
-                    form._configure_for_cluster(self._get_cluster())
-                else:
-                    form = Form()
+                elif hv == "xen-pvm":
+                    form = VMWizardPVMForm(data=data)
+                elif hv == "xen-hvm":
+                    form = VMWizardHVMForm(data=data)
+
+            if form:
+                form._configure_for_cluster(cluster)
+            else:
+                form = Form()
         else:
             form = super(VMWizardView, self).get_form(step, data, files)
 
