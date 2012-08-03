@@ -30,11 +30,15 @@ log_action = LogItem.objects.log_action
 
 from object_permissions import get_users_any
 
-from ganeti_web.constants import EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES, \
-    HV_NIC_MODES, HV_DISK_TYPES, HV_NIC_TYPES, KVM_NIC_TYPES, HVM_DISK_TYPES, \
-    KVM_DISK_TYPES, KVM_BOOT_ORDER, HVM_BOOT_ORDER, KVM_CHOICES, HV_USB_MICE, \
-    HV_SECURITY_MODELS, KVM_FLAGS, HV_DISK_CACHES, MODE_CHOICES, HVM_CHOICES, \
-    HV_DISK_TEMPLATES_SINGLE_NODE
+from ganeti_web.caps import has_cdrom2
+from ganeti_web.constants import (EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES,
+                                  HV_NIC_MODES, HV_DISK_TYPES, HV_NIC_TYPES,
+                                  KVM_NIC_TYPES, HVM_DISK_TYPES,
+                                  KVM_DISK_TYPES, KVM_BOOT_ORDER,
+                                  HVM_BOOT_ORDER, KVM_CHOICES, HV_USB_MICE,
+                                  HV_SECURITY_MODELS, KVM_FLAGS,
+                                  HV_DISK_CACHES, MODE_CHOICES, HVM_CHOICES,
+                                  HV_DISK_TEMPLATES_SINGLE_NODE)
 from ganeti_web.fields import DataVolumeField, MACAddressField
 from ganeti_web.models import (Cluster, ClusterUser, Job, Organization,
                                VirtualMachineTemplate, VirtualMachine)
@@ -921,7 +925,12 @@ class VMWizardBasicsForm(Form):
 
     def _configure_for_cluster(self, cluster):
         self.cluster = cluster
+
         self.fields["os"].choices = cluster_os_list(cluster)
+
+        beparams = cluster.info["beparams"]["default"]
+        self.fields["memory"].initial = beparams["memory"]
+        self.fields["vcpus"].initial = beparams["vcpus"]
 
     def clean_hostname(self):
         hostname = self.cleaned_data.get('hostname')
@@ -950,8 +959,47 @@ class VMWizardAdvancedForm(Form):
     name_check = BooleanField(label=_('Verify hostname through DNS'),
                               initial=False, required=False)
 
+
+class VMWizardKVMForm(Form):
+    kernel_path = CharField(label=_("Kernel path"), max_length=255)
+    root_path = CharField(label=_("Root path"), max_length=255)
+    serial_console = BooleanField(label=_("Enable serial console"),
+                                  required=False)
+    boot_order = CharField(label=_("Preferred boot device"), max_length=255,
+                           required=False)
+    cdrom_image_path = CharField(label=_("CD-ROM image path"), max_length=512,
+                                required=False)
+    cdrom2_image_path = CharField(label=_("Second CD-ROM image path"),
+                                  max_length=512, required=False)
+    # XXX fix constants here to not suck
+    disk_type = ChoiceField(label=_("Disk type"),
+                            choices=KVM_CHOICES["disk_type"])
+    # XXX here too plz
+    nic_type = ChoiceField(label=_("NIC type"),
+                           choices=KVM_CHOICES["nic_type"])
+
     def _configure_for_cluster(self, cluster):
         self.cluster = cluster
+        params = cluster.info["hvparams"]["kvm"]
+
+        self.fields["boot_order"].initial = params["boot_order"]
+        self.fields["disk_type"].initial = params["disk_type"]
+        self.fields["kernel_path"].initial = params["kernel_path"]
+        self.fields["nic_type"].initial = params["nic_type"]
+        self.fields["root_path"].initial = params["root_path"]
+        self.fields["serial_console"].initial = params["serial_console"]
+
+        # Remove cdrom2 if the cluster doesn't have it; see #11655.
+        if not has_cdrom2(cluster):
+            del self.fields["cdrom2_image_path"]
+
+    def clean(self):
+        data = super(VMWizardKVMForm, self).clean()
+
+        # Force cdrom disk type to IDE; see #9297.
+        data['cdrom_disk_type'] = 'ide'
+
+        return data
 
 
 def cluster_qs_for_user(user):
@@ -993,20 +1041,28 @@ class VMWizardView(CookieWizardView):
         print "Called with %r, %r, %r" % (step, data, files)
 
         if s == 0:
-            form = VMWizardClusterForm(data=data, files=files)
+            form = VMWizardClusterForm(data=data)
             user = self.request.user
             qs = cluster_qs_for_user(user)
             form.fields["cluster"].queryset = qs
         elif s == 1:
-            form = VMWizardOwnerForm(data=data, files=files)
+            form = VMWizardOwnerForm(data=data)
             qs = owner_qs_for_cluster(self._get_cluster())
             form.fields["owner"].queryset = qs
         elif s == 2:
-            form = VMWizardBasicsForm(data=data, files=files)
+            form = VMWizardBasicsForm(data=data)
             form._configure_for_cluster(self._get_cluster())
         elif s == 3:
-            form = VMWizardAdvancedForm(data=data, files=files)
-            form._configure_for_cluster(self._get_cluster())
+            form = VMWizardAdvancedForm(data=data)
+        elif s == 4:
+            cluster = self._get_cluster()
+            if cluster:
+                hv = cluster.info["default_hypervisor"]
+                if hv == "kvm":
+                    form = VMWizardKVMForm(data=data)
+                    form._configure_for_cluster(self._get_cluster())
+                else:
+                    form = Form()
         else:
             form = super(VMWizardView, self).get_form(step, data, files)
 
@@ -1033,7 +1089,7 @@ class VMWizardView(CookieWizardView):
             {
                 "link": "br0",
                 "mode": "bridged",
-            }
+            },
         ]
 
         beparams = {
@@ -1046,6 +1102,7 @@ class VMWizardView(CookieWizardView):
             "ip_check": forms[3].cleaned_data["ip_check"],
             "name_check": forms[3].cleaned_data["name_check"],
             "beparams": beparams,
+            "hvparams": forms[4].cleaned_data,
         }
 
         job_id = cluster.rapi.CreateInstance('create', hostname,
@@ -1086,5 +1143,6 @@ def vm_wizard():
         VMWizardOwnerForm,
         VMWizardBasicsForm,
         VMWizardAdvancedForm,
+        Form,
     )
     return VMWizardView.as_view(forms)
