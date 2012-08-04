@@ -25,9 +25,9 @@ import os.path
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
-# XXX - Django sets DEBUG to False when running unittests.  They want to ensure
-# that you test as if it were a production environment.  Unfortunately we have
-# some models and other settings used only for testing.  We use the TESTING flag
+# XXX - Django sets DEBUG to False when running unittests. They want to ensure
+# that you test as if it were a production environment. Unfortunately we have
+# some models and other settings used only for testing. We use the TESTING flag
 # to enable or disable these items.
 #
 # If you run the unittests without this set to TRUE, you will get many errors!
@@ -44,12 +44,18 @@ MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'ganeti.db',                      # Or path to database file if using sqlite3.
-        'USER': '',                      # Not used with sqlite3.
-        'PASSWORD': '',                  # Not used with sqlite3.
-        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+        # Use 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or
+        # 'oracle'.
+        'ENGINE': 'django.db.backends.sqlite3',
+
+        # Database name or path to database file if using sqlite3.
+        'NAME': 'ganeti.db',
+
+        'USER': '',      # Not used with sqlite3.
+        'PASSWORD': '',  # Not used with sqlite3.
+
+        'HOST': '',  # Set to empty string for localhost. Not used with sqlite3
+        'PORT': '',  # Set to empty string for default. Not used with sqlite3.
     }
 }
 
@@ -60,17 +66,15 @@ DATABASES = {
 # system time zone.
 TIME_ZONE = 'America/Los_Angeles'
 
-# If no other locale is present/supported for the time leave the following as is.
-# When locales are added, place them ath the "('yourlang', ugettext('YOUR LANGUAGE')),"
+# If no other locale is present/supported for the time leave the following as
+# is. When locales are added, place them at the
+# "('yourlang', ugettext('YOUR LANGUAGE')),"
 # line. E.g, for the Greek locale, it becomes: ('el', ugettext('Greek'))
-
-
 LANGUAGES = (
-#	 ('yourlang', ugettext('YOUR LANGUAGE')),
+    #('yourlang', ugettext('YOUR LANGUAGE')),
     ('el', ugettext('Greek')),
     ('en', ugettext('English')),
 )
-# end-of localization support
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
@@ -127,8 +131,8 @@ AUTHENTICATION_BACKENDS = (
 ROOT_URLCONF = 'urls'
 
 TEMPLATE_DIRS = (
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
+    # Put strings here, like "/home/html/django_templates" or
+    # "C:/www/django/templates". Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
     'templates/'
 )
@@ -148,10 +152,10 @@ ACCOUNT_ACTIVATION_DAYS = 7
 # Email settings for registration
 EMAIL_HOST = "localhost"
 EMAIL_PORT = "25"
-# DEFAULT_FROM_EMAIL = "noreply@example.org"
+#DEFAULT_FROM_EMAIL = "noreply@example.org"
 
-# Whether users should be able to create their own accounts. 
-# False if accounts can only be created by admins. 
+# Whether users should be able to create their own accounts.
+# False if accounts can only be created by admins.
 ALLOW_OPEN_REGISTRATION = True
 
 # A sample logging configuration. The only tangible logging
@@ -208,21 +212,44 @@ PERIODIC_CACHE_REFRESH = 300
 # Firewall Rules:
 #   Control Port: 8888, must be open between Ganeti Web Manager and Proxy
 #   Internal Ports: 12000+ must be open between the Proxy and Ganeti Nodes
-#   External Ports: default is 7000-8000, must be open between Proxy and Clients
-#   Flash Policy Server: 843, must open between Proxy and Clients
-
-VNC_PROXY='localhost:8888'
-
+#   External Ports: default is 7000-8000, must be open between Proxy and
+#   Clients Flash Policy Server: 843, must open between Proxy and Clients
+VNC_PROXY = 'localhost:8888'
 
 # API Key for authenticating scripts that pull information from ganeti, such as
 # list of sshkey's to assign to a virtual machine
 #
 # XXX this is a temporary feature that will eventually be replaced by a system
-#     that automatically creates keys per virtual machine.  This is just a quick
-#     way of enabled a secure method to pull sshkeys from ganeti web manager
+#     that automatically creates keys per virtual machine.  This is just
+#     a quick way of enabled a secure method to pull sshkeys from ganeti web
+#     manager
 WEB_MGR_API_KEY = "CHANGE_ME"
 
 # PyCurls default TIMEOUT in 7.21.6 defaults to 13 and CONNECTTIMEOUT to 78.
 # This is way too long to wait for incorrect or unresponsive ganeti clusters
 # when using the rapi for syncing and querying.
 RAPI_CONNECT_TIMEOUT = 3
+
+# METRICS_DAEMON specifies where metrics daemon (collectd-webdaemon) is
+# running. Possible options:
+#
+#   METRICS_DAEMON = "http://node1.example.org:8888"
+#    the master daemon runs on this one host. You should specify correct URL.
+#    IP address is also acceptable.
+#
+#   METRICS_DAEMON = "node"
+#    the daemon runs on every cluster's node.
+#
+#   METRICS_DAEMON = ["http://node1.example.org:8888",
+#                     "http://some.server.org:5678"]
+#    the daemon runs on these two hosts.
+#
+#   METRICS_DAEMON = None
+#    metrics and thresholds are disabled.
+#
+# CAUTION: Only the first option allows you to manipulate thresholds from GWM
+#          interface.
+#
+# More documentation about metrics:
+# https://code.osuosl.org/projects/ganeti-webmgr/wiki/Metrics
+METRICS_DAEMON = None
