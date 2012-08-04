@@ -931,7 +931,7 @@ class VMWizardBasicsForm(Form):
     vcpus = IntegerField(label=_("Virtual CPU Count"), initial=1, min_value=1)
     memory = DataVolumeField(label=_('Memory'))
     disk_template = ChoiceField(label=_('Disk Template'),
-                                choices=HV_DISK_TEMPLATES[1:])
+                                choices=HV_DISK_TEMPLATES)
     disk_size = DataVolumeField(label=_("Disk Size"))
 
     def _configure_for_cluster(self, cluster):
@@ -988,10 +988,8 @@ class VMWizardHVMForm(Form):
                            required=False)
     cdrom_image_path = CharField(label=_("CD-ROM image path"), max_length=512,
                                 required=False)
-    # XXX fix constants here to not suck
     disk_type = ChoiceField(label=_("Disk type"),
                             choices=HVM_CHOICES["disk_type"])
-    # XXX here too plz
     nic_type = ChoiceField(label=_("NIC type"),
                            choices=HVM_CHOICES["nic_type"])
 
@@ -1015,10 +1013,8 @@ class VMWizardKVMForm(Form):
                                 required=False)
     cdrom2_image_path = CharField(label=_("Second CD-ROM image path"),
                                   max_length=512, required=False)
-    # XXX fix constants here to not suck
     disk_type = ChoiceField(label=_("Disk type"),
                             choices=KVM_CHOICES["disk_type"])
-    # XXX here too plz
     nic_type = ChoiceField(label=_("NIC type"),
                            choices=KVM_CHOICES["nic_type"])
 
