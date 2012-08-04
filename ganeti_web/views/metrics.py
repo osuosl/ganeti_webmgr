@@ -7,15 +7,58 @@ from django.template.context import RequestContext
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext as _
+from django.conf import settings
 
+from collections import defaultdict
 import simplejson as json
 from requests.exceptions import RequestException
 
-from collectd_webdaemon.utils import (metrics_tree, arbitrary_metrics,
-    similar_thresholds, all_thresholds, add_threshold, edit_threshold,
-    get_threshold, delete_threshold)
 
-DAEMON_HOST = 'http://node1.example.org:8888'
+METRICS_ENABLED = True
+try:
+    from collectd_webdaemon.utils import (metrics_tree, arbitrary_metrics,
+        similar_thresholds, all_thresholds, add_threshold, edit_threshold,
+        get_threshold, delete_threshold)
+except ImportError:
+    METRICS_ENABLED = False
+
+
+def check_configured_hosts(settings):
+    """
+    Auxiliary function. Tests if defined metrics host is correct.
+
+    :param settings: Django settings
+    """
+    hosts = []
+
+    if not hasattr(settings, "METRICS_DAEMON"):
+        return False
+    elif not settings.METRICS_DAEMON:
+        return False
+    elif type(settings.METRICS_DAEMON) is list:
+        hosts += settings.METRICS_DAEMON
+    elif settings.METRICS_DAEMON == "node":
+        return "node"
+    else:
+        hosts.append(settings.METRICS_DAEMON)
+
+    try:
+        from urllib.parse import urlparse
+    except ImportError:
+        from urlparse import urlparse
+
+    for host in hosts:
+        url = urlparse(host)
+        if not all([url.scheme, url.hostname]) or url.path:
+            return False
+    return hosts if len(hosts) > 1 else hosts[0]
+
+DAEMON_HOST = check_configured_hosts(settings)
+METRICS_ENABLED = bool(DAEMON_HOST)
+if DAEMON_HOST == "node":
+    from ganeti_web.models import Node
+    result = Node.objects.values_list("hostname")
+    DAEMON_HOST = [x[0] for x in list(result)]
 
 
 # this decorator's here just in case someone accidentially added
@@ -35,6 +78,14 @@ def error_spotted(request, msg, template, data=None):
         context_instance=RequestContext(request))
 
 
+def metrics_disabled(request):
+    """
+    This is a fallback view, displayed whenever metrics support is disabled.
+    """
+    return render_to_response("ganeti/metrics/disabled.html", {},
+        context_instance=RequestContext(request))
+
+
 @login_required
 def metrics_general(request):
     """
@@ -44,18 +95,30 @@ def metrics_general(request):
     On POST request it returns metrics for specified set of hosts/plugins/types
     (from GET request.)
     """
+    if not METRICS_ENABLED:
+        return metrics_disabled(request)
+
     if request.method == "GET":
         template = "ganeti/metrics/metrics_general.html"
 
-        try:
-            tree = metrics_tree(DAEMON_HOST).json["tree"]
-        except (RequestException, KeyError, TypeError):
-            return error_spotted(request,
-                _("Couldn't connect to the metrics host %s") % DAEMON_HOST,
-                template)
+        hosts = []
+        if type(DAEMON_HOST) is list:
+            hosts += DAEMON_HOST
+        else:
+            hosts.append(DAEMON_HOST)
+
+        tree = dict()
+        for host in hosts:
+            try:
+                tree[host] = metrics_tree(host).json["tree"]
+            except (RequestException, KeyError, TypeError):
+                return error_spotted(request,
+                    _("Couldn't connect to the metrics host %s") %
+                    host, template)
 
         return render_to_response(template,
             {
+                "nodes": type(DAEMON_HOST) is list,
                 "tree": tree,
                 # I need JSONified list, because I'm using it in JavaScript
                 "tree_json": json.dumps(tree),
@@ -70,17 +133,25 @@ def metrics_general(request):
 
         template = "ganeti/metrics/metrics_display.html"
 
-        try:
-            chart = arbitrary_metrics(DAEMON_HOST, paths, start, end)
-        # TODO: this should include future min/max-value exception
-        #       collectd-webdaemon should be changed for this (None -> 0)
-        except (RequestException):
-            return error_spotted(request,
-                _("Couldn't obtain specified metrics."), template)
+        servers = defaultdict(list)
+        for path in paths:
+            path = path.split("|")
+            servers[path[0]].append(path[1])
+
+        # many charts. They have titles, too
+        charts = []
+        for server, path in servers.items():
+            try:
+                chart = arbitrary_metrics(server, path, start, end)
+                charts.append((server, chart))
+            except (RequestException):
+                return error_spotted(request,
+                    _("Couldn't obtain specified metrics."), template)
 
         return render_to_response(template,
             {
-                "metrics": chart,
+                "nodes": type(DAEMON_HOST) is list,
+                "charts": charts,
             },
             context_instance=RequestContext(request)
         )
@@ -92,6 +163,9 @@ def metrics_node(request, node):
     Displays metrics for this particular node.
     This view is reachable from Node overview page.
     """
+    if not METRICS_ENABLED:
+        return metrics_disabled(request)
+
     # TODO: display also for node's all virtual machines?
     return render_to_response("ganeti/metrics/metrics_node.html",
         {},
@@ -105,6 +179,9 @@ def metrics_vm(request, vm):
     Displays metrics for a particular virtual machine.
     This view is reachable from Virtual Machine overview page.
     """
+    if not METRICS_ENABLED:
+        return metrics_disabled(request)
+
     return render_to_response("ganeti/metrics/metrics_virtual_machine.html",
         {},
         context_instance=RequestContext(request)
@@ -120,6 +197,9 @@ def thresholds_general(request, host=None, plugin=None, type=None):
     given thresholds or similar thresholds. Otherwise it'll display a list of
     all defined thresholds.
     """
+    if not METRICS_ENABLED:
+        return metrics_disabled(request)
+
     if type:
         type = type.replace(".rrd", "")
 
@@ -191,6 +271,9 @@ def threshold_add(request):
     """
     Adds a new threshold through the form.
     """
+    if not METRICS_ENABLED:
+        return metrics_disabled(request)
+
     if request.method == "POST":
         form = ThresholdForm(request.POST)
         if form.is_valid():
@@ -220,6 +303,9 @@ def threshold_edit(request, threshold_id):
     """
     Changes a threshold through the form.
     """
+    if not METRICS_ENABLED:
+        return metrics_disabled(request)
+
     if request.method == "POST":
         form = ThresholdForm(request.POST)
         if form.is_valid():
@@ -258,6 +344,9 @@ def threshold_delete(request, threshold_id):
     Removes specified threshold.
     Doesn't ask for confirmation. Confirmation should be obtained before.
     """
+    if not METRICS_ENABLED:
+        return metrics_disabled(request)
+
     try:
         result = delete_threshold(DAEMON_HOST, threshold_id)
         if result.status_code == 200:

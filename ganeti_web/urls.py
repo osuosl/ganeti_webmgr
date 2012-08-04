@@ -269,8 +269,10 @@ urlpatterns += patterns('ganeti_web.views.metrics',
         'thresholds_general', name='thresholds-general'),
     url(r'^thresholds/$', 'thresholds_general', name='thresholds-general'),
     url(r'^add_threshold/$', 'threshold_add', name='threshold-add'),
-    url(r'^edit_threshold/(?P<threshold_id>\d+)$', 'threshold_edit', name='threshold-edit'),
-    url(r'^delete_threshold/(?P<threshold_id>\d+)$', 'threshold_delete', name='threshold-delete'),
+    url(r'^edit_threshold/(?P<threshold_id>\d+)$', 'threshold_edit',
+        name='threshold-edit'),
+    url(r'^delete_threshold/(?P<threshold_id>\d+)$', 'threshold_delete',
+        name='threshold-delete'),
 )
 
 #The following is used to serve up local static files like images

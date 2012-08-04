@@ -1,0 +1,13 @@
+{% extends "menu_base.html" %}
+{% load i18n %}
+{% load webmgr_tags %}
+
+{% block title %}{% trans "Not available" %}{% endblock %}
+
+{% block content %}
+<h1>{% trans "Metrics and thresholds are disabled or improperly configured." %}</h1>
+<p>{% trans "Please follow this link to read instructions on how to enable metrics and thresholds system and configure it properly:" %}</p>
+<p><a href="https://code.osuosl.org/projects/ganeti-webmgr/wiki/Metrics">
+    https://code.osuosl.org/projects/ganeti-webmgr/wiki/Metrics
+</a></p>
+{% endblock  %}

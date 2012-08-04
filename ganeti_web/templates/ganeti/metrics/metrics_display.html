@@ -1,6 +1,9 @@
 {% load metrics_tags %}
-{% if metrics %}
-{% embed_metrics metrics %}
+{% if charts %}
+    {% for server, chart in charts %}
+    <h3>{{ server }}</h3>
+    {% embed_metrics chart %}
+    {% endfor %}
 {% else %}
 <h3>No metrics available</h3>
 {% endif %}

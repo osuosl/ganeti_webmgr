@@ -284,12 +284,14 @@ tr.group td.name {background:url(/static/images/icons/group.png) no-repeat 0 4px
 
 /* metrics */
 #metrics_choice_table select {min-width: 160px;}
+#metrics_choice_table select#type {min-width: 140px;}
 #metrics_menu {width: 160px; float: right; text-align: right; padding-top: 15px;}
 #metrics_menu table {margin: 2px 0;}
 #selected_metrics ul {max-height: 110px; overflow-y: scroll; background-color:#EEE;}
 #selected_metrics li {padding: 2px 0;}
 #selected_metrics li input {vertical-align: middle;}
 #selected_metrics li span {vertical-align: middle;}
+#chart h3 {margin-top: 50px;}
 
 /* thresholds */
 #threshold_form {float: left; width: 400px;}
