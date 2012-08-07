@@ -40,7 +40,7 @@ from ganeti_web.constants import (EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES,
                                   HV_DISK_CACHES, MODE_CHOICES, HVM_CHOICES,
                                   HV_DISK_TEMPLATES_SINGLE_NODE)
 from ganeti_web.fields import DataVolumeField, MACAddressField
-from ganeti_web.models import (Cluster, ClusterUser, Job, Organization,
+from ganeti_web.models import (Cluster, ClusterUser, Job, Node, Organization,
                                VirtualMachineTemplate, VirtualMachine)
 from ganeti_web.utilities import (cluster_default_info, cluster_os_list,
                                   contains, get_hypervisor)
@@ -969,6 +969,20 @@ class VMWizardAdvancedForm(Form):
                             required=False)
     name_check = BooleanField(label=_('Verify hostname through DNS'),
                               initial=False, required=False)
+    pnode = ModelChoiceField(label=_("Primary Node"),
+                             queryset=Node.objects.all(), empty_label=None)
+    snode = ModelChoiceField(label=_("Secondary Node"),
+                             queryset=Node.objects.all(), empty_label=None)
+
+    def _configure_for_cluster(self, cluster):
+        self.cluster = cluster
+        qs = Node.objects.filter(cluster=cluster)
+        self.fields["pnode"].queryset = qs
+        self.fields["snode"].queryset = qs
+
+    def _configure_for_template(self, template):
+        if template != "drbd":
+            del self.fields["snode"]
 
 
 class VMWizardPVMForm(Form):
@@ -1080,6 +1094,12 @@ class VMWizardView(CookieWizardView):
             return data["hv"]
         return None
 
+    def _get_template(self):
+        data = self.get_cleaned_data_for_step("2")
+        if data:
+            return data["disk_template"]
+        return None
+
     def get_form(self, step=None, data=None, files=None):
         s = int(self.steps.current) if step is None else int(step)
 
@@ -1099,6 +1119,8 @@ class VMWizardView(CookieWizardView):
             form._configure_for_cluster(self._get_cluster())
         elif s == 3:
             form = VMWizardAdvancedForm(data=data)
+            form._configure_for_cluster(self._get_cluster())
+            form._configure_for_template(self._get_template())
         elif s == 4:
             cluster = self._get_cluster()
             hv = self._get_hv()
@@ -1154,9 +1176,13 @@ class VMWizardView(CookieWizardView):
             "os": forms[2].cleaned_data["os"],
             "ip_check": forms[3].cleaned_data["ip_check"],
             "name_check": forms[3].cleaned_data["name_check"],
+            "pnode": forms[3].cleaned_data["pnode"].hostname,
             "beparams": beparams,
             "hvparams": forms[4].cleaned_data,
         }
+
+        if "snode" in forms[3].cleaned_data:
+            kwargs["snode"] = forms[3].cleaned_data["snode"].hostname
 
         job_id = cluster.rapi.CreateInstance('create', hostname,
                                              disk_template, disks, nics,
