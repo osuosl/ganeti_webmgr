@@ -907,6 +907,19 @@ class VMWizardClusterForm(Form):
                                queryset=Cluster.objects.all(),
                                empty_label=None)
 
+    def clean_cluster(self):
+        """
+        Ensure that the cluster is available.
+        """
+
+        cluster = self.cleaned_data.get('cluster', None)
+        if not getattr(cluster, "info", None):
+            msg = _("This cluster is currently unavailable. Please check"
+                    " for Errors on the cluster detail page.")
+            self._errors['cluster'] = self.error_class([msg])
+
+        return cluster
+
 
 class VMWizardOwnerForm(Form):
     owner = ModelChoiceField(label=_('Owner'),
