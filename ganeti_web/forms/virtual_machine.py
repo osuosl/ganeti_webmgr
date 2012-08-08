@@ -43,7 +43,7 @@ from ganeti_web.fields import DataVolumeField, MACAddressField
 from ganeti_web.models import (Cluster, ClusterUser, Job, Node, Organization,
                                VirtualMachineTemplate, VirtualMachine)
 from ganeti_web.utilities import (cluster_default_info, cluster_os_list,
-                                  contains, get_hypervisor)
+                                  contains, get_hypervisor, hv_prettify)
 from django.utils.translation import ugettext_lazy as _
 from ganeti_web.util.client import REPLACE_DISK_AUTO, REPLACE_DISK_PRI, \
     REPLACE_DISK_CHG, REPLACE_DISK_SECONDARY
@@ -933,8 +933,9 @@ class VMWizardOwnerForm(Form):
         self.fields["owner"].queryset = qs
 
         hvs = cluster.info["enabled_hypervisors"]
+        prettified = [hv_prettify(hv) for hv in hvs]
         hv = cluster.info["default_hypervisor"]
-        self.fields["hv"].choices = zip(hvs, hvs)
+        self.fields["hv"].choices = zip(hvs, prettified)
         self.fields["hv"].initial = hv
 
 
