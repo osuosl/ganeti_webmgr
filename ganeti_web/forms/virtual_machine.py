@@ -1116,9 +1116,6 @@ class VMWizardView(CookieWizardView):
     def get_form(self, step=None, data=None, files=None):
         s = int(self.steps.current) if step is None else int(step)
 
-        print "At step %r" % s
-        print "Called with %r, %r, %r" % (step, data, files)
-
         if s == 0:
             form = VMWizardClusterForm(data=data)
             user = self.request.user
