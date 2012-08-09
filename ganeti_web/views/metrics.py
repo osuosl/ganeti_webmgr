@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render_to_response
 from django.template.context import RequestContext
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext as _
 from django.conf import settings
@@ -19,6 +19,7 @@ try:
     from collectd_webdaemon.utils import (metrics_tree, arbitrary_metrics,
         similar_thresholds, all_thresholds, add_threshold, edit_threshold,
         get_threshold, delete_threshold)
+    from collectd_webdaemon.models import OverviewCharts
 except ImportError:
     METRICS_ENABLED = False
 
@@ -189,6 +190,17 @@ def metrics_vm(request, vm):
         {},
         context_instance=RequestContext(request)
     )
+
+
+@login_required
+def save_overview(request):
+    """
+    Saves provided (via POST) list of paths so that they're displayed on the
+    overview page.
+    """
+    data = request.POST.getlist("paths[]")
+    obj = OverviewCharts(user=request.user, charts=json.dumps(data))
+    return HttpResponse("OK")
 
 
 @login_required

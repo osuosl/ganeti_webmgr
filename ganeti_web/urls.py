@@ -52,7 +52,8 @@ urlpatterns = patterns('ganeti_web.views.general',
     url(r'^used_resources/?$', 'used_resources', name="used_resources"),
 
     # clear errors
-    url(r'^error/clear/(?P<pk>\d+)/?$', 'clear_ganeti_error', name="error-clear"),
+    url(r'^error/clear/(?P<pk>\d+)/?$', 'clear_ganeti_error',
+        name="error-clear"),
 
     # Errors
     url(r'clusters/errors', 'get_errors', name="cluster-errors"),
@@ -72,10 +73,10 @@ urlpatterns += patterns('ganeti_web.views.users',
     url(r'^user/(?P<user_id>\d+)/key/?$', 'key_get', name="user-key-add"),
 
     # ssh keys
-    url(r'^keys/get/$',                     'key_get', name="key-get"),
-    url(r'^keys/get/(?P<key_id>\d+)/?$',    'key_get', name="key-get"),
-    url(r'^keys/save/$',                    'key_save', name="key-save"),
-    url(r'^keys/save/(?P<key_id>\d+)/?$',   'key_save', name="key-save"),
+    url(r'^keys/get/$', 'key_get', name="key-get"),
+    url(r'^keys/get/(?P<key_id>\d+)/?$', 'key_get', name="key-get"),
+    url(r'^keys/save/$', 'key_save', name="key-save"),
+    url(r'^keys/save/(?P<key_id>\d+)/?$', 'key_save', name="key-save"),
     url(r'^keys/delete/(?P<key_id>\d+)/?$', 'key_delete', name="key-delete"),
 )
 
@@ -96,24 +97,32 @@ urlpatterns += patterns('ganeti_web.views.cluster',
     #   Edit
     url(r'^%s/edit/?$' % cluster, 'edit', name="cluster-edit"),
     #   Redistribute config
-    url(r'^%s/redistribute-config/?$' % cluster, 'redistribute_config', name="cluster-redistribute-config"),
+    url(r'^%s/redistribute-config/?$' % cluster, 'redistribute_config',
+        name="cluster-redistribute-config"),
     #   User
     url(r'^%s/users/?$' % cluster, 'users', name="cluster-users"),
     url(r'^%s/virtual_machines/?$' % cluster, ClusterVMListView.as_view(),
         name="cluster-vms"),
     url(r'^%s/nodes/?$' % cluster, 'nodes', name="cluster-nodes"),
-    url(r'^%s/quota/(?P<user_id>\d+)?/?$' % cluster, 'quota', name="cluster-quota"),
-    url(r'^%s/permissions/?$' % cluster, 'permissions', name="cluster-permissions"),
-    url(r'^%s/permissions/user/(?P<user_id>\d+)/?$' % cluster, 'permissions', name="cluster-permissions-user"),
-    url(r'^%s/permissions/group/(?P<group_id>\d+)/?$' % cluster, 'permissions', name="cluster-permissions-group"),
+    url(r'^%s/quota/(?P<user_id>\d+)?/?$' % cluster, 'quota',
+        name="cluster-quota"),
+    url(r'^%s/permissions/?$' % cluster, 'permissions',
+        name="cluster-permissions"),
+    url(r'^%s/permissions/user/(?P<user_id>\d+)/?$' % cluster, 'permissions',
+        name="cluster-permissions-user"),
+    url(r'^%s/permissions/group/(?P<group_id>\d+)/?$' % cluster, 'permissions',
+        name="cluster-permissions-group"),
 
-    url(r'^(?P<id>\d+)/jobs/status/?$', "job_status", name="cluster-job-status"),
+    url(r'^(?P<id>\d+)/jobs/status/?$', "job_status",
+        name="cluster-job-status"),
 
     #ssh_keys
-    url(r'^%s/keys/(?P<api_key>\w+)/?$' % cluster, "ssh_keys", name="cluster-keys"),
+    url(r'^%s/keys/(?P<api_key>\w+)/?$' % cluster, "ssh_keys",
+        name="cluster-keys"),
 
     # object log
-    url(r'^%s/object_log/?$' % cluster, 'object_log', name="cluster-object_log"),
+    url(r'^%s/object_log/?$' % cluster, 'object_log',
+        name="cluster-object_log"),
 )
 
 
@@ -123,7 +132,8 @@ urlpatterns += patterns('ganeti_web.views.node',
     # Detail
     url(r'^%s/?$' % node_prefix, NodeDetailView.as_view(),
         name="node-detail"),
-    url(r'^node/(?P<id>\d+)/jobs/status/?$', "job_status", name="node-job-status"),
+    url(r'^node/(?P<id>\d+)/jobs/status/?$', "job_status",
+        name="node-job-status"),
 
     # Primary and secondary Virtual machines
     url(r'^%s/primary/?$' % node_prefix, NodePrimaryListView.as_view(),
@@ -132,7 +142,8 @@ urlpatterns += patterns('ganeti_web.views.node',
         name="node-secondary-vms"),
 
     #object log
-    url(r'^%s/object_log/?$' % node_prefix, 'object_log', name="node-object_log"),
+    url(r'^%s/object_log/?$' % node_prefix, 'object_log',
+        name="node-object_log"),
 
     # Node actions
     url(r'^%s/role/?$' % node_prefix, 'role', name="node-role"),
@@ -147,11 +158,15 @@ urlpatterns += patterns('ganeti_web.views.virtual_machine',
     url(r'^vms/$', VMListView.as_view(), name="virtualmachine-list"),
     #  Create
     url(r'^vm/add/?$', 'create', name="instance-create"),
-    url(r'^vm/add/choices/$', 'cluster_choices', name="instance-create-cluster-choices"),
-    url(r'^vm/add/options/$', 'cluster_options', name="instance-create-cluster-options"),
-    url(r'^vm/add/defaults/$', 'cluster_defaults', name="instance-create-cluster-defaults"),
+    url(r'^vm/add/choices/$', 'cluster_choices',
+        name="instance-create-cluster-choices"),
+    url(r'^vm/add/options/$', 'cluster_options',
+        name="instance-create-cluster-options"),
+    url(r'^vm/add/defaults/$', 'cluster_defaults',
+        name="instance-create-cluster-defaults"),
     url(r'^vm/add/%s/?$' % cluster_slug, 'create', name="instance-create"),
-    url(r'^%s/recover/?$' % vm_prefix, 'recover_failed_deploy', name="instance-create-recover"),
+    url(r'^%s/recover/?$' % vm_prefix, 'recover_failed_deploy',
+        name="instance-create-recover"),
 
     #  VM Table
     url(r'^%s/vm/table/?$' % cluster, VMListTableView.as_view(),
@@ -165,41 +180,50 @@ urlpatterns += patterns('ganeti_web.views.virtual_machine',
 
     #  Detail
     url(r'^%s/?$' % vm_prefix, 'detail', name="instance-detail"),
-    url(r'^vm/(?P<id>\d+)/jobs/status/?$', 'job_status', name="instance-job-status"),
+    url(r'^vm/(?P<id>\d+)/jobs/status/?$', 'job_status',
+        name="instance-job-status"),
     url(r'^%s/users/?$' % vm_prefix, 'users', name="vm-users"),
-    url(r'^%s/permissions/?$' % vm_prefix, 'permissions', name="vm-permissions"),
-    url(r'^%s/permissions/user/(?P<user_id>\d+)/?$' % vm_prefix, 'permissions', name="vm-permissions-user"),
-    url(r'^%s/permissions/group/(?P<group_id>\d+)/?$' % vm_prefix, 'permissions', name="vm-permissions-user"),
+    url(r'^%s/permissions/?$' % vm_prefix, 'permissions',
+        name="vm-permissions"),
+    url(r'^%s/permissions/user/(?P<user_id>\d+)/?$' % vm_prefix, 'permissions',
+        name="vm-permissions-user"),
+    url(r'^%s/permissions/group/(?P<group_id>\d+)/?$' % vm_prefix,
+        'permissions', name="vm-permissions-user"),
 
     #  Start, Stop, Reboot, VNC
     url(r'^%s/vnc/?$' % vm_prefix, 'novnc', name="instance-vnc"),
     url(r'^%s/vnc/popout/?$' % vm_prefix, 'novnc',
-                        {'template': 'ganeti/virtual_machine/vnc_popout.html'},
-                        name="instance-vnc-popout"),
-    url(r'^%s/vnc_proxy/?$' % vm_prefix, 'vnc_proxy', name="instance-vnc-proxy"),
+        {'template': 'ganeti/virtual_machine/vnc_popout.html'},
+        name="instance-vnc-popout"),
+    url(r'^%s/vnc_proxy/?$' % vm_prefix, 'vnc_proxy',
+        name="instance-vnc-proxy"),
     url(r'^%s/shutdown/?$' % vm_prefix, 'shutdown', name="instance-shutdown"),
     url(r'^%s/shutdown-now/?$' % vm_prefix, 'shutdown_now',
         name="instance-shutdown-now"),
     url(r'^%s/startup/?$' % vm_prefix, 'startup', name="instance-startup"),
     url(r'^%s/reboot/?$' % vm_prefix, 'reboot', name="instance-reboot"),
     url(r'^%s/migrate/?$' % vm_prefix, 'migrate', name="instance-migrate"),
-    url(r'^%s/replace_disks/?$' % vm_prefix, 'replace_disks', name="instance-replace-disks"),
+    url(r'^%s/replace_disks/?$' % vm_prefix, 'replace_disks',
+        name="instance-replace-disks"),
 
     # Delete
     url(r"^%s/delete/?$" % vm_prefix, VMDeleteView.as_view(),
         name="instance-delete"),
 
     # Reinstall
-    url(r"^%s/reinstall/?$" % vm_prefix, "reinstall", name="instance-reinstall"),
+    url(r"^%s/reinstall/?$" % vm_prefix, "reinstall",
+        name="instance-reinstall"),
 
     # Edit / Modify
     url(r"^%s/edit/?$" % vm_prefix, "modify", name="instance-modify"),
-    url(r'^%s/edit/confirm/?$' % vm_prefix, "modify_confirm", name="instance-modify-confirm"),
+    url(r'^%s/edit/confirm/?$' % vm_prefix, "modify_confirm",
+        name="instance-modify-confirm"),
     url(r"^%s/rename/?$" % vm_prefix, "rename", name="instance-rename"),
     url(r"^%s/reparent/?$" % vm_prefix, "reparent", name="instance-reparent"),
 
     # SSH Keys
-    url(r'^%s/keys/(?P<api_key>\w+)/?$' % vm_prefix, "ssh_keys", name="instance-keys"),
+    url(r'^%s/keys/(?P<api_key>\w+)/?$' % vm_prefix, "ssh_keys",
+        name="instance-keys"),
 
     # object log
     url(r'^%s/object_log/?$' % vm_prefix, 'object_log', name="vm-object_log"),
@@ -238,8 +262,10 @@ urlpatterns += patterns('ganeti_web.views.importing',
 
 # Node Importing
 urlpatterns += patterns('ganeti_web.views.importing_nodes',
-    url(r'^import/node/missing/', 'missing_ganeti', name='import-nodes-missing'),
-    url(r'^import/node/missing_db/', 'missing_db', name='import-nodes-missing_db'),
+    url(r'^import/node/missing/', 'missing_ganeti',
+        name='import-nodes-missing'),
+    url(r'^import/node/missing_db/', 'missing_db',
+        name='import-nodes-missing_db'),
 )
 
 # Jobs
@@ -259,12 +285,15 @@ urlpatterns += patterns('ganeti_web.views.user_search',
     url(r'^search/owners/?$', 'search_owners', name="owner-search")
 )
 urlpatterns += patterns('haystack.views',
-    url(r'^search/', login_required(SearchView(form_class=autocomplete_search_form)), name='search')
+    url(r'^search/', login_required(SearchView(
+        form_class=autocomplete_search_form)
+    ), name='search')
 )
 
 # Metrics
 urlpatterns += patterns('ganeti_web.views.metrics',
     url(r'^metrics/$', 'metrics_general', name='metrics-general'),
+    url(r'^metrics/save$', 'save_overview', name='metrics-overview-save'),
     url(r'^thresholds/(?P<host>.+)/(?P<plugin>.+)/(?P<type>.+)$',
         'thresholds_general', name='thresholds-general'),
     url(r'^thresholds/$', 'thresholds_general', name='thresholds-general'),
@@ -279,5 +308,5 @@ urlpatterns += patterns('ganeti_web.views.metrics',
 root = '%s/static' % os.path.dirname(os.path.realpath(__file__))
 urlpatterns += patterns('',
     (r'^static/(?P<path>.*)', 'django.views.static.serve',
-        {'document_root':  root, }),
+        {'document_root': root, }),
 )

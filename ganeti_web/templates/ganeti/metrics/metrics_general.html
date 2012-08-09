@@ -141,6 +141,21 @@
                 }
             );
         });
+
+        // when user clicks "Display on the overview page"
+        $("#overview_page_btn").click(function() {
+            var paths = Array();
+
+            $("#selected_metrics > ul input:checked").each(function() {
+                paths.push($(this).val());
+            });
+
+            $.post("{% url metrics-overview-save %}",
+                {
+                    paths: paths,
+                }
+            );
+        });
     });
 </script>
 {% endblock %}
@@ -227,7 +242,7 @@
         </div>
 
         <button class="button chart" id="plot_btn">{% trans "Plot!" %}</button>
-        <button class="button overview_page">{% trans "Display on the overview page" %}</button>
+        <button class="button overview_page" id="overview_page_btn">{% trans "Display on the overview page" %}</button>
     </div>
 
     <div id="selected_metrics" class="overview">
