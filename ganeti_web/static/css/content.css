@@ -32,7 +32,7 @@
  * Overview/Status page
  */
 #errors_list h2, #usage_summary h2, #cluster_summary h2, #vm_summary h2,
-#administration h2 {
+#administration h2, #charts_overview h2 {
     border:1px solid #555;
     background-color:#888;
     color:#fff;

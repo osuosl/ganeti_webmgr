@@ -1,4 +1,5 @@
 {% extends "menu_base.html" %}
+{% load cache %}
 {% load i18n %}
 {% load webmgr_tags %}
 
@@ -212,6 +213,18 @@
     {% endif %}
     </table>
 </div>
+{% endif %}
+
+{% if charts %}
+    {% cache 600 charts_overview user.username %}
+    {% load metrics_tags %}
+    <div id="charts_overview">
+    {% for server, chart in charts %}
+        <h2>{{ server }}</h2>
+        {% embed_metrics chart %}
+    {% endfor %}
+    </div>
+    {% endcache %}
 {% endif %}
 {% endblock %}
 

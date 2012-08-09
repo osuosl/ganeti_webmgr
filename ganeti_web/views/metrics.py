@@ -200,6 +200,7 @@ def save_overview(request):
     """
     data = request.POST.getlist("paths[]")
     obj = OverviewCharts(user=request.user, charts=json.dumps(data))
+    obj.save()
     return HttpResponse("OK")
 
 
