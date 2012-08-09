@@ -492,3 +492,8 @@ def render_os(os):
 def mult(value, arg):
     # pinched from http://code.djangoproject.com/ticket/361
     return int(value) * int(arg)
+
+
+@register.filter
+def split(value, separator):
+    return str(value).split(separator)

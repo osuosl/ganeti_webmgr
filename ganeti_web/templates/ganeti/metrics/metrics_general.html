@@ -232,7 +232,13 @@
 
     <div id="selected_metrics" class="overview">
         <h3>{% trans "Selected metrics" %}</h3>
-        <ul></ul>
+        <ul>
+        {% if metrics_paths|length %}
+            {% for path in metrics_paths %}
+                <li><label><input type="checkbox" value="{{ path }}" checked="checked" /><span title="{% trans 'Click to remove' %}">{{ path|split:"|"|last|cut:".rrd" }}</span></label></li>
+            {% endfor %}
+        {% endif %}
+        </ul>
     </div>
 
 

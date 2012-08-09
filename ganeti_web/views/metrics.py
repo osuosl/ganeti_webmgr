@@ -122,6 +122,7 @@ def metrics_general(request):
                 "tree": tree,
                 # I need JSONified list, because I'm using it in JavaScript
                 "tree_json": json.dumps(tree),
+                "metrics_paths": request.session.get("metrics_paths", tuple()),
             },
             context_instance=RequestContext(request)
         )
@@ -130,6 +131,8 @@ def metrics_general(request):
         paths = request.POST.getlist("paths[]")  # jQuery appends '[]'
         start = request.POST.get("start", "-1h")
         end = request.POST.get("end", "now")
+
+        request.session["metrics_paths"] = tuple(paths)
 
         template = "ganeti/metrics/metrics_display.html"
 
