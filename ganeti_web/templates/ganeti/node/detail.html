@@ -23,7 +23,7 @@
                 75:  '{{STATIC_URL}}/images/progressbar/progressbg_red.gif'
             }
         };
-        
+
         $(document).ready(function() {
             $('#tabs').tabs({
                 spinner: false,
@@ -38,7 +38,7 @@
                     }
                 }
             });
-            
+
             $(".ram, .disk").progressBar(PBAR_CONF);
 
             $(".modify, .migrate, .evacuate").click(function(event){
@@ -67,9 +67,9 @@
                             }
                         },
                         style: {
-                            name: 'dark', 
-                            border:{radius:5}, 
-                            width:400, 
+                            name: 'dark',
+                            border:{radius:5},
+                            width:400,
                             background:'#eeeeee'
                         },
                         show: {when:false, ready:true},
@@ -160,7 +160,7 @@
                 </a>
             </li>
             <li>
-                <a title="secondary" 
+                <a title="secondary"
                         href="{% url node-secondary-vms cluster.slug node.hostname %}">
                     <span>{% trans "Secondary" %}</span>
                 </a>
@@ -172,6 +172,7 @@
                 </a>
         </li>
         {% endif %}
+        <li><a title="metrics" href="{% url metrics-node cluster.slug node.hostname%}"><span>{% trans "Metrics" %}</span></a></li>
     </ul>
     <div id="detail">
         <ul id="actions">
@@ -183,8 +184,8 @@
                 </a>
             </li>
             <li>
-                <a class="button migrate" 
-                        title="migrates all primary instances of this node" 
+                <a class="button migrate"
+                        title="migrates all primary instances of this node"
                         href="{% url node-migrate cluster.slug node.hostname %}">
                     {% trans "Migrate" %}
                 </a>

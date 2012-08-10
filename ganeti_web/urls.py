@@ -294,6 +294,8 @@ urlpatterns += patterns('haystack.views',
 urlpatterns += patterns('ganeti_web.views.metrics',
     url(r'^metrics/$', 'metrics_general', name='metrics-general'),
     url(r'^metrics/save$', 'save_overview', name='metrics-overview-save'),
+
+    # thresholds manipulation
     url(r'^thresholds/(?P<host>.+)/(?P<plugin>.+)/(?P<type>.+)$',
         'thresholds_general', name='thresholds-general'),
     url(r'^thresholds/$', 'thresholds_general', name='thresholds-general'),
@@ -302,6 +304,12 @@ urlpatterns += patterns('ganeti_web.views.metrics',
         name='threshold-edit'),
     url(r'^delete_threshold/(?P<threshold_id>\d+)$', 'threshold_delete',
         name='threshold-delete'),
+
+    # metrics for nodes
+    url(r'^%s/metrics/$' % node_prefix, 'metrics_node', name="metrics-node"),
+
+    # metrics for VMs
+    url(r'^%s/metrics/?$' % vm_prefix, 'metrics_vm', name="metrics-vm"),
 )
 
 #The following is used to serve up local static files like images

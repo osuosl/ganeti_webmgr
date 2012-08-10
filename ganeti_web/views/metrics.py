@@ -12,13 +12,14 @@ from django.conf import settings
 from collections import defaultdict
 import simplejson as json
 from requests.exceptions import RequestException
+from .virtual_machine import get_vm_and_cluster_or_404
 
 
 METRICS_ENABLED = True
 try:
-    from collectd_webdaemon.utils import (metrics_tree, arbitrary_metrics,
-        similar_thresholds, all_thresholds, add_threshold, edit_threshold,
-        get_threshold, delete_threshold)
+    from collectd_webdaemon.utils import (metrics_tree, metrics_hosts,
+        arbitrary_metrics, similar_thresholds, all_thresholds, add_threshold,
+        edit_threshold, get_threshold, delete_threshold)
     from collectd_webdaemon.models import OverviewCharts
 except ImportError:
     METRICS_ENABLED = False
@@ -54,12 +55,26 @@ def check_configured_hosts(settings):
             return False
     return hosts if len(hosts) > 1 else hosts[0]
 
+
 DAEMON_HOST = check_configured_hosts(settings)
 METRICS_ENABLED = bool(DAEMON_HOST)
-if DAEMON_HOST == "node":
-    from ganeti_web.models import Node
-    result = Node.objects.values_list("hostname")
-    DAEMON_HOST = [x[0] for x in list(result)]
+
+
+def get_hosts(var):
+    """
+    Get list of hosts based on configuration.
+    TODO: cache query
+    """
+    hosts = []
+    if type(var) is list:
+        hosts = var[:]
+    elif var == "node":
+        from ganeti_web.models import Node
+        result = Node.objects.values_list("hostname")
+        hosts = [x[0] for x in list(result)]
+    else:
+        hosts.append(var)
+    return hosts
 
 
 # this decorator's here just in case someone accidentially added
@@ -102,11 +117,7 @@ def metrics_general(request):
     if request.method == "GET":
         template = "ganeti/metrics/metrics_general.html"
 
-        hosts = []
-        if type(DAEMON_HOST) is list:
-            hosts += DAEMON_HOST
-        else:
-            hosts.append(DAEMON_HOST)
+        hosts = get_hosts(DAEMON_HOST)
 
         tree = dict()
         for host in hosts:
@@ -162,7 +173,7 @@ def metrics_general(request):
 
 
 @login_required
-def metrics_node(request, node):
+def metrics_node(request, cluster_slug, host):
     """
     Displays metrics for this particular node.
     This view is reachable from Node overview page.
@@ -170,15 +181,39 @@ def metrics_node(request, node):
     if not METRICS_ENABLED:
         return metrics_disabled(request)
 
-    # TODO: display also for node's all virtual machines?
-    return render_to_response("ganeti/metrics/metrics_node.html",
-        {},
-        context_instance=RequestContext(request)
-    )
+    template = "ganeti/metrics/metrics_node.html"
+
+    metrics_server = ""
+    tree = None
+    servers = get_hosts(DAEMON_HOST)
+    try:
+        for server in servers:
+            if host in metrics_hosts(server).json["hosts"]:
+                tree = metrics_tree(server).json["tree"]
+                metrics_server = server
+                break
+    except (RequestException, KeyError, TypeError):
+        return error_spotted(request,
+            _("Couldn't obtain the list of hosts or host's metrics tree."),
+            template)
+
+    if tree:
+        return render_to_response("ganeti/metrics/metrics_node_vm.html",
+            {
+                "server": metrics_server,
+                "host": host,
+                "tree": tree[host],
+                "tree_json": json.dumps(tree[host]),
+            },
+            context_instance=RequestContext(request)
+        )
+    else:
+        return error_spotted(request,
+            _("Couldn't find this host on any metrics server."), template)
 
 
 @login_required
-def metrics_vm(request, vm):
+def metrics_vm(request, cluster_slug, instance):
     """
     Displays metrics for a particular virtual machine.
     This view is reachable from Virtual Machine overview page.
@@ -186,10 +221,38 @@ def metrics_vm(request, vm):
     if not METRICS_ENABLED:
         return metrics_disabled(request)
 
-    return render_to_response("ganeti/metrics/metrics_virtual_machine.html",
-        {},
-        context_instance=RequestContext(request)
-    )
+    template = "ganeti/metrics/metrics_node.html"
+    vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
+
+    host = "%s_%s" % (cluster.info["default_hypervisor"], instance)
+
+    metrics_server = ""
+    tree = None
+    servers = get_hosts(DAEMON_HOST)
+    try:
+        for server in servers:
+            if host in metrics_hosts(server).json["hosts"]:
+                tree = metrics_tree(server).json["tree"]
+                metrics_server = server
+                break
+    except (RequestException, KeyError, TypeError):
+        return error_spotted(request,
+            _("Couldn't obtain the list of hosts or host's metrics tree."),
+            template)
+
+    if tree:
+        return render_to_response("ganeti/metrics/metrics_node_vm.html",
+            {
+                "server": metrics_server,
+                "host": host,
+                "tree": tree[host],
+                "tree_json": json.dumps(tree[host]),
+            },
+            context_instance=RequestContext(request)
+        )
+    else:
+        return error_spotted(request,
+            _("Couldn't find this host on any metrics server."), template)
 
 
 @login_required

@@ -1,62 +1,25 @@
-{% extends "menu_base.html" %}
 {% load i18n %}
 {% load webmgr_tags %}
 
-{% block title %}{% trans "Metrics" %}{% endblock %}
-
-{% block head %}
 <script type="text/javascript" src="{{STATIC_URL}}/js/jquery-ui.min.js"></script>
 <script type="text/javascript">
     var tree = $.parseJSON('{{ tree_json|safe }}');
-    {% if nodes %}
-    var many_nodes = true;
-    {% else %}
-    var many_nodes = false;
-    {% endif %}
+    var server = "{{ server }}";
+    var host = "{{ host }}";
 
     $(document).ready(function () {
-        // when user selects specified server from <select>
-        $("#server").change(function() {
-            server = $(this).val();
-            $("#host").empty();
-            $("#plugin").empty();
-            $("#type").empty();
-
-            $.each(tree[server], function(k, v) {
-                $("<option/>", {"html": k}).appendTo("#host");
-            });
-        });
-
-
-        // when user selects specified host from <select>
-        $("#host").change(function() {
-            server = $("#server").val();
-            host = $(this).val();
-            $("#plugin").empty();
-            $("#type").empty();
-
-            $.each(tree[server][host], function(k, v) {
-                $("<option/>", {"html": k}).appendTo("#plugin");
-            });
-        });
-
-
         // when user selects specified plugin from <select>
         $("#plugin").change(function() {
-            server = $("#server").val();
-            host = $("#host").val();
             plugin = $(this).val();
             $("#type").empty();
 
-            $.each(tree[server][host][plugin], function(k, v) {
+            $.each(tree[plugin], function(k, v) {
                 $("<option/>", {"html": v.replace(".rrd", ""), "value": v}).appendTo("#type");
             });
         });
 
         // when user clicks "Add metrics"
         $("#add_metrics").click(function() {
-            server = $("#server").val();
-            host = $("#host").val();
             plugin = $("#plugin").val();
 
             if (host && plugin) {
@@ -158,10 +121,6 @@
         });
     });
 </script>
-{% endblock %}
-
-{% block content %}
-<h1>{% trans "Metrics" %}</h1>
 
 {% if messages %}
 <ul id="messages">
@@ -170,41 +129,20 @@
     {% endfor %}
 </ul>
 {% endif %}
+
 <div>
     <table id="metrics_choice_table">
         <tr>
-            {% if nodes %}
-            <th>{% trans "Server" %}</th>
-            {% endif %}
-            <th>{% trans "Host" %}</th>
             <th>{% trans "Plugin" %}</th>
             <th>{% trans "Type" %}</th>
             <th></th>
         </tr>
         <tr>
-            {% if nodes %}
-            <td>
-                <select name="server" id="server" size=7>
-                    {% for host in tree.keys %}
-                    <option>{{ host }}</option>
-                    {% endfor %}
-                </select>
-            </td>
-            {% else %}
-            <input type="hidden" value="{{ tree.keys.0 }}" id="server">
-            {% endif %}
-            <td>
-                <select name="host" id="host" size=7>
-                    {% if not nodes %}
-                        {% for host in tree.values %}
-                        <option>{{ host.keys.0 }}</option>
-                        {% endfor %}
-                    {% endif %}
-                </select>
-            </td>
             <td>
                 <select name="plugin" id="plugin" size=7>
-                    <option></option>
+                    {% for plugin in tree.keys %}
+                    <option>{{ plugin }}</option>
+                    {% endfor %}
                 </select>
             </td>
             <td>
@@ -247,18 +185,10 @@
 
     <div id="selected_metrics" class="overview">
         <h3>{% trans "Selected metrics" %}</h3>
-        <ul>
-        {% if metrics_paths|length %}
-            {% for path in metrics_paths %}
-                <li><label><input type="checkbox" value="{{ path }}" checked="checked" /><span title="{% trans 'Click to remove' %}">{{ path|split:"|"|last|cut:".rrd" }}</span></label></li>
-            {% endfor %}
-        {% endif %}
-        </ul>
+        <ul></ul>
     </div>
 </div>
 
 <div>
     <div id="chart"></div>
 </div>
-
-{% endblock %}

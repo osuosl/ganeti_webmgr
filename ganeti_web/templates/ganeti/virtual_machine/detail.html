@@ -13,7 +13,7 @@
     var job_poller;
 
      $(document).ready(function() {
-        $('#tabs').tabs({ 
+        $('#tabs').tabs({
             spinner: false,
             cache: true,
             select: function(event, ui) {
@@ -57,9 +57,9 @@
                     },
                     position: {  corner:{target:'center', tooltip:'center'}},
                     style: {
-                        name: 'dark', 
-                        border:{radius:5}, 
-                        width:400, 
+                        name: 'dark',
+                        border:{radius:5},
+                        width:400,
                         background:'#eeeeee'},
                     show: {when:false, ready:true},
                     hide: {fixed: true, when:false},
@@ -204,6 +204,7 @@
             </a>
         </li>
         {% endif %}
+        <li><a title="metrics" href="{% url metrics-vm cluster.slug instance.hostname %}"><span>{% trans "Metrics" %}</span></a></li>
     </ul>
     <div id="overview" class="tab_content">
 		{% if instance.cluster.username %}
