@@ -253,3 +253,9 @@ RAPI_CONNECT_TIMEOUT = 3
 # More documentation about metrics:
 # https://code.osuosl.org/projects/ganeti-webmgr/wiki/Metrics
 METRICS_DAEMON = None
+
+# METRICS_PORT specifies port used to connect to the metrics daemon
+# (collectd-webdaemon). This settings is only used when METRICS_DAEMON is set
+# to "node" configuration.
+METRICS_PORT = "8888"
+

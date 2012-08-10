@@ -6,6 +6,7 @@ from django.shortcuts import render_to_response
 from django.template.context import RequestContext
 from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse
+from django.core.cache import cache
 from django.utils.translation import ugettext as _
 from django.conf import settings
 
@@ -63,15 +64,18 @@ METRICS_ENABLED = bool(DAEMON_HOST)
 def get_hosts(var):
     """
     Get list of hosts based on configuration.
-    TODO: cache query
     """
     hosts = []
     if type(var) is list:
         hosts = var[:]
     elif var == "node":
-        from ganeti_web.models import Node
-        result = Node.objects.values_list("hostname")
-        hosts = [x[0] for x in list(result)]
+        hosts = cache.get("list_of_nodes")
+        if not hosts:
+            from ganeti_web.models import Node
+            result = Node.objects.values_list("hostname")
+            hosts = ["http://%s:%s" % (x[0], settings.METRICS_PORT) for x in
+                list(result)]
+            cache.set("list_of_nodes", hosts, 600)
     else:
         hosts.append(var)
     return hosts
