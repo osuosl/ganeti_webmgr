@@ -351,7 +351,7 @@ def overview(request, rest=False):
             for server, path in servers.items():
                 chart = arbitrary_metrics(server, path)
                 charts.append((server, chart))
-        except (RequestException):
+        except (RequestException, IOError):
             pass
 
     if rest:

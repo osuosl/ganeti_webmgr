@@ -136,7 +136,7 @@ def metrics_general(request):
 
         return render_to_response(template,
             {
-                "nodes": type(DAEMON_HOST) is list,
+                "nodes": type(DAEMON_HOST) is list or DAEMON_HOST == "node",
                 "tree": tree,
                 # I need JSONified list, because I'm using it in JavaScript
                 "tree_json": json.dumps(tree),
@@ -187,7 +187,7 @@ def metrics_node(request, cluster_slug, host):
     if not METRICS_ENABLED:
         return metrics_disabled(request)
 
-    template = "ganeti/metrics/metrics_node.html"
+    template = "ganeti/metrics/metrics_node_vm.html"
 
     metrics_server = ""
     tree = None
@@ -204,7 +204,7 @@ def metrics_node(request, cluster_slug, host):
             template)
 
     if tree:
-        return render_to_response("ganeti/metrics/metrics_node_vm.html",
+        return render_to_response(template,
             {
                 "server": metrics_server,
                 "host": host,
@@ -227,10 +227,10 @@ def metrics_vm(request, cluster_slug, instance):
     if not METRICS_ENABLED:
         return metrics_disabled(request)
 
-    template = "ganeti/metrics/metrics_node.html"
+    template = "ganeti/metrics/metrics_node_vm.html"
     vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
 
-    host = "%s_%s" % (cluster.info["default_hypervisor"], instance)
+    host = "%s_%s" % (cluster.info["default_hypervisor"], vm.info["name"])
 
     metrics_server = ""
     tree = None
@@ -247,7 +247,7 @@ def metrics_vm(request, cluster_slug, instance):
             template)
 
     if tree:
-        return render_to_response("ganeti/metrics/metrics_node_vm.html",
+        return render_to_response(template,
             {
                 "server": metrics_server,
                 "host": host,
