@@ -46,8 +46,13 @@ METRICS_ENABLED = True
 try:
     from collectd_webdaemon.utils import arbitrary_metrics
     from collectd_webdaemon.models import OverviewCharts
+    from .metrics import check_configured_hosts
 except ImportError:
     METRICS_ENABLED = False
+
+DAEMON_HOST = check_configured_hosts(settings)
+if METRICS_ENABLED:
+    METRICS_ENABLED = bool(DAEMON_HOST)
 
 
 class AboutView(TemplateView):

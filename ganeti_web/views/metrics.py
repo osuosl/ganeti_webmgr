@@ -129,7 +129,7 @@ def metrics_general(request):
         for host in hosts:
             try:
                 tree[host] = metrics_tree(host).json["tree"]
-            except (RequestException, KeyError, TypeError):
+            except (RequestException, KeyError, TypeError, IOError):
                 return error_spotted(request,
                     _("Couldn't connect to the metrics host %s") %
                     host, template)
@@ -165,7 +165,7 @@ def metrics_general(request):
             try:
                 chart = arbitrary_metrics(server, path, start, end)
                 charts.append((server, chart))
-            except (RequestException):
+            except (RequestException, IOError):
                 return error_spotted(request,
                     _("Couldn't obtain specified metrics."), template)
 
@@ -198,7 +198,7 @@ def metrics_node(request, cluster_slug, host):
                 tree = metrics_tree(server).json["tree"]
                 metrics_server = server
                 break
-    except (RequestException, KeyError, TypeError):
+    except (RequestException, KeyError, TypeError, IOError):
         return error_spotted(request,
             _("Couldn't obtain the list of hosts or host's metrics tree."),
             template)
@@ -241,7 +241,7 @@ def metrics_vm(request, cluster_slug, instance):
                 tree = metrics_tree(server).json["tree"]
                 metrics_server = server
                 break
-    except (RequestException, KeyError, TypeError):
+    except (RequestException, KeyError, TypeError, IOError):
         return error_spotted(request,
             _("Couldn't obtain the list of hosts or host's metrics tree."),
             template)
@@ -302,7 +302,7 @@ def thresholds_general(request, host=None, plugin=None, type=None):
         try:
             result = similar_thresholds(DAEMON_HOST, str(host), str(plugin),
                 str(type))
-        except RequestException:
+        except (RequestException, IOError):
             return error_spotted(request,
                 _("Couldn't obtain any threshold from %s") %
                 DAEMON_HOST, template)
@@ -331,7 +331,7 @@ def thresholds_general(request, host=None, plugin=None, type=None):
     else:
         try:
             result = all_thresholds(DAEMON_HOST)
-        except RequestException:
+        except (RequestException, IOError):
             return error_spotted(request,
                 _("Couldn't obtain the list of thresholds from %s") %
                 DAEMON_HOST, "ganeti/metrics/thresholds_general.html")
@@ -381,7 +381,7 @@ def threshold_add(request):
                 result = add_threshold(DAEMON_HOST, data)
                 if result.status_code not in [200, 201]:
                     raise RuntimeError("Wrong status code.")
-            except (RequestException, RuntimeError):
+            except (RequestException, RuntimeError, IOError):
                 messages.error(request, _("Threshold could not be created."))
             else:
                 messages.success(request, _("New threshold was created."))
@@ -419,7 +419,7 @@ def threshold_edit(request, threshold_id):
                 result = edit_threshold(DAEMON_HOST, threshold_id, data)
                 if result.status_code != 200:
                     raise RuntimeError("Wrong status code.")
-            except (RequestException, RuntimeError):
+            except (RequestException, RuntimeError, IOError):
                 messages.error(request, _("Threshold could not be updated."))
             else:
                 messages.success(request, _("The threshold was updated."))
@@ -432,7 +432,7 @@ def threshold_edit(request, threshold_id):
             if result.status_code != 200:
                 raise RuntimeError("Wrong status code.")
             result.json["threshold"]
-        except (RequestException, RuntimeError, KeyError):
+        except (RequestException, RuntimeError, KeyError, IOError):
                 messages.error(request, _("There's no such threshold."))
                 return HttpResponseRedirect(reverse("thresholds-general"))
 
@@ -462,7 +462,7 @@ def threshold_delete(request, threshold_id):
         result = delete_threshold(DAEMON_HOST, threshold_id)
         if result.status_code == 200:
             raise RuntimeError("Wrong status code.")
-    except (RequestException, RuntimeError):
+    except (RequestException, RuntimeError, IOError):
         messages.error(request, _("Could not delete that threshold."))
     else:
         messages.success(request, _("The threshold was successfully deleted."))
