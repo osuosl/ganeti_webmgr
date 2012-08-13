@@ -58,7 +58,6 @@ def check_configured_hosts(settings):
 
 
 DAEMON_HOST = check_configured_hosts(settings)
-print DAEMON_HOST
 if METRICS_ENABLED:
     METRICS_ENABLED = bool(DAEMON_HOST)
 
@@ -356,7 +355,7 @@ class ThresholdForm(forms.Form):
     persist = forms.BooleanField(required=False)
     invert = forms.BooleanField(required=False)
     hits = forms.IntegerField(required=False)
-    hysteresis = forms.BooleanField(required=False)
+    hysteresis = forms.FloatField(required=False)
 
 
 @login_required
@@ -439,7 +438,7 @@ def threshold_edit(request, threshold_id):
         form = ThresholdForm(initial=result.json["threshold"])
 
     return render_to_response("ganeti/metrics/threshold_form.html",
-        {"form": form, "action": "edit"},
+        {"form": form, "action": "edit", "threshold_id": threshold_id},
         context_instance=RequestContext(request))
 
 
@@ -460,9 +459,9 @@ def threshold_delete(request, threshold_id):
 
     try:
         result = delete_threshold(DAEMON_HOST, threshold_id)
-        if result.status_code == 200:
+        if result.status_code != 200:
             raise RuntimeError("Wrong status code.")
-    except (RequestException, RuntimeError, IOError):
+    except (RequestException, RuntimeError, IOError) as e:
         messages.error(request, _("Could not delete that threshold."))
     else:
         messages.success(request, _("The threshold was successfully deleted."))

@@ -25,7 +25,12 @@
 </ul>
 {% endif %}
 <div id="threshold_form">
-    <form method="post" action="{% url threshold-add %}">{% csrf_token %}
+    {% if action == "add" %}
+    <form method="post" action="{% url threshold-add %}">
+    {% elif action == "edit" %}
+    <form method="post" action="{% url threshold-edit threshold_id %}">
+    {% endif %}
+    {% csrf_token %}
         <fieldset class="first_fieldset">
             <h1 class="breadcrumb"><span>{% trans "Threshold" %}</span> : {% if action == "add" %}{% trans "Add" %}{% elif action == "edit" %}{% trans "Edit" %}{% endif %}</h1>
             {% for field in form %}
@@ -85,7 +90,7 @@
         <p>{% blocktrans %}<b>If you check this, you will receive lots of notifications.</b>{% endblocktrans %}</p>
     </div>
     <div id="help-invert">
-        <p>{% blocktrans %}If checked, collectd will yield notifications for values outside of [min, max] range.{% endblocktrans %}</p>
+        <p>{% blocktrans %}If checked, collectd will yield notifications for values inside [min, max] range.{% endblocktrans %}</p>
     </div>
     <div id="help-hits">
         <p>{% blocktrans %}Delays yielding notification until for a <i>number</i> of times. More information <a href="http://collectd.org/documentation/manpages/collectd.conf.5.shtml#threshold_configuration">here</a>.{% endblocktrans %}</p>

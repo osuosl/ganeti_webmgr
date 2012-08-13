@@ -95,7 +95,7 @@
                 {
                     "html": " +Thresholds",
                     "href": '{% url thresholds-general %}' +
-                        $(this).find("input:checked").val()
+                        $(this).find("label").text()
                 }));
         });
         $("#selected_metrics").delegate("li", "mouseleave", function(e) {
@@ -196,8 +196,8 @@
             <td>
                 <select name="host" id="host" size=7>
                     {% if not nodes %}
-                        {% for host in tree.values %}
-                        <option>{{ host.keys.0 }}</option>
+                        {% for host in tree.values.0 %}
+                        <option>{{ host }}</option>
                         {% endfor %}
                     {% endif %}
                 </select>
