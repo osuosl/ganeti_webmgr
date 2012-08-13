@@ -22,7 +22,7 @@ try:
         arbitrary_metrics, similar_thresholds, all_thresholds, add_threshold,
         edit_threshold, get_threshold, delete_threshold)
     from collectd_webdaemon.models import OverviewCharts
-except ImportError:
+except ImportError as e:
     METRICS_ENABLED = False
 
 
@@ -58,7 +58,9 @@ def check_configured_hosts(settings):
 
 
 DAEMON_HOST = check_configured_hosts(settings)
-METRICS_ENABLED = bool(DAEMON_HOST)
+print DAEMON_HOST
+if METRICS_ENABLED:
+    METRICS_ENABLED = bool(DAEMON_HOST)
 
 
 def get_hosts(var):
@@ -283,6 +285,14 @@ def thresholds_general(request, host=None, plugin=None, type=None):
     if not METRICS_ENABLED:
         return metrics_disabled(request)
 
+    template = "ganeti/metrics/thresholds_general.html"
+
+    # not using type(DAEMON_HOST), because 'type' is an argument
+    if DAEMON_HOST.__class__ == list or DAEMON_HOST == "node":
+        return error_spotted(request,
+            _("Thresholds can be enabled only for 1-master metrics server"
+            " configuration."), template)
+
     if type:
         type = type.replace(".rrd", "")
 
@@ -295,7 +305,7 @@ def thresholds_general(request, host=None, plugin=None, type=None):
         except RequestException:
             return error_spotted(request,
                 _("Couldn't obtain any threshold from %s") %
-                DAEMON_HOST, "ganeti/metrics/thresholds_general.html")
+                DAEMON_HOST, template)
 
         if "thresholds" in result.json.keys() and len(
                 result.json["thresholds"]):
@@ -304,7 +314,7 @@ def thresholds_general(request, host=None, plugin=None, type=None):
                 result.json,
                 context_instance=RequestContext(request))
         else:
-            # 3) add new threshold
+            # add new threshold
             plugin = plugin.split("-")
             type = type.split("-")
             form = ThresholdForm(initial={
@@ -357,6 +367,12 @@ def threshold_add(request):
     if not METRICS_ENABLED:
         return metrics_disabled(request)
 
+    # not using type(DAEMON_HOST), because 'type' is an argument
+    if DAEMON_HOST.__class__ == list or DAEMON_HOST == "node":
+        return error_spotted(request,
+            _("Thresholds can be enabled only for 1-master metrics server"
+            " configuration."), "ganeti/metrics/thresholds_general.html")
+
     if request.method == "POST":
         form = ThresholdForm(request.POST)
         if form.is_valid():
@@ -388,6 +404,12 @@ def threshold_edit(request, threshold_id):
     """
     if not METRICS_ENABLED:
         return metrics_disabled(request)
+
+    # not using type(DAEMON_HOST), because 'type' is an argument
+    if DAEMON_HOST.__class__ == list or DAEMON_HOST == "node":
+        return error_spotted(request,
+            _("Thresholds can be enabled only for 1-master metrics server"
+            " configuration."), "ganeti/metrics/thresholds_general.html")
 
     if request.method == "POST":
         form = ThresholdForm(request.POST)
@@ -429,6 +451,12 @@ def threshold_delete(request, threshold_id):
     """
     if not METRICS_ENABLED:
         return metrics_disabled(request)
+
+    # not using type(DAEMON_HOST), because 'type' is an argument
+    if DAEMON_HOST.__class__ == list or DAEMON_HOST == "node":
+        return error_spotted(request,
+            _("Thresholds can be enabled only for 1-master metrics server"
+            " configuration."), "ganeti/metrics/thresholds_general.html")
 
     try:
         result = delete_threshold(DAEMON_HOST, threshold_id)

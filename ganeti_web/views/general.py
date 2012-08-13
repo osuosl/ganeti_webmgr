@@ -151,7 +151,7 @@ def get_used_resources(cluster_user):
         resources[cluster]["running"] = owned_vms.filter(cluster=cluster,
                                                     status="running").count()
 
-    # add any clusters that have used resources but no perms (and thus no quota)
+    # add any clusters that have used resources but no perms (== no quota)
     # since we know they don't have a custom quota just add the default quota
     if used:
         for cluster in Cluster.objects.filter(pk__in=used):
@@ -266,11 +266,11 @@ def overview(request, rest=False):
     if user.is_superuser:
         vms = VirtualMachine.objects.all()
     else:
-        # Get query containing any virtual machines the user has permissions for
+        # Get query containing any VMs the user has permissions for
         vms = user.get_objects_any_perms(VirtualMachine, groups=True,
             cluster=['admin']).values('pk')
 
-    # build list of job errors.  Include jobs from any vm the user has access to
+    # build list of job errors. Include jobs from any vm the user has access to
     # If the user has admin on any cluster then those clusters and it's objects
     # must be included too.
     #
@@ -309,10 +309,11 @@ def overview(request, rest=False):
     for cluster in vms_total:
         vm_summary[cluster.pop('cluster__hostname')] = cluster
     for cluster in vms_running:
-        vm_summary[cluster['cluster__hostname']]['running'] = cluster['running']
+        vm_summary[cluster['cluster__hostname']]['running'] = cluster[
+            'running']
 
     # get list of personas for the user:  All groups, plus the user.
-    # include the user only if it owns a vm or has perms on at least one cluster
+    # include the user only if it owns a vm or has perms on at least 1 cluster
     profile = user.get_profile()
     personas = list(Organization.objects.filter(group__user=user))
     if profile.virtual_machines.count() \
