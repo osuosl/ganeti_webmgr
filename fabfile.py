@@ -78,7 +78,6 @@ env.MANIFEST = [
     "django_test_tools",
     "ganeti_web",
     "locale",
-    "twisted",
     # Files
     "AUTHORS",
     "CHANGELOG",
