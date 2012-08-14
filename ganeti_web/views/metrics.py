@@ -20,7 +20,7 @@ METRICS_ENABLED = True
 try:
     from collectd_webdaemon.utils import (metrics_tree, metrics_hosts,
         arbitrary_metrics, similar_thresholds, all_thresholds, add_threshold,
-        edit_threshold, get_threshold, delete_threshold)
+        edit_threshold, get_threshold, delete_threshold, generate_thresholds)
     from collectd_webdaemon.models import OverviewCharts
 except ImportError as e:
     METRICS_ENABLED = False
@@ -465,5 +465,37 @@ def threshold_delete(request, threshold_id):
         messages.error(request, _("Could not delete that threshold."))
     else:
         messages.success(request, _("The threshold was successfully deleted."))
+
+    return HttpResponseRedirect(reverse("thresholds-general"))
+
+
+@login_required
+def threshold_save_restart(request):
+    """
+    Tries to save thresholds from DB to the file and then to restart collectd
+    by issuing some kill command to the collectdmon. And it all happens through
+    web!
+    """
+    if not METRICS_ENABLED:
+        return metrics_disabled(request)
+
+    if type(DAEMON_HOST) is list or DAEMON_HOST == "node":
+        return error_spotted(request,
+            _("Thresholds can be enabled only for 1-master metrics server"
+            " configuration."), "ganeti/metrics/thresholds_general.html")
+
+    res = generate_thresholds(DAEMON_HOST)
+    if res.status_code == 404:
+        messages.error(request, _("Coudln't either make backup copy of "
+            "thresholds file or save thresholds file."))
+    elif res.status_code == 500:
+        messages.error(request, _("Something's wrong in collectd "
+            "configuration."))
+    elif res.status_code == 503:
+        messages.error(request, _("Saved thresholds, but couldn't restart the "
+            "collectd daemon. You have to do it yourself."))
+    else:
+        messages.success(request,
+            _("Configuration saved, collectd restarted."))
 
     return HttpResponseRedirect(reverse("thresholds-general"))

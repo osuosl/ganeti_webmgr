@@ -305,6 +305,10 @@ urlpatterns += patterns('ganeti_web.views.metrics',
     url(r'^delete_threshold/(?P<threshold_id>\d+)$', 'threshold_delete',
         name='threshold-delete'),
 
+    # thresholds: save configuration and restart collectd
+    url(r'^save_thresholds/$', 'threshold_save_restart',
+        name='thresholds-generate'),
+
     # metrics for nodes
     url(r'^%s/metrics/$' % node_prefix, 'metrics_node', name="metrics-node"),
 
