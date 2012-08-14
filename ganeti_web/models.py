@@ -1564,7 +1564,7 @@ class ClusterUser(models.Model):
     @property
     def permissable(self):
         """ returns an object that can be granted permissions """
-        raise self.cast().permissable
+        return self.cast().permissable
 
     def save(self, *args, **kwargs):
         if not self.id:

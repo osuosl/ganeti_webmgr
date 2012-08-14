@@ -1,0 +1,84 @@
+{% extends "menu_base.html" %}
+{% load i18n %}
+{% block title %}
+   {% trans "User:" %} {{user_detail.username}}
+{% endblock %}
+
+{% block head %}
+    <link href="{{STATIC_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
+    <script type="text/javascript" src="{{SITE_ROOT}}/object_permissions_media/js/jquery.form.js"></script>
+    <script type="text/javascript" src="{{SITE_ROOT}}/object_permissions_media/js/groups.js"></script>
+    <style>
+    #detail h3 {margin-top:30px;}
+    </style>
+    <script src="{{STATIC_URL}}/js/jquery-ui.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('#tabs').tabs({
+                spinner: false,
+                cache: true,
+                select: function(event, ui) {
+                    window.location.hash = ui.tab.hash;
+                },
+                ajaxOptions: {
+                    error: function(xhr, status, index, anchor) {
+                        $(anchor.hash).html("{% trans "Couldn't load this tab. We'll try to fix this as soon as possible" %}.");
+                    }
+                }
+            });
+        });
+    </script>
+{% endblock %}
+
+{% block content %}
+<h1 class="breadcrumb"><a href="{%url user-list %}">{% trans "Users" %}</a> : {{ user_detail.username }}</h1>
+<div id="tabs">
+    <ul>
+        <li><a href="#detail"><span>{% trans "Detail" %}</span></a></li>
+        {% block tabs %}{% endblock tabs %}
+    </ul>
+    <div id="detail">
+        <ul id="actions">
+            <li><a class="button edit" title="edit user" href="{% url user-edit user_detail.pk %}">{% trans "Edit" %}</a></li>
+        </ul>
+        
+        <table>
+        <tr><th>{%trans "Email" %}:</th><td>{{user_detail.email}}</td></tr>
+        <tr><th>{% trans "Join Date" %}:</th><td>{{user_detail.date_joined|date}}</td></tr>
+        <tr><th>{% trans "Last Login" %}:</th><td>{{user_detail.last_login|date}}</td></tr>
+        <tr><th>{% trans "Active" %}:</th><td>{{user_detail.is_active}}</td></tr>
+        <tr><th>{% trans "Admin" %}:</th><td>{{user_detail.is_superuser}}</td></tr>
+        </table>
+
+        {% block detail %}{% endblock %}
+
+        {% block groups_detail %}
+        {% load object_permission_tags %}
+        <h3>Groups</h3>
+        <table id="op_users">
+            <tr>
+                <th>Group</th>
+                <th>Permissions</th>
+                <th></th>
+            </tr>
+            {% for group in groups %}
+                <tr id="user_{{group.id}}" >
+                    <td class="name"><a href="{% url group-detail group.id %}">{{group.name}}</a></td>
+                    <td class="permissions">
+                        <a href="{% url group-permissions group.id %}/user/{{user_detail.id}}" class="permissions" title="click to edit">
+                            {% for permission in user_detail|permissions:group %}
+                                {{permission}}{%if not forloop.last%}, {%endif%}
+                            {% empty %}
+                                <span class="none">None</span>
+                            {% endfor %}
+                        </a>
+                    </td>
+                    <td></td>
+                </tr>
+            {% endfor %}
+        </table>
+        {% endblock %}
+
+    </div>
+</div>
+{% endblock %}
