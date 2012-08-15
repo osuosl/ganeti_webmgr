@@ -58,3 +58,6 @@ class TestFilters(unittest.TestCase):
         self.assertEqual(fpt(51200, 81920), "50 / 80")
         self.assertEqual(fpt(512, 2048), "0.5 / 2")
         self.assertEqual(fpt(510972, 870910), "499 / 850.5")
+
+    def test_hvs(self):
+        self.assertEqual(tags.hvs(["kvm", "xen-hvm"]), ["KVM", "Xen (HVM)"])

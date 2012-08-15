@@ -141,8 +141,12 @@
             {% with cluster.info as info %}
             <tr><th>{% trans "Architecture" %}</th><td>{{ info.architecture.0 }}</td></tr>
             <tr><th>{% trans "Ganeti Version" %}</th><td>{{info.software_version}}</td></tr>
-            <tr><th>{% trans "Default hypervisor" %}</th><td>{{ info.default_hypervisor }}</td></tr>
-            <tr><th>{% trans "Available hypervisors" %}</th><td>{{ info.enabled_hypervisors|join:", " }}</td></tr>
+            <tr><th>{% trans "Default hypervisor" %}</th>
+                <td>{{ info.default_hypervisor|hv }}</td>
+            </tr>
+            <tr><th>{% trans "Available hypervisors" %}</th>
+                <td>{{ info.enabled_hypervisors|hvs|join:", " }}</td>
+            </tr>
             <tr><th>{% trans "Master node" %}</th><td>
             {% if info.master %}
                 <a href="{% url node-detail cluster.slug info.master %}">{{ info.master }}</a>
