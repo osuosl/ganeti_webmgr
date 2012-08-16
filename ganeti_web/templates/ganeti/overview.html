@@ -40,12 +40,10 @@
             event.preventDefault();
             var row = this.parentNode.parentNode;
             $.post(this.href, function(){
-                $(row).fadeOut(1000, function(){
-                    $(row).remove();
-                    if($("#errors_list tr").length==0) {
-                        $("#errors_list").remove();
-                    }
-                });
+                $(row).remove();
+                if($("#errors_list tr").length==0) {
+                    $("#errors_list").remove();
+                }
             });
         });
         
