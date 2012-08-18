@@ -153,17 +153,19 @@ def metrics_general(request):
 
         template = "ganeti/metrics/metrics_display.html"
 
-        servers = defaultdict(list)
+        hosts = defaultdict(list)
         for path in paths:
             path = path.split("|")
-            servers[path[0]].append(path[1])
+            hosts[(path[1].split("/")[0], path[0])].append(path[1])
+
+        # print hosts
 
         # many charts. They have titles, too
         charts = []
-        for server, path in servers.items():
+        for host, paths in hosts.items():
             try:
-                chart = arbitrary_metrics(server, path, start, end)
-                charts.append((server, chart))
+                chart = arbitrary_metrics(host[1], paths, start, end)
+                charts.append((host[0], chart))
             except (RequestException, IOError):
                 return error_spotted(request,
                     _("Couldn't obtain specified metrics."), template)

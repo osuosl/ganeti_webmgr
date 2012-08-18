@@ -291,6 +291,7 @@ tr.group td.name {background:url(/static/images/icons/group.png) no-repeat 0 4px
 #selected_metrics li {padding: 2px 0;}
 #selected_metrics li input {vertical-align: middle;}
 #selected_metrics li span {vertical-align: middle;}
+#selected_metrics li span:hover {cursor: pointer; text-decoration: underline;}
 #chart h3 {margin-top: 50px;}
 
 /* thresholds */
