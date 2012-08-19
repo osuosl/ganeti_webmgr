@@ -314,6 +314,9 @@ urlpatterns += patterns('ganeti_web.views.metrics',
 
     # metrics for VMs
     url(r'^%s/metrics/?$' % vm_prefix, 'metrics_vm', name="metrics-vm"),
+
+    # alerts triggered by collectd plugin
+    url(r'^metrics/alert$', 'metrics_alert', name="metrics-alert"),
 )
 
 #The following is used to serve up local static files like images

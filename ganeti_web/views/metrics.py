@@ -9,6 +9,7 @@ from django.core.urlresolvers import reverse
 from django.core.cache import cache
 from django.utils.translation import ugettext as _
 from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
 
 from collections import defaultdict
 import simplejson as json
@@ -501,3 +502,10 @@ def threshold_save_restart(request):
             _("Configuration saved, collectd restarted."))
 
     return HttpResponseRedirect(reverse("thresholds-general"))
+
+
+@csrf_exempt
+def metrics_alert(request):
+    # TODO: check if alert comes from a trusted host
+    # TODO: save alert somewhere
+    return HttpResponse(request.POST)
