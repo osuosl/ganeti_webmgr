@@ -107,7 +107,7 @@ def clean():
         abort('Must be in a development environment.')
     else:
         with lcd('%(doc_root)s' % env):
-            gitcmd = 'git clean -%sdx -e \!settings.py'
+            gitcmd = 'git clean -%sdX -e \!settings.py'
             print('Files to be removed:')
             local(gitcmd % 'n')
             if confirm('Are you certain you would like to remove these files?'):
