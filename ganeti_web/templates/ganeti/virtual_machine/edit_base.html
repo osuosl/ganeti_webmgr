@@ -8,7 +8,9 @@
     <script src="{{STATIC_URL}}/js/helpTips.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
-            var formUpdate = new modifyFormUpdater({{ form.nics }});
+            var formUpdate = new modifyFormUpdater({{ form.disks }},
+                                                   {{ form.nics }}); 
+                                                   
             formUpdate.init();
             initHelpTips("#vmeditform");
         });
@@ -39,6 +41,16 @@
             {% endif %}
             {% block beparams %}{% endblock %}
         </fieldset>
+
+        {% if not form.diskless %} 
+        <fieldset id="disks">
+            <h3>{% trans "Disks" %}<a class="icon add"></a></h3>
+            {{ form.disk_count }}
+            {% for index in form.disk_fields %}
+                {% vmfield_disk form index %}
+            {% endfor %}
+        </fieldset>
+        {% endif %}
 
         <fieldset id="nics">
             <h3>{% trans "Network Devices" %}<a class="icon add"></a></h3>
