@@ -1,4 +1,4 @@
-function modifyFormUpdater(nic_count_original) {
+function modifyFormUpdater(disk_count_original, nic_count_original) {
     /* Functions for the modify form */
 
     // Security Model and Domain
@@ -14,6 +14,12 @@ function modifyFormUpdater(nic_count_original) {
     // Tmp variables for path and verify
     var tmp_vnc_x509_path = "";
     var tmp_vnc_x509_verify = false;
+
+    // Disks
+    var disk_count = $("#id_disk_count");
+    var disks = $("#disks");
+    var disk_add =   $("#disks .add");
+    var disk_delete= $("#disks .delete");
 
     // NICs
     var nic_count = $("#id_nic_count");
@@ -87,6 +93,10 @@ function modifyFormUpdater(nic_count_original) {
     function _initChangeHooks(){
         /* setup change hooks for the form elements */
 
+
+        disk_add.click(_add_disk);
+        disk_delete.live("click",_remove_disk);
+
         nic_add.click(_add_nic);
         nic_delete.live("click",_remove_nic);
 
@@ -96,28 +106,60 @@ function modifyFormUpdater(nic_count_original) {
         nics.children('.delete').not(':last').hide();
     }
 
+    function _add_disk() {
+    var count = disk_count.val();
+        disk_count.val(parseInt(count)+1);
+        var p = $('<p></p>');
+        var label = $("<label>Disk/" + count+ " Size</label>");
+        label.attr('for', "id_disk_size_" + count);
+        var input = $('<input type="text"/>');
+        input.attr("name", "disk_size_" + count);
+        input.attr("id", "id_disk_size_" + count);
+        p.append(label);
+        p.append(input);
+        disks.append(p);
+        disks.append('<div class="icon delete"></div>');
+    }
+
+    function _remove_disk() {
+        var count = disk_count.val();
+        disk_count.val(parseInt(count)-1);
+        var button = $(this);
+        button.prev("p").remove();
+        button.prev("ul").remove();
+        button.remove();
+
+        // renumber remaining disks
+        var i = 0;
+        $('#disks p').each(function(){
+            $(this).children('label')
+                    .html("Disk/" + i + " Size")
+                    .attr("for", "id_disk_size_" + i);
+            $(this).children('#disks input[name^=disk_size]').each(function(){
+                $(this)
+                    .attr("name", "disk_size_" + i)
+                    .attr("id", "id_disk_size_" + i);
+            });
+            i++;
+        });
+    }
+
     function _add_nic() {
         var count = nic_count.val();
-        if (count < nic_count_original+1) {
-            nic_count.val(parseInt(count)+1);
-            var p = $('<p></p>');
-            var label = $("<label>NIC/" + count +"</label>");
-            var mac = $('<input type="text"/>');
-            mac.attr("name", "nic_mac_" + count);
-            mac.attr("id", "id_nic_mac_" + count);
-            var link = $("#nics input[name^=nic_link]").first().clone();
-            link.attr("name", "nic_link_" + count);
-            link.attr("id", "id_nic_link_" + count);
-            p.append(label);
-            p.append(mac);
-            p.append(link);
-            nics.append(p);
-            nics.append('<div class="icon delete"></div>');
-            
-            if (count == nic_count_original){
-                nic_add.addClass('disabled');
-            }
-        }
+        nic_count.val(parseInt(count)+1);
+        var p = $('<p></p>');
+        var label = $("<label>NIC/" + count +"</label>");
+        var mac = $('<input type="text"/>');
+        mac.attr("name", "nic_mac_" + count);
+        mac.attr("id", "id_nic_mac_" + count);
+        var link = $("#nics input[name^=nic_link]").first().clone();
+        link.attr("name", "nic_link_" + count);
+        link.attr("id", "id_nic_link_" + count);
+        p.append(label);
+        p.append(mac);
+        p.append(link);
+        nics.append(p);
+        nics.append('<div class="icon delete"></div>');
     }
 
     function _remove_nic() {
@@ -131,10 +173,6 @@ function modifyFormUpdater(nic_count_original) {
         button.prev("p").remove();
         button.prev("ul").remove();
         button.remove();
-
-        if (count < nic_count_original+2){
-            nic_add.removeClass('disabled');
-        }
 
         // renumber remaining disks
         var i = 0;

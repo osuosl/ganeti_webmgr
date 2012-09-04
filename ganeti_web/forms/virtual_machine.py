@@ -203,6 +203,7 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
     always_required = ('vcpus', 'memory')
     empty_field = EMPTY_CHOICE_FIELD
 
+    disk_count = forms.IntegerField(initial=1, widget=forms.HiddenInput())
     nic_count = forms.IntegerField(initial=1, widget=forms.HiddenInput())
     os = forms.ChoiceField(label=_('Operating System'), choices=[empty_field])
 
@@ -247,6 +248,25 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
             #  ints.
             self.fields['vcpus'].initial = info['beparams']['vcpus']
             self.fields['memory'].initial = str(info['beparams']['memory'])
+
+            #Because disk_template isn't saved for virtual machines, we may assume
+            #that a VM with 0 disks is using the 'diskless' template.
+            self.disks = len(info['disk.sizes'])
+            if self.disks > 0: 
+                #Checking for a valid string to be cast to an int in initial['disk_count']
+                disk_count = int(initial.get('disk_count', 1)) if initial else 1
+                
+                disk_count = self.disks if self.disks > disk_count else disk_count
+                self.fields['disk_count'].initial = disk_count
+                
+                self.disk_fields = xrange(disk_count)
+                for i in xrange(disk_count):
+                    size = forms.CharField(label=_('Disk/%s Size' % i), max_length=255, required=True)
+                    self.fields['disk_size_%s' % i] = size
+                    if i < self.disks:
+                        size.initial = info['disk.sizes'][i]
+            else:
+                self.diskless = True
 
             # always take the larger nic count.  this ensures that if nics are
             # being removed that they will be in the form as Nones
