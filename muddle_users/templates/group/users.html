@@ -1,0 +1,81 @@
+<script type="text/javascript" src="{{STATIC_URL}}/js/jquery.form.js"></script>
+<script type="text/javascript">
+    $(document).ready(function() {
+        // Add user button
+        $('#add_user').click(function(event){
+            event.preventDefault();
+            $('.qtip').qtip('destroy');
+            $(this).qtip({
+                content: {
+                   url: '{% url group-add-user object.id %}',
+                   title: {text:'Add User: ', button:'close'}
+                },
+                position: {  corner:{target:'center', tooltip:'center'}},
+                style: {name: 'dark', border:{radius:5}, width:400, background:'#eeeeee'},
+                show: {when:false, ready:true},
+                hide: {fixed: true, when:false},
+                api:{onShow:function(){
+                    $(".ajax_form input[type!=hidden], .ajax_form select").first().focus();
+                }}
+            });
+        });
+        
+        // Delete user button
+        $('#op_users .delete').live("click", function(event) {
+            event.preventDefault();
+            var name = $(this).parent().parent().children('.name');
+            if (name.children('a').size() > 0) {
+                name = name.children('a').html();
+            } else {
+                name = name.html();
+            }
+            if (confirm("Remove user: " + name)) {
+                var id = this.parentNode.parentNode.id.substring(5);
+                $.post('{% url group-remove-user object.id %}', {'user':id},
+                    function(code){
+                        if(code==1) {$('#user_'+id).remove();}
+                    }, "json");
+            }
+        });
+        
+        // submit button
+        $(".add_user_form").live('submit', function(event){
+            event.preventDefault();
+            $("#errors").empty();
+            $(this).ajaxSubmit({success: update_group_user});
+        });
+    });
+    
+    function update_group_user(responseText, statusText, xhr, $form) {
+        if (xhr.getResponseHeader('Content-Type') == 'application/json') {
+            // parse errors
+            for (var key in responseText) {
+                $("#errors").append("<li>"+ responseText[key] +"</li>")
+            }
+        } else {
+            // successful permissions change.  replace the user row with the
+            // newly rendered html
+            $('.qtip').qtip('hide');
+            var html = $(responseText);
+            var id = html.attr('id');
+            var $row = $('#op_users #' + id);
+            if ($row.length == 1) {
+                $row.replaceWith(html);
+            } else {
+                $("#op_users").append(html);
+            }
+        }
+    }
+
+</script>
+<div id="add_user" class="button add">Add User</div>
+<table id="op_users">
+    <tr>
+        <th>Name</th>
+        {% block user_headers%}{% endblock %}
+        <th></th>
+    </tr>
+    {% for user_detail in users %}
+        {% block user_row %}{% include "group/user_row.html" %}{% endblock %}
+    {% endfor %}
+</table>

@@ -1,0 +1,47 @@
+{% extends "menu_base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Groups" %}{% endblock %}
+{% block head %}
+    <script type="text/javascript" src="{{STATIC_URL}}/js/jquery.ajax.delete.js"></script>
+    <script type="text/javascript" src="{{STATIC_URL}}/js/jquery.form.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            // submit button
+            $(".ajax_form").live("submit", function(){
+                $("#errors").empty();
+                $(this).ajaxSubmit({success: update});
+                return false;
+            });
+            
+            // Delete user button
+            $('#groups .delete').live("click", function(event) {
+                event.preventDefault();
+                var name = $(this).parent().parent().children('.name').children('a').html();
+                if (confirm("Delete group: " + name)) {
+                    var id = this.parentNode.parentNode.id.substring(6);
+                    $.delete_(this.href,
+                        function(code){
+                            if(code==1) {$('#group_'+id).remove();}
+                        }, "json");
+                }
+            });
+        });
+    </script>
+{% endblock %}
+
+{% block content %}
+    <h1 class="breadcrumb">Groups</h1>
+
+    {% if user.is_superuser %}<a id="add_group" href="{% url group-add %}" class="button add">Add Group</a>{% endif %}
+    <table id="groups">
+        <tr>
+            <th>Name</th>
+            <th>Users</th>
+            {% block group_headers %}{% endblock %}
+            <th></th>
+        </tr>
+        {% for group in groups %}
+            {% block group_row %}{% include "group/group_row.html" %}{% endblock %}
+        {% endfor %}
+    </table>
+{% endblock %}

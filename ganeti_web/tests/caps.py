@@ -1,6 +1,7 @@
 from unittest import TestCase
 
-from ganeti_web.caps import (ANCIENT, FUTURE, GANETI22, GANETI25, classify,
+from ganeti_web.caps import (ANCIENT, FUTURE, GANETI22, GANETI24, GANETI242,
+                             GANETI25, classify, has_cdrom2,
                              has_shutdown_timeout)
 
 class Mock(object):
@@ -26,6 +27,14 @@ class TestClassify(TestCase):
         cluster = make_mock_cluster("2.2.0")
         self.assertEqual(classify(cluster), GANETI22)
 
+    def test_ganeti242(self):
+        cluster = make_mock_cluster("2.4.2")
+        self.assertEqual(classify(cluster), GANETI242)
+
+    def test_ganeti241(self):
+        cluster = make_mock_cluster("2.4.1")
+        self.assertEqual(classify(cluster), GANETI24)
+
     def test_ganeti25(self):
         cluster = make_mock_cluster("2.5.0")
         self.assertEqual(classify(cluster), GANETI25)
@@ -40,3 +49,14 @@ class TestHasShutdownTimeout(TestCase):
     def test_lacks_shutdown_timeout(self):
         cluster = make_mock_cluster("2.4.0")
         self.assertFalse(has_shutdown_timeout(cluster))
+
+
+class TestHasCdrom2(TestCase):
+
+    def test_has_cdrom2(self):
+        cluster = make_mock_cluster("2.5.0")
+        self.assertTrue(has_cdrom2(cluster))
+
+    def test_lacks_cdrom2(self):
+        cluster = make_mock_cluster("2.2.0")
+        self.assertFalse(has_cdrom2(cluster))

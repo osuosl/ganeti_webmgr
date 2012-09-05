@@ -1,0 +1,1 @@
+from muddle_users.tests.views import *

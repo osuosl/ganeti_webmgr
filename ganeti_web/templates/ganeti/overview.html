@@ -40,12 +40,10 @@
             event.preventDefault();
             var row = this.parentNode.parentNode;
             $.post(this.href, function(){
-                $(row).fadeOut(1000, function(){
-                    $(row).remove();
-                    if($("#errors_list tr").length==0) {
-                        $("#errors_list").remove();
-                    }
-                });
+                $(row).remove();
+                if($("#errors_list tr").length==0) {
+                    $("#errors_list").remove();
+                }
             });
         });
         
@@ -65,9 +63,8 @@
 
 {% block content %}
 <h1>{% trans "Overview" %}</h1>
-{% if admin or create_vm %}
-<a href="{% url cluster-errors %}"><h1>{% trans "Errors" %} </h1></a>
 
+{% if admin or create_vm %}
 <div id="cluster_summary">
 <h2>{% trans "Cluster Status" %}</h2>
 <table id="clusters" class="sorted">

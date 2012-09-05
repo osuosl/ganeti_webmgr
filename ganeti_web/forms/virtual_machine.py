@@ -354,15 +354,17 @@ class NewVirtualMachineForm(VirtualMachineForm):
         boot_order = data.get('boot_order', '')
         image_path = data.get('cdrom_image_path', '')
         image2_path = data.get('cdrom2_image_path','')
-        if boot_order == 'cdrom':
-            if image_path == '':
-                if image2_path == '':
-                    msg = u"%s." % _("Image path required if boot device is CD-ROM")
-                    self._errors["cdrom_image_path"] = self.error_class([msg])
-                    del data["cdrom_image_path"]
-                else:
-                    image_path, image2_path = image2_path, image_path
- 
+        if boot_order == 'cdrom' and image_path == "":
+            # Check to see if there's a second CD-ROM but not a first one. In
+            # that case, we could just switch them around. However, if both
+            # trays are empty, then we can't really boot from CD-ROM, can we?
+            if image2_path == '':
+                msg = u"%s." % _("Image path required if boot device is CD-ROM")
+                self._errors["cdrom_image_path"] = self.error_class([msg])
+                del data["cdrom_image_path"]
+            else:
+                image_path, image2_path = image2_path, image_path
+
         if iallocator:
             # If iallocator is checked,
             #  don't display error messages for nodes

@@ -1,0 +1,4 @@
+{% extends "group/list.html" %}
+{% load shots %}
+{% block group_headers %}{% shot group-list-table-headers %}{% endshot %}{% endblock %}
+{% block group_row %}{% include "muddle/group/group_row.html" %}{% endblock %}

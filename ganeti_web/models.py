@@ -850,15 +850,11 @@ class VirtualMachine(CachedClusterObject):
     @models.permalink
     def get_absolute_url(self):
         """
-        Return absolute url for this instance.  Since the canonical url requires
-        the cluster object this method will check to see if the cluster is
-        already queried.  If it has not been queried it will use the
-        non-canonical url which is quicker to render.
+        Return absolute url for this instance.
         """
-        if hasattr(self, '_cluster_cache'):
-            return 'instance-detail', (), {'cluster_slug':self.cluster.slug,
-                                           'instance':self.hostname}
-        return 'instance-detail-id', (), {'id':self.pk}
+
+        return 'instance-detail', (), {'cluster_slug':self.cluster.slug,
+                                       'instance':self.hostname}
 
     def __repr__(self):
         return "<VirtualMachine: '%s'>" % self.hostname
@@ -911,15 +907,11 @@ class Node(CachedClusterObject):
     @models.permalink
     def get_absolute_url(self):
         """
-        Return absolute url for this node.  Since the canonical url requires
-        the cluster object this method will check to see if the cluster is
-        already queried.  If it has not been queried it will use the
-        non-canonical url which is quicker to render.
+        Return absolute url for this node.
         """
-        if hasattr(self, '_cluster_cache'):
-            return 'node-detail', (), {'cluster_slug':self.cluster.slug,
-                                           'host':self.hostname}
-        return 'node-detail-id', (), {'id':self.pk}
+
+        return 'node-detail', (), {'cluster_slug':self.cluster.slug,
+                                   'host':self.hostname}
 
     @property
     def rapi(self):
@@ -1572,7 +1564,7 @@ class ClusterUser(models.Model):
     @property
     def permissable(self):
         """ returns an object that can be granted permissions """
-        raise self.cast().permissable
+        return self.cast().permissable
 
     def save(self, *args, **kwargs):
         if not self.id:

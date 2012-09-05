@@ -1,0 +1,41 @@
+{% extends "menu_base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Group:" %}{{ object.name }}{% endblock %}
+
+{% block head %}
+    <link href="{{STATIC_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
+    <script src="{{STATIC_URL}}/js/jquery-ui.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('#tabs').tabs({
+                spinner: false,
+                cache: true,
+                select: function(event, ui) {
+                    window.location.hash = ui.tab.hash;
+                },
+                ajaxOptions: {
+                    error: function(xhr, status, index, anchor) {
+                        $(anchor.hash).html("Couldn't load this tab. We'll try to fix this as soon as possible.");
+                    }
+                }
+            });
+        });
+    </script>
+
+{% endblock %}
+
+{% block content %}
+<h1 class="breadcrumb"><a href="{%url group-list %}">{% trans "Groups" %}</a> : {{ group.name }}</h1>
+
+<div id="tabs">
+    <ul>
+        <li><a href="#overview"><span>{% trans "Overview" %}</span></a></li>
+        {% block tabs %}{% endblock %}
+    </ul>
+
+    <div id="overview">
+        <a class="button edit" href="{% url group-edit group.id %}">Edit</a>
+        {% block users %}{% include "group/users.html" %}{% endblock %}
+    </div>
+</div>
+{% endblock content %}

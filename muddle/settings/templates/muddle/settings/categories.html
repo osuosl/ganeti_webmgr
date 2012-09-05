@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Settings</h1>
+
+<ul id="settings_categories_main">
+    {% for category in categories %}
+    <li>
+        <a href="{% url muddle-settings-category category %}">{{ category }}</a>
+    </li>
+    {% endfor %}
+</ul>
+{% endblock %}

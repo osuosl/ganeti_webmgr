@@ -1,0 +1,72 @@
+{% extends "menu_base.html" %}
+
+{% block head %}
+    <link href="{{STATIC_URL}}/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
+    <script type="text/javascript" src="{{STATIC_URL}}/js/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="{{STATIC_URL}}/js/jquery.form.js"></script>
+
+    <script type="text/javascript">
+        $(function(){
+            $('#forms').tabs({
+                select: function(event, ui) {
+                    $("#messages, #errors").empty();
+                    window.location.hash = ui.tab.hash;
+                }
+            });
+
+            $("#forms form").submit(function(event){
+                event.preventDefault();
+                $("#messages, #errors").empty();
+                $(this).ajaxSubmit({success: form_response});
+            });
+        });
+
+        function form_response(data) {
+            if (data == 1) {
+                var msg = $("<li>Saved.</li>");
+                $("#messages").append(msg);
+                msg.delay(1500).fadeOut(3000, function(){
+                        msg.remove();
+                });
+            } else {
+                // errors
+                var errors = $("#errors");
+                for (var key in data) {
+                    var messages = data[key];
+                    for(var i in messages){
+                        errors.append("<li>" + key + " : " + messages[i] + "</li>");
+                    }
+                }
+            }
+        }
+    </script>
+{% endblock %}
+
+{% block content %}
+    <h1>
+        <a href="{% url muddle-settings %}" class="breadcrumb">Settings</a>
+        : {{ category }}
+    </h1>
+
+    <div id="forms">
+        <ul>
+            {% for subcategory in forms %}
+                <li><a href="#{{ subcategory }}"><span>{{subcategory|capfirst}}</span></a></li>
+            {% endfor %}
+        </ul>
+        <ul id="messages"></ul>
+        <ul id="errors"></ul>
+        {% for subcategory, form in forms.items %}
+            <div id="{{ subcategory }}">
+                <form id="form_{{ subcategory }}" action="{% url muddle-settings-save category subcategory %}" method="post">
+                    <table>
+                    {{ form.as_table }}
+                    <tr><td><input type="submit" value="submit"/></td></tr>
+                    </table>
+                </form>
+
+            </div>
+        {% endfor %}
+    </div>
+
+{% endblock %}
