@@ -92,16 +92,14 @@ def hv_prettify(hv):
     Prettify a hypervisor name, if we know about it.
     """
 
-    if hv == "kvm":
-        return "KVM"
-    elif hv == "lxc":
-        return "Linux Containers (LXC)"
-    elif hv == "xen-hvm":
-        return "Xen (HVM)"
-    elif hv == "xen-pvm":
-        return "Xen (PVM)"
+    prettified = {
+        "kvm": "KVM",
+        "lxc": "Linux Containers (LXC)",
+        "xen-hvm": "Xen (HVM)",
+        "xen-pvm": "Xen (PVM)",
+    }
 
-    return hv
+    return prettified.get(hv, hv)
 
 
 def cluster_os_list(cluster):
