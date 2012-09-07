@@ -29,6 +29,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from ganeti_web.constants import NODE_ROLE_MAP
 from ganeti_web.models import Cluster
+from ganeti_web.utilities import hv_prettify
 
 register = Library()
 
@@ -461,3 +462,11 @@ def render_os(os):
 def mult(value, arg):
     # pinched from http://code.djangoproject.com/ticket/361
     return int(value) * int(arg)
+
+
+register.filter("hv", stringfilter(hv_prettify))
+
+
+@register.filter
+def hvs(l):
+    return [hv_prettify(i) for i in l]

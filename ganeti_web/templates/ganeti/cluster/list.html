@@ -65,7 +65,7 @@
                 <td>{{ cluster.description }}</td>
                 {% if info %}
                     <td>v{{ info.software_version }}</td>
-                    <td>{{ info.default_hypervisor }}</td>
+                    <td>{{ info.default_hypervisor|hv }}</td>
                     <td><a href="{% url node-detail cluster.slug info.master %}">{{ info.master }}</a></td>
                 {% else %}
                     <td><i>unknown</i></td>
