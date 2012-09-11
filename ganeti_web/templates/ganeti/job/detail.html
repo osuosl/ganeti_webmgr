@@ -52,14 +52,6 @@
 
         </table>
 
-        {% with info.opresult|index:forloop.counter0 as job_result %}
-            {% if job_result %}
-                <pre>{{ job_result.1.0|format_job_log }}</pre>
-            {% endif %}
-        {% endwith %}
-
-        
-
     {% endfor %}
 
     {% endwith %}
