@@ -922,40 +922,16 @@ class VMWizardClusterForm(Form):
 
 
 class VMWizardOwnerForm(Form):
+    hostname = CharField(label=_('Instance Name'), max_length=255)
     owner = ModelChoiceField(label=_('Owner'),
                              queryset=ClusterUser.objects.all(),
                              empty_label=None)
-    hv = ChoiceField(label=_("Hypervisor"),
-                     choices=[])
-
-    def _configure_for_cluster(self, cluster):
-        qs = owner_qs_for_cluster(cluster)
-        self.fields["owner"].queryset = qs
-
-        hvs = cluster.info["enabled_hypervisors"]
-        prettified = [hv_prettify(hv) for hv in hvs]
-        hv = cluster.info["default_hypervisor"]
-        self.fields["hv"].choices = zip(hvs, prettified)
-        self.fields["hv"].initial = hv
-
-
-class VMWizardBasicsForm(Form):
-    hostname = CharField(label=_('Instance Name'), max_length=255)
-    os = ChoiceField(label=_('Operating System'), choices=[])
-    vcpus = IntegerField(label=_("Virtual CPU Count"), initial=1, min_value=1)
-    memory = DataVolumeField(label=_('Memory'))
-    disk_template = ChoiceField(label=_('Disk Template'),
-                                choices=HV_DISK_TEMPLATES)
-    disk_size = DataVolumeField(label=_("Disk Size"))
 
     def _configure_for_cluster(self, cluster):
         self.cluster = cluster
 
-        self.fields["os"].choices = cluster_os_list(cluster)
-
-        beparams = cluster.info["beparams"]["default"]
-        self.fields["memory"].initial = beparams["memory"]
-        self.fields["vcpus"].initial = beparams["vcpus"]
+        qs = owner_qs_for_cluster(cluster)
+        self.fields["owner"].queryset = qs
 
     def clean_hostname(self):
         hostname = self.cleaned_data.get('hostname')
@@ -976,6 +952,32 @@ class VMWizardBasicsForm(Form):
             self.errors["hostname"] = self.error_class(
                 ["Hostname contains spaces."])
         return hostname
+
+
+class VMWizardBasicsForm(Form):
+    hv = ChoiceField(label=_("Hypervisor"),
+                     choices=[])
+    os = ChoiceField(label=_('Operating System'), choices=[])
+    vcpus = IntegerField(label=_("Virtual CPU Count"), initial=1, min_value=1)
+    memory = DataVolumeField(label=_('Memory'))
+    disk_template = ChoiceField(label=_('Disk Template'),
+                                choices=HV_DISK_TEMPLATES)
+    disk_size = DataVolumeField(label=_("Disk Size"))
+
+    def _configure_for_cluster(self, cluster):
+        self.cluster = cluster
+
+        hvs = cluster.info["enabled_hypervisors"]
+        prettified = [hv_prettify(hv) for hv in hvs]
+        hv = cluster.info["default_hypervisor"]
+        self.fields["hv"].choices = zip(hvs, prettified)
+        self.fields["hv"].initial = hv
+
+        self.fields["os"].choices = cluster_os_list(cluster)
+
+        beparams = cluster.info["beparams"]["default"]
+        self.fields["memory"].initial = beparams["memory"]
+        self.fields["vcpus"].initial = beparams["vcpus"]
 
 
 class VMWizardAdvancedForm(Form):
@@ -1103,7 +1105,7 @@ class VMWizardView(CookieWizardView):
         return None
 
     def _get_hv(self):
-        data = self.get_cleaned_data_for_step("1")
+        data = self.get_cleaned_data_for_step("2")
         if data:
             return data["hv"]
         return None
