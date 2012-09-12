@@ -1154,6 +1154,16 @@ class VMWizardView(CookieWizardView):
 
         return form
 
+    def get_context_data(self, form, **kwargs):
+        context = super(VMWizardView, self).get_context_data(form=form,
+                                                             **kwargs)
+        summary = {
+            "cluster": self._get_cluster(),
+        }
+        context["summary"] = summary
+
+        return context
+
     def done(self, forms):
         user = self.request.user
 

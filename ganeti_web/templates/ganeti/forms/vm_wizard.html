@@ -17,6 +17,14 @@ $(window).load(function() {
 
 {% block content %}
 <h1>{% trans "Create a Virtual Machine" %}</h1>
+<h2>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</h2>
+<div class="vm-summary">
+    <ul>
+        {% if summary.cluster %}
+        <li>Cluster: {{ summary.cluster }}</li>
+        {% endif %}
+    </ul>
+</div>
 <form action="" method="POST">
     {% csrf_token %}
     <table>
