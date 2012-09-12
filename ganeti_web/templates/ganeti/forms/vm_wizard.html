@@ -1,0 +1,38 @@
+{% extends "menu_base.html" %}
+{% load i18n %}
+{% load webmgr_tags %}
+
+{% block title %}{%trans "Create a Virtual Machine" %}{% endblock %}
+
+{% block head %}
+{{ wizard.form.media }}
+<script src="{{STATIC_URL}}/js/disableSingletonDropdown.js"
+    type="text/javascript"></script>
+<script type="text/javascript">
+$(window).load(function() {
+    disableSingletonDropdown2();
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<h1>{% trans "Create a Virtual Machine" %}</h1>
+<form action="" method="POST">
+    {% csrf_token %}
+    <table>
+        {{ wizard.management_form }}
+        {{ wizard.form.as_table }}
+    </table>
+    <input type="submit" value="{% trans "Submit" %}" />
+    {% if wizard.steps.prev %}
+        <button name="wizard_goto_step" type="submit"
+            value="{{ wizard.steps.first }}">
+            {% trans "Start Over" %}
+        </button>
+        <button name="wizard_goto_step" type="submit"
+            value="{{ wizard.steps.prev }}">
+            {% trans "Previous Step" %}
+        </button>
+    {% endif %}
+</form>
+{% endblock %}
