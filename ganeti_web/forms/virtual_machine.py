@@ -922,7 +922,10 @@ class VMWizardClusterForm(Form):
 
 
 class VMWizardOwnerForm(Form):
-    hostname = CharField(label=_('Instance Name'), max_length=255)
+    template_name = CharField(label=_("Template Name"), max_length=255,
+                              required=False)
+    hostname = CharField(label=_('Instance Name'), max_length=255,
+                         required=False)
     owner = ModelChoiceField(label=_('Owner'),
                              queryset=ClusterUser.objects.all(),
                              empty_label=None)
@@ -950,8 +953,14 @@ class VMWizardOwnerForm(Form):
         # Spaces in hostname will always break things.
         if ' ' in hostname:
             self.errors["hostname"] = self.error_class(
-                ["Hostname contains spaces."])
+                ["Hostnames cannot contain spaces."])
         return hostname
+
+    def clean(self):
+        if (not self.cleaned_data.get("template_name") and
+            not self.cleaned_data.get("hostname")):
+            raise ValidationError("What should be created?")
+        return self.cleaned_data
 
 
 class VMWizardBasicsForm(Form):
@@ -996,7 +1005,7 @@ class VMWizardAdvancedForm(Form):
         self.fields["pnode"].queryset = qs
         self.fields["snode"].queryset = qs
 
-    def _configure_for_template(self, template):
+    def _configure_for_disk_template(self, template):
         if template != "drbd":
             del self.fields["snode"]
 
@@ -1110,7 +1119,7 @@ class VMWizardView(CookieWizardView):
             return data["hv"]
         return None
 
-    def _get_template(self):
+    def _get_disk_template(self):
         data = self.get_cleaned_data_for_step("2")
         if data:
             return data["disk_template"]
@@ -1133,7 +1142,7 @@ class VMWizardView(CookieWizardView):
         elif s == 3:
             form = VMWizardAdvancedForm(data=data)
             form._configure_for_cluster(self._get_cluster())
-            form._configure_for_template(self._get_template())
+            form._configure_for_disk_template(self._get_disk_template())
         elif s == 4:
             cluster = self._get_cluster()
             hv = self._get_hv()
