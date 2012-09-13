@@ -1216,8 +1216,17 @@ class VMWizardView(CookieWizardView):
         template.name_check = forms[3].cleaned_data["name_check"]
         template.pnode = forms[3].cleaned_data["pnode"].hostname
 
+        hvparams = forms[4].cleaned_data
+
+        template.boot_order = hvparams.get("boot_order")
+        template.cdrom2_image_path = hvparams.get("cdrom2_image_path")
+        template.cdrom_image_path = hvparams.get("cdrom_image_path")
+        template.kernel_path = hvparams.get("kernel_path")
+        template.root_path = hvparams.get("root_path")
+        template.serial_console = hvparams.get("serial_console")
+
         if "snode" in forms[3].cleaned_data:
-            template.snode = forms[3].cleaned_data["snode"].hostname,
+            template.snode = forms[3].cleaned_data["snode"].hostname
 
         if template_name:
             template.template_name = template_name
