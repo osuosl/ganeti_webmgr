@@ -30,6 +30,7 @@ log_action = LogItem.objects.log_action
 
 from object_permissions import get_users_any
 
+from ganeti_web.backend.templates import template_to_instance
 from ganeti_web.caps import has_cdrom2
 from ganeti_web.constants import (EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES,
                                   HV_NIC_MODES, HV_DISK_TYPES, HV_NIC_TYPES,
@@ -40,7 +41,7 @@ from ganeti_web.constants import (EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES,
                                   HV_DISK_CACHES, MODE_CHOICES, HVM_CHOICES,
                                   HV_DISK_TEMPLATES_SINGLE_NODE)
 from ganeti_web.fields import DataVolumeField, MACAddressField
-from ganeti_web.models import (Cluster, ClusterUser, Job, Node, Organization,
+from ganeti_web.models import (Cluster, ClusterUser, Node, Organization,
                                VirtualMachineTemplate, VirtualMachine)
 from ganeti_web.utilities import (cluster_default_info, cluster_os_list,
                                   contains, get_hypervisor, hv_prettify)
@@ -1176,76 +1177,62 @@ class VMWizardView(CookieWizardView):
         return context
 
     def done(self, forms):
+        """
+        Create a template. Optionally, bind a template to a VM instance
+        created from the template. Optionally, name the template and save it.
+        One or both of those is done depending on what the user has requested.
+        """
+
+        template = VirtualMachineTemplate()
+
         user = self.request.user
 
         cluster = forms[0].cleaned_data["cluster"]
         owner = forms[1].cleaned_data["owner"]
-        hostname = forms[2].cleaned_data["hostname"]
-        memory = forms[2].cleaned_data["memory"]
-        vcpus = forms[2].cleaned_data["vcpus"]
-        disk_template = forms[2].cleaned_data["disk_template"]
-        disk_size = forms[2].cleaned_data["disk_size"]
+        hostname = forms[1].cleaned_data["hostname"]
+        template_name = forms[1].cleaned_data["template_name"]
 
-        disks = [
+        template.cluster = cluster
+        template.memory = forms[2].cleaned_data["memory"]
+        template.vcpus = forms[2].cleaned_data["vcpus"]
+        template.disk_template = forms[2].cleaned_data["disk_template"]
+
+        disk_size = forms[2].cleaned_data["disk_size"]
+        template.disks = [
             {
                 "size": disk_size,
             },
         ]
 
-        nics = [
+        template.nics = [
             {
                 "link": "br0",
                 "mode": "bridged",
             },
         ]
 
-        beparams = {
-            "memory": memory,
-            "vcpus": vcpus,
-        }
-
-        kwargs = {
-            "os": forms[2].cleaned_data["os"],
-            "ip_check": forms[3].cleaned_data["ip_check"],
-            "name_check": forms[3].cleaned_data["name_check"],
-            "pnode": forms[3].cleaned_data["pnode"].hostname,
-            "beparams": beparams,
-            "hvparams": forms[4].cleaned_data,
-        }
+        template.os = forms[2].cleaned_data["os"]
+        # template.ip_check = forms[3].cleaned_data["ip_check"]
+        template.name_check = forms[3].cleaned_data["name_check"]
+        template.pnode = forms[3].cleaned_data["pnode"].hostname
 
         if "snode" in forms[3].cleaned_data:
-            kwargs["snode"] = forms[3].cleaned_data["snode"].hostname
+            template.snode = forms[3].cleaned_data["snode"].hostname,
 
-        job_id = cluster.rapi.CreateInstance('create', hostname,
-                                             disk_template, disks, nics,
-                                             **kwargs)
-        vm = VirtualMachine()
+        if template_name:
+            template.template_name = template_name
 
-        vm.cluster = cluster
-        vm.hostname = hostname
-        vm.ram = memory
-        vm.virtual_cpus = vcpus
-        vm.disk_size = disk_size
+        template.save()
 
-        vm.owner = owner
-        vm.ignore_cache = True
-
-        # Do a dance to get the VM and the job referencing each other.
-        vm.save()
-        job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
-        job.save()
-        vm.last_job = job
-        vm.save()
-
-        # grant admin permissions to the owner.  Only do this for new
-        # VMs.  otherwise we run the risk of granting perms to a
-        # different owner.  We should be preventing that elsewhere, but
-        # lets be extra careful since this check is cheap.
-        owner.permissable.grant('admin', vm)
-        log_action('CREATE', user, vm)
-
-        return HttpResponseRedirect(reverse('instance-detail',
-                                            args=[cluster.slug, vm.hostname]))
+        if hostname:
+            vm = template_to_instance(template, hostname, owner)
+            return HttpResponseRedirect(reverse('instance-detail',
+                                                args=[cluster.slug,
+                                                      vm.hostname]))
+        else:
+            return HttpResponseRedirect(reverse("template-detail",
+                                                args=[cluster.slug,
+                                                      template]))
 
 
 def vm_wizard():
