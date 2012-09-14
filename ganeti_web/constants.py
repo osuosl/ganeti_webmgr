@@ -146,6 +146,42 @@ ALL_DISK_TYPES = HV_DISK_TYPES + KVM_DISK_TYPES + HVM_DISK_TYPES
 ALL_NIC_TYPES = HV_NIC_TYPES + KVM_NIC_TYPES
 ALL_BOOT_ORDER = KVM_BOOT_ORDER + HVM_BOOT_ORDER
 
+KVM_KEYMAPS = {
+    'ar': 'ar',
+    'da': 'da',
+    'de': 'de',
+    'de-ch': 'de-ch',
+    'en-gb': 'en-gb',
+    'en-us': 'en-us',
+    'es': 'es',
+    'et': 'et',
+    'fi': 'fi',
+    'fo': 'fo',
+    'fr': 'fr',
+    'fr-be': 'fr-be',
+    'fr-ca': 'fr-ca',
+    'fr-ch': 'fr-ch',
+    'hr': 'hr',
+    'hu': 'hu',
+    'is': 'is',
+    'it': 'it',
+    'ja': 'ja',
+    'lt': 'lt',
+    'lv': 'lv',
+    'mk': 'mk',
+    'nl': 'nl',
+    'nl-be': 'nl-be',
+    'no': 'no',
+    'pl': 'pl',
+    'pt': 'pt',
+    'pt-br': 'pt-br',
+    'ru': 'ru',
+    'sl': 'sl',
+    'sv': 'sv',
+    'th': 'th',
+    'tr': 'tr'
+}
+
 KVM_CHOICES = {
     'disk_type': HV_DISK_TYPES + KVM_DISK_TYPES,
     'nic_type': HV_NIC_TYPES + KVM_NIC_TYPES,
