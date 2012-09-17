@@ -87,6 +87,21 @@ def cluster_default_info(cluster, hypervisor=None):
     return dict(hvparams, **extraparams)
 
 
+def hv_prettify(hv):
+    """
+    Prettify a hypervisor name, if we know about it.
+    """
+
+    prettified = {
+        "kvm": "KVM",
+        "lxc": "Linux Containers (LXC)",
+        "xen-hvm": "Xen (HVM)",
+        "xen-pvm": "Xen (PVM)",
+    }
+
+    return prettified.get(hv, hv)
+
+
 def cluster_os_list(cluster):
     """
     Create a detailed manifest of available operating systems on the cluster.

@@ -22,6 +22,7 @@ from django.contrib.auth.decorators import login_required
 import os
 from forms.autocomplete_search_form import autocomplete_search_form
 
+from ganeti_web.forms.virtual_machine import vm_wizard
 from ganeti_web.views.cluster import (ClusterDetailView, ClusterListView,
                                       ClusterVMListView)
 from ganeti_web.views.general import AboutView
@@ -140,6 +141,10 @@ urlpatterns += patterns('ganeti_web.views.node',
     url(r'^%s/role/?$' % node_prefix, 'role', name="node-role"),
     url(r'^%s/migrate/?$' % node_prefix, 'migrate', name="node-migrate"),
     url(r'^%s/evacuate/?$' % node_prefix, 'evacuate', name="node-evacuate"),
+)
+
+urlpatterns += patterns("ganeti_web.forms.virtual_machine",
+    url(r"^vm/wizard-add/?$", vm_wizard(), name="instance-wizard-create"),
 )
 
 # VirtualMachines

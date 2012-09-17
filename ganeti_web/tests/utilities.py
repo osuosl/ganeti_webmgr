@@ -17,7 +17,7 @@
 
 from django.test import SimpleTestCase
 
-from ganeti_web.utilities import compare, get_hypervisor
+from ganeti_web.utilities import compare, get_hypervisor, hv_prettify
 from ganeti_web.util.proxy.constants import INSTANCE, XEN_PVM_INSTANCE, XEN_HVM_INSTANCE
 
 __all__ = (
@@ -85,3 +85,13 @@ class TestGetHypervisor(SimpleTestCase):
     def test_get_hypervisor_unknown(self):
         self.disp.info = {"hvparams": "asdfaf"}
         self.assertEqual(get_hypervisor(self.disp), None)
+
+
+
+class TestHvPrettify(SimpleTestCase):
+
+    def test_prettify_kvm(self):
+        self.assertEqual(hv_prettify("kvm"), "KVM")
+
+    def test_prettify_unknown(self):
+        self.assertEqual(hv_prettify("unknown"), "unknown")
