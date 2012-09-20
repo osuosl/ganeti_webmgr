@@ -21,9 +21,13 @@ from ganeti_web.models import Cluster
 
 def site(request):
     """
-    adds site properties to the context
-    """    
-    return {'SITE_DOMAIN':settings.SITE_DOMAIN, 'SITE_NAME':settings.SITE_NAME}
+    Add common site information to the context.
+    """
+
+    return {
+        'SITE_DOMAIN': settings.SITE_DOMAIN,
+        'SITE_NAME': settings.SITE_NAME,
+    }
 
 
 ANONYMOUS_PERMISSIONS = dict(cluster_admin=False,
@@ -34,16 +38,26 @@ CLUSTER_ADMIN_PERMISSIONS = dict(cluster_admin=True,
                              create_vm=True,
                              view_cluster=True)
 
+CLUSTER_VIEW_PERMS = ['migrate', 'export', 'replace_disks', 'tags']
+
+
 def common_permissions(request):
     """
-    adds common cluster perms to the context:
+    Add common cluster permission information to the context.
 
-        * cluster_admin
-        * view_cluster
-        * create vm
+    Information added by this processor:
+
+        * "cluster_admin" indicates whether the current user is an
+          administrator of any clusters.
+        * "create_vm" indicates whether the current user is allowed to create
+          VMs on any cluster.
+        * "view_cluster" indicates whether the current user has any other
+          permissions that would allow them to view clusters.
     """
-    user = request.user
-    if user.is_authenticated():
+
+    user = getattr(request, "user", None)
+
+    if user and user.is_authenticated():
         if user.is_superuser:
             return CLUSTER_ADMIN_PERMISSIONS
 
@@ -54,12 +68,12 @@ def common_permissions(request):
 
         else:
             create_vm = 'create_vm' in perms
-            view_cluster = any((p in perms for p in ['migrate','export','replace_disks','tags']))
-        
+            view_cluster = any(p in perms for p in CLUSTER_VIEW_PERMS)
+
         return {
-            'cluster_admin':False,
-            'create_vm':create_vm,
-            'view_cluster':view_cluster
+            'cluster_admin': False,
+            'create_vm': create_vm,
+            'view_cluster': view_cluster,
         }
 
     return ANONYMOUS_PERMISSIONS

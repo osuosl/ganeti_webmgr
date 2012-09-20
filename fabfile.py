@@ -101,20 +101,14 @@ def clean():
     """
     In a development environment, remove all installed packages and symlinks.
     """
-    require('environment', provided_by=[dev, prod])
-
-    if env.environment != 'development':
-        abort('Must be in a development environment.')
-    else:
-        with lcd('%(doc_root)s' % env):
-            gitcmd = 'git clean -%sdx -e \!settings.py'
-            print('Files to be removed:')
-            local(gitcmd % 'n')
-            if confirm('Are you certain you would like to remove these files?'):
-                local(gitcmd % 'f')
-            else:
-                abort('Aborting clean.')
-
+    with lcd('%(doc_root)s' % env):
+        gitcmd = 'git clean -%sdX -e \!settings.py'
+        print('Files to be removed:')
+        local(gitcmd % 'n')
+        if confirm('Are you certain you would like to remove these files?'):
+            local(gitcmd % 'f')
+        else:
+            abort('Aborting clean.')
 
 def update():
     """
