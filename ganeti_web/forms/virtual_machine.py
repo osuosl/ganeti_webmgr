@@ -1191,6 +1191,7 @@ class VMWizardView(CookieWizardView):
         owner = forms[1].cleaned_data["owner"]
         hostname = forms[1].cleaned_data["hostname"]
         template_name = forms[1].cleaned_data["template_name"]
+        template.user = user
 
         template.cluster = cluster
         template.memory = forms[2].cleaned_data["memory"]
