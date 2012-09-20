@@ -88,7 +88,7 @@ def template_to_instance(template, hostname, owner):
 
     kwargs = {
         "os": template.os,
-        "ip_check": template.ip_check,
+        # "ip_check": template.ip_check,
         "name_check": template.name_check,
         "pnode": template.pnode,
         "beparams": beparams,
@@ -118,6 +118,6 @@ def template_to_instance(template, hostname, owner):
 
     # Grant admin permissions to the owner.
     owner.permissable.grant('admin', vm)
-    log_action('CREATE', owner, vm)
+    log_action('CREATE', template.user, vm)
 
     return vm
