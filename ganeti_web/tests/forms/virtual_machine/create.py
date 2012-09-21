@@ -2,17 +2,60 @@ from django.contrib.auth.models import User, Group
 from django.test import TestCase
 
 from ganeti_web import models
-from ganeti_web.forms.virtual_machine import NewVirtualMachineForm
+from ganeti_web.models import Node
+from ganeti_web.forms.virtual_machine import (NewVirtualMachineForm,
+                                              VMWizardAdvancedForm)
 from ganeti_web.util.proxy import RapiProxy
 from ganeti_web.util.proxy.constants import INFO
 from ganeti_web.tests.views.virtual_machine.base import (
     VirtualMachineTestCaseMixin, TestVirtualMachineViewsBase)
 
-__all__ = ['TestNewVirtualMachineFormInit',
-           'TestNewVirtualMachineFormValidation']
+__all__ = [
+    'TestNewVirtualMachineFormInit',
+    'TestNewVirtualMachineFormValidation',
+    "TestVMWizardAdvancedForm",
+]
 
-VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
+VirtualMachine = models.VirtualMachine
+
+class TestVMWizardAdvancedForm(TestCase):
+
+    def setUp(self):
+        # XXX #8895 means we need a cluster here
+        self.cluster = Cluster()
+        self.cluster.hostname = "cluster.example.com"
+        self.cluster.save()
+
+        self.pnode = Node()
+        self.pnode.cluster = self.cluster
+        self.pnode.hostname = "pnode.example.com"
+        self.pnode.save()
+
+        self.snode = Node()
+        self.snode.cluster = self.cluster
+        self.snode.hostname = "snode.example.com"
+        self.snode.save()
+
+        self.valid_data = {
+            "pnode": self.pnode.id,
+            "snode": self.snode.id,
+        }
+
+    def test_trivial(self):
+        pass
+
+    def test_validate_valid(self):
+        form = VMWizardAdvancedForm(self.valid_data)
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_validate_ip_check_without_name_check(self):
+        data = self.valid_data.copy()
+        data["ip_check"] = True
+        form = VMWizardAdvancedForm(data)
+        self.assertFalse(form.is_valid(),
+                         "IP check shouldn't be allowed without name check")
+
 
 
 class TestNewVirtualMachineFormInit(TestCase, VirtualMachineTestCaseMixin):
