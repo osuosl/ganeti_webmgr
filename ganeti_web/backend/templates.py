@@ -118,6 +118,5 @@ def template_to_instance(template, hostname, owner):
 
     # Grant admin permissions to the owner.
     owner.permissable.grant('admin', vm)
-    log_action('CREATE', template.user, vm)
 
     return vm
