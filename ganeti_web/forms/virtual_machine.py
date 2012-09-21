@@ -1010,6 +1010,14 @@ class VMWizardAdvancedForm(Form):
         if template != "drbd":
             del self.fields["snode"]
 
+    def clean(self):
+        # Ganeti will error on VM creation if an IP address check is requested
+        # but a name check is not.
+        if (self.cleaned_data.get("ip_check") and not
+            self.cleaned_data.get("name_check")):
+            msg = ["Cannot perform IP check without name check"]
+            self.errors["ip_check"] = self.error_class(msg)
+
 
 class VMWizardPVMForm(Form):
     kernel_path = CharField(label=_("Kernel path"), max_length=255)
