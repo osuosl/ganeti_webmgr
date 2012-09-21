@@ -1191,7 +1191,6 @@ class VMWizardView(CookieWizardView):
         owner = forms[1].cleaned_data["owner"]
         hostname = forms[1].cleaned_data["hostname"]
         template_name = forms[1].cleaned_data["template_name"]
-        template.user = user
 
         template.cluster = cluster
         template.memory = forms[2].cleaned_data["memory"]
@@ -1236,6 +1235,7 @@ class VMWizardView(CookieWizardView):
 
         if hostname:
             vm = template_to_instance(template, hostname, owner)
+            log_action('CREATE', user, vm)
             return HttpResponseRedirect(reverse('instance-detail',
                                                 args=[cluster.slug,
                                                       vm.hostname]))
