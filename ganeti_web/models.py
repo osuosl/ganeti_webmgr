@@ -1072,8 +1072,8 @@ class Cluster(CachedClusterObject):
     description = models.CharField(_('description'), max_length=128,
                                    blank=True)
     username = models.CharField(_('username'), max_length=128, blank=True)
-    password = PatchedEncryptedCharField(_('password'), max_length=128,
-                                         blank=True)
+    password = PatchedEncryptedCharField(_('password'), default="",
+                                         max_length=128, blank=True)
     hash = models.CharField(_('hash'), max_length=40, editable=False)
 
     # quota properties
@@ -1417,8 +1417,8 @@ class VirtualMachineTemplate(models.Model):
     machine form so that they can automatically be used or edited by a user.
     """
 
-    template_name = models.CharField(max_length=255)
-    description = models.CharField(max_length=255)
+    template_name = models.CharField(max_length=255, default="")
+    description = models.CharField(max_length=255, default="")
     cluster = models.ForeignKey(Cluster, related_name="templates", null=True,
                                 blank=True)
     start = models.BooleanField(verbose_name=_('Start up After Creation'),
@@ -1433,8 +1433,11 @@ class VirtualMachineTemplate(models.Model):
     iallocator_hostname = models.CharField(max_length=255, blank=True)
     disk_template = models.CharField(verbose_name=_('Disk Template'),
                                      max_length=16)
-    pnode = models.CharField(verbose_name=_('Primary Node'), max_length=255)
-    snode = models.CharField(verbose_name=_('Secondary Node'), max_length=255)
+    # XXX why aren't these FKs?
+    pnode = models.CharField(verbose_name=_('Primary Node'), max_length=255,
+                             default="")
+    snode = models.CharField(verbose_name=_('Secondary Node'), max_length=255,
+                             default="")
     os = models.CharField(verbose_name=_('Operating System'), max_length=255)
 
     # Backend parameters (BEPARAMS)
@@ -1447,19 +1450,23 @@ class VirtualMachineTemplate(models.Model):
                                  validators=[MinValueValidator(100)],
                                  null=True, blank=True)
     disks = PickleField(verbose_name=_('Disks'), null=True, blank=True)
-    disk_type = models.CharField(verbose_name=_('Disk Type'), max_length=255)
+    # XXX why isn't this an enum?
+    disk_type = models.CharField(verbose_name=_('Disk Type'), max_length=255,
+                                default="")
     nics = PickleField(verbose_name=_('NICs'), null=True, blank=True)
-    nic_type = models.CharField(verbose_name=_('NIC Type'), max_length=255)
+    # XXX why isn't this an enum?
+    nic_type = models.CharField(verbose_name=_('NIC Type'), max_length=255,
+                                default="")
 
     # Hypervisor parameters (HVPARAMS)
     kernel_path = models.CharField(verbose_name=_('Kernel Path'),
-                                   max_length=255, blank=True)
+                                   max_length=255, default="", blank=True)
     root_path = models.CharField(verbose_name=_('Root Path'), max_length=255,
                                  default='/', blank=True)
     serial_console = models.BooleanField(
         verbose_name=_('Enable Serial Console'))
     boot_order = models.CharField(verbose_name=_('Boot Device'),
-                                  max_length=255)
+                                  max_length=255, default="")
     cdrom_image_path = models.CharField(verbose_name=_('CD-ROM Image Path'),
                                         max_length=512, blank=True)
     cdrom2_image_path = models.CharField(
