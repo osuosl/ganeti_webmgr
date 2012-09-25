@@ -1024,6 +1024,8 @@ class VMWizardAdvancedForm(Form):
             msg = ["Cannot perform IP check without name check"]
             self.errors["ip_check"] = self.error_class(msg)
 
+        return self.cleaned_data
+
 
 class VMWizardPVMForm(Form):
     kernel_path = CharField(label=_("Kernel path"), max_length=255)
