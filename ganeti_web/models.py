@@ -188,7 +188,7 @@ class CachedClusterObject(models.Model):
     This model is abstract and may not be instantiated on its own.
     """
 
-    serialized_info = models.TextField(default=None, editable=False)
+    serialized_info = models.TextField(default="", editable=False)
     mtime = PreciseDateTimeField(null=True, editable=False)
     cached = PreciseDateTimeField(null=True, editable=False)
     ignore_cache = models.BooleanField(default=False)
@@ -206,7 +206,7 @@ class CachedClusterObject(models.Model):
         """
         overridden to ensure info is serialized prior to save
         """
-        if self.serialized_info is None:
+        if not self.serialized_info:
             self.serialized_info = cPickle.dumps(self.__info)
         super(CachedClusterObject, self).save(*args, **kwargs)
 
@@ -227,7 +227,7 @@ class CachedClusterObject(models.Model):
         """
 
         if self.__info is None:
-            if self.serialized_info is not None:
+            if self.serialized_info:
                 self.__info = cPickle.loads(str(self.serialized_info))
         return self.__info
 
@@ -235,7 +235,7 @@ class CachedClusterObject(models.Model):
         self.__info = value
         if value is not None:
             self.parse_info()
-            self.serialized_info = None
+            self.serialized_info = ""
 
     info = info.setter(_set_info)
 
