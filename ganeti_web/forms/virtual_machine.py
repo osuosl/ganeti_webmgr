@@ -969,10 +969,10 @@ class VMWizardBasicsForm(Form):
                      choices=[])
     os = ChoiceField(label=_('Operating System'), choices=[])
     vcpus = IntegerField(label=_("Virtual CPU Count"), initial=1, min_value=1)
-    memory = DataVolumeField(label=_('Memory'))
+    memory = DataVolumeField(label=_('Memory (MiB)'))
     disk_template = ChoiceField(label=_('Disk Template'),
                                 choices=HV_DISK_TEMPLATES)
-    disk_size = DataVolumeField(label=_("Disk Size"))
+    disk_size = DataVolumeField(label=_("Disk Size (MB)"))
 
     def _configure_for_cluster(self, cluster):
         self.cluster = cluster
