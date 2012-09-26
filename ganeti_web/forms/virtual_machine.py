@@ -1228,7 +1228,7 @@ class VMWizardView(CookieWizardView):
         ]
 
         template.os = forms[2].cleaned_data["os"]
-        # template.ip_check = forms[3].cleaned_data["ip_check"]
+        template.ip_check = forms[3].cleaned_data["ip_check"]
         template.name_check = forms[3].cleaned_data["name_check"]
         template.pnode = forms[3].cleaned_data["pnode"].hostname
 

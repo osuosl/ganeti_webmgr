@@ -88,7 +88,7 @@ def template_to_instance(template, hostname, owner):
 
     kwargs = {
         "os": template.os,
-        # "ip_check": template.ip_check,
+        "ip_check": template.ip_check,
         "name_check": template.name_check,
         "pnode": template.pnode,
         "beparams": beparams,
