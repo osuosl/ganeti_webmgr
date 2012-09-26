@@ -31,7 +31,7 @@ log_action = LogItem.objects.log_action
 from object_permissions import get_users_any
 
 from ganeti_web.backend.templates import template_to_instance
-from ganeti_web.caps import has_cdrom2
+from ganeti_web.caps import has_cdrom2, req_maxmem
 from ganeti_web.constants import (EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES,
                                   HV_NIC_MODES, HV_DISK_TYPES, HV_NIC_TYPES,
                                   KVM_NIC_TYPES, HVM_DISK_TYPES,
@@ -986,7 +986,10 @@ class VMWizardBasicsForm(Form):
         self.fields["os"].choices = cluster_os_list(cluster)
 
         beparams = cluster.info["beparams"]["default"]
-        self.fields["memory"].initial = beparams["memory"]
+        if (req_maxmem(cluster)):
+            self.fields["memory"].initial = beparams["maxmem"]
+        else:
+            self.fields["memory"].initial = beparams["memory"]
         self.fields["vcpus"].initial = beparams["vcpus"]
 
 
