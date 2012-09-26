@@ -36,7 +36,7 @@ from django.contrib.sites import models as sites_app
 from django.contrib.sites.management import create_default_site
 from django.core.validators import RegexValidator, MinValueValidator
 from django.db import models
-from django.db.models import Q, Sum
+from django.db.models import BooleanField, Q, Sum
 from django.db.models.query import QuerySet
 from django.db.models.signals import post_save, post_syncdb
 from django.db.utils import DatabaseError
@@ -1354,6 +1354,7 @@ class VirtualMachineTemplate(models.Model):
                 default=True)
     no_install = models.BooleanField(verbose_name=_('Do not install OS'), \
                 default=False)
+    ip_check = BooleanField(verbose_name=_("IP Check"), default=True)
     name_check = models.BooleanField(verbose_name=_('DNS Name Check'), \
                 default=True)
     iallocator = models.BooleanField(verbose_name=_('Automatic Allocation'), \
