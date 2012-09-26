@@ -18,6 +18,7 @@
 from django import forms
 from django.contrib.formtools.wizard.views import CookieWizardView
 from django.core.urlresolvers import reverse
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import Q
 from django.forms import (Form, BooleanField, CharField, ChoiceField,
                           IntegerField, ModelChoiceField, ValidationError)
@@ -977,14 +978,18 @@ class VMWizardBasicsForm(Form):
     def _configure_for_cluster(self, cluster):
         self.cluster = cluster
 
+        # Get a look at the list of available hypervisors, and set the initial
+        # hypervisor appropriately.
         hvs = cluster.info["enabled_hypervisors"]
         prettified = [hv_prettify(hv) for hv in hvs]
         hv = cluster.info["default_hypervisor"]
         self.fields["hv"].choices = zip(hvs, prettified)
         self.fields["hv"].initial = hv
 
+        # Get the OS list.
         self.fields["os"].choices = cluster_os_list(cluster)
 
+        # Set the default CPU count based on the backend parameters.
         beparams = cluster.info["beparams"]["default"]
         self.fields["vcpus"].initial = beparams["vcpus"]
 
@@ -994,6 +999,21 @@ class VMWizardBasicsForm(Form):
             self.fields["memory"].initial = beparams["maxmem"]
         else:
             self.fields["memory"].initial = beparams["memory"]
+
+        # If there are ipolicy limits in place, add validators for them.
+        if "ipolicy" in cluster.info:
+            if "max" in cluster.info["ipolicy"]:
+                v = cluster.info["ipolicy"]["max"]["disk-size"]
+                self.fields["disk_size"].validators.append(
+                    MaxValueValidator(v))
+                v = cluster.info["ipolicy"]["max"]["memory-size"]
+                self.fields["memory"].validators.append(MaxValueValidator(v))
+            if "min" in cluster.info["ipolicy"]:
+                v = cluster.info["ipolicy"]["min"]["disk-size"]
+                self.fields["disk_size"].validators.append(
+                    MinValueValidator(v))
+                v = cluster.info["ipolicy"]["min"]["memory-size"]
+                self.fields["memory"].validators.append(MinValueValidator(v))
 
 
 class VMWizardAdvancedForm(Form):
