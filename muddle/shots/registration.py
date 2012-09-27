@@ -35,43 +35,16 @@ def register(key, *mixers):
 class Shot(object):
 
     def __init__(self):
-        self.context_mixers = []
         self.template_mixers = []
 
     def add_mixers(self, mixers):
         for mixer in mixers:
-            if isinstance(mixer, (ContextMixer,)):
-                if any((s for s in self.context_mixers if s.function is mixer.function)):
-                    continue
-                self.context_mixers.append(mixer)
-            
-            elif isinstance(mixer, (TemplateMixer,)):
+            if isinstance(mixer, (TemplateMixer,)):
                 if any((s for s in self.template_mixers if s.origin == mixer.origin)):
                     continue
                 self.template_mixers.append(mixer)
-            
             else:
                 raise RuntimeError('Invalid mixer type')
-
-
-class ContextMixer(object):
-    """
-    A mixer that provides additional context.  This class wraps a handler
-    function.  It contains additional functionality that might be included with
-    """
-    function = None
-
-    def __init__(self, function):
-        assert(callable(function))
-        self.function = function
-
-    def __call__(self, request):
-        return self.function(request)
-
-    def __eq__(self, o):
-        if isinstance(o, (ContextMixer,)):
-            return o.function == self.function
-        return o == self.function
 
 
 class TemplateMixer(object):

@@ -1,1 +1,1 @@
-from muddle.shots.registration import initialize, register, ContextMixer, TemplateMixer
+from muddle.shots.registration import initialize, register, TemplateMixer

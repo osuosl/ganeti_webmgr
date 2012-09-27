@@ -1,10 +1,10 @@
 from django.test import TestCase
 
-from muddle.shots import register, TemplateMixer, ContextMixer
+from muddle.shots import register, TemplateMixer
 from muddle.shots.registration import MUDDLE_SHOTS
 
 
-__all__ = ['ShotsRegistration', 'ContextMixerTests', 'TemplateMixerTests']
+__all__ = ['ShotsRegistration', 'TemplateMixerTests']
 
 
 def func(request):
@@ -26,23 +26,6 @@ class ShotsTestsBase(TestCase):
 
     def tearDown(self):
         MUDDLE_SHOTS.clear()
-
-
-class ContextMixerTests(ShotsTestsBase):
-
-    def test_equality(self):
-        """ test equality against other mixers """
-        mixer1 = ContextMixer(func)
-        mixer1a = ContextMixer(func)
-        mixer2 = ContextMixer(func2)
-        self.assertEqual(mixer1, mixer1a)
-        self.assertNotEqual(mixer1, mixer2)
-
-    def test_equality_function(self):
-        """ test equality operator with functions """
-        mixer1 = ContextMixer(func)
-        self.assertEqual(mixer1, func)
-        self.assertNotEqual(mixer1, func2)
 
 
 class TemplateMixerTests(ShotsTestsBase):
@@ -67,15 +50,13 @@ class ShotsRegistration(ShotsTestsBase):
         """
         test registering a new shot
         """
-        register('foo', TemplateMixer('shots/tests/foo1.html'), ContextMixer(func))
-        register('bar', TemplateMixer('shots/tests/foo1.html'), ContextMixer(func))
+        register('foo', TemplateMixer('shots/tests/foo1.html'))
+        register('bar', TemplateMixer('shots/tests/foo1.html'))
 
         self.assertTrue('foo' in MUDDLE_SHOTS)
         self.assertTrue('bar' in MUDDLE_SHOTS)
 
-        self.assertEqual(1, len(MUDDLE_SHOTS['foo'].context_mixers))
         self.assertEqual(1, len(MUDDLE_SHOTS['foo'].template_mixers))
-        self.assertEqual(1, len(MUDDLE_SHOTS['bar'].context_mixers))
         self.assertEqual(1, len(MUDDLE_SHOTS['bar'].template_mixers))
 
     def test_register_empty_shot(self):
@@ -91,29 +72,13 @@ class ShotsRegistration(ShotsTestsBase):
         """
         self.test_register_new_shot()
 
-        register('foo', TemplateMixer('shots/tests/foo2.html'), ContextMixer(func2))
-        register('bar', TemplateMixer('shots/tests/foo2.html'), ContextMixer(func2))
+        register('foo', TemplateMixer('shots/tests/foo2.html'))
+        register('bar', TemplateMixer('shots/tests/foo2.html'))
 
         self.assertTrue('foo' in MUDDLE_SHOTS)
         self.assertTrue('bar' in MUDDLE_SHOTS)
-        self.assertEqual(2, len(MUDDLE_SHOTS['foo'].context_mixers))
         self.assertEqual(2, len(MUDDLE_SHOTS['foo'].template_mixers))
-        self.assertEqual(2, len(MUDDLE_SHOTS['bar'].context_mixers))
         self.assertEqual(2, len(MUDDLE_SHOTS['bar'].template_mixers))
-
-    def test_register_combine_context_mixers(self):
-        """
-        Test that context mixers are combined correctly when adding multiple
-        context mixers
-        """
-        register('foo', ContextMixer(func), ContextMixer(func2))
-        register('foo', ContextMixer(func2), ContextMixer(func3))
-        
-        mixers = MUDDLE_SHOTS['foo'].context_mixers
-        self.assertTrue(func in mixers)
-        self.assertTrue(func2 in mixers)
-        self.assertTrue(func3 in mixers)
-        self.assertEqual(3, len(mixers))
 
     def test_register_combine_template_mixers(self):
         """
