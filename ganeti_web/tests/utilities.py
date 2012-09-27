@@ -23,6 +23,7 @@ from ganeti_web.util.proxy.constants import INSTANCE, XEN_PVM_INSTANCE, XEN_HVM_
 __all__ = (
     "TestCompare",
     "TestGetHypervisor",
+    "TestHvPrettify",
 )
 
 class TestCompare(SimpleTestCase):
