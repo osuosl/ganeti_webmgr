@@ -1,9 +1,0 @@
-{% extends "base.html" %}
-{% load maintain_extras %}
-
-{% block content %}
-    <h1 class="list">{{wrapper.name}}
-        {% if perms|has_perm:PERM_CREATE %}<div class="button button_create"></div>{% endif %}
-    </h1>
-    {% include "view/list_instances.html" %}
-{% endblock %}
