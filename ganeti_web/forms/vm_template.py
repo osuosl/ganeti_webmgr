@@ -171,43 +171,15 @@ class VirtualMachineTemplateCopyForm(forms.Form):
 
 
 
-class VMTemplateFromInstance(Form):
-    cluster = ModelChoiceField(label=_('Cluster'),
-                               queryset=Cluster.objects.all(),
-                               empty_label=None)
+class VMInstanceFromTemplate(Form):
     owner = ModelChoiceField(label=_('Owner'),
                              queryset=ClusterUser.objects.all(),
                              empty_label=None)
     hostname = CharField(label=_('Instance Name'), max_length=255)
 
 
-    def clean_cluster(self):
-        """
-        Ensure that the cluster is available.
-        """
-
-        cluster = self.cleaned_data.get('cluster', None)
-        if not getattr(cluster, "info", None):
-            msg = _("This cluster is currently unavailable. Please check"
-                    " for Errors on the cluster detail page.")
-            self._errors['cluster'] = self.error_class([msg])
-
-        return cluster
-
-
     def clean_hostname(self):
         hostname = self.cleaned_data.get('hostname')
-        if hostname:
-            # Confirm that the hostname is not already in use.
-            try:
-                vm = VirtualMachine.objects.get(cluster=self.cluster,
-                                                hostname=hostname)
-            except VirtualMachine.DoesNotExist:
-                # Well, *I'm* convinced.
-                pass
-            else:
-                raise ValidationError(
-                    _("Hostname is already in use for this cluster"))
 
         # Spaces in hostname will always break things.
         if ' ' in hostname:

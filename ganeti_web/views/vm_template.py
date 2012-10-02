@@ -22,13 +22,16 @@ from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.utils import simplejson as json
 from django.views.decorators.http import require_http_methods, require_GET
+from django.views.generic.edit import FormView
 
+from ganeti_web.backend.templates import template_to_instance
+from ganeti_web.forms.vm_template import (VirtualMachineTemplateForm,
+                                          VirtualMachineTemplateCopyForm,
+                                          VMInstanceFromTemplate)
+from ganeti_web.forms.virtual_machine import NewVirtualMachineForm
 from ganeti_web.middleware import Http403
 from ganeti_web.models import Cluster, VirtualMachineTemplate, VirtualMachine
-from ganeti_web.forms.vm_template import (VirtualMachineTemplateForm,
-                                          VirtualMachineTemplateCopyForm)
-from ganeti_web.forms.virtual_machine import NewVirtualMachineForm
-from ganeti_web.views.generic import NO_PRIVS
+from ganeti_web.views.generic import NO_PRIVS, LoginRequiredMixin
 
 
 @login_required
@@ -161,26 +164,73 @@ def create_template_from_instance(request, cluster_slug, instance):
     )
 
 
-@require_GET
+
+class VMInstanceFromTemplateView(LoginRequiredMixin, FormView):
+    """
+    Create a virtual machine instance from a template.
+    """
+
+    form_class = VMInstanceFromTemplate
+    template_name = "ganeti/vm_template/to_vm.html"
+
+    def _get_stuff(self):
+        cluster_slug = self.kwargs["cluster_slug"]
+        template_name = self.kwargs["template"]
+
+        self.cluster = get_object_or_404(Cluster, slug=cluster_slug)
+        self.template = get_object_or_404(VirtualMachineTemplate,
+                                          template_name=template_name,
+                                          cluster__slug=cluster_slug)
+
+
+    def form_valid(self, form):
+        """
+        Create the new VM and then redirect to the new VM's page.
+        """
+
+        hostname = form.cleaned_data["hostname"]
+        owner = form.cleaned_data["owner"]
+
+        self._get_stuff()
+
+        vm = template_to_instance(self.template, hostname, owner)
+
+        return HttpResponseRedirect(reverse('instance-detail',
+                                            args=[self.cluster.slug,
+                                                  vm.hostname]))
+
+
+    def get_context_data(self, **kwargs):
+        context = super(VMInstanceFromTemplateView,
+                        self).get_context_data(**kwargs)
+
+        self._get_stuff()
+
+        context["template"] = self.template
+
+        return context
+
+
+
+@require_http_methods(["GET", "POST"])
 @login_required
 def create_instance_from_template(request, cluster_slug, template):
     """
-    View to create a new instance from a given template.
-      Post method is handled by virtual_machine create view.
+    Create a virtual machine instance from a template.
     """
-    user = request.user
-    if cluster_slug:
-        cluster = get_object_or_404(Cluster, slug=cluster_slug)
-        if not (
-            user.is_superuser or
-            user.has_perm('admin', cluster) or
-            user.has_perm('create_vm', cluster)
-            ):
-            raise Http403(NO_PRIVS)
 
+    user = request.user
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
     vm_template = get_object_or_404(VirtualMachineTemplate,
                                     template_name=template,
                                     cluster__slug=cluster_slug)
+
+    if not (
+        user.is_superuser or
+        user.has_perm('admin', cluster) or
+        user.has_perm('create_vm', cluster)
+        ):
+        raise Http403(NO_PRIVS)
 
     # Work with vm_template vars here
     initial = dict(
