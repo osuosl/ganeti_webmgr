@@ -151,7 +151,7 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
         # GET
         self.assert_200(url, args,
             users = [self.superuser, self.cluster_admin, self.create_vm],
-            template='ganeti/virtual_machine/create.html')
+            template='ganeti/vm_template/to_vm.html')
 
     def test_delete_view(self):
         """
@@ -308,29 +308,11 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
         args = (self.cluster.slug, self.template)
         self.assert_standard_fails(url, args)
 
-        # Copied from create_instance_from_template
-        data = dict(
-            cluster=self.template.cluster_id,
-        )
-        data.update(vars(self.template))
-        ignore_fields = ('template_name', 'disks', '_state', 'pnode', 'snode',
-            'description', '_cluster_cache', 'nics')
-        for field in ignore_fields:
-            del data[field]
-        data['disk_count'] = len(self.template.disks)
-        for i,disk in enumerate(self.template.disks):
-            data['disk_size_%s'%i] = disk['size']
-
-        def test_fields(user, response):
-            form = response.context['form']
-            for field in data:
-                self.assertEqual(data[field], form.initial[field])
-
         # GET
         self.assert_200(url, args,
-            users = [self.superuser, self.create_vm, self.cluster_admin],
-            tests = test_fields,
-            template='ganeti/virtual_machine/create.html')
+            users=[self.superuser, self.create_vm, self.cluster_admin],
+            template='ganeti/vm_template/to_vm.html')
+
         self.assert_403(url, args,
             users = [self.unauthorized])
 

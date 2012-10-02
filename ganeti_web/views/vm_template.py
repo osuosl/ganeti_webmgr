@@ -182,6 +182,14 @@ class VMInstanceFromTemplateView(LoginRequiredMixin, FormView):
                                           template_name=template_name,
                                           cluster__slug=cluster_slug)
 
+        user = self.request.user
+        if not (
+            user.is_superuser or
+            user.has_perm('admin', self.cluster) or
+            user.has_perm('create_vm', self.cluster)
+            ):
+            raise Http403(NO_PRIVS)
+
 
     def form_valid(self, form):
         """
