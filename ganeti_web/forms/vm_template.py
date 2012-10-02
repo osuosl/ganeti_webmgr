@@ -15,12 +15,13 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 from django import forms
+from django.forms import Form, CharField, ModelChoiceField, ValidationError
 from django.utils.translation import ugettext_lazy as _
 
 from ganeti_web.forms.virtual_machine import (VirtualMachineForm,
                                               NewVirtualMachineForm)
-from ganeti_web.models import Cluster 
-from ganeti_web.utilities import cluster_default_info, cluster_os_list 
+from ganeti_web.models import Cluster, ClusterUser, VirtualMachine
+from ganeti_web.utilities import cluster_default_info, cluster_os_list
 
 
 
@@ -170,3 +171,46 @@ class VirtualMachineTemplateCopyForm(forms.Form):
 
 
 
+class VMTemplateFromInstance(Form):
+    cluster = ModelChoiceField(label=_('Cluster'),
+                               queryset=Cluster.objects.all(),
+                               empty_label=None)
+    owner = ModelChoiceField(label=_('Owner'),
+                             queryset=ClusterUser.objects.all(),
+                             empty_label=None)
+    hostname = CharField(label=_('Instance Name'), max_length=255)
+
+
+    def clean_cluster(self):
+        """
+        Ensure that the cluster is available.
+        """
+
+        cluster = self.cleaned_data.get('cluster', None)
+        if not getattr(cluster, "info", None):
+            msg = _("This cluster is currently unavailable. Please check"
+                    " for Errors on the cluster detail page.")
+            self._errors['cluster'] = self.error_class([msg])
+
+        return cluster
+
+
+    def clean_hostname(self):
+        hostname = self.cleaned_data.get('hostname')
+        if hostname:
+            # Confirm that the hostname is not already in use.
+            try:
+                vm = VirtualMachine.objects.get(cluster=self.cluster,
+                                                hostname=hostname)
+            except VirtualMachine.DoesNotExist:
+                # Well, *I'm* convinced.
+                pass
+            else:
+                raise ValidationError(
+                    _("Hostname is already in use for this cluster"))
+
+        # Spaces in hostname will always break things.
+        if ' ' in hostname:
+            self.errors["hostname"] = self.error_class(
+                ["Hostnames cannot contain spaces."])
+        return hostname
