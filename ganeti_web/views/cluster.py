@@ -75,18 +75,22 @@ class ClusterListView(LoginRequiredMixin, PagedListView):
     template_name = "ganeti/cluster/list.html"
 
     def get_queryset(self):
-        if self.request.user.is_superuser:
-            return Cluster.objects.all()
-        else:
-            perms = ['admin', 'migrate', 'export', 'replace_disks', 'tags']
-            return self.request.user.get_objects_any_perms(Cluster, perms)
+            if self.request.user.is_superuser:
+                qs = Cluster.objects.all()
+            else:
+                perms = ['admin', 'migrate', 'export', 'replace_disks', 'tags']
+                qs = self.request.user.get_objects_any_perms(Cluster, perms)
+
+            self.queryset = qs
+            super(ClusterListView, self).get_queryset()
+            return qs.select_related() 
 
     def get_context_data(self, **kwargs):
-        return {
-            "cluster_list": kwargs["object_list"],
-            "user": self.request.user,
-        }
-
+            user = self.request.user
+            context = super(ClusterListView, self).get_context_data(object_list=kwargs["object_list"])
+            context["can_create"]= (user.is_superuser or
+                                    user.has_perm("admin", Cluster))
+            return context  
 class ClusterVMListView(LoginRequiredMixin, PagedListView):
 
     template_name = "ganeti/virtual_machine/table.html"

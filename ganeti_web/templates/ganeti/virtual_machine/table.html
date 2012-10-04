@@ -30,34 +30,6 @@
     }
 </style>
 
-<script type="text/javascript" src="{{STATIC_URL}}/js/VM_ajaxTable.js"></script>
-<script type="text/javascript">
-
-    $(function(){
-        /* "Main" */
-        {% if cluster %}
-            var url = "{% url cluster-virtualmachine-table cluster.slug %}";
-        {% else %}
-            {% if primary_node %}
-                var url = "{% url vm-table-primary node %}"
-            {% else %}{% if secondary_node %}
-                var url = "{% url vm-table-secondary node %}"
-            {% else %}
-                var url = "{% url virtualmachine-table %}";
-            {% endif %}{% endif %}
-        {% endif %}
-
-        {% if tableID %}
-            var tableID = '{{tableID}}';
-        {% else %} 
-            var tableID = 'ajaxTable';
-        {% endif %}
-
-        $('#'+tableID).data('ajaxTable', new ajaxTable(url, tableID));
-        $('#'+tableID).data('ajaxTable').init();
-    });
-
-</script>
 {% endblock %}
 
 {% if cluster %}
@@ -72,21 +44,9 @@
     {% endif %}
 {% endif %}
 
-{% if tableID %}
-<div id='{{tableID}}'>
-{% else %}
 <div id='ajaxTable'>
-{% endif %}
     <div id="vm-wrapper">
         {% include "ganeti/virtual_machine/inner_table.html" %}
-    </div>
-
-    <div class='spinner'>
-        <br/>
-       	{% trans "Loading" %}...
-        <br/>
-        <br/>
-        <img src='{{ STATIC_URL }}/images/ajax-loader.gif'>
     </div>
 </div>
 
