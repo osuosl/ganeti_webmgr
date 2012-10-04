@@ -30,6 +30,22 @@
     }
 </style>
 
+<script type="text/javascript">
+    function sort(url, old_order, new_order) { 
+        var order = getOrderAscDesc(old_order, new_order);
+        location.href = url.replace(old_order, order);
+    } 
+
+    function getOrderAscDesc(old_order, new_order) {
+        if (old_order == new_order) {
+            return '-' + old_order;
+        }
+        else {
+            return new_order;
+        }
+    }
+</script>
+
 {% endblock %}
 
 {% if cluster %}
@@ -44,8 +60,8 @@
     {% endif %}
 {% endif %}
 
-<div id='ajaxTable'>
-    <div id="vm-wrapper">
+<div id='ajaxTables'>
+    <div id="vm-wrappers">
         {% include "ganeti/virtual_machine/inner_table.html" %}
     </div>
 </div>

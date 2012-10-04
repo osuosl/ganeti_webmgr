@@ -2,19 +2,37 @@
 {% load i18n %}
 <table id="vmlist" class="sorted">
 <thead>
+    
+    {% if is_paginated %}
     <tr>
       <th class="status"></th>
-      <th>{% trans "Name" %}</th>
-      <th>{% trans "Owner" %}</th>
+      <th onclick="sort('{% url virtualmachine-list-paged page_obj.number,order %}', '{{order}}', 'hostname')"> {% trans "Name" %} </th>
+            
+      <th onclick="sort('{% url virtualmachine-list-paged page_obj.number,order %}', '{{order}}', 'owner')"> {% trans "Owner" %}</th>
       {% if not cluster %}
-      <th>{% trans "Cluster" %}</th>
+      <th onclick="sort('{% url virtualmachine-list-paged page_obj.number,order %}', '{{order}}', 'cluster')">{% trans "Cluster" %}</th>
       {% endif %}
       <th>{% trans "Node" %}</th>
-      <th>{% trans "OS" %}</th>
-      <th>{% trans "RAM" %}</th>
-      <th>{% trans "Disk Space" %}</th>
-      <th>{% trans "vCPUs" %}</th>
+      <th onclick="sort('{% url virtualmachine-list-paged page_obj.number,order %}', '{{order}}', 'operating_system')"> {% trans "OS" %}</th>
+      <th onclick="sort('{% url virtualmachine-list-paged page_obj.number,order %}', '{{order}}', 'ram')"> {% trans "RAM" %}</th>
+      <th onclick="sort('{% url virtualmachine-list-paged page_obj.number,order %}', '{{order}}', 'disk_size')"> {% trans "Disk Space" %}</th>
+      <th onclick="sort('{% url virtualmachine-list-paged page_obj.number,order %}', '{{order}}', 'virtual_cpus')">{% trans "vCPUs" %}</th>
     </tr>
+    {% else %}
+    <tr>
+      <th class="status"></th>
+      <th onclick="sort('{% url virtualmachine-list-ordered order %}', '{{order}}', 'hostname')"> {% trans "Name" %} </th>
+      <th onclick="sort('{% url virtualmachine-list-ordered order %}', '{{order}}', 'owner')"> {% trans "Owner" %}</th>
+      {% if not cluster %}
+      <th onclick="sort('{% url virtualmachine-list-ordered order %}', '{{order}}', 'cluster')">{% trans "Cluster" %}</th>
+      {% endif %}
+      <th>{% trans "Node" %}</th>
+      <th onclick="sort('{% url virtualmachine-list-ordered order %}', '{{order}}', 'operating_system')"> {% trans "OS" %}</th>
+      <th onclick="sort('{% url virtualmachine-list-ordered order %}', '{{order}}', 'ram')"> {% trans "RAM" %}</th>
+      <th onclick="sort('{% url virtualmachine-list-ordered order %}', '{{order}}', 'disk_size')"> {% trans "Disk Space" %}</th>
+      <th onclick="sort('{% url virtualmachine-list-ordered order %}', '{{order}}', 'virtual_cpus')">{% trans "vCPUs" %}</th>
+    </tr>
+    {% endif %}
 </thead>
 <tbody id="vms">
     {% for vm in object_list %}
@@ -94,21 +112,20 @@
 <ul class="pagination">
     {% if page_obj.has_previous %}
     <li class="previous">
-        <a href="{% url virtualmachine-list-paged page_obj.previous_page_number %}">&laquo; {% trans "Previous" %}</a>
+        <a href="{% url virtualmachine-list-paged page_obj.previous_page_number, "hostname" %}">&laquo; {% trans "Previous" %}</a>
     </li>
     {% endif %}
 
     {% for page in paginator.page_range %}
     <li class="{%if page == page_obj.number%}active{%endif%} page">
-        <a href="{% url virtualmachine-list-paged page%}">{{page}}</a>
+        <a href="{% url virtualmachine-list-paged page, order %}">{{page}}</a>
     </li>
     {% endfor %}
 
     {% if page_obj.has_next %}
     <li class="next">
-        <a href="{% url virtualmachine-list-paged page_obj.next_page_number %}">{% trans "Next" %} &raquo;</a>
+        <a href="{% url virtualmachine-list-paged page_obj.next_page_number, order %}">{% trans "Next" %} &raquo;</a>
     </li>
     {% endif %}
 </ul>   
 {% endif %}
-
