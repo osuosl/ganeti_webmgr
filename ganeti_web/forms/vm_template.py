@@ -15,12 +15,13 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 from django import forms
+from django.forms import Form, CharField, ModelChoiceField, ValidationError
 from django.utils.translation import ugettext_lazy as _
 
 from ganeti_web.forms.virtual_machine import (VirtualMachineForm,
                                               NewVirtualMachineForm)
-from ganeti_web.models import Cluster 
-from ganeti_web.utilities import cluster_default_info, cluster_os_list 
+from ganeti_web.models import Cluster, ClusterUser, VirtualMachine
+from ganeti_web.utilities import cluster_default_info, cluster_os_list
 
 
 
@@ -170,3 +171,18 @@ class VirtualMachineTemplateCopyForm(forms.Form):
 
 
 
+class VMInstanceFromTemplate(Form):
+    owner = ModelChoiceField(label=_('Owner'),
+                             queryset=ClusterUser.objects.all(),
+                             empty_label=None)
+    hostname = CharField(label=_('Instance Name'), max_length=255)
+
+
+    def clean_hostname(self):
+        hostname = self.cleaned_data.get('hostname')
+
+        # Spaces in hostname will always break things.
+        if ' ' in hostname:
+            self.errors["hostname"] = self.error_class(
+                ["Hostnames cannot contain spaces."])
+        return hostname

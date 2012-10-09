@@ -13,6 +13,7 @@ Versions recognized by this module (and GWM at large):
  * GANETI24: Ganeti 2.4.x prior to 2.4.2
  * GANETI242: Ganeti 2.4.2 and newer in the 2.4.x series
  * GANETI25: Ganeti 2.5.x
+ * GANETI26: Ganeti 2.6.x
  * FUTURE: Ganeti which probably is newer than, and somewhat
    backwards-compatible with, the newest version of Ganeti which GWM
    officially supports.
@@ -21,7 +22,16 @@ Note that all bets are off if the cluster's version doesn't correspond to the
 x.y.z (major.minor.patch) versioning pattern.
 """
 
-ANCIENT, GANETI22, GANETI23, GANETI24, GANETI242, GANETI25, FUTURE = range(7)
+(
+    ANCIENT,
+    GANETI22,
+    GANETI23,
+    GANETI24,
+    GANETI242,
+    GANETI25,
+    GANETI26,
+    FUTURE,
+) = range(8)
 
 def classify(cluster):
     """
@@ -38,8 +48,10 @@ def classify(cluster):
     except ValueError:
         return ANCIENT
 
-    if version >= (2, 6, 0):
+    if version >= (2, 7, 0):
         return FUTURE
+    if version >= (2, 6, 0):
+        return GANETI26
     elif version >= (2, 5, 0):
         return GANETI25
     elif version >= (2, 4, 2):
@@ -68,3 +80,11 @@ def has_cdrom2(cluster):
     """
 
     return classify(cluster) >= GANETI242
+
+def requires_maxmem(cluster):
+    """
+    Determine whether a cluster requires min/maxmem rather than
+    just memory.
+    """
+
+    return classify(cluster) >= GANETI26

@@ -31,7 +31,11 @@ $(window).load(function() {
         {{ wizard.management_form }}
         {{ wizard.form.as_table }}
     </table>
-    <input type="submit" value="{% trans "Submit" %}" />
+    {% if wizard.steps.next %}
+        <input type="submit" value="{% trans "Next Step" %}" />
+    {% else %}
+        <input type="submit" value="{% trans "Submit" %}" />
+    {% endif %}
     {% if wizard.steps.prev %}
         <button name="wizard_goto_step" type="submit"
             value="{{ wizard.steps.first }}">

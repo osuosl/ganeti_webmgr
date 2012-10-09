@@ -17,6 +17,7 @@
 # USA.
 from collections import defaultdict
 from ganeti_web import constants
+from ganeti_web.caps import requires_maxmem
 
 from ganeti_web.util.client import GanetiApiError
 
@@ -81,9 +82,14 @@ def cluster_default_info(cluster, hypervisor=None):
         'nic_types': nictypes,
         'nic_mode': nic_mode,
         'nic_link': nic_link,
-        'memory': beparams['memory'],
         'vcpus': beparams['vcpus'],
         }
+
+    if requires_maxmem(cluster):
+        extraparams['memory'] = beparams['maxmem']
+    else:
+        extraparams['memory'] = beparams['memory']
+
     return dict(hvparams, **extraparams)
 
 

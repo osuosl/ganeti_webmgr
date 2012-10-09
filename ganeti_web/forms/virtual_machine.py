@@ -18,6 +18,7 @@
 from django import forms
 from django.contrib.formtools.wizard.views import CookieWizardView
 from django.core.urlresolvers import reverse
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import Q
 from django.forms import (Form, BooleanField, CharField, ChoiceField,
                           IntegerField, ModelChoiceField, ValidationError)
@@ -28,10 +29,10 @@ from django.utils import simplejson as json
 from object_log.models import LogItem
 log_action = LogItem.objects.log_action
 
-from object_permissions import get_users_any
-
+from ganeti_web.backend.queries import (cluster_qs_for_user,
+                                        owner_qs_for_cluster)
 from ganeti_web.backend.templates import template_to_instance
-from ganeti_web.caps import has_cdrom2
+from ganeti_web.caps import has_cdrom2, requires_maxmem
 from ganeti_web.constants import (EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES,
                                   HV_NIC_MODES, HV_DISK_TYPES, HV_NIC_TYPES,
                                   KVM_NIC_TYPES, HVM_DISK_TYPES,
@@ -969,25 +970,50 @@ class VMWizardBasicsForm(Form):
                      choices=[])
     os = ChoiceField(label=_('Operating System'), choices=[])
     vcpus = IntegerField(label=_("Virtual CPU Count"), initial=1, min_value=1)
-    memory = DataVolumeField(label=_('Memory'))
+    memory = DataVolumeField(label=_('Memory (MiB)'))
     disk_template = ChoiceField(label=_('Disk Template'),
                                 choices=HV_DISK_TEMPLATES)
-    disk_size = DataVolumeField(label=_("Disk Size"))
+    disk_size = DataVolumeField(label=_("Disk Size (MB)"))
 
     def _configure_for_cluster(self, cluster):
         self.cluster = cluster
 
+        # Get a look at the list of available hypervisors, and set the initial
+        # hypervisor appropriately.
         hvs = cluster.info["enabled_hypervisors"]
         prettified = [hv_prettify(hv) for hv in hvs]
         hv = cluster.info["default_hypervisor"]
         self.fields["hv"].choices = zip(hvs, prettified)
         self.fields["hv"].initial = hv
 
+        # Get the OS list.
         self.fields["os"].choices = cluster_os_list(cluster)
 
+        # Set the default CPU count based on the backend parameters.
         beparams = cluster.info["beparams"]["default"]
-        self.fields["memory"].initial = beparams["memory"]
         self.fields["vcpus"].initial = beparams["vcpus"]
+
+        # If this cluster operates on the "maxmem" parameter instead of
+        # "memory", use that for now.
+        if requires_maxmem(cluster):
+            self.fields["memory"].initial = beparams["maxmem"]
+        else:
+            self.fields["memory"].initial = beparams["memory"]
+
+        # If there are ipolicy limits in place, add validators for them.
+        if "ipolicy" in cluster.info:
+            if "max" in cluster.info["ipolicy"]:
+                v = cluster.info["ipolicy"]["max"]["disk-size"]
+                self.fields["disk_size"].validators.append(
+                    MaxValueValidator(v))
+                v = cluster.info["ipolicy"]["max"]["memory-size"]
+                self.fields["memory"].validators.append(MaxValueValidator(v))
+            if "min" in cluster.info["ipolicy"]:
+                v = cluster.info["ipolicy"]["min"]["disk-size"]
+                self.fields["disk_size"].validators.append(
+                    MinValueValidator(v))
+                v = cluster.info["ipolicy"]["min"]["memory-size"]
+                self.fields["memory"].validators.append(MinValueValidator(v))
 
 
 class VMWizardAdvancedForm(Form):
@@ -1009,6 +1035,16 @@ class VMWizardAdvancedForm(Form):
     def _configure_for_disk_template(self, template):
         if template != "drbd":
             del self.fields["snode"]
+
+    def clean(self):
+        # Ganeti will error on VM creation if an IP address check is requested
+        # but a name check is not.
+        if (self.cleaned_data.get("ip_check") and not
+            self.cleaned_data.get("name_check")):
+            msg = ["Cannot perform IP check without name check"]
+            self.errors["ip_check"] = self.error_class(msg)
+
+        return self.cleaned_data
 
 
 class VMWizardPVMForm(Form):
@@ -1080,29 +1116,6 @@ class VMWizardKVMForm(Form):
         data['cdrom_disk_type'] = 'ide'
 
         return data
-
-
-def cluster_qs_for_user(user):
-    if user.is_superuser:
-        qs = Cluster.objects.all()
-    else:
-        qs = user.get_objects_any_perms(Cluster, ['admin','create_vm'], False)
-
-    # Exclude all read-only clusters.
-    qs = qs.exclude(Q(username='') | Q(mtime__isnull=True))
-
-    return qs
-
-
-def owner_qs_for_cluster(cluster):
-    # Get all superusers.
-    qs = ClusterUser.objects.filter(profile__user__is_superuser=True)
-
-    # Get all users who have the given permissions on the given cluster.
-    users = get_users_any(cluster, ["admin"], True)
-    qs |= ClusterUser.objects.filter(profile__user__in=users)
-
-    return qs
 
 
 class VMWizardView(CookieWizardView):
@@ -1212,7 +1225,7 @@ class VMWizardView(CookieWizardView):
         ]
 
         template.os = forms[2].cleaned_data["os"]
-        # template.ip_check = forms[3].cleaned_data["ip_check"]
+        template.ip_check = forms[3].cleaned_data["ip_check"]
         template.name_check = forms[3].cleaned_data["name_check"]
         template.pnode = forms[3].cleaned_data["pnode"].hostname
 
@@ -1235,6 +1248,7 @@ class VMWizardView(CookieWizardView):
 
         if hostname:
             vm = template_to_instance(template, hostname, owner)
+            log_action('CREATE', user, vm)
             return HttpResponseRedirect(reverse('instance-detail',
                                                 args=[cluster.slug,
                                                       vm.hostname]))
