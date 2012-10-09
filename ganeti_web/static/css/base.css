@@ -323,6 +323,7 @@ h1.breadcrumb a:hover {text-decoration:underline;}
 /** Button backgrounds **/
 div.edit, a.edit{background:url(/static/images/icons/edit.png) no-repeat;}
 div.delete, a.delete{background:url(/static/images/icons/delete.png) no-repeat;}
+div.refresh, a.refresh{background:url(/static/images/icons/arrow_refresh.png) no-repeat;}
 
 
 .add {background:url(/static/images/icons/add.png) no-repeat;}
