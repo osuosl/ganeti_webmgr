@@ -90,7 +90,14 @@ class ClusterListView(LoginRequiredMixin, PagedListView):
             context = super(ClusterListView, self).get_context_data(object_list=kwargs["object_list"])
             context["can_create"]= (user.is_superuser or
                                     user.has_perm("admin", Cluster))
+
+            if "order_by" in self.request.GET:
+                context["order"] = self.request.GET["order_by"]
+            else:
+                context["order"] = "hostname" #Default sort
+
             return context  
+
 class ClusterVMListView(LoginRequiredMixin, PagedListView):
 
     template_name = "ganeti/virtual_machine/table.html"
@@ -107,6 +114,11 @@ class ClusterVMListView(LoginRequiredMixin, PagedListView):
 
     def get_context_data(self, **kwargs):
         kwargs["cluster"] = self.cluster
+
+        # This is so the template knows which url to use to reload 
+        # the table when sorting or switching pages.
+        kwargs["cluster_vms"] = True
+
         return kwargs
 
 
