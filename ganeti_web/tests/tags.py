@@ -26,12 +26,6 @@ class TestFilters(unittest.TestCase):
     Big test case for all template filters.
     """
 
-    def test_truncate_valid(self):
-        self.assertEqual(tags.truncate("test", 4), "test")
-
-    def test_truncate_length(self):
-        self.assertEqual(tags.truncate("testing", 6), u"testi…")
-
     def test_abbreviate_fqdn(self):
         self.assertEqual(tags.abbreviate_fqdn("subdomain.example.com"),
             "subdomain")
@@ -64,3 +58,6 @@ class TestFilters(unittest.TestCase):
         self.assertEqual(fpt(51200, 81920), "50 / 80")
         self.assertEqual(fpt(512, 2048), "0.5 / 2")
         self.assertEqual(fpt(510972, 870910), "499 / 850.5")
+
+    def test_hvs(self):
+        self.assertEqual(tags.hvs(["kvm", "xen-hvm"]), ["KVM", "Xen (HVM)"])

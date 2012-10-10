@@ -17,6 +17,7 @@
 # USA.
 from collections import defaultdict
 from ganeti_web import constants
+from ganeti_web.caps import requires_maxmem
 
 from ganeti_web.util.client import GanetiApiError
 
@@ -36,12 +37,12 @@ def cluster_default_info(cluster, hypervisor=None):
 
     if hypervisor is not None:
         if hypervisor not in hvs:
-            return -1
+            raise RuntimeError("Was asked to deal with a cluster/HV mismatch")
         else:
             hv = hypervisor
     else:
         hv = info['default_hypervisor']
-    
+
     hvparams = info['hvparams'][hv]
     if hv == 'kvm':
         c = constants.KVM_CHOICES
@@ -55,7 +56,7 @@ def cluster_default_info(cluster, hypervisor=None):
             hvparams['nic_type'] = info['hvparams']['xen-hvm']['nic_type']
     else:
         c = constants.NO_CHOICES
-    
+
     disktypes = c['disk_type']
     nictypes = c['nic_type']
     bootdevices = c['boot_order']
@@ -81,10 +82,30 @@ def cluster_default_info(cluster, hypervisor=None):
         'nic_types': nictypes,
         'nic_mode': nic_mode,
         'nic_link': nic_link,
-        'memory': beparams['memory'],
         'vcpus': beparams['vcpus'],
-        }   
+        }
+
+    if requires_maxmem(cluster):
+        extraparams['memory'] = beparams['maxmem']
+    else:
+        extraparams['memory'] = beparams['memory']
+
     return dict(hvparams, **extraparams)
+
+
+def hv_prettify(hv):
+    """
+    Prettify a hypervisor name, if we know about it.
+    """
+
+    prettified = {
+        "kvm": "KVM",
+        "lxc": "Linux Containers (LXC)",
+        "xen-hvm": "Xen (HVM)",
+        "xen-pvm": "Xen (PVM)",
+    }
+
+    return prettified.get(hv, hv)
 
 
 def cluster_os_list(cluster):

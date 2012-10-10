@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block head %}
+     <link rel="stylesheet" type="text/css" href="../static/css/config.css" />
+    {{ block.super }}    
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
+    <script type="text/javascript">
+    
+        var $errors = undefined;
+        var $cur_form = undefined;
+        var tab_change = -1;
+        
+        $(document).ready(function() {
+            $errors = $('#errors');
+            $('#tab_content :first').each(function(){
+                switch_tab(this.id.slice(5));
+            });
+            
+            $('input.save').live('click', function(){
+                if (!lock) {return;}
+                $form = $(this.parentNode.parentNode.parentNode);
+                $inputs = $form.find('input,select');
+                args = {};
+                for (i=0; i<$inputs.length; i++) {
+                    input = $inputs.get(i);
+                    args[input.name]= $(input).val();
+                }
+                //clear errors
+                $('#success').hide();
+                $errors.hide().empty();
+                $.post('save', args, process_save, 'json');
+            });
+
+            $('input, select').live('keypress',function(e){
+                if (e.which == 13) {
+                    $form = $(this.parentNode.parentNode.parentNode);
+                    $form.find('input.save').trigger('click');
+                }
+            });
+
+            $('#tabs .tab').click(function() {
+                switch_tab(this.id.slice(4));
+            });
+            
+            refresh_lock();
+        });
+
+        function switch_tab(name){
+            // switch highlight
+            $('#tabs .active').removeClass('active');
+            $('#tab_' + name).addClass('active');
+
+            // switch form pane content
+            $node = $('#form_'+name);
+            if ($cur_form != undefined){
+                $cur_form.remove().appendTo("#tab_content");
+            }
+            $cur_form = $node
+            $node.remove().appendTo("#current_tab");
+        }
+
+        function process_save(data) {
+            if (data == 1){
+                $('#success').show().delay(1500).fadeOut(1500);
+                tab_change = -1;
+            }else{
+                for (i in data) {
+                    error = data[i];
+                    $errors.append('<li>'+ error[0] +' - '+ error[1] +'</li>');
+                }
+                $errors.show();
+            }
+        }
+    
+        {% include "../static/js/config_lock.js" %}
+    </script>
+{% endblock %}
+
+{% block content %}
+    <div id="success">Saved</div>
+    <ul id="errors"></ul>
+
+    <div id="h1">
+        <h1>Configuration: <span class="highlight">{{name}}</span></h1>
+        <div id="tabs">
+            {% block tabs %}
+            {% endblock %}
+        </div>
+    </div>
+    <div id="current_tab"></div>
+    <div id="tab_content">
+        {% block tab_content %}        
+            {% include  "config_form.html" %}
+        {% endblock %}
+    </div>
+{% endblock %}

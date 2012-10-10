@@ -36,7 +36,7 @@ from django.contrib.sites import models as sites_app
 from django.contrib.sites.management import create_default_site
 from django.core.validators import RegexValidator, MinValueValidator
 from django.db import models
-from django.db.models import Q, Sum
+from django.db.models import BooleanField, Q, Sum
 from django.db.models.query import QuerySet
 from django.db.models.signals import post_save, post_syncdb
 from django.db.utils import DatabaseError
@@ -850,15 +850,11 @@ class VirtualMachine(CachedClusterObject):
     @models.permalink
     def get_absolute_url(self):
         """
-        Return absolute url for this instance.  Since the canonical url requires
-        the cluster object this method will check to see if the cluster is
-        already queried.  If it has not been queried it will use the
-        non-canonical url which is quicker to render.
+        Return absolute url for this instance.
         """
-        if hasattr(self, '_cluster_cache'):
-            return 'instance-detail', (), {'cluster_slug':self.cluster.slug,
-                                           'instance':self.hostname}
-        return 'instance-detail-id', (), {'id':self.pk}
+
+        return 'instance-detail', (), {'cluster_slug':self.cluster.slug,
+                                       'instance':self.hostname}
 
     def __repr__(self):
         return "<VirtualMachine: '%s'>" % self.hostname
@@ -911,15 +907,11 @@ class Node(CachedClusterObject):
     @models.permalink
     def get_absolute_url(self):
         """
-        Return absolute url for this node.  Since the canonical url requires
-        the cluster object this method will check to see if the cluster is
-        already queried.  If it has not been queried it will use the
-        non-canonical url which is quicker to render.
+        Return absolute url for this node.
         """
-        if hasattr(self, '_cluster_cache'):
-            return 'node-detail', (), {'cluster_slug':self.cluster.slug,
-                                           'host':self.hostname}
-        return 'node-detail-id', (), {'id':self.pk}
+
+        return 'node-detail', (), {'cluster_slug':self.cluster.slug,
+                                   'host':self.hostname}
 
     @property
     def rapi(self):
@@ -1362,6 +1354,7 @@ class VirtualMachineTemplate(models.Model):
                 default=True)
     no_install = models.BooleanField(verbose_name=_('Do not install OS'), \
                 default=False)
+    ip_check = BooleanField(verbose_name=_("IP Check"), default=True)
     name_check = models.BooleanField(verbose_name=_('DNS Name Check'), \
                 default=True)
     iallocator = models.BooleanField(verbose_name=_('Automatic Allocation'), \
@@ -1572,7 +1565,7 @@ class ClusterUser(models.Model):
     @property
     def permissable(self):
         """ returns an object that can be granted permissions """
-        raise self.cast().permissable
+        return self.cast().permissable
 
     def save(self, *args, **kwargs):
         if not self.id:

@@ -15,12 +15,13 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 from django import forms
+from django.forms import Form, CharField, ModelChoiceField, ValidationError
 from django.utils.translation import ugettext_lazy as _
 
 from ganeti_web.forms.virtual_machine import (VirtualMachineForm,
-    NewVirtualMachineForm)
-from ganeti_web.models import Cluster 
-from ganeti_web.utilities import cluster_default_info, cluster_os_list 
+                                              NewVirtualMachineForm)
+from ganeti_web.models import Cluster, ClusterUser, VirtualMachine
+from ganeti_web.utilities import cluster_default_info, cluster_os_list
 
 
 
@@ -42,9 +43,9 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
         Initialize VirtualMachineTemplateForm
         """
         cluster = None
+        disk_count = 1
+        nic_count = 1
         initial = kwargs.get('initial', None)
-        disk_count = 0
-        nic_count = 0
         user = kwargs.pop('user', None)
 
         super(VirtualMachineForm, self).__init__(*args, **kwargs)
@@ -87,6 +88,7 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
                     self.fields['nic_mode_%s' % i].initial = initial['nic_mode_%s'%i]
                     self.fields['nic_link_%s' % i].initial = initial['nic_link_%s'%i]
 
+       
         if cluster and hasattr(cluster, 'info'):
             # Get choices based on hypervisor passed to the form.
             hv = initial.get('hypervisor', None)
@@ -105,6 +107,10 @@ class VirtualMachineTemplateForm(NewVirtualMachineForm):
             oslist = cluster_os_list(cluster)
             oslist.insert(0, self.empty_field)
             self.fields['os'].choices = oslist
+        
+        if not initial:
+            self.create_disk_fields(disk_count)
+            self.create_nic_fields(nic_count)
 
         # Set cluster choices
         if user.is_superuser:
@@ -165,3 +171,18 @@ class VirtualMachineTemplateCopyForm(forms.Form):
 
 
 
+class VMInstanceFromTemplate(Form):
+    owner = ModelChoiceField(label=_('Owner'),
+                             queryset=ClusterUser.objects.all(),
+                             empty_label=None)
+    hostname = CharField(label=_('Instance Name'), max_length=255)
+
+
+    def clean_hostname(self):
+        hostname = self.cleaned_data.get('hostname')
+
+        # Spaces in hostname will always break things.
+        if ' ' in hostname:
+            self.errors["hostname"] = self.error_class(
+                ["Hostnames cannot contain spaces."])
+        return hostname

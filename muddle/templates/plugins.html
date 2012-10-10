@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% load maintain_extras %}
+
+{% block head %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="../static/css/plugins.css" />
+    <script type="text/javascript">
+        var $errors = undefined;
+        $(document).ready(function() {
+                $('#plugins li.disabled input').live('click', function(){
+                        $(this).attr('checked',false);
+                        if(!lock){return;}
+                        $errors.empty().hide();
+                        $('#enable h2 .plugin').html(this.parentNode.id);
+                        $('#enable .description').html(this.parentNode.title);
+                        $.getJSON('{{ROOT}}/plugin/depends', {'name':this.parentNode.id}, process_depends);
+                    });
+                
+                $('#plugins li.enabled input').live('click', function(){
+                        $(this).attr('checked',true);
+                        if(!lock){return;}
+                        $('#disable h2 .plugin').html(this.parentNode.id);
+                        $('#disable .description').html(this.parentNode.title);
+                        $errors.empty().hide();
+                        $.getJSON('{{ROOT}}/plugin/dependeds', {'name':this.parentNode.id}, process_dependeds);
+                    });
+                
+                $('#enable button').click(function(){
+                        if(lock){
+                            name = $('#enable h2 .plugin').html();
+                            $.getJSON('{{ROOT}}/plugin/enable', {'name':name}, process_enabled);
+                        }
+                        $('#enable').hide();
+                    });
+                
+                $('#disable button').click(function(){
+                        if (lock){
+                            name = $('#disable h2 .plugin').html();
+                            $.getJSON('{{ROOT}}/plugin/disable', {'name':name}, process_disabled);
+                        }
+                        $('#disable').hide();
+                    });
+
+                $('#disable .button_close, #enable .button_close').click(function(){
+                        $('#enable, #disable').hide();
+                    });
+
+                $('html').keypress(function(e){
+                        if (e.which == 0) {
+                            $('#enable, #disable').hide();
+                        }
+                    });
+
+                $errors = $('#errors');
+                refresh_lock();
+            });
+        
+        function process_depends(data){
+            /*
+                processes a list of depends for a plugin prior to displaying
+                a enable form.
+            */
+            if (data.length == 2 && data[0] == -1) {
+                // errors
+                $errors.append(data[1]).show();
+                return;
+            }
+            if (data.length == 0) {
+                $('#enable .messages').hide();
+            } else {
+                $('#enable .messages').show();
+                $list = $('#enable .messages ul')
+                $list.empty();
+                for (i in data){
+                    plugin = data[i];
+                    $list.append('<li>'+plugin['name']+'</li>')
+                }
+            }
+            $('#enable').show().find('button').focus();
+        }
+
+        function process_enabled(data){
+            /*
+                processes a response from attempting to enable a plugin.  This
+                will either update the interface on a success or display a list
+                of errors
+            */
+            if (data.length == 2 && data[0] == -1){
+                errors = data[1];
+                for (i in errors) {
+                    $errors.append("<li>"+errors[i]+"</li>");
+                }
+                $errors.show();
+            } else {
+                for (i in data){
+                    plugin = data[i];
+                    $('#'+plugin)
+                        .removeClass('disabled')
+                        .addClass('enabled')
+                        .children('input').attr('checked',true);
+                }
+            }
+        }
+        
+        function process_dependeds(data){
+            /*
+                processes a list of dependeds for a plugin prior to displaying
+                a disable form.
+            */
+            if (data.length == 0) {
+                $('#disable .messages').hide();
+            } else {
+                $('#disable .messages').show();
+                $list = $('#disable .messages ul')
+                $list.empty();
+                for (i in data){
+                    plugin = data[i];
+                    $list.append('<li>'+plugin['name']+'</li>')
+                }
+            }
+            $('#disable').show().find('button').focus();
+        }
+        
+        function process_disabled(data){
+            /*
+                processes a response from attempting to disable a plugin.
+            */
+            if (data != -1){
+                for (i in data){
+                    plugin = data[i];
+                    $('#'+plugin)
+                        .removeClass('enabled')
+                        .addClass('disabled')
+                        .children('input').attr('checked',false);
+                }
+            }
+        }
+        
+        
+        {% include "../static/js/config_lock.js" %}
+        
+    </script>    
+{% endblock %}
+
+{% block content %}
+    <ul id="errors"></ul>
+    <h1>Plugins</h1>
+    <ul id="plugins">
+    {% for plugin in plugins %}
+    {% with plugin|config as config %}
+        <li id="{{config.name}}" title="{{plugin.description}}" class="{%if config.enabled%}enabled{%else%}disabled{%endif%}">
+            {{config.name}}
+            <input type="checkbox"
+                {%if config.enabled%}checked{%endif%}
+                {%if plugin.core %}disabled{%endif%}
+                />
+            {% if plugin.config_form %}
+                <a class="button_config button" href="{{ROOT}}/plugin/{{config.name}}/"></a>
+            {% endif %}
+        </li>
+    {% endwith %}
+    {% endfor %}
+    </ul>
+    
+    <div id="enable" class="form">
+        <div class="inner">
+            <div class="button_close button"></div>
+            <h2><span class="label">Enable:</span> <span class="plugin"></span></h2>
+            <div class="description"></div>
+            <div class="messages">
+            The following dependencies will also be enabled:
+            <ul></ul>
+            </div>
+            <button class="button_enable">Enable</button>
+        </div>
+    </div>
+    
+    <div id="disable" class="form">
+        <div class="inner">
+            <div class="button_close button"></div>
+            <h2><span class="label">Disable:</span> <span class="plugin"></span></h2>
+            <div class="description"></div>
+            <div class="messages">
+                The following plugins depend on this plugin:
+                <ul</ul>
+            </div>
+            <button class="button_disable">Disable</button>
+        </div>
+    </div>
+{% endblock %}

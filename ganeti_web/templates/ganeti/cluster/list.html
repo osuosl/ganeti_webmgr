@@ -6,7 +6,6 @@
 
 {% block head %}
 <script type="text/javascript" src="{{STATIC_URL}}/js/jquery.ajax.delete.js"></script>
-<script type="text/javascript" src="{{STATIC_URL}}/js/jquery.tablesorter.min.js"></script>
 <script type="text/javascript" src="{{STATIC_URL}}/js/jquery.progressbar.js"></script>
 <script type="text/javascript">
     var PBAR_CONF = {
@@ -65,7 +64,7 @@
                 <td>{{ cluster.description }}</td>
                 {% if info %}
                     <td>v{{ info.software_version }}</td>
-                    <td>{{ info.default_hypervisor }}</td>
+                    <td>{{ info.default_hypervisor|hv }}</td>
                     <td><a href="{% url node-detail cluster.slug info.master %}">{{ info.master }}</a></td>
                 {% else %}
                     <td><i>unknown</i></td>
@@ -82,6 +81,28 @@
     {% endfor %}
     </tbody>
 </table>
+
+{% if is_paginated %}
+<ul class="pagination">
+    {% if page_obj.has_previous %}
+    <li class="previous">
+        <a href="{% url cluster-list-paged page_obj.previous_page_number%}">&laquo; {% trans "Previous" %}</a>
+    </li>
+    {% endif %}
+
+    {% for page in paginator.page_range %}
+    <li class="{%if page == page_obj.number%}active{%endif%} page">
+        <a href="{% url cluster-list-paged page%}">{{page}}</a>
+    </li>
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+    <li class="next">
+        <a href="{% url cluster-list-paged page_obj.next_page_number%}">{% trans "Next" %} &raquo;</a>
+    </li>
+    {% endif %}
+</ul>
+{% endif %}
 
 <!-- Progress bars for free memory/disk and sorting -->
 <script type="text/javascript">

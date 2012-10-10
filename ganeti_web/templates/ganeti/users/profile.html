@@ -2,7 +2,51 @@
 
 {% block detail %}
     {%  with user.ssh_keys.all as keyslist %}
-    <h3>SSH keys</h3>
-    {% include "ganeti/ssh_keys/list.html" %}
+        <h3>SSH Keys</h3>
+        {% include "ganeti/ssh_keys/list.html" %}
     {% endwith %}
+    <br></br>
+    {% load object_permission_tags %}
+    {% if groups %} 
+        <h3>Groups</h3>
+        <table id="op_users">
+            <tr>
+                <th>Group</th>
+                <th>Permissions</th>
+                <th></th>
+            </tr>
+            {% for group in groups %}
+                <tr id="user_{{group.id}}">
+                    <td class="name">
+                    {% if "admin" in user_detail|permissions:group or user_detail.is_superuser%}
+                        <a href="{% url group-detail group.id %}">{{group.name}}</a>
+                    {% else %}
+                        {{group.name}}
+                    {% endif %}
+                    </td>
+                    <td class="permissions">
+                        {% if "admin" in user_detail|permissions:group or user_detail.is_superuser%}
+                            <a href="{% url group-permissions group.id %}/user/{{user_detail.id}}" class="permissions" title="click to edit">
+                                {% for permission in user_detail|permissions:group %}
+                                    {{permission}}{% if not forloop.last%}, {% endif %}
+                                {% empty %}
+                                    <span class="none">None</span>
+                                {% endfor %}
+                            </a>
+                        {% else %}
+                            {% for permission in user_detail|permissions:group %}
+                                {{permission}}{% if not forloop.last%}, {% endif %}
+                            {% empty %}
+                                <span class="none">None</span>
+                            {% endfor %}
+                        {% endif %}
+                    </td>
+                    <td></td>
+                </tr>
+            {% endfor %}
+        </table>
+        <br></br>
+    {% endif %}
+    {{permissions_template|safe}}
+    
 {% endblock %}

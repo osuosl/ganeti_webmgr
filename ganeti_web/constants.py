@@ -63,18 +63,17 @@ KVM_FLAGS = [
 ]
 
 KVM_DISK_TYPES = [
-    (u'scsi', u'scsi'),
-    (u'sd', u'sd'),
-    (u'mtd', u'mtd'),
-    (u'pflash', u'pflash'),
+    (u'scsi', u'SCSI'),
+    (u'sd', u'SD Card'),
+    (u'mtd', u'MTD'),
+    (u'pflash', u'PC System Flash'),
 ]
 
 KVM_NIC_TYPES = [
     (u'i82551',u'i82551'),
-    (u'i82557b',u'i82557b'),
-    (u'i82559er',u'i82559er'),
-    (u'pcnet',u'pcnet'),
-    (u'e1000',u'e1000'),
+    (u'i82557b',u'i82557B'),
+    (u'i82559er',u'i82559ER'),
+    (u'pcnet',u'PCnet'),
 ]
 
 # Xen HVM Choices
@@ -92,40 +91,35 @@ HVM_DISK_TYPES = [
 
 # HV Choices
 HV_DISK_TEMPLATES = [
-    EMPTY_CHOICE_FIELD,
-    (u'plain', u'plain'),
-    (u'drbd', u'drbd'),
-    (u'file', u'file'),
-    (u'diskless', u'diskless')
+    (u'plain', u'Plain'),
+    (u'drbd', u'DRBD'),
+    (u'file', u'File'),
+    (u'diskless', u'Diskless')
 ]
 
 # HV Choices
 HV_DISK_TEMPLATES_SINGLE_NODE = [
-    EMPTY_CHOICE_FIELD,
     (u'plain', u'plain'),
     (u'file', u'file'),
     (u'diskless', u'diskless')
 ]
 
 HV_DISK_TYPES = [
-    EMPTY_CHOICE_FIELD,
-    (u'paravirtual',u'paravirtual'),
-    (u'ide',u'ide'),
+    (u'paravirtual',u'Paravirtual'),
+    (u'ide',u'IDE'),
 ]
 
 HV_NIC_MODES = [
-    EMPTY_CHOICE_FIELD,
-    (u'routed', u'routed'),
-    (u'bridged', u'bridged')
+    (u'routed', u'Routed'),
+    (u'bridged', u'Bridged')
 ]
 
 HV_NIC_TYPES = [
-    EMPTY_CHOICE_FIELD,
     (u'e1000',u'e1000'),
-    (u'rtl8139',u'rtl8139'),
-    (u'ne2k_isa',u'ne2k_isa'),
-    (u'ne2k_pci',u'ne2k_pci'),
-    (u'paravirtual',u'paravirtual'),
+    (u'rtl8139',u'RTL8139'),
+    (u'ne2k_isa',u'NE2000 (ISA)'),
+    (u'ne2k_pci',u'NE2000 (PCI)'),
+    (u'paravirtual',u'Paravirtual'),
 ]
 
 HV_BOOT_ORDER = KVM_BOOT_ORDER
@@ -144,7 +138,6 @@ HV_SECURITY_MODELS = [
 ]
 
 HV_USB_MICE = [
-    EMPTY_CHOICE_FIELD,
     (u'mouse',u'Mouse'),
     (u'tablet',u'Tablet'),
 ]
@@ -176,4 +169,3 @@ NO_CHOICES = {
     'nic_type': None,
     'boot_order': None,
 }
-

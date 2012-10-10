@@ -1,0 +1,4 @@
+{% extends "group/users.html" %}
+{% load shots %}
+{% block user_headers %}{% shot group-users-table-headers %}{% endshot %}{% endblock %}
+{% block user_row %}{% include "muddle/group/user_row.html" %}{% endblock %}

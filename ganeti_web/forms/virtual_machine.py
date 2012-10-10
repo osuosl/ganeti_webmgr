@@ -16,20 +16,36 @@
 # USA.
 
 from django import forms
+from django.contrib.formtools.wizard.views import CookieWizardView
+from django.core.urlresolvers import reverse
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import Q
-from django.forms import ValidationError
+from django.forms import (Form, BooleanField, CharField, ChoiceField,
+                          IntegerField, ModelChoiceField, ValidationError)
+from django.http import HttpResponseRedirect
 # Per #6579, do not change this import without discussion.
 from django.utils import simplejson as json
 
-from ganeti_web.constants import EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES, \
-    HV_NIC_MODES, HV_DISK_TYPES, HV_NIC_TYPES, KVM_NIC_TYPES, HVM_DISK_TYPES, \
-    KVM_DISK_TYPES, KVM_BOOT_ORDER, HVM_BOOT_ORDER, KVM_CHOICES, HV_USB_MICE, \
-    HV_SECURITY_MODELS, KVM_FLAGS, HV_DISK_CACHES, MODE_CHOICES, HVM_CHOICES, \
-    HV_DISK_TEMPLATES_SINGLE_NODE
+from object_log.models import LogItem
+log_action = LogItem.objects.log_action
+
+from ganeti_web.backend.queries import (cluster_qs_for_user,
+                                        owner_qs_for_cluster)
+from ganeti_web.backend.templates import template_to_instance
+from ganeti_web.caps import has_cdrom2, requires_maxmem
+from ganeti_web.constants import (EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES,
+                                  HV_NIC_MODES, HV_DISK_TYPES, HV_NIC_TYPES,
+                                  KVM_NIC_TYPES, HVM_DISK_TYPES,
+                                  KVM_DISK_TYPES, KVM_BOOT_ORDER,
+                                  HVM_BOOT_ORDER, KVM_CHOICES, HV_USB_MICE,
+                                  HV_SECURITY_MODELS, KVM_FLAGS,
+                                  HV_DISK_CACHES, MODE_CHOICES, HVM_CHOICES,
+                                  HV_DISK_TEMPLATES_SINGLE_NODE)
 from ganeti_web.fields import DataVolumeField, MACAddressField
-from ganeti_web.models import (Cluster, ClusterUser, Organization,
-                           VirtualMachineTemplate, VirtualMachine)
-from ganeti_web.utilities import cluster_default_info, cluster_os_list, contains, get_hypervisor
+from ganeti_web.models import (Cluster, ClusterUser, Node, Organization,
+                               VirtualMachineTemplate, VirtualMachine)
+from ganeti_web.utilities import (cluster_default_info, cluster_os_list,
+                                  contains, get_hypervisor, hv_prettify)
 from django.utils.translation import ugettext_lazy as _
 from ganeti_web.util.client import REPLACE_DISK_AUTO, REPLACE_DISK_PRI, \
     REPLACE_DISK_CHG, REPLACE_DISK_SECONDARY
@@ -354,15 +370,17 @@ class NewVirtualMachineForm(VirtualMachineForm):
         boot_order = data.get('boot_order', '')
         image_path = data.get('cdrom_image_path', '')
         image2_path = data.get('cdrom2_image_path','')
-        if boot_order == 'cdrom':
-            if image_path == '':
-                if image2_path == '':
-                    msg = u"%s." % _("Image path required if boot device is CD-ROM")
-                    self._errors["cdrom_image_path"] = self.error_class([msg])
-                    del data["cdrom_image_path"]
-                else:
-                    image_path, image2_path = image2_path, image_path
- 
+        if boot_order == 'cdrom' and image_path == "":
+            # Check to see if there's a second CD-ROM but not a first one. In
+            # that case, we could just switch them around. However, if both
+            # trays are empty, then we can't really boot from CD-ROM, can we?
+            if image2_path == '':
+                msg = u"%s." % _("Image path required if boot device is CD-ROM")
+                self._errors["cdrom_image_path"] = self.error_class([msg])
+                del data["cdrom_image_path"]
+            else:
+                image_path, image2_path = image2_path, image_path
+
         if iallocator:
             # If iallocator is checked,
             #  don't display error messages for nodes
@@ -884,3 +902,368 @@ class ReplaceDisksForm(forms.Form):
         else:
             iallocator = None
         return self.instance.replace_disks(mode, disks, node, iallocator)
+
+
+class VMWizardClusterForm(Form):
+    cluster = ModelChoiceField(label=_('Cluster'),
+                               queryset=Cluster.objects.all(),
+                               empty_label=None)
+
+    def clean_cluster(self):
+        """
+        Ensure that the cluster is available.
+        """
+
+        cluster = self.cleaned_data.get('cluster', None)
+        if not getattr(cluster, "info", None):
+            msg = _("This cluster is currently unavailable. Please check"
+                    " for Errors on the cluster detail page.")
+            self._errors['cluster'] = self.error_class([msg])
+
+        return cluster
+
+
+class VMWizardOwnerForm(Form):
+    template_name = CharField(label=_("Template Name"), max_length=255,
+                              required=False)
+    hostname = CharField(label=_('Instance Name'), max_length=255,
+                         required=False)
+    owner = ModelChoiceField(label=_('Owner'),
+                             queryset=ClusterUser.objects.all(),
+                             empty_label=None)
+
+    def _configure_for_cluster(self, cluster):
+        self.cluster = cluster
+
+        qs = owner_qs_for_cluster(cluster)
+        self.fields["owner"].queryset = qs
+
+    def clean_hostname(self):
+        hostname = self.cleaned_data.get('hostname')
+        if hostname:
+            # Confirm that the hostname is not already in use.
+            try:
+                vm = VirtualMachine.objects.get(cluster=self.cluster,
+                                                hostname=hostname)
+            except VirtualMachine.DoesNotExist:
+                # Well, *I'm* convinced.
+                pass
+            else:
+                raise ValidationError(
+                    _("Hostname is already in use for this cluster"))
+
+        # Spaces in hostname will always break things.
+        if ' ' in hostname:
+            self.errors["hostname"] = self.error_class(
+                ["Hostnames cannot contain spaces."])
+        return hostname
+
+    def clean(self):
+        if (not self.cleaned_data.get("template_name") and
+            not self.cleaned_data.get("hostname")):
+            raise ValidationError("What should be created?")
+        return self.cleaned_data
+
+
+class VMWizardBasicsForm(Form):
+    hv = ChoiceField(label=_("Hypervisor"),
+                     choices=[])
+    os = ChoiceField(label=_('Operating System'), choices=[])
+    vcpus = IntegerField(label=_("Virtual CPU Count"), initial=1, min_value=1)
+    memory = DataVolumeField(label=_('Memory (MiB)'))
+    disk_template = ChoiceField(label=_('Disk Template'),
+                                choices=HV_DISK_TEMPLATES)
+    disk_size = DataVolumeField(label=_("Disk Size (MB)"))
+
+    def _configure_for_cluster(self, cluster):
+        self.cluster = cluster
+
+        # Get a look at the list of available hypervisors, and set the initial
+        # hypervisor appropriately.
+        hvs = cluster.info["enabled_hypervisors"]
+        prettified = [hv_prettify(hv) for hv in hvs]
+        hv = cluster.info["default_hypervisor"]
+        self.fields["hv"].choices = zip(hvs, prettified)
+        self.fields["hv"].initial = hv
+
+        # Get the OS list.
+        self.fields["os"].choices = cluster_os_list(cluster)
+
+        # Set the default CPU count based on the backend parameters.
+        beparams = cluster.info["beparams"]["default"]
+        self.fields["vcpus"].initial = beparams["vcpus"]
+
+        # If this cluster operates on the "maxmem" parameter instead of
+        # "memory", use that for now.
+        if requires_maxmem(cluster):
+            self.fields["memory"].initial = beparams["maxmem"]
+        else:
+            self.fields["memory"].initial = beparams["memory"]
+
+        # If there are ipolicy limits in place, add validators for them.
+        if "ipolicy" in cluster.info:
+            if "max" in cluster.info["ipolicy"]:
+                v = cluster.info["ipolicy"]["max"]["disk-size"]
+                self.fields["disk_size"].validators.append(
+                    MaxValueValidator(v))
+                v = cluster.info["ipolicy"]["max"]["memory-size"]
+                self.fields["memory"].validators.append(MaxValueValidator(v))
+            if "min" in cluster.info["ipolicy"]:
+                v = cluster.info["ipolicy"]["min"]["disk-size"]
+                self.fields["disk_size"].validators.append(
+                    MinValueValidator(v))
+                v = cluster.info["ipolicy"]["min"]["memory-size"]
+                self.fields["memory"].validators.append(MinValueValidator(v))
+
+
+class VMWizardAdvancedForm(Form):
+    ip_check = BooleanField(label=_('Verify IP'), initial=False,
+                            required=False)
+    name_check = BooleanField(label=_('Verify hostname through DNS'),
+                              initial=False, required=False)
+    pnode = ModelChoiceField(label=_("Primary Node"),
+                             queryset=Node.objects.all(), empty_label=None)
+    snode = ModelChoiceField(label=_("Secondary Node"),
+                             queryset=Node.objects.all(), empty_label=None)
+
+    def _configure_for_cluster(self, cluster):
+        self.cluster = cluster
+        qs = Node.objects.filter(cluster=cluster)
+        self.fields["pnode"].queryset = qs
+        self.fields["snode"].queryset = qs
+
+    def _configure_for_disk_template(self, template):
+        if template != "drbd":
+            del self.fields["snode"]
+
+    def clean(self):
+        # Ganeti will error on VM creation if an IP address check is requested
+        # but a name check is not.
+        if (self.cleaned_data.get("ip_check") and not
+            self.cleaned_data.get("name_check")):
+            msg = ["Cannot perform IP check without name check"]
+            self.errors["ip_check"] = self.error_class(msg)
+
+        return self.cleaned_data
+
+
+class VMWizardPVMForm(Form):
+    kernel_path = CharField(label=_("Kernel path"), max_length=255)
+    root_path = CharField(label=_("Root path"), max_length=255)
+
+    def _configure_for_cluster(self, cluster):
+        self.cluster = cluster
+        params = cluster.info["hvparams"]["xen-pvm"]
+
+        self.fields["kernel_path"].initial = params["kernel_path"]
+        self.fields["root_path"].initial = params["root_path"]
+
+
+class VMWizardHVMForm(Form):
+    boot_order = CharField(label=_("Preferred boot device"), max_length=255,
+                           required=False)
+    cdrom_image_path = CharField(label=_("CD-ROM image path"), max_length=512,
+                                required=False)
+    disk_type = ChoiceField(label=_("Disk type"),
+                            choices=HVM_CHOICES["disk_type"])
+    nic_type = ChoiceField(label=_("NIC type"),
+                           choices=HVM_CHOICES["nic_type"])
+
+    def _configure_for_cluster(self, cluster):
+        self.cluster = cluster
+        params = cluster.info["hvparams"]["xen-pvm"]
+
+        self.fields["boot_order"].initial = params["boot_order"]
+        self.fields["disk_type"].initial = params["disk_type"]
+        self.fields["nic_type"].initial = params["nic_type"]
+
+
+class VMWizardKVMForm(Form):
+    kernel_path = CharField(label=_("Kernel path"), max_length=255)
+    root_path = CharField(label=_("Root path"), max_length=255)
+    serial_console = BooleanField(label=_("Enable serial console"),
+                                  required=False)
+    boot_order = CharField(label=_("Preferred boot device"), max_length=255,
+                           required=False)
+    cdrom_image_path = CharField(label=_("CD-ROM image path"), max_length=512,
+                                required=False)
+    cdrom2_image_path = CharField(label=_("Second CD-ROM image path"),
+                                  max_length=512, required=False)
+    disk_type = ChoiceField(label=_("Disk type"),
+                            choices=KVM_CHOICES["disk_type"])
+    nic_type = ChoiceField(label=_("NIC type"),
+                           choices=KVM_CHOICES["nic_type"])
+
+    def _configure_for_cluster(self, cluster):
+        self.cluster = cluster
+        params = cluster.info["hvparams"]["kvm"]
+
+        self.fields["boot_order"].initial = params["boot_order"]
+        self.fields["disk_type"].initial = params["disk_type"]
+        self.fields["kernel_path"].initial = params["kernel_path"]
+        self.fields["nic_type"].initial = params["nic_type"]
+        self.fields["root_path"].initial = params["root_path"]
+        self.fields["serial_console"].initial = params["serial_console"]
+
+        # Remove cdrom2 if the cluster doesn't have it; see #11655.
+        if not has_cdrom2(cluster):
+            del self.fields["cdrom2_image_path"]
+
+    def clean(self):
+        data = super(VMWizardKVMForm, self).clean()
+
+        # Force cdrom disk type to IDE; see #9297.
+        data['cdrom_disk_type'] = 'ide'
+
+        return data
+
+
+class VMWizardView(CookieWizardView):
+    template_name = "ganeti/forms/vm_wizard.html"
+
+    def _get_cluster(self):
+        data = self.get_cleaned_data_for_step("0")
+        if data:
+            return data["cluster"]
+        return None
+
+    def _get_hv(self):
+        data = self.get_cleaned_data_for_step("2")
+        if data:
+            return data["hv"]
+        return None
+
+    def _get_disk_template(self):
+        data = self.get_cleaned_data_for_step("2")
+        if data:
+            return data["disk_template"]
+        return None
+
+    def get_form(self, step=None, data=None, files=None):
+        s = int(self.steps.current) if step is None else int(step)
+
+        if s == 0:
+            form = VMWizardClusterForm(data=data)
+            user = self.request.user
+            qs = cluster_qs_for_user(user)
+            form.fields["cluster"].queryset = qs
+        elif s == 1:
+            form = VMWizardOwnerForm(data=data)
+            form._configure_for_cluster(self._get_cluster())
+        elif s == 2:
+            form = VMWizardBasicsForm(data=data)
+            form._configure_for_cluster(self._get_cluster())
+        elif s == 3:
+            form = VMWizardAdvancedForm(data=data)
+            form._configure_for_cluster(self._get_cluster())
+            form._configure_for_disk_template(self._get_disk_template())
+        elif s == 4:
+            cluster = self._get_cluster()
+            hv = self._get_hv()
+            form = None
+
+            if cluster and hv:
+                if hv == "kvm":
+                    form = VMWizardKVMForm(data=data)
+                elif hv == "xen-pvm":
+                    form = VMWizardPVMForm(data=data)
+                elif hv == "xen-hvm":
+                    form = VMWizardHVMForm(data=data)
+
+            if form:
+                form._configure_for_cluster(cluster)
+            else:
+                form = Form()
+        else:
+            form = super(VMWizardView, self).get_form(step, data, files)
+
+        return form
+
+    def get_context_data(self, form, **kwargs):
+        context = super(VMWizardView, self).get_context_data(form=form,
+                                                             **kwargs)
+        summary = {
+            "cluster": self._get_cluster(),
+        }
+        context["summary"] = summary
+
+        return context
+
+    def done(self, forms):
+        """
+        Create a template. Optionally, bind a template to a VM instance
+        created from the template. Optionally, name the template and save it.
+        One or both of those is done depending on what the user has requested.
+        """
+
+        template = VirtualMachineTemplate()
+
+        user = self.request.user
+
+        cluster = forms[0].cleaned_data["cluster"]
+        owner = forms[1].cleaned_data["owner"]
+        hostname = forms[1].cleaned_data["hostname"]
+        template_name = forms[1].cleaned_data["template_name"]
+
+        template.cluster = cluster
+        template.memory = forms[2].cleaned_data["memory"]
+        template.vcpus = forms[2].cleaned_data["vcpus"]
+        template.disk_template = forms[2].cleaned_data["disk_template"]
+
+        disk_size = forms[2].cleaned_data["disk_size"]
+        template.disks = [
+            {
+                "size": disk_size,
+            },
+        ]
+
+        template.nics = [
+            {
+                "link": "br0",
+                "mode": "bridged",
+            },
+        ]
+
+        template.os = forms[2].cleaned_data["os"]
+        template.ip_check = forms[3].cleaned_data["ip_check"]
+        template.name_check = forms[3].cleaned_data["name_check"]
+        template.pnode = forms[3].cleaned_data["pnode"].hostname
+
+        hvparams = forms[4].cleaned_data
+
+        template.boot_order = hvparams.get("boot_order")
+        template.cdrom2_image_path = hvparams.get("cdrom2_image_path")
+        template.cdrom_image_path = hvparams.get("cdrom_image_path")
+        template.kernel_path = hvparams.get("kernel_path")
+        template.root_path = hvparams.get("root_path")
+        template.serial_console = hvparams.get("serial_console")
+
+        if "snode" in forms[3].cleaned_data:
+            template.snode = forms[3].cleaned_data["snode"].hostname
+
+        if template_name:
+            template.template_name = template_name
+
+        template.save()
+
+        if hostname:
+            vm = template_to_instance(template, hostname, owner)
+            log_action('CREATE', user, vm)
+            return HttpResponseRedirect(reverse('instance-detail',
+                                                args=[cluster.slug,
+                                                      vm.hostname]))
+        else:
+            return HttpResponseRedirect(reverse("template-detail",
+                                                args=[cluster.slug,
+                                                      template]))
+
+
+def vm_wizard():
+    forms = (
+        VMWizardClusterForm,
+        VMWizardOwnerForm,
+        VMWizardBasicsForm,
+        VMWizardAdvancedForm,
+        Form,
+    )
+    return VMWizardView.as_view(forms)

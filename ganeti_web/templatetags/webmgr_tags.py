@@ -17,19 +17,19 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
-from datetime import datetime
 
+from datetime import datetime
 import re
-from django.contrib.sites.models import Site
 
 from django.db.models import Count
 from django.template import Library, Node, TemplateSyntaxError
-from django.template.defaultfilters import stringfilter,filesizeformat
+from django.template.defaultfilters import stringfilter, filesizeformat
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
 from ganeti_web.constants import NODE_ROLE_MAP
 from ganeti_web.models import Cluster
+from ganeti_web.utilities import hv_prettify
 
 register = Library()
 
@@ -71,22 +71,6 @@ def index(obj, index):
     """ returns index of given object """
     if obj:
         return obj[index]
-
-
-@register.filter
-@stringfilter
-def truncate(value, count):
-    """
-    Truncates a string to be a certain length.
-
-    If the string is shorter than the specified length, it will returned
-    as-is.
-    """
-
-    if len(value) > count:
-        return value[:count - 1] + u"…"
-
-    return value
 
 
 @register.filter
@@ -147,6 +131,12 @@ def is_drbd(vm):
     """
     return 'drbd' == vm.info['disk_template']
 
+@register.filter
+def is_shared(vm):
+    """ Simple filter for returning true or false if a virtual machine
+    has shared for disklayout
+    """
+    return 'shared' == vm.info['disk_template']
 
 @register.filter
 def checkmark(bool):
@@ -163,12 +153,6 @@ def checkmark(bool):
 def node_role(code):
     """ renders full role name from role code """
     return NODE_ROLE_MAP[str(code)]
-
-
-@register.simple_tag
-def current_domain():
-    """ returns the domain of the current Site """
-    return Site.objects.get_current().domain
 
 
 @register.filter
@@ -205,14 +189,6 @@ def job_fields(info):
 """
 These filters were taken from Russel Haering's GanetiWeb project
 """
-
-@register.filter
-@stringfilter
-def render_node_status(status):
-    if status:
-        return _("Offline")
-    else:
-        return _("Online")
 
 
 @register.filter
@@ -398,8 +374,6 @@ def cluster_memory(cluster, allocated=True,tag=False):
     return num_reducer(float(d['used']*1024**2), float(d['total']*1024**2),size_tag.strip())
 
 
-    
-
 @register.simple_tag
 def cluster_disk(cluster, allocated=True,tag=False):
     """
@@ -412,6 +386,7 @@ def cluster_disk(cluster, allocated=True,tag=False):
     if allocated:
 	return num_reducer(float(d['allocated']*1024**2),float(d['total']*1024**2),size_tag.strip())
     return num_reducer(float(d['used']*1024**2),float(d['total']*1024**2),size_tag.strip())
+
 
 @register.simple_tag
 def format_running_vms(cluster):
@@ -509,3 +484,11 @@ def render_os(os):
 def mult(value, arg):
     # pinched from http://code.djangoproject.com/ticket/361
     return int(value) * int(arg)
+
+
+register.filter("hv", stringfilter(hv_prettify))
+
+
+@register.filter
+def hvs(l):
+    return [hv_prettify(i) for i in l]

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+
+{% block head %}
+    {{block.super}}
+    <link rel="stylesheet" type="text/css" href="../../static/css/generic_model_edit.css" /> 
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('input.selecter').each(function(){
+                $this = $(this);
+                
+                $('#'+$this.val()).show();
+                $this.prevAll('ul.child_selecter').children('.'+$this.val()).addClass('selected'); 
+                $this.prevAll('ul.child_selecter').find('li').click(function(){
+                    $this = $(this);
+                    val = $this.html();
+                    $this.addClass('selected')
+                    $this.siblings().removeClass('selected')
+                    $this.parent().next().val(val);
+                    $this.parent().siblings('.child').hide();
+                    $('#'+val).show();
+                });
+            });
+        });
+    </script>
+{% endblock %}
+
+{% block content %}
+
+    <form id="edit" method="post" >
+        
+        <h1>{{wrapper.name}}</h1>
+        {% with form.form_instance as form %}
+            {% include "edit/form_fields.html" %}
+        {% endwith %}
+        
+        {% for name, one_to_one in form.one_to_one_instances.items %}
+            {%with one_to_one.form_instance as form %}
+                {% include "edit/form_fields.html" %}
+            {% endwith %}
+        {% endfor %}
+        
+        {% for name, form in form.one_to_many_instances.items %}
+            {% include "edit/form_fields_list.html" %}
+        {% endfor %}
+        
+        <br/>
+        <input type="submit" value="submit"/>
+    </form>
+{% endblock %}

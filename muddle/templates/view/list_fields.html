@@ -1,0 +1,11 @@
+{% load maintain_extras %}
+
+{% include "view/list_fields_direct.html" %}
+
+{% for field, wrapper in wrapper.one_to_one.items %}
+    {% with instance|get:field as instance %}
+    {% with instance|perms:user as perms %}
+        {% include "view/list_fields_direct.html" %}    
+    {% endwith %}
+    {% endwith %}
+{% endfor %}

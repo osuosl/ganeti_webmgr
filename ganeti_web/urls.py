@@ -22,6 +22,7 @@ from django.contrib.auth.decorators import login_required
 import os
 from forms.autocomplete_search_form import autocomplete_search_form
 
+from ganeti_web.forms.virtual_machine import vm_wizard
 from ganeti_web.views.cluster import (ClusterDetailView, ClusterListView,
                                       ClusterVMListView)
 from ganeti_web.views.general import AboutView
@@ -30,7 +31,7 @@ from ganeti_web.views.node import (NodeDetailView, NodePrimaryListView,
                                    NodeSecondaryListView)
 from ganeti_web.views.virtual_machine import (VMDeleteView, VMListView,
                                               VMListTableView)
-
+from ganeti_web.views.vm_template import VMInstanceFromTemplateView
 
 cluster_slug = '(?P<cluster_slug>[-_A-Za-z0-9]+)'
 cluster = 'cluster/%s' % cluster_slug
@@ -53,7 +54,9 @@ urlpatterns = patterns('ganeti_web.views.general',
     
     # clear errors
     url(r'^error/clear/(?P<pk>\d+)/?$', 'clear_ganeti_error', name="error-clear"),
-
+    
+    # Errors
+    url(r'clusters/errors', 'get_errors', name="cluster-errors"),
     #About page
     url(r'^about/?$', AboutView.as_view(), name="about"),
 )
@@ -86,6 +89,8 @@ urlpatterns += patterns('ganeti_web.views.general',
 urlpatterns += patterns('ganeti_web.views.cluster',
     #   List
     url(r'^clusters/?$', ClusterListView.as_view(), name="cluster-list"),
+    #   List (Paged)
+    url(r'^clusters\?page=(?P<page>.+)$', ClusterListView.as_view(), name="cluster-list-paged"),
     #   Add
     url(r'^cluster/add/?$', 'edit', name="cluster-create"),
     #   Detail
@@ -138,11 +143,18 @@ urlpatterns += patterns('ganeti_web.views.node',
     url(r'^%s/evacuate/?$' % node_prefix, 'evacuate', name="node-evacuate"),
 )
 
+urlpatterns += patterns("ganeti_web.forms.virtual_machine",
+    url(r"^vm/wizard-add/?$", vm_wizard(), name="instance-wizard-create"),
+)
+
 # VirtualMachines
 vm_prefix = '%s/%s' %  (cluster, instance)
 urlpatterns += patterns('ganeti_web.views.virtual_machine',
     #  List
     url(r'^vms/$', VMListView.as_view(), name="virtualmachine-list"),
+    #  List (Paged)
+    url(r'^vms/\?page=(?P<page>.+)$', VMListView.as_view(), name="virtualmachine-list-paged"),
+
     #  Create
     url(r'^vm/add/?$', 'create', name="instance-create"),
     url(r'^vm/add/choices/$', 'cluster_choices', name="instance-create-cluster-choices"),
@@ -219,9 +231,9 @@ urlpatterns += patterns('ganeti_web.views.vm_template',
     # Copy
     url(r'^%s/copy/?$' % template_prefix, 'copy', name='template-copy'),
     # Create Instance from Template
-    url(r'^%s/vm/?$' % template_prefix, 'create_instance_from_template', 
+    url(r'^%s/vm/?$' % template_prefix, VMInstanceFromTemplateView.as_view(),
         name='instance-create-from-template'),
-    url(r'^%s/template/?$' % vm_prefix, 'create_template_from_instance', 
+    url(r'^%s/template/?$' % vm_prefix, 'create_template_from_instance',
         name='template-create-from-instance'),
 
 )
