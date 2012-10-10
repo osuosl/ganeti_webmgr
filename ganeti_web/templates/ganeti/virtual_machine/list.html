@@ -1,6 +1,8 @@
 {% extends "menu_base.html" %}
 {% block title %}Virtual Machines{% endblock %}
-
+{% block head %}
+    <script src="{{STATIC_URL}}/js/sorter.js"></script>
+{% endblock %}
 {% block content %}
 <h1 class="breadcrumb">Virtual Machines</h1>
 
