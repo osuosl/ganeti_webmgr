@@ -90,7 +90,8 @@ class ClusterListView(LoginRequiredMixin, PagedListView):
             context = super(ClusterListView, self).get_context_data(object_list=kwargs["object_list"])
             context["can_create"]= (user.is_superuser or
                                     user.has_perm("admin", Cluster))
-            return context  
+            return context
+
 class ClusterVMListView(LoginRequiredMixin, PagedListView):
 
     template_name = "ganeti/virtual_machine/table.html"
@@ -109,6 +110,9 @@ class ClusterVMListView(LoginRequiredMixin, PagedListView):
         kwargs["cluster"] = self.cluster
         return kwargs
 
+class ClusterRefreshView():
+
+    template = "ganeti/cluster/refresh.html"
 
 @login_required
 def nodes(request, cluster_slug):
