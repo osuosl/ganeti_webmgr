@@ -33,8 +33,7 @@ from django.views.decorators.http import require_POST
 from django.views.generic.detail import DetailView
 
 from object_permissions import get_users_any
-from object_permissions.signals import (view_add_user, view_edit_user,
-                                        view_remove_user)
+from object_permissions import signals as op_signals
 from object_permissions.views.permissions import view_users, view_permissions
 
 from object_log.models import LogItem
@@ -397,6 +396,6 @@ def recv_perm_edit(sender, editor, user, obj, **kwargs):
     log_action('MODIFY_PERMS', editor, obj, user)
 
 
-view_add_user.connect(recv_user_add, sender=Cluster)
-view_remove_user.connect(recv_user_remove, sender=Cluster)
-view_edit_user.connect(recv_perm_edit, sender=Cluster)
+op_signals.view_add_user.connect(recv_user_add, sender=Cluster)
+op_signals.view_remove_user.connect(recv_user_remove, sender=Cluster)
+op_signals.view_edit_user.connect(recv_perm_edit, sender=Cluster)
