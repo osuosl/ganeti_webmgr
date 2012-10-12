@@ -24,7 +24,7 @@ from forms.autocomplete_search_form import autocomplete_search_form
 
 from ganeti_web.forms.virtual_machine import vm_wizard
 from ganeti_web.views.cluster import (ClusterDetailView, ClusterListView,
-                                      ClusterVMListView, ClusterRefreshView)
+                                      ClusterVMListView)
 from ganeti_web.views.general import AboutView
 from ganeti_web.views.jobs import JobDetailView
 from ganeti_web.views.node import (NodeDetailView, NodePrimaryListView,
@@ -100,7 +100,7 @@ urlpatterns += patterns('ganeti_web.views.cluster',
     #   Edit
     url(r'^%s/edit/?$' % cluster, 'edit', name="cluster-edit"),
     # Refresh
-    url(r'^%s/refresh/?$' % cluster, ClusterRefreshView.as_view(), name='cluster-refresh'),
+    url(r'^%s/refresh/?$' % cluster, 'refresh', name='cluster-refresh'),
     #   Redistribute config
     url(r'^%s/redistribute-config/?$' % cluster, 'redistribute_config', name="cluster-redistribute-config"),
     #   User

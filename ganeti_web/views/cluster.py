@@ -109,13 +109,6 @@ class ClusterVMListView(LoginRequiredMixin, PagedListView):
         kwargs["cluster"] = self.cluster
         return kwargs
 
-class ClusterRefreshView(LoginRequiredMixin, DetailView):
-
-    template_name = "ganeti/cluster/refresh.html"
-
-    def get_object(self, queryset=None):
-        return get_object_or_404(Cluster, slug=self.kwargs["cluster_slug"])
-
 @login_required
 def nodes(request, cluster_slug):
     """
@@ -203,6 +196,21 @@ def edit(request, cluster_slug=None):
         context_instance=RequestContext(request),
     )
 
+@login_required
+def refresh(request, cluster_slug):
+    """
+    Display a notice to the user that we are refreshing
+    the cluster data, then redirect them back to the 
+    cluster details page.
+    """
+
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+
+    return render_to_response("ganeti/cluster/refresh.html", {
+        'cluster': cluster,
+        },
+        context_instance=RequestContext(request),
+    )
 
 @login_required
 def users(request, cluster_slug):
