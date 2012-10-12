@@ -51,7 +51,6 @@ from ganeti_web.forms.cluster import EditClusterForm, QuotaForm
 from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
                                       PagedListView)
 
-
 class ClusterDetailView(LoginRequiredMixin, DetailView):
 
     template_name = "ganeti/cluster/detail.html"
@@ -110,9 +109,12 @@ class ClusterVMListView(LoginRequiredMixin, PagedListView):
         kwargs["cluster"] = self.cluster
         return kwargs
 
-class ClusterRefreshView():
+class ClusterRefreshView(LoginRequiredMixin, DetailView):
 
-    template = "ganeti/cluster/refresh.html"
+    template_name = "ganeti/cluster/refresh.html"
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(Cluster, slug=self.kwargs["cluster_slug"])
 
 @login_required
 def nodes(request, cluster_slug):

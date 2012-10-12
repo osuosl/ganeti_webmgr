@@ -1,0 +1,8 @@
+{% extends "menu_base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Refreshing" %} {{ cluster.hostname|safe }}{% endblock %}
+{% load webmgr_tags %}
+{% block content %}
+    <p align='center'><b>{% trans "Refreshing" %} {{ cluster.hostname|safe }}</b></p>
+{% endblock %}
+
