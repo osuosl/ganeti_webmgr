@@ -25,7 +25,7 @@ from django.core.urlresolvers import reverse
 from django.db.models import Q, Sum
 from django.http import (HttpResponse, HttpResponseRedirect,
                          HttpResponseForbidden)
-from django.shortcuts import get_object_or_404, render_to_response
+from django.shortcuts import get_object_or_404, render_to_response, redirect
 from django.template import RequestContext
 from django.utils import simplejson as json
 from django.utils.translation import ugettext as _
@@ -205,12 +205,11 @@ def refresh(request, cluster_slug):
     """
 
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    cluster.sync_nodes()
+    cluster.sync_virtual_machines()
 
-    return render_to_response("ganeti/cluster/refresh.html", {
-        'cluster': cluster,
-        },
-        context_instance=RequestContext(request),
-    )
+    url = reverse('cluster-detail', args=[cluster.slug])
+    return redirect(url)
 
 @login_required
 def users(request, cluster_slug):
