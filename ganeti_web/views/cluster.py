@@ -205,8 +205,8 @@ def refresh(request, cluster_slug):
     """
 
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    cluster.sync_nodes()
-    cluster.sync_virtual_machines()
+    cluster.sync_nodes(remove=True)
+    cluster.sync_virtual_machines(remove=True)
 
     url = reverse('cluster-detail', args=[cluster.slug])
     return redirect(url)
