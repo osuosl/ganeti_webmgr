@@ -17,6 +17,7 @@ $(function () {
     var vnc_errors =        $("#vnc_errors");
     var vnc_status_bar =    $("#VNC_status_bar");
     var vnc_canvas =        $('#VNC_canvas');
+    var vnc_screen =        $('#VNC_screen');
 
     // XXX remap document.write to a dom function so that it works after DOM is
     // loaded function will be reset after noVNC scripts are loaded.
@@ -43,6 +44,14 @@ $(function () {
             connected = true;
             start();
         }
+        // Height will be VNC_canvas + a lil' bit
+        var cHeight = vnc_canvas;
+        // Width will be VNC_canvas + a lil' bit
+        var cWidth = vnc_canvas;
+        window.resizeTo(cHeight + 100, cWiith + 100);
+        vnc_status_bar.width(cWidth);
+        vnc_screen.width(cWidth);
+        alert(cHeight + ' and ' + cWidth);
     });
 
     encrypt.click(function(event){
@@ -125,19 +134,6 @@ $(function () {
                 .text('Disconnect');
             ctrlaltdelete.removeClass('disabled');
             vnc_canvas.addClass("connected");
-            if (POPOUT_URL == undefined) {
-                // resize window
-                var display = rfb.get_display();
-                // vnc display width + a little room
-                var width = display.get_width() + 20;
-                // vnc display height + action list height + a little room
-                // +100 and +20 seem arbitrary, but they are 'what look right'
-                var height = display.get_height() + $("#actions").height() + 100;
-                if (width < 775) {
-                    width = 775;
-                }
-                window.resizeTo(width, height);
-            }
         } else {
             vnc_canvas.removeClass("connected");
             connected = false;
@@ -152,10 +148,10 @@ $(function () {
                 .attr("class", klass)
                 .html(msg);
         }
-    }
+   }
 
     function stop() {
-        if (rfb != undefined) {
+         if (rfb != undefined) {
             rfb.disconnect();
             rfb = undefined;
         }
