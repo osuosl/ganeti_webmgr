@@ -29,8 +29,8 @@ from django.utils import simplejson as json
 from object_log.models import LogItem
 log_action = LogItem.objects.log_action
 
-from object_permissions import get_users_any
-
+from ganeti_web.backend.queries import (cluster_qs_for_user,
+                                        owner_qs_for_cluster)
 from ganeti_web.backend.templates import template_to_instance
 from ganeti_web.caps import has_cdrom2, requires_maxmem
 from ganeti_web.constants import (EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES,
@@ -1116,29 +1116,6 @@ class VMWizardKVMForm(Form):
         data['cdrom_disk_type'] = 'ide'
 
         return data
-
-
-def cluster_qs_for_user(user):
-    if user.is_superuser:
-        qs = Cluster.objects.all()
-    else:
-        qs = user.get_objects_any_perms(Cluster, ['admin','create_vm'], False)
-
-    # Exclude all read-only clusters.
-    qs = qs.exclude(Q(username='') | Q(mtime__isnull=True))
-
-    return qs
-
-
-def owner_qs_for_cluster(cluster):
-    # Get all superusers.
-    qs = ClusterUser.objects.filter(profile__user__is_superuser=True)
-
-    # Get all users who have the given permissions on the given cluster.
-    users = get_users_any(cluster, ["admin"], True)
-    qs |= ClusterUser.objects.filter(profile__user__in=users)
-
-    return qs
 
 
 class VMWizardView(CookieWizardView):
