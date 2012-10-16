@@ -34,6 +34,23 @@ $(function () {
     var host, port, password; // VNC proxy connection settings
     var connected = false;
 
+    // When the VNC Canvas is resized, this is called and resizes
+    // the window if it's a popup
+    function resize_popup() {
+        // Height will be VNC_canvas + a little bit
+         var cHeight = vnc_canvas.height();
+         // Width will be VNC_canvas + a little bit
+         var cWidth = vnc_canvas.width();
+
+         // Without this next line, the status hangs off to the right
+         // of the buttons. That looks really bad.
+         vnc_status_bar.width(cWidth);
+
+         // Resize
+         vnc_screen.width(cWidth);
+         window.resizeTo(cWidth + 50, cHeight + 100);
+    }
+
     connect.click(function(event) {
         event.preventDefault();
         var $this = $(this);
@@ -44,14 +61,10 @@ $(function () {
             connected = true;
             start();
         }
-        // Height will be VNC_canvas + a lil' bit
-        var cHeight = vnc_canvas;
-        // Width will be VNC_canvas + a lil' bit
-        var cWidth = vnc_canvas;
-        window.resizeTo(cHeight + 100, cWiith + 100);
-        vnc_status_bar.width(cWidth);
-        vnc_screen.width(cWidth);
-        alert(cHeight + ' and ' + cWidth);
+
+        // When connecting, change the window size to have
+        // the canvas fully viewable
+       resize_popup();
     });
 
     encrypt.click(function(event){
