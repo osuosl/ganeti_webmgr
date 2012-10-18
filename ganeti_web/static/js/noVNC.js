@@ -17,6 +17,7 @@ $(function () {
     var vnc_errors =        $("#vnc_errors");
     var vnc_status_bar =    $("#VNC_status_bar");
     var vnc_canvas =        $('#VNC_canvas');
+    var vnc_screen =        $('#VNC_screen');
 
     // XXX remap document.write to a dom function so that it works after DOM is
     // loaded function will be reset after noVNC scripts are loaded.
@@ -33,6 +34,23 @@ $(function () {
     var host, port, password; // VNC proxy connection settings
     var connected = false;
 
+    // When the VNC Canvas is resized, this is called and resizes
+    // the window if it's a popup
+    function resize_popup() {
+        // Height will be VNC_canvas + a little bit
+         var cHeight = vnc_canvas.height();
+         // Width will be VNC_canvas + a little bit
+         var cWidth = vnc_canvas.width();
+
+         // Without this next line, the status hangs off to the right
+         // of the buttons. That looks really bad.
+         vnc_status_bar.width(cWidth);
+
+         // Resize
+         vnc_screen.width(cWidth);
+         window.resizeTo(cWidth + 50, cHeight + 100);
+    }
+
     connect.click(function(event) {
         event.preventDefault();
         var $this = $(this);
@@ -43,6 +61,10 @@ $(function () {
             connected = true;
             start();
         }
+
+        // When connecting, change the window size to have
+        // the canvas fully viewable
+       resize_popup();
     });
 
     encrypt.click(function(event){
@@ -125,19 +147,6 @@ $(function () {
                 .text('Disconnect');
             ctrlaltdelete.removeClass('disabled');
             vnc_canvas.addClass("connected");
-            if (POPOUT_URL == undefined) {
-                // resize window
-                var display = rfb.get_display();
-                // vnc display width + a little room
-                var width = display.get_width() + 20;
-                // vnc display height + action list height + a little room
-                // +100 and +20 seem arbitrary, but they are 'what look right'
-                var height = display.get_height() + $("#actions").height() + 100;
-                if (width < 775) {
-                    width = 775;
-                }
-                window.resizeTo(width, height);
-            }
         } else {
             vnc_canvas.removeClass("connected");
             connected = false;
@@ -152,10 +161,10 @@ $(function () {
                 .attr("class", klass)
                 .html(msg);
         }
-    }
+   }
 
     function stop() {
-        if (rfb != undefined) {
+         if (rfb != undefined) {
             rfb.disconnect();
             rfb = undefined;
         }
