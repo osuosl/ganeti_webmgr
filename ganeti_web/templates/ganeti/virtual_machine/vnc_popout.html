@@ -35,18 +35,18 @@
                 function getQueryString() {
                     var result = {}, queryString = location.search.substring(1),
                         re = /([^&=]+)=([^&]*)/g, m;
-                    
+
                     while (m = re.exec(queryString)) {
                         result[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
                     }
-                    
+
                     return result;
                 }
-                
+
                 var auto_connect = getQueryString()["auto_connect"];
                 if (auto_connect == undefined) auto_connect = false;
                 if (auto_connect) $("connect").click();
             });
-        </script>     
+        </script>
     </body>
 </html>
