@@ -94,7 +94,7 @@ class VMListView(LoginRequiredMixin, PagedListView):
         else:
             qs = self.request.user.get_objects_any_perms(VirtualMachine,
                                                          groups=True,
-                                                         cluster=["admin"])
+                                                         perms=["admin"])
         self.queryset = qs
         super(VMListView, self).get_queryset()
         return qs.select_related()
