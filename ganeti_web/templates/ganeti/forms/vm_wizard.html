@@ -13,6 +13,10 @@ $(window).load(function() {
     disableSingletonDropdown2();
 });
 </script>
+<style type="text/css">
+button.select {float:right;}
+input.select {float:right;}
+</style>
 {% endblock %}
 
 {% block content %}
@@ -32,29 +36,29 @@ $(window).load(function() {
         {{ wizard.form.as_table }}
     </table>
     <table>
+    {% if wizard.steps.next %}
+        <input class="select" type="submit" 
+            value="{% trans "Next" %}" 
+            />
+    {% else %}
+        <input class="select" type="submit" 
+            value="{% trans "Create VM" %}" 
+            />
+    {% endif %}
     {% if wizard.steps.prev %}
-        <button name="wizard_goto_step" type="submit"
-            value="{{ wizard.steps.first }}"
-	    style="position: relative; left: 480px; top: 5px;"/>
-            {% trans "Start Over" %}
-        </button>
-        <button name="wizard_goto_step" type="submit"
+        <button class="select" name="wizard_goto_step" type="submit"
             value="{{ wizard.steps.prev }}"
-            style="position: relative; left: 480px; top: 5px;">
+            />
             {% trans "Previous" %}
         </button>
-    {% endif %}
+    	<button class="select" name="wizard_goto_step" type="submit"
+            value="{{ wizard.steps.first }}"
+	    />
+            {% trans "Start Over" %}
+        </button>
+       {% endif %}
 
-    {% if wizard.steps.next %}
-        <input type="submit" 
-            value="{% trans "Next" %}" 
-            style="position: relative; left: 480px; top: 5px"/>
-    {% else %}
-        <input type="submit" 
-            value="{% trans "Create VM" %}" 
-            style="position: relative; left: 480px; top: 5px"/>
-    {% endif %}
-    </table>
+   </table>
 
 </form>
 {% endblock %}
