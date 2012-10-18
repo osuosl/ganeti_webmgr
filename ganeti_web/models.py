@@ -28,6 +28,7 @@ import string
 import sys
 
 from django.conf import settings
+from django.db import models
 
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.generic import GenericForeignKey
@@ -1580,6 +1581,12 @@ class ClusterUser(models.Model):
 
     def __unicode__(self):
         return self.name
+    
+    @models.permalink    
+    def get_absolute_url(self):
+	return ("user-detail", (), {
+		"user_id": str(self.id)})	
+
 
     def used_resources(self, cluster=None, only_running=True):
         """
