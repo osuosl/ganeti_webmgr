@@ -163,16 +163,15 @@
         
     </p>
     <ul>
-        <li><b>paravirtual</b> - (HardwareVM &amp; KernelVM)</li>
+        <li><b>paravirtual</b> - Best used in high IO throughput applications</li>
         <li>
-            <b>ioemu</b> - (default for HardwareVM &amp; KernelVM) 
-				(HardwareVM &amp; KernelVM)
+            <b>ioemu</b> - IO Emulation
         </li>
-        <li><b>ide</b> - (HardwareVM &amp; KernelVM)</li>
-        <li><b>scsi</b> - (KernelVM)</li>
-        <li><b>sd</b> - (KernelVM)</li>
-        <li><b>mtd</b> - (KernelVM)</li>
-        <li><b>pflash</b> - (KernelVM)</li>
+        <li><b>ide</b> - Best for applications not needing large storage space.</li>
+        <li><b>scsi</b> - Use over ide only when large storage is needed(KVM)</li>
+        <li><b>sd</b> - Use SD card storage</li>
+        <li><b>mtd</b> - Use flash like on embedded devices</li>
+        <li><b>pflash</b> - Use parallel flash (NAND/NOR) like BIOS rom</li>
     </ul>
     <p>{% trans "Valid for the Xen HVM and KVM hypervisors" %}.</p>
 </div>
@@ -200,17 +199,15 @@
         presented to the virtual machine.{% endblocktrans %} {% trans "The possible options are" %}:
     </p>
     <ul>
-        <li><b>rtl8139</b> - (default for Xen HardwareVM) 
-				(HardwareVM &amp; KernelVM)</li>
-        <li><b>ne2k_isa</b> - (HardwareVM &amp; KernelVM)</li>
-        <li><b>ne2k_pci</b> - (HardwareVM &amp; KernelVM)</li>
-        <li><b>i82551</b> - (KernelVM)</li>
-        <li><b>i82557b</b> - (KernelVM)</li>
-        <li><b>i82559er</b> - (KernelVM)</li>
-        <li><b>pcnet</b> - (KernelVM)</li>
-        <li><b>e1000</b> - (HardwareVM &amp; KernelVM)</li>
-        <li><b>paravirtual</b> - (default for KernelVM) 
-		(KernelVM &amp; HardwareVM)</li>
+        <li><b>rtl8139</b> - (default for Xen HVM) (HVM &amp; KVM)</li>
+        <li><b>ne2k_isa</b> - (HVM &amp; KVM)</li>
+        <li><b>ne2k_pci</b> - (HVM &amp; KVM)</li>
+        <li><b>i82551</b> - (KVM)</li>
+        <li><b>i82557b</b> - (KVM)</li>
+        <li><b>i82559er</b> - (KVM)</li>
+        <li><b>pcnet</b> - (KVM)</li>
+        <li><b>e1000</b> - (HVM &amp; KVM)</li>
+        <li><b>paravirtual</b> - (default for KVM) (KVM &amp; HVM)</li>
     </ul>
     <p>{% trans "Valid for the Xen HVM and KVM hypervisors" %}.</p>
 </div>
