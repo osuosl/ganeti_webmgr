@@ -272,7 +272,7 @@ tr.group td.name {background:url(/static/images/icons/group.png) no-repeat 0 4px
 
 /* No VNC tab */
 #encrypt_check {display:none;}
-#VNC_status_bar.VNC_status_bar {background-color:#ddd; margin-top:5px;}
+#VNC_status_bar {background-color:#ddd; margin-top:5px; clear:both; width:812px;}
 #VNC_canvas {height:435px; width:812px;}
 #VNC_canvas.connected {background-color:#000; border: 5px solid black; height:inherit; width:inherit; }
 

@@ -1,5 +1,4 @@
 from django.contrib.auth.models import Group
-from django.test import TestCase
 # Per #6579, do not change this import without discussion.
 from django.utils import simplejson as json
 
@@ -8,9 +7,8 @@ from object_permissions import grant
 from ganeti_web import models
 from ganeti_web.util.proxy.constants import INFO
 from ganeti_web.tests.views.virtual_machine.base import TestVirtualMachineViewsBase
-from ganeti_web.utilities import os_prettify
 
-__all__ = ['TestVirtualMachineCreateHelpers', 'TestVirtualMachineHelpers']
+__all__ = ['TestVirtualMachineCreateHelpers']
 
 Cluster = models.Cluster
 
@@ -312,68 +310,3 @@ class TestVirtualMachineCreateHelpers(TestVirtualMachineViewsBase):
         self.assertEqual(expected, content)
         self.user.is_superuser = False
         self.user.save()
-
-
-class TestVirtualMachineHelpers(TestCase):
-
-    def test_os_prettify(self):
-        """
-        Test the os_prettify() helper function.
-        """
-
-        # Test a single entry.
-        self.assertEqual(os_prettify(["hurp+durp"]),
-            [
-                ("Hurp",
-                    [("hurp+durp", "Durp")]
-                )
-            ])
-
-    def test_os_prettify_multiple(self):
-        """
-        Test os_prettify()'s ability to handle multiple entries, including two
-        entries on the same category.
-        """
-
-        self.assertEqual(
-            os_prettify([
-                "image+obonto-hungry-hydralisk",
-                "image+fodoro-core",
-                "dobootstrop+dobion-lotso",
-            ]), [
-                ("Dobootstrop", [
-                    ("dobootstrop+dobion-lotso", "Dobion Lotso"),
-                ]),
-                ("Image", [
-                    ("image+obonto-hungry-hydralisk",
-                        "Obonto Hungry Hydralisk"),
-                    ("image+fodoro-core", "Fodoro Core"),
-                ]),
-            ])
-
-    def test_os_prettify_2517(self):
-        """
-        Test #2157 compliance.
-
-        This example should still parse, but in a weird way. Better than
-        nothing, though.
-        """
-
-        self.assertEqual(os_prettify(["debian-pressed+ia32"]),
-            [('Debian-pressed', [('debian-pressed+ia32', 'Ia32')])])
-
-    def test_os_prettify_2517_unknown(self):
-        """
-        Test #2157 compliance.
-
-        This example wasn't part of the bug; it was constructed to show off
-        the fix for #2157.
-        """
-
-        self.assertEqual(os_prettify(["deb-ver1", "noop"]),
-            [
-                ("Unknown", [
-                    ("deb-ver1", "deb-ver1"),
-                    ("noop", "noop"),
-                ]),
-            ])
