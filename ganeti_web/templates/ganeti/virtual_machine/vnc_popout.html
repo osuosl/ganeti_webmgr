@@ -10,9 +10,21 @@
             #VNC_canvas.connected {width:inherit !important;}
         </style>
         <script type="text/javascript" src="{{STATIC_URL}}/js/jquery.js"></script>
-        <script type="text/javascript"
-            src="{{STATIC_URL}}/js/ajax_csrf_protection.js"></script>
-
+        <script type="text/javascript" src="{{STATIC_URL}}/js/ajax_csrf_protection.js"></script>
+        <script type="text/javascript">
+            $(document).ready(function() {
+                // Trigger the proper event (POST) when clicking buttons
+                $("a.power").click(function(event) {
+                    event.preventDefault();
+                    if (confirm("Are you sure you want to " + this.title + " this VM?")) {
+                        // POST to the parent window so jobs can be displayed
+                        window.opener.$.post(this.href, window.opener.action_response);
+                        // If shutdown, close the window
+                        if (this.title == "shut down") window.close();
+                    }
+                });
+            });
+        </script>
     </head>
     <body>
         {% with 1 as popout %}
@@ -22,17 +34,18 @@
             $(function() {
                 function getQueryString() {
                     var result = {}, queryString = location.search.substring(1),
-                      re = /([^&=]+)=([^&]*)/g, m;
+                        re = /([^&=]+)=([^&]*)/g, m;
+
                     while (m = re.exec(queryString)) {
-                    result[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
+                        result[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
                     }
+
                     return result;
                 }
+
                 var auto_connect = getQueryString()["auto_connect"];
                 if (auto_connect == undefined) auto_connect = false;
-                if (auto_connect) {
-                    $("#connect").click();
-                }
+                if (auto_connect) $("connect").click();
             });
         </script>
     </body>
