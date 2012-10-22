@@ -909,6 +909,9 @@ class VMWizardClusterForm(Form):
                                queryset=Cluster.objects.all(),
                                empty_label=None)
 
+    def _configure_for_user(self, user):
+        self.fields["cluster"].queryset = cluster_qs_for_user(user)
+
     def clean_cluster(self):
         """
         Ensure that the cluster is available.
@@ -1144,9 +1147,7 @@ class VMWizardView(CookieWizardView):
 
         if s == 0:
             form = VMWizardClusterForm(data=data)
-            user = self.request.user
-            qs = cluster_qs_for_user(user)
-            form.fields["cluster"].queryset = qs
+            form._configure_for_user(self.request.user)
         elif s == 1:
             form = VMWizardOwnerForm(data=data)
             form._configure_for_cluster(self._get_cluster())
