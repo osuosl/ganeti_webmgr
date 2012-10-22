@@ -283,11 +283,13 @@
             {% endif %}
             {% if migrate %}
                 {% if instance|is_drbd or instance|is_shared  %}
-                    <li>
-                        <a class="button migrate" title="migrate" href="{% url instance-migrate cluster.slug instance.hostname %}">
-                            {% trans "Migrate" %}
-                        </a>
-                    </li>
+                    {%ifequal instance.info.status "running"%}
+                        <li>
+                            <a class="button migrate" title="migrate" href="{% url instance-migrate cluster.slug instance.hostname %}">
+                                {% trans "Migrate" %}
+                            </a>
+                        </li>
+                    {%endif%}
                 {% endif %}
             {% endif %}
             {# Create Template #}
