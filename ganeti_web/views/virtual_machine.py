@@ -92,7 +92,6 @@ class VMListView(LoginRequiredMixin, PagedListView):
         if self.request.user.is_superuser:
             qs = VirtualMachine.objects.all()
         else:
-	    
             qs = self.request.user.get_objects_any_perms(VirtualMachine,
                                                          groups=True,
                                                          cluster=["admin"])

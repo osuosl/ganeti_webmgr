@@ -53,8 +53,7 @@ def cluster_default_info(cluster, hypervisor=None):
             # taken from HVM. This does not affect forms as pvm ignores
             # the disk_type and nic_type fields.
             hvparams['disk_type'] = info['hvparams']['xen-hvm']['disk_type']
-        
-	    hvparams['nic_type'] = info['hvparams']['xen-hvm']['nic_type']
+            hvparams['nic_type'] = info['hvparams']['xen-hvm']['nic_type']
     else:
         c = constants.NO_CHOICES
 
@@ -90,7 +89,7 @@ def cluster_default_info(cluster, hypervisor=None):
         extraparams['memory'] = beparams['maxmem']
     else:
         extraparams['memory'] = beparams['memory']
-    ####hvparams['disk_type'] = "Paravirtual"
+
     return dict(hvparams, **extraparams)
 
 
