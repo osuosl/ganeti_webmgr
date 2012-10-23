@@ -16,6 +16,7 @@
 # USA.
 
 from ganeti_web.tests.accounts import *
+from ganeti_web.tests.backend import *
 from ganeti_web.tests.caps import *
 #from ganeti_web.tests.cache_updater import *
 from ganeti_web.tests.cached_cluster_object import *
