@@ -941,6 +941,10 @@ class VMWizardOwnerForm(Form):
         qs = owner_qs_for_cluster(cluster)
         self.fields["owner"].queryset = qs
 
+    def _configure_for_template(self, template):
+        if template:
+            self.fields["template_name"].initial = template.template_name
+
     def clean_hostname(self):
         hostname = self.cleaned_data.get('hostname')
         if hostname:
@@ -969,8 +973,7 @@ class VMWizardOwnerForm(Form):
 
 
 class VMWizardBasicsForm(Form):
-    hv = ChoiceField(label=_("Hypervisor"),
-                     choices=[])
+    hv = ChoiceField(label=_("Hypervisor"), choices=[])
     os = ChoiceField(label=_('Operating System'), choices=[])
     vcpus = IntegerField(label=_("Virtual CPU Count"), initial=1, min_value=1)
     memory = DataVolumeField(label=_('Memory (MiB)'))
@@ -1018,6 +1021,14 @@ class VMWizardBasicsForm(Form):
                 v = cluster.info["ipolicy"]["min"]["memory-size"]
                 self.fields["memory"].validators.append(MinValueValidator(v))
 
+    def _configure_for_template(self, template):
+        if template:
+            self.fields["os"].initial = template.os
+            self.fields["vcpus"].initial = template.vcpus
+            self.fields["memory"].initial = template.memory
+            self.fields["disk_template"].initial = template.disk_template
+            # XXX disk size
+
 
 class VMWizardAdvancedForm(Form):
     ip_check = BooleanField(label=_('Verify IP'), initial=False,
@@ -1034,6 +1045,13 @@ class VMWizardAdvancedForm(Form):
         qs = Node.objects.filter(cluster=cluster)
         self.fields["pnode"].queryset = qs
         self.fields["snode"].queryset = qs
+
+    def _configure_for_template(self, template):
+        if template:
+            self.fields["ip_check"].initial = template.ip_check
+            self.fields["name_check"].initial = template.name_check
+            self.fields["pnode"].initial = template.pnode
+            self.fields["snode"].initial = template.snode
 
     def _configure_for_disk_template(self, template):
         if template != "drbd":
@@ -1061,6 +1079,11 @@ class VMWizardPVMForm(Form):
         self.fields["kernel_path"].initial = params["kernel_path"]
         self.fields["root_path"].initial = params["root_path"]
 
+    def _configure_for_template(self, template):
+        if template:
+            self.fields["kernel_path"].initial = template.kernel_path
+            self.fields["root_path"].initial = template.root_path
+
 
 class VMWizardHVMForm(Form):
     boot_order = CharField(label=_("Preferred boot device"), max_length=255,
@@ -1079,6 +1102,14 @@ class VMWizardHVMForm(Form):
         self.fields["boot_order"].initial = params["boot_order"]
         self.fields["disk_type"].initial = params["disk_type"]
         self.fields["nic_type"].initial = params["nic_type"]
+
+    def _configure_for_template(self, template):
+        if template:
+            self.fields["boot_order"].initial = template.boot_order
+            self.fields["cdrom_image_path"].initial = template.cdrom_image_path
+            self.fields["disk_type"].initial = template.disk_type
+            self.fields["nic_type"].initial = template.nic_type
+
 
 
 class VMWizardKVMForm(Form):
@@ -1112,6 +1143,17 @@ class VMWizardKVMForm(Form):
         if not has_cdrom2(cluster):
             del self.fields["cdrom2_image_path"]
 
+    def _configure_for_template(self, template):
+        if template:
+            self.fields["kernel_path"].initial = template.kernel_path
+            self.fields["root_path"].initial = template.root_path
+            self.fields["serial_console"].initial = template.serial_console
+            self.fields["boot_order"].initial = template.boot_order
+            self.fields["cdrom_image_path"].initial = template.cdrom_image_path
+            self.fields["cdrom2_image_path"].initial = template.cdrom2_image_path
+            self.fields["disk_type"].initial = template.disk_type
+            self.fields["nic_type"].initial = template.nic_type
+
     def clean(self):
         data = super(VMWizardKVMForm, self).clean()
 
@@ -1123,6 +1165,12 @@ class VMWizardKVMForm(Form):
 
 class VMWizardView(CookieWizardView):
     template_name = "ganeti/forms/vm_wizard.html"
+
+    def _get_template(self):
+        name = self.kwargs.get("template")
+        if name:
+            return VirtualMachineTemplate.objects.get(template_name=name)
+        return None
 
     def _get_cluster(self):
         data = self.get_cleaned_data_for_step("0")
@@ -1148,15 +1196,20 @@ class VMWizardView(CookieWizardView):
         if s == 0:
             form = VMWizardClusterForm(data=data)
             form._configure_for_user(self.request.user)
+            # XXX this should somehow become totally invalid if the user
+            # doesn't have perms on the template.
         elif s == 1:
             form = VMWizardOwnerForm(data=data)
             form._configure_for_cluster(self._get_cluster())
+            form._configure_for_template(self._get_template())
         elif s == 2:
             form = VMWizardBasicsForm(data=data)
             form._configure_for_cluster(self._get_cluster())
+            form._configure_for_template(self._get_template())
         elif s == 3:
             form = VMWizardAdvancedForm(data=data)
             form._configure_for_cluster(self._get_cluster())
+            form._configure_for_template(self._get_template())
             form._configure_for_disk_template(self._get_disk_template())
         elif s == 4:
             cluster = self._get_cluster()
@@ -1173,6 +1226,7 @@ class VMWizardView(CookieWizardView):
 
             if form:
                 form._configure_for_cluster(cluster)
+                form._configure_for_template(self._get_template())
             else:
                 form = Form()
         else:
@@ -1190,14 +1244,20 @@ class VMWizardView(CookieWizardView):
 
         return context
 
-    def done(self, forms):
+    def done(self, forms, template=None, **kwargs):
         """
         Create a template. Optionally, bind a template to a VM instance
         created from the template. Optionally, name the template and save it.
         One or both of those is done depending on what the user has requested.
         """
 
-        template = VirtualMachineTemplate()
+        # Hack: accepting kwargs in order to be able to work in several
+        # different spots.
+
+        if template is None:
+            template = VirtualMachineTemplate()
+        else:
+            template = self._get_template()
 
         user = self.request.user
 
