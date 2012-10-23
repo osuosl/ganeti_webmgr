@@ -228,6 +228,9 @@ urlpatterns += patterns('ganeti_web.views.vm_template',
     url(r'^%s/delete/?$' % template_prefix, 'delete', name='template-delete'),
     # Edit
     url(r'^%s/edit/?$' % template_prefix, 'edit', name='template-edit'),
+    # Edit
+    url(r'^%s/wizard-edit/?$' % template_prefix, vm_wizard(),
+        name='template-wizard-edit'),
     # Copy
     url(r'^%s/copy/?$' % template_prefix, 'copy', name='template-copy'),
     # Create Instance from Template
