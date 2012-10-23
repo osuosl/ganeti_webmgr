@@ -25,6 +25,7 @@ from django.forms import (Form, BooleanField, CharField, ChoiceField,
 from django.http import HttpResponseRedirect
 # Per #6579, do not change this import without discussion.
 from django.utils import simplejson as json
+from django.utils.translation import ugettext_lazy as _
 
 from object_log.models import LogItem
 log_action = LogItem.objects.log_action
@@ -46,9 +47,9 @@ from ganeti_web.models import (Cluster, ClusterUser, Node, Organization,
                                VirtualMachineTemplate, VirtualMachine)
 from ganeti_web.utilities import (cluster_default_info, cluster_os_list,
                                   contains, get_hypervisor, hv_prettify)
-from django.utils.translation import ugettext_lazy as _
-from ganeti_web.util.client import REPLACE_DISK_AUTO, REPLACE_DISK_PRI, \
-    REPLACE_DISK_CHG, REPLACE_DISK_SECONDARY
+from ganeti_web.util.client import (REPLACE_DISK_AUTO, REPLACE_DISK_PRI,
+                                    REPLACE_DISK_CHG, REPLACE_DISK_SECONDARY)
+from ganeti_web.views.generic import LoginRequiredMixin
 
 username_or_mtime = Q(username='') | Q(mtime__isnull=True)
 
@@ -1163,7 +1164,7 @@ class VMWizardKVMForm(Form):
         return data
 
 
-class VMWizardView(CookieWizardView):
+class VMWizardView(LoginRequiredMixin, CookieWizardView):
     template_name = "ganeti/forms/vm_wizard.html"
 
     def _get_template(self):
