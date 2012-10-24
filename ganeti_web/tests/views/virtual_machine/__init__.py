@@ -16,10 +16,8 @@
 # USA.
 
 from ganeti_web.tests.views.virtual_machine.actions import *
-from ganeti_web.tests.views.virtual_machine.create import *
 from ganeti_web.tests.views.virtual_machine.edit import *
 from ganeti_web.tests.views.virtual_machine.general import *
-from ganeti_web.tests.views.virtual_machine.helpers import *
 from ganeti_web.tests.views.virtual_machine.object_log import *
 from ganeti_web.tests.views.virtual_machine.permissions import *
 from ganeti_web.tests.views.virtual_machine.vnc import *

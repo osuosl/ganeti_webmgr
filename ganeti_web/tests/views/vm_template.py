@@ -102,45 +102,6 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
         args = (self.cluster.slug,self.template)
         self.assert_standard_fails(url, args, authorized=False)
 
-    def test_create_view(self):
-        """
-        Test creating a new virtual machine template through the view.
-        """
-        url = '/template/create/'
-        args = ()
-        self.assert_standard_fails(url, args, authorized=False)
-
-        # GET
-        self.assert_200(url, args,
-            users = [self.unauthorized],
-            template='ganeti/vm_template/create.html')
-
-        def test_exist(user, request):
-            self.assertTrue(VirtualMachineTemplate.objects.filter(
-                template_name=self.create_template_data['template_name']).exists())
-        # POST
-        self.assertFalse(VirtualMachineTemplate.objects.filter(
-            template_name=self.create_template_data['template_name']).exists())
-        self.assert_200(url, args, method='post',
-            users=[self.superuser, self.cluster_admin, self.create_vm],
-            data=self.create_template_data,
-            follow=True,
-            setup=True,
-            tests=test_exist,
-            template='ganeti/vm_template/detail.html')
-
-        # unauthorized user (User with no cluster access)
-        VirtualMachineTemplate.objects.all().delete()
-        self.assertTrue(self.c.login(username=self.unauthorized.username, password='secret'))
-        request = self.c.post(url % args, self.create_template_data)
-        self.assertEqual(200, request.status_code)
-        self.assertTemplateUsed(request, 'ganeti/vm_template/create.html')
-        form = request.context['form']
-        self.assertEqual(['cluster'], form.errors.keys())
-
-        self.assertFalse(VirtualMachineTemplate.objects.filter(
-            template_name=self.create_template_data['template_name']).exists())
-
     def test_create_instance_from_template_view(self):
         """
         Tests creating an instance from a template
@@ -208,44 +169,6 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
             data={'template_name':'asdfff'},
             users=[self.unauthorized])
         self.assertFalse(VirtualMachineTemplate.objects.filter(template_name='asdfff').exists())
-
-    def test_edit_view(self):
-        """
-        Test editing a template
-        """
-        url = '/cluster/%s/template/%s/edit/'
-        args = (self.cluster.slug, self.template)
-        self.assert_standard_fails(url, args)
-
-        # GET
-        self.assert_200(url, args,
-            users = [self.superuser, self.create_vm, self.cluster_admin],
-            template='ganeti/vm_template/create.html')
-        self.assert_403(url, args,
-            users = [self.unauthorized])
-
-        # POST
-        data_=self.create_template_data.copy()
-        update = dict(
-            vcpus=4,
-        )
-        data_.update(update)
-        def test_vcpus(user, request):
-            vm = VirtualMachineTemplate.objects.get(pk=self.template.pk)
-            self.assertEqual(4, vm.vcpus)
-
-        self.assertTrue(VirtualMachineTemplate.objects.filter(pk=self.template.pk).exists())
-        self.assert_200(url, args, method='post',
-            users=[self.superuser, self.cluster_admin, self.create_vm],
-            data=data_,
-            setup=True,
-            follow=True,
-            tests=test_vcpus,
-            template='ganeti/vm_template/detail.html')
-
-        self.assert_403(url, args, method='post',
-            data=data_,
-            users=[self.unauthorized])
 
     def test_create_template_from_instance(self):
         """

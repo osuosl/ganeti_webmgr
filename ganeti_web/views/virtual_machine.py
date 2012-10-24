@@ -43,14 +43,13 @@ from object_permissions.views.permissions import view_users, view_permissions
 from object_log.models import LogItem
 log_action = LogItem.objects.log_action
 
-from ganeti_web.caps import has_cdrom2, has_shutdown_timeout
+from ganeti_web.caps import has_shutdown_timeout
 from ganeti_web.forms.virtual_machine import NewVirtualMachineForm, \
     KvmModifyVirtualMachineForm, PvmModifyVirtualMachineForm, \
     HvmModifyVirtualMachineForm, ModifyConfirmForm, MigrateForm, RenameForm, \
     ChangeOwnerForm, ReplaceDisksForm
 from ganeti_web.middleware import Http403
-from ganeti_web.models import Cluster, ClusterUser, Organization, VirtualMachine, \
-        Job, SSHKey, VirtualMachineTemplate, Node
+from ganeti_web.models import Cluster, Job, SSHKey, Node, VirtualMachine
 from ganeti_web.templatetags.webmgr_tags import render_storage
 from ganeti_web.util.client import GanetiApiError
 from ganeti_web.utilities import cluster_default_info, cluster_os_list, \
@@ -645,186 +644,6 @@ def object_log(request, cluster_slug, instance, rest=False):
         return list_for_object(request, vm)
 
 
-# XXX agh oh god my eyes why oh why
-@login_required
-def create(request, cluster_slug=None):
-    """
-    Create a new instance
-        Store in DB and
-        Create on given cluster
-    """
-    user = request.user
-    if not(user.is_superuser or user.has_any_perms(Cluster, ['admin', 'create_vm'])):
-        raise Http403(
-            _('You do not have permission to create virtual machines'))
-
-    if cluster_slug is not None:
-        cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    else:
-        cluster = None
-
-    if request.method == 'POST':
-        form = NewVirtualMachineForm(user, request.POST)
-        if form.is_valid():
-            data = form.cleaned_data
-            start = data.get('start')
-            no_install = data.get('no_install')
-            owner = data.get('owner')
-            grantee = data.get('grantee')
-            cluster = data.get('cluster')
-            hostname = data.get('hostname')
-            disk_template = data.get('disk_template')
-            # Default to not pass in pnode and snode
-            #  since these will be set if the form is correct
-            pnode = None
-            snode = None
-            os = data.get('os')
-            name_check = data.get('name_check')
-            iallocator = data.get('iallocator')
-            # Hidden fields
-            iallocator_hostname = None
-            if 'iallocator_hostname' in data:
-                iallocator_hostname = data.get('iallocator_hostname')
-            # BEPARAMS
-            vcpus = data.get('vcpus')
-            disks = data.get('disks')
-            disk_size = data.get('disk_size')
-            nics = data.get('nics')
-            memory = data.get('memory')
-            # If iallocator was not checked do not pass in the iallocator
-            #  name. If iallocator was checked don't pass snode,pnode.
-            if not iallocator:
-                iallocator_hostname = None
-                pnode = data.get('pnode')
-
-            # If drbd is being used assign the secondary node
-            if disk_template == 'drbd' and pnode is not None:
-                snode = data.get('snode')
-
-            # Create dictionary of only parameters supposed to be in hvparams
-            hv = data.get('hypervisor')
-            hvparams = {}
-            hvparam_fields = ()
-
-            if hv == 'xen-pvm':
-                hvparam_fields = ('kernel_path', 'root_path')
-            elif hv == 'xen-hvm':
-                hvparam_fields = (
-                    'boot_order',
-                    'disk_type',
-                    'nic_type',
-                    'cdrom_image_path',
-                )
-            elif hv == 'kvm':
-                hvparam_fields = [
-                    'kernel_path',
-                    'root_path',
-                    'serial_console',
-                    'boot_order',
-                    'disk_type',
-                    'cdrom_image_path',
-                    'nic_type',
-                ]
-
-                # Check before adding cdrom2; see #11655.
-                if has_cdrom2(cluster):
-                    hvparam_fields.append('cdrom2_image_path')
-
-                # Force cdrom disk type to IDE; see #9297.
-                hvparams['cdrom_disk_type'] = 'ide'
-
-            for field in hvparam_fields:
-                hvparams[field] = data[field]
-
-            # XXX attempt to load the virtual machine.  This ensure that if
-            # there was a previous vm with the same hostname, but had not
-            # successfully been deleted, then it will be deleted now
-            try:
-                VirtualMachine.objects.get(cluster=cluster, hostname=hostname)
-            except VirtualMachine.DoesNotExist:
-                pass
-
-            try:
-                job_id = cluster.rapi.CreateInstance('create', hostname,
-                        disk_template,
-                        disks,nics,
-                        no_install=no_install,
-                        start=start, os=os,
-                        pnode=pnode, snode=snode,
-                        name_check=name_check, ip_check=name_check,
-                        iallocator=iallocator_hostname,
-                        hypervisor=hv,
-                        hvparams=hvparams,
-                        beparams={"memory": memory, "vcpus":vcpus})
-            except GanetiApiError, e:
-                msg = '%s: %s' % (_('Error creating virtual machine on this cluster'),e)
-                form._errors["cluster"] = form.error_class([msg])
-            else:
-                # Check for a vm recovery, If it is not found then
-                if 'vm_recovery' in data:
-                    vm = data['vm_recovery']
-                    vm_template = vm.template
-                else:
-                    vm_template = VirtualMachineTemplate()
-                    vm = VirtualMachine(owner=owner)
-
-                vm.cluster = cluster
-                vm.hostname = hostname
-                vm.ram = memory
-                vm.virtual_cpus = vcpus
-                vm.disk_size = disk_size
-
-                # save temporary template
-                # XXX copy each property in data. Avoids errors from properties
-                # that don't exist on the model
-                for k,v in data.items():
-                    setattr(vm_template, k, v)
-                vm_template.save()
-
-                vm.template = vm_template
-                vm.ignore_cache = True
-
-                # Do a dance to get the VM and the job referencing each other.
-                vm.save()
-                job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
-                job.save()
-                vm.last_job = job
-                vm.save()
-
-                # grant admin permissions to the owner.  Only do this for new
-                # VMs.  otherwise we run the risk of granting perms to a
-                # different owner.  We should be preventing that elsewhere, but
-                # lets be extra careful since this check is cheap.
-                if 'vm_recovery' in data:
-                    log_action('VM_RECOVER', user, vm, job)
-                else:
-                    grantee.grant('admin', vm)
-                    log_action('CREATE', user, vm)
-
-                return HttpResponseRedirect(
-                reverse('instance-detail', args=[cluster.slug, vm.hostname]))
-
-        cluster_defaults = {}
-        if 'cluster' in request.POST and request.POST['cluster'] != '':
-            try:
-                cluster =  Cluster.objects.get(pk=request.POST['cluster'])
-                if cluster.info:
-                    cluster_defaults = cluster_default_info(cluster)
-            except Cluster.DoesNotExist:
-                pass
-
-    elif request.method == 'GET':
-        form = NewVirtualMachineForm(user)
-        cluster_defaults = {}
-
-    return render_to_response('ganeti/virtual_machine/create.html', {
-        'form': form,
-        'cluster_defaults':json.dumps(cluster_defaults)
-        },
-        context_instance=RequestContext(request),
-    )
-
-
 @login_required
 def modify(request, cluster_slug, instance):
     vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
@@ -1047,54 +866,6 @@ def modify_confirm(request, cluster_slug, instance):
 
 
 @login_required
-def recover_failed_deploy(request, cluster_slug, instance):
-    """
-    Loads a vm that failed to deploy back into the edit form
-    """
-    vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
-
-    user = request.user
-    if not (user.is_superuser or user.has_any_perms(vm, ['admin','modify']) \
-        or user.has_perm('admin', cluster)):
-        raise Http403(_('You do not have permissions to edit \
-            this virtual machine'))
-
-    # if there is no template, we can't recover.  redirect back to the detail
-    # page.  its likely that this vm was already fixed
-    if not vm.template_id:
-        return HttpResponseRedirect(reverse('instance-detail', \
-                                            args=[cluster_slug, instance]))
-
-    # create initial data - load this from the template.  Not all properties
-    # can be copied directly, some need to be copied explicitly due to naming
-    # conflicts.
-    initial = {'hostname':instance}
-    for k,v in vm.template.__dict__.items():
-        if v is not None and v != '':
-            initial[k] = v
-    initial['cluster'] = vm.template.cluster_id
-    initial['pnode'] = vm.template.pnode
-    initial['owner'] = vm.owner_id
-
-    if "disks" in initial:
-        for i, disk in enumerate(initial['disks']):
-            initial['disk_size_%s' % i] = "%dMB" % disk["size"]
-
-    if "nics" in initial:
-        for i, nic in enumerate(initial['nics']):
-            initial['nic_link_%s' % i] = nic['link']
-            initial['nic_mode_%s' % i] = nic['mode']
-
-    form = NewVirtualMachineForm(request.user, initial=initial)
-    cluster_defaults = cluster_default_info(cluster)
-
-    return render_to_response('ganeti/virtual_machine/create.html',
-        {'form': form, 'cluster_defaults':json.dumps(cluster_defaults)},
-        context_instance=RequestContext(request),
-    )
-
-
-@login_required
 def rename(request, cluster_slug, instance, rest=False, extracted_params=None):
     """
     Rename an existing instance
@@ -1221,75 +992,6 @@ def job_status(request, id, rest=False):
         return jobs
     else:
         return HttpResponse(json.dumps(jobs), mimetype='application/json')
-
-
-@login_required
-def cluster_choices(request):
-    """
-    Ajax view for looking up list of choices a user or usergroup has.  Returns
-    the list of clusters a user has access to, or the list of clusters one of
-    its groups has.
-    """
-    clusteruser_id = request.GET.get('clusteruser_id', None)
-
-    user = request.user
-    if user.is_superuser:
-        q = Cluster.objects.all()
-    elif clusteruser_id is not None:
-        clusteruser = get_object_or_404(ClusterUser, id=clusteruser_id).cast()
-        if isinstance(clusteruser, Organization):
-            target = clusteruser.group
-        else:
-            target = clusteruser.user
-        q = target.get_objects_any_perms(Cluster, ["admin", "create_vm"])
-    else:
-        q = user.get_objects_any_perms(Cluster, ['admin','create_vm'], False)
-
-    # Exclude all read-only clusters
-    # TODO Add exclude for clusters with errors
-    q = q.exclude(Q(username='') | Q(mtime__isnull=True))
-
-    clusters = list(q.values_list('id', 'hostname'))
-    content = json.dumps(clusters)
-    return HttpResponse(content, mimetype='application/json')
-
-
-@login_required
-def cluster_options(request):
-    """
-    Ajax view for retrieving node and operating system choices for a given
-    cluster.
-    """
-    cluster_id = request.GET.get('cluster_id', None)
-    cluster = get_object_or_404(Cluster, id__exact=cluster_id)
-
-    user = request.user
-    if not (user.is_superuser or user.has_any_perms(cluster, ['admin', 'create_vm'])):
-        raise Http403(
-            _('You do not have permissions to view this cluster'))
-
-    oslist = cluster_os_list(cluster)
-    nodes = [str(h) for h in cluster.nodes.values_list('hostname', flat=True)]
-    content = json.dumps({'nodes':nodes, 'os':oslist})
-    return HttpResponse(content, mimetype='application/json')
-
-
-@login_required
-def cluster_defaults(request):
-    """
-    Ajax view for retrieving the default cluster options to be set
-    on the NewVirtualMachineForm.
-    """
-    cluster_id = request.GET.get('cluster_id', None)
-    hypervisor = request.GET.get('hypervisor', None)
-    cluster = get_object_or_404(Cluster, id__exact=cluster_id)
-
-    user = request.user
-    if not (user.is_superuser or user.has_any_perms(cluster, ['admin', 'create_vm'])):
-        raise Http403(_('You do not have permission to view the default cluster options'))
-
-    content = json.dumps(cluster_default_info(cluster, hypervisor))
-    return HttpResponse(content, mimetype='application/json')
 
 
 def recv_user_add(sender, editor, user, obj, **kwargs):
