@@ -103,7 +103,7 @@ class VMListView(LoginRequiredMixin, PagedListView):
         user = self.request.user
         context = super(VMListView, self).get_context_data(object_list=kwargs["object_list"])
         context["can_create"] = (user.is_superuser or
-                                user.has_any_perms(Cluster, ["create_vm"]))
+                                 user.has_any_perms(Cluster, ["create_vm"]))
         return context
 
 class VMListTableView(VMListView):
@@ -119,7 +119,7 @@ class VMListTableView(VMListView):
 
     def get_queryset(self):
         qs = super(VMListTableView, self).get_queryset()
-        
+
         if "cluster_slug" in self.kwargs:
             self.cluster = Cluster.objects.get(slug=self.kwargs["cluster_slug"])
             qs = qs.filter(cluster=self.cluster)
@@ -137,12 +137,6 @@ class VMListTableView(VMListView):
             qs = qs.filter(secondary_node=inner)
 
         return qs
-
-    def get_context_data(self, **kwargs):
-        context = super(VMListTableView, self).get_context_data(
-            object_list=kwargs["object_list"])
-        context["cluster"] = self.cluster
-        return context
 
 
 class VMDeleteView(LoginRequiredMixin, DeleteView):
