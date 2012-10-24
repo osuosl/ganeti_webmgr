@@ -289,7 +289,12 @@
                                 {% trans "Migrate" %}
                             </a>
                         </li>
+                    
+                        
+                    
                     {%endif%}
+                    <a class="button failover" title="failover" href="{% url instance-failover cluster.slug instance.hostname %}">
+
                 {% endif %}
             {% endif %}
             {# Create Template #}
