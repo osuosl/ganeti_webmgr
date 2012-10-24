@@ -24,10 +24,12 @@ from django.utils import simplejson as json
 from django.views.decorators.http import require_http_methods, require_GET
 from django.views.generic.edit import FormView
 
-from ganeti_web.backend.templates import template_to_instance
+from ganeti_web.backend.templates import (instance_to_template,
+                                          template_to_instance)
 from ganeti_web.forms.vm_template import (VirtualMachineTemplateForm,
                                           VirtualMachineTemplateCopyForm,
-                                          VMInstanceFromTemplate)
+                                          VMInstanceFromTemplate,
+                                          TemplateFromVMInstance)
 from ganeti_web.forms.virtual_machine import NewVirtualMachineForm
 from ganeti_web.middleware import Http403
 from ganeti_web.models import Cluster, VirtualMachineTemplate, VirtualMachine
@@ -162,6 +164,59 @@ def create_template_from_instance(request, cluster_slug, instance):
         },
         context_instance = RequestContext(request)
     )
+
+
+
+class TemplateFromVMInstanceView(LoginRequiredMixin, FormView):
+    """
+    Create a template from a virtual machine instance.
+    """
+
+    form_class = TemplateFromVMInstance
+    template_name = "ganeti/vm_template/to_instance.html"
+
+    def _get_stuff(self):
+        cluster_slug = self.kwargs["cluster_slug"]
+        hostname = self.kwargs["instance"]
+
+        self.cluster = get_object_or_404(Cluster, slug=cluster_slug)
+        self.vm = get_object_or_404(VirtualMachine, hostname=hostname,
+                                    cluster__slug=cluster_slug)
+
+        user = self.request.user
+        if not (
+            user.is_superuser or
+            user.has_perm('admin', self.cluster) or
+            user.has_perm('create_vm', self.cluster)
+            ):
+            raise Http403(NO_PRIVS)
+
+
+    def form_valid(self, form):
+        """
+        Create the new VM and then redirect to the new VM's page.
+        """
+
+        template_name = form.cleaned_data["template_name"]
+
+        self._get_stuff()
+
+        template = instance_to_template(self.vm, template_name)
+
+        return HttpResponseRedirect(reverse("template-detail",
+                                            args=[self.cluster.slug,
+                                                  template.template_name]))
+
+
+    def get_context_data(self, **kwargs):
+        context = super(TemplateFromVMInstanceView,
+                        self).get_context_data(**kwargs)
+
+        self._get_stuff()
+
+        context["vm"] = self.vm
+
+        return context
 
 
 

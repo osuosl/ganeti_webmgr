@@ -259,40 +259,10 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
         args = (self.cluster.slug, self.instance)
         self.assert_standard_fails(url, args)
 
-        # Copied from create_template_from_instance view
-        # TODO figure out good way to associate the keys
-        #  of VirtualMachine to VirtualMachineTemplate
-        info = self.instance.info
-        links = info['nic.links']
-        modes = info['nic.modes']
-        sizes = info['disk.sizes']
-
-        data = dict(
-            template_name=self.instance.hostname,
-            cluster=self.cluster.id,
-            start=info['admin_state'],
-            disk_template=info['disk_template'],
-            disk_type=info['hvparams']['disk_type'],
-            nic_type=info['hvparams']['nic_type'],
-            os=self.instance.operating_system,
-            vcpus=self.instance.virtual_cpus,
-            memory=self.instance.ram,
-            disks=[{'size':size} for size in sizes],
-            nics=[{'mode':mode, 'link':link} for mode, link in zip(modes, links)],
-            nic_count=len(links),
-        )
-
-        def test_fields(user, response):
-            self.assertContains(response, self.instance)
-            form = response.context['form']
-            for field in data:
-                self.assertEqual(data[field], form.initial[field])
-
         # GET
         self.assert_200(url, args,
             users = [self.superuser, self.create_vm, self.cluster_admin],
-            tests = test_fields,
-            template='ganeti/vm_template/create.html')
+            template='ganeti/vm_template/to_instance.html')
         self.assert_403(url, args,
             users = [self.unauthorized])
 

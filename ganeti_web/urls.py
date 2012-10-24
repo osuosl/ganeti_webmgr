@@ -31,7 +31,8 @@ from ganeti_web.views.node import (NodeDetailView, NodePrimaryListView,
                                    NodeSecondaryListView)
 from ganeti_web.views.virtual_machine import (VMDeleteView, VMListView,
                                               VMListTableView)
-from ganeti_web.views.vm_template import VMInstanceFromTemplateView
+from ganeti_web.views.vm_template import (TemplateFromVMInstanceView,
+                                          VMInstanceFromTemplateView)
 
 cluster_slug = '(?P<cluster_slug>[-_A-Za-z0-9]+)'
 cluster = 'cluster/%s' % cluster_slug
@@ -236,7 +237,7 @@ urlpatterns += patterns('ganeti_web.views.vm_template',
     # Create Instance from Template
     url(r'^%s/vm/?$' % template_prefix, VMInstanceFromTemplateView.as_view(),
         name='instance-create-from-template'),
-    url(r'^%s/template/?$' % vm_prefix, 'create_template_from_instance',
+    url(r'^%s/template/?$' % vm_prefix, TemplateFromVMInstanceView.as_view(),
         name='template-create-from-instance'),
 
 )

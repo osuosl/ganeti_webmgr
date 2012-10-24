@@ -1,0 +1,20 @@
+{% extends "menu_base.html" %}
+{% load i18n %}
+{% load webmgr_tags %}
+
+{% block title %}{% trans "Create Template From Instance" %} : {{ template }}{% endblock title %}
+{% block content %}
+<h1 class="breadcrumb">
+    <span><a href="{% url virtualmachine-list %}">{% trans "Virtual Machines" %}</a></span>
+     : <a href="{% url instance-detail vm.cluster.slug vm %}">{{ vm }}</a>
+     : {% trans "Create Template" %}
+</h1>
+<div id="virtualmachineform">
+    <form method="post"
+        action="{% url template-create-from-instance vm.cluster.slug vm %}">
+        {% csrf_token %}
+        {{ form.as_table }}
+        <input class="submit" type="submit" value="{% trans "Create" %}">
+    </form>
+</div>
+{% endblock content %}
