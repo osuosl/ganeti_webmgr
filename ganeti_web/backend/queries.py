@@ -25,6 +25,8 @@ from ganeti_web.models import Cluster, ClusterUser
 def cluster_qs_for_user(user):
     if user.is_superuser:
         qs = Cluster.objects.all()
+    elif user.is_anonymous():
+        qs = Cluster.objects.none()
     else:
         qs = user.get_objects_any_perms(Cluster, ['admin','create_vm'], False)
 
