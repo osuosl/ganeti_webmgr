@@ -215,30 +215,30 @@ class TestVirtualMachineCreateHelpers(TestVirtualMachineViewsBase):
             hypervisors=[['kvm', 'kvm']],
             migration_downtime=30,
             nic_types=[
-                ['', '---------'],
+                
                 ['e1000', 'e1000'],
-                ['rtl8139', 'rtl8139'],
-                ['ne2k_isa', 'ne2k_isa'],
-                ['ne2k_pci', 'ne2k_pci'],
-                ['paravirtual', 'paravirtual'],
+                ['rtl8139', 'RTL8139'],
+                ['ne2k_isa', 'NE2000 (ISA)'],
+                ['ne2k_pci', 'NE2000 (PCI)'],
+                ['paravirtual', 'Paravirtual'],
                 ['i82551', 'i82551'],
-                ['i82557b', 'i82557b'],
-                ['i82559er', 'i82559er'],
-                ['pcnet', 'pcnet'],
-                ['e1000', 'e1000']
+                ['i82557b', 'i82557B'],
+                ['i82559er', 'i82559ER'],
+                ['pcnet', 'PCnet'],
+                
             ],
             kernel_args='ro',
             cdrom_image_path='',
             boot_order='disk',
             vhost_net=False,
             disk_types=[
-                ['', '---------'],
-                ['paravirtual', 'paravirtual'],
-                ['ide', 'ide'],
-                ['scsi', 'scsi'],
-                ['sd', 'sd'],
-                ['mtd', 'mtd'],
-                ['pflash', 'pflash']
+               
+                ['paravirtual', 'Paravirtual'],
+                ['ide', 'IDE'],
+                ['scsi', 'SCSI'],
+                ['sd', 'SD Card'],
+                ['mtd', 'MTD'],
+                ['pflash', 'PC System Flash']
             ],
             initrd_path='',
             disk_cache='default',

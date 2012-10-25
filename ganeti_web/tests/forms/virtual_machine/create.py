@@ -198,17 +198,17 @@ class TestNewVirtualMachineFormInit(TestCase, VirtualMachineTestCaseMixin):
         form = NewVirtualMachineForm(self.user)
         self.assertEqual([(u'', u'---------')],
             form.fields['nic_type'].choices)
-        self.assertEqual([(u'', u'---------'),
-            (u'routed', u'routed'),
-            (u'bridged', u'bridged')],
+        self.assertEqual([
+            (u'routed', u'Routed'),
+            (u'bridged', u'Bridged')],
             form.fields['nic_mode_0'].choices)
         self.assertEqual([(u'', u'---------')],
             form.fields['boot_order'].choices)
-        self.assertEqual([(u'', u'---------'),
-            (u'plain', u'plain'),
-            (u'drbd', u'drbd'),
-            (u'file', u'file'),
-            (u'diskless', u'diskless')],
+        self.assertEqual([
+            (u'plain', u'Plain'),
+            (u'drbd', u'DRBD'),
+            (u'file', u'File'),
+            (u'diskless', u'Diskless')],
             form.fields['disk_template'].choices)
 
     def test_init_and_data_params(self):
