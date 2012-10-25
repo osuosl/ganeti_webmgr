@@ -1161,6 +1161,13 @@ class VMWizardKVMForm(Form):
         # Force cdrom disk type to IDE; see #9297.
         data['cdrom_disk_type'] = 'ide'
 
+        # If booting from CD-ROM, require the first CD-ROM image to be
+        # present.
+        if (data.get("boot_order") == "cdrom" and
+            not data.get("cdrom_image_path")):
+            msg = u"%s." % _("Image path required if boot device is CD-ROM")
+            self._errors["cdrom_image_path"] = self.error_class([msg])
+
         return data
 
 
