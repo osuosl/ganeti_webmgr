@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 from django import forms
-from django.forms import Form, CharField, ModelChoiceField
+from django.forms import Form, CharField, ModelChoiceField, ValidationError
 from django.utils.translation import ugettext_lazy as _
 
 from ganeti_web.forms.virtual_machine import (VirtualMachineForm,
@@ -190,3 +190,9 @@ class VMInstanceFromTemplate(Form):
 
 class TemplateFromVMInstance(Form):
     template_name = CharField(label=_("Template Name"), max_length=255)
+
+    def clean_template_name(self):
+        name = self.cleaned_data['template_name']
+        if name.strip(' ') == '':
+            raise ValidationError(_("Name cannot consist of spaces."))
+        return name
