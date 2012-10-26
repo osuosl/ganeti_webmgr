@@ -102,45 +102,6 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
         args = (self.cluster.slug,self.template)
         self.assert_standard_fails(url, args, authorized=False)
 
-    def test_create_view(self):
-        """
-        Test creating a new virtual machine template through the view.
-        """
-        url = '/template/create/'
-        args = ()
-        self.assert_standard_fails(url, args, authorized=False)
-
-        # GET
-        self.assert_200(url, args,
-            users = [self.unauthorized],
-            template='ganeti/vm_template/create.html')
-
-        def test_exist(user, request):
-            self.assertTrue(VirtualMachineTemplate.objects.filter(
-                template_name=self.create_template_data['template_name']).exists())
-        # POST
-        self.assertFalse(VirtualMachineTemplate.objects.filter(
-            template_name=self.create_template_data['template_name']).exists())
-        self.assert_200(url, args, method='post',
-            users=[self.superuser, self.cluster_admin, self.create_vm],
-            data=self.create_template_data,
-            follow=True,
-            setup=True,
-            tests=test_exist,
-            template='ganeti/vm_template/detail.html')
-
-        # unauthorized user (User with no cluster access)
-        VirtualMachineTemplate.objects.all().delete()
-        self.assertTrue(self.c.login(username=self.unauthorized.username, password='secret'))
-        request = self.c.post(url % args, self.create_template_data)
-        self.assertEqual(200, request.status_code)
-        self.assertTemplateUsed(request, 'ganeti/vm_template/create.html')
-        form = request.context['form']
-        self.assertEqual(['cluster'], form.errors.keys())
-
-        self.assertFalse(VirtualMachineTemplate.objects.filter(
-            template_name=self.create_template_data['template_name']).exists())
-
     def test_create_instance_from_template_view(self):
         """
         Tests creating an instance from a template
@@ -209,44 +170,6 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
             users=[self.unauthorized])
         self.assertFalse(VirtualMachineTemplate.objects.filter(template_name='asdfff').exists())
 
-    def test_edit_view(self):
-        """
-        Test editing a template
-        """
-        url = '/cluster/%s/template/%s/edit/'
-        args = (self.cluster.slug, self.template)
-        self.assert_standard_fails(url, args)
-
-        # GET
-        self.assert_200(url, args,
-            users = [self.superuser, self.create_vm, self.cluster_admin],
-            template='ganeti/vm_template/create.html')
-        self.assert_403(url, args,
-            users = [self.unauthorized])
-
-        # POST
-        data_=self.create_template_data.copy()
-        update = dict(
-            vcpus=4,
-        )
-        data_.update(update)
-        def test_vcpus(user, request):
-            vm = VirtualMachineTemplate.objects.get(pk=self.template.pk)
-            self.assertEqual(4, vm.vcpus)
-
-        self.assertTrue(VirtualMachineTemplate.objects.filter(pk=self.template.pk).exists())
-        self.assert_200(url, args, method='post',
-            users=[self.superuser, self.cluster_admin, self.create_vm],
-            data=data_,
-            setup=True,
-            follow=True,
-            tests=test_vcpus,
-            template='ganeti/vm_template/detail.html')
-
-        self.assert_403(url, args, method='post',
-            data=data_,
-            users=[self.unauthorized])
-
     def test_create_template_from_instance(self):
         """
         Test the create_template_from_instance view
@@ -259,40 +182,10 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
         args = (self.cluster.slug, self.instance)
         self.assert_standard_fails(url, args)
 
-        # Copied from create_template_from_instance view
-        # TODO figure out good way to associate the keys
-        #  of VirtualMachine to VirtualMachineTemplate
-        info = self.instance.info
-        links = info['nic.links']
-        modes = info['nic.modes']
-        sizes = info['disk.sizes']
-
-        data = dict(
-            template_name=self.instance.hostname,
-            cluster=self.cluster.id,
-            start=info['admin_state'],
-            disk_template=info['disk_template'],
-            disk_type=info['hvparams']['disk_type'],
-            nic_type=info['hvparams']['nic_type'],
-            os=self.instance.operating_system,
-            vcpus=self.instance.virtual_cpus,
-            memory=self.instance.ram,
-            disks=[{'size':size} for size in sizes],
-            nics=[{'mode':mode, 'link':link} for mode, link in zip(modes, links)],
-            nic_count=len(links),
-        )
-
-        def test_fields(user, response):
-            self.assertContains(response, self.instance)
-            form = response.context['form']
-            for field in data:
-                self.assertEqual(data[field], form.initial[field])
-
         # GET
         self.assert_200(url, args,
             users = [self.superuser, self.create_vm, self.cluster_admin],
-            tests = test_fields,
-            template='ganeti/vm_template/create.html')
+            template='ganeti/vm_template/to_instance.html')
         self.assert_403(url, args,
             users = [self.unauthorized])
 

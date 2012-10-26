@@ -32,16 +32,10 @@
 
 {% endblock %}
 
-{% if cluster %}
-    <a class="button add" href="{% url instance-create cluster.slug %}">
-        {% trans "Add Virtual Machine" %}
-    </a>
-{% else %}
-    {% if can_create %}
-    <a class="button add" href="{% url instance-create %}">
-        {% trans "Add Virtual Machine" %}
-    </a>
-    {% endif %}
+{% if can_create %}
+<a class="button add" href="{% url instance-create %}">
+    {% trans "Add Virtual Machine" %}
+</a>
 {% endif %}
 
 <div id='ajaxTable'>

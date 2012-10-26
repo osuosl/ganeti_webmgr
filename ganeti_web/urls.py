@@ -31,7 +31,8 @@ from ganeti_web.views.node import (NodeDetailView, NodePrimaryListView,
                                    NodeSecondaryListView)
 from ganeti_web.views.virtual_machine import (VMDeleteView, VMListView,
                                               VMListTableView)
-from ganeti_web.views.vm_template import VMInstanceFromTemplateView
+from ganeti_web.views.vm_template import (TemplateFromVMInstanceView,
+                                          VMInstanceFromTemplateView)
 
 cluster_slug = '(?P<cluster_slug>[-_A-Za-z0-9]+)'
 cluster = 'cluster/%s' % cluster_slug
@@ -98,6 +99,8 @@ urlpatterns += patterns('ganeti_web.views.cluster',
         name="cluster-detail"),
     #   Edit
     url(r'^%s/edit/?$' % cluster, 'edit', name="cluster-edit"),
+    # Refresh
+    url(r'^%s/refresh/?$' % cluster, 'refresh', name='cluster-refresh'),
     #   Redistribute config
     url(r'^%s/redistribute-config/?$' % cluster, 'redistribute_config', name="cluster-redistribute-config"),
     #   User
@@ -143,8 +146,9 @@ urlpatterns += patterns('ganeti_web.views.node',
     url(r'^%s/evacuate/?$' % node_prefix, 'evacuate', name="node-evacuate"),
 )
 
+# VM add wizard
 urlpatterns += patterns("ganeti_web.forms.virtual_machine",
-    url(r"^vm/wizard-add/?$", vm_wizard(), name="instance-wizard-create"),
+    url(r"^vm/add/?$", vm_wizard(), name="instance-create"),
 )
 
 # VirtualMachines
@@ -154,14 +158,6 @@ urlpatterns += patterns('ganeti_web.views.virtual_machine',
     url(r'^vms/$', VMListView.as_view(), name="virtualmachine-list"),
     #  List (Paged)
     url(r'^vms/\?page=(?P<page>.+)$', VMListView.as_view(), name="virtualmachine-list-paged"),
-
-    #  Create
-    url(r'^vm/add/?$', 'create', name="instance-create"),
-    url(r'^vm/add/choices/$', 'cluster_choices', name="instance-create-cluster-choices"),
-    url(r'^vm/add/options/$', 'cluster_options', name="instance-create-cluster-options"),
-    url(r'^vm/add/defaults/$', 'cluster_defaults', name="instance-create-cluster-defaults"),
-    url(r'^vm/add/%s/?$' % cluster_slug, 'create', name="instance-create"),
-    url(r'^%s/recover/?$' % vm_prefix, 'recover_failed_deploy', name="instance-create-recover"),
 
     #  VM Table
     url(r'^%s/vm/table/?$' % cluster, VMListTableView.as_view(),
@@ -221,24 +217,20 @@ urlpatterns += patterns('ganeti_web.views.vm_template',
     # List
     url(r'^templates/$', 'templates', name='template-list'),
     # Create
-    url(r'^template/create/$', 'create', name='template-create'),
+    url(r'^template/create/$', vm_wizard(), name='template-create'),
     # Detail
     url(r'^%s/?$' % template_prefix, 'detail', name='template-detail'),
     # Delete
     url(r'^%s/delete/?$' % template_prefix, 'delete', name='template-delete'),
     # Edit
-    url(r'^%s/edit/?$' % template_prefix, 'edit', name='template-edit'),
-    # Edit
-    url(r'^%s/wizard-edit/?$' % template_prefix, vm_wizard(),
-        name='template-wizard-edit'),
+    url(r'^%s/edit/?$' % template_prefix, vm_wizard(), name='template-edit'),
     # Copy
     url(r'^%s/copy/?$' % template_prefix, 'copy', name='template-copy'),
-    # Create Instance from Template
+    # Create Instance from Template, and vice versa
     url(r'^%s/vm/?$' % template_prefix, VMInstanceFromTemplateView.as_view(),
         name='instance-create-from-template'),
-    url(r'^%s/template/?$' % vm_prefix, 'create_template_from_instance',
+    url(r'^%s/template/?$' % vm_prefix, TemplateFromVMInstanceView.as_view(),
         name='template-create-from-instance'),
-
 )
 
 

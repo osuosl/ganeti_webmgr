@@ -25,7 +25,7 @@ from django.core.urlresolvers import reverse
 from django.db.models import Q, Sum
 from django.http import (HttpResponse, HttpResponseRedirect,
                          HttpResponseForbidden)
-from django.shortcuts import get_object_or_404, render_to_response
+from django.shortcuts import get_object_or_404, render_to_response, redirect
 from django.template import RequestContext
 from django.utils import simplejson as json
 from django.utils.translation import ugettext as _
@@ -50,7 +50,6 @@ from ganeti_web.views import render_404
 from ganeti_web.forms.cluster import EditClusterForm, QuotaForm
 from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
                                       PagedListView)
-
 
 class ClusterDetailView(LoginRequiredMixin, DetailView):
 
@@ -90,7 +89,8 @@ class ClusterListView(LoginRequiredMixin, PagedListView):
             context = super(ClusterListView, self).get_context_data(object_list=kwargs["object_list"])
             context["can_create"]= (user.is_superuser or
                                     user.has_perm("admin", Cluster))
-            return context  
+            return context
+
 class ClusterVMListView(LoginRequiredMixin, PagedListView):
 
     template_name = "ganeti/virtual_machine/table.html"
@@ -108,7 +108,6 @@ class ClusterVMListView(LoginRequiredMixin, PagedListView):
     def get_context_data(self, **kwargs):
         kwargs["cluster"] = self.cluster
         return kwargs
-
 
 @login_required
 def nodes(request, cluster_slug):
@@ -197,6 +196,20 @@ def edit(request, cluster_slug=None):
         context_instance=RequestContext(request),
     )
 
+@login_required
+def refresh(request, cluster_slug):
+    """
+    Display a notice to the user that we are refreshing
+    the cluster data, then redirect them back to the 
+    cluster details page.
+    """
+
+    cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    cluster.sync_nodes(remove=True)
+    cluster.sync_virtual_machines(remove=True)
+
+    url = reverse('cluster-detail', args=[cluster.slug])
+    return redirect(url)
 
 @login_required
 def users(request, cluster_slug):
