@@ -10,7 +10,9 @@
             href="{{STATIC_URL}}/css/help_tips.css"/>
     <link rel="stylesheet" type="text/css" href="{{SITE_ROOT}}/object_permissions_media/css/form.css"/>
 
-    <!-- javascript includes -->
+    <!-- javascript includes --><script type="text/javascript">
+                        initSlider($("#id_disk_size_"+0), $("#id_disk_size_0"), 1024*100, "diskSliders");
+                        </script>
     <script src="{{STATIC_URL}}/js/disableSingletonDropdown.js"></script>
     <script src="{{STATIC_URL}}/js/createVM_formUpdater.js"></script>
     <script src="{{STATIC_URL}}/js/helpTips.js"></script>
@@ -26,7 +28,9 @@
             /* run when document is fully loaded */
 	    var recovery_flag = false;
             if(window.location.pathname.split("/")[window.location.pathname.split("/").length-1] == "recover") { recovery_flag = true; }
-            // init the live-form updater
+            // init the live-form updater<script type="text/javascript">
+                                initSlider($("#id_disk_size_"+0), $("#id_disk_size_0"), 1024*100, "diskSliders");
+                                                </script>
             var frmUpdater = new formUpdater(
                     '{% url instance-create-cluster-choices %}',
                     '{% url instance-create-cluster-options %}',
@@ -81,7 +85,8 @@
             {% endif %}
         </fieldset>
 
-        <fieldset id="disks">
+       
+                            
             <h3>{% trans "Disks" %}<div class="icon add"></div></h3>
             {{ form.disk_count }}
             {% for index in form.disk_fields %}
