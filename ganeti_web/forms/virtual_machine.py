@@ -35,18 +35,14 @@ from ganeti_web.backend.queries import (cluster_qs_for_user,
 from ganeti_web.backend.templates import template_to_instance
 from ganeti_web.caps import has_cdrom2, requires_maxmem
 from ganeti_web.constants import (EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES,
-                                  HV_NIC_MODES, HV_DISK_TYPES, HV_NIC_TYPES,
-                                  KVM_NIC_TYPES, HVM_DISK_TYPES,
-                                  KVM_DISK_TYPES, KVM_BOOT_ORDER,
-                                  HVM_BOOT_ORDER, KVM_CHOICES, HV_USB_MICE,
+                                  HV_NIC_MODES, KVM_CHOICES, HV_USB_MICE,
                                   HV_SECURITY_MODELS, KVM_FLAGS,
-                                  HV_DISK_CACHES, MODE_CHOICES, HVM_CHOICES,
-                                  HV_DISK_TEMPLATES_SINGLE_NODE)
+                                  HV_DISK_CACHES, MODE_CHOICES, HVM_CHOICES)
 from ganeti_web.fields import DataVolumeField, MACAddressField
-from ganeti_web.models import (Cluster, ClusterUser, Node, Organization,
+from ganeti_web.models import (Cluster, ClusterUser, Node,
                                VirtualMachineTemplate, VirtualMachine)
 from ganeti_web.utilities import (cluster_default_info, cluster_os_list,
-                                  contains, get_hypervisor, hv_prettify)
+                                  get_hypervisor, hv_prettify)
 from ganeti_web.util.client import (REPLACE_DISK_AUTO, REPLACE_DISK_PRI,
                                     REPLACE_DISK_CHG, REPLACE_DISK_SECONDARY)
 from ganeti_web.views.generic import LoginRequiredMixin
