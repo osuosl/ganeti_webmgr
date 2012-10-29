@@ -592,14 +592,19 @@ class VMWizardOwnerForm(Form):
                              empty_label=None)
 
     def _configure_for_cluster(self, cluster):
+        if not cluster:
+            return
+
         self.cluster = cluster
 
         qs = owner_qs_for_cluster(cluster)
         self.fields["owner"].queryset = qs
 
     def _configure_for_template(self, template):
-        if template:
-            self.fields["template_name"].initial = template.template_name
+        if not template:
+            return
+
+        self.fields["template_name"].initial = template.template_name
 
     def clean_hostname(self):
         hostname = self.cleaned_data.get('hostname')
@@ -638,6 +643,9 @@ class VMWizardBasicsForm(Form):
     disk_size = DataVolumeField(label=_("Disk Size (MB)"))
 
     def _configure_for_cluster(self, cluster):
+        if not cluster:
+            return
+
         self.cluster = cluster
 
         # Get a look at the list of available hypervisors, and set the initial
@@ -678,12 +686,14 @@ class VMWizardBasicsForm(Form):
                 self.fields["memory"].validators.append(MinValueValidator(v))
 
     def _configure_for_template(self, template):
-        if template:
-            self.fields["os"].initial = template.os
-            self.fields["vcpus"].initial = template.vcpus
-            self.fields["memory"].initial = template.memory
-            self.fields["disk_template"].initial = template.disk_template
-            # XXX disk size
+        if not template:
+            return
+
+        self.fields["os"].initial = template.os
+        self.fields["vcpus"].initial = template.vcpus
+        self.fields["memory"].initial = template.memory
+        self.fields["disk_template"].initial = template.disk_template
+        # XXX disk size
 
 
 class VMWizardAdvancedForm(Form):
@@ -697,17 +707,23 @@ class VMWizardAdvancedForm(Form):
                              queryset=Node.objects.all(), empty_label=None)
 
     def _configure_for_cluster(self, cluster):
+        if not cluster:
+            return
+
         self.cluster = cluster
+
         qs = Node.objects.filter(cluster=cluster)
         self.fields["pnode"].queryset = qs
         self.fields["snode"].queryset = qs
 
     def _configure_for_template(self, template):
-        if template:
-            self.fields["ip_check"].initial = template.ip_check
-            self.fields["name_check"].initial = template.name_check
-            self.fields["pnode"].initial = template.pnode
-            self.fields["snode"].initial = template.snode
+        if not template:
+            return
+
+        self.fields["ip_check"].initial = template.ip_check
+        self.fields["name_check"].initial = template.name_check
+        self.fields["pnode"].initial = template.pnode
+        self.fields["snode"].initial = template.snode
 
     def _configure_for_disk_template(self, template):
         if template != "drbd":
@@ -729,6 +745,9 @@ class VMWizardPVMForm(Form):
     root_path = CharField(label=_("Root path"), max_length=255)
 
     def _configure_for_cluster(self, cluster):
+        if not cluster:
+            return
+
         self.cluster = cluster
         params = cluster.info["hvparams"]["xen-pvm"]
 
@@ -736,9 +755,11 @@ class VMWizardPVMForm(Form):
         self.fields["root_path"].initial = params["root_path"]
 
     def _configure_for_template(self, template):
-        if template:
-            self.fields["kernel_path"].initial = template.kernel_path
-            self.fields["root_path"].initial = template.root_path
+        if not template:
+            return
+
+        self.fields["kernel_path"].initial = template.kernel_path
+        self.fields["root_path"].initial = template.root_path
 
 
 class VMWizardHVMForm(Form):
@@ -752,6 +773,9 @@ class VMWizardHVMForm(Form):
                            choices=HVM_CHOICES["nic_type"])
 
     def _configure_for_cluster(self, cluster):
+        if not cluster:
+            return
+
         self.cluster = cluster
         params = cluster.info["hvparams"]["xen-pvm"]
 
@@ -760,11 +784,13 @@ class VMWizardHVMForm(Form):
         self.fields["nic_type"].initial = params["nic_type"]
 
     def _configure_for_template(self, template):
-        if template:
-            self.fields["boot_order"].initial = template.boot_order
-            self.fields["cdrom_image_path"].initial = template.cdrom_image_path
-            self.fields["disk_type"].initial = template.disk_type
-            self.fields["nic_type"].initial = template.nic_type
+        if not template:
+            return
+
+        self.fields["boot_order"].initial = template.boot_order
+        self.fields["cdrom_image_path"].initial = template.cdrom_image_path
+        self.fields["disk_type"].initial = template.disk_type
+        self.fields["nic_type"].initial = template.nic_type
 
 
 
@@ -785,6 +811,9 @@ class VMWizardKVMForm(Form):
                            choices=KVM_CHOICES["nic_type"])
 
     def _configure_for_cluster(self, cluster):
+        if not cluster:
+            return
+
         self.cluster = cluster
         params = cluster.info["hvparams"]["kvm"]
 
@@ -800,15 +829,17 @@ class VMWizardKVMForm(Form):
             del self.fields["cdrom2_image_path"]
 
     def _configure_for_template(self, template):
-        if template:
-            self.fields["kernel_path"].initial = template.kernel_path
-            self.fields["root_path"].initial = template.root_path
-            self.fields["serial_console"].initial = template.serial_console
-            self.fields["boot_order"].initial = template.boot_order
-            self.fields["cdrom_image_path"].initial = template.cdrom_image_path
-            self.fields["cdrom2_image_path"].initial = template.cdrom2_image_path
-            self.fields["disk_type"].initial = template.disk_type
-            self.fields["nic_type"].initial = template.nic_type
+        if not template:
+            return
+
+        self.fields["kernel_path"].initial = template.kernel_path
+        self.fields["root_path"].initial = template.root_path
+        self.fields["serial_console"].initial = template.serial_console
+        self.fields["boot_order"].initial = template.boot_order
+        self.fields["cdrom_image_path"].initial = template.cdrom_image_path
+        self.fields["cdrom2_image_path"].initial = template.cdrom2_image_path
+        self.fields["disk_type"].initial = template.disk_type
+        self.fields["nic_type"].initial = template.nic_type
 
     def clean(self):
         data = super(VMWizardKVMForm, self).clean()
@@ -902,6 +933,10 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
                                                              **kwargs)
         summary = {
             "cluster": self._get_cluster(),
+            "owner_form": self.get_cleaned_data_for_step("1"),
+            "basics_form": self.get_cleaned_data_for_step("2"),
+            "advanced_form": self.get_cleaned_data_for_step("3"),
+            "hv_form": self.get_cleaned_data_for_step("4"),
         }
         context["summary"] = summary
 

@@ -27,6 +27,9 @@ input.select {float:right;}
         {% if summary.cluster %}
         <li>Cluster: {{ summary.cluster }}</li>
         {% endif %}
+        {% if summary.owner_form %}
+        <li>Owner: {{ summary.owner_form.owner }}</li>
+        {% endif %}
     </ul>
 </div>
 <form action="" method="POST">
