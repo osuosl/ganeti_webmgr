@@ -30,7 +30,7 @@
             if(window.location.pathname.split("/")[window.location.pathname.split("/").length-1] == "recover") { recovery_flag = true; }
             // init the live-form updater<script type="text/javascript">
                                 initSlider($("#id_disk_size_"+0), $("#id_disk_size_0"), 1024*100, "diskSliders");
-                                                </script>
+
             var frmUpdater = new formUpdater(
                     '{% url instance-create-cluster-choices %}',
                     '{% url instance-create-cluster-options %}',
@@ -91,9 +91,7 @@
             {{ form.disk_count }}
             {% for index in form.disk_fields %}
                 {% vmfield_disk form index %}
-                <script type="text/javascript">
-                    initSlider($("#id_disk_size_"+{{ index }}), $("#id_disk_size_0"), 1024*100, "diskSliders");
-                </script>
+
             {% endfor %}
         </fieldset>
 
