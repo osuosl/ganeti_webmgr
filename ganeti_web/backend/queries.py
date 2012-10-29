@@ -19,7 +19,7 @@ from django.db.models import Q
 
 from object_permissions import get_users_any
 
-from ganeti_web.models import Cluster, ClusterUser
+from ganeti_web.models import Cluster, ClusterUser, VirtualMachine
 
 
 def cluster_qs_for_user(user):
@@ -43,5 +43,22 @@ def owner_qs_for_cluster(cluster):
     # Get all users who have the given permissions on the given cluster.
     users = get_users_any(cluster, ["admin"], True)
     qs |= ClusterUser.objects.filter(profile__user__in=users)
+
+    return qs
+
+
+def vm_qs_for_admins(user):
+    """
+    Retrieve a queryset of all of the virtual machines for which this user is
+    an administrator.
+    """
+
+    if user.is_superuser:
+        qs = VirtualMachine.objects.all()
+    elif user.is_anonymous():
+        qs = VirtualMachine.objects.none()
+    else:
+        qs = user.get_objects_any_perms(VirtualMachine, groups=True,
+                                        perms=["admin"])
 
     return qs

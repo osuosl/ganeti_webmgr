@@ -29,6 +29,7 @@ from django.views.generic.base import TemplateView
 
 from object_permissions import get_users_any
 
+from ganeti_web.backend.queries import vm_qs_for_admins
 from ganeti_web.middleware import Http403
 from ganeti_web.models import Cluster, VirtualMachine, Job, GanetiError, \
     ClusterUser, Profile, Organization, SSHKey
@@ -68,7 +69,7 @@ USED_NOTHING = dict(disk=0, ram=0, virtual_cpus=0)
 
 
 @login_required
-def get_errors(request): 
+def get_errors(request):
     """ Returns all errors that have ever been generated for clusters/vms
     and then sends them to the errors page.
     """
@@ -80,13 +81,11 @@ def get_errors(request):
         clusters = user.get_objects_all_perms(Cluster, ['admin',])
     admin = user.is_superuser or clusters
 
-    if user.is_superuser:
-        vms = VirtualMachine.objects.all()
-    else:
-        # Get query containing any virtual machines the user has permissions for
-        vms = user.get_objects_any_perms(VirtualMachine, groups=True, cluster=['admin']).values('pk')
+    # Get all of the PKs from VMs that this user may administer.
+    vms = vm_qs_for_admins(user).values("pk")
 
-    # build list of job errors.  Include jobs from any vm the user has access to
+    # build list of job errors. Include jobs from any vm the user has access
+    # to
     # If the user has admin on any cluster then those clusters and it's objects
     # must be included too.
     #
@@ -208,11 +207,8 @@ def overview(request, rest=False):
     else:
         orphaned = import_ready = missing = 0
 
-    if user.is_superuser:
-        vms = VirtualMachine.objects.all()
-    else:
-        # Get query containing any virtual machines the user has permissions for
-        vms = user.get_objects_any_perms(VirtualMachine, groups=True, cluster=['admin']).values('pk')
+    # Get all of the PKs from VMs that this user may administer.
+    vms = vm_qs_for_admins(user).values("pk")
 
     # build list of job errors.  Include jobs from any vm the user has access to
     # If the user has admin on any cluster then those clusters and it's objects
