@@ -37,6 +37,15 @@ def cluster_qs_for_user(user):
 
 
 def owner_qs_for_cluster(cluster):
+    """
+    Get all owners for a cluster.
+    """
+
+    # get_users_any() can't deal with None, and at any rate, nobody can
+    # possibly own a null cluster.
+    if not cluster:
+        return ClusterUser.objects.none()
+
     # Get all superusers.
     qs = ClusterUser.objects.filter(profile__user__is_superuser=True)
 

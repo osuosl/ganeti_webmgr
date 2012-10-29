@@ -1,11 +1,13 @@
 from django.contrib.auth.models import AnonymousUser
 from django.test import TestCase
 
-from ganeti_web.backend.queries import cluster_qs_for_user
+from ganeti_web.backend.queries import (cluster_qs_for_user,
+                                        owner_qs_for_cluster)
 from ganeti_web.models import Cluster
 
 __all__ = (
     "TestClusterQSForUser",
+    "TestOwnerQSForCluster",
 )
 
 class TestClusterQSForUser(TestCase):
@@ -24,3 +26,10 @@ class TestClusterQSForUser(TestCase):
         self.assertNotIn(cluster, qs)
 
         cluster.delete()
+
+
+class TestOwnerQSForCluster(TestCase):
+
+    def test_owner_qs_for_cluster_none(self):
+        qs = owner_qs_for_cluster(None)
+        self.assertFalse(qs)
