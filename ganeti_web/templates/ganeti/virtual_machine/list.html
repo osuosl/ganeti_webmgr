@@ -1,6 +1,8 @@
 {% extends "menu_base.html" %}
 {% block title %}Virtual Machines{% endblock %}
-
+{% block head %}
+<script type="text/javascript" src="{{STATIC_URL}}/js/toggle_checkboxes.js"></script>
+{% endblock %}
 {% block content %}
 <h1 class="breadcrumb">Virtual Machines</h1>
 
