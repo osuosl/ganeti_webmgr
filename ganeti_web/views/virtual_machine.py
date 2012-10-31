@@ -43,7 +43,7 @@ from object_permissions.views.permissions import view_users, view_permissions
 from object_log.models import LogItem
 log_action = LogItem.objects.log_action
 
-from ganeti_web.backend.queries import vm_qs_for_admins
+from ganeti_web.backend.queries import vm_qs_for_users
 from ganeti_web.caps import has_shutdown_timeout
 from ganeti_web.forms.virtual_machine import (KvmModifyVirtualMachineForm,
                                               PvmModifyVirtualMachineForm,
@@ -91,7 +91,7 @@ class VMListView(LoginRequiredMixin, PagedListView):
     template_name = "ganeti/virtual_machine/list.html"
 
     def get_queryset(self):
-        qs = vm_qs_for_admins(self.request.user)
+        qs = vm_qs_for_users(self.request.user)
         return qs.select_related()
 
     def get_context_data(self, **kwargs):
