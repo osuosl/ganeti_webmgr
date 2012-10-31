@@ -1638,7 +1638,7 @@ class ClusterUser(models.Model):
     @property
     def permissable(self):
         """ returns an object that can be granted permissions """
-        raise self.cast().permissable
+        raise self.cast().permissable()
 
     @classmethod
     def _get_real_type(cls):
