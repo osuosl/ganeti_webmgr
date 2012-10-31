@@ -35,7 +35,8 @@ class TestClusterFormBase(TestCase):
     def setUp(self):
         models.client.GanetiRapiClient = RapiProxy
 
-        self.cluster = Cluster(hostname='test.example.test', slug='OSL_TEST')
+        self.cluster = Cluster(hostname='test.example.test', slug='OSL_TEST',
+                               username="", password="")
         self.cluster.save()
 
         self.data = dict(hostname='new-host3.hostname',
@@ -77,12 +78,13 @@ class TestClusterFormNew(TestClusterFormBase):
 
     def test_optional_fields(self):
         data = self.data
-        non_required = ['slug','description','virtual_cpus','disk','ram']
-        for property in non_required:
+        non_required = ['slug', 'description', 'virtual_cpus', 'disk', 'ram']
+        for field in non_required:
             data_ = data.copy()
-            del data_[property]
+            del data_[field]
             form = EditClusterForm(data_)
-            self.assertTrue(form.is_valid())
+            self.assertTrue(form.is_valid(),
+                            "Field %r was incorrectly required" % field)
             cluster = form.save()
             for k, v in data_.items():
                 self.assertEqual(v, getattr(cluster, k))
@@ -219,8 +221,8 @@ class TestClusterFormEdit(TestClusterFormBase):
         tests setting a username and password for a cluster that did not
         previously have a username and password
         """
-        self.cluster.username = None
-        self.cluster.password = None
+        self.cluster.username = ""
+        self.cluster.password = ""
         self.cluster.save()
 
         data = self.data

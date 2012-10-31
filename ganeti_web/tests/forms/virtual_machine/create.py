@@ -147,4 +147,3 @@ class TestVMWizardAdvancedForm(TestCase):
         form = VMWizardAdvancedForm(data)
         self.assertFalse(form.is_valid(),
                          "IP check shouldn't be allowed without name check")
-
