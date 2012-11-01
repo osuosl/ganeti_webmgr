@@ -794,6 +794,18 @@ class VirtualMachine(CachedClusterObject):
             .update(last_job=job, ignore_cache=True)
         return job
 
+    def failover(self):
+        """
+        Perform a failover of this VM to another node.
+
+        Note: this only works under disk type DRDB
+        """
+        id = self.rapi.FailoverInstance(self.hostname)
+        job = Job.objects.create(job_id=id, obj=self, cluster_id=self.cluster_id)
+        self.last_job=job
+        VirtualMachine.objects.filter(pk=self.id) \
+            .update(last_job=job, ignore_cache=True)
+
     def replace_disks(self, mode=REPLACE_DISK_AUTO, disks=None, node=None,
                       iallocator=None):
         id = self.rapi.ReplaceInstanceDisks(self.hostname, disks, mode, node,
