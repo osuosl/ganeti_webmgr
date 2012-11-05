@@ -9,9 +9,10 @@ Contents:
 .. toctree::
     :maxdepth: 1
 
-    rapi
+    faq
     development
     deployment
+    rapi
 
 
 Indices and tables
