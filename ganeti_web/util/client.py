@@ -130,8 +130,8 @@ def prepare_query(query):
 
     This function operates on dicts in-place and has no return value.
 
-    @type query: dict
-    @param query: Query arguments
+    :type query: dict
+    :param query: Query arguments
     """
 
     for name in query:
@@ -163,15 +163,15 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Initializes this class.
 
-        @type host: string
-        @param host: the ganeti cluster master to interact with
-        @type port: int
-        @param port: the port on which the RAPI is running (default is 5080)
-        @type username: string
-        @param username: the username to connect with
-        @type password: string
-        @param password: the password to connect with
-        @param logger: Logging object
+        :type host: string
+        :param host: the ganeti cluster master to interact with
+        :type port: int
+        :param port: the port on which the RAPI is running (default is 5080)
+        :type username: string
+        :param username: the username to connect with
+        :type password: string
+        :param password: the password to connect with
+        :param logger: Logging object
         """
 
         if username is not None and password is None:
@@ -201,19 +201,19 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         This constructs a full URL, encodes and decodes HTTP bodies, and
         handles invalid responses in a pythonic way.
 
-        @type method: string
-        @param method: HTTP method to use
-        @type path: string
-        @param path: HTTP URL path
-        @type query: list of two-tuples
-        @param query: query arguments to pass to urllib.urlencode
-        @type content: str or None
-        @param content: HTTP body content
+        :type method: string
+        :param method: HTTP method to use
+        :type path: string
+        :param path: HTTP URL path
+        :type query: list of two-tuples
+        :param query: query arguments to pass to urllib.urlencode
+        :type content: str or None
+        :param content: HTTP body content
 
-        @rtype: object
-        @return: JSON-Decoded response
+        :rtype: object
+        :return: JSON-Decoded response
 
-        @raises GanetiApiError: If an invalid response is returned
+        :raises GanetiApiError: If an invalid response is returned
         """
 
         if not path.startswith("/"):
@@ -261,8 +261,8 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Gets the Remote API version running on the cluster.
 
-        @rtype: int
-        @return: Ganeti Remote API version
+        :rtype: int
+        :return: Ganeti Remote API version
         """
 
         return self._SendRequest("get", "/version")
@@ -271,8 +271,8 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Gets the list of optional features supported by RAPI server.
 
-        @rtype: list
-        @return: List of optional features
+        :rtype: list
+        :return: List of optional features
         """
 
         try:
@@ -289,8 +289,8 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Gets the Operating Systems running in the Ganeti cluster.
 
-        @rtype: list of str
-        @return: operating systems
+        :rtype: list of str
+        :return: operating systems
         """
 
         return self._SendRequest("get", "/%s/os" % GANETI_RAPI_VERSION)
@@ -299,8 +299,8 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Gets info about the cluster.
 
-        @rtype: dict
-        @return: information about the cluster
+        :rtype: dict
+        :return: information about the cluster
         """
 
         return self._SendRequest("get", "/%s/info" % GANETI_RAPI_VERSION,
@@ -310,7 +310,7 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Tells the cluster to redistribute its configuration files.
 
-        @return: job id
+        :return: job id
 
         """
         return self._SendRequest("put", "/%s/redistribute-config" %
@@ -322,8 +322,8 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
 
         More details for parameters can be found in the RAPI documentation.
 
-        @rtype: int
-        @return: job id
+        :rtype: int
+        :return: job id
         """
 
         return self._SendRequest("put", "/%s/modify" % GANETI_RAPI_VERSION,
@@ -333,8 +333,8 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Gets the cluster tags.
 
-        @rtype: list of str
-        @return: cluster tags
+        :rtype: list of str
+        :return: cluster tags
         """
 
         return self._SendRequest("get", "/%s/tags" % GANETI_RAPI_VERSION)
@@ -343,13 +343,13 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Adds tags to the cluster.
 
-        @type tags: list of str
-        @param tags: tags to add to the cluster
-        @type dry_run: bool
-        @param dry_run: whether to perform a dry run
+        :type tags: list of str
+        :param tags: tags to add to the cluster
+        :type dry_run: bool
+        :param dry_run: whether to perform a dry run
 
-        @rtype: int
-        @return: job id
+        :rtype: int
+        :return: job id
         """
 
         query = {
@@ -364,10 +364,10 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Deletes tags from the cluster.
 
-        @type tags: list of str
-        @param tags: tags to delete
-        @type dry_run: bool
-        @param dry_run: whether to perform a dry run
+        :type tags: list of str
+        :param tags: tags to delete
+        :type dry_run: bool
+        :param dry_run: whether to perform a dry run
         """
 
         query = {
@@ -382,11 +382,11 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Gets information about instances on the cluster.
 
-        @type bulk: bool
-        @param bulk: whether to return all information about all instances
+        :type bulk: bool
+        :param bulk: whether to return all information about all instances
 
-        @rtype: list of dict or list of str
-        @return: if bulk is True, info about the instances, else a list of instances
+        :rtype: list of dict or list of str
+        :return: if bulk is True, info about the instances, else a list of instances
         """
 
         if bulk:
@@ -401,11 +401,11 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Gets information about an instance.
 
-        @type instance: str
-        @param instance: instance whose info to return
+        :type instance: str
+        :param instance: instance whose info to return
 
-        @rtype: dict
-        @return: info about the instance
+        :rtype: dict
+        :return: info about the instance
         """
 
         return self._SendRequest("get", ("/%s/instances/%s" %
@@ -415,10 +415,10 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Gets information about an instance.
 
-        @type instance: string
-        @param instance: Instance name
-        @rtype: string
-        @return: Job ID
+        :type instance: string
+        :param instance: Instance name
+        :rtype: string
+        :return: Job ID
         """
 
         if static is None:
@@ -436,24 +436,24 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
 
         More details for parameters can be found in the RAPI documentation.
 
-        @type mode: string
-        @param mode: Instance creation mode
-        @type name: string
-        @param name: Hostname of the instance to create
-        @type disk_template: string
-        @param disk_template: Disk template for instance (e.g. plain, diskless,
+        :type mode: string
+        :param mode: Instance creation mode
+        :type name: string
+        :param name: Hostname of the instance to create
+        :type disk_template: string
+        :param disk_template: Disk template for instance (e.g. plain, diskless,
                                                     file, or drbd)
-        @type disks: list of dicts
-        @param disks: List of disk definitions
-        @type nics: list of dicts
-        @param nics: List of NIC definitions
-        @type dry_run: bool
-        @keyword dry_run: whether to perform a dry run
-        @type no_install: bool
-        @keyword no_install: whether to create without installing OS(true=don't install)
+        :type disks: list of dicts
+        :param disks: List of disk definitions
+        :type nics: list of dicts
+        :param nics: List of NIC definitions
+        :type dry_run: bool
+        :keyword dry_run: whether to perform a dry run
+        :type no_install: bool
+        :keyword no_install: whether to create without installing OS(true=don't install)
 
-        @rtype: int
-        @return: job id
+        :rtype: int
+        :return: job id
         """
 
         if _INST_CREATE_REQV1 not in self.GetFeatures():
@@ -492,11 +492,11 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Deletes an instance.
 
-        @type instance: str
-        @param instance: the instance to delete
+        :type instance: str
+        :param instance: the instance to delete
 
-        @rtype: int
-        @return: job id
+        :rtype: int
+        :return: job id
         """
 
         return self._SendRequest("delete", ("/%s/instances/%s" %
@@ -509,10 +509,10 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
 
         More details for parameters can be found in the RAPI documentation.
 
-        @type instance: string
-        @param instance: Instance name
-        @rtype: int
-        @return: job id
+        :type instance: string
+        :param instance: Instance name
+        :rtype: int
+        :return: job id
         """
 
         return self._SendRequest("put", ("/%s/instances/%s/modify" %
@@ -523,11 +523,11 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Activates an instance's disks.
 
-        @type instance: string
-        @param instance: Instance name
-        @type ignore_size: bool
-        @param ignore_size: Whether to ignore recorded size
-        @return: job id
+        :type instance: string
+        :param instance: Instance name
+        :type ignore_size: bool
+        :param ignore_size: Whether to ignore recorded size
+        :return: job id
         """
 
         return self._SendRequest("put", ("/%s/instances/%s/activate-disks" %
@@ -538,9 +538,9 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Deactivates an instance's disks.
 
-        @type instance: string
-        @param instance: Instance name
-        @return: job id
+        :type instance: string
+        :param instance: Instance name
+        :return: job id
         """
 
         return self._SendRequest("put", ("/%s/instances/%s/deactivate-disks" %
@@ -549,14 +549,14 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
     def RecreateInstanceDisks(self, instance, disks=None, nodes=None):
         """Recreate an instance's disks.
 
-        @type instance: string
-        @param instance: Instance name
-        @type disks: list of int
-        @param disks: List of disk indexes
-        @type nodes: list of string
-        @param nodes: New instance nodes, if relocation is desired
-        @rtype: string
-        @return: job id
+        :type instance: string
+        :param instance: Instance name
+        :type disks: list of int
+        :param disks: List of disk indexes
+        :type nodes: list of string
+        :param nodes: New instance nodes, if relocation is desired
+        :rtype: string
+        :return: job id
         """
 
         body = {}
@@ -576,16 +576,16 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
 
         More details for parameters can be found in the RAPI documentation.
 
-        @type instance: string
-        @param instance: Instance name
-        @type disk: integer
-        @param disk: Disk index
-        @type amount: integer
-        @param amount: Grow disk by this amount (MiB)
-        @type wait_for_sync: bool
-        @param wait_for_sync: Wait for disk to synchronize
-        @rtype: int
-        @return: job id
+        :type instance: string
+        :param instance: Instance name
+        :type disk: integer
+        :param disk: Disk index
+        :type amount: integer
+        :param amount: Grow disk by this amount (MiB)
+        :type wait_for_sync: bool
+        :param wait_for_sync: Wait for disk to synchronize
+        :rtype: int
+        :return: job id
         """
 
         body = {
@@ -601,11 +601,11 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Gets tags for an instance.
 
-        @type instance: str
-        @param instance: instance whose tags to return
+        :type instance: str
+        :param instance: instance whose tags to return
 
-        @rtype: list of str
-        @return: tags for the instance
+        :rtype: list of str
+        :return: tags for the instance
         """
 
         return self._SendRequest("get", ("/%s/instances/%s/tags" %
@@ -615,15 +615,15 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Adds tags to an instance.
 
-        @type instance: str
-        @param instance: instance to add tags to
-        @type tags: list of str
-        @param tags: tags to add to the instance
-        @type dry_run: bool
-        @param dry_run: whether to perform a dry run
+        :type instance: str
+        :param instance: instance to add tags to
+        :type tags: list of str
+        :param tags: tags to add to the instance
+        :type dry_run: bool
+        :param dry_run: whether to perform a dry run
 
-        @rtype: int
-        @return: job id
+        :rtype: int
+        :return: job id
         """
 
         query = {
@@ -639,12 +639,12 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Deletes tags from an instance.
 
-        @type instance: str
-        @param instance: instance to delete tags from
-        @type tags: list of str
-        @param tags: tags to delete
-        @type dry_run: bool
-        @param dry_run: whether to perform a dry run
+        :type instance: str
+        :param instance: instance to delete tags from
+        :type tags: list of str
+        :param tags: tags to delete
+        :type dry_run: bool
+        :param dry_run: whether to perform a dry run
         """
 
         query = {
@@ -661,15 +661,15 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Reboots an instance.
 
-        @type instance: str
-        @param instance: instance to rebot
-        @type reboot_type: str
-        @param reboot_type: one of: hard, soft, full
-        @type ignore_secondaries: bool
-        @param ignore_secondaries: if True, ignores errors for the secondary node
+        :type instance: str
+        :param instance: instance to rebot
+        :type reboot_type: str
+        :param reboot_type: one of: hard, soft, full
+        :type ignore_secondaries: bool
+        :param ignore_secondaries: if True, ignores errors for the secondary node
                 while re-assembling disks (in hard-reboot mode only)
-        @type dry_run: bool
-        @param dry_run: whether to perform a dry run
+        :type dry_run: bool
+        :param dry_run: whether to perform a dry run
         """
 
         query = {
@@ -692,14 +692,14 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Shuts down an instance.
 
-        @type instance: str
-        @param instance: the instance to shut down
-        @type dry_run: bool
-        @param dry_run: whether to perform a dry run
-        @type no_remember: bool
-        @param no_remember: if true, will not record the state change
-        @rtype: string
-        @return: job id
+        :type instance: str
+        :param instance: the instance to shut down
+        :type dry_run: bool
+        :param dry_run: whether to perform a dry run
+        :type no_remember: bool
+        :param no_remember: if true, will not record the state change
+        :rtype: string
+        :return: job id
         """
 
         query = {
@@ -719,14 +719,14 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Starts up an instance.
 
-        @type instance: str
-        @param instance: the instance to start up
-        @type dry_run: bool
-        @param dry_run: whether to perform a dry run
-        @type no_remember: bool
-        @param no_remember: if true, will not record the state change
-        @rtype: string
-        @return: job id
+        :type instance: str
+        :param instance: the instance to start up
+        :type dry_run: bool
+        :param dry_run: whether to perform a dry run
+        :type no_remember: bool
+        :param no_remember: if true, will not record the state change
+        :rtype: string
+        :return: job id
         """
 
         query = {
@@ -743,13 +743,13 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Reinstalls an instance.
 
-        @type instance: str
-        @param instance: The instance to reinstall
-        @type os: str or None
-        @param os: The operating system to reinstall. If None, the instance's
+        :type instance: str
+        :param instance: The instance to reinstall
+        :type os: str or None
+        :param os: The operating system to reinstall. If None, the instance's
                 current operating system will be installed again
-        @type no_startup: bool
-        @param no_startup: Whether to start the instance automatically
+        :type no_startup: bool
+        :param no_startup: Whether to start the instance automatically
         """
 
         if _INST_REINSTALL_REQV1 in self.GetFeatures():
@@ -786,23 +786,23 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Replaces disks on an instance.
 
-        @type instance: str
-        @param instance: instance whose disks to replace
-        @type disks: list of ints
-        @param disks: Indexes of disks to replace
-        @type mode: str
-        @param mode: replacement mode to use (defaults to replace_auto)
-        @type remote_node: str or None
-        @param remote_node: new secondary node to use (for use with
+        :type instance: str
+        :param instance: instance whose disks to replace
+        :type disks: list of ints
+        :param disks: Indexes of disks to replace
+        :type mode: str
+        :param mode: replacement mode to use (defaults to replace_auto)
+        :type remote_node: str or None
+        :param remote_node: new secondary node to use (for use with
                 replace_new_secondary mode)
-        @type iallocator: str or None
-        @param iallocator: instance allocator plugin to use (for use with
+        :type iallocator: str or None
+        :param iallocator: instance allocator plugin to use (for use with
                                              replace_auto mode)
-        @type dry_run: bool
-        @param dry_run: whether to perform a dry run
+        :type dry_run: bool
+        :param dry_run: whether to perform a dry run
 
-        @rtype: int
-        @return: job id
+        :rtype: int
+        :return: job id
         """
 
         query = {
@@ -827,12 +827,12 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Prepares an instance for an export.
 
-        @type instance: string
-        @param instance: Instance name
-        @type mode: string
-        @param mode: Export mode
-        @rtype: string
-        @return: Job ID
+        :type instance: string
+        :param instance: Instance name
+        :type mode: string
+        :param mode: Export mode
+        :rtype: string
+        :return: Job ID
         """
 
         return self._SendRequest("put", ("/%s/instances/%s/prepare-export" %
@@ -845,12 +845,12 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Exports an instance.
 
-        @type instance: string
-        @param instance: Instance name
-        @type mode: string
-        @param mode: Export mode
-        @rtype: string
-        @return: Job ID
+        :type instance: string
+        :param instance: Instance name
+        :type mode: string
+        :param mode: Export mode
+        :rtype: string
+        :return: Job ID
         """
 
         body = {
@@ -878,12 +878,12 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Migrates an instance.
 
-        @type instance: string
-        @param instance: Instance name
-        @type mode: string
-        @param mode: Migration mode
-        @type cleanup: bool
-        @param cleanup: Whether to clean up a previously failed migration
+        :type instance: string
+        :param instance: Instance name
+        :type mode: string
+        :param mode: Migration mode
+        :type cleanup: bool
+        :param cleanup: Whether to clean up a previously failed migration
         """
 
         body = {}
@@ -902,17 +902,17 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
                          ignore_consistency=False, target_node=None):
         """Does a failover of an instance.
 
-        @type instance: string
-        @param instance: Instance name
-        @type iallocator: string
-        @param iallocator: Iallocator for deciding the target node for
+        :type instance: string
+        :param instance: Instance name
+        :type iallocator: string
+        :param iallocator: Iallocator for deciding the target node for
             shared-storage instances
-        @type ignore_consistency: bool
-        @param ignore_consistency: Whether to ignore disk consistency
-        @type target_node: string
-        @param target_node: Target node for shared-storage instances
-        @rtype: string
-        @return: job id
+        :type ignore_consistency: bool
+        :param ignore_consistency: Whether to ignore disk consistency
+        :type target_node: string
+        :param target_node: Target node for shared-storage instances
+        :rtype: string
+        :return: job id
         """
 
         body = {
@@ -934,14 +934,14 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Changes the name of an instance.
 
-        @type instance: string
-        @param instance: Instance name
-        @type new_name: string
-        @param new_name: New instance name
-        @type ip_check: bool
-        @param ip_check: Whether to ensure instance's IP address is inactive
-        @type name_check: bool
-        @param name_check: Whether to ensure instance's name is resolvable
+        :type instance: string
+        :param instance: Instance name
+        :type new_name: string
+        :param new_name: New instance name
+        :type ip_check: bool
+        :param ip_check: Whether to ensure instance's IP address is inactive
+        :type name_check: bool
+        :param name_check: Whether to ensure instance's name is resolvable
         """
 
         body = {
@@ -960,8 +960,8 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Request information for connecting to instance's console.
 
-        @type instance: string
-        @param instance: Instance name
+        :type instance: string
+        :param instance: Instance name
         """
 
         return self._SendRequest("get", ("/%s/instances/%s/console" %
@@ -971,8 +971,8 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Gets all jobs for the cluster.
 
-        @rtype: list of int
-        @return: job ids for the cluster
+        :rtype: list of int
+        :return: job ids for the cluster
         """
 
         jobs = self._SendRequest("get", "/%s/jobs" % GANETI_RAPI_VERSION)
@@ -983,11 +983,11 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Gets the status of a job.
 
-        @type job_id: int
-        @param job_id: job id whose status to query
+        :type job_id: int
+        :param job_id: job id whose status to query
 
-        @rtype: dict
-        @return: job status
+        :rtype: dict
+        :return: job status
         """
 
         return self._SendRequest("get", "/%s/jobs/%s" % (GANETI_RAPI_VERSION,
@@ -997,8 +997,8 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Waits for job changes.
 
-        @type job_id: int
-        @param job_id: Job ID for which to wait
+        :type job_id: int
+        :param job_id: Job ID for which to wait
         """
 
         body = {
@@ -1014,10 +1014,10 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Cancels a job.
 
-        @type job_id: int
-        @param job_id: id of the job to delete
-        @type dry_run: bool
-        @param dry_run: whether to perform a dry run
+        :type job_id: int
+        :param job_id: id of the job to delete
+        :type dry_run: bool
+        :param dry_run: whether to perform a dry run
         """
 
         return self._SendRequest("delete", "/%s/jobs/%s" %
@@ -1028,11 +1028,11 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Gets all nodes in the cluster.
 
-        @type bulk: bool
-        @param bulk: whether to return all information about all instances
+        :type bulk: bool
+        :param bulk: whether to return all information about all instances
 
-        @rtype: list of dict or str
-        @return: if bulk is true, info about nodes in the cluster,
+        :rtype: list of dict or str
+        :return: if bulk is true, info about nodes in the cluster,
                 else list of nodes in the cluster
         """
 
@@ -1048,11 +1048,11 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Gets information about a node.
 
-        @type node: str
-        @param node: node whose info to return
+        :type node: str
+        :param node: node whose info to return
 
-        @rtype: dict
-        @return: info about the node
+        :rtype: dict
+        :return: info about the node
         """
 
         return self._SendRequest("get", "/%s/nodes/%s" % (GANETI_RAPI_VERSION,
@@ -1064,27 +1064,27 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Evacuates instances from a Ganeti node.
 
-        @type node: str
-        @param node: node to evacuate
-        @type iallocator: str or None
-        @param iallocator: instance allocator to use
-        @type remote_node: str
-        @param remote_node: node to evaucate to
-        @type dry_run: bool
-        @param dry_run: whether to perform a dry run
-        @type early_release: bool
-        @param early_release: whether to enable parallelization
-        @type accept_old: bool
-        @param accept_old: Whether caller is ready to accept old-style
+        :type node: str
+        :param node: node to evacuate
+        :type iallocator: str or None
+        :param iallocator: instance allocator to use
+        :type remote_node: str
+        :param remote_node: node to evaucate to
+        :type dry_run: bool
+        :param dry_run: whether to perform a dry run
+        :type early_release: bool
+        :param early_release: whether to enable parallelization
+        :type accept_old: bool
+        :param accept_old: Whether caller is ready to accept old-style
             (pre-2.5) results
 
-        @rtype: string, or a list for pre-2.5 results
-        @return: Job ID or, if C{accept_old} is set and server is pre-2.5,
+        :rtype: string, or a list for pre-2.5 results
+        :return: Job ID or, if C{accept_old} is set and server is pre-2.5,
             list of (job ID, instance name, new secondary node); if dry_run
             was specified, then the actual move jobs were not submitted and
             the job IDs will be C{None}
 
-        @raises GanetiApiError: if an iallocator and remote_node are both
+        :raises GanetiApiError: if an iallocator and remote_node are both
                 specified
         """
 
@@ -1142,20 +1142,20 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Migrates all primary instances from a node.
 
-        @type node: str
-        @param node: node to migrate
-        @type mode: string
-        @param mode: if passed, it will overwrite the live migration type,
+        :type node: str
+        :param node: node to migrate
+        :type mode: string
+        :param mode: if passed, it will overwrite the live migration type,
                 otherwise the hypervisor default will be used
-        @type dry_run: bool
-        @param dry_run: whether to perform a dry run
-        @type iallocator: string
-        @param iallocator: instance allocator to use
-        @type target_node: string
-        @param target_node: Target node for shared-storage instances
+        :type dry_run: bool
+        :param dry_run: whether to perform a dry run
+        :type iallocator: string
+        :param iallocator: instance allocator to use
+        :type target_node: string
+        :param target_node: Target node for shared-storage instances
 
-        @rtype: int
-        @return: job id
+        :rtype: int
+        :return: job id
         """
 
         query = {
@@ -1191,11 +1191,11 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Gets the current role for a node.
 
-        @type node: str
-        @param node: node whose role to return
+        :type node: str
+        :param node: node whose role to return
 
-        @rtype: str
-        @return: the current role for a node
+        :rtype: str
+        :return: the current role for a node
         """
 
         return self._SendRequest("get", ("/%s/nodes/%s/role" %
@@ -1205,18 +1205,18 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Sets the role for a node.
 
-        @type node: str
-        @param node: the node whose role to set
-        @type role: str
-        @param role: the role to set for the node
-        @type force: bool
-        @param force: whether to force the role change
-        @type auto_promote: bool
-        @param auto_promote: Whether node(s) should be promoted to master
+        :type node: str
+        :param node: the node whose role to set
+        :type role: str
+        :param role: the role to set for the node
+        :type force: bool
+        :param force: whether to force the role change
+        :type auto_promote: bool
+        :param auto_promote: Whether node(s) should be promoted to master
             candidate if necessary
 
-        @rtype: int
-        @return: job id
+        :rtype: int
+        :return: job id
         """
 
         query = {
@@ -1232,12 +1232,12 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Powercycles a node.
 
-        @type node: string
-        @param node: Node name
-        @type force: bool
-        @param force: Whether to force the operation
-        @rtype: string
-        @return: job id
+        :type node: string
+        :param node: Node name
+        :type force: bool
+        :param force: Whether to force the operation
+        :rtype: string
+        :return: job id
         """
 
         query = {
@@ -1254,10 +1254,10 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
 
         More details for parameters can be found in the RAPI documentation.
 
-        @type node: string
-        @param node: Node name
-        @rtype: string
-        @return: job id
+        :type node: string
+        :param node: Node name
+        :rtype: string
+        :return: job id
         """
 
         return self._SendRequest("post", ("/%s/nodes/%s/modify" %
@@ -1268,15 +1268,15 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Gets the storage units for a node.
 
-        @type node: str
-        @param node: the node whose storage units to return
-        @type storage_type: str
-        @param storage_type: storage type whose units to return
-        @type output_fields: str
-        @param output_fields: storage type fields to return
+        :type node: str
+        :param node: the node whose storage units to return
+        :type storage_type: str
+        :param storage_type: storage type whose units to return
+        :type output_fields: str
+        :param output_fields: storage type fields to return
 
-        @rtype: int
-        @return: job id where results can be retrieved
+        :rtype: int
+        :return: job id where results can be retrieved
         """
 
         query = {
@@ -1293,18 +1293,18 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Modifies parameters of storage units on the node.
 
-        @type node: str
-        @param node: node whose storage units to modify
-        @type storage_type: str
-        @param storage_type: storage type whose units to modify
-        @type name: str
-        @param name: name of the storage unit
-        @type allocatable: bool or None
-        @param allocatable: Whether to set the "allocatable" flag on the storage
+        :type node: str
+        :param node: node whose storage units to modify
+        :type storage_type: str
+        :param storage_type: storage type whose units to modify
+        :type name: str
+        :param name: name of the storage unit
+        :type allocatable: bool or None
+        :param allocatable: Whether to set the "allocatable" flag on the storage
                                                 unit (None=no modification, True=set, False=unset)
 
-        @rtype: int
-        @return: job id
+        :rtype: int
+        :return: job id
         """
 
         query = {
@@ -1323,15 +1323,15 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Repairs a storage unit on the node.
 
-        @type node: str
-        @param node: node whose storage units to repair
-        @type storage_type: str
-        @param storage_type: storage type to repair
-        @type name: str
-        @param name: name of the storage unit to repair
+        :type node: str
+        :param node: node whose storage units to repair
+        :type storage_type: str
+        :param storage_type: storage type to repair
+        :type name: str
+        :param name: name of the storage unit to repair
 
-        @rtype: int
-        @return: job id
+        :rtype: int
+        :return: job id
         """
 
         query = {
@@ -1347,11 +1347,11 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Gets the tags for a node.
 
-        @type node: str
-        @param node: node whose tags to return
+        :type node: str
+        :param node: node whose tags to return
 
-        @rtype: list of str
-        @return: tags for the node
+        :rtype: list of str
+        :return: tags for the node
         """
 
         return self._SendRequest("get", ("/%s/nodes/%s/tags" %
@@ -1361,15 +1361,15 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Adds tags to a node.
 
-        @type node: str
-        @param node: node to add tags to
-        @type tags: list of str
-        @param tags: tags to add to the node
-        @type dry_run: bool
-        @param dry_run: whether to perform a dry run
+        :type node: str
+        :param node: node to add tags to
+        :type tags: list of str
+        :param tags: tags to add to the node
+        :type dry_run: bool
+        :param dry_run: whether to perform a dry run
 
-        @rtype: int
-        @return: job id
+        :rtype: int
+        :return: job id
         """
 
         query = {
@@ -1385,15 +1385,15 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Delete tags from a node.
 
-        @type node: str
-        @param node: node to remove tags from
-        @type tags: list of str
-        @param tags: tags to remove from the node
-        @type dry_run: bool
-        @param dry_run: whether to perform a dry run
+        :type node: str
+        :param node: node to remove tags from
+        :type tags: list of str
+        :param tags: tags to remove from the node
+        :type dry_run: bool
+        :param dry_run: whether to perform a dry run
 
-        @rtype: int
-        @return: job id
+        :rtype: int
+        :return: job id
         """
 
         query = {
@@ -1409,11 +1409,11 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Gets all node groups in the cluster.
 
-        @type bulk: bool
-        @param bulk: whether to return all information about the groups
+        :type bulk: bool
+        :param bulk: whether to return all information about the groups
 
-        @rtype: list of dict or str
-        @return: if bulk is true, a list of dictionaries with info about all node
+        :rtype: list of dict or str
+        :return: if bulk is true, a list of dictionaries with info about all node
                 groups in the cluster, else a list of names of those node groups
         """
 
@@ -1429,11 +1429,11 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Gets information about a node group.
 
-        @type group: str
-        @param group: name of the node group whose info to return
+        :type group: str
+        :param group: name of the node group whose info to return
 
-        @rtype: dict
-        @return: info about the node group
+        :rtype: dict
+        :return: info about the node group
         """
 
         return self._SendRequest("get", "/%s/groups/%s" %
@@ -1443,15 +1443,15 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Creates a new node group.
 
-        @type name: str
-        @param name: the name of node group to create
-        @type alloc_policy: str
-        @param alloc_policy: the desired allocation policy for the group, if any
-        @type dry_run: bool
-        @param dry_run: whether to peform a dry run
+        :type name: str
+        :param name: the name of node group to create
+        :type alloc_policy: str
+        :param alloc_policy: the desired allocation policy for the group, if any
+        :type dry_run: bool
+        :param dry_run: whether to peform a dry run
 
-        @rtype: int
-        @return: job id
+        :rtype: int
+        :return: job id
         """
 
         query = {
@@ -1472,10 +1472,10 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
 
         More details for parameters can be found in the RAPI documentation.
 
-        @type group: string
-        @param group: Node group name
-        @rtype: int
-        @return: job id
+        :type group: string
+        :param group: Node group name
+        :rtype: int
+        :return: job id
         """
 
         return self._SendRequest("put", ("/%s/groups/%s/modify" %
@@ -1486,13 +1486,13 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Deletes a node group.
 
-        @type group: str
-        @param group: the node group to delete
-        @type dry_run: bool
-        @param dry_run: whether to peform a dry run
+        :type group: str
+        :param group: the node group to delete
+        :type dry_run: bool
+        :param dry_run: whether to peform a dry run
 
-        @rtype: int
-        @return: job id
+        :rtype: int
+        :return: job id
         """
 
         query = {
@@ -1507,13 +1507,13 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Changes the name of a node group.
 
-        @type group: string
-        @param group: Node group name
-        @type new_name: string
-        @param new_name: New node group name
+        :type group: string
+        :param group: Node group name
+        :type new_name: string
+        :param new_name: New node group name
 
-        @rtype: int
-        @return: job id
+        :rtype: int
+        :return: job id
         """
 
         body = {
@@ -1529,13 +1529,13 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Assigns nodes to a group.
 
-        @type group: string
-        @param group: Node gropu name
-        @type nodes: list of strings
-        @param nodes: List of nodes to assign to the group
+        :type group: string
+        :param group: Node gropu name
+        :type nodes: list of strings
+        :param nodes: List of nodes to assign to the group
 
-        @rtype: int
-        @return: job id
+        :rtype: int
+        :return: job id
 
         """
 
@@ -1556,11 +1556,11 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Gets tags for a node group.
 
-        @type group: string
-        @param group: Node group whose tags to return
+        :type group: string
+        :param group: Node group whose tags to return
 
-        @rtype: list of strings
-        @return: tags for the group
+        :rtype: list of strings
+        :return: tags for the group
         """
 
         return self._SendRequest("get", ("/%s/groups/%s/tags" %
@@ -1570,15 +1570,15 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Adds tags to a node group.
 
-        @type group: str
-        @param group: group to add tags to
-        @type tags: list of string
-        @param tags: tags to add to the group
-        @type dry_run: bool
-        @param dry_run: whether to perform a dry run
+        :type group: str
+        :param group: group to add tags to
+        :type tags: list of string
+        :param tags: tags to add to the group
+        :type dry_run: bool
+        :param dry_run: whether to perform a dry run
 
-        @rtype: string
-        @return: job id
+        :rtype: string
+        :return: job id
         """
 
         query = {
@@ -1594,14 +1594,14 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Deletes tags from a node group.
 
-        @type group: str
-        @param group: group to delete tags from
-        @type tags: list of string
-        @param tags: tags to delete
-        @type dry_run: bool
-        @param dry_run: whether to perform a dry run
-        @rtype: string
-        @return: job id
+        :type group: str
+        :param group: group to delete tags from
+        :type tags: list of string
+        :param tags: tags to delete
+        :type dry_run: bool
+        :param dry_run: whether to perform a dry run
+        :rtype: string
+        :return: job id
         """
 
         query = {
@@ -1617,15 +1617,15 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Retrieves information about resources.
 
-        @type what: string
-        @param what: Resource name, one of L{constants.QR_VIA_RAPI}
-        @type fields: list of string
-        @param fields: Requested fields
-        @type qfilter: None or list
-        @param qfilter: Query filter
+        :type what: string
+        :param what: Resource name, one of L{constants.QR_VIA_RAPI}
+        :type fields: list of string
+        :param fields: Requested fields
+        :type qfilter: None or list
+        :param qfilter: Query filter
 
-        @rtype: string
-        @return: job id
+        :rtype: string
+        :return: job id
         """
 
         body = {
@@ -1643,13 +1643,13 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
         Retrieves available fields for a resource.
 
-        @type what: string
-        @param what: Resource name, one of L{constants.QR_VIA_RAPI}
-        @type fields: list of string
-        @param fields: Requested fields
+        :type what: string
+        :param what: Resource name, one of L{constants.QR_VIA_RAPI}
+        :type fields: list of string
+        :param fields: Requested fields
 
-        @rtype: string
-        @return: job id
+        :rtype: string
+        :return: job id
         """
 
         query = {}
