@@ -8,12 +8,15 @@ isn't answered here, ask on the Freenode IRC network in channel
 
 .. _GWM Google Group: http://groups.google.com/group/ganeti-webmgr/
 
-I added a virtual machine using the ``gnt-instance`` command-line tool, and I
-don't see it in GWM!
+I added a virtual machine using the ``gnt-instance`` command-line tool, and I don't see it in GWM!
+--------------------------------------------------------------------------------------------------
+
   Use the "Import VM" page (linked from the admin sidebar) to add those
   virtual machines to GWM.
 
 How do I limit the resources available to a user?
+-------------------------------------------------
+
   Change the user's quota on the cluster. Default quotas for virtual CPUs,
   disk space, and memory can be set when adding the cluster. After adding a
   user to the cluster, their quota will be listed in the "Users" tab of the
@@ -23,6 +26,8 @@ How do I limit the resources available to a user?
   available to that user.
 
 What does "Autostart" do?
+-------------------------
+
   When the "Autostart" mark on a virtual machine's detail page is a green
   check mark, it means that the virtual machine will be automatically started
   if the node reboots. Otherwise, if the mark is a red cross, the virtual
