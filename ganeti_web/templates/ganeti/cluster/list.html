@@ -7,6 +7,7 @@
 {% block head %}
 <script type="text/javascript" src="{{STATIC_URL}}/js/jquery.ajax.delete.js"></script>
 <script type="text/javascript" src="{{STATIC_URL}}/js/jquery.progressbar.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}/js/sorter.js"></script>
 <script type="text/javascript">
     var PBAR_CONF = {
         steps: 0,
@@ -37,15 +38,27 @@
 
 <table id="clusters" class="sorted">
     <thead>
+        {% if is_paginated %}
         <tr>
-            <th>{% trans "Cluster" %}</th>
-            <th>{% trans "Description" %}</th>
+            <th onclick="sort('{% url cluster-list-paged page_obj.number,order %}', '{{order}}', 'hostname')">{% trans "Cluster" %}</th>
+            <th onclick="sort('{% url cluster-list-paged page_obj.number,order %}', '{{order}}', 'description')">{% trans "Description" %}</th>
             <th>{% trans "Version" %}</th>
             <th>{% trans "Hypervisor" %}</th>
             <th>{% trans "Master node" %}</th>
-            <th>{% trans "Nodes" %}</th>
-            <th>{% trans "VMs" %}</th>
+            <th onclick="sort('{% url cluster-list-paged page_obj.number,order %}', '{{order}}', 'nodes')">{% trans "Nodes" %}</th>
+            <th onclick="sort('{% url cluster-list-paged page_obj.number,order %}', '{{order}}', 'virtual_machines')">{% trans "VMs" %}</th>
         </tr>
+        {% else %}
+        <tr>
+            <th onclick="sort('{% url cluster-list-ordered order %}', '{{order}}', 'hostname')">{% trans "Cluster" %}</th>
+            <th onclick="sort('{% url cluster-list-ordered order %}', '{{order}}', 'description')">{% trans "Description" %}</th>
+            <th>{% trans "Version" %}</th>
+            <th>{% trans "Hypervisor" %}</th>
+            <th>{% trans "Master node" %}</th>
+            <th onclick="sort('{% url cluster-list-ordered order %}', '{{order}}', 'nodes')">{% trans "Nodes" %}</th>
+            <th onclick="sort('{% url cluster-list-ordered order %}', '{{order}}', 'virtual_machines')">{% trans "VMs" %}</th>
+        </tr>
+        {% endif %}
     </thead>
     <tbody>
     {% for cluster in cluster_list %}
@@ -86,19 +99,19 @@
 <ul class="pagination">
     {% if page_obj.has_previous %}
     <li class="previous">
-        <a href="{% url cluster-list-paged page_obj.previous_page_number%}">&laquo; {% trans "Previous" %}</a>
+        <a href="{% url cluster-list-paged page_obj.previous_page_number order %}">&laquo; {% trans "Previous" %}</a>
     </li>
     {% endif %}
 
     {% for page in paginator.page_range %}
     <li class="{%if page == page_obj.number%}active{%endif%} page">
-        <a href="{% url cluster-list-paged page%}">{{page}}</a>
+        <a href="{% url cluster-list-paged page order%}">{{page}}</a>
     </li>
     {% endfor %}
 
     {% if page_obj.has_next %}
     <li class="next">
-        <a href="{% url cluster-list-paged page_obj.next_page_number%}">{% trans "Next" %} &raquo;</a>
+        <a href="{% url cluster-list-paged page_obj.next_page_number order%}">{% trans "Next" %} &raquo;</a>
     </li>
     {% endif %}
 </ul>
