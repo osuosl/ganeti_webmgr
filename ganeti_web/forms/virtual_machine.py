@@ -35,7 +35,10 @@ from ganeti_web.backend.queries import (cluster_qs_for_user,
 from ganeti_web.backend.templates import template_to_instance
 from ganeti_web.caps import has_cdrom2, requires_maxmem
 from ganeti_web.constants import (EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES,
-                                  HV_NIC_MODES, KVM_CHOICES, HV_USB_MICE,
+                                  HV_NIC_MODES, HV_DISK_TYPES, HV_NIC_TYPES,
+                                  KVM_NIC_TYPES, HVM_DISK_TYPES,
+                                  KVM_DISK_TYPES, KVM_BOOT_ORDER, KVM_KEYMAPS,
+                                  HVM_BOOT_ORDER, KVM_CHOICES, HV_USB_MICE,
                                   HV_SECURITY_MODELS, KVM_FLAGS,
                                   HV_DISK_CACHES, MODE_CHOICES, HVM_CHOICES)
 from ganeti_web.fields import DataVolumeField, MACAddressField
@@ -799,6 +802,7 @@ class VMWizardKVMForm(Form):
     root_path = CharField(label=_("Root path"), max_length=255)
     serial_console = BooleanField(label=_("Enable serial console"),
                                   required=False)
+    keymap = ChoiceField(label=_("Keymap"), choices=sorted(KVM_KEYMAPS))
     boot_order = CharField(label=_("Preferred boot device"), max_length=255,
                            required=False)
     cdrom_image_path = CharField(label=_("CD-ROM image path"), max_length=512,
@@ -817,6 +821,7 @@ class VMWizardKVMForm(Form):
         self.cluster = cluster
         params = cluster.info["hvparams"]["kvm"]
 
+        self.fields["keymap"].initial = params["keymap"]
         self.fields["boot_order"].initial = params["boot_order"]
         self.fields["disk_type"].initial = params["disk_type"]
         self.fields["kernel_path"].initial = params["kernel_path"]
