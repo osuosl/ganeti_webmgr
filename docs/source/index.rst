@@ -13,20 +13,62 @@ groups for structuring access to organizations.
 Getting Started
 ---------------
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
 
-    caching
-    faq
     deployment
+    fabric-install
+    manual-install
+    upgrading
+    importing
+    screenshots
+    changelog
+    license
+    faq
+
+Community & Support
+-------------------
+.. toctree::
+    :maxdepth: 2
+
+    comm/issues
+    comm/contact
+
+Usage
+-----
+.. toctree::
+    :maxdepth: 2
+
+    usage/clusters
+    usage/permissions
+    usage/sshkeys
+    usage/templates
+    usage/registration
+    usage/caching
+    usage/vnc
 
 Developers
 ----------
 .. toctree::
     :maxdepth: 2
 
-    development
-    rapi
+    dev/developers
+    dev/contributers
+    dev/tests
+    dev/search
 
+References & Guides
+~~~~~~~~~~~~~~~~~~~
+.. toctree::
+    :maxdepth: 2
+
+    ref/development
+    ref/release
+    ref/prod-upgrade
+    ref/rapi-help
+    ref/rapi
+    ref/git
+    ref/logo
+    ref/versions
 
 Indices and tables
 ==================
