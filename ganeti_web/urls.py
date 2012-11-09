@@ -88,10 +88,13 @@ urlpatterns += patterns('ganeti_web.views.general',
 
 # Clusters
 urlpatterns += patterns('ganeti_web.views.cluster',
-    #   List
+    #  List
     url(r'^clusters/?$', ClusterListView.as_view(), name="cluster-list"),
-    #   List (Paged)
-    url(r'^clusters\?page=(?P<page>.+)$', ClusterListView.as_view(), name="cluster-list-paged"),
+    #  List (Ordered and Non-Paginated)
+    url(r'^clusters\?order_by=(?P<order>.+)$', VMListView.as_view(), name="cluster-list-ordered"),
+    #  List (Paged)
+    url(r'^clusters\?page=(?P<page>.+)\&order_by=(?P<order>.+)$', VMListView.as_view(), name="cluster-list-paged"),
+
     #   Add
     url(r'^cluster/add/?$', 'edit', name="cluster-create"),
     #   Detail
