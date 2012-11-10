@@ -1,9 +1,8 @@
 Nope! This page is defunct (Cache System)
 =========================================
 
-.. figure:: /attachments/download/387
+.. figure:: /_static/ganeti_cache.png
    :align: center
-   :alt: 
 
 Ganeti Web Manager uses a cache system that stores information about
 ganeti clusters in the database. This allows the following:

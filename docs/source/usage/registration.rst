@@ -9,15 +9,13 @@ The default setting for registration is open, which means that visitors
 to your site's login page can follow a link from the login page to
 create their own accounts.
 
-.. figure:: /attachments/download/2541
+.. figure:: /_static/registration-link.png
    :align: center
-   :alt: 
 
 The "Not a member?" link takes the user to the registration page:
 
-.. figure:: /attachments/download/2547
+.. figure:: /_static/registration-page-open.png
    :align: center
-   :alt: 
 
 The user is emailed a password and a confirmation link, then has an
 account on your site. Users can also be added by a site admin by
@@ -46,6 +44,5 @@ The "Not a member?" link is hidden from users on the login page. If they
 navigate to the <SITE\_ROOT>/accounts/register page, they will see this
 message instead of the account creation form:
 
-.. figure:: /attachments/download/2553
+.. figure:: /_static/closed-registration.png
    :align: center
-   :alt: 

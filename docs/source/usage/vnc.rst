@@ -9,9 +9,10 @@ in the absence of WebSockets.
 VNC AuthProxy
 -------------
 
-.. figure:: /attachments/download/1551
+.. figure:: /_static/vnc1.png
    :align: center
-   :alt: 
+
+   ..
 
 VNC Auth proxy is required for the console tab to function. VNC servers
 do not speak websockets and our proxy allows your ganeti cluster to sit
@@ -19,9 +20,10 @@ behind a firewall, VPN, or NAT.
 For more information about the VNC AuthProxy, see
 `http://code.osuosl.org/projects/twisted-vncauthproxy <http://code.osuosl.org/projects/twisted-vncauthproxy>`_
 
-.. figure:: /attachments/download/1557
+.. figure:: /_static/vnc2.png
    :align: center
-   :alt: 
+
+   ..
 
 VNCAuthProxy has a control channel that is used to request port
 forwarding to a specific VNC machine. It will respond with a local port
@@ -44,8 +46,8 @@ servers should use a public hostname or IP.
 
 ::
 
-    1# located in settings.py
-    2VNC_PROXY='localhost:8888'
+    # located in settings.py
+    VNC_PROXY='localhost:8888'
 
 Starting the Daemon
 ~~~~~~~~~~~~~~~~~~~
@@ -96,11 +98,13 @@ Python Path for flash policy server
 
 The following error indicates that your python path is not set or the
 proxy is not installed.
+
 ::
 
     /usr/bin/twistd: Unknown command: flashpolicy
 
 Ensure that your virtualenv is active
+
 ::
 
     source bin/activate
