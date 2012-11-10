@@ -6,30 +6,33 @@ Here's a few screenshots of Ganeti Web Manager:
 Status Dashboard
 ----------------
 
-`|image0| <http://code.osuosl.org/attachments/1491/dashboard.png>`_
+.. figure:: /_static/dashboard-small.png
+    :align: center
 
 Viewing virtual machines in a cluster
 -------------------------------------
 
-`|image1| <http://code.osuosl.org/attachments/1503/cluster-vm-tab.png>`_
+.. figure:: /_static/cluster-vm-tab-small.png
+    :align: center
 
 Creating a new Virtual Machine
 ------------------------------
 
-`|image2| <http://code.osuosl.org/attachments/1515/vm-add.png>`_
+.. figure:: /_static/vm-add-small.png
+    :align: center
 
-`|image3| <http://code.osuosl.org/attachments/1527/vm-create-output.png>`_
+.. figure:: /_static/vm-create-output-small.png
+    :align: center
 
 Virtual Machine Console
 -----------------------
 
-`|image4| <http://code.osuosl.org/attachments/1581/vm-console.png>`_
+.. figure:: /_static/vm-console-small.png
+    :align: center
 
 Virtual Machine Detail Page
 ---------------------------
 
-.. figure:: /attachments/download/2535
+.. figure:: /_static/testvm-screenshot.png
    :align: center
    :alt: Viewing a virtual machine detail page
-
-   Viewing a virtual machine detail page

@@ -18,18 +18,16 @@ Overview
    then ./manage.py runserver
 
 This section explains how to automatically install Ganeti Web Manager
-using `Fabric <http://docs.fabfile.org/en/1.0.1/index.html>`_. Fabric
-simplifies the installation process by automatically installing
-dependencies into a virtual environment.
+using Fabric_. Fabric simplifies the installation process by
+automatically installing dependencies into a virtual environment.
 
 Related Topics:
 
--  Read more about why `Fabric is strongly
-   recommended </projects/ganeti-webmgr/wiki/Fabric_is_strongly_recommended>`_.
--  `Troubleshoot an installation using
-   Fabric </projects/ganeti-webmgr/wiki/Fabric-troubleshooting>`_.
--  `Manual
-   installation </projects/ganeti-webmgr/wiki/Manual-installation>`_.
+-  Read more about why :ref:`Fabric is strongly recommended`
+-  :ref:`Troubleshoot an installation using Fabric`
+-  :ref:`Manual Installation`
+
+.. _Fabric: http://docs.fabfile.org/
 
 Compatibility
 -------------
@@ -59,7 +57,7 @@ Dependencies
 
 -  Python: >=2.5, python >=2.6 recommended
 -  `Pip <http://www.pip-installer.org/en/latest/index.html>`_ >= 0.8.2
--  `Fabric <http://docs.fabfile.org/en/1.0.1/index.html>`_ >=1.0.1
+-  Fabric_ >=1.0.1
 -  `VirtualEnv <http://pypi.python.org/pypi/virtualenv>`_ >= 1.6.1
 
 Pip is required for installing Fabric and a useful tool to install
