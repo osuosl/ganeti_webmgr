@@ -47,9 +47,9 @@ template = '(?P<template>[^/]+)'
 
 # General
 urlpatterns = patterns('ganeti_web.views.general',
-    #   Index page - it's status page
+    # Index page - it's status page
     url(r'^$', 'overview', name="index"),
-    #   Status page
+    # Status page
     url(r'^overview/?$', 'overview', name="overview"),
     url(r'^used_resources/?$', 'used_resources', name="used_resources"),
     
@@ -58,7 +58,7 @@ urlpatterns = patterns('ganeti_web.views.general',
     
     # Errors
     url(r'clusters/errors', 'get_errors', name="cluster-errors"),
-    #About page
+    # About page
     url(r'^about/?$', AboutView.as_view(), name="about"),
 )
 
@@ -95,18 +95,18 @@ urlpatterns += patterns('ganeti_web.views.cluster',
     #  List (Paged)
     url(r'^clusters\?page=(?P<page>.+)\&order_by=(?P<order>.+)$', VMListView.as_view(), name="cluster-list-paged"),
 
-    #   Add
+    # Add
     url(r'^cluster/add/?$', 'edit', name="cluster-create"),
-    #   Detail
+    # Detail
     url(r'^%s/?$' % cluster, ClusterDetailView.as_view(),
         name="cluster-detail"),
-    #   Edit
+    # Edit
     url(r'^%s/edit/?$' % cluster, 'edit', name="cluster-edit"),
     # Refresh
     url(r'^%s/refresh/?$' % cluster, 'refresh', name='cluster-refresh'),
-    #   Redistribute config
+    # Redistribute config
     url(r'^%s/redistribute-config/?$' % cluster, 'redistribute_config', name="cluster-redistribute-config"),
-    #   User
+    # User
     url(r'^%s/users/?$' % cluster, 'users', name="cluster-users"),
     url(r'^%s/virtual_machines/?$' % cluster, ClusterVMListView.as_view(),
         name="cluster-vms"),
@@ -118,7 +118,7 @@ urlpatterns += patterns('ganeti_web.views.cluster',
 
     url(r'^(?P<id>\d+)/jobs/status/?$', "job_status", name="cluster-job-status"),
 
-    #ssh_keys
+    # ssh_keys
     url(r'^%s/keys/(?P<api_key>\w+)/?$' % cluster, "ssh_keys", name="cluster-keys"),
 
     # object log
@@ -140,7 +140,7 @@ urlpatterns += patterns('ganeti_web.views.node',
     url(r'^%s/secondary/?$' % node_prefix, NodeSecondaryListView.as_view(),
         name="node-secondary-vms"),
 
-    #object log
+    # object log
     url(r'^%s/object_log/?$' % node_prefix, 'object_log', name="node-object_log"),
 
     # Node actions
@@ -157,14 +157,14 @@ urlpatterns += patterns("ganeti_web.forms.virtual_machine",
 # VirtualMachines
 vm_prefix = '%s/%s' %  (cluster, instance)
 urlpatterns += patterns('ganeti_web.views.virtual_machine',
-    #  List
+    # List
     url(r'^vms/$', VMListView.as_view(), name="virtualmachine-list"),
-    #  List (Ordered and Non-Paginated)
+    # List (Ordered and Non-Paginated)
     url(r'^vms/\?order_by=(?P<order>.+)$', VMListView.as_view(), name="virtualmachine-list-ordered"),
-    #  List (Paged)
+    # List (Paged)
     url(r'^vms/\?page=(?P<page>.+)\&order_by=(?P<order>.+)$', VMListView.as_view(), name="virtualmachine-list-paged"),
 
-    #  VM Table
+    # VM Table
     url(r'^%s/vm/table/?$' % cluster, VMListTableView.as_view(),
         name="cluster-virtualmachine-table"),
     url(r'^vm/table/$', VMListTableView.as_view(),
@@ -174,7 +174,7 @@ urlpatterns += patterns('ganeti_web.views.virtual_machine',
     url(r'^vm/table/%s/?$' % secondary_node, VMListTableView.as_view(),
         name="vm-table-secondary"),
 
-    #  Detail
+    # Detail
     url(r'^%s/?$' % vm_prefix, 'detail', name="instance-detail"),
     url(r'^vm/(?P<id>\d+)/jobs/status/?$', 'job_status', name="instance-job-status"),
     url(r'^%s/users/?$' % vm_prefix, 'users', name="vm-users"),
@@ -182,7 +182,7 @@ urlpatterns += patterns('ganeti_web.views.virtual_machine',
     url(r'^%s/permissions/user/(?P<user_id>\d+)/?$' % vm_prefix, 'permissions', name="vm-permissions-user"),
     url(r'^%s/permissions/group/(?P<group_id>\d+)/?$' % vm_prefix, 'permissions', name="vm-permissions-user"),
     
-    #  Start, Stop, Reboot, VNC
+    # Start, Stop, Reboot, VNC
     url(r'^%s/vnc/?$' % vm_prefix, 'novnc', name="instance-vnc"),
     url(r'^%s/vnc/popout/?$' % vm_prefix, 'novnc',
                         {'template':'ganeti/virtual_machine/vnc_popout.html'},
@@ -272,7 +272,7 @@ urlpatterns += patterns('haystack.views',
     url(r'^search/', login_required(SearchView(form_class=autocomplete_search_form)), name='search')
 )
 
-#The following is used to serve up local static files like images
+# The following is used to serve up local static files like images
 root = '%s/static' % os.path.dirname(os.path.realpath(__file__))
 urlpatterns += patterns('',
     (r'^static/(?P<path>.*)', 'django.views.static.serve',
