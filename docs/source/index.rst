@@ -17,6 +17,7 @@ Getting Started
 
     deployment
     fabric-install
+    fabric-recommend
     manual-install
     upgrading
     importing
@@ -45,6 +46,7 @@ Usage
     usage/registration
     usage/caching
     usage/vnc
+    usage/ldap
 
 Developers
 ----------
@@ -55,6 +57,7 @@ Developers
     dev/contributers
     dev/tests
     dev/search
+    dev/selenium
 
 References & Guides
 ~~~~~~~~~~~~~~~~~~~
@@ -66,6 +69,7 @@ References & Guides
     ref/prod-upgrade
     ref/rapi-help
     ref/rapi
+    ref/rest-api
     ref/git
     ref/logo
     ref/versions
