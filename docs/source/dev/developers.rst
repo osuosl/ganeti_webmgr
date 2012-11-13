@@ -62,7 +62,7 @@ JSON
 ~~~~
 
 If you need a JSON library, the import for this codebase is "from
-django.utils import simplejson as json". See `#6579 </issues/6579>`_ for
+django.utils import simplejson as json". See `#6579 <http://code.osuosl.org/issues/6579>`_ for
 more information.
 
 Testing

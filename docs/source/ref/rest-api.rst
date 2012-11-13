@@ -41,7 +41,7 @@ variables should be accessed separately (such as object logs)
 The *users/developers/visitors are advised to test* the code and *submit
 the comments/notices/wishes*. Comments can be submitted either directly
 to the author, here on this wiki or using the Redmine ticket at
-[[https://code.osuosl.org/issues/3573]].
+[[https://code.osuosl.orghttp://code.osuosl.org/issues/3573]].
 
 The version containing significant changes to this version may be
 expected in *November 2011*.

@@ -134,8 +134,8 @@ Permissions for virtual machines are also registered as tags on the
 virtual machine object. This allows the permissions to be viewed and set
 via the command line tool. Tags will be parsed when creating virtual
 machines, and will be updated when the object is refreshed
-(`#387 </issues/387>`_). When permissions are granted tags will be set
-on the virtual machine (`#393 </issues/393>`_).
+(`#387 <http://code.osuosl.org/issues/387>`_). When permissions are granted tags will be set
+on the virtual machine (`#393 <http://code.osuosl.org/issues/393>`_).
 
 Tags use the pattern:
 *GANETI\_WEB\_MANAGER:<permission>:[G\|U]:<user\_id>*

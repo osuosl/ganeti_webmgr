@@ -245,5 +245,5 @@ Ganeti Web Manager version 0.8
 
 Users have experienced problems with Ganeti version 2.1, because it does
 not support some of the new RAPI features available in version 0.8 of
-Ganeti Web Manager. (see Issue `#8973 </issues/8973>`_). To avoid these
+Ganeti Web Manager. (see Issue `#8973 <http://code.osuosl.org/issues/8973>`_). To avoid these
 problems, use GWM 0.8 with Ganeti version 2.4 or better.
