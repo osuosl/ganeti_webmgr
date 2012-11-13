@@ -16,10 +16,8 @@ Commit Access
 '''''''''''''
 
 Commit access requires an account on our gitolite server. You must
-`submit
-patches </projects/ganeti-webmgr/wiki/Developers#Submitting-Patches>`_
-and establish a relationship with us prior to being granted commit
-access.
+`Submitting Patches`_ and establish a relationship with us prior to being
+granted commit access.
 
 ::
 

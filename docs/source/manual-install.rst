@@ -1,9 +1,8 @@
 Manual installation
 ===================
 
-Please note that `installation using
-Fabric </projects/ganeti-webmgr/wiki/Installation#Install-with-Fabric>`_
-is strongly recommended for Ganeti Web Manager version 0.7 and above.
+Please note that :doc:`fabric-recommend`
+for Ganeti Web Manager version 0.7 and above.
 
 For troubleshooting and help with common errors, see `this
 page </projects/ganeti-webmgr/wiki/Errors>`_.
@@ -109,16 +108,10 @@ Optional (for the web-based VNC console)
        cd ganeti_webmgr
        git clone git://github.com/kanaka/noVNC.git
 
-#. Check out `Twisted
-   VNCAuthProxy. <http://code.osuosl.org/projects/twisted-vncauthproxy>`_
-   directly into the ganeti\_webmgr root:
-   ::
+#. Check out :ref:`vnc-authproxy` directly into the ganeti\_webmgr root::
 
        cd ganeti_webmgr
        git clone git://git.osuosl.org/gitolite/ganeti/twisted_vncauthproxy
-
-   Instructions for setting up the Twisted VNCAuthProxy are available at
-   `http://code.osuosl.org/projects/ganeti-webmgr/wiki/VNC#VNC-AuthProxy <http://code.osuosl.org/projects/ganeti-webmgr/wiki/VNC#VNC-AuthProxy>`_.
 
 Configuration
 ~~~~~~~~~~~~~
@@ -202,26 +195,29 @@ Deploying a production server requires additional setup steps.
        10import django.core.handlers.wsgi
        11application = django.core.handlers.wsgi.WSGIHandler()
 
-#. Enable the `periodic cache
-   updater </projects/ganeti-webmgr/wiki/Cache_System#Periodic-Cache-Refresh>`_.
-   **NOTE**: Do not run the cache updater as ``root``.
+#. Enable the :ref:`periodic-cache-updater`.
+
+.. _Note:: Do not run the cache updater as ``root``.
+
    ::
 
        twistd --pidfile=/tmp/gwm_cache.pid gwm_cache
 
-   You may encounter an issue where twisted fails to start and gives you
-   an error.
-   This is usually caused by the environment variable PYTHONPATH not
-   being
-   exported correctly if you switch to superuser 'su -'. To fix it type:
+You may encounter an issue where twisted fails to start and gives you an
+error.  This is usually caused by the environment variable PYTHONPATH
+not being exported correctly if you switch to superuser 'su -'. To fix
+it type:
+
    ::
 
        export PYTHONPATH="." 
 
    Than ``exit`` out of root.
+
 #. Set **VNC\_PROXY** to the hostname of your VNC AuthProxy server in
    **settings.py**. The VNC AuthProxy does not need to run on the same
    server as Ganeti Web Manager.
+
    ::
 
        1VNC_PROXY = 'my.server.org:8888'
