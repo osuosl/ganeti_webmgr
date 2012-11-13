@@ -23,9 +23,9 @@ automatically installing dependencies into a virtual environment.
 
 Related Topics:
 
--  Read more about why :ref:`Fabric is strongly recommended`
--  :ref:`Troubleshoot an installation using Fabric`
--  :ref:`Manual Installation`
+-  Read more about why :doc:`fabric-recommend`
+-  :doc:`fabric-install`
+-  :doc:`manual-install`
 
 .. _Fabric: http://docs.fabfile.org/
 

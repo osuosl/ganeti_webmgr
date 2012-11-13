@@ -1,10 +1,10 @@
-Troubleshooting Fabric:
-=======================
+Troubleshooting Fabric
+======================
 
 This page provides a list of common problems and errors encountered when
 installing Ganeti Web Manager with Fabric, and their solutions. If you
-are installing manually instead of using Fabric, please see `this
-page </projects/ganeti-webmgr/wiki/Errors>`_.
+are installing manually instead of using Fabric, please see
+:doc:`errors`.
 
 If you discover ambiguities or problems with the installation
 instructions that aren't addressed in this page, please ask in the
@@ -12,8 +12,8 @@ instructions that aren't addressed in this page, please ask in the
 `http://freenode.net/using\_the\_network.shtml <http://freenode.net/using_the_network.shtml>`_
 can help you get started.
 
-For installing Fabric:
-----------------------
+Installation
+------------
 
 With Pip
 ~~~~~~~~
@@ -29,8 +29,8 @@ On Ubuntu
 
     sudo apt-get install python-pip
 
-Errors:
--------
+Errors
+------
 
 Fabfiles
 ~~~~~~~~
@@ -52,8 +52,8 @@ Fabfiles
        cd ganeti_webmgr
        git pull origin develop
 
-Can't find settings.py:
-~~~~~~~~~~~~~~~~~~~~~~~
+Can't find settings.py
+~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
@@ -63,10 +63,8 @@ Can't find settings.py:
 
 Did you remember to **cp setttings.py.dist settings.py** ?
 
-Database Error ("no such table", "no column named *\_*",
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-etc.)
-~~~~~
+Database Error ("no such table", "no column named *\_*", etc.)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ::
 
      DatabaseError at /
@@ -100,8 +98,8 @@ settings.py will need. If the app whose table was missing (such as
 tastypie) was not listed in your settings.py, no table would have been
 created for it.
 
-DRBD machine creation error:
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DRBD machine creation error
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
