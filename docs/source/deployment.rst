@@ -36,7 +36,7 @@ Ganeti Web Manager is compatible with the following:
 
 -  `Ganeti <http://code.google.com/p/ganeti/>`_: **>= v2.2.x** is
    supported. **v2.1.x** and **v2.0.x** are unsupported and sometimes
-   work but can cause problems (see `#8973 </issues/8973>`_). Lower
+   work but can cause problems (see `#8973 <http://code.osuosl.org/issues/8973>`_). Lower
    versions are **not** supported.
 -  **Browsers:** `Mozilla Firefox <http://mozilla.com/firefox>`_ >=
    v3.x, `Google Chrome <http://www.google.com/chrome/>`_ or
@@ -134,7 +134,7 @@ Configuration
    following lines to reflect your wishes.
 
    .. Note:: Postgresql is not supported at this time and the
-             install will fail (See issue `#3237 </issues/3237>`_).
+             install will fail (See issue `#3237 <http://code.osuosl.org/issues/3237>`_).
 
    ::
 
