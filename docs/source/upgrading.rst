@@ -32,8 +32,7 @@ for more information about converting apps.
    python-django-south <http://south.aeracode.org/docs/installation.html>`_.
 #. Add "south" to the list of **INSTALLED\_APPS** inside **settings.py**
 #. Make sure you add any new settings to **settings.py** that are listed
-   in the `Settings Changes section
-   below </projects/ganeti-webmgr/wiki/Upgrading#Settings-Changes>`_
+   in `Settings Changes`_ 
 #. Synchronize the database with **./manage.py syncdb**
    ::
 
@@ -234,8 +233,7 @@ User Registration
     2# False if accounts can only be created by admins. 
     3ALLOW_OPEN_REGISTRATION = True
 
-Docs on the wiki:
-`OpenRegistration </projects/ganeti-webmgr/wiki/OpenRegistration>`_
+More documentation for registration can be found at :doc:`usage/registration`.
 
 Ganeti Version
 --------------

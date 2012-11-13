@@ -40,31 +40,27 @@ Adding a Cluster
 
 When the Cluster is added it will automatically synchronize. Virtual
 Machines objects will be created to match what is found on the Ganeti
-Cluster. `Permission
-tags </projects/ganeti-webmgr/wiki/Permissions#Permission-Tags>`_ will
+Cluster. :ref:`permission-tags` will
 also be parsed to automatically add permissions for virtual machines.
 
 A cluster can be added with only its hostname and port, but a username
 and password for the cluster are required if you want to make changes to
 it. Clusters added without a valid username and password appear in
-`Read-Only mode </projects/ganeti-webmgr/wiki/Cluster_Read_Only>`_,
-where you can only change aspects of the cluster that are local to
-Ganeti Web Manager's database.
+:doc:`/cluster-read-only` where you can only change aspects of the
+cluster that are local to Ganeti Web Manager's database.
 
-Permissions can be `edited
-manually </projects/ganeti-webmgr/wiki/Permissions>`_ or you can use the
-`orphans
-tool </projects/ganeti-webmgr/wiki/Managing_Clusters#Orphaned-Virtual-Machines>`_
-to find virtual machines with no permissions.
+:doc:`permissions` can be edited manually or you can use the
+:ref:`orphans` tool to find virtual machines with no
+permissions.
 
 Synchronizing Clusters
 ----------------------
 
 Ganeti Web Manager stores some information about clusters in its
-database. Cluster and virtual machine information will `refresh
-automatically </projects/ganeti-webmgr/wiki/Cache_System#Lazy-Cache-Refresh>`_,
-but the list of virtual machines must be synchronized manually. This can
-be done by via the orphans view
+database. Cluster and virtual machine information will
+:ref:`refresh automatically <lazy-cache>`, but the list of virtual
+machines must be synchronized manually. This can be done by via the
+orphans view
 
 #. Main Menu -> Orphans
 
@@ -132,14 +128,14 @@ Hypervisor parameters:
 
 *TODO finish this part*
 
+.. _orphans:
+
 Orphaned Virtual Machines
 -------------------------
 
-`Permission
-tags </projects/ganeti-webmgr/wiki/Permissions#Permission-Tags>`_ are
-parsed by virtual machine objects, but sometimes virtual machines will
-have no tags. To quickly identify virtual machines with no admin users,
-use the orphans view
+:ref:`permission-tags` are parsed by virtual machine objects, but
+sometimes virtual machines will have no tags. To quickly identify
+virtual machines with no admin users, use the orphans view
 
 #. Main Menu -> Orphans
 

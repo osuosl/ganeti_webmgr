@@ -16,6 +16,8 @@ ganeti clusters in the database. This allows the following:
 The cache system is transparent and will load cached data automatically
 when the object is initialized.
 
+.. _lazy-cache:
+
 Lazy Cache Refresh
 ------------------
 
