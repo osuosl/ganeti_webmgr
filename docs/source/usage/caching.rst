@@ -26,6 +26,9 @@ to the ganeti RAPI to fetch information. For this reason the lazy
 refresh mechanism is intended to only be used for testing, and as a
 backup to ensure that objects will always be refreshed.
 
+
+.. _periodic-cache-updater:
+
 Periodic Cache Refresh
 ----------------------
 

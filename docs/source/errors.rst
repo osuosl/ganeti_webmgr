@@ -4,12 +4,10 @@ Errors & Troubleshooting
 The main Ganeti install page assumes significant background knowledge,
 especially regarding troubleshooting. This page provides guidance about
 common errors that occur during the installation process. This page is
-structured to supplement the `Manual
-Installation </projects/ganeti-webmgr/wiki/Manual-install>`_ guide.
+structured to supplement the :doc:`manual-install` guide.
 
 For help with problems related to installing Ganeti Web Manager with
-Fabric, please see the`Fabric install
-troubleshooting </projects/ganeti-webmgr/wiki/Fabric-troubleshooting>`_page.
+Fabric, please see :doc:`fabric-install`.
 
 If you discover ambiguities or problems with the installation
 instructions that aren't addressed in this page, please ask in the
@@ -85,6 +83,5 @@ The Code, above, explains how to fix this.
 401 Unauthorized: No permission -- see authorization schemes
 ------------------------------------------------------------
 
-This error occurs when your cluster is not `configured with a RAPI
-user </projects/ganeti-webmgr/wiki/Managing_Clusters#Ganeti-RAPI-users-and-passwords>`_,
-or the user credentials are incorrect.
+This error occurs when your cluster is not :doc:`usage/clusters`, or the user
+credentials are incorrect.

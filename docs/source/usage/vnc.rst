@@ -6,6 +6,8 @@ client. noVNC requires WebSockets to function. Support for older
 browsers is provided through a flash applet that is used transparently
 in the absence of WebSockets.
 
+.. _vnc-authproxy:
+
 VNC AuthProxy
 -------------
 

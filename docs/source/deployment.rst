@@ -228,8 +228,7 @@ Deploying a production server requires additional setup steps.
        import django.core.handlers.wsgi
        application = django.core.handlers.wsgi.WSGIHandler()
 
-#. Enable the `periodic cache
-   updater </projects/ganeti-webmgr/wiki/Cache_System#Periodic-Cache-Refresh>`_.
+#. Enable the :doc:`usage/caching`
 
    .. Note:: Do not run the cache updater as ``root``.
 
