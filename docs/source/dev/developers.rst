@@ -52,21 +52,21 @@ In addition to PEP 8:
    parenthetical continuations instead.
 
 Units
-~~~~~
+'''''
 
 Try to write modular code. Focus on isolating units of code that can be
 easily analyzed and tested. For sanity purposes, please try to avoid
 mutually recursive objects.
 
 JSON
-~~~~
+''''
 
 If you need a JSON library, the import for this codebase is "from
 django.utils import simplejson as json". See `#6579 <http://code.osuosl.org/issues/6579>`_ for
 more information.
 
 Testing
-~~~~~~~
+'''''''
 
 Ganeti Web Manager has a fairly complete test suite. New code should
 have matching tests. Before committing code, run the suite for Ganeti
