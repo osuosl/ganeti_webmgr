@@ -9,26 +9,6 @@ For a high level description of how permissions can be used in various
 scenarios, read this `blog
 post <http://blogs.osuosl.org/kreneskyp/2010/12/28/ganeti-web-manager-permissions/>`_.
 
-Contents
-
--  `Permissions <#Permissions>`_
-
-   -  
-
-      -  `Adding users to objects. <#Adding-users-to-objects>`_
-      -  `Updating permissions <#Updating-permissions>`_
-      -  `Deleting permissions <#Deleting-permissions>`_
-
-   -  `Groups <#Groups>`_
-
-      -  `Group Permissions <#Group-Permissions>`_
-
-   -  `Cluster <#Cluster>`_
-   -  `Quotas <#Quotas>`_
-   -  `Virtual Machines <#Virtual-Machines>`_
-
-      -  `Permission Tags <#Permission-Tags>`_
-
 Adding users to objects.
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -126,6 +106,8 @@ page.
 -  **Remove** - Permission to delete this VM
 -  **Power** - Permission to start, stop, reboot, and access console
 -  **Tags** - Can set tags for this VM
+
+.. _permission-tags:
 
 Permission Tags
 ~~~~~~~~~~~~~~~

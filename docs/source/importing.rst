@@ -7,8 +7,7 @@ Importing a Cluster
 
 When the Cluster is imported into Ganeti Web Manager it will
 automatically synchronize. Virtual Machine objects will be created to
-match what is found on the Ganeti Cluster. `Permission
-tags </projects/ganeti-webmgr/wiki/Permissions#Permission-Tags>`_ will
+match what is found on the Ganeti Cluster. :ref:`permission-tags` will
 also be parsed to automatically add permissions for virtual machines.
 
 Note that if the cluster requires a username and password, you must
@@ -20,8 +19,6 @@ properties by using the "edit" button on the cluster detail page. The
 edit button will only be visible if you're logged in as a cluster admin
 or superuser.
 
-Permissions can be `edited
-manually </projects/ganeti-webmgr/wiki/Permissions>`_ or you can use the
-`orphans
-tool </projects/ganeti-webmgr/wiki/Managing_Clusters#Orphaned-Virtual-Machines>`_
-to find virtual machines with no permissions.
+:doc:`usage/permissions` can be or you can use the :ref:`orphans` tool to find
+virtual machines with no permissions.
+
