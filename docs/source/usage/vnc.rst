@@ -16,11 +16,10 @@ VNC AuthProxy
 
    ..
 
-VNC Auth proxy is required for the console tab to function. VNC servers
-do not speak websockets and our proxy allows your ganeti cluster to sit
-behind a firewall, VPN, or NAT.
-For more information about the VNC AuthProxy, see
-`http://code.osuosl.org/projects/twisted-vncauthproxy <http://code.osuosl.org/projects/twisted-vncauthproxy>`_
+`VNC AuthProxy <http://code.osuosl.org/projects/twisted-vncauthproxy>`_
+is required for the console tab to function. VNC servers do not speak
+websockets and our proxy allows your ganeti cluster to sit behind a
+firewall, VPN, or NAT.
 
 .. figure:: /_static/vnc2.png
    :align: center

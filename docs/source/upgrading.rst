@@ -6,7 +6,7 @@ Upgrading
 
 This guide will walk you through upgrading Ganeti Web Manager. Our
 upgrade process uses
-`Python-Django-South <http://south.aeracode.org/docs/>`_ a database
+`South <http://south.aeracode.org/docs/>`_, a database
 migration tool that will update your database.
 
 #. Backup the database

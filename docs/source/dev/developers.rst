@@ -41,8 +41,8 @@ too <http://jeffkreeftmeijer.com/2010/why-arent-you-using-git-flow/>`_.
 Coding Standards
 ----------------
 
-We follow PEP 8, "the guide for python style":
-`http://www.python.org/dev/peps/pep-0008/ <http://www.python.org/dev/peps/pep-0008/>`_.
+We follow `PEP 8 <http://www.python.org/dev/peps/pep-0008/>`_, "the
+guide for python style".
 
 In addition to PEP 8:
 

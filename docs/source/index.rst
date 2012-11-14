@@ -19,6 +19,7 @@ Getting Started
     fabric-install
     fabric-recommend
     manual-install
+    errors
     upgrading
     importing
     screenshots
@@ -40,11 +41,13 @@ Usage
     :maxdepth: 2
 
     usage/clusters
+    usage/cluster-read-only
     usage/permissions
     usage/sshkeys
     usage/templates
     usage/registration
     usage/caching
+    caching
     usage/vnc
     usage/ldap
 
@@ -64,11 +67,7 @@ References & Guides
 .. toctree::
     :maxdepth: 2
 
-    ref/development
-    ref/release
-    ref/prod-upgrade
     ref/rapi-help
-    ref/rapi
     ref/rest-api
     ref/git
     ref/logo

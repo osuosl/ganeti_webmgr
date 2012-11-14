@@ -6,7 +6,7 @@ will be output instead of an error in the test. It is a very useful
 argument for debugging.
 ::
 
-    1self.assertTrue(False, msg="And what else floats? A duck!")
+    self.assertTrue(False, msg="And what else floats? A duck!")
 
 Forms
 -----
@@ -17,8 +17,8 @@ If there is an error in the test for form.is\_valid() a good way to find
 out what form fields are giving trouble is by checking form.errors.
 ::
 
-    1form = MyFormWithErrors()
-    2self.assertTrue(form.is_valid(), msg=form.errors)
+    form = MyFormWithErrors()
+    self.assertTrue(form.is_valid(), msg=form.errors)
 
 All Django forms generally accept 'initial', 'instance', and 'data'
 keyword arguments, but forms will behave differently depending on which
@@ -30,12 +30,12 @@ This is probably the easiest of all the form tests to work with, because
 it is what you are so used to seeing.
 ::
 
-    1# data is a dictionary
-    2form = MyForm(data)
-    3self.assertTrue(form.is_bound)
-    4self.assertTrue(form.is_valid())
-    5for field in form.fields:
-    6    self.assertEqual(data[field], form.cleaned_data[field])
+    # data is a dictionary
+    form = MyForm(data)
+    self.assertTrue(form.is_bound)
+    self.assertTrue(form.is_valid())
+    for field in form.fields:
+        self.assertEqual(data[field], form.cleaned_data[field])
 
 **initial**
 
@@ -46,12 +46,12 @@ set to the value of the initial keyword argument originally passed into
 the form field.
 ::
 
-    1# initial is a dictionary
-    2form = MyForm(initial=initial)
-    3self.assertFalse(form.is_bound)
-    4self.assertFalse(form.is_valid())
-    5for field in form.fields:
-    6    self.assertEqual(initial[field], form.fields[field].initial) # This will *NOT* work!
+    # initial is a dictionary
+    form = MyForm(initial=initial)
+    self.assertFalse(form.is_bound)
+    self.assertFalse(form.is_valid())
+    for field in form.fields:
+        self.assertEqual(initial[field], form.fields[field].initial) # This will *NOT* work!
 
 **instance**
 
@@ -60,6 +60,6 @@ Forms that are passed the instance keyword argument will have set the
 Thus you can test form.instance against the instance you passed in.
 ::
 
-    1# instance is an instance of a model
-    2form = MyModelForm(instance=instance)
-    3self.assertEqual(instance, form.instance)
+    # instance is an instance of a model
+    form = MyModelForm(instance=instance)
+    self.assertEqual(instance, form.instance)
