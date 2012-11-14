@@ -20,13 +20,11 @@ Haystack
 Haystack is the meat 'n' potatoes of the search system, involved in
 every aspect. Mainly it does the following:
 
--  Defines the search set in terms of GWM models in
-   `search\_indexes.py </projects/ganeti-webmgr/repository/revisions/master/entry/ganeti_web/search_indexes.py>`_
+-  Defines the search set in terms of GWM models in **/ganeti_web/search_indexes.py**
 -  Manages making queries and indexing the search back-end (currently
    Whoosh).
 -  Provides search-specific forms and templates (GWM only uses one
-   search result template,
-   `/templates/search/search.html </projects/ganeti-webmgr/repository/revisions/master/entry/ganeti_web/templates/search/search.html>`_)
+   search result template: **/templates/search/search.html**)
 
 Find out more about defining search indexes with the `Haystack
 SearchIndex
@@ -50,11 +48,13 @@ database. This means the index will always be up-to-date, but has the
 potential to severely hamper performance when dealing with a lot of
 database changes.
 
-Indexing behavior is set when the search set is defined in
-`search\_indexes.py </projects/ganeti-webmgr/repository/revisions/master/entry/ganeti_web/search_indexes.py>`_.
+Indexing behavior is set when the search set is defined in **/ganeti_web/search_indexes.py**
 If database performance starts to become an issue, try using
-\`SearchIndex\` instead of \`RealTimeSearchIndex\`, and run
-\`./manage.py update\_index\` from time-to-time. For more information,
+*SearchIndex* instead of *RealTimeSearchIndex*, and run::
+
+    $ ./manage.py update_index
+
+from time-to-time. For more information,
 please see the `Haystack documentation on the
 subject <http://docs.haystacksearch.org/dev/searchindex_api.html#keeping-the-index-fresh>`_.
 
@@ -66,15 +66,12 @@ types a query. This is facilitated through two main components:
 
 -  `jQuery UI Autocomplete
    widget <http://jqueryui.com/demos/autocomplete/>`_ itself
--  An `autocomplete Django
-   view </projects/ganeti-webmgr/repository/revisions/master/entry/ganeti_web/views/search.py>`_
+-  An autocomplete Django view **ganeti_web/views/search.py**
    that supplies Autocomplete with suggestion data to display
 
 Basically, the Autocomplete widget calls the autocomplete view as the
 user types, and fills a pop-up box underneath the input box with search
-suggestions. The JavaScript logic can be found in
-`autocomplete\_search.js </projects/ganeti-webmgr/repository/revisions/master/entry/ganeti_web/media/js/autocomplete_search.js>`_,
-and the search view can be found in
-`ganeti/views/search.py </projects/ganeti-webmgr/repository/revisions/master/entry/ganeti_web/views/search.py>`_.
+suggestions. The JavaScript logic can be found in **/static/js/autocomplete_search.js**,
+and the search view can be found in **ganeti_web/views/search.py**.
 Both of these files contain details about how the suggestion data is
 structured, sent, and processed.

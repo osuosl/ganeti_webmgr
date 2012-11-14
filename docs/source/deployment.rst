@@ -167,6 +167,8 @@ Configuration
 
        ./manage.py runserver
 
+.. _install-additional-config:
+
 Additional configuration for production servers
 -----------------------------------------------
 
@@ -202,9 +204,9 @@ Deploying a production server requires additional setup steps.
    to an SMTP server. Set **``EMAIL_HOST``**, **``EMAIL_PORT``**, and
    **``DEFAULT_FROM_EMAIL``** in settings.py. For more complicated
    outgoing mail setups, please refer to the `django email
-   documentation <http://docs.djangoproject.com/en/1.2/topics/email/>`_.
+   documentation <http://docs.djangoproject.com/en/dev/topics/email/>`_.
 #. Follow the django guide to `deploy with
-   apache. <https://docs.djangoproject.com/en/1.4/howto/deployment/wsgi/modwsgi/>`_
+   apache. <https://docs.djangoproject.com/en/dev/howto/deployment/wsgi/modwsgi/>`_
    Here is an example mod\_wsgi file:
 
    ::

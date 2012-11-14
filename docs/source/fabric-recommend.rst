@@ -9,7 +9,7 @@ and the inconvenience of installation.
 Why Fabric?
 -----------
 
-`Fabric <http://docs.fabfile.org/en/1.0.1/index.html>`_ is the Python
+`Fabric <http://docs.fabfile.org/>`_ is the Python
 counterpart to the
 `Capstrano <https://github.com/capistrano/capistrano/wiki>`_ web
 application deployment tool. Fabric automates Ganeti Web Manager's
@@ -34,7 +34,7 @@ Virtual Environments
 --------------------
 
 Ganeti Web Manager has been developed and tested with specific versions
-of its :ref:`Install dependencies`.
+of its :ref:`install-dependencies`.
 If another program on your system uses a version of a dependency that
 GWM doesn't support, it can cause failure or unexpected behavior. To
 avoid these conflicts, Ganeti Web Manager version 0.7 (and above) is run

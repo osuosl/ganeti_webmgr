@@ -12,8 +12,8 @@ Fabric, please see :doc:`fabric-install`.
 If you discover ambiguities or problems with the installation
 instructions that aren't addressed in this page, please ask in the
 #ganeti-webmgr channel on Freenode! If you're unfamiliar with IRC,
-`http://freenode.net/using\_the\_network.shtml <http://freenode.net/using_the_network.shtml>`_
-can help you get started.
+Freenode's `Using the Network <http://freenode.net/using_the_network.shtml>`_
+page can help you get started.
 
 Get The Code
 ------------
