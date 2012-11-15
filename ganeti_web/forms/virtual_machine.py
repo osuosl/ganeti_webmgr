@@ -1127,7 +1127,13 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
         if template_name:
             template.template_name = template_name
         else:
-            template.template_name = str(time.time() * (10 ** 6))
+            # The template is temporary and will be removed by the VM when the
+            # VM successfully comes into existence.
+            template.temporary = True
+            # Give it a temporary name. Something unique. This is the number
+            # of microseconds since the epoch; I figure that it'll work out
+            # alright.
+            template.template_name = str(int(time.time() * (10 ** 6)))
 
         template.save()
 
