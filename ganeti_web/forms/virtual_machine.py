@@ -15,6 +15,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
+import time
+
 from django import forms
 from django.contrib.formtools.wizard.views import CookieWizardView
 from django.conf import settings
@@ -1124,6 +1126,8 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
 
         if template_name:
             template.template_name = template_name
+        else:
+            template.template_name = str(time.time() * (10 ** 6))
 
         template.save()
 
