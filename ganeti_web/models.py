@@ -1418,6 +1418,7 @@ class VirtualMachineTemplate(models.Model):
     """
 
     template_name = models.CharField(max_length=255, default="")
+    temporary = BooleanField(verbose_name=_("Temporary"), default=False)
     description = models.CharField(max_length=255, default="")
     cluster = models.ForeignKey(Cluster, related_name="templates", null=True,
                                 blank=True)
