@@ -164,7 +164,7 @@ def create_virtualenv(virtualenv=None, force=False):
             local('virtualenv %(virtualenv)s --distribute' % env)
 
             # now lets make sure the virtual env has the the newest pip
-            local('%(virtualenv)s/bin/pip install --upgrade pip' % env)
+            local('%(virtualenv)s/bin/pip install -q --upgrade pip' % env)
 
 
 def create_env():
@@ -191,7 +191,7 @@ def install_dependencies_pip():
 
     with lcd(env.doc_root):
         # Run the installation with pip, passing in our requirements.txt.
-        local('%(virtualenv)s/bin/pip install -r requirements.txt' % env)
+        local('%(virtualenv)s/bin/pip install -q -r requirements.txt' % env)
 
 
 def install_dependencies_git():
@@ -244,7 +244,7 @@ def install_dependencies_git():
         # not have it and will need to be symlinked into the project
         if _exists('%(doc_root)s/dependencies/%(git_repo)s/setup.py' % env):
             with lcd(env.doc_root):
-                local('%(virtualenv)s/bin/pip install -e dependencies/%(git_repo)s' % env)
+                local('%(virtualenv)s/bin/pip install -q -e dependencies/%(git_repo)s' % env)
 
         else:
             # else, configure and create symlink to git repo
