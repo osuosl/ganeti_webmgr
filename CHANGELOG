@@ -2,6 +2,17 @@
 Changelog
 =========
 
+v0.9.1
+------
+
+* New Error list page
+* Pagination links now correctly show up on the Virtual Machines page
+* Migrate button disabled for non-drbd VMs on VM detail page
+* VM template fields correctly set NIC and DNS defaults for new VM
+* Fix network devices not copied back to new VM page, when deployment fails
+* Account password reset form fixed
+* Error messages on VMs clearable again
+
 v0.9
 ----
 Notable changes:

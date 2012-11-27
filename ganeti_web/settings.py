@@ -76,6 +76,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.sessions',
     'django.contrib.sites',
+    'django.contrib.staticfiles',
     'registration',
     # ganeti_web must come before object_permissions in order to migrate from
     # 0.7 or older successfully.
