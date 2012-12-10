@@ -43,7 +43,7 @@ from object_permissions.views.permissions import view_users, view_permissions
 from object_log.models import LogItem
 log_action = LogItem.objects.log_action
 
-from ganeti_web.backend.queries import vm_qs_for_admins
+from ganeti_web.backend.queries import vm_qs_for_users
 from ganeti_web.caps import has_shutdown_timeout
 from ganeti_web.forms.virtual_machine import (KvmModifyVirtualMachineForm,
                                               PvmModifyVirtualMachineForm,
@@ -91,15 +91,49 @@ class VMListView(LoginRequiredMixin, PagedListView):
     template_name = "ganeti/virtual_machine/list.html"
 
     def get_queryset(self):
-        qs = vm_qs_for_admins(self.request.user)
+        qs = vm_qs_for_users(self.request.user)
         return qs.select_related()
 
     def get_context_data(self, **kwargs):
         user = self.request.user
         context = super(VMListView, self).get_context_data(object_list=kwargs["object_list"])
         context["can_create"] = (user.is_superuser or
-                                 user.has_any_perms(Cluster, ["create_vm"]))
+                                user.has_any_perms(Cluster, ["create_vm"]))
+
+        # Allows for bulk reboot/shutdown/start -- NEEDS TESTING -- NOT TESTED
+        if self.request.method == 'POST':            
+
+            if user.has_any_perms(VirtualMachine, ['admin', 'modify', 'remove', 'power']):
+                # Call bulk_ops and send in the request
+                self.bulk_ops(self.request)
+            else:
+                # Return an error for each VM the user doesn't have permissions on.
+                print "error calling bulk_ops"
+
         return context
+
+    def bulk_ops(self, request):
+
+        for vm in request.POST.getlist('chkbx'):
+            vm_operation = request.POST['vm_options']
+            hostname = vm[:vm.find(",")]
+            slug = vm[vm.find(",")+1:]
+                
+            print "Shutting down a VM"
+
+            if vm_operation == "Reboot VMs":
+                reboot(request, slug, hostname)
+            elif vm_operation == "Start VMs":
+                startup(request, slug, hostname)
+            elif vm_operation == "Shutdown VMs":
+                shutdown(request, slug, hostname)
+            elif vm_operation == "Immediately Shutdown VMs":
+                shutdown_now(request, slug, hostname)
+
+
+    def post(self, *args, **kwargs):
+        return super(VMListView, self).get(self.request, args, kwargs)
+        
 
 class VMListTableView(VMListView):
     """
