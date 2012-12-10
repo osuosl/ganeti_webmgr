@@ -120,7 +120,7 @@
 <ul class="pagination">
     {% if page_obj.has_previous %}
     <li class="previous">
-        <a href="{% url virtualmachine-list-paged page_obj.previous_page_number, "hostname" %}">&laquo; {% trans "Previous" %}</a>
+        <a href="{% url virtualmachine-list-paged page_obj.previous_page_number, order %}">&laquo; {% trans "Previous" %}</a>
     </li>
     {% endif %}
 
