@@ -60,8 +60,6 @@ def vm_qs_for_admins(user):
     """
     Retrieve a queryset of all of the virtual machines for which this user is
     an administrator.
-
-    Used mainly for showing VM errors to admins.
     """
 
     if user.is_superuser:
@@ -76,15 +74,17 @@ def vm_qs_for_admins(user):
 
 def vm_qs_for_users(user):
     """
-    Retrieves a queryset of all the virtual machines for which the user has permissions.
+    Retrieves a queryset of all the virtual machines for which the user has
+    any permission.
     """
 
-     if user.is_superuser:
+    if user.is_superuser:
         qs = VirtualMachine.objects.all()
     elif user.is_anonymous():
         qs = VirtualMachine.objects.none()
     else:
-        qs = user.get_objects_any_perms(VirtualMachine, groups=True,
-                                        perms=["admin", "modify", "remove", "power", "tags"])
+        # If no permissions are listed, then *any* permission will cause a VM
+        # to be added to the query.
+        qs = user.get_objects_any_perms(VirtualMachine, groups=True)
 
     return qs
