@@ -1,0 +1,47 @@
+{% load webmgr_tags %}
+{% load i18n %}
+<script type="text/javascript">
+  function sort(url, old_order, new_order) {
+    var order = getOrderAscDec(old_order, new_order);
+    location.href = url.replace(old_order, order);
+  }
+
+  function getOrderAscDec(old_order, new_order) {
+    if (old_order == new_order) {
+      return '-' + old_order;
+    } else {
+      return new_order
+    }
+  }
+</script>
+
+<table id="joblist" class="sorted">
+<thead>
+  <tr>
+    <th class="header">{% trans "ID" %}</th>
+    <th class="header">{% trans "VM" %}</th>
+    <th class="header">{% trans "Action" %}</th>
+    <th class="header">{% trans "Status" %}</th>
+    <th class="header">{% trans "Completed" %}</th>
+  </tr>
+</thead>
+
+<tbody id="jobs">
+  {% for job in jobs %}
+  {% with job.info as info %}
+    <tr>
+      <td><a href="{% url job-detail cluster.slug job.info.id %}">{{ job.info.id }}</a></td>
+      <td><a href="{% url instance-detail cluster.slug job.obj %}"</a>{{ job.obj }}</td>
+      {% with info.ops|last as action %}
+      <!-- Only grab last job operation to display on table. For two part job 
+      actions like reinstalls which consist of reboot and reinstall-->
+      <td>{{ action.OP_ID|format_job_op }}</td>
+      {% endwith %}
+      <td>{{ job.status }}</td>
+      <td>{{ job.finished|date }}</td>
+    </tr>
+  {% endwith %}
+  {% endfor %}
+</tbody>
+
+</table>

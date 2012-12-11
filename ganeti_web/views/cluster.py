@@ -81,7 +81,7 @@ class ClusterListView(LoginRequiredMixin, PagedListView):
 
             self.queryset = qs
             super(ClusterListView, self).get_queryset()
-            return qs.select_related() 
+            return qs.select_related()
 
     def get_context_data(self, **kwargs):
             user = self.request.user
@@ -111,6 +111,36 @@ class ClusterVMListView(LoginRequiredMixin, PagedListView):
 
     def get_context_data(self, **kwargs):
         kwargs["cluster"] = self.cluster
+        return kwargs
+
+class ClusterJobListView(LoginRequiredMixin, PagedListView):
+
+    template_name = "ganeti/cluster/jobs.html"
+
+    def get_queryset(self):
+        self.cluster = get_object_or_404(Cluster,
+                                         slug=self.kwargs["cluster_slug"])
+
+        user = self.request.user
+        admin = user.is_superuser or user.has_perm("admin", self.cluster) or \
+        user.has_perm("create_vm", self.cluster)
+
+        if not admin:
+            raise Http403(NO_PRIVS)
+
+        self.jobs = Job.objects.filter(cluster=self.cluster.id).order_by('job_id')
+        return self.jobs
+
+    def get_context_data(self, **kwargs):
+        kwargs["cluster"] = self.cluster
+        kwargs["jobs"] = self.jobs
+
+        # Refer to Bug 11997 to implement ordering using requests
+        if "order_by" in self.request.GET:
+            kwargs["order"] = self.request.GET["order_by"]
+        else:
+            kwargs["order"] = "job_id"
+
         return kwargs
 
 @login_required
@@ -204,7 +234,7 @@ def edit(request, cluster_slug=None):
 def refresh(request, cluster_slug):
     """
     Display a notice to the user that we are refreshing
-    the cluster data, then redirect them back to the 
+    the cluster data, then redirect them back to the
     cluster details page.
     """
 

@@ -24,7 +24,7 @@ from forms.autocomplete_search_form import autocomplete_search_form
 
 from ganeti_web.forms.virtual_machine import vm_wizard
 from ganeti_web.views.cluster import (ClusterDetailView, ClusterListView,
-                                      ClusterVMListView)
+                                      ClusterVMListView, ClusterJobListView)
 from ganeti_web.views.general import AboutView
 from ganeti_web.views.jobs import JobDetailView
 from ganeti_web.views.node import (NodeDetailView, NodePrimaryListView,
@@ -52,10 +52,10 @@ urlpatterns = patterns('ganeti_web.views.general',
     # Status page
     url(r'^overview/?$', 'overview', name="overview"),
     url(r'^used_resources/?$', 'used_resources', name="used_resources"),
-    
+
     # clear errors
     url(r'^error/clear/(?P<pk>\d+)/?$', 'clear_ganeti_error', name="error-clear"),
-    
+
     # Errors
     url(r'clusters/errors', 'get_errors', name="cluster-errors"),
     # About page
@@ -123,6 +123,9 @@ urlpatterns += patterns('ganeti_web.views.cluster',
 
     # object log
     url(r'^%s/object_log/?$' % cluster, 'object_log', name="cluster-object_log"),
+
+    # Jobs
+    url(r'%s/jobs/?$' % cluster, ClusterJobListView.as_view(), name="cluster-jobs"),
 )
 
 
@@ -133,7 +136,7 @@ urlpatterns += patterns('ganeti_web.views.node',
     url(r'^%s/?$' % node_prefix, NodeDetailView.as_view(),
         name="node-detail"),
     url(r'^node/(?P<id>\d+)/jobs/status/?$', "job_status", name="node-job-status"),
-    
+
     # Primary and secondary Virtual machines
     url(r'^%s/primary/?$' % node_prefix, NodePrimaryListView.as_view(),
         name="node-primary-vms"),
@@ -181,8 +184,8 @@ urlpatterns += patterns('ganeti_web.views.virtual_machine',
     url(r'^%s/permissions/?$' % vm_prefix, 'permissions', name="vm-permissions"),
     url(r'^%s/permissions/user/(?P<user_id>\d+)/?$' % vm_prefix, 'permissions', name="vm-permissions-user"),
     url(r'^%s/permissions/group/(?P<group_id>\d+)/?$' % vm_prefix, 'permissions', name="vm-permissions-user"),
-    
-    # Start, Stop, Reboot, VNC
+
+    #  Start, Stop, Reboot, VNC
     url(r'^%s/vnc/?$' % vm_prefix, 'novnc', name="instance-vnc"),
     url(r'^%s/vnc/popout/?$' % vm_prefix, 'novnc',
                         {'template':'ganeti/virtual_machine/vnc_popout.html'},
@@ -202,16 +205,16 @@ urlpatterns += patterns('ganeti_web.views.virtual_machine',
 
     # Reinstall
     url(r"^%s/reinstall/?$" % vm_prefix, "reinstall", name="instance-reinstall"),
-    
+
     # Edit / Modify
     url(r"^%s/edit/?$" % vm_prefix, "modify", name="instance-modify"),
     url(r'^%s/edit/confirm/?$' % vm_prefix, "modify_confirm", name="instance-modify-confirm"),
     url(r"^%s/rename/?$" % vm_prefix, "rename", name="instance-rename"),
     url(r"^%s/reparent/?$" % vm_prefix, "reparent", name="instance-reparent"),
-    
+
     # SSH Keys
     url(r'^%s/keys/(?P<api_key>\w+)/?$' % vm_prefix, "ssh_keys", name="instance-keys"),
-    
+
     # object log
     url(r'^%s/object_log/?$' % vm_prefix, 'object_log', name="vm-object_log"),
 )
