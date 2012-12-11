@@ -34,10 +34,9 @@ Compatibility
 
 Ganeti Web Manager is compatible with the following:
 
--  `Ganeti <http://code.google.com/p/ganeti/>`_: **>= v2.2.x** is
-   supported. **v2.1.x** and **v2.0.x** are unsupported and sometimes
-   work but can cause problems (see `#8973 <http://code.osuosl.org/issues/8973>`_). Lower
-   versions are **not** supported.
+-  `Ganeti <http://code.google.com/p/ganeti/>`_: Ganeti **2.3.x--2.6.0** are
+   supported. Earlier versions are unsupported; they may occasionally work,
+   but should not be relied upon.
 -  **Browsers:** `Mozilla Firefox <http://mozilla.com/firefox>`_ >=
    v3.x, `Google Chrome <http://www.google.com/chrome/>`_ or
    `Chromium <http://code.google.com/chromium/>`_. Other contemporary
