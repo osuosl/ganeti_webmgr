@@ -18,18 +18,16 @@ Overview
    then ./manage.py runserver
 
 This section explains how to automatically install Ganeti Web Manager
-using `Fabric <http://docs.fabfile.org/en/1.0.1/index.html>`_. Fabric
-simplifies the installation process by automatically installing
-dependencies into a virtual environment.
+using Fabric_. Fabric simplifies the installation process by
+automatically installing dependencies into a virtual environment.
 
 Related Topics:
 
--  Read more about why `Fabric is strongly
-   recommended </projects/ganeti-webmgr/wiki/Fabric_is_strongly_recommended>`_.
--  `Troubleshoot an installation using
-   Fabric </projects/ganeti-webmgr/wiki/Fabric-troubleshooting>`_.
--  `Manual
-   installation </projects/ganeti-webmgr/wiki/Manual-installation>`_.
+-  Read more about why :doc:`fabric-recommend`
+-  :doc:`fabric-install`
+-  :doc:`manual-install`
+
+.. _Fabric: http://docs.fabfile.org/
 
 Compatibility
 -------------
@@ -38,7 +36,7 @@ Ganeti Web Manager is compatible with the following:
 
 -  `Ganeti <http://code.google.com/p/ganeti/>`_: **>= v2.2.x** is
    supported. **v2.1.x** and **v2.0.x** are unsupported and sometimes
-   work but can cause problems (see `#8973 </issues/8973>`_). Lower
+   work but can cause problems (see `#8973 <http://code.osuosl.org/issues/8973>`_). Lower
    versions are **not** supported.
 -  **Browsers:** `Mozilla Firefox <http://mozilla.com/firefox>`_ >=
    v3.x, `Google Chrome <http://www.google.com/chrome/>`_ or
@@ -59,7 +57,7 @@ Dependencies
 
 -  Python: >=2.5, python >=2.6 recommended
 -  `Pip <http://www.pip-installer.org/en/latest/index.html>`_ >= 0.8.2
--  `Fabric <http://docs.fabfile.org/en/1.0.1/index.html>`_ >=1.0.1
+-  Fabric_ >=1.0.1
 -  `VirtualEnv <http://pypi.python.org/pypi/virtualenv>`_ >= 1.6.1
 
 Pip is required for installing Fabric and a useful tool to install
@@ -136,7 +134,7 @@ Configuration
    following lines to reflect your wishes.
 
    .. Note:: Postgresql is not supported at this time and the
-             install will fail (See issue `#3237 </issues/3237>`_).
+             install will fail (See issue `#3237 <http://code.osuosl.org/issues/3237>`_).
 
    ::
 
@@ -168,6 +166,8 @@ Configuration
    ::
 
        ./manage.py runserver
+
+.. _install-additional-config:
 
 Additional configuration for production servers
 -----------------------------------------------
@@ -204,9 +204,9 @@ Deploying a production server requires additional setup steps.
    to an SMTP server. Set **``EMAIL_HOST``**, **``EMAIL_PORT``**, and
    **``DEFAULT_FROM_EMAIL``** in settings.py. For more complicated
    outgoing mail setups, please refer to the `django email
-   documentation <http://docs.djangoproject.com/en/1.2/topics/email/>`_.
+   documentation <http://docs.djangoproject.com/en/dev/topics/email/>`_.
 #. Follow the django guide to `deploy with
-   apache. <https://docs.djangoproject.com/en/1.4/howto/deployment/wsgi/modwsgi/>`_
+   apache. <https://docs.djangoproject.com/en/dev/howto/deployment/wsgi/modwsgi/>`_
    Here is an example mod\_wsgi file:
 
    ::
@@ -230,8 +230,7 @@ Deploying a production server requires additional setup steps.
        import django.core.handlers.wsgi
        application = django.core.handlers.wsgi.WSGIHandler()
 
-#. Enable the `periodic cache
-   updater </projects/ganeti-webmgr/wiki/Cache_System#Periodic-Cache-Refresh>`_.
+#. Enable the :doc:`usage/caching`
 
    .. Note:: Do not run the cache updater as ``root``.
 
