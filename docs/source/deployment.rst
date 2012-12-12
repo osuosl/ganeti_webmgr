@@ -232,26 +232,6 @@ Deploying a production server requires additional setup steps.
        import django.core.handlers.wsgi
        application = django.core.handlers.wsgi.WSGIHandler()
 
-#. Enable the :doc:`usage/caching`
-
-   .. Note:: Do not run the cache updater as ``root``.
-
-   ::
-
-       twistd --pidfile=/tmp/gwm_cache.pid gwm_cache
-
-   You may encounter an issue where twisted fails to start and gives you
-   an error.
-   This is usually caused by the environment variable PYTHONPATH not
-   being
-   exported correctly if you switch to superuser 'su -'. To fix it type:
-
-   ::
-
-       export PYTHONPATH="."
-
-   Then ``exit`` out of root.
-
 #. Set **VNC\_PROXY** to the hostname of your VNC AuthProxy server in
    **settings.py**. The VNC AuthProxy does not need to run on the same
    server as Ganeti Web Manager.

@@ -31,30 +31,6 @@ backup to ensure that objects will always be refreshed.
 
 .. _periodic-cache-updater:
 
-Periodic Cache Refresh
-----------------------
-
-Relying on the lazy cache alone will still result in delays loading
-pages, especially if there are several pages to load. Included is a
-periodic cache updater that will use bulk methods to reduce calls to
-ganeti and database server. The cache update script is very fast and
-should only take a few seconds to run even with larger clusters. Running
-the updater at a shorter interval than the lazy cache will ensure
-objects are always up to date.
-
-The period cache refresher can be started with **twistd**, it requires
-the virtual environment to be active
-**NOTE**: Do not run the cache updater as ``root``.
-
-::
-
-        twistd --pidfile=/tmp/gwm_cache.pid gwm_cache
-
-Updating with celery
-~~~~~~~~~~~~~~~~~~~~
-
-not yet implemented
-
 CachedClusterObject
 -------------------
 
@@ -95,16 +71,3 @@ are a hash of hostname, port, user, and password. This allows changes in
 settings to be easily detected. Cached objects should store the hash as
 part of its model and use it to look up existing clients without
 querying the cluster for the full set of connection credentials.
-
-Possible Issues
----------------
-
-You may encounter an issue where twisted fails to start and gives you an
-error.
-This is usually caused by the environment variable PYTHONPATH not being
-exported correctly if you switch to superuser 'su -'. To fix it type:
-::
-
-    export PYTHONPATH="." 
-
-Then ``exit`` out of root.
