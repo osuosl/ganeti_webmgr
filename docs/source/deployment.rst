@@ -34,22 +34,25 @@ Compatibility
 
 Ganeti Web Manager is compatible with the following:
 
--  `Ganeti <http://code.google.com/p/ganeti/>`_: Ganeti **2.3.x--2.6.0** are
-   supported. Earlier versions are unsupported; they may occasionally work,
-   but should not be relied upon.
--  **Browsers:** `Mozilla Firefox <http://mozilla.com/firefox>`_ >=
-   v3.x, `Google Chrome <http://www.google.com/chrome/>`_ or
-   `Chromium <http://code.google.com/chromium/>`_. Other contemporary
-   browsers may also work, but are not supported. (The web-based VNC
-   console requires browser support of
-   `WebSockets <http://en.wikipedia.org/wiki/WebSockets>`_ and
-   `HTML5 <http://en.wikipedia.org/wiki/Html5.>`_)
--  **Databases:** MySQL or SQLite. SQLite is not recommended in
-   production environments.
--  **Operating Systems:** GWM has been tested on Debian 7, Ubuntu 11.10,
-   12.04 and CentOs 5 and 6. Debian 6 is supported, provided the Pip,
-   Virtualenv and Fabric packages are updated to the versions listed
-   below.
+- `Ganeti`_: Ganeti **2.3.x--2.6.0** are supported. Earlier versions are
+  unsupported; they may occasionally work, but should not be relied upon.
+- **Browsers:** `Mozilla Firefox`_ 3.x and newer, and recent `Google
+  Chrome`_/`Google Chromium`_, are supported. Other contemporary browsers may
+  also work, but are not supported. The web-based VNC
+  console requires browser support of WebSockets and HTML5.
+- Databases: While all databases supported by Django should work, the GWM team
+  officially supports `SQLite`_ and `MySQL`_.
+- Operating Systems: GWM is officially supported on Ubuntu 11.10, Ubuntu
+  12.04, and CentOS 6. It is also known to work on Debian 7 and CentOS 5.
+  Debian 6 should work, provided the Pip, Virtualenv and Fabric packages are
+  updated to the versions listed below.
+
+.. _Ganeti: http://code.google.com/p/ganeti/
+.. _Mozilla Firefox: http://mozilla.com/firefox
+.. _Google Chrome: http://www.google.com/chrome/
+.. _Google Chromium: http://www.chromium.org/
+.. _SQLite: https://sqlite.org/
+.. _MySQL: https://www.mysql.com/
 
 Dependencies
 ------------
