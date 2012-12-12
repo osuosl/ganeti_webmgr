@@ -124,8 +124,17 @@ urlpatterns += patterns('ganeti_web.views.cluster',
     # object log
     url(r'^%s/object_log/?$' % cluster, 'object_log', name="cluster-object_log"),
 
-    # Jobs
-    url(r'%s/jobs/?$' % cluster, ClusterJobListView.as_view(), name="cluster-jobs"),
+    # Taken from bug 11997's changes
+    # Jobs (Ordered)
+    url(r'%s/jobs/\?order_by=(?P<order>.+)$' % cluster, ClusterJobListView.as_view(),
+        name="cluster-jobs-ordered"),
+
+    # Jobs (Just Paged)
+    url(r'%s/jobs/\?page=(?P<page>.+)$' % cluster, ClusterJobListView.as_view(),
+        name="cluster-jobs-paged"),
+
+    url(r'%s/jobs/?$' % cluster, ClusterJobListView.as_view(),
+        name="cluster-jobs"),
 )
 
 

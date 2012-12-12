@@ -31,6 +31,7 @@ from django.utils import simplejson as json
 from django.utils.translation import ugettext as _
 from django.views.decorators.http import require_POST
 from django.views.generic.detail import DetailView
+from django.views.generic.list import ListView
 
 from object_permissions import get_users_any
 from object_permissions import signals as op_signals
@@ -128,20 +129,26 @@ class ClusterJobListView(LoginRequiredMixin, PagedListView):
         if not admin:
             raise Http403(NO_PRIVS)
 
-        self.jobs = Job.objects.filter(cluster=self.cluster.id).order_by('job_id')
-        return self.jobs
+        qs = Job.objects.filter(cluster=self.cluster.id)
+        if "order_by" in self.request.GET:
+            qs = qs.order_by(self.request.GET['order_by'])
+
+        self.queryset = qs
+        super(ClusterJobListView, self).get_queryset()
+
+        return qs.select_related()
 
     def get_context_data(self, **kwargs):
-        kwargs["cluster"] = self.cluster
-        kwargs["jobs"] = self.jobs
+        context = super(ClusterJobListView,
+            self).get_context_data(object_list=kwargs["object_list"])
+        context["cluster"] = self.cluster
 
-        # Refer to Bug 11997 to implement ordering using requests
         if "order_by" in self.request.GET:
-            kwargs["order"] = self.request.GET["order_by"]
+            context["order"] = self.request.GET["order_by"]
         else:
-            kwargs["order"] = "job_id"
+            context["order"] = "id"
 
-        return kwargs
+        return context
 
 @login_required
 def nodes(request, cluster_slug):
