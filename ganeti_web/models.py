@@ -590,10 +590,6 @@ class VirtualMachine(CachedClusterObject):
     allows the cache to function in the absence of a periodic update mechanism
     such as Cron, Celery, or Threads.
 
-    The lazy update and periodic update should use separate refresh timeouts
-    where LAZY_CACHE_REFRESH > PERIODIC_CACHE_REFRESH.  This ensures that lazy
-    cache will only be used if the periodic cache is not updating.
-
     XXX Serialized_info can possibly be changed to a CharField if an upper
         limit can be determined. (Later Date, if it will optimize db)
 
