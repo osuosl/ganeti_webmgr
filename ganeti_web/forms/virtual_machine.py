@@ -109,7 +109,7 @@ class VirtualMachineForm(forms.ModelForm):
                 # doesn't exist, no further checks needed
                 pass
 
-        # Spaces in hostname will always break things. 
+        # Spaces in hostname will always break things.
         if ' ' in hostname:
             self.errors["hostname"] = self.error_class(
                 ["Hostname contains illegal character"])
@@ -227,7 +227,7 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
         for field in self.always_required:
             self.fields[field].required = True
         # If the required property is set on a child class,
-        #  require those form fields   
+        #  require those form fields
         try:
             if self.required:
                 for field in self.required:
@@ -263,14 +263,14 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
                     link.initial = info['nic.links'][i]
 
             self.fields['os'].initial = info['os']
-            
+
             try:
                 if self.hvparam_fields:
                     for field in self.hvparam_fields:
                         self.fields[field].initial = hvparam.get(field)
             except AttributeError:
                 pass
-            
+
     def clean(self):
         data = self.cleaned_data
         kernel_path = data.get('kernel_path')
@@ -314,7 +314,7 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
 
 
 class HvmModifyVirtualMachineForm(ModifyVirtualMachineForm):
-    hvparam_fields = ('boot_order', 'cdrom_image_path', 'nic_type', 
+    hvparam_fields = ('boot_order', 'cdrom_image_path', 'nic_type',
         'disk_type', 'vnc_bind_address', 'acpi', 'use_localtime')
     required = ('disk_type', 'boot_order', 'nic_type')
     empty_field = EMPTY_CHOICE_FIELD
@@ -331,7 +331,7 @@ class HvmModifyVirtualMachineForm(ModifyVirtualMachineForm):
     boot_order = forms.ChoiceField(label=_('Boot Device'), choices=boot_devices)
 
     class Meta(ModifyVirtualMachineForm.Meta):
-        exclude = ModifyVirtualMachineForm.Meta.exclude + ('kernel_path', 
+        exclude = ModifyVirtualMachineForm.Meta.exclude + ('kernel_path',
             'root_path', 'kernel_args', 'serial_console', 'cdrom2_image_path')
 
     def __init__(self, vm, *args, **kwargs):
@@ -339,14 +339,14 @@ class HvmModifyVirtualMachineForm(ModifyVirtualMachineForm):
 
 
 class PvmModifyVirtualMachineForm(ModifyVirtualMachineForm):
-    hvparam_fields = ('root_path', 'kernel_path', 'kernel_args', 
+    hvparam_fields = ('root_path', 'kernel_path', 'kernel_args',
         'initrd_path')
 
     initrd_path = forms.CharField(label='initrd Path', required=False)
     kernel_args = forms.CharField(label='Kernel Args', required=False)
 
     class Meta(ModifyVirtualMachineForm.Meta):
-        exclude = ModifyVirtualMachineForm.Meta.exclude + ('disk_type', 
+        exclude = ModifyVirtualMachineForm.Meta.exclude + ('disk_type',
             'nic_type', 'boot_order', 'cdrom_image_path', 'serial_console',
             'cdrom2_image_path')
 
@@ -356,14 +356,14 @@ class PvmModifyVirtualMachineForm(ModifyVirtualMachineForm):
 
 class KvmModifyVirtualMachineForm(PvmModifyVirtualMachineForm,
                                   HvmModifyVirtualMachineForm):
-    hvparam_fields = ('acpi', 'disk_cache', 'initrd_path', 
-        'kernel_args', 'kvm_flag', 'mem_path', 
-        'migration_downtime', 'security_domain', 
-        'security_model', 'usb_mouse', 'use_chroot', 
-        'use_localtime', 'vnc_bind_address', 'vnc_tls', 
-        'vnc_x509_path', 'vnc_x509_verify', 'disk_type', 
-        'boot_order', 'nic_type', 'root_path', 
-        'kernel_path', 'serial_console', 
+    hvparam_fields = ('acpi', 'disk_cache', 'initrd_path',
+        'kernel_args', 'kvm_flag', 'mem_path',
+        'migration_downtime', 'security_domain',
+        'security_model', 'usb_mouse', 'use_chroot',
+        'use_localtime', 'vnc_bind_address', 'vnc_tls',
+        'vnc_x509_path', 'vnc_x509_verify', 'disk_type',
+        'boot_order', 'nic_type', 'root_path',
+        'kernel_path', 'serial_console',
         'cdrom_image_path',
         'cdrom2_image_path',
     )
@@ -392,16 +392,16 @@ class KvmModifyVirtualMachineForm(PvmModifyVirtualMachineForm,
     vnc_x509_path = forms.CharField(label='VNC x509 Path', required=False)
     vnc_x509_verify = forms.BooleanField(label='VNC x509 Verify',
         required=False)
-    
+
     class Meta(ModifyVirtualMachineForm.Meta):
         pass
-    
+
     def __init__(self, vm, *args, **kwargs):
         super(KvmModifyVirtualMachineForm, self).__init__(vm, *args, **kwargs)
         self.fields['disk_type'].choices = self.disk_types
         self.fields['nic_type'].choices = self.nic_types
         self.fields['boot_order'].choices = self.boot_devices
-    
+
 
 class ModifyConfirmForm(forms.Form):
 
@@ -441,7 +441,7 @@ class ModifyConfirmForm(forms.Form):
             except KeyError:
                 pass
             del data['nic_link_%s' % (nic_count+i)]
-            
+
         data['nics'] = nics
         return cleaned
 
@@ -494,7 +494,7 @@ class ReplaceDisksForm(forms.Form):
     disks = forms.MultipleChoiceField(label=_('Disks'), required=False)
     node = forms.ChoiceField(label=_('Node'), choices=[empty_field], required=False)
     iallocator = forms.BooleanField(initial=False, label=_('Iallocator'), required=False)
-    
+
     def __init__(self, instance, *args, **kwargs):
         super(ReplaceDisksForm, self).__init__(*args, **kwargs)
         self.instance = instance
@@ -517,7 +517,7 @@ class ReplaceDisksForm(forms.Form):
                                     initial=defaults['iallocator'],
                                     required=False,
                                     widget = forms.HiddenInput())
-    
+
     def clean(self):
         data = self.cleaned_data
         mode = data.get('mode')
@@ -531,7 +531,7 @@ class ReplaceDisksForm(forms.Form):
             elif iallocator and node:
                 msg = _('Choose either node or iallocator')
                 self._errors['mode'] = self.error_class([msg])
-                
+
         return data
 
     def clean_disks(self):
@@ -563,7 +563,19 @@ class ReplaceDisksForm(forms.Form):
 class VMWizardClusterForm(Form):
     cluster = ModelChoiceField(label=_('Cluster'),
                                queryset=Cluster.objects.all(),
-                               empty_label=None)
+                               empty_label=None,
+                               help_text="""
+                               <h3>Test</h3>!!!!
+                               <p>Cool Stuff bro</p>
+                               """)
+
+    # Add has_help_tip CSS class to all form fields with help_text
+    def __init__(self, *args, **kwargs):
+        super(VMWizardClusterForm, self).__init__(*args, **kwargs)
+        for field in self.fields:
+            field = self.fields[field]
+            if hasattr(field, 'help_text'):
+                field.widget.attrs['class'] = 'has_help_tip'
 
     def _configure_for_user(self, user):
         self.fields["cluster"].queryset = cluster_qs_for_user(user)
@@ -584,12 +596,21 @@ class VMWizardClusterForm(Form):
 
 class VMWizardOwnerForm(Form):
     template_name = CharField(label=_("Template Name"), max_length=255,
-                              required=False)
+                              required=False, help_text="test!")
     hostname = CharField(label=_('Instance Name'), max_length=255,
-                         required=False)
+                         required=False, help_text='123')
     owner = ModelChoiceField(label=_('Owner'),
                              queryset=ClusterUser.objects.all(),
                              empty_label=None)
+
+    # Add has_help_tip CSS class to all form fields with help_text
+    def __init__(self, *args, **kwargs):
+        super(VMWizardOwnerForm, self).__init__(*args, **kwargs)
+        for field in self.fields:
+            field = self.fields[field]
+            if hasattr(field, 'help_text'):
+                field.widget.attrs['class'] = 'has_help_tip'
+
 
     def _configure_for_cluster(self, cluster):
         if not cluster:

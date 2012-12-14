@@ -1,4 +1,4 @@
-#help {
+.help_tip {
     background-color:#eee;
     border:1px solid #888;
     border-radius:5px;
@@ -11,7 +11,7 @@
     -webkit-border-radius:5px;
 }
 
-#help h3 {
+.help_tip h3 {
     background-color:#c2e192;
     border-bottom:1px solid #888;
     color:#444;
