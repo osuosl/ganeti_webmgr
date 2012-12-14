@@ -26,11 +26,11 @@ PIP_INSTALL = dict((r.project_name, str(r)) for r in
                    pkg_resources.parse_requirements(open("requirements.txt").read()))
 
 GIT_INSTALL =  {
-    'django_object_permissions':{
+    'django-object-permissions':{
         'url':'git://git.osuosl.org/gitolite/django/django_object_permissions',
         'development':'develop',
         },
-    'django_object_log':{
+    'django-object-log':{
         'url':'git://git.osuosl.org/gitolite/django/django_object_log',
         'development':'develop',
         },
@@ -85,7 +85,6 @@ env.MANIFEST = [
     "settings.py.dist",
     "urls.py",
 ]
-
 
 def deploy():
     """
@@ -208,7 +207,8 @@ def install_dependencies_git():
 
     create_env()
 
-    for name, opts in GIT_INSTALL.items():
+    for name in (set(GIT_INSTALL) - set(PIP_INSTALL)):
+        opts = GIT_INSTALL[name]
 
         # check for required values
         if 'url' not in opts:
@@ -225,8 +225,9 @@ def install_dependencies_git():
         # clone repo
         with lcd('%(doc_root)s/dependencies' % env):
             env.git_repo = name
+            env.git_url = opts['url']
             if not _exists('%(doc_root)s/dependencies/%(git_repo)s' % env):
-                local('git clone %(url)s' % opts)
+                local('git clone %(git_url)s %(git_repo)s' % env)
 
             # create branch if not using master
             if opts['head'] != 'master':
