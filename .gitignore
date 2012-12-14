@@ -53,6 +53,8 @@ haystack
 twisted_vncauthproxy
 
 # files/dirs created by Fabric and or VirtualEnv
+venv
+env
 bin
 dependencies
 include
