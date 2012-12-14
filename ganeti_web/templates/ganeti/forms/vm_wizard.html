@@ -5,50 +5,13 @@
 {% block title %}{%trans "Create a Virtual Machine" %}{% endblock %}
 
 {% block head %}
-{{ wizard.form.media }}
-
-<!-- Move help_tips css and js to the wizard.form.media context -->
-<!--
-<script src="{{STATIC_URL}}/js/helpTips.js" type=text/javascript"></script>
--->
-
-<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}/css/help_tips.css"/>
-
-<!--
 <script src="{{STATIC_URL}}/js/disableSingletonDropdown.js"
     type="text/javascript"></script>
+
 <script type="text/javascript">
 $(window).load(function() {
     disableSingletonDropdown2();
 });
-</script>
--->
-
-<script type='text/javascript'>
-  $(document).ready(function() {
-    // Inputs which have a help tip.
-    var $help_items = $('.has_help_tip');
-    /*
-    Binds the event to our inputs, 
-    passing the focused element to the handler.
-    */
-    $help_items.live('focus', this, getHelpTips);
-
-    function getHelpTips(event) {
-      // Store the main help container for reuse.
-      var $help_container = $('#help');
-      // The name of the input corresponds to the help tip's help attribute.
-      var help_name = $(this).attr('name');
-      var $tip = $help_container.find('div[help="'+help_name+'"]');
-
-      // Hide the previous help tips.
-      $help_container.find('div[help]').hide();
-      // Make sure the help container isn't hidden
-      $help_container.show();
-      // Show the tip.
-      $tip.show();
-    }
-  });
 </script>
 
 <style type="text/css">
@@ -70,51 +33,7 @@ input.select {float:right;}
         {% endif %}
     </ul>
 </div>
-<form action="" method="POST">
-    {% csrf_token %}
-    <table>
-        {{ wizard.management_form }}
-        {% comment %}
-        {{ wizard.form.as_table }}
-        {% endcomment %}
 
-        {% for field in wizard.form %}
-        <tr>
-          <th>{{ field.label_tag }}</th>
-          <td>{{ field }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-    <table>
-    {% if wizard.steps.next %}
-        <input class="select" type="submit" 
-            value="{% trans "Next" %}" 
-            />
-    {% else %}
-        <input class="select" type="submit" 
-            value="{% trans "Create VM" %}" 
-            />
-    {% endif %}
-    {% if wizard.steps.prev %}
-        <button class="select" name="wizard_goto_step" type="submit"
-            value="{{ wizard.steps.prev }}"
-            />
-            {% trans "Previous" %}
-        </button>
-    	<button class="select" name="wizard_goto_step" type="submit"
-            value="{{ wizard.steps.first }}"
-	    />
-            {% trans "Start Over" %}
-        </button>
-       {% endif %}
+{% include "ganeti/forms/generic_helptip_wizard.html" %}
 
-   </table>
-
-</form>
-
-<div id="help">
-{% for field in wizard.form %}
-  <div help='{{field.html_name}}' class='help_tip'>{{ field.help_text|safe }}</div>
-{% endfor %}
-</div>
 {% endblock %}
