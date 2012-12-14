@@ -46,6 +46,7 @@ from ganeti_web.utilities import (cluster_default_info, cluster_os_list,
 from ganeti_web.util.client import (REPLACE_DISK_AUTO, REPLACE_DISK_PRI,
                                     REPLACE_DISK_CHG, REPLACE_DISK_SECONDARY)
 from ganeti_web.views.generic import LoginRequiredMixin
+from ganeti_web.forms.generic import HelpTipsForm
 
 username_or_mtime = Q(username='') | Q(mtime__isnull=True)
 
@@ -559,8 +560,7 @@ class ReplaceDisksForm(forms.Form):
             iallocator = None
         return self.instance.replace_disks(mode, disks, node, iallocator)
 
-
-class VMWizardClusterForm(Form):
+class VMWizardClusterForm(HelpTipsForm):
     cluster = ModelChoiceField(label=_('Cluster'),
                                queryset=Cluster.objects.all(),
                                empty_label=None,
@@ -568,14 +568,6 @@ class VMWizardClusterForm(Form):
                                <h3>Test</h3>!!!!
                                <p>Cool Stuff bro</p>
                                """)
-
-    # Add has_help_tip CSS class to all form fields with help_text
-    def __init__(self, *args, **kwargs):
-        super(VMWizardClusterForm, self).__init__(*args, **kwargs)
-        for field in self.fields:
-            field = self.fields[field]
-            if hasattr(field, 'help_text'):
-                field.widget.attrs['class'] = 'has_help_tip'
 
     def _configure_for_user(self, user):
         self.fields["cluster"].queryset = cluster_qs_for_user(user)
@@ -594,7 +586,7 @@ class VMWizardClusterForm(Form):
         return cluster
 
 
-class VMWizardOwnerForm(Form):
+class VMWizardOwnerForm(HelpTipsForm):
     template_name = CharField(label=_("Template Name"), max_length=255,
                               required=False, help_text="test!")
     hostname = CharField(label=_('Instance Name'), max_length=255,
@@ -602,15 +594,6 @@ class VMWizardOwnerForm(Form):
     owner = ModelChoiceField(label=_('Owner'),
                              queryset=ClusterUser.objects.all(),
                              empty_label=None)
-
-    # Add has_help_tip CSS class to all form fields with help_text
-    def __init__(self, *args, **kwargs):
-        super(VMWizardOwnerForm, self).__init__(*args, **kwargs)
-        for field in self.fields:
-            field = self.fields[field]
-            if hasattr(field, 'help_text'):
-                field.widget.attrs['class'] = 'has_help_tip'
-
 
     def _configure_for_cluster(self, cluster):
         if not cluster:
@@ -654,7 +637,7 @@ class VMWizardOwnerForm(Form):
         return self.cleaned_data
 
 
-class VMWizardBasicsForm(Form):
+class VMWizardBasicsForm(HelpTipsForm):
     hv = ChoiceField(label=_("Hypervisor"), choices=[])
     os = ChoiceField(label=_('Operating System'), choices=[])
     vcpus = IntegerField(label=_("Virtual CPU Count"), initial=1, min_value=1)
@@ -717,7 +700,7 @@ class VMWizardBasicsForm(Form):
         # XXX disk size
 
 
-class VMWizardAdvancedForm(Form):
+class VMWizardAdvancedForm(HelpTipsForm):
     ip_check = BooleanField(label=_('Verify IP'), initial=False,
                             required=False)
     name_check = BooleanField(label=_('Verify hostname through DNS'),
