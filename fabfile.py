@@ -141,7 +141,7 @@ def _exists(path):
         return os.path.exists(path)
 
 
-def create_virtualenv(virtualenv=None, force=False):
+def create_virtualenv(virtualenv='venv', force=False):
     """
     Create a virtualenv for pip installations.
 
@@ -156,9 +156,7 @@ def create_virtualenv(virtualenv=None, force=False):
     env.virtualenv = virtualenv if virtualenv else env.doc_root
 
     with lcd(env.doc_root):
-        if not force and _exists('%(virtualenv)s/lib' % env):
-            print 'virtualenv already created'
-        else:
+        if force or not _exists('%(virtualenv)s/lib' % env):
             # XXX does this actually create a new environment if one already
             # exists there?
             local('virtualenv %(virtualenv)s --distribute' % env)
