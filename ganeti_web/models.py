@@ -26,6 +26,7 @@ import random
 import re
 import string
 import sys
+import time
 
 from django.conf import settings
 
@@ -1474,10 +1475,29 @@ class VirtualMachineTemplate(models.Model):
         unique_together = (("cluster", "template_name"),)
 
     def __unicode__(self):
-        if self.template_name is None:
-            return u'unnamed'
+        if self.temporary:
+            return u'(temporary)'
         else:
             return self.template_name
+
+    def set_name(self, name):
+        """
+        Set this template's name.
+
+        If the name is blank, this template will become temporary and its name
+        will be set to a unique timestamp.
+        """
+
+        if name:
+            self.template_name = name
+        else:
+            # The template is temporary and will be removed by the VM when the
+            # VM successfully comes into existence.
+            self.temporary = True
+            # Give it a temporary name. Something unique. This is the number
+            # of microseconds since the epoch; I figure that it'll work out
+            # alright.
+            self.template_name = str(int(time.time() * (10 ** 6)))
 
 
 class GanetiError(models.Model):

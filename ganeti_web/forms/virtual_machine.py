@@ -15,8 +15,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-import time
-
 from django import forms
 from django.contrib.formtools.wizard.views import CookieWizardView
 from django.conf import settings
@@ -1124,17 +1122,7 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
         if "snode" in forms[3].cleaned_data:
             template.snode = forms[3].cleaned_data["snode"].hostname
 
-        if template_name:
-            template.template_name = template_name
-        else:
-            # The template is temporary and will be removed by the VM when the
-            # VM successfully comes into existence.
-            template.temporary = True
-            # Give it a temporary name. Something unique. This is the number
-            # of microseconds since the epoch; I figure that it'll work out
-            # alright.
-            template.template_name = str(int(time.time() * (10 ** 6)))
-
+        template.set_name(template_name)
         template.save()
 
         if hostname:
