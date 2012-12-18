@@ -8,7 +8,7 @@
 <script type='text/javascript'>
   $(document).ready(function() {
     // Inputs which have a help tip.
-    var $help_items = $('.has_help_tip');
+    var $help_items = $('input, select', '#wizard');
     /* Binds the event to our inputs,
     passing the focused element to the handler. */
     $help_items.live('focus', this, getHelpTips);
@@ -30,11 +30,17 @@
   });
 </script>
 
+<style>
+#help {
+  margin-top: 20px;
+}
+</style>
+
 {% endblock %}
 
 <form action="" method="POST">
     {% csrf_token %}
-    <table>
+    <table id='wizard'>
         {{ wizard.management_form }}
 
         {% for field in wizard.form %}
@@ -75,7 +81,8 @@
 {% for field in wizard.form %}
   {% if field.help_text != '' %}
     <div help='{{ field.html_name }}' class='help_tip'>
-      {{ field.help_text|safe }}
+      <h3>{{ field.label }}</h3>
+      <div>{{ field.help_text|safe }}</div>
     </div>
   {% endif %}
 {% endfor %}

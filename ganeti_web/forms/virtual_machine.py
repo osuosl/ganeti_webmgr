@@ -37,7 +37,8 @@ from ganeti_web.caps import has_cdrom2, requires_maxmem
 from ganeti_web.constants import (EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES,
                                   HV_NIC_MODES, KVM_CHOICES, HV_USB_MICE,
                                   HV_SECURITY_MODELS, KVM_FLAGS,
-                                  HV_DISK_CACHES, MODE_CHOICES, HVM_CHOICES)
+                                  HV_DISK_CACHES, MODE_CHOICES, HVM_CHOICES,
+                                  VM_HELP, VM_CREATE_HELP, VM_RENAME_HELP)
 from ganeti_web.fields import DataVolumeField, MACAddressField
 from ganeti_web.models import (Cluster, ClusterUser, Node,
                                VirtualMachineTemplate, VirtualMachine)
@@ -46,7 +47,6 @@ from ganeti_web.utilities import (cluster_default_info, cluster_os_list,
 from ganeti_web.util.client import (REPLACE_DISK_AUTO, REPLACE_DISK_PRI,
                                     REPLACE_DISK_CHG, REPLACE_DISK_SECONDARY)
 from ganeti_web.views.generic import LoginRequiredMixin
-from ganeti_web.forms.generic import HelpTipsForm
 
 username_or_mtime = Q(username='') | Q(mtime__isnull=True)
 
@@ -494,7 +494,9 @@ class ReplaceDisksForm(forms.Form):
     mode = forms.ChoiceField(choices=MODE_CHOICES, label=_('Mode'))
     disks = forms.MultipleChoiceField(label=_('Disks'), required=False)
     node = forms.ChoiceField(label=_('Node'), choices=[empty_field], required=False)
-    iallocator = forms.BooleanField(initial=False, label=_('Iallocator'), required=False)
+    iallocator = forms.BooleanField(initial=False, label=_('Iallocator'),
+                                    required=False,
+                                    help_text=_(VM_CREATE_HELP['iallocator']))
 
     def __init__(self, instance, *args, **kwargs):
         super(ReplaceDisksForm, self).__init__(*args, **kwargs)
@@ -560,14 +562,10 @@ class ReplaceDisksForm(forms.Form):
             iallocator = None
         return self.instance.replace_disks(mode, disks, node, iallocator)
 
-class VMWizardClusterForm(HelpTipsForm):
+class VMWizardClusterForm(Form):
     cluster = ModelChoiceField(label=_('Cluster'),
                                queryset=Cluster.objects.all(),
-                               empty_label=None,
-                               help_text="""
-                               <h3>Test</h3>!!!!
-                               <p>Cool Stuff bro</p>
-                               """)
+                               empty_label=None)
 
     def _configure_for_user(self, user):
         self.fields["cluster"].queryset = cluster_qs_for_user(user)
@@ -586,14 +584,15 @@ class VMWizardClusterForm(HelpTipsForm):
         return cluster
 
 
-class VMWizardOwnerForm(HelpTipsForm):
+class VMWizardOwnerForm(Form):
     template_name = CharField(label=_("Template Name"), max_length=255,
-                              required=False, help_text="test!")
+                              required=False,
+                              help_text=_(VM_HELP['template_name']))
     hostname = CharField(label=_('Instance Name'), max_length=255,
-                         required=False, help_text='123')
+                         required=False, help_text=_(VM_CREATE_HELP['hostname']))
     owner = ModelChoiceField(label=_('Owner'),
                              queryset=ClusterUser.objects.all(),
-                             empty_label=None)
+                             empty_label=None, help_text=_(VM_CREATE_HELP['owner']))
 
     def _configure_for_cluster(self, cluster):
         if not cluster:
@@ -637,14 +636,20 @@ class VMWizardOwnerForm(HelpTipsForm):
         return self.cleaned_data
 
 
-class VMWizardBasicsForm(HelpTipsForm):
-    hv = ChoiceField(label=_("Hypervisor"), choices=[])
-    os = ChoiceField(label=_('Operating System'), choices=[])
-    vcpus = IntegerField(label=_("Virtual CPU Count"), initial=1, min_value=1)
-    memory = DataVolumeField(label=_('Memory (MiB)'))
+class VMWizardBasicsForm(Form):
+    hv = ChoiceField(label=_("Hypervisor"), choices=[],
+                     help_text=_(VM_CREATE_HELP['hypervisor']))
+    os = ChoiceField(label=_('Operating System'), choices=[],
+                     help_text=_(VM_CREATE_HELP['os']))
+    vcpus = IntegerField(label=_("Virtual CPU Count"), initial=1, min_value=1,
+                         help_text=_(VM_HELP['vcpus']))
+    memory = DataVolumeField(label=_('Memory (MiB)'),
+                             help_text=_(VM_HELP['memory']))
     disk_template = ChoiceField(label=_('Disk Template'),
-                                choices=HV_DISK_TEMPLATES)
-    disk_size = DataVolumeField(label=_("Disk Size (MB)"))
+                                choices=HV_DISK_TEMPLATES,
+                                help_text=_(VM_CREATE_HELP['disk_template']))
+    disk_size = DataVolumeField(label=_("Disk Size (MB)"),
+                                help_text=_(VM_CREATE_HELP['disk_size']))
 
     def _configure_for_cluster(self, cluster):
         if not cluster:
@@ -700,15 +705,19 @@ class VMWizardBasicsForm(HelpTipsForm):
         # XXX disk size
 
 
-class VMWizardAdvancedForm(HelpTipsForm):
+class VMWizardAdvancedForm(Form):
     ip_check = BooleanField(label=_('Verify IP'), initial=False,
-                            required=False)
+                            required=False,
+                            help_text=_(VM_RENAME_HELP['ip_check']))
     name_check = BooleanField(label=_('Verify hostname through DNS'),
-                              initial=False, required=False)
+                              initial=False, required=False,
+                              help_text=_(VM_RENAME_HELP['name_check']))
     pnode = ModelChoiceField(label=_("Primary Node"),
-                             queryset=Node.objects.all(), empty_label=None)
+                             queryset=Node.objects.all(), empty_label=None,
+                             help_text=_(VM_CREATE_HELP['pnode']))
     snode = ModelChoiceField(label=_("Secondary Node"),
-                             queryset=Node.objects.all(), empty_label=None)
+                             queryset=Node.objects.all(), empty_label=None,
+                             help_text=_(VM_CREATE_HELP['snode']))
 
     def _configure_for_cluster(self, cluster):
         if not cluster:
@@ -768,13 +777,17 @@ class VMWizardPVMForm(Form):
 
 class VMWizardHVMForm(Form):
     boot_order = CharField(label=_("Preferred boot device"), max_length=255,
-                           required=False)
+                           required=False,
+                           help_text=_(VM_CREATE_HELP['boot_order']))
     cdrom_image_path = CharField(label=_("CD-ROM image path"), max_length=512,
-                                required=False)
+                                required=False,
+                                help_text=_(VM_CREATE_HELP['cdrom_image_path']))
     disk_type = ChoiceField(label=_("Disk type"),
-                            choices=HVM_CHOICES["disk_type"])
+                            choices=HVM_CHOICES["disk_type"],
+                            help_text=_(VM_CREATE_HELP['disk_type']))
     nic_type = ChoiceField(label=_("NIC type"),
-                           choices=HVM_CHOICES["nic_type"])
+                           choices=HVM_CHOICES["nic_type"],
+                           help_text=_(VM_CREATE_HELP['nic_type']))
 
     def _configure_for_cluster(self, cluster):
         if not cluster:
@@ -799,20 +812,28 @@ class VMWizardHVMForm(Form):
 
 
 class VMWizardKVMForm(Form):
-    kernel_path = CharField(label=_("Kernel path"), max_length=255)
-    root_path = CharField(label=_("Root path"), max_length=255)
+    kernel_path = CharField(label=_("Kernel path"), max_length=255,
+                            help_text=_(VM_CREATE_HELP['kernel_path']))
+    root_path = CharField(label=_("Root path"), max_length=255,
+                          help_text=_(VM_CREATE_HELP['root_path']))
     serial_console = BooleanField(label=_("Enable serial console"),
-                                  required=False)
+                                  required=False,
+                                  help_text=_(VM_CREATE_HELP['serial_console']))
     boot_order = CharField(label=_("Preferred boot device"), max_length=255,
-                           required=False)
+                           required=False,
+                           help_text=_(VM_CREATE_HELP['boot_order']))
     cdrom_image_path = CharField(label=_("CD-ROM image path"), max_length=512,
-                                required=False)
+                                required=False,
+                                help_text=_(VM_CREATE_HELP['cdrom_image_path']))
     cdrom2_image_path = CharField(label=_("Second CD-ROM image path"),
-                                  max_length=512, required=False)
+                                  max_length=512, required=False,
+                                  help_text=_(VM_CREATE_HELP['cdrom2_image_path']))
     disk_type = ChoiceField(label=_("Disk type"),
-                            choices=KVM_CHOICES["disk_type"])
+                            choices=KVM_CHOICES["disk_type"],
+                            help_text=_(VM_CREATE_HELP['disk_type']))
     nic_type = ChoiceField(label=_("NIC type"),
-                           choices=KVM_CHOICES["nic_type"])
+                           choices=KVM_CHOICES["nic_type"],
+                           help_text=_(VM_CREATE_HELP['nic_type']))
 
     def _configure_for_cluster(self, cluster):
         if not cluster:
