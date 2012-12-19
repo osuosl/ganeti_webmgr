@@ -40,6 +40,8 @@ GIT_INSTALL =  {
     },
 }
 
+DEV = 'development'
+PROD = 'production'
 
 # default environment settings - override these in environment methods if you
 # wish to have an environment that functions differently
@@ -52,7 +54,7 @@ def dev():
     Configure development deployment.
     """
 
-    env.environment = 'development'
+    env.environment = DEV
 
 
 def prod():
@@ -60,7 +62,7 @@ def prod():
     Configure production deployment.
     """
 
-    env.environment = 'production'
+    env.environment = PROD
 
 
 # List of stuff to include in the tarball, recursive.
@@ -114,7 +116,7 @@ def update():
     """
     require('environment', provided_by=[dev, prod])
 
-    if env.environment != 'development':
+    if env.environment != DEV:
         raise Exception('must be in a development environment in order to'
             'update develop branches.')
     else:
@@ -198,7 +200,7 @@ def install_dependencies_git():
 
     require('environment', provided_by=[dev, prod])
 
-    if env.environment != 'development':
+    if env.environment != DEV:
         # If we can satisfy all of our dependencies from pip alone, then don't
         # bother running the git installation.
         if all(p in PIP_INSTALL for p in GIT_INSTALL):
@@ -217,7 +219,7 @@ def install_dependencies_git():
         # set git head to check out
         if env.environment in opts:
             opts['head'] = opts[env.environment]
-        elif env.environment == 'development' and 'production' in opts:
+        elif env.environment == DEV and 'production' in opts:
             opts['head'] = opts['production']
         else:
             opts['head'] = 'master'
