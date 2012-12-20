@@ -76,6 +76,7 @@ def request_ssh(proxy, sport, daddr, dport, password, command):
     """
 
     host, port = proxy
+    port = int(port)
     if not password or not command:
         return False
 
@@ -83,6 +84,7 @@ def request_ssh(proxy, sport, daddr, dport, password, command):
         "daddr": daddr,
         "dport": dport,
         "password": password,
+        "serial": True,
         "command": command,
     }
 

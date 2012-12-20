@@ -330,7 +330,7 @@ def console_proxy(request, cluster_slug, instance):
         return HttpResponseForbidden(msg)
 
     use_tls = bool(request.POST.get("tls"))
-    result = json.dumps(vm.setup_ssh_forwarding(tls=use_tls))
+    result = json.dumps(vm.setup_ssh_forwarding())
 
     return HttpResponse(result, mimetype="application/json")
 
