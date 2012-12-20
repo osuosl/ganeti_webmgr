@@ -34,23 +34,6 @@ $(function () {
     var host, port, password; // VNC proxy connection settings
     var connected = false;
 
-    // When the VNC Canvas is resized, this is called and resizes
-    // the window if it's a popup
-    function resize_popup() {
-        // Height will be VNC_canvas + a little bit
-         var cHeight = vnc_canvas.height();
-         // Width will be VNC_canvas + a little bit
-         var cWidth = vnc_canvas.width();
-
-         // Without this next line, the status hangs off to the right
-         // of the buttons. That looks really bad.
-         vnc_status_bar.width(cWidth);
-
-         // Resize
-         vnc_screen.width(cWidth);
-         window.resizeTo(cWidth + 50, cHeight + 100);
-    }
-
     connect.click(function(event) {
         event.preventDefault();
         var $this = $(this);
@@ -61,10 +44,6 @@ $(function () {
             connected = true;
             start();
         }
-
-        // When connecting, change the window size to have
-        // the canvas fully viewable
-       resize_popup();
     });
 
     encrypt.click(function(event){
@@ -81,27 +60,12 @@ $(function () {
         }
     });
 
-    ctrlaltdelete
-        .click(function(event){
-            event.preventDefault();
-            if (!$(this).hasClass('disabled')) {
-                rfb.sendCtrlAltDel();
-            }
-        });
-
-    if (POPOUT_URL != undefined) {
-        popout.click(function(event) {
-            event.preventDefault();
-            var url;
-            if (rfb == undefined) {
-                url = POPOUT_URL;
-            } else {
-                url = POPOUT_URL + '?auto_connect=1';
-                stop();
-            }
-            window.open(url, 'popout', 'height=550,width=775,status=no,toolbar=no,menubar=no,location=no');
-        });
-    }
+    ctrlaltdelete.click(function(event){
+        event.preventDefault();
+        if (!$(this).hasClass('disabled')) {
+            rfb.sendCtrlAltDel();
+        }
+    });
 
     // users exits the page by following link or closing the tab or sth else
     $(window).bind("unload", stop);

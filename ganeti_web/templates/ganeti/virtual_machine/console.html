@@ -6,26 +6,48 @@
     // Set include path for noVNC scripts
     var INCLUDE_URI = "{{SITE_ROOT}}/novnc/";
     // Set path for proxy requests
-    var PROXY_REQUEST_URI = "{% url instance-vnc-proxy cluster_slug instance.hostname %}";
-    {% if not popout %}
-    var POPOUT_URL = "{% url instance-vnc-popout cluster_slug instance.hostname %}";
-    {% endif %}
+    var PROXY_REQUEST_URI = "{% url instance-console-proxy cluster_slug instance.hostname %}";
 </script>
 <script type="text/javascript" src="{{STATIC_URL}}/js/console.js"></script>
 
 <ul id="actions" class="horizontal">
-    <li><a id="encrypt" href="#" title="encrypt" class="button encrypt">{% trans "Encrypt" %}</a></li>
-    <li><a id="connect" href="#" title="connect to" class="button connect">{% trans "Connect" %}</a></li>
+    <li>
+        <a id="encrypt" href="#" title="encrypt" class="button encrypt">
+            {% trans "Encrypt" %}
+        </a>
+    </li>
+    <li>
+        <a id="connect" href="#" title="connect to" class="button connect">
+            {% trans "Connect" %}
+        </a>
+    </li>
     {% ifequal instance.info.status "running" %}
-    <li><a class="button shutdown power" title="shut down" href="{% url instance-shutdown cluster_slug instance.hostname %}">{% trans "Shutdown" %}</a></li>
-    <li><a class="button reboot power" title="reboot" href="{% url instance-reboot cluster_slug instance.hostname %}">{% trans "Reboot" %}</a></li>
+    <li>
+        <a class="button shutdown power" title="shut down"
+            href="{% url instance-shutdown cluster_slug instance.hostname %}">
+            {% trans "Shutdown" %}
+        </a>
+    </li>
+    <li>
+        <a class="button reboot power" title="reboot"
+            href="{% url instance-reboot cluster_slug instance.hostname %}">
+            {% trans "Reboot" %}
+        </a>
+    </li>
     {% else %}
-    <li><a class="button startup power" href="{% url instance-startup cluster_slug instance.hostname %}">{% trans "Start" %}</a></li>
+    <li>
+        <a class="button startup power"
+            href="{% url instance-startup cluster_slug instance.hostname %}">
+            {% trans "Start" %}
+        </a>
+    </li>
     {% endifequal %}
-    <li><a id="ctrlaltdelete" href="#" class="button reboot disabled power" title="Send Ctrl-Alt-Delete">Ctrl-Alt-Delete</a></li>
-    {% if not popout %}
-    <li><a id="popout" href="#" class="button popout" title="popout vnc window"></a></li>
-    {% endif %}
+    <li>
+        <a id="ctrlaltdelete" href="#"
+            class="button reboot disabled power" title="Send Ctrl-Alt-Delete">
+            Ctrl-Alt-Delete
+        </a>
+    </li>
 </ul>
 
 <input type="checkbox" id="encrypt_check" />
@@ -35,7 +57,9 @@
         noVNC client
     </div>
     <canvas id="VNC_canvas">
-        {% blocktrans %}Canvas is not supported in your browser. Please use new versions
-        of Chrome or Firefox.{% endblocktrans %}
+    {% blocktrans %}
+    Canvas is not supported in your browser. Please use new versions of Chrome
+    or Firefox.
+    {% endblocktrans %}
     </canvas>
 </div>
