@@ -19,7 +19,7 @@
             select: function(event, ui) {
                         window.location.hash = ui.tab.hash;
                     }
-		});
+        });
 
         {% if admin %}
             {% ifnotequal instance.info.status "running" %}
@@ -184,29 +184,32 @@
 
 <div id="tabs">
     <ul>
-        <li><a href="#overview"><span>{% trans "Overview" %}</span></a></li>
+        <li><a href="#overview">{% trans "Overview" %}</a></li>
         {% if admin %}
-            <li>
-                <a title="users" href="{% url vm-users cluster.slug instance.hostname %}">
-                    <span>{% trans "Users" %}</span>
-                </a>
-            </li>
-            <li>
-                <a title="log" href="{% url vm-object_log cluster.slug instance.hostname %}">
-                    <span>{% trans "Log" %}</span>
-                </a>
-            </li>
+        <li>
+            <a title="users"
+                href="{% url vm-users cluster.slug instance.hostname %}">
+                {% trans "Users" %}
+            </a>
+        </li>
+        <li>
+            <a title="log"
+                href="{% url vm-object_log cluster.slug instance.hostname %}">
+                {% trans "Log" %}
+            </a>
+        </li>
         {%endif%}
-	{% if admin or power %}
-	    <li>
-            <a title="console" href="{% url instance-vnc cluster.slug instance.hostname %}">
-                <span>{% trans "Console" %}</span>
+        {% if admin or power %}
+        <li>
+            <a title="console"
+                href="{% url instance-vnc cluster.slug instance.hostname %}">
+                {% trans "Console" %}
             </a>
         </li>
         {% endif %}
     </ul>
     <div id="overview" class="tab_content">
-		{% if instance.cluster.username %}
+        {% if instance.cluster.username %}
         {% with instance.cluster.username as username %}
         <ul id="actions">
             {# Start, Shutdown, Reboot #}
@@ -308,7 +311,7 @@
             {% endif %}
         </ul>
         {% endwith %}
-		{% endif %}
+        {% endif %}
 
         {% with instance.info as info %}
         {% if info %}
