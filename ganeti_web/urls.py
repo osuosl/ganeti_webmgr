@@ -177,12 +177,7 @@ urlpatterns += patterns('ganeti_web.views.virtual_machine',
     url(r'^%s/permissions/user/(?P<user_id>\d+)/?$' % vm_prefix, 'permissions', name="vm-permissions-user"),
     url(r'^%s/permissions/group/(?P<group_id>\d+)/?$' % vm_prefix, 'permissions', name="vm-permissions-user"),
     
-    #  Start, Stop, Reboot, VNC
-    url(r'^%s/vnc/?$' % vm_prefix, 'novnc', name="instance-vnc"),
-    url(r'^%s/vnc/popout/?$' % vm_prefix, 'novnc',
-                        {'template':'ganeti/virtual_machine/vnc_popout.html'},
-                        name="instance-vnc-popout"),
-    url(r'^%s/vnc_proxy/?$' % vm_prefix, 'vnc_proxy', name="instance-vnc-proxy"),
+    #  Start, Stop, Reboot
     url(r'^%s/shutdown/?$' % vm_prefix, 'shutdown', name="instance-shutdown"),
     url(r'^%s/shutdown-now/?$' % vm_prefix, 'shutdown_now',
         name="instance-shutdown-now"),
@@ -190,6 +185,16 @@ urlpatterns += patterns('ganeti_web.views.virtual_machine',
     url(r'^%s/reboot/?$' % vm_prefix, 'reboot', name="instance-reboot"),
     url(r'^%s/migrate/?$' % vm_prefix, 'migrate', name="instance-migrate"),
     url(r'^%s/replace_disks/?$' % vm_prefix, 'replace_disks', name="instance-replace-disks"),
+
+    # Consoles (serial and VNC)
+    url(r'^%s/console/?$' % vm_prefix, 'console', name="instance-console"),
+    url(r'^%s/console-proxy/?$' % vm_prefix, 'console_proxy',
+        name="instance-console-proxy"),
+    url(r'^%s/vnc/?$' % vm_prefix, 'novnc', name="instance-vnc"),
+    url(r'^%s/vnc/popout/?$' % vm_prefix, 'novnc',
+                        {'template':'ganeti/virtual_machine/vnc_popout.html'},
+                        name="instance-vnc-popout"),
+    url(r'^%s/vnc_proxy/?$' % vm_prefix, 'vnc_proxy', name="instance-vnc-proxy"),
 
     # Delete
     url(r"^%s/delete/?$" % vm_prefix, VMDeleteView.as_view(),

@@ -201,8 +201,14 @@
         {%endif%}
         {% if admin or power %}
         <li>
-            <a title="console"
+            <a title="vnc"
                 href="{% url instance-vnc cluster.slug instance.hostname %}">
+                {% trans "VNC" %}
+            </a>
+        </li>
+        <li>
+            <a title="console"
+                href="{% url instance-console cluster.slug instance.hostname %}">
                 {% trans "Console" %}
             </a>
         </li>

@@ -291,6 +291,51 @@ def reinstall(request, cluster_slug, instance):
 
 
 @login_required
+def console(request, cluster_slug, instance):
+    template = "ganeti/virtual_machine/console.html"
+
+    vm = get_object_or_404(VirtualMachine, hostname=instance,
+                           cluster__slug=cluster_slug)
+    user = request.user
+
+    # Check user abilities.
+    if not (user.is_superuser
+            or user.has_any_perms(vm, ['admin', 'power'])
+            or user.has_perm('admin', vm.cluster)):
+        msg = _("You don't have permission to use the console!")
+        return HttpResponseForbidden(msg)
+
+    context = {
+        'cluster_slug': cluster_slug,
+        'instance': vm,
+    }
+
+    return render_to_response(template, context,
+        context_instance=RequestContext(request),
+    )
+
+
+@require_POST
+@login_required
+def console_proxy(request, cluster_slug, instance):
+    vm = get_object_or_404(VirtualMachine, hostname=instance,
+                                 cluster__slug=cluster_slug)
+    user = request.user
+
+    # Check user abilities.
+    if not (user.is_superuser
+            or user.has_any_perms(vm, ['admin', 'power'])
+            or user.has_perm('admin', vm.cluster)):
+        msg = _("You don't have permission to use the console!")
+        return HttpResponseForbidden(msg)
+
+    use_tls = bool(request.POST.get("tls"))
+    result = json.dumps(vm.setup_ssh_forwarding(tls=use_tls))
+
+    return HttpResponse(result, mimetype="application/json")
+
+
+@login_required
 def novnc(request, cluster_slug, instance, template="ganeti/virtual_machine/novnc.html"):
     vm = get_object_or_404(VirtualMachine, hostname=instance,
                            cluster__slug=cluster_slug)
