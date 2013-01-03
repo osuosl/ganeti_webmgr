@@ -293,3 +293,45 @@ def tarball():
         )
         local('tar zcf %(tarball)s %(files)s --exclude=*.pyc' % data)
         local('mv %(tarball)s ./ganeti_webmgr/' % data)
+
+
+def _uncomment(filen, com):
+    args = dict(filen=filen, com=com)
+    local('sed -i.bak -r -e "/%(com)s/ '
+          's/^([[:space:]]*)#[[:space:]]?/\\1/g" %(filen)s' % args)
+
+
+def _comment(filen, com):
+    args = dict(filen=filen, com=com)
+    local('sed -i.bak -r -e "s/(%(com)s)/#\\1/g" %(filen)s' % args)
+
+
+def ldap(state="enable"):
+    """
+    Enable LDAP settings, and install packages
+    Depends on: libldap2-dev, libsasl2-dev
+    """
+
+
+    filename = 'settings.py' % env
+    env.virtualenv = env.doc_root
+
+    with lcd(env.doc_root):
+        if state == "enable":
+            # Install and enable LDAP settings
+            if not _exists('/usr/include/lber.h'):
+                print ("Make sure libldap-dev is"
+                      " installed before continuing")
+            if not _exists('/usr/include/sasl'):
+                print ("Make sure libsasl2-dev is"
+                      " installed before continuing")
+            local('%(virtualenv)s/bin/pip install -qr requirements-ldap.txt' % env)
+
+            _uncomment(filename, 'from ldap_settings')
+            _uncomment(filename, "'django_auth_ldap")
+        elif state == "disable":
+            # Disable LDAP settings and uninstall requirments
+            local('%(virtualenv)s/bin/pip uninstall -qyr requirements-ldap.txt' % env)
+
+            _comment(filename, 'from ldap_settings')
+            _comment(filename, "'django_auth_ldap")
