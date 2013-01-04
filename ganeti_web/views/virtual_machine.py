@@ -100,15 +100,16 @@ class VMListView(LoginRequiredMixin, PagedListView):
         context["can_create"] = (user.is_superuser or
                                 user.has_any_perms(Cluster, ["create_vm"]))
 
-        # Allows for bulk reboot/shutdown/start -- NEEDS TESTING -- NOT TESTED
-        if self.request.method == 'POST':
+        if user.has_any_perms(VirtualMachine, ['admin', 'modify', 'remove', 'power']):
+            context["bulk_ops"] = True
+        else:
+            context["bulk_ops"] = False
 
-            if user.has_any_perms(VirtualMachine, ['admin', 'modify', 'remove', 'power']):
-                # Call bulk_ops and send in the request
+        # Allows for bulk reboot/shutdown/start
+        if self.request.method == 'POST':
+            if context["bulk_ops"]:
                 self.bulk_ops(self.request)
-            else:
-                # Return an error for each VM the user doesn't have permissions on.
-                print "error calling bulk_ops"
+
         if "order_by" in self.request.GET:
             context["order"] = self.request.GET["order_by"]
         else:
@@ -117,6 +118,7 @@ class VMListView(LoginRequiredMixin, PagedListView):
         return context
 
     def bulk_ops(self, request):
+        #Used for performing bulk operations on VMs
 
         for vm in request.POST.getlist('chkbx'):
             vm_operation = request.POST['vm_options']
@@ -124,6 +126,9 @@ class VMListView(LoginRequiredMixin, PagedListView):
             slug = vm[vm.find(",")+1:]
 
             print "Shutting down a VM"
+
+            hostname = vm[:vm.find(",")] # Checkbox value is "hostname, slug"
+            slug = vm[vm.find(",")+1:] # which is why it's split like this.
 
             if vm_operation == "Reboot VMs":
                 reboot(request, slug, hostname)
@@ -338,7 +343,7 @@ def shutdown(request, cluster_slug, instance):
 
     if not (user.is_superuser or user.has_any_perms(vm, ['admin','power']) or
         user.has_perm('admin', vm.cluster)):
-        msg = _('You do not have permission to shut down this virtual machine')
+        msg = _('You do not have permission to shut down '+instance)
         raise Http403(msg)
 
     try:
@@ -363,7 +368,7 @@ def shutdown_now(request, cluster_slug, instance):
 
     if not (user.is_superuser or user.has_any_perms(vm, ['admin','power']) or
         user.has_perm('admin', vm.cluster)):
-        msg = _('You do not have permission to shut down this virtual machine')
+        msg = _('You do not have permission to shut down '+instance)
         raise Http403(msg)
 
     try:
@@ -387,7 +392,7 @@ def startup(request, cluster_slug, instance, rest=False):
     user = request.user
     if not (user.is_superuser or user.has_any_perms(vm, ['admin','power']) or
         user.has_perm('admin', vm.cluster)):
-            msg = _('You do not have permission to start up this virtual machine')
+            msg = _('You do not have permission to start up '+instance)
             if rest:
                 return {"msg": msg, "code": 403}
             else:
@@ -514,7 +519,7 @@ def reboot(request, cluster_slug, instance, rest=False):
             if rest:
                 return HttpResponseForbidden()
             else:
-                raise Http403(_('You do not have permission to reboot this virtual machine'))
+                raise Http403(_('You do not have permission to reboot '+instance))
 
     try:
         job = vm.reboot()
