@@ -3,14 +3,15 @@
 
 <form method="post" class="sorted">
 {% csrf_token %}
+
 <table id="vmlist">
-<select name="vm_options">
-  <option name="Reboot">Reboot VMs</option>
-  <option name="Start">Start VMs</option>
-  <option name="Shutdown">Shutdown VMs</option>
-  <option name="Immediate shutdown">Immediately Shutdown VMs</option>
-</select>
- 
+  <select name="vm_options">
+    <option name="Reboot">Reboot VMs</option>
+    <option name="Start">Start VMs</option>
+    <option name="Shutdown">Shutdown VMs</option>
+    <option name="Immediate shutdown">Immediately Shutdown VMs</option>
+  </select>
+
 <input type="submit" onclick="return confirm('Are you sure you want to preform this action the the selected VMs?')" value="Submit"/>
 
 <thead>
@@ -18,8 +19,7 @@
     {% if is_paginated %} {% comment %} Different urls are needed depending on whether the page is paginated or not {% endcomment %}
     <tr>
       <th><input type="checkbox" name="master_chkbx" onclick="toggle_boxes(this);"></input><th>
-      <th class="status"></th>
-      <th onclick="sort('{% url virtualmachine-list-paged page_obj.number,order %}', '{{order}}', 'hostname')"> {% trans "Name" %} </th>            
+      <th onclick="sort('{% url virtualmachine-list-paged page_obj.number,order %}', '{{order}}', 'hostname')"> {% trans "Name" %} </th>
       <th onclick="sort('{% url virtualmachine-list-paged page_obj.number,order %}', '{{order}}', 'owner')"> {% trans "Owner" %}</th>
       <th onclick="sort('{% url virtualmachine-list-paged page_obj.number,order %}', '{{order}}', 'cluster')">{% trans "Cluster" %}</th>
       <th>{% trans "Node" %}</th>
@@ -28,9 +28,9 @@
       <th onclick="sort('{% url virtualmachine-list-paged page_obj.number,order %}', '{{order}}', 'disk_size')"> {% trans "Disk Space" %}</th>
       <th onclick="sort('{% url virtualmachine-list-paged page_obj.number,order %}', '{{order}}', 'virtual_cpus')">{% trans "vCPUs" %}</th>
     </tr>
-    {% else %} 
+    {% else %}
     <tr>
-      <th class="status"></th>
+      <th><input type="checkbox" name="master_chkbx" onclick="toggle_boxes(this);"></input><th>
       <th onclick="sort('{% url virtualmachine-list-ordered order %}', '{{order}}', 'hostname')"> {% trans "Name" %} </th>
       <th onclick="sort('{% url virtualmachine-list-ordered order %}', '{{order}}', 'owner')"> {% trans "Owner" %}</th>
       <th onclick="sort('{% url virtualmachine-list-ordered order %}', '{{order}}', 'cluster')">{% trans "Cluster" %}</th>
@@ -43,7 +43,7 @@
     {% endif %}
   {% else %}
     <tr>
-      <th class="status"></th>
+      <th><input type="checkbox" name="master_chkbx" onclick="toggle_boxes(this);"></input><th>
       <th> {% trans "Name" %} </th>
       <th> {% trans "Owner" %}</th>
       <th> {% trans "Node" %}</th>
@@ -150,5 +150,5 @@
         <a href="{% url virtualmachine-list-paged page_obj.next_page_number, order %}">{% trans "Next" %} &raquo;</a>
     </li>
     {% endif %}
-</ul>   
+</ul>
 {% endif %}
