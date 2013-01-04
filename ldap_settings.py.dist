@@ -151,7 +151,7 @@ AUTH_LDAP_REQUIRE_GROUP = "cn=enabled,ou=Group,dc=example,dc=org"
 # The distinguished name of a group; authentication will fail for any user
 # that belongs to this group.
 #   Default: None
-AUTH_LDAP_DENY_GROUP = "cn=disenabled,ou=Group,dc=example,dc=org"
+AUTH_LDAP_DENY_GROUP = "cn=disabled,ou=Group,dc=example,dc=org"
 
 # If True, LDAPBackend will mirror a user's LDAP group membership in the
 # Django database. Any time a user authenticates, we will create all of
