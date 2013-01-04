@@ -5,12 +5,14 @@
 {% csrf_token %}
 
 <table id="vmlist">
+  {% if bulk_ops %}
   <select name="vm_options">
     <option name="Reboot">Reboot VMs</option>
     <option name="Start">Start VMs</option>
     <option name="Shutdown">Shutdown VMs</option>
     <option name="Immediate shutdown">Immediately Shutdown VMs</option>
   </select>
+  {% endif %}
 
 <input type="submit" onclick="return confirm('Are you sure you want to preform this action the the selected VMs?')" value="Submit"/>
 
@@ -18,7 +20,11 @@
   {% if order %} {% comment %} order will only exist if the VM view is using this template {% endcomment %}
     {% if is_paginated %} {% comment %} Different urls are needed depending on whether the page is paginated or not {% endcomment %}
     <tr>
+      {% if bulk_ops %}
       <th><input type="checkbox" name="master_chkbx" onclick="toggle_boxes(this);"></input><th>
+      {% else %}
+      <th class="status"></th>
+      {% endif %}
       <th onclick="sort('{% url virtualmachine-list-paged page_obj.number,order %}', '{{order}}', 'hostname')"> {% trans "Name" %} </th>
       <th onclick="sort('{% url virtualmachine-list-paged page_obj.number,order %}', '{{order}}', 'owner')"> {% trans "Owner" %}</th>
       <th onclick="sort('{% url virtualmachine-list-paged page_obj.number,order %}', '{{order}}', 'cluster')">{% trans "Cluster" %}</th>
@@ -30,7 +36,11 @@
     </tr>
     {% else %}
     <tr>
+      {% if bulk_ops %}
       <th><input type="checkbox" name="master_chkbx" onclick="toggle_boxes(this);"></input><th>
+      {% else %}
+      <th class="status"></th>
+      {% endif %}
       <th onclick="sort('{% url virtualmachine-list-ordered order %}', '{{order}}', 'hostname')"> {% trans "Name" %} </th>
       <th onclick="sort('{% url virtualmachine-list-ordered order %}', '{{order}}', 'owner')"> {% trans "Owner" %}</th>
       <th onclick="sort('{% url virtualmachine-list-ordered order %}', '{{order}}', 'cluster')">{% trans "Cluster" %}</th>
@@ -43,7 +53,11 @@
     {% endif %}
   {% else %}
     <tr>
+      {% if bulk_ops %}
       <th><input type="checkbox" name="master_chkbx" onclick="toggle_boxes(this);"></input><th>
+      {% else %}
+      <th class="status"></th>
+      {% endif %}
       <th> {% trans "Name" %} </th>
       <th> {% trans "Owner" %}</th>
       <th> {% trans "Node" %}</th>
