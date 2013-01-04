@@ -12,9 +12,9 @@
     <option name="Shutdown">Shutdown VMs</option>
     <option name="Immediate shutdown">Immediately Shutdown VMs</option>
   </select>
-  {% endif %}
 
-<input type="submit" onclick="return confirm('Are you sure you want to preform this action the the selected VMs?')" value="Submit"/>
+  <input type="submit" onclick="return confirm('Are you sure you want to preform this action the the selected VMs?')" value="Submit"/>
+  {% endif %}
 
 <thead>
   {% if order %} {% comment %} order will only exist if the VM view is using this template {% endcomment %}
@@ -74,7 +74,9 @@
     {% if not vm.pending_delete or vm.last_job_id %}
     {% with vm.info as info %}
     <tr>
+        {% if bulk_ops %}
         <td><input type="checkbox" name="chkbx" value="{{vm.hostname}},{{vm.cluster.slug}}"></input></td>
+        {% endif %}
         <td class="status">
             {% if vm.error %}
                 <div class="icon_error" title="{% trans "Ganeti API Error" %}: {{vm.error}}, last status was {{ vm.status|render_instance_status }}"></div>
