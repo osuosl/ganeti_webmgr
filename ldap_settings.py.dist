@@ -85,7 +85,7 @@ AUTH_LDAP_BIND_DN = ''
 #   Default: '' (Empty string)
 AUTH_LDAP_BIND_PASSWORD = ''
 
-# A string template that describes any user’s distinguished name based on
+# A string template that describes any user's distinguished name based on
 # the username. This must contain the placeholder %(user)s.
 #   Default: None
 #AUTH_LDAP_USER_DN_TEMPLATE = None
