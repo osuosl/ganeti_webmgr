@@ -109,6 +109,8 @@ class VMListView(LoginRequiredMixin, PagedListView):
         if self.request.method == 'POST':
             if context["bulk_ops"]:
                 bulk_ops(self.request)
+                self.bulk_ops(self.request)
+
         if "order_by" in self.request.GET:
             context["order"] = self.request.GET["order_by"]
         else:
@@ -116,6 +118,30 @@ class VMListView(LoginRequiredMixin, PagedListView):
 
         return context
 
+    def bulk_ops(self, request):
+        #Used for performing bulk operations on VMs
+
+        for vm in request.POST.getlist('chkbx'):
+            vm_operation = request.POST['vm_options']
+            hostname = vm[:vm.find(",")]
+            slug = vm[vm.find(",")+1:]
+
+            print "Shutting down a VM"
+
+            hostname = vm[:vm.find(",")] # Checkbox value is "hostname, slug"
+            slug = vm[vm.find(",")+1:] # which is why it's split like this.
+
+            if vm_operation == "Reboot VMs":
+                reboot(request, slug, hostname)
+            elif vm_operation == "Start VMs":
+                startup(request, slug, hostname)
+            elif vm_operation == "Shutdown VMs":
+                shutdown(request, slug, hostname)
+            elif vm_operation == "Immediately Shutdown VMs":
+                shutdown_now(request, slug, hostname)
+
+
+>>>>>>> Added in a check to see if the user has permission to perform actions
     def post(self, *args, **kwargs):
         return super(VMListView, self).get(self.request, args, kwargs)
 
