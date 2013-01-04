@@ -109,6 +109,7 @@ class VMListView(LoginRequiredMixin, PagedListView):
         if self.request.method == 'POST':
             if context["bulk_ops"]:
                 bulk_ops(self.request)
+
         if "order_by" in self.request.GET:
             context["order"] = self.request.GET["order_by"]
         else:
