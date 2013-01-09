@@ -18,8 +18,6 @@ Getting Started
     deployment
     fabric-install
     fabric-recommend
-    manual-install
-    errors
     upgrading
     importing
     screenshots

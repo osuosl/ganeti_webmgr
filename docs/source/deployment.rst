@@ -25,7 +25,6 @@ Related Topics:
 
 -  Read more about why :doc:`fabric-recommend`
 -  :doc:`fabric-install`
--  :doc:`manual-install`
 
 .. _Fabric: http://docs.fabfile.org/
 

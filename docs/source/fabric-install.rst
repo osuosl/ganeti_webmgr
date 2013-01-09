@@ -2,9 +2,7 @@ Troubleshooting Fabric
 ======================
 
 This page provides a list of common problems and errors encountered when
-installing Ganeti Web Manager with Fabric, and their solutions. If you
-are installing manually instead of using Fabric, please see
-:doc:`errors`.
+installing Ganeti Web Manager with Fabric, and their solutions.
 
 If you discover ambiguities or problems with the installation
 instructions that aren't addressed in this page, please ask in the

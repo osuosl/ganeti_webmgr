@@ -34,11 +34,10 @@ Virtual Environments
 --------------------
 
 Ganeti Web Manager has been developed and tested with specific versions
-of its :ref:`install-dependencies`.
-If another program on your system uses a version of a dependency that
-GWM doesn't support, it can cause failure or unexpected behavior. To
-avoid these conflicts, Ganeti Web Manager version 0.7 (and above) is run
-in a virtual environment.
+of its dependencies. If another program on your system uses a version of a
+dependency that GWM doesn't support, it can cause failure or unexpected
+behavior. To avoid these conflicts, Ganeti Web Manager version 0.7 (and above)
+is run in a virtual environment.
 
 `Virtualenv <http://www.virtualenv.org/en/latest/>`_ solves problems
 caused by incorrect dependency versions by isolating the environment in
