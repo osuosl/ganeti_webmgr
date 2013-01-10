@@ -21,7 +21,8 @@ from django.core.urlresolvers import reverse
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import Q
 from django.forms import (Form, BooleanField, CharField, ChoiceField,
-                          IntegerField, ModelChoiceField, ValidationError)
+                          IntegerField, ModelChoiceField, ValidationError,
+                          MultipleChoiceField, CheckboxSelectMultiple)
 from django.http import HttpResponseRedirect
 # Per #6579, do not change this import without discussion.
 from django.utils import simplejson as json
@@ -566,6 +567,14 @@ class VMWizardClusterForm(Form):
     cluster = ModelChoiceField(label=_('Cluster'),
                                queryset=Cluster.objects.all(),
                                empty_label=None)
+    OPTIONS = (
+        ('template', 'Template'),
+        ('virtualmachine', 'Virtual Machine'),
+    )
+    vm_or_template = MultipleChoiceField(widget=CheckboxSelectMultiple,
+                                         choices=OPTIONS,
+                                         label=_('What would you '
+                                                 'like to create?'))
 
     def _configure_for_user(self, user):
         self.fields["cluster"].queryset = cluster_qs_for_user(user)
@@ -891,6 +900,14 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
             return VirtualMachineTemplate.objects.get(template_name=name)
         return None
 
+    def _get_vm_or_template(self):
+        data = self.get_cleaned_data_for_step("0")
+        if data:
+            choices = data['vm_or_template']
+            print choices
+            return choices
+        return None
+
     def _get_cluster(self):
         data = self.get_cleaned_data_for_step("0")
         if data:
@@ -918,6 +935,7 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
             # XXX this should somehow become totally invalid if the user
             # doesn't have perms on the template.
         elif s == 1:
+            choices = self._get_vm_or_template()
             form = VMWizardOwnerForm(data=data)
             form._configure_for_cluster(self._get_cluster())
             form._configure_for_template(self._get_template())
