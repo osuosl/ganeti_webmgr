@@ -21,12 +21,31 @@ input.select {float:right;}
 {% endblock %}
 
 {% block content %}
-<h1>{% trans "Create a Virtual Machine" %}</h1>
+<h1>
+{% trans "Create a " %}
+  {% for choice in summary.cluster_form.choices %}
+    {% if forloop.counter > 1 %}
+      {% trans " and " %}
+    {% endif %}
+
+    {% if choice == 'hostname' %}
+      {% trans "Virtual Machine" %}
+    {% endif %}
+
+    {% if choice == 'template_name' %}
+      {% trans "Template" %}
+    {% endif %}
+
+  {% empty %}
+    {% trans "Template and/or Virtual Machine" %}
+  {% endfor %}
+:</h1>
+
 <h2>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</h2>
 <div class="vm-summary">
     <ul>
-        {% if summary.cluster %}
-        <li>Cluster: {{ summary.cluster }}</li>
+        {% if summary.cluster_form.cluster %}
+        <li>Cluster: {{ summary.cluster_form.cluster }}</li>
         {% endif %}
         {% if summary.owner_form %}
         <li>Owner: {{ summary.owner_form.owner }}</li>

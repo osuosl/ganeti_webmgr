@@ -567,14 +567,15 @@ class VMWizardClusterForm(Form):
     cluster = ModelChoiceField(label=_('Cluster'),
                                queryset=Cluster.objects.all(),
                                empty_label=None)
-    OPTIONS = (
-        ('template', 'Template'),
-        ('virtualmachine', 'Virtual Machine'),
-    )
-    vm_or_template = MultipleChoiceField(widget=CheckboxSelectMultiple,
-                                         choices=OPTIONS,
-                                         label=_('What would you '
-                                                 'like to create?'))
+
+    def __init__(self, options=None, *args, **kwargs):
+        super(VMWizardClusterForm, self).__init__(*args, **kwargs)
+        if options:
+            self.fields['choices'] = MultipleChoiceField(
+                                     widget=CheckboxSelectMultiple,
+                                     choices=options,
+                                     label=_('What would you '
+                                         'like to create?'))
 
     def _configure_for_user(self, user):
         self.fields["cluster"].queryset = cluster_qs_for_user(user)
@@ -594,6 +595,9 @@ class VMWizardClusterForm(Form):
 
 
 class VMWizardOwnerForm(Form):
+    owner = ModelChoiceField(label=_('Owner'),
+                             queryset=ClusterUser.objects.all(),
+                             empty_label=None)
     template_name = CharField(label=_("Template Name"), max_length=255,
                               required=False,
                               help_text=_(VM_HELP['template_name']))
@@ -612,7 +616,13 @@ class VMWizardOwnerForm(Form):
         qs = owner_qs_for_cluster(cluster)
         self.fields["owner"].queryset = qs
 
-    def _configure_for_template(self, template):
+    def _configure_for_template(self, template, choices=None):
+        # for each option not checked on step 0
+        if choices:
+            for field in choices:
+                # Hide it
+                self.fields[field].widget = forms.HiddenInput()
+
         if not template:
             return
 
@@ -894,18 +904,29 @@ class VMWizardKVMForm(Form):
 class VMWizardView(LoginRequiredMixin, CookieWizardView):
     template_name = "ganeti/forms/vm_wizard.html"
 
+    OPTIONS = (
+        # value, display value
+        # value corresponds to VMWizardOwnerForm's fields
+        ('template_name', 'Template'),
+        ('hostname', 'Virtual Machine'),
+    )
+
+    def _get_vm_or_template(self):
+        """Returns items that were not checked in step0"""
+        data = self.get_cleaned_data_for_step('0')
+        if data:
+            options = [option[0] for option in self.OPTIONS]
+            choices = data.get('choices', None)
+            # which boxes weren't checked
+            unchecked = set(options) - set(choices)
+            return unchecked
+
+        return None
+
     def _get_template(self):
         name = self.kwargs.get("template")
         if name:
             return VirtualMachineTemplate.objects.get(template_name=name)
-        return None
-
-    def _get_vm_or_template(self):
-        data = self.get_cleaned_data_for_step("0")
-        if data:
-            choices = data['vm_or_template']
-            print choices
-            return choices
         return None
 
     def _get_cluster(self):
@@ -930,15 +951,15 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
         s = int(self.steps.current) if step is None else int(step)
 
         if s == 0:
-            form = VMWizardClusterForm(data=data)
+            form = VMWizardClusterForm(data=data, options=self.OPTIONS)
             form._configure_for_user(self.request.user)
             # XXX this should somehow become totally invalid if the user
             # doesn't have perms on the template.
         elif s == 1:
-            choices = self._get_vm_or_template()
             form = VMWizardOwnerForm(data=data)
             form._configure_for_cluster(self._get_cluster())
-            form._configure_for_template(self._get_template())
+            form._configure_for_template(self._get_template(),
+                                         choices=self._get_vm_or_template())
         elif s == 2:
             form = VMWizardBasicsForm(data=data)
             form._configure_for_cluster(self._get_cluster())
@@ -975,7 +996,7 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
         context = super(VMWizardView, self).get_context_data(form=form,
                                                              **kwargs)
         summary = {
-            "cluster": self._get_cluster(),
+            "cluster_form": self.get_cleaned_data_for_step("0"),
             "owner_form": self.get_cleaned_data_for_step("1"),
             "basics_form": self.get_cleaned_data_for_step("2"),
             "advanced_form": self.get_cleaned_data_for_step("3"),
@@ -1004,8 +1025,21 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
 
         cluster = forms[0].cleaned_data["cluster"]
         owner = forms[1].cleaned_data["owner"]
-        hostname = forms[1].cleaned_data["hostname"]
+
         template_name = forms[1].cleaned_data["template_name"]
+        hostname = forms[1].cleaned_data["hostname"]
+
+        # choice_data are the options that were not checked
+        # if unchecked, than we should make sure that this is not submitted.
+        # this fixes cases where the user checked a box in the beginning, put
+        # data into the input, and went back and unchecked that box later.
+        unchecked_options = self._get_vm_or_template()
+        for unchecked in unchecked_options:
+            if 'template_name' == unchecked:
+                template_name = ''
+            if 'hostname' == unchecked:
+                hostname = ''
+
 
         template.cluster = cluster
         template.memory = forms[2].cleaned_data["memory"]
