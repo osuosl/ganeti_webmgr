@@ -180,6 +180,9 @@ LOGGING = {
 # default items per page
 ITEMS_PER_PAGE = 10
 
+# default max number of disks that can be added at once to an instance
+MAX_DISKS_ADD = 6
+
 # Ganeti Cached Cluster Objects Timeouts
 #    LAZY_CACHE_REFRESH (milliseconds) is the fallback cache timer that is
 #    checked when the object is instantiated. It defaults to 600000ms, or ten
