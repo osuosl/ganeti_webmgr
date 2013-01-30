@@ -182,6 +182,7 @@ ITEMS_PER_PAGE = 10
 
 # default max number of disks that can be added at once to an instance
 MAX_DISKS_ADD = 6
+
 # default max number of NICS that can be added at once to an instance
 MAX_NICS_ADD = 6
 
