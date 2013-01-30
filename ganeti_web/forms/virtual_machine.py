@@ -722,6 +722,17 @@ class VMWizardBasicsForm(Form):
 
             self.fields['nic_mode_%s'%i] = nic_mode
             self.fields['nic_link_%s'%i] = nic_link
+=======
+        self.disk_fields = range(count)
+        widget_attrs = {'class': 'multi multi_disks'}
+        for i in range(count):
+            disk_size = DataVolumeField(label=_("Disk/%s Size (MB)" % i),
+                                        required=False,
+                                        help_text=_(VM_CREATE_HELP['disk_size']))
+
+            disk_size.widget.attrs = widget_attrs
+            self.fields['disk_size_%s' % i] = disk_size
+>>>>>>> Multi-disk support in vm_wizard added.
 
     def _configure_for_cluster(self, cluster):
         if not cluster:
@@ -781,9 +792,28 @@ class VMWizardBasicsForm(Form):
         self.fields["disk_template"].initial = template.disk_template
         for num, disk in enumerate(template.disks):
             self.fields["disk_size_%s" % num].initial = disk["size"]
+
         for num, nic in enumerate(template.nics):
             self.fields["nic_link_%s" % num].initial = nic['link']
             self.fields["nic_mode_%s" % num].initial = nic['mode']
+
+    def clean(self):
+        data = self.cleaned_data
+        # get disk sizes after validation (after 1.5G -> 1500)
+        # and filter empty fields.
+        disks = []
+        for disk_num in xrange(settings.MAX_DISKS_ADD):
+            disk = data.get("disk_size_%s" % disk_num, None)
+            if disk:
+                disks.append(disk)
+        # after filtering if our list doesn't contain any sizes, than the user
+        # didn't fill in any of the fields.
+        if not disks:
+            raise forms.ValidationError("You need to add at least 1 disk!")
+
+        # Store disks as an array of dicts for use in template.
+        data["disks"] = [{"size": disk} for disk in disks]
+        return data
 
     def clean(self):
         data = self.cleaned_data
@@ -1141,6 +1171,14 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
         template.disk_template = forms[2].cleaned_data["disk_template"]
 
         template.disks = forms[2].cleaned_data["disks"]
+
+        # Leaving for now
+        #disk_size = forms[2].cleaned_data["disk_size"]
+        #template.disks = [
+        #    {
+        #        "size": disk_size,
+        #    },
+        #]
 
         nics = forms[2].cleaned_data["nics"]
         # default
