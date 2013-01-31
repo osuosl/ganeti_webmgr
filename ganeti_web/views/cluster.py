@@ -93,9 +93,9 @@ class ClusterListView(LoginRequiredMixin, PagedListView):
             if "order_by" in self.request.GET:
                 context["order"] = self.request.GET["order_by"]
             else:
-                context["order"] = "id" 
+                context["order"] = "id"
 
-            return context  
+            return context
 class ClusterVMListView(LoginRequiredMixin, PagedListView):
 
     template_name = "ganeti/virtual_machine/table.html"

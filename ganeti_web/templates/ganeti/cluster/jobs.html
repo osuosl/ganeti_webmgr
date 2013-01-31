@@ -6,7 +6,7 @@
   function toggle_sort_order(order) {
     // If order was descending than change to ascending
     var new_order = order.replace('-', '');
-    // If new_order is the same as before the replace, than it was accenting. 
+    // If new_order is the same as before the replace, than it was accenting.
     // Change to descending.
     if (order == new_order) {
       new_order = '-' + new_order;
@@ -25,7 +25,7 @@
       cur_sort = $header.attr("id");
       var new_sort = toggle_sort_order(cur_sort);
       var url = '{% url cluster-jobs cluster.slug %}' + '?page=' + page + '&order_by=' + new_sort;
-      
+
       $('#job_container').load(url + ' #grab', function() {
         $("#"+cur_sort).attr('id', new_sort);
       });
@@ -76,7 +76,7 @@
         {% endif %}
       </td>
       {% with info.ops|last as action %}
-        <!-- Only grab last job operation to display on table. For two part job 
+        <!-- Only grab last job operation to display on table. For two part job
         actions like reinstalls which consist of reboot and reinstall-->
         <td>{{ action.OP_ID|format_job_op }}</td>
       {% endwith %}
@@ -109,7 +109,7 @@
         <a href="{{ page_obj.next_page_number }}">{% trans "Next" %} &raquo;</a>
     </li>
     {% endif %}
-</ul>   
+</ul>
 {% endif %}
 
 {% endwith %}
