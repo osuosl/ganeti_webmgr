@@ -1,6 +1,7 @@
 {% extends "menu_base.html" %}
 {% load i18n %}
 {% load webmgr_tags %}
+{% load include_strip %}
 
 {% block title %}{%trans "Create a Virtual Machine" %}{% endblock %}
 
@@ -22,24 +23,8 @@ input.select {float:right;}
 
 {% block content %}
 <h1>
-{% trans "Create a " %}
-  {% for choice in summary.cluster_form.choices %}
-    {% if forloop.counter > 1 %}
-      {% trans " and " %}
-    {% endif %}
-
-    {% if choice == 'hostname' %}
-      {% trans "Virtual Machine" %}
-    {% endif %}
-
-    {% if choice == 'template_name' %}
-      {% trans "Template" %}
-    {% endif %}
-
-  {% empty %}
-    {% trans "Template and/or Virtual Machine" %}
-  {% endfor %}
-:</h1>
+Create {% include_strip "ganeti/forms/create_choice.html" with choices=summary.cluster_form.choices %} :
+</h1>
 
 <h2>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</h2>
 <div class="vm-summary">

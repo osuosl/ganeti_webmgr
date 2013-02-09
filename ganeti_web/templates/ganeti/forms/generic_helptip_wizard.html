@@ -1,5 +1,6 @@
 {% block head %}
 {% load i18n %}
+{% load include_strip %}
 
 {{ wizard.form.media }}
 
@@ -43,10 +44,12 @@
     <table id='wizard'>
         {{ wizard.management_form }}
 
-        {% for field in wizard.form %}
+        {% for field in wizard.form.visible_fields %}
         <tr>
           <th>{{ field.label_tag }}</th>
-          <td>{{ field }}</td>
+          <td>
+          {{ field.errors }}
+          {{ field }}</td>
         </tr>
         {% endfor %}
     </table>
@@ -57,7 +60,7 @@
             />
     {% else %}
         <input class="select" type="submit"
-            value="{% trans "Create VM" %}"
+            value="Create {% include_strip "ganeti/forms/create_choice.html" with choices=summary.cluster_form.choices vm="VM"%}"
             />
     {% endif %}
     {% if wizard.steps.prev %}
@@ -66,13 +69,12 @@
             />
             {% trans "Previous" %}
         </button>
-	      <button class="select" name="wizard_goto_step" type="submit"
+        <button class="select" name="wizard_goto_step" type="submit"
             value="{{ wizard.steps.first }}"
-	    />
+	          />
             {% trans "Start Over" %}
         </button>
-       {% endif %}
-
+     {% endif %}
    </table>
 
 </form>

@@ -163,7 +163,8 @@ urlpatterns += patterns('ganeti_web.views.node',
 
 # VM add wizard
 urlpatterns += patterns("ganeti_web.forms.virtual_machine",
-    url(r"^vm/add/?$", vm_wizard(), name="instance-create"),
+    url(r"^vm/add/?$", vm_wizard(initial_dict={0: {'choices': [u'hostname']}}),
+                                 name="instance-create"),
 )
 
 # VirtualMachines
@@ -234,7 +235,9 @@ urlpatterns += patterns('ganeti_web.views.vm_template',
     # List
     url(r'^templates/$', 'templates', name='template-list'),
     # Create
-    url(r'^template/create/$', vm_wizard(), name='template-create'),
+    url(r'^template/create/$',
+        vm_wizard(initial_dict={0: {'choices': [u'template_name']}}),
+                  name='template-create'),
     # Detail
     url(r'^%s/?$' % template_prefix, 'detail', name='template-detail'),
     # Delete

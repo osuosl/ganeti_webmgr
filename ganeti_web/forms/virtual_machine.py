@@ -568,14 +568,22 @@ class VMWizardClusterForm(Form):
                                queryset=Cluster.objects.all(),
                                empty_label=None)
 
+    class Media:
+        css = {
+            # I'm not quite sure if this is the proper way to use static
+            'all': ('/static/css/vm_wizard/cluster_form.css',)
+        }
+
     def __init__(self, options=None, *args, **kwargs):
         super(VMWizardClusterForm, self).__init__(*args, **kwargs)
         if options:
             self.fields['choices'] = MultipleChoiceField(
-                                     widget=CheckboxSelectMultiple,
-                                     choices=options,
-                                     label=_('What would you '
-                                         'like to create?'))
+                widget=CheckboxSelectMultiple,
+                choices=options,
+                initial=self.initial,
+                label=_('What would you '
+                        'like to create?'),
+                help_text=_(VM_CREATE_HELP['choices']))
 
     def _configure_for_user(self, user):
         self.fields["cluster"].queryset = cluster_qs_for_user(user)
@@ -949,9 +957,11 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
 
     def get_form(self, step=None, data=None, files=None):
         s = int(self.steps.current) if step is None else int(step)
+        initial = self.get_form_initial(s)
 
         if s == 0:
-            form = VMWizardClusterForm(data=data, options=self.OPTIONS)
+            form = VMWizardClusterForm(data=data, options=self.OPTIONS,
+                                       initial=initial)
             form._configure_for_user(self.request.user)
             # XXX this should somehow become totally invalid if the user
             # doesn't have perms on the template.
@@ -1040,7 +1050,6 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
             if 'hostname' == unchecked:
                 hostname = ''
 
-
         template.cluster = cluster
         template.memory = forms[2].cleaned_data["memory"]
         template.vcpus = forms[2].cleaned_data["vcpus"]
@@ -1094,7 +1103,7 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
                                                       template]))
 
 
-def vm_wizard():
+def vm_wizard(*args, **kwargs):
     forms = (
         VMWizardClusterForm,
         VMWizardOwnerForm,
@@ -1102,4 +1111,5 @@ def vm_wizard():
         VMWizardAdvancedForm,
         Form,
     )
-    return VMWizardView.as_view(forms)
+    initial = kwargs.get('initial_dict', None)
+    return VMWizardView.as_view(forms, initial_dict=initial)

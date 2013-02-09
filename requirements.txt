@@ -1,6 +1,7 @@
 Twisted>=11.0.0
 django-fields
 django-haystack==1.2.1
+django-include-strip-tag
 django-registration>=0.7,<0.8
 django>=1.4
 django_object_log==0.7

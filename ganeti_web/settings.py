@@ -88,6 +88,7 @@ INSTALLED_APPS = (
     'muddle',
     'muddle.shots',
     'muddle_users',
+    'include_strip_tag',
 )
 
 # The model that contains extra user profile stuff.
