@@ -2,12 +2,12 @@ function disableSingletonDropdown(dropdown, ignoreOpt){
     /*
      * "Disable" the specified dropdown if it has only one option.
      *
-     * If a dropdown has only a one option, hide it, and replace it with a 
+     * If a dropdown has only a one option, hide it, and replace it with a
      * disabled replica. This is necessary because one cannot simply disable a
      * dropdown because then it will not be sent with a submit.
      *
      * If ``ignoreOpt`` is supplied, options labeled with ``ignoreOpt`` will be
-     * ignored and treaded as if they don't exist. This is useful if the 
+     * ignored and treaded as if they don't exist. This is useful if the
      * dropdown has "blank" options such as "---------" or "- choose one -",
      * etc.
      *
@@ -84,6 +84,7 @@ function disableSingletonDropdown2() {
             });
             var span = $("<span />");
             span.html(option.innerHTML);
+            span.addClass('dropdown');
             $(select).after(hidden, span);
             $(select).remove();
         }

@@ -1,0 +1,16 @@
+td label, td select, .dropdown {
+  display: block;
+  text-align: left;
+  margin-left: 25px;
+}
+td input {
+  width: 13px;
+  height: 13px;
+  text-align: left;
+  position: relative;
+  padding: 0;
+  margin: 0;
+  vertical-align: bottom;
+  *overflow: hidden;
+}
+

@@ -296,6 +296,10 @@ VM_CREATE_HELP = {
                      the list to fulfill Ganeti's parameter requirements.  The
                      selected OS will be associated with the VM, but not
                      installed.  </p> """,
+    'choices': """<p>Template - A re-usable Virtual Machine Template. Check
+                     this box if you want to save the options for easy re-use
+                     later.</p> <p>Virtual Machine - Start up an instance with
+                     the options chosen in this Wizard""",
 }
 
 VM_HELP = {
