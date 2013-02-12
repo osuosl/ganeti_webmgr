@@ -159,20 +159,17 @@ def get_vm_counts(clusters):
     """
     format_key = 'cluster_admin_%d'
     orphaned = import_ready = missing = 0
-    keys = [k for k in clusters.values_list('pk', flat=True)]
-    cluster_list = Cluster.objects.filter(pk__in=keys)
 
     # update the values that were not cached
-    if cluster_list.count():
-        base = VirtualMachine.objects.filter(cluster__in=cluster_list,
-                owner=None).order_by()
-        annotated = base.values("cluster__pk").annotate(orphaned=Count("id"))
+    if clusters.exists():
+        annotated = VirtualMachine.objects.filter(cluster__in=clusters,
+                owner=None).order_by().values("cluster__pk").annotate(orphaned=Count("id"))
 
         result = {}
         for i in annotated:
             result[format_key % i["cluster__pk"]] = {"orphaned": i["orphaned"]}
             orphaned += i["orphaned"]
-        for cluster in cluster_list:
+        for cluster in clusters:
             key = format_key % cluster.pk
 
             if key not in result:
