@@ -722,7 +722,6 @@ class VMWizardBasicsForm(Form):
 
             self.fields['nic_mode_%s'%i] = nic_mode
             self.fields['nic_link_%s'%i] = nic_link
-=======
         self.disk_fields = range(count)
         widget_attrs = {'class': 'multi multi_disks'}
         for i in range(count):
@@ -730,9 +729,9 @@ class VMWizardBasicsForm(Form):
                                         required=False,
                                         help_text=_(VM_CREATE_HELP['disk_size']))
 
-            disk_size.widget.attrs = widget_attrs
+            disk_size.widget.attrs['class'] = 'multi disk'
+            disk_size.widget.attrs['data-group'] = i
             self.fields['disk_size_%s' % i] = disk_size
->>>>>>> Multi-disk support in vm_wizard added.
 
     def _configure_for_cluster(self, cluster):
         if not cluster:
