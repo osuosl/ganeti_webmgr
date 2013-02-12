@@ -808,6 +808,8 @@ class VMWizardBasicsForm(Form):
             # nic list.
             if link and mode:
                 nics.append({'link': link, 'mode': mode})
+            elif link or mode:
+                raise ValidationError(_("Please input both a link and mode."))
 
         data['nics'] = nics
         return data
