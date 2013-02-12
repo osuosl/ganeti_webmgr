@@ -35,6 +35,9 @@
 #help {
   margin-top: 20px;
 }
+#step_controls {
+  padding-top: 25px;
+}
 </style>
 
 {% endblock %}
@@ -42,39 +45,41 @@
 <form action="" method="POST">
     {% csrf_token %}
     <table id='wizard'>
-        {{ wizard.management_form }}
+      {{ wizard.management_form }}
+      {{ wizard.form.non_field_errors }}
 
-        {% for field in wizard.form.visible_fields %}
-        <tr>
-          <th>{{ field.label_tag }}</th>
-          <td>
-          {{ field.errors }}
-          {{ field }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-    <table>
-    {% if wizard.steps.next %}
-        <input class="select" type="submit"
-            value="{% trans "Next" %}"
-            />
-    {% else %}
-        <input class="select" type="submit"
-            value="Create {% include_strip "ganeti/forms/create_choice.html" with choices=summary.cluster_form.choices vm="VM"%}"
-            />
-    {% endif %}
-    {% if wizard.steps.prev %}
-        <button class="select" name="wizard_goto_step" type="submit"
-            value="{{ wizard.steps.prev }}"
-            />
-            {% trans "Previous" %}
-        </button>
-        <button class="select" name="wizard_goto_step" type="submit"
-            value="{{ wizard.steps.first }}"
-	          />
-            {% trans "Start Over" %}
-        </button>
-     {% endif %}
+      {% for hidden in wizard.forms.invisible_fields %} 
+        {{ hidden }}
+      {% endfor %}
+
+      {% for field in wizard.form.visible_fields %}
+      <tr>
+        <th>{{ field.label_tag }}</th>
+        <td>{{ field.errors }} {{ field }}</td>
+      </tr>
+      {% endfor %}
+      <tr >
+        <td></td>
+        <td id="step_controls">
+          {% if wizard.steps.prev %}
+              <button class="select" name="wizard_goto_step" type="submit"
+                  value="{{ wizard.steps.first }}">
+                  {% trans "Start Over" %}
+              </button>
+              <button class="select" name="wizard_goto_step" type="submit"
+                  value="{{ wizard.steps.prev }}">
+                  {% trans "Previous" %}
+              </button>
+           {% endif %}
+          {% if wizard.steps.next %}
+              <input class="select" type="submit"
+                  value="{% trans "Next"%} "/>
+          {% else %}
+              <input class="select" type="submit"
+                  value="{% trans "Create" %} {% include_strip "ganeti/forms/create_choice.html" with choices=summary.cluster_form.choices vm="VM" %}" />
+          {% endif %}
+        </td>
+      </tr>
    </table>
 
 </form>

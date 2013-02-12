@@ -3,7 +3,7 @@ td label, td select, .dropdown {
   text-align: left;
   margin-left: 25px;
 }
-td input {
+td input[id^=step_controls] {
   width: 13px;
   height: 13px;
   text-align: left;
