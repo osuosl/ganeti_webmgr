@@ -702,7 +702,7 @@ class VMWizardBasicsForm(Form):
         nic_count = settings.MAX_NICS_ADD
         self.create_nic_fields(nic_count)
 
-    def create_nic_fields(self, count, defaults=None):
+    def create_nic_fields(self, count):
         """
         dynamically add fields for nics
         """
@@ -710,12 +710,16 @@ class VMWizardBasicsForm(Form):
         for i in range(count):
             nic_mode = forms.ChoiceField(label=_('NIC/%s Mode' % i),
                                          choices=HV_NIC_MODES,
-                                         required=False)
+                                         required=False, initial='')
             nic_link = forms.CharField(label=_('NIC/%s Link' % i),
                                        max_length=255,
-                                       required=False)
-            if defaults is not None:
-                nic_link.initial = defaults['nic_link']
+                                       required=False, initial='')
+
+            nic_mode.widget.attrs['class'] = 'multi nic mode'
+            nic_mode.widget.attrs['data-group'] = i
+            nic_link.widget.attrs['class'] = 'multi nic link'
+            nic_link.widget.attrs['data-group'] = i
+
             self.fields['nic_mode_%s'%i] = nic_mode
             self.fields['nic_link_%s'%i] = nic_link
 
