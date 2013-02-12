@@ -688,14 +688,13 @@ class VMWizardBasicsForm(Form):
         """
         dynamically add fields for disks
         """
-        self.disk_fields = range(count)
-        widget_attrs = {'class': 'multi multi_disks'}
         for i in range(count):
             disk_size = DataVolumeField(label=_("Disk/%s Size (MB)" % i),
                                         required=False,
                                         help_text=_(VM_CREATE_HELP['disk_size']))
 
-            disk_size.widget.attrs = widget_attrs
+            disk_size.widget.attrs['class'] = 'multi disk'
+            disk_size.widget.attrs['data-group'] = i
             self.fields['disk_size_%s' % i] = disk_size
 
     def _configure_for_cluster(self, cluster):
