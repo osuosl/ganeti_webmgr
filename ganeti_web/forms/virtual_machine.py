@@ -805,10 +805,11 @@ class VMWizardBasicsForm(Form):
             disk = data.get("disk_size_%s" % disk_num, None)
             if disk:
                 disks.append(disk)
-        # after filtering if our list doesn't contain any sizes, than the user
-        # didn't fill in any of the fields.
-        if not disks:
-            raise forms.ValidationError("You need to add at least 1 disk!")
+        # if disks validated (no errors), but none of them contain data, then
+        # they were all left empty
+        if not disks and not self._errors:
+            msg = _("You need to add at least 1 disk!")
+            self._errors["disk_size_0"] = self.error_class([msg])
 
         # Store disks as an array of dicts for use in template.
         data["disks"] = [{"size": disk} for disk in disks]
