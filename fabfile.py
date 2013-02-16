@@ -23,7 +23,7 @@ from fabric.operations import local, require, prompt
 # preference for production environments
 
 PIP_INSTALL = dict((r.project_name, str(r)) for r in
-                   pkg_resources.parse_requirements(open("requirements.txt").read()))
+                   pkg_resources.parse_requirements(open("requirements/prod.txt").read()))
 
 GIT_INSTALL =  {
     'django-object-permissions':{
@@ -82,7 +82,7 @@ env.MANIFEST = [
     "__init__.py",
     "fabfile.py",
     "manage.py",
-    "requirements.txt",
+    "requirements",
     "search_sites.py",
     "settings.py.dist",
     "urls.py",
@@ -189,8 +189,9 @@ def install_dependencies_pip():
     create_virtualenv()
 
     with lcd(env.doc_root):
-        # Run the installation with pip, passing in our requirements.txt.
-        local('%(virtualenv)s/bin/pip install -q -r requirements.txt' % env)
+        # Run the installation with pip, passing in our
+        # requirements/prod.txt.
+        local('%(virtualenv)s/bin/pip install -qr requirements/prod.txt' % env)
 
 
 def install_dependencies_git():
