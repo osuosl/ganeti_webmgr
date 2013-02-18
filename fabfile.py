@@ -320,10 +320,9 @@ def ldap(state="enable"):
         if state == "enable":
             # Install and enable LDAP settings
             if not _exists('/usr/include/lber.h'):
-                print ("Make sure libldap-dev is"
-                      " installed before continuing")
+                abort("Make sure libldap-dev is installed before continuing")
             if not _exists('/usr/include/sasl'):
-                print ("Make sure libsasl2-dev is"
+                abort("Make sure libsasl2-dev is"
                       " installed before continuing")
             local('%(virtualenv)s/bin/pip install -qr requirements-ldap.txt' % env)
 
