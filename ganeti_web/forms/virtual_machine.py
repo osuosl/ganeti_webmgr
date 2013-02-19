@@ -1122,10 +1122,10 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
         if "snode" in forms[3].cleaned_data:
             template.snode = forms[3].cleaned_data["snode"].hostname
 
-        if template_name:
-            template.template_name = template_name
-
-        template.save()
+        template.set_name(template_name)
+        # only save the template to the database if its not temporary
+        if not template.temporary:
+            template.save()
 
         if hostname:
             vm = template_to_instance(template, hostname, owner)

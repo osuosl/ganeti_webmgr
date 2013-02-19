@@ -112,7 +112,12 @@
 {% endblock %}
 
 {% block content %}
-<h1 class="breadcrumb"><a href="{% url cluster-list %}">{% trans "Cluster" %}</a> : {{ cluster.hostname }}</h1>
+<h1 class="breadcrumb"><a href="{% url cluster-list %}">{% trans "Cluster" %}</a> : {{ cluster.hostname }}
+    {% if not cluster.username %}
+        {% trans " - READ ONLY" %}
+   {% endif %}
+        
+</h1>
 
 <ul id="messages">
     {%if cluster.error%}<li class="error">{% trans "Error in Ganeti API" %}:<p>{{cluster.error}}</p></li>{%endif%}
