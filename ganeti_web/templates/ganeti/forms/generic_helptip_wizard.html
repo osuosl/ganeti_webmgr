@@ -3,7 +3,7 @@
 {% load include_strip %}
 
 {{ wizard.form.media }}
-
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}/css/vm_wizard/base.css"/>
 <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}/css/help_tips.css"/>
 
 <script type='text/javascript'>
@@ -30,15 +30,6 @@
     }
   });
 </script>
-
-<style>
-#help {
-  margin-top: 20px;
-}
-#step_controls {
-  padding-top: 25px;
-}
-</style>
 
 {% endblock %}
 

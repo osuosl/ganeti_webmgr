@@ -65,7 +65,7 @@ class TestVMWizardBasicsForm(TestCase):
             "vcpus": 1,
             "memory": 128,
             "disk_template": "plain",
-            "disk_size": 2048,
+            "disk_size_0": 2048,
         }
 
     def test_trivial(self):
@@ -92,14 +92,14 @@ class TestVMWizardBasicsForm(TestCase):
 
     def test_validate_min_disk_size(self):
         data = self.valid_data.copy()
-        data["disk_size"] = 512
+        data["disk_size_0"] = 512
         form = VMWizardBasicsForm(data)
         form._configure_for_cluster(self.cluster)
         self.assertFalse(form.is_valid(), "Disk size should be too small")
 
     def test_validate_max_disk_size(self):
         data = self.valid_data.copy()
-        data["disk_size"] = 16384
+        data["disk_size_0"] = 16384
         form = VMWizardBasicsForm(data)
         form._configure_for_cluster(self.cluster)
         self.assertFalse(form.is_valid(), "Disk size should be too big")

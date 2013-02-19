@@ -17,6 +17,7 @@
 
 from django import forms
 from django.contrib.formtools.wizard.views import CookieWizardView
+from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import Q
@@ -675,8 +676,26 @@ class VMWizardBasicsForm(Form):
     disk_template = ChoiceField(label=_('Disk Template'),
                                 choices=HV_DISK_TEMPLATES,
                                 help_text=_(VM_CREATE_HELP['disk_template']))
-    disk_size = DataVolumeField(label=_("Disk Size (MB)"),
-                                help_text=_(VM_CREATE_HELP['disk_size']))
+
+    def __init__(self, *args, **kwargs):
+        super(VMWizardBasicsForm, self).__init__(*args, **kwargs)
+
+        # Create disk fields based on value in settings
+        disk_count = settings.MAX_DISKS_ADD
+        self.create_disk_fields(disk_count)
+
+    def create_disk_fields(self, count):
+        """
+        dynamically add fields for disks
+        """
+        for i in range(count):
+            disk_size = DataVolumeField(label=_("Disk/%s Size (MB)" % i),
+                                        required=False,
+                                        help_text=_(VM_CREATE_HELP['disk_size']))
+
+            disk_size.widget.attrs['class'] = 'multi disk'
+            disk_size.widget.attrs['data-group'] = i
+            self.fields['disk_size_%s' % i] = disk_size
 
     def _configure_for_cluster(self, cluster):
         if not cluster:
@@ -710,14 +729,16 @@ class VMWizardBasicsForm(Form):
         if "ipolicy" in cluster.info:
             if "max" in cluster.info["ipolicy"]:
                 v = cluster.info["ipolicy"]["max"]["disk-size"]
-                self.fields["disk_size"].validators.append(
-                    MaxValueValidator(v))
+                for disk in xrange(settings.MAX_DISKS_ADD):
+                    self.fields["disk_size_%s" % disk].validators.append(
+                        MaxValueValidator(v))
                 v = cluster.info["ipolicy"]["max"]["memory-size"]
                 self.fields["memory"].validators.append(MaxValueValidator(v))
             if "min" in cluster.info["ipolicy"]:
                 v = cluster.info["ipolicy"]["min"]["disk-size"]
-                self.fields["disk_size"].validators.append(
-                    MinValueValidator(v))
+                for disk in xrange(settings.MAX_DISKS_ADD):
+                    self.fields["disk_size_%s" % disk].validators.append(
+                        MinValueValidator(v))
                 v = cluster.info["ipolicy"]["min"]["memory-size"]
                 self.fields["memory"].validators.append(MinValueValidator(v))
 
@@ -729,7 +750,27 @@ class VMWizardBasicsForm(Form):
         self.fields["vcpus"].initial = template.vcpus
         self.fields["memory"].initial = template.memory
         self.fields["disk_template"].initial = template.disk_template
-        # XXX disk size
+        for num, disk in enumerate(template.disks):
+            self.fields["disk_size_%s" % num].initial = disk["size"]
+
+    def clean(self):
+        data = self.cleaned_data
+        # get disk sizes after validation (after 1.5G -> 1500)
+        # and filter empty fields.
+        disks = []
+        for disk_num in xrange(settings.MAX_DISKS_ADD):
+            disk = data.get("disk_size_%s" % disk_num, None)
+            if disk:
+                disks.append(disk)
+        # if disks validated (no errors), but none of them contain data, then
+        # they were all left empty
+        if not disks and not self._errors:
+            msg = _("You need to add at least 1 disk!")
+            self._errors["disk_size_0"] = self.error_class([msg])
+
+        # Store disks as an array of dicts for use in template.
+        data["disks"] = [{"size": disk} for disk in disks]
+        return data
 
 
 class VMWizardAdvancedForm(Form):
@@ -1055,12 +1096,7 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
         template.vcpus = forms[2].cleaned_data["vcpus"]
         template.disk_template = forms[2].cleaned_data["disk_template"]
 
-        disk_size = forms[2].cleaned_data["disk_size"]
-        template.disks = [
-            {
-                "size": disk_size,
-            },
-        ]
+        template.disks = forms[2].cleaned_data["disks"]
 
         template.nics = [
             {
