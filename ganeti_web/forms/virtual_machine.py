@@ -1098,14 +1098,6 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
 
         template.disks = forms[2].cleaned_data["disks"]
 
-        # Leaving for now
-        #disk_size = forms[2].cleaned_data["disk_size"]
-        #template.disks = [
-        #    {
-        #        "size": disk_size,
-        #    },
-        #]
-
         template.nics = [
             {
                 "link": "br0",
