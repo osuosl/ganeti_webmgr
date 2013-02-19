@@ -1183,7 +1183,13 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
         nics = forms[2].cleaned_data["nics"]
         # default
         if not nics: nics = [{"link": "br0", "mode": "bridged"}]
-        template.nics = nics
+
+        template.nics = [
+            {
+                "link": "br0",
+                "mode": "bridged",
+            },
+        ]
 
         template.os = forms[2].cleaned_data["os"]
         template.ip_check = forms[3].cleaned_data["ip_check"]
