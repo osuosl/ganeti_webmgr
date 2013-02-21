@@ -11,13 +11,10 @@
     type="text/javascript"></script>
 <script src="{{STATIC_URL}}/js/disableSingletonDropdown.js"
     type="text/javascript"></script>
-
-<script type="text/javascript">
-$(document).ready(function() {
-    disableSingletonDropdown2();
-    multi_input('.disk');
-});
-</script>
+<style type="text/css">
+    button.select {float:right;}
+    input.select {float:right;}
+</style>
 {% endblock %}
 
 {% block content %}
