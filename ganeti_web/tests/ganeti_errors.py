@@ -92,7 +92,11 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
 
         # test store_error
         store_error = GanetiError.store_error
+
+        # Duplicated, to ensure store_error only stores one error.
         store_error(str(msg), obj=cluster0, code=msg.code)
+        store_error(str(msg), obj=cluster0, code=msg.code)
+
         store_error(str(msg), obj=cluster1, code=msg.code)
         store_error(str(msg), obj=cluster2, code=msg.code)
         store_error(str(msg), obj=vm0, code=msg.code)
