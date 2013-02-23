@@ -1117,10 +1117,15 @@ class VMWizardKVMForm(Form):
 
         return data
 
+class VMWizardSummaryForm(Form):
+    class Media:
+        css = {
+            'all': ('/static/css/vm_wizard/summary.css',)
+        }
 
 class VMWizardView(LoginRequiredMixin, PermissionRequiredMixin,
                    CookieWizardView):
-    template_name = "ganeti/forms/vm_wizard.html"
+    template_name = "ganeti/forms/vm_wizard_generic_table.html"
     permission_required = ["admin", "create_vm"]
     no_perms_msg = ("You do not have admin or create vm "
                     "privledges to any clusters.")
@@ -1175,6 +1180,12 @@ class VMWizardView(LoginRequiredMixin, PermissionRequiredMixin,
             return data.get("iallocator", False)
         return False
 
+    def get_template_names(self):
+        template = self.template_name
+        if self.steps.current == '5':
+            template = 'ganeti/forms/summary.html'
+        return template
+
     def get_form(self, step=None, data=None, files=None):
         s = int(self.steps.current) if step is None else int(step)
         initial = self.get_form_initial(s)
@@ -1223,6 +1234,8 @@ class VMWizardView(LoginRequiredMixin, PermissionRequiredMixin,
                 form._configure_for_template(self._get_template())
             else:
                 form = Form()
+        elif s == 5:
+            form = VMWizardSummaryForm(data=data)
         else:
             form = super(VMWizardView, self).get_form(step, data, files)
 
@@ -1345,6 +1358,7 @@ def vm_wizard(*args, **kwargs):
         VMWizardOwnerForm,
         VMWizardBasicsForm,
         VMWizardAdvancedForm,
+        VMWizardSummaryForm,
         Form,
     )
     initial = kwargs.get('initial_dict', None)

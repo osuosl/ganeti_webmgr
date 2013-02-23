@@ -1,0 +1,20 @@
+{% load i18n %}
+{% load include_strip %}
+
+{% if wizard.steps.prev %}
+    <button class="select" name="wizard_goto_step" type="submit"
+        value="{{ wizard.steps.first }}">
+        {% trans "Start Over" %}
+    </button>
+    <button class="select" name="wizard_goto_step" type="submit"
+        value="{{ wizard.steps.prev }}">
+        {% trans "Previous" %}
+    </button>
+{% endif %}
+{% if wizard.steps.next %}
+    <input class="select" type="submit"
+        value="{% trans "Next"%} "/>
+{% else %}
+    <input class="select" type="submit"
+        value="{% trans "Create" %} {% include_strip "ganeti/forms/create_choice.html" with vm="VM" %}" />
+{% endif %}

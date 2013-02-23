@@ -1,0 +1,14 @@
+{% load i18n %}
+
+{% block helptips %}
+  <div id="help">
+  {% for field in form %}
+    {% if field.help_text %}
+      <div id='help-{{ field.html_name }}'>
+        <h3>{{ field.label }}</h3>
+        <div>{{ field.help_text|safe }}</div>
+      </div>
+    {% endif %}
+  {% endfor %}
+  </div>
+{% endblock helptips %}

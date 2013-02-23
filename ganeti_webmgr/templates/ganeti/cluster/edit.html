@@ -22,7 +22,7 @@
         $(document).ready(function() {
             /* run when document is fully loaded */
             // init the help tips for the individ. form objects
-            initHelpTips('#clusterform');
+            helpTips("#clusterform");
         });
 
     </script>
@@ -74,11 +74,7 @@
     </form>
 </div>
 
-<div id="help" class="help_tip">
-    <h3></h3>
-    <div></div>
-</div>
-<div id="help-contents">
+<div id="help">
     {% include "ganeti/helptips/cluster_edit.html" %}
 </div>
 
