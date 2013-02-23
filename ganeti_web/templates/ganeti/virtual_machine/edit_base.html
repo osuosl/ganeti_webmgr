@@ -10,7 +10,7 @@
         $(document).ready(function() {
             var formUpdate = new modifyFormUpdater({{ form.nics }});
             formUpdate.init();
-            initHelpTips("#vmeditform");
+            helpTips("#vmeditform");
         });
     </script>
 {% endblock %}
@@ -54,11 +54,7 @@
         <input class="submit" type="submit" value="{% trans "Continue" %}" />
     </form>
 </div>
-<div id="help" class="help_tip">
-    <h3></h3>
-    <div></div>
-</div>
-<div id="help-contents">
+<div id="help">
     {% include "ganeti/helptips/vm.html" %}
     {% include "ganeti/helptips/vm_edit.html" %}
     {% block helptips %}{% endblock %}

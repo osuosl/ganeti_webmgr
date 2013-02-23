@@ -1,0 +1,15 @@
+#summary table {
+  width: 63%;
+  height: 70%;
+  margin: 0 auto;
+}
+
+#step_controls {
+  display: table;
+  margin: 0 auto;
+}
+
+#summary td {
+  text-align: left;
+  text-indent: 26px;
+}

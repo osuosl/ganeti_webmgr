@@ -13,7 +13,7 @@
     <script type="text/javascript" src="{{SITE_ROOT}}/object_permissions_media/js/autocomplete_user_search.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
-            initHelpTips("#virtualmachineform");
+            helpTips("#virtualmachineform");
             autocomplete_user_search($("#id_owner"),'{% url owner-search %}');
         });
     </script>
@@ -44,7 +44,7 @@
         <div></div>
     </div>
 
-    <div id="help-contents">
+    <div id="help">
        {% include "ganeti/helptips/vm_create.html" %}
     </div>
 {% endblock %}

@@ -949,9 +949,14 @@ class VMWizardKVMForm(Form):
 
         return data
 
+class VMWizardSummaryForm(Form):
+    class Media:
+        css = {
+            'all': ('/static/css/vm_wizard/summary.css',)
+        }
 
 class VMWizardView(LoginRequiredMixin, CookieWizardView):
-    template_name = "ganeti/forms/vm_wizard.html"
+    template_name = "ganeti/forms/vm_wizard_generic_table.html"
 
     OPTIONS = (
         # value, display value
@@ -996,6 +1001,12 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
             return data["disk_template"]
         return None
 
+    def get_template_names(self):
+        template = self.template_name
+        if self.steps.current == '5':
+            template = 'ganeti/forms/summary.html'
+        return template
+
     def get_form(self, step=None, data=None, files=None):
         s = int(self.steps.current) if step is None else int(step)
         initial = self.get_form_initial(s)
@@ -1038,6 +1049,8 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
                 form._configure_for_template(self._get_template())
             else:
                 form = Form()
+        elif s == 5:
+            form = VMWizardSummaryForm(data=data)
         else:
             form = super(VMWizardView, self).get_form(step, data, files)
 
@@ -1145,6 +1158,7 @@ def vm_wizard(*args, **kwargs):
         VMWizardOwnerForm,
         VMWizardBasicsForm,
         VMWizardAdvancedForm,
+        VMWizardSummaryForm,
         Form,
     )
     initial = kwargs.get('initial_dict', None)
