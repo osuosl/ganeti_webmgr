@@ -1,0 +1,125 @@
+{% extends "ganeti/forms/vm_wizard_base.html" %}
+{% load i18n %}
+{% load webmgr_tags %}
+
+
+{% block header %}
+Summary
+{% endblock header %}
+
+{% block form_content %}
+<div id="summary">
+
+<table>
+  {% with owner=summary.owner_form advanced=summary.advanced_form basics=summary.basics_form hv=summary.hv_form %}
+
+  <tbody>
+    <tr><th colspan="2">{% trans "General" %}</th></tr>
+    <tr>
+      {% if owner.hostname %}
+      <td>{% trans "Hostname" %}</td>
+      <td>{{ owner.hostname }}</td>
+      {% endif %}
+    </tr>
+    <tr>
+      {% if owner.template_name %}
+      <td>{% trans "Template Name" %}</td>
+      <td>{{ owner.template_name }}</td>
+      {% endif %}
+    </tr>
+    <tr>
+      <td>{% trans "Primary Node" %}</td>
+      <td>{{ advanced.pnode }}</td>
+    </tr>
+    <tr>
+      <td>{% trans "Serial Console" %}</td>
+      <td>{{ hv.serial_console }}</td>
+    </tr>
+    <tr>
+      <td>{% trans "Check Hostname" %}</td>
+      <td>{{ advanced.name_check }}</td>
+    </tr>
+    <tr>
+      <td>{% trans "Check IP" %}</td>
+      <td>{{ advanced.ip_check }}</td>
+    </tr>
+    <tr><th colspan="2">Resources</th></tr>
+
+    <tr>
+      <td>{% trans "Virtual CPU Count" %}</td>
+      <td>{{ basics.vcpus }}</td>
+    </tr>
+    <tr>
+      <td>{% trans "Memory (RAM)" %}</td>
+      <td>{{ basics.memory|render_storage }}</td>
+    </tr>
+
+    <!-- Disks -->
+    <tr>
+      <td>{% trans "Disk Template" %}</td>
+      <td>{{ basics.disk_template }}</td>
+    </tr>
+    <tr>
+      <td>{% trans "Disk Type" %}</td>
+      <td>{{ hv.disk_type }}</td>
+    </tr>
+    {% for disk in basics.disks %}
+      <tr>
+        <td>{% trans "Disk" %}/{{ forloop.counter0 }}</td>
+        <td>{{ disk.size|render_storage }}</td>
+      </tr>
+    {% endfor %}
+
+    <!-- NICs -->
+    <tr>
+      <td>{% trans "NIC Type" %}</td>
+      <td>{{ hv.nic_type }}</td>
+    </tr>
+
+    <!-- CD drive -->
+    <tr>
+      <td>{% trans "CDROM Disk Type" %}</td>
+      <td>{{ hv.cdrom_disk_type|default:"Not Set" }}</td>
+    </tr>
+    <tr>
+      <td>{% trans "CDROM Image Path" %}</td>
+      <td>{{ hv.cdrom_image_path|default:"Not Set" }}</td>
+    </tr>
+    <tr>
+      <td>{% trans "CDROM2 Image Path" %}</td>
+      <td>{{ hv.cdrom2_image_path|default:"Not Set" }}</td>
+    </tr>
+
+    <!-- HV stuff -->
+    <tr><th colspan="2">{% trans "Hypervisor Parameters" %}</th></tr>
+    <tr>
+      <td>{% trans "Hypervisor" %}</td>
+      <td>{{ basics.hv }}</td>
+    </tr>
+    <tr>
+      <td>{% trans "Operating System" %}</td>
+      <td>{{ basics.os }}</td>
+    </tr>
+    <tr>
+      <td>{% trans "Root Path" %}</td>
+      <td>{{ hv.root_path|default:"Not Set" }}</td>
+    </tr>
+    <tr>
+      <td>{% trans "Kernel Path" %}</td>
+      <td>{{ hv.kernel_path|default:"Not Set" }}</td>
+    </tr>
+    <tr>
+      <td>{% trans "Boot Order" %}</td>
+      <td>{{ hv.boot_order|default:"Not Set" }}</td>
+    </tr>
+  </tbody>
+
+  {% endwith %}
+</table>
+
+<div id="step_controls">
+  {% include "ganeti/forms/step_controls.html" %}
+</div>
+
+</div>
+{% endblock form_content %}

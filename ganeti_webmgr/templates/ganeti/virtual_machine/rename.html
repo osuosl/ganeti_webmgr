@@ -9,7 +9,9 @@
     <link rel="stylesheet" type="text/css"
             href="{{STATIC_URL}}/css/help_tips.css"/>
     <script src="{{STATIC_URL}}/js/helpTips.js"></script>
-    <script type="text/javascript">initHelpTips('#virtualmachineform');</script>
+    <script type="text/javascript">
+      helpTips('#virtualmachineform');
+    </script>
     <script type="text/javascript">
         // Make sure that if IP Check is selected, so is DNS Name Check
         $(document).ready(function() {
@@ -62,7 +64,7 @@
         <div></div>
     </div>
 
-    <div id="help-contents">
+    <div id="help">
         {% include "ganeti/helptips/vm_rename.html" %}
     </div>
 {% endblock %}

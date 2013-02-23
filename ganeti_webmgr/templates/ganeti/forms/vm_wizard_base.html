@@ -1,0 +1,58 @@
+{% extends "menu_base.html" %}
+{% load i18n %}
+{% load webmgr_tags %}
+{% load include_strip %}
+
+
+{% block title %}{%trans "Create a Virtual Machine" %}{% endblock %}
+
+{% block head %}
+{{ wizard.form.media }}
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}/css/vm_wizard/base.css"/>
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}/css/help_tips.css"/>
+
+<script src="{{STATIC_URL}}/js/helpTips.js"></script>
+<script src="{{STATIC_URL}}/js/disableSingletonDropdown.js" type="text/javascript"></script>
+<script src="{{STATIC_URL}}/js/multiInputHide.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+$(document).ready(function() {
+    helpTips("#wizard");
+    multi_input('.disk');
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<h1>{% block header %}
+Create {% include_strip "ganeti/forms/create_choice.html" with choices=summary.cluster_form.choices %} :
+{% endblock header %}</h1>
+
+<h2>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</h2>
+
+<div class="vm-summary">
+    <ul>
+        {% if summary.cluster_form.cluster %}
+        <li>Cluster: {{ summary.cluster_form.cluster }}</li>
+        {% endif %}
+        {% if summary.owner_form %}
+        <li>Owner: {{ summary.owner_form.owner }}</li>
+        {% endif %}
+    </ul>
+</div>
+
+<form action="" id='wizard' method="POST">{% csrf_token %} {{ wizard.management_form }}
+{% block form_content %}
+
+{% comment %} Including the step_controls by default. {% endcomment %}
+{% include "ganeti/forms/step_controls.html" %}
+{% endblock form_content %}
+</form>
+
+{% comment %}
+  All this does is render each fields help_text
+  and puts it into a help_tip div for styling
+{% endcomment %}
+{% include "ganeti/forms/helptips.html" with form=wizard.form only %}
+
+{% endblock content %}
