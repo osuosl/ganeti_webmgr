@@ -1608,11 +1608,11 @@ class GanetiError(models.Model):
                 # return if the error exists for cluster
                 try:
                     c_ct = ContentType.objects.get_for_model(Cluster)
-                    return cls.objects.get(msg=msg, obj_type=c_ct, code=code,
+                    return cls.objects.filter(msg=msg, obj_type=c_ct, code=code,
                                            obj_id=obj.cluster_id,
-                                           cleared=False)
+                                           cleared=False)[0]
 
-                except cls.DoesNotExist:
+                except (cls.DoesNotExist, IndexError):
                     # we want to proceed when the error is not
                     # cluster-specific
                     pass
@@ -1623,10 +1623,10 @@ class GanetiError(models.Model):
         # cluster will already be queried so use create() instead which does
         # allow cluster_id
         try:
-            return cls.objects.get(msg=msg, obj_type=ct, obj_id=obj.pk,
-                                   code=code, **kwargs)
+            return cls.objects.filter(msg=msg, obj_type=ct, obj_id=obj.pk,
+                                   code=code, **kwargs)[0]
 
-        except cls.DoesNotExist:
+        except (cls.DoesNotExist, IndexError):
             cluster_id = obj.pk if is_cluster else obj.cluster_id
 
             return cls.objects.create(timestamp=datetime.now(), msg=msg,
