@@ -680,27 +680,25 @@ class VMWizardBasicsForm(Form):
     def __init__(self, *args, **kwargs):
         super(VMWizardBasicsForm, self).__init__(*args, **kwargs)
 
-        # Create disk fields based on value in settings
+        # Create disk and nic fields based on value in settings
         disk_count = settings.MAX_DISKS_ADD
         self.create_disk_fields(disk_count)
+
+        nic_count = settings.MAX_NICS_ADD
+        self.create_nic_fields(nic_count)
 
     def create_disk_fields(self, count):
         """
         dynamically add fields for disks
         """
         for i in range(count):
-            disk_size = DataVolumeField(label=_("Disk/%s Size (MB)" % i),
-                                        required=False,
-                                        help_text=_(VM_CREATE_HELP['disk_size']))
+            disk_size = DataVolumeField(
+                label=_("Disk/%s Size (MB)" % i), required=False,
+                help_text=_(VM_CREATE_HELP['disk_size']))
 
             disk_size.widget.attrs['class'] = 'multi disk'
             disk_size.widget.attrs['data-group'] = i
             self.fields['disk_size_%s' % i] = disk_size
-
-    def __init__(self, *args, **kwargs):
-        super(VMWizardBasicsForm, self).__init__(*args, **kwargs)
-        nic_count = settings.MAX_NICS_ADD
-        self.create_nic_fields(nic_count)
 
     def create_nic_fields(self, count):
         """
@@ -708,12 +706,13 @@ class VMWizardBasicsForm(Form):
         """
         self.nic_fields = range(count)
         for i in range(count):
-            nic_mode = forms.ChoiceField(label=_('NIC/%s Mode' % i),
-                                         choices=HV_NIC_MODES,
-                                         required=False, initial='')
-            nic_link = forms.CharField(label=_('NIC/%s Link' % i),
-                                       max_length=255,
-                                       required=False, initial='')
+            nic_mode = forms.ChoiceField(
+                label=_('NIC/%s Mode' % i), choices=HV_NIC_MODES, initial='',
+                required=False, help_text=_(VM_CREATE_HELP['nic_mode']))
+
+            nic_link = forms.CharField(
+                label=_('NIC/%s Link' % i), max_length=255, required=False,
+                initial='', help_text=_(VM_HELP['nic_link']))
 
             nic_mode.widget.attrs['class'] = 'multi nic mode'
             nic_mode.widget.attrs['data-group'] = i
