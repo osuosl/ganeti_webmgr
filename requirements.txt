@@ -3,7 +3,7 @@ django-fields
 django-haystack==1.2.1
 django-include-strip-tag
 django-registration>=0.7,<0.8
-django>=1.4
+django>=1.4,<1.5
 django_object_log==0.7
 django_object_permissions==1.4.3
 pyopenssl
