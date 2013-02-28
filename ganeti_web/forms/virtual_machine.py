@@ -40,7 +40,8 @@ from ganeti_web.constants import (EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES,
                                   HV_NIC_MODES, KVM_CHOICES, HV_USB_MICE,
                                   HV_SECURITY_MODELS, KVM_FLAGS,
                                   HV_DISK_CACHES, MODE_CHOICES, HVM_CHOICES,
-                                  VM_HELP, VM_CREATE_HELP, VM_RENAME_HELP)
+                                  VM_HELP, VM_CREATE_HELP, VM_RENAME_HELP,
+                                  KVM_BOOT_ORDER, HVM_BOOT_ORDER)
 from ganeti_web.fields import DataVolumeField, MACAddressField
 from ganeti_web.models import (Cluster, ClusterUser, Node,
                                VirtualMachineTemplate, VirtualMachine)
@@ -844,9 +845,9 @@ class VMWizardPVMForm(Form):
 
 
 class VMWizardHVMForm(Form):
-    boot_order = CharField(label=_("Preferred boot device"), max_length=255,
-                           required=False,
-                           help_text=_(VM_CREATE_HELP['boot_order']))
+    boot_order = ChoiceField(label=_("Preferred boot device"),
+                             required=False, choices=HVM_BOOT_ORDER,
+                             help_text=_(VM_CREATE_HELP['boot_order']))
     cdrom_image_path = CharField(label=_("CD-ROM image path"), max_length=512,
                                 required=False,
                                 help_text=_(VM_CREATE_HELP['cdrom_image_path']))
@@ -887,9 +888,9 @@ class VMWizardKVMForm(Form):
     serial_console = BooleanField(label=_("Enable serial console"),
                                   required=False,
                                   help_text=_(VM_CREATE_HELP['serial_console']))
-    boot_order = CharField(label=_("Preferred boot device"), max_length=255,
-                           required=False,
-                           help_text=_(VM_CREATE_HELP['boot_order']))
+    boot_order = ChoiceField(label=_("Preferred boot device"),
+                             required=False, choices=KVM_BOOT_ORDER,
+                             help_text=_(VM_CREATE_HELP['boot_order']))
     cdrom_image_path = CharField(label=_("CD-ROM image path"), max_length=512,
                                 required=False,
                                 help_text=_(VM_CREATE_HELP['cdrom_image_path']))
