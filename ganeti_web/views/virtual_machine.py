@@ -56,7 +56,7 @@ from ganeti_web.models import Cluster, Job, SSHKey, Node, VirtualMachine
 from ganeti_web.templatetags.webmgr_tags import render_storage
 from ganeti_web.util.client import GanetiApiError
 from ganeti_web.utilities import (cluster_os_list, compare, os_prettify,
-                                  get_hypervisor)
+                                  get_hypervisor, bulk_ops)
 from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
                                       PagedListView)
 
@@ -108,37 +108,13 @@ class VMListView(LoginRequiredMixin, PagedListView):
         # Allows for bulk reboot/shutdown/start
         if self.request.method == 'POST':
             if context["bulk_ops"]:
-                self.bulk_ops(self.request)
-
+                bulk_ops(self.request)
         if "order_by" in self.request.GET:
             context["order"] = self.request.GET["order_by"]
         else:
             context["order"] = "hostname"
 
         return context
-
-    def bulk_ops(self, request):
-        #Used for performing bulk operations on VMs
-
-        for vm in request.POST.getlist('chkbx'):
-            vm_operation = request.POST['vm_options']
-            hostname = vm[:vm.find(",")]
-            slug = vm[vm.find(",")+1:]
-
-            print "Shutting down a VM"
-
-            hostname = vm[:vm.find(",")] # Checkbox value is "hostname, slug"
-            slug = vm[vm.find(",")+1:] # which is why it's split like this.
-
-            if vm_operation == "Reboot VMs":
-                reboot(request, slug, hostname)
-            elif vm_operation == "Start VMs":
-                startup(request, slug, hostname)
-            elif vm_operation == "Shutdown VMs":
-                shutdown(request, slug, hostname)
-            elif vm_operation == "Immediately Shutdown VMs":
-                shutdown_now(request, slug, hostname)
-
 
     def post(self, *args, **kwargs):
         return super(VMListView, self).get(self.request, args, kwargs)

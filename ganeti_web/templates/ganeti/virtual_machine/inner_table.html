@@ -1,7 +1,19 @@
 {% load webmgr_tags %}
 {% load i18n %}
 
-<form method="post" class="sorted">
+<script type="text/javascript" src="{{STATIC_URL}}/js/toggle_checkboxes.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}/js/jquery.form.js"></script>
+<script type="text/javascript">
+    $("#bulk_ops").live("submit", function(event) {
+            event.preventDefault();
+            var submit = confirm('Are you sure you want to perform this action the the selected VMs?')
+            if (submit){
+               $(this).ajaxSubmit();
+            }
+    });
+
+</script>
+<form id="bulk_ops" method="post" class="sorted">
 {% csrf_token %}
 
 <table id="vmlist">
@@ -10,11 +22,9 @@
     <option name="Reboot">Reboot VMs</option>
     <option name="Start">Start VMs</option>
     <option name="Shutdown">Shutdown VMs</option>
-    <option name="Immediate shutdown">Immediately Shutdown VMs</option>
   </select>
-  {% endif %}
 
-  <input type="submit" onclick="return confirm('Are you sure you want to preform this action the the selected VMs?')" value="Submit"/>
+  <input type="submit" value="Submit"></input>
   {% endif %}
 
 <thead>
@@ -76,7 +86,7 @@
     {% with vm.info as info %}
     <tr>
         {% if bulk_ops %}
-        <td><input type="checkbox" name="chkbx" value="{{vm.hostname}},{{vm.cluster.slug}}"></input></td>
+        <td><input type="checkbox" name="chkbx" value="{'hostname' : '{{vm.hostname}}', 'slug' : '{{vm.cluster.slug}}'}"></input></td>
         {% endif %}
         <td class="status">
             {% if vm.error %}

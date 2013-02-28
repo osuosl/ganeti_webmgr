@@ -15,12 +15,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
+
+import ast
 from collections import defaultdict
 from ganeti_web import constants
 from ganeti_web.caps import requires_maxmem
 
 from ganeti_web.util.client import GanetiApiError
-
+from ganeti_web.models import Cluster, VirtualMachine
 
 def cluster_default_info(cluster, hypervisor=None):
     """
@@ -207,3 +209,41 @@ def get_hypervisor(vm):
         elif 'acpi' in info:
             return 'xen-hvm'
     return None
+
+def bulk_ops(request):
+    """
+    Given a request, parse out the vm hostname and cluster slug associated with given
+    checkboxes. Then perform an action on these VMs.
+    """
+    vm_operation = request.POST['vm_options']
+
+    if vm_operation == "Reboot VMs":
+        func = VirtualMachine.reboot
+    elif vm_operation == "Start VMs":
+        func = VirtualMachine.startup
+    elif vm_operation == "Shutdown VMs":
+        func = VirtualMachine.shutdown
+    elif vm_operation == "Immediately Shutdown VMs":
+        func = VirtualMachine.shutdown_now
+
+    print "Into bulk ops function"
+
+    for vm in request.POST.getlist('chkbx'):
+        print "into for loop in bulk ops"
+        print vm
+        vm_info = eval(vm)
+        print "hostname = " +vm_info["hostname"]
+        print "slug =" +vm_info["slug"]
+        #hostname = vm[:vm.find(",")] # Checkbox value is "hostname, slug"
+        #slug = vm[vm.find(",")+1:] # which is why it's split like this.
+
+        cluster = Cluster.objects.get(slug=vm_info["slug"])
+        machine = VirtualMachine.objects.get(hostname=vm_info["hostname"], cluster=cluster.id)
+
+        if vm_operation == "Reboot VMs":
+            machine.reboot()
+        elif vm_operation == "Start VMs":
+            machine.startup()
+        elif vm_operation == "Shutdown VMs":
+            machine.shutdown()
+
