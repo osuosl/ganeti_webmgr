@@ -846,8 +846,8 @@ class VMWizardPVMForm(Form):
 
 class VMWizardHVMForm(Form):
     boot_order = ChoiceField(label=_("Preferred boot device"),
-                           required=False, choices=HVM_BOOT_ORDER,
-                           help_text=_(VM_CREATE_HELP['boot_order']))
+                             required=False, choices=HVM_BOOT_ORDER,
+                             help_text=_(VM_CREATE_HELP['boot_order']))
     cdrom_image_path = CharField(label=_("CD-ROM image path"), max_length=512,
                                 required=False,
                                 help_text=_(VM_CREATE_HELP['cdrom_image_path']))
@@ -889,8 +889,8 @@ class VMWizardKVMForm(Form):
                                   required=False,
                                   help_text=_(VM_CREATE_HELP['serial_console']))
     boot_order = ChoiceField(label=_("Preferred boot device"),
-                           required=False, choices=KVM_BOOT_ORDER,
-                           help_text=_(VM_CREATE_HELP['boot_order']))
+                             required=False, choices=KVM_BOOT_ORDER,
+                             help_text=_(VM_CREATE_HELP['boot_order']))
     cdrom_image_path = CharField(label=_("CD-ROM image path"), max_length=512,
                                 required=False,
                                 help_text=_(VM_CREATE_HELP['cdrom_image_path']))
