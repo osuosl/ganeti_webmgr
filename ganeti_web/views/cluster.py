@@ -29,7 +29,7 @@ from django.shortcuts import get_object_or_404, render_to_response, redirect
 from django.template import RequestContext
 from django.utils import simplejson as json
 from django.utils.translation import ugettext as _
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_http_methods
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 
@@ -50,6 +50,7 @@ from ganeti_web.views import render_404
 from ganeti_web.forms.cluster import EditClusterForm, QuotaForm
 from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
                                       PagedListView)
+from ganeti_web.utilities import bulk_ops
 
 class ClusterDetailView(LoginRequiredMixin, DetailView):
 
@@ -68,6 +69,11 @@ class ClusterDetailView(LoginRequiredMixin, DetailView):
             "admin": admin,
             "readonly": not admin,
         }
+
+    def post(self, *args, **kwargs):
+        if self.request.POST['vm_options']:
+            bulk_ops(self.request)
+        return super(ClusterDetailView, self).get(self.request, args, kwargs)
 
 class ClusterListView(LoginRequiredMixin, PagedListView):
 
@@ -96,6 +102,7 @@ class ClusterListView(LoginRequiredMixin, PagedListView):
                 context["order"] = "id"
 
             return context
+
 class ClusterVMListView(LoginRequiredMixin, PagedListView):
 
     template_name = "ganeti/virtual_machine/table.html"
@@ -111,8 +118,23 @@ class ClusterVMListView(LoginRequiredMixin, PagedListView):
         return self.cluster.virtual_machines.select_related("cluster").all()
 
     def get_context_data(self, **kwargs):
+        user = self.request.user
         kwargs["cluster"] = self.cluster
+
+        if user.has_any_perms(VirtualMachine, ['admin', 'modify', 'remove', 'power']):
+            kwargs["bulk_ops"] = True
+        else:
+            kwargs["bulk_ops"] = False
+
+        # Allows for bulk reboot/shutdown/start
+        if self.request.method == 'POST':
+            print "POST request recieved"
+            if kwargs["bulk_ops"]:
+                bulk_ops(self.request)
         return kwargs
+
+    def post(self, *args, **kwargs):
+        return super(ClusterVMListView, self).get(self.request, args, kwargs)
 
 class ClusterJobListView(LoginRequiredMixin, PagedListView):
 
