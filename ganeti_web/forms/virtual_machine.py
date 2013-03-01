@@ -712,8 +712,8 @@ class VMWizardBasicsForm(Form):
         self.fields["hv"].choices = zip(hvs, prettified)
         self.fields["hv"].initial = hv
 
-        if has_sharedfile(cluster):
-            self.fields["disk_template"].choices += [("sharedfile", "Sharedfile")]
+        if not has_sharedfile(cluster):
+            self.fields["disk_template"].choices.remove((u'sharedfile', u'Sharedfile'))
 
         # Get the OS list.
         self.fields["os"].choices = cluster_os_list(cluster)
