@@ -878,8 +878,8 @@ def modify_confirm(request, cluster_slug, instance):
         if key in ['nic_count','nic_count_original']:
             continue
         elif key not in old_set.keys():
-            diff = ""
-            instance_diff[fields[key].label] = _('Added')
+            if fields[key].label: # Checking to make sure the label is not None
+                instance_diff[fields[key].label] = _('Added')
         else:
             diff = compare(old_set[key], data[key])
 
