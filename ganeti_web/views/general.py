@@ -207,32 +207,6 @@ def overview(request, rest=False):
     # Get all of the PKs from VMs that this user may administer.
     vms = vm_qs_for_admins(user).values("pk")
 
-    # build list of job errors.  Include jobs from any vm the user has access to
-    # If the user has admin on any cluster then those clusters and it's objects
-    # must be included too.
-    #
-    # XXX all jobs have the cluster listed, filtering by cluster includes jobs
-    # for both the cluster itself and any of its VMs or Nodes
-    error_clause = Q(status='error')
-    vm_type = ContentType.objects.get_for_model(VirtualMachine)
-    select_clause = Q(content_type=vm_type, object_id__in=vms)
-    if admin:
-        select_clause |= Q(cluster__in=clusters)
-    job_errors = Job.objects.filter(error_clause & select_clause) \
-        .order_by("-finished")[:5]
-
-    # Build the list of job errors. Include jobs from any VMs for which the
-    # user has access.
-    qs = GanetiError.objects.filter(cleared=False)
-    ganeti_errors = qs.get_errors(obj=vms)
-    # If the user is an admin on any cluster, then include administrated
-    # clusters and related objects.
-    if admin:
-        ganeti_errors |= qs.get_errors(obj=clusters)
-
-    # merge error lists
-    errors = merge_errors(ganeti_errors, job_errors)
-
     # get vm summary - running and totals need to be done as separate queries
     # and then merged into a single list
     vms_running = vms.filter(status='running') \
@@ -270,7 +244,6 @@ def overview(request, rest=False):
             'cluster_list': clusters,
             'create_vm': create_vm,
             'user': request.user,
-            'errors': errors,
             'orphaned': orphaned,
             'import_ready': import_ready,
             'missing': missing,
