@@ -120,9 +120,6 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         clusters = response.context['cluster_list']
         self.assertTrue(cluster not in clusters)
         self.assertEqual(0, len(clusters))
-        self.assertTrue((False, job) in response.context["errors"]) # due to no clusters
-        self.assertFalse((False, job1) in response.context["errors"]) # due to no clusters
-        self.assertEqual(1, len(response.context["errors"]))
         self.assertEqual(0, response.context["orphaned"])
         self.assertEqual(0, response.context["missing"])
         self.assertEqual(0, response.context["import_ready"])
@@ -136,9 +133,6 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         clusters = response.context['cluster_list']
         self.assertTrue(cluster in clusters)
         self.assertEqual(1, len(clusters))
-        self.assertTrue((False, job) in response.context["errors"])
-        self.assertFalse((False, job1) in response.context["errors"]) # due to no clusters
-        self.assertEqual(1, len(response.context["errors"]))
         self.assertEqual(1, response.context["orphaned"])
         self.assertEqual(1, response.context["missing"])
         self.assertEqual(2, response.context["import_ready"])
@@ -153,9 +147,6 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         self.assertTrue(cluster in clusters)
         self.assertTrue(cluster1 in clusters)
         self.assertEqual(2, len(clusters))
-        self.assertTrue((False, job) in response.context["errors"])
-        self.assertTrue((False, job1) in response.context["errors"])
-        self.assertEqual(2, len(response.context["errors"]))
         self.assertEqual(2, response.context["orphaned"])
         self.assertEqual(2, response.context["missing"])
         self.assertEqual(4, response.context["import_ready"])

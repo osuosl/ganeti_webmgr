@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*- vim:encoding=utf-8:
-
 # Copyright (C) 2010 Oregon State University et al.
 # Copyright (C) 2010 Greek Research and Technology Network
 #
@@ -227,6 +225,7 @@ def render_storage(value):
         return "%d MiB" % amount
 
 
+# XXX QuerySet
 @register.filter
 def quota(cluster_user, cluster):
     """
@@ -234,7 +233,7 @@ def quota(cluster_user, cluster):
     """
     return cluster.get_quota(cluster_user)
 
-
+# XXX QuerySet
 @register.filter
 def cluster_admin(user):
     """
@@ -338,6 +337,7 @@ def num_reducer(num1,num2,size_tag):
 		return "%.2f / %.2f" % (num1/1024**5,num2/1024**5)
 
 
+# XXX Possible QuerySet (cluster.available_ram)
 @register.simple_tag
 def cluster_memory(cluster, allocated=True,tag=False):
     """
@@ -351,7 +351,7 @@ def cluster_memory(cluster, allocated=True,tag=False):
         return num_reducer(float(d['allocated']*1024**2), float(d['total']*1024**2),size_tag.strip())
     return num_reducer(float(d['used']*1024**2), float(d['total']*1024**2),size_tag.strip())
 
-
+# XXX Possible QuerySet (cluster.available_disk)
 @register.simple_tag
 def cluster_disk(cluster, allocated=True,tag=False):
     """
@@ -366,6 +366,7 @@ def cluster_disk(cluster, allocated=True,tag=False):
     return num_reducer(float(d['used']*1024**2),float(d['total']*1024**2),size_tag.strip())
 
 
+# XXX QuerySet
 @register.simple_tag
 def format_running_vms(cluster):
     """
@@ -375,6 +376,7 @@ def format_running_vms(cluster):
                       cluster.virtual_machines.all().count())
 
 
+# XXX Possible QuerySet
 @register.simple_tag
 def format_online_nodes(cluster):
     """
