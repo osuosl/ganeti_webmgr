@@ -142,9 +142,7 @@
 
 {% block content %}
 <h1 class="breadcrumb">
-    <a href="{% url cluster-detail cluster.slug %}">
-        {{cluster.hostname}}
-    </a>
+    <a href="{% url cluster-detail cluster.slug %}">{{cluster.hostname}}</a>
     : {{node.hostname}}
 </h1>
 
