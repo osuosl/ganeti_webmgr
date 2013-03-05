@@ -81,6 +81,7 @@ def has_cdrom2(cluster):
 
     return classify(cluster) >= GANETI242
 
+
 def requires_maxmem(cluster):
     """
     Determine whether a cluster requires min/maxmem rather than
@@ -88,3 +89,11 @@ def requires_maxmem(cluster):
     """
 
     return classify(cluster) >= GANETI26
+
+def has_sharedfile(cluster):
+    """
+    Determine whether a cluster supports the sharedfile disk template.
+    """
+
+    return classify(cluster) >= GANETI25
+
