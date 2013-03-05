@@ -171,9 +171,7 @@
 {% block content %}
 <h1 class="breadcrumb">
     {% if view_cluster %}
-    <a href="{% url cluster-detail cluster.slug %}#virtual_machines">
-        {{cluster.hostname|abbreviate_fqdn}}
-    </a>
+    <a href="{% url cluster-detail cluster.slug %}#virtual_machines">{{cluster.hostname|abbreviate_fqdn}}</a>
     {% else %}
     <span>{{cluster.hostname|abbreviate_fqdn}}</span>
     {% endif %}
