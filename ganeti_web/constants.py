@@ -111,6 +111,7 @@ HV_DISK_TYPES = [
 ]
 
 HV_NIC_MODES = [
+    (u'', u''),
     (u'routed', u'Routed'),
     (u'bridged', u'Bridged')
 ]

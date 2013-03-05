@@ -104,6 +104,12 @@ class TestVMWizardBasicsForm(TestCase):
         form._configure_for_cluster(self.cluster)
         self.assertFalse(form.is_valid(), "Disk size should be too big")
 
+    def test_validate_no_nic_input(self):
+        data = self.valid_data.copy()
+        data["nics"] = None
+        form = VMWizardBasicsForm(data)
+        form._configure_for_cluster(self.cluster)
+        self.assertTrue(form.is_valid())
 
 
 class TestVMWizardAdvancedForm(TestCase):
