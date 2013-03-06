@@ -94,7 +94,8 @@ HV_DISK_TEMPLATES = [
     (u'plain', u'Plain'),
     (u'drbd', u'DRBD'),
     (u'file', u'File'),
-    (u'diskless', u'Diskless')
+    (u'diskless', u'Diskless'),
+    (u'sharedfile', u'Sharedfile'),
 ]
 
 # HV Choices
@@ -110,6 +111,7 @@ HV_DISK_TYPES = [
 ]
 
 HV_NIC_MODES = [
+    (u'', u''),
     (u'routed', u'Routed'),
     (u'bridged', u'Bridged')
 ]
