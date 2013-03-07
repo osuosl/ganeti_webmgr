@@ -35,7 +35,7 @@ log_action = LogItem.objects.log_action
 from ganeti_web.backend.queries import (cluster_qs_for_user,
                                         owner_qs_for_cluster)
 from ganeti_web.backend.templates import template_to_instance
-from ganeti_web.caps import has_cdrom2, requires_maxmem, has_sharedfile
+from ganeti_web.caps import has_cdrom2, has_balloonmem, has_sharedfile
 from ganeti_web.constants import (EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES,
                                   HV_NIC_MODES, KVM_CHOICES, HV_USB_MICE,
                                   HV_SECURITY_MODELS, KVM_FLAGS,
@@ -749,7 +749,7 @@ class VMWizardBasicsForm(Form):
 
         # If this cluster operates on the "maxmem" parameter instead of
         # "memory", use that for now.
-        if requires_maxmem(cluster):
+        if has_balloonmem(cluster):
             self.fields["memory"].initial = beparams["maxmem"]
         else:
             self.fields["memory"].initial = beparams["memory"]

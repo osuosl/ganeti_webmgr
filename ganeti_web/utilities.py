@@ -17,7 +17,7 @@
 # USA.
 from collections import defaultdict
 from ganeti_web import constants
-from ganeti_web.caps import requires_maxmem
+from ganeti_web.caps import has_balloonmem
 
 from ganeti_web.util.client import GanetiApiError
 
@@ -85,7 +85,7 @@ def cluster_default_info(cluster, hypervisor=None):
         'vcpus': beparams['vcpus'],
         }
 
-    if requires_maxmem(cluster):
+    if has_balloonmem(cluster):
         extraparams['memory'] = beparams['maxmem']
     else:
         extraparams['memory'] = beparams['memory']
