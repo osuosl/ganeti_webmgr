@@ -16,7 +16,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-import ast
 from collections import defaultdict
 from ganeti_web import constants
 from ganeti_web.caps import requires_maxmem
