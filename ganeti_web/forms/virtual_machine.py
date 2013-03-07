@@ -672,7 +672,9 @@ class VMWizardBasicsForm(Form):
                      help_text=_(VM_CREATE_HELP['os']))
     vcpus = IntegerField(label=_("Virtual CPU Count"), initial=1, min_value=1,
                          help_text=_(VM_HELP['vcpus']))
-    memory = DataVolumeField(label=_('Memory (MiB)'),
+    memory = DataVolumeField(label=_('Maximum RAM (MiB)'),
+                             help_text=_(VM_HELP['memory']))
+    minram = DataVolumeField(label=_('Minimum RAM (MiB)'),
                              help_text=_(VM_HELP['memory']))
     disk_template = ChoiceField(label=_('Disk Template'),
                                 choices=HV_DISK_TEMPLATES,
@@ -749,10 +751,9 @@ class VMWizardBasicsForm(Form):
 
         # If this cluster operates on the "maxmem" parameter instead of
         # "memory", use that for now.
+        self.fields["memory"].initial = beparams["maxmem"]
         if has_balloonmem(cluster):
-            self.fields["memory"].initial = beparams["maxmem"]
-        else:
-            self.fields["memory"].initial = beparams["memory"]
+            self.fields["minram"].initial = beparams["minmem"]
 
         # If there are ipolicy limits in place, add validators for them.
         if "ipolicy" in cluster.info:
@@ -763,6 +764,8 @@ class VMWizardBasicsForm(Form):
                         MaxValueValidator(v))
                 v = cluster.info["ipolicy"]["max"]["memory-size"]
                 self.fields["memory"].validators.append(MaxValueValidator(v))
+                if has_balloonmem(cluster):
+                    self.fields["minram"].validators.append(MaxValueValidator(v))
             if "min" in cluster.info["ipolicy"]:
                 v = cluster.info["ipolicy"]["min"]["disk-size"]
                 for disk in xrange(settings.MAX_DISKS_ADD):
@@ -770,6 +773,8 @@ class VMWizardBasicsForm(Form):
                         MinValueValidator(v))
                 v = cluster.info["ipolicy"]["min"]["memory-size"]
                 self.fields["memory"].validators.append(MinValueValidator(v))
+                if has_balloonmem(cluster):
+                    self.fields["minram"].validators.append(MinValueValidator(v))
 
     def _configure_for_template(self, template):
         if not template:
@@ -778,6 +783,8 @@ class VMWizardBasicsForm(Form):
         self.fields["os"].initial = template.os
         self.fields["vcpus"].initial = template.vcpus
         self.fields["memory"].initial = template.memory
+        if has_balloonmem(cluster):
+            self.fields["minram"].initial = template.minmem
         self.fields["disk_template"].initial = template.disk_template
         for num, disk in enumerate(template.disks):
             self.fields["disk_size_%s" % num].initial = disk["size"]
@@ -1137,6 +1144,8 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
 
         template.cluster = cluster
         template.memory = forms[2].cleaned_data["memory"]
+        if has_balloonmem(cluster):
+            template.minmem = forms[2].cleaned_data["minram"]
         template.vcpus = forms[2].cleaned_data["vcpus"]
         template.disk_template = forms[2].cleaned_data["disk_template"]
 
