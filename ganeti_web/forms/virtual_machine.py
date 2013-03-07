@@ -681,12 +681,17 @@ class VMWizardBasicsForm(Form):
     def __init__(self, *args, **kwargs):
         super(VMWizardBasicsForm, self).__init__(*args, **kwargs)
 
-        # Create disk and nic fields based on value in settings
-        disk_count = settings.MAX_DISKS_ADD
-        self.create_disk_fields(disk_count)
+        self.disk_count = kwargs.get('max_disks')
+        self.nic_count = kwargs.get('max_nics')
 
-        nic_count = settings.MAX_NICS_ADD
-        self.create_nic_fields(nic_count)
+        # Create disk and nic fields based on value in settings
+        if not self.disk_count:
+            self.disk_count = settings.MAX_DISKS_ADD
+        self.create_disk_fields(self.disk_count)
+
+        if not self.nic_count:
+            self.nic_count = settings.MAX_NICS_ADD
+        self.create_nic_fields(self.nic_count)
 
     def create_disk_fields(self, count):
         """
@@ -1189,5 +1194,4 @@ def vm_wizard(*args, **kwargs):
         VMWizardAdvancedForm,
         Form,
     )
-    initial = kwargs.get('initial_dict', None)
-    return VMWizardView.as_view(forms, initial_dict=initial)
+    return VMWizardView.as_view(forms, *args, **kwargs)
