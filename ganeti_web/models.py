@@ -604,6 +604,7 @@ class VirtualMachine(CachedClusterObject):
     virtual_cpus = models.IntegerField(default=-1)
     disk_size = models.IntegerField(default=-1)
     ram = models.IntegerField(default=-1)
+    minram = models.IntegerField(default=-1)
     cluster_hash = models.CharField(max_length=40, editable=False)
     operating_system = models.CharField(max_length=128)
     status = models.CharField(max_length=14)
