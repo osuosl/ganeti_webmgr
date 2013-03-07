@@ -1,11 +1,19 @@
 from django.test import TestCase
+from django.test.client import RequestFactory
+
+from django_test_tools.views import ViewTestMixin
+from django_test_tools.users import UserTestMixin
 
 from ganeti_web import models
 from ganeti_web.models import Node
-from ganeti_web.forms.virtual_machine import (VMWizardBasicsForm,
+from ganeti_web.forms.virtual_machine import (vm_wizard, VMWizardView,
+                                              VMWizardClusterForm,
+                                              VMWizardOwnerForm,
+                                              VMWizardBasicsForm,
                                               VMWizardAdvancedForm)
 
 __all__ = [
+    "TestVMWizard",
     "TestVMWizardBasicsForm",
     "TestVMWizardAdvancedForm",
 ]
@@ -51,6 +59,37 @@ class MockCluster(object):
     }
 
     rapi = MockRapi()
+
+
+class TestVMWizard(TestCase, ViewTestMixin, UserTestMixin):
+    wizard_url = '/vm/add'
+
+    def setUp(self):
+        self.cluster = MockCluster()
+        self.user = TestVMWizard.create_user()
+        user = self.client.login(username=self.user.username, password='secret')
+
+    def test_form_init(self):
+        """
+        Tests to make sure our WizardCorrectly initializes the form_list
+        """
+        forms = (VMWizardClusterForm, VMWizardOwnerForm, VMWizardBasicsForm,
+                 VMWizardAdvancedForm)
+        # We can't call as_view() here because, that makes the object into a
+        # view, which requires a request
+        testwizard = VMWizardView.get_initkwargs(forms)
+        self.assertEqual(testwizard['form_list'],
+            {u'0': VMWizardClusterForm, u'1': VMWizardOwnerForm,
+             u'2': VMWizardBasicsForm, u'3': VMWizardAdvancedForm})
+
+    def test_access(self):
+        """
+        Tests that only authenticated users can access the vm creation wizard
+        """
+        args = ()
+        self.assert_401(self.wizard_url, args)
+        self.assert_404(self.wizard_url, args)
+        self.assert_200(self.wizard_url, args, [self.user])
 
 
 
