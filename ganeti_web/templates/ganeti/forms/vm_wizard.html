@@ -14,19 +14,14 @@
 
 <script type="text/javascript">
 $(document).ready(function() {
-    disableSingletonDropdown2();
     multi_input('.disk');
+    multi_input('.nic');
 });
 </script>
 <style type="text/css">
 button.select {float:right;}
 input.select {float:right;}
 </style>
-<script>
-$(document).ready(function() {
-    multi_input('.disk');
-});
-</script>
 {% endblock %}
 
 {% block content %}
