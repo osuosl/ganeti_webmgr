@@ -96,6 +96,8 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
             memory=512,
             os='image+debian-osgeo',
             disk_type='paravirtual',
+            disk_count='1',
+            disk_size_0=1024,
             boot_order='disk',
             nic_type='paravirtual',
             nic_count=1,

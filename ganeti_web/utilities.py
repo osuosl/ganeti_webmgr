@@ -228,13 +228,7 @@ def bulk_ops(request):
     print "Into bulk ops function"
 
     for vm in request.POST.getlist('chkbx'):
-        print "into for loop in bulk ops"
-        print vm
         vm_info = eval(vm)
-        print "hostname = " +vm_info["hostname"]
-        print "slug =" +vm_info["slug"]
-        #hostname = vm[:vm.find(",")] # Checkbox value is "hostname, slug"
-        #slug = vm[vm.find(",")+1:] # which is why it's split like this.
 
         cluster = Cluster.objects.get(slug=vm_info["slug"])
         machine = VirtualMachine.objects.get(hostname=vm_info["hostname"], cluster=cluster.id)
