@@ -121,10 +121,8 @@ class ClusterVMListView(LoginRequiredMixin, PagedListView):
         user = self.request.user
         kwargs["cluster"] = self.cluster
 
-        if user.has_any_perms(VirtualMachine, ['admin', 'modify', 'remove', 'power']):
-            kwargs["bulk_ops"] = True
-        else:
-            kwargs["bulk_ops"] = False
+        kwargs["bulk_ops"] = (user.is_superuser or
+            user.has_any_perms(VirtualMachine, ['admin', 'modify', 'remove', 'power']))
 
         # Allows for bulk reboot/shutdown/start
         if self.request.method == 'POST':

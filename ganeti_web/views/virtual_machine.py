@@ -100,10 +100,8 @@ class VMListView(LoginRequiredMixin, PagedListView):
         context["can_create"] = (user.is_superuser or
                                 user.has_any_perms(Cluster, ["create_vm"]))
 
-        if user.has_any_perms(VirtualMachine, ['admin', 'modify', 'remove', 'power']):
-            context["bulk_ops"] = True
-        else:
-            context["bulk_ops"] = False
+        context["bulk_ops"] = (user.is_superuser or
+            user.has_any_perms(VirtualMachine, ['admin', 'modify', 'remove', 'power']))
 
         # Allows for bulk reboot/shutdown/start
         if self.request.method == 'POST':
