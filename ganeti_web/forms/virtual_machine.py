@@ -59,6 +59,8 @@ class VirtualMachineForm(forms.ModelForm):
       and shared form fields.
     """
     memory = DataVolumeField(label=_('Memory'), min_value=100)
+    minmem = DataVolumeField(label=_('Minimum RAM (MiB)'), required=True, min_value=100)
+    maxmem = DataVolumeField(label=_('Maximum RAM (MiB)'), required=True, min_value=100)
 
     class Meta:
         model = VirtualMachineTemplate
@@ -218,6 +220,9 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
     def __init__(self, vm, initial=None, *args, **kwargs):
         super(VirtualMachineForm, self).__init__(initial, *args, **kwargs)
 
+        if has_balloonmem(vm.cluster):
+            self.always_required = ('vcpus', 'memory', 'minmem')
+
         # Set owner on form
         try:
             self.owner
@@ -248,7 +253,14 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
             #  from ganeti as an int and the DataVolumeField does not like
             #  ints.
             self.fields['vcpus'].initial = info['beparams']['vcpus']
-            self.fields['memory'].initial = str(info['beparams']['memory'])
+            if has_balloonmem(vm.cluster):
+                del self.fields['memory']
+                self.fields['minmem'].initial = info['beparams']['minmem']
+                self.fields['maxmem'].initial = info['beparams']['maxmem']
+            else:
+                del self.fields['minmem']
+                del self.fields['maxmem']
+                self.fields['memory'].initial = str(info['beparams']['memory'])
 
             # always take the larger nic count.  this ensures that if nics are
             # being removed that they will be in the form as Nones
@@ -418,7 +430,11 @@ class ModifyConfirmForm(forms.Form):
 
         # XXX copy properties into cleaned data so that check_quota_modify can
         # be used
-        cleaned['memory'] = data['memory']
+        if data.get('maxmem'):
+            cleaned['maxmem'] = data['maxmem']
+            cleaned['minmem'] = data['minmem']
+        else:
+            cleaned['memory'] = data['memory']
         cleaned['vcpus'] = data['vcpus']
         cleaned['start'] = 'reboot' in data or self.vm.is_running
         check_quota_modify(self)

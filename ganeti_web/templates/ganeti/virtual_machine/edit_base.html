@@ -31,7 +31,12 @@
         <fieldset class="first_fieldset">
             <legend>{% trans "General Parameters" %}</legend>
             {% vmfield form.vcpus %}
+            {% if not balloon %}
             {% vmfield form.memory %}
+            {% else %}
+            {% vmfield form.minmem %}
+            {% vmfield form.maxmem %}
+            {% endif %}
             {% block beparams %}{% endblock %}
         </fieldset>
 
