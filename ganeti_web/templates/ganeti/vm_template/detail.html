@@ -65,7 +65,7 @@ $(document).ready(function() {
 <table class="horizontal">
     <tr><th>{% trans "VCPUs" %}</th><td>{{ template.vcpus }}</td></tr>
     {% if template.memory %}
-    <tr><th>{% trans "Memory" %}</th><td>{{ template.memory|render_storage }}</td></tr>
+    <tr><th>{% trans "Memory (Min/Max)" %}</th><td>{{ template.minmem|render_storage }} / {{ template.memory|render_storage  }}</td></tr>
     {% endif %}
     <tr><th>{% trans "NIC type" %}</th><td>{{ template.nic_type }}</td></tr>
     <tr><th>{% trans "Disk Template" %}</th><td>{{ template.disk_template }}</td></tr>
