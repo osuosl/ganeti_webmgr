@@ -838,6 +838,11 @@ class VMWizardBasicsForm(Form):
                 raise ValidationError(_("Please input both a link and mode."))
 
         data['nics'] = nics
+
+        if data.get('minram') > data.get('memory'):
+            msg = _("The minimum ram cannot be larger than the maximum ram.")
+            self._errors["minram"] = self.error_class([msg])
+
         return data
 
 class VMWizardAdvancedForm(Form):
