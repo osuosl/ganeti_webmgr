@@ -688,9 +688,9 @@ class VMWizardBasicsForm(Form):
                      help_text=_(VM_CREATE_HELP['os']))
     vcpus = IntegerField(label=_("Virtual CPU Count"), initial=1, min_value=1,
                          help_text=_(VM_HELP['vcpus']))
-    memory = DataVolumeField(label=_('Maximum RAM (MiB)'),
-                             help_text=_(VM_HELP['memory']))
     minram = DataVolumeField(label=_('Minimum RAM (MiB)'),
+                             help_text=_(VM_HELP['memory']))
+    memory = DataVolumeField(label=_('Maximum RAM (MiB)'),
                              help_text=_(VM_HELP['memory']))
     disk_template = ChoiceField(label=_('Disk Template'),
                                 choices=HV_DISK_TEMPLATES,
