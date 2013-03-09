@@ -27,6 +27,8 @@ from object_log.models import LogItem
 
 from ganeti_web.models import Job, VirtualMachine, VirtualMachineTemplate
 
+from ganeti_web.caps import has_balloonmem
+
 log_action = LogItem.objects.log_action
 
 
@@ -77,14 +79,19 @@ def template_to_instance(template, hostname, owner):
     """
 
     cluster = template.cluster
-    memory = template.memory
-    vcpus = template.vcpus
-    disk_size = template.disks[0]["size"]
-
     beparams = {
-        "memory": memory,
         "vcpus": template.vcpus,
     }
+    memory = template.memory
+    if has_balloonmem(cluster):
+        minram = template.minmem
+        beparams['minmem'] = minram
+        beparams['maxmem'] = memory
+    else:
+        beparams['memory'] = memory
+
+    vcpus = template.vcpus
+    disk_size = template.disks[0]["size"]
 
     kwargs = {
         "os": template.os,
@@ -103,6 +110,8 @@ def template_to_instance(template, hostname, owner):
     vm.cluster = cluster
     vm.hostname = hostname
     vm.ram = memory
+    if has_balloonmem(cluster):
+        vm.minram = minram
     vm.virtual_cpus = vcpus
     vm.disk_size = disk_size
 
