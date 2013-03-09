@@ -12,6 +12,10 @@ class Migration(DataMigration):
         db.add_column('ganeti_web_virtualmachine', 'minram',
                       self.gf('django.db.models.fields.IntegerField')(default=-1),
                       keep_default=False)
+        # Adding field VirtualMachineTemplate.minmem
+        db.add_column('ganeti_web_virtualmachinetemplate', 'minmem',
+                      self.gf('django.db.models.fields.IntegerField')(null=True, blank=True),
+                      keep_default=False)
        
         # Set the Min/Max RAM size both as the old RAM value
         the_data = orm['ganeti_web.virtualmachine']
@@ -19,9 +23,16 @@ class Migration(DataMigration):
             data.minram = data.ram
             data.save()
 
+        more_data = orm['ganeti_web.virtualmachinetemplate']
+        for data in more_data.objects.all():
+            data.minmem = data.memory
+            data.save()
+
     def backwards(self, orm):
         # Deleting field 'VirtualMachine.minram'
         db.delete_column('ganeti_web_virtualmachine', 'minram')
+        # Deleting field 'VirtualMachine.minmem'
+        db.delete_column('ganeti_web_virtualmachinetemplate', 'minmem')
 
     models = {
         'auth.group': {
@@ -220,6 +231,7 @@ class Migration(DataMigration):
             'ip_check': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'kernel_path': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '255', 'blank': 'True'}),
             'memory': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'minmem': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
             'name_check': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'nic_type': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '255'}),
             'nics': ('django_fields.fields.PickleField', [], {'null': 'True', 'blank': 'True'}),

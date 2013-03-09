@@ -1448,6 +1448,9 @@ class VirtualMachineTemplate(models.Model):
     memory = models.IntegerField(verbose_name=_('Memory'),
                                  validators=[MinValueValidator(100)],
                                  null=True, blank=True)
+    minmem = models.IntegerField(verbose_name=_('Minimum Memory'),
+                                 validators=[MinValueValidator(100)],
+                                 null=True, blank=True)
     disks = PickleField(verbose_name=_('Disks'), null=True, blank=True)
     # XXX why isn't this an enum?
     disk_type = models.CharField(verbose_name=_('Disk Type'), max_length=255,
