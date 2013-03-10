@@ -35,7 +35,7 @@ log_action = LogItem.objects.log_action
 from ganeti_web.backend.queries import (cluster_qs_for_user,
                                         owner_qs_for_cluster)
 from ganeti_web.backend.templates import template_to_instance
-from ganeti_web.caps import has_cdrom2, requires_maxmem, has_sharedfile
+from ganeti_web.caps import has_cdrom2, has_balloonmem, has_sharedfile
 from ganeti_web.constants import (EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES,
                                   HV_NIC_MODES, KVM_CHOICES, HV_USB_MICE,
                                   HV_SECURITY_MODELS, KVM_FLAGS,
@@ -59,6 +59,8 @@ class VirtualMachineForm(forms.ModelForm):
       and shared form fields.
     """
     memory = DataVolumeField(label=_('Memory'), min_value=100)
+    minmem = DataVolumeField(label=_('Minimum RAM (MiB)'), required=True, min_value=100)
+    maxmem = DataVolumeField(label=_('Maximum RAM (MiB)'), required=True, min_value=100)
 
     class Meta:
         model = VirtualMachineTemplate
@@ -218,6 +220,9 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
     def __init__(self, vm, initial=None, *args, **kwargs):
         super(VirtualMachineForm, self).__init__(initial, *args, **kwargs)
 
+        if has_balloonmem(vm.cluster):
+            self.always_required = ('vcpus', 'memory', 'minmem')
+
         # Set owner on form
         try:
             self.owner
@@ -248,7 +253,14 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
             #  from ganeti as an int and the DataVolumeField does not like
             #  ints.
             self.fields['vcpus'].initial = info['beparams']['vcpus']
-            self.fields['memory'].initial = str(info['beparams']['memory'])
+            if has_balloonmem(vm.cluster):
+                del self.fields['memory']
+                self.fields['minmem'].initial = info['beparams']['minmem']
+                self.fields['maxmem'].initial = info['beparams']['maxmem']
+            else:
+                del self.fields['minmem']
+                del self.fields['maxmem']
+                self.fields['memory'].initial = str(info['beparams']['memory'])
 
             # always take the larger nic count.  this ensures that if nics are
             # being removed that they will be in the form as Nones
@@ -418,7 +430,11 @@ class ModifyConfirmForm(forms.Form):
 
         # XXX copy properties into cleaned data so that check_quota_modify can
         # be used
-        cleaned['memory'] = data['memory']
+        if data.get('maxmem'):
+            cleaned['maxmem'] = data['maxmem']
+            cleaned['minmem'] = data['minmem']
+        else:
+            cleaned['memory'] = data['memory']
         cleaned['vcpus'] = data['vcpus']
         cleaned['start'] = 'reboot' in data or self.vm.is_running
         check_quota_modify(self)
@@ -672,7 +688,9 @@ class VMWizardBasicsForm(Form):
                      help_text=_(VM_CREATE_HELP['os']))
     vcpus = IntegerField(label=_("Virtual CPU Count"), initial=1, min_value=1,
                          help_text=_(VM_HELP['vcpus']))
-    memory = DataVolumeField(label=_('Memory (MiB)'),
+    minram = DataVolumeField(label=_('Minimum RAM (MiB)'),
+                             help_text=_(VM_HELP['memory']))
+    memory = DataVolumeField(label=_('Maximum RAM (MiB)'),
                              help_text=_(VM_HELP['memory']))
     disk_template = ChoiceField(label=_('Disk Template'),
                                 choices=HV_DISK_TEMPLATES,
@@ -749,10 +767,9 @@ class VMWizardBasicsForm(Form):
 
         # If this cluster operates on the "maxmem" parameter instead of
         # "memory", use that for now.
-        if requires_maxmem(cluster):
-            self.fields["memory"].initial = beparams["maxmem"]
-        else:
-            self.fields["memory"].initial = beparams["memory"]
+        self.fields["memory"].initial = beparams["maxmem"]
+        if has_balloonmem(cluster):
+            self.fields["minram"].initial = beparams["minmem"]
 
         # If there are ipolicy limits in place, add validators for them.
         if "ipolicy" in cluster.info:
@@ -763,6 +780,8 @@ class VMWizardBasicsForm(Form):
                         MaxValueValidator(v))
                 v = cluster.info["ipolicy"]["max"]["memory-size"]
                 self.fields["memory"].validators.append(MaxValueValidator(v))
+                if has_balloonmem(cluster):
+                    self.fields["minram"].validators.append(MaxValueValidator(v))
             if "min" in cluster.info["ipolicy"]:
                 v = cluster.info["ipolicy"]["min"]["disk-size"]
                 for disk in xrange(settings.MAX_DISKS_ADD):
@@ -770,6 +789,8 @@ class VMWizardBasicsForm(Form):
                         MinValueValidator(v))
                 v = cluster.info["ipolicy"]["min"]["memory-size"]
                 self.fields["memory"].validators.append(MinValueValidator(v))
+                if has_balloonmem(cluster):
+                    self.fields["minram"].validators.append(MinValueValidator(v))
 
     def _configure_for_template(self, template):
         if not template:
@@ -778,6 +799,8 @@ class VMWizardBasicsForm(Form):
         self.fields["os"].initial = template.os
         self.fields["vcpus"].initial = template.vcpus
         self.fields["memory"].initial = template.memory
+        if has_balloonmem(cluster):
+            self.fields["minram"].initial = template.minmem
         self.fields["disk_template"].initial = template.disk_template
         for num, disk in enumerate(template.disks):
             self.fields["disk_size_%s" % num].initial = disk["size"]
@@ -815,6 +838,11 @@ class VMWizardBasicsForm(Form):
                 raise ValidationError(_("Please input both a link and mode."))
 
         data['nics'] = nics
+
+        if data.get('minram') > data.get('memory'):
+            msg = _("The minimum ram cannot be larger than the maximum ram.")
+            self._errors["minram"] = self.error_class([msg])
+
         return data
 
 class VMWizardAdvancedForm(Form):
@@ -1137,6 +1165,8 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
 
         template.cluster = cluster
         template.memory = forms[2].cleaned_data["memory"]
+        if has_balloonmem(cluster):
+            template.minmem = forms[2].cleaned_data["minram"]
         template.vcpus = forms[2].cleaned_data["vcpus"]
         template.disk_template = forms[2].cleaned_data["disk_template"]
 

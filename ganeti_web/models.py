@@ -604,6 +604,7 @@ class VirtualMachine(CachedClusterObject):
     virtual_cpus = models.IntegerField(default=-1)
     disk_size = models.IntegerField(default=-1)
     ram = models.IntegerField(default=-1)
+    minram = models.IntegerField(default=-1)
     cluster_hash = models.CharField(max_length=40, editable=False)
     operating_system = models.CharField(max_length=128)
     status = models.CharField(max_length=14)
@@ -1445,6 +1446,9 @@ class VirtualMachineTemplate(models.Model):
     # XXX do we really want the minimum memory to be 100MiB? This isn't
     # strictly necessary AFAICT.
     memory = models.IntegerField(verbose_name=_('Memory'),
+                                 validators=[MinValueValidator(100)],
+                                 null=True, blank=True)
+    minmem = models.IntegerField(verbose_name=_('Minimum Memory'),
                                  validators=[MinValueValidator(100)],
                                  null=True, blank=True)
     disks = PickleField(verbose_name=_('Disks'), null=True, blank=True)
