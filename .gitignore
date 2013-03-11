@@ -16,6 +16,10 @@ settings.py*
 !settings.py.dist
 !ganeti_web/settings.py
 
+# ldap_settings
+ldap_settings.py*
+!ldap_settings.py.dist
+
 # Any sqlite database files created by the project
 *.db
 
