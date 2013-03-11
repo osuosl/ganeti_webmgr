@@ -19,6 +19,7 @@
 # Django settings for ganeti_webmgr project.
 
 from ganeti_web.settings import *
+#from ldap_settings import *
 
 import os.path
 
@@ -121,6 +122,7 @@ SECRET_KEY = '!c&bm88vo=gby*vxf2gydv8hc!+f+eo+yu&!g&!)#n5quwsr82'
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
+#     'django_auth_ldap.backend.LDAPBackend',
     'object_permissions.backend.ObjectPermBackend',
 )
 
