@@ -3,9 +3,9 @@ LDAP
 
 .. versionadded:: 0.10
 
-Ganeti Web Manager support LDAP authentication through the use of
+Ganeti Web Manager supports LDAP authentication through the use of
 `django-auth-ldap`_ and `python-ldap`_. A fabric command has been
-written to easily handling enabling and disabling LDAP support.
+written to easily handle enabling and disabling LDAP support.
 
 Dependencies
 ------------
