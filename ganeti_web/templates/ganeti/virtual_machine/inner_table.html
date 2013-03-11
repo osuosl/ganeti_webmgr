@@ -1,23 +1,10 @@
 {% load webmgr_tags %}
 {% load i18n %}
-
-<form method="post" class="sorted">
-{% csrf_token %}
-<table id="vmlist">
-<select name="vm_options">
-  <option name="Reboot">Reboot VMs</option>
-  <option name="Start">Start VMs</option>
-  <option name="Shutdown">Shutdown VMs</option>
-  <option name="Immediate shutdown">Immediately Shutdown VMs</option>
-</select>
- 
-<input type="submit" onclick="return confirm('Are you sure you want to preform this action the the selected VMs?')" value="Submit"/>
-
+<table id="vmlist" class="sorted">
 <thead>
   {% if order %} {% comment %} order will only exist if the VM view is using this template {% endcomment %}
     {% if is_paginated %} {% comment %} Different urls are needed depending on whether the page is paginated or not {% endcomment %}
     <tr>
-      <th><input type="checkbox" name="master_chkbx" onclick="toggle_boxes(this);"></input><th>
       <th class="status"></th>
       <th onclick="sort('{% url virtualmachine-list-paged page_obj.number,order %}', '{{order}}', 'hostname')"> {% trans "Name" %} </th>            
       <th onclick="sort('{% url virtualmachine-list-paged page_obj.number,order %}', '{{order}}', 'owner')"> {% trans "Owner" %}</th>
@@ -63,7 +50,6 @@
     {% if not vm.pending_delete or vm.last_job_id %}
     {% with vm.info as info %}
     <tr>
-        <td><input type="checkbox" name="chkbx" value="{{vm.hostname}},{{vm.cluster.slug}}"></input></td>
         <td class="status">
             {% if vm.error %}
                 <div class="icon_error" title="{% trans "Ganeti API Error" %}: {{vm.error}}, last status was {{ vm.status|render_instance_status }}"></div>
@@ -133,7 +119,6 @@
     {% endfor %}
 </tbody>
 </table>
-</form>
 {% if is_paginated %}
 <ul class="pagination">
     {% if page_obj.has_previous %}
