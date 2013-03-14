@@ -23,18 +23,16 @@
             75: '/static/images/progressbar/progressbg_green.gif',
         },
     };
-    $(document).ready(function() {
-        
-    });
 </script>
 {% endblock %}
 
 {% block content %}
-<h1 class="breadcrumb">Clusters</h1>
-
-{% if user.is_superuser %}
-<a class="button add" href="{% url cluster-create %}">{% trans "Add Cluster" %}</a>
-{% endif %}
+<div class="header">
+  <h1 class="breadcrumb">Clusters</h1>
+  {% if user.is_superuser %}
+    <a class="button add" href="{% url cluster-create %}">{% trans "Add Cluster" %}</a>
+  {% endif %}
+</div>
 
 <table id="clusters" class="sorted">
     <thead>

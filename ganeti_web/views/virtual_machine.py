@@ -100,44 +100,12 @@ class VMListView(LoginRequiredMixin, PagedListView):
         context["can_create"] = (user.is_superuser or
                                 user.has_any_perms(Cluster, ["create_vm"]))
 
-        # Allows for bulk reboot/shutdown/start -- NEEDS TESTING -- NOT TESTED
-        if self.request.method == 'POST':
-
-            if user.has_any_perms(VirtualMachine, ['admin', 'modify', 'remove', 'power']):
-                # Call bulk_ops and send in the request
-                self.bulk_ops(self.request)
-            else:
-                # Return an error for each VM the user doesn't have permissions on.
-                print "error calling bulk_ops"
         if "order_by" in self.request.GET:
             context["order"] = self.request.GET["order_by"]
         else:
             context["order"] = "hostname"
 
         return context
-
-    def bulk_ops(self, request):
-
-        for vm in request.POST.getlist('chkbx'):
-            vm_operation = request.POST['vm_options']
-            hostname = vm[:vm.find(",")]
-            slug = vm[vm.find(",")+1:]
-
-            print "Shutting down a VM"
-
-            if vm_operation == "Reboot VMs":
-                reboot(request, slug, hostname)
-            elif vm_operation == "Start VMs":
-                startup(request, slug, hostname)
-            elif vm_operation == "Shutdown VMs":
-                shutdown(request, slug, hostname)
-            elif vm_operation == "Immediately Shutdown VMs":
-                shutdown_now(request, slug, hostname)
-
-
-    def post(self, *args, **kwargs):
-        return super(VMListView, self).get(self.request, args, kwargs)
-
 
 class VMListTableView(VMListView):
     """

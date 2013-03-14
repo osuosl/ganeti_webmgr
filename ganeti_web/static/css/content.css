@@ -280,3 +280,13 @@ tr.group td.name {background:url(/static/images/icons/group.png) no-repeat 0 4px
 .object_log .timestamp {font-weight:bold; width:4em;}
 .object_log td {text-align:left !important;}
 
+.header {
+  padding-bottom: 12px;
+}
+.header h1 {
+  clear: both;
+  display: inline;
+}
+.header .button {
+  float: right;
+}

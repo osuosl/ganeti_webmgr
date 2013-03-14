@@ -5,10 +5,10 @@
 {% block title %}{% trans "Templates" %}{% endblock title %}
 
 {% block content %}
-<h1>{% trans "Templates" %}</h1>
-<p>
-    <a class="button add" href="{% url template-create %}">Create Template</a>
-</p>
+<div class="header">
+  <h1>{% trans "Templates" %}</h1>
+  <a class="button add" href="{% url template-create %}">Create Template</a>
+</div>
 
 <table>
     <thead>
