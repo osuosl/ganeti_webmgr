@@ -134,9 +134,7 @@ Configuration
    (not recommended for production), edit **settings.py**, and edit the
    following lines to reflect your wishes.
 
-   .. Note:: Postgresql is not supported at this time and the
-             install will fail (See issue `#3237 <http://code.osuosl.org/issues/3237>`_).
-
+   .. Note:: Postgresql is supported as of version .10
    ::
 
        DATABASE_ENGINE = ''   # <-- Change this to 'mysql', 'postgresql', 'postgresql_psycopg2' or 'sqlite3'
@@ -148,9 +146,18 @@ Configuration
 
 #. Initialize Database:
 
+   MySQL/SQLite:
    ::
 
        ./manage.py syncdb --migrate
+
+   Postgres:
+
+   .. Note:: This assumes your doing a fresh install of GWM on a new Postgres database.
+   ::
+
+       ./manage.py syncdb --all
+       ./manage.py migrate --fake
 
 #. Build the search indexes
 
