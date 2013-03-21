@@ -216,30 +216,56 @@ def overview(request, rest=False):
     # Get all of the PKs from VMs that this user may administer.
     vms = vm_qs_for_admins(user).values("pk")
 
+    # build list of job errors.  Include jobs from any vm the user has access
+    # to if the user has admin on any cluster then those clusters and it's
+    # objects must be included too.
+
+    # XXX all jobs have the cluster listed, filtering by cluster includes jobs
+    # for both the cluster itself and any of its VMs or Nodes
+    error_clause = Q(status='error')
+    vm_type = ContentType.objects.get_for_model(VirtualMachine)
+    select_clause = Q(content_type=vm_type, object_id__in=vms)
+    if admin:
+        select_clause |= Q(cluster__in=clusters)
+    job_errors = Job.objects.filter(error_clause & select_clause) \
+        .order_by("-finished")[:5]
+
+    # Build the list of job errors. Include jobs from any VMs for which the
+    # user has access.
+    qs = GanetiError.objects.filter(cleared=False)
+    ganeti_errors = qs.get_errors(obj=vms)
+    # If the user is an admin on any cluster, then include administrated
+    # clusters and related objects.
+    if admin:
+        ganeti_errors |= qs.get_errors(obj=clusters)
+
+    # merge error lists
+    errors = merge_errors(ganeti_errors, job_errors)
+
     # get vm summary - running and totals need to be done as separate queries
     # and then merged into a single list
-    vms_running = vms.filter(status='running') \
-        .order_by() \
-        .values('cluster__hostname', 'cluster__slug') \
-        .annotate(running=Count('pk'))
-    vms_total = vms.order_by()\
-        .values('cluster__hostname', 'cluster__slug') \
-        .annotate(total=Count('pk'))
+    vms_running = (vms.filter(status='running')
+                      .order_by()
+                      .values('cluster__hostname', 'cluster__slug')
+                      .annotate(running=Count('pk')))
+    vms_total = (vms.order_by()
+                    .values('cluster__hostname', 'cluster__slug')
+                    .annotate(total=Count('pk')))
     vm_summary = {}
     for cluster in vms_total:
-        vm_summary[cluster.pop('cluster__hostname')] = cluster
+        name = cluster.pop('cluster__hostname')
+        vm_summary[name] = cluster
     for cluster in vms_running:
-        vm_summary[cluster['cluster__hostname']]['running'] = \
-            cluster['running']
+        name = cluster['cluster__hostname']
+        vm_summary[name]['running'] = cluster['running']
 
-    # get list of personas for the user:  All groups, plus the user.
-    # include the user only if it owns a vm or has
-    # perms on at least one cluster
+    # get list of personas for the user: All groups, plus the user.
+    # include the user if they own a vm or have perms on at least one cluster
     profile = user.get_profile()
     personas = list(Organization.objects.filter(group__user=user))
-    if profile.virtual_machines.count() \
-        or user.has_any_perms(Cluster, ['admin', 'create_vm'], groups=False) \
-            or not personas:
+    owns_vm = profile.virtual_machines.count()
+    has_perms = user.has_any_perms(Cluster, ['admin', 'create_vm'], False)
+    if (owns_vm or has_perms or not personas):
         personas.insert(0, profile)
 
     # get resources used per cluster from the first persona in the list
@@ -248,19 +274,20 @@ def overview(request, rest=False):
     if rest:
         return clusters
     else:
-        return render_to_response("ganeti/overview.html", {
+        context = {
             'admin': admin,
             'cluster_list': clusters,
             'user': request.user,
+            'errors': errors,
             'orphaned': orphaned,
             'import_ready': import_ready,
             'missing': missing,
             'resources': resources,
             'vm_summary': vm_summary,
             'personas': personas,
-        },
-            context_instance=RequestContext(request),
-        )
+        }
+        return render_to_response("ganeti/overview.html", context,
+                                  context_instance=RequestContext(request))
 
 
 @login_required
