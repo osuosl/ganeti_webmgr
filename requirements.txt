@@ -4,7 +4,7 @@ django-haystack==1.2.1
 django-registration>=0.7,<0.8
 django>=1.4
 django-object-log==0.7
-django-object-permissions==1.4.3
+django-object-permissions==1.4.5
 pyopenssl
 requests>=0.9
 simplejson
