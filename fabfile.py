@@ -47,24 +47,7 @@ PROD = 'production'
 # wish to have an environment that functions differently
 env.doc_root = '.'
 env.remote = False
-
-
-def dev():
-    """
-    Configure development deployment.
-    """
-
-    env.environment = DEV
-
-
-def prod():
-    """
-    Configure production deployment.
-    """
-
-    env.environment = PROD
-
-
+env.environment = PROD
 # List of stuff to include in the tarball, recursive.
 env.MANIFEST = [
     # Directories
@@ -87,6 +70,14 @@ env.MANIFEST = [
     "settings.py.dist",
     "urls.py",
 ]
+
+
+def dev():
+    """
+    Configure development deployment.
+    """
+    env.environment = DEV
+
 
 def deploy():
     """
@@ -114,7 +105,6 @@ def update():
     """
     In a development environment, update all develop branches.
     """
-    require('environment', provided_by=[dev, prod])
 
     if env.environment != DEV:
         raise Exception('must be in a development environment in order to'
@@ -153,7 +143,6 @@ def create_virtualenv(virtualenv='venv', force=False):
     already exists.
     """
 
-    require('environment', provided_by=[dev, prod])
     env.virtualenv = virtualenv if virtualenv else env.doc_root
 
     with lcd(env.doc_root):
@@ -171,8 +160,6 @@ def create_env():
     Setup environment for git dependencies.
     """
 
-    require('environment', provided_by=[dev, prod])
-
     with lcd(env.doc_root):
         if _exists('dependencies'):
             print 'dependencies directory exists already'
@@ -185,7 +172,6 @@ def install_dependencies_pip():
     Install all dependencies available from pip.
     """
 
-    require('environment', provided_by=[dev, prod])
     create_virtualenv()
 
     with lcd(env.doc_root):
@@ -197,8 +183,6 @@ def install_dependencies_git():
     """
     Install all dependencies available from git.
     """
-
-    require('environment', provided_by=[dev, prod])
 
     if env.environment != DEV:
         # If we can satisfy all of our dependencies from pip alone, then don't
