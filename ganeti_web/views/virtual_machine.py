@@ -96,9 +96,10 @@ class VMListView(LoginRequiredMixin, PagedListView):
 
     def get_context_data(self, **kwargs):
         user = self.request.user
-        context = super(VMListView, self).get_context_data(object_list=kwargs["object_list"])
-        context["can_create"] = (user.is_superuser or
-                                user.has_any_perms(Cluster, ["create_vm"]))
+        context = super(VMListView, self).get_context_data(
+            object_list=kwargs["object_list"])
+        context["create_vm"] = (user.is_superuser or
+            user.has_any_perms(Cluster, ["admin", "create_vm"]))
 
         if "order_by" in self.request.GET:
             context["order"] = self.request.GET["order_by"]
@@ -527,7 +528,8 @@ def detail(request, cluster_slug, instance, rest=False):
     vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
 
     user = request.user
-    cluster_admin = user.is_superuser or user.has_perm('admin', cluster)
+    cluster_admin = (user.is_superuser or
+                     user.has_any_perms(cluster, perms=['admin','create_vm']))
 
     if not cluster_admin:
         perms = user.get_perms(vm)
