@@ -86,8 +86,19 @@ def vm_qs_for_users(user):
     elif user.is_anonymous():
         qs = VirtualMachine.objects.none()
     else:
-        # If no permissions are listed, then *any* permission will cause a VM
+        # If no permissions are provided, then *any* permission will cause a VM
         # to be added to the query.
-        qs = user.get_objects_any_perms(VirtualMachine, groups=True)
+        vm_qs = user.get_objects_any_perms(VirtualMachine, groups=True)
+
+        # first we get the IDs of the clusters which a user is admin of
+        cluster_ids = user.get_objects_any_perms(
+            Cluster, ['admin'], groups=True).values_list('pk', flat=True)
+        # create a queryset of VMs where the user is an admin of the cluster
+        cluster_vm_qs = VirtualMachine.objects.filter(
+            cluster__pk__in=cluster_ids).distinct()
+
+        # Union of vms a user has any permissions to AND vms a user has
+        # permissions to via cluster
+        qs = (vm_qs | cluster_vm_qs).distinct()
 
     return qs
