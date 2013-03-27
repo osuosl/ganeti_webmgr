@@ -25,7 +25,7 @@ by consolidating the entire process into a single command.
 ::
 
     # production environment
-    fab prod deploy
+    fab deploy
 
     # development environment
     fab dev deploy

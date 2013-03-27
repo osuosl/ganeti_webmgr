@@ -38,7 +38,7 @@ Overview
     1. Install dependencies: Python, Pip, Fabric, VirtualEnv
     2. Get the Ganeti Web Manager code: Clone from the repository or download
         a release tarball
-    3. Deploy fabric environment: fab dev deploy or fab prod deploy
+    3. Deploy fabric environment: fab dev deploy or fab deploy
     4. Configure Settings: Copy settings.py.dist to settings.py and make any 
         modifications
     5. Sync database, then run the server: ./manage.py syncdb --migrate, then 
@@ -124,7 +124,7 @@ dependencies.  Choose either production or development environment
 
   * production environment
       
-    $ fab prod deploy
+    $ fab deploy
 
   * development environment
       
