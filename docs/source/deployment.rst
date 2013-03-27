@@ -119,7 +119,7 @@ Install with Fabric
 
    ::
 
-       source bin/activate
+       source venv/bin/activate
 
 Configuration
 -------------
@@ -219,7 +219,7 @@ Deploying a production server requires additional setup steps.
        path = '/var/lib/django/ganeti_webmgr'
 
        # activate virtualenv
-       activate_this = '%s/bin/activate_this.py' % path
+       activate_this = '%s/venv/bin/activate_this.py' % path
        execfile(activate_this, dict(__file__=activate_this))
 
        # add project to path
