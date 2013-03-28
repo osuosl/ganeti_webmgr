@@ -108,7 +108,7 @@ urlpatterns += patterns('ganeti_web.views.cluster',
     url(r'^%s/redistribute-config/?$' % cluster, 'redistribute_config', name="cluster-redistribute-config"),
     # User
     url(r'^%s/users/?$' % cluster, 'users', name="cluster-users"),
-    url(r'^%s/virtual_machines/?$' % cluster, ClusterVMListView.as_view(),
+    url(r'^%s/virtual_machines/?$' % cluster, VMListView.as_view(),
         name="cluster-vms"),
     url(r'^%s/nodes/?$' % cluster, 'nodes', name="cluster-nodes"),
     url(r'^%s/quota/(?P<user_id>\d+)?/?$'% cluster, 'quota', name="cluster-quota"),

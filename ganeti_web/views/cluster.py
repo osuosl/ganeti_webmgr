@@ -96,6 +96,7 @@ class ClusterListView(LoginRequiredMixin, PagedListView):
                 context["order"] = "id"
 
             return context
+
 class ClusterVMListView(LoginRequiredMixin, PagedListView):
 
     template_name = "ganeti/virtual_machine/table.html"
