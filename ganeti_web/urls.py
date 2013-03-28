@@ -104,84 +104,55 @@ urlpatterns += patterns('ganeti_web.views.general',
                         )
 
 # Clusters
-urlpatterns += patterns('ganeti_web.views.cluster',
-                        #  List
-                        url(r'^clusters/?$',
-                            ClusterListView.as_view(),
-                            name="cluster-list"),
-                        #  List (Ordered and Non-Paginated)
-                        url(r'^clusters\?order_by=(?P<order>.+)$',
-                            VMListView.as_view(),
-                            name="cluster-list-ordered"),
-                        #  List (Paged)
-                        url(r'^clusters\?page=(?P<page>.+)\&order_by='
-                            '(?P<order>.+)$',
-                            VMListView.as_view(),
-                            name="cluster-list-paged"),
+urlpatterns += patterns(
+    'ganeti_web.views.cluster',
 
-                        # Add
-                        url(r'^cluster/add/?$', 'edit',
-                            name="cluster-create"),
-                        # Detail
-                        url(r'^%s/?$' % cluster,
-                            ClusterDetailView.as_view(),
-                            name="cluster-detail"),
-                        # Edit
-                        url(r'^%s/edit/?$' % cluster,
-                            'edit', name="cluster-edit"),
-                        # Refresh
-                        url(r'^%s/refresh/?$' % cluster,
-                            'refresh', name='cluster-refresh'),
-                        # Redistribute config
-                        url(r'^%s/redistribute-config/?$' % cluster,
-                            'redistribute_config',
-                            name="cluster-redistribute-config"),
-                        # User
-                        url(r'^%s/users/?$' % cluster,
-                            'users', name="cluster-users"),
-                        url(r'^%s/virtual_machines/?$' % cluster,
-                            ClusterVMListView.as_view(),
-                            name="cluster-vms"),
-                        url(r'^%s/nodes/?$' % cluster,
-                            'nodes', name="cluster-nodes"),
-                        url(r'^%s/quota/(?P<user_id>\d+)?/?$' % cluster,
-                            'quota', name="cluster-quota"),
-                        url(r'^%s/permissions/?$' % cluster,
-                            'permissions', name="cluster-permissions"),
-                        url(r'^%s/permissions/user/(?P<user_id>\d+)/?$'
-                            % cluster, 'permissions',
-                            name="cluster-permissions-user"),
-                        url(r'^%s/permissions/group/(?P<group_id>\d+)/?$'
-                            % cluster, 'permissions',
-                            name="cluster-permissions-group"),
+    url(r'^clusters/?$', ClusterListView.as_view(), name="cluster-list"),
 
-                        url(r'^(?P<id>\d+)/jobs/status/?$',
-                            "job_status", name="cluster-job-status"),
+    url(r'^cluster/add/?$', 'edit', name="cluster-create"),
 
-                        # ssh_keys
-                        url(r'^%s/keys/(?P<api_key>\w+)/?$' % cluster,
-                            "ssh_keys", name="cluster-keys"),
+    url(r'^%s/?$' % cluster, ClusterDetailView.as_view(),
+        name="cluster-detail"),
 
-                        # object log
-                        url(r'^%s/object_log/?$' % cluster,
-                            'object_log', name="cluster-object_log"),
+    url(r'^%s/edit/?$' % cluster, 'edit', name="cluster-edit"),
 
-                        # Taken from bug 11997's changes
-                        # Jobs (Ordered)
-                        url(r'%s/jobs/\?order_by=(?P<order>.+)$' % cluster,
-                            ClusterJobListView.as_view(),
-                            name="cluster-jobs-ordered"),
+    url(r'^%s/refresh/?$' % cluster, 'refresh', name='cluster-refresh'),
 
-                        # Jobs (Just Paged)
-                        url(r'%s/jobs/\?page=(?P<page>.+)$' % cluster,
-                            ClusterJobListView.as_view(),
-                            name="cluster-jobs-paged"),
+    url(r'^%s/redistribute-config/?$' % cluster, 'redistribute_config',
+        name="cluster-redistribute-config"),
 
-                        url(r'%s/jobs/?$' % cluster,
-                            ClusterJobListView.as_view(),
-                            name="cluster-jobs"),
-                        )
+    url(r'^%s/users/?$' % cluster, 'users', name="cluster-users"),
 
+    url(r'^%s/virtual_machines/?$' % cluster, ClusterVMListView.as_view(),
+        name="cluster-vm-list"),
+
+    url(r'^%s/nodes/?$' % cluster, 'nodes', name="cluster-nodes"),
+
+    url(r'^%s/quota/(?P<user_id>\d+)?/?$' % cluster, 'quota',
+        name="cluster-quota"),
+
+    url(r'^%s/permissions/?$' % cluster, 'permissions',
+        name="cluster-permissions"),
+
+    url(r'^%s/permissions/user/(?P<user_id>\d+)/?$' % cluster, 'permissions',
+        name="cluster-permissions-user"),
+
+    url(r'^%s/permissions/group/(?P<group_id>\d+)/?$' % cluster, 'permissions',
+        name="cluster-permissions-group"),
+
+    url(r'^(?P<id>\d+)/jobs/status/?$', "job_status",
+        name="cluster-job-status"),
+
+    url(r'^%s/keys/(?P<api_key>\w+)/?$' % cluster, "ssh_keys",
+        name="cluster-keys"),
+
+    url(r'^%s/object_log/?$' % cluster,
+        'object_log',
+        name="cluster-object_log"),
+
+    url(r'%s/jobs/?$' % cluster, ClusterJobListView.as_view(),
+        name="cluster-job-list"),
+)
 
 # Nodes
 node_prefix = 'cluster/%s/node/%s' % (cluster_slug, host)

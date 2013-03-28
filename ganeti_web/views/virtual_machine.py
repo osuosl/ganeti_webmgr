@@ -91,8 +91,18 @@ class VMListView(LoginRequiredMixin, PagedListView):
     """
     template_name = "ganeti/virtual_machine/list.html"
 
+    def get_template_names(self):
+        if self.request.is_ajax():
+            template = ['ganeti/virtual_machine/table.html']
+        else:
+            template = ['ganeti/virtual_machine/list.html']
+        return template
+
     def get_queryset(self):
         qs = vm_qs_for_users(self.request.user)
+        cluster_slug = self.kwargs.get("cluster_slug", None)
+        if cluster_slug:
+            qs = qs.filter(cluster__slug=cluster_slug)
         return qs.select_related()
 
     def get_context_data(self, **kwargs):
