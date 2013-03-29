@@ -172,10 +172,6 @@ vm_prefix = '%s/%s' %  (cluster, instance)
 urlpatterns += patterns('ganeti_web.views.virtual_machine',
     # List
     url(r'^vms/$', VMListView.as_view(), name="virtualmachine-list"),
-    # List (Ordered and Non-Paginated)
-    url(r'^vms/\?order_by=(?P<order>.+)$', VMListView.as_view(), name="virtualmachine-list-ordered"),
-    # List (Paged)
-    url(r'^vms/\?page=(?P<page>.+)\&order_by=(?P<order>.+)$', VMListView.as_view(), name="virtualmachine-list-paged"),
 
     # VM Table
     url(r'^%s/vm/table/?$' % cluster, VMListTableView.as_view(),
