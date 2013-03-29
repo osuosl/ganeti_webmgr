@@ -32,6 +32,7 @@ from django.utils import simplejson as json
 from django.utils.translation import ugettext as _
 from django.views.decorators.http import require_http_methods, require_POST
 from django.views.generic.edit import DeleteView
+from django.views.generic.list import ListView
 
 from object_log.views import list_for_object
 
@@ -58,7 +59,7 @@ from ganeti_web.util.client import GanetiApiError
 from ganeti_web.utilities import (cluster_os_list, compare, os_prettify,
                                   get_hypervisor)
 from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
-                                      PagedListView)
+                                      PaginationMixin, SortingMixin)
 
 
 #XXX No more need for tastypie dependency for 0.8
@@ -85,11 +86,13 @@ def get_vm_and_cluster_or_404(cluster_slug, instance):
     raise Http404('Virtual Machine does not exist')
 
 
-class VMListView(LoginRequiredMixin, PagedListView):
+class VMListView(LoginRequiredMixin, PaginationMixin, SortingMixin, ListView):
     """
     View for displaying a list of VirtualMachines.
     """
     template_name = "ganeti/virtual_machine/list.html"
+    default_sort_params = ("hostname", 'asc')
+    model = VirtualMachine
 
     def get_template_names(self):
         if self.request.is_ajax():
@@ -99,23 +102,19 @@ class VMListView(LoginRequiredMixin, PagedListView):
         return template
 
     def get_queryset(self):
-        qs = vm_qs_for_users(self.request.user)
+        qs = super(VMListView, self).get_queryset()
+        vms = vm_qs_for_users(self.request.user)
+        qs |= vms
         cluster_slug = self.kwargs.get("cluster_slug", None)
         if cluster_slug:
             qs = qs.filter(cluster__slug=cluster_slug)
         return qs.select_related()
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, *args, **kwargs):
+        context = super(VMListView, self).get_context_data(*args, **kwargs)
         user = self.request.user
-        context = super(VMListView, self).get_context_data(
-            object_list=kwargs["object_list"])
         context["create_vm"] = (user.is_superuser or
             user.has_any_perms(Cluster, ["admin", "create_vm"]))
-
-        if "order_by" in self.request.GET:
-            context["order"] = self.request.GET["order_by"]
-        else:
-            context["order"] = "hostname"
 
         return context
 

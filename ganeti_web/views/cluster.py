@@ -49,7 +49,7 @@ from ganeti_web.models import (Cluster, ClusterUser, Profile, SSHKey,
 from ganeti_web.views import render_404
 from ganeti_web.forms.cluster import EditClusterForm, QuotaForm
 from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
-                                      PagedListView)
+                                      PaginationMixin, SortingMixin)
 
 
 class ClusterDetailView(LoginRequiredMixin, DetailView):
@@ -71,8 +71,7 @@ class ClusterDetailView(LoginRequiredMixin, DetailView):
         }
 
 
-class ClusterListView(LoginRequiredMixin, PagedListView):
-
+class ClusterListView(LoginRequiredMixin, PaginationMixin, ListView):
     template_name = "ganeti/cluster/list.html"
 
     def get_queryset(self):
@@ -101,7 +100,7 @@ class ClusterListView(LoginRequiredMixin, PagedListView):
             return context
 
 
-class ClusterVMListView(LoginRequiredMixin, PagedListView):
+class ClusterVMListView(LoginRequiredMixin, PaginationMixin, ListView):
 
     template_name = "ganeti/virtual_machine/table.html"
 
@@ -120,7 +119,7 @@ class ClusterVMListView(LoginRequiredMixin, PagedListView):
         return kwargs
 
 
-class ClusterJobListView(LoginRequiredMixin, PagedListView):
+class ClusterJobListView(LoginRequiredMixin, PaginationMixin, ListView):
 
     template_name = "ganeti/cluster/jobs.html"
 
