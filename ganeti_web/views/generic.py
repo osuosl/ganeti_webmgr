@@ -8,6 +8,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.utils.decorators import method_decorator
 from django.utils.http import urlencode
 from django.utils.translation import ugettext as _
+from django.views.generic.list import ListView
 
 # Standard translation messages. We use these everywhere.
 
@@ -56,7 +57,7 @@ class SortingMixin(object):
     def get_context_data(self, **kwargs):
         context = super(SortingMixin, self).get_context_data(**kwargs)
         sort_by, order = self.get_sort_params()
-        params = { 'sort_by': sort_by, 'order': order}
+        params = {'sort_by': sort_by, 'order': order}
         # Store the sort querystring for the current page for easy reuse in
         # templates
         sort_query = urlencode(params)
@@ -67,7 +68,7 @@ class SortingMixin(object):
     def get_default_sort_params(self):
         if self.default_sort_params is None:
             raise ImproperlyConfigured(
-                "'SortingMixin' requires the 'default_sort_params' "
+                "'SortMixin' requires the 'default_sort_params' "
                 "attribute to be set."
             )
         return self.default_sort_params
@@ -97,3 +98,37 @@ class SortingMixin(object):
             qs = qs.reverse()
         return qs
 
+class GWMBaseListView(PaginationMixin, SortingMixin, ListView):
+    """
+    A base view which will filter querysets by cluster, primary node, or
+    secondary node. It will also saves these to context data.
+
+    This base already includes our standard mixins and if a more custom view is
+    necessary, the methods can be overloaded.
+    """
+    def get_queryset(self):
+        qs = super(GWMBaseListView, self).get_queryset()
+        # Filter by cluster if applicable
+        cluster_slug = self.kwargs.get("cluster_slug", None)
+        if cluster_slug:
+            qs = qs.filter(cluster__slug=cluster_slug)
+
+        # filter the vms by primary node if applicable
+        pnode = self.kwargs.get("primary_node", None)
+        if pnode:
+            qs = qs.filter(primary_node=pnode)
+
+        # filter the vms by the secondary node if applicable
+        snode = self.kwargs.get("secondary_node", None)
+        if snode:
+            qs = qs.filter(secondary_node=snode)
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super(GWMBaseListView, self).get_context_data(**kwargs)
+        cluster_slug = kwargs.get("cluster_slug", None)
+        if cluster_slug:
+            context['cluster_slug'] = cluster_slug
+
+        return context

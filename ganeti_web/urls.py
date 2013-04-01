@@ -29,8 +29,7 @@ from ganeti_web.views.general import AboutView
 from ganeti_web.views.jobs import JobDetailView
 from ganeti_web.views.node import (NodeDetailView, NodePrimaryListView,
                                    NodeSecondaryListView)
-from ganeti_web.views.virtual_machine import (VMDeleteView, VMListView,
-                                              VMListTableView)
+from ganeti_web.views.virtual_machine import VMDeleteView, VMListView
 from ganeti_web.views.vm_template import (TemplateFromVMInstanceView,
                                           VMInstanceFromTemplateView)
 
@@ -90,11 +89,6 @@ urlpatterns += patterns('ganeti_web.views.general',
 urlpatterns += patterns('ganeti_web.views.cluster',
     #  List
     url(r'^clusters/?$', ClusterListView.as_view(), name="cluster-list"),
-    #  List (Ordered and Non-Paginated)
-    url(r'^clusters\?order_by=(?P<order>.+)$', VMListView.as_view(), name="cluster-list-ordered"),
-    #  List (Paged)
-    url(r'^clusters\?page=(?P<page>.+)\&order_by=(?P<order>.+)$', VMListView.as_view(), name="cluster-list-paged"),
-
     # Add
     url(r'^cluster/add/?$', 'edit', name="cluster-create"),
     # Detail
@@ -108,14 +102,17 @@ urlpatterns += patterns('ganeti_web.views.cluster',
     url(r'^%s/redistribute-config/?$' % cluster, 'redistribute_config', name="cluster-redistribute-config"),
     # User
     url(r'^%s/users/?$' % cluster, 'users', name="cluster-users"),
-    url(r'^%s/virtual_machines/?$' % cluster, VMListView.as_view(),
-        name="cluster-vms"),
+    # VMs
+    url(r'^%s/virtual_machines/?$' % cluster, ClusterVMListView.as_view(), name="cluster-vm-list"),
+    # Nodes
     url(r'^%s/nodes/?$' % cluster, 'nodes', name="cluster-nodes"),
+    # Quota
     url(r'^%s/quota/(?P<user_id>\d+)?/?$'% cluster, 'quota', name="cluster-quota"),
+    # Permissions
     url(r'^%s/permissions/?$' % cluster, 'permissions', name="cluster-permissions"),
     url(r'^%s/permissions/user/(?P<user_id>\d+)/?$' % cluster, 'permissions', name="cluster-permissions-user"),
     url(r'^%s/permissions/group/(?P<group_id>\d+)/?$' % cluster, 'permissions', name="cluster-permissions-group"),
-
+    # Jobs
     url(r'^(?P<id>\d+)/jobs/status/?$', "job_status", name="cluster-job-status"),
 
     # ssh_keys
@@ -172,16 +169,6 @@ vm_prefix = '%s/%s' %  (cluster, instance)
 urlpatterns += patterns('ganeti_web.views.virtual_machine',
     # List
     url(r'^vms/$', VMListView.as_view(), name="virtualmachine-list"),
-
-    # VM Table
-    url(r'^%s/vm/table/?$' % cluster, VMListTableView.as_view(),
-        name="cluster-virtualmachine-table"),
-    url(r'^vm/table/$', VMListTableView.as_view(),
-        name="virtualmachine-table"),
-    url(r'^vm/table/%s/?$' % primary_node, VMListTableView.as_view(),
-        name="vm-table-primary"),
-    url(r'^vm/table/%s/?$' % secondary_node, VMListTableView.as_view(),
-        name="vm-table-secondary"),
 
     # Detail
     url(r'^%s/?$' % vm_prefix, 'detail', name="instance-detail"),
