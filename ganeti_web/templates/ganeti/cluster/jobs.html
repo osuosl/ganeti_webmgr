@@ -1,117 +1,39 @@
-{% block head %}
 {% load webmgr_tags %}
 {% load i18n %}
-
-<script type="text/javascript">
-  function toggle_sort_order(order) {
-    // If order was descending than change to ascending
-    var new_order = order.replace('-', '');
-    // If new_order is the same as before the replace, than it was accenting.
-    // Change to descending.
-    if (order == new_order) {
-      new_order = '-' + new_order;
-    }
-    return new_order;
-  }
-
-  $(document).ready(function() {
-    //Default sort order
-    cur_sort = 'id';
-    // Clicking on headers sorts by that header value. Toggles ascending/descending
-    $('.sorted th[id]').live('click', function(event) {
-      event.preventDefault();
-      var $header = $(this);
-      // Global so paging can get sort order
-      cur_sort = $header.attr("id");
-      var new_sort = toggle_sort_order(cur_sort);
-      var url = '{% url cluster-jobs cluster.slug %}' + '?page=' + page + '&order_by=' + new_sort;
-
-      $('#job_container').load(url + ' #grab', function() {
-        $("#"+cur_sort).attr('id', new_sort);
-      });
-    });
-    // Clicking on the next/previous or page numbers will keep sort order and load that page.
-    page = '1'; //Default page
-    $('.pagination a').live("click", function(event) {
-      event.preventDefault();
-      page = $(this).attr('href');
-      var url = '{% url cluster-jobs cluster.slug %}' + '?page=' + page + '&order_by=' + cur_sort;
-      $('#job_container').load(url + ' #grab');
-    });
-
-  });
-
+{% block head %}
+<script type="text/javascript" src="{{STATIC_URL}}/js/jquery.tablesorter.min.js"></script>
+<script>
+$(function() {
+  $("#joblist").tablesorter();
+});
 </script>
 {% endblock %}
-
-<div id="job_container">
-<div id="grab">
-
-{% with object_list as jobs %}
 <table id="joblist" class="sorted">
 <thead>
   <tr>
-    <!-- The id's for these headers are used for sort keys. -->
-    <th id="id">{% trans "ID" %}</th>
-    <!-- Cannot sort by VM because the VM data is stored in a serialized field rather than its own field -->
-    <th>{% trans "VM" %}</th>
-    <th id="op">{% trans "Action" %}</th>
-    <th id="status">{% trans "Status" %}</th>
-    <th id="finished">{% trans "Completed" %}</th>
+    <th>{% trans "ID" %}</th>
+    <th>{% trans "Object" %}</th>
+    <th>{% trans "Action" %}</th>
+    <th>{% trans "Status" %}</th>
+    <th>{% trans "Completed" %}</th>
   </tr>
-
 </thead>
 
 <tbody id="jobs">
-  {% for job in jobs %}
-  {% with job.info as info %}
+  {% for job in object_list %}
     <tr>
-      <td><a href="{% url job-detail cluster.slug job.info.id %}">{{ job.info.id }}</a></td>
+      <td><a href="{% url job-detail job.cluster.slug job.info.id %}">{{ job.info.id }}</a></td>
       <td>
-        {% comment %} This check is here to prevent links to VM's which don't exist anymore {% endcomment %}
-        {% if job.obj == None %}
-          Deleted
+        {% if job.obj %}
+          {{ job.obj|class_name }}: <a href="{% url instance-detail job.obj.cluster.slug job.obj.hostname %}">{{ job.obj }}</a>
         {% else %}
-          <a href="{% url instance-detail cluster.slug job.obj %}"</a>{{ job.obj }}
+          <b>{% trans "Deleted" %}</b>
         {% endif %}
       </td>
-      {% with info.ops|last as action %}
-        <!-- Only grab last job operation to display on table. For two part job
-        actions like reinstalls which consist of reboot and reinstall-->
-        <td>{{ action.OP_ID|format_job_op }}</td>
-      {% endwith %}
+      <td>{{ job.op|format_job_op }}</td>
       <td>{{ job.status }}</td>
       <td>{{ job.finished|date }}</td>
     </tr>
-  {% endwith %}
   {% endfor %}
 </tbody>
-
 </table>
-
-{% if is_paginated %}
-<ul class="pagination">
-    {% if page_obj.has_previous %}
-    <li class="previous">
-        <a href="{{ page_obj.previous_page_number }}">&laquo; {% trans "Previous" %}</a>
-    </li>
-    {% endif %}
-
-    {% for page in paginator.page_range %}
-    <!-- <a> tags outside the <li> to make the entire button clickable -->
-    <a href="{{ page }}">
-      <li class="{% if page == page_obj.number %}active {% endif %}page">{{page}}</li>
-    </a>
-    {% endfor %}
-
-    {% if page_obj.has_next %}
-    <li class="next">
-        <a href="{{ page_obj.next_page_number }}">{% trans "Next" %} &raquo;</a>
-    </li>
-    {% endif %}
-</ul>
-{% endif %}
-
-{% endwith %}
-</div> <!--/grab-->
-</div> <!--/job_container-->

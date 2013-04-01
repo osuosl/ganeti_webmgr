@@ -100,7 +100,7 @@ class ClusterVMListView(VMListView):
         # check privs
         self.admin = self.can_create(self.cluster)
         if not self.admin:
-            return Http403(NO_PRIVS)
+            raise Http403(NO_PRIVS)
         self.queryset = vm_qs_for_users(self.request.user, clusters=False)
         # Calling super automatically filters by cluster
         return super(ClusterVMListView, self).get_queryset()
@@ -116,41 +116,24 @@ class ClusterVMListView(VMListView):
         return context
 
 
-class ClusterJobListView(LoginRequiredMixin, PaginationMixin, ListView):
+class ClusterJobListView(LoginRequiredMixin, ListView):
 
     template_name = "ganeti/cluster/jobs.html"
+    model = Job
 
     def get_queryset(self):
-        self.cluster = get_object_or_404(Cluster,
-                                         slug=self.kwargs["cluster_slug"])
+        cluster_slug = self.kwargs.get("cluster_slug", None)
+        cluster = get_object_or_404(Cluster, slug=cluster_slug)
 
         user = self.request.user
-        admin = user.is_superuser or user.has_perm("admin", self.cluster) or \
-            user.has_perm("create_vm", self.cluster)
+        perms = (user.is_superuser or
+                 user.has_any_perms(cluster, ['admin', 'create_vm']))
+        if not perms:
+            return Http403(NO_PRIVS)
 
-        if not admin:
-            raise Http403(NO_PRIVS)
-
-        qs = Job.objects.filter(cluster=self.cluster.id)
-        if "order_by" in self.request.GET:
-            qs = qs.order_by(self.request.GET['order_by'])
-
-        self.queryset = qs
-        super(ClusterJobListView, self).get_queryset()
-
-        return qs.select_related()
-
-    def get_context_data(self, **kwargs):
-        context = super(ClusterJobListView, self).get_context_data(
-            object_list=kwargs["object_list"])
-        context["cluster"] = self.cluster
-
-        if "order_by" in self.request.GET:
-            context["order"] = self.request.GET["order_by"]
-        else:
-            context["order"] = "id"
-
-        return context
+        self.queryset = (Job.objects.filter(cluster__slug=cluster_slug)
+                                    .select_related("cluster"))
+        return super(ClusterJobListView, self).get_queryset()
 
 
 @login_required
