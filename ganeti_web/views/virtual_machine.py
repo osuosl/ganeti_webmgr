@@ -59,7 +59,8 @@ from ganeti_web.util.client import GanetiApiError
 from ganeti_web.utilities import (cluster_os_list, compare, os_prettify,
                                   get_hypervisor)
 from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
-                                      PaginationMixin, SortingMixin)
+                                      PaginationMixin, SortingMixin,
+                                      GWMBaseListView)
 
 
 #XXX No more need for tastypie dependency for 0.8
@@ -86,13 +87,12 @@ def get_vm_and_cluster_or_404(cluster_slug, instance):
     raise Http404('Virtual Machine does not exist')
 
 
-class VMListView(LoginRequiredMixin, PaginationMixin, SortingMixin, ListView):
+class VMListView(LoginRequiredMixin, GWMBaseListView):
     """
     View for displaying a list of VirtualMachines.
     """
     template_name = "ganeti/virtual_machine/list.html"
     default_sort_params = ("hostname", 'asc')
-    model = VirtualMachine
 
     def get_template_names(self):
         if self.request.is_ajax():
@@ -102,55 +102,26 @@ class VMListView(LoginRequiredMixin, PaginationMixin, SortingMixin, ListView):
         return template
 
     def get_queryset(self):
+        # queryset takes precedence over model
+        self.queryset = vm_qs_for_users(self.request.user)
         qs = super(VMListView, self).get_queryset()
-        vms = vm_qs_for_users(self.request.user)
-        qs |= vms
-        cluster_slug = self.kwargs.get("cluster_slug", None)
-        if cluster_slug:
-            qs = qs.filter(cluster__slug=cluster_slug)
-        return qs.select_related()
+        return qs
 
-    def get_context_data(self, *args, **kwargs):
-        context = super(VMListView, self).get_context_data(*args, **kwargs)
-        user = self.request.user
-        context["create_vm"] = (user.is_superuser or
-            user.has_any_perms(Cluster, ["admin", "create_vm"]))
-
+    def get_context_data(self, **kwargs):
+        context = super(VMListView, self).get_context_data(**kwargs)
+        # pass in the Cluster Class to check all clusters
+        context["create_vm"] = self.can_create(Cluster)
+        context["ajax_url"] = reverse("virtualmachine-list")
         return context
 
-
-class VMListTableView(VMListView):
-    """
-    View for displaying the virtual machine table.
-
-    This is used for ajax calls to reload the table, usually because of a page
-    or sorting change.
-
-    It's very similar to the ``VMListView``, but has some additional filters
-    which can be applied.
-    """
-
-    def get_queryset(self):
-        qs = super(VMListTableView, self).get_queryset()
-
-        if "cluster_slug" in self.kwargs:
-            self.cluster = Cluster.objects \
-                .get(slug=self.kwargs["cluster_slug"])
-            qs = qs.filter(cluster=self.cluster)
-        else:
-            self.cluster = None
-
-        # filter the vms by primary node if applicable
-        if "primary_node" in self.kwargs:
-            inner = Node.objects.filter(hostname=self.kwargs["primary_node"])
-            qs = qs.filter(primary_node=inner)
-
-        # filter the vms by secondary node if applicable
-        if "secondary_node" in self.kwargs:
-            inner = Node.objects.filter(hostname=self.kwargs["secondary_node"])
-            qs = qs.filter(secondary_node=inner)
-
-        return qs
+    def can_create(self, cluster):
+        """
+        Given an instance of a cluster or all clusters returns
+        whether or not the logged in user is able to create a VM.
+        """
+        user = self.request.user
+        return (user.is_superuser or user.has_any_perms(cluster,
+            ["admin", "create_vm"]))
 
 
 class VMDeleteView(LoginRequiredMixin, DeleteView):

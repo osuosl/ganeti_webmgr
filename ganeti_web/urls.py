@@ -29,8 +29,7 @@ from ganeti_web.views.general import AboutView
 from ganeti_web.views.jobs import JobDetailView
 from ganeti_web.views.node import (NodeDetailView, NodePrimaryListView,
                                    NodeSecondaryListView)
-from ganeti_web.views.virtual_machine import (VMDeleteView, VMListView,
-                                              VMListTableView)
+from ganeti_web.views.virtual_machine import VMDeleteView, VMListView
 from ganeti_web.views.vm_template import (TemplateFromVMInstanceView,
                                           VMInstanceFromTemplateView)
 
@@ -108,7 +107,7 @@ urlpatterns += patterns(
     'ganeti_web.views.cluster',
 
     url(r'^clusters/?$', ClusterListView.as_view(), name="cluster-list"),
-
+    # Add
     url(r'^cluster/add/?$', 'edit', name="cluster-create"),
 
     url(r'^%s/?$' % cluster, ClusterDetailView.as_view(),
