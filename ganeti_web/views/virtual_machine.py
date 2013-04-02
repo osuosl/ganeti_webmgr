@@ -114,16 +114,6 @@ class VMListView(LoginRequiredMixin, GWMBaseListView):
         context["ajax_url"] = reverse("virtualmachine-list")
         return context
 
-    def can_create(self, cluster):
-        """
-        Given an instance of a cluster or all clusters returns
-        whether or not the logged in user is able to create a VM.
-        """
-        user = self.request.user
-        return (user.is_superuser or user.has_any_perms(cluster,
-            ["admin", "create_vm"]))
-
-
 class VMDeleteView(LoginRequiredMixin, DeleteView):
     """
     Delete a VM.
