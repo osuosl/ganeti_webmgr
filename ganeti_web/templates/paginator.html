@@ -1,6 +1,6 @@
 {% load i18n %}
 {% if is_paginated %}
-<ul class="paginator">
+<ul id="paginator" class="paginator">
     {% if page_obj.has_previous %}
     <li class="previous">
         <a href="{{ ajax_url }}?page={{ page_obj.previous_page_number }}&{{ sort_query }}">&laquo; {% trans "Previous" %}</a>

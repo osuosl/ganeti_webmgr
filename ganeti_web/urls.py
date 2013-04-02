@@ -121,7 +121,7 @@ urlpatterns += patterns('ganeti_web.views.cluster',
     # object log
     url(r'^%s/object_log/?$' % cluster, 'object_log', name="cluster-object_log"),
     # Jobs
-    url(r'%s/jobs/?$' % cluster, ClusterJobListView.as_view(), name="cluster-jobs"),
+    url(r'%s/jobs/?$' % cluster, ClusterJobListView.as_view(), name="cluster-job-list"),
 )
 
 
