@@ -7,7 +7,7 @@
 {% block head %}
 <script type="text/javascript" src="{{STATIC_URL}}/js/jquery.ajax.delete.js"></script>
 <script type="text/javascript" src="{{STATIC_URL}}/js/jquery.progressbar.js"></script>
-<script type="text/javascript" src="{{STATIC_URL}}/js/sorter.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}/js/jquery.tablesorter.min.js"></script>
 <script type="text/javascript">
     var PBAR_CONF = {
         steps: 0,
@@ -23,6 +23,9 @@
             75: '/static/images/progressbar/progressbg_green.gif',
         },
     };
+    $(function() {
+      $("#clusters").tablesorter();
+    });
 </script>
 {% endblock %}
 
