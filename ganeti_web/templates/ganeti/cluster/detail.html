@@ -130,9 +130,9 @@
             <li><a title="nodes" href="{% url cluster-nodes cluster.slug %}"><span>{% trans "Nodes" %}</span></a></li>
             <li><a title="user" href="{% url cluster-users cluster.slug %}"><span>{% trans "Users" %}</span></a></li>
             <li><a title="log" href="{% url cluster-object_log cluster.slug %}"><span>{% trans "Log" %}</span></a></li>
-            <li><a title="jobs" href="{% url cluster-jobs cluster.slug %}"><span>{% trans "Jobs" %}</span></a></li>
+            <li><a title="jobs" href="{% url cluster-job-list cluster.slug %}"><span>{% trans "Jobs" %}</span></a></li>
         {% elif create_vm %}
-            <li><a title="jobs" href="{% url cluster-jobs cluster.slug %}"><span>{% trans "Jobs" %}</span></a></li>
+            <li><a title="jobs" href="{% url cluster-job-list cluster.slug %}"><span>{% trans "Jobs" %}</span></a></li>
         {%endif%}
     </ul>
     <div id="overview" class="tab_content">

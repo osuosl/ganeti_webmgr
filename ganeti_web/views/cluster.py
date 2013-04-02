@@ -116,24 +116,29 @@ class ClusterVMListView(VMListView):
         return context
 
 
-class ClusterJobListView(LoginRequiredMixin, ListView):
+class ClusterJobListView(LoginRequiredMixin, GWMBaseListView):
 
     template_name = "ganeti/cluster/jobs.html"
     model = Job
 
-    def get_queryset(self):
-        cluster_slug = self.kwargs.get("cluster_slug", None)
-        cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    default_sort_params = ('job_id', 'asc')
 
-        user = self.request.user
-        perms = (user.is_superuser or
-                 user.has_any_perms(cluster, ['admin', 'create_vm']))
+    def get_queryset(self):
+        self.get_kwargs()
+        self.cluster = get_object_or_404(Cluster, slug=self.cluster_slug)
+        perms = self.can_create(self.cluster)
         if not perms:
             return Http403(NO_PRIVS)
 
-        self.queryset = (Job.objects.filter(cluster__slug=cluster_slug)
+        self.queryset = (Job.objects.filter(cluster__slug=self.cluster_slug)
                                     .select_related("cluster"))
         return super(ClusterJobListView, self).get_queryset()
+
+    def get_context_data(self, **kwargs):
+        context = super(ClusterJobListView, self).get_context_data(**kwargs)
+        context['ajax_url'] = reverse('cluster-job-list',
+            kwargs={'cluster_slug': self.cluster_slug})
+        return context
 
 
 @login_required
