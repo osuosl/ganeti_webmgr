@@ -106,29 +106,45 @@ class GWMBaseListView(PaginationMixin, SortingMixin, ListView):
     This base already includes our standard mixins and if a more custom view is
     necessary, the methods can be overloaded.
     """
+    def get_kwargs(self):
+        """
+        Get common URL kwargs and assign as object variables.
+
+        This is a useful utility method that should be used if you don't want
+        to call super() on you queryset method at the beginning.
+        """
+        self.cluster_slug = self.kwargs.get("cluster_slug", None)
+        self.pnode = self.kwargs.get("primary_node", None)
+        self.snode = self.kwargs.get("secondary_node", None)
+
     def get_queryset(self):
+        self.get_kwargs()  # Make sure that we have our values.
         qs = super(GWMBaseListView, self).get_queryset()
         # Filter by cluster if applicable
-        cluster_slug = self.kwargs.get("cluster_slug", None)
-        if cluster_slug:
-            qs = qs.filter(cluster__slug=cluster_slug)
+        if self.cluster_slug:
+            qs = qs.filter(cluster__slug=self.cluster_slug)
 
         # filter the vms by primary node if applicable
-        pnode = self.kwargs.get("primary_node", None)
-        if pnode:
-            qs = qs.filter(primary_node=pnode)
+        if self.pnode:
+            qs = qs.filter(primary_node=self.pnode)
 
         # filter the vms by the secondary node if applicable
-        snode = self.kwargs.get("secondary_node", None)
-        if snode:
-            qs = qs.filter(secondary_node=snode)
+        if self.snode:
+            qs = qs.filter(secondary_node=self.snode)
 
         return qs
 
     def get_context_data(self, **kwargs):
         context = super(GWMBaseListView, self).get_context_data(**kwargs)
-        cluster_slug = kwargs.get("cluster_slug", None)
-        if cluster_slug:
-            context['cluster_slug'] = cluster_slug
+        context['cluster_slug'] = self.cluster_slug
 
         return context
+
+    def can_create(self, cluster):
+        """
+        Given an instance of a cluster or all clusters returns
+        whether or not the logged in user is able to create a VM.
+        """
+        user = self.request.user
+        return (user.is_superuser or user.has_any_perms(cluster,
+                ["admin", "create_vm"]))

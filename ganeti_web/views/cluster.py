@@ -93,9 +93,9 @@ class ClusterListView(LoginRequiredMixin, GWMBaseListView):
 class ClusterVMListView(VMListView):
 
     def get_queryset(self):
+        self.get_kwargs()
         # Store most of these variables on the object, because we'll be using
         # them in context data too
-        self.cluster_slug = self.kwargs.get('cluster_slug', None)
         self.cluster = get_object_or_404(Cluster, slug=self.cluster_slug)
         # check privs
         self.admin = self.can_create(self.cluster)
