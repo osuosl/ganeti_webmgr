@@ -1,3 +1,5 @@
+.. _installation:
+
 Installation
 ============
 
@@ -5,8 +7,7 @@ Installation
          installing the dependencies, please download the tarball instead of
          cloning the repository.
 
-Overview
-~~~~~~~~
+There are 5 steps to follow for deploying Ganeti Web Manager
 
 #. Install dependencies: Python, Pip, Fabric, VirtualEnv
 #. Get the Ganeti Web Manager code: Clone from the repository or
@@ -135,6 +136,7 @@ Configuration
    following lines to reflect your wishes.
 
    .. Note:: Postgresql is supported as of version .10
+
    ::
 
        DATABASE_ENGINE = ''   # <-- Change this to 'mysql', 'postgresql', 'postgresql_psycopg2' or 'sqlite3'
@@ -154,6 +156,7 @@ Configuration
    Postgres:
 
    .. Note:: This assumes your doing a fresh install of GWM on a new Postgres database.
+
    ::
 
        ./manage.py syncdb --all
