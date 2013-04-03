@@ -4,6 +4,8 @@ Manager releases also includes other libraries with separately licensed
 -  Django Object Permissions - MIT
 -  NoVNC - LPGL
 
+.. _license:
+
 GPL License
 -----------
 
