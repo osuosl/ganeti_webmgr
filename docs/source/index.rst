@@ -7,24 +7,24 @@ Ganeti Web Manager
 |gwm| is a Django_ based web frontend for managing Ganeti_ virtualization
 clusters. Since Ganeti only provides a command-line interface, |gwm|'s
 goal is to provide a user friendly interface to Ganeti by being feature
-complete with Ganeti's RAPI_. On top of Ganeti it provides a permission
-system for managing access to clusters and virtual machine and an in
-browser VNC console.
+complete with Ganeti's :ref:`RAPI <rapi>`. On top of Ganeti it
+provides a permission system for managing access to clusters and virtual
+machines and an in browser VNC console.
 
 If you don't already have a Ganeti cluster setup, these directions_ can
 help you get started. If you are looking for support, please contact us
-through these :ref:`channels <contact>`. If you are looking to deploy |gwm| for the
-first time, check out our :ref:`installation` guide. If you already have
-a |gwm| instance running and are looking to upgrade, see :ref:`upgrading`.
+through these :ref:`channels <contact>`. If you are looking to deploy
+|gwm| for the first time, check out our :ref:`installation` guide. If
+you already have a |gwm| instance running it might be time to
+:ref:`upgrade <upgrading>`.
 
 
-|gwm| is licensed under :ref:`GPLv2 <license>`. It is currently
+|gwm| is licensed under the :ref:`GPLv2 <license>`. It is currently
 developed and maintained by the Oregon State University Open Source Lab
 and a handful of volunteers. If you would like to get involved in
-development see our:ref:`development` guide.
+development see our :ref:`development <development>` guide.
 
 
-.. _RAPI: http://docs.ganeti.org/ganeti/current/html/rapi.html
 .. _directions: http://docs.ganeti.org/ganeti/current/html/install.html
 .. _Ganeti: http://code.google.com/p/ganeti/
 .. _Django: http://djangoproject.com
