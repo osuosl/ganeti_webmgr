@@ -12,13 +12,13 @@
 !.mailmap
 
 # Don't track the top-level settings.py, but do track the internal one.
-settings.py*
-!settings.py.dist
-!ganeti_web/settings.py
+ganeti-webmgr/settings.py*
+!ganeti-webmgr/settings.py.dist
+!ganeti-webmgr/ganeti_web/settings.py
 
 # ldap_settings
-ldap_settings.py*
-!ldap_settings.py.dist
+ganeti-webmgr/ldap_settings.py*
+!ganeti-webmgr/ldap_settings.py.dist
 
 # Any sqlite database files created by the project
 *.db
@@ -54,25 +54,25 @@ ldap_settings.py*
 *.old
 
 # files that might exist in dev environment
-django
-ganeti_web_layout
-object_log
-object_permissions
-noVNC
-haystack
-twisted_vncauthproxy
+ganeti-webmgr/django
+ganeti-webmgr/ganeti_web_layout
+ganeti-webmgr/object_log
+ganeti-webmgr/object_permissions
+ganeti-webmgr/noVNC
+ganeti-webmgr/haystack
+ganeti-webmgr/twisted_vncauthproxy
 
 # files/dirs created by Fabric and or VirtualEnv
-bin
-dependencies
-include
-lib
-local
-pysqlite2-doc
-build
+ganeti-webmgr/bin
+ganeti-webmgr/dependencies
+ganeti-webmgr/include
+ganeti-webmgr/lib
+ganeti-webmgr/local
+ganeti-webmgr/pysqlite2-doc
+ganeti-webmgr/build
 
 # whoosh index files (used by haystack search)
-whoosh_index
+ganeti-webmgr/whoosh_index
 
 # twisted cache
-twisted/plugins/dropin.cache
+ganeti-webmgr/twisted/plugins/dropin.cache

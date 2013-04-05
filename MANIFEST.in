@@ -1,0 +1,14 @@
+include AUTHORS
+include CHANGELOG
+include COPYING
+include LICENSE
+include README
+include UPGRADING
+recursive-include ganeti-webmgr *.txt
+recursive-include ganeti-webmgr *.sh *.conf
+recursive-include ganeti-webmgr *.py *.dist
+recursive-include ganeti-webmgr *.html *.js *.css
+recursive-include ganeti-webmgr *.png *.jpg *.gif
+recursive-include ganeti-webmgr/docs *.rst
+include ganeti-webmgr/docs/Makefile
+include ganeti-webmgr/muddle/LICENSE.muddle
