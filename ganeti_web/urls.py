@@ -53,7 +53,9 @@ urlpatterns = patterns('ganeti_web.views.general',
     
     # clear errors
     url(r'^error/clear/(?P<pk>\d+)/?$', 'clear_ganeti_error', name="error-clear"),
-
+    
+    # Errors
+    url(r'clusters/errors', 'get_errors', name="cluster-errors"),
     #About page
     url(r'^about/?$', AboutView.as_view(), name="about"),
 )
@@ -86,6 +88,8 @@ urlpatterns += patterns('ganeti_web.views.general',
 urlpatterns += patterns('ganeti_web.views.cluster',
     #   List
     url(r'^clusters/?$', ClusterListView.as_view(), name="cluster-list"),
+    #   List (Paged)
+    url(r'^clusters\?page=(?P<page>.+)$', ClusterListView.as_view(), name="cluster-list-paged"),
     #   Add
     url(r'^cluster/add/?$', 'edit', name="cluster-create"),
     #   Detail
@@ -143,6 +147,9 @@ vm_prefix = '%s/%s' %  (cluster, instance)
 urlpatterns += patterns('ganeti_web.views.virtual_machine',
     #  List
     url(r'^vms/$', VMListView.as_view(), name="virtualmachine-list"),
+    #  List (Paged)
+    url(r'^vms/\?page=(?P<page>.+)$', VMListView.as_view(), name="virtualmachine-list-paged"),
+
     #  Create
     url(r'^vm/add/?$', 'create', name="instance-create"),
     url(r'^vm/add/choices/$', 'cluster_choices', name="instance-create-cluster-choices"),

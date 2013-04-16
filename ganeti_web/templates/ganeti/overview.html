@@ -8,6 +8,7 @@
 <script type="text/javascript" src="{{STATIC_URL}}/js/jquery.ajax.delete.js"></script>
 <script type="text/javascript" src="{{STATIC_URL}}/js/jquery.tablesorter.min.js"></script>
 <script type="text/javascript" src="{{STATIC_URL}}/js/jquery.progressbar.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}/js/disableSingletonDropdown.js"></script>
 <script type="text/javascript">
     var CLUSTER_RESOURCES_PBAR = {
         steps: 0,
@@ -35,17 +36,14 @@
         });
         $("#clusters").tablesorter();
         $("#errors_list table").tablesorter();
-        
         $("#errors_list a.clear").live("click", function(event){
             event.preventDefault();
             var row = this.parentNode.parentNode;
             $.post(this.href, function(){
-                $(row).fadeOut(1000, function(){
-                    $(row).remove();
-                    if($("#errors_list tr").length==0) {
-                        $("#errors_list").remove();
-                    }
-                });
+                $(row).remove();
+                if($("#errors_list tr").length==0) {
+                    $("#errors_list").remove();
+                }
             });
         });
         
@@ -55,6 +53,9 @@
                 $("#usage_summary table").replaceWith(html);
             });
         })
+	$("#usage_summary select").attr("id","user_select");
+	disableSingletonDropdown($("#user_select"));
+
     });
     
 </script>
@@ -63,7 +64,7 @@
 {% block content %}
 <h1>{% trans "Overview" %}</h1>
 
-{% if admin %}
+{% if admin or create_vm %}
 <div id="cluster_summary">
 <h2>{% trans "Cluster Status" %}</h2>
 <table id="clusters" class="sorted">
@@ -155,7 +156,7 @@
 
 {% if errors %}
 <div id="errors_list">
-    <h2>{% trans "Errors and Failures" %}</h2>
+    <h2>{% trans "Recent Errors" %}</h2>
     <table>
     {% for tuple in errors %}
         {% with tuple.0 as is_ganeti_error %}

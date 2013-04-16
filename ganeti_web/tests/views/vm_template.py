@@ -46,8 +46,8 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
         cluster.sync_nodes()
 
         template = VirtualMachineTemplate(template_name="Template1", cluster=cluster)
-        template.disks = []
-        template.nics = []
+        template.disks = [{'size':500}]
+        template.nics = [{'mode': 'bridged', 'link':''}]
         template.save()
 
         instance = VirtualMachine(hostname='new.vm.hostname', cluster=cluster)

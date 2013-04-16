@@ -23,7 +23,6 @@ from django.template import RequestContext
 from ganeti_web.forms.importing import ImportForm, OrphanForm, VirtualMachineForm
 from ganeti_web.middleware import Http403
 from ganeti_web.models import VirtualMachine, Cluster
-from ganeti_web.views.general import update_vm_counts
 from ganeti_web.views.generic import NO_PRIVS
 
 
@@ -65,7 +64,6 @@ def orphans(request):
                 vm.owner = owner
                 vm.save()
                 orphaned[vm.cluster_id] -= 1
-            update_vm_counts(key='orphaned', data=orphaned)
 
             # remove updated vms from the list
             vms_with_cluster = [i for i in vms_with_cluster
@@ -118,7 +116,6 @@ def missing_ganeti(request):
             missing = defaultdict(lambda:0)
             for i in q:
                 missing[ i.cluster_id ] -= 1
-            update_vm_counts(key='missing', data=missing)
 
             q.delete()
 
@@ -189,8 +186,6 @@ def missing_db(request):
                 if owner is None:
                     orphaned[cluster.pk] += 1
 
-            update_vm_counts(key='import_ready', data=import_ready)
-            update_vm_counts(key='orphaned', data=orphaned)
 
             # remove created vms from the list
             vms = filter(lambda x: unicode(x[0]) not in vm_ids, vms)

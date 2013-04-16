@@ -17,7 +17,6 @@
 
 from django.conf import settings
 from django.contrib.auth.models import User, Group
-from django.core.cache import cache
 from django.test import TestCase
 from django.test.client import Client
 # Per #6579, do not change this import without discussion.
@@ -33,7 +32,6 @@ Cluster = models.Cluster
 VirtualMachine = models.VirtualMachine
 Job = models.Job
 
-from ganeti_web.views.general import update_vm_counts
 
 __all__ = ('TestGeneralViews', )
 
@@ -81,15 +79,6 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         User.objects.all().delete()
         Group.objects.all().delete()
         Job.objects.all().delete()
-        self.clear_cache()
-
-    def clear_cache(self):
-        # delete caches to make sure we don't get any unused states
-        cache.delete('cluster_admin_0')
-        cache.delete('cluster_admin_1')
-        cache.delete('cluster_admin_2')
-        cache.delete('cluster_admin_3')
-        cache.delete('cluster_admin_4')
 
     def test_view_overview(self):
         """
@@ -121,7 +110,6 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # authorized user (non-admin)
-        self.clear_cache()
         user.grant("admin", vm)
         user.save()
         self.assertTrue(c.login(username=user.username, password='secret'))
@@ -140,7 +128,6 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         self.assertEqual(0, response.context["import_ready"])
 
         # authorized user (admin on one cluster)
-        self.clear_cache()
         self.assertTrue(c.login(username=user1.username, password='secret'))
         response = c.get(url % args)
         self.assertEqual(status, response.status_code)
@@ -157,7 +144,6 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         self.assertEqual(2, response.context["import_ready"])
 
         # authorized user (superuser)
-        self.clear_cache()
         self.assertTrue(c.login(username=user2.username, password='secret'))
         response = c.get(url % args)
         self.assertEqual(status, response.status_code)
@@ -235,68 +221,6 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         self.assertEqual(200, response.status_code)
         self.assertEqual(mimetype, response['content-type'])
         self.assertTemplateUsed(response, template)
-
-    def test_cluster_admin_counts_cache(self):
-        """ tests the cache for the admin cluster counts on the status page
-        these tests will fail if cache is not configured
-
-        Verifies:
-            * existing values are updated
-            * any of the dict keys can be updated
-            * keys not in the cache are discarded
-        """
-        ids = ['cluster_admin_0', 'cluster_admin_1', 'cluster_admin_2']
-
-        data = {
-            'cluster_admin_0':{'orphaned':1,'missing':2,'ready_to_import':3},
-            'cluster_admin_1':{'orphaned':4,'missing':5,'ready_to_import':6}
-        }
-        cache.set_many(data)
-
-        update = {
-            0:4,
-            1:5,
-            3:6,
-        }
-
-        # update orphaned
-        update_vm_counts('orphaned', update)
-        cached = cache.get_many(ids)
-        self.assertTrue('cluster_admin_0' in cached)
-        self.assertTrue('cluster_admin_1' in cached)
-        self.assertFalse('cluster_admin_2' in cached)
-        self.assertEqual(5, cached['cluster_admin_0']['orphaned'])
-        self.assertEqual(2, cached['cluster_admin_0']['missing'])
-        self.assertEqual(3, cached['cluster_admin_0']['ready_to_import'])
-        self.assertEqual(9, cached['cluster_admin_1']['orphaned'])
-        self.assertEqual(5, cached['cluster_admin_1']['missing'])
-        self.assertEqual(6, cached['cluster_admin_1']['ready_to_import'])
-
-        # update orphaned
-        update_vm_counts('missing', update)
-        cached = cache.get_many(ids)
-        self.assertTrue('cluster_admin_0' in cached)
-        self.assertTrue('cluster_admin_1' in cached)
-        self.assertFalse('cluster_admin_2' in cached)
-        self.assertEqual(5, cached['cluster_admin_0']['orphaned'])
-        self.assertEqual(6, cached['cluster_admin_0']['missing'])
-        self.assertEqual(3, cached['cluster_admin_0']['ready_to_import'])
-        self.assertEqual(9, cached['cluster_admin_1']['orphaned'])
-        self.assertEqual(10, cached['cluster_admin_1']['missing'])
-        self.assertEqual(6, cached['cluster_admin_1']['ready_to_import'])
-
-        # update ready_to_import
-        update_vm_counts('ready_to_import', update)
-        cached = cache.get_many(ids)
-        self.assertTrue('cluster_admin_0' in cached)
-        self.assertTrue('cluster_admin_1' in cached)
-        self.assertFalse('cluster_admin_2' in cached)
-        self.assertEqual(5, cached['cluster_admin_0']['orphaned'])
-        self.assertEqual(6, cached['cluster_admin_0']['missing'])
-        self.assertEqual(7, cached['cluster_admin_0']['ready_to_import'])
-        self.assertEqual(9, cached['cluster_admin_1']['orphaned'])
-        self.assertEqual(10, cached['cluster_admin_1']['missing'])
-        self.assertEqual(11, cached['cluster_admin_1']['ready_to_import'])
 
     def test_view_ssh_keys(self):
         """ tests retrieving all sshkeys from the gwm instance """

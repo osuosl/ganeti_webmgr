@@ -33,9 +33,8 @@ from django.views.decorators.http import require_POST
 from django.views.generic.detail import DetailView
 
 from object_permissions import get_users_any
+from object_permissions import signals as op_signals
 from object_permissions.views.permissions import view_users, view_permissions
-
-from muddle_users import signals as muddle_user_signals
 
 from object_log.models import LogItem
 from object_log.views import list_for_object
@@ -75,18 +74,22 @@ class ClusterListView(LoginRequiredMixin, PagedListView):
     template_name = "ganeti/cluster/list.html"
 
     def get_queryset(self):
-        if self.request.user.is_superuser:
-            return Cluster.objects.all()
-        else:
-            perms = ['admin', 'migrate', 'export', 'replace_disks', 'tags']
-            return self.request.user.get_objects_any_perms(Cluster, perms)
+            if self.request.user.is_superuser:
+                qs = Cluster.objects.all()
+            else:
+                perms = ['admin', 'migrate', 'export', 'replace_disks', 'tags']
+                qs = self.request.user.get_objects_any_perms(Cluster, perms)
+
+            self.queryset = qs
+            super(ClusterListView, self).get_queryset()
+            return qs.select_related() 
 
     def get_context_data(self, **kwargs):
-        return {
-            "cluster_list": kwargs["object_list"],
-            "user": self.request.user,
-        }
-
+            user = self.request.user
+            context = super(ClusterListView, self).get_context_data(object_list=kwargs["object_list"])
+            context["can_create"]= (user.is_superuser or
+                                    user.has_perm("admin", Cluster))
+            return context  
 class ClusterVMListView(LoginRequiredMixin, PagedListView):
 
     template_name = "ganeti/virtual_machine/table.html"
@@ -380,6 +383,6 @@ def recv_perm_edit(sender, editor, user, obj, **kwargs):
     log_action('MODIFY_PERMS', editor, obj, user)
 
 
-muddle_user_signals.view_add_user.connect(recv_user_add, sender=Cluster)
-muddle_user_signals.view_remove_user.connect(recv_user_remove, sender=Cluster)
-muddle_user_signals.view_edit_user.connect(recv_perm_edit, sender=Cluster)
+op_signals.view_add_user.connect(recv_user_add, sender=Cluster)
+op_signals.view_remove_user.connect(recv_user_remove, sender=Cluster)
+op_signals.view_edit_user.connect(recv_perm_edit, sender=Cluster)

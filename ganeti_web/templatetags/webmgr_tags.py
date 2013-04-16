@@ -17,14 +17,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
-from datetime import datetime
 
+from datetime import datetime
 import re
-from django.contrib.sites.models import Site
 
 from django.db.models import Count
 from django.template import Library, Node, TemplateSyntaxError
-from django.template.defaultfilters import stringfilter
+from django.template.defaultfilters import stringfilter, filesizeformat
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
@@ -71,22 +70,6 @@ def index(obj, index):
     """ returns index of given object """
     if obj:
         return obj[index]
-
-
-@register.filter
-@stringfilter
-def truncate(value, count):
-    """
-    Truncates a string to be a certain length.
-
-    If the string is shorter than the specified length, it will returned
-    as-is.
-    """
-
-    if len(value) > count:
-        return value[:count - 1] + u"…"
-
-    return value
 
 
 @register.filter
@@ -147,6 +130,12 @@ def is_drbd(vm):
     """
     return 'drbd' == vm.info['disk_template']
 
+@register.filter
+def is_shared(vm):
+    """ Simple filter for returning true or false if a virtual machine
+    has shared for disklayout
+    """
+    return 'shared' == vm.info['disk_template']
 
 @register.filter
 def checkmark(bool):
@@ -163,12 +152,6 @@ def checkmark(bool):
 def node_role(code):
     """ renders full role name from role code """
     return NODE_ROLE_MAP[str(code)]
-
-
-@register.simple_tag
-def current_domain():
-    """ returns the domain of the current Site """
-    return Site.objects.get_current().domain
 
 
 @register.filter
@@ -205,14 +188,6 @@ def job_fields(info):
 """
 These filters were taken from Russel Haering's GanetiWeb project
 """
-
-@register.filter
-@stringfilter
-def render_node_status(status):
-    if status:
-        return _("Offline")
-    else:
-        return _("Online")
 
 
 @register.filter
@@ -343,25 +318,51 @@ def node_disk(node, allocated=True):
 
 
 @register.simple_tag
-def cluster_memory(cluster, allocated=True):
-    """
-    Pretty-print a memory quantity of the whole cluster [GiB]
-    """
-    d = cluster.available_ram
-    if allocated:
-        return format_part_total(d['allocated'], d['total'])
-    return format_part_total(d['used'], d['total'])
-    
+def num_reducer(num1,num2,size_tag):
+	"""
+	Formats number percentages for progress bars takes in bytes
+	"""
+
+	if size_tag == "bytes":
+		return "%.2f / %.2f" % (num1,num2)
+	elif size_tag == "KB":
+		return "%.2f / %.2f" % (num1/1024,num2/1024)
+	elif size_tag == "MB":
+		return "%.2f / %.2f" % (num1/1024**2,num2/1024**2)
+	elif size_tag == "GB":
+		return "%.2f / %.2f" % (num1/1024**3,num2/1024**3)
+	elif size_tag == "TB":
+		return "%.2f / %.2f" % (num1/1024**4,num2/1024**4)
+	elif size_tag == "PB":
+		return "%.2f / %.2f" % (num1/1024**5,num2/1024**5)
+
 
 @register.simple_tag
-def cluster_disk(cluster, allocated=True):
+def cluster_memory(cluster, allocated=True,tag=False):
     """
-    Pretty-print a memory quantity of the whole cluster [GiB]
+    Pretty-print a memory quantity of the whole cluster in a dynamic unit based on filesizeformat
+    """
+    d = cluster.available_ram
+    size_tag = (filesizeformat(d["total"]*1024**2)).split(" ")[1]
+    if tag == True:
+	return "[%s]" % size_tag
+    if allocated:
+        return num_reducer(float(d['allocated']*1024**2), float(d['total']*1024**2),size_tag.strip())
+    return num_reducer(float(d['used']*1024**2), float(d['total']*1024**2),size_tag.strip())
+
+
+@register.simple_tag
+def cluster_disk(cluster, allocated=True,tag=False):
+    """
+    Pretty-print a memory quantity of the whole cluster in a dyanmic unit based on filesizeformat
     """
     d = cluster.available_disk
+    size_tag = (filesizeformat(d["total"]*1024**2)).split(" ")[1]
+    if tag == True:
+	return "[%s]" % (size_tag)
     if allocated:
-        return format_part_total(d['allocated'], d['total'])
-    return format_part_total(d['used'], d['total'])
+	return num_reducer(float(d['allocated']*1024**2),float(d['total']*1024**2),size_tag.strip())
+    return num_reducer(float(d['used']*1024**2),float(d['total']*1024**2),size_tag.strip())
 
 
 @register.simple_tag

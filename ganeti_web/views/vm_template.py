@@ -197,11 +197,15 @@ def create_instance_from_template(request, cluster_slug, template):
 
     # Initialize mutliple disks
     initial['disk_count'] = len(vm_template.disks)
+    if initial['disk_count'] == 0:
+        initial['disk_count'] = 1
     for i,disk in enumerate(vm_template.disks):
         initial['disk_size_%s'%i] = disk['size']
 
     # initialize multiple nics
     initial['nic_count'] = len(vm_template.nics)
+    if initial['nic_count'] == 0:
+        initial['nic_count'] = 1
     for i,nic in enumerate(vm_template.nics):
         initial['nic_mode_%s'%i] = nic['mode']
         initial['nic_link_%s'%i] = nic['link']

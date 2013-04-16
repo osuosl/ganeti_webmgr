@@ -4,7 +4,6 @@
 
 {% block basehead %}
 <!-- Include CSS -->
-<link rel="stylesheet" type="text/css" href={{STATIC_URL}}/css/content.css/>
 <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}/css/jquery-ui.css"/>
 <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}/css/content.css"/>
 
@@ -37,14 +36,10 @@
                 <li><a href="{% url index %}">{% trans "Overview" %}</a></li>
                 {% shot main_menu %}{% endshot %}
                 {% if user.is_superuser %}
-                <li><h3>{% trans "Admin" %}</h3></li>
+                    <li><h3>{% trans "Admin" %}</h3></li>
                     {% shot admin_menu %}{% endshot %}
-                    {% if user.is_superuser %}
-                        <li><a href="{% url user-list %}">{% trans "Users" %}</a></li>
-                    {% endif %}
-                    {% if user.is_superuser or group_admin %}
-                        <li><a href="{% url group-list %}">{% trans "Groups" %}</a></li>
-                    {% endif %}
+                    <li><a href="{% url user-list %}">{% trans "Users" %}</a></li>
+                    <li><a href="{% url group-list %}">{% trans "Groups" %}</a></li>
                 {% endif %}
             </ul>
         </div>

@@ -78,7 +78,6 @@ env.MANIFEST = [
     "django_test_tools",
     "ganeti_web",
     "locale",
-    "twisted",
     # Files
     "AUTHORS",
     "CHANGELOG",
@@ -142,7 +141,6 @@ def update():
                     with lcd(git_dir):
                         print 'Updating git repo: %(git_repo)s' % env
                         local('git pull --ff')
-
 
 def _exists(path):
     """

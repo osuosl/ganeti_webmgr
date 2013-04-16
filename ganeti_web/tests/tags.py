@@ -26,12 +26,6 @@ class TestFilters(unittest.TestCase):
     Big test case for all template filters.
     """
 
-    def test_truncate_valid(self):
-        self.assertEqual(tags.truncate("test", 4), "test")
-
-    def test_truncate_length(self):
-        self.assertEqual(tags.truncate("testing", 6), u"testi…")
-
     def test_abbreviate_fqdn(self):
         self.assertEqual(tags.abbreviate_fqdn("subdomain.example.com"),
             "subdomain")

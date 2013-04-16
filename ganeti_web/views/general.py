@@ -20,7 +20,6 @@ from itertools import chain, izip, repeat
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
-from django.core.cache import cache
 from django.db.models import Q, Count
 from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import render_to_response, get_object_or_404
@@ -68,6 +67,60 @@ def merge_errors(errors, jobs):
 USED_NOTHING = dict(disk=0, ram=0, virtual_cpus=0)
 
 
+@login_required
+def get_errors(request): 
+    """ Returns all errors that have ever been generated for clusters/vms
+    and then sends them to the errors page.
+    """
+    user = request.user
+
+    if user.is_superuser:
+        clusters = Cluster.objects.all()
+    else:
+        clusters = user.get_objects_all_perms(Cluster, ['admin',])
+    admin = user.is_superuser or clusters
+
+    if user.is_superuser:
+        vms = VirtualMachine.objects.all()
+    else:
+        # Get query containing any virtual machines the user has permissions for
+        vms = user.get_objects_any_perms(VirtualMachine, groups=True, cluster=['admin']).values('pk')
+
+    # build list of job errors.  Include jobs from any vm the user has access to
+    # If the user has admin on any cluster then those clusters and it's objects
+    # must be included too.
+    #
+    # XXX all jobs have the cluster listed, filtering by cluster includes jobs
+    # for both the cluster itself and any of its VMs or Nodes
+    error_clause = Q(status='error')
+    vm_type = ContentType.objects.get_for_model(VirtualMachine)
+    select_clause = Q(content_type=vm_type, object_id__in=vms)
+    if admin:
+        select_clause |= Q(cluster__in=clusters)
+    job_errors = Job.objects.filter(error_clause & select_clause)
+
+    # Build the list of job errors. Include jobs from any VMs for which the
+    # user has access.
+    qs = GanetiError.objects
+    ganeti_errors = qs.get_errors(obj=vms)
+    # If the user is an admin on any cluster, then include administrated
+    # clusters and related objects.
+    if admin:
+        ganeti_errors |= qs.get_errors(obj=clusters)
+
+    # merge error lists
+    errors = merge_errors(ganeti_errors, job_errors)
+
+    return render_to_response("ganeti/errors.html", {
+        'admin':admin,
+        'cluster_list': clusters,
+        'user': request.user,
+        'errors':errors,
+            },
+            context_instance=RequestContext(request),
+        )
+
+
 def get_used_resources(cluster_user):
     """ help function for querying resources used for a given cluster_user """
     resources = {}
@@ -98,54 +151,17 @@ def get_used_resources(cluster_user):
     return resources
 
 
-def update_vm_counts(key, data):
-    """
-    Updates the cache for numbers of orphaned / ready to import / missing VMs.
-
-    If the cluster's data is not in cache it is ignored.  This is only for
-    updating the cache with information we already have.
-
-    @param key - admin data key that is being updated: orphaned, ready_to_import,
-        or missing
-    @param data - dict of data stored by cluster.pk
-    """
-    format_key = 'cluster_admin_%d'
-    keys = [format_key % k for k in data.keys()]
-    cached = cache.get_many(keys)
-
-    for k, v in data.items():
-        try:
-            values = cached[format_key % k]
-            values[key] += v
-        except KeyError:
-            pass
-
-    cache.set_many(cached, 600)
-
-
-def get_vm_counts(clusters, timeout=600):
+def get_vm_counts(clusters):
     """
     Helper for getting the list of orphaned/ready to import/missing VMs.
-    Caches by the way.
-
-    This caches data under the keys:   cluster_admin_<cluster_id>
 
     @param clusters the list of clusters, for which numbers of VM are counted.
                     May be None, if update is set.
-    @param timeout  specified timeout for cache, in seconds.
     """
     format_key = 'cluster_admin_%d'
     orphaned = import_ready = missing = 0
-    cached = cache.get_many((format_key % cluster.pk for cluster in clusters))
-    exclude = [int(key[14:]) for key in cached.keys()]
-    keys = [k for k in clusters.values_list('pk', flat=True) if k not in exclude]
+    keys = [k for k in clusters.values_list('pk', flat=True)]
     cluster_list = Cluster.objects.filter(pk__in=keys)
-
-    # total the cached values first
-    for k in cached.values():
-        orphaned += k["orphaned"]
-        import_ready += k["import_ready"]
-        missing += k["missing"]
 
     # update the values that were not cached
     if cluster_list.count():
@@ -169,9 +185,6 @@ def get_vm_counts(clusters, timeout=600):
             import_ready += result[key]["import_ready"]
             missing += result[key]["missing"]
 
-        # add all results into cache
-        cache.set_many(result, timeout)
-
     return orphaned, import_ready, missing
 
 
@@ -185,7 +198,7 @@ def overview(request, rest=False):
     if user.is_superuser:
         clusters = Cluster.objects.all()
     else:
-        clusters = user.get_objects_all_perms(Cluster, ['admin',])
+        clusters = user.get_objects_any_perms(Cluster, ['admin', 'create_vm',])
     admin = user.is_superuser or clusters
 
     #orphaned, ready to import, missing
@@ -254,12 +267,15 @@ def overview(request, rest=False):
     # get resources used per cluster from the first persona in the list
     resources = get_used_resources(personas[0])
 
+    create_vm = user.has_perm('create_vm', clusters)
+
     if rest:
         return clusters
     else:
         return render_to_response("ganeti/overview.html", {
             'admin':admin,
             'cluster_list': clusters,
+            'create_vm': create_vm,
             'user': request.user,
             'errors': errors,
             'orphaned': orphaned,

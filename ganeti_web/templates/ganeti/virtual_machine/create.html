@@ -23,13 +23,14 @@
         // -------
         $(document).ready(function() {
             /* run when document is fully loaded */
-           
+	    var recovery_flag = false;
+            if(window.location.pathname.split("/")[window.location.pathname.split("/").length-1] == "recover") { recovery_flag = true; }
             // init the live-form updater
             var frmUpdater = new formUpdater(
                     '{% url instance-create-cluster-choices %}',
                     '{% url instance-create-cluster-options %}',
                     '{% url instance-create-cluster-defaults %}');
-            frmUpdater.init({{ cluster_defaults|safe }});
+            frmUpdater.init({{ cluster_defaults|safe }},recovery_flag);
  
             // init the help tips for the individ. form objects
             initHelpTips('#virtualmachineform');
