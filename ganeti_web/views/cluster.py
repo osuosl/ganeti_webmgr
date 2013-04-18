@@ -50,8 +50,7 @@ from ganeti_web.models import (Cluster, ClusterUser, Profile, SSHKey,
 from ganeti_web.views import render_404
 from ganeti_web.views.virtual_machine import VMListView
 from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
-                                      PaginationMixin, SortingMixin,
-                                      GWMBaseListView)
+                                      PaginationMixin, GWMBaseView)
 from ganeti_web.util.client import GanetiApiError
 
 
@@ -73,7 +72,10 @@ class ClusterDetailView(LoginRequiredMixin, DetailView):
             "readonly": not admin,
         }
 
-class ClusterListView(LoginRequiredMixin, GWMBaseListView):
+
+class ClusterListView(LoginRequiredMixin, PaginationMixin, GWMBaseView,
+                      ListView):
+
     template_name = "ganeti/cluster/list.html"
     default_sort_params = ('hostname', 'asc')
     model = Cluster
@@ -116,7 +118,8 @@ class ClusterVMListView(VMListView):
         return context
 
 
-class ClusterJobListView(LoginRequiredMixin, GWMBaseListView):
+class ClusterJobListView(LoginRequiredMixin, PaginationMixin, GWMBaseView,
+                         ListView):
 
     template_name = "ganeti/cluster/jobs.html"
     model = Job

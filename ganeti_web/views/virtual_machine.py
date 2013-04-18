@@ -59,8 +59,7 @@ from ganeti_web.util.client import GanetiApiError
 from ganeti_web.utilities import (cluster_os_list, compare, os_prettify,
                                   get_hypervisor)
 from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
-                                      PaginationMixin, SortingMixin,
-                                      GWMBaseListView)
+                                      PaginationMixin, GWMBaseView)
 
 
 #XXX No more need for tastypie dependency for 0.8
@@ -87,7 +86,7 @@ def get_vm_and_cluster_or_404(cluster_slug, instance):
     raise Http404('Virtual Machine does not exist')
 
 
-class VMListView(LoginRequiredMixin, GWMBaseListView):
+class VMListView(LoginRequiredMixin, PaginationMixin, GWMBaseView, ListView):
     """
     View for displaying a list of VirtualMachines.
     """
