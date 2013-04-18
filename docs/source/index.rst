@@ -34,25 +34,24 @@ development see our :ref:`development <development>` guide.
 Getting Started
 ---------------
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
 
-    deployment
-    fabric-install
-    fabric-recommend
-    upgrading
+    installing
     importing
+    upgrading
+
+
+Community & Information
+-----------------------
+.. toctree::
+    :maxdepth: 1
+
+    comm/contact
+    comm/issues
     screenshots
     changelog
     license
     faq
-
-Community & Support
--------------------
-.. toctree::
-    :maxdepth: 2
-
-    comm/issues
-    comm/contact
 
 Usage
 -----
