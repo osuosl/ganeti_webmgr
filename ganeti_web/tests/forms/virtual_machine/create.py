@@ -34,6 +34,7 @@ class MockCluster(object):
         "beparams": {
             "default": {
                 "maxmem": 256,
+                "minmem": 128,
                 "vcpus": 1,
             },
         },
@@ -64,6 +65,7 @@ class TestVMWizardBasicsForm(TestCase):
             "os": "image+dobion-lotso",
             "vcpus": 1,
             "memory": 128,
+            "minram": 128,
             "disk_template": "plain",
             "disk_size_0": 2048,
         }

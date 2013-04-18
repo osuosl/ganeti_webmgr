@@ -44,7 +44,7 @@ from object_log.models import LogItem
 log_action = LogItem.objects.log_action
 
 from ganeti_web.backend.queries import vm_qs_for_users
-from ganeti_web.caps import has_shutdown_timeout
+from ganeti_web.caps import has_shutdown_timeout, has_balloonmem
 from ganeti_web.forms.virtual_machine import (KvmModifyVirtualMachineForm,
                                               PvmModifyVirtualMachineForm,
                                               HvmModifyVirtualMachineForm,
@@ -100,44 +100,12 @@ class VMListView(LoginRequiredMixin, PagedListView):
         context["can_create"] = (user.is_superuser or
                                 user.has_any_perms(Cluster, ["create_vm"]))
 
-        # Allows for bulk reboot/shutdown/start -- NEEDS TESTING -- NOT TESTED
-        if self.request.method == 'POST':
-
-            if user.has_any_perms(VirtualMachine, ['admin', 'modify', 'remove', 'power']):
-                # Call bulk_ops and send in the request
-                self.bulk_ops(self.request)
-            else:
-                # Return an error for each VM the user doesn't have permissions on.
-                print "error calling bulk_ops"
         if "order_by" in self.request.GET:
             context["order"] = self.request.GET["order_by"]
         else:
             context["order"] = "hostname"
 
         return context
-
-    def bulk_ops(self, request):
-
-        for vm in request.POST.getlist('chkbx'):
-            vm_operation = request.POST['vm_options']
-            hostname = vm[:vm.find(",")]
-            slug = vm[vm.find(",")+1:]
-
-            print "Shutting down a VM"
-
-            if vm_operation == "Reboot VMs":
-                reboot(request, slug, hostname)
-            elif vm_operation == "Start VMs":
-                startup(request, slug, hostname)
-            elif vm_operation == "Shutdown VMs":
-                shutdown(request, slug, hostname)
-            elif vm_operation == "Immediately Shutdown VMs":
-                shutdown_now(request, slug, hostname)
-
-
-    def post(self, *args, **kwargs):
-        return super(VMListView, self).get(self.request, args, kwargs)
-
 
 class VMListTableView(VMListView):
     """
@@ -730,6 +698,7 @@ def modify(request, cluster_slug, instance):
         'cluster': cluster,
         'instance': vm,
         'form': form,
+        'balloon': has_balloonmem(cluster)
         },
         context_instance=RequestContext(request),
     )
@@ -774,15 +743,20 @@ def modify_confirm(request, cluster_slug, instance):
             form.cluster = cluster
 
             if form.is_valid():
+                beparams = {}
                 data = form.cleaned_data
                 rapi_dict = data['rapi_dict']
                 nics = rapi_dict.pop('nics')
-                vcpus = rapi_dict.pop('vcpus')
-                memory = rapi_dict.pop('memory')
+                beparams['vcpus'] = rapi_dict.pop('vcpus')
+                if has_balloonmem(cluster):
+                    beparams['maxmem']= rapi_dict.pop('maxmem')
+                    beparams['minmem'] = rapi_dict.pop('minmem')
+                else:
+                    beparams['memroy'] = rapi_dict.pop('memory')
                 os_name = rapi_dict.pop('os')
                 job_id = cluster.rapi.ModifyInstance(instance,
                     nics=nics, os_name=os_name, hvparams=rapi_dict,
-                    beparams={'vcpus':vcpus,'memory':memory}
+                    beparams=beparams
                 )
                 # Create job and update message on virtual machine detail page
                 job = Job.objects.create(job_id=job_id, obj=vm, cluster=cluster)
@@ -824,11 +798,14 @@ def modify_confirm(request, cluster_slug, instance):
     hvparams = info['hvparams']
 
     old_set = dict(
-        memory=info['beparams']['memory'],
         vcpus=info['beparams']['vcpus'],
         os=info['os'],
     )
-
+    if has_balloonmem(cluster):
+        old_set['maxmem'] = info['beparams']['maxmem']
+        old_set['minmem'] = info['beparams']['minmem']
+    else:
+        old_set['memory'] = info['beparams']['memory']
     nic_count = len(info['nic.links'])
     for i in xrange(nic_count):
         old_set['nic_link_%s' % i] = info['nic.links'][i]
@@ -840,7 +817,7 @@ def modify_confirm(request, cluster_slug, instance):
     instance_diff = {}
     fields = hv_form(vm, data).fields
     for key in data.keys():
-        if key == 'memory':
+        if key in ['memory', 'maxmem', 'minmem']:
             diff = compare(render_storage(old_set[key]),
                 render_storage(data[key]))
         elif key == 'os':

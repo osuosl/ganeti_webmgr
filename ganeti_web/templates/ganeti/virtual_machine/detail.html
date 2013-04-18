@@ -359,7 +359,7 @@
         <h3>Hardware</h3>
         <table class="horizontal">
             <tr><th>{% trans "VCPUs" %}</th><td>{{ instance.virtual_cpus }}</td></tr>
-            <tr><th>{% trans "Memory" %}</th><td>{{ instance.ram|render_storage }}</td></tr>
+            <tr><th>{% trans "Memory (Min/Max)" %}</th><td>{{ instance.minram|render_storage }} / {{ instance.ram|render_storage  }}</td></tr>
             <tr><th>{% trans "NIC type" %}</th><td>{{ info.hvparams.nic_type }}</td></tr>
         </table>
 

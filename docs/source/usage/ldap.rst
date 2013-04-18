@@ -1,52 +1,67 @@
 LDAP
 ====
 
-This is a tentative guide to using LDAP authentication in GWM.
+.. versionadded:: 0.10
 
-First, add ``django_auth_ldap.backend.LDAPBackend`` to
-``AUTHENTICATION_BACKENDS`` in your ``settings.py`` file.
+Ganeti Web Manager supports LDAP authentication through the use of
+`django-auth-ldap`_ and `python-ldap`_. A fabric command has been
+written to easily handle enabling and disabling LDAP support.
 
-Then, add something like the following snippet, and adjust to taste:
+Dependencies
+------------
 
-::
+In order to use `python-ldap`_ a couple of system level packages need to
+be installed first.
 
-    # LDAP Authentication via django-auth-ldap
-    # If you need to debug your configuration, see:
-    #       http://packages.python.org/django-auth-ldap/#logging
-    # Set AUTH_LDAP_SERVER_URI to the server you will authenticate against.
-    # If you want to bind as a specific user, update AUTH_LDAP_BIND_DN and
-    #       AUTH_LDAP_BIND_PASSWORD appropriately.  Leave blank to bind
-    #       anonymously.
-    # Specify where to search in LDAP via AUTH_LDAP_USER_SEARCH.
-    # You can also define user attributes based on those found in LDAP.
-    #       Update AUTH_LDAP_USER_ATTR_MAP as needed.
-    import ldap
-    from django_auth_ldap.config import LDAPSearch, GroupOfNamesType
-    AUTH_LDAP_SERVER_URI = "ldaps://ldap.example.com" 
-    AUTH_LDAP_BIND_DN = "" 
-    AUTH_LDAP_BIND_PASSWORD = "" 
-    AUTH_LDAP_USER_SEARCH = LDAPSearch("ou=People,dc=example,dc=com",
-            ldap.SCOPE_SUBTREE, "(uid=%(user)s)")
-    AUTH_LDAP_USER_ATTR_MAP = {
-        "fist_name": "givenName",
-        "last_name": "sn",
-        "email": "mail" 
-    }
+For a Debian based systems:
+ * libldap2-dev 
+ * libsasl2-dev
 
-    # If you want to perform group-based authorization, update the
-    # following as needed.
-    # You can set user flags based on group membership via
-    #       AUTH_LDAP_USER_FLAGS_BY_GROUP.
-    # You can also require the user be a member of a group so as to be
-    # authorized to log in.  Likewise, you can ban users based on group
-    # membership.
-    AUTH_LDAP_GROUP_SEARCH = LDAPSearch("ou=Group,dc=example,dc=com",
-            ldap.SCOPE_SUBTREE, "(objectClass=groupOfNames")
-    AUTH_LDAP_GROUP_TYPE = GroupOfNamesType(name_attr="cn")
-    AUTH_LDAP_USER_FLAGS_BY_GROUP = {
-        "is_active": "cn=Operators,ou=Group,dc=example,dc=com",
-        "is_staff": "cn=Staff,ou=Group,dc=example,dc=com",
-        "is_superuser": "cn=Privileged,ou=Group,dc=example,dc=com",
-    }
-    AUTH_LDAP_REQUIRE_GROUP = "cn=Operators,ou=Group,dc=example,dc=com" 
-    AUTH_LDAP_DENY_GROUP = "cn=Banned,ou=Group,dc=example,dc=com" 
+For a Red Hat based systems:
+ * openldap-devel
+
+Deploying
+---------
+
+To deploy Ganeti Web Manager with LDAP
+
+#. Copy ``ldap_settings.py.dist`` to ``ldap_settings.py``.
+
+   ::
+
+      $ cp ldap_settings.py.dist ldap_settings.py
+
+#. Change `ldap_settings.py` to fit your LDAP configuration.
+
+   ::
+
+      $ vi ldap_settings.py
+
+.. note:: 
+    ``ldap_settings.py.dist`` has been thoroughly commented so that external
+    documentation shouldn't be needed. If you have specific questions about
+    options or want an overview of the package, please consult the
+    `django-auth-ldap`_ documentation.
+
+
+#. Run the fabric command to enable LDAP in settings::
+
+   $ fab ldap
+
+``fab ldap`` installs `django-auth-ldap`_ and `python-ldap`_ and takes
+care of the commenting and uncommenting the lines in settings.py that
+handle LDAP imports.
+
+Disabling
+---------
+If you would like to later disable LDAP support, all that is required is
+to run::
+
+   $ fab ldap:disable
+
+.. note::
+    This will remove `django-auth-ldap`_ and `python-ldap`_ but will not
+    remove the system specific dependencies.
+
+.. _python-ldap: http://www.python-ldap.org/doc/html/index.html
+.. _django-auth-ldap: http://pythonhosted.org/django-auth-ldap/

@@ -82,7 +82,7 @@ def has_cdrom2(cluster):
     return classify(cluster) >= GANETI242
 
 
-def requires_maxmem(cluster):
+def has_balloonmem(cluster):
     """
     Determine whether a cluster requires min/maxmem rather than
     just memory.
