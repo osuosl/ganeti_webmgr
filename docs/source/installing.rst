@@ -22,11 +22,6 @@ This section explains how to automatically install Ganeti Web Manager
 using Fabric_. Fabric simplifies the installation process by
 automatically installing dependencies into a virtual environment.
 
-Related Topics:
-
--  Read more about why :doc:`fabric-recommend`
--  :doc:`fabric-install`
-
 .. _Fabric: http://docs.fabfile.org/
 
 Compatibility
