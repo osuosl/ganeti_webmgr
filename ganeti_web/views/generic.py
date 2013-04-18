@@ -8,7 +8,6 @@ from django.core.exceptions import ImproperlyConfigured
 from django.utils.decorators import method_decorator
 from django.utils.http import urlencode
 from django.utils.translation import ugettext as _
-from django.views.generic.list import ListView
 
 # Standard translation messages. We use these everywhere.
 
@@ -98,7 +97,8 @@ class SortingMixin(object):
             qs = qs.reverse()
         return qs
 
-class GWMBaseListView(PaginationMixin, SortingMixin, ListView):
+
+class GWMBaseView(object):
     """
     A base view which will filter querysets by cluster, primary node, or
     secondary node. It will also saves these to context data.
@@ -119,7 +119,7 @@ class GWMBaseListView(PaginationMixin, SortingMixin, ListView):
 
     def get_queryset(self):
         self.get_kwargs()  # Make sure that we have our values.
-        qs = super(GWMBaseListView, self).get_queryset()
+        qs = super(GWMBaseView, self).get_queryset()
         # Filter by cluster if applicable
         if self.cluster_slug:
             qs = qs.filter(cluster__slug=self.cluster_slug)
@@ -135,7 +135,8 @@ class GWMBaseListView(PaginationMixin, SortingMixin, ListView):
         return qs
 
     def get_context_data(self, **kwargs):
-        context = super(GWMBaseListView, self).get_context_data(**kwargs)
+        self.get_kwargs()
+        context = super(GWMBaseView, self).get_context_data(**kwargs)
         context['cluster_slug'] = self.cluster_slug
 
         return context
