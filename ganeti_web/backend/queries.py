@@ -28,7 +28,7 @@ def cluster_qs_for_user(user):
     elif user.is_anonymous():
         qs = Cluster.objects.none()
     else:
-        qs = user.get_objects_any_perms(Cluster, ['admin','create_vm'], False)
+        qs = user.get_objects_any_perms(Cluster, ['admin', 'create_vm'], False)
 
     # Exclude all read-only clusters.
     qs = qs.exclude(Q(username='') | Q(mtime__isnull=True))
@@ -71,6 +71,7 @@ def vm_qs_for_admins(user):
                                         perms=["admin"])
 
     return qs
+
 
 def vm_qs_for_users(user):
     """
