@@ -14,29 +14,31 @@ from fabric.operations import local, require, prompt
 #
 #    GIT_INSTALL - install packages from git:
 #
-#                    url - git url for checkouts
-#                    development - head to checkout for dev.  Defaults to master
-#                    production - head to checkout for prod.  defaults to master.
-#                    symlink - directory to symlink into project.  uses project
-#                              name if blank
+#                  url - git url for checkouts
+#                  development - head to checkout for dev.  Defaults to master
+#                  production - head to checkout for prod.  defaults to master.
+#                  symlink - directory to symlink into project.  uses project
+#                            name if blank
 # Packages from git are given preference for dev environment. PIP is given
 # preference for production environments
 
 PIP_INSTALL = dict((r.project_name, str(r)) for r in
-                   pkg_resources.parse_requirements(open("requirements.txt").read()))
+                   pkg_resources.parse_requirements(
+                       open("requirements.txt").read()))
 
-GIT_INSTALL =  {
-    'django_object_permissions':{
-        'url':'git://git.osuosl.org/gitolite/django/django_object_permissions',
-        'development':'develop',
-        },
-    'django_object_log':{
-        'url':'git://git.osuosl.org/gitolite/django/django_object_log',
-        'development':'develop',
-        },
-    'twisted_vncauthproxy':{
-        'url':'git://git.osuosl.org/gitolite/ganeti/twisted_vncauthproxy',
-        'development':'develop',
+GIT_INSTALL = {
+    'django_object_permissions': {
+        'url': 'git://git.osuosl.org/gitolite/django'
+               '/django_object_permissions',
+        'development': 'develop',
+    },
+    'django_object_log': {
+        'url': 'git://git.osuosl.org/gitolite/django/django_object_log',
+        'development': 'develop',
+    },
+    'twisted_vncauthproxy': {
+        'url': 'git://git.osuosl.org/gitolite/ganeti/twisted_vncauthproxy',
+        'development': 'develop',
     },
 }
 
@@ -96,6 +98,7 @@ def deploy():
     install_dependencies_git()
     novnc()
 
+
 def clean():
     """
     In a development environment, remove all installed packages and symlinks.
@@ -109,6 +112,7 @@ def clean():
         else:
             abort('Aborting clean.')
 
+
 def update():
     """
     In a development environment, update all develop branches.
@@ -117,16 +121,18 @@ def update():
 
     if env.environment != 'development':
         raise Exception('must be in a development environment in order to'
-            'update develop branches.')
+                        'update develop branches.')
+
     else:
         with lcd('%(doc_root)s/dependencies' % env):
             for git_dir, opts in GIT_INSTALL.items():
                 env.git_repo = git_dir
                 if (_exists('%(doc_root)s/dependencies/%(git_repo)s' % env) and
-                    'development' in opts and 'checkout' not in opts):
+                        'development' in opts and 'checkout' not in opts):
                     with lcd(git_dir):
                         print 'Updating git repo: %(git_repo)s' % env
                         local('git pull --ff')
+
 
 def _exists(path):
     """
@@ -214,7 +220,8 @@ def install_dependencies_git():
 
         # check for required values
         if 'url' not in opts:
-            raise Exception('missing required argument "url" for git repo: %s' % name)
+            raise Exception('missing required argument "url"'
+                            'for git repo: %s' % name)
 
         # set git head to check out
         if env.environment in opts:
@@ -236,7 +243,7 @@ def install_dependencies_git():
                     local('git fetch')
 
                     # Attempt to create a tracked branch and update it.
-                    with settings(hide('warnings','stderr'), warn_only=True):
+                    with settings(hide('warnings', 'stderr'), warn_only=True):
                         local('git checkout -t origin/%(head)s' % opts)
                         local('git pull')
 
@@ -244,19 +251,22 @@ def install_dependencies_git():
         # not have it and will need to be symlinked into the project
         if _exists('%(doc_root)s/dependencies/%(git_repo)s/setup.py' % env):
             with lcd(env.doc_root):
-                local('%(virtualenv)s/bin/pip install -q -e dependencies/%(git_repo)s' % env)
+                local('%(virtualenv)s/bin/pip install -q -e'
+                      'dependencies/%(git_repo)s' % env)
 
         else:
             # else, configure and create symlink to git repo
-            with lcd (env.doc_root):
+            with lcd(env.doc_root):
                 if 'symlink' in opts:
                     env.symlink = opts['symlink']
-                    env.symlink_path = '%(doc_root)s/dependencies/%(git_repo)s/%(symlink)s' % env
+                    env.symlink_path = '%(doc_root)s/dependencies/%' \
+                                       '(git_repo)s/%(symlink)s' % env
                 else:
                     env.symlink = name
-                    env.symlink_path = '%(doc_root)s/dependencies/%(git_repo)s' % env
+                    env.symlink_path = '%(doc_root)s/dependencies/%' \
+                                       '(git_repo)s' % env
 
-                with settings(hide('warnings','stderr'), warn_only=True):
+                with settings(hide('warnings', 'stderr'), warn_only=True):
                     local('ln -sf %(symlink_path)s %(doc_root)s' % env)
 
 
@@ -312,7 +322,6 @@ def ldap(state="enable"):
     Depends on: libldap2-dev, libsasl2-dev
     """
 
-
     filename = 'settings.py' % env
     env.virtualenv = env.doc_root
 
@@ -324,13 +333,15 @@ def ldap(state="enable"):
             if not _exists('/usr/include/sasl'):
                 abort("Make sure libsasl2-dev is"
                       " installed before continuing")
-            local('%(virtualenv)s/bin/pip install -qr requirements-ldap.txt' % env)
+            local('%(virtualenv)s/bin/pip install -qr'
+                  ' requirements-ldap.txt' % env)
 
             _uncomment(filename, 'from ldap_settings')
             _uncomment(filename, "'django_auth_ldap")
         elif state == "disable":
             # Disable LDAP settings and uninstall requirments
-            local('%(virtualenv)s/bin/pip uninstall -qyr requirements-ldap.txt' % env)
+            local('%(virtualenv)s/bin/pip uninstall -qyr'
+                  ' requirements-ldap.txt' % env)
 
             _comment(filename, 'from ldap_settings')
             _comment(filename, "'django_auth_ldap")
