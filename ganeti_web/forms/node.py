@@ -28,7 +28,9 @@ class RoleForm(forms.Form):
     """
     Form for editing roles
     """
-    role = forms.ChoiceField(initial='', choices=constants.ROLE_CHOICES, label='New Role')
+    role = forms.ChoiceField(initial='',
+                             choices=constants.ROLE_CHOICES,
+                             label='New Role')
     force = forms.BooleanField(initial=False, required=False)
 
 
@@ -38,31 +40,31 @@ class MigrateForm(forms.Form):
 
 
 class EvacuateForm(forms.Form):
-    EMPTY_FIELD = constants.EMPTY_CHOICE_FIELD 
+    EMPTY_FIELD = constants.EMPTY_CHOICE_FIELD
 
-    iallocator = forms.BooleanField(initial=False, required=False, \
+    iallocator = forms.BooleanField(initial=False, required=False,
                                     label='Automatic Allocation')
-    iallocator_hostname = forms.CharField(initial='', required=False, \
-                                    widget = forms.HiddenInput())
+    iallocator_hostname = forms.CharField(initial='', required=False,
+                                          widget=forms.HiddenInput())
     node = forms.ChoiceField(initial='', choices=[EMPTY_FIELD], required=False)
 
     def __init__(self, cluster, node, *args, **kwargs):
         super(EvacuateForm, self).__init__(*args, **kwargs)
 
-        node_list = [str(h) for h in cluster.nodes.exclude(pk=node.pk)\
-                                    .values_list('hostname', flat=True)]
+        node_list = [str(h) for h in cluster.nodes.exclude(pk=node.pk)
+                     .values_list('hostname', flat=True)]
         nodes = zip(node_list, node_list)
         nodes.insert(0, self.EMPTY_FIELD)
         self.fields['node'].choices = nodes
 
         defaults = cluster_default_info(cluster)
-        if defaults['iallocator'] != '' :
+        if defaults['iallocator'] != '':
             self.fields['iallocator'].initial = True
             self.fields['iallocator_hostname'].initial = defaults['iallocator']
 
     def clean(self):
         data = self.cleaned_data
-        
+
         iallocator = data['iallocator']
         node = data['node'] if 'node' in data else None
 
@@ -71,6 +73,7 @@ class EvacuateForm(forms.Form):
         elif node:
             data['iallocator_hostname'] = None
         else:
-            raise ValidationError(_('Must choose automatic allocation or a specific node'))
+            raise ValidationError(_('Must choose automatic allocation '
+                                    'or a specific node'))
 
         return data

@@ -29,13 +29,13 @@ class QuotaForm(forms.Form):
     """
     Form for editing user quota on a cluster
     """
-    input = forms.TextInput(attrs={'size':5})
+    input = forms.TextInput(attrs={'size': 5})
 
-    user = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), \
+    user = forms.ModelChoiceField(queryset=ClusterUser.objects.all(),
                                   widget=forms.HiddenInput)
     ram = DataVolumeField(label='Memory', required=False, min_value=0)
-    virtual_cpus = forms.IntegerField(label='Virtual CPUs', required=False, \
-                                    min_value=0, widget=input)
+    virtual_cpus = forms.IntegerField(label='Virtual CPUs', required=False,
+                                      min_value=0, widget=input)
     disk = DataVolumeField(label='Disk Space', required=False, min_value=0)
     delete = forms.BooleanField(required=False, widget=forms.HiddenInput)
 
@@ -48,7 +48,7 @@ class EditClusterForm(forms.ModelForm):
     class Meta:
         model = Cluster
         widgets = {
-            'password' : forms.PasswordInput(),
+            'password': forms.PasswordInput(),
         }
 
     ram = DataVolumeField(label=_('Memory'), required=False, min_value=0)

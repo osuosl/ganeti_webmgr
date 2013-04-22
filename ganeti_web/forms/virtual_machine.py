@@ -53,14 +53,17 @@ from ganeti_web.views.generic import LoginRequiredMixin
 
 username_or_mtime = Q(username='') | Q(mtime__isnull=True)
 
+
 class VirtualMachineForm(forms.ModelForm):
     """
     Parent class that holds all vm clean methods
       and shared form fields.
     """
     memory = DataVolumeField(label=_('Memory'), min_value=100)
-    minmem = DataVolumeField(label=_('Minimum RAM (MiB)'), required=True, min_value=100)
-    maxmem = DataVolumeField(label=_('Maximum RAM (MiB)'), required=True, min_value=100)
+    minmem = DataVolumeField(label=_('Minimum RAM (MiB)'),
+                             required=True, min_value=100)
+    maxmem = DataVolumeField(label=_('Maximum RAM (MiB)'),
+                             required=True, min_value=100)
 
     class Meta:
         model = VirtualMachineTemplate
@@ -73,7 +76,7 @@ class VirtualMachineForm(forms.ModelForm):
         for i in range(count):
             disk_size = DataVolumeField(min_value=100, required=True,
                                         label=_("Disk/%s Size" % i))
-            self.fields['disk_size_%s'%i] = disk_size
+            self.fields['disk_size_%s' % i] = disk_size
 
     def create_nic_fields(self, count, defaults=None):
         """
@@ -81,12 +84,14 @@ class VirtualMachineForm(forms.ModelForm):
         """
         self.nic_fields = range(count)
         for i in range(count):
-            nic_mode = forms.ChoiceField(label=_('NIC/%s Mode' % i), choices=HV_NIC_MODES)
-            nic_link = forms.CharField(label=_('NIC/%s Link' % i), max_length=255)
+            nic_mode = forms.ChoiceField(label=_('NIC/%s Mode' % i),
+                                         choices=HV_NIC_MODES)
+            nic_link = forms.CharField(label=_('NIC/%s Link' % i),
+                                       max_length=255)
             if defaults is not None:
                 nic_link.initial = defaults['nic_link']
-            self.fields['nic_mode_%s'%i] = nic_mode
-            self.fields['nic_link_%s'%i] = nic_link
+            self.fields['nic_mode_%s' % i] = nic_mode
+            self.fields['nic_link_%s' % i] = nic_link
 
     def clean_hostname(self):
         data = self.cleaned_data
@@ -98,7 +103,8 @@ class VirtualMachineForm(forms.ModelForm):
             #
             # Recoveries are only allowed when the user is the owner of the VM
             try:
-                vm = VirtualMachine.objects.get(cluster=cluster, hostname=hostname)
+                vm = VirtualMachine.objects.get(cluster=cluster,
+                                                hostname=hostname)
 
                 # detect vm that failed to deploy
                 if not vm.pending_delete and vm.template is not None:
@@ -106,10 +112,12 @@ class VirtualMachineForm(forms.ModelForm):
                     if current_owner == self.owner:
                         data['vm_recovery'] = vm
                     else:
-                        msg = _("Owner cannot be changed when recovering a failed deployment")
+                        msg = _("Owner cannot be changed when recovering a "
+                                "failed deployment")
                         self._errors["owner"] = self.error_class([msg])
                 else:
-                    raise ValidationError(_("Hostname is already in use for this cluster"))
+                    raise ValidationError(_("Hostname is already in use for "
+                                            "this cluster"))
 
             except VirtualMachine.DoesNotExist:
                 # doesn't exist, no further checks needed
@@ -144,12 +152,14 @@ class VirtualMachineForm(forms.ModelForm):
 
         if data and security_model != 'user':
             msg = u'%s.' % _(
-                'This field can not be set if Security Mode is not set to User')
+                'This field can not be set if Security '
+                'Mode is not set to User')
         elif security_model == 'user':
             if not data:
                 msg = u'%s.' % _('This field is required')
             elif not data[0].isalpha():
-                msg = u'%s.' % _('This field must being with an alpha character')
+                msg = u'%s.' % _('This field must being with '
+                                 'an alpha character')
 
         if msg:
             self._errors['security_domain'] = self.error_class([msg])
@@ -178,22 +188,30 @@ def check_quota_modify(form):
             used = owner.used_resources(cluster, only_running=True)
 
             if (start and quota['ram'] is not None and
-                (used['ram'] + data['memory']-vm.ram) > quota['ram']):
+               (used['ram'] + data['memory']-vm.ram) > quota['ram']):
                     del data['memory']
-                    q_msg = u"%s" % _("Owner does not have enough ram remaining on this cluster. You must reduce the amount of ram.")
+                    q_msg = u"%s" % _("Owner does not have enough ram "
+                                      "remaining on this cluster. You must "
+                                      "reduce the amount of ram.")
                     form._errors["ram"] = form.error_class([q_msg])
 
             if 'disk_size' in data and data['disk_size']:
-                if quota['disk'] and used['disk'] + data['disk_size'] > quota['disk']:
+                if quota['disk'] and used['disk'] + data['disk_size'] > \
+                        quota['disk']:
                     del data['disk_size']
-                    q_msg = u"%s" % _("Owner does not have enough diskspace remaining on this cluster.")
+                    q_msg = u"%s" % _("Owner does not have enough diskspace "
+                                      "remaining on this cluster.")
                     form._errors["disk_size"] = form.error_class([q_msg])
 
             if (start and quota['virtual_cpus'] is not None and
-                (used['virtual_cpus'] + data['vcpus'] - vm.virtual_cpus) >
-                quota['virtual_cpus']):
+               (used['virtual_cpus'] + data['vcpus']
+                - vm.virtual_cpus) >
+               quota['virtual_cpus']):
                     del data['vcpus']
-                    q_msg = u"%s" % _("Owner does not have enough virtual cpus remaining on this cluster. You must reduce the amount of virtual cpus.")
+                    q_msg = u"%s" % _("Owner does not have enough virtual "
+                                      "cpus remaining on this cluster. You "
+                                      "must reduce the amount of virtual "
+                                      "cpus.")
                     form._errors["vcpus"] = form.error_class([q_msg])
 
 
