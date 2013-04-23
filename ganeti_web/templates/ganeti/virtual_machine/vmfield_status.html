@@ -1,0 +1,27 @@
+{% load webmgr_tags %}
+{% load i18n %}
+{% with record as vm %}
+{% with vm.info as info %}
+    {% if vm.error %}
+        <div class="icon_error" title="{% trans "Ganeti API Error" %}: {{vm.error}}, last status was {{ value|render_instance_status }}"></div>
+    {% else %}
+        {% if vm.pending_delete %}
+            <div class="icon_deleting" title="delete in progress"></div>
+        {% else %}
+            {% if info.admin_state %}
+                {% if info.oper_state %}
+                    <div class="icon_running" title="running"></div>
+                {% else %}
+                    <div class="icon_error" title="{{ value|render_instance_status }}"></div>
+                {% endif %}
+            {% else %}
+                {% if info.oper_state %}
+                    <div class="icon_error" title="{{ value|render_instance_status }}"></div>
+                {% else %}
+                    <div class="icon_stopped" title="stopped"></div>
+                {% endif %}
+            {% endif %}
+        {% endif %}
+    {% endif %}
+{% endwith %}
+{% endwith %}

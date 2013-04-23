@@ -33,7 +33,8 @@ class PaginationMixin(object):
     paginated ListView.
     """
 
-    paginate_by = settings.ITEMS_PER_PAGE
+    paginate_by = settings.ITEMS_PER_PAGE  # list view
+    table_pagination = {"per_page": settings.ITEMS_PER_PAGE}  # table view
 
     def get_paginate_by(self, queryset):
         """

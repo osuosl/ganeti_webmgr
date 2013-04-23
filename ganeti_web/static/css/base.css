@@ -7,7 +7,7 @@
 }
 
 html {width: 100%;}
-html, body {height:100%; /* Sticky Footer */ } 
+html, body {height:100%; /* Sticky Footer */ }
 body {
     background:url(/static/images/body_background.png) repeat-x top #eee;
     color:#333333;
@@ -132,7 +132,23 @@ pre.error {
 }
 #content h1 {margin:10px 0 10px 0;}
 #content table {margin-top:15px;  width:100%;}
-#content th {background:#eeeeee; border:1px solid #dddddd !important;}
+#content th {
+    background:#eeeeee;
+    border:1px solid #dddddd !important;
+}
+#content .table-container th {
+    height: 25px;
+    padding: 0 18px 0 0;
+}
+#content td {
+    height: 25px;
+}
+#content th.bulk,
+#content th.status {
+    text-align: center;
+    width: 16px;
+    padding: 0 2px;
+}
 #content td.actions {width:16px;}
 #content tr {border-right:0;}
 #content tr.group_row {margin:auto;}
@@ -143,12 +159,19 @@ pre.error {
     border-top:1px solid #eee;
     font-family:"Lucida Grande",Verdana,Arial,sans-serif;
     font-size:12px;
-    line-height:14px;
-    padding:5px;
+    line-height: 14px;
+    padding: 5px;
     text-align: center;
-    vertical-align:top;
 }
-#content th.status, #content th.actions { background:none; padding:0;}
+#content th.actions { background:none; padding:0;}
+#content th a {
+    color: black;
+    display: block;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    line-height: 22px;
+}
 #content td a {border:0; padding:0;}
 
 /* horizontal info tables */
@@ -156,15 +179,22 @@ pre.error {
 #content table.horizontal th { width:15em; }
 
 /* tablesorter style */
-#content table.sorted th {
+#content table th.sortable {
     background: url(/static/images/bg.gif) no-repeat center right #eee;
-    padding-right: 15px;
+}
+#content table th.sortable a,
+#content table th.desc a {
     cursor: s-resize;
 }
-#content table.sorted .ascending {background-image: url(/static/images/asc.gif);}
-#content table.sorted .descending {background-image: url(/static/images/desc.gif);}
-#content table.sorted .ascending {background-color: #7AB0DC;}
-#content table.sorted .descending {background-color: #7AB0DC;}
+#content table th.asc a {
+    cursor: n-resize;
+}
+#content table .asc {background-image: url(/static/images/asc.gif);}
+#content table .desc {background-image: url(/static/images/desc.gif);}
+/* Blue background for sorted cell */
+#content table .asc, #content table .desc {
+    background-color: #7AB0DC;
+}
 
 #footer {
     background: url(/static/images/footerBack.jpg) repeat-x 0 0 #1d1d1d;
@@ -226,7 +256,7 @@ pre.error {
  **/
  .menu {
 
-     
+
     float:left;
     color:#555555;
     padding:30px 10px 0 0;
@@ -347,43 +377,43 @@ div.delete, div.edit {
 
 
 /** Pagination **/
-.paginator {
+.pagination {
     float: right;
     margin-top: 15px;
 }
-.paginator li {
+.pagination li {
     display: inline-block;
     font-size: 11px;
     list-style: none;
 }
-.paginator li a {
+.pagination li a {
     padding: 3px 6px;
     width: 100%;
     height: 100%;
 }
-.paginator .next a,
-.paginator .previous a {
+.pagination .next a,
+.pagination .previous a {
     font-weight: bold;
 }
-.paginator .page {
+.pagination .page {
     border: solid 1px #9aafe5;
     cursor: pointer;
 }
-.paginator li.page:hover {
+.pagination li.page:hover {
     background-color:#9aafe5;
 }
-.paginator .active {
+.pagination .active {
     background-color: #2e6ab1 !important;
     border-color: #2e6ab1;
     color: #FFFFFF;
     cursor: auto;
     font-weight: bold;
 }
-.paginator a:link,
-.paginator a:visited {
+.pagination a:link,
+.pagination a:visited {
     color: #0e509e;
     text-decoration: none;
 }
-.paginator a:hover {
+.pagination a:hover {
     text-decoration: underline;
 }

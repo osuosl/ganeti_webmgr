@@ -32,17 +32,18 @@ from django.utils import simplejson as json
 from django.utils.translation import ugettext as _
 from django.views.decorators.http import require_http_methods, require_POST
 from django.views.generic.edit import DeleteView
-from django.views.generic.list import ListView
+
+from django_tables2 import SingleTableView
 
 from object_log.views import list_for_object
+from object_log.models import LogItem
+log_action = LogItem.objects.log_action
 
 from object_permissions import get_users_any
 from object_permissions.signals import (view_add_user, view_edit_user,
                                         view_remove_user)
 from object_permissions.views.permissions import view_users, view_permissions
 
-from object_log.models import LogItem
-log_action = LogItem.objects.log_action
 
 from ganeti_web.backend.queries import vm_qs_for_users
 from ganeti_web.caps import has_shutdown_timeout, has_balloonmem
@@ -61,6 +62,8 @@ from ganeti_web.utilities import (cluster_os_list, compare, os_prettify,
 from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
                                       PaginationMixin, GWMBaseView)
 
+from ganeti_web.views.tables import VMTable
+
 
 #XXX No more need for tastypie dependency for 0.8
 class HttpAccepted(HttpResponse):
@@ -71,6 +74,7 @@ class HttpAccepted(HttpResponse):
      to an import.
     """
     status_code = 202
+
 
 def get_vm_and_cluster_or_404(cluster_slug, instance):
     """
@@ -85,16 +89,19 @@ def get_vm_and_cluster_or_404(cluster_slug, instance):
     raise Http404('Virtual Machine does not exist')
 
 
-class VMListView(LoginRequiredMixin, PaginationMixin, GWMBaseView, ListView):
+class VMListView(LoginRequiredMixin, PaginationMixin, GWMBaseView,
+                 SingleTableView):
     """
-    View for displaying a list of VirtualMachines.
+    A view for listing VirtualMachines. It does so using a custom table object
+    containing the logic for displaying the list.
     """
+    model = VirtualMachine
+    table_class = VMTable
     template_name = "ganeti/virtual_machine/list.html"
-    default_sort_params = ("hostname", 'asc')
 
     def get_template_names(self):
         if self.request.is_ajax():
-            template = ['ganeti/virtual_machine/table.html']
+            template = ['table.html']  # all we need is the table
         else:
             template = ['ganeti/virtual_machine/list.html']
         return template
@@ -107,10 +114,13 @@ class VMListView(LoginRequiredMixin, PaginationMixin, GWMBaseView, ListView):
 
     def get_context_data(self, **kwargs):
         context = super(VMListView, self).get_context_data(**kwargs)
-        # pass in the Cluster Class to check all clusters
-        context["create_vm"] = self.can_create(Cluster)
         context["ajax_url"] = reverse("virtualmachine-list")
+        # check perms, and send them to the table for rendering
+        # pass in the Cluster Class to check all clusters
+        can_create = self.can_create(Cluster)
+        context["table"].can_create = context["create_vm"] = can_create
         return context
+
 
 class VMDeleteView(LoginRequiredMixin, DeleteView):
     """
