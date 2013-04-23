@@ -1,4 +1,5 @@
 {% extends "menu_base.html" %}
+{% load django_tables2 %}
 {% load i18n %}
 {% block title %}Virtual Machines{% endblock %}
 {% block content %}
@@ -10,5 +11,6 @@
     </a>
   {% endif %}
 </div>
-{% include "ganeti/virtual_machine/table.html" %}
+
+{% render_table table "table.html" %}
 {% endblock %}
