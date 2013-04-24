@@ -763,11 +763,12 @@ class VMWizardBasicsForm(Form):
         beparams = cluster.info["beparams"]["default"]
         self.fields["vcpus"].initial = beparams["vcpus"]
 
-        # If this cluster operates on the "maxmem" parameter instead of
-        # "memory", use that for now.
-        self.fields["memory"].initial = beparams["maxmem"]
+        # Check for memory based on ganeti version
         if has_balloonmem(cluster):
+            self.fields["memory"].initial = beparams["maxmem"]
             self.fields["minram"].initial = beparams["minmem"]
+        else:
+            self.fields["memory"].initial = beparams["memeory"]
 
         # If there are ipolicy limits in place, add validators for them.
         if "ipolicy" in cluster.info:
