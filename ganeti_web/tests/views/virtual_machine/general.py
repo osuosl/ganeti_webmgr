@@ -4,7 +4,8 @@ from django.core.urlresolvers import reverse
 from django.utils import simplejson as json
 
 from ganeti_web.models import SSHKey
-from ganeti_web.tests.views.virtual_machine.base import TestVirtualMachineViewsBase
+from ganeti_web.tests.views.virtual_machine.base \
+    import TestVirtualMachineViewsBase
 
 __all__ = ['TestVirtualMachineViewList',
            'TestVirtualMachineDetailView',
@@ -84,7 +85,8 @@ class TestVirtualMachineViewList(TestVirtualMachineViewsBase):
         vm3, cluster1 = self.create_virtual_machine(self.cluster, 'test3')
 
         # authorized (superuser)
-        self.assertTrue(self.c.login(username=user2.username, password='secret'))
+        self.assertTrue(self.c.login(username=user2.username,
+                                     password='secret'))
         response = self.c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
@@ -116,7 +118,8 @@ class TestVirtualMachineSSHKeysView(TestVirtualMachineViewsBase):
         specified virtual machine
         """
         # second virtual machine created
-        vm1, cluster1 = self.create_virtual_machine(self.cluster, 'vm2.example.bak')
+        vm1, cluster1 = self.create_virtual_machine(self.cluster,
+                                                    'vm2.example.bak')
 
         # grant admin permission to first user
         self.user.grant("admin", self.vm)
@@ -163,6 +166,6 @@ class TestVirtualMachineSSHKeysView(TestVirtualMachineViewsBase):
                                             key]))
         self.assertEqual(200, response.status_code)
         self.assertEquals("application/json", response["content-type"])
-        self.assertEqual(len(json.loads(response.content)), 0 )
+        self.assertEqual(len(json.loads(response.content)), 0)
         self.assertNotContains(response, "test@test")
         self.assertNotContains(response, "asd@asd")

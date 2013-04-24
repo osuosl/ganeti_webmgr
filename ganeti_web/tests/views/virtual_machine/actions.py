@@ -1,7 +1,8 @@
 from ganeti_web.models import VirtualMachine, Job
 from object_permissions import grant
 
-from ganeti_web.tests.views.virtual_machine.base import TestVirtualMachineViewsBase
+from ganeti_web.tests.views.virtual_machine.base \
+    import TestVirtualMachineViewsBase
 
 __all__ = ['TestVirtualMachineActions']
 
@@ -16,7 +17,8 @@ class TestVirtualMachineActions(TestVirtualMachineViewsBase):
 
     def test_view_startup_overquota(self):
         """
-        Test starting a virtual machine that would cause the owner to exceed quota
+        Test starting a virtual machine that would cause the
+        owner to exceed quota
         """
         args = (self.cluster.slug, self.vm.hostname)
         url = '/cluster/%s/%s/startup'
@@ -44,8 +46,8 @@ class TestVirtualMachineActions(TestVirtualMachineViewsBase):
 
         # restore values
         # XXX wait, whoa, whoa, why do we need to do this?
-        self.cluster.set_quota(self.user.get_profile(), dict(ram=10, disk=2000,
-                                                        virtual_cpus=10))
+        self.cluster.set_quota(self.user.get_profile(),
+                               dict(ram=10, disk=2000, virtual_cpus=10))
         self.vm.owner_id = None
         self.vm.ram = -1
         self.vm.virtual_cpus = -1
@@ -68,7 +70,7 @@ class TestVirtualMachineActions(TestVirtualMachineViewsBase):
         """
         url = '/cluster/%s/%s/migrate'
         args = (self.cluster.slug, self.vm.hostname)
-        template='ganeti/virtual_machine/migrate.html'
+        template = 'ganeti/virtual_machine/migrate.html'
         authorized = [self.superuser, self.cluster_admin,
                       self.cluster_migrate]
 
@@ -77,6 +79,6 @@ class TestVirtualMachineActions(TestVirtualMachineViewsBase):
         self.assert_200(url, args, authorized, template=template)
 
         # post
-        data = {'mode':'live'}
+        data = {'mode': 'live'}
         self.validate_post_only_url(url, args, data, users=authorized,
                                     get_allowed=True)
