@@ -38,7 +38,8 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
         models.client.GanetiRapiClient = RapiProxy
 
         self.node, cluster = self.create_node()
-        self.node2, self.cluster = self.create_node(cluster, 'node2.example.bak')
+        self.node2, self.cluster = self.create_node(cluster,
+                                                    'node2.example.bak')
 
         context = {"cluster": self.cluster, "node": self.node}
 
@@ -100,7 +101,7 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
         def test(user, response):
             data = json.loads(response.content)
             self.assertTrue('opstatus' in data)
-        data = {'role':'master-candidate'}
+        data = {'role': 'master-candidate'}
         self.assert_200(url, args, users, method='post', data=data,
                         mime='application/json', tests=test)
 
@@ -121,7 +122,7 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
         def test(user, response):
             data = json.loads(response.content)
             self.assertFalse('opstatus' in data)
-        data = {'role':'master-candidate'}
+        data = {'role': 'master-candidate'}
         self.node.rapi.SetNodeRole.error = GanetiApiError("Testing Error")
         self.assert_200(url, args, [self.superuser], method='post',
                         mime='application/json', data=data, tests=test)
@@ -183,6 +184,7 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
         users = [self.superuser, self.user_migrate, self.user_admin]
 
         data = {'iallocator': True, 'iallocator_hostname': 'foo', 'node': ''}
+
         def tests(user, response):
             data = json.loads(response.content)
             self.assertTrue('status' in data, data)
@@ -197,6 +199,7 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
 
         data = {'iallocator': False, 'iallocator_hostname': 'foo',
                 'node': 'node2.example.bak'}
+
         def tests(user, response):
             data = json.loads(response.content)
             self.assertTrue('status' in data, data)

@@ -24,7 +24,7 @@
 __all__ = [
     'MonkeyPatcher',
     'patch',
-    ]
+]
 
 
 class MonkeyPatcher(object):

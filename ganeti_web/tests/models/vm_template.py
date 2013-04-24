@@ -6,6 +6,7 @@ __all__ = (
     "TestVirtualMachineTemplateModel",
 )
 
+
 class TestVirtualMachineTemplateModel(TestCase):
 
     def test_vm_template_set_name_named(self):

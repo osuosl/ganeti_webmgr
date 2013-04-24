@@ -29,7 +29,8 @@ VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
 GanetiError = models.GanetiError
 
-__all__ = ('TestGanetiErrorModel','TestErrorViews')
+__all__ = ('TestGanetiErrorModel', 'TestErrorViews')
+
 
 class TestGanetiErrorBase():
     """
@@ -81,11 +82,16 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
         Verifies:
             * all those methods are free of errors
         """
-        cluster0 = self.create_model(Cluster, hostname="test0", slug="OSL_TEST0")
-        cluster1 = self.create_model(Cluster, hostname="test1", slug="OSL_TEST1")
-        cluster2 = self.create_model(Cluster, hostname="test2", slug="OSL_TEST2")
-        vm0 = self.create_model(VirtualMachine,cluster=cluster0, hostname="vm0.test.org")
-        vm1 = self.create_model(VirtualMachine,cluster=cluster1, hostname="vm1.test.org")
+        cluster0 = self.create_model(Cluster, hostname="test0",
+                                     slug="OSL_TEST0")
+        cluster1 = self.create_model(Cluster, hostname="test1",
+                                     slug="OSL_TEST1")
+        cluster2 = self.create_model(Cluster, hostname="test2",
+                                     slug="OSL_TEST2")
+        vm0 = self.create_model(VirtualMachine, cluster=cluster0,
+                                hostname="vm0.test.org")
+        vm1 = self.create_model(VirtualMachine, cluster=cluster1,
+                                hostname="vm1.test.org")
 
         msg = client.GanetiApiError("Simulating an error", 777)
         RapiProxy.error = msg
@@ -157,8 +163,10 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
         Verifies:
             * Manager store_error works properly for specific code numbers
         """
-        cluster0 = self.create_model(Cluster, hostname="test0", slug="OSL_TEST0")
-        vm0 = self.create_model(VirtualMachine,cluster=cluster0, hostname="vm0.test.org")
+        cluster0 = self.create_model(Cluster, hostname="test0",
+                                     slug="OSL_TEST0")
+        vm0 = self.create_model(VirtualMachine, cluster=cluster0,
+                                hostname="vm0.test.org")
 
         msg0 = client.GanetiApiError("Simulating 401 error", 401)
         msg1 = client.GanetiApiError("Simulating 404 error", 404)
@@ -239,10 +247,14 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
             * error will be saved as GanetiError object
             * successful refresh after will clear error
         """
-        cluster0 = self.create_model(Cluster, hostname="test0", slug="OSL_TEST0")
-        cluster1 = self.create_model(Cluster, hostname="test1", slug="OSL_TEST1")
-        vm0 = self.create_model(VirtualMachine,cluster=cluster0, hostname="vm0.test.org")
-        vm1 = self.create_model(VirtualMachine,cluster=cluster1, hostname="vm1.test.org")
+        cluster0 = self.create_model(Cluster, hostname="test0",
+                                     slug="OSL_TEST0")
+        cluster1 = self.create_model(Cluster, hostname="test1",
+                                     slug="OSL_TEST1")
+        vm0 = self.create_model(VirtualMachine, cluster=cluster0,
+                                hostname="vm0.test.org")
+        vm1 = self.create_model(VirtualMachine, cluster=cluster1,
+                                hostname="vm1.test.org")
 
         msg = client.GanetiApiError("Simulating an error", 777)
         RapiProxy.error = msg
@@ -358,7 +370,8 @@ class TestErrorViews(TestGanetiErrorBase, TestCase):
         self.assertFalse(vm_error.cleared)
 
         # unauthorized user
-        self.assertTrue(self.c.login(username=self.user.username, password='secret'))
+        self.assertTrue(self.c.login(username=self.user.username,
+                                     password='secret'))
         response = self.c.post(url % vm_error.id)
         self.assertEqual(403, response.status_code)
         vm_error = GanetiError.objects.get(pk=vm_error.pk)

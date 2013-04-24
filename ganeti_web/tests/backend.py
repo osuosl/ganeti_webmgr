@@ -10,6 +10,7 @@ __all__ = (
     "TestOwnerQSForCluster",
 )
 
+
 class TestClusterQSForUser(TestCase):
 
     def test_cluster_qs_for_user_anon(self):

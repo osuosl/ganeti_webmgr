@@ -11,6 +11,7 @@ data = dict(
     description='asdf',
 )
 
+
 class TestVirtualMachineTemplateCopyForm(TestCase):
     """
     Test class for testing the use of VirtualMachineTemplateCopyForm
@@ -18,7 +19,7 @@ class TestVirtualMachineTemplateCopyForm(TestCase):
     def test_form_init(self):
         """
         Test sanity.
-        
+
         Verifies:
             * Form can be instantiated
             * Form is not bound
@@ -30,7 +31,7 @@ class TestVirtualMachineTemplateCopyForm(TestCase):
     def test_form_from_initial(self):
         """
         Test form instantiation from initial kwarg.
-        
+
         Verifies:
             * Form fields correctly set
             * Form validation is not run
@@ -45,7 +46,7 @@ class TestVirtualMachineTemplateCopyForm(TestCase):
     def test_form_from_data(self):
         """
         Test form instantiation from initial kwarg.
-        
+
         Verifies:
             * Form fields correctly set
             * Form validation is not
@@ -56,7 +57,6 @@ class TestVirtualMachineTemplateCopyForm(TestCase):
         for k, v in data.items():
             self.assertTrue(k in form.data)
             self.assertEqual(v, form.data[k])
-
 
     def test_form_required_fields(self):
         """

@@ -40,15 +40,15 @@ class TestClusterFormBase(TestCase):
         self.cluster.save()
 
         self.data = dict(hostname='new-host3.hostname',
-                    slug='new-host3',
-                    port=5080,
-                    description='testing editing clusters',
-                    username='tester',
-                    password = 'secret',
-                    virtual_cpus=1,
-                    disk=2,
-                    ram=3
-                    )
+                         slug='new-host3',
+                         port=5080,
+                         description='testing editing clusters',
+                         username='tester',
+                         password='secret',
+                         virtual_cpus=1,
+                         disk=2,
+                         ram=3
+                         )
 
     def tearDown(self):
         # Tear down the cluster.
@@ -116,7 +116,7 @@ class TestClusterFormNew(TestClusterFormBase):
         form = EditClusterForm(self.data)
         form.is_valid()
         form.save()
-        for property in ['hostname','slug']:
+        for property in ['hostname', 'slug']:
             data_ = self.data.copy()
             data_[property] = 'different'
             form = EditClusterForm(data_)
@@ -124,7 +124,6 @@ class TestClusterFormNew(TestClusterFormBase):
 
 
 class TestClusterFormEdit(TestClusterFormBase):
-
 
     def test_bound_form(self):
         """ tests binding form with existing instance """
