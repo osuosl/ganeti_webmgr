@@ -35,14 +35,16 @@ register = Library()
 These filters were created specifically
 for the Ganeti Web Manager project
 """
+
+
 @register.inclusion_tag('ganeti/virtual_machine/vmfield.html')
 def vmfield(field):
-    return {'field':field}
+    return {'field': field}
 
 
 @register.inclusion_tag('ganeti/virtual_machine/vmfield_disk.html')
 def vmfield_disk(form, index):
-    return {'field':form['disk_size_%s' % index], 'index':index}
+    return {'field': form['disk_size_%s' % index], 'index': index}
 
 
 @register.inclusion_tag('ganeti/virtual_machine/vmfield_nic.html')
@@ -50,7 +52,7 @@ def vmfield_nic(form, index):
     """
     Render a set of form fields for creating or editing a network card
     """
-    data = {'link':form['nic_link_%s' % index],'index':index}
+    data = {'link': form['nic_link_%s' % index], 'index': index}
     if 'nic_mode_%s' % index in form.fields:
         data['mode'] = form['nic_mode_%s' % index]
     if 'nic_mac_%s' % index in form.fields:
@@ -110,10 +112,10 @@ def ssh_keypart_truncate(value, count):
     try:
         pos0 = value.find(" ")
         pos1 = value[(pos0+1):].find(" ") + pos0
-        if (pos0==-1 or pos1==-1) or (pos0==pos1):
+        if (pos0 == -1 or pos1 == -1) or (pos0 == pos1):
             raise BaseException
         value = value[pos0+1:pos1+1]
-        
+
         if len(value) > count:
             value = "%s ... %s" % (value[:(count/2)], value[(-count/2):])
     except BaseException:
@@ -129,6 +131,7 @@ def is_drbd(vm):
     """
     return 'drbd' == vm.info['disk_template']
 
+
 @register.filter
 def is_shared(vm):
     """ Simple filter for returning true or false if a virtual machine
@@ -136,11 +139,12 @@ def is_shared(vm):
     """
     return 'shared' == vm.info['disk_template']
 
+
 @register.filter
 def checkmark(bool):
     """ converts a boolean into a checkmark if it is true """
     if bool:
-        str_  = '<div class="check icon"></div>'
+        str_ = '<div class="check icon"></div>'
     else:
         str_ = '<div class="xmark icon"></div>'
     return mark_safe(str_)
@@ -233,6 +237,7 @@ def quota(cluster_user, cluster):
     """
     return cluster.get_quota(cluster_user)
 
+
 # XXX QuerySet
 @register.filter
 def cluster_admin(user):
@@ -250,8 +255,9 @@ def format_job_op(op):
 @register.filter
 def format_job_log(log):
     """ formats a ganeti job log for display on an html page """
-    formatted = log.replace('\n','<br/>')
+    formatted = log.replace('\n', '<br/>')
     return mark_safe(formatted)
+
 
 @register.simple_tag
 def format_part_total(part, total):
@@ -318,52 +324,59 @@ def node_disk(node, allocated=True):
 
 
 @register.simple_tag
-def num_reducer(num1,num2,size_tag):
-	"""
-	Formats number percentages for progress bars takes in bytes
-	"""
+def num_reducer(num1, num2, size_tag):
+    """
+    Formats number percentages for progress bars takes in bytes
+    """
 
-	if size_tag == "bytes":
-		return "%.2f / %.2f" % (num1,num2)
-	elif size_tag == "KB":
-		return "%.2f / %.2f" % (num1/1024,num2/1024)
-	elif size_tag == "MB":
-		return "%.2f / %.2f" % (num1/1024**2,num2/1024**2)
-	elif size_tag == "GB":
-		return "%.2f / %.2f" % (num1/1024**3,num2/1024**3)
-	elif size_tag == "TB":
-		return "%.2f / %.2f" % (num1/1024**4,num2/1024**4)
-	elif size_tag == "PB":
-		return "%.2f / %.2f" % (num1/1024**5,num2/1024**5)
+    if size_tag == "bytes":
+        return "%.2f / %.2f" % (num1, num2)
+    elif size_tag == "KB":
+        return "%.2f / %.2f" % (num1/1024, num2/1024)
+    elif size_tag == "MB":
+        return "%.2f / %.2f" % (num1/1024**2, num2/1024**2)
+    elif size_tag == "GB":
+        return "%.2f / %.2f" % (num1/1024**3, num2/1024**3)
+    elif size_tag == "TB":
+        return "%.2f / %.2f" % (num1/1024**4, num2/1024**4)
+    elif size_tag == "PB":
+        return "%.2f / %.2f" % (num1/1024**5, num2/1024**5)
 
 
 # XXX Possible QuerySet (cluster.available_ram)
 @register.simple_tag
-def cluster_memory(cluster, allocated=True,tag=False):
+def cluster_memory(cluster, allocated=True, tag=False):
     """
-    Pretty-print a memory quantity of the whole cluster in a dynamic unit based on filesizeformat
+    Pretty-print a memory quantity of the whole cluster
+    in a dynamic unit based on filesizeformat
     """
     d = cluster.available_ram
     size_tag = (filesizeformat(d["total"]*1024**2)).split(" ")[1]
-    if tag == True:
-	return "[%s]" % size_tag
+    if tag is True:
+        return "[%s]" % size_tag
     if allocated:
-        return num_reducer(float(d['allocated']*1024**2), float(d['total']*1024**2),size_tag.strip())
-    return num_reducer(float(d['used']*1024**2), float(d['total']*1024**2),size_tag.strip())
+        return num_reducer(float(d['allocated']*1024**2),
+                           float(d['total']*1024**2), size_tag.strip())
+    return num_reducer(float(d['used']*1024**2),
+                       float(d['total']*1024**2), size_tag.strip())
+
 
 # XXX Possible QuerySet (cluster.available_disk)
 @register.simple_tag
-def cluster_disk(cluster, allocated=True,tag=False):
+def cluster_disk(cluster, allocated=True, tag=False):
     """
-    Pretty-print a memory quantity of the whole cluster in a dyanmic unit based on filesizeformat
+    Pretty-print a memory quantity of the whole cluster in a
+    dyanmic unit based on filesizeformat
     """
     d = cluster.available_disk
     size_tag = (filesizeformat(d["total"]*1024**2)).split(" ")[1]
-    if tag == True:
-	return "[%s]" % (size_tag)
+    if tag is True:
+        return "[%s]" % (size_tag)
     if allocated:
-	return num_reducer(float(d['allocated']*1024**2),float(d['total']*1024**2),size_tag.strip())
-    return num_reducer(float(d['used']*1024**2),float(d['total']*1024**2),size_tag.strip())
+        return num_reducer(float(d['allocated']*1024**2),
+                           float(d['total']*1024**2), size_tag.strip())
+    return num_reducer(float(d['used']*1024**2),
+                       float(d['total']*1024**2), size_tag.strip())
 
 
 # XXX QuerySet
@@ -372,8 +385,9 @@ def format_running_vms(cluster):
     """
     Return number of VMs that are available and number of all VMs
     """
-    return "%d/%d" % (cluster.virtual_machines.filter(status="running").count(),
-                      cluster.virtual_machines.all().count())
+    return "%d/%d" % \
+        (cluster.virtual_machines.filter(status="running").count(),
+         cluster.virtual_machines.all().count())
 
 
 # XXX Possible QuerySet
@@ -397,10 +411,11 @@ def get_nics(parser, token):
     try:
         tag_name, arg = token.contents.split(None, 1)
     except ValueError:
-        raise TemplateSyntaxError, "%r tag requires arguments" % token.contents.split()[0]
+        raise TemplateSyntaxError("%r tag requires arguments" %
+                                  token.contents.split()[0])
     m = re.search(r'(\w+) as (\w+)', arg)
     if not m:
-        raise TemplateSyntaxError, "%r tag had invalid arguments" % tag_name
+        raise TemplateSyntaxError("%r tag had invalid arguments" % tag_name)
     instance_name, res_name = m.groups()
     return NicsNode(instance_name, res_name)
 
@@ -412,8 +427,11 @@ class NicsNode(Node):
 
     def render(self, context):
         instance = context[self.instance_name]
-        context[self.res_name] = zip(instance['nic.bridges'], instance['nic.ips'], instance['nic.links'],
-                                     instance['nic.macs'], instance['nic.modes'])
+        context[self.res_name] = zip(instance['nic.bridges'],
+                                     instance['nic.ips'],
+                                     instance['nic.links'],
+                                     instance['nic.macs'],
+                                     instance['nic.modes'])
         return ''
 
 
@@ -422,10 +440,11 @@ def get_by_name(parser, token):
     try:
         tag_name, arg = token.contents.split(None, 1)
     except ValueError:
-        raise TemplateSyntaxError, "%r tag requires arguments" % token.contents.split()[0]
+        raise TemplateSyntaxError("%r tag requires arguments" %
+                                  token.contents.split()[0])
     m = re.search(r'\s*(.+)\s+"(.+)"\s+as\s+(\w+)', arg)
     if not m:
-        raise TemplateSyntaxError, "%r tag had invalid arguments" % tag_name
+        raise TemplateSyntaxError("%r tag had invalid arguments" % tag_name)
     item_name, attr_name, res_name = m.groups()
     return GetterNode(item_name, attr_name, res_name)
 
@@ -442,6 +461,7 @@ class GetterNode(Node):
 
 # These filters were created by Corbin Simpson IN THE NAME OF AWESOME!
 # Just kidding. Created for ganeti-webmgr at Oregon State University.
+
 
 @register.filter
 @stringfilter
