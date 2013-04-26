@@ -623,7 +623,8 @@ INSTANCES_BULK = [{'admin_state': False,
                    'tags': [],
                    'uuid': '27bac3d3-f634-4dee-aa60-ed2eeb5f2287'},
                   {'admin_state': False,
-                   'beparams': {'auto_balance': True, 'memory': 512, 'vcpus': 2},
+                   'beparams': {'auto_balance': True, 'memory': 512,
+                                'vcpus': 2},
                    'ctime': 1285799513.4741089,
                    'disk.sizes': [5120],
                    'disk_template': 'plain',
@@ -670,13 +671,13 @@ INSTANCES_BULK = [{'admin_state': False,
                    'status': 'running',
                    'tags': [],
                    'uuid': '27bac3d3-f634-4dee-aa60-ed2eeb5f2287'}
-]
+                 ]
 
 # map nodes response for bulk argument
 NODES_MAP = ResponseMap([
-    (((),{}),NODES),
-    (((False,),{}),NODES),
-    (((),{'bulk':False}),NODES),
-    (((True,),{}),NODES_BULK),
-    (((),{'bulk':True}),NODES_BULK),
+    (((), {}), NODES),
+    (((False,), {}), NODES),
+    (((), {'bulk': False}), NODES),
+    (((True,), {}), NODES_BULK),
+    (((), {'bulk': True}), NODES_BULK),
 ])

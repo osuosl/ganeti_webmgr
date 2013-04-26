@@ -36,7 +36,7 @@ def importing(request):
         raise Http403(NO_PRIVS)
 
     return render_to_response('ganeti/importing/nodes/main.html',
-              context_instance=RequestContext(request))
+                              context_instance=RequestContext(request))
 
 
 @login_required
@@ -83,13 +83,11 @@ def missing_ganeti(request):
 
     nodes = node_tuple_list
 
-    return render_to_response("ganeti/importing/nodes/missing.html"
-                              , {
-        'nodes': nodes,
-        'form':form,
-        },
-        context_instance=RequestContext(request),
-    )
+    return render_to_response("ganeti/importing/nodes/missing.html",
+                              {'nodes': nodes,
+                               'form': form, },
+                              context_instance=RequestContext(request),
+                              )
 
 
 @login_required
@@ -127,12 +125,14 @@ def missing_db(request):
                 node.refresh()
 
                 # refresh all vms on this node
-                VirtualMachine.objects\
-                    .filter(cluster=cluster, hostname__in=node.info['pinst_list']) \
+                VirtualMachine.objects \
+                    .filter(cluster=cluster,
+                            hostname__in=node.info['pinst_list']) \
                     .update(primary_node=node)
 
-                VirtualMachine.objects\
-                    .filter(cluster=cluster, hostname__in=node.info['sinst_list']) \
+                VirtualMachine.objects \
+                    .filter(cluster=cluster,
+                            hostname__in=node.info['sinst_list']) \
                     .update(secondary_node=node)
 
     else:
@@ -141,7 +141,8 @@ def missing_db(request):
     nodes = {}
     for cluster in clusters:
         for hostname in cluster.nodes_missing_in_db:
-            nodes[hostname] = ('%s:%s' % (cluster.id, hostname), cluster.hostname, hostname)
+            nodes[hostname] = ('%s:%s' % (cluster.id, hostname),
+                               cluster.hostname, hostname)
     node_hostnames = nodes.keys()
     node_hostnames.sort()
 
@@ -151,9 +152,7 @@ def missing_db(request):
 
     nodes = nodes_tuple_list
 
-    return render_to_response("ganeti/importing/nodes/import.html", {
-        'nodes': nodes,
-        'form':form,
-        },
-        context_instance=RequestContext(request),
-    )
+    return render_to_response("ganeti/importing/nodes/import.html",
+                              {'nodes': nodes,
+                               'form': form, },
+                              context_instance=RequestContext(request), )
