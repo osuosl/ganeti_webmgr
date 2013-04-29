@@ -671,7 +671,7 @@ INSTANCES_BULK = [{'admin_state': False,
                    'status': 'running',
                    'tags': [],
                    'uuid': '27bac3d3-f634-4dee-aa60-ed2eeb5f2287'}
-                 ]
+                  ]
 
 # map nodes response for bulk argument
 NODES_MAP = ResponseMap([
