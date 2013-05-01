@@ -180,8 +180,25 @@ pre.error {
 
 /* tablesorter style */
 #content table th.sortable {
-    background: url(/static/images/bg.gif) no-repeat center right #eee;
+    background-image: url(/static/images/bg.gif);
+    background-repeat: no-repeat;
+    background-position: right;
+    background-color: #eee;
 }
+#content table th.sortable.asc {
+    background-image: url(/static/images/asc.gif);
+    background-color: #7AB0DC;
+
+}
+#content table th.sortable.desc {
+    background-image: url(/static/images/desc.gif);
+    background-color: #7AB0DC;
+}
+#content table th.sortable.status .asc,
+#content table th.sortable.status .desc {
+    background-position: center left;
+}
+
 #content table th.sortable a,
 #content table th.desc a {
     cursor: s-resize;
@@ -189,10 +206,11 @@ pre.error {
 #content table th.asc a {
     cursor: n-resize;
 }
-#content table .asc {background-image: url(/static/images/asc.gif);}
-#content table .desc {background-image: url(/static/images/desc.gif);}
 /* Blue background for sorted cell */
-#content table .asc, #content table .desc {
+#content table th.asc:not(.status) a,
+#content table th.desc:not(.status) a,
+#content table th.desc,
+#content table th.asc {
     background-color: #7AB0DC;
 }
 
