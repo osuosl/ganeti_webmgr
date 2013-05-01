@@ -25,7 +25,7 @@ by consolidating the entire process into a single command.
 ::
 
     # production environment
-    fab prod deploy
+    fab deploy
 
     # development environment
     fab dev deploy
@@ -46,7 +46,7 @@ which Ganeti Web Manager is run. Fabric installs the correct versions of
 the dependencies in the virtual environment, without the risk of
 impeding other programs that also use the dependencies in your system's
 global library. The end user's only interaction with the virtual
-environment is entering it (**source bin/activate**) before running GWM,
+environment is entering it (**source venv/bin/activate**) before running GWM,
 since all setup and configuration are dealt with by the Fabfile.
 
 The virtual environment ensures that Ganeti Web Manager will access the
@@ -59,7 +59,7 @@ Using the Virtual Environment
 ::
 
     #enter virtual environment 
-    source bin/activate
+    source venv/bin/activate
 
     #leave virtual environment
     deactivate
@@ -69,7 +69,7 @@ appears in parentheses at the start of the command prompt. For example:
 
 ::
 
-    user@computer:~/ganeti_webmgr$ source bin/activate
+    user@computer:~/ganeti_webmgr$ source venv/bin/activate
     (ganeti_webmgr)user@computer:~/ganeti_webmgr$ ./manage.py syncdb
     (ganeti_webmgr)user@computer:~/ganeti_webmgr$ deactivate
     user@computer:~/ganeti_webmgr$ 
@@ -85,5 +85,5 @@ virtualenv is created. The following code should be in the
 ::
 
     # activate virtual environment
-    activate_this = '%s/bin/activate_this.py' % PATH_TO_GANETI_WEBMGR
+    activate_this = '%s/venv/bin/activate_this.py' % PATH_TO_GANETI_WEBMGR
     execfile(activate_this, dict(__file__=activate_this))
