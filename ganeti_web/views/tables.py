@@ -64,3 +64,33 @@ class VMTable(BaseVMTable):
         sequence = ("status", "hostname", "cluster", "...")
         order_by = ("hostname")
 
+class ClusterTable(Table):
+
+    cluster = LinkColumn(
+        "cluster-detail",
+        args=[A("slug")],
+        accessor="slug",
+        verbose_name='cluster'
+    )
+    description = Column()
+    version = Column(accessor="info.software_version", orderable=False, default="unknown")
+    hypervisor = Column(accessor="info.default_hypervisor", orderable=False, default="unknown")
+    master_node = LinkColumn(
+        "node-detail",
+        kwargs={"cluster_slug": A("slug"),
+                "host": A("info.master")},
+        accessor="info.master",
+        orderable=False,
+        default="unknown"
+    )
+    nodes = Column(accessor="nodes.count", orderable=False)
+    vms = Column(accessor="virtual_machines.count", verbose_name='VMs',
+                 orderable=False)
+
+    class Meta:
+        empty_text = "No Clusters"
+        sequence = ("cluster", "description", "version", "hypervisor",
+                    "master_node", "nodes", "vms")
+
+    def render_hypervisor(self, value):
+        return hv_prettify(value)
