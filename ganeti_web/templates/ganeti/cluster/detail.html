@@ -7,6 +7,7 @@
     <script type="text/javascript" src="{{STATIC_URL}}/js/jquery.ajax.delete.js"></script>
     <script src="{{STATIC_URL}}/js/jquery-ui.min.js"></script>
     <script src="{{STATIC_URL}}/js/jquery.progressbar.js"></script>
+    <script type="text/javascript" src="{{STATIC_URL}}/js/ajax_tab_handler.js"></script>
 
     <script type="text/javascript">
         var job_poller;
@@ -28,7 +29,7 @@
                 spinner: false,
                 select: function(event, ui) {
                     window.location.hash = ui.tab.hash;
-					          var loadingMsg = '{% trans "Loading" %}';
+                    var loadingMsg = '{% trans "Loading" %}';
                     var tabID = ui.panel;
                     if (tabID.id != "overview") {
                         $(tabID).html("<div class='spinner'><br/>"+loadingMsg+"...<br/><br/><img src='{{STATIC_URL}}/images/ajax-loader.gif'></div>");
@@ -40,7 +41,7 @@
                     }
                 },
                 load: function(event, ui) {
-                    init_ajax_pagination(event, ui);
+                    init_ajax_tab_handler(event, ui, ".pagination a, .sortable a");
                 }
             });
 
@@ -112,7 +113,6 @@
     </script>
 
 <script type="text/javascript" src="{{STATIC_URL}}/js/job_status.js"></script>
-<script type="text/javascript" src="{{STATIC_URL}}/js/pagination.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -120,7 +120,7 @@
     {% if not cluster.username %}
         {% trans " - READ ONLY" %}
    {% endif %}
-        
+
 </h1>
 
 <ul id="messages">

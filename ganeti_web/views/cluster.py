@@ -33,6 +33,8 @@ from django.views.decorators.http import require_POST
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 
+from django_tables2 import SingleTableView
+
 from object_permissions import get_users_any
 from object_permissions import signals as op_signals
 from object_permissions.views.permissions import view_users, view_permissions
@@ -48,9 +50,10 @@ from ganeti_web.middleware import Http403
 from ganeti_web.models import (Cluster, ClusterUser, Profile, SSHKey,
                                VirtualMachine, Job)
 from ganeti_web.views import render_404
-from ganeti_web.views.virtual_machine import VMListView
 from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
                                       PaginationMixin, GWMBaseView)
+from ganeti_web.views.tables import BaseVMTable
+from ganeti_web.views.virtual_machine import VMListView
 from ganeti_web.util.client import GanetiApiError
 
 
@@ -93,6 +96,7 @@ class ClusterListView(LoginRequiredMixin, PaginationMixin, GWMBaseView,
 
 
 class ClusterVMListView(VMListView):
+    table_class = BaseVMTable
 
     def get_queryset(self):
         self.get_kwargs()
@@ -113,8 +117,10 @@ class ClusterVMListView(VMListView):
             context["cluster"] = self.cluster
             context["create_vm"] = self.admin
             # Required since we cant use a relative link.
-            context["ajax_url"] = reverse("cluster-vm-list",
-                kwargs={'cluster_slug': self.cluster_slug})
+            context["ajax_url"] = reverse(
+                "cluster-vm-list",
+                kwargs={'cluster_slug': self.cluster_slug}
+            )
         return context
 
 
@@ -139,8 +145,10 @@ class ClusterJobListView(LoginRequiredMixin, PaginationMixin, GWMBaseView,
 
     def get_context_data(self, **kwargs):
         context = super(ClusterJobListView, self).get_context_data(**kwargs)
-        context['ajax_url'] = reverse('cluster-job-list',
-            kwargs={'cluster_slug': self.cluster_slug})
+        context['ajax_url'] = reverse(
+            'cluster-job-list',
+            kwargs={'cluster_slug': self.cluster_slug}
+        )
         return context
 
 
