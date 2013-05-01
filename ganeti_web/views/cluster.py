@@ -52,7 +52,7 @@ from ganeti_web.models import (Cluster, ClusterUser, Profile, SSHKey,
 from ganeti_web.views import render_404
 from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
                                       PaginationMixin, GWMBaseView)
-from ganeti_web.views.tables import BaseVMTable
+from ganeti_web.views.tables import BaseVMTable, ClusterTable
 from ganeti_web.views.virtual_machine import VMListView
 from ganeti_web.util.client import GanetiApiError
 
@@ -77,20 +77,22 @@ class ClusterDetailView(LoginRequiredMixin, DetailView):
 
 
 class ClusterListView(LoginRequiredMixin, PaginationMixin, GWMBaseView,
-                      ListView):
+                      SingleTableView):
 
     template_name = "ganeti/cluster/list.html"
-    default_sort_params = ('hostname', 'asc')
     model = Cluster
+    table_class = ClusterTable
 
     def get_queryset(self):
         self.queryset = cluster_qs_for_user(self.request.user)
-        return super(ClusterListView, self).get_queryset()
+        qs = super(ClusterListView, self).get_queryset()
+        qs = qs.select_related("nodes", "virtual_machines")
+        return qs
 
     def get_context_data(self, **kwargs):
         user = self.request.user
         context = super(ClusterListView, self).get_context_data(**kwargs)
-        context["can_create"]= (user.is_superuser or
+        context["create_vm"] = (user.is_superuser or
                                 user.has_perm("admin", Cluster))
 
         return context

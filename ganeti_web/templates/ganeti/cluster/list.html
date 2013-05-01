@@ -1,93 +1,13 @@
-{% extends "menu_base.html" %}
+{% extends "list_base.html" %}
 {% load i18n %}
-{% load webmgr_tags %}
 
 {% block title %}{% trans 'Clusters' %}{% endblock %}
+{% block breadcrumb %}{% trans 'Clusters' %}{% endblock %}
 
-{% block head %}
-<script type="text/javascript" src="{{STATIC_URL}}/js/jquery.ajax.delete.js"></script>
-<script type="text/javascript" src="{{STATIC_URL}}/js/jquery.progressbar.js"></script>
-<script type="text/javascript" src="{{STATIC_URL}}/js/jquery.tablesorter.min.js"></script>
-<script type="text/javascript">
-    var PBAR_CONF = {
-        steps: 0,
-        showText: true,
-        textFormat: 'fraction',
-        // XXX there's issue, bars doesn't scale the progress to the given width
-        width: 120,
-        boxImage: '/static/images/progressbar/progressbar.gif',
-        barImage: {
-            0:  '/static/images/progressbar/progressbg_red.gif',
-            30: '/static/images/progressbar/progressbg_orange.gif',
-            50: '/static/images/progressbar/progressbg_yellow.gif',
-            75: '/static/images/progressbar/progressbg_green.gif',
-        },
-    };
-    $(function() {
-      $("#clusters").tablesorter();
-    });
-</script>
-{% endblock %}
-
-{% block content %}
-<div class="header">
-  <h1 class="breadcrumb">Clusters</h1>
+{% block action_button %}
   {% if user.is_superuser %}
-    <a class="button add" href="{% url cluster-create %}">{% trans "Add Cluster" %}</a>
+    <a class="button add" href="{% url cluster-create %}">
+        {% trans "Add Cluster" %}
+    </a>
   {% endif %}
-</div>
-
-<table id="clusters" class="sorted">
-    <thead>
-        <tr>
-            <th>{% trans "Cluster" %}</th>
-            <th>{% trans "Description" %}</th>
-            <th>{% trans "Version" %}</th>
-            <th>{% trans "Hypervisor" %}</th>
-            <th>{% trans "Master node" %}</th>
-            <th>{% trans "Nodes" %}</th>
-            <th>{% trans "VMs" %}</th>
-        </tr>
-    </thead>
-    <tbody>
-    {% for cluster in cluster_list %}
-        {% with cluster.info as info %}
-        {% with cluster.nodes as nodes %}
-            <tr id="cluster_{{cluster.id}}">
-                <td class="name">
-                    {% if cluster.error %}
-                        <div class="icon_error" title="{% trans 'Ganeti API Error' %}: {{cluster.error}}"></div>
-                    {% endif %}
-
-                    <a href="{% url cluster-detail cluster.slug %}">
-                        {{ cluster.hostname|abbreviate_fqdn }}
-                    </a>
-                </td>
-                <td>{{ cluster.description }}</td>
-                {% if info %}
-                    <td>v{{ info.software_version }}</td>
-                    <td>{{ info.default_hypervisor|hv }}</td>
-                    <td><a href="{% url node-detail cluster.slug info.master %}">{{ info.master }}</a></td>
-                {% else %}
-                    <td><i>unknown</i></td>
-                    <td><i>unknown</i></td>
-                    <td><i>unknown</i></td>
-                {% endif %}
-                <td>{{ nodes.count }}</td>
-                <td>{{ cluster.virtual_machines.count }}</td>
-            </tr>
-        {% endwith %}
-        {% endwith %}
-    {% empty %}
-        <tr class="none"><td colspan="100%">{% trans "No Clusters" %}</td></tr>
-    {% endfor %}
-    </tbody>
-</table>
-
-{% include "paginator.html" %}
-
-<!-- Progress bars for free memory/disk and sorting -->
-<script type="text/javascript">
-    $("#clusters .ram, #clusters .disk").progressBar(PBAR_CONF);
-</script>
 {% endblock %}
