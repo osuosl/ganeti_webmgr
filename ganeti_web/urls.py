@@ -92,8 +92,7 @@ urlpatterns += patterns('ganeti_web.views.cluster',
     # Add
     url(r'^cluster/add/?$', 'edit', name="cluster-create"),
     # Detail
-    url(r'^%s/?$' % cluster, ClusterDetailView.as_view(),
-        name="cluster-detail"),
+    url(r'^%s/?$' % cluster, ClusterDetailView.as_view(), name="cluster-detail"),
     # Edit
     url(r'^%s/edit/?$' % cluster, 'edit', name="cluster-edit"),
     # Refresh
