@@ -22,7 +22,7 @@ class UserTestMixin():
     """
     Mixin providing functions for easily creating users
     """
-    
+
     @classmethod
     def create_user(cls, username='tester', **kwargs):
         user, new = User.objects.get_or_create(username=username, **kwargs)
@@ -52,6 +52,7 @@ class UserTestMixin():
             user = self.create_user(name, **kwargs)
             # New behavior: Add the user directly to this class.
             setattr(self, name, user)
+            context.update({name: user})
 
         return context
 

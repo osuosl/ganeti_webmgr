@@ -623,15 +623,13 @@ class VMWizardClusterForm(Form):
 class VMWizardOwnerForm(Form):
     owner = ModelChoiceField(label=_('Owner'),
                              queryset=ClusterUser.objects.all(),
-                             empty_label=None)
+                             empty_label=None,
+                             help_text=_(VM_CREATE_HELP['owner']))
     template_name = CharField(label=_("Template Name"), max_length=255,
                               required=False,
                               help_text=_(VM_HELP['template_name']))
     hostname = CharField(label=_('Instance Name'), max_length=255,
                          required=False, help_text=_(VM_CREATE_HELP['hostname']))
-    owner = ModelChoiceField(label=_('Owner'),
-                             queryset=ClusterUser.objects.all(),
-                             empty_label=None, help_text=_(VM_CREATE_HELP['owner']))
 
     def _configure_for_cluster(self, cluster):
         if not cluster:
