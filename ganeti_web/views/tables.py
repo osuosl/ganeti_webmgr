@@ -63,6 +63,43 @@ class VMTable(BaseVMTable):
     class Meta:
         sequence = ("status", "hostname", "cluster", "...")
         order_by = ("hostname")
+        empty_text = "No Virtual Machines"
+
+
+class VMTemplateTable(Table):
+
+    template_name = LinkColumn(
+        "template-detail",
+        args=[A("cluster.slug"), A("template_name")],
+        verbose_name="name"
+    )
+    description = Column()
+    cluster = LinkColumn(
+        "cluster-detail",
+        args=[A("cluster.slug")],
+        accessor="cluster.slug",
+        verbose_name="cluster"
+    )
+    os = Column(verbose_name='OS')
+    memory = Column(verbose_name='RAM')
+    disk_space = Column()
+    vcpus = Column(verbose_name='vCPUs')
+
+    class Meta:
+        sequence = ("template_name", "description", "cluster", "os", "memory",
+                    "disk_space", "vcpus")
+        order_by = ("template_name")
+        empty_text = "No Templates"
+
+    def render_os(self, value):
+        return render_os(value)
+
+    def render_memory(self, value):
+        return render_storage(value)
+
+    def render_disk_space(self, value):
+        return render_storage(value)
+
 
 class ClusterTable(Table):
 
