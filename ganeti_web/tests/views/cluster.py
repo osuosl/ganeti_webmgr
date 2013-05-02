@@ -403,7 +403,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         """
         url = "/cluster/%s/virtual_machines/"
         args = self.cluster.slug
-        self.validate_get(url, args, 'ganeti/virtual_machine/table.html')
+        self.validate_get(url, args, 'ganeti/virtual_machine/list.html')
 
     def test_view_nodes(self):
         """
