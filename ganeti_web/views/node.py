@@ -39,6 +39,8 @@ from ganeti_web.models import Node, Job
 from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
                                       PaginationMixin, SortingMixin)
 
+from ganeti_web.views.virtual_machine import VMListView
+
 
 def get_node_and_cluster_or_404(cluster_slug, host):
     """
@@ -77,57 +79,45 @@ class NodeDetailView(LoginRequiredMixin, DetailView):
             "readonly": readonly,
         }
 
-class NodePrimaryListView(LoginRequiredMixin, PaginationMixin, ListView):
+
+# We can probably get away with a single view, and filter which vm's by url,
+# rather than the foreign key, but this works.
+
+class BaseNodeVMListView(VMListView):
+    def get_node(self):
+        """
+        Helper method to query the database and retrieve the node, and cluster.
+        If the user has perms return the node otherwise return a 403 error.
+        """
+        self.node, self.cluster = get_node_and_cluster_or_404(
+            self.kwargs["cluster_slug"], self.kwargs["host"])
+
+        user = self.request.user
+        if not (user.is_superuser or
+                user.has_any_perms(self.cluster, ["admin", "migrate"])):
+            raise Http403(NO_PRIVS)
+
+        return self.node
+
+
+class NodePrimaryListView(BaseNodeVMListView):
     """
     Renders a list of primary VirtualMachines on the given node.
     """
 
-    template_name = "ganeti/virtual_machine/table.html"
-
     def get_queryset(self):
-        self.node, self.cluster = get_node_and_cluster_or_404(
-            self.kwargs["cluster_slug"], self.kwargs["host"])
+        node = self.get_node()
+        return node.primary_vms.all()
 
-        user = self.request.user
-        if not (user.is_superuser or
-                user.has_any_perms(self.cluster, ["admin", "migrate"])):
-            raise Http403(NO_PRIVS)
 
-        return self.node.primary_vms.all()
-
-    def get_context_data(self, **kwargs):
-        kwargs.update({
-            "tableID": "table_primary",
-            "primary_node": True,
-            "node": self.node,
-        })
-        return kwargs
-
-class NodeSecondaryListView(LoginRequiredMixin, PaginationMixin, ListView):
+class NodeSecondaryListView(BaseNodeVMListView):
     """
     Renders a list of secondary VirtualMachines on the given node.
     """
 
-    template_name = "ganeti/virtual_machine/table.html"
-
     def get_queryset(self):
-        self.node, self.cluster = get_node_and_cluster_or_404(
-            self.kwargs["cluster_slug"], self.kwargs["host"])
-
-        user = self.request.user
-        if not (user.is_superuser or
-                user.has_any_perms(self.cluster, ["admin", "migrate"])):
-            raise Http403(NO_PRIVS)
-
-        return self.node.secondary_vms.all()
-
-    def get_context_data(self, **kwargs):
-        kwargs.update({
-            "tableID": "table_secondary",
-            "secondary_node": True,
-            "node": self.node,
-        })
-        return kwargs
+        node = self.get_node()
+        return node.secondary_vms.all()
 
 
 @login_required

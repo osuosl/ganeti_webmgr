@@ -69,14 +69,14 @@ class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
         url = '/cluster/%s/node/%s/primary'
         users = [self.superuser, self.user_migrate, self.user_admin]
         self.assert_standard_fails(url, args)
-        self.assert_200(url, args, users, 'ganeti/virtual_machine/table.html')
+        self.assert_200(url, args, users, 'ganeti/virtual_machine/list.html')
 
     def test_secondary_vms(self):
         args = (self.cluster.slug, self.node.hostname)
         url = '/cluster/%s/node/%s/secondary'
         users = [self.superuser, self.user_migrate, self.user_admin]
         self.assert_standard_fails(url, args)
-        self.assert_200(url, args, users, 'ganeti/virtual_machine/table.html')
+        self.assert_200(url, args, users, 'ganeti/virtual_machine/list.html')
 
     def test_object_log(self):
         args = (self.cluster.slug, self.node.hostname)
