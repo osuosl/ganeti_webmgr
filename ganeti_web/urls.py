@@ -31,7 +31,8 @@ from ganeti_web.views.node import (NodeDetailView, NodePrimaryListView,
                                    NodeSecondaryListView)
 from ganeti_web.views.virtual_machine import VMDeleteView, VMListView
 from ganeti_web.views.vm_template import (TemplateFromVMInstanceView,
-                                          VMInstanceFromTemplateView)
+                                          VMInstanceFromTemplateView,
+                                          TemplateListView)
 
 cluster_slug = '(?P<cluster_slug>[-_A-Za-z0-9]+)'
 cluster = 'cluster/%s' % cluster_slug
@@ -205,7 +206,7 @@ urlpatterns += patterns('ganeti_web.views.virtual_machine',
 template_prefix = '%s/template/%s' % (cluster, template)
 urlpatterns += patterns('ganeti_web.views.vm_template',
     # List
-    url(r'^templates/$', 'templates', name='template-list'),
+    url(r'^templates/$', TemplateListView.as_view(), name='template-list'),
     # Create
     url(r'^template/create/$',
         vm_wizard(initial_dict={0: {'choices': [u'template_name']}}),
