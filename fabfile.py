@@ -2,7 +2,7 @@ import os
 
 import pkg_resources
 
-from fabric.api import env, abort
+from fabric.api import env, abort, task
 from fabric.context_managers import settings, hide, lcd
 from fabric.contrib.console import confirm
 from fabric.contrib.files import exists
@@ -72,6 +72,7 @@ env.MANIFEST = [
 ]
 
 
+@task
 def dev():
     """
     Configure development deployment.
@@ -79,6 +80,7 @@ def dev():
     env.environment = DEV
 
 
+@task
 def deploy():
     """
     Install all dependencies from git and pip.
@@ -88,6 +90,8 @@ def deploy():
     install_dependencies_git()
     novnc()
 
+
+@task
 def clean():
     """
     In a development environment, remove all installed packages and symlinks.
@@ -101,6 +105,7 @@ def clean():
         else:
             abort('Aborting clean.')
 
+@task
 def update():
     """
     In a development environment, update all develop branches.
@@ -263,6 +268,7 @@ def novnc():
         local("mv kanaka-noVNC-*/ noVNC")
 
 
+@task
 def tarball():
     """
     Package a release tarball.
