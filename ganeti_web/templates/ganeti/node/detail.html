@@ -7,6 +7,7 @@
     <script type="text/javascript" src="{{STATIC_URL}}/js/jquery-ui.min.js"></script>
     <script type="text/javascript" src="{{STATIC_URL}}/js/jquery.form.js"></script>
     <script type="text/javascript" src="{{STATIC_URL}}/js/jquery.progressbar.js"></script>
+    <script type="text/javascript" src="{{STATIC_URL}}/js/ajax_tab_handler.js"></script>
     <script type="text/javascript" src="{{STATIC_URL}}/js/job_status.js"></script>
     <script type="text/javascript">
         var job_poller;
@@ -23,7 +24,7 @@
                 75:  '{{STATIC_URL}}/images/progressbar/progressbg_red.gif'
             }
         };
-        
+
         $(document).ready(function() {
             $('#tabs').tabs({
                 spinner: false,
@@ -32,13 +33,16 @@
                 select: function(event, ui) {
                     window.location.hash = ui.tab.hash;
                 },
+                load: function(event, ui) {
+                    init_ajax_tab_handler(event, ui, ".pagination a, .sortable a");
+                },
                 ajaxOptions: {
                     error: function(xhr, status, index, anchor) {
                         $(anchor.hash).html("{% trans "Couldn't load this tab. We'll try to fix this as soon as possible" %}.");
                     }
                 }
             });
-            
+
             $(".ram, .disk").progressBar(PBAR_CONF);
 
             $(".modify, .migrate, .evacuate").click(function(event){
@@ -67,9 +71,9 @@
                             }
                         },
                         style: {
-                            name: 'dark', 
-                            border:{radius:5}, 
-                            width:400, 
+                            name: 'dark',
+                            border:{radius:5},
+                            width:400,
                             background:'#eeeeee'
                         },
                         show: {when:false, ready:true},
@@ -158,7 +162,7 @@
                 </a>
             </li>
             <li>
-                <a title="secondary" 
+                <a title="secondary"
                         href="{% url node-secondary-vms cluster.slug node.hostname %}">
                     <span>{% trans "Secondary" %}</span>
                 </a>
@@ -181,8 +185,8 @@
                 </a>
             </li>
             <li>
-                <a class="button migrate" 
-                        title="migrates all primary instances of this node" 
+                <a class="button migrate"
+                        title="migrates all primary instances of this node"
                         href="{% url node-migrate cluster.slug node.hostname %}">
                     {% trans "Migrate" %}
                 </a>
