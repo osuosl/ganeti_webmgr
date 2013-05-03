@@ -62,7 +62,7 @@ from ganeti_web.utilities import (cluster_os_list, compare, os_prettify,
 from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
                                       PaginationMixin, GWMBaseView)
 
-from ganeti_web.views.tables import VMTable
+from ganeti_web.views.tables import BaseVMTable
 
 
 #XXX No more need for tastypie dependency for 0.8
@@ -89,14 +89,14 @@ def get_vm_and_cluster_or_404(cluster_slug, instance):
     raise Http404('Virtual Machine does not exist')
 
 
-class VMListView(LoginRequiredMixin, PaginationMixin, GWMBaseView,
-                 SingleTableView):
+class BaseVMListView(LoginRequiredMixin, PaginationMixin, GWMBaseView,
+                     SingleTableView):
     """
     A view for listing VirtualMachines. It does so using a custom table object
     containing the logic for displaying the list.
     """
     model = VirtualMachine
-    table_class = VMTable
+    table_class = BaseVMTable
     template_name = "ganeti/virtual_machine/list.html"
 
     def get_template_names(self):
@@ -106,10 +106,12 @@ class VMListView(LoginRequiredMixin, PaginationMixin, GWMBaseView,
             template = ['ganeti/virtual_machine/list.html']
         return template
 
+
+class VMListView(BaseVMListView):
     def get_queryset(self):
         # queryset takes precedence over model
         self.queryset = vm_qs_for_users(self.request.user)
-        qs = super(VMListView, self).get_queryset()
+        qs = super(BaseVMListView, self).get_queryset()
         return qs
 
     def get_context_data(self, **kwargs):

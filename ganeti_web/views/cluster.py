@@ -52,8 +52,8 @@ from ganeti_web.models import (Cluster, ClusterUser, Profile, SSHKey,
 from ganeti_web.views import render_404
 from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
                                       PaginationMixin, GWMBaseView)
-from ganeti_web.views.tables import BaseVMTable, ClusterTable
-from ganeti_web.views.virtual_machine import VMListView
+from ganeti_web.views.tables import ClusterVMTable, ClusterTable
+from ganeti_web.views.virtual_machine import BaseVMListView
 from ganeti_web.util.client import GanetiApiError
 
 
@@ -98,8 +98,8 @@ class ClusterListView(LoginRequiredMixin, PaginationMixin, GWMBaseView,
         return context
 
 
-class ClusterVMListView(VMListView):
-    table_class = BaseVMTable
+class ClusterVMListView(BaseVMListView):
+    table_class = ClusterVMTable
 
     def get_queryset(self):
         self.get_kwargs()
