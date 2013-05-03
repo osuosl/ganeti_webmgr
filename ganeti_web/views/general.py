@@ -170,7 +170,7 @@ def get_vm_counts(clusters):
         annotated = VirtualMachine.objects \
             .filter(cluster__in=clusters,
                     owner=None).order_by().values("cluster__pk") \
-                        .annotate(orphaned=Count("id"))
+            .annotate(orphaned=Count("id"))
 
         result = {}
         for i in annotated:
@@ -280,8 +280,8 @@ def used_resources(request, rest=False):
         user_type = ContentType.objects.get_for_model(Profile)
         if cu.real_type_id == user_type.pk:
             if not Profile.objects.filter(clusteruser_ptr=cu.pk, user=user) \
-                .exists():
-                    raise Http403(_('You are not authorized to view this page'))
+                    .exists():
+                raise Http403(_('You are not authorized to view this page'))
         else:
             if not Organization.objects.filter(clusteruser_ptr=cu.pk,
                                                group__user=user).exists():
