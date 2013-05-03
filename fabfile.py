@@ -15,28 +15,35 @@ from fabric.operations import local, require, prompt
 #    GIT_INSTALL - install packages from git:
 #
 #                    url - git url for checkouts
-#                    development - head to checkout for dev.  Defaults to master
-#                    production - head to checkout for prod.  defaults to master.
-#                    symlink - directory to symlink into project.  uses project
-#                              name if blank
+#                    development - head to checkout for dev.
+#                                  Defaults to master
+#                    production - head to checkout for prod.
+#                                 Defaults to master.
+#                    symlink - directory to symlink into project.
+#                              Uses project name if blank
 # Packages from git are given preference for dev environment. PIP is given
 # preference for production environments
 
 PIP_INSTALL = dict((r.project_name, str(r)) for r in
-                   pkg_resources.parse_requirements(open("requirements/prod.txt").read()))
+                   pkg_resources.parse_requirements(
+                       open("requirements/prod.txt").read()
+                   ))
 
-GIT_INSTALL =  {
-    'django-object-permissions':{
-        'url':'git://git.osuosl.org/gitolite/django/django_object_permissions',
-        'development':'develop',
-        },
-    'django-object-log':{
-        'url':'git://git.osuosl.org/gitolite/django/django_object_log',
-        'development':'develop',
-        },
-    'twisted_vncauthproxy':{
-        'url':'git://git.osuosl.org/gitolite/ganeti/twisted_vncauthproxy',
-        'development':'develop',
+GIT_INSTALL = {
+    'django-object-permissions': {
+        'url': 'git://git.osuosl.org/gitolite/django/'
+               'django_object_permissions',
+        'development': 'develop',
+    },
+    'django-object-log': {
+        'url': 'git://git.osuosl.org/gitolite/django/'
+               'django_object_log',
+        'development': 'develop',
+    },
+    'twisted_vncauthproxy': {
+        'url': 'git://git.osuosl.org/gitolite/ganeti/'
+               'twisted_vncauthproxy',
+        'development': 'develop',
     },
 }
 
@@ -106,6 +113,7 @@ def clean():
         else:
             abort('Aborting clean.')
 
+
 @task
 def update():
     """
@@ -114,16 +122,17 @@ def update():
 
     if env.environment != DEV:
         raise Exception('must be in a development environment in order to'
-            'update develop branches.')
+                        'update develop branches.')
     else:
         with lcd('%(doc_root)s/dependencies' % env):
             for git_dir, opts in GIT_INSTALL.items():
                 env.git_repo = git_dir
                 if (_exists('%(doc_root)s/dependencies/%(git_repo)s' % env) and
-                    'development' in opts and 'checkout' not in opts):
+                        'development' in opts and 'checkout' not in opts):
                     with lcd(git_dir):
                         print 'Updating git repo: %(git_repo)s' % env
                         local('git pull --ff')
+
 
 def _exists(path):
     """
@@ -158,7 +167,7 @@ def create_virtualenv(virtualenv='venv', force=False):
             local('virtualenv %(virtualenv)s --distribute' % env)
 
             # now lets make sure the virtual env has the the newest pip
-            local(str(verbose_check()+'--upgrade pip') % env )
+            local(str(verbose_check()+'--upgrade pip') % env)
 
 
 def create_env():
@@ -182,6 +191,7 @@ def verbose_check():
         install_str += '-q '
 
     return install_str
+
 
 def install_dependencies_pip():
     """
@@ -215,7 +225,8 @@ def install_dependencies_git():
 
         # check for required values
         if 'url' not in opts:
-            raise Exception('missing required argument "url" for git repo: %s' % name)
+            raise Exception('missing required argument "url" '
+                            'for git repo: %s' % name)
 
         # set git head to check out
         if env.environment in opts:
@@ -238,7 +249,7 @@ def install_dependencies_git():
                     local('git fetch')
 
                     # Attempt to create a tracked branch and update it.
-                    with settings(hide('warnings','stderr'), warn_only=True):
+                    with settings(hide('warnings', 'stderr'), warn_only=True):
                         local('git checkout -t origin/%(head)s' % opts)
                         local('git pull')
 
@@ -246,19 +257,23 @@ def install_dependencies_git():
         # not have it and will need to be symlinked into the project
         if _exists('%(doc_root)s/dependencies/%(git_repo)s/setup.py' % env):
             with lcd(env.doc_root):
-                local(str(verbose_check()+'-e dependencies/%(git_repo)s') % env)
+                local(
+                    str(verbose_check()+'-e dependencies/%(git_repo)s') % env
+                )
 
         else:
             # else, configure and create symlink to git repo
-            with lcd (env.doc_root):
+            with lcd(env.doc_root):
                 if 'symlink' in opts:
                     env.symlink = opts['symlink']
-                    env.symlink_path = '%(doc_root)s/dependencies/%(git_repo)s/%(symlink)s' % env
+                    env.symlink_path = '%(doc_root)s/dependencies/' \
+                                       '%(git_repo)s/%(symlink)s' % env
                 else:
                     env.symlink = name
-                    env.symlink_path = '%(doc_root)s/dependencies/%(git_repo)s' % env
+                    env.symlink_path = '%(doc_root)s/dependencies/' \
+                                       '%(git_repo)s' % env
 
-                with settings(hide('warnings','stderr'), warn_only=True):
+                with settings(hide('warnings', 'stderr'), warn_only=True):
                     local('ln -sf %(symlink_path)s %(doc_root)s' % env)
 
 
@@ -296,6 +311,7 @@ def tarball():
         )
         local('tar zcf %(tarball)s %(files)s --exclude=*.pyc' % data)
         local('mv %(tarball)s ./ganeti_webmgr/' % data)
+
 
 @task
 def v():
