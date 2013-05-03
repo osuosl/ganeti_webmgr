@@ -48,6 +48,7 @@ PROD = 'production'
 env.doc_root = '.'
 env.remote = False
 env.environment = PROD
+env.verbose = False
 # List of stuff to include in the tarball, recursive.
 env.MANIFEST = [
     # Directories
@@ -157,7 +158,7 @@ def create_virtualenv(virtualenv='venv', force=False):
             local('virtualenv %(virtualenv)s --distribute' % env)
 
             # now lets make sure the virtual env has the the newest pip
-            local('%(virtualenv)s/bin/pip install -q --upgrade pip' % env)
+            local(str(verbose_check()+'--upgrade pip') % env )
 
 
 def create_env():
@@ -172,6 +173,16 @@ def create_env():
             local('mkdir dependencies')
 
 
+def verbose_check():
+    """
+    Default to quiet install when env.verbose is false
+    """
+    install_str = '%(virtualenv)s/bin/pip install '
+    if not env.verbose:
+        install_str += '-q '
+
+    return install_str
+
 def install_dependencies_pip():
     """
     Install all dependencies available from pip.
@@ -182,7 +193,7 @@ def install_dependencies_pip():
     with lcd(env.doc_root):
         # Run the installation with pip, passing in our
         # requirements/prod.txt.
-        local('%(virtualenv)s/bin/pip install -qr requirements/prod.txt' % env)
+        local(str(verbose_check()+'-r requirements/prod.txt') % env)
 
 
 def install_dependencies_git():
@@ -235,7 +246,7 @@ def install_dependencies_git():
         # not have it and will need to be symlinked into the project
         if _exists('%(doc_root)s/dependencies/%(git_repo)s/setup.py' % env):
             with lcd(env.doc_root):
-                local('%(virtualenv)s/bin/pip install -q -e dependencies/%(git_repo)s' % env)
+                local(str(verbose_check()+'-e dependencies/%(git_repo)s') % env)
 
         else:
             # else, configure and create symlink to git repo
@@ -285,3 +296,10 @@ def tarball():
         )
         local('tar zcf %(tarball)s %(files)s --exclude=*.pyc' % data)
         local('mv %(tarball)s ./ganeti_webmgr/' % data)
+
+@task
+def v():
+    """
+    Enable verbose output in some commands
+    """
+    env.verbose = True
