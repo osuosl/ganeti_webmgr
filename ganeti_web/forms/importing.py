@@ -23,7 +23,7 @@ from ganeti_web.models import ClusterUser
 
 class VirtualMachineForm(forms.Form):
     virtual_machines = forms.MultipleChoiceField()
-    
+
     def __init__(self, choices, *args, **kwargs):
         super(VirtualMachineForm, self).__init__(*args, **kwargs)
         self.fields['virtual_machines'].choices = choices
@@ -42,7 +42,8 @@ class ImportForm(VirtualMachineForm):
     Form used for assigning owners to VirtualMachines that do not yet have an
     owner (orphans).
     """
-    owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), required=False)
+    owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(),
+                                   required=False)
 
 
 class NodeForm(forms.Form):
@@ -51,4 +52,3 @@ class NodeForm(forms.Form):
     def __init__(self, choices, *args, **kwargs):
         super(NodeForm, self).__init__(*args, **kwargs)
         self.fields['nodes'].choices = choices
-

@@ -21,7 +21,8 @@ class autocomplete_search_form(SearchForm):
 
         # Perform an autocomplete search query on the 'content_auto' fields of
         # the searchable models
-        sqs = self.searchqueryset.autocomplete(content_auto=self.cleaned_data['q'])
+        sqs = self.searchqueryset.autocomplete(
+            content_auto=self.cleaned_data['q'])
 
         if self.load_all:
             sqs = sqs.load_all()

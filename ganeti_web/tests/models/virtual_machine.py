@@ -22,7 +22,7 @@ from django.test import TestCase
 
 from ganeti_web.util.proxy import RapiProxy
 from ganeti_web.util.proxy.constants import (INSTANCE, JOB, JOB_RUNNING,
-    JOB_DELETE_SUCCESS)
+                                             JOB_DELETE_SUCCESS)
 from ganeti_web import models, constants
 
 VirtualMachine = models.VirtualMachine
@@ -36,6 +36,7 @@ __all__ = (
     'TestVirtualMachineModel',
     'VirtualMachineTestCaseMixin',
 )
+
 
 class VirtualMachineTestCaseMixin(object):
     def create_virtual_machine(self, cluster=None, hostname='vm1.example.bak'):
@@ -80,7 +81,8 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         When cluster is saved hash for its VirtualMachines should be updated
         """
         vm0, cluster = self.create_virtual_machine()
-        vm1, cluster = self.create_virtual_machine(cluster, 'test2.example.bak')
+        vm1, cluster = self.create_virtual_machine(cluster,
+                                                   'test2.example.bak')
 
         self.assertEqual(vm0.cluster_hash, cluster.hash)
         self.assertEqual(vm1.cluster_hash, cluster.hash)
@@ -90,8 +92,10 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         cluster.save()
         vm0 = VirtualMachine.objects.get(pk=vm0.id)
         vm1 = VirtualMachine.objects.get(pk=vm1.id)
-        self.assertEqual(vm0.cluster_hash, cluster.hash, 'VirtualMachine does not have updated cache')
-        self.assertEqual(vm1.cluster_hash, cluster.hash, 'VirtualMachine does not have updated cache')
+        self.assertEqual(vm0.cluster_hash, cluster.hash,
+                         'VirtualMachine does not have updated cache')
+        self.assertEqual(vm1.cluster_hash, cluster.hash,
+                         'VirtualMachine does not have updated cache')
 
         vm0.delete()
         vm1.delete()
@@ -135,12 +139,14 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         # setting owner
         vm.owner = owner0
         vm.save()
-        self.assertEqual(['%s%s' % (constants.OWNER_TAG, owner0.id)], vm.info['tags'])
+        self.assertEqual(['%s%s' % (constants.OWNER_TAG, owner0.id)],
+                         vm.info['tags'])
 
         # changing owner
         vm.owner = owner1
         vm.save()
-        self.assertEqual(['%s%s' % (constants.OWNER_TAG, owner1.id)], vm.info['tags'])
+        self.assertEqual(['%s%s' % (constants.OWNER_TAG, owner1.id)],
+                         vm.info['tags'])
 
         # setting owner to none
         vm.owner = None
@@ -200,14 +206,16 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         vm = VirtualMachine.objects.get(id=vm.id)
         self.assertTrue(vm.ignore_cache)
         self.assertTrue(vm.last_job_id)
-        self.assertTrue(Job.objects.filter(id=job.id).values()[0]['ignore_cache'])
+        self.assertTrue(
+            Job.objects.filter(id=job.id).values()[0]['ignore_cache'])
 
         # finished job resets ignore_cache flag
         vm.rapi.GetJobStatus.response = JOB
         vm = VirtualMachine.objects.get(id=vm.id)
         self.assertFalse(vm.ignore_cache)
         self.assertFalse(vm.last_job_id)
-        self.assertFalse(Job.objects.filter(id=job.id).values()[0]['ignore_cache'])
+        self.assertFalse(
+            Job.objects.filter(id=job.id).values()[0]['ignore_cache'])
         self.assertTrue(Job.objects.get(id=job.id).finished)
 
         job.delete()
@@ -232,7 +240,8 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         vm = VirtualMachine.objects.get(id=vm.id)
         self.assertTrue(vm.ignore_cache)
         self.assertTrue(vm.last_job_id)
-        self.assertTrue(Job.objects.filter(id=job.id).values()[0]['ignore_cache'])
+        self.assertTrue(
+            Job.objects.filter(id=job.id).values()[0]['ignore_cache'])
 
         # finished job resets ignore_cache flag
         vm.rapi.GetJobStatus.response = JOB
@@ -240,7 +249,8 @@ class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
         vm = VirtualMachine.objects.get(id=vm.id)
         self.assertFalse(vm.ignore_cache)
         self.assertFalse(vm.last_job_id)
-        self.assertFalse(Job.objects.filter(id=job.id).values()[0]['ignore_cache'])
+        self.assertFalse(
+            Job.objects.filter(id=job.id).values()[0]['ignore_cache'])
         self.assertTrue(Job.objects.get(id=job.id).finished)
 
         job.delete()

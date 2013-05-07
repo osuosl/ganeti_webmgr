@@ -58,8 +58,9 @@ class TestNodeModel(TestCase, NodeTestCaseMixin):
         Test instantiating a VirtualMachine with extra parameters
         """
         # Define cluster for use
-        node_hostname='node.test.org'
-        cluster = Cluster.objects.create(hostname='test.example.bak', slug='OSL_TEST')
+        node_hostname = 'node.test.org'
+        cluster = Cluster.objects.create(hostname='test.example.bak',
+                                         slug='OSL_TEST')
 
         # Cluster
         node = Node.objects.create(cluster=cluster, hostname=node_hostname)

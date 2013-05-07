@@ -40,14 +40,17 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
         self.tearDown()
         models.client.GanetiRapiClient = RapiProxy
 
-        cluster = Cluster(hostname='test.cluster', slug='test', username='tester', password='secret')
-        cluster.id = 23 # XXX MySQL DB does not reset auto-increment IDs when an object is removed
+        cluster = Cluster(hostname='test.cluster', slug='test',
+                          username='tester', password='secret')
+        cluster.id = 23  # XXX MySQL DB does not reset auto-increment
+                         # IDs when an object is removed
         cluster.save()
         cluster.sync_nodes()
 
-        template = VirtualMachineTemplate(template_name="Template1", cluster=cluster)
-        template.disks = [{'size':500}]
-        template.nics = [{'mode': 'bridged', 'link':''}]
+        template = VirtualMachineTemplate(template_name="Template1",
+                                          cluster=cluster)
+        template.disks = [{'size': 500}]
+        template.nics = [{'mode': 'bridged', 'link': ''}]
         template.save()
 
         instance = VirtualMachine(hostname='new.vm.hostname', cluster=cluster)
@@ -58,7 +61,7 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
 
         # Users
         self.create_users([
-            ('superuser', {'is_superuser':True}),
+            ('superuser', {'is_superuser': True}),
             'cluster_admin',
             'create_vm',
             'unauthorized',
@@ -70,7 +73,7 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
             cluster=cluster.pk,
             template_name='foo_bar',
             memory=512,
-            disk_template = 'plain',
+            disk_template='plain',
             disk_count=0,
             nic_count=0,
         )
@@ -99,7 +102,7 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
         Test viewing details of a virtual machine template.
         """
         url = '/cluster/%s/template/%s'
-        args = (self.cluster.slug,self.template)
+        args = (self.cluster.slug, self.template)
         self.assert_standard_fails(url, args, authorized=False)
 
     def test_create_instance_from_template_view(self):
@@ -111,8 +114,9 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
 
         # GET
         self.assert_200(url, args,
-            users = [self.superuser, self.cluster_admin, self.create_vm],
-            template='ganeti/vm_template/to_vm.html')
+                        users=[self.superuser, self.cluster_admin,
+                               self.create_vm],
+                        template='ganeti/vm_template/to_vm.html')
 
     def test_delete_view(self):
         """
@@ -121,23 +125,30 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
         url = '/cluster/%s/template/%s/delete/'
         args = (self.cluster.slug, self.template)
 
-        self.assertTrue(VirtualMachineTemplate.objects.filter(pk=self.template.pk).exists())
+        self.assertTrue(
+            VirtualMachineTemplate.objects.filter(
+                pk=self.template.pk).exists())
         self.assert_401(url, args)
         self.assert_401(url, args, method='delete')
-        self.assertTrue(VirtualMachineTemplate.objects.filter(pk=self.template.pk).exists())
+        self.assertTrue(
+            VirtualMachineTemplate.objects.filter(
+                pk=self.template.pk).exists())
 
         def test_exist(user, request):
-            self.assertFalse(VirtualMachineTemplate.objects.filter(pk=self.template.pk).exists())
+            self.assertFalse(
+                VirtualMachineTemplate.objects.filter(
+                    pk=self.template.pk).exists())
 
-        self.assert_200(url, args, users=[self.superuser, self.cluster_admin,
-                                          self.create_vm],
-            method='delete',
-            setup=True,
-            tests=test_exist,
-            mime='application/json')
+        self.assert_200(url, args,
+                        users=[self.superuser, self.cluster_admin,
+                               self.create_vm],
+                        method='delete',
+                        setup=True,
+                        tests=test_exist,
+                        mime='application/json')
 
         self.assert_403(url, args, users=[self.unauthorized],
-            method='delete')
+                        method='delete')
 
     def test_copy_view(self):
         """
@@ -149,26 +160,32 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
 
         # GET
         self.assert_200(url, args,
-            users = [self.superuser, self.create_vm, self.cluster_admin],
-            template='ganeti/vm_template/copy.html')
+                        users=[self.superuser, self.create_vm,
+                               self.cluster_admin],
+                        template='ganeti/vm_template/copy.html')
         self.assert_403(url, args,
-            users = [self.unauthorized])
+                        users=[self.unauthorized])
 
         def test_name(user, request):
-            self.assertTrue(VirtualMachineTemplate.objects.filter(template_name='asdf').exists())
+            self.assertTrue(
+                VirtualMachineTemplate.objects.filter(
+                    template_name='asdf').exists())
         # POST
         self.assert_200(url, args, method='post',
-            users=[self.superuser, self.cluster_admin, self.create_vm],
-            data={'template_name':'asdf'},
-            setup=True,
-            follow=True,
-            tests=test_name,
-            template='ganeti/vm_template/detail.html')
+                        users=[self.superuser, self.cluster_admin,
+                               self.create_vm],
+                        data={'template_name': 'asdf'},
+                        setup=True,
+                        follow=True,
+                        tests=test_name,
+                        template='ganeti/vm_template/detail.html')
 
         self.assert_403(url, args, method='post',
-            data={'template_name':'asdfff'},
-            users=[self.unauthorized])
-        self.assertFalse(VirtualMachineTemplate.objects.filter(template_name='asdfff').exists())
+                        data={'template_name': 'asdfff'},
+                        users=[self.unauthorized])
+        self.assertFalse(
+            VirtualMachineTemplate.objects.filter(
+                template_name='asdfff').exists())
 
     def test_create_template_from_instance(self):
         """
@@ -184,10 +201,11 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
 
         # GET
         self.assert_200(url, args,
-            users = [self.superuser, self.create_vm, self.cluster_admin],
-            template='ganeti/vm_template/to_instance.html')
+                        users=[self.superuser, self.create_vm,
+                               self.cluster_admin],
+                        template='ganeti/vm_template/to_instance.html')
         self.assert_403(url, args,
-            users = [self.unauthorized])
+                        users=[self.unauthorized])
 
     def test_create_instance_from_template(self):
         """
@@ -203,9 +221,9 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
 
         # GET
         self.assert_200(url, args,
-            users=[self.superuser, self.create_vm, self.cluster_admin],
-            template='ganeti/vm_template/to_vm.html')
+                        users=[self.superuser, self.create_vm,
+                               self.cluster_admin],
+                        template='ganeti/vm_template/to_vm.html')
 
         self.assert_403(url, args,
-            users = [self.unauthorized])
-
+                        users=[self.unauthorized])

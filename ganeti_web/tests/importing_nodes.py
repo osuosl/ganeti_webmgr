@@ -40,7 +40,7 @@ class NodeImportBase(TestCase):
 
     def setUp(self):
         self.tearDown()
-        
+
         models.client.GanetiRapiClient = RapiProxy
 
         self.unauthorized = User(id=2, username='tester0')
@@ -50,30 +50,38 @@ class NodeImportBase(TestCase):
         self.unauthorized.set_password('secret')
         self.authorized.set_password('secret')
         self.superuser.set_password('secret')
-        
+
         self.unauthorized.save()
         self.authorized.save()
         self.superuser.save()
 
-        self.cluster0 = Cluster.objects.create(hostname='test0', slug='OSL_TEST0')
-        self.cluster1 = Cluster.objects.create(hostname='test1', slug='OSL_TEST1')
+        self.cluster0 = Cluster.objects.create(hostname='test0',
+                                               slug='OSL_TEST0')
+        self.cluster1 = Cluster.objects.create(hostname='test1',
+                                               slug='OSL_TEST1')
 
         self.authorized.grant('admin', self.cluster0)
 
-        self.cluster0.rapi.GetNodes.response = ['node0','node2']
-        self.cluster1.rapi.GetNodes.response = ['node3','node5']
+        self.cluster0.rapi.GetNodes.response = ['node0', 'node2']
+        self.cluster1.rapi.GetNodes.response = ['node3', 'node5']
 
-        self.vm = VirtualMachine.objects.create(hostname='gimager.example.bak', cluster=self.cluster0)
+        self.vm = VirtualMachine.objects.create(hostname='gimager.example.bak',
+                                                cluster=self.cluster0)
 
-        self.node0 = Node.objects.create(hostname='node0', cluster=self.cluster0)
-        self.node1 = Node.objects.create(hostname='node1', cluster=self.cluster0)
-        self.node3 = Node.objects.create(hostname='node3', cluster=self.cluster1)
-        self.node4 = Node.objects.create(hostname='node4', cluster=self.cluster1)
+        self.node0 = Node.objects.create(hostname='node0',
+                                         cluster=self.cluster0)
+        self.node1 = Node.objects.create(hostname='node1',
+                                         cluster=self.cluster0)
+        self.node3 = Node.objects.create(hostname='node3',
+                                         cluster=self.cluster1)
+        self.node4 = Node.objects.create(hostname='node4',
+                                         cluster=self.cluster1)
 
         self.c = Client()
 
     def tearDown(self):
-        # reset proxy object default values, could cause collisions in other tests
+        # reset proxy object default values,
+        # could cause collisions in other tests
         if self.cluster0 is not None:
             self.cluster0.rapi.GetNodes.response = NODES
         if self.cluster1 is not None:
@@ -94,7 +102,8 @@ class NodeImportBase(TestCase):
 
     def test_unauthorized(self):
         """ unauthorized user """
-        self.assertTrue(self.c.login(username=self.unauthorized.username, password='secret'))
+        self.assertTrue(self.c.login(username=self.unauthorized.username,
+                                     password='secret'))
         response = self.c.get(self.url)
         self.assertEqual(403, response.status_code)
 
@@ -105,26 +114,32 @@ class NodeMissingDBTests(NodeImportBase):
 
     def test_get_form(self):
         """ authorized get (cluster admin perm) """
-        self.assertTrue(self.c.login(username=self.authorized.username, password='secret'))
+        self.assertTrue(self.c.login(username=self.authorized.username,
+                                     password='secret'))
         response = self.c.get(self.url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/importing/nodes/import.html')
-        self.assertEqual([('%s:node2'%self.cluster0.pk,'test0','node2')], response.context['nodes'])
+        self.assertEqual([('%s:node2' % self.cluster0.pk, 'test0', 'node2')],
+                         response.context['nodes'])
 
     def test_get_form_superuser(self):
         """ authorized get (superuser) """
-        self.assertTrue(self.c.login(username=self.superuser.username, password='secret'))
+        self.assertTrue(self.c.login(username=self.superuser.username,
+                                     password='secret'))
         response = self.c.get(self.url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/importing/nodes/import.html')
-        self.assertEqual([('%s:node2'%self.cluster0.pk,'test0','node2'), ('%s:node5'%self.cluster1.pk,'test1','node5')], response.context['nodes'])
+        self.assertEqual([('%s:node2' % self.cluster0.pk, 'test0', 'node2'),
+                         ('%s:node5' % self.cluster1.pk, 'test1', 'node5')],
+                         response.context['nodes'])
 
     def test_invalid_node(self):
         """ POST - invalid node """
-        self.assertTrue(self.c.login(username=self.superuser.username, password='secret'))
-        data = {'nodes':[-1]}
+        self.assertTrue(self.c.login(username=self.superuser.username,
+                                     password='secret'))
+        data = {'nodes': [-1]}
         response = self.c.post(self.url, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
@@ -133,8 +148,9 @@ class NodeMissingDBTests(NodeImportBase):
 
     def test_unauthorized_post(self):
         """ POST - user does not have perms for cluster """
-        self.assertTrue(self.c.login(username=self.authorized.username, password='secret'))
-        data = {'nodes':[self.node3.hostname]}
+        self.assertTrue(self.c.login(username=self.authorized.username,
+                                     password='secret'))
+        data = {'nodes': [self.node3.hostname]}
         response = self.c.post(self.url, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
@@ -143,8 +159,9 @@ class NodeMissingDBTests(NodeImportBase):
 
     def test_successful_import(self):
         """ POST - success """
-        self.assertTrue(self.c.login(username=self.authorized.username, password='secret'))
-        data = {'nodes':['%s:node2'%self.cluster0.pk]}
+        self.assertTrue(self.c.login(username=self.authorized.username,
+                                     password='secret'))
+        data = {'nodes': ['%s:node2' % self.cluster0.pk]}
         response = self.c.post(self.url, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
@@ -165,50 +182,63 @@ class NodeMissingTests(NodeImportBase):
 
     def test_get_form_authorized(self):
         # authorized get (cluster admin perm)
-        self.assertTrue(self.c.login(username=self.authorized.username, password='secret'))
+        self.assertTrue(self.c.login(username=self.authorized.username,
+                                     password='secret'))
         response = self.c.get(self.url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'ganeti/importing/nodes/missing.html')
-        self.assertEqual([('node1','test0','node1')], response.context['nodes'])
+        self.assertTemplateUsed(response,
+                                'ganeti/importing/nodes/missing.html')
+        self.assertEqual([('node1', 'test0', 'node1')],
+                         response.context['nodes'])
 
     def test_get_form_superuser(self):
         """ authorized get (superuser) """
-        self.assertTrue(self.c.login(username=self.superuser.username, password='secret'))
+        self.assertTrue(self.c.login(username=self.superuser.username,
+                        password='secret'))
         response = self.c.get(self.url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'ganeti/importing/nodes/missing.html')
-        self.assertEqual([('node1','test0','node1'), ('node4','test1','node4')], response.context['nodes'])
+        self.assertTemplateUsed(response,
+                                'ganeti/importing/nodes/missing.html')
+        self.assertEqual([('node1', 'test0', 'node1'),
+                         ('node4', 'test1', 'node4')],
+                         response.context['nodes'])
 
     def test_invalid_node(self):
         """ POST - invalid vm """
-        self.assertTrue(self.c.login(username=self.superuser.username, password='secret'))
-        data = {'nodes':[-1]}
+        self.assertTrue(self.c.login(username=self.superuser.username,
+                                     password='secret'))
+        data = {'nodes': [-1]}
         response = self.c.post(self.url, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'ganeti/importing/nodes/missing.html')
+        self.assertTemplateUsed(response,
+                                'ganeti/importing/nodes/missing.html')
         self.assertTrue(response.context['form'].errors)
 
     def test_post_unauthorized(self):
         """ POST - user does not have perms for cluster """
-        self.assertTrue(self.c.login(username=self.authorized.username, password='secret'))
-        data = {'nodes':[self.node3.hostname]}
+        self.assertTrue(self.c.login(username=self.authorized.username,
+                                     password='secret'))
+        data = {'nodes': [self.node3.hostname]}
         response = self.c.post(self.url, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'ganeti/importing/nodes/missing.html')
+        self.assertTemplateUsed(response,
+                                'ganeti/importing/nodes/missing.html')
         self.assertTrue(response.context['form'].errors)
 
     def test_successful_deletion(self):
         """ POST - success """
-        self.assertTrue(self.c.login(username=self.authorized.username, password='secret'))
-        data = {'nodes':['node1']}
+        self.assertTrue(self.c.login(username=self.authorized.username,
+                                     password='secret'))
+        data = {'nodes': ['node1']}
         response = self.c.post(self.url, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'ganeti/importing/nodes/missing.html')
+        self.assertTemplateUsed(response,
+                                'ganeti/importing/nodes/missing.html')
         self.assertFalse(response.context['form'].errors)
         self.assertFalse(Node.objects.filter(hostname='node1').exists())
         self.assertEqual([], response.context['nodes'])

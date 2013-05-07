@@ -27,6 +27,7 @@ from ganeti_web.models import SSHKey, validate_sshkey
 
 __all__ = ('TestSSHKeys',)
 
+
 class TestSSHKeys(TestCase):
 
     def setUp(self):
@@ -60,14 +61,12 @@ class TestSSHKeys(TestCase):
         self.key = key
         self.c = Client()
 
-
     def tearDown(self):
         self.anonymous.delete()
         self.user.delete()
         self.user1.delete()
         self.admin.delete()
         self.key.delete()
-
 
     def test_permissions(self):
         """
@@ -97,26 +96,28 @@ class TestSSHKeys(TestCase):
             self.assertTemplateUsed(response, "registration/login.html")
 
         # test unauthorized access (== not owner)
-        for i in [ urls["get_existing"], urls["save_existing"], urls["delete"] ]:
+        for i in [urls["get_existing"], urls["save_existing"],
+                  urls["delete"]]:
             self.assertTrue(self.c.login(username=self.user1.username,
                                          password="secret"))
             response = self.c.get(i)
             self.assertEqual(403, response.status_code)
 
         # test owner access
-        for i in [ urls["get_existing"], urls["save_existing"], urls["delete"] ]:
+        for i in [urls["get_existing"], urls["save_existing"],
+                  urls["delete"]]:
             self.assertTrue(self.c.login(username=self.user.username,
                                          password="secret"))
             response = self.c.get(i)
             self.assertEqual(200, response.status_code)
 
         # test admin access
-        for i in [ urls["get_existing"], urls["save_existing"], urls["delete"] ]:
+        for i in [urls["get_existing"], urls["save_existing"],
+                  urls["delete"]]:
             self.assertTrue(self.c.login(username=self.admin.username,
                                          password="secret"))
             response = self.c.get(i)
             self.assertEqual(200, response.status_code)
-
 
     def test_getting(self):
         """
@@ -133,14 +134,16 @@ class TestSSHKeys(TestCase):
             # appropriate object is being got
             response = self.c.get(reverse("key-get", args=[self.key.id]))
             self.assertEqual(200, response.status_code)
-            self.assertEquals("text/html; charset=utf-8", response["content-type"])
+            self.assertEquals("text/html; charset=utf-8",
+                              response["content-type"])
             self.assertTemplateUsed(response, "ganeti/ssh_keys/form.html")
             self.assertContains(response, self.key.key, count=1)
 
             # new object is being created
             response = self.c.get(reverse("key-get"))
             self.assertEqual(200, response.status_code)
-            self.assertEquals("text/html; charset=utf-8", response["content-type"])
+            self.assertEquals("text/html; charset=utf-8",
+                              response["content-type"])
             self.assertTemplateUsed(response, "ganeti/ssh_keys/form.html")
             self.assertNotContains(response, self.key.key)
 
@@ -178,11 +181,11 @@ class TestSSHKeys(TestCase):
             # note: for this tests cannot be used assertFormError assertion
             #  * invalid key (existing object)
             response = self.c.post(reverse("key-save", args=[self.key.id]),
-                                   {"key":"key"})
+                                   {"key": "key"})
             self.assertEquals("application/json", response["content-type"])
             self.assertContains(response, validate_sshkey.message, count=1)
             #  * invalid key (new object)
-            response = self.c.post(reverse("key-save"), {"key":"key"})
+            response = self.c.post(reverse("key-save"), {"key": "key"})
             self.assertEquals("application/json", response["content-type"])
             self.assertContains(response, validate_sshkey.message, count=1)
             #  * missing fields

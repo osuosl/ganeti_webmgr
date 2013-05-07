@@ -19,7 +19,6 @@ class TemplateTestCase(TestCase, UserTestMixin):
         #cluster.info = INFO
         cluster.save()
 
-
         # Template
         template_data = dict(
             template_name='new.vm.template',
@@ -40,7 +39,7 @@ class TemplateTestCase(TestCase, UserTestMixin):
             nic_count=0,
             boot_order='disk',
             os='image+ubuntu-lucid',
-         )
+        )
         data = template_data.copy()
         data['cluster'] = cluster
         del data['disk_count']
@@ -53,9 +52,9 @@ class TemplateTestCase(TestCase, UserTestMixin):
 
         # Users
         self.create_users([
-            ('superuser', {'is_superuser':True}),
+            ('superuser', {'is_superuser': True}),
             'cluster_admin',
-            ])
+        ])
         self.cluster_admin.grant('admin', cluster)
 
         self.users = [self.superuser, self.cluster_admin]
@@ -63,7 +62,6 @@ class TemplateTestCase(TestCase, UserTestMixin):
         self.cluster = cluster
         self.template_data = template_data
         self.template_fields = fields
-
 
     def tearDown(self):
         User.objects.all().delete()

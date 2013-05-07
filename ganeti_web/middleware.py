@@ -6,10 +6,12 @@
 from django.http import HttpResponseForbidden
 from django.template import RequestContext, loader
 
+
 class Http403(Exception):
     """
     A 403 error should be sent back to our client.
     """
+
 
 def render_403(request, message):
     """
@@ -22,6 +24,7 @@ def render_403(request, message):
     })
 
     return HttpResponseForbidden(template.render(context))
+
 
 class Http403Middleware(object):
     """

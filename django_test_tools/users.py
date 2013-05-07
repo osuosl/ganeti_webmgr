@@ -67,5 +67,5 @@ class UserTestMixin():
 
         return self.create_users([
             'unauthorized',
-            ('superuser',{'is_superuser':True})
+            ('superuser', {'is_superuser': True})
         ], context)

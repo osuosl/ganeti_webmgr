@@ -49,7 +49,7 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         vm.save()
 
         User(id=1, username='anonymous').save()
-        settings.ANONYMOUS_USER_ID=1
+        settings.ANONYMOUS_USER_ID = 1
 
         user = User(id=2, username='tester0')
         user.set_password('secret')
@@ -72,7 +72,6 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         dict_['vm'] = vm
         dict_['c'] = Client()
 
-
     def tearDown(self):
         SSHKey.objects.all().delete()
         Cluster.objects.all().delete()
@@ -91,10 +90,10 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         vm1 = VirtualMachine(hostname='vm2.example.bak', cluster=cluster1)
         vm1.save()
         job = Job(job_id=233, obj=vm, cluster=cluster,
-                finished="2011-01-07 21:59", status="error")
+                  finished="2011-01-07 21:59", status="error")
         job.save()
         job1 = Job(job_id=1234, obj=vm1, cluster=cluster1,
-                finished="2011-01-05 21:59", status="error")
+                   finished="2011-01-05 21:59", status="error")
         job1.save()
         job.rapi.GetJobStatus.response = JOB_ERROR
 
@@ -120,9 +119,6 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         clusters = response.context['cluster_list']
         self.assertTrue(cluster not in clusters)
         self.assertEqual(0, len(clusters))
-        self.assertTrue((False, job) in response.context["errors"]) # due to no clusters
-        self.assertFalse((False, job1) in response.context["errors"]) # due to no clusters
-        self.assertEqual(1, len(response.context["errors"]))
         self.assertEqual(0, response.context["orphaned"])
         self.assertEqual(0, response.context["missing"])
         self.assertEqual(0, response.context["import_ready"])
@@ -136,9 +132,6 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         clusters = response.context['cluster_list']
         self.assertTrue(cluster in clusters)
         self.assertEqual(1, len(clusters))
-        self.assertTrue((False, job) in response.context["errors"])
-        self.assertFalse((False, job1) in response.context["errors"]) # due to no clusters
-        self.assertEqual(1, len(response.context["errors"]))
         self.assertEqual(1, response.context["orphaned"])
         self.assertEqual(1, response.context["missing"])
         self.assertEqual(2, response.context["import_ready"])
@@ -153,9 +146,6 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         self.assertTrue(cluster in clusters)
         self.assertTrue(cluster1 in clusters)
         self.assertEqual(2, len(clusters))
-        self.assertTrue((False, job) in response.context["errors"])
-        self.assertTrue((False, job1) in response.context["errors"])
-        self.assertEqual(2, len(response.context["errors"]))
         self.assertEqual(2, response.context["orphaned"])
         self.assertEqual(2, response.context["missing"])
         self.assertEqual(4, response.context["import_ready"])
@@ -184,40 +174,40 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         self.assertEqual(404, response.status_code)
 
         # 404 - invalid id
-        response = c.get(url, {'id':1234567})
+        response = c.get(url, {'id': 1234567})
         self.assertEqual(404, response.status_code)
 
         # unauthorized user (different user)
-        response = c.get(url, {'id':user2.get_profile().pk})
+        response = c.get(url, {'id': user2.get_profile().pk})
         self.assertEqual(403, response.status_code)
 
         # unauthorized user (in different group)
         self.assertTrue(c.login(username=user.username, password='secret'))
-        response = c.get(url, {'id':group1.organization.pk})
+        response = c.get(url, {'id': group1.organization.pk})
         self.assertEqual(403, response.status_code)
 
         # authorized user (same user)
-        response = c.get(url, {'id':user.get_profile().pk})
+        response = c.get(url, {'id': user.get_profile().pk})
         self.assertEqual(200, response.status_code)
         self.assertEqual(mimetype, response['content-type'])
         self.assertTemplateUsed(response, template)
 
         # authorized user (in group)
-        response = c.get(url, {'id':group0.organization.pk})
+        response = c.get(url, {'id': group0.organization.pk})
         self.assertEqual(200, response.status_code)
         self.assertEqual(mimetype, response['content-type'])
         self.assertTemplateUsed(response, template)
 
         # authorized user (superuser)
         self.assertTrue(c.login(username=user2.username, password='secret'))
-        response = c.get(url, {'id':user.get_profile().pk})
+        response = c.get(url, {'id': user.get_profile().pk})
         self.assertEqual(200, response.status_code)
         self.assertEqual(mimetype, response['content-type'])
         self.assertTemplateUsed(response, template)
 
         # authorized user (superuser)
         self.assertTrue(c.login(username=user2.username, password='secret'))
-        response = c.get(url, {'id':group1.organization.pk})
+        response = c.get(url, {'id': group1.organization.pk})
         self.assertEqual(200, response.status_code)
         self.assertEqual(mimetype, response['content-type'])
         self.assertTemplateUsed(response, template)
@@ -244,11 +234,12 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         url = '/keys/%s/'
         args = (key,)
 
-        self.assert_standard_fails(url, args, login_required=False, authorized=False)
+        self.assert_standard_fails(url, args, login_required=False,
+                                   authorized=False)
 
         # cluster without users who have admin perms
         response = c.get(url % args)
-        self.assertEqual(200, response.status_code )
+        self.assertEqual(200, response.status_code)
         self.assertEquals("application/json", response["content-type"])
         self.assertEqual(len(json.loads(response.content)), 0)
         self.assertNotContains(response, "test@test")
@@ -260,9 +251,9 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         user1.grant("admin", cluster)
 
         response = c.get(url % args)
-        self.assertEqual(200, response.status_code )
+        self.assertEqual(200, response.status_code)
         self.assertEquals("application/json", response["content-type"])
-        self.assertEqual(len(json.loads(response.content)), 3 )
+        self.assertEqual(len(json.loads(response.content)), 3)
         self.assertContains(response, "test@test", count=1)
         self.assertContains(response, "asd@asd", count=1)
         self.assertContains(response, "foo@bar", count=1)
