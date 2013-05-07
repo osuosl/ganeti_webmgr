@@ -2,7 +2,7 @@ import os
 
 import pkg_resources
 
-from fabric.api import env, abort
+from fabric.api import env, abort, task
 from fabric.context_managers import settings, hide, lcd
 from fabric.contrib.console import confirm
 from fabric.contrib.files import exists
@@ -14,57 +14,48 @@ from fabric.operations import local, require, prompt
 #
 #    GIT_INSTALL - install packages from git:
 #
-#                  url - git url for checkouts
-#                  development - head to checkout for dev.  Defaults to master
-#                  production - head to checkout for prod.  defaults to master.
-#                  symlink - directory to symlink into project.  uses project
-#                            name if blank
+#                    url - git url for checkouts
+#                    development - head to checkout for dev.
+#                                  Defaults to master
+#                    production - head to checkout for prod.
+#                                 Defaults to master.
+#                    symlink - directory to symlink into project.
+#                              Uses project name if blank
 # Packages from git are given preference for dev environment. PIP is given
 # preference for production environments
 
 PIP_INSTALL = dict((r.project_name, str(r)) for r in
                    pkg_resources.parse_requirements(
-                       open("requirements.txt").read()))
+                       open("requirements/prod.txt").read()
+                   ))
 
 GIT_INSTALL = {
-    'django_object_permissions': {
-        'url': 'git://git.osuosl.org/gitolite/django'
-               '/django_object_permissions',
+    'django-object-permissions': {
+        'url': 'git://git.osuosl.org/gitolite/django/'
+               'django_object_permissions',
         'development': 'develop',
     },
-    'django_object_log': {
-        'url': 'git://git.osuosl.org/gitolite/django/django_object_log',
+    'django-object-log': {
+        'url': 'git://git.osuosl.org/gitolite/django/'
+               'django_object_log',
         'development': 'develop',
     },
     'twisted_vncauthproxy': {
-        'url': 'git://git.osuosl.org/gitolite/ganeti/twisted_vncauthproxy',
+        'url': 'git://git.osuosl.org/gitolite/ganeti/'
+               'twisted_vncauthproxy',
         'development': 'develop',
     },
 }
 
+DEV = 'development'
+PROD = 'production'
 
 # default environment settings - override these in environment methods if you
 # wish to have an environment that functions differently
 env.doc_root = '.'
 env.remote = False
-
-
-def dev():
-    """
-    Configure development deployment.
-    """
-
-    env.environment = 'development'
-
-
-def prod():
-    """
-    Configure production deployment.
-    """
-
-    env.environment = 'production'
-
-
+env.environment = PROD
+env.verbose = False
 # List of stuff to include in the tarball, recursive.
 env.MANIFEST = [
     # Directories
@@ -82,13 +73,22 @@ env.MANIFEST = [
     "__init__.py",
     "fabfile.py",
     "manage.py",
-    "requirements.txt",
+    "requirements",
     "search_sites.py",
     "settings.py.dist",
     "urls.py",
 ]
 
 
+@task
+def dev():
+    """
+    Configure development deployment.
+    """
+    env.environment = DEV
+
+
+@task
 def deploy():
     """
     Install all dependencies from git and pip.
@@ -99,6 +99,7 @@ def deploy():
     novnc()
 
 
+@task
 def clean():
     """
     In a development environment, remove all installed packages and symlinks.
@@ -113,16 +114,15 @@ def clean():
             abort('Aborting clean.')
 
 
+@task
 def update():
     """
     In a development environment, update all develop branches.
     """
-    require('environment', provided_by=[dev, prod])
 
-    if env.environment != 'development':
+    if env.environment != DEV:
         raise Exception('must be in a development environment in order to'
                         'update develop branches.')
-
     else:
         with lcd('%(doc_root)s/dependencies' % env):
             for git_dir, opts in GIT_INSTALL.items():
@@ -147,7 +147,7 @@ def _exists(path):
         return os.path.exists(path)
 
 
-def create_virtualenv(virtualenv=None, force=False):
+def create_virtualenv(virtualenv='venv', force=False):
     """
     Create a virtualenv for pip installations.
 
@@ -158,27 +158,22 @@ def create_virtualenv(virtualenv=None, force=False):
     already exists.
     """
 
-    require('environment', provided_by=[dev, prod])
     env.virtualenv = virtualenv if virtualenv else env.doc_root
 
     with lcd(env.doc_root):
-        if not force and _exists('%(virtualenv)s/lib' % env):
-            print 'virtualenv already created'
-        else:
+        if force or not _exists('%(virtualenv)s/lib' % env):
             # XXX does this actually create a new environment if one already
             # exists there?
             local('virtualenv %(virtualenv)s --distribute' % env)
 
             # now lets make sure the virtual env has the the newest pip
-            local('%(virtualenv)s/bin/pip install -q --upgrade pip' % env)
+            local(str(verbose_check()+'--upgrade pip') % env)
 
 
 def create_env():
     """
     Setup environment for git dependencies.
     """
-
-    require('environment', provided_by=[dev, prod])
 
     with lcd(env.doc_root):
         if _exists('dependencies'):
@@ -187,17 +182,28 @@ def create_env():
             local('mkdir dependencies')
 
 
+def verbose_check():
+    """
+    Default to quiet install when env.verbose is false
+    """
+    install_str = '%(virtualenv)s/bin/pip install '
+    if not env.verbose:
+        install_str += '-q '
+
+    return install_str
+
+
 def install_dependencies_pip():
     """
     Install all dependencies available from pip.
     """
 
-    require('environment', provided_by=[dev, prod])
     create_virtualenv()
 
     with lcd(env.doc_root):
-        # Run the installation with pip, passing in our requirements.txt.
-        local('%(virtualenv)s/bin/pip install -q -r requirements.txt' % env)
+        # Run the installation with pip, passing in our
+        # requirements/prod.txt.
+        local(str(verbose_check()+'-r requirements/prod.txt') % env)
 
 
 def install_dependencies_git():
@@ -205,9 +211,7 @@ def install_dependencies_git():
     Install all dependencies available from git.
     """
 
-    require('environment', provided_by=[dev, prod])
-
-    if env.environment != 'development':
+    if env.environment != DEV:
         # If we can satisfy all of our dependencies from pip alone, then don't
         # bother running the git installation.
         if all(p in PIP_INSTALL for p in GIT_INSTALL):
@@ -216,17 +220,18 @@ def install_dependencies_git():
 
     create_env()
 
-    for name, opts in GIT_INSTALL.items():
+    for name in (set(GIT_INSTALL) - set(PIP_INSTALL)):
+        opts = GIT_INSTALL[name]
 
         # check for required values
         if 'url' not in opts:
-            raise Exception('missing required argument "url"'
+            raise Exception('missing required argument "url" '
                             'for git repo: %s' % name)
 
         # set git head to check out
         if env.environment in opts:
             opts['head'] = opts[env.environment]
-        elif env.environment == 'development' and 'production' in opts:
+        elif env.environment == DEV and 'production' in opts:
             opts['head'] = opts['production']
         else:
             opts['head'] = 'master'
@@ -234,8 +239,9 @@ def install_dependencies_git():
         # clone repo
         with lcd('%(doc_root)s/dependencies' % env):
             env.git_repo = name
+            env.git_url = opts['url']
             if not _exists('%(doc_root)s/dependencies/%(git_repo)s' % env):
-                local('git clone %(url)s' % opts)
+                local('git clone %(git_url)s %(git_repo)s' % env)
 
             # create branch if not using master
             if opts['head'] != 'master':
@@ -251,20 +257,21 @@ def install_dependencies_git():
         # not have it and will need to be symlinked into the project
         if _exists('%(doc_root)s/dependencies/%(git_repo)s/setup.py' % env):
             with lcd(env.doc_root):
-                local('%(virtualenv)s/bin/pip install -q -e'
-                      'dependencies/%(git_repo)s' % env)
+                local(
+                    str(verbose_check()+'-e dependencies/%(git_repo)s') % env
+                )
 
         else:
             # else, configure and create symlink to git repo
             with lcd(env.doc_root):
                 if 'symlink' in opts:
                     env.symlink = opts['symlink']
-                    env.symlink_path = '%(doc_root)s/dependencies/%' \
-                                       '(git_repo)s/%(symlink)s' % env
+                    env.symlink_path = '%(doc_root)s/dependencies/' \
+                                       '%(git_repo)s/%(symlink)s' % env
                 else:
                     env.symlink = name
-                    env.symlink_path = '%(doc_root)s/dependencies/%' \
-                                       '(git_repo)s' % env
+                    env.symlink_path = '%(doc_root)s/dependencies/' \
+                                       '%(git_repo)s' % env
 
                 with settings(hide('warnings', 'stderr'), warn_only=True):
                     local('ln -sf %(symlink_path)s %(doc_root)s' % env)
@@ -287,6 +294,7 @@ def novnc():
         local("mv kanaka-noVNC-*/ noVNC")
 
 
+@task
 def tarball():
     """
     Package a release tarball.
@@ -345,3 +353,11 @@ def ldap(state="enable"):
 
             _comment(filename, 'from ldap_settings')
             _comment(filename, "'django_auth_ldap")
+
+
+@task
+def v():
+    """
+    Enable verbose output in some commands
+    """
+    env.verbose = True
