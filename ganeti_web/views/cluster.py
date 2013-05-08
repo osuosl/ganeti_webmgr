@@ -31,7 +31,6 @@ from django.utils import simplejson as json
 from django.utils.translation import ugettext as _
 from django.views.decorators.http import require_POST
 from django.views.generic.detail import DetailView
-from django.views.generic.list import ListView
 
 from django_tables2 import SingleTableView
 
@@ -52,7 +51,8 @@ from ganeti_web.models import (Cluster, ClusterUser, Profile, SSHKey,
 from ganeti_web.views import render_404
 from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
                                       PaginationMixin, GWMBaseView)
-from ganeti_web.views.tables import ClusterVMTable, ClusterTable
+from ganeti_web.views.tables import (ClusterTable, ClusterVMTable,
+                                     ClusterJobTable)
 from ganeti_web.views.virtual_machine import BaseVMListView
 from ganeti_web.util.client import GanetiApiError
 
@@ -128,22 +128,27 @@ class ClusterVMListView(BaseVMListView):
 
 
 class ClusterJobListView(LoginRequiredMixin, PaginationMixin, GWMBaseView,
-                         ListView):
+                         SingleTableView):
 
     template_name = "ganeti/cluster/jobs.html"
     model = Job
+    table_class = ClusterJobTable
 
-    default_sort_params = ('job_id', 'asc')
+    def get_template_names(self):
+        if self.request.is_ajax():
+            template = ['table.html']  # all we need is the table
+        else:
+            template = [self.template_name]
+        return template
 
     def get_queryset(self):
         self.get_kwargs()
         self.cluster = get_object_or_404(Cluster, slug=self.cluster_slug)
         perms = self.can_create(self.cluster)
+        self.queryset = self.cluster.jobs.all()
         if not perms:
             return Http403(NO_PRIVS)
 
-        self.queryset = (Job.objects.filter(cluster__slug=self.cluster_slug)
-                                    .select_related("cluster"))
         return super(ClusterJobListView, self).get_queryset()
 
     def get_context_data(self, **kwargs):

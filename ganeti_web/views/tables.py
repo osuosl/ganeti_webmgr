@@ -1,8 +1,9 @@
-from django_tables2 import Table, Column, LinkColumn, TemplateColumn
+from django_tables2 import (Table, Column, LinkColumn, TemplateColumn,
+                            DateTimeColumn)
 from django_tables2.utils import A
 
 from ganeti_web.templatetags.webmgr_tags import (render_storage, render_os,
-                                                 abbreviate_fqdn)
+                                                 abbreviate_fqdn, format_job_op)
 from ganeti_web.utilities import hv_prettify
 
 
@@ -10,6 +11,7 @@ class BaseVMTable(Table):
 
     status = TemplateColumn(
         template_name="ganeti/virtual_machine/vmfield_status.html",
+        attrs={"th": {"class": "status_indicator"}}
     )
     cluster = LinkColumn(
         "cluster-detail",
@@ -64,7 +66,7 @@ class VMTable(BaseVMTable):
 
 class ClusterVMTable(BaseVMTable):
     class Meta:
-        exclude = ("cluster")
+        exclude = ("cluster",)
         order_by = ("hostname")
         empty_text = "This cluster has no Virtual Machines"
 
@@ -139,6 +141,42 @@ class ClusterTable(Table):
         empty_text = "No Clusters"
         sequence = ("cluster", "description", "version", "hypervisor",
                     "master_node", "nodes", "vms")
+        order_by = ("cluster")
 
     def render_hypervisor(self, value):
         return hv_prettify(value)
+
+
+class JobTable(Table):
+    job_id = LinkColumn(
+        'job-detail',
+        args=[A("cluster.slug"), A("job_id")]
+    )
+    cluster = LinkColumn(
+        "cluster-detail",
+        args=[A("cluster.slug")],
+        accessor="cluster.slug",
+        verbose_name='cluster'
+    )
+    object = TemplateColumn(
+        template_name="ganeti/overview/object_link.html",
+        accessor="obj"
+    )
+    operation = Column(accessor="op", verbose_name="operation")
+    # Extra space is because it doesn't like the word status for some reason.
+    status = Column(verbose_name="status ")
+    finished = DateTimeColumn()
+
+    class Meta:
+        empty_text = "No jobs"
+        order_by = ("job_id")
+
+    def render_operation(self, value):
+        return format_job_op(value)
+
+
+class ClusterJobTable(JobTable):
+
+    class Meta:
+        exclude = ("cluster",)
+        empty_text = "No jobs available for this cluster"
