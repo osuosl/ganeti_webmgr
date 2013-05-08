@@ -34,17 +34,17 @@
 #errors_list, #usage_summary, #administration { margin-top: 2em;}
 #errors_list h2 {background-color:#DB533B; border-color:#BC4631}
 #errors_list table {margin:0;}
-#errors_list td.Cluster {
+#errors_list div.Cluster {
     padding-left: 25px;
-    background:url(/static/images/icons/cluster.png) no-repeat 4px 4px;
+    background:url(/static/images/icons/cluster.png) no-repeat 4px -2px;
 }
-#errors_list td.VirtualMachine {
+#errors_list div.VirtualMachine {
     padding-left: 25px;
-    background:url(/static/images/icons/vm.png) no-repeat 4px 4px;
+    background:url(/static/images/icons/vm.png) no-repeat 4px -2px;
 }
-#errors_list td.Node {
+#errors_list div.Node {
     padding-left: 25px;
-    background:url(/static/images/icons/node.png) no-repeat 4px 4px;
+    background:url(/static/images/icons/node.png) no-repeat 4px -2px;
 }
 
 

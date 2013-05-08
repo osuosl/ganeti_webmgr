@@ -1,41 +1,5 @@
-{% load webmgr_tags %}
+{% extends "list_base.html" %}
 {% load i18n %}
-{% block head %}
-<script type="text/javascript" src="{{STATIC_URL}}/js/jquery.tablesorter.min.js"></script>
-<script>
-$(function() {
-  $("#joblist").tablesorter();
-});
-</script>
-{% endblock %}
-<table id="joblist" class="sorted">
-<thead>
-  <tr>
-    <th>{% trans "ID" %}</th>
-    <th>{% trans "Object" %}</th>
-    <th>{% trans "Action" %}</th>
-    <th>{% trans "Status" %}</th>
-    <th>{% trans "Completed" %}</th>
-  </tr>
-</thead>
 
-<tbody id="jobs">
-  {% for job in object_list %}
-    <tr>
-      <td><a href="{% url job-detail job.cluster.slug job.job_id %}">{{ job.job_id }}</a></td>
-      <td>
-        {% if job.obj %}
-          {{ job.obj|class_name }}: <a href="{% url instance-detail job.obj.cluster.slug job.obj.hostname %}">{{ job.obj }}</a>
-        {% else %}
-          <b>{% trans "Deleted" %}</b>
-        {% endif %}
-      </td>
-      <td>{{ job.op|format_job_op }}</td>
-      <td>{{ job.status }}</td>
-      <td>{{ job.finished|date }}</td>
-    </tr>
-  {% endfor %}
-</tbody>
-</table>
-
-{% include "paginator.html" %}
+{% block title %}{% trans 'Cluster Jobs' %}{% endblock %}
+{% block breadcrumb %}{% trans 'Cluster Jobs' %}{% endblock %}

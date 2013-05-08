@@ -144,7 +144,7 @@ pre.error {
     height: 25px;
 }
 #content th.bulk,
-#content th.status {
+#content th.status_indicator {
     text-align: center;
     width: 16px;
     padding: 0 2px;
@@ -194,8 +194,8 @@ pre.error {
     background-image: url(/static/images/desc.gif);
     background-color: #7AB0DC;
 }
-#content table th.sortable.status .asc,
-#content table th.sortable.status .desc {
+#content table th.sortable.status_indicator .asc,
+#content table th.sortable.status_indicator .desc {
     background-position: center left;
 }
 
@@ -207,8 +207,8 @@ pre.error {
     cursor: n-resize;
 }
 /* Blue background for sorted cell */
-#content table th.asc:not(.status) a,
-#content table th.desc:not(.status) a,
+#content table th.asc:not(.status_indicator) a,
+#content table th.desc:not(.status_indicator) a,
 #content table th.desc,
 #content table th.asc {
     background-color: #7AB0DC;
