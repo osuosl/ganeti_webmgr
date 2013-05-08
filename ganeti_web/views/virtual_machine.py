@@ -54,7 +54,7 @@ from ganeti_web.forms.virtual_machine import (KvmModifyVirtualMachineForm,
                                               RenameForm, ChangeOwnerForm,
                                               ReplaceDisksForm)
 from ganeti_web.middleware import Http403
-from ganeti_web.models import Cluster, Job, SSHKey, Node, VirtualMachine
+from ganeti_web.models import Cluster, Job, SSHKey, VirtualMachine
 from ganeti_web.templatetags.webmgr_tags import render_storage
 from ganeti_web.util.client import GanetiApiError
 from ganeti_web.utilities import (cluster_os_list, compare, os_prettify,
@@ -528,7 +528,7 @@ def detail(request, cluster_slug, instance, rest=False):
 
     user = request.user
     cluster_admin = (user.is_superuser or
-                     user.has_any_perms(cluster, perms=['admin','create_vm']))
+                     user.has_any_perms(cluster, perms=['admin', 'create_vm']))
 
     if not cluster_admin:
         perms = user.get_perms(vm)

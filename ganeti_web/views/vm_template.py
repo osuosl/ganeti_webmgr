@@ -52,11 +52,12 @@ class TemplateListView(LoginRequiredMixin, PaginationMixin, SingleTableView):
         Helper function to sum disk templates since they're stored in the
         database using a serialized field.
 
-        Note - This expects a list of templates, and does not return a queryset.
+        Note - This expects a list of templates, and does not return a queryset
 
         """
         for template in templates:
-            template.disk_space = sum([disk['size'] for disk in template.disks])
+            total_disk_size = sum([disk['size'] for disk in template.disks])
+            template.disk_space = total_disk_size
         return templates
 
 

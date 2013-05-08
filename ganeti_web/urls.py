@@ -46,62 +46,55 @@ host = '(?P<host>[^/]+)'
 template = '(?P<template>[^/]+)'
 
 # General
-urlpatterns = patterns('ganeti_web.views.general',
-                       # Index page - it's status page
-                       url(r'^$', 'overview', name="index"),
-                       # Status page
-                       url(r'^overview/?$', 'overview', name="overview"),
-                       url(r'^used_resources/?$',
-                           'used_resources', name="used_resources"),
+urlpatterns = patterns(
+    'ganeti_web.views.general',
 
-                       # clear errors
-                       url(r'^error/clear/(?P<pk>\d+)/?$',
-                           'clear_ganeti_error',
-                           name="error-clear"),
+    url(r'^$', 'overview', name="index"),
 
-                       # Errors
-                       url(r'clusters/errors',
-                           'get_errors',
-                           name="cluster-errors"),
-                       # About page
-                       url(r'^about/?$', AboutView.as_view(), name="about"),
-                       )
+    # Status page
+    url(r'^overview/?$', 'overview', name="overview"),
+    url(r'^used_resources/?$', 'used_resources', name="used_resources"),
+
+    url(r'^error/clear/(?P<pk>\d+)/?$', 'clear_ganeti_error',
+        name="error-clear"),
+
+    url(r'clusters/errors', 'get_errors', name="cluster-errors"),
+
+    url(r'^about/?$', AboutView.as_view(), name="about"),
+)
 
 
 # Users - overridden from users app to use custom templates
-urlpatterns += patterns('muddle_users.views.user',
-                        url(r'^accounts/profile/?',
-                            'user_profile',
-                            name='profile',
-                            kwargs={'template': 'ganeti/users/profile.html'}),
-                        )
+urlpatterns += patterns(
+    'muddle_users.views.user',
+    url(r'^accounts/profile/?', 'user_profile', name='profile',
+        kwargs={'template': 'ganeti/users/profile.html'}),
+)
 
 # Users
-urlpatterns += patterns('ganeti_web.views.users',
-                        url(r'^user/(?P<user_id>\d+)/key/?$',
-                            'key_get',
-                            name="user-key-add"),
+urlpatterns += patterns(
+    'ganeti_web.views.users',
 
-                        # ssh keys
-                        url(r'^keys/get/$', 'key_get', name="key-get"),
-                        url(r'^keys/get/(?P<key_id>\d+)/?$',
-                            'key_get',
-                            name="key-get"),
-                        url(r'^keys/save/$', 'key_save', name="key-save"),
-                        url(r'^keys/save/(?P<key_id>\d+)/?$',
-                            'key_save',
-                            name="key-save"),
-                        url(r'^keys/delete/(?P<key_id>\d+)/?$',
-                            'key_delete',
-                            name="key-delete"),
-                        )
+    url(r'^user/(?P<user_id>\d+)/key/?$',
+        'key_get',
+        name="user-key-add"),
+
+    url(r'^keys/get/$', 'key_get', name="key-get"),
+
+    url(r'^keys/get/(?P<key_id>\d+)/?$', 'key_get', name="key-get"),
+
+    url(r'^keys/save/$', 'key_save', name="key-save"),
+
+    url(r'^keys/save/(?P<key_id>\d+)/?$', 'key_save', name="key-save"),
+
+    url(r'^keys/delete/(?P<key_id>\d+)/?$', 'key_delete', name="key-delete"),
+)
 
 # All SSH Keys
-urlpatterns += patterns('ganeti_web.views.general',
-                        url(r'^keys/(?P<api_key>\w+)/$',
-                            'ssh_keys',
-                            name="key-list"),
-                        )
+urlpatterns += patterns(
+    'ganeti_web.views.general',
+    url(r'^keys/(?P<api_key>\w+)/$', 'ssh_keys', name="key-list"),
+)
 
 # Clusters
 urlpatterns += patterns(
@@ -154,44 +147,39 @@ urlpatterns += patterns(
         name="cluster-job-list"),
 )
 
+
 # Nodes
 node_prefix = 'cluster/%s/node/%s' % (cluster_slug, host)
-urlpatterns += patterns('ganeti_web.views.node',
-                        # Detail
-                        url(r'^%s/?$' % node_prefix,
-                            NodeDetailView.as_view(),
-                            name="node-detail"),
-                        url(r'^node/(?P<id>\d+)/jobs/status/?$',
-                            "job_status", name="node-job-status"),
+urlpatterns += patterns(
+    'ganeti_web.views.node',
 
-                        # Primary and secondary Virtual machines
-                        url(r'^%s/primary/?$' % node_prefix,
-                            NodePrimaryListView.as_view(),
-                            name="node-primary-vms"),
-                        url(r'^%s/secondary/?$' % node_prefix,
-                            NodeSecondaryListView.as_view(),
-                            name="node-secondary-vms"),
+    url(r'^%s/?$' % node_prefix, NodeDetailView.as_view(), name="node-detail"),
 
-                        # object log
-                        url(r'^%s/object_log/?$' % node_prefix,
-                            'object_log', name="node-object_log"),
+    url(r'^node/(?P<id>\d+)/jobs/status/?$', "job_status",
+        name="node-job-status"),
 
-                        # Node actions
-                        url(r'^%s/role/?$' % node_prefix,
-                            'role', name="node-role"),
-                        url(r'^%s/migrate/?$' % node_prefix,
-                            'migrate', name="node-migrate"),
-                        url(r'^%s/evacuate/?$' % node_prefix,
-                            'evacuate', name="node-evacuate"),
-                        )
+    url(r'^%s/primary/?$' % node_prefix, NodePrimaryListView.as_view(),
+        name="node-primary-vms"),
+
+    url(r'^%s/secondary/?$' % node_prefix, NodeSecondaryListView.as_view(),
+        name="node-secondary-vms"),
+
+    url(r'^%s/object_log/?$' % node_prefix, 'object_log',
+        name="node-object_log"),
+
+    # Node actions
+    url(r'^%s/role/?$' % node_prefix, 'role', name="node-role"),
+    url(r'^%s/migrate/?$' % node_prefix, 'migrate', name="node-migrate"),
+    url(r'^%s/evacuate/?$' % node_prefix, 'evacuate', name="node-evacuate"),
+)
 
 # VM add wizard
-urlpatterns += patterns("ganeti_web.forms.virtual_machine",
-                        url(r"^vm/add/?$",
-                            vm_wizard(initial_dict={0:
-                                      {'choices': [u'hostname']}}),
-                            name="instance-create"),
-                        )
+urlpatterns += patterns(
+    "ganeti_web.forms.virtual_machine",
+    url(r"^vm/add/?$",
+    vm_wizard(initial_dict={0: {'choices': [u'hostname']}}),
+    name="instance-create"),
+)
 
 # VirtualMachines
 vm_prefix = '%s/%s' % (cluster, instance)
@@ -260,7 +248,6 @@ urlpatterns += patterns(
     url(r'^%s/object_log/?$' % vm_prefix, 'object_log', name="vm-object_log"),
 )
 
-
 # VirtualMachineTemplates
 template_prefix = '%s/template/%s' % (cluster, template)
 urlpatterns += patterns(
@@ -287,58 +274,68 @@ urlpatterns += patterns(
         name='template-create-from-instance'),
 )
 
-
 # Virtual Machine Importing
-urlpatterns += patterns('ganeti_web.views.importing',
-                        url(r'^import/orphans/', 'orphans',
-                            name='import-orphans'),
-                        url(r'^import/missing/', 'missing_ganeti',
-                            name='import-missing'),
-                        url(r'^import/missing_db/', 'missing_db',
-                            name='import-missing_db'),
-                        )
+urlpatterns += patterns(
+    'ganeti_web.views.importing',
+
+    url(r'^import/orphans/', 'orphans',
+        name='import-orphans'),
+    url(r'^import/missing/', 'missing_ganeti',
+        name='import-missing'),
+    url(r'^import/missing_db/', 'missing_db',
+        name='import-missing_db'),
+)
 
 # Node Importing
-urlpatterns += patterns('ganeti_web.views.importing_nodes',
-                        url(r'^import/node/missing/', 'missing_ganeti',
-                            name='import-nodes-missing'),
-                        url(r'^import/node/missing_db/', 'missing_db',
-                            name='import-nodes-missing_db'),
-                        )
+urlpatterns += patterns(
+    'ganeti_web.views.importing_nodes',
+
+    url(r'^import/node/missing/', 'missing_ganeti',
+        name='import-nodes-missing'),
+
+    url(r'^import/node/missing_db/', 'missing_db',
+        name='import-nodes-missing_db'),
+)
 
 # Jobs
 job = '%s/job/(?P<job_id>\d+)' % cluster
-urlpatterns += patterns('ganeti_web.views.jobs',
-                        url(r'^%s/status/?' % job, 'status',
-                            name='job-status'),
-                        url(r'^%s/clear/?' % job, 'clear',
-                            name='job-clear'),
-                        url(r'^%s/?' % job, JobDetailView.as_view(),
-                            name='job-detail'),
-                        )
+urlpatterns += patterns(
+    'ganeti_web.views.jobs',
+
+    url(r'^%s/status/?' % job, 'status', name='job-status'),
+
+    url(r'^%s/clear/?' % job, 'clear', name='job-clear'),
+
+    url(r'^%s/?' % job, JobDetailView.as_view(), name='job-detail'),
+)
 
 # Search
-urlpatterns += patterns('ganeti_web.views.search',
-                        url(r'^search/suggestions.json', 'suggestions',
-                            name='search-suggestions'),
-                        url(r'^search/detail_lookup', 'detail_lookup',
-                            name='search-detail-lookup')
-                        )
-urlpatterns += patterns('ganeti_web.views.user_search',
-                        url(r'^search/owners/?$', 'search_owners',
-                            name="owner-search")
-                        )
-urlpatterns += patterns('haystack.views',
-                        url(r'^search/',
-                            login_required(SearchView(form_class=
-                                           autocomplete_search_form)),
-                            name='search')
-                        )
+urlpatterns += patterns(
+    'ganeti_web.views.search',
+
+    url(r'^search/suggestions.json', 'suggestions', name='search-suggestions'),
+
+    url(r'^search/detail_lookup', 'detail_lookup', name='search-detail-lookup')
+)
+
+urlpatterns += patterns(
+    'ganeti_web.views.user_search',
+
+    url(r'^search/owners/?$', 'search_owners', name="owner-search")
+)
+
+urlpatterns += patterns(
+    'haystack.views',
+    url(r'^search/',
+        login_required(SearchView(form_class=autocomplete_search_form)),
+        name='search')
+)
 
 # The following is used to serve up local static files like images
 root = '%s/static' % os.path.dirname(os.path.realpath(__file__))
-urlpatterns += patterns('',
-                        (r'^static/(?P<path>.*)',
-                         'django.views.static.serve',
-                         {'document_root':  root, }),
-                        )
+urlpatterns += patterns(
+    '',
+    (r'^static/(?P<path>.*)',
+    'django.views.static.serve',
+    {'document_root': root})
+)
