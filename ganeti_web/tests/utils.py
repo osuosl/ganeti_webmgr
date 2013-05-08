@@ -17,15 +17,16 @@
 
 import sys
 
+
 class MuteStdout(object):
     """ context manager that mutes stdout """
-    def __enter__( self ):
+    def __enter__(self):
         self.stdout = sys.stdout
         sys.stdout = self
-    
-    def __exit__( self, type, value, tb ):
+
+    def __exit__(self, type, value, tb):
         sys.stdout = self.stdout
-    
+
     def write(self, str):
         """ ignore all calls to write """
         pass

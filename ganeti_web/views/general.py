@@ -38,6 +38,7 @@ from ganeti_web.views.generic import NO_PRIVS
 from django.utils.translation import ugettext as _
 from ganeti_web.constants import VERSION
 
+
 class AboutView(TemplateView):
 
     template_name = "ganeti/about.html"
@@ -45,6 +46,7 @@ class AboutView(TemplateView):
     def render_to_response(self, context, **kwargs):
         context["version"] = VERSION
         return super(AboutView, self).render_to_response(context, **kwargs)
+
 
 def merge_errors(errors, jobs):
     """
@@ -78,7 +80,7 @@ def get_errors(request):
     if user.is_superuser:
         clusters = Cluster.objects.all()
     else:
-        clusters = user.get_objects_all_perms(Cluster, ['admin',])
+        clusters = user.get_objects_all_perms(Cluster, ['admin', ])
     admin = user.is_superuser or clusters
 
     # Get all of the PKs from VMs that this user may administer.
@@ -110,14 +112,14 @@ def get_errors(request):
     # merge error lists
     errors = merge_errors(ganeti_errors, job_errors)
 
-    return render_to_response("ganeti/errors.html", {
-        'admin':admin,
-        'cluster_list': clusters,
-        'user': request.user,
-        'errors':errors,
-            },
-            context_instance=RequestContext(request),
-        )
+    return render_to_response("ganeti/errors.html",
+                              {
+                              'admin': admin,
+                              'cluster_list': clusters,
+                              'user': request.user,
+                              'errors': errors,
+                              },
+                              context_instance=RequestContext(request))
 
 
 def get_used_resources(cluster_user):
@@ -130,22 +132,25 @@ def get_used_resources(cluster_user):
 
     for cluster, quota in quotas.items():
         resources[cluster] = {
-            "used": used.pop(cluster.id) if cluster.id in used else USED_NOTHING,
+            "used": used.pop(cluster.id)
+            if cluster.id in used else USED_NOTHING,
             "set": quota
         }
         resources[cluster]["total"] = owned_vms.filter(cluster=cluster).count()
-        resources[cluster]["running"] = owned_vms.filter(cluster=cluster, \
-                                                    status="running").count()
+        resources[cluster]["running"] = owned_vms \
+            .filter(cluster=cluster, status="running").count()
 
-    # add any clusters that have used resources but no perms (and thus no quota)
+    # add any clusters that have used resources
+    # but no perms (and thus no quota)
     # since we know they don't have a custom quota just add the default quota
     if used:
         for cluster in Cluster.objects.filter(pk__in=used):
-            resources[cluster] = {"used":used[cluster.id],
-                                  "set":cluster.get_default_quota()}
-            resources[cluster]["total"] = owned_vms.filter(cluster=cluster).count()
-            resources[cluster]["running"] = owned_vms.filter(cluster=cluster, \
-                                                    status="running").count()
+            resources[cluster] = {"used": used[cluster.id],
+                                  "set": cluster.get_default_quota()}
+            resources[cluster]["total"] = owned_vms \
+                .filter(cluster=cluster).count()
+            resources[cluster]["running"] = owned_vms \
+                .filter(cluster=cluster, status="running").count()
 
     return resources
 
@@ -159,20 +164,19 @@ def get_vm_counts(clusters):
     """
     format_key = 'cluster_admin_%d'
     orphaned = import_ready = missing = 0
-    keys = [k for k in clusters.values_list('pk', flat=True)]
-    cluster_list = Cluster.objects.filter(pk__in=keys)
 
     # update the values that were not cached
-    if cluster_list.count():
-        base = VirtualMachine.objects.filter(cluster__in=cluster_list,
-                owner=None).order_by()
-        annotated = base.values("cluster__pk").annotate(orphaned=Count("id"))
+    if clusters.exists():
+        annotated = VirtualMachine.objects \
+            .filter(cluster__in=clusters,
+                    owner=None).order_by().values("cluster__pk") \
+            .annotate(orphaned=Count("id"))
 
         result = {}
         for i in annotated:
             result[format_key % i["cluster__pk"]] = {"orphaned": i["orphaned"]}
             orphaned += i["orphaned"]
-        for cluster in cluster_list:
+        for cluster in clusters:
             key = format_key % cluster.pk
 
             if key not in result:
@@ -197,7 +201,8 @@ def overview(request, rest=False):
     if user.is_superuser:
         clusters = Cluster.objects.all()
     else:
-        clusters = user.get_objects_any_perms(Cluster, ['admin', 'create_vm',])
+        clusters = user.get_objects_any_perms(Cluster,
+                                              ['admin', 'create_vm', ])
     admin = user.is_superuser or clusters
 
     #orphaned, ready to import, missing
@@ -210,55 +215,31 @@ def overview(request, rest=False):
     # Get all of the PKs from VMs that this user may administer.
     vms = vm_qs_for_admins(user).values("pk")
 
-    # build list of job errors.  Include jobs from any vm the user has access to
-    # If the user has admin on any cluster then those clusters and it's objects
-    # must be included too.
-    #
-    # XXX all jobs have the cluster listed, filtering by cluster includes jobs
-    # for both the cluster itself and any of its VMs or Nodes
-    error_clause = Q(status='error')
-    vm_type = ContentType.objects.get_for_model(VirtualMachine)
-    select_clause = Q(content_type=vm_type, object_id__in=vms)
-    if admin:
-        select_clause |= Q(cluster__in=clusters)
-    job_errors = Job.objects.filter(error_clause & select_clause) \
-        .order_by("-finished")[:5]
-
-    # Build the list of job errors. Include jobs from any VMs for which the
-    # user has access.
-    qs = GanetiError.objects.filter(cleared=False)
-    ganeti_errors = qs.get_errors(obj=vms)
-    # If the user is an admin on any cluster, then include administrated
-    # clusters and related objects.
-    if admin:
-        ganeti_errors |= qs.get_errors(obj=clusters)
-
-    # merge error lists
-    errors = merge_errors(ganeti_errors, job_errors)
-
     # get vm summary - running and totals need to be done as separate queries
     # and then merged into a single list
     vms_running = vms.filter(status='running') \
-                        .order_by() \
-                        .values('cluster__hostname','cluster__slug') \
-                        .annotate(running=Count('pk'))
+        .order_by() \
+        .values('cluster__hostname', 'cluster__slug') \
+        .annotate(running=Count('pk'))
     vms_total = vms.order_by()\
-                        .values('cluster__hostname','cluster__slug') \
-                        .annotate(total=Count('pk'))
+        .values('cluster__hostname', 'cluster__slug') \
+        .annotate(total=Count('pk'))
     vm_summary = {}
     for cluster in vms_total:
         vm_summary[cluster.pop('cluster__hostname')] = cluster
     for cluster in vms_running:
-        vm_summary[cluster['cluster__hostname']]['running'] = cluster['running']
+        vm_summary[cluster['cluster__hostname']]['running'] = \
+            cluster['running']
 
     # get list of personas for the user:  All groups, plus the user.
-    # include the user only if it owns a vm or has perms on at least one cluster
+    # include the user only if it owns a vm or has
+    # perms on at least one cluster
     profile = user.get_profile()
     personas = list(Organization.objects.filter(group__user=user))
     if profile.virtual_machines.count() \
         or user.has_any_perms(Cluster, ['admin', 'create_vm'], groups=False) \
-        or not personas:
-            personas.insert(0, profile)
+            or not personas:
+        personas.insert(0, profile)
 
     # get resources used per cluster from the first persona in the list
     resources = get_used_resources(personas[0])
@@ -269,18 +250,17 @@ def overview(request, rest=False):
         return clusters
     else:
         return render_to_response("ganeti/overview.html", {
-            'admin':admin,
+            'admin': admin,
             'cluster_list': clusters,
             'create_vm': create_vm,
             'user': request.user,
-            'errors': errors,
             'orphaned': orphaned,
             'import_ready': import_ready,
             'missing': missing,
             'resources': resources,
             'vm_summary': vm_summary,
             'personas': personas,
-            },
+        },
             context_instance=RequestContext(request),
         )
 
@@ -299,11 +279,11 @@ def used_resources(request, rest=False):
     if not user.is_superuser:
         user_type = ContentType.objects.get_for_model(Profile)
         if cu.real_type_id == user_type.pk:
-            if not Profile.objects.filter(clusteruser_ptr=cu.pk, user=user)\
-                .exists():
+            if not Profile.objects.filter(clusteruser_ptr=cu.pk, user=user) \
+                    .exists():
                 raise Http403(_('You are not authorized to view this page'))
         else:
-            if not Organization.objects.filter(clusteruser_ptr=cu.pk, \
+            if not Organization.objects.filter(clusteruser_ptr=cu.pk,
                                                group__user=user).exists():
                 raise Http403(_('You are not authorized to view this page'))
 
@@ -312,9 +292,8 @@ def used_resources(request, rest=False):
         return resources
     else:
         return render_to_response("ganeti/overview/used_resources.html", {
-            'resources':resources
+            'resources': resources
         }, context_instance=RequestContext(request))
-
 
 
 @login_required
@@ -332,9 +311,9 @@ def clear_ganeti_error(request, pk):
             raise Http403(NO_PRIVS)
         elif isinstance(obj, (VirtualMachine,)):
             # object is a virtual machine, check perms on VM and on Cluster
-            if not (obj.owner_id == user.get_profile().pk or \
-                user.has_perm('admin', obj.cluster)):
-                    raise Http403(NO_PRIVS)
+            if not (obj.owner_id == user.get_profile().pk or
+                    user.has_perm('admin', obj.cluster)):
+                raise Http403(NO_PRIVS)
 
     # clear the error
     GanetiError.objects.filter(pk=error.pk).update(cleared=True)
@@ -352,13 +331,15 @@ def ssh_keys(request, api_key):
 
     users = set()
     for cluster in Cluster.objects.all():
-        users = users.union(set(get_users_any(cluster).values_list("id", flat=True)))
+        users = users.union(set(get_users_any(cluster)
+                                .values_list("id", flat=True)))
     for vm in VirtualMachine.objects.all():
-        users = users.union(set(get_users_any(vm).values_list('id', flat=True)))
+        users = users.union(set(get_users_any(vm)
+                                .values_list('id', flat=True)))
 
     keys = SSHKey.objects \
         .filter(Q(user__in=users) | Q(user__is_superuser=True)) \
-        .values_list('key','user__username')\
+        .values_list('key', 'user__username')\
         .order_by('user__username')
 
     keys_list = list(keys)

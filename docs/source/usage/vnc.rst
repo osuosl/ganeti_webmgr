@@ -108,7 +108,7 @@ Ensure that your virtualenv is active
 
 ::
 
-    source bin/activate
+    source venv/bin/activate
 
 If not using a virtualenv, then you must manually set the **PYTHONPATH**
 environment variable as root.

@@ -6,6 +6,7 @@ register = template.Library()
 
 OPEN_REG = getattr(settings, 'ALLOW_OPEN_REGISTRATION', True)
 
+
 @register.tag
 def open_registration(parser, token):
     nodelist_true = parser.parse(('else', 'endopen_registration'))

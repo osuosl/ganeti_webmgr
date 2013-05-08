@@ -77,6 +77,7 @@ def vm_qs_for_admins(user):
 
     return qs
 
+
 def vm_qs_for_users(user, clusters=True):
     """
     Retrieves a queryset of all the virtual machines for which the user has

@@ -7,9 +7,9 @@ from django.test import TestCase
 from ganeti_web import models
 from ganeti_web import constants
 from ganeti_web.forms.virtual_machine import (HvmModifyVirtualMachineForm,
-    KvmModifyVirtualMachineForm,
-    PvmModifyVirtualMachineForm,
-    ModifyVirtualMachineForm)
+                                              KvmModifyVirtualMachineForm,
+                                              PvmModifyVirtualMachineForm,
+                                              ModifyVirtualMachineForm)
 from ganeti_web.util.client import GanetiRapiClient
 from ganeti_web.util.proxy.constants import (INFO, INSTANCE, NODE, NODES,
                                              XEN_INFO, XEN_HVM_INSTANCE,
@@ -23,7 +23,7 @@ __all__ = [
     'TestKvmModifyVirtualMachineForm',
     'TestHvmModifyVirtualMachineForm',
     'TestPvmModifyVirtualMachineForm',
-    ]
+]
 
 VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
@@ -38,35 +38,35 @@ class TestModifyVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
     rapi = GanetiRapiClient
 
     data = dict(vcpus=2,
-        acpi=True,
-        disk_cache='default',
-        initrd_path='',
-        kernel_args='ro',
-        kvm_flag=None,
-        mem_path=None,
-        migration_downtime=30,
-        security_domain='',
-        security_model='none',
-        usb_mouse=None,
-        use_chroot=False,
-        use_localtime=False,
-        vnc_bind_address='0.0.0.0',
-        vnc_tls=False,
-        vnc_x509_path=None,
-        vnc_x509_verify=False,
-        memory=512,
-        os='image+debian-osgeo',
-        disk_type='paravirtual',
-        boot_order='disk',
-        nic_type='paravirtual',
-        nic_count=1,
-        nic_count_original=1,
-        nic_link_0='br0',
-        nic_mac_0='aa:bb:00:00:33:d2',
-        root_path='/dev/vda1',
-        kernel_path='/boot/vmlinuz-2.32.6-27-generic',
-        serial_console=True,
-        cdrom_image_path='')
+                acpi=True,
+                disk_cache='default',
+                initrd_path='',
+                kernel_args='ro',
+                kvm_flag=None,
+                mem_path=None,
+                migration_downtime=30,
+                security_domain='',
+                security_model='none',
+                usb_mouse=None,
+                use_chroot=False,
+                use_localtime=False,
+                vnc_bind_address='0.0.0.0',
+                vnc_tls=False,
+                vnc_x509_path=None,
+                vnc_x509_verify=False,
+                memory=512,
+                os='image+debian-osgeo',
+                disk_type='paravirtual',
+                boot_order='disk',
+                nic_type='paravirtual',
+                nic_count=1,
+                nic_count_original=1,
+                nic_link_0='br0',
+                nic_mac_0='aa:bb:00:00:33:d2',
+                root_path='/dev/vda1',
+                kernel_path='/boot/vmlinuz-2.32.6-27-generic',
+                serial_console=True,
+                cdrom_image_path='')
 
     def setUp(self):
         """
@@ -146,22 +146,23 @@ class TestKvmModifyVirtualMachineForm(TestModifyVirtualMachineForm):
 
     def setUp(self):
         self.patches = (
-            (self.rapi, 'GetNodes', lambda x:NODES),
-            (self.rapi, 'GetInfo', lambda x:INFO),
-            (self.rapi, 'GetNode', lambda y,x:NODE),
-            (self.rapi, 'GetOperatingSystems', lambda x:OPERATING_SYSTEMS),
-            (self.rapi, 'GetInstance', lambda x,y:INSTANCE),
+            (self.rapi, 'GetNodes', lambda x: NODES),
+            (self.rapi, 'GetInfo', lambda x: INFO),
+            (self.rapi, 'GetNode', lambda y, x: NODE),
+            (self.rapi, 'GetOperatingSystems', lambda x: OPERATING_SYSTEMS),
+            (self.rapi, 'GetInstance', lambda x, y: INSTANCE),
         )
 
         super(TestKvmModifyVirtualMachineForm, self).setUp()
 
         self.vm, self.cluster = self.create_virtual_machine(
-            cluster = Cluster(hostname='kvm.cluster',
+            cluster=Cluster(
+                hostname='kvm.cluster',
                 slug='kvm',
                 username='kvmuser',
                 password='kvmpass',
             ),
-            hostname = 'kvm.virtualmachine'
+            hostname='kvm.virtualmachine'
         )
 
         self.cluster.info = INFO.copy()
@@ -192,19 +193,19 @@ class TestKvmModifyVirtualMachineForm(TestModifyVirtualMachineForm):
         form = KvmModifyVirtualMachineForm(self.vm)
         fields = form.fields
         self.assertEqual(set(disk_type),
-            set(fields['disk_type'].choices))
+                         set(fields['disk_type'].choices))
         self.assertEqual(set(nic_type),
-            set(fields['nic_type'].choices))
+                         set(fields['nic_type'].choices))
         self.assertEqual(set(boot_order),
-            set(fields['boot_order'].choices))
+                         set(fields['boot_order'].choices))
         self.assertEqual(set(disk_caches),
-            set(fields['disk_cache'].choices))
+                         set(fields['disk_cache'].choices))
         self.assertEqual(set(kvm_flags),
-            set(fields['kvm_flag'].choices))
+                         set(fields['kvm_flag'].choices))
         self.assertEqual(set(security_models),
-            set(fields['security_model'].choices))
+                         set(fields['security_model'].choices))
         self.assertEqual(set(usb_mice),
-            set(fields['usb_mouse'].choices))
+                         set(fields['usb_mouse'].choices))
 
     def test_initial_form_fields(self):
         """
@@ -226,22 +227,24 @@ class TestHvmModifyVirtualMachineForm(TestModifyVirtualMachineForm):
 
     def setUp(self):
         self.patches = (
-            (self.rapi, 'GetNodes', lambda x:NODES),
-            (self.rapi, 'GetNode', lambda y,x:NODE),
-            (self.rapi, 'GetInfo', lambda x:XEN_INFO),
-            (self.rapi, 'GetOperatingSystems', lambda x:XEN_OPERATING_SYSTEMS),
-            (self.rapi, 'GetInstance', lambda x,y:XEN_HVM_INSTANCE),
+            (self.rapi, 'GetNodes', lambda x: NODES),
+            (self.rapi, 'GetNode', lambda y, x: NODE),
+            (self.rapi, 'GetInfo', lambda x: XEN_INFO),
+            (self.rapi, 'GetOperatingSystems',
+             lambda x: XEN_OPERATING_SYSTEMS),
+            (self.rapi, 'GetInstance', lambda x, y: XEN_HVM_INSTANCE),
         )
 
         super(TestHvmModifyVirtualMachineForm, self).setUp()
 
         self.vm, self.cluster = self.create_virtual_machine(
-            cluster = Cluster(hostname='xen-hvm.cluster',
+            cluster=Cluster(
+                hostname='xen-hvm.cluster',
                 slug='xen-hvm',
                 username='xenuser',
                 password='xenpass',
             ),
-            hostname = 'xen-hvm.virtualmachine'
+            hostname='xen-hvm.virtualmachine'
         )
 
         self.cluster.info = XEN_INFO.copy()
@@ -250,7 +253,7 @@ class TestHvmModifyVirtualMachineForm(TestModifyVirtualMachineForm):
         self.vm.refresh()
 
         # data custom to HVM
-        self.data['os'] ='debootstrap+default'
+        self.data['os'] = 'debootstrap+default'
         self.data['boot_order'] = 'cd'
 
     def test_meta_xenrapiproxy_set(self):
@@ -268,11 +271,11 @@ class TestHvmModifyVirtualMachineForm(TestModifyVirtualMachineForm):
 
         form = self.Form(self.vm)
         self.assertEqual(set(disk_type),
-            set(form.fields['disk_type'].choices))
+                         set(form.fields['disk_type'].choices))
         self.assertEqual(set(nic_type),
-            set(form.fields['nic_type'].choices))
+                         set(form.fields['nic_type'].choices))
         self.assertEqual(set(boot_order),
-            set(form.fields['boot_order'].choices))
+                         set(form.fields['boot_order'].choices))
 
     def test_initial_form_fields(self):
         """
@@ -306,29 +309,31 @@ class TestPvmModifyVirtualMachineForm(TestModifyVirtualMachineForm):
 
     def setUp(self):
         self.patches = (
-            (self.rapi, 'GetNodes', lambda x:NODES),
-            (self.rapi, 'GetNode', lambda x,y:NODE),
-            (self.rapi, 'GetInfo', lambda x:XEN_INFO),
-            (self.rapi, 'GetOperatingSystems', lambda x:XEN_OPERATING_SYSTEMS),
-            (self.rapi, 'GetInstance', lambda x,y:XEN_PVM_INSTANCE)
+            (self.rapi, 'GetNodes', lambda x: NODES),
+            (self.rapi, 'GetNode', lambda x, y: NODE),
+            (self.rapi, 'GetInfo', lambda x: XEN_INFO),
+            (self.rapi, 'GetOperatingSystems',
+             lambda x: XEN_OPERATING_SYSTEMS),
+            (self.rapi, 'GetInstance', lambda x, y: XEN_PVM_INSTANCE)
         )
 
         super(TestPvmModifyVirtualMachineForm, self).setUp()
 
         self.vm, self.cluster = self.create_virtual_machine(
-            cluster = Cluster(hostname='xen-pvm.cluster',
+            cluster=Cluster(
+                hostname='xen-pvm.cluster',
                 slug='xen-pvm',
                 username='pvmuser',
                 password='pvmpass',
             ),
-            hostname = 'pvm.virtualmachine'
+            hostname='pvm.virtualmachine'
         )
 
         self.cluster.info = XEN_INFO.copy()
         self.vm.info = XEN_PVM_INSTANCE.copy()
         self.vm.refresh()
 
-        self.data['os'] ='debootstrap+default'
+        self.data['os'] = 'debootstrap+default'
 
     def test_meta_default_hypervisor(self):
         """
@@ -353,7 +358,8 @@ class TestPvmModifyVirtualMachineForm(TestModifyVirtualMachineForm):
         """
         Test that the form does not contain any extra fields.
         """
-        modify_fields = ('vcpus', 'memory', 'nic_count', 'nic_link_0', 'nic_mac_0', 'os')
+        modify_fields = ('vcpus', 'memory', 'nic_count',
+                         'nic_link_0', 'nic_mac_0', 'os')
         hv_fields = PvmModifyVirtualMachineForm.hvparam_fields
         form = PvmModifyVirtualMachineForm(self.vm)
 
@@ -370,9 +376,9 @@ class TestPvmModifyVirtualMachineForm(TestModifyVirtualMachineForm):
           to the form as data, and the initial kwarg was binding the data.
         """
         data = dict(
-            os = 'image+default',
-            vcpus = 2,
-            memory = 200,
+            os='image+default',
+            vcpus=2,
+            memory=200,
             nic_count=1,
             nic_count_original=1,
             nic_link_0='br0',

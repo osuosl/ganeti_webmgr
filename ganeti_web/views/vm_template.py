@@ -52,11 +52,12 @@ class TemplateListView(LoginRequiredMixin, PaginationMixin, SingleTableView):
         Helper function to sum disk templates since they're stored in the
         database using a serialized field.
 
-        Note - This expects a list of templates, and does not return a queryset.
+        Note - This expects a list of templates, and does not return a queryset
 
         """
         for template in templates:
-            template.disk_space = sum([disk['size'] for disk in template.disks])
+            total_disk_space = sum([disk['size'] for disk in template.disks])
+            template.disk_space = total_disk_space
         return templates
 
 
@@ -77,13 +78,10 @@ class TemplateFromVMInstanceView(LoginRequiredMixin, FormView):
                                     cluster__slug=cluster_slug)
 
         user = self.request.user
-        if not (
-            user.is_superuser or
-            user.has_perm('admin', self.cluster) or
-            user.has_perm('create_vm', self.cluster)
-            ):
+        if not (user.is_superuser or
+                user.has_perm('admin', self.cluster) or
+                user.has_perm('create_vm', self.cluster)):
             raise Http403(NO_PRIVS)
-
 
     def form_valid(self, form):
         """
@@ -100,7 +98,6 @@ class TemplateFromVMInstanceView(LoginRequiredMixin, FormView):
                                             args=[self.cluster.slug,
                                                   template.template_name]))
 
-
     def get_context_data(self, **kwargs):
         context = super(TemplateFromVMInstanceView,
                         self).get_context_data(**kwargs)
@@ -110,7 +107,6 @@ class TemplateFromVMInstanceView(LoginRequiredMixin, FormView):
         context["vm"] = self.vm
 
         return context
-
 
 
 class VMInstanceFromTemplateView(LoginRequiredMixin, FormView):
@@ -131,13 +127,10 @@ class VMInstanceFromTemplateView(LoginRequiredMixin, FormView):
                                           cluster__slug=cluster_slug)
 
         user = self.request.user
-        if not (
-            user.is_superuser or
-            user.has_perm('admin', self.cluster) or
-            user.has_perm('create_vm', self.cluster)
-            ):
+        if not (user.is_superuser or
+                user.has_perm('admin', self.cluster) or
+                user.has_perm('create_vm', self.cluster)):
             raise Http403(NO_PRIVS)
-
 
     def form_valid(self, form):
         """
@@ -155,7 +148,6 @@ class VMInstanceFromTemplateView(LoginRequiredMixin, FormView):
                                             args=[self.cluster.slug,
                                                   vm.hostname]))
 
-
     def get_context_data(self, **kwargs):
         context = super(VMInstanceFromTemplateView,
                         self).get_context_data(**kwargs)
@@ -172,21 +164,19 @@ def detail(request, cluster_slug, template):
     user = request.user
     if cluster_slug:
         cluster = get_object_or_404(Cluster, slug=cluster_slug)
-        if not (
-            user.is_superuser or
-            user.has_perm('admin', cluster) or
-            user.has_perm('create_vm', cluster)
-            ):
+        if not (user.is_superuser or
+                user.has_perm('admin', cluster) or
+                user.has_perm('create_vm', cluster)):
             raise Http403(NO_PRIVS)
 
     vm_template = get_object_or_404(VirtualMachineTemplate,
                                     template_name=template,
                                     cluster__slug=cluster_slug)
-    return render_to_response('ganeti/vm_template/detail.html', {
-        'template':vm_template,
-        'cluster':cluster_slug,
-        },
-        context_instance = RequestContext(request)
+    return render_to_response(
+        'ganeti/vm_template/detail.html',
+        {'template': vm_template,
+         'cluster': cluster_slug, },
+        context_instance=RequestContext(request)
     )
 
 
@@ -199,23 +189,22 @@ def copy(request, cluster_slug, template):
     user = request.user
     if cluster_slug:
         cluster = get_object_or_404(Cluster, slug=cluster_slug)
-        if not (
-            user.is_superuser or
-            user.has_perm('admin', cluster) or
-            user.has_perm('create_vm', cluster)
-            ):
+        if not (user.is_superuser or
+                user.has_perm('admin', cluster) or
+                user.has_perm('create_vm', cluster)):
             raise Http403(NO_PRIVS)
 
-    obj = get_object_or_404(VirtualMachineTemplate, template_name=template,
-                                    cluster__slug=cluster_slug)
+    obj = get_object_or_404(VirtualMachineTemplate,
+                            template_name=template,
+                            cluster__slug=cluster_slug)
     if request.method == "GET":
         form = VirtualMachineTemplateCopyForm()
-        return render_to_response('ganeti/vm_template/copy.html', {
-            'form':form,
-            'template':obj,
-            'cluster':cluster_slug,
-            },
-            context_instance = RequestContext(request)
+        return render_to_response(
+            'ganeti/vm_template/copy.html',
+            {'form': form,
+             'template': obj,
+             'cluster': cluster_slug, },
+            context_instance=RequestContext(request)
         )
     elif request.method == "POST":
         form = VirtualMachineTemplateCopyForm(request.POST)
@@ -230,7 +219,7 @@ def copy(request, cluster_slug, template):
             obj.description = desc
             obj.save()
         return HttpResponseRedirect(reverse('template-detail',
-                            args=[cluster_slug, obj]))
+                                    args=[cluster_slug, obj]))
 
 
 @login_required
@@ -239,16 +228,15 @@ def delete(request, cluster_slug, template):
     user = request.user
     if cluster_slug:
         cluster = get_object_or_404(Cluster, slug=cluster_slug)
-        if not (
-            user.is_superuser or
-            user.has_perm('admin', cluster) or
-            user.has_perm('create_vm', cluster)
-            ):
+        if not (user.is_superuser or
+                user.has_perm('admin', cluster) or
+                user.has_perm('create_vm', cluster)):
             raise Http403(NO_PRIVS)
 
     try:
-        vm_template = VirtualMachineTemplate.objects.get(template_name=template,
-                                                         cluster__slug=cluster_slug)
+        vm_template = VirtualMachineTemplate.objects \
+            .get(template_name=template,
+                 cluster__slug=cluster_slug)
         vm_template.delete()
     except VirtualMachineTemplate.DoesNotExist:
         return HttpResponse('-1', mimetype='application/json')

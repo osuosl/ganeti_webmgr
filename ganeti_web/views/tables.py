@@ -3,7 +3,8 @@ from django_tables2 import (Table, Column, LinkColumn, TemplateColumn,
 from django_tables2.utils import A
 
 from ganeti_web.templatetags.webmgr_tags import (render_storage, render_os,
-                                                 abbreviate_fqdn, format_job_op)
+                                                 abbreviate_fqdn,
+                                                 format_job_op)
 from ganeti_web.utilities import hv_prettify
 
 
@@ -123,8 +124,16 @@ class ClusterTable(Table):
         verbose_name='cluster'
     )
     description = Column()
-    version = Column(accessor="info.software_version", orderable=False, default="unknown")
-    hypervisor = Column(accessor="info.default_hypervisor", orderable=False, default="unknown")
+    version = Column(
+        accessor="info.software_version",
+        orderable=False,
+        default="unknown"
+    )
+    hypervisor = Column(
+        accessor="info.default_hypervisor",
+        orderable=False,
+        default="unknown"
+    )
     master_node = LinkColumn(
         "node-detail",
         kwargs={"cluster_slug": A("slug"),

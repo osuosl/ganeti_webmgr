@@ -35,6 +35,7 @@ __all__ = (
     "ugettext",
 )
 
+
 # Horrible Django hack for convincing Django that we are i18n'd.
 def ugettext(s):
     return s

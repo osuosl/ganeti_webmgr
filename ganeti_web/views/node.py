@@ -133,7 +133,8 @@ class NodeSecondaryListView(BaseNodeVMListView):
 
     def get_context_data(self, **kwargs):
         context = super(BaseNodeVMListView, self).get_context_data(**kwargs)
-        context['ajax_url'] = reverse('node-secondary-vms', args=self.ajax_args)
+        context['ajax_url'] = reverse('node-secondary-vms',
+                                      args=self.ajax_args)
         return context
 
 
@@ -145,7 +146,8 @@ def object_log(request, cluster_slug, host, rest=False):
     node, cluster = get_node_and_cluster_or_404(cluster_slug, host)
 
     user = request.user
-    if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
+    if not (user.is_superuser or user.has_any_perms(cluster,
+                                                    ['admin', 'migrate'])):
         if not rest:
             raise Http403(NO_PRIVS)
         else:
@@ -162,7 +164,8 @@ def role(request, cluster_slug, host):
     node, cluster = get_node_and_cluster_or_404(cluster_slug, host)
 
     user = request.user
-    if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
+    if not (user.is_superuser or user.has_any_perms(cluster,
+                                                    ['admin', 'migrate'])):
         raise Http403(NO_PRIVS)
 
     if request.method == 'POST':
@@ -175,9 +178,10 @@ def role(request, cluster_slug, host):
 
                 # log information
                 log_action('NODE_ROLE_CHANGE', user, node)
-                return HttpResponse(json.dumps(msg), mimetype='application/json')
+                return HttpResponse(json.dumps(msg),
+                                    mimetype='application/json')
             except GanetiApiError, e:
-                content = json.dumps({'__all__':[str(e)]})
+                content = json.dumps({'__all__': [str(e)]})
         else:
             # error in form return ajax response
             content = json.dumps(form.errors)
@@ -188,12 +192,12 @@ def role(request, cluster_slug, host):
         form = RoleForm()
 
     else:
-        data = {'role':constants.ROLE_MAP[node.role]}
+        data = {'role': constants.ROLE_MAP[node.role]}
         form = RoleForm(data)
 
-    return render_to_response('ganeti/node/role.html', \
-        {'form':form, 'node':node, 'cluster':cluster}, \
-        context_instance=RequestContext(request))
+    return render_to_response('ganeti/node/role.html',
+                              {'form': form, 'node': node, 'cluster': cluster},
+                              context_instance=RequestContext(request))
 
 
 @login_required
@@ -204,7 +208,8 @@ def migrate(request, cluster_slug, host):
     node, cluster = get_node_and_cluster_or_404(cluster_slug, host)
 
     user = request.user
-    if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
+    if not (user.is_superuser or user.has_any_perms(cluster,
+                                                    ['admin', 'migrate'])):
         raise Http403(NO_PRIVS)
 
     if request.method == 'POST':
@@ -218,9 +223,10 @@ def migrate(request, cluster_slug, host):
                 # log information
                 log_action('NODE_MIGRATE', user, node)
 
-                return HttpResponse(json.dumps(msg), mimetype='application/json')
+                return HttpResponse(json.dumps(msg),
+                                    mimetype='application/json')
             except GanetiApiError, e:
-                content = json.dumps({'__all__':[str(e)]})
+                content = json.dumps({'__all__': [str(e)]})
         else:
             # error in form return ajax response
             content = json.dumps(form.errors)
@@ -229,9 +235,9 @@ def migrate(request, cluster_slug, host):
     else:
         form = MigrateForm()
 
-    return render_to_response('ganeti/node/migrate.html', \
-        {'form':form, 'node':node, 'cluster':cluster}, \
-        context_instance=RequestContext(request))
+    return render_to_response('ganeti/node/migrate.html',
+                              {'form': form, 'node': node, 'cluster': cluster},
+                              context_instance=RequestContext(request))
 
 
 @login_required
@@ -242,7 +248,8 @@ def evacuate(request, cluster_slug, host):
     node, cluster = get_node_and_cluster_or_404(cluster_slug, host)
 
     user = request.user
-    if not (user.is_superuser or user.has_any_perms(cluster, ['admin','migrate'])):
+    if not (user.is_superuser or user.has_any_perms(cluster,
+                                                    ['admin', 'migrate'])):
         raise Http403(NO_PRIVS)
 
     if request.method == 'POST':
@@ -259,9 +266,10 @@ def evacuate(request, cluster_slug, host):
                 # log information
                 log_action('NODE_EVACUATE', user, node, job)
 
-                return HttpResponse(json.dumps(msg), mimetype='application/json')
+                return HttpResponse(json.dumps(msg),
+                                    mimetype='application/json')
             except GanetiApiError, e:
-                content = json.dumps({'__all__':[str(e)]})
+                content = json.dumps({'__all__': [str(e)]})
         else:
             # error in form return ajax response
             content = json.dumps(form.errors)
@@ -270,9 +278,9 @@ def evacuate(request, cluster_slug, host):
     else:
         form = EvacuateForm(cluster, node)
 
-    return render_to_response('ganeti/node/evacuate.html', \
-        {'form':form, 'node':node, 'cluster':cluster}, \
-        context_instance=RequestContext(request))
+    return render_to_response('ganeti/node/evacuate.html',
+                              {'form': form, 'node': node, 'cluster': cluster},
+                              context_instance=RequestContext(request))
 
 
 @login_required

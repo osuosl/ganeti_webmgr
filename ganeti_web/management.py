@@ -23,12 +23,13 @@ from django.contrib.sites.models import Site
 
 from django.db.models.signals import post_syncdb
 
+
 def update_sites_module(sender, **kwargs):
     """
     Create a new row in the django_sites table that
       holds SITE_ID, SITE_NAME and SITE_DOMAIN defined
       in setting.py
-      
+
       If SITE_NAME or SITE_DOMAIN are not defined they
        will default to 'example.com'
     """
@@ -51,7 +52,7 @@ def update_sites_module(sender, **kwargs):
     except AttributeError, e:
         print e
         print 'Using: \'%s\' for site domain.' % domain
-    
+
     try:
         site = Site.objects.get(id=id)
         if site.name != name:
@@ -76,5 +77,5 @@ def update_sites_module(sender, **kwargs):
     else:
         if site.name != name:
             print "A site with the id of %s is already taken. " \
-            "Please change SITE_ID to a different number in your " \
-            "settings.py file." % id
+                  "Please change SITE_ID to a different number in your " \
+                  "settings.py file." % id

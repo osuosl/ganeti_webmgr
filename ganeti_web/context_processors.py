@@ -35,8 +35,8 @@ ANONYMOUS_PERMISSIONS = dict(cluster_admin=False,
                              view_cluster=False)
 
 CLUSTER_ADMIN_PERMISSIONS = dict(cluster_admin=True,
-                             create_vm=True,
-                             view_cluster=True)
+                                 create_vm=True,
+                                 view_cluster=True)
 
 CLUSTER_VIEW_PERMS = ['migrate', 'export', 'replace_disks', 'tags']
 
