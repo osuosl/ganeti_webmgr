@@ -809,7 +809,7 @@ class VMWizardBasicsForm(Form):
             self.fields["memory"].initial = beparams["maxmem"]
             self.fields["minram"].initial = beparams["minmem"]
         else:
-            self.fields["memory"].initial = beparams["memeory"]
+            self.fields["memory"].initial = beparams["memory"]
 
         # If there are ipolicy limits in place, add validators for them.
         if "ipolicy" in cluster.info:
