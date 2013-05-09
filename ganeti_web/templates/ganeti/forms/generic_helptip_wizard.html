@@ -28,6 +28,15 @@
       // Show the tip.
       $tip.show();
     }
+
+    // Attach a keydown listener to the form inputs
+    // and when ENTER (magic number 13) is fired, click
+    // either 'Next' or 'Create VM.'
+    $("input").keydown(function(e) {
+        if (e.which == 13) {
+            $("input[type=submit]").click();
+        }
+    });
   });
 </script>
 
