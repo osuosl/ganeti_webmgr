@@ -8,7 +8,13 @@ from ganeti_web.templatetags.webmgr_tags import (render_storage, render_os,
 from ganeti_web.utilities import hv_prettify
 
 
-class BaseVMTable(Table):
+class BaseTable(Table):
+    def __init__(self, *args, **kwargs):
+        kwargs['template'] = kwargs.get("template", "table.html")
+        return super(BaseTable, self).__init__(*args, **kwargs)
+
+
+class BaseVMTable(BaseTable):
 
     status = TemplateColumn(
         template_name="ganeti/virtual_machine/vmfield_status.html",
@@ -40,10 +46,6 @@ class BaseVMTable(Table):
         sequence = ("status", "hostname", "cluster", "...")
         order_by = ("hostname")
         empty_text = "No Virtual Machines"
-
-    def __init__(self, *args, **kwargs):
-        self.template = "table.html"
-        return super(BaseVMTable, self).__init__(*args, **kwargs)
 
     def render_disk_size(self, value):
         return render_storage(value)
@@ -80,7 +82,7 @@ class NodeVMTable(BaseVMTable):
                       "assigned to it as this role.")
 
 
-class VMTemplateTable(Table):
+class VMTemplateTable(BaseTable):
 
     template_name = LinkColumn(
         "template-detail",
@@ -115,7 +117,7 @@ class VMTemplateTable(Table):
         return render_storage(value)
 
 
-class ClusterTable(Table):
+class ClusterTable(BaseTable):
 
     cluster = LinkColumn(
         "cluster-detail",
@@ -156,7 +158,7 @@ class ClusterTable(Table):
         return hv_prettify(value)
 
 
-class JobTable(Table):
+class JobTable(BaseTable):
     job_id = LinkColumn(
         'job-detail',
         args=[A("cluster.slug"), A("job_id")]
