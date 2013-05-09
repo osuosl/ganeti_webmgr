@@ -169,7 +169,8 @@ class JobTable(Table):
     )
     object = TemplateColumn(
         template_name="ganeti/overview/object_link.html",
-        accessor="obj"
+        accessor="obj",
+        orderable=False  # Cannot access generic fk to get obj name for sort
     )
     operation = Column(accessor="op", verbose_name="operation")
     # Extra space is because it doesn't like the word status for some reason.
