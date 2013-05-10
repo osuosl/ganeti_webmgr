@@ -34,7 +34,7 @@ What does "Autostart" do?
   machine will only start when a user manually starts it.
 
 I get the error: "Whoosh\_index not writable for current user/group"
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   When running GWM through Apache, it is required that the apache user
   (or www-data) and group can write to the whoosh_index directory.
