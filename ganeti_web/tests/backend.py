@@ -1,4 +1,4 @@
-from django.contrib.auth.models import AnonymousUser, User, Group
+from django.contrib.auth.models import AnonymousUser, Group
 from django.test import TestCase
 
 from django_test_tools.users import UserTestMixin
@@ -11,6 +11,7 @@ __all__ = (
     "TestClusterQSForUser",
     "TestOwnerQSForCluster",
 )
+
 
 class TestClusterQSForUser(TestCase, UserTestMixin):
 
