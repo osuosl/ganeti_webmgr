@@ -91,6 +91,7 @@ INSTALLED_APPS = (
     'muddle.shots',
     'muddle_users',
     'include_strip_tag',
+    'django_tables2',
 )
 
 # The model that contains extra user profile stuff.
