@@ -809,7 +809,7 @@ class VMWizardBasicsForm(Form):
             self.fields["memory"].initial = beparams["maxmem"]
             self.fields["minram"].initial = beparams["minmem"]
         else:
-            self.fields["memory"].initial = beparams["memeory"]
+            self.fields["memory"].initial = beparams["memory"]
 
         # If there are ipolicy limits in place, add validators for them.
         if "ipolicy" in cluster.info:
@@ -841,7 +841,7 @@ class VMWizardBasicsForm(Form):
         self.fields["os"].initial = template.os
         self.fields["vcpus"].initial = template.vcpus
         self.fields["memory"].initial = template.memory
-        if has_balloonmem(cluster):
+        if has_balloonmem(template.cluster):
             self.fields["minram"].initial = template.minmem
         self.fields["disk_template"].initial = template.disk_template
         for num, disk in enumerate(template.disks):
