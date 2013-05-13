@@ -23,6 +23,8 @@ from django.template import RequestContext
 from django.views.decorators.http import require_http_methods
 from django.views.generic.edit import FormView
 
+from django_tables2 import SingleTableView
+
 from ganeti_web.backend.templates import (instance_to_template,
                                           template_to_instance)
 from ganeti_web.forms.vm_template import (VirtualMachineTemplateCopyForm,
@@ -30,22 +32,33 @@ from ganeti_web.forms.vm_template import (VirtualMachineTemplateCopyForm,
                                           TemplateFromVMInstance)
 from ganeti_web.middleware import Http403
 from ganeti_web.models import Cluster, VirtualMachineTemplate, VirtualMachine
-from ganeti_web.views.generic import NO_PRIVS, LoginRequiredMixin
+from ganeti_web.views.generic import (LoginRequiredMixin, PaginationMixin,
+                                      NO_PRIVS)
+from ganeti_web.views.tables import VMTemplateTable
 
 
-@login_required
-def templates(request):
-    # Get a queryset of templates. Exclude templates that have been marked as
-    # temporary.
-    templates = VirtualMachineTemplate.objects.exclude(temporary=True)
-    # Because templates do not have 'disk_size' this value
-    #  is computed here to be easily displayed.
-    for template in templates:
-        template.disk_size = sum([disk['size'] for disk in template.disks])
-    return render_to_response(
-        'ganeti/vm_template/list.html',
-        {'templates': templates, },
-        context_instance=RequestContext(request))
+class TemplateListView(LoginRequiredMixin, PaginationMixin, SingleTableView):
+    queryset = VirtualMachineTemplate.objects.exclude(temporary=True)
+    table_class = VMTemplateTable
+    template_name = "ganeti/vm_template/list.html"
+
+    def get_queryset(self):
+        qs = super(TemplateListView, self).get_queryset()
+        templates = list(qs)
+        return self.sum_disks(templates)
+
+    def sum_disks(self, templates):
+        """
+        Helper function to sum disk templates since they're stored in the
+        database using a serialized field.
+
+        Note - This expects a list of templates, and does not return a queryset
+
+        """
+        for template in templates:
+            total_disk_size = sum([disk['size'] for disk in template.disks])
+            template.disk_space = total_disk_size
+        return templates
 
 
 class TemplateFromVMInstanceView(LoginRequiredMixin, FormView):

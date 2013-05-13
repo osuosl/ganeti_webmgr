@@ -1,15 +1,15 @@
 {% load webmgr_tags %}
 
-{% with error.obj|class_name as class %}
-<td class="{{class}} name">
+{% with record.obj|class_name as class %}
+    <div class ="{{class}}">
     {% ifequal class 'Cluster' %}
-        <a href="{% url cluster-detail error.obj.slug %}">{{ error.obj|abbreviate_fqdn }}</a>
+        <a href="{% url cluster-detail record.obj.slug %}">{{ record.obj|abbreviate_fqdn }}</a>
     {% endifequal %}
     {% ifequal class 'VirtualMachine' %}
-        <a href="{% url instance-detail error.obj.cluster.slug error.obj.hostname %}">{{ error.obj|abbreviate_fqdn }}</a>
+        <a href="{% url instance-detail record.obj.cluster.slug record.obj.hostname %}">{{ record.obj|abbreviate_fqdn }}</a>
     {% endifequal %}
     {% ifequal class 'Node' %}
-        <a href="{% url node-detail error.obj.cluster.slug error.obj.hostname %}">{{ error.obj|abbreviate_fqdn }}</a>
+        <a href="{% url node-detail record.obj.cluster.slug record.obj.hostname %}">{{ record.obj|abbreviate_fqdn }}</a>
     {% endifequal %}
-</td>
+    </div>
 {% endwith %}

@@ -16,7 +16,7 @@
 # USA.
 
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import simplejson as json
 from django.views.generic.detail import DetailView

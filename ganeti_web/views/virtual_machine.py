@@ -33,15 +33,17 @@ from django.utils.translation import ugettext as _
 from django.views.decorators.http import require_http_methods, require_POST
 from django.views.generic.edit import DeleteView
 
+from django_tables2 import SingleTableView
+
 from object_log.views import list_for_object
+from object_log.models import LogItem
+log_action = LogItem.objects.log_action
 
 from object_permissions import get_users_any
 from object_permissions.signals import (view_add_user, view_edit_user,
                                         view_remove_user)
 from object_permissions.views.permissions import view_users, view_permissions
 
-from object_log.models import LogItem
-log_action = LogItem.objects.log_action
 
 from ganeti_web.backend.queries import vm_qs_for_users
 from ganeti_web.caps import has_shutdown_timeout, has_balloonmem
@@ -52,13 +54,15 @@ from ganeti_web.forms.virtual_machine import (KvmModifyVirtualMachineForm,
                                               RenameForm, ChangeOwnerForm,
                                               ReplaceDisksForm)
 from ganeti_web.middleware import Http403
-from ganeti_web.models import Cluster, Job, SSHKey, Node, VirtualMachine
+from ganeti_web.models import Cluster, Job, SSHKey, VirtualMachine
 from ganeti_web.templatetags.webmgr_tags import render_storage
 from ganeti_web.util.client import GanetiApiError
 from ganeti_web.utilities import (cluster_os_list, compare, os_prettify,
                                   get_hypervisor)
 from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
-                                      PagedListView)
+                                      PaginationMixin, GWMBaseView)
+
+from ganeti_web.views.tables import BaseVMTable
 
 
 #XXX No more need for tastypie dependency for 0.8
@@ -85,63 +89,39 @@ def get_vm_and_cluster_or_404(cluster_slug, instance):
     raise Http404('Virtual Machine does not exist')
 
 
-class VMListView(LoginRequiredMixin, PagedListView):
+class BaseVMListView(LoginRequiredMixin, PaginationMixin, GWMBaseView,
+                     SingleTableView):
     """
-    View for displaying a list of VirtualMachines.
+    A view for listing VirtualMachines. It does so using a custom table object
+    containing the logic for displaying the list.
     """
+    model = VirtualMachine
+    table_class = BaseVMTable
     template_name = "ganeti/virtual_machine/list.html"
 
+    def get_template_names(self):
+        if self.request.is_ajax():
+            template = ['table.html']  # all we need is the table
+        else:
+            template = ['ganeti/virtual_machine/list.html']
+        return template
+
+
+class VMListView(BaseVMListView):
     def get_queryset(self):
-        qs = vm_qs_for_users(self.request.user)
-        return qs.select_related()
+        # queryset takes precedence over model
+        self.queryset = vm_qs_for_users(self.request.user)
+        qs = super(BaseVMListView, self).get_queryset()
+        return qs
 
     def get_context_data(self, **kwargs):
-        user = self.request.user
-        context = super(VMListView, self) \
-            .get_context_data(object_list=kwargs["object_list"])
-        context["can_create"] = (user.is_superuser or
-                                 user.has_any_perms(Cluster, ["create_vm"]))
-
-        if "order_by" in self.request.GET:
-            context["order"] = self.request.GET["order_by"]
-        else:
-            context["order"] = "hostname"
-
+        context = super(VMListView, self).get_context_data(**kwargs)
+        context["ajax_url"] = reverse("virtualmachine-list")
+        # check perms, and send them to the table for rendering
+        # pass in the Cluster Class to check all clusters
+        can_create = self.can_create(Cluster)
+        context["table"].can_create = context["create_vm"] = can_create
         return context
-
-
-class VMListTableView(VMListView):
-    """
-    View for displaying the virtual machine table.
-
-    This is used for ajax calls to reload the table, usually because of a page
-    or sorting change.
-
-    It's very similar to the ``VMListView``, but has some additional filters
-    which can be applied.
-    """
-
-    def get_queryset(self):
-        qs = super(VMListTableView, self).get_queryset()
-
-        if "cluster_slug" in self.kwargs:
-            self.cluster = Cluster.objects \
-                .get(slug=self.kwargs["cluster_slug"])
-            qs = qs.filter(cluster=self.cluster)
-        else:
-            self.cluster = None
-
-        # filter the vms by primary node if applicable
-        if "primary_node" in self.kwargs:
-            inner = Node.objects.filter(hostname=self.kwargs["primary_node"])
-            qs = qs.filter(primary_node=inner)
-
-        # filter the vms by secondary node if applicable
-        if "secondary_node" in self.kwargs:
-            inner = Node.objects.filter(hostname=self.kwargs["secondary_node"])
-            qs = qs.filter(secondary_node=inner)
-
-        return qs
 
 
 class VMDeleteView(LoginRequiredMixin, DeleteView):
@@ -547,7 +527,8 @@ def detail(request, cluster_slug, instance, rest=False):
     vm, cluster = get_vm_and_cluster_or_404(cluster_slug, instance)
 
     user = request.user
-    cluster_admin = user.is_superuser or user.has_perm('admin', cluster)
+    cluster_admin = (user.is_superuser or
+                     user.has_any_perms(cluster, perms=['admin', 'create_vm']))
 
     if not cluster_admin:
         perms = user.get_perms(vm)

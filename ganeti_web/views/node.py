@@ -18,7 +18,7 @@
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
-from django.db.models.query_utils import Q
+from django.core.urlresolvers import reverse
 from django.http import HttpResponse, Http404
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -35,8 +35,9 @@ from ganeti_web import constants
 from ganeti_web.forms.node import RoleForm, MigrateForm, EvacuateForm
 from ganeti_web.middleware import Http403
 from ganeti_web.models import Node, Job
-from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
-                                      PagedListView)
+from ganeti_web.views.generic import NO_PRIVS, LoginRequiredMixin
+from ganeti_web.views.virtual_machine import BaseVMListView
+from ganeti_web.views.tables import NodeVMTable
 
 
 def get_node_and_cluster_or_404(cluster_slug, host):
@@ -77,58 +78,64 @@ class NodeDetailView(LoginRequiredMixin, DetailView):
         }
 
 
-class NodePrimaryListView(LoginRequiredMixin, PagedListView):
+# We can probably get away with a single view, and filter which vm's by url,
+# rather than the foreign key, but this works.
+
+class BaseNodeVMListView(BaseVMListView):
+
+    table_class = NodeVMTable
+    template_name = "ganeti/virtual_machine/list.html"
+
+    def get_node(self):
+        """
+        Helper method to query the database and retrieve the node, and cluster.
+        If the user has perms return the node otherwise return a 403 error.
+        """
+        self.node, self.cluster = get_node_and_cluster_or_404(
+            self.kwargs["cluster_slug"], self.kwargs["host"])
+
+        user = self.request.user
+        self.admin = (user.is_superuser or user.has_any_perms(self.cluster,
+                      ["admin", "migrate"]))
+        if not self.admin:
+            raise Http403(NO_PRIVS)
+
+        self.ajax_args = [self.cluster.slug, self.node.hostname]
+
+        return self.node
+
+
+class NodePrimaryListView(BaseNodeVMListView):
     """
     Renders a list of primary VirtualMachines on the given node.
     """
 
-    template_name = "ganeti/virtual_machine/table.html"
-
     def get_queryset(self):
-        self.node, self.cluster = get_node_and_cluster_or_404(
-            self.kwargs["cluster_slug"], self.kwargs["host"])
-
-        user = self.request.user
-        if not (user.is_superuser or
-                user.has_any_perms(self.cluster, ["admin", "migrate"])):
-            raise Http403(NO_PRIVS)
-
-        return self.node.primary_vms.all()
+        node = self.get_node()
+        self.queryset = node.primary_vms.all()
+        return super(NodePrimaryListView, self).get_queryset()
 
     def get_context_data(self, **kwargs):
-        kwargs.update({
-            "tableID": "table_primary",
-            "primary_node": True,
-            "node": self.node,
-        })
-        return kwargs
+        context = super(BaseNodeVMListView, self).get_context_data(**kwargs)
+        context['ajax_url'] = reverse('node-primary-vms', args=self.ajax_args)
+        return context
 
 
-class NodeSecondaryListView(LoginRequiredMixin, PagedListView):
+class NodeSecondaryListView(BaseNodeVMListView):
     """
     Renders a list of secondary VirtualMachines on the given node.
     """
 
-    template_name = "ganeti/virtual_machine/table.html"
-
     def get_queryset(self):
-        self.node, self.cluster = get_node_and_cluster_or_404(
-            self.kwargs["cluster_slug"], self.kwargs["host"])
-
-        user = self.request.user
-        if not (user.is_superuser or
-                user.has_any_perms(self.cluster, ["admin", "migrate"])):
-            raise Http403(NO_PRIVS)
-
-        return self.node.secondary_vms.all()
+        node = self.get_node()
+        self.queryset = node.secondary_vms.all()
+        return super(NodeSecondaryListView, self).get_queryset()
 
     def get_context_data(self, **kwargs):
-        kwargs.update({
-            "tableID": "table_secondary",
-            "secondary_node": True,
-            "node": self.node,
-        })
-        return kwargs
+        context = super(BaseNodeVMListView, self).get_context_data(**kwargs)
+        context['ajax_url'] = reverse('node-secondary-vms',
+                                      args=self.ajax_args)
+        return context
 
 
 @login_required

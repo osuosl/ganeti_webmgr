@@ -31,7 +31,8 @@ from django.utils import simplejson as json
 from django.utils.translation import ugettext as _
 from django.views.decorators.http import require_POST
 from django.views.generic.detail import DetailView
-from django.views.generic.list import ListView
+
+from django_tables2 import SingleTableView
 
 from object_permissions import get_users_any
 from object_permissions import signals as op_signals
@@ -42,14 +43,18 @@ from object_log.views import list_for_object
 
 log_action = LogItem.objects.log_action
 
-from ganeti_web.util.client import GanetiApiError
+from ganeti_web.backend.queries import vm_qs_for_users, cluster_qs_for_user
+from ganeti_web.forms.cluster import EditClusterForm, QuotaForm
 from ganeti_web.middleware import Http403
 from ganeti_web.models import (Cluster, ClusterUser, Profile, SSHKey,
                                VirtualMachine, Job)
 from ganeti_web.views import render_404
-from ganeti_web.forms.cluster import EditClusterForm, QuotaForm
 from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
-                                      PagedListView)
+                                      PaginationMixin, GWMBaseView)
+from ganeti_web.views.tables import (ClusterTable, ClusterVMTable,
+                                     ClusterJobTable)
+from ganeti_web.views.virtual_machine import BaseVMListView
+from ganeti_web.util.client import GanetiApiError
 
 
 class ClusterDetailView(LoginRequiredMixin, DetailView):
@@ -71,89 +76,86 @@ class ClusterDetailView(LoginRequiredMixin, DetailView):
         }
 
 
-class ClusterListView(LoginRequiredMixin, PagedListView):
+class ClusterListView(LoginRequiredMixin, PaginationMixin, GWMBaseView,
+                      SingleTableView):
 
     template_name = "ganeti/cluster/list.html"
+    model = Cluster
+    table_class = ClusterTable
 
     def get_queryset(self):
-            if self.request.user.is_superuser:
-                qs = Cluster.objects.all()
-            else:
-                perms = ['admin', 'migrate', 'export', 'replace_disks', 'tags']
-                qs = self.request.user.get_objects_any_perms(Cluster, perms)
-
-            self.queryset = qs
-            super(ClusterListView, self).get_queryset()
-            return qs.select_related()
+        self.queryset = cluster_qs_for_user(self.request.user)
+        qs = super(ClusterListView, self).get_queryset()
+        qs = qs.select_related("nodes", "virtual_machines")
+        return qs
 
     def get_context_data(self, **kwargs):
-            user = self.request.user
-            context = super(ClusterListView, self).get_context_data(
-                object_list=kwargs["object_list"])
-            context["can_create"] = (user.is_superuser or
-                                     user.has_perm("admin", Cluster))
-
-            if "order_by" in self.request.GET:
-                context["order"] = self.request.GET["order_by"]
-            else:
-                context["order"] = "id"
-
-            return context
-
-
-class ClusterVMListView(LoginRequiredMixin, PagedListView):
-
-    template_name = "ganeti/virtual_machine/table.html"
-
-    def get_queryset(self):
-        self.cluster = get_object_or_404(Cluster,
-                                         slug=self.kwargs["cluster_slug"])
         user = self.request.user
-        admin = user.is_superuser or user.has_perm("admin", self.cluster)
-        if not admin:
-            raise Http403(NO_PRIVS)
+        context = super(ClusterListView, self).get_context_data(**kwargs)
+        context["create_vm"] = (user.is_superuser or
+                                user.has_perm("admin", Cluster))
+        return context
 
-        return self.cluster.virtual_machines.select_related("cluster").all()
+
+class ClusterVMListView(BaseVMListView):
+    table_class = ClusterVMTable
+
+    def get_queryset(self):
+        self.get_kwargs()
+        # Store most of these variables on the object, because we'll be using
+        # them in context data too
+        self.cluster = get_object_or_404(Cluster, slug=self.cluster_slug)
+        # check privs
+        self.admin = self.can_create(self.cluster)
+        if not self.admin:
+            raise Http403(NO_PRIVS)
+        self.queryset = vm_qs_for_users(self.request.user, clusters=False)
+        # Calling super automatically filters by cluster
+        return super(ClusterVMListView, self).get_queryset()
 
     def get_context_data(self, **kwargs):
-        kwargs["cluster"] = self.cluster
-        return kwargs
+        context = super(ClusterVMListView, self).get_context_data(**kwargs)
+        if self.cluster_slug:
+            context["cluster"] = self.cluster
+            context["create_vm"] = self.admin
+            # Required since we cant use a relative link.
+            context["ajax_url"] = reverse(
+                "cluster-vm-list",
+                kwargs={'cluster_slug': self.cluster_slug}
+            )
+        return context
 
 
-class ClusterJobListView(LoginRequiredMixin, PagedListView):
+class ClusterJobListView(LoginRequiredMixin, PaginationMixin, GWMBaseView,
+                         SingleTableView):
 
     template_name = "ganeti/cluster/jobs.html"
+    model = Job
+    table_class = ClusterJobTable
+
+    def get_template_names(self):
+        if self.request.is_ajax():
+            template = ['table.html']  # all we need is the table
+        else:
+            template = [self.template_name]
+        return template
 
     def get_queryset(self):
-        self.cluster = get_object_or_404(Cluster,
-                                         slug=self.kwargs["cluster_slug"])
+        self.get_kwargs()
+        self.cluster = get_object_or_404(Cluster, slug=self.cluster_slug)
+        perms = self.can_create(self.cluster)
+        self.queryset = self.cluster.jobs.all()
+        if not perms:
+            return Http403(NO_PRIVS)
 
-        user = self.request.user
-        admin = user.is_superuser or user.has_perm("admin", self.cluster) or \
-            user.has_perm("create_vm", self.cluster)
-
-        if not admin:
-            raise Http403(NO_PRIVS)
-
-        qs = Job.objects.filter(cluster=self.cluster.id)
-        if "order_by" in self.request.GET:
-            qs = qs.order_by(self.request.GET['order_by'])
-
-        self.queryset = qs
-        super(ClusterJobListView, self).get_queryset()
-
-        return qs.select_related()
+        return super(ClusterJobListView, self).get_queryset()
 
     def get_context_data(self, **kwargs):
-        context = super(ClusterJobListView, self).get_context_data(
-            object_list=kwargs["object_list"])
-        context["cluster"] = self.cluster
-
-        if "order_by" in self.request.GET:
-            context["order"] = self.request.GET["order_by"]
-        else:
-            context["order"] = "id"
-
+        context = super(ClusterJobListView, self).get_context_data(**kwargs)
+        context['ajax_url'] = reverse(
+            'cluster-job-list',
+            kwargs={'cluster_slug': self.cluster_slug}
+        )
         return context
 
 
