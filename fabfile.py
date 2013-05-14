@@ -64,6 +64,8 @@ env.MANIFEST = [
     "docs",
     "ganeti_web",
     "locale",
+    "muddle",
+    "muddle_users",
     # Files
     "AUTHORS",
     "CHANGELOG",
@@ -77,6 +79,7 @@ env.MANIFEST = [
     "requirements",
     "search_sites.py",
     "settings.py.dist",
+    "ldap_settings.py.dist",
     "urls.py",
 ]
 
