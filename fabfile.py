@@ -324,14 +324,15 @@ def _comment(filen, com):
     local('sed -i.bak -r -e "s/(%(com)s)/#\\1/g" %(filen)s' % args)
 
 
-def ldap(state="enable"):
+@task
+def ldap(state="enable", virtualenv='venv'):
     """
     Enable LDAP settings, and install packages
     Depends on: libldap2-dev, libsasl2-dev
     """
 
-    filename = 'settings.py' % env
-    env.virtualenv = env.doc_root
+    filename = 'settings.py'
+    env.virtualenv = virtualenv if virtualenv else env.doc_root
 
     with lcd(env.doc_root):
         if state == "enable":
@@ -341,15 +342,14 @@ def ldap(state="enable"):
             if not _exists('/usr/include/sasl'):
                 abort("Make sure libsasl2-dev is"
                       " installed before continuing")
-            local('%(virtualenv)s/bin/pip install -qr'
-                  ' requirements-ldap.txt' % env)
+            local(str(verbose_check()+'-r requirements/ldap.txt') % env)
 
             _uncomment(filename, 'from ldap_settings')
             _uncomment(filename, "'django_auth_ldap")
         elif state == "disable":
             # Disable LDAP settings and uninstall requirments
-            local('%(virtualenv)s/bin/pip uninstall -qyr'
-                  ' requirements-ldap.txt' % env)
+            local('%(virtualenv)s/bin/pip uninstall '
+                  '-r requirements/ldap.txt' % env)
 
             _comment(filename, 'from ldap_settings')
             _comment(filename, "'django_auth_ldap")
