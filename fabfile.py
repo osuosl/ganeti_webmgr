@@ -61,6 +61,7 @@ env.MANIFEST = [
     # Directories
     "deprecated",
     "django_test_tools",
+    "docs",
     "ganeti_web",
     "locale",
     # Files
