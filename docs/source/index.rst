@@ -28,7 +28,6 @@ development see our :ref:`development <development>` guide.
 .. _directions: http://docs.ganeti.org/ganeti/current/html/install.html
 .. _Ganeti: http://code.google.com/p/ganeti/
 .. _Django: http://djangoproject.com
-.. |gwm| replace:: Ganeti Web Manager
 
 
 Getting Started

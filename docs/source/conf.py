@@ -260,3 +260,10 @@ texinfo_documents = [
 intersphinx_mapping = {'http://docs.python.org/': None}
 
 autodoc_default_flags = ['members']
+
+# A string of reStructuredText that will be included at the end of every
+# source file that is read. This is the right place to add substitutions
+# that should be available in every file.
+rst_epilog = """
+.. |gwm| replace:: Ganeti Web Manager
+"""
