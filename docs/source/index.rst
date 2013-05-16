@@ -36,6 +36,7 @@ Getting Started
     :maxdepth: 1
 
     installing
+    deploying
     importing
     upgrading
 

@@ -20,6 +20,31 @@ in a terminal, open a web browser, and navigate to
 Apache + mod_wsgi
 -----------------
 
+#. Follow the django guide to `deploy with
+   apache. <https://docs.djangoproject.com/en/dev/howto/deployment/wsgi/modwsgi/>`_
+   Here is an example mod\_wsgi file:
+
+   ::
+
+       import os
+       import sys
+
+       path = '/var/lib/django/ganeti_webmgr'
+
+       # activate virtualenv
+       activate_this = '%s/venv/bin/activate_this.py' % path
+       execfile(activate_this, dict(__file__=activate_this))
+
+       # add project to path
+       if path not in sys.path:
+           sys.path.append(path)
+
+       # configure django environment
+       os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+
+       import django.core.handlers.wsgi
+       application = django.core.handlers.wsgi.WSGIHandler()
+
 Virtualenv
 ~~~~~~~~~~
 

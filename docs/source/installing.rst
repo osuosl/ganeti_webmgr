@@ -211,30 +211,6 @@ Deploying a production server requires additional setup steps.
    **``DEFAULT_FROM_EMAIL``** in settings.py. For more complicated
    outgoing mail setups, please refer to the `django email
    documentation <http://docs.djangoproject.com/en/dev/topics/email/>`_.
-#. Follow the django guide to `deploy with
-   apache. <https://docs.djangoproject.com/en/dev/howto/deployment/wsgi/modwsgi/>`_
-   Here is an example mod\_wsgi file:
-
-   ::
-
-       import os
-       import sys
-
-       path = '/var/lib/django/ganeti_webmgr'
-
-       # activate virtualenv
-       activate_this = '%s/venv/bin/activate_this.py' % path
-       execfile(activate_this, dict(__file__=activate_this))
-
-       # add project to path
-       if path not in sys.path:
-           sys.path.append(path)
-
-       # configure django environment
-       os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
-
-       import django.core.handlers.wsgi
-       application = django.core.handlers.wsgi.WSGIHandler()
 
 #. Set **VNC\_PROXY** to the hostname of your VNC AuthProxy server in
    **settings.py**. The VNC AuthProxy does not need to run on the same
