@@ -93,13 +93,13 @@ def dev():
 
 
 @task
-def deploy():
+def deploy(virtualenv=''):
     """
     Install all dependencies from git and pip.
     """
 
-    install_dependencies_pip()
-    install_dependencies_git()
+    create_venv = False if virtualenv == 'novenv' else True
+    install_dependencies_pip(create_venv)
     novnc()
 
 
@@ -171,7 +171,7 @@ def create_virtualenv(virtualenv='venv', force=False):
             local('virtualenv %(virtualenv)s --distribute' % env)
 
             # now lets make sure the virtual env has the the newest pip
-            local(str(verbose_check()+'--upgrade pip') % env)
+            local(str(pip_install() + '--upgrade pip'))
 
 
 def create_env():
@@ -186,28 +186,38 @@ def create_env():
             local('mkdir dependencies')
 
 
-def verbose_check():
+def verbose_check(pip):
     """
     Default to quiet install when env.verbose is false
     """
-    install_str = '%(virtualenv)s/bin/pip install '
     if not env.verbose:
-        install_str += '-q '
+        pip += '-q '
 
-    return install_str
+    return pip
 
 
-def install_dependencies_pip():
+def pip_installer(virtualenv=False):
+    if not virtualenv:
+        pip = 'pip install '
+    else:
+        pip = '%(virtualenv)s/bin/pip install ' % env
+    return verbose_check(pip)
+
+
+def install_dependencies_pip(virtualenv=True):
     """
     Install all dependencies available from pip.
     """
 
-    create_virtualenv()
+    if virtualenv:
+        create_virtualenv()
+
+    pip = pip_installer(virtualenv)
 
     with lcd(env.doc_root):
         # Run the installation with pip, passing in our
         # requirements/prod.txt.
-        local(str(verbose_check()+'-r requirements/prod.txt') % env)
+        local(pip + '-r requirements/prod.txt')
 
 
 def install_dependencies_git():

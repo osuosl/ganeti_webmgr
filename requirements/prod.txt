@@ -12,3 +12,4 @@ requests>=0.9
 simplejson
 south>=0.7.3
 whoosh>=1.8.1
+-e git://git.osuosl.org/gitolite/ganeti/twisted_vncauthproxy@3163a2ec77768dd14f986681bec4b9e5e8e4e2e3#egg=VNCAuthProxy-dev
