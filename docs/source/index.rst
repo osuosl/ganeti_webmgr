@@ -46,12 +46,12 @@ Community & Information
 .. toctree::
     :maxdepth: 1
 
-    comm/contact
-    comm/issues
-    screenshots
-    changelog
-    license
-    faq
+    info/contact
+    info/issues
+    info/screenshots
+    info/changelog
+    info/license
+    info/faq
 
 Usage
 -----
