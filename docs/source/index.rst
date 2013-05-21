@@ -56,7 +56,7 @@ Community & Information
 Usage
 -----
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
 
     usage/clusters
     usage/cluster-read-only
@@ -72,7 +72,7 @@ Usage
 Developers
 ----------
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
 
     dev/developers
     dev/contributers
@@ -83,7 +83,7 @@ Developers
 References & Guides
 ~~~~~~~~~~~~~~~~~~~
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
 
     ref/rapi-help
     ref/rest-api
