@@ -4,12 +4,12 @@
 Deployment
 ==========
 
-Now that you have a |project| instance setup you will want to deploy
+Now that you have a |gwm| instance setup you will want to deploy
 it to somewhere that can be accessed by a web browser.
 
 Testing
 -------
-If you are just testing |project| out, run::
+If you are just testing |gwm| out, run::
 
     $ python manage.py runserver
 
@@ -69,6 +69,3 @@ Gunicorn
 
 uWSGI
 -----
-
-
-.. |project| replace:: Ganeti Web Manager
