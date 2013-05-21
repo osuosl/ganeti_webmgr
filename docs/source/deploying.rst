@@ -56,7 +56,7 @@ virtualenv is created. The following code should be in the
 ::
 
     # activate virtual environment
-    activate_this = '%s/bin/activate_this.py' % PATH_TO_GANETI_WEBMGR
+    activate_this = '%s/venv/bin/activate_this.py' % PATH_TO_GANETI_WEBMGR
     execfile(activate_this, dict(__file__=activate_this))
 
 Nginx
