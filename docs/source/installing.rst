@@ -3,154 +3,100 @@
 Installation
 ============
 
-.. Note: Installing from the tarball is the preferred method. After
-         installing the dependencies, please download the tarball instead of
-         cloning the repository.
+Currently we have use `Fabric`, a tool for streamlining administration
+tasks, to deploy |gwm|.
 
-There are 5 steps to follow for deploying Ganeti Web Manager
+.. Note:: Eventually we would like to minimized
+          installation dependencies and have |gwm| installable as a python
+          package, deb or rpm.
 
-#. Install dependencies: Python, Pip, Fabric, VirtualEnv
-#. Get the Ganeti Web Manager code: Clone from the repository or
-   download a release tarball
-#. Deploy fabric environment: fab dev deploy or fab deploy
-#. Configure Settings: Copy settings.py.dist to settings.py and make
-   any modifications
-#. Sync database, then run the server: ./manage.py syncdb --migrate,
-   then ./manage.py runserver
+Before installing |gwm|, make sure you have all the required
+:ref:`dependencies` installed.
 
-This section explains how to automatically install Ganeti Web Manager
-using Fabric_. Fabric simplifies the installation process by
-automatically installing dependencies into a virtual environment.
+Installing
+----------
 
-.. _Fabric: http://docs.fabfile.org/
-
-Compatibility
--------------
-
-Ganeti Web Manager is compatible with the following:
-
-- `Ganeti`_: Ganeti **2.4.x--2.6.0** are supported. Earlier versions are
-  unsupported; they may occasionally work, but should not be relied upon.
-- **Browsers:** `Mozilla Firefox`_ 3.x and newer, and recent `Google
-  Chrome`_/`Google Chromium`_, are supported. Other contemporary browsers may
-  also work, but are not supported. The web-based VNC
-  console requires browser support of WebSockets and HTML5.
-- Databases: While all databases supported by Django should work, the GWM team
-  officially supports `SQLite`_ and `MySQL`_.
-- Operating Systems: GWM is officially supported on Ubuntu 11.10, Ubuntu
-  12.04, and CentOS 6. It is also known to work on Debian 7 and CentOS 5.
-  Debian 6 should work, provided the Pip, Virtualenv and Fabric packages are
-  updated to the versions listed below.
-
-.. _Ganeti: http://code.google.com/p/ganeti/
-.. _Mozilla Firefox: http://mozilla.com/firefox
-.. _Google Chrome: http://www.google.com/chrome/
-.. _Google Chromium: http://www.chromium.org/
-.. _SQLite: https://sqlite.org/
-.. _MySQL: https://www.mysql.com/
-
-Dependencies
-------------
-
--  Python: >=2.5, python >=2.6 recommended
--  `Pip <http://www.pip-installer.org/en/latest/index.html>`_ >= 0.8.2
--  Fabric_ >=1.0.1
--  `VirtualEnv <http://pypi.python.org/pypi/virtualenv>`_ >= 1.6.1
-
-Pip is required for installing Fabric and a useful tool to install
-Virtualenv
-
-::
-
-    #pip
-    sudo apt-get install python-pip
-
-    # devel libraries may be needed for some pip installs
-    sudo apt-get install python-dev
-
-Install Fabric and Virtualenv
-
-::
-
-    # install fabric and virtualenv
-    sudo apt-get install python-virtualenv
-    sudo apt-get install fabric
-
-.. Note:: The use of pip to install system packages is not recommended,
-          please use your system's package manager to install Virtualenv and
-          Fabric.
-
-Install with Fabric
--------------------
-
-#. Either download and unpack the `latest
-   release <http://code.osuosl.org/projects/ganeti-webmgr/files>`_, or
-   check it out from the repository:
+#. Download, or wget, and unpack the `latest
+   release <http://code.osuosl.org/projects/ganeti-webmgr/files>`_,
+   currently this is `0.9.2
+   <https://code.osuosl.org/attachments/download/3231/ganeti-webmgr-0.9.2.tar.gz>`_.
 
    ::
 
-       git clone git://git.osuosl.org/gitolite/ganeti/ganeti_webmgr
+      # wget or download from your browser of choice
+      wget https://code.osuosl.org/attachements/download/3231/ganeti-webmgr-0.9.2.tar.gz
 
-#. Switch to project directory
-
-   ::
-
-       # Fabric commands only work from a directory containing a fabfile
-       cd ganeti_webmgr/
-
-#. Run Fabric to automatically create python virtual environment with
-   required dependencies. Choose either production or development
-   environment
+#. Change to the project directory.
 
    ::
 
-       # production environment
+       cd ganeti_webmgr
+
+#. Run Fabric to automatically create a python virtual environment and
+   install required dependencies. This may take a few minutes.
+
+   ::
+
+       # Deploy a production environment
        fab deploy
 
-       # development environment
-       fab dev deploy
+   .. versionchanged:: 0.10
+      `fab prod deploy` is now `fab deploy`. `fab dev deploy` is still
+      the same.
 
-#. Activate virtual environment
+   .. Note:: If you would like a more noisy output, adding `v`, as in
+             `fab v deploy`, will provide more verbosity.
 
-   ::
+Minimum Configuration
+---------------------
 
-       source venv/bin/activate
-
-Configuration
--------------
-
-#. In the project root, you'll find a default-settings file called
-   **settings.py.dist**. Copy it to **settings.py**:
+#. While in the project root, copy the default settings file
+   **settings.py.dist** to **settings.py**:
 
    ::
 
        cp settings.py.dist settings.py
 
-#. If you want to use another database engine besides the default SQLite
-   (not recommended for production), edit **settings.py**, and edit the
-   following lines to reflect your wishes.
+#. Edit **settings.py** and change the database backend to your
+   preferred database along with filling any any relevant details
+   relating to your database setup.
 
-   .. Note:: Postgresql is supported as of version .10
 
    ::
 
-       DATABASE_ENGINE = ''   # <-- Change this to 'mysql', 'postgresql', 'postgresql_psycopg2' or 'sqlite3'
-       DATABASE_NAME = ''     # <-- Change this to a database name, or a file for SQLite
-       DATABASE_USER = ''     # <-- Change this (not needed for SQLite)
-       DATABASE_PASSWORD = '' # <-- Change this (not needed for SQLite)
-       DATABASE_HOST = ''     # <-- Change this (not needed if database is localhost)
-       DATABASE_PORT = ''     # <-- Change this (not needed if database is localhost)
+       'default': {
+           # Add 'postgresql_psycopg2', 'postgresql', 'mysql',
+           # 'sqlite3' or 'oracle'.
+           'ENGINE': 'django.db.backends.',
+
+           # Or path to database file if using sqlite3.
+           'NAME': 'ganeti.db',
+
+           # Not used with sqlite3.
+           'USER':     '',
+
+           # Not used with sqlite3.
+           'PASSWORD': '',
+
+           # Set to empty string for localhost. Not used with sqlite3.
+           'HOST':     '',
+
+           # Set to empty string for default. Not used with sqlite3.
+           'PORT':     '',
+       }
 
 #. Initialize Database:
 
    MySQL/SQLite:
-   ::
 
+   ::
+       
+       # Create new tables and migrate all apps using southdb
        ./manage.py syncdb --migrate
 
    Postgres:
 
-   .. Note:: This assumes your doing a fresh install of GWM on a new Postgres database.
+   .. Note:: This assumes your doing a fresh install of |gwm| on a new Postgres database.
 
    ::
 
@@ -167,11 +113,9 @@ Configuration
              ensures that the search indexes stay up-to-date when models change in
              Ganeti Web Manager.
 
-#. Everything should be all set up! Run the development server with:
+#. Deploy Ganeti Web Manager with `mod_wsgi and Apache`:
+   :ref:`deploying`.
 
-   ::
-
-       ./manage.py runserver
 
 .. _install-additional-config:
 
@@ -188,6 +132,7 @@ Deploying a production server requires additional setup steps.
 
 #. Change your **SECRET\_KEY** and **WEB\_MGR\_API\_KEY** to unique (and
    hopefully unguessable) strings in your settings.py.
+
 #. Configure the `Django Cache
    Framework <http://docs.djangoproject.com/en/dev/topics/cache/>`_ to
    use a production capable backend in **settings.py**. By default
@@ -206,6 +151,7 @@ Deploying a production server requires additional setup steps.
    your templates directory to **``TEMPLATE_DIRS``** and remove the
    relative reference to **``'templates'``**. We've had issues using
    wsgi not working correctly unless this change has been made.
+
 #. Ensure the server has the ability to send emails or you have access
    to an SMTP server. Set **``EMAIL_HOST``**, **``EMAIL_PORT``**, and
    **``DEFAULT_FROM_EMAIL``** in settings.py. For more complicated

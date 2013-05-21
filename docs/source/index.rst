@@ -85,6 +85,7 @@ References & Guides
 .. toctree::
     :maxdepth: 1
 
+    ref/dependencies
     ref/rapi-help
     ref/rest-api
     ref/git
