@@ -58,16 +58,16 @@ Usage
 .. toctree::
     :maxdepth: 1
 
-    usage/clusters
-    usage/cluster-read-only
-    usage/permissions
-    usage/sshkeys
-    usage/templates
-    usage/registration
-    usage/caching
+    features/clusters
+    features/cluster-read-only
+    features/permissions
+    features/sshkeys
+    features/templates
+    features/registration
+    features/caching
     caching
-    usage/vnc
-    usage/ldap
+    features/vnc
+    features/ldap
 
 Developers
 ----------
