@@ -1,3 +1,5 @@
+.. _cluster-read-only:
+
 Cluster Read Only Mode
 ======================
 

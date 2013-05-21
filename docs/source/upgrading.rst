@@ -235,7 +235,7 @@ User Registration
     2# False if accounts can only be created by admins. 
     3ALLOW_OPEN_REGISTRATION = True
 
-More documentation for registration can be found at :doc:`usage/registration`.
+More documentation for registration can be found at :ref:`registration`.
 
 Ganeti Version
 --------------

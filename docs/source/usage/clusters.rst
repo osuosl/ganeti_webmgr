@@ -46,10 +46,10 @@ also be parsed to automatically add permissions for virtual machines.
 A cluster can be added with only its hostname and port, but a username
 and password for the cluster are required if you want to make changes to
 it. Clusters added without a valid username and password appear in
-:doc:`cluster-read-only` where you can only change aspects of the
+:ref:`cluster-read-only` where you can only change aspects of the
 cluster that are local to Ganeti Web Manager's database.
 
-:doc:`permissions` can be edited manually or you can use the
+:ref:`permissions` can be edited manually or you can use the
 :ref:`orphans` tool to find virtual machines with no
 permissions.
 

@@ -19,6 +19,6 @@ properties by using the "edit" button on the cluster detail page. The
 edit button will only be visible if you're logged in as a cluster admin
 or superuser.
 
-:doc:`usage/permissions` can be or you can use the :ref:`orphans` tool to find
+:ref:`permissions` can be or you can use the :ref:`orphans` tool to find
 virtual machines with no permissions.
 
