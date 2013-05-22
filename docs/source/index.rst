@@ -53,8 +53,8 @@ Community & Information
     info/license
     info/faq
 
-Usage
------
+Features
+--------
 .. toctree::
     :maxdepth: 1
 
