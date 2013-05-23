@@ -1,6 +1,6 @@
-================================================================================
+===================
  Ganeti Web Manager
-================================================================================
+===================
 
 Ganeti Web Manager is a Django-based web application that allows administrators
 and clients access to their ganeti clusters.  
@@ -26,9 +26,9 @@ IRC:          #ganeti-webmgr on freenode.net
 Twitter:      http://twitter.com/ganetiwebmgr
 
 
-================================================================================
+=============
  Installation
-================================================================================
+=============
 
 *Note*: Installing from the tarball is the preferred method. After installing
 the dependencies, please download the tarball instead of cloning the repository.
@@ -237,9 +237,9 @@ Deploying a production server requires additional setup steps.
 
 Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/Install
 
-================================================================================
- Ganeti RAPI users and passwords
-================================================================================
+===============================
+Ganeti RAPI users and passwords
+===============================
 
 Before you can start using Ganeti Web Manager, you will need to create a user
 and password on the Ganeti cluster.
@@ -261,9 +261,9 @@ An example hash entry might look like the following:
 Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/Managing_Clusters#Ganeti-RAPI-users-and-passwords
 
 
-================================================================================
- Importing a Cluster
-================================================================================
+===================
+Importing a Cluster
+===================
 
 1. Use the admin user created during syncdb to log in.
 2. Import a cluster:  Clusters -> Add Cluster
@@ -275,9 +275,9 @@ Virtual Machines with information from the Ganeti cluster.
 Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/Importing_a_Cluster
 
 
-================================================================================
- Users, Groups, and Permissions
-================================================================================
+==============================
+Users, Groups, and Permissions
+==============================
 
 Permissions may be granted to both clusters and virtual machines. The
 permissions system is intended to allow users to manage themselves. Any object
@@ -311,9 +311,9 @@ and may act on their behalf to create virtual machines.
 Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/Permissions
 
 
-================================================================================
- Assigning Quotas
-================================================================================
+================
+Assigning Quotas
+================
 
 Quotas restrict the usage of cluster resources by users and groups. Default
 quotas can be set by editing clusters, if no quota is set unlimited access is
@@ -330,9 +330,9 @@ Leaving a value empty specifies unlimited access for that resource.
 Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/Permissions#Quotas
 
 
-================================================================================
- Orphaned Virtual Machines
-================================================================================
+=========================
+Orphaned Virtual Machines
+=========================
 
 You can find Virtual Machines with no permissions via Admin -> Orphaned VMs.
 This will force a synchronization of all clusters and display Virtual Machines
@@ -344,9 +344,9 @@ granting access to non-admin users.
 Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/Managing_Clusters#Orphaned-Virtual-Machines
 
 
-================================================================================
- Cache System
-================================================================================
+============
+Cache System
+============
 
 Ganeti Web Manager uses a cache system that stores information about Ganeti
 clusters in the database. This allows the following:
@@ -367,9 +367,9 @@ the object is initialized.
 
 Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/Cache_System
 
-================================================================================
- VNC 
-================================================================================
+===
+VNC
+===
 
 Ganeti Web Manager provides an in browser console using noVNC [1], an HTML5
 client.  noVNC requires WebSockets to function. Support for older browsers is
@@ -380,9 +380,9 @@ WebSockets.
 
 Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/VNC
 
-================================================================================
- VNC AuthProxy
-================================================================================
+=============
+VNC AuthProxy
+=============
 
 VNC Auth proxy [1] is required for the console tab to function. VNC servers do
 not speak websockets and our proxy allows your ganeti cluster to sit behind a
@@ -433,9 +433,9 @@ Try executing twisted again and it should work.
 
 Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/VNC#VNC-Authproxy
 
-================================================================================
- SSH Keys
-================================================================================
+========
+SSH Keys
+========
 
 Ganeti Web Manager allows users to store SSH Keys. Each virtual machine has a
 view that will return SSH keys for users with access. This can be used as a
