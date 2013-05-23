@@ -38,7 +38,6 @@ Getting Started
     installing
     deploying
     importing
-    upgrading
 
 
 Community & Information
@@ -68,6 +67,13 @@ Features
     caching
     features/vnc
     features/ldap
+
+Usage
+-----
+.. toctree::
+    :maxdepth: 1
+
+    usage/configuring
 
 Developers
 ----------
