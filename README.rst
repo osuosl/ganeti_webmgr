@@ -357,9 +357,9 @@ unlimited access is allowed. This will affect all users and groups.
 
 The default quota can be overridden on the cluster users page:
 
-   1. Clusters -> Cluster -> Users
-   2. Click on the quota
-   3. Edit values
+1. Clusters -> Cluster -> Users
+2. Click on the quota
+3. Edit values
 
 Leaving a value empty specifies unlimited access for that resource.
 
@@ -394,10 +394,10 @@ clusters in the database. This allows the following::
   Model  <- cache <-  Updater
 
 
- * Permissions are stored in the database and are associated to the cached
-   objects
- * The cached data can be searched and or filtered
- * Limits the amount of traffic between the web server and Ganeti cluster.
+* Permissions are stored in the database and are associated to the cached
+  objects
+* The cached data can be searched and or filtered
+* Limits the amount of traffic between the web server and Ganeti cluster.
 
 The cache system is transparent and will load cached data automatically when
 the object is initialized.
