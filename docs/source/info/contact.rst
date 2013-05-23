@@ -4,6 +4,9 @@
 Contact Information
 ===================
 
+.. todo::
+   Make sure to tell people to file bugs.
+
 Here are a couple of ways to get in touch with us.
 
 .. Note:: Before asking a support related question, please make sure it has not already

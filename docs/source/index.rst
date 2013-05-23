@@ -40,33 +40,23 @@ Getting Started
     importing
 
 
-Community & Information
------------------------
-.. toctree::
-    :maxdepth: 1
-
-    info/contact
-    info/issues
-    info/screenshots
-    info/changelog
-    info/license
-    info/faq
-
 Features
 --------
 .. toctree::
     :maxdepth: 1
 
+    features/permissions
+    features/objectlog
+    features/vnc
+    features/sshkeys
+    features/ldap
+    features/templates
+
     features/clusters
     features/cluster-read-only
-    features/permissions
-    features/sshkeys
-    features/templates
     features/registration
     features/caching
     caching
-    features/vnc
-    features/ldap
 
 Usage
 -----
@@ -74,24 +64,48 @@ Usage
     :maxdepth: 1
 
     usage/configuring
+    usage/upgrading
+    usage/clusters
+    usage/virtualmachines
+    usage/nodes
+    usage/templates
 
-Developers
-----------
-.. toctree::
-    :maxdepth: 1
-
-    dev/developers
-    dev/contributers
-    dev/tests
-    dev/search
-    dev/selenium
-
-References & Guides
-~~~~~~~~~~~~~~~~~~~
+Project Information
+-------------------
 .. toctree::
     :maxdepth: 1
 
     ref/dependencies
+    info/changelog
+    info/history
+    info/design
+    info/contact
+    info/screenshots
+    info/license
+    info/faq
+
+Development
+-----------
+.. toctree::
+    :maxdepth: 1
+
+    dev/schedule
+    dev/process
+    info/issues
+    dev/tools
+    dev/documentation
+    dev/contributers
+
+    dev/developers
+    dev/tests
+    dev/search
+    dev/selenium
+
+References
+~~~~~~~~~~
+.. toctree::
+    :maxdepth: 1
+
     ref/rapi-help
     ref/rest-api
     ref/git

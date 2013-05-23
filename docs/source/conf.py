@@ -267,3 +267,7 @@ autodoc_default_flags = ['members']
 rst_epilog = """
 .. |gwm| replace:: Ganeti Web Manager
 """
+
+# If this is True, todo and todolist produce output, else they produce
+# nothing. The default is False.
+todo_include_todos = False

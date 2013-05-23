@@ -1,5 +1,12 @@
-SSHKeys
-=======
+.. _sshkeys:
+
+SSH Keys
+========
+
+.. todo::
+   This really needs to be tested and updated. I (Trevor) have never
+   personally worked with ssh keys, or tested getting them to the
+   server. Our internal script might also be different.
 
 Ganeti Web Manager allows users to store SSH Keys. Each virtual machine
 has a view that will return SSH keys for users with access.
