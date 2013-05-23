@@ -33,25 +33,26 @@ Installation
 *Note*: Installing from the tarball is the preferred method. After installing
 the dependencies, please download the tarball instead of cloning the repository.
 
-Overview
+Overview:
 
-    1. Install dependencies: Python, Pip, Fabric, VirtualEnv
-    2. Get the Ganeti Web Manager code: Clone from the repository or
-       download a release tarball
-    3. Deploy fabric environment: fab dev deploy or fab deploy
-    4. Configure Settings: Copy settings.py.dist to settings.py and make
-       any modifications
-    5. Sync database, then run the server: ./manage.py syncdb --migrate,
-       then ./manage.py runserver
+1. Install dependencies: Python, Pip, Fabric, VirtualEnv
+2. Get the Ganeti Web Manager code: Clone from the repository or
+   download a release tarball
+3. Deploy fabric environment: fab dev deploy or fab deploy
+4. Configure Settings: Copy settings.py.dist to settings.py and make
+   any modifications
+5. Sync database, then run the server: ./manage.py syncdb --migrate,
+   then ./manage.py runserver
 
 This section explains how to automatically install Ganeti Web Manager
 using Fabric_. Fabric simplifies the installation process by
 automatically installing dependencies into a virtual environment.
 
 Related Topics:
-    * Read more about why Fabric is strongly recommended [1]_
-    * Troubleshoot an installation using Fabric [2]_
-    * Manual installation [3]_
+
+* Read more about why Fabric is strongly recommended [1]_
+* Troubleshoot an installation using Fabric [2]_
+* Manual installation [3]_
 
 .. [1] https://code.osuosl.org/projects/ganeti-webmgr/wiki/Fabric_is_strongly_recommended
 .. [2] https://code.osuosl.org/projects/ganeti-webmgr/wiki/Fabric-troubleshooting
@@ -63,27 +64,27 @@ Compatibility
 
 Ganeti Web Manager is compatible with the following:
 
-  Ganeti_
-       Ganeti >= v2.2.x is supported. v2.1.x and v2.0.x are unsupported
-       and sometimes work but can cause problems (see #8973). Lower
-       versions are **not** supported.
+Ganeti_
+     Ganeti >= v2.2.x is supported. v2.1.x and v2.0.x are unsupported
+     and sometimes work but can cause problems (see #8973). Lower
+     versions are **not** supported.
 
-  Browsers:
-      `Mozilla Firefox`_ >= v3.x
-      `Google Chrome`_ or Chromium_
+Browsers:
+    `Mozilla Firefox`_ >= v3.x
+    `Google Chrome`_ or Chromium_
 
-      Other contemporary browsers may also work, but are not supported.
-      The web-based VNC console requires browser support of WebSockets_
-      and HTML5_.
+    Other contemporary browsers may also work, but are not supported.
+    The web-based VNC console requires browser support of WebSockets_
+    and HTML5_.
 
-  Databases:
-      MySQL or SQLite. SQLite is not recommended in production
-      environments.
+Databases:
+    MySQL or SQLite. SQLite is not recommended in production
+    environments.
 
-  Operating Systems:
-      GWM has been tested on Debian 7, Ubuntu 11.10, 12.04 and CentOs 5
-      and 6.  Debian 6 is supported, provided the Pip, Virtualenv and
-      Fabric packages are updated to the versions listed below.
+Operating Systems:
+    GWM has been tested on Debian 7, Ubuntu 11.10, 12.04 and CentOs 5
+    and 6.  Debian 6 is supported, provided the Pip, Virtualenv and
+    Fabric packages are updated to the versions listed below.
 
 .. _Ganeti: http://code.google.com/p/ganeti/
 .. _Mozilla Firefox: http://mozilla.com/firefox
@@ -96,25 +97,25 @@ Ganeti Web Manager is compatible with the following:
 Dependencies
 ------------
 
-    :Python: >=2.5, python >=2.6 recommended
-    :Pip_: >= 0.8.2
-    :Fabric_: >=1.0.1
-    :VirtualEnv_: >= 1.6.1
+:Python: >=2.5, python >=2.6 recommended
+:Pip_: >= 0.8.2
+:Fabric_: >=1.0.1
+:VirtualEnv_: >= 1.6.1
 
 Pip is required for installing Fabric and a useful tool to install Virtualenv
 
-    * install pip::
+* install pip::
 
-      $ sudo apt-get install python-pip
+  $ sudo apt-get install python-pip
 
-    * devel libraries may be needed for some pip installs::
+* devel libraries may be needed for some pip installs::
 
-      $ sudo apt-get install python-dev
+  $ sudo apt-get install python-dev
 
-    * install fabric and virtualenv::
+* install fabric and virtualenv::
 
-      $ sudo apt-get install python-virtualenv
-      $ sudo apt-get install fabric
+  $ sudo apt-get install python-virtualenv
+  $ sudo apt-get install fabric
 
 .. note:: the use of pip to install system packages is not recommended,
           please use your system's package manager to install Virtualenv
@@ -142,17 +143,17 @@ Run Fabric to automatically create python virtual environment with
 required dependencies. Choose either production or development
 environment
 
-  * production environment::
+* production environment::
 
-    $ fab deploy
+  $ fab deploy
 
-  * development environment::
+* development environment::
 
-    $ fab dev deploy
+  $ fab dev deploy
 
-  * activate virtual environment::
+* activate virtual environment::
 
-    $ source venv/bin/activate
+  $ source venv/bin/activate
 
 
 .. _latest release: http://code.osuosl.org/projects/ganeti-webmgr/files
@@ -205,69 +206,70 @@ Additional configuration for production servers
 
 Deploying a production server requires additional setup steps.
 
-    1. Change the ownership of the *whoosh_index* directory to apache::
+1. Change the ownership of the *whoosh_index* directory to apache::
 
-        $ chown apache:apache whoosh_index/
+    $ chown apache:apache whoosh_index/
 
-    2. Change your *SECRET_KEY* and *WEB_MGR_API_KEY* to unique (and
-       hopefully unguessable) strings in your settings.py.
+2. Change your *SECRET_KEY* and *WEB_MGR_API_KEY* to unique (and
+   hopefully unguessable) strings in your settings.py.
 
-    3. Configure the `Django Cache Framework`_ to use a production
-       capable backend in *settings.py*.  By default Ganeti Web Manager is
-       configured to use the *LocMemCache* but it is not recommended for
-       production.  Use Memcached or a similar backend.::
+3. Configure the `Django Cache Framework`_ to use a production
+   capable backend in *settings.py*.  By default Ganeti Web Manager is
+   configured to use the *LocMemCache* but it is not recommended for
+   production.  Use Memcached or a similar backend.::
 
-         CACHES = {
-             'default': {
-                 'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-             }
+     CACHES = {
+         'default': {
+             'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
          }
+     }
 
-.. _Django Cache Framework: http://docs.djangoproject.com/en/dev/topics/cache/
 
 
-    4. For versions >= 0.5 you may need to add the full filesystem path
-       to your templates directory to TEMPLATE_DIRS and remove the relative
-       reference to 'templates'. We've had issues using wsgi not working
-       correctly unless this change has been made.
+4. For versions >= 0.5 you may need to add the full filesystem path
+   to your templates directory to TEMPLATE_DIRS and remove the relative
+   reference to 'templates'. We've had issues using wsgi not working
+   correctly unless this change has been made.
 
-    5. Ensure the server has the ability to send emails or you have
-       access to an SMTP server. Set EMAIL_HOST, EMAIL_PORT, and
-       DEFAULT_FROM_EMAIL in settings.py. For more complicated outgoing
-       mail setups, please refer to the django email documentation
-       (http://docs.djangoproject.com/en/1.2/topics/email/)
+5. Ensure the server has the ability to send emails or you have
+   access to an SMTP server. Set EMAIL_HOST, EMAIL_PORT, and
+   DEFAULT_FROM_EMAIL in settings.py. For more complicated outgoing
+   mail setups, please refer to the django email documentation
+   (http://docs.djangoproject.com/en/1.2/topics/email/)
 
-    6. Follow the django guide to deploy with apache.
-       (http://docs.djangoproject.com/en/dev/howto/deployment/modwsgi/)
+6. Follow the django guide to deploy with apache.
+   (http://docs.djangoproject.com/en/dev/howto/deployment/modwsgi/)
 
-       Here is an example mod_wsgi file::
+   Here is an example mod_wsgi file::
 
-           import os
-           import sys
+       import os
+       import sys
 
-           path = '/var/lib/django/ganeti_webmgr'
+       path = '/var/lib/django/ganeti_webmgr'
 
-           # activate virtualenv
-           activate_this = '%s/venv/bin/activate_this.py' % path
-           execfile(activate_this, dict(__file__=activate_this))
+       # activate virtualenv
+       activate_this = '%s/venv/bin/activate_this.py' % path
+       execfile(activate_this, dict(__file__=activate_this))
 
-           # add project to path
-           if path not in sys.path:
-               sys.path.append(path)
+       # add project to path
+       if path not in sys.path:
+           sys.path.append(path)
 
-           # configure django environment
-           os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+       # configure django environment
+       os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 
-           import django.core.handlers.wsgi
-           application = django.core.handlers.wsgi.WSGIHandler()
+       import django.core.handlers.wsgi
+       application = django.core.handlers.wsgi.WSGIHandler()
 
-    7. Set VNC_PROXY to the hostname of your VNC AuthProxy server in
-       settings.py.  The VNC AuthProxy does not need to run on the same
-       server as Ganeti Web Manager::
+7. Set VNC_PROXY to the hostname of your VNC AuthProxy server in
+   settings.py.  The VNC AuthProxy does not need to run on the same
+   server as Ganeti Web Manager::
 
-         VNC_PROXY = 'my.server.org:8888'
+     VNC_PROXY = 'my.server.org:8888'
 
 Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/Install
+
+.. _Django Cache Framework: http://docs.djangoproject.com/en/dev/topics/cache/
 
 
 ===============================
@@ -419,9 +421,11 @@ Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/VNC
 VNC AuthProxy
 =============
 
-VNC Auth proxy [1] is required for the console tab to function. VNC
+VNC Auth proxy [#]_ is required for the console tab to function. VNC
 servers do not speak websockets and our proxy allows your ganeti cluster
 to sit behind a firewall, VPN, or NAT.
+
+.. [#] http://code.osuosl.org/projects/twisted-vncauthproxy
 
 Enabling in settings.py
 -----------------------
@@ -465,8 +469,6 @@ not being exported correctly if you sudo up to root. To fix it type::
     $ export PYTHONPATH="."
 
 Try executing twisted again and it should work.
-
-[1] http://code.osuosl.org/projects/twisted-vncauthproxy
 
 Also see: http://code.osuosl.org/projects/ganeti-webmgr/wiki/VNC#VNC-Authproxy
 
