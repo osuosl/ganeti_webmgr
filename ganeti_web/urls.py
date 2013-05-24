@@ -331,6 +331,11 @@ urlpatterns += patterns(
         name='search')
 )
 
+# Visualization Graph
+urlpatterns += patterns('ganeti_web.views.graph',
+    url(r'^cluster/graph.js$', ClusterGraphView.as_view(), name='cluster-graph'),
+)
+
 # The following is used to serve up local static files like images
 root = '%s/static' % os.path.dirname(os.path.realpath(__file__))
 urlpatterns += patterns(
