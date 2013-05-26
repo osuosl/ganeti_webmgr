@@ -26,6 +26,7 @@ from ganeti_web.forms.virtual_machine import vm_wizard
 from ganeti_web.views.cluster import (ClusterDetailView, ClusterListView,
                                       ClusterVMListView, ClusterJobListView)
 from ganeti_web.views.general import AboutView
+from ganeti_web.views.graph import ClusterGraphView
 from ganeti_web.views.jobs import JobDetailView
 from ganeti_web.views.node import (NodeDetailView, NodePrimaryListView,
                                    NodeSecondaryListView)
@@ -333,7 +334,7 @@ urlpatterns += patterns(
 
 # Visualization Graph
 urlpatterns += patterns('ganeti_web.views.graph',
-    url(r'^cluster/graph.js$', ClusterGraphView.as_view(), name='cluster-graph'),
+    url(r'^graph$', ClusterGraphView.as_view(), name='cluster-graph'),
 )
 
 # The following is used to serve up local static files like images

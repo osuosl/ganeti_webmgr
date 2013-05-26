@@ -29,18 +29,65 @@ from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
                                       PagedListView)
 
 
+
+def vmqs_to_dicts(vm_queryset):
+    '''
+    (Virtual Machine Queryset to Dictionaries)
+    A function that converts a queryset of virtual machines belonging to a cluster to relevant structures.
+    The structures returned are:
+     #nodedict - A dictionary mapping a primary node to all of its dependent instances (primary instances)
+     #psdict -   A dictionary mapping an "instance group" (primary_node) to a dictionary of secondary nodes having weights.
+                 Example : node1:{node3 : 5} => Implies that 5 instances having node1 as primary have node3 as secondary.
+    '''
+    nodedict = {}
+    psdict = {}
+    for vm_obj in vm_queryset:
+        vm = vm_obj.hostname
+        pnode = vm_obj.primary_node
+        snode = vm_obj.secondary_node
+        ##Creating the PrimaryNode-Instance relations.
+        try:
+            nodedict[pnode]
+            nodedict[pnode].append(vm)
+        except KeyError:
+            nodedict[pnode] = [vm,]
+
+        ##Creating the "instance-group" to secondary node relations.
+        try:
+            # pnode might not be already there in psdict, thats why we "try" it.
+            snodes = psdict[pnode]
+            # Increase count of no. of links from pnode to the respective snode.
+            if snode in snodes:
+                snodes[snode] += 1
+            else:
+                if snode != 'None':
+                    snodes[snode] = 1
+        #This exception occurs only when pnode not in psdict.
+        except KeyError:
+            if snode != 'None':
+                psdict[pnode] = {snode: 1}
+    return (nodedict,psdict,)
+
+from pprint import pprint as pp
+
 class ClusterGraphView(LoginRequiredMixin, TemplateView):
     """
     View for generating a graph representing a Ganeti Cluster.
     """
     template_name = "graph/graph_object.js"
-    cluster_hostname = "ganeti.example.org"
-    cluster = Cluster.objects.get(hostname=cluster_hostname)
-    vms = VirtualMachine.objects.filter(cluster=cluster)
+    #cluster_hostname = "ganeti.example.org"
 
     def get_context_data(self, **kwargs):
-        user = self.request.user
         context = super(ClusterGraphView, self).get_context_data(** kwargs)
-        context['vm_queryset'] = self.vms
+
+        cluster = Cluster.objects.get(slug=self.request.GET['cluster'])
+        nodes = Node.objects.filter(cluster=cluster)
+        vmqs = VirtualMachine.objects.filter(cluster=cluster)
+        nodedict,psdict = vmqs_to_dicts(vmqs)
+
+        context['nodedict'] = nodedict
+        context['psdict'] = psdict
+        pp(nodedict)
+        #pp(psdict)
         return context
 
