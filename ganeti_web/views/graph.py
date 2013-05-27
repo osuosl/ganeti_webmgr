@@ -96,7 +96,8 @@ def js_edges_obj(nodedict,psdict):
             s += '\t\t"%s":{length:6},\n'%(instance,)
         #Edges to Secondary Nodes.
         for snode,slinkweight in psdict[node].items():
-            s += '\t\t"%s":{length:15, width:%d},\n'%(snode,slinkweight)
+            if snode:
+                s += '\t\t"%s":{length:15, width:%d},\n'%(snode,slinkweight)
         s+='\t},\n'
     s+='}'
     return s
