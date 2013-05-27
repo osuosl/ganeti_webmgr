@@ -68,7 +68,39 @@ def vmqs_to_dicts(vm_queryset):
                 psdict[pnode] = {snode: 1}
     return (nodedict,psdict,)
 
-from pprint import pprint as pp
+
+def js_nodes_obj(nodedict):
+    '''
+    Takes in a "nodedict" and converts it into a Javascript Nodes object.
+    '''
+    s = '{\n'
+    for node in sorted(nodedict.keys()):
+        s += '"%s":{color:CLR.ganetinode, shape:"dot", alpha:1},\n'%(node,)
+        for instance in nodedict[node]:
+            s += '"%s":{color:CLR.ganetivm, alpha:0},\n'%(instance,)
+        s += '}\n'
+    return s
+
+
+def js_edges_obj(nodedict,psdict):
+    '''
+    Takes in "nodedict" and "psdict" dictionaries and uses it to 
+    generate a string representation of the Javascript EDGE object.
+    '''
+    s = '{\n'
+    for node in sorted(nodedict.keys()):
+        s += '\t"%s":{\n'%(node,)
+
+        #Edges to Instances.
+        for instance in nodedict[node]:
+            s += '\t\t"%s":{length:6},\n'%(instance,)
+        #Edges to Secondary Nodes.
+        for snode,slinkweight in psdict[node].items():
+            s += '\t\t"%s":{length:15, width:%d},\n'%(snode,slinkweight)
+        s+='\t},\n'
+    s+='}'
+    return s
+
 
 class ClusterGraphView(LoginRequiredMixin, TemplateView):
     """
@@ -85,9 +117,10 @@ class ClusterGraphView(LoginRequiredMixin, TemplateView):
         vmqs = VirtualMachine.objects.filter(cluster=cluster)
         nodedict,psdict = vmqs_to_dicts(vmqs)
 
-        context['nodedict'] = nodedict
-        context['psdict'] = psdict
-        pp(nodedict)
-        #pp(psdict)
+        graph_nodes = js_nodes_obj(nodedict)
+        graph_edges = js_edges_obj(nodedict,psdict)
+
+        context['graph_nodes'] = graph_nodes
+        context['graph_edges'] = graph_edges
         return context
 
