@@ -6,10 +6,6 @@ Installation
 Currently we have use `Fabric`, a tool for streamlining administration
 tasks, to deploy |gwm|.
 
-.. Note:: Eventually we would like to minimized
-          installation dependencies and have |gwm| installable as a python
-          package, deb or rpm.
-
 Before installing |gwm|, make sure you have all the required
 :ref:`dependencies` installed.
 
