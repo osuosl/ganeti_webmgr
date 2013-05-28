@@ -9,6 +9,7 @@ tasks, to deploy |gwm|.
 Before installing |gwm|, make sure you have all the required
 :ref:`dependencies` installed.
 
+
 Installing
 ----------
 
@@ -43,15 +44,20 @@ Installing
    .. Note:: If you would like a more noisy output, adding `v`, as in
              `fab v deploy`, will provide more verbosity.
 
-Minimum Configuration
----------------------
-
 #. While in the project root, copy the default settings file
    **settings.py.dist** to **settings.py**:
 
    ::
 
        cp settings.py.dist settings.py
+
+
+Minimum Configuration
+---------------------
+
+Getting |gwm| up and running requires a minimum configuration of a
+database server. If you don't have a database server available, and are
+fine using SQLite, you can skip this step.
 
 #. Edit **settings.py** and change the database backend to your
    preferred database along with filling any any relevant details
@@ -80,6 +86,10 @@ Minimum Configuration
            # Set to empty string for default. Not used with sqlite3.
            'PORT':     '',
        }
+
+
+Initializing
+------------
 
 #. Initialize Database:
 
