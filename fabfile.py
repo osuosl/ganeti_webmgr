@@ -61,7 +61,8 @@ env.MANIFEST = [
     # Directories
     "deprecated",
     "django_test_tools",
-    "docs",
+    "docs/source",
+    "docs/Makefile",
     "ganeti_web",
     "locale",
     "muddle",
@@ -71,6 +72,7 @@ env.MANIFEST = [
     "CHANGELOG",
     "COPYING",
     "LICENSE",
+    "LICENSE.muddle",
     "README",
     "UPGRADING",
     "__init__.py",
