@@ -92,7 +92,7 @@ def js_edges_obj(nodedict,psdict):
 
 class ClusterGraphView(LoginRequiredMixin, TemplateView):
     """
-    View for generating a graph representing a Ganeti Cluster.
+    View for generating an Arbor graph representing a Ganeti Cluster.
     """
     template_name = "graph/graph_object.js"
     #cluster_hostname = "ganeti.example.org"
@@ -112,3 +112,14 @@ class ClusterGraphView(LoginRequiredMixin, TemplateView):
         context['graph_edges'] = graph_edges
         return context
 
+
+class VisualizationView(LoginRequiredMixin, TemplateView):
+    """
+    View for Visualization.
+    """
+    template_name = "graph/index.html"
+    #cluster_hostname = "ganeti.example.org"
+
+    def get_context_data(self, **kwargs):
+        context = super(VisualizationView, self).get_context_data(** kwargs)
+        return context
