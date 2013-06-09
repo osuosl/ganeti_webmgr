@@ -17,18 +17,14 @@
 
 from itertools import chain, izip, repeat
 
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q, Count
-from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
-from django.utils import simplejson as json
 from django.utils.translation import ugettext as _
 from django.views.generic.base import TemplateView
-
-from object_permissions import get_users_any
+from django.http import HttpResponse
 
 from . import render_404
 from .generic import NO_PRIVS
@@ -39,7 +35,7 @@ from ..middleware import Http403
 from clusters.models import Cluster
 from virtualmachines.models import VirtualMachine
 from jobs.models import Job
-from utils.models import GanetiError, SSHKey
+from utils.models import GanetiError
 from auth.models import ClusterUser, Organization, Profile
 
 
@@ -348,28 +344,3 @@ def clear_ganeti_error(request, pk):
     GanetiError.objects.filter(pk=error.pk).update(cleared=True)
 
     return HttpResponse('1', mimetype='application/json')
-
-
-def ssh_keys(request, api_key):
-    """ Lists all keys for all clusters managed by GWM """
-    """
-    Show all ssh keys which belong to users, who have any perms on the cluster
-    """
-    if settings.WEB_MGR_API_KEY != api_key:
-        return HttpResponseForbidden(_("You're not allowed to view keys."))
-
-    users = set()
-    for cluster in Cluster.objects.all():
-        users = users.union(set(get_users_any(cluster)
-                                .values_list("id", flat=True)))
-    for vm in VirtualMachine.objects.all():
-        users = users.union(set(get_users_any(vm)
-                                .values_list('id', flat=True)))
-
-    keys = SSHKey.objects \
-        .filter(Q(user__in=users) | Q(user__is_superuser=True)) \
-        .values_list('key', 'user__username')\
-        .order_by('user__username')
-
-    keys_list = list(keys)
-    return HttpResponse(json.dumps(keys_list), mimetype="application/json")

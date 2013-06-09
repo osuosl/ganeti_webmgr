@@ -92,6 +92,14 @@ INSTALLED_APPS = (
     'muddle_users',
     'include_strip_tag',
     'django_tables2',
+
+    # ganeti apps
+    'auth',
+    'clusters',
+    'jobs',
+    'nodes',
+    'utils',
+    'virtualmachines',
 )
 
 # The model that contains extra user profile stuff.
