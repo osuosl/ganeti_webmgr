@@ -25,19 +25,22 @@ from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils import simplejson as json
+from django.utils.translation import ugettext as _
 from django.views.generic.base import TemplateView
 
 from object_permissions import get_users_any
 
-from ganeti_web.backend.queries import vm_qs_for_admins
-from ganeti_web.middleware import Http403
-from ganeti_web.models import (Cluster, VirtualMachine, Job, GanetiError,
-                               ClusterUser, Organization, SSHKey)
-from auth.models import Profile
-from ganeti_web.views import render_404
-from ganeti_web.views.generic import NO_PRIVS
-from django.utils.translation import ugettext as _
-from ganeti_web.constants import VERSION
+from . import render_404
+from .generic import NO_PRIVS
+from ..constants import VERSION
+from ..backend.queries import vm_qs_for_admins
+from ..middleware import Http403
+
+from clusters.models import Cluster
+from virtualmachines.models import VirtualMachine
+from jobs.models import Job
+from utils.models import GanetiError, SSHKey
+from auth.models import ClusterUser, Organization, Profile
 
 
 class AboutView(TemplateView):

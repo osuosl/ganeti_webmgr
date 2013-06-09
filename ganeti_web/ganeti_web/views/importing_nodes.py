@@ -20,10 +20,13 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render_to_response
 from django.template.context import RequestContext
 
-from ganeti_web.forms.importing import NodeForm
-from ganeti_web.middleware import Http403
-from ganeti_web.models import Cluster, Node, VirtualMachine
-from ganeti_web.views.generic import NO_PRIVS
+from ..forms.importing import NodeForm
+from ..middleware import Http403
+from .generic import NO_PRIVS
+
+from clusters.models import Cluster
+from nodes.models import Node
+from virtualmachines.models import VirtualMachine
 
 
 @login_required

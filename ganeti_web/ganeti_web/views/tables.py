@@ -2,10 +2,10 @@ from django_tables2 import (Table, Column, LinkColumn, TemplateColumn,
                             DateTimeColumn)
 from django_tables2.utils import A
 
-from ganeti_web.templatetags.webmgr_tags import (render_storage, render_os,
-                                                 abbreviate_fqdn,
-                                                 format_job_op)
-from ganeti_web.utilities import hv_prettify
+from ..templatetags.webmgr_tags import (render_storage, render_os,
+                                        abbreviate_fqdn, format_job_op)
+
+from utils import hv_prettify
 
 
 class BaseTable(Table):

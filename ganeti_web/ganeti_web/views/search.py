@@ -5,7 +5,9 @@ from django.http import (HttpResponse, HttpResponseRedirect,
                          HttpResponseNotFound)
 from django.utils import simplejson as json
 
-from ganeti_web.models import VirtualMachine, Cluster, Node
+from virtualmachines.models import VirtualMachine
+from clusters.models import Cluster
+from nodes.models import Node
 
 
 @login_required
