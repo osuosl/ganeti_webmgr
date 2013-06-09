@@ -31,8 +31,9 @@ from object_permissions import get_users_any
 
 from ganeti_web.backend.queries import vm_qs_for_admins
 from ganeti_web.middleware import Http403
-from ganeti_web.models import Cluster, VirtualMachine, Job, GanetiError, \
-    ClusterUser, Profile, Organization, SSHKey
+from ganeti_web.models import (Cluster, VirtualMachine, Job, GanetiError,
+                               ClusterUser, Organization, SSHKey)
+from auth.models import Profile
 from ganeti_web.views import render_404
 from ganeti_web.views.generic import NO_PRIVS
 from django.utils.translation import ugettext as _

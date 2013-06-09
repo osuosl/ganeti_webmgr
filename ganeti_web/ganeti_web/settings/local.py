@@ -95,4 +95,4 @@ INSTALLED_APPS = (
 )
 
 # The model that contains extra user profile stuff.
-AUTH_PROFILE_MODULE = 'ganeti_web.Profile'
+AUTH_PROFILE_MODULE = 'auth.Profile'

@@ -1,15 +1,19 @@
+import binascii
+import re
 import cPickle
 from datetime import datetime, timedelta
 from hashlib import sha1
 
 from django.conf import settings
 from django.db import models
+from django.db.models import Sum
 from django.utils.encoding import force_unicode
 from django.utils.translation import ugettext_lazy as _
+from django.contrib.contenttypes.models import ContentType
 
-from utils.fields import (PatchedEncryptedCharField, PreciseDateTimeField,
-                          SumIf)
-from utils.client import GanetiApiError, REPLACE_DISK_AUTO
+from utils import get_rapi
+from utils.fields import PatchedEncryptedCharField, PreciseDateTimeField
+from utils.client import GanetiApiError
 from utils.models import GanetiError, Quota
 
 from nodes.models import Node
@@ -156,7 +160,7 @@ class CachedClusterObject(models.Model):
                     self.__class__.objects.filter(pk=self.id) \
                         .update(cached=self.cached)
 
-        except GanetiApiError, e:
+        except GanetiApiError as e:
             # Use regular expressions to match the quoted message
             #  given by GanetiApiError. '\\1' is a group substitution
             #  which places the first group '('|\")' in it's place.

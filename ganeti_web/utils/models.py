@@ -1,4 +1,24 @@
+import re
+from datetime import datetime
+
+from django.utils.translation import ugettext_lazy as _
+from django.core.validators import RegexValidator
 from django.db import models
+from django.db.models.query import QuerySet
+from django.contrib.auth.models import User
+
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.generic import GenericForeignKey
+
+from clusters.models import Cluster
+from auth.models import ClusterUser
+
+
+ssh_public_key_re = re.compile(r'^ssh-(rsa|dsa|dss) [A-Z0-9+/=]+ .+$',
+                               re.IGNORECASE)
+ssh_public_key_error = _("Enter a valid RSA or DSA SSH key.")
+validate_sshkey = RegexValidator(ssh_public_key_re, ssh_public_key_error,
+                                 "invalid")
 
 
 class QuerySetManager(models.Manager):

@@ -22,10 +22,12 @@ from django.test.client import Client
 
 from ganeti_web.util.proxy import RapiProxy, CallProxy
 from ganeti_web import models
+
+from auth.models import Profile
+
 Cluster = models.Cluster
 VirtualMachine = models.VirtualMachine
 Organization = models.Organization
-Profile = models.Profile
 
 __all__ = ('ImportViews', )
 

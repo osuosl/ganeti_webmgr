@@ -21,10 +21,10 @@ from django.test import TestCase
 
 from ganeti_web.util.proxy import RapiProxy
 from ganeti_web import models
+from auth.models import Profile
 VirtualMachine = models.VirtualMachine
 Cluster = models.Cluster
 ClusterUser = models.ClusterUser
-Profile = models.Profile
 Organization = models.Organization
 Quota = models.Quota
 

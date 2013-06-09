@@ -1,4 +1,12 @@
 from django.db import models
+from django.db.models import Sum, Q
+
+from clusters.models import CachedClusterObject
+from virtualmachines.models import VirtualMachine
+from jobs.models import Job
+
+from ganeti_web import constants
+from utils import get_rapi
 
 
 class Node(CachedClusterObject):
@@ -82,11 +90,11 @@ class Node(CachedClusterObject):
     @property
     def ram(self):
         """ returns dict of free and total ram """
-        values = VirtualMachine.objects \
-            .filter(Q(primary_node=self) | Q(secondary_node=self)) \
-            .filter(status='running') \
-            .exclude(ram=-1).order_by() \
-            .aggregate(used=Sum('ram'))
+        values = (VirtualMachine.objects
+                  .filter(Q(primary_node=self) | Q(secondary_node=self))
+                  .filter(status='running')
+                  .exclude(ram=-1).order_by()
+                  .aggregate(used=Sum('ram')))
 
         total = self.ram_total
         used = total - self.ram_free

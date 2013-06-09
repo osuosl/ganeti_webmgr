@@ -1,6 +1,11 @@
+from datetime import datetime
+
 from django.db import models
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import GenericForeignKey
 
+from utils import get_rapi
+from utils.client import GanetiApiError
 from clusters.models import CachedClusterObject
 
 
@@ -69,7 +74,7 @@ class Job(CachedClusterObject):
         if self.id and (self.ignore_cache or self.info is None):
             try:
                 self.refresh()
-            except GanetiApiError, e:
+            except GanetiApiError as e:
                 # if the Job has been archived then we don't know whether it
                 # was successful or not. Mark it as unknown.
                 if e.code == 404:

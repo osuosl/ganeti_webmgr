@@ -19,6 +19,8 @@ from ganeti_web.util.proxy.constants import (INFO, INSTANCE, NODE, NODES,
 from ganeti_web.tests.views.virtual_machine.base import (
     VirtualMachineTestCaseMixin,)
 
+from utils import clear_rapi_cache
+
 __all__ = [
     'TestKvmModifyVirtualMachineForm',
     'TestHvmModifyVirtualMachineForm',
@@ -84,7 +86,7 @@ class TestModifyVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         self.data = self._data.copy()
         self.vm.delete()
         self.cluster.delete()
-        models.clear_rapi_cache()
+        clear_rapi_cache()
 
     def test_multiple_nic(self):
         data = self.data.copy()

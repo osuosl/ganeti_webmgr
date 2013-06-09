@@ -20,7 +20,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.test.client import Client
 
-from ganeti_web.models import Profile
+from auth.models import Profile
 
 
 __all__ = ('TestProfileModel', 'TestAccountViews',)

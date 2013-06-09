@@ -1,4 +1,22 @@
+import time
+
+from django.core.validators import MinValueValidator
 from django.db import models
+from django.conf import settings
+from django.utils.translation import ugettext_lazy as _
+
+from clusters.models import CachedClusterObject, Cluster
+from jobs.models import Job
+from nodes.models import Node
+
+from ganeti_web import constants
+from utils import generate_random_password, get_rapi
+from utils.client import REPLACE_DISK_AUTO
+
+if settings.VNC_PROXY:
+    from utils.vncdaemon.vapclient import request_forwarding, request_ssh
+
+from django_fields.fields import PickleField
 
 
 class VirtualMachine(CachedClusterObject):
@@ -319,7 +337,7 @@ class VirtualMachineTemplate(models.Model):
     """
 
     template_name = models.CharField(max_length=255, default="")
-    temporary = BooleanField(verbose_name=_("Temporary"), default=False)
+    temporary = models.BooleanField(verbose_name=_("Temporary"), default=False)
     description = models.CharField(max_length=255, default="")
     cluster = models.ForeignKey(Cluster, related_name="templates", null=True,
                                 blank=True)
@@ -327,7 +345,7 @@ class VirtualMachineTemplate(models.Model):
                                 default=True)
     no_install = models.BooleanField(verbose_name=_('Do not install OS'),
                                      default=False)
-    ip_check = BooleanField(verbose_name=_("IP Check"), default=True)
+    ip_check = models.BooleanField(verbose_name=_("IP Check"), default=True)
     name_check = models.BooleanField(verbose_name=_('DNS Name Check'),
                                      default=True)
     iallocator = models.BooleanField(verbose_name=_('Automatic Allocation'),

@@ -18,32 +18,13 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-import binascii
-from datetime import datetime, timedelta
-from hashlib import sha1
-import random
-import re
-import string
 import sys
-import time
-
-from django.conf import settings
 
 from django.contrib.auth.models import User, Group
-from django.contrib.contenttypes.generic import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites import models as sites_app
 from django.contrib.sites.management import create_default_site
-from django.core.validators import RegexValidator, MinValueValidator
-from django.db import models
-from django.db.models import BooleanField, Q, Sum
-from django.db.models.query import QuerySet
 from django.db.models.signals import post_save, post_syncdb
 from django.db.utils import DatabaseError
-from django.utils.encoding import force_unicode
-from django.utils.translation import ugettext_lazy as _
-
-from django_fields.fields import PickleField
 
 from utils.logs import register_log_actions
 
@@ -54,92 +35,22 @@ from object_permissions.registration import register
 
 from muddle_users import signals as muddle_user_signals
 
-from ganeti_web import constants, management, permissions
-from utils.fields import (PatchedEncryptedCharField, PreciseDateTimeField,
-                          SumIf)
-from utils import client
-from utils.client import GanetiApiError, REPLACE_DISK_AUTO
+from auth.models import Organization
+from clusters.models import Cluster
+from nodes.models import Node
+from virtualmachines.models import VirtualMachine
+from utils.client import GanetiApiError
+
+# from ganeti_web import constants, management, permissions
+from .management import update_sites_module
+import permissions
+
+from auth.models import Profile
 
 from south.signals import post_migrate
 
-if settings.VNC_PROXY:
-    from utils.vncdaemon.vapclient import request_forwarding, request_ssh
-
-
-def generate_random_password(length=12):
-    "Generate random sequence of specified length"
-    return "".join(random.sample(string.letters + string.digits, length))
-
+# XXX: am I wrong or is it not used anywhere?
 FINISHED_JOBS = 'success', 'unknown', 'error'
-
-RAPI_CACHE = {}
-RAPI_CACHE_HASHES = {}
-
-
-def get_rapi(hash, cluster):
-    """
-    Retrieves the cached Ganeti RAPI client for a given hash.  The Hash is
-    derived from the connection credentials required for a cluster.  If the
-    client is not yet cached, it will be created and added.
-
-    If a hash does not correspond to any cluster then Cluster.DoesNotExist will
-    be raised.
-
-    @param cluster - either a cluster object, or ID of object.  This is used
-    for resolving the cluster if the client is not already found.  The id is
-    used rather than the hash, because the hash is mutable.
-
-    @return a Ganeti RAPI client.
-    """
-    if hash in RAPI_CACHE:
-        return RAPI_CACHE[hash]
-
-    # always look up the instance, even if we were given a Cluster instance
-    # it ensures we are retrieving the latest credentials.  This helps avoid
-    # stale credentials.  Retrieve only the values because we don't actually
-    # need another Cluster instance here.
-    if isinstance(cluster, (Cluster,)):
-        cluster = cluster.id
-    (credentials,) = Cluster.objects.filter(id=cluster) \
-        .values_list('hash', 'hostname', 'port', 'username', 'password')
-    hash, host, port, user, password = credentials
-    user = user or None
-    # decrypt password
-    # XXX django-fields only stores str, convert to None if needed
-    password = Cluster.decrypt_password(password) if password else None
-    password = None if password in ('None', '') else password
-
-    # now that we know hash is fresh, check cache again. The original hash
-    # could have been stale. This avoids constructing a new RAPI that already
-    # exists.
-    if hash in RAPI_CACHE:
-        return RAPI_CACHE[hash]
-
-    # delete any old version of the client that was cached.
-    if cluster in RAPI_CACHE_HASHES:
-        del RAPI_CACHE[RAPI_CACHE_HASHES[cluster]]
-
-    # Set connect timeout in settings.py so that you do not learn patience.
-    rapi = client.GanetiRapiClient(host, port, user, password,
-                                   timeout=settings.RAPI_CONNECT_TIMEOUT)
-    RAPI_CACHE[hash] = rapi
-    RAPI_CACHE_HASHES[cluster] = hash
-    return rapi
-
-
-def clear_rapi_cache():
-    """
-    clears the rapi cache
-    """
-    RAPI_CACHE.clear()
-    RAPI_CACHE_HASHES.clear()
-
-
-ssh_public_key_re = re.compile(
-    r'^ssh-(rsa|dsa|dss) [A-Z0-9+/=]+ .+$', re.IGNORECASE)
-ssh_public_key_error = _("Enter a valid RSA or DSA SSH key.")
-validate_sshkey = RegexValidator(ssh_public_key_re, ssh_public_key_error,
-                                 "invalid")
 
 
 def create_profile(sender, instance, **kwargs):
@@ -184,7 +95,7 @@ post_save.connect(update_organization, sender=Group)
 #  the useless table for sites is not created. This will be
 #  reconnected for other apps to use in update_sites_module.
 post_syncdb.disconnect(create_default_site, sender=sites_app)
-post_syncdb.connect(management.update_sites_module, sender=sites_app,
+post_syncdb.connect(update_sites_module, sender=sites_app,
                     dispatch_uid="ganeti.management.update_sites_module")
 
 

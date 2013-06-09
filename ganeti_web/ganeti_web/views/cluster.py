@@ -46,8 +46,9 @@ log_action = LogItem.objects.log_action
 from ganeti_web.backend.queries import vm_qs_for_users, cluster_qs_for_user
 from ganeti_web.forms.cluster import EditClusterForm, QuotaForm
 from ganeti_web.middleware import Http403
-from ganeti_web.models import (Cluster, ClusterUser, Profile, SSHKey,
-                               VirtualMachine, Job)
+from ganeti_web.models import (Cluster, ClusterUser, SSHKey, VirtualMachine,
+                               Job)
+from auth.models import Profile
 from ganeti_web.views import render_404
 from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
                                       PaginationMixin, GWMBaseView)
