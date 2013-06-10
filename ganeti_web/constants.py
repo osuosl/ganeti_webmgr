@@ -200,9 +200,7 @@ VM_CREATE_HELP = {
                      the name is not resolvable yet.</p> """,
     'iallocator': """<p>Automatically select primary and secondary node to
                      allocate disks on.</p> <p>When selected it will use the
-                     cluster default <a
-                     href="http://docs.ganeti.org/ganeti/current/html
-                     /iallocator.html">
+                     cluster default <a href="http://docs.ganeti.org/ganeti/current/html/iallocator.html">
                      iallocator</a> (if set by the cluster). The iallocator
                      being used will be displayed after the checkbox.</p> """,
     'disk_template': """<p>Disk layout template for the virtual machine on the
@@ -247,10 +245,8 @@ VM_CREATE_HELP = {
                     </ul><p>Valid for the Xen HVM and KVM hypervisors.</p>""",
     'nic_mode': """ <p> This option specifies how the virtual machine connects
                     to the network. More information on this can be found in
-                    the <a
-                    href="http://docs.ganeti.org/ganeti/current/html
-                    /install.html#configuring-the-network">Ganeti
-                    tutorial documentation</a>.  </p> <p>When in doubt, choose
+                    the <a href="http://docs.ganeti.org/ganeti/current/html/install.html#configuring-the-network"> Ganeti tutorial documentation</a> .</p>
+                    <p>When in doubt, choose
                     <b>bridged</b>.</p> <ul> <li> <b>bridged</b> - The virtual
                     machine's network interface will be attached to a software
                     bridge running on the node.  </li> <li><b>routed</b> - The
@@ -319,9 +315,7 @@ VM_HELP = {
                    br0)</i>.  </p> <p>In <b>routed</b> mode it's intended to
                    differentiate between different routing tables/virtual
                    machine groups (but the meaning is dependant on the network
-                   script, see <a
-                   href="http://docs.ganeti.org/ganeti/current/man
-                   /gnt-cluster.html">
+                   script, see <a href="http://docs.ganeti.org/ganeti/current/man/gnt-cluster.html">
                    gnt-cluster(8)</a> for more details.  </p> """,
     'nic_mac': """<p> This option specifies a MAC address to be associated
                   with the NIC.  </p> <p> Any valid MAC address may be used.
