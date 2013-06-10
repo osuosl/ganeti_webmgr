@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+.. todo::
+   Add in release dates for each version. Don't include links to all the
+   tickets. This can be accessed from the issue tracker (Roadmap). Add
+   reference for each upgrade version.
+
 v0.6.1
 ------
 

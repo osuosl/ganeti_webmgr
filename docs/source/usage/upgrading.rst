@@ -1,3 +1,5 @@
+.. _upgrading:
+
 Upgrading
 =========
 
@@ -138,44 +140,44 @@ TESTING
 
 ::
 
-    1# XXX - Django sets DEBUG to False when running unittests.  They want to ensure
-    2# that you test as if it were a production environment.  Unfortunately we have
-    3# some models and other settings used only for testing.  We use the TESTING flag
-    4# to enable or disable these items.
-    5#
-    6# If you run the unittests without this set to TRUE, you will get many errors!
-    7TESTING = False
+    # XXX - Django sets DEBUG to False when running unittests.  They want to ensure
+    # that you test as if it were a production environment.  Unfortunately we have
+    # some models and other settings used only for testing.  We use the TESTING flag
+    # to enable or disable these items.
+    #
+    # If you run the unittests without this set to TRUE, you will get many errors!
+    TESTING = False
 
 ITEMS\_PER\_PAGE
 ^^^^^^^^^^^^^^^^
 
 ::
 
-    1# default items per page
-    2ITEMS_PER_PAGE = 20
+    # default items per page
+    ITEMS_PER_PAGE = 20
 
 VNC\_PROXY
 ^^^^^^^^^^
 
 ::
 
-     1# Enable the VNC proxy.  When enabled this will use the proxy to create local
-     2# ports that are forwarded to the virtual machines.  It allows you to control
-     3# access to the VNC servers.  When disabled, the console tab will connect 
-     4# directly to the VNC server running on the virtual machine.
-     5#
-     6# Expected values: False if no proxy, string with proxy host and port otherwise
-     7# String syntax: "HOST:PORT", for example: "localhost:8888" 
-     8#
-     9# Note: you will probably have to open more ports in firewall. For proxy's default
-    10# settings, it uses port 8888 for listening for requests and ports 7000..8000
-    11# for serving proxy.
-    12#
-    13# To run proxy (in 'util' directory):
-    14#  $ python vncauthproxy.py --websockets
-    15# If you want to use encryption, then:
-    16#  $ python vncauthproxy.py --websockets --cert=FILE.pem
-    17VNC_PROXY=False
+    # Enable the VNC proxy.  When enabled this will use the proxy to create local
+    # ports that are forwarded to the virtual machines.  It allows you to control
+    # access to the VNC servers.  When disabled, the console tab will connect 
+    # directly to the VNC server running on the virtual machine.
+    #
+    # Expected values: False if no proxy, string with proxy host and port otherwise
+    # String syntax: "HOST:PORT", for example: "localhost:8888" 
+    #
+    # Note: you will probably have to open more ports in firewall. For proxy's default
+    # settings, it uses port 8888 for listening for requests and ports 7000..8000
+    # for serving proxy.
+    #
+    # To run proxy (in 'util' directory):
+    #  $ python vncauthproxy.py --websockets
+    # If you want to use encryption, then:
+    #  $ python vncauthproxy.py --websockets --cert=FILE.pem
+    VNC_PROXY=False
 
 Messages Framework
 ^^^^^^^^^^^^^^^^^^
@@ -203,20 +205,20 @@ South
 
 ::
 
-    1# Disable South during unittests.  This is optional, but will likely cause unittests
-    2# to fail if these are not set properly.
-    3SOUTH_TESTS_MIGRATE = False
-    4SKIP_SOUTH_TESTS = True
+    # Disable South during unittests.  This is optional, but will likely cause unittests
+    # to fail if these are not set properly.
+    SOUTH_TESTS_MIGRATE = False
+    SKIP_SOUTH_TESTS = True
 
 Haystack
 ^^^^^^^^
 
 ::
 
-    1# haystack search engine config
-    2HAYSTACK_SITECONF = 'search_sites'
-    3HAYSTACK_SEARCH_ENGINE = 'whoosh'
-    4HAYSTACK_WHOOSH_PATH = os.path.join(DOC_ROOT, 'whoosh_index')
+    # haystack search engine config
+    HAYSTACK_SITECONF = 'search_sites'
+    HAYSTACK_SEARCH_ENGINE = 'whoosh'
+    HAYSTACK_WHOOSH_PATH = os.path.join(DOC_ROOT, 'whoosh_index')
 
 Version 0.8
 ~~~~~~~~~~~
@@ -229,11 +231,11 @@ User Registration
 
 ::
 
-    1# Whether users should be able to create their own accounts. 
-    2# False if accounts can only be created by admins. 
-    3ALLOW_OPEN_REGISTRATION = True
+    # Whether users should be able to create their own accounts. 
+    # False if accounts can only be created by admins. 
+    ALLOW_OPEN_REGISTRATION = True
 
-More documentation for registration can be found at :doc:`usage/registration`.
+More documentation for registration can be found at :ref:`registration`.
 
 Ganeti Version
 --------------

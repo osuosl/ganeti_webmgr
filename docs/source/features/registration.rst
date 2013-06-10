@@ -1,3 +1,5 @@
+.. _registration:
+
 Open Registration
 =================
 

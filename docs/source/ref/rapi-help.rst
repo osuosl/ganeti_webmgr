@@ -1,3 +1,5 @@
+.. _rapi:
+
 Working With The RAPI
 =====================
 

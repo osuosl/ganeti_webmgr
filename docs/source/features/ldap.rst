@@ -7,6 +7,8 @@ Ganeti Web Manager supports LDAP authentication through the use of
 `django-auth-ldap`_ and `python-ldap`_. A fabric command has been
 written to easily handle enabling and disabling LDAP support.
 
+.. _ldap-dependencies:
+
 Dependencies
 ------------
 
@@ -37,11 +39,11 @@ To deploy Ganeti Web Manager with LDAP
 
       $ vi ldap_settings.py
 
-.. note:: 
-    ``ldap_settings.py.dist`` has been thoroughly commented so that external
-    documentation shouldn't be needed. If you have specific questions about
-    options or want an overview of the package, please consult the
-    `django-auth-ldap`_ documentation.
+   .. note::
+       ``ldap_settings.py.dist`` has been thoroughly commented so that external
+       documentation shouldn't be needed. If you have specific questions about
+       options or want an overview of the package, please consult the
+       `django-auth-ldap`_ documentation.
 
 
 #. Run the fabric command to enable LDAP in settings::

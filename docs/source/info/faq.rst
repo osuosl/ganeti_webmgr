@@ -32,3 +32,13 @@ What does "Autostart" do?
   check mark, it means that the virtual machine will be automatically started
   if the node reboots. Otherwise, if the mark is a red cross, the virtual
   machine will only start when a user manually starts it.
+
+I get the error: "Whoosh\_index not writable for current user/group"
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  When running GWM through Apache, it is required that the apache user
+  (or www-data) and group can write to the whoosh_index directory.
+
+::
+
+    chown apache:apache whoosh_index/
