@@ -246,10 +246,12 @@ Deploying a production server requires additional setup steps.
 
 1. Change the ownership of the ``whoosh_index`` directory to apache
 
-        $ chown apache:apache whoosh_index/
+.. sourcecode:: bash
+
+    $ chown apache:apache whoosh_index/
 
 2. Change your ``SECRET_KEY`` and ``WEB_MGR_API_KEY`` to unique (and hopefully
-    unguessable) strings in your ``settings.py``.
+   unguessable) strings in your ``settings.py``.
 
 3. Configure the `Django Cache Framework`_ to use a production capable backend
    in ``settings.py``.  By default Ganeti Web Manager is configured to use the
@@ -273,7 +275,7 @@ Deploying a production server requires additional setup steps.
    SMTP server. Set ``EMAIL_HOST``, ``EMAIL_PORT``, and ``DEFAULT_FROM_EMAIL``
    in ``settings.py``. For more complicated outgoing mail setups, please refer to the `Django Email documentation`_.
 
-6. Follow the`Django guide <http://docs.djangoproject.com/en/dev/howto/deployment/modwsgi/>`_ to deploy with apache.
+6. Follow the `Django guide <http://docs.djangoproject.com/en/dev/howto/deployment/modwsgi/>`_ to deploy with apache.
    Here is an example mod_wsgi file:
 
 .. sourcecode:: python
