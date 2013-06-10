@@ -13,14 +13,13 @@ Before installing |gwm|, make sure you have all the required
 Installing
 ----------
 
-#. Download, or wget, and unpack the `latest
+#. Download and unpack the `latest
    release <http://code.osuosl.org/projects/ganeti-webmgr/files>`_,
    currently this is `0.9.2
    <https://code.osuosl.org/attachments/download/3231/ganeti-webmgr-0.9.2.tar.gz>`_.
 
    ::
-
-      # wget or download from your browser of choice
+      # Use wget or curl to download from the command line.
       wget https://code.osuosl.org/attachements/download/3231/ganeti-webmgr-0.9.2.tar.gz
 
 #. Change to the project directory.
@@ -119,55 +118,11 @@ Initializing
              ensures that the search indexes stay up-to-date when models change in
              Ganeti Web Manager.
 
-#. Deploy Ganeti Web Manager with `mod_wsgi and Apache`:
-   :ref:`deploying`.
+Next Steps
+----------
 
-
-.. _install-additional-config:
-
-Additional configuration for production servers
------------------------------------------------
-
-Deploying a production server requires additional setup steps.
-
-#. Change the ownership of the ``whoosh_index`` directory to apache
-
-   ::
-
-       chown apache:apache whoosh_index/
-
-#. Change your **SECRET\_KEY** and **WEB\_MGR\_API\_KEY** to unique (and
-   hopefully unguessable) strings in your settings.py.
-
-#. Configure the `Django Cache
-   Framework <http://docs.djangoproject.com/en/dev/topics/cache/>`_ to
-   use a production capable backend in **settings.py**. By default
-   Ganeti Web Manager is configured to use the **LocMemCache** but it is
-   not recommended for production. Use Memcached or a similar backend.
-
-   ::
-
-       CACHES = {
-           'default': {
-               'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-           }
-       }
-
-#. For versions >= 0.5 you may need to add the full filesystem path to
-   your templates directory to **``TEMPLATE_DIRS``** and remove the
-   relative reference to **``'templates'``**. We've had issues using
-   wsgi not working correctly unless this change has been made.
-
-#. Ensure the server has the ability to send emails or you have access
-   to an SMTP server. Set **``EMAIL_HOST``**, **``EMAIL_PORT``**, and
-   **``DEFAULT_FROM_EMAIL``** in settings.py. For more complicated
-   outgoing mail setups, please refer to the `django email
-   documentation <http://docs.djangoproject.com/en/dev/topics/email/>`_.
-
-#. Set **VNC\_PROXY** to the hostname of your VNC AuthProxy server in
-   **settings.py**. The VNC AuthProxy does not need to run on the same
-   server as Ganeti Web Manager.
-
-   ::
-
-       VNC_PROXY = 'my.server.org:8888'
+Congradulations! |gwm| is now installed and initialized. Next, you'll want
+to look into :ref:`configuring` and :ref:`deploying`, if you are going
+to be setting up a production instance. Otherwise, if you just want to
+play around with |gwm|, or are :ref:`developing <development>`, take a look at
+:ref:`test-server`.
