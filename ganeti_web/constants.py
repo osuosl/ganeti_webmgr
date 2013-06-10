@@ -180,9 +180,7 @@ VM_CREATE_HELP = {
                " on.</p>",
     'hostname': """<p>Fully qualified domain name <i>(<b>FQDN</b>)</i> to
                     assign to this virtual machine.<i>(e.g.
-                    hostname.example.org)</i></p> <p>Note: It is strongly
-                    recommended to leave the DNS Name Check box checked, to
-                    confirm that your selected hostname is valid. Spaces and
+                    hostname.example.org)</i></p> <p>Note: Spaces and
                     certain special characters are not permitted in the
                     hostname field because they can cause errors with editing
                     or deleting the VM.</p>""",
