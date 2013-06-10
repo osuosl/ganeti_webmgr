@@ -1,11 +1,16 @@
 .. _deploying:
 
-==========
 Deployment
 ==========
 
-Now that you have a |gwm| instance setup you will want to deploy
-it to somewhere that can be accessed by a web browser.
+If you haven't already :ref:`configured <configuring>` |gwm|, now would
+be a good time to do so.
+
+Now that you have a |gwm| instance setup and configured, you will want
+to deploy it to somewhere that can be accessed by a web browser.
+
+
+.. _test-server:
 
 Testing
 -------
@@ -13,37 +18,41 @@ If you are just testing |gwm| out, run::
 
     $ python manage.py runserver
 
-in a terminal, open a web browser, and navigate to
+Then open a web browser, and navigate to
 `http://localhost:8000`.
+
+::
+
+   firefox http://localhost:8000
 
 
 Apache + mod_wsgi
 -----------------
 
-#. Follow the django guide to `deploy with
-   apache. <https://docs.djangoproject.com/en/dev/howto/deployment/wsgi/modwsgi/>`_
-   Here is an example mod\_wsgi file:
+Follow the django guide to `deploy with
+apache. <https://docs.djangoproject.com/en/dev/howto/deployment/wsgi/modwsgi/>`_
+Here is an example mod\_wsgi file:
 
-   ::
+::
 
-       import os
-       import sys
+    import os
+    import sys
 
-       path = '/var/lib/django/ganeti_webmgr'
+    path = '/var/lib/django/ganeti_webmgr'
 
-       # activate virtualenv
-       activate_this = '%s/venv/bin/activate_this.py' % path
-       execfile(activate_this, dict(__file__=activate_this))
+    # activate virtualenv
+    activate_this = '%s/venv/bin/activate_this.py' % path
+    execfile(activate_this, dict(__file__=activate_this))
 
-       # add project to path
-       if path not in sys.path:
-           sys.path.append(path)
+    # add project to path
+    if path not in sys.path:
+        sys.path.append(path)
 
-       # configure django environment
-       os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+    # configure django environment
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 
-       import django.core.handlers.wsgi
-       application = django.core.handlers.wsgi.WSGIHandler()
+    import django.core.handlers.wsgi
+    application = django.core.handlers.wsgi.WSGIHandler()
 
 Virtualenv
 ~~~~~~~~~~
