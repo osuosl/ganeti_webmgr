@@ -182,10 +182,10 @@
 
         <h3>{% trans "Resource Usage" %}</h3>
         <table id="resources" class="horizontal">
-            <tr><th>{%trans "Ram Allocated "%}{% cluster_memory cluster 1 1 %}</th><td class="ram">{% cluster_memory cluster %}</td></tr>
-            <tr><th>{% trans "Ram Used " %}{% cluster_memory cluster 0 1%}</th><td class="ram">{% cluster_memory cluster 0 %}</td></tr>
-            <tr><th>{% trans "Disk Allocated " %}{% cluster_disk cluster 1 1 %}</th><td class="disk">{% cluster_disk cluster %}</td></tr>
-            <tr><th>{% trans "Disk Used " %}{% cluster_disk cluster 0 1%}</th><td class="disk">{% cluster_disk cluster 0 %}</td></tr>
+            <tr><th>{%trans "Ram Allocated "%}</th><td class="ram">{% cluster_memory cluster %}</td></tr>
+            <tr><th>{% trans "Ram Used " %}</th><td class="ram">{% cluster_memory cluster 0 %}</td></tr>
+            <tr><th>{% trans "Disk Allocated " %}</th><td class="disk">{% cluster_disk cluster %}</td></tr>
+            <tr><th>{% trans "Disk Used " %}</th><td class="disk">{% cluster_disk cluster 0 %}</td></tr>
         </table>
 
         <h3>{% trans "Default Quota" %}</h3>
