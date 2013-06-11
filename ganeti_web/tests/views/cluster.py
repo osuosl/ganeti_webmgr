@@ -196,7 +196,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
                     port=5080,
                     description='testing editing clusters',
                     username='tester',
-                    password = 'secret',
+                    password='secret',
                     virtual_cpus=1,
                     disk=2,
                     ram=3
@@ -219,8 +219,6 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         for k, v in data_.items():
             self.assertEqual(v, getattr(cluster, k))
         Cluster.objects.all().delete()
-
-
 
     def test_view_edit(self):
         """
@@ -262,8 +260,8 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
                     port=5080,
                     description='testing editing clusters',
                     username='tester',
-                    password = 'secret',
-                    confirm_password = 'secret',
+                    password='secret',
+                    confirm_password='secret',
                     virtual_cpus=1,
                     disk=2,
                     ram=3
@@ -361,7 +359,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertTrue(self.c.login(username=self.unauthorized.username,
                                      password='secret'))
         response = self.c.get(url % args)
-        self.assertEqual(200, response.status_code) # Ticket 6891
+        self.assertEqual(200, response.status_code)  # Ticket 6891
 
         # invalid cluster
         response = self.c.get(url % "DoesNotExist")
@@ -405,7 +403,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         """
         url = "/cluster/%s/virtual_machines/"
         args = self.cluster.slug
-        self.validate_get(url, args, 'ganeti/virtual_machine/table.html')
+        self.validate_get(url, args, 'ganeti/virtual_machine/list.html')
 
     def test_view_nodes(self):
         """
@@ -449,14 +447,16 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
+        self.assertTemplateUsed(response,
+                                'object_permissions/permissions/form.html')
 
         # valid GET authorized user (superuser)
         self.assertTrue(self.c.login(username=self.superuser.username,
                                      password='secret'))
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
+        self.assertTemplateUsed(response,
+                                'object_permissions/permissions/form.html')
 
         # no user or group
         data = {
@@ -552,7 +552,8 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
             * missing user and group returns error as json
             * GET returns html for form
             * If user/group has permissions no html is returned
-            * If user/group has no permissions a json response of -1 is returned
+            * If user/group has no permissions a
+              json response of -1 is returned
         """
         args = (self.cluster.slug, self.user.id)
         args_post = self.cluster.slug
@@ -580,14 +581,16 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
+        self.assertTemplateUsed(response,
+                                'object_permissions/permissions/form.html')
 
         # valid GET authorized user (superuser)
         self.assertTrue(self.c.login(username=self.superuser.username,
                                      password='secret'))
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
+        self.assertTemplateUsed(response,
+                                'object_permissions/permissions/form.html')
 
         # invalid user
         response = self.c.get(url % (self.cluster.slug, -1))
@@ -630,7 +633,8 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertFalse(self.user.has_perm('create_vm', self.cluster))
 
         # add quota to the user
-        user_quota = {'default':0, 'ram':51, 'virtual_cpus':10, 'disk':3000}
+        user_quota = {'default': 0, 'ram': 51,
+                      'virtual_cpus': 10, 'disk': 3000}
         quota = Quota(cluster=self.cluster, user=self.user.get_profile())
         quota.__dict__.update(user_quota)
         quota.save()
@@ -651,8 +655,10 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertEqual('"user_2"', response.content)
 
         # quota should be deleted (and showing default)
-        self.assertEqual(1,
-                         self.cluster.get_quota(self.user.get_profile())['default'])
+        self.assertEqual(
+            1,
+            self.cluster.get_quota(self.user.get_profile())['default']
+        )
         self.assertFalse(self.user.get_profile().quotas.all().exists())
 
         # no permissions specified - user with no quota
@@ -670,8 +676,10 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertNotEqual('0', response.content)
 
         # quota should be deleted (and showing default)
-        self.assertEqual(1,
-                         self.cluster.get_quota(self.user.get_profile())['default'])
+        self.assertEqual(
+            1,
+            self.cluster.get_quota(self.user.get_profile())['default']
+        )
         self.assertFalse(self.user.get_profile().quotas.all().exists())
 
     def test_view_group_permissions(self):
@@ -704,7 +712,8 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
+        self.assertTemplateUsed(response,
+                                'object_permissions/permissions/form.html')
         self.user.revoke('admin', self.cluster)
 
         # valid GET authorized user (superuser)
@@ -712,7 +721,8 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
                                      password='secret'))
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
+        self.assertTemplateUsed(response,
+                                'object_permissions/permissions/form.html')
 
         # invalid group
         response = self.c.get(url % (self.cluster.slug, 0))
@@ -750,7 +760,8 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertEqual(['admin'], self.group.get_perms(self.cluster))
 
         # add quota to the group
-        user_quota = {'default':0, 'ram':51, 'virtual_cpus':10, 'disk':3000}
+        user_quota = {'default': 0, 'ram': 51,
+                      'virtual_cpus': 10, 'disk': 3000}
         quota = Quota(cluster=self.cluster, user=self.group.organization)
         quota.__dict__.update(user_quota)
         quota.save()
@@ -770,8 +781,10 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertEqual('"group_%s"' % self.group.id, response.content)
 
         # quota should be deleted (and showing default)
-        self.assertEqual(1,
-                         self.cluster.get_quota(self.group.organization)['default'])
+        self.assertEqual(
+            1,
+            self.cluster.get_quota(self.group.organization)['default']
+        )
         self.assertFalse(self.group.organization.quotas.all().exists())
 
         # no permissions specified - user with no quota
@@ -788,8 +801,10 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertNotEqual('0', response.content)
 
         # quota should be deleted (and showing default)
-        self.assertEqual(1,
-                         self.cluster.get_quota(self.group.organization)['default'])
+        self.assertEqual(
+            1,
+            self.cluster.get_quota(self.group.organization)['default']
+        )
         self.assertFalse(self.group.organization.quotas.all().exists())
 
     def test_sync_virtual_machines_in_edit_view(self):
@@ -808,7 +823,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
                     port=5080,
                     description='testing editing clusters',
                     username='tester',
-                    password = 'secret',
+                    password='secret',
                     virtual_cpus=1,
                     disk=2,
                     ram=3
@@ -851,13 +866,15 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         url = '/cluster/%s/keys/%s/'
         args = (self.cluster.slug, key)
 
-        self.assert_standard_fails(url, args, login_required=False, authorized=False)
+        self.assert_standard_fails(url, args,
+                                   login_required=False,
+                                   authorized=False)
 
         # cluster without users who have admin perms
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals("application/json", response["content-type"])
-        self.assertEqual(len(json.loads(response.content)), 0 )
+        self.assertEqual(len(json.loads(response.content)), 0)
         self.assertNotContains(response, "test@test")
         self.assertNotContains(response, "asd@asd")
 
@@ -870,7 +887,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals("application/json", response["content-type"])
-        self.assertEqual(len(json.loads(response.content)), 3 )
+        self.assertEqual(len(json.loads(response.content)), 3)
         self.assertContains(response, "test@test", count=1)
         self.assertContains(response, "asd@asd", count=1)
         self.assertContains(response, "foo@bar", count=1)
@@ -916,6 +933,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertEquals('application/json', response['content-type'])
         self.assertTrue('status' in response.content)
         self.assertTrue(Cluster.objects.filter(id=self.cluster.id).exists())
+
 
 class TestClusterQuotaViews(TestCase, ViewTestMixin, UserTestMixin):
     """
@@ -985,9 +1003,11 @@ class TestClusterQuotaViews(TestCase, ViewTestMixin, UserTestMixin):
             * successful DELETE removes user quota
         """
 
-        default_quota = {'default':1, 'ram':1, 'virtual_cpus':None, 'disk':3}
-        user_quota = {'default':0, 'ram':4, 'virtual_cpus':5, 'disk':None}
-        user_unlimited = {'default':0, 'ram':None, 'virtual_cpus':None, 'disk':None}
+        default_quota = {'default': 1, 'ram': 1,
+                         'virtual_cpus': None, 'disk': 3}
+        user_quota = {'default': 0, 'ram': 4, 'virtual_cpus': 5, 'disk': None}
+        user_unlimited = {'default': 0, 'ram': None,
+                          'virtual_cpus': None, 'disk': None}
         self.cluster.__dict__.update(default_quota)
         self.cluster.save()
 
@@ -1016,13 +1036,14 @@ class TestClusterQuotaViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertEqual(404, response.status_code)
 
         # no user (POST)
-        data = {'ram':'', 'virtual_cpus':'', 'disk':''}
+        data = {'ram': '', 'virtual_cpus': '', 'disk': ''}
         response = self.c.post(url_post % args_post, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
 
         # valid POST - setting unlimited values (nones)
-        data = {'user':cluster_user.id, 'ram':'', 'virtual_cpus':'', 'disk':''}
+        data = {'user': cluster_user.id, 'ram': '',
+                'virtual_cpus': '', 'disk': ''}
         response = self.c.post(url_post % args_post, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
@@ -1032,7 +1053,8 @@ class TestClusterQuotaViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertTrue(query.exists())
 
         # valid POST - setting values
-        data = {'user':cluster_user.id, 'ram':4, 'virtual_cpus':5, 'disk':''}
+        data = {'user': cluster_user.id, 'ram': 4,
+                'virtual_cpus': 5, 'disk': ''}
         response = self.c.post(url_post % args_post, data)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, template)
@@ -1040,7 +1062,7 @@ class TestClusterQuotaViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertTrue(query.exists())
 
         # valid POST - setting implicit unlimited (values are excluded)
-        data = {'user':cluster_user.id}
+        data = {'user': cluster_user.id}
         response = self.c.post(url_post % args_post, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
@@ -1049,7 +1071,7 @@ class TestClusterQuotaViews(TestCase, ViewTestMixin, UserTestMixin):
         self.assertTrue(query.exists())
 
         # valid DELETE - returns to default values
-        data = {'user':cluster_user.id, 'delete':True}
+        data = {'user': cluster_user.id, 'delete': True}
         response = self.c.post(url_post % args_post, data)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, template)
@@ -1085,7 +1107,7 @@ class TestClusterQuotaViews(TestCase, ViewTestMixin, UserTestMixin):
         """
 
         response = self.c.get("/cluster/%s/user/quota/?user=%s" %
-                         ("DOES_NOT_EXIST", self.user.id))
+                              ("DOES_NOT_EXIST", self.user.id))
         self.assertEqual(404, response.status_code)
 
     def test_user_quota_anonymous(self):

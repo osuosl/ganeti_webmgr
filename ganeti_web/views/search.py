@@ -12,10 +12,10 @@ from ganeti_web.models import VirtualMachine, Cluster, Node
 def suggestions(request):
     ''' Return a list of search results for the autocomplete search box.
 
-    Return a list of search results for the query in the GET parameter `term` 
+    Return a list of search results for the query in the GET parameter `term`
     as a JSON object. If `term` does not exist, just return a blank list.
 
-    The format consists of a list of objects representing the object name and 
+    The format consists of a list of objects representing the object name and
     the object type. Here's an example:
 
         [
@@ -64,18 +64,19 @@ def suggestions(request):
             result_objects.append(result_object)
 
     # Return the results list as a json object
-    return HttpResponse(json.dumps(result_objects, indent=4), 
-            mimetype='application/json')
+    return HttpResponse(json.dumps(result_objects, indent=4),
+                        mimetype='application/json')
+
 
 @login_required
 def detail_lookup(request):
     '''
     Look up and redirect to the detail page for the given object.
-    
-    There must be two supplied GET parameters: 
-        `type`:     which declares the type of object we're looking up, and 
-                    the possible values should be either 'vm', 'cluster', or 
-                    'node'. 
+
+    There must be two supplied GET parameters:
+        `type`:     which declares the type of object we're looking up, and
+                    the possible values should be either 'vm', 'cluster', or
+                    'node'.
         `hostname`: Hostname of the object.
     '''
     # Grab the GET parameters
@@ -92,10 +93,10 @@ def detail_lookup(request):
         # cluster so we don't make an additional db query
         if object_type == 'vm':
             obj = VirtualMachine.objects.filter(hostname=hostname)\
-                    .select_related('cluster')[0]
+                .select_related('cluster')[0]
         elif object_type == 'node':
             obj = Node.objects.filter(hostname=hostname)\
-                    .select_related('cluster')[0]
+                .select_related('cluster')[0]
         elif object_type == 'cluster':
             obj = Cluster.objects.filter(hostname=hostname)[0]
         else:
@@ -103,5 +104,5 @@ def detail_lookup(request):
     except IndexError:
         return HttpResponseNotFound()
 
-    # Redirect to the absolute URL of the object    
+    # Redirect to the absolute URL of the object
     return HttpResponseRedirect(obj.get_absolute_url())

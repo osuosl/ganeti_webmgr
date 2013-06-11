@@ -25,6 +25,7 @@ from django.utils import simplejson as json
 
 CTRL_SOCKET = "/tmp/vncproxy.sock"
 
+
 def request_forwarding(server, daddr, dport, password, sport=None, tls=False):
     """
     Ask TVAP/VNCAP for a forwarding port.
@@ -43,9 +44,9 @@ def request_forwarding(server, daddr, dport, password, sport=None, tls=False):
             return False
 
         request = {
-            "daddr":daddr,
-            "dport":dport,
-            "password":password,
+            "daddr": daddr,
+            "dport": dport,
+            "password": password,
             "ws": True,
             "tls": tls,
         }
@@ -56,7 +57,7 @@ def request_forwarding(server, daddr, dport, password, sport=None, tls=False):
         request = json.dumps(request)
 
         ctrl = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        ctrl.connect( (host, port) )
+        ctrl.connect((host, port))
         ctrl.send("%s\r\n" % request)
         response = ctrl.recv(1024).strip()
         ctrl.close()
@@ -69,6 +70,7 @@ def request_forwarding(server, daddr, dport, password, sport=None, tls=False):
     # XXX bare except
     except:
         return False
+
 
 def request_ssh(proxy, sport, daddr, dport, password, command):
     """

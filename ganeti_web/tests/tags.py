@@ -21,6 +21,7 @@ import unittest
 
 from ganeti_web.templatetags import webmgr_tags as tags
 
+
 class TestFilters(unittest.TestCase):
     """
     Big test case for all template filters.
@@ -28,7 +29,7 @@ class TestFilters(unittest.TestCase):
 
     def test_abbreviate_fqdn(self):
         self.assertEqual(tags.abbreviate_fqdn("subdomain.example.com"),
-            "subdomain")
+                         "subdomain")
 
     def test_abbreviate_fqdn_abbreviated(self):
         self.assertEqual(tags.abbreviate_fqdn("subdomain"), "subdomain")

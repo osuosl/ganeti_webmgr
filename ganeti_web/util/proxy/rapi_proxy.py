@@ -20,13 +20,14 @@ from ganeti_web.util import client
 from ganeti_web.util.proxy import CallProxy
 from ganeti_web.util.proxy.constants import *
 
+
 class RapiProxy(client.GanetiRapiClient):
     """
-    Proxy class for testing RAPI interface without a cluster present. This class
-    has methods replaced that will return dummy info
+    Proxy class for testing RAPI interface without a cluster present.
+    This class has methods replaced that will return dummy info
     """
     error = None
-    
+
     def __new__(cls, *args, **kwargs):
         """
         Each time the RapiProxy is created, monkey patch
@@ -40,7 +41,7 @@ class RapiProxy(client.GanetiRapiClient):
         CallProxy.patch(instance, 'GetNode', False, NODE)
         CallProxy.patch(instance, 'GetInfo', False, INFO)
         CallProxy.patch(instance, 'GetOperatingSystems', False,
-            OPERATING_SYSTEMS)
+                        OPERATING_SYSTEMS)
         CallProxy.patch(instance, 'GetJobStatus', False, JOB_RUNNING)
         CallProxy.patch(instance, 'StartupInstance', False, 1)
         CallProxy.patch(instance, 'ShutdownInstance', False, 1)
@@ -58,25 +59,25 @@ class RapiProxy(client.GanetiRapiClient):
         CallProxy.patch(instance, 'SetNodeRole', False, 1)
         CallProxy.patch(instance, 'EvacuateNode', False, 1)
         CallProxy.patch(instance, 'MigrateNode', False, 1)
-        
+
         return instance
-    
+
     def fail(self, *args, **kwargs):
         """
         Raise the error set on this object.
         """
         raise self.error
-    
+
     def __setattr__(self, name, value):
         return super(RapiProxy, self).__setattr__(name, value)
-     
+
     def __getattribute__(self, key):
-        if key in ['GetInstances', 'GetInstance', 'GetNodes', 'GetNode', \
-                   'GetInfo', 'StartupInstance', 'ShutdownInstance', \
-                   'RebootInstance', 'AddInstanceTags', 'DeleteInstanceTags', \
-                   'GetOperatingSystems', 'GetJobStatus', 'CreateInstance', \
+        if key in ['GetInstances', 'GetInstance', 'GetNodes', 'GetNode',
+                   'GetInfo', 'StartupInstance', 'ShutdownInstance',
+                   'RebootInstance', 'AddInstanceTags', 'DeleteInstanceTags',
+                   'GetOperatingSystems', 'GetJobStatus', 'CreateInstance',
                    'ReinstallInstance'] \
-                    and self.error:
+                and self.error:
             return self.fail
         return super(RapiProxy, self).__getattribute__(key)
 
@@ -97,7 +98,6 @@ class XenRapiProxy(RapiProxy):
         CallProxy.patch(instance, 'GetInstance', False, XEN_PVM_INSTANCE)
         CallProxy.patch(instance, 'GetInfo', False, XEN_INFO)
         CallProxy.patch(instance, 'GetOperatingSystems', False,
-            XEN_OPERATING_SYSTEMS)
+                        XEN_OPERATING_SYSTEMS)
 
         return instance
-

@@ -76,7 +76,7 @@ class TestAccountViews(TestCase):
         url = '/accounts/login/'
 
         # no username
-        data = {'password':'secret'}
+        data = {'password': 'secret'}
         response = self.c.post(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
@@ -89,7 +89,7 @@ class TestAccountViews(TestCase):
         url = '/accounts/login/'
 
         # no password
-        data = {'username':'tester'}
+        data = {'username': 'tester'}
         response = self.c.post(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
@@ -102,7 +102,7 @@ class TestAccountViews(TestCase):
         url = '/accounts/login/'
 
         # bad username
-        data = {'username':'invalid', 'password':'secret'}
+        data = {'username': 'invalid', 'password': 'secret'}
         response = self.c.post(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
@@ -115,7 +115,7 @@ class TestAccountViews(TestCase):
         url = '/accounts/login/'
 
         # bad password
-        data = {'username':'tester', 'password':'incorrect'}
+        data = {'username': 'tester', 'password': 'incorrect'}
         response = self.c.post(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
@@ -128,7 +128,8 @@ class TestAccountViews(TestCase):
         url = '/accounts/login/'
 
         # user with perms on no virtual machines
-        self.assertTrue(self.c.login(username=self.user.username, password='secret'))
+        self.assertTrue(self.c.login(username=self.user.username,
+                        password='secret'))
         response = self.c.post(url, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
@@ -141,7 +142,7 @@ class TestAccountViews(TestCase):
         url = '/accounts/login/'
 
         # invalid method
-        data = {'username':'tester', 'password':'secret'}
+        data = {'username': 'tester', 'password': 'secret'}
         response = self.c.get(url, data, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
@@ -154,7 +155,7 @@ class TestAccountViews(TestCase):
         url = '/accounts/login/'
 
         # success
-        data = {'username':'tester', 'password':'secret'}
+        data = {'username': 'tester', 'password': 'secret'}
         response = self.c.post(url, data, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
@@ -178,7 +179,8 @@ class TestAccountViews(TestCase):
         url = '/accounts/logout/'
 
         # successful logout
-        self.assertTrue(self.c.login(username=self.user.username, password='secret'))
+        self.assertTrue(self.c.login(username=self.user.username,
+                                     password='secret'))
         response = self.c.get(url, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
@@ -202,7 +204,8 @@ class TestAccountViews(TestCase):
         url = '/accounts/profile/'
 
         # get form
-        self.assertTrue(self.c.login(username=self.user.username, password='secret'))
+        self.assertTrue(self.c.login(username=self.user.username,
+                                     password='secret'))
         response = self.c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
@@ -215,18 +218,21 @@ class TestAccountViews(TestCase):
         url = '/accounts/profile/'
 
         # get form
-        self.assertTrue(self.c.login(username=self.user.username, password='secret'))
+        self.assertTrue(self.c.login(username=self.user.username,
+                        password='secret'))
         self.c.get(url)
 
         # bad method (CSRF check)
-        data = {'email':'new@test.com', 'old_password':'secret','new_password':'foo', 'confirm_password':'foo'}
+        data = {'email': 'new@test.com', 'old_password': 'secret',
+                'new_password': 'foo', 'confirm_password': 'foo'}
         response = self.c.get(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/users/profile.html')
         user = User.objects.get(id=self.user.id)
         self.assertEqual('test@test.com', user.email)
-        self.assertTrue(user.check_password('secret'), 'Password should not have been changed')
+        self.assertTrue(user.check_password('secret'),
+                        'Password should not have been changed')
 
     def test_view_profile_invalid_old_password(self):
         """
@@ -235,18 +241,21 @@ class TestAccountViews(TestCase):
         url = '/accounts/profile/'
 
         # get form
-        self.assertTrue(self.c.login(username=self.user.username, password='secret'))
+        self.assertTrue(self.c.login(username=self.user.username,
+                        password='secret'))
         self.c.get(url)
 
         # bad old password
-        data = {'email':'new@test.com', 'old_password':'incorrect','new_password':'foo', 'confirm_password':'foo'}
+        data = {'email': 'new@test.com', 'old_password': 'incorrect',
+                'new_password': 'foo', 'confirm_password': 'foo'}
         response = self.c.get(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/users/profile.html')
         user = User.objects.get(id=self.user.id)
         self.assertEqual('test@test.com', user.email)
-        self.assertTrue(user.check_password('secret'), 'Password should not have been changed')
+        self.assertTrue(user.check_password('secret'),
+                        'Password should not have been changed')
 
     def test_view_profile_unconfirmed(self):
         """
@@ -255,18 +264,21 @@ class TestAccountViews(TestCase):
         url = '/accounts/profile/'
 
         # get form
-        self.assertTrue(self.c.login(username=self.user.username, password='secret'))
+        self.assertTrue(self.c.login(username=self.user.username,
+                        password='secret'))
         self.c.get(url)
 
         # not confirmed
-        data = {'email':'new@test.com', 'old_password':'secret','new_password':'foo', 'confirm_password':'incorrect'}
+        data = {'email': 'new@test.com', 'old_password': 'secret',
+                'new_password': 'foo', 'confirm_password': 'incorrect'}
         response = self.c.get(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/users/profile.html')
         user = User.objects.get(id=self.user.id)
         self.assertEqual('test@test.com', user.email)
-        self.assertTrue(user.check_password('secret'), 'Password should not have been changed')
+        self.assertTrue(user.check_password('secret'),
+                        'Password should not have been changed')
 
     def test_view_profile_change_email(self):
         """
@@ -275,17 +287,19 @@ class TestAccountViews(TestCase):
         url = '/accounts/profile/'
 
         # get form
-        self.assertTrue(self.c.login(username=self.user.username, password='secret'))
+        self.assertTrue(self.c.login(username=self.user.username,
+                        password='secret'))
         self.c.get(url)
 
         # change email
-        response = self.c.post(url, {'email':'new@test.com'})
+        response = self.c.post(url, {'email': 'new@test.com'})
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/users/profile.html')
         user = User.objects.get(id=self.user.id)
         self.assertEqual('new@test.com', user.email)
-        self.assertTrue(user.check_password('secret'), 'Password should not have been changed')
+        self.assertTrue(user.check_password('secret'),
+                        'Password should not have been changed')
 
     def test_view_profile_change_password(self):
         """
@@ -294,15 +308,18 @@ class TestAccountViews(TestCase):
         url = '/accounts/profile/'
 
         # get form
-        self.assertTrue(self.c.login(username=self.user.username, password='secret'))
+        self.assertTrue(self.c.login(username=self.user.username,
+                        password='secret'))
         self.c.get(url)
 
         # change password
-        data = {'email':'new2@test.com', 'old_password':'secret','new_password':'foo', 'confirm_password':'foo'}
+        data = {'email': 'new2@test.com', 'old_password': 'secret',
+                'new_password': 'foo', 'confirm_password': 'foo'}
         response = self.c.post(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/users/profile.html')
         user = User.objects.get(id=self.user.id)
         self.assertEqual('new2@test.com', user.email)
-        self.assertTrue(user.check_password('foo'), 'Password was not been changed')
+        self.assertTrue(user.check_password('foo'),
+                        'Password was not been changed')

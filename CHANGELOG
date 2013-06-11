@@ -2,6 +2,21 @@
 Changelog
 =========
 
+v0.10
+-----
+
+Notable Changes:
+  * Ganeti 2.6 Support
+  * VM Wizard
+  * Job List - Cluster
+  * LDAP Support
+  * Manual Refresh Button
+  * Notice on Read-Only Clusters
+  * Sharedfile Disk Template Added
+
+* Docs now ship with product
+* Fabfile cleaned up and simplified
+
 v0.9.2
 ------
 

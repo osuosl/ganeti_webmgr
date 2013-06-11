@@ -7,6 +7,7 @@
     <script type="text/javascript" src="{{STATIC_URL}}/js/jquery.ajax.delete.js"></script>
     <script src="{{STATIC_URL}}/js/jquery-ui.min.js"></script>
     <script src="{{STATIC_URL}}/js/jquery.progressbar.js"></script>
+    <script type="text/javascript" src="{{STATIC_URL}}/js/ajax_tab_handler.js"></script>
 
     <script type="text/javascript">
         var job_poller;
@@ -28,16 +29,19 @@
                 spinner: false,
                 select: function(event, ui) {
                     window.location.hash = ui.tab.hash;
-					var loadingMsg = '{% trans "Loading" %}';
+                    var loadingMsg = '{% trans "Loading" %}';
                     var tabID = ui.panel;
-                                       if (tabID.id != "overview") {
-                                               $(tabID).html("<div class='spinner'><br/>"+loadingMsg+"...<br/><br/><img src='{{STATIC_URL}}/images/ajax-loader.gif'></div>");
-                                       }
-                 },
+                    if (tabID.id != "overview") {
+                        $(tabID).html("<div class='spinner'><br/>"+loadingMsg+"...<br/><br/><img src='{{STATIC_URL}}/images/ajax-loader.gif'></div>");
+                    }
+                },
                 ajaxOptions: {
                     error: function(xhr, status, index, anchor) {
                         $(anchor.hash).html("{% trans "Couldn't load this tab. We'll try to fix this as soon as possible" %}.");
                     }
+                },
+                load: function(event, ui) {
+                    init_ajax_tab_handler(event, ui, ".pagination a, .sortable a");
                 }
             });
 
@@ -116,7 +120,7 @@
     {% if not cluster.username %}
         {% trans " - READ ONLY" %}
    {% endif %}
-        
+
 </h1>
 
 <ul id="messages">
@@ -126,13 +130,13 @@
     <ul>
         <li><a href="#overview"><span>{% trans "Overview" %}</span></a></li>
         {% if admin %}
-            <li><a title="virtual machines" href="{% url cluster-vms cluster.slug %}"><span>{% trans "Virtual Machines" %}</span></a></li>
+            <li><a title="virtual machines" href="{% url cluster-vm-list cluster.slug %}"><span>{% trans "Virtual Machines" %}</span></a></li>
             <li><a title="nodes" href="{% url cluster-nodes cluster.slug %}"><span>{% trans "Nodes" %}</span></a></li>
             <li><a title="user" href="{% url cluster-users cluster.slug %}"><span>{% trans "Users" %}</span></a></li>
             <li><a title="log" href="{% url cluster-object_log cluster.slug %}"><span>{% trans "Log" %}</span></a></li>
-            <li><a title="jobs" href="{% url cluster-jobs cluster.slug %}"><span>{% trans "Jobs" %}</span></a></li>
+            <li><a title="jobs" href="{% url cluster-job-list cluster.slug %}"><span>{% trans "Jobs" %}</span></a></li>
         {% elif create_vm %}
-            <li><a title="jobs" href="{% url cluster-jobs cluster.slug %}"><span>{% trans "Jobs" %}</span></a></li>
+            <li><a title="jobs" href="{% url cluster-job-list cluster.slug %}"><span>{% trans "Jobs" %}</span></a></li>
         {%endif%}
     </ul>
     <div id="overview" class="tab_content">
@@ -178,10 +182,10 @@
 
         <h3>{% trans "Resource Usage" %}</h3>
         <table id="resources" class="horizontal">
-            <tr><th>{%trans "Ram Allocated "%}{% cluster_memory cluster 1 1 %}</th><td class="ram">{% cluster_memory cluster %}</td></tr>
-            <tr><th>{% trans "Ram Used " %}{% cluster_memory cluster 0 1%}</th><td class="ram">{% cluster_memory cluster 0 %}</td></tr>
-            <tr><th>{% trans "Disk Allocated " %}{% cluster_disk cluster 1 1 %}</th><td class="disk">{% cluster_disk cluster %}</td></tr>
-            <tr><th>{% trans "Disk Used " %}{% cluster_disk cluster 0 1%}</th><td class="disk">{% cluster_disk cluster 0 %}</td></tr>
+            <tr><th>{%trans "Ram Allocated "%}</th><td class="ram">{% cluster_memory cluster %}</td></tr>
+            <tr><th>{% trans "Ram Used " %}</th><td class="ram">{% cluster_memory cluster 0 %}</td></tr>
+            <tr><th>{% trans "Disk Allocated " %}</th><td class="disk">{% cluster_disk cluster %}</td></tr>
+            <tr><th>{% trans "Disk Used " %}</th><td class="disk">{% cluster_disk cluster 0 %}</td></tr>
         </table>
 
         <h3>{% trans "Default Quota" %}</h3>

@@ -12,6 +12,7 @@ parser = OptionParser()
 parser.add_option("-c", "--cluster", help="cluster to retrieve keys from")
 parser.add_option("-i", "--instance", help="instance to retrieve keys from")
 
+
 def main():
     options, arguments = parser.parse_args()
     if len(arguments) < 2:
@@ -23,15 +24,18 @@ def main():
                       cluster_slug=options.cluster, vm_name=options.instance)
     app.run()
 
+
 class ArgumentException(Exception):
     """
     There was a bad argument, or something like that.
     """
 
+
 class BadMimetype(Exception):
     """
     There was a bad MIME type, or something like that.
     """
+
 
 class Application(object):
     def __init__(self, api_key, hostname, cluster_slug=None, vm_name=None):
@@ -80,7 +84,8 @@ class Application(object):
         try:
             s = self.printout(self.parse(self.get()))
         except Exception, e:
-            sys.stderr.write("Errors occured, could not retrieve informations.\n")
+            sys.stderr.write("Errors occured, could not "
+                             "retrieve informations.\n")
             sys.stderr.write(str(e)+"\n")
         else:
             sys.stdout.write(s)

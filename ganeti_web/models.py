@@ -254,8 +254,8 @@ class CachedClusterObject(models.Model):
 
         if self.id:
             if (self.ignore_cache
-                or self.cached is None
-                or datetime.now() > self.cached + epsilon):
+                    or self.cached is None
+                    or datetime.now() > self.cached + epsilon):
                 self.refresh()
             elif self.info:
                 self.parse_transient_info()
@@ -1454,7 +1454,7 @@ class VirtualMachineTemplate(models.Model):
     disks = PickleField(verbose_name=_('Disks'), null=True, blank=True)
     # XXX why isn't this an enum?
     disk_type = models.CharField(verbose_name=_('Disk Type'), max_length=255,
-                                default="")
+                                 default="")
     nics = PickleField(verbose_name=_('NICs'), null=True, blank=True)
     # XXX why isn't this an enum?
     nic_type = models.CharField(verbose_name=_('NIC Type'), max_length=255,
@@ -1612,9 +1612,10 @@ class GanetiError(models.Model):
                 # return if the error exists for cluster
                 try:
                     c_ct = ContentType.objects.get_for_model(Cluster)
-                    return cls.objects.filter(msg=msg, obj_type=c_ct, code=code,
-                                           obj_id=obj.cluster_id,
-                                           cleared=False)[0]
+                    return cls.objects.filter(msg=msg, obj_type=c_ct,
+                                              code=code,
+                                              obj_id=obj.cluster_id,
+                                              cleared=False)[0]
 
                 except (cls.DoesNotExist, IndexError):
                     # we want to proceed when the error is not
@@ -1628,7 +1629,7 @@ class GanetiError(models.Model):
         # allow cluster_id
         try:
             return cls.objects.filter(msg=msg, obj_type=ct, obj_id=obj.pk,
-                                   code=code, **kwargs)[0]
+                                      code=code, **kwargs)[0]
 
         except (cls.DoesNotExist, IndexError):
             cluster_id = obj.pk if is_cluster else obj.cluster_id

@@ -22,16 +22,21 @@ from object_permissions import get_users_any
 from ganeti_web.models import Cluster, ClusterUser, VirtualMachine
 
 
-def cluster_qs_for_user(user):
+def cluster_qs_for_user(user, groups=True, readonly=True, **kwargs):
+    """
+    Return clusters which a user has access to
+    """
     if user.is_superuser:
         qs = Cluster.objects.all()
     elif user.is_anonymous():
         qs = Cluster.objects.none()
     else:
-        qs = user.get_objects_any_perms(Cluster, ['admin','create_vm'], False)
+        qs = user.get_objects_any_perms(Cluster, ['admin', 'create_vm'],
+                                        groups=groups, **kwargs)
 
-    # Exclude all read-only clusters.
-    qs = qs.exclude(Q(username='') | Q(mtime__isnull=True))
+    if not readonly:
+        # Exclude all read-only clusters.
+        qs = qs.exclude(Q(username='') | Q(mtime__isnull=True))
 
     return qs
 
@@ -72,7 +77,8 @@ def vm_qs_for_admins(user):
 
     return qs
 
-def vm_qs_for_users(user):
+
+def vm_qs_for_users(user, clusters=True):
     """
     Retrieves a queryset of all the virtual machines for which the user has
     any permission.
@@ -83,8 +89,22 @@ def vm_qs_for_users(user):
     elif user.is_anonymous():
         qs = VirtualMachine.objects.none()
     else:
-        # If no permissions are listed, then *any* permission will cause a VM
+        # If no permissions are provided, then *any* permission will cause a VM
         # to be added to the query.
         qs = user.get_objects_any_perms(VirtualMachine, groups=True)
 
-    return qs
+        # Add all VMs including VMs you have permission to via Cluster Perms
+        if clusters:
+            # first we get the IDs of the clusters which a user is admin of
+            cluster_ids = user.get_objects_any_perms(
+                Cluster, ['admin'], groups=True).values_list('pk', flat=True)
+            # next create a queryset of VMs where the user is an admin of the
+            # cluster
+            cluster_vm_qs = VirtualMachine.objects.filter(
+                cluster__pk__in=cluster_ids).distinct()
+
+            # Union of vms a user has any permissions to AND vms a user has
+            # permissions to via cluster
+            qs |= cluster_vm_qs
+
+    return qs.distinct()
