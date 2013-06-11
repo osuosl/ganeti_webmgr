@@ -15,13 +15,7 @@ Installing
 
 #. Download and unpack the `latest
    release <http://code.osuosl.org/projects/ganeti-webmgr/files>`_,
-   currently this is |release| located `here
-   <https://code.osuosl.org/attachments/download/3267/ganeti-webmgr-0.10.tar.gz>`_.
-
-   ::
-
-       # Use wget or curl to download from the command line.
-       wget https://code.osuosl.org/attachements/download/3267/ganeti-webmgr-0.10.tar.gz
+   currently this is |release|.
 
 #. Change to the project directory.
 
