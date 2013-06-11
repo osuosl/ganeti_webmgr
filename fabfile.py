@@ -73,7 +73,7 @@ env.MANIFEST = [
     "COPYING",
     "LICENSE",
     "LICENSE.muddle",
-    "README",
+    "README.rst",
     "UPGRADING",
     "__init__.py",
     "fabfile.py",
