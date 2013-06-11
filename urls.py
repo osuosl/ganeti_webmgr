@@ -24,7 +24,8 @@ from django.conf.urls.defaults import *
 #from django.contrib import admin
 #admin.autodiscover()
 
-urlpatterns = patterns('',
+urlpatterns = patterns(
+    '',
     (r'^', include('ganeti_web.urls')),
     (r'^', include('object_permissions.urls')),
     (r'^', include('object_log.urls')),
@@ -47,24 +48,26 @@ urlpatterns = patterns('',
     url(r'^accounts/login/?', 'django.contrib.auth.views.login',
         name="login",),
     url(r'^accounts/logout/?', 'django.contrib.auth.views.logout',
-        {'next_page':'/'}, name="logout"),
+        {'next_page': '/'}, name="logout"),
     (r'^accounts/', include('registration.urls')),
 
     # Explicit 500 test route
     (r'^500/$', 'django.views.generic.simple.direct_to_template',
-     {'template':"500.html"})
+     {'template': "500.html"})
 )
 # Language settings
 urlpatterns += patterns('',
-    (r'^i18n/', include('django.conf.urls.i18n')),
-    )
+                        (r'^i18n/', include('django.conf.urls.i18n')),
+                        )
 handler500 = 'ganeti_web.views.view_500'
 
 
 #The following is used to serve up local static files like images
-urlpatterns += patterns('',
+urlpatterns += patterns(
+    '',
     (r'^favicon.ico', 'django.views.static.serve',
-        {'document_root':  settings.STATIC_ROOT, 'path': 'favicon.ico'}),
+    {'document_root':  settings.STATIC_ROOT,
+     'path': 'favicon.ico'}),
 
     # noVNC files
     (r'^novnc/(?P<path>.*)', 'django.views.static.serve',

@@ -35,6 +35,7 @@ __all__ = (
     "ugettext",
 )
 
+
 # Horrible Django hack for convincing Django that we are i18n'd.
 def ugettext(s):
     return s
@@ -50,6 +51,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.contrib.messages.context_processors.messages',
     'django.core.context_processors.debug',
     'django.core.context_processors.i18n',
+    'django.core.context_processors.request',
     'django.core.context_processors.static',
     'ganeti_web.context_processors.site',
     'ganeti_web.context_processors.common_permissions',
@@ -88,6 +90,8 @@ INSTALLED_APPS = (
     'muddle',
     'muddle.shots',
     'muddle_users',
+    'include_strip_tag',
+    'django_tables2',
 )
 
 # The model that contains extra user profile stuff.

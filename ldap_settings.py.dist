@@ -1,0 +1,192 @@
+# Copyright (C) 2012 Oregon State University
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
+# USA.
+
+# LDAP Authentication via django-auth-ldap
+#     http://packages.python.org/django-auth-ldap/#reference
+import ldap
+from django_auth_ldap.config import LDAPSearch, GroupOfNamesType
+
+## Enable Logging
+# If you need to debug your configuration, see:
+#     http://packages.python.org/django-auth-ldap/#logging
+import logging
+logger = logging.getLogger('django_auth_ldap')
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.WARN)
+
+__all__ = (
+    'AUTH_LDAP_SERVER_URI',
+    'AUTH_LDAP_BIND_DN',
+    'AUTH_LDAP_BIND_PASSWORD',
+    'AUTH_LDAP_USER_SEARCH',
+    'AUTH_LDAP_GROUP_SEARCH',
+    'AUTH_LDAP_USER_ATTR_MAP',
+    'AUTH_LDAP_GROUP_TYPE',
+    'AUTH_LDAP_USER_FLAGS_BY_GROUP',
+    'AUTH_LDAP_BIND_AS_AUTHENTICATING_USER',
+    'AUTH_LDAP_REQUIRE_GROUP',
+    'AUTH_LDAP_DENY_GROUP',
+)
+
+# The URI of the LDAP server. This can be any URI that is supported by
+# your underlying LDAP libraries.
+#   Default: ldap://localhost
+AUTH_LDAP_SERVER_URI = 'ldap://localhost'
+
+# A dictionary of options to pass to each connection to the LDAP server
+# via LDAPObject.set_option(). Keys are ldap.OPT_* constants.
+#   Default: {}
+#AUTH_LDAP_CONNECTION_OPTIONS = {}
+
+# A dictionary of options to pass to ldap.set_option(). Keys are
+# ldap.OPT_* constants.
+#   Default: {}
+#AUTH_LDAP_GLOBAL_OPTIONS = {}
+
+# If True, authentication will leave the LDAP connection bound as the
+# authenticating user, rather than forcing it to re-bind with the
+# default credentials after authentication succeeds. This may be
+# desirable if you do not have global credentials that are able to
+# access the user's attributes. django-auth-ldap never stores the user's
+# password, so this only applies to requests where the user is
+# authenticated. Thus, the downside to this setting is that LDAP results
+# may vary based on whether the user was authenticated earlier in the
+# Django view, which could be surprising to code not directly concerned
+# with authentication.
+#   Default: False
+AUTH_LDAP_BIND_AS_AUTHENTICATING_USER = False
+
+# The distinguished name to use when binding to the LDAP server (with
+# AUTH_LDAP_BIND_PASSWORD). Use the empty string (the default) for an
+# anonymous bind. To authenticate a user, we will bind with that user's
+# DN and password, but for all other LDAP operations, we will be bound
+# as the DN in this setting. For example, if AUTH_LDAP_USER_DN_TEMPLATE
+# is not set, we'll use this to search for the user. If
+# AUTH_LDAP_FIND_GROUP_PERMS is True, we'll also use it to determine
+# group membership.
+#   Default = '' (Empty string)
+AUTH_LDAP_BIND_DN = ''
+
+# The password to use with AUTH_LDAP_BIND_DN.
+#   Default: '' (Empty string)
+AUTH_LDAP_BIND_PASSWORD = ''
+
+# A string template that describes any user's distinguished name based on
+# the username. This must contain the placeholder %(user)s.
+#   Default: None
+#AUTH_LDAP_USER_DN_TEMPLATE = None
+
+# An LDAPSearch object that will locate a user in the directory. The
+# filter parameter should contain the placeholder %(user)s for the
+# username. It must return exactly one result for authentication to
+# succeed.
+#   Default: None
+AUTH_LDAP_USER_SEARCH = LDAPSearch("ou=People,dc=example,dc=org",
+                                   ldap.SCOPE_SUBTREE, "(uid=%(user)s)")
+
+# A mapping from user profile field names to LDAP attribute names. A
+# user's profile will be populated from his LDAP attributes at login.
+#   Default: {}
+#AUTH_LDAP_PROFILE_ATTR_MAP = {}
+
+# A mapping from User field names to LDAP attribute names. A users's User
+# object will be populated from his LDAP attributes at login.
+#   Default: {}
+AUTH_LDAP_USER_ATTR_MAP = {
+    "fist_name": "givenName",
+    "last_name": "sn",
+    "email": "mail"
+}
+
+# An LDAPSearch object that finds all LDAP groups that users might
+# belong to. If your configuration makes any references to LDAP groups,
+# this and AUTH_LDAP_GROUP_TYPE must be set.
+#   Default: None
+AUTH_LDAP_GROUP_SEARCH = LDAPSearch("ou=Group,dc=example,dc=org",
+                                    ldap.SCOPE_SUBTREE,
+                                    "(objectClass=groupOfNames)")
+
+# An LDAPGroupType instance describing the type of group returned by
+# AUTH_LDAP_GROUP_SEARCH.
+#   Default: None
+AUTH_LDAP_GROUP_TYPE = GroupOfNamesType()
+
+# A mapping from boolean User field names to distinguished names of LDAP
+# groups. The corresponding field is set to True or False according to
+# whether the user is a member of the group.
+#   Default: {}
+AUTH_LDAP_USER_FLAGS_BY_GROUP = {
+    "is_active": "cn=group1,ou=Group,dc=example,dc=org",
+    "is_staff": "cn=group2,ou=Group,dc=example,dc=org",
+    "is_superuser": "cn=group3,ou=Group,dc=example,dc=org",
+}
+
+# If True, each connection to the LDAP server will call start_tls to
+# enable TLS encryption over the standard LDAP port. There are a number of
+# configuration options that can be given to AUTH_LDAP_GLOBAL_OPTIONS that
+# affect the TLS connection. For example, ldap.OPT_X_TLS_REQUIRE_CERT can
+# be set to ldap.OPT_X_TLS_NEVER to disable certificate verification,
+# perhaps to allow self-signed certificates.
+#   Default: False
+#AUTH_LDAP_START_TLS = False
+
+# The distinguished name of a group; authentication will fail for any user
+# that does not belong to this group.
+#   Default: None
+AUTH_LDAP_REQUIRE_GROUP = "cn=enabled,ou=Group,dc=example,dc=org"
+
+# The distinguished name of a group; authentication will fail for any user
+# that belongs to this group.
+#   Default: None
+AUTH_LDAP_DENY_GROUP = "cn=disabled,ou=Group,dc=example,dc=org"
+
+# If True, LDAPBackend will mirror a user's LDAP group membership in the
+# Django database. Any time a user authenticates, we will create all of
+# his LDAP groups as Django groups and update his Django group
+# membership to exactly match his LDAP group membership. If the LDAP
+# server has nested groups, the Django database will end up with a
+# flattened representation.
+#   Default: False
+#AUTH_LDAP_MIRROR_GROUPS = False
+
+# If True, the fields of a User object will be updated with the latest
+# values from the LDAP directory every time the user logs in. Otherwise
+# the User object will only be populated when it is automatically created.
+#   Default: True
+AUTH_LDAP_ALWAYS_UPDATE_USER = True
+
+# If True, LDAPBackend will be able furnish permissions for any Django
+# user, regardless of which backend authenticated it.
+#   Default: False
+#AUTH_LDAP_AUTHORIZE_ALL_USERS = False
+
+# If True, LDAPBackend will furnish group permissions based on the LDAP
+# groups the authenticated user belongs to. AUTH_LDAP_GROUP_SEARCH and
+# AUTH_LDAP_GROUP_TYPE must also be set.
+#   Default: False
+#AUTH_LDAP_FIND_GROUP_PERMS = False
+
+# If True, LDAP group membership will be cached using Django's cache
+# framework. The cache timeout can be customized with
+# AUTH_LDAP_GROUP_CACHE_TIMEOUT.
+#   Default: False
+AUTH_LDAP_CACHE_GROUPS = True
+
+# If AUTH_LDAP_CACHE_GROUPS is True, this is the cache timeout for group
+# memberships. If None, the global cache timeout will be used.
+#   Default: None
+AUTH_LDAP_GROUP_CACHE_TIMEOUT = 3600

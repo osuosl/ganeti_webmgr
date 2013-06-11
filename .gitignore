@@ -2,13 +2,23 @@
 # The following lists what should be ignored in this git directory
 ##
 
+# Hidden files
+.*
+
 # All compiled python code
 *.pyc
+
+# Don't ignore the mailmap file
+!.mailmap
 
 # Don't track the top-level settings.py, but do track the internal one.
 settings.py*
 !settings.py.dist
 !ganeti_web/settings.py
+
+# ldap_settings
+ldap_settings.py*
+!ldap_settings.py.dist
 
 # Any sqlite database files created by the project
 *.db
@@ -53,6 +63,8 @@ haystack
 twisted_vncauthproxy
 
 # files/dirs created by Fabric and or VirtualEnv
+venv
+env
 bin
 dependencies
 include
@@ -66,6 +78,3 @@ whoosh_index
 
 # twisted cache
 twisted/plugins/dropin.cache
-
-# Hidden files
-.*

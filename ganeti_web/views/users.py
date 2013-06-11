@@ -26,24 +26,28 @@ from django.utils.translation import ugettext as _
 
 from ganeti_web.models import SSHKey
 
+
 @login_required
 def key_get(request, key_id=None, user_id=None):
     if request.is_ajax:
         user = request.user
 
         if not key_id:
-            user_cmp = get_object_or_404(User, pk=user_id) if user_id else user
-            form = SSHKeyForm(initial={'user':user_cmp.pk})
+            user_cmp = get_object_or_404(User, pk=user_id) \
+                if user_id else user
+            form = SSHKeyForm(initial={'user': user_cmp.pk})
         else:
             key_edit = get_object_or_404(SSHKey, pk=key_id)
             form = SSHKeyForm(instance=key_edit)
             user_cmp = key_edit.user
-        
-        if not (user.is_superuser or user_cmp==user):
-            return HttpResponseForbidden(_("Only superuser or owner can get user's SSH key."))
-        
-        return render_to_response("ganeti/ssh_keys/form.html", {"key_form": form,
-                    "key_id":key_id}, context_instance=RequestContext(request))
+
+        if not (user.is_superuser or user_cmp == user):
+            return HttpResponseForbidden(_("Only superuser or owner "
+                                           "can get user's SSH key."))
+
+        return render_to_response("ganeti/ssh_keys/form.html",
+                                  {"key_form": form, "key_id": key_id},
+                                  context_instance=RequestContext(request))
     return HttpResponse(_("Cannot retrieve information"))
 
 
@@ -60,8 +64,9 @@ def key_save(request, key_id=None):
 
         # check if the user has appropriate permissions
         user = request.user
-        if not (user.is_superuser or user.id==owner_id):
-            return HttpResponseForbidden(_("Only superuser or owner can save user's SSH key."))
+        if not (user.is_superuser or user.id == owner_id):
+            return HttpResponseForbidden(_("Only superuser or owner "
+                                           "can save user's SSH key."))
 
         form = SSHKeyForm(data=request.POST, instance=key_edit)
         if form.is_valid():
@@ -79,8 +84,9 @@ def key_delete(request, key_id):
     user = request.user
     key_edit = get_object_or_404(SSHKey, pk=key_id)
 
-    if not (user.is_superuser or key_edit.user==user):
-        return HttpResponseForbidden(_('Only superuser or owner can delete user\'s SSH key.'))
+    if not (user.is_superuser or key_edit.user == user):
+        return HttpResponseForbidden(_('Only superuser or owner '
+                                       'can delete user\'s SSH key.'))
 
     if request.method == "DELETE":
         key_edit.delete()
@@ -100,5 +106,5 @@ class SSHKeyForm(forms.ModelForm):
     def clean_key(self):
         value = self.cleaned_data.get('key', None)
         if value is not None:
-            value = value.replace('\n',' ')
+            value = value.replace('\n', ' ')
         return value

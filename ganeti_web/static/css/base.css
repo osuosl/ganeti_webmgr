@@ -7,7 +7,7 @@
 }
 
 html {width: 100%;}
-html, body {height:100%; /* Sticky Footer */ } 
+html, body {height:100%; /* Sticky Footer */ }
 body {
     background:url(/static/images/body_background.png) repeat-x top #eee;
     color:#333333;
@@ -132,7 +132,23 @@ pre.error {
 }
 #content h1 {margin:10px 0 10px 0;}
 #content table {margin-top:15px;  width:100%;}
-#content th {background:#eeeeee; border:1px solid #dddddd !important;}
+#content th {
+    background:#eeeeee;
+    border:1px solid #dddddd !important;
+}
+#content .table-container th {
+    height: 25px;
+    padding: 0 18px 0 0;
+}
+#content td {
+    height: 25px;
+}
+#content th.bulk,
+#content th.status_indicator {
+    text-align: center;
+    width: 16px;
+    padding: 0 2px;
+}
 #content td.actions {width:16px;}
 #content tr {border-right:0;}
 #content tr.group_row {margin:auto;}
@@ -143,12 +159,19 @@ pre.error {
     border-top:1px solid #eee;
     font-family:"Lucida Grande",Verdana,Arial,sans-serif;
     font-size:12px;
-    line-height:14px;
-    padding:5px;
+    line-height: 14px;
+    padding: 5px;
     text-align: center;
-    vertical-align:top;
 }
-#content th.status, #content th.actions { background:none; padding:0;}
+#content th.actions { background:none; padding:0;}
+#content th a {
+    color: black;
+    display: block;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    line-height: 22px;
+}
 #content td a {border:0; padding:0;}
 
 /* horizontal info tables */
@@ -156,15 +179,40 @@ pre.error {
 #content table.horizontal th { width:15em; }
 
 /* tablesorter style */
-#content table.sorted th {
-    background: url(/static/images/bg.gif) no-repeat center right #eee;
-    padding-right: 15px;
+#content table th.sortable {
+    background-image: url(/static/images/bg.gif);
+    background-repeat: no-repeat;
+    background-position: right;
+    background-color: #eee;
+}
+#content table th.sortable.asc {
+    background-image: url(/static/images/asc.gif);
+    background-color: #7AB0DC;
+
+}
+#content table th.sortable.desc {
+    background-image: url(/static/images/desc.gif);
+    background-color: #7AB0DC;
+}
+#content table th.sortable.status_indicator .asc,
+#content table th.sortable.status_indicator .desc {
+    background-position: center left;
+}
+
+#content table th.sortable a,
+#content table th.desc a {
     cursor: s-resize;
 }
-#content table.sorted .ascending {background-image: url(/static/images/asc.gif);}
-#content table.sorted .descending {background-image: url(/static/images/desc.gif);}
-#content table.sorted .ascending {background-color: #7AB0DC;}
-#content table.sorted .descending {background-color: #7AB0DC;}
+#content table th.asc a {
+    cursor: n-resize;
+}
+/* Blue background for sorted cell */
+#content table th.asc:not(.status_indicator) a,
+#content table th.desc:not(.status_indicator) a,
+#content table th.desc,
+#content table th.asc {
+    background-color: #7AB0DC;
+}
 
 #footer {
     background: url(/static/images/footerBack.jpg) repeat-x 0 0 #1d1d1d;
@@ -226,7 +274,7 @@ pre.error {
  **/
  .menu {
 
-     
+
     float:left;
     color:#555555;
     padding:30px 10px 0 0;
@@ -347,29 +395,43 @@ div.delete, div.edit {
 
 
 /** Pagination **/
-.pagination {float:right; margin-top: 15px;}
-.pagination li{
-    margin:0;
-    display:inline;
-    font-size:11px;
-    list-style:none;
-    padding:3px 6px;
+.pagination {
+    float: right;
+    margin-top: 15px;
+}
+.pagination li {
+    display: inline-block;
+    font-size: 11px;
+    list-style: none;
+}
+.pagination li a {
+    padding: 3px 6px;
+    width: 100%;
+    height: 100%;
 }
 .pagination .next a,
-.pagination .previous a { font-weight:bold; }
-.pagination .page {border:solid 1px #9aafe5; cursor:pointer; margin:0 2px 0 0;}
-.pagination li.page:hover { background-color:#9aafe5;}
+.pagination .previous a {
+    font-weight: bold;
+}
+.pagination .page {
+    border: solid 1px #9aafe5;
+    cursor: pointer;
+}
+.pagination li.page:hover {
+    background-color:#9aafe5;
+}
 .pagination .active {
-    background-color:#2e6ab1 !important;
-    border-color:#2e6ab1;
-    color:#FFFFFF;
-    cursor:auto;
-    font-weight:bold;
+    background-color: #2e6ab1 !important;
+    border-color: #2e6ab1;
+    color: #FFFFFF;
+    cursor: auto;
+    font-weight: bold;
 }
 .pagination a:link,
 .pagination a:visited {
-    margin:0;
-    color:#0e509e;
-    text-decoration:none;
+    color: #0e509e;
+    text-decoration: none;
 }
-.pagination a:hover { text-decoration:underline;}
+.pagination a:hover {
+    text-decoration: underline;
+}

@@ -17,11 +17,13 @@
 
 from django import forms
 from django.contrib.formtools.wizard.views import CookieWizardView
+from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import Q
 from django.forms import (Form, BooleanField, CharField, ChoiceField,
-                          IntegerField, ModelChoiceField, ValidationError)
+                          IntegerField, ModelChoiceField, ValidationError,
+                          MultipleChoiceField, CheckboxSelectMultiple)
 from django.http import HttpResponseRedirect
 # Per #6579, do not change this import without discussion.
 from django.utils import simplejson as json
@@ -33,11 +35,13 @@ log_action = LogItem.objects.log_action
 from ganeti_web.backend.queries import (cluster_qs_for_user,
                                         owner_qs_for_cluster)
 from ganeti_web.backend.templates import template_to_instance
-from ganeti_web.caps import has_cdrom2, requires_maxmem
+from ganeti_web.caps import has_cdrom2, has_balloonmem, has_sharedfile
 from ganeti_web.constants import (EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES,
                                   HV_NIC_MODES, KVM_CHOICES, HV_USB_MICE,
                                   HV_SECURITY_MODELS, KVM_FLAGS,
-                                  HV_DISK_CACHES, MODE_CHOICES, HVM_CHOICES)
+                                  HV_DISK_CACHES, MODE_CHOICES, HVM_CHOICES,
+                                  VM_HELP, VM_CREATE_HELP, VM_RENAME_HELP,
+                                  KVM_BOOT_ORDER, HVM_BOOT_ORDER)
 from ganeti_web.fields import DataVolumeField, MACAddressField
 from ganeti_web.models import (Cluster, ClusterUser, Node,
                                VirtualMachineTemplate, VirtualMachine)
@@ -49,12 +53,17 @@ from ganeti_web.views.generic import LoginRequiredMixin
 
 username_or_mtime = Q(username='') | Q(mtime__isnull=True)
 
+
 class VirtualMachineForm(forms.ModelForm):
     """
     Parent class that holds all vm clean methods
       and shared form fields.
     """
     memory = DataVolumeField(label=_('Memory'), min_value=100)
+    minmem = DataVolumeField(label=_('Minimum RAM (MiB)'),
+                             required=True, min_value=100)
+    maxmem = DataVolumeField(label=_('Maximum RAM (MiB)'),
+                             required=True, min_value=100)
 
     class Meta:
         model = VirtualMachineTemplate
@@ -67,7 +76,7 @@ class VirtualMachineForm(forms.ModelForm):
         for i in range(count):
             disk_size = DataVolumeField(min_value=100, required=True,
                                         label=_("Disk/%s Size" % i))
-            self.fields['disk_size_%s'%i] = disk_size
+            self.fields['disk_size_%s' % i] = disk_size
 
     def create_nic_fields(self, count, defaults=None):
         """
@@ -75,12 +84,14 @@ class VirtualMachineForm(forms.ModelForm):
         """
         self.nic_fields = range(count)
         for i in range(count):
-            nic_mode = forms.ChoiceField(label=_('NIC/%s Mode' % i), choices=HV_NIC_MODES)
-            nic_link = forms.CharField(label=_('NIC/%s Link' % i), max_length=255)
+            nic_mode = forms.ChoiceField(label=_('NIC/%s Mode' % i),
+                                         choices=HV_NIC_MODES)
+            nic_link = forms.CharField(label=_('NIC/%s Link' % i),
+                                       max_length=255)
             if defaults is not None:
                 nic_link.initial = defaults['nic_link']
-            self.fields['nic_mode_%s'%i] = nic_mode
-            self.fields['nic_link_%s'%i] = nic_link
+            self.fields['nic_mode_%s' % i] = nic_mode
+            self.fields['nic_link_%s' % i] = nic_link
 
     def clean_hostname(self):
         data = self.cleaned_data
@@ -92,7 +103,8 @@ class VirtualMachineForm(forms.ModelForm):
             #
             # Recoveries are only allowed when the user is the owner of the VM
             try:
-                vm = VirtualMachine.objects.get(cluster=cluster, hostname=hostname)
+                vm = VirtualMachine.objects.get(cluster=cluster,
+                                                hostname=hostname)
 
                 # detect vm that failed to deploy
                 if not vm.pending_delete and vm.template is not None:
@@ -100,16 +112,18 @@ class VirtualMachineForm(forms.ModelForm):
                     if current_owner == self.owner:
                         data['vm_recovery'] = vm
                     else:
-                        msg = _("Owner cannot be changed when recovering a failed deployment")
+                        msg = _("Owner cannot be changed when recovering a "
+                                "failed deployment")
                         self._errors["owner"] = self.error_class([msg])
                 else:
-                    raise ValidationError(_("Hostname is already in use for this cluster"))
+                    raise ValidationError(_("Hostname is already in use for "
+                                            "this cluster"))
 
             except VirtualMachine.DoesNotExist:
                 # doesn't exist, no further checks needed
                 pass
 
-        # Spaces in hostname will always break things. 
+        # Spaces in hostname will always break things.
         if ' ' in hostname:
             self.errors["hostname"] = self.error_class(
                 ["Hostname contains illegal character"])
@@ -138,12 +152,14 @@ class VirtualMachineForm(forms.ModelForm):
 
         if data and security_model != 'user':
             msg = u'%s.' % _(
-                'This field can not be set if Security Mode is not set to User')
+                'This field can not be set if Security '
+                'Mode is not set to User')
         elif security_model == 'user':
             if not data:
                 msg = u'%s.' % _('This field is required')
             elif not data[0].isalpha():
-                msg = u'%s.' % _('This field must being with an alpha character')
+                msg = u'%s.' % _('This field must being with '
+                                 'an alpha character')
 
         if msg:
             self._errors['security_domain'] = self.error_class([msg])
@@ -172,22 +188,30 @@ def check_quota_modify(form):
             used = owner.used_resources(cluster, only_running=True)
 
             if (start and quota['ram'] is not None and
-                (used['ram'] + data['memory']-vm.ram) > quota['ram']):
+               (used['ram'] + data['memory']-vm.ram) > quota['ram']):
                     del data['memory']
-                    q_msg = u"%s" % _("Owner does not have enough ram remaining on this cluster. You must reduce the amount of ram.")
+                    q_msg = u"%s" % _("Owner does not have enough ram "
+                                      "remaining on this cluster. You must "
+                                      "reduce the amount of ram.")
                     form._errors["ram"] = form.error_class([q_msg])
 
             if 'disk_size' in data and data['disk_size']:
-                if quota['disk'] and used['disk'] + data['disk_size'] > quota['disk']:
+                if quota['disk'] and used['disk'] + data['disk_size'] > \
+                        quota['disk']:
                     del data['disk_size']
-                    q_msg = u"%s" % _("Owner does not have enough diskspace remaining on this cluster.")
+                    q_msg = u"%s" % _("Owner does not have enough diskspace "
+                                      "remaining on this cluster.")
                     form._errors["disk_size"] = form.error_class([q_msg])
 
             if (start and quota['virtual_cpus'] is not None and
-                (used['virtual_cpus'] + data['vcpus'] - vm.virtual_cpus) >
-                quota['virtual_cpus']):
+               (used['virtual_cpus'] + data['vcpus']
+                - vm.virtual_cpus) >
+               quota['virtual_cpus']):
                     del data['vcpus']
-                    q_msg = u"%s" % _("Owner does not have enough virtual cpus remaining on this cluster. You must reduce the amount of virtual cpus.")
+                    q_msg = u"%s" % _("Owner does not have enough virtual "
+                                      "cpus remaining on this cluster. You "
+                                      "must reduce the amount of virtual "
+                                      "cpus.")
                     form._errors["vcpus"] = form.error_class([q_msg])
 
 
@@ -207,12 +231,16 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
     class Meta:
         model = VirtualMachineTemplate
         exclude = ('start', 'owner', 'cluster', 'hostname', 'name_check',
-        'iallocator', 'iallocator_hostname', 'disk_template', 'pnode', 'nics',
-        'snode','disk_size', 'nic_mode', 'template_name', 'hypervisor', 'disks',
-        'description', 'no_install')
+                   'iallocator', 'iallocator_hostname', 'disk_template',
+                   'pnode', 'nics', 'snode', 'disk_size', 'nic_mode',
+                   'template_name', 'hypervisor', 'disks', 'description',
+                   'no_install', 'ip_check', 'temporary')
 
     def __init__(self, vm, initial=None, *args, **kwargs):
         super(VirtualMachineForm, self).__init__(initial, *args, **kwargs)
+
+        if has_balloonmem(vm.cluster):
+            self.always_required = ('vcpus', 'memory', 'minmem')
 
         # Set owner on form
         try:
@@ -227,7 +255,7 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
         for field in self.always_required:
             self.fields[field].required = True
         # If the required property is set on a child class,
-        #  require those form fields   
+        #  require those form fields
         try:
             if self.required:
                 for field in self.required:
@@ -244,7 +272,14 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
             #  from ganeti as an int and the DataVolumeField does not like
             #  ints.
             self.fields['vcpus'].initial = info['beparams']['vcpus']
-            self.fields['memory'].initial = str(info['beparams']['memory'])
+            if has_balloonmem(vm.cluster):
+                del self.fields['memory']
+                self.fields['minmem'].initial = info['beparams']['minmem']
+                self.fields['maxmem'].initial = info['beparams']['maxmem']
+            else:
+                del self.fields['minmem']
+                del self.fields['maxmem']
+                self.fields['memory'].initial = str(info['beparams']['memory'])
 
             # always take the larger nic count.  this ensures that if nics are
             # being removed that they will be in the form as Nones
@@ -254,7 +289,8 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
             self.fields['nic_count'].initial = nic_count
             self.nic_fields = xrange(nic_count)
             for i in xrange(nic_count):
-                link = forms.CharField(label=_('NIC/%s Link' % i), max_length=255, required=True)
+                link = forms.CharField(label=_('NIC/%s Link' % i),
+                                       max_length=255, required=True)
                 self.fields['nic_link_%s' % i] = link
                 mac = MACAddressField(label=_('NIC/%s Mac' % i), required=True)
                 self.fields['nic_mac_%s' % i] = mac
@@ -263,14 +299,14 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
                     link.initial = info['nic.links'][i]
 
             self.fields['os'].initial = info['os']
-            
+
             try:
                 if self.hvparam_fields:
                     for field in self.hvparam_fields:
                         self.fields[field].initial = hvparam.get(field)
             except AttributeError:
                 pass
-            
+
     def clean(self):
         data = self.cleaned_data
         kernel_path = data.get('kernel_path')
@@ -278,7 +314,8 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
 
         # Make sure if initrd_path is set, kernel_path is aswell
         if initrd_path and not kernel_path:
-            msg = u"%s." % _("Kernel Path must be specified along with Initrd Path")
+            msg = u"%s." % _("Kernel Path must be specified along "
+                             "with Initrd Path")
             self._errors['kernel_path'] = self.error_class([msg])
             self._errors['initrd_path'] = self.error_class([msg])
             del data['initrd_path']
@@ -288,7 +325,8 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
         vnc_x509_verify = data.get('vnc_x509_verify')
 
         if not vnc_tls and vnc_x509_path:
-            msg = u'%s.' % _('This field can not be set without VNC TLS enabled')
+            msg = u'%s.' % _("This field can not be set without "
+                             "VNC TLS enabled")
             self._errors['vnc_x509_path'] = self.error_class([msg])
         if vnc_x509_verify and not vnc_x509_path:
             msg = u'%s.' % _('This field is required')
@@ -305,17 +343,20 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
             mac = data[mac_field] if mac_field in data else None
             link = data[link_field] if link_field in data else None
             if mac and not link:
-                self._errors[link_field] = self.error_class([_('This field is required')])
+                self._errors[link_field] = self.error_class([_('This field is'
+                                                               ' required')])
             elif link and not mac:
-                self._errors[mac_field] = self.error_class([_('This field is required')])
+                self._errors[mac_field] = self.error_class([_('This field is '
+                                                              'required')])
         data['nic_count_original'] = self.nics
 
         return data
 
 
 class HvmModifyVirtualMachineForm(ModifyVirtualMachineForm):
-    hvparam_fields = ('boot_order', 'cdrom_image_path', 'nic_type', 
-        'disk_type', 'vnc_bind_address', 'acpi', 'use_localtime')
+    hvparam_fields = ('boot_order', 'cdrom_image_path', 'nic_type',
+                      'disk_type', 'vnc_bind_address', 'acpi',
+                      'use_localtime')
     required = ('disk_type', 'boot_order', 'nic_type')
     empty_field = EMPTY_CHOICE_FIELD
     disk_types = HVM_CHOICES['disk_type']
@@ -325,30 +366,33 @@ class HvmModifyVirtualMachineForm(ModifyVirtualMachineForm):
     acpi = forms.BooleanField(label='ACPI', required=False)
     use_localtime = forms.BooleanField(label='Use Localtime', required=False)
     vnc_bind_address = forms.IPAddressField(label='VNC Bind Address',
-        required=False)
+                                            required=False)
     disk_type = forms.ChoiceField(label=_('Disk Type'), choices=disk_types)
     nic_type = forms.ChoiceField(label=_('NIC Type'), choices=nic_types)
-    boot_order = forms.ChoiceField(label=_('Boot Device'), choices=boot_devices)
+    boot_order = forms.ChoiceField(label=_('Boot Device'),
+                                   choices=boot_devices)
 
     class Meta(ModifyVirtualMachineForm.Meta):
-        exclude = ModifyVirtualMachineForm.Meta.exclude + ('kernel_path', 
-            'root_path', 'kernel_args', 'serial_console', 'cdrom2_image_path')
+        exclude = ModifyVirtualMachineForm.Meta.exclude + \
+            ('kernel_path', 'root_path', 'kernel_args',
+             'serial_console', 'cdrom2_image_path')
 
     def __init__(self, vm, *args, **kwargs):
         super(HvmModifyVirtualMachineForm, self).__init__(vm, *args, **kwargs)
 
 
 class PvmModifyVirtualMachineForm(ModifyVirtualMachineForm):
-    hvparam_fields = ('root_path', 'kernel_path', 'kernel_args', 
-        'initrd_path')
+    hvparam_fields = ('root_path', 'kernel_path', 'kernel_args',
+                      'initrd_path')
 
     initrd_path = forms.CharField(label='initrd Path', required=False)
     kernel_args = forms.CharField(label='Kernel Args', required=False)
 
     class Meta(ModifyVirtualMachineForm.Meta):
-        exclude = ModifyVirtualMachineForm.Meta.exclude + ('disk_type', 
-            'nic_type', 'boot_order', 'cdrom_image_path', 'serial_console',
-            'cdrom2_image_path')
+        exclude = ModifyVirtualMachineForm.Meta.exclude + \
+            ('disk_type', 'nic_type', 'boot_order',
+             'cdrom_image_path', 'serial_console',
+             'cdrom2_image_path')
 
     def __init__(self, vm, *args, **kwargs):
         super(PvmModifyVirtualMachineForm, self).__init__(vm, *args, **kwargs)
@@ -356,14 +400,15 @@ class PvmModifyVirtualMachineForm(ModifyVirtualMachineForm):
 
 class KvmModifyVirtualMachineForm(PvmModifyVirtualMachineForm,
                                   HvmModifyVirtualMachineForm):
-    hvparam_fields = ('acpi', 'disk_cache', 'initrd_path', 
-        'kernel_args', 'kvm_flag', 'mem_path', 
-        'migration_downtime', 'security_domain', 
-        'security_model', 'usb_mouse', 'use_chroot', 
-        'use_localtime', 'vnc_bind_address', 'vnc_tls', 
-        'vnc_x509_path', 'vnc_x509_verify', 'disk_type', 
-        'boot_order', 'nic_type', 'root_path', 
-        'kernel_path', 'serial_console', 
+    hvparam_fields = (
+        'acpi', 'disk_cache', 'initrd_path',
+        'kernel_args', 'kvm_flag', 'mem_path',
+        'migration_downtime', 'security_domain',
+        'security_model', 'usb_mouse', 'use_chroot',
+        'use_localtime', 'vnc_bind_address', 'vnc_tls',
+        'vnc_x509_path', 'vnc_x509_verify', 'disk_type',
+        'boot_order', 'nic_type', 'root_path',
+        'kernel_path', 'serial_console',
         'cdrom_image_path',
         'cdrom2_image_path',
     )
@@ -376,32 +421,32 @@ class KvmModifyVirtualMachineForm(PvmModifyVirtualMachineForm,
     boot_devices = KVM_CHOICES['boot_order']
 
     disk_cache = forms.ChoiceField(label='Disk Cache', required=False,
-        choices=disk_caches)
+                                   choices=disk_caches)
     kvm_flag = forms.ChoiceField(label='KVM Flag', required=False,
-        choices=kvm_flags)
+                                 choices=kvm_flags)
     mem_path = forms.CharField(label='Mem Path', required=False)
     migration_downtime = forms.IntegerField(label='Migration Downtime',
-        required=False)
+                                            required=False)
     security_model = forms.ChoiceField(label='Security Model',
-        required=False, choices=security_models)
+                                       required=False, choices=security_models)
     security_domain = forms.CharField(label='Security Domain', required=False)
     usb_mouse = forms.ChoiceField(label='USB Mouse', required=False,
-        choices=usb_mice)
+                                  choices=usb_mice)
     use_chroot = forms.BooleanField(label='Use Chroot', required=False)
     vnc_tls = forms.BooleanField(label='VNC TLS', required=False)
     vnc_x509_path = forms.CharField(label='VNC x509 Path', required=False)
     vnc_x509_verify = forms.BooleanField(label='VNC x509 Verify',
-        required=False)
-    
+                                         required=False)
+
     class Meta(ModifyVirtualMachineForm.Meta):
         pass
-    
+
     def __init__(self, vm, *args, **kwargs):
         super(KvmModifyVirtualMachineForm, self).__init__(vm, *args, **kwargs)
         self.fields['disk_type'].choices = self.disk_types
         self.fields['nic_type'].choices = self.nic_types
         self.fields['boot_order'].choices = self.boot_devices
-    
+
 
 class ModifyConfirmForm(forms.Form):
 
@@ -414,7 +459,11 @@ class ModifyConfirmForm(forms.Form):
 
         # XXX copy properties into cleaned data so that check_quota_modify can
         # be used
-        cleaned['memory'] = data['memory']
+        if data.get('maxmem'):
+            cleaned['maxmem'] = data['maxmem']
+            cleaned['minmem'] = data['minmem']
+        else:
+            cleaned['memory'] = data['memory']
         cleaned['vcpus'] = data['vcpus']
         cleaned['start'] = 'reboot' in data or self.vm.is_running
         check_quota_modify(self)
@@ -435,13 +484,13 @@ class ModifyConfirmForm(forms.Form):
             index = i if i < nic_count_original else 'add'
             nics.append((index, nic))
         for i in xrange(nic_count_original-nic_count):
-            nics.append(('remove',{}))
+            nics.append(('remove', {}))
             try:
                 del data['nic_mac_%s' % (nic_count+i)]
             except KeyError:
                 pass
             del data['nic_link_%s' % (nic_count+i)]
-            
+
         data['nics'] = nics
         return cleaned
 
@@ -450,15 +499,18 @@ class MigrateForm(forms.Form):
     """ Form used for migrating a Virtual Machine """
     mode = forms.ChoiceField(choices=MODE_CHOICES)
     cleanup = forms.BooleanField(initial=False, required=False,
-                                 label=_("Attempt recovery from failed migration"))
+                                 label=_("Attempt recovery from failed "
+                                         "migration"))
 
 
 class RenameForm(forms.Form):
     """ form used for renaming a Virtual Machine """
     hostname = forms.CharField(label=_('Instance Name'), max_length=255,
                                required=True)
-    ip_check = forms.BooleanField(initial=True, required=False, label=_('IP Check'))
-    name_check = forms.BooleanField(initial=True, required=False, label=_('DNS Name Check'))
+    ip_check = forms.BooleanField(initial=True, required=False,
+                                  label=_('IP Check'))
+    name_check = forms.BooleanField(initial=True, required=False,
+                                    label=_('DNS Name Check'))
 
     def __init__(self, vm, *args, **kwargs):
         self.vm = vm
@@ -468,13 +520,15 @@ class RenameForm(forms.Form):
         data = self.cleaned_data
         hostname = data.get('hostname', None)
         if hostname and hostname == self.vm.hostname:
-            raise ValidationError(_("The new hostname must be different than the current hostname"))
+            raise ValidationError(_("The new hostname must be different than "
+                                    "the current hostname"))
         return hostname
 
 
 class ChangeOwnerForm(forms.Form):
     """ Form used when modifying the owner of a virtual machine """
-    owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(), label=_('Owner'))
+    owner = forms.ModelChoiceField(queryset=ClusterUser.objects.all(),
+                                   label=_('Owner'))
 
 
 class ReplaceDisksForm(forms.Form):
@@ -492,32 +546,37 @@ class ReplaceDisksForm(forms.Form):
 
     mode = forms.ChoiceField(choices=MODE_CHOICES, label=_('Mode'))
     disks = forms.MultipleChoiceField(label=_('Disks'), required=False)
-    node = forms.ChoiceField(label=_('Node'), choices=[empty_field], required=False)
-    iallocator = forms.BooleanField(initial=False, label=_('Iallocator'), required=False)
-    
+    node = forms.ChoiceField(label=_('Node'), choices=[empty_field],
+                             required=False)
+    iallocator = forms.BooleanField(initial=False, label=_('Iallocator'),
+                                    required=False,
+                                    help_text=_(VM_CREATE_HELP['iallocator']))
+
     def __init__(self, instance, *args, **kwargs):
         super(ReplaceDisksForm, self).__init__(*args, **kwargs)
         self.instance = instance
 
         # set disk choices based on the instance
-        disk_choices = [(i, 'disk/%s' % i) for i,v in enumerate(instance.info['disk.sizes'])]
+        disk_choices = [(i, 'disk/%s' % i) for i, v in
+                        enumerate(instance.info['disk.sizes'])]
         self.fields['disks'].choices = disk_choices
 
         # set choices based on the instances cluster
         cluster = instance.cluster
-        nodelist = [str(h) for h in cluster.nodes.values_list('hostname', flat=True)]
+        nodelist = [str(h) for h in
+                    cluster.nodes.values_list('hostname', flat=True)]
         nodes = zip(nodelist, nodelist)
         nodes.insert(0, self.empty_field)
         self.fields['node'].choices = nodes
 
         defaults = cluster_default_info(cluster, get_hypervisor(instance))
-        if defaults['iallocator'] != '' :
+        if defaults['iallocator'] != '':
             self.fields['iallocator'].initial = True
             self.fields['iallocator_hostname'] = forms.CharField(
-                                    initial=defaults['iallocator'],
-                                    required=False,
-                                    widget = forms.HiddenInput())
-    
+                initial=defaults['iallocator'],
+                required=False,
+                widget=forms.HiddenInput())
+
     def clean(self):
         data = self.cleaned_data
         mode = data.get('mode')
@@ -525,13 +584,14 @@ class ReplaceDisksForm(forms.Form):
             iallocator = data.get('iallocator')
             node = data.get('node')
             if not (iallocator or node):
-                msg = _('Node or iallocator is required when replacing secondary with new disk')
+                msg = _('Node or iallocator is required when '
+                        'replacing secondary with new disk')
                 self._errors['mode'] = self.error_class([msg])
 
             elif iallocator and node:
                 msg = _('Choose either node or iallocator')
                 self._errors['mode'] = self.error_class([msg])
-                
+
         return data
 
     def clean_disks(self):
@@ -565,6 +625,23 @@ class VMWizardClusterForm(Form):
                                queryset=Cluster.objects.all(),
                                empty_label=None)
 
+    class Media:
+        css = {
+            # I'm not quite sure if this is the proper way to use static
+            'all': ('/static/css/vm_wizard/cluster_form.css',)
+        }
+
+    def __init__(self, options=None, *args, **kwargs):
+        super(VMWizardClusterForm, self).__init__(*args, **kwargs)
+        if options:
+            self.fields['choices'] = MultipleChoiceField(
+                widget=CheckboxSelectMultiple,
+                choices=options,
+                initial=self.initial,
+                label=_('What would you '
+                        'like to create?'),
+                help_text=_(VM_CREATE_HELP['choices']))
+
     def _configure_for_user(self, user):
         self.fields["cluster"].queryset = cluster_qs_for_user(user)
 
@@ -583,13 +660,16 @@ class VMWizardClusterForm(Form):
 
 
 class VMWizardOwnerForm(Form):
-    template_name = CharField(label=_("Template Name"), max_length=255,
-                              required=False)
-    hostname = CharField(label=_('Instance Name'), max_length=255,
-                         required=False)
     owner = ModelChoiceField(label=_('Owner'),
                              queryset=ClusterUser.objects.all(),
-                             empty_label=None)
+                             empty_label=None,
+                             help_text=_(VM_CREATE_HELP['owner']))
+    template_name = CharField(label=_("Template Name"), max_length=255,
+                              required=False,
+                              help_text=_(VM_HELP['template_name']))
+    hostname = CharField(label=_('Instance Name'), max_length=255,
+                         required=False,
+                         help_text=_(VM_CREATE_HELP['hostname']))
 
     def _configure_for_cluster(self, cluster):
         if not cluster:
@@ -600,7 +680,13 @@ class VMWizardOwnerForm(Form):
         qs = owner_qs_for_cluster(cluster)
         self.fields["owner"].queryset = qs
 
-    def _configure_for_template(self, template):
+    def _configure_for_template(self, template, choices=None):
+        # for each option not checked on step 0
+        if choices:
+            for field in choices:
+                # Hide it
+                self.fields[field].widget = forms.HiddenInput()
+
         if not template:
             return
 
@@ -628,19 +714,70 @@ class VMWizardOwnerForm(Form):
 
     def clean(self):
         if (not self.cleaned_data.get("template_name") and
-            not self.cleaned_data.get("hostname")):
+                not self.cleaned_data.get("hostname")):
             raise ValidationError("What should be created?")
         return self.cleaned_data
 
 
 class VMWizardBasicsForm(Form):
-    hv = ChoiceField(label=_("Hypervisor"), choices=[])
-    os = ChoiceField(label=_('Operating System'), choices=[])
-    vcpus = IntegerField(label=_("Virtual CPU Count"), initial=1, min_value=1)
-    memory = DataVolumeField(label=_('Memory (MiB)'))
+    hv = ChoiceField(label=_("Hypervisor"), choices=[],
+                     help_text=_(VM_CREATE_HELP['hypervisor']))
+    os = ChoiceField(label=_('Operating System'), choices=[],
+                     help_text=_(VM_CREATE_HELP['os']))
+    vcpus = IntegerField(label=_("Virtual CPU Count"), initial=1, min_value=1,
+                         help_text=_(VM_HELP['vcpus']))
+    minram = DataVolumeField(label=_('Minimum RAM (MiB)'),
+                             help_text=_(VM_HELP['memory']))
+    memory = DataVolumeField(label=_('Maximum RAM (MiB)'),
+                             help_text=_(VM_HELP['memory']))
     disk_template = ChoiceField(label=_('Disk Template'),
-                                choices=HV_DISK_TEMPLATES)
-    disk_size = DataVolumeField(label=_("Disk Size (MB)"))
+                                choices=HV_DISK_TEMPLATES,
+                                help_text=_(VM_CREATE_HELP['disk_template']))
+
+    def __init__(self, *args, **kwargs):
+        super(VMWizardBasicsForm, self).__init__(*args, **kwargs)
+
+        # Create disk and nic fields based on value in settings
+        disk_count = settings.MAX_DISKS_ADD
+        self.create_disk_fields(disk_count)
+
+        nic_count = settings.MAX_NICS_ADD
+        self.create_nic_fields(nic_count)
+
+    def create_disk_fields(self, count):
+        """
+        dynamically add fields for disks
+        """
+        for i in range(count):
+            disk_size = DataVolumeField(
+                label=_("Disk/%s Size (MB)" % i), required=False,
+                help_text=_(VM_CREATE_HELP['disk_size']))
+
+            disk_size.widget.attrs['class'] = 'multi disk'
+            disk_size.widget.attrs['data-group'] = i
+            self.fields['disk_size_%s' % i] = disk_size
+
+    def create_nic_fields(self, count):
+        """
+        dynamically add fields for nics
+        """
+        self.nic_fields = range(count)
+        for i in range(count):
+            nic_mode = forms.ChoiceField(
+                label=_('NIC/%s Mode' % i), choices=HV_NIC_MODES, initial='',
+                required=False, help_text=_(VM_CREATE_HELP['nic_mode']))
+
+            nic_link = forms.CharField(
+                label=_('NIC/%s Link' % i), max_length=255, required=False,
+                initial='', help_text=_(VM_HELP['nic_link']))
+
+            nic_mode.widget.attrs['class'] = 'multi nic mode'
+            nic_mode.widget.attrs['data-group'] = i
+            nic_link.widget.attrs['class'] = 'multi nic link'
+            nic_link.widget.attrs['data-group'] = i
+
+            self.fields['nic_mode_%s' % i] = nic_mode
+            self.fields['nic_link_%s' % i] = nic_link
 
     def _configure_for_cluster(self, cluster):
         if not cluster:
@@ -656,6 +793,10 @@ class VMWizardBasicsForm(Form):
         self.fields["hv"].choices = zip(hvs, prettified)
         self.fields["hv"].initial = hv
 
+        if not has_sharedfile(cluster):
+            self.fields["disk_template"].choices.remove((u'sharedfile',
+                                                         u'Sharedfile'))
+
         # Get the OS list.
         self.fields["os"].choices = cluster_os_list(cluster)
 
@@ -663,10 +804,10 @@ class VMWizardBasicsForm(Form):
         beparams = cluster.info["beparams"]["default"]
         self.fields["vcpus"].initial = beparams["vcpus"]
 
-        # If this cluster operates on the "maxmem" parameter instead of
-        # "memory", use that for now.
-        if requires_maxmem(cluster):
+        # Check for memory based on ganeti version
+        if has_balloonmem(cluster):
             self.fields["memory"].initial = beparams["maxmem"]
+            self.fields["minram"].initial = beparams["minmem"]
         else:
             self.fields["memory"].initial = beparams["memory"]
 
@@ -674,16 +815,24 @@ class VMWizardBasicsForm(Form):
         if "ipolicy" in cluster.info:
             if "max" in cluster.info["ipolicy"]:
                 v = cluster.info["ipolicy"]["max"]["disk-size"]
-                self.fields["disk_size"].validators.append(
-                    MaxValueValidator(v))
+                for disk in xrange(settings.MAX_DISKS_ADD):
+                    self.fields["disk_size_%s" % disk].validators.append(
+                        MaxValueValidator(v))
                 v = cluster.info["ipolicy"]["max"]["memory-size"]
                 self.fields["memory"].validators.append(MaxValueValidator(v))
+                if has_balloonmem(cluster):
+                    self.fields["minram"].validators.append(
+                        MaxValueValidator(v))
             if "min" in cluster.info["ipolicy"]:
                 v = cluster.info["ipolicy"]["min"]["disk-size"]
-                self.fields["disk_size"].validators.append(
-                    MinValueValidator(v))
+                for disk in xrange(settings.MAX_DISKS_ADD):
+                    self.fields["disk_size_%s" % disk].validators.append(
+                        MinValueValidator(v))
                 v = cluster.info["ipolicy"]["min"]["memory-size"]
                 self.fields["memory"].validators.append(MinValueValidator(v))
+                if has_balloonmem(cluster):
+                    self.fields["minram"].validators.append(
+                        MinValueValidator(v))
 
     def _configure_for_template(self, template):
         if not template:
@@ -692,19 +841,66 @@ class VMWizardBasicsForm(Form):
         self.fields["os"].initial = template.os
         self.fields["vcpus"].initial = template.vcpus
         self.fields["memory"].initial = template.memory
+        if has_balloonmem(template.cluster):
+            self.fields["minram"].initial = template.minmem
         self.fields["disk_template"].initial = template.disk_template
-        # XXX disk size
+        for num, disk in enumerate(template.disks):
+            self.fields["disk_size_%s" % num].initial = disk["size"]
+        for num, nic in enumerate(template.nics):
+            self.fields["nic_link_%s" % num].initial = nic['link']
+            self.fields["nic_mode_%s" % num].initial = nic['mode']
+
+    def clean(self):
+        data = self.cleaned_data
+        # get disk sizes after validation (after 1.5G -> 1500)
+        # and filter empty fields.
+        disks = []
+        for disk_num in xrange(settings.MAX_DISKS_ADD):
+            disk = data.get("disk_size_%s" % disk_num, None)
+            if disk:
+                disks.append(disk)
+        # if disks validated (no errors), but none of them contain data, then
+        # they were all left empty
+        if not disks and not self._errors:
+            msg = _("You need to add at least 1 disk!")
+            self._errors["disk_size_0"] = self.error_class([msg])
+
+        # Store disks as an array of dicts for use in template.
+        data["disks"] = [{"size": disk} for disk in disks]
+
+        nics = []
+        for nic in xrange(settings.MAX_NICS_ADD):
+            link = data.get('nic_link_%s' % nic, None)
+            mode = data.get('nic_mode_%s' % nic, None)
+            # if both the mode and link for a NIC are filled out, add it to the
+            # nic list.
+            if link and mode:
+                nics.append({'link': link, 'mode': mode})
+            elif link or mode:
+                raise ValidationError(_("Please input both a link and mode."))
+
+        data['nics'] = nics
+
+        if data.get('minram') > data.get('memory'):
+            msg = _("The minimum ram cannot be larger than the maximum ram.")
+            self._errors["minram"] = self.error_class([msg])
+
+        return data
 
 
 class VMWizardAdvancedForm(Form):
     ip_check = BooleanField(label=_('Verify IP'), initial=False,
-                            required=False)
+                            required=False,
+                            help_text=_(VM_RENAME_HELP['ip_check']))
     name_check = BooleanField(label=_('Verify hostname through DNS'),
-                              initial=False, required=False)
+                              initial=False, required=False,
+                              help_text=_(VM_RENAME_HELP['name_check']))
     pnode = ModelChoiceField(label=_("Primary Node"),
-                             queryset=Node.objects.all(), empty_label=None)
+                             queryset=Node.objects.all(), empty_label=None,
+                             help_text=_(VM_CREATE_HELP['pnode']))
     snode = ModelChoiceField(label=_("Secondary Node"),
-                             queryset=Node.objects.all(), empty_label=None)
+                             queryset=Node.objects.all(), empty_label=None,
+                             help_text=_(VM_CREATE_HELP['snode']))
 
     def _configure_for_cluster(self, cluster):
         if not cluster:
@@ -733,7 +929,7 @@ class VMWizardAdvancedForm(Form):
         # Ganeti will error on VM creation if an IP address check is requested
         # but a name check is not.
         if (self.cleaned_data.get("ip_check") and not
-            self.cleaned_data.get("name_check")):
+                self.cleaned_data.get("name_check")):
             msg = ["Cannot perform IP check without name check"]
             self.errors["ip_check"] = self.error_class(msg)
 
@@ -763,14 +959,19 @@ class VMWizardPVMForm(Form):
 
 
 class VMWizardHVMForm(Form):
-    boot_order = CharField(label=_("Preferred boot device"), max_length=255,
-                           required=False)
+    boot_order = ChoiceField(label=_("Preferred boot device"),
+                             required=False, choices=HVM_BOOT_ORDER,
+                             help_text=_(VM_CREATE_HELP['boot_order']))
     cdrom_image_path = CharField(label=_("CD-ROM image path"), max_length=512,
-                                required=False)
+                                 required=False,
+                                 help_text=_(
+                                     VM_CREATE_HELP['cdrom_image_path']))
     disk_type = ChoiceField(label=_("Disk type"),
-                            choices=HVM_CHOICES["disk_type"])
+                            choices=HVM_CHOICES["disk_type"],
+                            help_text=_(VM_CREATE_HELP['disk_type']))
     nic_type = ChoiceField(label=_("NIC type"),
-                           choices=HVM_CHOICES["nic_type"])
+                           choices=HVM_CHOICES["nic_type"],
+                           help_text=_(VM_CREATE_HELP['nic_type']))
 
     def _configure_for_cluster(self, cluster):
         if not cluster:
@@ -793,22 +994,32 @@ class VMWizardHVMForm(Form):
         self.fields["nic_type"].initial = template.nic_type
 
 
-
 class VMWizardKVMForm(Form):
-    kernel_path = CharField(label=_("Kernel path"), max_length=255)
-    root_path = CharField(label=_("Root path"), max_length=255)
+    kernel_path = CharField(label=_("Kernel path"), max_length=255,
+                            help_text=_(VM_CREATE_HELP['kernel_path']))
+    root_path = CharField(label=_("Root path"), max_length=255,
+                          help_text=_(VM_CREATE_HELP['root_path']))
     serial_console = BooleanField(label=_("Enable serial console"),
-                                  required=False)
-    boot_order = CharField(label=_("Preferred boot device"), max_length=255,
-                           required=False)
+                                  required=False,
+                                  help_text=_(
+                                      VM_CREATE_HELP['serial_console']))
+    boot_order = ChoiceField(label=_("Preferred boot device"),
+                             required=False, choices=KVM_BOOT_ORDER,
+                             help_text=_(VM_CREATE_HELP['boot_order']))
     cdrom_image_path = CharField(label=_("CD-ROM image path"), max_length=512,
-                                required=False)
+                                 required=False,
+                                 help_text=_(
+                                     VM_CREATE_HELP['cdrom_image_path']))
     cdrom2_image_path = CharField(label=_("Second CD-ROM image path"),
-                                  max_length=512, required=False)
+                                  max_length=512, required=False,
+                                  help_text=_(
+                                      VM_CREATE_HELP['cdrom2_image_path']))
     disk_type = ChoiceField(label=_("Disk type"),
-                            choices=KVM_CHOICES["disk_type"])
+                            choices=KVM_CHOICES["disk_type"],
+                            help_text=_(VM_CREATE_HELP['disk_type']))
     nic_type = ChoiceField(label=_("NIC type"),
-                           choices=KVM_CHOICES["nic_type"])
+                           choices=KVM_CHOICES["nic_type"],
+                           help_text=_(VM_CREATE_HELP['nic_type']))
 
     def _configure_for_cluster(self, cluster):
         if not cluster:
@@ -850,7 +1061,7 @@ class VMWizardKVMForm(Form):
         # If booting from CD-ROM, require the first CD-ROM image to be
         # present.
         if (data.get("boot_order") == "cdrom" and
-            not data.get("cdrom_image_path")):
+                not data.get("cdrom_image_path")):
             msg = u"%s." % _("Image path required if boot device is CD-ROM")
             self._errors["cdrom_image_path"] = self.error_class([msg])
 
@@ -859,6 +1070,25 @@ class VMWizardKVMForm(Form):
 
 class VMWizardView(LoginRequiredMixin, CookieWizardView):
     template_name = "ganeti/forms/vm_wizard.html"
+
+    OPTIONS = (
+        # value, display value
+        # value corresponds to VMWizardOwnerForm's fields
+        ('template_name', 'Template'),
+        ('hostname', 'Virtual Machine'),
+    )
+
+    def _get_vm_or_template(self):
+        """Returns items that were not checked in step0"""
+        data = self.get_cleaned_data_for_step('0')
+        if data:
+            options = [option[0] for option in self.OPTIONS]
+            choices = data.get('choices', None)
+            # which boxes weren't checked
+            unchecked = set(options) - set(choices)
+            return unchecked
+
+        return None
 
     def _get_template(self):
         name = self.kwargs.get("template")
@@ -886,16 +1116,19 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
 
     def get_form(self, step=None, data=None, files=None):
         s = int(self.steps.current) if step is None else int(step)
+        initial = self.get_form_initial(s)
 
         if s == 0:
-            form = VMWizardClusterForm(data=data)
+            form = VMWizardClusterForm(data=data, options=self.OPTIONS,
+                                       initial=initial)
             form._configure_for_user(self.request.user)
             # XXX this should somehow become totally invalid if the user
             # doesn't have perms on the template.
         elif s == 1:
             form = VMWizardOwnerForm(data=data)
             form._configure_for_cluster(self._get_cluster())
-            form._configure_for_template(self._get_template())
+            form._configure_for_template(self._get_template(),
+                                         choices=self._get_vm_or_template())
         elif s == 2:
             form = VMWizardBasicsForm(data=data)
             form._configure_for_cluster(self._get_cluster())
@@ -932,7 +1165,7 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
         context = super(VMWizardView, self).get_context_data(form=form,
                                                              **kwargs)
         summary = {
-            "cluster": self._get_cluster(),
+            "cluster_form": self.get_cleaned_data_for_step("0"),
             "owner_form": self.get_cleaned_data_for_step("1"),
             "basics_form": self.get_cleaned_data_for_step("2"),
             "advanced_form": self.get_cleaned_data_for_step("3"),
@@ -961,27 +1194,35 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
 
         cluster = forms[0].cleaned_data["cluster"]
         owner = forms[1].cleaned_data["owner"]
-        hostname = forms[1].cleaned_data["hostname"]
+
         template_name = forms[1].cleaned_data["template_name"]
+        hostname = forms[1].cleaned_data["hostname"]
+
+        # choice_data are the options that were not checked
+        # if unchecked, than we should make sure that this is not submitted.
+        # this fixes cases where the user checked a box in the beginning, put
+        # data into the input, and went back and unchecked that box later.
+        unchecked_options = self._get_vm_or_template()
+        for unchecked in unchecked_options:
+            if 'template_name' == unchecked:
+                template_name = ''
+            if 'hostname' == unchecked:
+                hostname = ''
 
         template.cluster = cluster
         template.memory = forms[2].cleaned_data["memory"]
+        if has_balloonmem(cluster):
+            template.minmem = forms[2].cleaned_data["minram"]
         template.vcpus = forms[2].cleaned_data["vcpus"]
         template.disk_template = forms[2].cleaned_data["disk_template"]
 
-        disk_size = forms[2].cleaned_data["disk_size"]
-        template.disks = [
-            {
-                "size": disk_size,
-            },
-        ]
+        template.disks = forms[2].cleaned_data["disks"]
 
-        template.nics = [
-            {
-                "link": "br0",
-                "mode": "bridged",
-            },
-        ]
+        nics = forms[2].cleaned_data["nics"]
+        # default
+        if not nics:
+            nics = [{"link": "br0", "mode": "bridged"}]
+        template.nics = nics
 
         template.os = forms[2].cleaned_data["os"]
         template.ip_check = forms[3].cleaned_data["ip_check"]
@@ -1000,10 +1241,10 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
         if "snode" in forms[3].cleaned_data:
             template.snode = forms[3].cleaned_data["snode"].hostname
 
-        if template_name:
-            template.template_name = template_name
-
-        template.save()
+        template.set_name(template_name)
+        # only save the template to the database if its not temporary
+        if not template.temporary:
+            template.save()
 
         if hostname:
             vm = template_to_instance(template, hostname, owner)
@@ -1017,7 +1258,7 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
                                                       template]))
 
 
-def vm_wizard():
+def vm_wizard(*args, **kwargs):
     forms = (
         VMWizardClusterForm,
         VMWizardOwnerForm,
@@ -1025,4 +1266,5 @@ def vm_wizard():
         VMWizardAdvancedForm,
         Form,
     )
-    return VMWizardView.as_view(forms)
+    initial = kwargs.get('initial_dict', None)
+    return VMWizardView.as_view(forms, initial_dict=initial)

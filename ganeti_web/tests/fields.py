@@ -65,7 +65,7 @@ class TestDataVolumeField(SimpleTestCase):
         }
         invalid = {
             "9001 GB":
-                [u"Ensure this value is less than or equal to 9216000."],
+            [u"Ensure this value is less than or equal to 9216000."],
         }
         self.assertFieldOutput(DataVolumeField, valid, invalid,
                                field_kwargs={"max_value": 9216000},

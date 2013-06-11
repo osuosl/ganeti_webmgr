@@ -26,6 +26,7 @@ import random
 import re
 import string
 import sys
+import time
 
 from django.conf import settings
 
@@ -253,8 +254,8 @@ class CachedClusterObject(models.Model):
 
         if self.id:
             if (self.ignore_cache
-                or self.cached is None
-                or datetime.now() > self.cached + epsilon):
+                    or self.cached is None
+                    or datetime.now() > self.cached + epsilon):
                 self.refresh()
             elif self.info:
                 self.parse_transient_info()
@@ -590,10 +591,6 @@ class VirtualMachine(CachedClusterObject):
     allows the cache to function in the absence of a periodic update mechanism
     such as Cron, Celery, or Threads.
 
-    The lazy update and periodic update should use separate refresh timeouts
-    where LAZY_CACHE_REFRESH > PERIODIC_CACHE_REFRESH.  This ensures that lazy
-    cache will only be used if the periodic cache is not updating.
-
     XXX Serialized_info can possibly be changed to a CharField if an upper
         limit can be determined. (Later Date, if it will optimize db)
 
@@ -607,6 +604,7 @@ class VirtualMachine(CachedClusterObject):
     virtual_cpus = models.IntegerField(default=-1)
     disk_size = models.IntegerField(default=-1)
     ram = models.IntegerField(default=-1)
+    minram = models.IntegerField(default=-1)
     cluster_hash = models.CharField(max_length=40, editable=False)
     operating_system = models.CharField(max_length=128)
     status = models.CharField(max_length=14)
@@ -1418,6 +1416,7 @@ class VirtualMachineTemplate(models.Model):
     """
 
     template_name = models.CharField(max_length=255, default="")
+    temporary = BooleanField(verbose_name=_("Temporary"), default=False)
     description = models.CharField(max_length=255, default="")
     cluster = models.ForeignKey(Cluster, related_name="templates", null=True,
                                 blank=True)
@@ -1449,10 +1448,13 @@ class VirtualMachineTemplate(models.Model):
     memory = models.IntegerField(verbose_name=_('Memory'),
                                  validators=[MinValueValidator(100)],
                                  null=True, blank=True)
+    minmem = models.IntegerField(verbose_name=_('Minimum Memory'),
+                                 validators=[MinValueValidator(100)],
+                                 null=True, blank=True)
     disks = PickleField(verbose_name=_('Disks'), null=True, blank=True)
     # XXX why isn't this an enum?
     disk_type = models.CharField(verbose_name=_('Disk Type'), max_length=255,
-                                default="")
+                                 default="")
     nics = PickleField(verbose_name=_('NICs'), null=True, blank=True)
     # XXX why isn't this an enum?
     nic_type = models.CharField(verbose_name=_('NIC Type'), max_length=255,
@@ -1477,10 +1479,29 @@ class VirtualMachineTemplate(models.Model):
         unique_together = (("cluster", "template_name"),)
 
     def __unicode__(self):
-        if self.template_name is None:
-            return u'unnamed'
+        if self.temporary:
+            return u'(temporary)'
         else:
             return self.template_name
+
+    def set_name(self, name):
+        """
+        Set this template's name.
+
+        If the name is blank, this template will become temporary and its name
+        will be set to a unique timestamp.
+        """
+
+        if name:
+            self.template_name = name
+        else:
+            # The template is temporary and will be removed by the VM when the
+            # VM successfully comes into existence.
+            self.temporary = True
+            # Give it a temporary name. Something unique. This is the number
+            # of microseconds since the epoch; I figure that it'll work out
+            # alright.
+            self.template_name = str(int(time.time() * (10 ** 6)))
 
 
 class GanetiError(models.Model):
@@ -1591,11 +1612,12 @@ class GanetiError(models.Model):
                 # return if the error exists for cluster
                 try:
                     c_ct = ContentType.objects.get_for_model(Cluster)
-                    return cls.objects.get(msg=msg, obj_type=c_ct, code=code,
-                                           obj_id=obj.cluster_id,
-                                           cleared=False)
+                    return cls.objects.filter(msg=msg, obj_type=c_ct,
+                                              code=code,
+                                              obj_id=obj.cluster_id,
+                                              cleared=False)[0]
 
-                except cls.DoesNotExist:
+                except (cls.DoesNotExist, IndexError):
                     # we want to proceed when the error is not
                     # cluster-specific
                     pass
@@ -1606,10 +1628,10 @@ class GanetiError(models.Model):
         # cluster will already be queried so use create() instead which does
         # allow cluster_id
         try:
-            return cls.objects.get(msg=msg, obj_type=ct, obj_id=obj.pk,
-                                   code=code, **kwargs)
+            return cls.objects.filter(msg=msg, obj_type=ct, obj_id=obj.pk,
+                                      code=code, **kwargs)[0]
 
-        except cls.DoesNotExist:
+        except (cls.DoesNotExist, IndexError):
             cluster_id = obj.pk if is_cluster else obj.cluster_id
 
             return cls.objects.create(timestamp=datetime.now(), msg=msg,

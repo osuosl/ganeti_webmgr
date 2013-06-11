@@ -2,10 +2,12 @@ from unittest import TestCase
 
 from ganeti_web.caps import (ANCIENT, FUTURE, GANETI22, GANETI24, GANETI242,
                              GANETI25, classify, has_cdrom2,
-                             has_shutdown_timeout, requires_maxmem)
+                             has_shutdown_timeout, has_balloonmem)
+
 
 class Mock(object):
     pass
+
 
 def make_mock_cluster(version):
     cluster = Mock()
@@ -61,14 +63,15 @@ class TestHasCdrom2(TestCase):
         cluster = make_mock_cluster("2.2.0")
         self.assertFalse(has_cdrom2(cluster))
 
+
 class TestRequiresMaxmem(TestCase):
 
     # Ganeti >= 2.6 changes the beparam 'memory' to 'maxmem' and 'minmem'
     # however, just using 'maxmem' seems to work.
-    def test_requires_maxmem(self):
+    def test_has_balloonmem(self):
         cluster = make_mock_cluster("2.6.0")
-        self.assertTrue(requires_maxmem(cluster))
+        self.assertTrue(has_balloonmem(cluster))
 
-    def test_requires_memory(self):
+    def test_no_balloonmem(self):
         cluster = make_mock_cluster("2.5.0")
-        self.assertFalse(requires_maxmem(cluster))
+        self.assertFalse(has_balloonmem(cluster))

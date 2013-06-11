@@ -1,6 +1,8 @@
-from ganeti_web.tests.views.virtual_machine.base import TestVirtualMachineViewsBase
+from ganeti_web.tests.views.virtual_machine.base \
+    import TestVirtualMachineViewsBase
 
 __all__ = ['TestVirtualMachineLogViews']
+
 
 class TestVirtualMachineLogViews(TestVirtualMachineViewsBase):
 

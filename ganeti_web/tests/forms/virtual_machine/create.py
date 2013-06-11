@@ -34,6 +34,7 @@ class MockCluster(object):
         "beparams": {
             "default": {
                 "maxmem": 256,
+                "minmem": 128,
                 "vcpus": 1,
             },
         },
@@ -53,7 +54,6 @@ class MockCluster(object):
     rapi = MockRapi()
 
 
-
 class TestVMWizardBasicsForm(TestCase):
 
     def setUp(self):
@@ -64,8 +64,9 @@ class TestVMWizardBasicsForm(TestCase):
             "os": "image+dobion-lotso",
             "vcpus": 1,
             "memory": 128,
+            "minram": 128,
             "disk_template": "plain",
-            "disk_size": 2048,
+            "disk_size_0": 2048,
         }
 
     def test_trivial(self):
@@ -92,18 +93,24 @@ class TestVMWizardBasicsForm(TestCase):
 
     def test_validate_min_disk_size(self):
         data = self.valid_data.copy()
-        data["disk_size"] = 512
+        data["disk_size_0"] = 512
         form = VMWizardBasicsForm(data)
         form._configure_for_cluster(self.cluster)
         self.assertFalse(form.is_valid(), "Disk size should be too small")
 
     def test_validate_max_disk_size(self):
         data = self.valid_data.copy()
-        data["disk_size"] = 16384
+        data["disk_size_0"] = 16384
         form = VMWizardBasicsForm(data)
         form._configure_for_cluster(self.cluster)
         self.assertFalse(form.is_valid(), "Disk size should be too big")
 
+    def test_validate_no_nic_input(self):
+        data = self.valid_data.copy()
+        data["nics"] = None
+        form = VMWizardBasicsForm(data)
+        form._configure_for_cluster(self.cluster)
+        self.assertTrue(form.is_valid())
 
 
 class TestVMWizardAdvancedForm(TestCase):

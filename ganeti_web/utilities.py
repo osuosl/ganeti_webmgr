@@ -17,7 +17,7 @@
 # USA.
 from collections import defaultdict
 from ganeti_web import constants
-from ganeti_web.caps import requires_maxmem
+from ganeti_web.caps import has_balloonmem
 
 from ganeti_web.util.client import GanetiApiError
 
@@ -83,9 +83,9 @@ def cluster_default_info(cluster, hypervisor=None):
         'nic_mode': nic_mode,
         'nic_link': nic_link,
         'vcpus': beparams['vcpus'],
-        }
+    }
 
-    if requires_maxmem(cluster):
+    if has_balloonmem(cluster):
         extraparams['memory'] = beparams['maxmem']
     else:
         extraparams['memory'] = beparams['memory']
@@ -147,7 +147,8 @@ def os_prettify(oses):
         try:
             # Split into type and flavor.
             t, flavor = name.split("+", 1)
-            # Prettify flavors. "this-boring-string" becomes "This Boring String"
+            # Prettify flavors. "this-boring-string" becomes
+            #"This Boring String"
             flavor = " ".join(word.capitalize() for word in flavor.split("-"))
             d[t.capitalize()].append((name, flavor))
         except ValueError:
@@ -164,7 +165,7 @@ def compare(x, y):
     Using the python cmp function, returns a string detailing the change in
         difference
     """
-    i = cmp(x,y)
+    i = cmp(x, y)
     if y is None and i != 0:
         return "removed"
     if isinstance(x, basestring) and i != 0:
@@ -188,14 +189,16 @@ def compare(x, y):
 
 def contains(e, t):
     """
-    Determine whether or not the element e is contained within the list of tuples t
+    Determine whether or not the element e is contained within
+    the list of tuples t
     """
     return any(e == v[0] for v in t)
 
 
 def get_hypervisor(vm):
     """
-    Given a VirtualMachine object, return its hypervisor depending on what hvparam fields
+    Given a VirtualMachine object,
+    return its hypervisor depending on what hvparam fields
     it contains.
     """
     if vm.info:

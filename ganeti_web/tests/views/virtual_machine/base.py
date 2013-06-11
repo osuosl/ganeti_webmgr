@@ -16,6 +16,7 @@ Cluster = models.Cluster
 Node = models.Node
 Job = models.Job
 
+
 class VirtualMachineTestCaseMixin():
     def create_virtual_machine(self, cluster=None, hostname='vm1.example.bak'):
         cluster = cluster if cluster else Cluster(hostname='test.example.bak',
@@ -42,14 +43,16 @@ class TestVirtualMachineViewsBase(TestCase, VirtualMachineTestCaseMixin,
         self.vm, self.cluster = self.create_virtual_machine()
 
         self.create_standard_users()
-        self.create_users([
-              ('user',{'id':69}),
-              ('user1',{'id':88}),
-              ('vm_admin',{'id':77}),
-              ('vm_modify',{'id':75}),
-              ('cluster_migrate',{'id':78}),
-              ('cluster_admin',{'id':99}),
-        ])
+        self.create_users(
+            [
+                ('user', {'id': 69}),
+                ('user1', {'id': 88}),
+                ('vm_admin', {'id': 77}),
+                ('vm_modify', {'id': 75}),
+                ('cluster_migrate', {'id': 78}),
+                ('cluster_admin', {'id': 99}),
+            ]
+        )
 
         self.vm_admin.grant('admin', self.vm)
         self.vm_modify.grant('modify', self.vm)

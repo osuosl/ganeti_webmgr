@@ -33,6 +33,7 @@ x.y.z (major.minor.patch) versioning pattern.
     FUTURE,
 ) = range(8)
 
+
 def classify(cluster):
     """
     Determine the class of a cluster by examining its version.
@@ -81,10 +82,19 @@ def has_cdrom2(cluster):
 
     return classify(cluster) >= GANETI242
 
-def requires_maxmem(cluster):
+
+def has_balloonmem(cluster):
     """
     Determine whether a cluster requires min/maxmem rather than
     just memory.
     """
 
     return classify(cluster) >= GANETI26
+
+
+def has_sharedfile(cluster):
+    """
+    Determine whether a cluster supports the sharedfile disk template.
+    """
+
+    return classify(cluster) >= GANETI25

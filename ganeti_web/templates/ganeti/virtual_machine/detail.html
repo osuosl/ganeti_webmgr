@@ -19,7 +19,7 @@
             select: function(event, ui) {
                         window.location.hash = ui.tab.hash;
                     }
-		});
+        });
 
         {% if admin %}
             {% ifnotequal instance.info.status "running" %}
@@ -171,9 +171,7 @@
 {% block content %}
 <h1 class="breadcrumb">
     {% if view_cluster %}
-    <a href="{% url cluster-detail cluster.slug %}#virtual_machines">
-        {{cluster.hostname|abbreviate_fqdn}}
-    </a>
+    <a href="{% url cluster-detail cluster.slug %}#virtual_machines">{{cluster.hostname|abbreviate_fqdn}}</a>
     {% else %}
     <span>{{cluster.hostname|abbreviate_fqdn}}</span>
     {% endif %}
@@ -184,29 +182,32 @@
 
 <div id="tabs">
     <ul>
-        <li><a href="#overview"><span>{% trans "Overview" %}</span></a></li>
+        <li><a href="#overview">{% trans "Overview" %}</a></li>
         {% if admin %}
-            <li>
-                <a title="users" href="{% url vm-users cluster.slug instance.hostname %}">
-                    <span>{% trans "Users" %}</span>
-                </a>
-            </li>
-            <li>
-                <a title="log" href="{% url vm-object_log cluster.slug instance.hostname %}">
-                    <span>{% trans "Log" %}</span>
-                </a>
-            </li>
+        <li>
+            <a title="users"
+                href="{% url vm-users cluster.slug instance.hostname %}">
+                {% trans "Users" %}
+            </a>
+        </li>
+        <li>
+            <a title="log"
+                href="{% url vm-object_log cluster.slug instance.hostname %}">
+                {% trans "Log" %}
+            </a>
+        </li>
         {%endif%}
-	{% if admin or power %}
-	    <li>
-            <a title="console" href="{% url instance-vnc cluster.slug instance.hostname %}">
-                <span>{% trans "Console" %}</span>
+        {% if admin or power %}
+        <li>
+            <a title="console"
+                href="{% url instance-vnc cluster.slug instance.hostname %}">
+                {% trans "Console" %}
             </a>
         </li>
         {% endif %}
     </ul>
     <div id="overview" class="tab_content">
-		{% if instance.cluster.username %}
+        {% if instance.cluster.username %}
         {% with instance.cluster.username as username %}
         <ul id="actions">
             {# Start, Shutdown, Reboot #}
@@ -308,7 +309,7 @@
             {% endif %}
         </ul>
         {% endwith %}
-		{% endif %}
+        {% endif %}
 
         {% with instance.info as info %}
         {% if info %}
@@ -358,7 +359,7 @@
         <h3>Hardware</h3>
         <table class="horizontal">
             <tr><th>{% trans "VCPUs" %}</th><td>{{ instance.virtual_cpus }}</td></tr>
-            <tr><th>{% trans "Memory" %}</th><td>{{ instance.ram|render_storage }}</td></tr>
+            <tr><th>{% trans "Memory (Min/Max)" %}</th><td>{{ instance.minram|render_storage }} / {{ instance.ram|render_storage  }}</td></tr>
             <tr><th>{% trans "NIC type" %}</th><td>{{ info.hvparams.nic_type }}</td></tr>
         </table>
 

@@ -163,15 +163,15 @@
         
     </p>
     <ul>
-        <li><b>paravirtual</b> - (HVM &amp; KVM)</li>
+        <li><b>paravirtual</b> - Best used in high IO throughput applications</li>
         <li>
-            <b>ioemu</b> - (default for HVM &amp; KVM) (HVM &amp; KVM)
+            <b>ioemu</b> - IO Emulation
         </li>
-        <li><b>ide</b> - (HVM &amp; KVM)</li>
-        <li><b>scsi</b> - (KVM)</li>
-        <li><b>sd</b> - (KVM)</li>
-        <li><b>mtd</b> - (KVM)</li>
-        <li><b>pflash</b> - (KVM)</li>
+        <li><b>ide</b> - Best for applications not needing large storage space.</li>
+        <li><b>scsi</b> - Use over ide only when large storage is needed(KVM)</li>
+        <li><b>sd</b> - Use SD card storage</li>
+        <li><b>mtd</b> - Use flash like on embedded devices</li>
+        <li><b>pflash</b> - Use parallel flash (NAND/NOR) like BIOS rom</li>
     </ul>
     <p>{% trans "Valid for the Xen HVM and KVM hypervisors" %}.</p>
 </div>

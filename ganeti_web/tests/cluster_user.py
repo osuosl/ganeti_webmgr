@@ -32,7 +32,7 @@ __all__ = ('TestClusterUser',)
 
 
 class TestClusterUser(TestCase):
-    
+
     def setUp(self):
         self.tearDown()
         models.client.GanetiRapiClient = RapiProxy
@@ -50,63 +50,63 @@ class TestClusterUser(TestCase):
     def test_user_signal(self):
         """
         Test signals related to User:
-        
+
         Verifies:
             * profile is created/deleted with user
         """
         user = User(username='tester')
         user.save()
-        
+
         # profile created
         profile = user.get_profile()
         self.assertTrue(profile, 'profile was not created')
-        
+
         # profile deleted
         user.delete()
         self.assertFalse(Profile.objects.filter(id=profile.id).exists())
-    
+
     def test_group_signal(self):
         """
         Test signals related to User:
-        
+
         Verifies:
             * organization is created/deleted with Group
         """
         group = Group(name='tester')
         group.save()
-        
+
         # org created
         org = group.organization
         self.assertTrue(group.organization, 'profile was not created')
-        
+
         # org deleted
         group.delete()
         self.assertFalse(Organization.objects.filter(id=org.id).exists())
-    
+
     def test_casting_profile(self):
         """
         Tests casting ClusterUser into Profile
         """
         user = User(username='tester')
         user.save()
-        
+
         cluster_user = ClusterUser.objects.all()[0]
         profile = cluster_user.cast()
-        
+
         self.assertTrue(isinstance(profile, (Profile,)))
-    
+
     def test_casting_organization(self):
         """
         Tests casting ClusterUser into an Organization
         """
         group = Group(name='tester')
         group.save()
-        
+
         cluster_user = ClusterUser.objects.all()[0]
         organization = cluster_user.cast()
-        
+
         self.assertTrue(isinstance(organization, (Organization,)))
-    
+
     def test_used_resources(self):
         """
         Tests retrieving dictionary of resources used by a cluster user
@@ -115,41 +115,51 @@ class TestClusterUser(TestCase):
         c2 = Cluster(hostname="testing2", slug="test2")
         c3 = Cluster(hostname="testing3", slug="test3")
         user = User(username="owner")
-        quota = {"disk": 26, "ram":6, "virtual_cpus":14}
+        quota = {"disk": 26, "ram": 6, "virtual_cpus": 14}
 
-        for i in (c1, c2, c3, user): i.save()
+        for i in (c1, c2, c3, user):
+            i.save()
 
         owner = user.get_profile()
         c1.set_quota(owner, quota)
         c3.set_quota(owner, quota)
-        
+
         # test used_resources returns zeros for no values
         result = owner.used_resources(cluster=c1)
         self.assertEqual(0, result['ram'])
         self.assertEqual(0, result['disk'])
         self.assertEqual(0, result['virtual_cpus'])
-        
-        vm11 = VirtualMachine(hostname="1one", owner=owner, cluster=c1, status="running")
-        vm21 = VirtualMachine(hostname="2one", owner=owner, cluster=c2, status="running")
-        vm31 = VirtualMachine(hostname="3one", owner=owner, cluster=c2, status="running")
 
-        vm12 = VirtualMachine(hostname="1two", owner=owner, cluster=c1, status="running",
-                ram=1, virtual_cpus=3, disk_size=6)
-        vm22 = VirtualMachine(hostname="2two", owner=owner, cluster=c2, status="running",
-                ram=1, virtual_cpus=3, disk_size=6)
-        vm32 = VirtualMachine(hostname="3two", owner=owner, cluster=c3, status="running",
-                ram=1, virtual_cpus=3, disk_size=6)
+        vm11 = VirtualMachine(hostname="1one", owner=owner,
+                              cluster=c1, status="running")
+        vm21 = VirtualMachine(hostname="2one", owner=owner,
+                              cluster=c2, status="running")
+        vm31 = VirtualMachine(hostname="3one", owner=owner,
+                              cluster=c2, status="running")
 
-        vm13 = VirtualMachine(hostname="1three", owner=owner, cluster=c1, status="stopped",
-                ram=1, virtual_cpus=3, disk_size=6)
-        vm23 = VirtualMachine(hostname="2three", owner=owner, cluster=c2, status="stopped",
-                ram=1, virtual_cpus=3, disk_size=6)
-        vm33 = VirtualMachine(hostname="3three", owner=owner, cluster=c3, status="stopped",
-                ram=1, virtual_cpus=3, disk_size=6)
-        
+        vm12 = VirtualMachine(hostname="1two", owner=owner,
+                              cluster=c1, status="running",
+                              ram=1, virtual_cpus=3, disk_size=6)
+        vm22 = VirtualMachine(hostname="2two", owner=owner,
+                              cluster=c2, status="running",
+                              ram=1, virtual_cpus=3, disk_size=6)
+        vm32 = VirtualMachine(hostname="3two", owner=owner,
+                              cluster=c3, status="running",
+                              ram=1, virtual_cpus=3, disk_size=6)
+
+        vm13 = VirtualMachine(hostname="1three", owner=owner,
+                              cluster=c1, status="stopped",
+                              ram=1, virtual_cpus=3, disk_size=6)
+        vm23 = VirtualMachine(hostname="2three", owner=owner,
+                              cluster=c2, status="stopped",
+                              ram=1, virtual_cpus=3, disk_size=6)
+        vm33 = VirtualMachine(hostname="3three", owner=owner,
+                              cluster=c3, status="stopped",
+                              ram=1, virtual_cpus=3, disk_size=6)
+
         for i in (vm11, vm12, vm13, vm21, vm22, vm23, vm31, vm32, vm33):
             i.save()
-        
+
         # multiple clusters - every VM
         result = owner.used_resources(cluster=None, only_running=False)
         self.assertTrue(c1.id in result.keys())
@@ -159,7 +169,7 @@ class TestClusterUser(TestCase):
         self.assertEqual(result[c1.id]["ram"], 2)
         self.assertEqual(result[c1.id]["virtual_cpus"], 6)
         self.assertEqual(result[c1.id], result[c3.id])
-        
+
         # multiple clusters - only running VMs
         result = owner.used_resources(cluster=None, only_running=True)
         self.assertTrue(c1.id in result.keys())
@@ -169,13 +179,13 @@ class TestClusterUser(TestCase):
         self.assertEqual(result[c1.id]["ram"], 1)
         self.assertEqual(result[c1.id]["virtual_cpus"], 3)
         self.assertEqual(result[c1.id], result[c3.id])
-        
+
         # single cluster - every VM
         result = owner.used_resources(cluster=c1, only_running=False)
         self.assertEqual(result["disk"], 12)
         self.assertEqual(result["ram"], 2)
         self.assertEqual(result["virtual_cpus"], 6)
-        
+
         # single cluster - only running VMs
         result = owner.used_resources(cluster=c1, only_running=True)
         self.assertEqual(result["disk"], 12)

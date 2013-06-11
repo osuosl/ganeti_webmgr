@@ -8,7 +8,8 @@
 <script type="text/javascript" src="{{STATIC_URL}}/js/jquery.ajax.delete.js"></script>
 <script type="text/javascript" src="{{STATIC_URL}}/js/jquery.tablesorter.min.js"></script>
 <script type="text/javascript" src="{{STATIC_URL}}/js/jquery.progressbar.js"></script>
-<script type="text/javascript" src="{{STATIC_URL}}/js/disableSingletonDropdown.js"></script>
+<script src="{{STATIC_URL}}/js/disableSingletonDropdown.js"
+    type="text/javascript"></script>
 <script type="text/javascript">
     var CLUSTER_RESOURCES_PBAR = {
         steps: 0,
@@ -54,7 +55,6 @@
             });
         })
 	$("#usage_summary select").attr("id","user_select");
-	disableSingletonDropdown($("#user_select"));
 
     });
     
@@ -153,35 +153,6 @@
 </h2>
 {% include "ganeti/overview/used_resources.html" %}
 </div>
-
-{% if errors %}
-<div id="errors_list">
-    <h2>{% trans "Recent Errors" %}</h2>
-    <table>
-    {% for tuple in errors %}
-        {% with tuple.0 as is_ganeti_error %}
-        {% with tuple.1 as error %}
-            {% if is_ganeti_error %}
-                <tr class="gerror" id="gerror_{{error.pk}}">
-                    {% include "ganeti/overview/object_link.html" %}
-                    <td>{{ error.msg }}</td>
-                    <td>{{ error.timestamp|date }}</td>
-                    <td><a class="clear" title="clear message" href="{% url error-clear error.pk %}"></a></td>
-                </tr>
-            {% else %}
-                <tr class="jerror" id="jerror_{{error.pk}}">
-                    {% include "ganeti/overview/object_link.html" %}
-                    <td><a href="{% url job-detail error.cluster.slug error.job_id %}">{% trans "Job" noop %}#{{error.job_id}}: {{ error.current_operation|format_job_op }}</a></td>
-                    <td>{{ error.finished|date }}</td>
-                    <td><a class="clear" title="clear message" href="{% url job-clear error.cluster.slug error.job_id %}"></a></td>
-                </tr>
-            {% endif %}
-        {% endwith %}
-        {% endwith %}
-    {% endfor %}
-    </table>
-</div>
-{% endif %}
 
 {% if orphaned or import_ready or missing %}
 <div id="administration">

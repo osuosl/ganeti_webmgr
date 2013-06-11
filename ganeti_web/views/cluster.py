@@ -32,6 +32,8 @@ from django.utils.translation import ugettext as _
 from django.views.decorators.http import require_POST
 from django.views.generic.detail import DetailView
 
+from django_tables2 import SingleTableView
+
 from object_permissions import get_users_any
 from object_permissions import signals as op_signals
 from object_permissions.views.permissions import view_users, view_permissions
@@ -41,14 +43,19 @@ from object_log.views import list_for_object
 
 log_action = LogItem.objects.log_action
 
-from ganeti_web.util.client import GanetiApiError
+from ganeti_web.backend.queries import vm_qs_for_users, cluster_qs_for_user
+from ganeti_web.forms.cluster import EditClusterForm, QuotaForm
 from ganeti_web.middleware import Http403
 from ganeti_web.models import (Cluster, ClusterUser, Profile, SSHKey,
                                VirtualMachine, Job)
 from ganeti_web.views import render_404
-from ganeti_web.forms.cluster import EditClusterForm, QuotaForm
 from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
-                                      PagedListView)
+                                      PaginationMixin, GWMBaseView)
+from ganeti_web.views.tables import (ClusterTable, ClusterVMTable,
+                                     ClusterJobTable)
+from ganeti_web.views.virtual_machine import BaseVMListView
+from ganeti_web.util.client import GanetiApiError
+
 
 class ClusterDetailView(LoginRequiredMixin, DetailView):
 
@@ -68,45 +75,89 @@ class ClusterDetailView(LoginRequiredMixin, DetailView):
             "readonly": not admin,
         }
 
-class ClusterListView(LoginRequiredMixin, PagedListView):
+
+class ClusterListView(LoginRequiredMixin, PaginationMixin, GWMBaseView,
+                      SingleTableView):
 
     template_name = "ganeti/cluster/list.html"
+    model = Cluster
+    table_class = ClusterTable
 
     def get_queryset(self):
-            if self.request.user.is_superuser:
-                qs = Cluster.objects.all()
-            else:
-                perms = ['admin', 'migrate', 'export', 'replace_disks', 'tags']
-                qs = self.request.user.get_objects_any_perms(Cluster, perms)
-
-            self.queryset = qs
-            super(ClusterListView, self).get_queryset()
-            return qs.select_related() 
+        self.queryset = cluster_qs_for_user(self.request.user)
+        qs = super(ClusterListView, self).get_queryset()
+        qs = qs.select_related("nodes", "virtual_machines")
+        return qs
 
     def get_context_data(self, **kwargs):
-            user = self.request.user
-            context = super(ClusterListView, self).get_context_data(object_list=kwargs["object_list"])
-            context["can_create"]= (user.is_superuser or
-                                    user.has_perm("admin", Cluster))
-            return context
-
-class ClusterVMListView(LoginRequiredMixin, PagedListView):
-
-    template_name = "ganeti/virtual_machine/table.html"
-
-    def get_queryset(self):
-        self.cluster = get_object_or_404(Cluster,
-                                         slug=self.kwargs["cluster_slug"])
         user = self.request.user
-        admin = user.is_superuser or user.has_perm("admin", self.cluster)
-        if not admin:
-            raise Http403(NO_PRIVS)
+        context = super(ClusterListView, self).get_context_data(**kwargs)
+        context["create_vm"] = (user.is_superuser or
+                                user.has_perm("admin", Cluster))
+        return context
 
-        return self.cluster.virtual_machines.select_related("cluster").all()
+
+class ClusterVMListView(BaseVMListView):
+    table_class = ClusterVMTable
+
+    def get_queryset(self):
+        self.get_kwargs()
+        # Store most of these variables on the object, because we'll be using
+        # them in context data too
+        self.cluster = get_object_or_404(Cluster, slug=self.cluster_slug)
+        # check privs
+        self.admin = self.can_create(self.cluster)
+        if not self.admin:
+            raise Http403(NO_PRIVS)
+        self.queryset = vm_qs_for_users(self.request.user, clusters=False)
+        # Calling super automatically filters by cluster
+        return super(ClusterVMListView, self).get_queryset()
 
     def get_context_data(self, **kwargs):
-        kwargs["cluster"] = self.cluster
-        return kwargs
+        context = super(ClusterVMListView, self).get_context_data(**kwargs)
+        if self.cluster_slug:
+            context["cluster"] = self.cluster
+            context["create_vm"] = self.admin
+            # Required since we cant use a relative link.
+            context["ajax_url"] = reverse(
+                "cluster-vm-list",
+                kwargs={'cluster_slug': self.cluster_slug}
+            )
+        return context
+
+
+class ClusterJobListView(LoginRequiredMixin, PaginationMixin, GWMBaseView,
+                         SingleTableView):
+
+    template_name = "ganeti/cluster/jobs.html"
+    model = Job
+    table_class = ClusterJobTable
+
+    def get_template_names(self):
+        if self.request.is_ajax():
+            template = ['table.html']  # all we need is the table
+        else:
+            template = [self.template_name]
+        return template
+
+    def get_queryset(self):
+        self.get_kwargs()
+        self.cluster = get_object_or_404(Cluster, slug=self.cluster_slug)
+        perms = self.can_create(self.cluster)
+        self.queryset = self.cluster.jobs.all()
+        if not perms:
+            return Http403(NO_PRIVS)
+
+        return super(ClusterJobListView, self).get_queryset()
+
+    def get_context_data(self, **kwargs):
+        context = super(ClusterJobListView, self).get_context_data(**kwargs)
+        context['ajax_url'] = reverse(
+            'cluster-job-list',
+            kwargs={'cluster_slug': self.cluster_slug}
+        )
+        return context
+
 
 @login_required
 def nodes(request, cluster_slug):
@@ -122,11 +173,11 @@ def nodes(request, cluster_slug):
     # avoid querying Node.allocated_cpus for each node in the list.  Repackage
     # list so it is easier to retrieve the values in the template
     values = VirtualMachine.objects \
-            .filter(cluster=cluster, status='running') \
-            .exclude(virtual_cpus=-1) \
-            .order_by() \
-            .values('primary_node') \
-            .annotate(cpus=Sum('virtual_cpus'))
+        .filter(cluster=cluster, status='running') \
+        .exclude(virtual_cpus=-1) \
+        .order_by() \
+        .values('primary_node') \
+        .annotate(cpus=Sum('virtual_cpus'))
     cpus = {}
     nodes = cluster.nodes.all()
     for d in values:
@@ -138,12 +189,12 @@ def nodes(request, cluster_slug):
             cpus[node.pk] = 0
 
     return render_to_response("ganeti/node/table.html",
-        {'cluster': cluster,
-         'nodes':nodes,
-         'cpus':cpus,
-        },
-        context_instance=RequestContext(request),
-    )
+                              {'cluster': cluster,
+                               'nodes': nodes,
+                               'cpus': cpus,
+                               },
+                              context_instance=RequestContext(request),
+                              )
 
 
 @login_required
@@ -157,7 +208,8 @@ def edit(request, cluster_slug=None):
         cluster = None
 
     user = request.user
-    if not (user.is_superuser or (cluster and user.has_perm('admin', cluster))):
+    if not (user.is_superuser or (cluster and user.has_perm(
+            'admin', cluster))):
         raise Http403(NO_PRIVS)
 
     if request.method == 'POST':
@@ -189,17 +241,18 @@ def edit(request, cluster_slug=None):
         form = EditClusterForm(instance=cluster)
 
     return render_to_response("ganeti/cluster/edit.html", {
-        'form' : form,
+        'form': form,
         'cluster': cluster,
-        },
+    },
         context_instance=RequestContext(request),
     )
+
 
 @login_required
 def refresh(request, cluster_slug):
     """
     Display a notice to the user that we are refreshing
-    the cluster data, then redirect them back to the 
+    the cluster data, then redirect them back to the
     cluster details page.
     """
 
@@ -209,6 +262,7 @@ def refresh(request, cluster_slug):
 
     url = reverse('cluster-detail', args=[cluster.slug])
     return redirect(url)
+
 
 @login_required
 def users(request, cluster_slug):
@@ -222,13 +276,15 @@ def users(request, cluster_slug):
         raise Http403(NO_PRIVS)
 
     url = reverse('cluster-permissions', args=[cluster.slug])
-    return view_users(request, cluster, url, template='ganeti/cluster/users.html')
+    return view_users(request, cluster, url,
+                      template='ganeti/cluster/users.html')
 
 
 @login_required
 def permissions(request, cluster_slug, user_id=None, group_id=None):
     """
-    Update a users permissions. This wraps object_permissions.view_permissions()
+    Update a users permissions.
+    This wraps object_permissions.view_permissions()
     with our custom permissions checks.
     """
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
@@ -261,7 +317,7 @@ def redistribute_config(request, cluster_slug):
 
         log_action('CLUSTER_REDISTRIBUTE', user, cluster, job)
     except GanetiApiError, e:
-        msg = {'__all__':[str(e)]}
+        msg = {'__all__': [str(e)]}
     return HttpResponse(json.dumps(msg), mimetype='application/json')
 
 
@@ -276,11 +332,12 @@ def ssh_keys(request, cluster_slug, api_key):
 
     users = set(get_users_any(cluster).values_list("id", flat=True))
     for vm in cluster.virtual_machines.all():
-        users = users.union(set(get_users_any(vm).values_list('id', flat=True)))
+        users = users.union(set(get_users_any(vm)
+                            .values_list('id', flat=True)))
 
     keys = SSHKey.objects \
         .filter(Q(user__in=users) | Q(user__is_superuser=True)) \
-        .values_list('key','user__username') \
+        .values_list('key', 'user__username') \
         .order_by('user__username')
 
     keys_list = list(keys)
@@ -313,12 +370,14 @@ def quota(request, cluster_slug, user_id):
             if isinstance(cluster_user, (Profile,)):
                 return render_to_response(
                     "ganeti/cluster/user_row.html",
-                    {'object':cluster, 'user_detail':cluster_user.user, 'url':url},
+                    {'object': cluster, 'user_detail': cluster_user.user,
+                     'url': url},
                     context_instance=RequestContext(request))
             else:
                 return render_to_response(
                     "ganeti/cluster/group_row.html",
-                    {'object':cluster, 'group':cluster_user.group, 'url':url},
+                    {'object': cluster, 'group': cluster_user.group,
+                     'url': url},
                     context_instance=RequestContext(request))
 
         # error in form return ajax response
@@ -328,7 +387,7 @@ def quota(request, cluster_slug, user_id):
     if user_id:
         cluster_user = get_object_or_404(ClusterUser, id=user_id)
         quota = cluster.get_quota(cluster_user)
-        data = {'user':user_id}
+        data = {'user': user_id}
         if quota:
             data.update(quota)
     else:
@@ -336,8 +395,9 @@ def quota(request, cluster_slug, user_id):
 
     form = QuotaForm(data)
     return render_to_response("ganeti/cluster/quota.html",
-                        {'form':form, 'cluster':cluster, 'user_id':user_id},
-                        context_instance=RequestContext(request))
+                              {'form': form, 'cluster': cluster,
+                               'user_id': user_id},
+                              context_instance=RequestContext(request))
 
 
 @login_required
