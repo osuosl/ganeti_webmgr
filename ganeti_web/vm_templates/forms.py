@@ -18,7 +18,7 @@
 from django.forms import Form, CharField, ModelChoiceField, ValidationError
 from django.utils.translation import ugettext_lazy as _
 
-from ganeti_web.models import ClusterUser
+from auth.models import ClusterUser
 
 
 class VirtualMachineTemplateCopyForm(Form):

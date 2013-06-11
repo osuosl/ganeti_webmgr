@@ -42,14 +42,18 @@ from ganeti_web.constants import (EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES,
                                   HV_DISK_CACHES, MODE_CHOICES, HVM_CHOICES,
                                   VM_HELP, VM_CREATE_HELP, VM_RENAME_HELP,
                                   KVM_BOOT_ORDER, HVM_BOOT_ORDER)
-from ganeti_web.fields import DataVolumeField, MACAddressField
-from ganeti_web.models import (Cluster, ClusterUser, Node,
-                               VirtualMachineTemplate, VirtualMachine)
-from ganeti_web.utilities import (cluster_default_info, cluster_os_list,
-                                  get_hypervisor, hv_prettify)
-from ganeti_web.util.client import (REPLACE_DISK_AUTO, REPLACE_DISK_PRI,
-                                    REPLACE_DISK_CHG, REPLACE_DISK_SECONDARY)
 from ganeti_web.views.generic import LoginRequiredMixin
+
+from utils.fields import DataVolumeField, MACAddressField
+from clusters.models import Cluster
+from auth.models import ClusterUser
+from nodes.models import Node
+from virtualmachines.models import VirtualMachine
+from vm_templates.models import VirtualMachineTemplate
+from utils import (cluster_default_info, cluster_os_list, get_hypervisor,
+                   hv_prettify)
+from utils.client import (REPLACE_DISK_AUTO, REPLACE_DISK_PRI,
+                          REPLACE_DISK_CHG, REPLACE_DISK_SECONDARY)
 
 username_or_mtime = Q(username='') | Q(mtime__isnull=True)
 

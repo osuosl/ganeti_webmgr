@@ -100,6 +100,7 @@ INSTALLED_APPS = (
     'nodes',
     'utils',
     'virtualmachines',
+    'vm_templates',
 )
 
 # The model that contains extra user profile stuff.

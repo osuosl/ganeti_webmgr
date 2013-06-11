@@ -27,11 +27,13 @@ from django_tables2 import SingleTableView
 
 from ganeti_web.backend.templates import (instance_to_template,
                                           template_to_instance)
-from ganeti_web.forms.vm_template import (VirtualMachineTemplateCopyForm,
-                                          VMInstanceFromTemplate,
-                                          TemplateFromVMInstance)
+from .forms import (VirtualMachineTemplateCopyForm, VMInstanceFromTemplate,
+                    TemplateFromVMInstance)
+from clusters.models import Cluster
+from virtualmachines.models import VirtualMachine
+from vm_templates.models import VirtualMachineTemplate
+
 from ganeti_web.middleware import Http403
-from ganeti_web.models import Cluster, VirtualMachineTemplate, VirtualMachine
 from ganeti_web.views.generic import (LoginRequiredMixin, PaginationMixin,
                                       NO_PRIVS)
 from ganeti_web.views.tables import VMTemplateTable

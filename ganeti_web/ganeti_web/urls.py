@@ -25,18 +25,14 @@ from django.conf.urls.defaults import patterns, url, include
 from django.contrib.auth.decorators import login_required
 
 from ganeti_web.views.general import AboutView
-from ganeti_web.views.vm_template import (TemplateFromVMInstanceView,
-                                          VMInstanceFromTemplateView,
-                                          TemplateListView)
 from virtualmachines.forms import vm_wizard
 
 
-from clusters.urls import cluster
-from virtualmachines.urls import vm_prefix
-template = '(?P<template>[^/]+)'
+handler500 = 'ganeti_web.views.view_500'
+
+
 primary_node = 'primary_node/(?P<primary_node>.+)'
 secondary_node = 'secondary_node/(?P<secondary_node>.+)'
-template_prefix = '%s/template/%s' % (cluster, template)
 
 
 # general include
@@ -53,6 +49,7 @@ urlpatterns = patterns(
     (r'^', include('nodes.urls')),
     (r'^', include('utils.urls')),
     (r'^', include('virtualmachines.urls')),
+    (r'^', include('vm_templates.urls')),
 )
 
 # user management and authentication
@@ -81,10 +78,9 @@ urlpatterns += patterns(
      {'template': "500.html"})
 )
 
+
 # Language settings
 urlpatterns += patterns('', (r'^i18n/', include('django.conf.urls.i18n')))
-
-handler500 = 'ganeti_web.views.view_500'
 
 
 # General
@@ -122,30 +118,6 @@ urlpatterns += patterns(
     name="instance-create"),
 )
 
-# VirtualMachineTemplates
-urlpatterns += patterns(
-    'ganeti_web.views.vm_template',
-
-    url(r'^templates/$', TemplateListView.as_view(), name='template-list'),
-
-    url(r'^template/create/$',
-        vm_wizard(initial_dict={0: {'choices': [u'template_name']}}),
-        name='template-create'),
-
-    url(r'^%s/?$' % template_prefix, 'detail', name='template-detail'),
-
-    url(r'^%s/delete/?$' % template_prefix, 'delete', name='template-delete'),
-
-    url(r'^%s/edit/?$' % template_prefix, vm_wizard(), name='template-edit'),
-
-    url(r'^%s/copy/?$' % template_prefix, 'copy', name='template-copy'),
-
-    url(r'^%s/vm/?$' % template_prefix, VMInstanceFromTemplateView.as_view(),
-        name='instance-create-from-template'),
-
-    url(r'^%s/template/?$' % vm_prefix, TemplateFromVMInstanceView.as_view(),
-        name='template-create-from-instance'),
-)
 
 # Virtual Machine Importing
 urlpatterns += patterns(
@@ -159,6 +131,7 @@ urlpatterns += patterns(
         name='import-missing_db'),
 )
 
+
 # Node Importing
 urlpatterns += patterns(
     'ganeti_web.views.importing_nodes',
@@ -169,6 +142,7 @@ urlpatterns += patterns(
     url(r'^import/node/missing_db/', 'missing_db',
         name='import-nodes-missing_db'),
 )
+
 
 # Search
 urlpatterns += patterns(
@@ -189,6 +163,7 @@ urlpatterns += patterns(
         login_required(SearchView(form_class=autocomplete_search_form)),
         name='search')
 )
+
 
 # The following is used to serve up local static files like images
 root = '%s/static' % os.path.dirname(os.path.realpath(__file__))

@@ -44,9 +44,9 @@ from object_log.views import list_for_object
 log_action = LogItem.objects.log_action
 
 from ganeti_web.backend.queries import vm_qs_for_users, cluster_qs_for_user
-from ganeti_web.forms.cluster import EditClusterForm, QuotaForm
 from ganeti_web.middleware import Http403
 
+from .forms import EditClusterForm, QuotaForm
 from .models import Cluster
 from auth.models import Profile, ClusterUser
 from utils.models import SSHKey
