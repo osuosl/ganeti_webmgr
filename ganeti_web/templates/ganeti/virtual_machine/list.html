@@ -1,17 +1,13 @@
-{% extends "menu_base.html" %}
+{% extends "list_base.html" %}
 {% load i18n %}
-{% block title %}Virtual Machines{% endblock %}
-{% block head %}
-    <script src="{{STATIC_URL}}/js/sorter.js"></script>
-{% endblock %}
-{% block content %}
-<div class="header">
-  <h1 class="breadcrumb">Virtual Machines</h1>
-  {% if can_create %}
+
+{% block title %}{% trans "Virtual Machines" %}{% endblock %}
+{% block breadcrumb %}{% trans "Virtual Machines" %}{% endblock %}
+
+{% block action_button %}
+  {% if create_vm %}
     <a class="button add" href="{% url instance-create %}">
         {% trans "Add Virtual Machine" %}
     </a>
   {% endif %}
-</div>
-{% include "ganeti/virtual_machine/table.html" %}
 {% endblock %}

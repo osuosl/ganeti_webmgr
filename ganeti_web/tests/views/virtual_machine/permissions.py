@@ -1,6 +1,7 @@
 from object_permissions import get_user_perms, grant
 
-from ganeti_web.tests.views.virtual_machine.base import TestVirtualMachineViewsBase
+from ganeti_web.tests.views.virtual_machine.base \
+    import TestVirtualMachineViewsBase
 
 __all__ = ['TestVirtualMachinePermissionsViews']
 
@@ -18,7 +19,8 @@ class TestVirtualMachinePermissionsViews(TestVirtualMachineViewsBase):
         """
         url = "/cluster/%s/%s/users/"
         args = (self.cluster.slug, self.vm.hostname)
-        self.validate_get(url, args, 'object_permissions/permissions/users.html')
+        self.validate_get(url, args,
+                          'object_permissions/permissions/users.html')
 
     def test_view_add_permissions(self):
         """
@@ -51,7 +53,8 @@ class TestVirtualMachinePermissionsViews(TestVirtualMachineViewsBase):
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
+        self.assertTemplateUsed(response,
+                                'object_permissions/permissions/form.html')
         self.user.revoke('admin', self.vm)
 
         # valid GET authorized user (cluster admin)
@@ -59,7 +62,8 @@ class TestVirtualMachinePermissionsViews(TestVirtualMachineViewsBase):
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
+        self.assertTemplateUsed(response,
+                                'object_permissions/permissions/form.html')
         self.user.revoke('admin', self.cluster)
 
         # valid GET authorized user (superuser)
@@ -67,7 +71,8 @@ class TestVirtualMachinePermissionsViews(TestVirtualMachineViewsBase):
         self.user.save()
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
+        self.assertTemplateUsed(response,
+                                'object_permissions/permissions/form.html')
 
         # no user or group
         data = {'permissions': ['admin'], 'obj': self.vm.pk}
@@ -99,19 +104,24 @@ class TestVirtualMachinePermissionsViews(TestVirtualMachineViewsBase):
 
         # valid POST user has permissions
         self.user1.grant('power', self.vm)
-        data = {'permissions': ['admin'], 'user': self.user1.id, 'obj': self.vm.pk}
+        data = {'permissions': ['admin'], 'user': self.user1.id,
+                'obj': self.vm.pk}
         response = self.c.post(url % args, data)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'object_permissions/permissions/user_row.html')
+        self.assertTemplateUsed(response,
+                                'object_permissions/permissions/user_row.html')
         self.assertTrue(self.user1.has_perm('admin', self.vm))
         self.assertFalse(self.user1.has_perm('power', self.vm))
 
         # valid POST group has permissions
         self.group.grant('power', self.vm)
-        data = {'permissions': ['admin'], 'group': self.group.id, 'obj': self.vm.pk}
+        data = {'permissions': ['admin'],
+                'group': self.group.id, 'obj': self.vm.pk}
         response = self.c.post(url % args, data)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'object_permissions/permissions/group_row.html')
+        self.assertTemplateUsed(
+            response,
+            'object_permissions/permissions/group_row.html')
         self.assertEqual(['admin'], self.group.get_perms(self.vm))
 
     def test_view_user_permissions(self):
@@ -127,7 +137,8 @@ class TestVirtualMachinePermissionsViews(TestVirtualMachineViewsBase):
             * missing user and group returns error as json
             * GET returns html for form
             * If user/group has permissions no html is returned
-            * If user/group has no permissions a json response of -1 is returned
+            * If user/group has no permissions a json
+              response of -1 is returned
         """
         args = (self.cluster.slug, self.vm.hostname, self.user1.id)
         args_post = (self.cluster.slug, self.vm.hostname)
@@ -160,7 +171,8 @@ class TestVirtualMachinePermissionsViews(TestVirtualMachineViewsBase):
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
+        self.assertTemplateUsed(response,
+                                'object_permissions/permissions/form.html')
         self.user.revoke('admin', self.vm)
 
         # valid GET authorized user (cluster admin)
@@ -168,7 +180,8 @@ class TestVirtualMachinePermissionsViews(TestVirtualMachineViewsBase):
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
+        self.assertTemplateUsed(response,
+                                'object_permissions/permissions/form.html')
         self.user.revoke('admin', self.cluster)
 
         # valid GET authorized user (superuser)
@@ -176,7 +189,8 @@ class TestVirtualMachinePermissionsViews(TestVirtualMachineViewsBase):
         self.user.save()
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
+        self.assertTemplateUsed(response,
+                                'object_permissions/permissions/form.html')
 
         # invalid user
         response = self.c.get(url % (self.cluster.slug, self.vm.hostname, -1))
@@ -198,10 +212,12 @@ class TestVirtualMachinePermissionsViews(TestVirtualMachineViewsBase):
 
         # valid POST user has permissions
         self.user1.grant('power', self.vm)
-        data = {'permissions': ['admin'], 'user': self.user1.id, 'obj': self.vm.pk}
+        data = {'permissions': ['admin'], 'user': self.user1.id,
+                'obj': self.vm.pk}
         response = self.c.post(url_post % args_post, data)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'object_permissions/permissions/user_row.html')
+        self.assertTemplateUsed(response,
+                                'object_permissions/permissions/user_row.html')
         self.assertTrue(self.user1.has_perm('admin', self.vm))
         self.assertFalse(self.user1.has_perm('power', self.vm))
 
@@ -234,11 +250,13 @@ class TestVirtualMachinePermissionsViews(TestVirtualMachineViewsBase):
         self.assertEqual(403, response.status_code)
 
         # nonexisent cluster
-        response = self.c.get(url % ("DOES_NOT_EXIST", self.vm.hostname, self.group.id))
+        response = self.c.get(url % ("DOES_NOT_EXIST",
+                                     self.vm.hostname, self.group.id))
         self.assertEqual(404, response.status_code)
 
         # nonexisent vm
-        response = self.c.get(url % (self.cluster.slug, "DOES_NOT_EXIST", self.user1.id))
+        response = self.c.get(url % (self.cluster.slug,
+                                     "DOES_NOT_EXIST", self.user1.id))
         self.assertEqual(404, response.status_code)
 
         # valid GET authorized user (perm)
@@ -246,7 +264,8 @@ class TestVirtualMachinePermissionsViews(TestVirtualMachineViewsBase):
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
+        self.assertTemplateUsed(response,
+                                'object_permissions/permissions/form.html')
         self.user.revoke('admin', self.vm)
 
         # valid GET authorized user (cluster admin)
@@ -254,7 +273,8 @@ class TestVirtualMachinePermissionsViews(TestVirtualMachineViewsBase):
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
+        self.assertTemplateUsed(response,
+                                'object_permissions/permissions/form.html')
         self.user.revoke('admin', self.cluster)
 
         # valid GET authorized user (superuser)
@@ -262,7 +282,8 @@ class TestVirtualMachinePermissionsViews(TestVirtualMachineViewsBase):
         self.user.save()
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
-        self.assertTemplateUsed(response, 'object_permissions/permissions/form.html')
+        self.assertTemplateUsed(response,
+                                'object_permissions/permissions/form.html')
 
         # invalid group
         response = self.c.get(url % (self.cluster.slug, self.vm.hostname, 0))
@@ -282,10 +303,13 @@ class TestVirtualMachinePermissionsViews(TestVirtualMachineViewsBase):
 
         # valid POST group has permissions
         self.group.grant('power', self.vm)
-        data = {'permissions': ['admin'], 'group': self.group.id, 'obj': self.vm.pk}
+        data = {'permissions': ['admin'],
+                'group': self.group.id, 'obj': self.vm.pk}
         response = self.c.post(url_post % args_post, data)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'object_permissions/permissions/group_row.html')
+        self.assertTemplateUsed(
+            response,
+            'object_permissions/permissions/group_row.html')
         self.assertEqual(['admin'], self.group.get_perms(self.vm))
 
         # valid POST group has no permissions left

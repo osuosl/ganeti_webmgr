@@ -54,7 +54,6 @@ class MockCluster(object):
     rapi = MockRapi()
 
 
-
 class TestVMWizardBasicsForm(TestCase):
 
     def setUp(self):

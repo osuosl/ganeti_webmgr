@@ -4,22 +4,23 @@ from ganeti_web.models import VirtualMachine, Cluster, Node
 
 ''' Haystack search indexex.
 
-This is where the search indexes are defined. They fill the Haystack search 
-query set (the set of objects that are searchable.) There should be one index 
+This is where the search indexes are defined. They fill the Haystack search
+query set (the set of objects that are searchable.) There should be one index
 defined per GWM model.
 
 Note that we're using the `SearchIndex` update-based search indexer. This means
-the search index will need to be updated periodically with 
+the search index will need to be updated periodically with
 `./manage.py update_index`
 
 Previously, we were using `RealTimeSearchIndex` which updated the index anytime
 an associated GWM model changed in the database. Concerns about database
-performance, database locking issues, and dev server socket problems pushed us 
+performance, database locking issues, and dev server socket problems pushed us
 away from this indexer.
 
-For more informaiton about the availible search indexers, see 
+For more informaiton about the availible search indexers, see
 http://docs.haystacksearch.org/dev/searchindex_api.html#keeping-the-index-fresh
 '''
+
 
 class VirtualMachineIndex(SearchIndex):
     ''' Search index for VirtualMachines '''
@@ -38,6 +39,7 @@ class VirtualMachineIndex(SearchIndex):
 
 site.register(VirtualMachine, VirtualMachineIndex)
 
+
 class ClusterIndex(SearchIndex):
     ''' Search index for Clusters '''
 
@@ -50,6 +52,7 @@ class ClusterIndex(SearchIndex):
         return Cluster.objects.all()
 
 site.register(Cluster, ClusterIndex)
+
 
 class NodeIndex(RealTimeSearchIndex):
     ''' Search index for Nodes '''

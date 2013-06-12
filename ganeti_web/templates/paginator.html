@@ -1,0 +1,23 @@
+{% load i18n %}
+{% load django_tables2 %}
+{% if is_paginated %}
+<ul id="pagination" class="pagination">
+    {% if page_obj.has_previous %}
+    <li class="previous">
+        <a href="{{ ajax_url }}{% querystring table.prefixed_page_field=table.page.previous_page_number %}">&laquo; {% trans "Previous" %}</a>
+    </li>
+    {% endif %}
+
+    {% for page in paginator.page_range %}
+    <li class="{% if page == page_obj.number%}active {% endif %}page">
+        <a href="{{ ajax_url }}{% querystring table.prefixed_page_field=page %}">{{ page }}</a>
+    </li>
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+    <li class="next">
+        <a href="{{ ajax_url }}{% querystring table.prefixed_page_field=table.page.next_page_number %}">{% trans "Next" %} &raquo;</a>
+    </li>
+    {% endif %}
+</ul>
+{% endif %}

@@ -57,16 +57,16 @@ JOB_STATUS_CANCELED = "canceled"
 JOB_STATUS_SUCCESS = "success"
 JOB_STATUS_ERROR = "error"
 JOB_STATUS_FINALIZED = frozenset([
-  JOB_STATUS_CANCELED,
-  JOB_STATUS_SUCCESS,
-  JOB_STATUS_ERROR,
-  ])
+                                 JOB_STATUS_CANCELED,
+                                 JOB_STATUS_SUCCESS,
+                                 JOB_STATUS_ERROR,
+                                 ])
 JOB_STATUS_ALL = frozenset([
-  JOB_STATUS_QUEUED,
-  JOB_STATUS_WAITING,
-  JOB_STATUS_CANCELING,
-  JOB_STATUS_RUNNING,
-  ]) | JOB_STATUS_FINALIZED
+                           JOB_STATUS_QUEUED,
+                           JOB_STATUS_WAITING,
+                           JOB_STATUS_CANCELING,
+                           JOB_STATUS_RUNNING,
+                           ]) | JOB_STATUS_FINALIZED
 
 # Legacy name
 JOB_STATUS_WAITLOCK = JOB_STATUS_WAITING
@@ -151,7 +151,7 @@ def prepare_query(query):
                              type(value).__name__)
 
 
-class GanetiRapiClient(object): # pylint: disable-msg=R0904
+class GanetiRapiClient(object):  # pylint: disable-msg=R0904
     """
     Ganeti RAPI client.
     """
@@ -276,7 +276,8 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
 
         try:
-            return self._SendRequest("get", "/%s/features" % GANETI_RAPI_VERSION)
+            return self._SendRequest("get",
+                                     "/%s/features" % GANETI_RAPI_VERSION)
         except GanetiApiError, err:
             # Older RAPI servers don't support this resource. Just return an
             # empty list.
@@ -304,7 +305,7 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         """
 
         return self._SendRequest("get", "/%s/info" % GANETI_RAPI_VERSION,
-                                                         None, None)
+                                 None, None)
 
     def RedistributeConfig(self):
         """
@@ -386,7 +387,8 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         :param bulk: whether to return all information about all instances
 
         :rtype: list of dict or list of str
-        :return: if bulk is True, info about the instances, else a list of instances
+        :return: if bulk is True, info about the instances,
+                 else a list of instances
         """
 
         if bulk:
@@ -394,7 +396,7 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
                                      GANETI_RAPI_VERSION, query={"bulk": 1})
         else:
             instances = self._SendRequest("get", "/%s/instances" %
-                                     GANETI_RAPI_VERSION)
+                                          GANETI_RAPI_VERSION)
             return [i["id"] for i in instances]
 
     def GetInstance(self, instance):
@@ -450,7 +452,8 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         :type dry_run: bool
         :keyword dry_run: whether to perform a dry run
         :type no_install: bool
-        :keyword no_install: whether to create without installing OS(true=don't install)
+        :keyword no_install: whether to create
+         without installing OS(true=don't install)
 
         :rtype: int
         :return: job id
@@ -666,7 +669,8 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         :type reboot_type: str
         :param reboot_type: one of: hard, soft, full
         :type ignore_secondaries: bool
-        :param ignore_secondaries: if True, ignores errors for the secondary node
+        :param ignore_secondaries: if True, ignores errors
+                                   for the secondary node
                 while re-assembling disks (in hard-reboot mode only)
         :type dry_run: bool
         :param dry_run: whether to perform a dry run
@@ -924,7 +928,6 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         if target_node is not None:
             body["target_node"] = target_node
 
-
         return self._SendRequest("put", ("/%s/instances/%s/failover" %
                                          (GANETI_RAPI_VERSION, instance)),
                                  content=body)
@@ -1124,7 +1127,8 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
 
             # Pre-2.5 servers can only evacuate secondaries
             if mode is not None and mode != NODE_EVAC_SEC:
-                raise GanetiApiError("Server can only evacuate secondary instances")
+                raise GanetiApiError("Server can only evacuate "
+                                     "secondary instances")
 
             if iallocator is not None:
                 query["iallocator"] = iallocator
@@ -1300,8 +1304,9 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         :type name: str
         :param name: name of the storage unit
         :type allocatable: bool or None
-        :param allocatable: Whether to set the "allocatable" flag on the storage
-                                                unit (None=no modification, True=set, False=unset)
+        :param allocatable: Whether to set the "allocatable"
+                            flag on the storage
+                            unit (None=no modification, True=set, False=unset)
 
         :rtype: int
         :return: job id
@@ -1413,8 +1418,9 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         :param bulk: whether to return all information about the groups
 
         :rtype: list of dict or str
-        :return: if bulk is true, a list of dictionaries with info about all node
-                groups in the cluster, else a list of names of those node groups
+        :return: if bulk is true, a list of dictionaries
+                 with info about all node groups
+                 in the cluster, else a list of names of those node groups
         """
 
         if bulk:
@@ -1446,7 +1452,8 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         :type name: str
         :param name: the name of node group to create
         :type alloc_policy: str
-        :param alloc_policy: the desired allocation policy for the group, if any
+        :param alloc_policy: the desired allocation
+                             policy for the group, if any
         :type dry_run: bool
         :param dry_run: whether to peform a dry run
 
@@ -1523,7 +1530,6 @@ class GanetiRapiClient(object): # pylint: disable-msg=R0904
         return self._SendRequest("put", ("/%s/groups/%s/rename" %
                                          (GANETI_RAPI_VERSION, group)),
                                  content=body)
-
 
     def AssignGroupNodes(self, group, nodes, force=False, dry_run=False):
         """

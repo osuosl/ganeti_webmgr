@@ -4,8 +4,10 @@ from ganeti_web.caps import (ANCIENT, FUTURE, GANETI22, GANETI24, GANETI242,
                              GANETI25, classify, has_cdrom2,
                              has_shutdown_timeout, has_balloonmem)
 
+
 class Mock(object):
     pass
+
 
 def make_mock_cluster(version):
     cluster = Mock()
@@ -60,6 +62,7 @@ class TestHasCdrom2(TestCase):
     def test_lacks_cdrom2(self):
         cluster = make_mock_cluster("2.2.0")
         self.assertFalse(has_cdrom2(cluster))
+
 
 class TestRequiresMaxmem(TestCase):
 

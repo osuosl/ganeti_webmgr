@@ -1,6 +1,8 @@
-from ganeti_web.tests.views.virtual_machine.base import TestVirtualMachineViewsBase
+from ganeti_web.tests.views.virtual_machine.base \
+    import TestVirtualMachineViewsBase
 
 __all__ = ['TestVirtualMachineVNCViews']
+
 
 class TestVirtualMachineVNCViews(TestVirtualMachineViewsBase):
 
@@ -17,7 +19,6 @@ class TestVirtualMachineVNCViews(TestVirtualMachineViewsBase):
         url = "/cluster/%s/%s/vnc/"
         args = (self.cluster.slug, self.vm.hostname)
         self.validate_get(url, args, 'ganeti/virtual_machine/novnc.html')
-
 
     def test_view_vnc_proxy(self):
         """

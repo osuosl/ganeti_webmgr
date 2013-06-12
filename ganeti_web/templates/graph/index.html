@@ -1,0 +1,24 @@
+{% extends "menu_base.html"%}
+
+{% block head %}
+    <!--meta name="description" content="Graphical Viusalization of a Ganeti Clusters via Ganeti Web Manager"-->
+    <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}/css/graph.css">
+
+    <script src="{{ STATIC_URL }}js/jquery.js"></script>
+    <script src="{{ STATIC_URL }}js/jquery.address.js"></script>
+    <script src="{{ STATIC_URL }}js/arbor.js"></script>
+    <script src="{{ STATIC_URL }}js/arbor-tween.js"></script>
+    <script src="{{ STATIC_URL }}js/arbor-graphics.js"></script>
+{% end block %}
+
+{% block content %}
+  <div id="arbor">
+    <canvas id="grapharea" width="1200" height="600"></canvas>
+  </div>  
+
+  <!-- This is the path to the Javascript file which defines the objects required for the Visual Modelling -->
+  <script src="/graph.js?cluster=ganeti"></script>
+
+  <!-- This is the script responsible for rendering the Graph taking help of arbor functions, jquery and webworkers -->
+  <script src="{{ STATIC_URL }}js/render-graph.js"></script>
+{% endblock %}

@@ -37,6 +37,7 @@ from south.modelsinspector import add_introspection_rules
 
 from django_fields.fields import EncryptedCharField
 
+
 class PatchedEncryptedCharField(EncryptedCharField):
     """
     django_fields upstream refuses to fix a bug, so we get to do it ourselves.
@@ -98,7 +99,6 @@ class PreciseDateTimeField(DecimalField):
 
         super(PreciseDateTimeField, self).__init__(**kwargs)
 
-
     def get_prep_value(self, value):
         """
         Turn a datetime into a Decimal.
@@ -113,7 +113,6 @@ class PreciseDateTimeField(DecimalField):
         seconds = Decimal(int(time.mktime(value.timetuple())))
         fraction = Decimal(value.microsecond)
         return seconds + (fraction / self.shifter)
-
 
     def get_db_prep_save(self, value, connection):
         """
@@ -131,7 +130,6 @@ class PreciseDateTimeField(DecimalField):
         return connection.ops.value_to_db_decimal(self.get_prep_value(value),
                                                   self.max_digits,
                                                   self.decimal_places)
-
 
     def to_python(self, value):
         """
@@ -194,13 +192,14 @@ class DataVolumeField(CharField):
 
         value = str(value).upper().strip()
 
-        matches = re.match(r'([0-9]+(?:\.[0-9]+)?)\s*(M|G|T|MB|GB|TB)?$', value)
-        if matches == None:
+        matches = re.match(r'([0-9]+(?:\.[0-9]+)?)\s*(M|G|T|MB|GB|TB)?$',
+                           value)
+        if matches is None:
             raise ValidationError(_('Invalid format.'))
 
         multiplier = 1
         unit = matches.group(2)
-        if unit != None:
+        if unit is not None:
             unit = unit[0]
             if unit == 'M':
                 multiplier = 1
@@ -239,12 +238,14 @@ class SQLSumIf(models.sql.aggregates.Aggregate):
     # XXX not all databases treat 1 and True the same, or have True. Use the
     # expression 1=1 which always evaluates true with a value compatible with
     # the database.
-    sql_template= "%(function)s(CASE %(condition)s WHEN 1=1 THEN %(field)s ELSE NULL END)"
+    sql_template = "%(function)s(CASE %(condition)s WHEN 1=1 THEN " \
+                   "%(field)s ELSE NULL END)"
 
 
 class SumIf(models.Aggregate):
     name = 'SUM'
 
     def add_to_query(self, query, alias, col, source, is_summary):
-        aggregate = SQLSumIf(col, source=source, is_summary=is_summary, **self.extra)
+        aggregate = SQLSumIf(col, source=source,
+                             is_summary=is_summary, **self.extra)
         query.aggregates[alias] = aggregate

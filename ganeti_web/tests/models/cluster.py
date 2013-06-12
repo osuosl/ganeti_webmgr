@@ -77,8 +77,10 @@ class TestClusterModel(TestCase):
         cluster.save()
         cluster.info = INFO
 
-        self.assertEqual(cluster.ctime, datetime.fromtimestamp(1270685309.818239))
-        self.assertEqual(cluster.mtime, datetime.fromtimestamp(1283552454.2998919))
+        self.assertEqual(cluster.ctime,
+                         datetime.fromtimestamp(1270685309.818239))
+        self.assertEqual(cluster.mtime,
+                         datetime.fromtimestamp(1283552454.2998919))
 
         cluster.delete()
 
@@ -91,8 +93,9 @@ class TestClusterModel(TestCase):
             * if user has quota, return values from Quota
             * if user doesn't have quota, return default cluster values
         """
-        default_quota = {'default':1, 'ram':1, 'virtual_cpus':None, 'disk':3}
-        user_quota = {'default':0, 'ram':4, 'virtual_cpus':5, 'disk':None}
+        default_quota = {'default': 1, 'ram': 1,
+                         'virtual_cpus': None, 'disk': 3}
+        user_quota = {'default': 0, 'ram': 4, 'virtual_cpus': 5, 'disk': None}
 
         cluster = Cluster(hostname='foo.fake.hostname')
         cluster.__dict__.update(default_quota)
@@ -126,9 +129,10 @@ class TestClusterModel(TestCase):
             * passing a None with an existing quota deletes it
             * passing a None with no quota, does nothing
         """
-        default_quota = {'default':1,'ram':1, 'virtual_cpus':None, 'disk':3}
-        user_quota = {'default':0, 'ram':4, 'virtual_cpus':5, 'disk':None}
-        user_quota2 = {'default':0, 'ram':7, 'virtual_cpus':8, 'disk':9}
+        default_quota = {'default': 1, 'ram': 1,
+                         'virtual_cpus': None, 'disk': 3}
+        user_quota = {'default': 0, 'ram': 4, 'virtual_cpus': 5, 'disk': None}
+        user_quota2 = {'default': 0, 'ram': 7, 'virtual_cpus': 8, 'disk': 9}
 
         cluster = Cluster(hostname='foo.fake.hostname')
         cluster.__dict__.update(default_quota)
@@ -169,8 +173,10 @@ class TestClusterModel(TestCase):
         cluster = Cluster(hostname='ganeti.example.test')
         cluster.save()
         vm_missing = 'gimager.example.bak'
-        vm_current = VirtualMachine(cluster=cluster, hostname='gimager2.example.bak')
-        vm_removed = VirtualMachine(cluster=cluster, hostname='does.not.exist.org')
+        vm_current = VirtualMachine(cluster=cluster,
+                                    hostname='gimager2.example.bak')
+        vm_removed = VirtualMachine(cluster=cluster,
+                                    hostname='does.not.exist.org')
         vm_current.save()
         vm_removed.save()
 
@@ -178,17 +184,23 @@ class TestClusterModel(TestCase):
         self.assertTrue(VirtualMachine.objects.get(cluster=cluster,
                                                    hostname=vm_missing),
                         'missing vm was not created')
-        self.assertTrue(VirtualMachine.objects.get(cluster=cluster,
-                                                   hostname=vm_current.hostname),
-                        'previously existing vm was not created')
-        self.assertTrue(VirtualMachine.objects.filter(cluster=cluster,
-                                                      hostname=vm_removed.hostname),
-                        "vm not in ganeti was not removed from db")
+        self.assertTrue(
+            VirtualMachine.objects.get(
+                cluster=cluster,
+                hostname=vm_current.hostname),
+            'previously existing vm was not created')
+        self.assertTrue(
+            VirtualMachine.objects.filter(
+                cluster=cluster,
+                hostname=vm_removed.hostname),
+            "vm not in ganeti was not removed from db")
 
         cluster.sync_virtual_machines(True)
-        self.assertFalse(VirtualMachine.objects.filter(cluster=cluster,
-                                                       hostname=vm_removed.hostname),
-                         'vm not present in ganeti was not removed from db')
+        self.assertFalse(
+            VirtualMachine.objects.filter(
+                cluster=cluster,
+                hostname=vm_removed.hostname),
+            'vm not present in ganeti was not removed from db')
 
         vm_removed.delete()
         vm_current.delete()
@@ -205,21 +217,39 @@ class TestClusterModel(TestCase):
         """
         cluster = Cluster.objects.create(hostname='ganeti.example.test')
         node_missing = 'gtest1.example.bak'
-        node_current = Node.objects.create(cluster=cluster, hostname='gtest2.example.bak')
-        node_removed = Node.objects.create(cluster=cluster, hostname='does.not.exist.org')
+        node_current = Node.objects.create(cluster=cluster,
+                                           hostname='gtest2.example.bak')
+        node_removed = Node.objects.create(cluster=cluster,
+                                           hostname='does.not.exist.org')
 
         cluster.sync_nodes()
-        self.assertTrue(Node.objects.get(cluster=cluster, hostname=node_missing), 'missing node was not created')
-        self.assertTrue(Node.objects.get(cluster=cluster, hostname=node_current.hostname), 'previously existing node was not created')
-        self.assertTrue(Node.objects.filter(cluster=cluster, hostname=node_removed.hostname), 'node not present in ganeti was not removed from db, even though remove flag was false')
+        self.assertTrue(
+            Node.objects.get(
+                cluster=cluster,
+                hostname=node_missing),
+            'missing node was not created')
+        self.assertTrue(
+            Node.objects.get(
+                cluster=cluster,
+                hostname=node_current.hostname),
+            'previously existing node was not created')
+        self.assertTrue(
+            Node.objects.filter(
+                cluster=cluster,
+                hostname=node_removed.hostname),
+            'node not present in ganeti was not removed from db, '
+            'even though remove flag was false')
 
         cluster.sync_nodes(True)
-        self.assertFalse(Node.objects.filter(cluster=cluster, hostname=node_removed.hostname), 'node not present in ganeti was not removed from db')
+        self.assertFalse(
+            Node.objects.filter(
+                cluster=cluster,
+                hostname=node_removed.hostname),
+            'node not present in ganeti was not removed from db')
 
         node_current.delete()
         node_removed.delete()
         cluster.delete()
-
 
     def test_missing_in_database(self):
         """
@@ -227,8 +257,10 @@ class TestClusterModel(TestCase):
         """
         cluster = Cluster(hostname='ganeti.example.test')
         cluster.save()
-        vm_current = VirtualMachine(cluster=cluster, hostname='gimager2.example.bak')
-        vm_removed = VirtualMachine(cluster=cluster, hostname='does.not.exist.org')
+        vm_current = VirtualMachine(cluster=cluster,
+                                    hostname='gimager2.example.bak')
+        vm_removed = VirtualMachine(cluster=cluster,
+                                    hostname='does.not.exist.org')
         vm_current.save()
         vm_removed.save()
 
@@ -244,8 +276,10 @@ class TestClusterModel(TestCase):
         """
         cluster = Cluster(hostname='ganeti.example.test')
         cluster.save()
-        vm_current = VirtualMachine(cluster=cluster, hostname='gimager2.example.bak')
-        vm_removed = VirtualMachine(cluster=cluster, hostname='does.not.exist.org')
+        vm_current = VirtualMachine(cluster=cluster,
+                                    hostname='gimager2.example.bak')
+        vm_removed = VirtualMachine(cluster=cluster,
+                                    hostname='does.not.exist.org')
         vm_current.save()
         vm_removed.save()
 
@@ -260,7 +294,8 @@ class TestClusterModel(TestCase):
         Tests that the available_ram property returns the correct values
         """
         c = Cluster.objects.create(hostname='ganeti.example.test')
-        c2 = Cluster.objects.create(hostname='ganeti2.example.test', slug='argh')
+        c2 = Cluster.objects.create(hostname='ganeti2.example.test',
+                                    slug='argh')
         node = Node.objects.create(cluster=c, hostname='node.example.test')
         node1 = Node.objects.create(cluster=c2, hostname='node1.example.test')
 
@@ -285,7 +320,8 @@ class TestClusterModel(TestCase):
                                             hostname='yoo', ram=999,
                                             status='admin_down')
 
-        # test with no nodes, should result in zeros since nodes info isn't cached yet
+        # test with no nodes, should result in
+        # zeros since nodes info isn't cached yet
         ram = c.available_ram
         self.assertEqual(0, ram['free'])
         self.assertEqual(0, ram['total'])
@@ -319,7 +355,8 @@ class TestClusterModel(TestCase):
         Tests that the available_disk property returns the correct values
         """
         c = Cluster.objects.create(hostname='ganeti.example.test')
-        c2 = Cluster.objects.create(hostname='ganeti2.example.test', slug='argh')
+        c2 = Cluster.objects.create(hostname='ganeti2.example.test',
+                                    slug='argh')
         node = Node.objects.create(cluster=c, hostname='node.example.test')
         node1 = Node.objects.create(cluster=c2, hostname='node1.example.test')
 
@@ -327,7 +364,7 @@ class TestClusterModel(TestCase):
                                             hostname='foo', disk_size=123,
                                             status='running')
         bar = VirtualMachine.objects.create(cluster=c,
-                                            primary_node=node,hostname='bar',
+                                            primary_node=node, hostname='bar',
                                             disk_size=456, status='running')
         xoo = VirtualMachine.objects.create(cluster=c, primary_node=node,
                                             hostname='xoo', disk_size=789,
@@ -344,7 +381,8 @@ class TestClusterModel(TestCase):
                                             hostname='yoo', disk_size=999,
                                             status='admin_down')
 
-        # test with no nodes, should result in zeros since nodes info isn't cached yet
+        # test with no nodes, should result in
+        # zeros since nodes info isn't cached yet
         disk = c.available_disk
         self.assertEqual(0, disk['free'])
         self.assertEqual(0, disk['total'])
@@ -391,14 +429,16 @@ class TestClusterModel(TestCase):
         cluster = Cluster.objects.get(id=cluster.id)
         self.assertTrue(cluster.ignore_cache)
         self.assertTrue(cluster.last_job_id)
-        self.assertTrue(Job.objects.filter(id=job_id).values()[0]['ignore_cache'])
+        self.assertTrue(
+            Job.objects.filter(id=job_id).values()[0]['ignore_cache'])
 
         # finished job resets ignore_cache flag
         cluster.rapi.GetJobStatus.response = JOB
         cluster = Cluster.objects.get(id=cluster.id)
         self.assertFalse(cluster.ignore_cache)
         self.assertFalse(cluster.last_job_id)
-        self.assertFalse(Job.objects.filter(id=job_id).values()[0]['ignore_cache'])
+        self.assertFalse(
+            Job.objects.filter(id=job_id).values()[0]['ignore_cache'])
         self.assertTrue(Job.objects.get(id=job_id).finished)
 
         cluster.delete()

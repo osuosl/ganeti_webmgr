@@ -1,26 +1,7 @@
 /* content.css */
 #content {float:left; width: 817px;}
 #content td.ram, td.disk {text-align:left !important;}
-#content td.status, td.actions { padding:5px 0 0 0;}
-
-/* tablesorter style */
-#content table.sorted th {
-    background: #eeeeee url(/static/images/bg.gif) no-repeat center right;
-    border: 1px solid #ddd;
-    padding-right: 15px;
-    cursor: s-resize;
-}
-#content table.sorted .headerSortUp {background-image: url(/static/images/asc.gif);}
-#content table.sorted .headerSortDown {background-image: url(/static/images/desc.gif);}
-#content table.sorted .headerSortDown, #content table.sorted .headerSortUp {
-    background-color: #7AB0DC;
-}
-
-#content th.status, #content th.actions {
-    background:none;
-    padding:0;
-}
-
+#content td.actions { padding:5px 0 0 0;}
 
 /**
  * Actions (buttons Delete, Shutdown, Start, Reboot)
@@ -53,17 +34,17 @@
 #errors_list, #usage_summary, #administration { margin-top: 2em;}
 #errors_list h2 {background-color:#DB533B; border-color:#BC4631}
 #errors_list table {margin:0;}
-#errors_list td.Cluster {
+#errors_list div.Cluster {
     padding-left: 25px;
-    background:url(/static/images/icons/cluster.png) no-repeat 4px 4px;
+    background:url(/static/images/icons/cluster.png) no-repeat 4px -2px;
 }
-#errors_list td.VirtualMachine {
+#errors_list div.VirtualMachine {
     padding-left: 25px;
-    background:url(/static/images/icons/vm.png) no-repeat 4px 4px;
+    background:url(/static/images/icons/vm.png) no-repeat 4px -2px;
 }
-#errors_list td.Node {
+#errors_list div.Node {
     padding-left: 25px;
-    background:url(/static/images/icons/node.png) no-repeat 4px 4px;
+    background:url(/static/images/icons/node.png) no-repeat 4px -2px;
 }
 
 

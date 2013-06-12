@@ -1,5 +1,5 @@
 # Copyright (C) 2010 Oregon State University et al.
-# 
+#
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
@@ -28,6 +28,7 @@ __all__ = (
     "TestHvPrettify",
     "TestOSPrettify",
 )
+
 
 class TestCompare(SimpleTestCase):
     """
@@ -65,7 +66,6 @@ class TestCompare(SimpleTestCase):
         self.assertEqual(compare(2, 0), "decreased from 2 to 0")
 
 
-
 class TestGetHypervisor(SimpleTestCase):
 
     def setUp(self):
@@ -91,7 +91,6 @@ class TestGetHypervisor(SimpleTestCase):
         self.assertEqual(get_hypervisor(self.disp), None)
 
 
-
 class TestHvPrettify(SimpleTestCase):
 
     def test_prettify_kvm(self):
@@ -99,7 +98,6 @@ class TestHvPrettify(SimpleTestCase):
 
     def test_prettify_unknown(self):
         self.assertEqual(hv_prettify("unknown"), "unknown")
-
 
 
 class TestOSPrettify(SimpleTestCase):
@@ -111,11 +109,7 @@ class TestOSPrettify(SimpleTestCase):
 
         # Test a single entry.
         self.assertEqual(os_prettify(["hurp+durp"]),
-            [
-                ("Hurp",
-                    [("hurp+durp", "Durp")]
-                )
-            ])
+                         [("Hurp", [("hurp+durp", "Durp")])])
 
     def test_os_prettify_multiple(self):
         """
@@ -148,7 +142,8 @@ class TestOSPrettify(SimpleTestCase):
         """
 
         self.assertEqual(os_prettify(["debian-pressed+ia32"]),
-            [('Debian-pressed', [('debian-pressed+ia32', 'Ia32')])])
+                         [('Debian-pressed',
+                         [('debian-pressed+ia32', 'Ia32')])])
 
     def test_os_prettify_2517_unknown(self):
         """
@@ -159,9 +154,5 @@ class TestOSPrettify(SimpleTestCase):
         """
 
         self.assertEqual(os_prettify(["deb-ver1", "noop"]),
-            [
-                ("Unknown", [
-                    ("deb-ver1", "deb-ver1"),
-                    ("noop", "noop"),
-                ]),
-            ])
+                         [("Unknown", [("deb-ver1", "deb-ver1"),
+                         ("noop", "noop"), ]), ])
