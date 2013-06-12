@@ -21,8 +21,10 @@
   <script src="{{ STATIC_URL }}js/arbor-tween.js"></script>
   <script src="{{ STATIC_URL }}js/arbor-graphics.js"></script>
 
-  <!-- This contains the editable code for altering the Ganeti Cluster Graph manually -->
-  <script src="sample-ganeti-graphs/graph_object_prod.js"></script> <!-- This JS file can be selected as per the graph to be rendered -->
+  <!-- This is the path to the Javascript file which defines the objects required for the Visual Modelling -->
   <script src="/graph.js?cluster=ganeti"></script>
+
+  <!-- This is the script responsible for rendering the Graph taking help of arbor functions, jquery and webworkers -->
+  <script src="{{ STATIC_URL }}js/render-graph.js"></script>
 </body>
 </html>
