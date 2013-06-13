@@ -21,7 +21,7 @@ Installing
    ::
 
        # Use wget or curl to download from the command line.
-       wget https://code.osuosl.org/attachements/download/3231/ganeti-webmgr-0.9.2.tar.gz
+       wget https://code.osuosl.org/attachements/download/3267/ganeti-webmgr-0.10.tar.gz
 
 #. Change to the project directory.
 
@@ -102,7 +102,7 @@ Initializing
    MySQL/SQLite:
 
    ::
-       
+
        # Create new tables and migrate all apps using southdb
        ./manage.py syncdb --migrate
 
