@@ -4,7 +4,6 @@ from django.conf import settings
 
 from clusters.models import CachedClusterObject
 from jobs.models import Job
-from nodes.models import Node
 
 from ganeti_web import constants
 from utils import generate_random_password, get_rapi
@@ -35,10 +34,12 @@ class VirtualMachine(CachedClusterObject):
         limit can be determined. (Later Date, if it will optimize db)
 
     """
-    cluster = models.ForeignKey('Cluster', related_name='virtual_machines',
+    cluster = models.ForeignKey('clusters.Cluster',
+                                related_name='virtual_machines',
                                 editable=False, default=0)
     hostname = models.CharField(max_length=128, db_index=True)
-    owner = models.ForeignKey('ClusterUser', related_name='virtual_machines',
+    owner = models.ForeignKey('auth.ClusterUser',
+                              related_name='virtual_machines',
                               null=True, blank=True,
                               on_delete=models.SET_NULL)
     virtual_cpus = models.IntegerField(default=-1)
@@ -50,16 +51,17 @@ class VirtualMachine(CachedClusterObject):
     status = models.CharField(max_length=14)
 
     # node relations
-    primary_node = models.ForeignKey('Node', related_name='primary_vms',
+    primary_node = models.ForeignKey('nodes.Node', related_name='primary_vms',
                                      null=True, blank=True)
-    secondary_node = models.ForeignKey('Node', related_name='secondary_vms',
+    secondary_node = models.ForeignKey('nodes.Node',
+                                       related_name='secondary_vms',
                                        null=True, blank=True)
 
     # The last job reference indicates that there is at least one pending job
     # for this virtual machine.  There may be more than one job, and that can
     # never be prevented.  This just indicates that job(s) are pending and the
     # job related code should be run (status, cleanup, etc).
-    last_job = models.ForeignKey('Job', related_name="+", null=True,
+    last_job = models.ForeignKey('jobs.Job', related_name="+", null=True,
                                  blank=True)
 
     # deleted flag indicates a VM is being deleted, but the job has not
@@ -71,7 +73,7 @@ class VirtualMachine(CachedClusterObject):
     # Template temporarily stores parameters used to create this virtual
     # machine. This template is used to recreate the values entered into the
     # form.
-    template = models.ForeignKey("VirtualMachineTemplate",
+    template = models.ForeignKey("vm_templates.VirtualMachineTemplate",
                                  related_name="instances", null=True,
                                  blank=True)
 
@@ -139,6 +141,7 @@ class VirtualMachine(CachedClusterObject):
         Loads all values from cached info, included persistent properties that
         are stored in the database
         """
+        from nodes.models import Node
         data = super(VirtualMachine, cls).parse_persistent_info(info)
 
         # Parse resource properties

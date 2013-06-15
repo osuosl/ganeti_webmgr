@@ -9,8 +9,6 @@ from .client import GanetiRapiClient, GanetiApiError
 from ganeti_web import constants
 from ganeti_web.caps import has_balloonmem
 
-from clusters.models import Cluster
-
 
 def generate_random_password(length=12):
     "Generate random sequence of specified length"
@@ -36,6 +34,9 @@ def get_rapi(hash, cluster):
 
     @return a Ganeti RAPI client.
     """
+    # preventing circular imports
+    from clusters.models import Cluster
+
     if hash in RAPI_CACHE:
         return RAPI_CACHE[hash]
 

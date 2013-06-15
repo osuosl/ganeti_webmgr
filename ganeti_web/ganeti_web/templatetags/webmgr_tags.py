@@ -26,8 +26,8 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
 from ganeti_web.constants import NODE_ROLE_MAP
-from ganeti_web.models import Cluster
-from ganeti_web.utilities import hv_prettify
+from clusters.models import Cluster
+from utils import hv_prettify
 
 register = Library()
 

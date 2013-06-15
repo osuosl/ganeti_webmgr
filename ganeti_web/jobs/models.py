@@ -35,7 +35,8 @@ class Job(CachedClusterObject):
     content_type = models.ForeignKey(ContentType, related_name="+")
     object_id = models.IntegerField()
     obj = GenericForeignKey('content_type', 'object_id')
-    cluster = models.ForeignKey('Cluster', related_name='jobs', editable=False)
+    cluster = models.ForeignKey('clusters.Cluster', related_name='jobs',
+                                editable=False)
     cluster_hash = models.CharField(max_length=40, editable=False)
 
     finished = models.DateTimeField(null=True, blank=True)

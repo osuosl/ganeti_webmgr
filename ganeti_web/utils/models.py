@@ -10,9 +10,6 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import GenericForeignKey
 
-from clusters.models import Cluster
-from auth.models import ClusterUser
-
 
 ssh_public_key_re = re.compile(r'^ssh-(rsa|dsa|dss) [A-Z0-9+/=]+ .+$',
                                re.IGNORECASE)
@@ -55,7 +52,7 @@ class GanetiError(models.Model):
     """
     Class for storing errors which occured in Ganeti
     """
-    cluster = models.ForeignKey(Cluster, related_name="errors")
+    cluster = models.ForeignKey("clusters.Cluster", related_name="errors")
     msg = models.TextField()
     code = models.PositiveIntegerField(blank=True, null=True)
 
@@ -100,6 +97,7 @@ class GanetiError(models.Model):
 
             @param  obj   affected object (itself or just QuerySet)
             """
+            from clusters.models import Cluster
 
             if obj is None:
                 raise RuntimeError("Implementation error calling get_errors()"
@@ -136,6 +134,7 @@ class GanetiError(models.Model):
         @param  obj  object (i.e. cluster or vm) affected by the error
         @param code  error's code number
         """
+        from clusters.models import Cluster
         ct = ContentType.objects.get_for_model(obj.__class__)
         is_cluster = isinstance(obj, Cluster)
 
@@ -193,8 +192,8 @@ class Quota(models.Model):
     attributes of this model represent maximum values the ClusterUser can
     consume.  The absence of a Quota indicates unlimited usage.
     """
-    user = models.ForeignKey(ClusterUser, related_name='quotas')
-    cluster = models.ForeignKey(Cluster, related_name='quotas')
+    user = models.ForeignKey("auth.ClusterUser", related_name='quotas')
+    cluster = models.ForeignKey("clusters.Cluster", related_name='quotas')
 
     ram = models.IntegerField(default=0, null=True, blank=True)
     disk = models.IntegerField(default=0, null=True, blank=True)

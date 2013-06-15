@@ -14,11 +14,7 @@ from django.contrib.contenttypes.models import ContentType
 from utils import get_rapi
 from utils.fields import PatchedEncryptedCharField, PreciseDateTimeField
 from utils.client import GanetiApiError
-from utils.models import GanetiError, Quota
-
-from nodes.models import Node
-from virtualmachines.models import VirtualMachine
-from jobs.models import Job
+from utils.models import Quota
 
 
 class CachedClusterObject(models.Model):
@@ -127,6 +123,7 @@ class CachedClusterObject(models.Model):
         If communication with Ganeti fails, an error will be stored in
         ``error``.
         """
+        from utils.models import GanetiError
 
         job_data = self.check_job_status()
         for k, v in job_data.items():
@@ -191,6 +188,9 @@ class CachedClusterObject(models.Model):
         raise NotImplementedError
 
     def check_job_status(self):
+        # preventing circular import
+        from jobs.models import Job
+
         if not self.last_job_id:
             return {}
 
@@ -314,7 +314,7 @@ class Cluster(CachedClusterObject):
     # for this virtual machine.  There may be more than one job, and that can
     # never be prevented.  This just indicates that job(s) are pending and the
     # job related code should be run (status, cleanup, etc).
-    last_job = models.ForeignKey('Job', related_name='cluster_last_job',
+    last_job = models.ForeignKey('jobs.Job', related_name='cluster_last_job',
                                  null=True, blank=True)
 
     class Meta:
@@ -468,6 +468,9 @@ class Cluster(CachedClusterObject):
             * VMs no longer in ganeti are deleted
             * VMs missing from the database are added
         """
+        # preventing circular imports
+        from virtualmachines.models import VirtualMachine
+
         ganeti = self.instances()
         db = self.virtual_machines.all().values_list('hostname', flat=True)
 
@@ -490,6 +493,9 @@ class Cluster(CachedClusterObject):
             * Nodes no longer in ganeti are deleted
             * Nodes missing from the database are added
         """
+        # to prevent circular imports
+        from nodes.models import Node
+
         ganeti = self.rapi.GetNodes()
         db = self.nodes.all().values_list('hostname', flat=True)
 
@@ -630,6 +636,9 @@ class Cluster(CachedClusterObject):
         Redistribute config from cluster's master node to all
         other nodes.
         """
+        # preventing circular import
+        from jobs.models import Job
+
         # no exception handling, because it's being done in a view
         id = self.rapi.RedistributeConfig()
         job = Job.objects.create(job_id=id, obj=self, cluster_id=self.id)

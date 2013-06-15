@@ -2,7 +2,6 @@ import time
 from django.core.validators import MinValueValidator
 from django.utils.translation import ugettext_lazy as _
 from django.db import models
-from clusters.models import Cluster
 from django_fields.fields import PickleField
 
 
@@ -15,8 +14,8 @@ class VirtualMachineTemplate(models.Model):
     template_name = models.CharField(max_length=255, default="")
     temporary = models.BooleanField(verbose_name=_("Temporary"), default=False)
     description = models.CharField(max_length=255, default="")
-    cluster = models.ForeignKey(Cluster, related_name="templates", null=True,
-                                blank=True)
+    cluster = models.ForeignKey("clusters.Cluster", related_name="templates",
+                                null=True, blank=True)
     start = models.BooleanField(verbose_name=_('Start up After Creation'),
                                 default=True)
     no_install = models.BooleanField(verbose_name=_('Do not install OS'),

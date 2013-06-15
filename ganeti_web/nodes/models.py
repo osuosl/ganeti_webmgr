@@ -23,7 +23,7 @@ class Node(CachedClusterObject):
 
     ROLE_CHOICES = ((k, v) for k, v in constants.NODE_ROLE_MAP.items())
 
-    cluster = models.ForeignKey('Cluster', related_name='nodes')
+    cluster = models.ForeignKey('clusters.Cluster', related_name='nodes')
     hostname = models.CharField(max_length=128, unique=True)
     cluster_hash = models.CharField(max_length=40, editable=False)
     offline = models.BooleanField()
@@ -38,7 +38,7 @@ class Node(CachedClusterObject):
     # for this virtual machine.  There may be more than one job, and that can
     # never be prevented.  This just indicates that job(s) are pending and the
     # job related code should be run (status, cleanup, etc).
-    last_job = models.ForeignKey('Job', related_name="+", null=True,
+    last_job = models.ForeignKey('jobs.Job', related_name="+", null=True,
                                  blank=True)
 
     def __unicode__(self):
