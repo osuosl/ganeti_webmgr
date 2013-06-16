@@ -170,11 +170,11 @@ root = '%s/static' % os.path.dirname(os.path.realpath(__file__))
 urlpatterns += patterns(
     '',
     (r'^static/(?P<path>.*)', 'django.views.static.serve',
-     {'document_root': root})
+     {'document_root': root}),
     (r'^favicon.ico', 'django.views.static.serve',
      {'document_root':  settings.STATIC_ROOT, 'path': 'favicon.ico'}),
 
     # noVNC files
     (r'^novnc/(?P<path>.*)', 'django.views.static.serve',
-        {'document_root':  '%s/noVNC/include' % settings.DOC_ROOT}),
+     {'document_root':  '%s/noVNC/include' % settings.DOC_ROOT}),
 )

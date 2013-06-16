@@ -858,7 +858,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
 
         # get API key
         # XXX agh oh god what why are you doing this argfl
-        import settings
+        from django.conf import settings
         key = settings.WEB_MGR_API_KEY
 
         url = '/cluster/%s/keys/%s/'

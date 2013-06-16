@@ -231,7 +231,7 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         self.user2.revoke_all(self.cluster)
 
         # get API key
-        import settings
+        # import settings
         key = settings.WEB_MGR_API_KEY
 
         url = '/keys/%s/'

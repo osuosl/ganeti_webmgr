@@ -21,9 +21,9 @@ from django import forms
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext as _
 
-from ganeti_web.fields import DataVolumeField
+from utils.fields import DataVolumeField
 from clusters.models import Cluster
-from auth.modesl import ClusterUser
+from auth.models import ClusterUser
 
 
 class QuotaForm(forms.Form):

@@ -22,7 +22,7 @@ __all__ = ['INSTANCE', 'INSTANCES', 'XEN_PVM_INSTANCE', 'XEN_HVM_INSTANCE',
            'JOB_ERROR', 'JOB_DELETE_SUCCESS', 'JOB_LOG', 'INSTANCES_BULK',
            'NODES_MAP']
 
-from response_map import ResponseMap
+from .response_map import ResponseMap
 
 INSTANCES = ['gimager.example.bak', 'gimager2.example.bak']
 INSTANCE = {

@@ -21,7 +21,7 @@ from django.forms import ValidationError
 from django.utils.translation import ugettext as _
 
 from ganeti_web import constants
-from ganeti_web.utilities import cluster_default_info
+from utils import cluster_default_info
 
 
 class RoleForm(forms.Form):
