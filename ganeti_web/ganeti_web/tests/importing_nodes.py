@@ -20,8 +20,6 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.test.client import Client
 
-from utils import client
-from utils.proxy import RapiProxy
 from utils.proxy.constants import NODES
 
 from clusters.models import Cluster
@@ -40,8 +38,6 @@ class NodeImportBase(TestCase):
 
     def setUp(self):
         self.tearDown()
-
-        client.GanetiRapiClient = RapiProxy
 
         self.unauthorized = User(id=2, username='tester0')
         self.authorized = User(id=3, username='tester1')

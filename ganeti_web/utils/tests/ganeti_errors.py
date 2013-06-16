@@ -20,7 +20,7 @@ from datetime import datetime
 from django.test import TestCase
 from django.test.client import Client
 
-from .. import client
+from ..client import GanetiApiError
 from ..proxy import RapiProxy, CallProxy
 
 from django.contrib.auth.models import User
@@ -39,7 +39,6 @@ class TestGanetiErrorBase():
 
     def setUp(self):
         self.tearDown()
-        client.GanetiRapiClient = RapiProxy
 
     def tearDown(self):
         VirtualMachine.objects.all().delete()
@@ -93,7 +92,7 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
         vm1 = self.create_model(VirtualMachine, cluster=cluster1,
                                 hostname="vm1.test.org")
 
-        msg = client.GanetiApiError("Simulating an error", 777)
+        msg = GanetiApiError("Simulating an error", 777)
         RapiProxy.error = msg
 
         # test store_error
@@ -168,8 +167,8 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
         vm0 = self.create_model(VirtualMachine, cluster=cluster0,
                                 hostname="vm0.test.org")
 
-        msg0 = client.GanetiApiError("Simulating 401 error", 401)
-        msg1 = client.GanetiApiError("Simulating 404 error", 404)
+        msg0 = GanetiApiError("Simulating 401 error", 401)
+        msg1 = GanetiApiError("Simulating 404 error", 404)
         RapiProxy.error = msg0
 
         store_error = GanetiError.store_error
@@ -256,7 +255,7 @@ class TestGanetiErrorModel(TestGanetiErrorBase, TestCase):
         vm1 = self.create_model(VirtualMachine, cluster=cluster1,
                                 hostname="vm1.test.org")
 
-        msg = client.GanetiApiError("Simulating an error", 777)
+        msg = GanetiApiError("Simulating an error", 777)
         RapiProxy.error = msg
 
         # force an error on all objects to test its capture
@@ -349,7 +348,7 @@ class TestErrorViews(TestGanetiErrorBase, TestCase):
     def test_clear_error(self):
         url = '/error/clear/%s'
 
-        msg = client.GanetiApiError("Simulating an error", 777)
+        msg = GanetiApiError("Simulating an error", 777)
         RapiProxy.error = msg
 
         # test store_error

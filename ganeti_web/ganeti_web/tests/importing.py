@@ -20,9 +20,6 @@ from django.contrib.auth.models import User, Group
 from django.test import TestCase
 from django.test.client import Client
 
-from utils import client
-from utils.proxy import RapiProxy
-
 from auth.models import Profile, Organization
 from clusters.models import Cluster
 from virtualmachines.models import VirtualMachine
@@ -34,8 +31,6 @@ class ImportViews(TestCase):
 
     def setUp(self):
         self.tearDown()
-
-        client.GanetiRapiClient = RapiProxy
 
         self.user = User(id=2, username='tester0')
         self.user.set_password('secret')

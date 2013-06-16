@@ -27,8 +27,6 @@ from django_test_tools.views import ViewTestMixin
 
 from object_permissions import get_user_perms
 
-from utils import client
-from utils.proxy import RapiProxy
 from utils.proxy.constants import NODES, NODES_BULK
 
 from clusters.models import Cluster
@@ -42,7 +40,6 @@ __all__ = ['TestClusterViews', "TestClusterQuotaViews"]
 class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
 
     def setUp(self):
-        client.GanetiRapiClient = RapiProxy
 
         user = User(id=2, username='tester0')
         user.set_password('secret')
@@ -939,8 +936,6 @@ class TestClusterQuotaViews(TestCase, ViewTestMixin, UserTestMixin):
     """
 
     def setUp(self):
-        client.GanetiRapiClient = RapiProxy
-
         user = User(id=2, username='tester0')
         user.set_password('secret')
         user.save()

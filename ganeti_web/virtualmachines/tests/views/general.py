@@ -130,7 +130,7 @@ class TestVirtualMachineSSHKeysView(TestVirtualMachineViewsBase):
         key1.save()
 
         # get API key
-        import settings
+        from django.conf import settings
         key = settings.WEB_MGR_API_KEY
 
         # forbidden

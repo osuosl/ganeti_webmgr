@@ -27,8 +27,6 @@ from clusters.models import Cluster
 from virtualmachines.models import VirtualMachine
 from vm_templates.models import VirtualMachineTemplate
 
-from utils import client
-from utils.proxy import RapiProxy
 from utils.proxy.constants import INSTANCE
 
 
@@ -41,7 +39,6 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
     """
     def setUp(self):
         self.tearDown()
-        client.GanetiRapiClient = RapiProxy
 
         cluster = Cluster(hostname='test.cluster', slug='test',
                           username='tester', password='secret')

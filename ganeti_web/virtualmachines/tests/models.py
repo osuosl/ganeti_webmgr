@@ -20,8 +20,6 @@ from datetime import datetime
 
 from django.test import TestCase
 
-from utils import client
-from utils.proxy import RapiProxy
 from utils.proxy.constants import (INSTANCE, JOB, JOB_RUNNING,
                                    JOB_DELETE_SUCCESS)
 
@@ -52,9 +50,6 @@ class VirtualMachineTestCaseMixin(object):
 
 
 class TestVirtualMachineModel(TestCase, VirtualMachineTestCaseMixin):
-
-    def setUp(self):
-        client.GanetiRapiClient = RapiProxy
 
     def test_save(self):
         """

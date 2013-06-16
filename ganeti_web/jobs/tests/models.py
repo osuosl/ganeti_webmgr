@@ -17,8 +17,7 @@
 
 from django.test import TestCase
 
-from utils import client
-from utils.proxy import RapiProxy, CallProxy
+from utils.proxy import CallProxy
 from utils.proxy.constants import JOB, JOB_RUNNING, JOB_ERROR
 from virtualmachines.tests.views.base import VirtualMachineTestCaseMixin
 
@@ -28,7 +27,6 @@ from ..models import Job
 class TestJobMixin(VirtualMachineTestCaseMixin):
 
     def setUp(self):
-        client.GanetiRapiClient = RapiProxy
 
         self.vm, self.cluster = self.create_virtual_machine()
 

@@ -21,8 +21,6 @@ from datetime import datetime
 from django.contrib.auth.models import User
 from django.test import TestCase
 
-from utils import client
-from utils.proxy import RapiProxy
 from utils.proxy.constants import INFO, JOB_RUNNING, JOB
 
 from virtualmachines.models import VirtualMachine
@@ -36,9 +34,6 @@ __all__ = ['TestClusterModel']
 
 
 class TestClusterModel(TestCase):
-
-    def setUp(self):
-        client.GanetiRapiClient = RapiProxy
 
     def test_instantiation(self):
         """

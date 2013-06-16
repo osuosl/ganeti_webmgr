@@ -19,8 +19,6 @@
 from django.contrib.auth.models import User, Group
 from django.test import TestCase
 
-from utils import client
-from utils.proxy import RapiProxy
 from utils.models import Quota
 from ..models import Profile, ClusterUser, Organization
 from virtualmachines.models import VirtualMachine
@@ -33,7 +31,6 @@ class TestClusterUser(TestCase):
 
     def setUp(self):
         self.tearDown()
-        client.GanetiRapiClient = RapiProxy
 
     def tearDown(self):
         Quota.objects.all().delete()

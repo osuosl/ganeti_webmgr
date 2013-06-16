@@ -5,6 +5,7 @@ from collections import defaultdict
 from django.conf import settings
 
 from .client import GanetiRapiClient, GanetiApiError
+from .proxy import RapiProxy
 
 from ganeti_web import constants
 from ganeti_web.caps import has_balloonmem
@@ -37,6 +38,16 @@ def get_rapi(hash, cluster):
     # preventing circular imports
     from clusters.models import Cluster
 
+    # If the tests are running, we replace GanetiRapiClient with its
+    # descendant, RapiProxy.  This is due to the fact, that explicit replacing
+    # in tests
+    #     client.GanetiRapiClient = RapiProxy
+    # doesn't work anymore.  Additional advantage is about 3 lines lesser files
+    # containing tests.
+    rapi_client = GanetiRapiClient
+    if settings.TESTING:
+        rapi_client = RapiProxy
+
     if hash in RAPI_CACHE:
         return RAPI_CACHE[hash]
 
@@ -66,8 +77,8 @@ def get_rapi(hash, cluster):
         del RAPI_CACHE[RAPI_CACHE_HASHES[cluster]]
 
     # Set connect timeout in settings.py so that you do not learn patience.
-    rapi = GanetiRapiClient(host, port, user, password,
-                            timeout=settings.RAPI_CONNECT_TIMEOUT)
+    rapi = rapi_client(host, port, user, password,
+                       timeout=settings.RAPI_CONNECT_TIMEOUT)
     RAPI_CACHE[hash] = rapi
     RAPI_CACHE_HASHES[cluster] = hash
     return rapi

@@ -25,8 +25,6 @@ from django_test_tools.views import ViewTestMixin
 
 from .models import NodeTestCaseMixin
 
-from utils import client
-from utils.proxy import RapiProxy
 from utils.client import GanetiApiError
 
 from clusters.models import Cluster
@@ -40,8 +38,6 @@ __all__ = ['TestNodeViews']
 class TestNodeViews(TestCase, NodeTestCaseMixin, UserTestMixin, ViewTestMixin):
 
     def setUp(self):
-        client.GanetiRapiClient = RapiProxy
-
         self.node, cluster = self.create_node()
         self.node2, self.cluster = self.create_node(cluster,
                                                     'node2.example.bak')

@@ -6,14 +6,9 @@ from django_test_tools.users import UserTestMixin
 from vm_templates.models import VirtualMachineTemplate
 from clusters.models import Cluster
 
-from utils import client
-from utils.proxy import RapiProxy
-
 
 class TemplateTestCase(TestCase, UserTestMixin):
     def setUp(self):
-        client.GanetiRapiClient = RapiProxy
-
         # Cluster
         cluster = Cluster(hostname='test.cluster.gwm', slug='test',
                           username='foo', password='bar')

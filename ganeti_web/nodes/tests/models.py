@@ -19,8 +19,6 @@ from datetime import datetime
 
 from django.test import TestCase
 
-from utils import client
-from utils.proxy import RapiProxy
 from utils.proxy.constants import NODE
 
 from virtualmachines.models import VirtualMachine
@@ -42,9 +40,6 @@ class NodeTestCaseMixin(object):
 
 
 class TestNodeModel(TestCase, NodeTestCaseMixin):
-
-    def setUp(self):
-        client.GanetiRapiClient = RapiProxy
 
     def test_trivial(self):
         """

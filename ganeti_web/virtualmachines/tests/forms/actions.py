@@ -1,9 +1,7 @@
 from django.contrib.auth.models import User
 from django.test import TestCase
 
-from utils.proxy import RapiProxy
 from utils.proxy.constants import INFO
-from utils import client
 from utils.client import REPLACE_DISK_CHG, REPLACE_DISK_AUTO
 
 from ...forms import ReplaceDisksForm
@@ -18,7 +16,6 @@ __all__ = ['TestReplaceDisksForm']
 class TestReplaceDisksForm(TestCase, VirtualMachineTestCaseMixin):
 
     def setUp(self):
-        client.GanetiRapiClient = RapiProxy
         self.vm, self.cluster = self.create_virtual_machine()
         self.cluster.info = INFO
         self.vm.refresh()

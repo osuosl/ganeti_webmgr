@@ -19,8 +19,6 @@
 from django.test import TestCase
 from ..forms import EditClusterForm
 
-from utils import client
-from utils.proxy import RapiProxy
 from ..models import Cluster
 
 
@@ -30,8 +28,6 @@ __all__ = ['TestClusterFormNew', 'TestClusterFormEdit']
 class TestClusterFormBase(TestCase):
 
     def setUp(self):
-        client.GanetiRapiClient = RapiProxy
-
         self.cluster = Cluster(hostname='test.example.test', slug='OSL_TEST',
                                username="", password="")
         self.cluster.save()

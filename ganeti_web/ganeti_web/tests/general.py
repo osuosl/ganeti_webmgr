@@ -24,8 +24,6 @@ from django.utils import simplejson as json
 
 from django_test_tools.views import ViewTestMixin
 
-from utils import client
-from utils.proxy import RapiProxy
 from utils.proxy.constants import JOB_ERROR
 from utils.models import SSHKey
 
@@ -41,8 +39,6 @@ class TestGeneralViews(TestCase, ViewTestMixin):
 
     def setUp(self):
         self.tearDown()
-
-        client.GanetiRapiClient = RapiProxy
 
         self.cluster = Cluster(hostname='test.example.test', slug='OSL_TEST')
         self.cluster.save()

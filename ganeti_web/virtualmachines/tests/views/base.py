@@ -8,13 +8,11 @@ from django_test_tools.users import UserTestMixin
 
 from vm_templates.models import VirtualMachineTemplate
 
-from utils import client
-from utils.proxy import RapiProxy
-
 from ...models import VirtualMachine
 from clusters.models import Cluster
 from nodes.models import Node
 from jobs.models import Job
+from utils.client import GanetiApiError
 
 
 class VirtualMachineTestCaseMixin():
@@ -39,7 +37,6 @@ class TestVirtualMachineViewsBase(TestCase, VirtualMachineTestCaseMixin,
     maxDiff = None
 
     def setUp(self):
-        client.GanetiRapiClient = RapiProxy
         self.vm, self.cluster = self.create_virtual_machine()
 
         self.create_standard_users()
@@ -124,7 +121,7 @@ class TestVirtualMachineViewsBase(TestCase, VirtualMachineTestCaseMixin,
                         mime='application/json', method='post')
 
         msg = "SIMULATING_AN_ERROR"
-        self.vm.rapi.error = client.GanetiApiError(msg)
+        self.vm.rapi.error = GanetiApiError(msg)
         self.assert_200(url, args, [self.superuser], data=data,
                         tests=test_json_error, mime='application/json',
                         method='post')
