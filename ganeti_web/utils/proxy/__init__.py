@@ -15,8 +15,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-from call_proxy import CallProxy
-from rapi_proxy import RapiProxy, XenRapiProxy
-from response_map import ResponseMap
+from .call_proxy import CallProxy
+from .rapi_proxy import RapiProxy, XenRapiProxy
+from .response_map import ResponseMap
 
 __all__ = ['RapiProxy', 'XenRapiProxy', 'CallProxy', 'ResponseMap']

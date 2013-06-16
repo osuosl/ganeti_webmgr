@@ -4,7 +4,7 @@ from django.test import TestCase
 from utils.proxy import RapiProxy
 from utils.proxy.constants import INFO
 from utils import client
-from client import REPLACE_DISK_CHG, REPLACE_DISK_AUTO
+from utils.client import REPLACE_DISK_CHG, REPLACE_DISK_AUTO
 
 from ...forms import ReplaceDisksForm
 from ..views.base import VirtualMachineTestCaseMixin

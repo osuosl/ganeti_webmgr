@@ -1,4 +1,4 @@
-from ...forms import VMWizardBasicsForm
+from virtualmachines.forms import VMWizardBasicsForm
 from .base import TemplateTestCase
 
 __all__ = ['TestEditTemplateVMBasicForm']

@@ -27,7 +27,7 @@ from .models import NodeTestCaseMixin
 
 from utils import client
 from utils.proxy import RapiProxy
-from ganeti_web.util.client import GanetiApiError
+from utils.client import GanetiApiError
 
 from clusters.models import Cluster
 from virtualmachines.models import VirtualMachine

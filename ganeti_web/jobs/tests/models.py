@@ -20,7 +20,7 @@ from django.test import TestCase
 from utils import client
 from utils.proxy import RapiProxy, CallProxy
 from utils.proxy.constants import JOB, JOB_RUNNING, JOB_ERROR
-from virtualmachines.tests.base import VirtualMachineTestCaseMixin
+from virtualmachines.tests.views.base import VirtualMachineTestCaseMixin
 
 from ..models import Job
 

@@ -6,10 +6,10 @@ from ganeti_web import constants
 
 from ...forms import (HvmModifyVirtualMachineForm, KvmModifyVirtualMachineForm,
                       PvmModifyVirtualMachineForm, ModifyVirtualMachineForm)
-from ..base import VirtualMachineTestCaseMixin
+from ..views.base import VirtualMachineTestCaseMixin
 
 from utils import clear_rapi_cache, client
-from client import GanetiRapiClient
+from utils.client import GanetiRapiClient
 from utils.proxy.constants import (INFO, INSTANCE, NODE, NODES, XEN_INFO,
                                    XEN_HVM_INSTANCE, XEN_PVM_INSTANCE,
                                    OPERATING_SYSTEMS, XEN_OPERATING_SYSTEMS)
