@@ -18,7 +18,7 @@
 
 from django import forms
 
-from ganeti_web.models import ClusterUser
+from auth.models import ClusterUser
 
 
 class VirtualMachineForm(forms.Form):

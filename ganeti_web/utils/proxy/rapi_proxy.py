@@ -16,9 +16,9 @@
 # USA.
 
 
-from ganeti_web.util import client
-from ganeti_web.util.proxy import CallProxy
-from ganeti_web.util.proxy.constants import *
+from .. import client
+from . import CallProxy
+from .constants import *
 
 
 class RapiProxy(client.GanetiRapiClient):

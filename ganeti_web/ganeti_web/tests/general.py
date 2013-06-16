@@ -23,14 +23,15 @@ from django.test.client import Client
 from django.utils import simplejson as json
 
 from django_test_tools.views import ViewTestMixin
-from ganeti_web.models import SSHKey
 
-from ganeti_web.util.proxy import RapiProxy
-from ganeti_web.util.proxy.constants import JOB_ERROR
-from ganeti_web import models
-Cluster = models.Cluster
-VirtualMachine = models.VirtualMachine
-Job = models.Job
+from utils import client
+from utils.proxy import RapiProxy
+from utils.proxy.constants import JOB_ERROR
+from utils.models import SSHKey
+
+from clusters.models import Cluster
+from virtualmachines.models import VirtualMachine
+from jobs.models import Job
 
 
 __all__ = ('TestGeneralViews', )
@@ -41,36 +42,31 @@ class TestGeneralViews(TestCase, ViewTestMixin):
     def setUp(self):
         self.tearDown()
 
-        models.client.GanetiRapiClient = RapiProxy
+        client.GanetiRapiClient = RapiProxy
 
-        cluster = Cluster(hostname='test.example.test', slug='OSL_TEST')
-        cluster.save()
-        vm = VirtualMachine(hostname='vm1.example.bak', cluster=cluster)
-        vm.save()
+        self.cluster = Cluster(hostname='test.example.test', slug='OSL_TEST')
+        self.cluster.save()
+        self.vm = VirtualMachine(hostname='vm1.example.bak',
+                                 cluster=self.cluster)
+        self.vm.save()
 
         User(id=1, username='anonymous').save()
         settings.ANONYMOUS_USER_ID = 1
 
-        user = User(id=2, username='tester0')
-        user.set_password('secret')
-        user.save()
-        user1 = User(id=3, username='tester1')
-        user1.set_password('secret')
-        user1.grant("admin", cluster)
-        user1.grant("admin", vm)
-        user1.save()
-        user2 = User(id=4, username="tester2")
-        user2.set_password("secret")
-        user2.is_superuser = True
-        user2.save()
+        self.user = User(id=2, username='tester0')
+        self.user.set_password('secret')
+        self.user.save()
+        self.user1 = User(id=3, username='tester1')
+        self.user1.set_password('secret')
+        self.user1.grant("admin", self.cluster)
+        self.user1.grant("admin", self.vm)
+        self.user1.save()
+        self.user2 = User(id=4, username="tester2")
+        self.user2.set_password("secret")
+        self.user2.is_superuser = True
+        self.user2.save()
 
-        dict_ = globals()
-        dict_['user'] = user
-        dict_['user1'] = user1
-        dict_['user2'] = user2
-        dict_['cluster'] = cluster
-        dict_['vm'] = vm
-        dict_['c'] = Client()
+        self.c = Client()
 
     def tearDown(self):
         SSHKey.objects.all().delete()
@@ -89,7 +85,7 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         cluster1.save()
         vm1 = VirtualMachine(hostname='vm2.example.bak', cluster=cluster1)
         vm1.save()
-        job = Job(job_id=233, obj=vm, cluster=cluster,
+        job = Job(job_id=233, obj=self.vm, cluster=self.cluster,
                   finished="2011-01-07 21:59", status="error")
         job.save()
         job1 = Job(job_id=1234, obj=vm1, cluster=cluster1,
@@ -104,46 +100,49 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         status = 200
 
         # anonymous user
-        response = c.get(url % args, follow=True)
+        response = self.c.get(url % args, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # authorized user (non-admin)
-        user.grant("admin", vm)
-        user.save()
-        self.assertTrue(c.login(username=user.username, password='secret'))
-        response = c.get(url % args)
+        self.user.grant("admin", self.vm)
+        self.user.save()
+        self.assertTrue(self.c.login(username=self.user.username,
+                        password='secret'))
+        response = self.c.get(url % args)
         self.assertEqual(status, response.status_code)
         self.assertEqual(mimetype, response['content-type'])
         self.assertTemplateUsed(response, template)
         clusters = response.context['cluster_list']
-        self.assertTrue(cluster not in clusters)
+        self.assertTrue(self.cluster not in clusters)
         self.assertEqual(0, len(clusters))
         self.assertEqual(0, response.context["orphaned"])
         self.assertEqual(0, response.context["missing"])
         self.assertEqual(0, response.context["import_ready"])
 
         # authorized user (admin on one cluster)
-        self.assertTrue(c.login(username=user1.username, password='secret'))
-        response = c.get(url % args)
+        self.assertTrue(self.c.login(username=self.user1.username,
+                        password='secret'))
+        response = self.c.get(url % args)
         self.assertEqual(status, response.status_code)
         self.assertEqual(mimetype, response['content-type'])
         self.assertTemplateUsed(response, template)
         clusters = response.context['cluster_list']
-        self.assertTrue(cluster in clusters)
+        self.assertTrue(self.cluster in clusters)
         self.assertEqual(1, len(clusters))
         self.assertEqual(1, response.context["orphaned"])
         self.assertEqual(1, response.context["missing"])
         self.assertEqual(2, response.context["import_ready"])
 
         # authorized user (superuser)
-        self.assertTrue(c.login(username=user2.username, password='secret'))
-        response = c.get(url % args)
+        self.assertTrue(self.c.login(username=self.user2.username,
+                        password='secret'))
+        response = self.c.get(url % args)
         self.assertEqual(status, response.status_code)
         self.assertEqual(mimetype, response['content-type'])
         self.assertTemplateUsed(response, template)
         clusters = response.context['cluster_list']
-        self.assertTrue(cluster in clusters)
+        self.assertTrue(self.cluster in clusters)
         self.assertTrue(cluster1 in clusters)
         self.assertEqual(2, len(clusters))
         self.assertEqual(2, response.context["orphaned"])
@@ -155,8 +154,8 @@ class TestGeneralViews(TestCase, ViewTestMixin):
 
         group0 = Group.objects.create(name='group0')
         group1 = Group.objects.create(name='group1')
-        user.groups.add(group0)
-        user1.groups.add(group1)
+        self.user.groups.add(group0)
+        self.user1.groups.add(group1)
 
         url = "/used_resources/"
         args = {}
@@ -164,50 +163,54 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         mimetype = "text/html; charset=utf-8"
 
         # anonymous user
-        response = c.get(url, args, follow=True)
+        response = self.c.get(url, args, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # 404 - no id
-        self.assertTrue(c.login(username=user.username, password='secret'))
-        response = c.get(url, {})
+        self.assertTrue(self.c.login(username=self.user.username,
+                        password='secret'))
+        response = self.c.get(url, {})
         self.assertEqual(404, response.status_code)
 
         # 404 - invalid id
-        response = c.get(url, {'id': 1234567})
+        response = self.c.get(url, {'id': 1234567})
         self.assertEqual(404, response.status_code)
 
         # unauthorized user (different user)
-        response = c.get(url, {'id': user2.get_profile().pk})
+        response = self.c.get(url, {'id': self.user2.get_profile().pk})
         self.assertEqual(403, response.status_code)
 
         # unauthorized user (in different group)
-        self.assertTrue(c.login(username=user.username, password='secret'))
-        response = c.get(url, {'id': group1.organization.pk})
+        self.assertTrue(self.c.login(username=self.user.username,
+                        password='secret'))
+        response = self.c.get(url, {'id': group1.organization.pk})
         self.assertEqual(403, response.status_code)
 
         # authorized user (same user)
-        response = c.get(url, {'id': user.get_profile().pk})
+        response = self.c.get(url, {'id': self.user.get_profile().pk})
         self.assertEqual(200, response.status_code)
         self.assertEqual(mimetype, response['content-type'])
         self.assertTemplateUsed(response, template)
 
         # authorized user (in group)
-        response = c.get(url, {'id': group0.organization.pk})
+        response = self.c.get(url, {'id': group0.organization.pk})
         self.assertEqual(200, response.status_code)
         self.assertEqual(mimetype, response['content-type'])
         self.assertTemplateUsed(response, template)
 
         # authorized user (superuser)
-        self.assertTrue(c.login(username=user2.username, password='secret'))
-        response = c.get(url, {'id': user.get_profile().pk})
+        self.assertTrue(self.c.login(username=self.user2.username,
+                        password='secret'))
+        response = self.c.get(url, {'id': self.user.get_profile().pk})
         self.assertEqual(200, response.status_code)
         self.assertEqual(mimetype, response['content-type'])
         self.assertTemplateUsed(response, template)
 
         # authorized user (superuser)
-        self.assertTrue(c.login(username=user2.username, password='secret'))
-        response = c.get(url, {'id': group1.organization.pk})
+        self.assertTrue(self.c.login(username=self.user2.username,
+                        password='secret'))
+        response = self.c.get(url, {'id': group1.organization.pk})
         self.assertEqual(200, response.status_code)
         self.assertEqual(mimetype, response['content-type'])
         self.assertTemplateUsed(response, template)
@@ -216,16 +219,16 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         """ tests retrieving all sshkeys from the gwm instance """
 
         # add some keys
-        SSHKey.objects.create(key="ssh-rsa test test@test", user=user)
-        SSHKey.objects.create(key="ssh-dsa test asd@asd", user=user)
-        SSHKey.objects.create(key="ssh-dsa test foo@bar", user=user1)
+        SSHKey.objects.create(key="ssh-rsa test test@test", user=self.user)
+        SSHKey.objects.create(key="ssh-dsa test asd@asd", user=self.user)
+        SSHKey.objects.create(key="ssh-dsa test foo@bar", user=self.user1)
 
-        user.revoke_all(vm)
-        user.revoke_all(cluster)
-        user1.revoke_all(vm)
-        user1.revoke_all(cluster)
-        user2.revoke_all(vm)
-        user2.revoke_all(cluster)
+        self.user.revoke_all(self.vm)
+        self.user.revoke_all(self.cluster)
+        self.user1.revoke_all(self.vm)
+        self.user1.revoke_all(self.cluster)
+        self.user2.revoke_all(self.vm)
+        self.user2.revoke_all(self.cluster)
 
         # get API key
         import settings
@@ -238,7 +241,7 @@ class TestGeneralViews(TestCase, ViewTestMixin):
                                    authorized=False)
 
         # cluster without users who have admin perms
-        response = c.get(url % args)
+        response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals("application/json", response["content-type"])
         self.assertEqual(len(json.loads(response.content)), 0)
@@ -247,10 +250,10 @@ class TestGeneralViews(TestCase, ViewTestMixin):
 
         # vm with users who have admin perms
         # grant admin permission to first user
-        user.grant("admin", vm)
-        user1.grant("admin", cluster)
+        self.user.grant("admin", self.vm)
+        self.user1.grant("admin", self.cluster)
 
-        response = c.get(url % args)
+        response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEquals("application/json", response["content-type"])
         self.assertEqual(len(json.loads(response.content)), 3)

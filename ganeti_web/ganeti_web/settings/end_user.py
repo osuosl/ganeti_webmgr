@@ -32,7 +32,7 @@ TEMPLATE_DEBUG = DEBUG
 # flag to enable or disable these items.
 #
 # If you run the unittests without this set to TRUE, you will get many errors!
-TESTING = False
+TESTING = True
 # Setting this to False disables south migrations when running tests.
 SOUTH_TESTS_MIGRATE = False
 SKIP_SOUTH_TESTS = True

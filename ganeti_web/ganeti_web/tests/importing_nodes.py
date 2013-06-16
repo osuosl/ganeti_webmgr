@@ -19,15 +19,15 @@
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.test.client import Client
-from ganeti_web.models import Node
 
-from ganeti_web.util.proxy import RapiProxy
-from ganeti_web.util.proxy.constants import NODES
-from ganeti_web import models
-Cluster = models.Cluster
-VirtualMachine = models.VirtualMachine
-Organization = models.Organization
-Profile = models.Profile
+from utils import client
+from utils.proxy import RapiProxy
+from utils.proxy.constants import NODES
+
+from clusters.models import Cluster
+from nodes.models import Node
+from virtualmachines.models import VirtualMachine
+from auth.models import Profile
 
 __all__ = ['NodeMissingDBTests', 'NodeMissingTests']
 
@@ -41,7 +41,7 @@ class NodeImportBase(TestCase):
     def setUp(self):
         self.tearDown()
 
-        models.client.GanetiRapiClient = RapiProxy
+        client.GanetiRapiClient = RapiProxy
 
         self.unauthorized = User(id=2, username='tester0')
         self.authorized = User(id=3, username='tester1')

@@ -278,7 +278,7 @@ class GanetiRapiClient(object):  # pylint: disable-msg=R0904
         try:
             return self._SendRequest("get",
                                      "/%s/features" % GANETI_RAPI_VERSION)
-        except GanetiApiError, err:
+        except GanetiApiError as err:
             # Older RAPI servers don't support this resource. Just return an
             # empty list.
             if err.code == requests.codes.not_found:

@@ -3,9 +3,8 @@ from django.test import TestCase
 
 from django_test_tools.users import UserTestMixin
 
-from ganeti_web.backend.queries import (cluster_qs_for_user,
-                                        owner_qs_for_cluster)
-from ganeti_web.models import Cluster
+from ..backend.queries import cluster_qs_for_user, owner_qs_for_cluster
+from clusters.models import Cluster
 
 __all__ = (
     "TestClusterQSForUser",

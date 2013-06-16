@@ -19,7 +19,7 @@
 
 import unittest
 
-from ganeti_web.templatetags import webmgr_tags as tags
+from ..templatetags import webmgr_tags as tags
 
 
 class TestFilters(unittest.TestCase):

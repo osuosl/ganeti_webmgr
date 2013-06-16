@@ -1,8 +1,7 @@
 from unittest import TestCase
 
-from ganeti_web.caps import (ANCIENT, FUTURE, GANETI22, GANETI24, GANETI242,
-                             GANETI25, classify, has_cdrom2,
-                             has_shutdown_timeout, has_balloonmem)
+from ..caps import (ANCIENT, FUTURE, GANETI22, GANETI24, GANETI242, GANETI25,
+                    classify, has_cdrom2, has_shutdown_timeout, has_balloonmem)
 
 
 class Mock(object):

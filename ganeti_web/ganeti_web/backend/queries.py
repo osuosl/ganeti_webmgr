@@ -19,7 +19,9 @@ from django.db.models import Q
 
 from object_permissions import get_users_any
 
-from ganeti_web.models import Cluster, ClusterUser, VirtualMachine
+from clusters.models import Cluster
+from auth.models import ClusterUser
+from virtualmachines.models import VirtualMachine
 
 
 def cluster_qs_for_user(user, groups=True, readonly=True, **kwargs):
