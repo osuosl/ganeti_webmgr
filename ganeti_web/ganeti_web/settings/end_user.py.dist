@@ -21,7 +21,7 @@
 from .local import *
 #from ldap_settings import *
 
-import os.path
+from os.path import join, realpath, abspath, dirname
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -102,7 +102,8 @@ USE_I18N = True
 USE_L10N = True
 
 # absolute path to the docroot of this site
-DOC_ROOT = os.path.dirname(os.path.realpath(__file__))
+PROJECT_ROOT = realpath(join(abspath(dirname(__file__)), "..", "..", ".."))
+DOC_ROOT = realpath(join(abspath(dirname(__file__)), "..", ".."))
 
 # prefix used for the site.  ie. http://myhost.com/<SITE_ROOT>
 # for the django standalone server this should be ''
@@ -111,7 +112,12 @@ SITE_ROOT = ''
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
-STATIC_ROOT = '%s/static' % DOC_ROOT
+STATIC_ROOT = join(DOC_ROOT, "collected_static")
+
+STATICFILES_DIRS = (
+    join(PROJECT_ROOT, 'noVNC', 'include'),
+    join(DOC_ROOT, 'static'),
+)
 
 # URL that handles the media served from STATIC_ROOT.
 # XXX contrary to django docs, do not use a trailling slash.  It makes urls
@@ -121,7 +127,7 @@ STATIC_URL = '%s/static' % SITE_ROOT
 # Path to installed locales. New translations should be added to this
 # directory.
 LOCALE_PATHS = (
-    '%s/locale' % DOC_ROOT,
+    join(PROJECT_ROOT, "locale"),
 )
 
 # Make this unique, and don't share it with anybody.
@@ -140,13 +146,13 @@ TEMPLATE_DIRS = (
     # or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    'templates/'
+    join(DOC_ROOT, 'templates')
 )
 
 # Search settings
 HAYSTACK_SITECONF = 'search_sites'
 HAYSTACK_SEARCH_ENGINE = 'whoosh'
-HAYSTACK_WHOOSH_PATH = os.path.join(DOC_ROOT, 'whoosh_index')
+HAYSTACK_WHOOSH_PATH = join(DOC_ROOT, 'whoosh_index')
 
 LOGIN_REDIRECT_URL = '/'
 

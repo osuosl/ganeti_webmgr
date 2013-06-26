@@ -31,6 +31,7 @@ from virtualmachines.forms import vm_wizard
 handler500 = 'ganeti_web.views.view_500'
 
 
+# TODO: is this used anywhere?  Probably not.  Get rid of it.
 primary_node = 'primary_node/(?P<primary_node>.+)'
 secondary_node = 'secondary_node/(?P<secondary_node>.+)'
 
@@ -40,8 +41,6 @@ urlpatterns = patterns(
     '',
     (r'^', include('object_permissions.urls')),
     (r'^', include('object_log.urls')),
-    (r'^', include('muddle_users.urls')),
-    (r'^', include('muddle.urls')),
 
     (r'^', include('auth.urls')),
     (r'^', include('clusters.urls')),
@@ -103,6 +102,7 @@ urlpatterns += patterns(
 
 
 # Users - overridden from users app to use custom templates
+# TODO: IT DOES NOT OVERRIDE
 urlpatterns += patterns(
     'muddle_users.views.user',
     url(r'^accounts/profile/?', 'user_profile', name='profile',
@@ -165,16 +165,30 @@ urlpatterns += patterns(
 )
 
 
-# The following is used to serve up local static files like images
-root = '%s/static' % os.path.dirname(os.path.realpath(__file__))
+# Moved here so that our overriding works
 urlpatterns += patterns(
     '',
-    (r'^static/(?P<path>.*)', 'django.views.static.serve',
-     {'document_root': root}),
-    (r'^favicon.ico', 'django.views.static.serve',
-     {'document_root':  settings.STATIC_ROOT, 'path': 'favicon.ico'}),
-
-    # noVNC files
-    (r'^novnc/(?P<path>.*)', 'django.views.static.serve',
-     {'document_root':  '%s/noVNC/include' % settings.DOC_ROOT}),
+    (r'^', include('muddle_users.urls')),
+    (r'^', include('muddle.urls')),
 )
+
+
+
+
+# XXX: since Django 1.3 you don't actually have to include static urls here.
+#      Everything is being served by Django development server.
+
+# -----------------------------------------------------------------------------
+# The following is used to serve up local static files like images
+# root = '%s/static' % os.path.dirname(os.path.realpath(__file__))
+# urlpatterns += patterns(
+#     '',
+#     (r'^site_media/(?P<path>.*)$', 'django.views.static.serve',
+#      {'document_root': settings.STATIC_ROOT, "show_indexes": True}),
+#     (r'^favicon.ico', 'django.views.static.serve',
+#     {'document_root':  settings.STATIC_ROOT, 'path': 'favicon.ico'}),
+
+#     noVNC files
+#     (r'^novnc/(?P<path>.*)', 'django.views.static.serve',
+#     {'document_root':  '%s/noVNC/include' % settings.DOC_ROOT}),
+# )
