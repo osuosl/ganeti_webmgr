@@ -1,15 +1,16 @@
 from itertools import chain
 from django.test import TestCase
 
-from .monkey import MonkeyPatcher
 from ganeti_web import constants
 
 from ...forms import (HvmModifyVirtualMachineForm, KvmModifyVirtualMachineForm,
                       PvmModifyVirtualMachineForm, ModifyVirtualMachineForm)
 from ..views.base import VirtualMachineTestCaseMixin
 
+import utils.proxy.constants
+import utils
 from utils import clear_rapi_cache, client
-from utils.client import GanetiRapiClient
+from utils.proxy import RapiProxy, XenRapiProxy, CallProxy
 from utils.proxy.constants import (INFO, INSTANCE, NODE, NODES, XEN_INFO,
                                    XEN_HVM_INSTANCE, XEN_PVM_INSTANCE,
                                    OPERATING_SYSTEMS, XEN_OPERATING_SYSTEMS)
@@ -23,13 +24,17 @@ __all__ = [
 ]
 
 
-class TestModifyVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
+# CallProxy.patch(utils, 'get_rapi_client', True, XenRapiProxy)
+utils.get_rapi_client = lambda: XenRapiProxy
+
+
+class ModifyVirtualMachineFormTestCase(TestCase, VirtualMachineTestCaseMixin):
+    """
+    This is abstract test case used by next 3 test cases.  It proxies some of
+    the RAPI requests.
+    """
 
     Form = ModifyVirtualMachineForm
-
-    proxy = MonkeyPatcher()
-    # Assure that we have a GanetiRapiClient object to work with in tests
-    rapi = GanetiRapiClient
 
     data = dict(vcpus=2,
                 acpi=True,
@@ -67,18 +72,15 @@ class TestModifyVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         Reset models.client.GanetiRapiClient back to the GanetiRapiClient
           class, so that patching can begin.
         """
-        client.GanetiRapiClient = GanetiRapiClient
         self._data = self.data.copy()
-        if hasattr(self, 'patches'):
-            self.proxy = MonkeyPatcher(*self.patches)
-        self.proxy.patch()
 
     def tearDown(self):
-        self.proxy.restore()
         self.data = self._data.copy()
         self.vm.delete()
         self.cluster.delete()
         clear_rapi_cache()
+        utils.get_rapi_client = lambda: RapiProxy
+        # utils.get_rapi_client.enable()
 
     def test_multiple_nic(self):
         data = self.data.copy()
@@ -134,18 +136,19 @@ class TestModifyVirtualMachineForm(TestCase, VirtualMachineTestCaseMixin):
         self.assertEqual('aa:00:00:c5:47:2e', form.fields['nic_mac_0'].initial)
 
 
-class TestKvmModifyVirtualMachineForm(TestModifyVirtualMachineForm):
+class TestKvmModifyVirtualMachineForm(ModifyVirtualMachineFormTestCase):
 
     Form = KvmModifyVirtualMachineForm
 
     def setUp(self):
-        self.patches = (
-            (self.rapi, 'GetNodes', lambda x: NODES),
-            (self.rapi, 'GetInfo', lambda x: INFO),
-            (self.rapi, 'GetNode', lambda y, x: NODE),
-            (self.rapi, 'GetOperatingSystems', lambda x: OPERATING_SYSTEMS),
-            (self.rapi, 'GetInstance', lambda x, y: INSTANCE),
-        )
+        # self.patches = (
+        #     (self.rapi, 'GetNodes', lambda x: NODES),
+        #     (self.rapi, 'GetInfo', lambda x: INFO),
+        #     (self.rapi, 'GetNode', lambda y, x: NODE),
+        #     (self.rapi, 'GetOperatingSystems', lambda x: OPERATING_SYSTEMS),
+        #     (self.rapi, 'GetInstance', lambda x, y: INSTANCE),
+        #     # (utils, "get_rapi_client", lambda: XenRapiProxy)
+        # )
 
         super(TestKvmModifyVirtualMachineForm, self).setUp()
 
@@ -215,19 +218,22 @@ class TestKvmModifyVirtualMachineForm(TestModifyVirtualMachineForm):
             self.assertFalse(field in form.fields, field)
 
 
-class TestHvmModifyVirtualMachineForm(TestModifyVirtualMachineForm):
+class TestHvmModifyVirtualMachineForm(ModifyVirtualMachineFormTestCase):
 
     Form = HvmModifyVirtualMachineForm
 
     def setUp(self):
-        self.patches = (
-            (self.rapi, 'GetNodes', lambda x: NODES),
-            (self.rapi, 'GetNode', lambda y, x: NODE),
-            (self.rapi, 'GetInfo', lambda x: XEN_INFO),
-            (self.rapi, 'GetOperatingSystems',
-             lambda x: XEN_OPERATING_SYSTEMS),
-            (self.rapi, 'GetInstance', lambda x, y: XEN_HVM_INSTANCE),
-        )
+        # self.patches = (
+        #     (self.rapi, 'GetNodes', lambda x: NODES),
+        #     (self.rapi, 'GetNode', lambda y, x: NODE),
+        #     (self.rapi, 'GetInfo', lambda x: XEN_INFO),
+        #     (self.rapi, 'GetOperatingSystems',
+        #      lambda x: XEN_OPERATING_SYSTEMS),
+        #     (self.rapi, 'GetInstance', lambda x, y: XEN_HVM_INSTANCE),
+        #     # (utils.proxy.constants, "OPERATING_SYSTEMS", XEN_OPERATING_SYSTEMS)
+        # )
+        utils.get_rapi_client = lambda: XenRapiProxy
+        # utils.get_rapi_client.disable()
 
         super(TestHvmModifyVirtualMachineForm, self).setUp()
 
@@ -297,19 +303,22 @@ class TestHvmModifyVirtualMachineForm(TestModifyVirtualMachineForm):
             self.assertEqual(form.fields[field].initial, hvparams[field])
 
 
-class TestPvmModifyVirtualMachineForm(TestModifyVirtualMachineForm):
+class TestPvmModifyVirtualMachineForm(ModifyVirtualMachineFormTestCase):
 
     Form = PvmModifyVirtualMachineForm
 
     def setUp(self):
-        self.patches = (
-            (self.rapi, 'GetNodes', lambda x: NODES),
-            (self.rapi, 'GetNode', lambda x, y: NODE),
-            (self.rapi, 'GetInfo', lambda x: XEN_INFO),
-            (self.rapi, 'GetOperatingSystems',
-             lambda x: XEN_OPERATING_SYSTEMS),
-            (self.rapi, 'GetInstance', lambda x, y: XEN_PVM_INSTANCE)
-        )
+        # utils.get_rapi_client = lambda: XenRapiProxy
+        utils.get_rapi_client.disable()
+
+        # self.patches = (
+        #     (self.rapi, 'GetNodes', lambda x: NODES),
+        #     (self.rapi, 'GetNode', lambda x, y: NODE),
+        #     (self.rapi, 'GetInfo', lambda x: XEN_INFO),
+        #     (self.rapi, 'GetOperatingSystems',
+        #      lambda x: XEN_OPERATING_SYSTEMS),
+        #     (self.rapi, 'GetInstance', lambda x, y: XEN_PVM_INSTANCE)
+        # )
 
         super(TestPvmModifyVirtualMachineForm, self).setUp()
 

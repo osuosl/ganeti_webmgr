@@ -16,8 +16,8 @@ settings.py*
 !settings.py.dist
 !ganeti_web/settings.py
 
-settings/end_user.py*
-!settings/end_user.py.dist
+end_user.py*
+!end_user.py.dist
 
 # ldap_settings
 ldap_settings.py*

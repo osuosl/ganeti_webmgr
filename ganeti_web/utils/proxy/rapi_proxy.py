@@ -101,3 +101,22 @@ class XenRapiProxy(RapiProxy):
                         XEN_OPERATING_SYSTEMS)
 
         return instance
+
+
+class XenHvmRapiProxy(XenRapiProxy):
+    def __new__(cls, *args, **kwargs):
+        """
+        Inherits from the RapiProxy and extends it to return
+        information for Xen clusters instead of Kvm clusters.
+        """
+        instance = RapiProxy.__new__(cls, *args, **kwargs)
+        # Unbind functions that are to be patched
+        instance.GetInstances = None
+        instance.GetInstance = None
+        instance.GetInfo = None
+        instance.GetOperatingSystems = None
+        CallProxy.patch(instance, 'GetInstances', False, INSTANCES)
+        CallProxy.patch(instance, 'GetInstance', False, XEN_PVM_INSTANCE)
+        CallProxy.patch(instance, 'GetInfo', False, XEN_INFO)
+        CallProxy.patch(instance, 'GetOperatingSystems', False,
+                        XEN_OPERATING_SYSTEMS)
