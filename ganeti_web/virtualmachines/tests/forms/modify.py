@@ -1,3 +1,4 @@
+import copy
 from itertools import chain
 from django.test import TestCase
 
@@ -10,7 +11,7 @@ from ..views.base import VirtualMachineTestCaseMixin
 import utils.proxy.constants
 import utils
 from utils import clear_rapi_cache, client
-from utils.proxy import RapiProxy, XenRapiProxy, CallProxy
+from utils.proxy import XenRapiProxy, XenHvmRapiProxy
 from utils.proxy.constants import (INFO, INSTANCE, NODE, NODES, XEN_INFO,
                                    XEN_HVM_INSTANCE, XEN_PVM_INSTANCE,
                                    OPERATING_SYSTEMS, XEN_OPERATING_SYSTEMS)
@@ -24,8 +25,9 @@ __all__ = [
 ]
 
 
-# CallProxy.patch(utils, 'get_rapi_client', True, XenRapiProxy)
-utils.get_rapi_client = lambda: XenRapiProxy
+# This is copy of the utils.get_rapi_client function.  We replace original in
+# every test below, so we should somehow bring the original back.
+OLD_RAPI_CLIENT = copy.copy(utils.get_rapi_client)
 
 
 class ModifyVirtualMachineFormTestCase(TestCase, VirtualMachineTestCaseMixin):
@@ -79,8 +81,7 @@ class ModifyVirtualMachineFormTestCase(TestCase, VirtualMachineTestCaseMixin):
         self.vm.delete()
         self.cluster.delete()
         clear_rapi_cache()
-        utils.get_rapi_client = lambda: RapiProxy
-        # utils.get_rapi_client.enable()
+        utils.get_rapi_client = OLD_RAPI_CLIENT
 
     def test_multiple_nic(self):
         data = self.data.copy()
@@ -141,15 +142,6 @@ class TestKvmModifyVirtualMachineForm(ModifyVirtualMachineFormTestCase):
     Form = KvmModifyVirtualMachineForm
 
     def setUp(self):
-        # self.patches = (
-        #     (self.rapi, 'GetNodes', lambda x: NODES),
-        #     (self.rapi, 'GetInfo', lambda x: INFO),
-        #     (self.rapi, 'GetNode', lambda y, x: NODE),
-        #     (self.rapi, 'GetOperatingSystems', lambda x: OPERATING_SYSTEMS),
-        #     (self.rapi, 'GetInstance', lambda x, y: INSTANCE),
-        #     # (utils, "get_rapi_client", lambda: XenRapiProxy)
-        # )
-
         super(TestKvmModifyVirtualMachineForm, self).setUp()
 
         self.vm, self.cluster = self.create_virtual_machine(
@@ -223,6 +215,8 @@ class TestHvmModifyVirtualMachineForm(ModifyVirtualMachineFormTestCase):
     Form = HvmModifyVirtualMachineForm
 
     def setUp(self):
+        utils.get_rapi_client = lambda: XenRapiProxy
+
         # self.patches = (
         #     (self.rapi, 'GetNodes', lambda x: NODES),
         #     (self.rapi, 'GetNode', lambda y, x: NODE),
@@ -230,10 +224,7 @@ class TestHvmModifyVirtualMachineForm(ModifyVirtualMachineFormTestCase):
         #     (self.rapi, 'GetOperatingSystems',
         #      lambda x: XEN_OPERATING_SYSTEMS),
         #     (self.rapi, 'GetInstance', lambda x, y: XEN_HVM_INSTANCE),
-        #     # (utils.proxy.constants, "OPERATING_SYSTEMS", XEN_OPERATING_SYSTEMS)
         # )
-        utils.get_rapi_client = lambda: XenRapiProxy
-        # utils.get_rapi_client.disable()
 
         super(TestHvmModifyVirtualMachineForm, self).setUp()
 
@@ -299,6 +290,8 @@ class TestHvmModifyVirtualMachineForm(ModifyVirtualMachineFormTestCase):
         hvparams = self.vm.info['hvparams']
         form = self.Form(self.vm)
 
+        # print hvparam_fields
+        # print hvparams
         for field in hvparam_fields:
             self.assertEqual(form.fields[field].initial, hvparams[field])
 
@@ -308,17 +301,7 @@ class TestPvmModifyVirtualMachineForm(ModifyVirtualMachineFormTestCase):
     Form = PvmModifyVirtualMachineForm
 
     def setUp(self):
-        # utils.get_rapi_client = lambda: XenRapiProxy
-        utils.get_rapi_client.disable()
-
-        # self.patches = (
-        #     (self.rapi, 'GetNodes', lambda x: NODES),
-        #     (self.rapi, 'GetNode', lambda x, y: NODE),
-        #     (self.rapi, 'GetInfo', lambda x: XEN_INFO),
-        #     (self.rapi, 'GetOperatingSystems',
-        #      lambda x: XEN_OPERATING_SYSTEMS),
-        #     (self.rapi, 'GetInstance', lambda x, y: XEN_PVM_INSTANCE)
-        # )
+        utils.get_rapi_client = lambda: XenRapiProxy
 
         super(TestPvmModifyVirtualMachineForm, self).setUp()
 

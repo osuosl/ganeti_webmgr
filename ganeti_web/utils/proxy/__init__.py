@@ -16,7 +16,7 @@
 # USA.
 
 from .call_proxy import CallProxy
-from .rapi_proxy import RapiProxy, XenRapiProxy
+from .rapi_proxy import RapiProxy, XenRapiProxy, XenHvmRapiProxy
 from .response_map import ResponseMap
 
 __all__ = ['RapiProxy', 'XenRapiProxy', 'CallProxy', 'ResponseMap']

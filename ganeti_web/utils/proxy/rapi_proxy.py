@@ -116,7 +116,7 @@ class XenHvmRapiProxy(XenRapiProxy):
         instance.GetInfo = None
         instance.GetOperatingSystems = None
         CallProxy.patch(instance, 'GetInstances', False, INSTANCES)
-        CallProxy.patch(instance, 'GetInstance', False, XEN_PVM_INSTANCE)
+        CallProxy.patch(instance, 'GetInstance', False, XEN_HVM_INSTANCE)
         CallProxy.patch(instance, 'GetInfo', False, XEN_INFO)
         CallProxy.patch(instance, 'GetOperatingSystems', False,
                         XEN_OPERATING_SYSTEMS)
