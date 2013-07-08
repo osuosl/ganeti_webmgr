@@ -11,4 +11,4 @@ pyopenssl
 requests>=0.9
 simplejson
 south>=0.7.3
-whoosh>=1.8.1
+whoosh==1.8.1
