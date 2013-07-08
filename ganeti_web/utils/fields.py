@@ -56,7 +56,7 @@ class PatchedEncryptedCharField(EncryptedCharField):
                                                     prepared=prepared)
 
 
-add_introspection_rules([], ["^ganeti_web\.fields\.PatchedEncryptedCharField"])
+add_introspection_rules([], ["^utils\.fields\.PatchedEncryptedCharField"])
 
 
 class PreciseDateTimeField(DecimalField):
@@ -152,7 +152,7 @@ class PreciseDateTimeField(DecimalField):
 
 # Migration rules for PDTField. PDTField's serialization is surprisingly
 # straightforward and doesn't need any help here.
-add_introspection_rules([], ["^ganeti_web\.fields\.PreciseDateTimeField"])
+add_introspection_rules([], ["^utils\.fields\.PreciseDateTimeField"])
 
 
 class DataVolumeField(CharField):
@@ -214,7 +214,7 @@ class DataVolumeField(CharField):
 
 # Migration rules for DVField. DVField doesn't do anything fancy, so the
 # default rules will work.
-add_introspection_rules([], ["^ganeti_web\.fields\.DataVolumeField"])
+add_introspection_rules([], ["^utils\.fields\.DataVolumeField"])
 
 
 class MACAddressField(RegexField):
@@ -229,7 +229,7 @@ class MACAddressField(RegexField):
 
 # Migration rules for MAField. MAField doesn't do anything fancy, so the
 # default rules will work.
-add_introspection_rules([], ["^ganeti_web\.fields\.MACAddressField"])
+add_introspection_rules([], ["^utils\.fields\.MACAddressField"])
 
 
 class SQLSumIf(models.sql.aggregates.Aggregate):

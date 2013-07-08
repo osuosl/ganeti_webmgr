@@ -8,11 +8,13 @@ class Migration(DataMigration):
         """
         Update content types for Cluster Users
         """
-        ct = ContentType.objects.get_for_model(orm.Organization)
-        orm.Organization.objects.all().update(real_type=ct)
+        # XXX: commented out so there is no need to fake this migration
+        # ct = ContentType.objects.get_for_model(orm.Organization)
+        # orm.Organization.objects.all().update(real_type=ct)
 
-        ct = ContentType.objects.get_for_model(orm.Profile)
-        orm.Profile.objects.all().update(real_type=ct)
+        # ct = ContentType.objects.get_for_model(orm.Profile)
+        # orm.Profile.objects.all().update(real_type=ct)
+        pass
 
     def backwards(self, orm):
         """No need for backwards, row will be deleted anyways"""
