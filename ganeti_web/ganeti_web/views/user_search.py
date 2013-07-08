@@ -2,7 +2,7 @@ from django.http import HttpResponse
 from django.contrib.auth.models import User, Group
 from django.utils import simplejson
 
-from auth.models import ClusterUser
+from authentication.models import ClusterUser
 
 
 def search_users(request):

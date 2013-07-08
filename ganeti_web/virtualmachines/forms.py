@@ -46,7 +46,7 @@ from ganeti_web.views.generic import LoginRequiredMixin
 
 from utils.fields import DataVolumeField, MACAddressField
 from clusters.models import Cluster
-from auth.models import ClusterUser
+from authentication.models import ClusterUser
 from nodes.models import Node
 from virtualmachines.models import VirtualMachine
 from vm_templates.models import VirtualMachineTemplate

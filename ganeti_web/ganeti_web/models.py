@@ -35,7 +35,7 @@ from object_permissions.registration import register
 
 from muddle_users import signals as muddle_user_signals
 
-from auth.models import Organization
+from authentication.models import Organization
 from clusters.models import Cluster
 from nodes.models import Node
 from virtualmachines.models import VirtualMachine
@@ -45,7 +45,7 @@ from utils.client import GanetiApiError
 from .management import update_sites_module
 import permissions
 
-from auth.models import Profile
+from authentication.models import Profile
 
 from south.signals import post_migrate
 

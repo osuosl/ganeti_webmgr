@@ -20,7 +20,7 @@ from django.contrib.auth.models import User, Group
 from django.test import TestCase
 from django.test.client import Client
 
-from auth.models import Profile, Organization
+from authentication.models import Profile, Organization
 from clusters.models import Cluster
 from virtualmachines.models import VirtualMachine
 

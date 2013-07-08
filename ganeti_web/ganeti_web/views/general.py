@@ -36,7 +36,7 @@ from clusters.models import Cluster
 from virtualmachines.models import VirtualMachine
 from jobs.models import Job
 from utils.models import GanetiError
-from auth.models import ClusterUser, Organization, Profile
+from authentication.models import ClusterUser, Organization, Profile
 
 
 class AboutView(TemplateView):

@@ -20,7 +20,7 @@ from django.db.models import Q
 from object_permissions import get_users_any
 
 from clusters.models import Cluster
-from auth.models import ClusterUser
+from authentication.models import ClusterUser
 from virtualmachines.models import VirtualMachine
 
 

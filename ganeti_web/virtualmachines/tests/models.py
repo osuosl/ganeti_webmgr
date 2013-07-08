@@ -25,7 +25,7 @@ from utils.proxy.constants import (INSTANCE, JOB, JOB_RUNNING,
 
 from virtualmachines.models import VirtualMachine
 from clusters.models import Cluster
-from auth.models import ClusterUser
+from authentication.models import ClusterUser
 from jobs.models import Job
 
 from ganeti_web import constants

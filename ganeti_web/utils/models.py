@@ -192,7 +192,7 @@ class Quota(models.Model):
     attributes of this model represent maximum values the ClusterUser can
     consume.  The absence of a Quota indicates unlimited usage.
     """
-    user = models.ForeignKey("auth.ClusterUser", related_name='quotas')
+    user = models.ForeignKey("authentication.ClusterUser", related_name='quotas')
     cluster = models.ForeignKey("clusters.Cluster", related_name='quotas')
 
     ram = models.IntegerField(default=0, null=True, blank=True)

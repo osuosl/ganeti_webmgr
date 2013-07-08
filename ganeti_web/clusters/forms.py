@@ -23,7 +23,7 @@ from django.utils.translation import ugettext as _
 
 from utils.fields import DataVolumeField
 from clusters.models import Cluster
-from auth.models import ClusterUser
+from authentication.models import ClusterUser
 
 
 class QuotaForm(forms.Form):

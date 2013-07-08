@@ -25,7 +25,7 @@ from utils.proxy.constants import NODES
 from clusters.models import Cluster
 from nodes.models import Node
 from virtualmachines.models import VirtualMachine
-from auth.models import Profile
+from authentication.models import Profile
 
 __all__ = ['NodeMissingDBTests', 'NodeMissingTests']
 

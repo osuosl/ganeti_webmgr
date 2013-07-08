@@ -42,7 +42,7 @@ urlpatterns = patterns(
     (r'^', include('object_permissions.urls')),
     (r'^', include('object_log.urls')),
 
-    (r'^', include('auth.urls')),
+    (r'^', include('authentication.urls')),
     (r'^', include('clusters.urls')),
     (r'^', include('jobs.urls')),
     (r'^', include('nodes.urls')),

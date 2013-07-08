@@ -1,7 +1,7 @@
 from django.conf.urls.defaults import patterns, url
 
 urlpatterns = patterns(
-    'auth.views',
+    'authentication.views',
 
     url(r'^user/(?P<user_id>\d+)/key/?$',
         'key_get',

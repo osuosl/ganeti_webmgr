@@ -94,7 +94,7 @@ INSTALLED_APPS = (
     'django_tables2',
 
     # ganeti apps
-    'auth',
+    'authentication',
     'clusters',
     'jobs',
     'nodes',
@@ -104,4 +104,4 @@ INSTALLED_APPS = (
 )
 
 # The model that contains extra user profile stuff.
-AUTH_PROFILE_MODULE = 'auth.Profile'
+AUTH_PROFILE_MODULE = 'authentication.Profile'

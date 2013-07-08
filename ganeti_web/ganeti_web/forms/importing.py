@@ -18,7 +18,7 @@
 
 from django import forms
 
-from auth.models import ClusterUser
+from authentication.models import ClusterUser
 
 
 class VirtualMachineForm(forms.Form):

@@ -48,7 +48,7 @@ from ganeti_web.middleware import Http403
 
 from .forms import EditClusterForm, QuotaForm
 from .models import Cluster
-from auth.models import Profile, ClusterUser
+from authentication.models import Profile, ClusterUser
 from utils.models import SSHKey
 from virtualmachines.models import VirtualMachine
 from jobs.models import Job

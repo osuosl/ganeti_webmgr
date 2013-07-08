@@ -38,7 +38,7 @@ class VirtualMachine(CachedClusterObject):
                                 related_name='virtual_machines',
                                 editable=False, default=0)
     hostname = models.CharField(max_length=128, db_index=True)
-    owner = models.ForeignKey('auth.ClusterUser',
+    owner = models.ForeignKey('authentication.ClusterUser',
                               related_name='virtual_machines',
                               null=True, blank=True,
                               on_delete=models.SET_NULL)
