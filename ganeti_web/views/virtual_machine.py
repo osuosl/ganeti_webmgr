@@ -758,7 +758,7 @@ def modify_confirm(request, cluster_slug, instance):
                     beparams['maxmem'] = rapi_dict.pop('maxmem')
                     beparams['minmem'] = rapi_dict.pop('minmem')
                 else:
-                    beparams['memroy'] = rapi_dict.pop('memory')
+                    beparams['memory'] = rapi_dict.pop('memory')
                 os_name = rapi_dict.pop('os')
                 job_id = cluster.rapi.ModifyInstance(
                     instance,
