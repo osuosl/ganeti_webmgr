@@ -72,7 +72,7 @@ class Migration(SchemaMigration):
             'ignore_cache': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'last_job': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'cluster_last_job'", 'null': 'True', 'to': "orm['ganeti_web.Job']"}),
             'mtime': ('utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
-            'password': ('ganeti_web.fields.PatchedEncryptedCharField', [], {'default': "''", 'max_length': '293', 'cipher': "'AES'", 'blank': 'True'}),
+            'password': ('utils.fields.PatchedEncryptedCharField', [], {'default': "''", 'max_length': '293', 'cipher': "'AES'", 'blank': 'True'}),
             'port': ('django.db.models.fields.PositiveIntegerField', [], {'default': '5080'}),
             'ram': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
             'serialized_info': ('django.db.models.fields.TextField', [], {'default': 'None', 'null': 'True'}),
