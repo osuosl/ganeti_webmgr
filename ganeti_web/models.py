@@ -1058,6 +1058,9 @@ class Node(CachedClusterObject):
     def __repr__(self):
         return "<Node: '%s'>" % self.hostname
 
+    def natural_key(self):
+        return self.hostname
+
 
 class Cluster(CachedClusterObject):
     """
