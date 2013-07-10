@@ -25,6 +25,7 @@ from forms.autocomplete_search_form import autocomplete_search_form
 from ganeti_web.forms.virtual_machine import vm_wizard
 from ganeti_web.views.cluster import (ClusterDetailView, ClusterListView,
                                       ClusterVMListView, ClusterJobListView)
+from ganeti_web.views.ganetiviz import VMJsonView,NodeJsonView
 from ganeti_web.views.general import AboutView
 from ganeti_web.views.jobs import JobDetailView
 from ganeti_web.views.node import (NodeDetailView, NodePrimaryListView,
@@ -329,6 +330,17 @@ urlpatterns += patterns(
     url(r'^search/',
         login_required(SearchView(form_class=autocomplete_search_form)),
         name='search')
+)
+
+# Ganetiviz
+urlpatterns += patterns(
+    'ganeti_web.views.graph',
+
+    url(r'^ganetiviz/vms/(?P<cluster_hostname>[\.\w]+)$', VMJsonView.as_view(), 
+        name='json-vms'),
+
+    url(r'^ganetiviz/nodes/(?P<cluster_hostname>[\.\w]+)$', NodeJsonView.as_view(),
+        name='json-nodes'),
 )
 
 # The following is used to serve up local static files like images
