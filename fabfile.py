@@ -170,7 +170,7 @@ def create_virtualenv(virtualenv='venv', force=False):
         if force or not _exists('%(virtualenv)s/lib' % env):
             # XXX does this actually create a new environment if one already
             # exists there?
-            local('virtualenv %(virtualenv)s --distribute' % env)
+            local('virtualenv %(virtualenv)s --distribute --no-site-packages' % env)
 
             # now lets make sure the virtual env has the the newest pip
             local(str(verbose_check()+'--upgrade pip') % env)
