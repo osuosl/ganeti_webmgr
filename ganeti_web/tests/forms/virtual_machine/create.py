@@ -154,3 +154,10 @@ class TestVMWizardAdvancedForm(TestCase):
         form = VMWizardAdvancedForm(data)
         self.assertFalse(form.is_valid(),
                          "IP check shouldn't be allowed without name check")
+
+    def test_validate_pnode_equals_snode(self):
+        invalid_data = self.valid_data.copy()
+        invalid_data["snode"] = invalid_data["pnode"]
+        form = VMWizardAdvancedForm(invalid_data)
+        self.assertFalse(form.is_valid(),
+            "The secondary node cannot be the primary node.")
