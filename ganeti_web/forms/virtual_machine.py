@@ -125,7 +125,7 @@ class VirtualMachineForm(forms.ModelForm):
 
         # Spaces in hostname will always break things.
         if ' ' in hostname:
-            self.errors["hostname"] = self.error_class(
+            self._errors["hostname"] = self.error_class(
                 ["Hostname contains illegal character"])
         return hostname
 
@@ -708,7 +708,7 @@ class VMWizardOwnerForm(Form):
 
         # Spaces in hostname will always break things.
         if ' ' in hostname:
-            self.errors["hostname"] = self.error_class(
+            self._errors["hostname"] = self.error_class(
                 ["Hostnames cannot contain spaces."])
         return hostname
 
@@ -928,12 +928,16 @@ class VMWizardAdvancedForm(Form):
     def clean(self):
         # Ganeti will error on VM creation if an IP address check is requested
         # but a name check is not.
-        if (self.cleaned_data.get("ip_check") and not
-                self.cleaned_data.get("name_check")):
+        data = self.cleaned_data
+        if (data.get("ip_check") and not data.get("name_check")):
             msg = ["Cannot perform IP check without name check"]
-            self.errors["ip_check"] = self.error_class(msg)
+            self._errors["ip_check"] = self.error_class(msg)
 
-        return self.cleaned_data
+        if data.get('pnode') == data.get('snode'):
+            raise forms.ValidationError("The secondary node cannot be the "
+                                        "primary node.")
+
+        return data
 
 
 class VMWizardPVMForm(Form):
