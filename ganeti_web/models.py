@@ -1733,10 +1733,8 @@ class Profile(ClusterUser):
     """
     user = models.OneToOneField(User)
 
-    @models.permalink
     def get_absolute_url(self):
-        return ('muddle_users.views.user.user_detail', (), {
-            'user_id': self.id})
+        return self.user.get_absolute_url()
 
     def grant(self, perm, obj):
         self.user.grant(perm, obj)
