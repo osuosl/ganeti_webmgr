@@ -1000,6 +1000,7 @@ class VMWizardHVMForm(Form):
 
 class VMWizardKVMForm(Form):
     kernel_path = CharField(label=_("Kernel path"), max_length=255,
+                            required=False,
                             help_text=_(VM_CREATE_HELP['kernel_path']))
     root_path = CharField(label=_("Root path"), max_length=255,
                           help_text=_(VM_CREATE_HELP['root_path']))
