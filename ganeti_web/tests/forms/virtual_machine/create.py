@@ -49,6 +49,12 @@ class MockCluster(object):
                 "memory-size": 128,
             },
         },
+        "nicparams": {
+            "default": {
+                "mode": "bridged",
+                "link": "br0",
+            }
+        }
     }
 
     rapi = MockRapi()
@@ -67,6 +73,8 @@ class TestVMWizardBasicsForm(TestCase):
             "minram": 128,
             "disk_template": "plain",
             "disk_size_0": 2048,
+            'nic_mode_0': 'bridged',
+            'nic_link_0': 'br0',
         }
 
     def test_trivial(self):
@@ -107,10 +115,25 @@ class TestVMWizardBasicsForm(TestCase):
 
     def test_validate_no_nic_input(self):
         data = self.valid_data.copy()
-        data["nics"] = None
+        del data['nic_mode_0']
+        del data['nic_link_0']
         form = VMWizardBasicsForm(data)
         form._configure_for_cluster(self.cluster)
         self.assertTrue(form.is_valid())
+
+    def test_validate_partial_nic_no_mode(self):
+        data = self.valid_data.copy()
+        data['nic_mode_0'] = ''
+        form = VMWizardBasicsForm(data)
+        form._configure_for_cluster(self.cluster)
+        self.assertFalse(form.is_valid())
+
+    def test_validate_partial_nic_no_link(self):
+        data = self.valid_data.copy()
+        data['nic_link_0'] = ''
+        form = VMWizardBasicsForm(data)
+        form._configure_for_cluster(self.cluster)
+        self.assertFalse(form.is_valid())
 
 
 class TestVMWizardAdvancedForm(TestCase):
