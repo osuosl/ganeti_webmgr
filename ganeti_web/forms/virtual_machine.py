@@ -814,20 +814,28 @@ class VMWizardBasicsForm(Form):
         # If there are ipolicy limits in place, add validators for them.
         if "ipolicy" in cluster.info:
             if "max" in cluster.info["ipolicy"]:
+                # disk maximums
                 v = cluster.info["ipolicy"]["max"]["disk-size"]
                 for disk in xrange(settings.MAX_DISKS_ADD):
                     self.fields["disk_size_%s" % disk].validators.append(
                         MaxValueValidator(v))
+                # ram minimums
                 v = cluster.info["ipolicy"]["max"]["memory-size"]
                 self.fields["memory"].validators.append(MaxValueValidator(v))
                 if has_balloonmem(cluster):
                     self.fields["minram"].validators.append(
                         MaxValueValidator(v))
+
             if "min" in cluster.info["ipolicy"]:
+                # disk minimums
                 v = cluster.info["ipolicy"]["min"]["disk-size"]
                 for disk in xrange(settings.MAX_DISKS_ADD):
-                    self.fields["disk_size_%s" % disk].validators.append(
-                        MinValueValidator(v))
+                    disk_field = self.fields["disk_size_%s" % disk]
+                    disk_field.validators.append(MinValueValidator(v))
+                    # if its the first disk, add the min value as a default
+                    if disk == 0:
+                        disk_field.initial = v
+                # memory minimums
                 v = cluster.info["ipolicy"]["min"]["memory-size"]
                 self.fields["memory"].validators.append(MinValueValidator(v))
                 if has_balloonmem(cluster):
