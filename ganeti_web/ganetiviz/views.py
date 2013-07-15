@@ -6,7 +6,6 @@ from django.http import (HttpResponse, HttpResponseRedirect,
 from django.views.generic import DetailView
 
 from ganeti_web.models import Cluster, Node, VirtualMachine
-from ganeti_web.views.generic import LoginRequiredMixin
 
 
 class VMJsonView(DetailView):
