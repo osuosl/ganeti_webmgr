@@ -768,9 +768,10 @@ class VMWizardBasicsForm(Form):
                 required=False, help_text=_(VM_CREATE_HELP['nic_mode']))
 
             nic_link = forms.CharField(
-                label=_('NIC/%s Link' % i), max_length=255, required=False,
-                initial='', help_text=_(VM_HELP['nic_link']))
+                label=_('NIC/%s Link' % i), max_length=255, initial='',
+                required=False, help_text=_(VM_HELP['nic_link']))
 
+            # used for front end
             nic_mode.widget.attrs['class'] = 'multi nic mode'
             nic_mode.widget.attrs['data-group'] = i
             nic_link.widget.attrs['class'] = 'multi nic link'
@@ -833,6 +834,11 @@ class VMWizardBasicsForm(Form):
                 if has_balloonmem(cluster):
                     self.fields["minram"].validators.append(
                         MinValueValidator(v))
+
+        # configure cluster defaults for nics
+        nic_defaults = cluster.info['nicparams']['default']
+        self.fields['nic_mode_0'].initial = nic_defaults['mode']
+        self.fields['nic_link_0'].initial = nic_defaults['link']
 
     def _configure_for_template(self, template):
         if not template:
