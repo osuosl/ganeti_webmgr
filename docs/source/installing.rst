@@ -15,12 +15,7 @@ Installing
 
 #. Download and unpack the `latest
    release <http://code.osuosl.org/projects/ganeti-webmgr/files>`_,
-   currently this is `0.9.2
-   <https://code.osuosl.org/attachments/download/3231/ganeti-webmgr-0.9.2.tar.gz>`_.
-
-   ::
-      # Use wget or curl to download from the command line.
-      wget https://code.osuosl.org/attachements/download/3231/ganeti-webmgr-0.9.2.tar.gz
+   currently this is |release|.
 
 #. Change to the project directory.
 
@@ -90,12 +85,18 @@ fine using SQLite, you can skip this step.
 Initializing
 ------------
 
+#. Activate the Python Virtualenv:
+
+   ::
+
+       source venv/bin/activate
+
 #. Initialize Database:
 
    MySQL/SQLite:
 
    ::
-       
+
        # Create new tables and migrate all apps using southdb
        ./manage.py syncdb --migrate
 

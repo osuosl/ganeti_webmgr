@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-VERSION = '0.10.0'
+VERSION = '0.10.1'
 OWNER_TAG = 'gwm:owner:'
 
 # Form Constants
@@ -111,9 +111,9 @@ HV_DISK_TYPES = [
 ]
 
 HV_NIC_MODES = [
-    (u'', u''),
-    (u'routed', u'Routed'),
-    (u'bridged', u'Bridged')
+    ('', ''),
+    (u'bridged', u'bridged'),
+    (u'routed', u'routed'),
 ]
 
 HV_NIC_TYPES = [
