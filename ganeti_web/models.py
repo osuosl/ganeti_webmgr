@@ -358,8 +358,12 @@ class CachedClusterObject(models.Model):
 
             try:
                 data = self.rapi.GetJobStatus(job.job_id)
+
+                op = data.get('ops', None)
+                if op:
+                    op = op[-1]['OP_ID']
                 status = data['status']
-                op = data['ops'][-1]['OP_ID']
+
             except GanetiApiError:
                 pass
 
