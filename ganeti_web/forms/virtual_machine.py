@@ -125,7 +125,7 @@ class VirtualMachineForm(forms.ModelForm):
 
         # Spaces in hostname will always break things.
         if ' ' in hostname:
-            self.errors["hostname"] = self.error_class(
+            self._errors["hostname"] = self.error_class(
                 ["Hostname contains illegal character"])
         return hostname
 
@@ -708,7 +708,7 @@ class VMWizardOwnerForm(Form):
 
         # Spaces in hostname will always break things.
         if ' ' in hostname:
-            self.errors["hostname"] = self.error_class(
+            self._errors["hostname"] = self.error_class(
                 ["Hostnames cannot contain spaces."])
         return hostname
 
@@ -768,9 +768,10 @@ class VMWizardBasicsForm(Form):
                 required=False, help_text=_(VM_CREATE_HELP['nic_mode']))
 
             nic_link = forms.CharField(
-                label=_('NIC/%s Link' % i), max_length=255, required=False,
-                initial='', help_text=_(VM_HELP['nic_link']))
+                label=_('NIC/%s Link' % i), max_length=255, initial='',
+                required=False, help_text=_(VM_HELP['nic_link']))
 
+            # used for front end
             nic_mode.widget.attrs['class'] = 'multi nic mode'
             nic_mode.widget.attrs['data-group'] = i
             nic_link.widget.attrs['class'] = 'multi nic link'
@@ -814,25 +815,38 @@ class VMWizardBasicsForm(Form):
         # If there are ipolicy limits in place, add validators for them.
         if "ipolicy" in cluster.info:
             if "max" in cluster.info["ipolicy"]:
+                # disk maximums
                 v = cluster.info["ipolicy"]["max"]["disk-size"]
                 for disk in xrange(settings.MAX_DISKS_ADD):
                     self.fields["disk_size_%s" % disk].validators.append(
                         MaxValueValidator(v))
+                # ram minimums
                 v = cluster.info["ipolicy"]["max"]["memory-size"]
                 self.fields["memory"].validators.append(MaxValueValidator(v))
                 if has_balloonmem(cluster):
                     self.fields["minram"].validators.append(
                         MaxValueValidator(v))
+
             if "min" in cluster.info["ipolicy"]:
+                # disk minimums
                 v = cluster.info["ipolicy"]["min"]["disk-size"]
                 for disk in xrange(settings.MAX_DISKS_ADD):
-                    self.fields["disk_size_%s" % disk].validators.append(
-                        MinValueValidator(v))
+                    disk_field = self.fields["disk_size_%s" % disk]
+                    disk_field.validators.append(MinValueValidator(v))
+                    # if its the first disk, add the min value as a default
+                    if disk == 0:
+                        disk_field.initial = v
+                # memory minimums
                 v = cluster.info["ipolicy"]["min"]["memory-size"]
                 self.fields["memory"].validators.append(MinValueValidator(v))
                 if has_balloonmem(cluster):
                     self.fields["minram"].validators.append(
                         MinValueValidator(v))
+
+        # configure cluster defaults for nics
+        nic_defaults = cluster.info['nicparams']['default']
+        self.fields['nic_mode_0'].initial = nic_defaults['mode']
+        self.fields['nic_link_0'].initial = nic_defaults['link']
 
     def _configure_for_template(self, template):
         if not template:
@@ -928,12 +942,16 @@ class VMWizardAdvancedForm(Form):
     def clean(self):
         # Ganeti will error on VM creation if an IP address check is requested
         # but a name check is not.
-        if (self.cleaned_data.get("ip_check") and not
-                self.cleaned_data.get("name_check")):
+        data = self.cleaned_data
+        if (data.get("ip_check") and not data.get("name_check")):
             msg = ["Cannot perform IP check without name check"]
-            self.errors["ip_check"] = self.error_class(msg)
+            self._errors["ip_check"] = self.error_class(msg)
 
-        return self.cleaned_data
+        if data.get('pnode') == data.get('snode'):
+            raise forms.ValidationError("The secondary node cannot be the "
+                                        "primary node.")
+
+        return data
 
 
 class VMWizardPVMForm(Form):
@@ -996,6 +1014,7 @@ class VMWizardHVMForm(Form):
 
 class VMWizardKVMForm(Form):
     kernel_path = CharField(label=_("Kernel path"), max_length=255,
+                            required=False,
                             help_text=_(VM_CREATE_HELP['kernel_path']))
     root_path = CharField(label=_("Root path"), max_length=255,
                           help_text=_(VM_CREATE_HELP['root_path']))

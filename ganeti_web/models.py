@@ -1657,6 +1657,9 @@ class ClusterUser(models.Model):
             self.real_type = self._get_real_type()
         super(ClusterUser, self).save(*args, **kwargs)
 
+    def get_absolute_url(self):
+        return self.cast().get_absolute_url()
+
     @property
     def permissable(self):
         """ returns an object that can be granted permissions """
@@ -1730,9 +1733,8 @@ class Profile(ClusterUser):
     """
     user = models.OneToOneField(User)
 
-    @models.permalink
     def get_absolute_url(self):
-        return ('muddle_users.views.user')
+        return self.user.get_absolute_url()
 
     def grant(self, perm, obj):
         self.user.grant(perm, obj)
@@ -1762,6 +1764,9 @@ class Organization(ClusterUser):
     """
 
     group = models.OneToOneField(Group, related_name='organization')
+
+    def get_absolute_url(self):
+        return self.group.get_absolute_url()
 
     def grant(self, perm, object):
         self.group.grant(perm, object)

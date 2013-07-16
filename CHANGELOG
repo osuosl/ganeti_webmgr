@@ -2,6 +2,16 @@
 Changelog
 =========
 
+v0.10.1
+-------
+Notable Changes:
+  * Cluster defaults are now used for all steps in VM Wizard. Previously NIC settings and Disk size had no defaults.
+  * Pinned Versions of dependencies
+
+* Fixed bug for KVM where kernel path was required, now optional. (KVM only)
+* Fixed exception when owner of a VM was a group
+* During VM Creation the form now properly raises a validation error if primary node is the same as the secondary node
+
 v0.10
 -----
 
@@ -82,13 +92,13 @@ Notable Changes:
 * Unified use of CSRF tokens
 
 v0.7.2
-----
+------
   * Fixed HAYSTACK_SITECONF default setting
   * Updated README to include virtualenv for mod_wsgi script
   
 
 v0.7.1
-----
+------
   * Updated Fabric dependency: Django Object Permissions 1.4.1
   * Overview: Used resources was not displaying clusters when used did not 
     permissions
@@ -122,11 +132,11 @@ Notable Changes:
 
 
 v0.6.2
-----
+------
   * fixing packaging issue with object log
 
 v0.6.1
-----
+------
   * updating object log to 0.5.1
 
 v0.6
@@ -160,15 +170,15 @@ Notable Changes:
 
 v0.4
 ----
- * Initial Release
-   
-   * Caching system
-   * Permissions system: 
-       * user & group management
-       * per cluster/vm permissions
-   * basic VM management: Create, Delete, Start, Stop, Reboot
-   * ssh key feed 
-   * basic quota system
-   * Import tools
+Initial Release
+
+  * Caching system
+  * Permissions system:
+      * user & group management
+      * per cluster/vm permissions
+  * basic VM management: Create, Delete, Start, Stop, Reboot
+  * ssh key feed
+  * basic quota system
+  * Import tools
 
 

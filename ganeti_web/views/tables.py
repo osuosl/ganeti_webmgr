@@ -1,3 +1,5 @@
+from django.utils.safestring import mark_safe
+
 from django_tables2 import (Table, Column, LinkColumn, TemplateColumn,
                             DateTimeColumn)
 from django_tables2.utils import A
@@ -32,10 +34,7 @@ class BaseVMTable(BaseTable):
                 "instance": A("hostname")},
         verbose_name='name',
     )
-    owner = LinkColumn(
-        "user-detail-name",
-        args=[A("owner")],
-    )
+    owner = Column()
     node = Column(verbose_name='node', accessor="primary_node")
     operating_system = Column(verbose_name='OS')
     ram = Column(verbose_name='RAM')
@@ -58,6 +57,11 @@ class BaseVMTable(BaseTable):
 
     def render_node(self, value):
         return abbreviate_fqdn(value)
+
+    def render_owner(self, value):
+        url = value.get_absolute_url()
+        url_str = '<a href="{}">{}</a>'
+        return mark_safe(url_str.format(url, value))
 
 
 class VMTable(BaseVMTable):

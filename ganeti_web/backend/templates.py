@@ -102,6 +102,14 @@ def template_to_instance(template, hostname, owner):
         "beparams": beparams,
     }
 
+    if template.snode:
+        kwargs.update({"snode": template.snode})
+    # secondary node isn't set, check if drdb is set (this shouldn't happen if
+    # form validation is correct)
+    elif template.disk_template == 'drdb':
+        msg = 'Disk template set to drdb, but no secondary node set'
+        raise RuntimeError(msg)
+
     job_id = cluster.rapi.CreateInstance('create', hostname,
                                          template.disk_template,
                                          template.disks, template.nics,
