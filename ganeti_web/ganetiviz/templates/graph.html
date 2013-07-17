@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="description" content="Ganeti Cluster Visualization" />
+<script src="{{ STATIC_URL }}js/cytoscape-lib/jquery.js"></script>
+<meta charset=utf-8 />
+<title>Ganeti Cluster Mapping</title>
+  <script src="{{ STATIC_URL }}js/cytoscape-lib/cytoscape.min.js"></script>
+  <link rel="stylesheet" type="text/css" media="screen" href="css/graph.css" />
+</head>
+<body>
+  <input type="text" id="vertexInput" name="vertex" onkeypress="vertexSearch(event)""></input>
+  <hr/>
+  <div id="cy"></div>
+  <script src="{{ STATIC_URL }}/js/utility-functions.js"></script>
+
+  <script>
+    vms_json = $.getJSON('ganetiviz/vms/{{ cluster_hostname }}')
+    gnodes_json = $.getJSON('ganetiviz/vms/{{ cluster_hostname }}')
+  </script>
+
+  <script src="{{ STATIC_URL }}/js/graph.js"></script>
+</body>
+</html>
