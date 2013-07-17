@@ -3,9 +3,11 @@ from django.core import serializers
 from django.http import (HttpResponse, HttpResponseRedirect,
                          HttpResponseForbidden, HttpResponseBadRequest,
                          Http404)
-from django.views.generic import DetailView
+from django.views.generic import DetailView,TemplateView
 
 from ganeti_web.models import Cluster, Node, VirtualMachine
+from ganeti_web.views.generic import LoginRequiredMixin
+
 
 
 class VMJsonView(DetailView):
@@ -39,3 +41,16 @@ class NodeJsonView(DetailView):
 
         return HttpResponse(node_json_data, content_type='application/json')  
 
+
+class ClusterGraphView(TemplateView):
+    """
+    View that dispatches the appropriate template file responsible for visual
+    mapping of the Cluster Graph.
+    """
+    template_name = 'graph.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(AboutView, self).get_context_data(**kwargs)
+        cluster_hostname=self.kwargs['cluster_hostname']
+        context['cluster_hostname'] = cluster_hostname
+        return context
