@@ -100,6 +100,7 @@ def template_to_instance(template, hostname, owner):
         "name_check": template.name_check,
         "pnode": template.pnode,
         "beparams": beparams,
+        "no_install": template.no_install,
     }
 
     if template.snode:

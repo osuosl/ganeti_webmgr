@@ -724,6 +724,7 @@ class VMWizardBasicsForm(Form):
                      help_text=_(VM_CREATE_HELP['hypervisor']))
     os = ChoiceField(label=_('Operating System'), choices=[],
                      help_text=_(VM_CREATE_HELP['os']))
+    no_install = BooleanField(label=_('Do not install the OS'), required=False)
     vcpus = IntegerField(label=_("Virtual CPU Count"), initial=1, min_value=1,
                          help_text=_(VM_HELP['vcpus']))
     minram = DataVolumeField(label=_('Minimum RAM (MiB)'),
@@ -733,6 +734,7 @@ class VMWizardBasicsForm(Form):
     disk_template = ChoiceField(label=_('Disk Template'),
                                 choices=HV_DISK_TEMPLATES,
                                 help_text=_(VM_CREATE_HELP['disk_template']))
+
 
     def __init__(self, *args, **kwargs):
         super(VMWizardBasicsForm, self).__init__(*args, **kwargs)
@@ -1244,6 +1246,8 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
         template.nics = nics
 
         template.os = forms[2].cleaned_data["os"]
+        template.no_install = forms[2].cleaned_data["no_install"]
+
         template.ip_check = forms[3].cleaned_data["ip_check"]
         template.name_check = forms[3].cleaned_data["name_check"]
         template.pnode = forms[3].cleaned_data["pnode"].hostname
