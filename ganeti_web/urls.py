@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-from django.conf.urls.defaults import patterns, url
+from django.conf.urls.defaults import patterns, url, include
 from haystack.views import SearchView
 from django.contrib.auth.decorators import login_required
 import os
@@ -338,4 +338,11 @@ urlpatterns += patterns(
     (r'^static/(?P<path>.*)',
     'django.views.static.serve',
     {'document_root': root})
+)
+
+
+# Ganetiviz
+urlpatterns += patterns(
+    '',
+  url(r'', include('ganetiviz.urls')),
 )
