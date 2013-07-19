@@ -50,7 +50,7 @@ class ClusterGraphView(TemplateView):
     template_name = 'graph.html'
 
     def get_context_data(self, **kwargs):
-        context = super(AboutView, self).get_context_data(**kwargs)
+        context = super(ClusterGraphView, self).get_context_data(**kwargs)
         cluster_hostname=self.kwargs['cluster_hostname']
         context['cluster_hostname'] = cluster_hostname
         return context
