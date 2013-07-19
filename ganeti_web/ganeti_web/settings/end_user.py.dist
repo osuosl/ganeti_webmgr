@@ -139,7 +139,7 @@ AUTHENTICATION_BACKENDS = (
     'object_permissions.backend.ObjectPermBackend',
 )
 
-ROOT_URLCONF = 'urls'
+ROOT_URLCONF = 'ganeti_web.urls'
 
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates"
