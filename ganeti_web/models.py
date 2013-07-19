@@ -525,15 +525,35 @@ class Job(CachedClusterObject):
 
     def refresh(self):
         self.info = self._refresh()
-        self.save()
+        valid = Job.valid_job(self.info)
+        if valid:
+            self.save()
+        # else:
+        #     Job.objects.get(job_id=self.info['id']).delete()
+
+
+    @classmethod
+    def valid_job(cls, info):
+        status = info.get('status')
+        ops = info.get('ops')
+        return not (ops is None and status is None)
+
+    @classmethod
+    def parse_op(cls, info):
+        ops = info['ops']
+        op = None
+        if ops:
+            # Return the most recent operation
+            op = ops[-1]['OP_ID']
+        return op
 
     @classmethod
     def parse_persistent_info(cls, info):
         """
         Parse status and turn off cache bypass flag if job has finished
         """
-        data = {'status': info['status'],
-                'op': info['ops'][-1]['OP_ID']}
+        op = Job.parse_op(info)
+        data = {'status': info['status'], 'op': op}
         if data['status'] in ('error', 'success'):
             data['ignore_cache'] = False
         if info['end_ts']:
@@ -570,7 +590,7 @@ class Job(CachedClusterObject):
         """
         Returns the last operation, which is generally the primary operation.
         """
-        return self.info['ops'][-1]['OP_ID']
+        return Job.parse_op(self.info)
 
     def __repr__(self):
         return "<Job %d (%d), status %r>" % (self.id, self.job_id,
