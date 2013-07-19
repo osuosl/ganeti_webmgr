@@ -6,7 +6,7 @@
 <meta charset=utf-8 />
 <title>Ganeti Cluster Mapping</title>
   <script src="{{ STATIC_URL }}js/cytoscape-lib/cytoscape.min.js"></script>
-  <link rel="stylesheet" type="text/css" media="screen" href="css/graph.css" />
+  <link rel="stylesheet" type="text/css" media="screen" href="{{ STATIC_URL }}css/graph.css" />
 </head>
 <body>
   <input type="text" id="vertexInput" name="vertex" onkeypress="vertexSearch(event)""></input>
@@ -15,8 +15,25 @@
   <script src="{{ STATIC_URL }}/js/utility-functions.js"></script>
 
   <script>
-    vms_json = $.getJSON('ganetiviz/vms/{{ cluster_hostname }}')
-    gnodes_json = $.getJSON('ganetiviz/vms/{{ cluster_hostname }}')
+    //TODO: Try to swtich to an aysnchronus solution.
+
+    $.ajaxSetup({
+        async: false
+    });
+
+    $.getJSON("/ganetiviz/vms/{{ cluster_hostname }}",function( json ) {
+      vms_json = json
+      console.log( "JSON Data: " + json);
+    });
+
+    $.getJSON("/ganetiviz/nodes/{{ cluster_hostname }}",function( json ) {
+      gnodes_json = json
+      console.log( "JSON Data: " + json);
+    });
+
+    $.ajaxSetup({
+        async: true
+    });
   </script>
 
   <script src="{{ STATIC_URL }}/js/graph.js"></script>
