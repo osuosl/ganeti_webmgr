@@ -359,10 +359,9 @@ class CachedClusterObject(models.Model):
             try:
                 data = self.rapi.GetJobStatus(job.job_id)
 
-                op = data.get('ops', None)
-                if op:
-                    op = op[-1]['OP_ID']
-                status = data['status']
+                if Job.valid_job(data):
+                    op = data['ops'][-1]['OP_ID']
+                    status = data['status']
 
             except GanetiApiError:
                 pass
@@ -525,7 +524,7 @@ class Job(CachedClusterObject):
 
     def refresh(self):
         self.info = self._refresh()
-        valid = Job.valid_job(self.info)
+        valid = self.valid_job(self.info)
         if valid:
             self.save()
         # else:
@@ -551,7 +550,9 @@ class Job(CachedClusterObject):
         """
         Parse status and turn off cache bypass flag if job has finished
         """
-        op = Job.parse_op(info)
+        if not cls.valid_job():
+            return
+        op = cls.parse_op(info)
         data = {'status': info['status'], 'op': op}
         if data['status'] in ('error', 'success'):
             data['ignore_cache'] = False
@@ -589,7 +590,7 @@ class Job(CachedClusterObject):
         """
         Returns the last operation, which is generally the primary operation.
         """
-        return Job.parse_op(self.info)
+        return self.parse_op(self.info)
 
     def __repr__(self):
         return "<Job %d (%d), status %r>" % (self.id, self.job_id,
