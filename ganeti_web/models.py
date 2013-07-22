@@ -353,8 +353,8 @@ class CachedClusterObject(models.Model):
 
         updates = {}
         for job in jobs:
-            status = 'unknown'
             op = None
+            status = 'unknown'
 
             try:
                 data = self.rapi.GetJobStatus(job.job_id)
@@ -394,7 +394,7 @@ class CachedClusterObject(models.Model):
                         updates.update(_updates)
 
         # we only care about the very last job for resetting the cache flags
-        if status in ('success', 'error', 'unknown') or not jobs:
+        if not jobs or status in ('success', 'error', 'unknown'):
             updates['ignore_cache'] = False
             updates['last_job'] = None
 
@@ -530,7 +530,6 @@ class Job(CachedClusterObject):
             self.save()
         # else:
         #     Job.objects.get(job_id=self.info['id']).delete()
-
 
     @classmethod
     def valid_job(cls, info):
