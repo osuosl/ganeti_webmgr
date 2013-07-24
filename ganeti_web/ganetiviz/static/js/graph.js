@@ -100,10 +100,17 @@ vms_json.forEach(function(vm) {
 
     vm_hostname = vm["fields"]["hostname"]
     pnode = vm["fields"]["primary_node"]    // (g)node
+    vm_status = vm["fields"]["status"]
+
+    // Assigning a color to instances as per status. green for "running" instance, red for the rest.
+    vm_color = '#AA0000'
+    if (vm_status == "running"){
+        vm_color = '#00CC00'
+    }
 
     // Adding Cytoscape Graph Vertices representing Instances
     cytoscape_node_obj =  {
-         data: { id: vm_hostname, name: vm_hostname, weight: 0.05,},
+         data: { id: vm_hostname, name: vm_hostname, weight: 0.05,color: vm_color},
 	       position: VMPositions[pnode].pop(),
          classes:'ganeti-instance' }
     CytoNodeList.push(cytoscape_node_obj);
@@ -159,9 +166,11 @@ $('#cy').cytoscape({
         'text-valign': 'center',
         'text-outline-width': 0.5,
         'font-size':3,
-        'text-outline-color': '#FC6FB1',
-        'background-color': '#FC6FB1',
+        'text-outline-color': 'data(color)',
+        'background-color': 'data(color)',
         'color': '#fff',
+        //'text-outline-color': '#FC6FB1',
+        //'background-color': '#FC6FB1',
         'visibility':'hidden',
       })
     .selector('node.ganeti-instance.highlighted')
