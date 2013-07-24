@@ -21,7 +21,8 @@ class VMJsonView(DetailView):
 
         cluster = Cluster.objects.get(hostname=cluster_hostname)
         vm_queryset = VirtualMachine.objects.filter(cluster=cluster)
-        vm_json_data = serializers.serialize('json', vm_queryset, fields=('hostname','primary_node','secondary_node'), use_natural_keys=True)
+        selected_fields = ('hostname','primary_node','secondary_node','status')
+        vm_json_data = serializers.serialize('json', vm_queryset, fields=selected_fields, use_natural_keys=True)
 
         return HttpResponse(vm_json_data, content_type='application/json')  
 
@@ -37,7 +38,8 @@ class NodeJsonView(DetailView):
 
         cluster = Cluster.objects.get(hostname=cluster_hostname)
         node_queryset = Node.objects.filter(cluster=cluster)
-        node_json_data = serializers.serialize('json', node_queryset, fields=('hostname','ram_total','ram_free'))
+        selected_fields = ('hostname','ram_total','ram_free','offline','role')
+        node_json_data = serializers.serialize('json', node_queryset, fields= selected_fields)
 
         return HttpResponse(node_json_data, content_type='application/json')  
 
