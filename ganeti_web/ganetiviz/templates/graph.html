@@ -23,12 +23,10 @@
 
     $.getJSON("/ganetiviz/vms/{{ cluster_hostname }}",function( json ) {
       vms_json = json
-      console.log( "JSON Data: " + json);
     });
 
     $.getJSON("/ganetiviz/nodes/{{ cluster_hostname }}",function( json ) {
       gnodes_json = json
-      console.log( "JSON Data: " + json);
     });
 
     $.ajaxSetup({

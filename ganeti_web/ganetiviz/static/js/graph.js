@@ -9,10 +9,19 @@
 syscenter = {x:500,y:500} // Center of the whole System
 var pp = polypointscircle(syscenter,200,5)
 
-CytoNodeList = []
-CytoEdgeList = []
-CytoNodePositions = {} // Stores the rendering position of the Gnodes for each node.
+CytoNodeList = []            // A list of node objects in a format required by Cytoscape JS will be added to this list.
+CytoEdgeList = []           // A list of edge objects in a format required by Cytoscape JS will be added to this list.
+CytoNodePositions = {}     // Stores the rendering position of the Gnodes for each node.
 
+VMGraph = {}               // A HashMap object that will contain mapping from VM to pnode or snode for fast search, and parent object lookup.
+FailoverLinks = {}        // FailoverLinks will contain number of failover possibilities b/n a PNode & an SNode.
+NodeInstanceLinks = {}   // HashMap from Node to NUMBER of primary Instances.
+
+/*
+[1.1][gnodes_json_1]
+- Adds all GanetiNodes to "CytoNodeList" in format required for rendering with Cytoscape.
+  (The GanetiInstances are not added to the list in a later block)
+*/
 var loop_index = 0;
 gnodes_json.forEach(function(node) {
     gnode = node["fields"]["hostname"]
@@ -29,17 +38,28 @@ gnodes_json.forEach(function(node) {
 });
 
 
-VMGraph = {}
-FailoverLinks = {}
 
-// [vms_json] First Loop
+/*
+[1.2][vms_json_1]: First loop over each Virtual Machine object
+- Adds items to "VMGraph"
+- Adds items to "FailoverLinks"
+- Adds items to "NodeInstanceLinks"
+*/
 vms_json.forEach(function(vm) {
     vm_hostname = vm["fields"]["hostname"]
-    pnode = vm["fields"]["primary_node"]    // A Ganeti Node
-    snode = vm["fields"]["secondary_node"]  // A Ganeti Node
+    pnode = vm["fields"]["primary_node"]    // A Ganeti Node referred ahead as (g)node
+    snode = vm["fields"]["secondary_node"]  // (g)node
 
-    // A HashMap object that will contain mapping from VM to pnode or snode for fast search.
+    // A HashMap object that will contain mapping from VM to pnode or snode for fast search
     VMGraph[vm_hostname] = [pnode,snode]
+
+    // Counting number of instances of each (g)node.
+    if (!NodeInstanceLinks[pnode]){
+        NodeInstanceLinks[pnode] = 1
+    }
+    else{
+        NodeInstanceLinks[pnode] += 1
+    }
 
     // FailoverLinks will contain number of failover possibilities b/n a PNode & an SNode.
     if (snode != null){
@@ -54,20 +74,50 @@ vms_json.forEach(function(vm) {
             FailoverLinks[pnode][snode] += 1
       }
     }
-
-    // Adding Cytoscape Graph Vertices: Instances:
-    cytoscape_node_obj =       
-        {data: { id: vm_hostname, name: vm_hostname, weight: 0.05,},
-	      position: rndisc(CytoNodePositions[pnode],27,31), classes:'ganeti-instance' }
-    CytoNodeList.push(cytoscape_node_obj);
-
-    // Adding Cytoscape Graph Edges: Node-Instance edges.
-    cytoscape_edge_obj = { data: { source: pnode, target: vm_hostname, color: '#6FFCB1', strength:1 }, classes: 'instance-edge'};
-    CytoEdgeList.push(cytoscape_edge_obj);
 });
 
 
-// Adding Cytoscape edges between nodes.
+
+//[1.3] Computing graph rendering positions for VirtualMachine vertices.
+//    VM's should lie on a circle around their respective primary node at regular intervals for clean display.
+VMPositions = {}  // A HashMap object defining VM positions for each (g)node.
+for (nodekey in NodeInstanceLinks){
+    N = NodeInstanceLinks[nodekey] 
+    node_position = CytoNodePositions[nodekey]    // We are going to generate points around this coordinate lying on a circle.
+    R = 30                                       // Setting R constant for now. #TODO Check optimal value.
+    VMPositions[nodekey] = polypointscircle(center=node_position,R,N)
+}
+
+
+/*
+[1.4][vms_json_2]:: Second loop over each VM object makes use of objects built in first loop.
+- This is necessary and contents cannot be shifted to 1st loop.
+- Adds all GanetiInstance objects to "CytoNodeList", making it an exhaustive list of vertice objects.
+- Adds only the GanetiNode-Instance-Edges to "CytoEdgeList", 
+  (Node-Node edges still need to be added)
+*/
+vms_json.forEach(function(vm) {
+
+    vm_hostname = vm["fields"]["hostname"]
+    pnode = vm["fields"]["primary_node"]    // (g)node
+
+    // Adding Cytoscape Graph Vertices representing Instances
+    cytoscape_node_obj =  {
+         data: { id: vm_hostname, name: vm_hostname, weight: 0.05,},
+	       position: VMPositions[pnode].pop(),
+         classes:'ganeti-instance' }
+    CytoNodeList.push(cytoscape_node_obj);
+
+    // Adding Cytoscape Graph Edges: (g)Node-Instance edges.
+    cytoscape_edge_obj = { data: { source: pnode, target: vm_hostname, color: '#6FFCB1', strength:1 }, classes: 'instance-edge'};
+    CytoEdgeList.push(cytoscape_edge_obj);
+
+});
+//Note: Having 2 similar loop introduces a very small (constant factor) performance overhead, but is logically essential here.
+
+
+
+// [1.5] Adding the remaining Cytoscape Graph Edges: (g)Node-(g)Node edges
 for (sourcenodekey in FailoverLinks) {
     for (targetnodekey in FailoverLinks[sourcenodekey]){
         cytoscape_edge_obj = { data: { source: sourcenodekey, target: targetnodekey, 
@@ -195,6 +245,7 @@ function vertexSearch(e) {
 }
 
 // Panning by pressing arrow keys (Work in progress)
+/*
 $("#cy").keypress(function (event) {
   // handle cursor keys
   if (event.keyCode == 37) {
@@ -203,4 +254,4 @@ $("#cy").keypress(function (event) {
     // go right
   }
 });
-
+*/
