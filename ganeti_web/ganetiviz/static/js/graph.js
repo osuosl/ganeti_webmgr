@@ -3,7 +3,7 @@
 */
 
 
-/******* [1] Abstract Graph Manipulation, Creating Appropriate Object Represnetations ***********/
+/******* [1] Abstract Graph Manipulation, Creating Appropriate Object Represnetations **********/
 /**********************************************************************************************/
 
 syscenter = {x:500,y:500} // Center of the whole System
@@ -164,7 +164,7 @@ $('#cy').cytoscape({
         'color': '#fff',
         'visibility':'hidden',
       })
-    .selector('node.ganeti-instance.active')
+    .selector('node.ganeti-instance.highlighted')
       .css({
         'visibility':'visible',
         'text-outline-color': 'brown',
@@ -240,7 +240,14 @@ function vertexSearch(e) {
         text = $('#vertexInput').val() // get the current value of the input field.
         var node_selector = "node[name ^='" + text + "']";
         console.log(node_selector);
-        cy.$(node_selector).toggleClass("active",true)
+        cy_selected_instance = cy.$(node_selector)
+        if (cy_selected_instance){
+            // Un-highlight all the instances first.
+            cy.$(".ganeti-instance").toggleClass("highlighted",false)
+            //cy_selected_instance.toggleClass("active",true)
+            cy_selected_instance.addClass("highlighted")
+            cy_selected_instance.css({'visibility':'visible',})
+        }
     }
 }
 
