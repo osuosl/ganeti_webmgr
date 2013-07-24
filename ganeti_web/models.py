@@ -352,10 +352,10 @@ class CachedClusterObject(models.Model):
         jobs = qs.order_by("job_id")
 
         updates = {}
-        for job in jobs:
-            op = None
-            status = 'unknown'
+        op = None
+        status = 'unknown'
 
+        for job in jobs:
             try:
                 data = self.rapi.GetJobStatus(job.job_id)
 
