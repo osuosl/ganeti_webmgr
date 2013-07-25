@@ -550,7 +550,7 @@ class Job(CachedClusterObject):
         """
         Parse status and turn off cache bypass flag if job has finished
         """
-        if not cls.valid_job():
+        if not cls.valid_job(info):
             return
         op = cls.parse_op(info)
         data = {'status': info['status'], 'op': op}
