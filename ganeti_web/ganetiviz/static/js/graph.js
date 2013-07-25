@@ -25,12 +25,19 @@ NodeInstanceLinks = {}   // HashMap from Node to NUMBER of primary Instances.
 var loop_index = 0;
 gnodes_json.forEach(function(node) {
     gnode = node["fields"]["hostname"]
+    offline = node["fields"]["offline"]
     position = pp[loop_index]
     CytoNodePositions[gnode] = position
 
-    // Adding the ganeti nodes to the Cytoscape NodeList
+    gnode_color = '#6FB1FC'
+    if (offline){
+        console.log("Offline!")
+        gnode_color = '#DD2222'
+    }
+
+    // Adding the (g)nodes ie. Ganeti Nodes to the Cytoscape NodeList
     cytoscape_node_obj =       
-      {data: { id: gnode, name: gnode, weight: 100,},
+      {data: { id: gnode, name: gnode, weight: 100,color:gnode_color},
         position: position, classes:'ganeti-node'};
     CytoNodeList.push(cytoscape_node_obj);
 
@@ -153,8 +160,10 @@ $('#cy').cytoscape({
         'content': 'data(name)',
         'text-valign': 'center',
         'text-outline-width': 1,
-        'text-outline-color': '#6FB1FC',
-        'background-color': '#6FB1FC',
+        'text-outline-color': 'data(color)',
+        'background-color': 'data(color)',
+        //'text-outline-color': '#6FB1FC',
+        //'background-color': '#6FB1FC',
         'color': '#fff'
       })
     .selector('node.ganeti-instance')
