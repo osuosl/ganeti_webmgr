@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+import sys
+import json
+
 from optparse import OptionParser
 from urllib2 import urlopen
-from urlparse import urlparse, urlunparse
-import sys
-
-from django.utils import simplejson as json
+from urlparse import urlparse, urlunparse, urljoin
 
 parser = OptionParser()
 parser.add_option("-c", "--cluster", help="cluster to retrieve keys from")
@@ -49,7 +49,10 @@ class Application(object):
             path = "/keys/%s/" % api_key
 
         split = urlparse(hostname)
-        self.url = urlunparse(split._replace(path=path))
+        if split.path and not split.netloc:
+            self.url = "http://" + split.path + path
+        else:
+            self.url = urlunparse(split._replace(path=path))
 
     def get(self):
         """
@@ -73,8 +76,8 @@ class Application(object):
         Returns string with authorized_keys file syntax and some comments
         """
 
-        s = ["%s added automatically for ganeti web manager user: %s" % i
-             for i in data]
+        s = ["%s added automatically for "
+             "ganeti web manager user: %s" % (i[0], i[1]) for i in data]
         return "\n".join(s)
 
     def run(self):
@@ -82,13 +85,15 @@ class Application(object):
         Combines get, parse and printout methods.
         """
         try:
-            s = self.printout(self.parse(self.get()))
+            keys = self.printout(self.parse(self.get()))
         except Exception, e:
             sys.stderr.write("Errors occured, could not "
                              "retrieve informations.\n")
             sys.stderr.write(str(e)+"\n")
+            sys.exit(1)
         else:
-            sys.stdout.write(s)
+            sys.stdout.write(keys)
+            sys.exit(0)
 
 if __name__ == "__main__":
     main()
