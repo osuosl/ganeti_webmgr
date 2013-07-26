@@ -56,7 +56,7 @@ from object_permissions.registration import register
 from muddle_users import signals as muddle_user_signals
 
 from ganeti_web import constants, management, permissions
-from ganeti_web.fields import (PatchedEncryptedCharField,
+from ganeti_web.fields import (PatchedEncryptedCharField, LowerCaseCharField,
                                PreciseDateTimeField, SumIf)
 from ganeti_web.util import client
 from ganeti_web.util.client import GanetiApiError, REPLACE_DISK_AUTO
@@ -621,7 +621,7 @@ class VirtualMachine(CachedClusterObject):
     """
     cluster = models.ForeignKey('Cluster', related_name='virtual_machines',
                                 editable=False, default=0)
-    hostname = models.CharField(max_length=128, db_index=True)
+    hostname = LowerCaseCharField(max_length=128, db_index=True)
     owner = models.ForeignKey('ClusterUser', related_name='virtual_machines',
                               null=True, blank=True,
                               on_delete=models.SET_NULL)
@@ -925,7 +925,7 @@ class Node(CachedClusterObject):
     ROLE_CHOICES = ((k, v) for k, v in constants.NODE_ROLE_MAP.items())
 
     cluster = models.ForeignKey('Cluster', related_name='nodes')
-    hostname = models.CharField(max_length=128, unique=True)
+    hostname = LowerCaseCharField(max_length=128, unique=True)
     cluster_hash = models.CharField(max_length=40, editable=False)
     offline = models.BooleanField()
     role = models.CharField(max_length=1, choices=ROLE_CHOICES)
@@ -1087,7 +1087,7 @@ class Cluster(CachedClusterObject):
     """
     A Ganeti cluster that is being tracked by this manager tool
     """
-    hostname = models.CharField(_('hostname'), max_length=128, unique=True)
+    hostname = LowerCaseCharField(_('hostname'), max_length=128, unique=True)
     slug = models.SlugField(_('slug'), max_length=50, unique=True,
                             db_index=True)
     port = models.PositiveIntegerField(_('port'), default=5080)
@@ -1453,7 +1453,7 @@ class VirtualMachineTemplate(models.Model):
                                      default=True)
     iallocator = models.BooleanField(verbose_name=_('Automatic Allocation'),
                                      default=False)
-    iallocator_hostname = models.CharField(max_length=255, blank=True)
+    iallocator_hostname = LowerCaseCharField(max_length=255, blank=True)
     disk_template = models.CharField(verbose_name=_('Disk Template'),
                                      max_length=16)
     # XXX why aren't these FKs?
