@@ -3,7 +3,7 @@
 
 set -e
 
-if [ -z "${AUTHORIZED_KEYS}" -o ] ; then
+if [ -z "${AUTHORIZED_KEYS}" ] ; then
     echo "Missing authorized keys location"
     exit 1
 fi
