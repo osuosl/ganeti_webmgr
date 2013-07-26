@@ -68,6 +68,9 @@ class LowerCaseCharField(models.CharField):
         setattr(cls, self.name, ModifyingFieldDescriptor(self))
 
 
+add_introspection_rules([], ["^ganeti_web\.fields\.LowerCaseCharField"])
+
+
 class PatchedEncryptedCharField(EncryptedCharField):
     """
     django_fields upstream refuses to fix a bug, so we get to do it ourselves.
