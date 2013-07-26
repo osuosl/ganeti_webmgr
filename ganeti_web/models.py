@@ -523,9 +523,10 @@ class Job(CachedClusterObject):
                     pass
 
     def refresh(self):
-        self.info = self._refresh()
-        valid = self.valid_job(self.info)
+        info = self._refresh()
+        valid = self.valid_job(info)
         if valid:
+            self.info = info
             self.save()
         # else:
         #     Job.objects.get(job_id=self.info['id']).delete()
