@@ -52,7 +52,11 @@ class ModifyingFieldDescriptor(object):
         instance.__dict__[self.field.name] = self.field.to_python(value)
 
 
-class LowerCaseCharField(CharField):
+class LowerCaseCharField(models.CharField):
+    """
+    This is a wrapper around the charfield which forces values to lowercase
+    when assigned and prior to saving to the DB
+    """
     def to_python(self, value):
         value = super(LowerCaseCharField, self).to_python(value)
         if isinstance(value, basestring):
