@@ -10,6 +10,7 @@
 </head>
 <body>
   <input type="text" id="vertexInput" name="vertex" onkeypress="vertexSearch(event)""></input>
+  <input type="button" value="Refresh Cluster" style="float:right" onClick="window.location.href='/ganetiviz/refresh/{{ cluster_hostname }}'">
   <hr/>
   <div id="cy"></div>
   <script src="{{ STATIC_URL }}/js/utility-functions.js"></script>
