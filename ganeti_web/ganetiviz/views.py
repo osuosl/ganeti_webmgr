@@ -3,7 +3,8 @@ from django.core import serializers
 from django.http import (HttpResponse, HttpResponseRedirect,
                          HttpResponseForbidden, HttpResponseBadRequest,
                          Http404)
-from django.views.generic import DetailView,TemplateView
+from django.shortcuts import get_object_or_404, render_to_response, redirect
+from django.views.generic import DetailView,TemplateView,View
 
 from ganeti_web.models import Cluster, Node, VirtualMachine
 from ganeti_web.views.generic import LoginRequiredMixin
@@ -56,3 +57,18 @@ class ClusterGraphView(TemplateView):
         cluster_hostname=self.kwargs['cluster_hostname']
         context['cluster_hostname'] = cluster_hostname
         return context
+
+
+class ClusterRefreshView(View,LoginRequiredMixin):
+    """
+    Refresh the cluster information, and redirect the user back to the ganetiviz cluster map.
+    """
+    def get(self, request, *args, **kwargs):
+        cluster_hostname=self.kwargs['cluster_hostname']
+
+        cluster = get_object_or_404(Cluster, hostname=cluster_hostname)
+        cluster.sync_nodes(remove=True)
+        cluster.sync_virtual_machines(remove=True)
+
+        url = 'map/%s'%(cluster_hostname,)
+        return redirect(url)
