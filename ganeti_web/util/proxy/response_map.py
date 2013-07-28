@@ -20,15 +20,14 @@ class ResponseMap(object):
     """
     An object that encapsulates return values based on parameters given to the
     called method.
-    
+
     Return Map should be initialized with a list containing tuples all possible
     arg/kwarg combinations plus the result that should be sent for those args
     """
     def __init__(self, map):
         self.map = map
-    
+
     def __getitem__(self, key):
         for k, response in self.map:
             if key == k:
                 return response
-

@@ -21,7 +21,6 @@ from django.utils.translation import ugettext_lazy as _
 from ganeti_web.models import ClusterUser
 
 
-
 class VirtualMachineTemplateCopyForm(Form):
     """
     Form used to when copying a VirtualMachineTemplate
@@ -31,13 +30,11 @@ class VirtualMachineTemplateCopyForm(Form):
                             required=False)
 
 
-
 class VMInstanceFromTemplate(Form):
     owner = ModelChoiceField(label=_('Owner'),
                              queryset=ClusterUser.objects.all(),
                              empty_label=None)
     hostname = CharField(label=_('Instance Name'), max_length=255)
-
 
     def clean_hostname(self):
         hostname = self.cleaned_data.get('hostname')
@@ -47,7 +44,6 @@ class VMInstanceFromTemplate(Form):
             self.errors["hostname"] = self.error_class(
                 ["Hostnames cannot contain spaces."])
         return hostname
-
 
 
 class TemplateFromVMInstance(Form):

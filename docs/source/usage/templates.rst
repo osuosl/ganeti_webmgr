@@ -1,5 +1,9 @@
-Virtual Machine Templates
-=========================
+.. _templates:
 
-A new feature of Ganeti Web Manager 0.8 is the ability to create
-Templates.
+Templates
+=========
+
+.. todo::
+   Templates kinda suck. Add documentation on how the work, why they are
+   useful, and give a side note, or reference dev docs on their use in
+   the backend (temporary templates).

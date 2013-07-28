@@ -4,7 +4,8 @@ from django.utils import simplejson as json
 
 from ganeti_web import models
 from ganeti_web.util.proxy.constants import JOB_RUNNING
-from ganeti_web.tests.views.virtual_machine.base import TestVirtualMachineViewsBase
+from ganeti_web.tests.views.virtual_machine.base \
+    import TestVirtualMachineViewsBase
 from ganeti_web.utilities import cluster_os_list
 
 __all__ = ['TestVirtualMachineEditViews',
@@ -45,7 +46,8 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         response = self.c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'ganeti/virtual_machine/edit_kvm.html')
+        self.assertTemplateUsed(response,
+                                'ganeti/virtual_machine/edit_kvm.html')
         user.revoke_all(self.vm)
         self.c.logout()
 
@@ -57,7 +59,8 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         response = self.c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'ganeti/virtual_machine/edit_kvm.html')
+        self.assertTemplateUsed(response,
+                                'ganeti/virtual_machine/edit_kvm.html')
         user.revoke_all(self.vm)
         self.c.logout()
 
@@ -69,7 +72,8 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         response = self.c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'ganeti/virtual_machine/edit_kvm.html')
+        self.assertTemplateUsed(response,
+                                'ganeti/virtual_machine/edit_kvm.html')
         self.c.logout()
         user.is_superuser = False
         user.save()
@@ -77,36 +81,36 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         ## POST
         os_list = cluster_os_list(self.cluster)
         data = dict(vcpus=2,
-            acpi=True,
-            disk_cache='default',
-            initrd_path='',
-            kernel_args='ro',
-            kvm_flag='',
-            mem_path='',
-            migration_downtime=30,
-            security_domain='',
-            security_model='none',
-            usb_mouse='',
-            use_chroot=False,
-            use_localtime=False,
-            vnc_bind_address='0.0.0.0',
-            vnc_tls=False,
-            vnc_x509_path='',
-            vnc_x509_verify=False,
-            memory=512,
-            os='image+debian-osgeo',
-            disk_type='paravirtual',
-            boot_order='disk',
-            nic_type='paravirtual',
-            nic_count=1,
-            nic_count_original=1,
-            nic_link_0='br0',
-            nic_mac_0='aa:bb:00:00:33:d2',
-            root_path='/dev/vda1',
-            kernel_path='/boot/vmlinuz-2.32.6-27-generic',
-            serial_console=True,
-            cdrom_image_path='',
-            cdrom2_image_path='')
+                    acpi=True,
+                    disk_cache='default',
+                    initrd_path='',
+                    kernel_args='ro',
+                    kvm_flag='',
+                    mem_path='',
+                    migration_downtime=30,
+                    security_domain='',
+                    security_model='none',
+                    usb_mouse='',
+                    use_chroot=False,
+                    use_localtime=False,
+                    vnc_bind_address='0.0.0.0',
+                    vnc_tls=False,
+                    vnc_x509_path='',
+                    vnc_x509_verify=False,
+                    memory=512,
+                    os='image+debian-osgeo',
+                    disk_type='paravirtual',
+                    boot_order='disk',
+                    nic_type='paravirtual',
+                    nic_count=1,
+                    nic_count_original=1,
+                    nic_link_0='br0',
+                    nic_mac_0='aa:bb:00:00:33:d2',
+                    root_path='/dev/vda1',
+                    kernel_path='/boot/vmlinuz-2.32.6-27-generic',
+                    serial_console=True,
+                    cdrom_image_path='',
+                    cdrom2_image_path='')
 
         # Required Values
         user.grant('modify', self.vm)
@@ -124,13 +128,15 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
             # If failure then a field that is not required by the model, but
             #  should be required by the form, is not being required by
             #  the form. See the ModifyVirtualMachineForm.required field.
-            self.assertNotEqual(response.context['form'][property].errors, [], msg=property)
-            self.assertEqual(200, response.status_code) # 302 if success (BAD)
-            self.assertEqual('text/html; charset=utf-8', response['content-type'])
-            self.assertTemplateUsed(response, 'ganeti/virtual_machine/edit_kvm.html')
+            self.assertNotEqual(response.context['form'][property].errors,
+                                [], msg=property)
+            self.assertEqual(200, response.status_code)  # 302 if success (BAD)
+            self.assertEqual('text/html; charset=utf-8',
+                             response['content-type'])
+            self.assertTemplateUsed(response,
+                                    'ganeti/virtual_machine/edit_kvm.html')
         self.c.logout()
         user.revoke_all(self.vm)
-
 
         # Anonymous User
         response = self.c.post(url, data)
@@ -211,35 +217,35 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
 
         os_list = cluster_os_list(self.cluster)
         edit_form = dict(vcpus=2,
-            acpi=True,
-            disk_cache='default',
-            initrd_path='',
-            kernel_args='ro',
-            kvm_flag='',
-            mem_path='',
-            migration_downtime=30,
-            security_domain='',
-            security_model='none',
-            usb_mouse='',
-            use_chroot=False,
-            use_localtime=False,
-            vnc_bind_address='0.0.0.0',
-            vnc_tls=False,
-            vnc_x509_path='',
-            vnc_x509_verify=False,
-            memory=512,
-            os='image+debian-osgeo',
-            disk_type='paravirtual',
-            boot_order='disk',
-            nic_type='paravirtual',
-            nic_count=1,
-            nic_count_original=1,
-            nic_link_0='br0',
-            nic_mac_0='aa:bb:00:00:33:d2',
-            root_path='/dev/vda1',
-            kernel_path='/boot/vmlinuz-2.32.6-27-generic',
-            serial_console=True,
-            cdrom_image_path='')
+                         acpi=True,
+                         disk_cache='default',
+                         initrd_path='',
+                         kernel_args='ro',
+                         kvm_flag='',
+                         mem_path='',
+                         migration_downtime=30,
+                         security_domain='',
+                         security_model='none',
+                         usb_mouse='',
+                         use_chroot=False,
+                         use_localtime=False,
+                         vnc_bind_address='0.0.0.0',
+                         vnc_tls=False,
+                         vnc_x509_path='',
+                         vnc_x509_verify=False,
+                         memory=512,
+                         os='image+debian-osgeo',
+                         disk_type='paravirtual',
+                         boot_order='disk',
+                         nic_type='paravirtual',
+                         nic_count=1,
+                         nic_count_original=1,
+                         nic_link_0='br0',
+                         nic_mac_0='aa:bb:00:00:33:d2',
+                         root_path='/dev/vda1',
+                         kernel_path='/boot/vmlinuz-2.32.6-27-generic',
+                         serial_console=True,
+                         cdrom_image_path='')
 
         ## SESSION VARIABLES
         # Make sure session variables are set
@@ -256,7 +262,8 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         response = self.c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'ganeti/virtual_machine/edit_confirm.html')
+        self.assertTemplateUsed(response,
+                                'ganeti/virtual_machine/edit_confirm.html')
 
         #session['os_list'] = os_list
         #session.save()
@@ -281,8 +288,10 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         session.save()
         response = self.c.get(url)
         self.assertEqual(200, response.status_code)
-        self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'ganeti/virtual_machine/edit_confirm.html')
+        self.assertEqual('text/html; charset=utf-8',
+                         response['content-type'])
+        self.assertTemplateUsed(response,
+                                'ganeti/virtual_machine/edit_confirm.html')
         user.revoke_all(self.vm)
         self.c.logout()
 
@@ -298,7 +307,8 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         response = self.c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'ganeti/virtual_machine/edit_confirm.html')
+        self.assertTemplateUsed(response,
+                                'ganeti/virtual_machine/edit_confirm.html')
         user.revoke_all(self.vm)
         self.c.logout()
 
@@ -314,13 +324,14 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         response = self.c.get(url)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'ganeti/virtual_machine/edit_confirm.html')
+        self.assertTemplateUsed(response,
+                                'ganeti/virtual_machine/edit_confirm.html')
         self.c.logout()
         user.is_superuser = False
         user.save()
 
         ## POST
-        data = {'rapi_dict':json.dumps(edit_form)}
+        data = {'rapi_dict': json.dumps(edit_form)}
         # Anonymous User
         response = self.c.post(url, data)
         self.assertEqual(302, response.status_code)
@@ -340,7 +351,8 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
             self.assertTrue(user.is_superuser)
             response = self.c.post(url, data)
             self.assertEqual(302, response.status_code)
-            self.assertEqual('text/html; charset=utf-8', response['content-type'])
+            self.assertEqual('text/html; charset=utf-8',
+                             response['content-type'])
             self.c.logout()
             user.is_superuser = False
             user.save()
@@ -352,7 +364,8 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
             response = self.c.post(url, data)
             self.assertEqual(403, response.status_code)
             self.assertTrue(response.context['message'])
-            self.assertEqual('text/html; charset=utf-8', response['content-type'])
+            self.assertEqual('text/html; charset=utf-8',
+                             response['content-type'])
             self.assertTemplateUsed(response, '403.html')
             self.c.logout()
 
@@ -368,7 +381,8 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
             self.assertFalse(user.is_superuser)
             response = self.c.post(url, data)
             self.assertEqual(302, response.status_code)
-            self.assertEqual('text/html; charset=utf-8', response['content-type'])
+            self.assertEqual('text/html; charset=utf-8',
+                             response['content-type'])
             user.revoke_all(self.vm)
             self.c.logout()
 
@@ -383,7 +397,8 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
             self.assertFalse(user.is_superuser)
             response = self.c.post(url, data)
             self.assertEqual(302, response.status_code)
-            self.assertEqual('text/html; charset=utf-8', response['content-type'])
+            self.assertEqual('text/html; charset=utf-8',
+                             response['content-type'])
             user.revoke_all(self.vm)
             self.c.logout()
 
@@ -407,35 +422,35 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         ## POST
         os_list = cluster_os_list(self.cluster)
         data = dict(vcpus=2000,
-            acpi=True,
-            disk_cache='default',
-            initrd_path='',
-            kernel_args='ro',
-            kvm_flag='',
-            mem_path='',
-            migration_downtime=30,
-            security_domain='',
-            security_model='none',
-            usb_mouse='',
-            use_chroot=False,
-            use_localtime=False,
-            vnc_bind_address='0.0.0.0',
-            vnc_tls=False,
-            vnc_x509_path='',
-            vnc_x509_verify=False,
-            memory=512,
-            os='image+debian-osgeo',
-            disk_type='paravirtual',
-            boot_order='disk',
-            nic_type='paravirtual',
-            nic_count=1,
-            nic_count_original=1,
-            nic_link_0='br0',
-            nic_mac_0='aa:bb:00:00:33:d2',
-            root_path='/dev/vda1',
-            kernel_path='/boot/vmlinuz-2.32.6-27-generic',
-            serial_console=True,
-            cdrom_image_path='')
+                    acpi=True,
+                    disk_cache='default',
+                    initrd_path='',
+                    kernel_args='ro',
+                    kvm_flag='',
+                    mem_path='',
+                    migration_downtime=30,
+                    security_domain='',
+                    security_model='none',
+                    usb_mouse='',
+                    use_chroot=False,
+                    use_localtime=False,
+                    vnc_bind_address='0.0.0.0',
+                    vnc_tls=False,
+                    vnc_x509_path='',
+                    vnc_x509_verify=False,
+                    memory=512,
+                    os='image+debian-osgeo',
+                    disk_type='paravirtual',
+                    boot_order='disk',
+                    nic_type='paravirtual',
+                    nic_count=1,
+                    nic_count_original=1,
+                    nic_link_0='br0',
+                    nic_mac_0='aa:bb:00:00:33:d2',
+                    root_path='/dev/vda1',
+                    kernel_path='/boot/vmlinuz-2.32.6-27-generic',
+                    serial_console=True,
+                    cdrom_image_path='')
 
         user.grant('modify', self.vm)
         self.assertTrue(self.c.login(username=user.username,
@@ -445,8 +460,9 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         session['os_list'] = os_list
         session.save()
         response = self.c.post(url, data)
-        self.assertEqual(200, response.status_code) # 302 if success (BAD)
-        self.assertTemplateUsed(response, 'ganeti/virtual_machine/edit_kvm.html')
+        self.assertEqual(200, response.status_code)  # 302 if success (BAD)
+        self.assertTemplateUsed(response,
+                                'ganeti/virtual_machine/edit_kvm.html')
         user.revoke_all(self.vm)
         self.c.logout()
 
@@ -467,36 +483,36 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
 
         os_list = cluster_os_list(self.cluster)
         edit_form = dict(vcpus=2000,
-            acpi=True,
-            disk_cache='default',
-            initrd_path='',
-            kernel_args='ro',
-            kvm_flag='',
-            mem_path='',
-            migration_downtime=30,
-            security_domain='',
-            security_model='none',
-            usb_mouse='',
-            use_chroot=False,
-            use_localtime=False,
-            vnc_bind_address='0.0.0.0',
-            vnc_tls=False,
-            vnc_x509_path='',
-            vnc_x509_verify=False,
-            memory=512,
-            os='image+debian-osgeo',
-            disk_type='paravirtual',
-            boot_order='disk',
-            nic_type='paravirtual',
-            nic_count=1,
-            nic_count_original=1,
-            nic_link_0='br0',
-            nic_mac_0='aa:bb:00:00:33:d2',
-            root_path='/dev/vda1',
-            kernel_path='/boot/vmlinuz-2.32.6-27-generic',
-            serial_console=True,
-            cdrom_image_path='')
-        data = {'rapi_dict':json.dumps(edit_form), 'save':True}
+                         acpi=True,
+                         disk_cache='default',
+                         initrd_path='',
+                         kernel_args='ro',
+                         kvm_flag='',
+                         mem_path='',
+                         migration_downtime=30,
+                         security_domain='',
+                         security_model='none',
+                         usb_mouse='',
+                         use_chroot=False,
+                         use_localtime=False,
+                         vnc_bind_address='0.0.0.0',
+                         vnc_tls=False,
+                         vnc_x509_path='',
+                         vnc_x509_verify=False,
+                         memory=512,
+                         os='image+debian-osgeo',
+                         disk_type='paravirtual',
+                         boot_order='disk',
+                         nic_type='paravirtual',
+                         nic_count=1,
+                         nic_count_original=1,
+                         nic_link_0='br0',
+                         nic_mac_0='aa:bb:00:00:33:d2',
+                         root_path='/dev/vda1',
+                         kernel_path='/boot/vmlinuz-2.32.6-27-generic',
+                         serial_console=True,
+                         cdrom_image_path='')
+        data = {'rapi_dict': json.dumps(edit_form), 'save': True}
 
         # regular user
         self.assertTrue(self.c.login(username=user.username,
@@ -508,7 +524,8 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         response = self.c.post(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'ganeti/virtual_machine/edit_confirm.html')
+        self.assertTemplateUsed(response,
+                                'ganeti/virtual_machine/edit_confirm.html')
         self.c.logout()
 
 
@@ -646,8 +663,10 @@ class TestVirtualMachineDeleteViews(TestVirtualMachineViewsBase):
                                      password='secret'))
         response = self.c.post(self.url % self.args, follow=True)
         self.assertEqual(200, response.status_code)
-        self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'ganeti/virtual_machine/delete_status.html')
+        self.assertEqual('text/html; charset=utf-8',
+                         response['content-type'])
+        self.assertTemplateUsed(response,
+                                'ganeti/virtual_machine/delete_status.html')
         self.assertTrue(VirtualMachine.objects.filter(id=self.vm.id).exists())
         qs = VirtualMachine.objects.filter(id=self.vm.id)
         pending_delete, job_id = qs.values('pending_delete', 'last_job_id')[0]
@@ -661,7 +680,8 @@ class TestVirtualMachineDeleteViews(TestVirtualMachineViewsBase):
         response = self.c.post(self.url % self.args, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'ganeti/virtual_machine/delete_status.html')
+        self.assertTemplateUsed(response,
+                                'ganeti/virtual_machine/delete_status.html')
         self.assertTrue(VirtualMachine.objects.filter(id=self.vm.id).exists())
         qs = VirtualMachine.objects.filter(id=self.vm.id)
         pending_delete, job_id = qs.values('pending_delete', 'last_job_id')[0]
@@ -732,7 +752,8 @@ class TestVirtualMachineReinstallViews(TestVirtualMachineViewsBase):
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'ganeti/virtual_machine/reinstall.html')
+        self.assertTemplateUsed(response,
+                                'ganeti/virtual_machine/reinstall.html')
         self.assertTrue(VirtualMachine.objects.filter(id=self.vm.id).exists())
         self.user.revoke_all(self.vm)
 
@@ -741,7 +762,8 @@ class TestVirtualMachineReinstallViews(TestVirtualMachineViewsBase):
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'ganeti/virtual_machine/reinstall.html')
+        self.assertTemplateUsed(response,
+                                'ganeti/virtual_machine/reinstall.html')
         self.assertTrue(VirtualMachine.objects.filter(id=self.vm.id).exists())
         self.user.revoke_all(self.cluster)
 
@@ -750,7 +772,8 @@ class TestVirtualMachineReinstallViews(TestVirtualMachineViewsBase):
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'ganeti/virtual_machine/reinstall.html')
+        self.assertTemplateUsed(response,
+                                'ganeti/virtual_machine/reinstall.html')
         self.assertTrue(VirtualMachine.objects.filter(id=self.vm.id).exists())
         self.user.revoke_all(self.cluster)
 
@@ -760,7 +783,8 @@ class TestVirtualMachineReinstallViews(TestVirtualMachineViewsBase):
         response = self.c.get(url % args)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'ganeti/virtual_machine/reinstall.html')
+        self.assertTemplateUsed(response,
+                                'ganeti/virtual_machine/reinstall.html')
         self.assertTrue(VirtualMachine.objects.filter(id=self.vm.id).exists())
 
         #authorized POST (superuser)
@@ -803,8 +827,8 @@ class TestVirtualMachineRenameViews(TestVirtualMachineViewsBase):
         url = "/cluster/%s/%s/rename/"
         args = (self.cluster.slug, self.vm.hostname)
         template = 'ganeti/virtual_machine/rename.html'
-        users =[self.superuser, self.cluster_admin, self.vm_admin,
-                self.vm_modify]
+        users = [self.superuser, self.cluster_admin,
+                 self.vm_admin, self.vm_modify]
         denied = [self.cluster_migrate]
 
         # test GET requests
@@ -823,7 +847,8 @@ class TestVirtualMachineRenameViews(TestVirtualMachineViewsBase):
         users = [self.superuser, self.cluster_admin, self.vm_admin,
                  self.vm_modify]
         denied = [self.cluster_migrate]
-        data = {'hostname':'foo.arg.different', 'ip_check':False, 'name_check':False}
+        data = {'hostname': 'foo.arg.different',
+                'ip_check': False, 'name_check': False}
 
         def tests(user, response):
             updated_vm = VirtualMachine.objects.get(pk=self.vm.pk)
@@ -843,7 +868,8 @@ class TestVirtualMachineRenameViews(TestVirtualMachineViewsBase):
         url = "/cluster/%s/%s/rename/"
         args = (self.cluster.slug, self.vm.hostname)
         template = 'ganeti/virtual_machine/rename.html'
-        data = {'hostname':'foo.arg.different', 'ip_check':False, 'name_check':False}
+        data = {'hostname': 'foo.arg.different',
+                'ip_check': False, 'name_check': False}
         errors = ({'hostname': self.vm.hostname},)
 
         #noinspection PyUnusedLocal
@@ -867,7 +893,7 @@ class TestVirtualMachineReparentViews(TestVirtualMachineViewsBase):
         url = "/cluster/%s/%s/reparent/"
         args = (self.cluster.slug, self.vm.hostname)
         template = 'ganeti/virtual_machine/reparent.html'
-        users =[self.superuser, self.cluster_admin]
+        users = [self.superuser, self.cluster_admin]
         denied = [self.vm_admin, self.vm_modify, self.cluster_migrate]
 
         # test GET requests

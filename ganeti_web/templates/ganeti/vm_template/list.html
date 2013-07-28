@@ -1,43 +1,12 @@
-{% extends "menu_base.html" %}
+{% extends "list_base.html" %}
 {% load i18n %}
-{% load webmgr_tags %}
 
 {% block title %}{% trans "Templates" %}{% endblock title %}
+{% block breadcrumb %}{% trans "Templates" %}{% endblock %}
 
-{% block content %}
-<div class="header">
-  <h1>{% trans "Templates" %}</h1>
-  <a class="button add" href="{% url template-create %}">Create Template</a>
-</div>
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Cluster</th>
-            <th>OS</th>
-            <th>RAM</th>
-            <th>Disk Space</th>
-            <th>VCPUs</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for template in templates %}
-        <tr>
-            <td><a href="{% url template-detail template.cluster.slug template %}">{{ template.template_name }}</a></td>
-            {# TODO Change to truncatechars in next Django version #}
-            <td>{{template.description|truncatewords:1}}</td>
-            <td><a href="{% url cluster-detail template.cluster.slug %}">{{ template.cluster.slug}}</a></td>
-            <td>{{template.os|render_os}}</td>
-            <td>{{template.memory|render_storage}}</td>
-            <td>{{template.disk_size|render_storage}}</td>
-            <td>{{template.vcpus}}</td>
-        </tr>
-        {% empty %}
-        <tr class="none"><td colspan="100%">{% trans "No Templates" %}</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% endblock content %}
+{% block action_button %}
+    <a class="button add" href="{% url template-create %}">
+        {% trans "Create Template" %}
+    </a>
+{% endblock %}
 

@@ -15,38 +15,38 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-VERSION = '0.9.2'
+VERSION = '0.10.1'
 OWNER_TAG = 'gwm:owner:'
 
 # Form Constants
 EMPTY_CHOICE_FIELD = (u'', u'---------')
 
 MODE_CHOICES = (
-    ('live','Live'),
-    ('non-live','Non-Live'),
+    ('live', 'Live'),
+    ('non-live', 'Non-Live'),
 )
 
 NODE_ROLE_MAP = {
-    'M':'Master',
-    'C':'Master Candidate',
-    'R':'Regular',
-    'D':'Drained',
-    'O':'Offline',
+    'M': 'Master',
+    'C': 'Master Candidate',
+    'R': 'Regular',
+    'D': 'Drained',
+    'O': 'Offline',
 }
 
 ROLE_CHOICES = (
     EMPTY_CHOICE_FIELD,
-    (u'master-candidate',u'Master Candidate'),
-    (u'regular',u'Regular'),
-    (u'drained',u'Drained'),
-    (u'offline',u'Offline'),
+    (u'master-candidate', u'Master Candidate'),
+    (u'regular', u'Regular'),
+    (u'drained', u'Drained'),
+    (u'offline', u'Offline'),
 )
 
 ROLE_MAP = {
-    'C':u'master-candidate',
-    'R':u'regular',
-    'D':u'drained',
-    'O':u'offline',
+    'C': u'master-candidate',
+    'R': u'regular',
+    'D': u'drained',
+    'O': u'offline',
 }
 
 # KVM Choices
@@ -70,10 +70,10 @@ KVM_DISK_TYPES = [
 ]
 
 KVM_NIC_TYPES = [
-    (u'i82551',u'i82551'),
-    (u'i82557b',u'i82557B'),
-    (u'i82559er',u'i82559ER'),
-    (u'pcnet',u'PCnet'),
+    (u'i82551', u'i82551'),
+    (u'i82557b', u'i82557B'),
+    (u'i82559er', u'i82559ER'),
+    (u'pcnet', u'PCnet'),
 ]
 
 # Xen HVM Choices
@@ -106,42 +106,42 @@ HV_DISK_TEMPLATES_SINGLE_NODE = [
 ]
 
 HV_DISK_TYPES = [
-    (u'paravirtual',u'Paravirtual'),
-    (u'ide',u'IDE'),
+    (u'paravirtual', u'Paravirtual'),
+    (u'ide', u'IDE'),
 ]
 
 HV_NIC_MODES = [
-    (u'', u''),
-    (u'routed', u'Routed'),
-    (u'bridged', u'Bridged')
+    ('', ''),
+    (u'bridged', u'bridged'),
+    (u'routed', u'routed'),
 ]
 
 HV_NIC_TYPES = [
-    (u'e1000',u'e1000'),
-    (u'rtl8139',u'RTL8139'),
-    (u'ne2k_isa',u'NE2000 (ISA)'),
-    (u'ne2k_pci',u'NE2000 (PCI)'),
-    (u'paravirtual',u'Paravirtual'),
+    (u'e1000', u'e1000'),
+    (u'rtl8139', u'RTL8139'),
+    (u'ne2k_isa', u'NE2000 (ISA)'),
+    (u'ne2k_pci', u'NE2000 (PCI)'),
+    (u'paravirtual', u'Paravirtual'),
 ]
 
 HV_BOOT_ORDER = KVM_BOOT_ORDER
 
 HV_DISK_CACHES = [
-    (u'none',u'None'),
-    (u'default',u'Default'),
-    (u'writethrough',u'Writethrough'),
-    (u'writeback',u'Writeback'),
+    (u'none', u'None'),
+    (u'default', u'Default'),
+    (u'writethrough', u'Writethrough'),
+    (u'writeback', u'Writeback'),
 ]
 
 HV_SECURITY_MODELS = [
-    (u'none',u'None'),
-    (u'user',u'User'),
-    (u'pool',u'Pool'),
+    (u'none', u'None'),
+    (u'user', u'User'),
+    (u'pool', u'Pool'),
 ]
 
 HV_USB_MICE = [
-    (u'mouse',u'Mouse'),
-    (u'tablet',u'Tablet'),
+    (u'mouse', u'Mouse'),
+    (u'tablet', u'Tablet'),
 ]
 
 ALL_DISK_TYPES = HV_DISK_TYPES + KVM_DISK_TYPES + HVM_DISK_TYPES
@@ -173,19 +173,19 @@ NO_CHOICES = {
 }
 
 VM_CREATE_HELP = {
-    'owner': """<p>The owner indicates who this virtual machine belongs to. Resources
-                used by the virtual machine will be deducted from the owner's
-                quota.</p>""",
-    'cluster': "<p>Which ganeti cluster to deploy the new virtual machine on.</p>",
+    'owner': """<p>The owner indicates who this virtual machine belongs to.
+                Resources used by the virtual machine will be deducted from the
+                owner's quota.</p>""",
+    'cluster': "<p>Which ganeti cluster to deploy the new virtual machine"
+               " on.</p>",
     'hostname': """<p>Fully qualified domain name <i>(<b>FQDN</b>)</i> to
                     assign to this virtual machine.<i>(e.g.
-                    hostname.example.org)</i></p> <p>Note: It is strongly
-                    recommended to leave the DNS Name Check box checked, to
-                    confirm that your selected hostname is valid. Spaces and
+                    hostname.example.org)</i></p> <p>Note: Spaces and
                     certain special characters are not permitted in the
                     hostname field because they can cause errors with editing
                     or deleting the VM.</p>""",
-    'hypervisor': "<p>Which hypervisor the new virtual machine will run under.</p>",
+    'hypervisor': "<p>Which hypervisor the new virtual machine will run under"
+                  ".</p>",
     'start': """<p>Uncheck this if you don't want the instance to automatically
                 start after creation. If you do so, you can start it manually
                 on the virtual machine detail page.</p> <p>This option is only
@@ -200,8 +200,7 @@ VM_CREATE_HELP = {
                      the name is not resolvable yet.</p> """,
     'iallocator': """<p>Automatically select primary and secondary node to
                      allocate disks on.</p> <p>When selected it will use the
-                     cluster default <a
-                     href="http://docs.ganeti.org/ganeti/current/html/iallocator.html">
+                     cluster default <a href="http://docs.ganeti.org/ganeti/current/html/iallocator.html">
                      iallocator</a> (if set by the cluster). The iallocator
                      being used will be displayed after the checkbox.</p> """,
     'disk_template': """<p>Disk layout template for the virtual machine on the
@@ -246,9 +245,8 @@ VM_CREATE_HELP = {
                     </ul><p>Valid for the Xen HVM and KVM hypervisors.</p>""",
     'nic_mode': """ <p> This option specifies how the virtual machine connects
                     to the network. More information on this can be found in
-                    the <a
-                    href="http://docs.ganeti.org/ganeti/current/html/install.html#configuring-the-network">Ganeti
-                    tutorial documentation</a>.  </p> <p>When in doubt, choose
+                    the <a href="http://docs.ganeti.org/ganeti/current/html/install.html#configuring-the-network"> Ganeti tutorial documentation</a> .</p>
+                    <p>When in doubt, choose
                     <b>bridged</b>.</p> <ul> <li> <b>bridged</b> - The virtual
                     machine's network interface will be attached to a software
                     bridge running on the node.  </li> <li><b>routed</b> - The
@@ -309,15 +307,15 @@ VM_HELP = {
                 machine.</p> <p><b><i>This will be deducted from the owner's
                 quota.</i></b></p> """,
     'memory': """<p> Amount of ram to allocate to this virtual machine. If no
-                 units are given, megabytes is assumed.  </p> <p><b><i>This will
+                 units are given, megabytes is assumed.
+                 </p> <p><b><i>This will
                  be deducted from the owner's quota.</i></b></p> """,
     'nic_link': """<p>In <b>bridged</b> mode, it specifies the bridge
                    interface to attach this NIC to on the node <i>(e.g.
                    br0)</i>.  </p> <p>In <b>routed</b> mode it's intended to
                    differentiate between different routing tables/virtual
                    machine groups (but the meaning is dependant on the network
-                   script, see <a
-                   href="http://docs.ganeti.org/ganeti/current/man/gnt-cluster.html">
+                   script, see <a href="http://docs.ganeti.org/ganeti/current/man/gnt-cluster.html">
                    gnt-cluster(8)</a> for more details.  </p> """,
     'nic_mac': """<p> This option specifies a MAC address to be associated
                   with the NIC.  </p> <p> Any valid MAC address may be used.
@@ -329,11 +327,13 @@ VM_HELP = {
 }
 
 VM_RENAME_HELP = {
-    'hostname': """<p>Domain name or host name to assign to this virtual machine;
+    'hostname': """<p>Domain name or host name to assign to this virtual
+                   machine;
                    e.g. <tt>example.org</tt> or
                    <tt>subdomain.example.org</tt>.</p>""",
     'ip_check': "<p>Whether to ensure instance's IP address is inactive.</p>",
-    'name_check': """<p> Check the virtual machine DNS name via the resolver <i>(e.g. in DNS or
+    'name_check': """<p> Check the virtual machine DNS name via the
+                     resolver <i>(e.g. in DNS or
                      /etc/hosts, depending on your setup)</i>. Since the name
                      check is used to compute the IP address this also
                      enables/disables IP checks <i>(e.g.  if the IP is
@@ -343,4 +343,3 @@ VM_RENAME_HELP = {
                      caution!</b> If left unchecked you may run into name/ip
                      collisions. </p>""",
 }
-
