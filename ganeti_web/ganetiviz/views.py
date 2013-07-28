@@ -70,5 +70,5 @@ class ClusterRefreshView(View,LoginRequiredMixin):
         cluster.sync_nodes(remove=True)
         cluster.sync_virtual_machines(remove=True)
 
-        url = 'map/%s'%(cluster_hostname,)
+        url = '/map/%s'%(cluster_hostname,)
         return redirect(url)
