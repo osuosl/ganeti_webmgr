@@ -1278,6 +1278,13 @@ class Cluster(CachedClusterObject):
                 self.virtual_machines \
                     .filter(hostname__in=missing_ganeti).delete()
 
+        # Get up to date data on all VMs
+        self.refresh_virtual_machines()
+
+    def refresh_virtual_machines(self):
+        for vm in self.virtual_machines.all():
+            vm.refresh()
+
     def sync_nodes(self, remove=False):
         """
         Synchronizes the Nodes in the database with the information
@@ -1298,6 +1305,13 @@ class Cluster(CachedClusterObject):
             missing_ganeti = filter(lambda x: str(x) not in ganeti, db)
             if missing_ganeti:
                 self.nodes.filter(hostname__in=missing_ganeti).delete()
+
+        # Get up to date data for all Nodes
+        self.refresh_nodes()
+
+    def refresh_nodes(self):
+        for node in self.nodes.all():
+            node.refresh()
 
     @property
     def missing_in_ganeti(self):
