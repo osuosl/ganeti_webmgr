@@ -15,6 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
+from string import Template
 
 from django.contrib.auth.models import User, Group
 from django.test import TestCase
@@ -234,7 +235,10 @@ class ImportViews(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/importing/missing_db.html')
-        self.assertEqual([('1:vm2', 'test0', 'vm2')],
+
+        cid_vm_hostname = Template('$cid:$hostname')
+        c_vm2 = cid_vm_hostname.substitute(cid=self.cluster0.id, hostname='vm2')
+        self.assertEqual([(c_vm2, u'test0', u'vm2')],
                          response.context['vms'])
         self.user.revoke_all(self.cluster0)
 
@@ -245,8 +249,9 @@ class ImportViews(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/importing/missing_db.html')
-        self.assertEqual([('1:vm2', 'test0', 'vm2'),
-                         ('2:vm5', 'test1', 'vm5')],
+        c_vm5 = cid_vm_hostname.substitute(cid=self.cluster1.id, hostname='vm5')
+        self.assertEqual([(c_vm2, u'test0', u'vm2'),
+                          (c_vm5, u'test1', u'vm5')],
                          response.context['vms'])
         self.user.is_superuser = False
         self.user.save()
@@ -278,7 +283,7 @@ class ImportViews(TestCase):
         self.assertTrue(response.context['form'].errors)
 
         # POST - success
-        data = {'virtual_machines': ['1:vm2'], 'owner': self.owner.id}
+        data = {'virtual_machines': [c_vm2], 'owner': self.owner.id}
         response = self.c.post(url, data)
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])

@@ -198,8 +198,8 @@ def missing_db(request):
     vms = {}
     for cluster in clusters:
         for hostname in cluster.missing_in_db:
-            vms[hostname] = ('%s:%s' % (cluster.id, hostname),
-                             cluster.hostname, hostname)
+            vms[hostname] = (u'%s:%s' % (cluster.id, hostname),
+                             unicode(cluster.hostname), unicode(hostname))
     vmhostnames = vms.keys()
     vmhostnames.sort()
 
