@@ -101,6 +101,7 @@ INSTALLED_APPS = (
     'utils',
     'virtualmachines',
     'vm_templates',
+    'ganetiviz',
 )
 
 # The model that contains extra user profile stuff.
