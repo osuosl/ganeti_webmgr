@@ -49,6 +49,7 @@ urlpatterns = patterns(
     (r'^', include('utils.urls')),
     (r'^', include('virtualmachines.urls')),
     (r'^', include('vm_templates.urls')),
+    (r'', include('ganetiviz.urls')),
 )
 
 # user management and authentication
