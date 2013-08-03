@@ -1,7 +1,7 @@
 from django.conf.urls.defaults import patterns, url
 from ganetiviz.views import VMJsonView,NodeJsonView,ClusterGraphView,ClusterRefreshView
 
-urlpatterns += patterns(
+urlpatterns = patterns(
     'ganetiviz.views',
 
     url(r'^ganetiviz/vms/(?P<cluster_hostname>[\.\w]+)$', VMJsonView.as_view(), 
