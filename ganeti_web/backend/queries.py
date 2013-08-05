@@ -17,7 +17,7 @@
 
 from django.db.models import Q
 
-from object_permissions import get_users_any
+from object_permissions import get_users_any, get_groups_any
 
 from ganeti_web.models import Cluster, ClusterUser, VirtualMachine
 
@@ -52,13 +52,19 @@ def owner_qs_for_cluster(cluster):
         return ClusterUser.objects.none()
 
     # Get all superusers.
-    qs = ClusterUser.objects.filter(profile__user__is_superuser=True)
+    superusers_qs = ClusterUser.objects.filter(
+        profile__user__is_superuser=True)
 
     # Get all users who have the given permissions on the given cluster.
-    users = get_users_any(cluster, ["admin"], True)
-    qs |= ClusterUser.objects.filter(profile__user__in=users)
+    # This will include users who's groups have admin privs.
+    users = get_users_any(cluster, ["admin"], groups=True)
+    # Get the actual groups themselves.
+    groups = get_groups_any(cluster, ["admin"])
 
-    return qs
+    qs = ClusterUser.objects.filter(Q(profile__user__in=users) |
+                                    Q(organization__group__in=groups))
+    qs |= superusers_qs
+    return qs.distinct()
 
 
 def vm_qs_for_admins(user):
