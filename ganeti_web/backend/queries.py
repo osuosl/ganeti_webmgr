@@ -71,7 +71,7 @@ def owner_qs(cluster, user):
         return ClusterUser.objects.none()
 
     if user.is_superuser:
-        return owner_qs_for_superuser(cluster)
+        return owner_qs_for_superuser(cluster).order_by('name')
 
     user_is_admin = user.has_any_perms(cluster, ['admin'], groups=False)
 
@@ -89,9 +89,11 @@ def owner_qs(cluster, user):
     groups_q = Q(organization__group__in=groups)
     if user_is_admin:
         # User is admin, so we want to include them.
-        return ClusterUser.objects.filter(Q(profile__user=user) | groups_q)
+        qs =  ClusterUser.objects.filter(Q(profile__user=user) | groups_q)
     else:
-        return ClusterUser.objects.filter(groups_q)
+        qs = ClusterUser.objects.filter(groups_q)
+
+    return qs.order_by('name')
 
 
 def owner_qs_for_superuser(cluster):
