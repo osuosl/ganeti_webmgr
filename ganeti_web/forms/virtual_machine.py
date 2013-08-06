@@ -791,6 +791,15 @@ class VMWizardBasicsForm(Form):
 
         self.cluster = cluster
 
+        # Verify that the autoallocator isn't nothing
+        # If it is, remove the option.
+        default_iallocator = cluster.info['default_iallocator']
+        if not default_iallocator:
+            del self.fields['iallocator']
+        else:
+            label_extra = " (%s)" % default_iallocator
+            self.fields['iallocator'].label += label_extra
+
         # Get a look at the list of available hypervisors, and set the initial
         # hypervisor appropriately.
         hvs = cluster.info["enabled_hypervisors"]
@@ -941,17 +950,16 @@ class VMWizardAdvancedForm(Form):
         self.fields["pnode"].initial = template.pnode
         self.fields["snode"].initial = template.snode
 
-    def _configure_for_iallocator(self, use_iallocator):
-        if use_iallocator:
-            del self.fields["pnode"]
-            del self.fields["snode"]
-            self.use_iallocator = use_iallocator
+    def _configure_for_iallocator(self):
+        del self.fields["pnode"]
+        del self.fields["snode"]
+        self.use_iallocator = True
 
-    def _configure_for_disk_template(self, template, use_iallocator=False):
+    def _configure_for_disk_template(self, template):
         # If its not drdb, we dont use the secondary node.
         # If we're using the iallocator then this field
         # will already be deleted.
-        if template != "drbd" and not use_iallocator:
+        if template != "drbd":
             del self.fields["snode"]
 
 
@@ -1152,7 +1160,8 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
     def _get_iallocator(self):
         data = self.get_cleaned_data_for_step("2")
         if data:
-            return data["iallocator"]
+            # This one is different because the iallocator might not exist.
+            return data.get("iallocator", False)
         return False
 
     def get_form(self, step=None, data=None, files=None):
@@ -1179,9 +1188,11 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
             form._configure_for_cluster(self._get_cluster())
             form._configure_for_template(self._get_template())
             using_iallocator = self._get_iallocator()
-            form._configure_for_iallocator(using_iallocator)
-            form._configure_for_disk_template(self._get_disk_template(),
-                                              using_iallocator)
+            # Autoallocation means we dont need to configure the disk template
+            if using_iallocator:
+                form._configure_for_iallocator()
+            else:
+                form._configure_for_disk_template(self._get_disk_template())
         elif s == 4:
             cluster = self._get_cluster()
             hv = self._get_hv()
