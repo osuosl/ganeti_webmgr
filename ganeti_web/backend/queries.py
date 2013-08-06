@@ -71,7 +71,7 @@ def owner_qs(cluster, user):
         return ClusterUser.objects.none()
 
     if user.is_superuser:
-        return owner_qs_for_superuser(cluster).order_by('name')
+        return owner_qs_for_superuser(cluster)
 
     user_is_admin = user.has_any_perms(cluster, ['admin'], groups=False)
 
@@ -98,7 +98,7 @@ def owner_qs(cluster, user):
 
 def owner_qs_for_superuser(cluster):
     "Return all the users since we are superuser"
-    return ClusterUser.objects.all()
+    return ClusterUser.objects.all().order_by('name')
 
 def vm_qs_for_admins(user):
     """
