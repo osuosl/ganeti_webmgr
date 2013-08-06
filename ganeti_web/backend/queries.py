@@ -66,6 +66,37 @@ def owner_qs_for_cluster(cluster):
     qs |= superusers_qs
     return qs.distinct()
 
+def owner_qs(cluster, user):
+    if not cluster:
+        return ClusterUser.objects.none()
+
+    if user.is_superuser:
+        return owner_qs_for_superuser(cluster)
+
+    user_is_admin = user.has_any_perms(cluster, ['admin'], groups=False)
+
+    # Get a list of groups which has admin on this cluster
+    admin_groups = get_groups_any(cluster, ["admin"])
+    # Get the list of groups the user is in
+    users_groups = user.profile.user.groups.all()
+    groups = []
+    for group in users_groups:
+        # filter out the groups the user isn't in
+        if group in admin_groups:
+            groups.append(group)
+
+    # The groups the user is in
+    groups_q = Q(organization__group__in=groups)
+    if user_is_admin:
+        # User is admin, so we want to include them.
+        return ClusterUser.objects.filter(Q(profile__user=user) | groups_q)
+    else:
+        return ClusterUser.objects.filter(groups_q)
+
+
+def owner_qs_for_superuser(cluster):
+    "Return all the users since we are superuser"
+    return ClusterUser.objects.all()
 
 def vm_qs_for_admins(user):
     """
