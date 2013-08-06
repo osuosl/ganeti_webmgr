@@ -910,6 +910,7 @@ class VMWizardAdvancedForm(Form):
     name_check = BooleanField(label=_('Verify hostname through DNS'),
                               initial=False, required=False,
                               help_text=_(VM_RENAME_HELP['name_check']))
+    no_start = BooleanField(label=_('Do not boot the VM'), required=False)
     pnode = ModelChoiceField(label=_("Primary Node"),
                              queryset=Node.objects.all(), empty_label=None,
                              help_text=_(VM_CREATE_HELP['pnode']))
@@ -1250,7 +1251,11 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
         template.no_install = forms[2].cleaned_data["no_install"]
         template.ip_check = forms[3].cleaned_data["ip_check"]
         template.name_check = forms[3].cleaned_data["name_check"]
+        template.no_start = forms[3].cleaned_data["no_start"]
+
         template.pnode = forms[3].cleaned_data["pnode"].hostname
+        if "snode" in forms[3].cleaned_data:
+            template.snode = forms[3].cleaned_data["snode"].hostname
 
         hvparams = forms[4].cleaned_data
 
@@ -1262,9 +1267,6 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
         template.serial_console = hvparams.get("serial_console")
         template.nic_type = hvparams.get('nic_type')
         template.disk_type = hvparams.get('disk_type')
-
-        if "snode" in forms[3].cleaned_data:
-            template.snode = forms[3].cleaned_data["snode"].hostname
 
         template.set_name(template_name)
         # only save the template to the database if its not temporary

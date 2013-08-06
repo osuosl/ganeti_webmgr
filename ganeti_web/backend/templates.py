@@ -123,6 +123,7 @@ def template_to_instance(template, hostname, owner):
         "pnode": template.pnode,
         "beparams": beparams,
         "no_install": template.no_install,
+        "start": not template.no_start,
         "hvparams": hvparams,
     }
 
