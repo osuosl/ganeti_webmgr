@@ -32,8 +32,7 @@ from django.utils.translation import ugettext_lazy as _
 from object_log.models import LogItem
 log_action = LogItem.objects.log_action
 
-from ganeti_web.backend.queries import (cluster_qs_for_user,
-                                        owner_qs_for_cluster)
+from ganeti_web.backend.queries import cluster_qs_for_user, owner_qs
 from ganeti_web.backend.templates import template_to_instance
 from ganeti_web.caps import has_cdrom2, has_balloonmem, has_sharedfile
 from ganeti_web.constants import (EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES,
@@ -677,7 +676,7 @@ class VMWizardOwnerForm(Form):
 
         self.cluster = cluster
 
-        qs = owner_qs_for_cluster(cluster)
+        qs = owner_qs(cluster)
         self.fields["owner"].queryset = qs
 
     def _configure_for_template(self, template, choices=None):
