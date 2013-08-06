@@ -724,7 +724,8 @@ class VMWizardBasicsForm(Form):
                      help_text=_(VM_CREATE_HELP['hypervisor']))
     os = ChoiceField(label=_('Operating System'), choices=[],
                      help_text=_(VM_CREATE_HELP['os']))
-    no_install = BooleanField(label=_('Do not install the OS'), required=False)
+    no_install = BooleanField(label=_('Do not install the OS'), required=False,
+                              help_text=_(VM_CREATE_HELP['no_install']))
     iallocator = BooleanField(label=_("Automatic Allocation"),
                               initial=True, required=False,
                               help_text=_(VM_CREATE_HELP['iallocator']))
