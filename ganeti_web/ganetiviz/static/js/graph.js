@@ -31,14 +31,15 @@ gnodes_json.forEach(function(node) {
 
     gnode_color = '#6FB1FC'
     if (offline){
-        console.log("Offline!")
+        //console.log("Offline!")
         gnode_color = '#DD2222'
     }
+
 
     // Adding the (g)nodes ie. Ganeti Nodes to the Cytoscape NodeList
     cytoscape_node_obj =       
       {data: { id: gnode, name: gnode, weight: 100,color:gnode_color},
-        position: position, classes:'ganeti-node'};
+        position: position, classes:'ganeti-node', locked: true};
     CytoNodeList.push(cytoscape_node_obj);
 
     loop_index += 1
@@ -110,6 +111,7 @@ vms_json_sorted.forEach(function(vm) {
 
     vm_hostname = vm["fields"]["hostname"]
     pnode = vm["fields"]["primary_node"]    // (g)node
+    snode = vm["fields"]["secondary_node"]
     vm_status = vm["fields"]["status"]
 
     // Assigning a color to instances as per status. green for "running" instance, red for the rest.
@@ -118,11 +120,14 @@ vms_json_sorted.forEach(function(vm) {
         vm_color = '#00CC00'
     }
 
+    // Adding classes to each instance vertice that make its selection convenient.
+    instance_classes_string = 'ganeti-instance ' + 'pnode-' + fqdntoid(pnode) + ' snode-' + fqdntoid(snode)
+
     // Adding Cytoscape Graph Vertices representing Instances
     cytoscape_node_obj =  {
          data: { id: vm_hostname, name: vm_hostname, weight: 0.05,color: vm_color},
 	       position: VMPositions[pnode].pop(),
-         classes:'ganeti-instance' }
+         classes:instance_classes_string }
     CytoNodeList.push(cytoscape_node_obj);
 
     // Adding Cytoscape Graph Edges: (g)Node-Instance edges.
@@ -138,7 +143,7 @@ vms_json_sorted.forEach(function(vm) {
 for (sourcenodekey in FailoverLinks) {
     for (targetnodekey in FailoverLinks[sourcenodekey]){
         cytoscape_edge_obj = { data: { source: sourcenodekey, target: targetnodekey, 
-                               color: '#6FB1FC', strength: FailoverLinks[sourcenodekey][targetnodekey] }};
+                               color: '#6FB1FC', strength: FailoverLinks[sourcenodekey][targetnodekey] }, classes: 'node-edge'};
         CytoEdgeList.push(cytoscape_edge_obj);
     }
 };
@@ -229,20 +234,48 @@ $('#cy').cytoscape({
   ready: function(){
     window.cy = this;
 
+/*
     // To make Primary Instances corresponding to a Ganeti-Node visible.
     cy.$('node.ganeti-node').click(function(){
         // First hide any of the instance-vertices that are already visible.
-        cy.$(".ganeti-instance").css({visibility:"hidden"});
+        //cy.$(".ganeti-instance").css({visibility:"hidden"});
+
+        console.log(this.id())
+
         // Now, show the instance vertices corresponding to this node (being clicked)
         var branches_selector = "edge[source='" + this.id() + "']";
         // Make target of each branch ending at an instance vertice visible.
         cy.$(branches_selector).filter(".instance-edge").each(function(i, branch){
-            branch.target()[0].css({visibility:'visible'});
+            instance_element = branch.target()[0]
+            //console.log(instance_element['_private']['data']['name'])
+            if (instance_element.css('visibility') == 'visible'){
+                instance_element.css({visibility:'hidden'})
+            }else if (instance_element.css('visibility') == 'hidden'){
+                instance_element.css({visibility:'visible'})
+            }
         });
+    });
+*/
+
+    cy.$('node.ganeti-node').mousedown(function(){
+        class_string = '.pnode-' + fqdntoid(this.id())
+        //console.log(class_string)
+
+        // Collection of instances attached to the node clicked upon.
+        primary_instances = cy.$(class_string)
+
+        //// Primary Instances around this node are shown.
+        //primary_instances.css({visibility:'visible'})
+        // If the set of primary instances around this node is already visible then hide them, else show them.
+        if (primary_instances.css('visibility') == 'visible'){
+            primary_instances.css({visibility:'hidden'})
+        }else {
+            primary_instances.css({visibility:'visible'})
+        }
     });
 
     // Highlights the edge indicating failover direction.
-    cy.$('node.ganeti-instance').mousedown(function(){
+    cy.$('node.ganeti-instance').click(function(){
         cy.$('edge').toggleClass("active",false);
         pnode = VMGraph[this.id()][0];
         snode = VMGraph[this.id()][1];
@@ -255,12 +288,13 @@ $('#cy').cytoscape({
   }
 });
 
+
 // InputBox Instance-Node Search Feature.
 function vertexSearch(e) {
     if (e.keyCode == 13) {
         text = $('#vertexInput').val() // get the current value of the input field.
         var node_selector = "node[name ^='" + text + "']";
-        console.log(node_selector);
+        //console.log(node_selector);
         cy_selected_instance = cy.$(node_selector)
         if (cy_selected_instance){
             // Un-highlight all the instances first.
@@ -272,14 +306,65 @@ function vertexSearch(e) {
     }
 }
 
-// Panning by pressing arrow keys (Work in progress)
-/*
-$("#cy").keypress(function (event) {
-  // handle cursor keys
-  if (event.keyCode == 37) {
-    // go left
-  } else if (event.keyCode == 39) {
-    // go right
-  }
+
+// Panning by pressing arrow keys
+$(document).keydown(function(e){
+    //console.log(e.keyCode)
+
+    if (e.keyCode == 37) { 
+        // go left
+        cy.panBy({
+            x: -25,
+            y: 0 
+        });
+       return false;
+    }
+    if (e.keyCode == 39) { 
+        // go right
+        cy.panBy({
+            x: 25,
+            y: 0 
+        });
+       return false;
+    }
+    if (e.keyCode == 38) { 
+        // go up
+        cy.panBy({
+            x: 0,
+            y: -25 
+        });
+       return false;
+    }
+    if (e.keyCode == 40) { 
+        // go down
+        cy.panBy({
+            x: 0,
+            y: 25 
+        });
+       return false;
+    }
+
+    // Character 'c' is pressed == All the visible instances are cleared. (Actually hidden)
+    if (e.keyCode == 67) { 
+        cy.$('.ganeti-instance').css({'visibility':'hidden'})
+    }
+
+    // Character 's' is pressed == All the secondary instances corresponding to the highlighted node pop up.
+    if (e.keyCode == 83) { 
+        ele = cy.$(':selected')[0]
+        if (ele != null && ele['_private']['classes']['ganeti-node'] == true){
+            cy.$('.ganeti-instance').css({'visibility':'hidden'})
+            snode = ele['_private']['data']['id']
+            sec_instances_selector = '.snode-' + fqdntoid(snode)
+            sec_instances = cy.$(sec_instances_selector)
+            //console.log(sec_instances_selector)
+            sec_instances.css({'visibility':'visible'})
+            //sec_instances.toggleClass('highlighted-sinstances',true)
+        }
+       return false;
+    }
+
 });
-*/
+
+
+
