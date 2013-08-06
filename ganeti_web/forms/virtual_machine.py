@@ -735,7 +735,6 @@ class VMWizardBasicsForm(Form):
                                 choices=HV_DISK_TEMPLATES,
                                 help_text=_(VM_CREATE_HELP['disk_template']))
 
-
     def __init__(self, *args, **kwargs):
         super(VMWizardBasicsForm, self).__init__(*args, **kwargs)
 
@@ -1245,9 +1244,10 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
             nics = [{"link": "br0", "mode": "bridged"}]
         template.nics = nics
 
+        template.hypervisor = forms[2].cleaned_data["hv"]
+
         template.os = forms[2].cleaned_data["os"]
         template.no_install = forms[2].cleaned_data["no_install"]
-
         template.ip_check = forms[3].cleaned_data["ip_check"]
         template.name_check = forms[3].cleaned_data["name_check"]
         template.pnode = forms[3].cleaned_data["pnode"].hostname
@@ -1260,6 +1260,8 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
         template.kernel_path = hvparams.get("kernel_path")
         template.root_path = hvparams.get("root_path")
         template.serial_console = hvparams.get("serial_console")
+        template.nic_type = hvparams.get('nic_type')
+        template.disk_type = hvparams.get('disk_type')
 
         if "snode" in forms[3].cleaned_data:
             template.snode = forms[3].cleaned_data["snode"].hostname

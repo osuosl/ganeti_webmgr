@@ -83,6 +83,27 @@ def template_to_instance(template, hostname, owner):
     beparams = {
         "vcpus": template.vcpus,
     }
+
+    hvparams = {}
+    hv = template.hypervisor
+    kvm = hv == 'kvm'
+    pvm = hv == 'xen-pvm'
+    hvm = hv == 'xen-hvm'
+    kvm_or_hvm = kvm or hvm
+    kvm_or_pvm = kvm or pvm
+
+    if kvm_or_hvm:
+        hvparams.update(boot_order=template.boot_order)
+        hvparams.update(cdrom_image_path=template.cdrom_image_path)
+        hvparams.update(nic_type=template.nic_type)
+        hvparams.update(disk_type=template.disk_type)
+    if kvm_or_pvm:
+        hvparams.update(kernel_path=template.kernel_path)
+        hvparams.update(root_path=template.root_path)
+    if kvm:
+        hvparams.update(cdrom2_image_path=template.cdrom2_image_path)
+        hvparams.update(serial_console=template.serial_console)
+
     memory = template.memory
     if has_balloonmem(cluster):
         minram = template.minmem
@@ -96,11 +117,13 @@ def template_to_instance(template, hostname, owner):
 
     kwargs = {
         "os": template.os,
+        "hypervisor": hv,
         "ip_check": template.ip_check,
         "name_check": template.name_check,
         "pnode": template.pnode,
         "beparams": beparams,
         "no_install": template.no_install,
+        "hvparams": hvparams,
     }
 
     if template.snode:
