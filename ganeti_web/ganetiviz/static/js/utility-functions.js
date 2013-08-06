@@ -11,6 +11,7 @@ function rbt(a,b){
 
 function polypointscircle(center,R,N) {
     // Returns an array with the coodrdinates of a regular polygon (which lie on a circle with a center)
+    // N is the number of nodes of the polygon, (the number of points on the circle you want to generate)
     var polypoints = new Array();
     for (i=0; i<N; i++){
       alpha = i * (2*Math.PI)/N + (Math.PI/2);
@@ -53,6 +54,9 @@ function modrndisc(pt,r,R,syscenter){
 
 
 function fqdntoid(fqdn){
+    if (fqdn == null){
+        return null
+    }
     // To replace "." by "-" in a Fully Qualified Domain Name.
     return fqdn.replace(/\./g,"-")
 }
