@@ -12,7 +12,7 @@
     var $help_items = $('input, select', '#wizard');
     /* Binds the event to our inputs,
     passing the focused element to the handler. */
-    $help_items.live('focus', this, getHelpTips);
+    $help_items.live('focus, click', this, getHelpTips);
 
     function getHelpTips(event) {
       // Store the main help container for reuse.
@@ -48,7 +48,7 @@
       {{ wizard.management_form }}
       {{ wizard.form.non_field_errors }}
 
-      {% for hidden in wizard.forms.invisible_fields %} 
+      {% for hidden in wizard.forms.invisible_fields %}
         {{ hidden }}
       {% endfor %}
 
