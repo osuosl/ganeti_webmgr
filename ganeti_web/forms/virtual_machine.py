@@ -931,6 +931,10 @@ class VMWizardAdvancedForm(Form):
                              queryset=Node.objects.all(), empty_label=None,
                              help_text=_(VM_CREATE_HELP['snode']))
 
+    # By default unless the configure_for_iallocator method has run,
+    # we assume we're not using autoallocation
+    use_iallocator = False
+
     def _configure_for_cluster(self, cluster):
         if not cluster:
             return
