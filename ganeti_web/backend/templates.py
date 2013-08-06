@@ -120,20 +120,27 @@ def template_to_instance(template, hostname, owner):
         "hypervisor": hv,
         "ip_check": template.ip_check,
         "name_check": template.name_check,
-        "pnode": template.pnode,
         "beparams": beparams,
         "no_install": template.no_install,
         "start": not template.no_start,
         "hvparams": hvparams,
     }
 
-    if template.snode:
-        kwargs.update({"snode": template.snode})
-    # secondary node isn't set, check if drdb is set (this shouldn't happen if
-    # form validation is correct)
-    elif template.disk_template == 'drdb':
-        msg = 'Disk template set to drdb, but no secondary node set'
-        raise RuntimeError(msg)
+    # Using auto allocator
+    if template.iallocator:
+        default_iallocator = cluster.info['default_iallocator']
+        kwargs.update(iallocator=default_iallocator)
+    # Not using allocator, pass pnode
+    else:
+        kwargs.update(pnode=template.pnode)
+        # Also pass in snode if it exists (drdb)
+        if template.snode:
+            kwargs.update(snode=template.snode)
+        # secondary node isn't set but we're using drdb, so programming error
+        # (this shouldn't happen if form validation is done correctly)
+        elif template.disk_template == 'drdb':
+            msg = 'Disk template set to drdb, but no secondary node set'
+            raise RuntimeError(msg)
 
     job_id = cluster.rapi.CreateInstance('create', hostname,
                                          template.disk_template,

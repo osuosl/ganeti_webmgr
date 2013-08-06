@@ -725,6 +725,9 @@ class VMWizardBasicsForm(Form):
     os = ChoiceField(label=_('Operating System'), choices=[],
                      help_text=_(VM_CREATE_HELP['os']))
     no_install = BooleanField(label=_('Do not install the OS'), required=False)
+    iallocator = BooleanField(label=_("Automatic Allocation"),
+                              initial=True, required=False,
+                              help_text=_(VM_CREATE_HELP['iallocator']))
     vcpus = IntegerField(label=_("Virtual CPU Count"), initial=1, min_value=1,
                          help_text=_(VM_HELP['vcpus']))
     minram = DataVolumeField(label=_('Minimum RAM (MiB)'),
@@ -937,9 +940,19 @@ class VMWizardAdvancedForm(Form):
         self.fields["pnode"].initial = template.pnode
         self.fields["snode"].initial = template.snode
 
-    def _configure_for_disk_template(self, template):
-        if template != "drbd":
+    def _configure_for_iallocator(self, use_iallocator):
+        if use_iallocator:
+            del self.fields["pnode"]
             del self.fields["snode"]
+            self.use_iallocator = use_iallocator
+
+    def _configure_for_disk_template(self, template, use_iallocator=False):
+        # If its not drdb, we dont use the secondary node.
+        # If we're using the iallocator then this field
+        # will already be deleted.
+        if template != "drbd" and not use_iallocator:
+            del self.fields["snode"]
+
 
     def clean(self):
         # Ganeti will error on VM creation if an IP address check is requested
@@ -949,7 +962,7 @@ class VMWizardAdvancedForm(Form):
             msg = ["Cannot perform IP check without name check"]
             self._errors["ip_check"] = self.error_class(msg)
 
-        if data.get('pnode') == data.get('snode'):
+        if not self.use_iallocator and data.get('pnode') == data.get('snode'):
             raise forms.ValidationError("The secondary node cannot be the "
                                         "primary node.")
 
@@ -1135,6 +1148,12 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
             return data["disk_template"]
         return None
 
+    def _get_iallocator(self):
+        data = self.get_cleaned_data_for_step("2")
+        if data:
+            return data["iallocator"]
+        return False
+
     def get_form(self, step=None, data=None, files=None):
         s = int(self.steps.current) if step is None else int(step)
         initial = self.get_form_initial(s)
@@ -1158,7 +1177,10 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
             form = VMWizardAdvancedForm(data=data)
             form._configure_for_cluster(self._get_cluster())
             form._configure_for_template(self._get_template())
-            form._configure_for_disk_template(self._get_disk_template())
+            using_iallocator = self._get_iallocator()
+            form._configure_for_iallocator(using_iallocator)
+            form._configure_for_disk_template(self._get_disk_template(),
+                                              using_iallocator)
         elif s == 4:
             cluster = self._get_cluster()
             hv = self._get_hv()
@@ -1249,13 +1271,15 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
 
         template.os = forms[2].cleaned_data["os"]
         template.no_install = forms[2].cleaned_data["no_install"]
+        template.iallocator = forms[2].cleaned_data["iallocator"]
         template.ip_check = forms[3].cleaned_data["ip_check"]
         template.name_check = forms[3].cleaned_data["name_check"]
         template.no_start = forms[3].cleaned_data["no_start"]
 
-        template.pnode = forms[3].cleaned_data["pnode"].hostname
-        if "snode" in forms[3].cleaned_data:
-            template.snode = forms[3].cleaned_data["snode"].hostname
+        if not template.iallocator:
+            template.pnode = forms[3].cleaned_data["pnode"].hostname
+            if "snode" in forms[3].cleaned_data:
+                template.snode = forms[3].cleaned_data["snode"].hostname
 
         hvparams = forms[4].cleaned_data
 
