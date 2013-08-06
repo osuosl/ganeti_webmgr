@@ -89,14 +89,16 @@ def owner_qs(cluster, user):
     groups_q = Q(organization__group__in=groups)
     if user_is_admin:
         # User is admin, so we want to include them.
-        return ClusterUser.objects.filter(Q(profile__user=user) | groups_q)
+        qs =  ClusterUser.objects.filter(Q(profile__user=user) | groups_q)
     else:
-        return ClusterUser.objects.filter(groups_q)
+        qs = ClusterUser.objects.filter(groups_q)
+
+    return qs.order_by('name')
 
 
 def owner_qs_for_superuser(cluster):
     "Return all the users since we are superuser"
-    return ClusterUser.objects.all()
+    return ClusterUser.objects.all().order_by('name')
 
 def vm_qs_for_admins(user):
     """
