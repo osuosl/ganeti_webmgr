@@ -670,13 +670,13 @@ class VMWizardOwnerForm(Form):
                          required=False,
                          help_text=_(VM_CREATE_HELP['hostname']))
 
-    def _configure_for_cluster(self, cluster):
+    def _configure_for_cluster(self, cluster, user):
         if not cluster:
             return
 
         self.cluster = cluster
 
-        qs = owner_qs(cluster)
+        qs = owner_qs(cluster, user)
         self.fields["owner"].queryset = qs
 
     def _configure_for_template(self, template, choices=None):
@@ -1144,7 +1144,8 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
             # doesn't have perms on the template.
         elif s == 1:
             form = VMWizardOwnerForm(data=data)
-            form._configure_for_cluster(self._get_cluster())
+            form._configure_for_cluster(self._get_cluster(),
+                                        user=self.request.user)
             form._configure_for_template(self._get_template(),
                                          choices=self._get_vm_or_template())
         elif s == 2:
