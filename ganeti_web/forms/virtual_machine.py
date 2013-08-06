@@ -32,8 +32,7 @@ from django.utils.translation import ugettext_lazy as _
 from object_log.models import LogItem
 log_action = LogItem.objects.log_action
 
-from ganeti_web.backend.queries import (cluster_qs_for_user,
-                                        owner_qs_for_cluster)
+from ganeti_web.backend.queries import cluster_qs_for_user, owner_qs
 from ganeti_web.backend.templates import template_to_instance
 from ganeti_web.caps import has_cdrom2, has_balloonmem, has_sharedfile
 from ganeti_web.constants import (EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES,
@@ -671,13 +670,13 @@ class VMWizardOwnerForm(Form):
                          required=False,
                          help_text=_(VM_CREATE_HELP['hostname']))
 
-    def _configure_for_cluster(self, cluster):
+    def _configure_for_cluster(self, cluster, user):
         if not cluster:
             return
 
         self.cluster = cluster
 
-        qs = owner_qs_for_cluster(cluster)
+        qs = owner_qs(cluster, user)
         self.fields["owner"].queryset = qs
 
     def _configure_for_template(self, template, choices=None):
@@ -1145,7 +1144,8 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
             # doesn't have perms on the template.
         elif s == 1:
             form = VMWizardOwnerForm(data=data)
-            form._configure_for_cluster(self._get_cluster())
+            form._configure_for_cluster(self._get_cluster(),
+                                        user=self.request.user)
             form._configure_for_template(self._get_template(),
                                          choices=self._get_vm_or_template())
         elif s == 2:
