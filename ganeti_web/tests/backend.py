@@ -9,6 +9,7 @@ from ganeti_web.models import Cluster
 __all__ = (
     "TestClusterQSForUser",
     "TestOwnerQSNoGroups",
+    "TestOwnerQSGroups",
 )
 
 
@@ -123,3 +124,48 @@ class TestOwnerQSNoGroups(TestCase):
         owners = owner_qs(self.cluster, self.noperms)
         self.assertQuerysetEqual(owners, [])
 
+
+class TestOwnerQSGroups(TestCase):
+
+    def setUp(self):
+        self.superuser = User.objects.create_superuser('super', None, 'secret')
+        self.standard = User.objects.create_user('standard', password='secret')
+
+        self.admin_group = Group.objects.create(name='admin_group')
+        self.non_admin_group = Group.objects.create(name='non_admin_group')
+
+        self.standard.groups = [self.admin_group, self.non_admin_group]
+
+        self.cluster = Cluster.objects.create(
+            hostname="cluster1.example.org", slug="cluster1",
+            username='foo', password='bar', mtime=1)
+
+        self.admin_group.grant('admin', self.cluster)
+
+    def tearDown(self):
+        self.superuser.delete()
+        self.standard.delete()
+
+        self.admin_group.delete()
+        self.non_admin_group.delete()
+
+        self.cluster.delete()
+
+    def test_superuser(self):
+        owners = owner_qs(self.cluster, self.superuser)
+        valid_owners = [self.admin_group.organization,
+                        self.non_admin_group.organization,
+                        self.standard.get_profile(),
+                        self.superuser.get_profile()]
+
+        self.assertQuerysetEqual(owners, map(repr, valid_owners))
+
+    def test_user_in_admin_group(self):
+        owners = owner_qs(self.cluster, self.standard)
+        valid_owners = [repr(self.admin_group.organization)]
+        self.assertQuerysetEqual(owners, valid_owners)
+
+    def test_user_in_non_admin_group(self):
+        self.standard.groups.remove(self.admin_group)
+        owners = owner_qs(self.cluster, self.standard)
+        self.assertQuerysetEqual(owners, [])
