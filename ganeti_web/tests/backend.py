@@ -124,6 +124,11 @@ class TestOwnerQSNoGroups(TestCase):
         owners = owner_qs(self.cluster, self.noperms)
         self.assertQuerysetEqual(owners, [])
 
+    def test_create_vm_perms(self):
+        self.noperms.grant('create_vm', self.cluster)
+        owners = owner_qs(self.cluster, self.noperms)
+        valid_owners = [repr(self.noperms.get_profile())]
+        self.assertQuerysetEqual(owners, valid_owners)
 
 class TestOwnerQSGroups(TestCase):
 
@@ -169,3 +174,10 @@ class TestOwnerQSGroups(TestCase):
         self.standard.groups.remove(self.admin_group)
         owners = owner_qs(self.cluster, self.standard)
         self.assertQuerysetEqual(owners, [])
+
+    def test_create_vm_perms_group(self):
+        self.non_admin_group.grant('create_vm', self.cluster)
+        owners = owner_qs(self.cluster, self.standard)
+        valid_owners = [self.admin_group.organization,
+                        self.non_admin_group.organization]
+        self.assertQuerysetEqual(owners, map(repr, valid_owners))
