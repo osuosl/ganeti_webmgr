@@ -76,7 +76,7 @@ def owner_qs(cluster, user):
     """
     Get all owners for a cluster given a cluster and a user.
 
-    This only returns ClusterUser objects which have admin permissions on the
+    This only returns ClusterUser ojbjects which have admin permissions on the
     object.  This is mostly because this is used to assign an owner which is
     used for quotas. Quotas should only be assigned to objects with admin
     permissions.
@@ -88,7 +88,10 @@ def owner_qs(cluster, user):
     if user.is_superuser:
         return owner_qs_for_superuser(cluster)
 
-    user_is_admin = user.has_any_perms(cluster, ['admin'], groups=False)
+    user_is_admin = user.has_any_perms(
+        cluster, ['admin', 'create_vm'], groups=False
+    )
+
     groups = admin_group_qs(cluster, user)
     # Translates to:
     # ClusterUser's Organization's Group is in the `groups` list.
@@ -109,7 +112,7 @@ def admin_group_qs(cluster, user):
     # Get the list of groups the user is in
     users_groups = user.profile.user.groups.all().distinct()
     # Get a list of groups which has admin on this cluster
-    admin_groups = get_groups_any(cluster, ["admin"])
+    admin_groups = get_groups_any(cluster, ["admin", 'create_vm'])
     # Intersection: Which groups are both the users group and admin groups
     groups = users_groups & admin_groups
     return groups
