@@ -9,7 +9,7 @@ from ganeti_web.models import Cluster
 __all__ = (
     "TestClusterQSForUser",
     "TestOwnerQSNoGroups",
-    "TestOwnerQSGroups",
+    "TestOwnerQSWithGroups",
 )
 
 
@@ -130,7 +130,7 @@ class TestOwnerQSNoGroups(TestCase):
         valid_owners = [repr(self.noperms.get_profile())]
         self.assertQuerysetEqual(owners, valid_owners)
 
-class TestOwnerQSGroups(TestCase):
+class TestOwnerQSWithGroups(TestCase):
 
     def setUp(self):
         self.superuser = User.objects.create_superuser('super', None, 'secret')
