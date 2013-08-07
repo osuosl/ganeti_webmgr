@@ -1688,6 +1688,9 @@ class ClusterUser(models.Model):
     real_type = models.ForeignKey(ContentType, related_name="+",
                                   editable=False, null=True, blank=True)
 
+    def __repr__(self):
+        return "<%s: %s>" % (str(self.real_type), self.name)
+
     def __unicode__(self):
         return self.name
 
