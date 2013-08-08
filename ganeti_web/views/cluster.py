@@ -257,6 +257,7 @@ def refresh(request, cluster_slug):
     """
 
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    cluster.refresh()
     cluster.sync_nodes(remove=True)
     cluster.sync_virtual_machines(remove=True)
 
