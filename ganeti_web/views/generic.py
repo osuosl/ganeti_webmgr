@@ -30,6 +30,7 @@ class LoginRequiredMixin(object):
 class PermissionRequiredMixin(object):
 
     permission_required = None
+    no_perms_msg = NO_PRIVS
 
     def get_required_perms(self, request=None):
         if isinstance(self.permission_required, basestring):
@@ -54,7 +55,7 @@ class PermissionRequiredMixin(object):
         has_perms = self.has_perms(request, perms, obj)
         if not has_perms:
             self.on_check_perm_fail(request, obj)
-            raise PermissionDenied
+            raise PermissionDenied(self.no_perms_msg)
 
     def has_perms(self, request, perms, obj=None):
         """
