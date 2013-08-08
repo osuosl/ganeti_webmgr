@@ -1092,6 +1092,8 @@ class VMWizardView(LoginRequiredMixin, PermissionRequiredMixin,
                    CookieWizardView):
     template_name = "ganeti/forms/vm_wizard.html"
     permission_required = ["admin", "create_vm"]
+    no_perms_msg = ("You do not have admin or create vm "
+                    "privledges to any clusters.")
 
     OPTIONS = (
         # value, display value
