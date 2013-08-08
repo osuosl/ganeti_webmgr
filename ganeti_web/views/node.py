@@ -19,6 +19,7 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
+from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse, Http404
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -33,7 +34,6 @@ log_action = LogItem.objects.log_action
 from ganeti_web.util.client import GanetiApiError
 from ganeti_web import constants
 from ganeti_web.forms.node import RoleForm, MigrateForm, EvacuateForm
-from ganeti_web.middleware import Http403
 from ganeti_web.models import Node, Job
 from ganeti_web.views.generic import NO_PRIVS, LoginRequiredMixin
 from ganeti_web.views.virtual_machine import BaseVMListView
@@ -98,7 +98,7 @@ class BaseNodeVMListView(BaseVMListView):
         self.admin = (user.is_superuser or user.has_any_perms(self.cluster,
                       ["admin", "migrate"]))
         if not self.admin:
-            raise Http403(NO_PRIVS)
+            raise PermissionDenied(NO_PRIVS)
 
         self.ajax_args = [self.cluster.slug, self.node.hostname]
 
@@ -149,7 +149,7 @@ def object_log(request, cluster_slug, host, rest=False):
     if not (user.is_superuser or user.has_any_perms(cluster,
                                                     ['admin', 'migrate'])):
         if not rest:
-            raise Http403(NO_PRIVS)
+            raise PermissionDenied(NO_PRIVS)
         else:
             return {'error': NO_PRIVS}
 
@@ -166,7 +166,7 @@ def role(request, cluster_slug, host):
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster,
                                                     ['admin', 'migrate'])):
-        raise Http403(NO_PRIVS)
+        raise PermissionDenied(NO_PRIVS)
 
     if request.method == 'POST':
         form = RoleForm(request.POST)
@@ -210,7 +210,7 @@ def migrate(request, cluster_slug, host):
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster,
                                                     ['admin', 'migrate'])):
-        raise Http403(NO_PRIVS)
+        raise PermissionDenied(NO_PRIVS)
 
     if request.method == 'POST':
         form = MigrateForm(request.POST)
@@ -250,7 +250,7 @@ def evacuate(request, cluster_slug, host):
     user = request.user
     if not (user.is_superuser or user.has_any_perms(cluster,
                                                     ['admin', 'migrate'])):
-        raise Http403(NO_PRIVS)
+        raise PermissionDenied(NO_PRIVS)
 
     if request.method == 'POST':
         form = EvacuateForm(cluster, node, request.POST)
