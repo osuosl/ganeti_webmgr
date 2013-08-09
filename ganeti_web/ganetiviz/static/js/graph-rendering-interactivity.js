@@ -151,7 +151,7 @@ $('#cy').cytoscape({
 // InputBox Instance-Node Search Feature.
 function vertexSearch(e) {
     if (e.keyCode == 13) {
-        text = $('#vertexInput').val() // get the current value of the input field.
+        text = $('instancelookup').val() // get the current value of the input field.
         var node_selector = "node[name ^='" + text + "']";
         //console.log(node_selector);
         cy_selected_instance = cy.$(node_selector)
@@ -165,10 +165,33 @@ function vertexSearch(e) {
     }
 }
 
+// Double clicking on the instance lookup box clears it.
+$("#instancelookup-div").dblclick(function(e){
+    $("#instancelookup-div").val("")
+});
+
+$("#instancelookup-div").keydown(function(e){
+    // console.log(e.keyCode)
+    if (e.keyCode == 13) {
+        text = $('#instancelookup-div').val() // get the current value of the input field.
+        var node_selector = "node[name ^='" + text + "']";
+        //console.log(node_selector);
+        cy_selected_instance = cy.$(node_selector)
+        console.log(cy_selected_instance)
+        if (cy_selected_instance){
+            // Un-highlight all the instances first.
+            cy.$(".ganeti-instance").toggleClass("highlighted",false)
+            //cy_selected_instance.toggleClass("active",true)
+            cy_selected_instance.addClass("highlighted")
+            cy_selected_instance.css({'visibility':'visible',})
+        }
+    }
+
+});
 
 // Panning by pressing arrow keys
 $(document).keydown(function(e){
-    //console.log(e.keyCode)
+    //console.log(e)
 
     if (e.keyCode == 37) { 
         // go left
@@ -203,6 +226,7 @@ $(document).keydown(function(e){
        return false;
     }
 
+
     // Character 'c' is pressed == All the visible instances are cleared. (Actually hidden)
     if (e.keyCode == 67) { 
         cy.$('.ganeti-instance').css({'visibility':'hidden'})
@@ -220,14 +244,14 @@ $(document).keydown(function(e){
             sec_instances.css({'visibility':'visible'})
             //sec_instances.toggleClass('highlighted-sinstances',true)
         }
-       return false;
     }
 
 
+    // If Character 'h' is pressed then switch help mode on.
     if (e.keyCode == 72) { 
         if (HELP_MODE == false){
             HELP_MODE = true
-            console.log("Help Mode switched ON")
+            //console.log("Help Mode switched ON")
             // $("#cy").css({'width': '70%', })
             $("#overlay-help").css({'visibility':'visible',})
         } else {
@@ -236,6 +260,8 @@ $(document).keydown(function(e){
             // $("#cy").css({ 'width': '100%'})
         }
     }
+
+
 });
 
 
