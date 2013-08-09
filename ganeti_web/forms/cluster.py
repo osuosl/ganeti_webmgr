@@ -16,8 +16,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
+import socket
 
 from django import forms
+from django.core.validators import validate_ipv4_address
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext as _
 
@@ -72,11 +75,38 @@ class EditClusterForm(forms.ModelForm):
         """
 
         data = self.cleaned_data = super(EditClusterForm, self).clean()
+        hostname = data.get('hostname')
+        ipaddr = False
+        try:
+            # Check if its an IP Address
+            validate_ipv4_address(hostname)
+            ipaddr = hostname
+        except ValidationError:
+            # Not an IP Address, but a hostname
+            pass
+
+        if ipaddr:
+            host, _, _ = socket.gethostbyaddr(ipaddr)
+        else:
+            ipaddr = host = socket.gethostbyname(hostname)
+
+        try:
+            cluster = Cluster.objects.get(hostname=host)
+            msg = ("Cluster with Hostname %s already exists with IP Address %s"
+                   % (cluster.hostname, ipaddr))
+            self._errors['hostname'] = self.error_class([msg])
+        except ObjectDoesNotExist:
+            # Doesn't exist.
+            pass
 
         # Automatically set the slug on cluster creation, based on the
         # hostname, if no slug was provided.
-        if "hostname" in data and 'slug' not in data:
-            data['slug'] = slugify(data["hostname"].split('.')[0])
+        if hostname and 'slug' not in data:
+            if not ipaddr:
+                slug = slugify(data["hostname"].split('.')[0])
+            else:
+                slug = hostname
+            data['slug'] = slug
             del self._errors['slug']
 
         username = data.get('username', "")
