@@ -724,6 +724,11 @@ class VMWizardBasicsForm(Form):
                      help_text=_(VM_CREATE_HELP['hypervisor']))
     os = ChoiceField(label=_('Operating System'), choices=[],
                      help_text=_(VM_CREATE_HELP['os']))
+    no_install = BooleanField(label=_('Do not install the OS'), required=False,
+                              help_text=_(VM_CREATE_HELP['no_install']))
+    iallocator = BooleanField(label=_("Automatic Allocation"),
+                              initial=True, required=False,
+                              help_text=_(VM_CREATE_HELP['iallocator']))
     vcpus = IntegerField(label=_("Virtual CPU Count"), initial=1, min_value=1,
                          help_text=_(VM_HELP['vcpus']))
     minram = DataVolumeField(label=_('Minimum RAM (MiB)'),
@@ -785,6 +790,15 @@ class VMWizardBasicsForm(Form):
             return
 
         self.cluster = cluster
+
+        # Verify that the autoallocator isn't nothing
+        # If it is, remove the option.
+        default_iallocator = cluster.info['default_iallocator']
+        if not default_iallocator:
+            del self.fields['iallocator']
+        else:
+            label_extra = " (%s)" % default_iallocator
+            self.fields['iallocator'].label += label_extra
 
         # Get a look at the list of available hypervisors, and set the initial
         # hypervisor appropriately.
@@ -909,12 +923,17 @@ class VMWizardAdvancedForm(Form):
     name_check = BooleanField(label=_('Verify hostname through DNS'),
                               initial=False, required=False,
                               help_text=_(VM_RENAME_HELP['name_check']))
+    no_start = BooleanField(label=_('Do not boot the VM'), required=False)
     pnode = ModelChoiceField(label=_("Primary Node"),
                              queryset=Node.objects.all(), empty_label=None,
                              help_text=_(VM_CREATE_HELP['pnode']))
     snode = ModelChoiceField(label=_("Secondary Node"),
                              queryset=Node.objects.all(), empty_label=None,
                              help_text=_(VM_CREATE_HELP['snode']))
+
+    # By default unless the configure_for_iallocator method has run,
+    # we assume we're not using autoallocation
+    use_iallocator = False
 
     def _configure_for_cluster(self, cluster):
         if not cluster:
@@ -935,9 +954,18 @@ class VMWizardAdvancedForm(Form):
         self.fields["pnode"].initial = template.pnode
         self.fields["snode"].initial = template.snode
 
+    def _configure_for_iallocator(self):
+        del self.fields["pnode"]
+        del self.fields["snode"]
+        self.use_iallocator = True
+
     def _configure_for_disk_template(self, template):
+        # If its not drdb, we dont use the secondary node.
+        # If we're using the iallocator then this field
+        # will already be deleted.
         if template != "drbd":
             del self.fields["snode"]
+
 
     def clean(self):
         # Ganeti will error on VM creation if an IP address check is requested
@@ -947,7 +975,7 @@ class VMWizardAdvancedForm(Form):
             msg = ["Cannot perform IP check without name check"]
             self._errors["ip_check"] = self.error_class(msg)
 
-        if data.get('pnode') == data.get('snode'):
+        if not self.use_iallocator and data.get('pnode') == data.get('snode'):
             raise forms.ValidationError("The secondary node cannot be the "
                                         "primary node.")
 
@@ -1133,6 +1161,13 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
             return data["disk_template"]
         return None
 
+    def _get_iallocator(self):
+        data = self.get_cleaned_data_for_step("2")
+        if data:
+            # This one is different because the iallocator might not exist.
+            return data.get("iallocator", False)
+        return False
+
     def get_form(self, step=None, data=None, files=None):
         s = int(self.steps.current) if step is None else int(step)
         initial = self.get_form_initial(s)
@@ -1156,7 +1191,12 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
             form = VMWizardAdvancedForm(data=data)
             form._configure_for_cluster(self._get_cluster())
             form._configure_for_template(self._get_template())
-            form._configure_for_disk_template(self._get_disk_template())
+            using_iallocator = self._get_iallocator()
+            # Autoallocation means we dont need to configure the disk template
+            if using_iallocator:
+                form._configure_for_iallocator()
+            else:
+                form._configure_for_disk_template(self._get_disk_template())
         elif s == 4:
             cluster = self._get_cluster()
             hv = self._get_hv()
@@ -1243,10 +1283,19 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
             nics = [{"link": "br0", "mode": "bridged"}]
         template.nics = nics
 
+        template.hypervisor = forms[2].cleaned_data["hv"]
+
         template.os = forms[2].cleaned_data["os"]
+        template.no_install = forms[2].cleaned_data["no_install"]
+        template.iallocator = forms[2].cleaned_data["iallocator"]
         template.ip_check = forms[3].cleaned_data["ip_check"]
         template.name_check = forms[3].cleaned_data["name_check"]
-        template.pnode = forms[3].cleaned_data["pnode"].hostname
+        template.no_start = forms[3].cleaned_data["no_start"]
+
+        if not template.iallocator:
+            template.pnode = forms[3].cleaned_data["pnode"].hostname
+            if "snode" in forms[3].cleaned_data:
+                template.snode = forms[3].cleaned_data["snode"].hostname
 
         hvparams = forms[4].cleaned_data
 
@@ -1256,9 +1305,8 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
         template.kernel_path = hvparams.get("kernel_path")
         template.root_path = hvparams.get("root_path")
         template.serial_console = hvparams.get("serial_console")
-
-        if "snode" in forms[3].cleaned_data:
-            template.snode = forms[3].cleaned_data["snode"].hostname
+        template.nic_type = hvparams.get('nic_type')
+        template.disk_type = hvparams.get('disk_type')
 
         template.set_name(template_name)
         # only save the template to the database if its not temporary
