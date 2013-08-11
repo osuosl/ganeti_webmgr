@@ -61,17 +61,3 @@ class ClusterGraphView(TemplateView):
         context['cluster_slug'] = cluster_slug
         return context
 
-
-class ClusterRefreshView(View,LoginRequiredMixin):
-    """
-    Refresh the cluster information, and redirect the user back to the ganetiviz cluster map.
-    """
-    def get(self, request, *args, **kwargs):
-        cluster_hostname=self.kwargs['cluster_hostname']
-
-        cluster = get_object_or_404(Cluster, hostname=cluster_hostname)
-        cluster.sync_nodes(remove=True)
-        cluster.sync_virtual_machines(remove=True)
-
-        url = '/map/%s'%(cluster_hostname,)
-        return redirect(url)

@@ -1,5 +1,5 @@
 from django.conf.urls.defaults import patterns, url
-from ganetiviz.views import VMJsonView,NodeJsonView,ClusterGraphView,ClusterRefreshView
+from ganetiviz.views import VMJsonView,NodeJsonView,ClusterGraphView
 
 urlpatterns = patterns(
     'ganetiviz.views',
@@ -12,7 +12,4 @@ urlpatterns = patterns(
 
     url(r'^map/(?P<cluster_hostname>[\.\w]+)$', ClusterGraphView.as_view(), 
         name='cluster-graph'),
-
-    url(r'^ganetiviz/refresh/(?P<cluster_hostname>[\.\w]+)$', ClusterRefreshView.as_view(), 
-        name='ganetiviz-refresh'),
 )
