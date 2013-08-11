@@ -55,7 +55,10 @@ class ClusterGraphView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super(ClusterGraphView, self).get_context_data(**kwargs)
         cluster_hostname=self.kwargs['cluster_hostname']
+        cluster_obj = Cluster.objects.get(hostname=cluster_hostname)
+        cluster_slug = cluster_obj.slug
         context['cluster_hostname'] = cluster_hostname
+        context['cluster_slug'] = cluster_slug
         return context
 
 

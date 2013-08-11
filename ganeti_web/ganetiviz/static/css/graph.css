@@ -21,6 +21,7 @@ body {
   width: 25%;
   z-index: -1;
   background: #FFEBCD;
+  opacity:0.9;
 }
 
 #instancelookup-div {
@@ -28,7 +29,7 @@ body {
   position: absolute;
   max-height:1em; 
   top: 10px;
-  left: 41%;
+  left: 42%;
   height: 3%;
   width: 14%;
   z-index: -2;

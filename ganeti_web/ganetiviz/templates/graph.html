@@ -10,35 +10,74 @@
 </head>
 <body>
 <div>
-    <input type="button" value="Refresh Cluster" style="float:right" onClick="window.location.href='/ganetiviz/refresh/{{ cluster_hostname }}'">
+    <input id="refresh-button" type="button" value="Refresh Cluster" style="float:right">
     <div style="float:left"> <b>Press 'h' for help..</b> </div>
 </div>
 
   <div id="cy"></div>
   <input id="instancelookup-div" placeholder="Filter instances by name">
+  <div id="overlay-help"> <br> <b> Help Active </b> </br>
+    <ul>
+    <li> Press 'h' again to toggle </li>
+    <li> Pan the graph - Arrow Keys </li>
+    <li> Zoom In/ Out - Scroll <br/>
+        (mouse pointer at focus point) </li>
+    <li> Click Node to view primary instances </li>
+    <li> Click again to hide primary instances </li>
+    <li> Press 's' to view secondary instances for selected node </li>
+    <li> Click "Refresh Cluster" to sync map with ganeti </li>
+    <li> Color Codes: 
+      <ul> 
+        <li>  Offline Node: <font color="#DD2222"> Red </font>  </li>
+        <li>  Running Nodes: <font color="#6FB1FC"> Blue </font> </li>
+        <li>  Active Instances : <font color="#00CC00"> Green </font> </li>
+        <li>  Active Instances: <font color="#AA0000"> Red </font>  </li>
+      </ul>
+    </li>
+    </ul>
+  </div>
+
   <script src="{{ STATIC_URL }}/js/utility-functions.js"></script>
 
   <script>
     //TODO: Try to swtich to an aysnchronus solution.
 
-    $.ajaxSetup({
-        async: false
-    });
+    function fetchclusterdata(){
+      $.ajaxSetup({
+          async: false
+      });
 
-    $.getJSON("/ganetiviz/vms/{{ cluster_hostname }}",function( json ) {
-      vms_json = json
-    });
+      $.getJSON("/ganetiviz/vms/{{ cluster_hostname }}",function( json ) {
+        window.vms_json = json
+      });
 
-    $.getJSON("/ganetiviz/nodes/{{ cluster_hostname }}",function( json ) {
-      gnodes_json = json
-    });
+      $.getJSON("/ganetiviz/nodes/{{ cluster_hostname }}",function( json ) {
+        window.gnodes_json = json
+      });
 
-    $.ajaxSetup({
-        async: true
-    });
+      $.ajaxSetup({
+          async: true
+      });
+    };
   </script>
 
   <script src="{{ STATIC_URL }}/js/graph-abstract-modelling.js"></script>
   <script src="{{ STATIC_URL }}/js/graph-rendering-interactivity.js"></script>
+
+  <script>
+    fetchclusterdata()
+    buildabstractgraph()
+    renderinteractivegraph()
+
+    // If the refresh-button is clicked
+    $("#refresh-button").click(function(e){
+        $.get("/cluster/{{ cluster_slug }}/refresh/", function() {
+            fetchclusterdata()
+            buildabstractgraph()
+            renderinteractivegraph()
+        });
+    })
+  </script>
+
 </body>
 </html>
