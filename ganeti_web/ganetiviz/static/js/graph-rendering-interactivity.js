@@ -170,79 +170,85 @@ function renderinteractivegraph(){
 
   });
 
-
-  // Other Keyboard Events
-  $(document).keydown(function(e){
-      //console.log(e)
-
-      // Panning the Graph using arrow keys
-      if (e.keyCode == 37) { 
-          // go left
-          cy.panBy({
-              x: -25,
-              y: 0 
-          });
-         return false;
-      }
-      if (e.keyCode == 39) { 
-          // go right
-          cy.panBy({
-              x: 25,
-              y: 0 
-          });
-         return false;
-      }
-      if (e.keyCode == 38) { 
-          // go up
-          cy.panBy({
-              x: 0,
-              y: -25 
-          });
-         return false;
-      }
-      if (e.keyCode == 40) { 
-          // go down
-          cy.panBy({
-              x: 0,
-              y: 25 
-          });
-         return false;
-      }
-
-
-      // Character 'c' is pressed == All the visible instances are cleared. (Actually hidden)
-      if (e.keyCode == 67) { 
-          cy.$('.ganeti-instance').css({'visibility':'hidden'})
-      }
-
-      // Character 's' is pressed == All the secondary instances corresponding to the highlighted node pop up.
-      if (e.keyCode == 83) { 
-          ele = cy.$(':selected')[0]
-          if (ele != null && ele['_private']['classes']['ganeti-node'] == true){
-              cy.$('.ganeti-instance').css({'visibility':'hidden'})
-              snode = ele['_private']['data']['id']
-              sec_instances_selector = '.snode-' + fqdntoid(snode)
-              sec_instances = cy.$(sec_instances_selector)
-              //console.log(sec_instances_selector)
-              sec_instances.css({'visibility':'visible'})
-              //sec_instances.toggleClass('highlighted-sinstances',true)
-          }
-      }
-
-
-      // If Character 'h' is pressed then switch help mode on.
-      if (e.keyCode == 72) { 
-          if (GANETIVIZ_HELP_MODE == false){
-              GANETIVIZ_HELP_MODE = true
-              console.log("Help Mode switched ON")
-              // $("#cy").css({'width': '70%', })
-              $("#overlay-help").css({'visibility':'visible',})
-          } else {
-              GANETIVIZ_HELP_MODE = false
-              $("#overlay-help").css({'visibility':'hidden',})
-              // $("#cy").css({ 'width': '100%'})
-          }
-      }
-  });
-
 }
+
+
+// Other Keyboard Events
+$(document).keydown(function(e){
+    //console.log(e.keyCode)
+
+    // Panning the Graph using arrow keys
+    if (e.keyCode == 37) { 
+        // go right
+        cy.panBy({
+            x: 25,
+            y: 0 
+        });
+       return false;
+    }
+    if (e.keyCode == 39) { 
+        // go left
+        cy.panBy({
+            x: -25,
+            y: 0 
+        });
+       return false;
+    }
+    if (e.keyCode == 38) { 
+        // go down
+        cy.panBy({
+            x: 0,
+            y: 25 
+        });
+       return false;
+    }
+    if (e.keyCode == 40) { 
+        // go up
+        cy.panBy({
+            x: 0,
+            y: -25 
+        });
+       return false;
+    }
+
+
+    // Character 'c' is pressed == All the visible instances are cleared. (Actually hidden)
+    if (e.keyCode == 67) { 
+        cy.$('.ganeti-instance').css({'visibility':'hidden'})
+    }
+
+    // Character 's' is pressed == All the secondary instances corresponding to the highlighted node pop up.
+    if (e.keyCode == 83) { 
+        ele = cy.$(':selected')[0]
+        if (ele != null && ele['_private']['classes']['ganeti-node'] == true){
+            cy.$('.ganeti-instance').css({'visibility':'hidden'})
+            snode = ele['_private']['data']['id']
+            sec_instances_selector = '.snode-' + fqdntoid(snode)
+            sec_instances = cy.$(sec_instances_selector)
+            //console.log(sec_instances_selector)
+            sec_instances.css({'visibility':'visible'})
+            //sec_instances.toggleClass('highlighted-sinstances',true)
+        }
+    }
+
+
+    // If Character 'h' is pressed then switch help mode on.
+    if (e.keyCode == 72) { 
+        if (GANETIVIZ_HELP_MODE == false){
+            GANETIVIZ_HELP_MODE = true
+            console.log("Help Mode switched ON")
+            // $("#cy").css({'width': '70%', })
+            $("#overlay-help").css({'visibility':'visible',})
+        } else {
+            GANETIVIZ_HELP_MODE = false
+            $("#overlay-help").css({'visibility':'hidden',})
+            // $("#cy").css({ 'width': '100%'})
+        }
+    }
+
+    // If Character 'r' is pressed then we reset the graph to the original position (without refreshing the cluster)
+    if (e.keyCode == 82) { 
+        buildabstractgraph()
+        renderinteractivegraph()
+    }
+});
