@@ -1,12 +1,13 @@
 body { 
   font: 14px helvetica neue, helvetica, arial, sans-serif;
+  overflow: hidden;
 }
 
 #cy {
   height: 90%;
   width: 98%;
   position: absolute;
-  left: 0;
+  left: 5;
   top: 20px;
   z-index: -2;
 }
@@ -16,12 +17,13 @@ body {
   visibility: hidden;
   position: absolute;
   top: 45px;
-  right: 0px;
+  left: 0px;
   height: 100%;
   width: 25%;
   z-index: -1;
   background: #FFEBCD;
   opacity:0.9;
+  overflow: scroll;
 }
 
 #instancelookup-div {
