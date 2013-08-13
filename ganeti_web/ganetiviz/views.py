@@ -17,10 +17,10 @@ class VMJsonView(DetailView):
     The cluster is specified in the url, example: "/ganetiviz/vms/ganeti.example.org"
     """
     def get(self, request, *args, **kwargs):
-        #cluster_hostname = "ganeti.example.org"
-        cluster_hostname=self.kwargs['cluster_hostname']
+        #cluster_slug = "ganeti"
+        cluster_slug=self.kwargs['cluster_slug']
 
-        cluster = Cluster.objects.get(hostname=cluster_hostname)
+        cluster = Cluster.objects.get(slug=cluster_slug)
         vm_queryset = VirtualMachine.objects.filter(cluster=cluster)
         selected_fields = ('hostname','primary_node','secondary_node','status')
         vm_json_data = serializers.serialize('json', vm_queryset, fields=selected_fields, use_natural_keys=True)
@@ -34,10 +34,10 @@ class NodeJsonView(DetailView):
     The cluster is specified in the url, example: "/ganetiviz/vms/ganeti.example.org"
     """
     def get(self, request, *args, **kwargs):
-        #cluster_hostname = "ganeti.example.org"
-        cluster_hostname=self.kwargs['cluster_hostname']
+        #cluster_slug = "ganeti"
+        cluster_slug=self.kwargs['cluster_slug']
 
-        cluster = Cluster.objects.get(hostname=cluster_hostname)
+        cluster = Cluster.objects.get(slug=cluster_slug)
         node_queryset = Node.objects.filter(cluster=cluster)
         selected_fields = ('hostname','ram_total','ram_free','offline','role')
         node_json_data = serializers.serialize('json', node_queryset, fields= selected_fields)
@@ -54,10 +54,10 @@ class ClusterGraphView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(ClusterGraphView, self).get_context_data(**kwargs)
-        cluster_hostname=self.kwargs['cluster_hostname']
-        cluster_obj = Cluster.objects.get(hostname=cluster_hostname)
-        cluster_slug = cluster_obj.slug
-        context['cluster_hostname'] = cluster_hostname
+
+        cluster_slug=self.kwargs['cluster_slug']
+        cluster = Cluster.objects.get(slug=cluster_slug)
         context['cluster_slug'] = cluster_slug
+
         return context
 
