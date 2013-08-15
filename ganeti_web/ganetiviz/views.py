@@ -61,3 +61,19 @@ class ClusterGraphView(TemplateView):
 
         return context
 
+
+class AllClustersView(TemplateView):
+    """
+    View that renders a template with showing a list of available clusters 
+    each linking to its corresponding Map Page.
+    """
+    template_name = 'cluster-list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(AllClustersView, self).get_context_data(**kwargs)
+
+        clusters = Cluster.objects.all()
+        context['clusters'] = clusters
+
+        return context
+
