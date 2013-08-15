@@ -26,6 +26,10 @@ from os.path import join, realpath, abspath, dirname
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
+# absolute path to the docroot of this site
+PROJECT_ROOT = realpath(join(abspath(dirname(__file__)), "..", "..", ".."))
+DOC_ROOT = realpath(join(abspath(dirname(__file__)), "..", ".."))
+
 # XXX - Django sets DEBUG to False when running unittests.  They want to ensure
 # that you test as if it were a production environment.  Unfortunately we have
 # some models and other settings used only for testing.  We use the TESTING
@@ -50,7 +54,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
 
         # Or path to database file if using sqlite3.
-        'NAME': 'ganeti.db',
+        'NAME': join(PROJECT_ROOT, 'ganeti.db'),
         'USER': '',      # Not used with sqlite3.
         'PASSWORD': '',  # Not used with sqlite3.
         'HOST': '',      # Set to empty string for localhost.
@@ -100,10 +104,6 @@ USE_I18N = True
 # If you set this to False, Django will not format dates, numbers and
 # calendars according to the current locale
 USE_L10N = True
-
-# absolute path to the docroot of this site
-PROJECT_ROOT = realpath(join(abspath(dirname(__file__)), "..", "..", ".."))
-DOC_ROOT = realpath(join(abspath(dirname(__file__)), "..", ".."))
 
 # prefix used for the site.  ie. http://myhost.com/<SITE_ROOT>
 # for the django standalone server this should be ''
