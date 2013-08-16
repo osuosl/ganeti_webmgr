@@ -49,7 +49,8 @@ from ganeti_web.utilities import (cluster_default_info, cluster_os_list,
                                   get_hypervisor, hv_prettify)
 from ganeti_web.util.client import (REPLACE_DISK_AUTO, REPLACE_DISK_PRI,
                                     REPLACE_DISK_CHG, REPLACE_DISK_SECONDARY)
-from ganeti_web.views.generic import LoginRequiredMixin
+from ganeti_web.views.generic import (LoginRequiredMixin,
+                                      PermissionRequiredMixin)
 
 username_or_mtime = Q(username='') | Q(mtime__isnull=True)
 
@@ -1115,8 +1116,12 @@ class VMWizardKVMForm(Form):
         return data
 
 
-class VMWizardView(LoginRequiredMixin, CookieWizardView):
+class VMWizardView(LoginRequiredMixin, PermissionRequiredMixin,
+                   CookieWizardView):
     template_name = "ganeti/forms/vm_wizard.html"
+    permission_required = ["admin", "create_vm"]
+    no_perms_msg = ("You do not have admin or create vm "
+                    "privledges to any clusters.")
 
     OPTIONS = (
         # value, display value
@@ -1323,6 +1328,12 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
             return HttpResponseRedirect(reverse("template-detail",
                                                 args=[cluster.slug,
                                                       template]))
+
+    def has_perms(self, request, perms, obj=None):
+        user = request.user
+        # We use Cluster and dont use obj because we want to check if the user
+        # has perms on ANY clusters
+        return user.is_superuser or user.has_any_perms(Cluster, perms)
 
 
 def vm_wizard(*args, **kwargs):

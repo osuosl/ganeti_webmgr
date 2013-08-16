@@ -16,12 +16,12 @@
 # USA.
 
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import simplejson as json
 from django.views.generic.detail import DetailView
 
-from ganeti_web.middleware import Http403
 from ganeti_web.models import Job, Cluster, VirtualMachine, Node
 from ganeti_web.views.generic import NO_PRIVS, LoginRequiredMixin
 
@@ -73,13 +73,13 @@ def clear(request, cluster_slug, job_id):
 
     if not cluster_admin:
         if isinstance(obj, (Cluster, Node)):
-            raise Http403(NO_PRIVS)
+            raise PermissionDenied(NO_PRIVS)
         elif isinstance(obj, (VirtualMachine,)):
             # object is a virtual machine, check perms on VM and on Cluster
             if not (obj.owner_id == user.get_profile().pk
                     or user.has_perm('admin', obj)
                     or user.has_perm('admin', obj.cluster)):
-                raise Http403(NO_PRIVS)
+                raise PermissionDenied(NO_PRIVS)
 
     # If the job points to an object, and the job is the most recent job on
     # the object, then clear it from the object.

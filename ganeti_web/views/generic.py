@@ -2,9 +2,10 @@
 
 # Generic class-based view mixins and helpers.
 
+from collections import Iterable
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, PermissionDenied
 from django.utils.decorators import method_decorator
 from django.utils.http import urlencode
 from django.utils.translation import ugettext as _
@@ -26,6 +27,61 @@ class LoginRequiredMixin(object):
     def dispatch(self, *args, **kwargs):
         return super(LoginRequiredMixin, self).dispatch(*args, **kwargs)
 
+class PermissionRequiredMixin(object):
+
+    permission_required = None
+    no_perms_msg = NO_PRIVS
+
+    def get_required_perms(self, request=None):
+        if isinstance(self.permission_required, basestring):
+            perms = [self.permission_required]
+        elif isinstance(self.permission_required, Iterable):
+            perms = [p for p in self.permission_required]
+        else:
+            raise ImproperlyConfigured("""
+                'PermissionRequiredMixin' requires the 'permission_required'
+                attribute to be a single string representing a permission,
+                or a list of permissions. Instead got '%s'.
+                """ % self.permission_required)
+        return perms
+
+    def check_perms(self, request, obj=None):
+        """
+        Gets the required permissions and checks if the user has them.
+
+        If the user doesn't have any perms, raises a PermissionDenied exception
+        """
+        perms = self.get_required_perms(request)
+        has_perms = self.has_perms(request, perms, obj)
+        if not has_perms:
+            self.on_check_perm_fail(request, obj)
+            raise PermissionDenied(self.no_perms_msg)
+
+    def has_perms(self, request, perms, obj=None):
+        """
+        Performs the permission checking. By default it checks if the user has
+        permissions using the Django auth framework.
+
+        Can be overridden to check permissions with a different backend or
+        determine if the user has permissions using other methods.
+        """
+        return request.user.has_perms(perms, obj=obj)
+
+    def on_check_perm_fail(self, request, obj=None):
+        """
+        Method which is called when the user doesn't have permissions. By
+        default it does nothing and should be overridden to provide side
+        effects if the user has no permissions.
+        """
+
+    def dispatch(self, request, *args, **kwargs):
+        # We want an object to check against for object permissions
+        obj = (hasattr(self, 'get_object') and self.get_object()
+            or getattr(self, 'object', None))
+
+        self.check_perms(request, obj)
+        return super(PermissionRequiredMixin, self).dispatch(request, *args,
+            **kwargs)
 
 class PaginationMixin(object):
     """
