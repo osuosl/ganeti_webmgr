@@ -1,15 +1,15 @@
-from django.contrib.auth.models import AnonymousUser, Group
+from django.contrib.auth.models import AnonymousUser, Group, User
 from django.test import TestCase
 
 from django_test_tools.users import UserTestMixin
 
-from ganeti_web.backend.queries import (cluster_qs_for_user,
-                                        owner_qs_for_cluster)
+from ganeti_web.backend.queries import cluster_qs_for_user, owner_qs
 from ganeti_web.models import Cluster
 
 __all__ = (
     "TestClusterQSForUser",
-    "TestOwnerQSForCluster",
+    "TestOwnerQSNoGroups",
+    "TestOwnerQSWithGroups",
 )
 
 
@@ -85,8 +85,99 @@ class TestClusterQSForUser(TestCase, UserTestMixin):
         user.delete()
 
 
-class TestOwnerQSForCluster(TestCase):
+class TestOwnerQSNoGroups(TestCase):
 
-    def test_owner_qs_for_cluster_none(self):
-        qs = owner_qs_for_cluster(None)
-        self.assertFalse(qs)
+    def setUp(self):
+        self.superuser = User.objects.create_superuser('super', None, 'secret')
+        self.admin = User.objects.create_user('admin', password='secret')
+        self.noperms = User.objects.create_user('noperms', password='secret')
+
+        self.cluster = Cluster.objects.create(
+            hostname="cluster1.example.org", slug="cluster1",
+            username='foo', password='bar', mtime=1)
+
+        self.admin.grant('admin', self.cluster)
+
+    def tearDown(self):
+        self.superuser.delete()
+        self.admin.delete()
+        self.noperms.delete()
+
+        self.cluster.delete()
+
+    def test_no_cluster(self):
+        owners = owner_qs(None, self.admin)
+        self.assertQuerysetEqual(owners, [])
+
+    def test_superuser(self):
+        owners = owner_qs(self.cluster, self.superuser)
+        valid_owners_list = [self.admin, self.noperms, self.superuser]
+        valid_owners = map(lambda user: user.get_profile(), valid_owners_list)
+        self.assertQuerysetEqual(owners, map(repr, valid_owners))
+
+    def test_admin_user(self):
+        owners = owner_qs(self.cluster, self.admin)
+        valid_owners = [self.admin.get_profile()]
+        self.assertQuerysetEqual(owners, map(repr, valid_owners))
+
+    def test_noperms_user(self):
+        owners = owner_qs(self.cluster, self.noperms)
+        self.assertQuerysetEqual(owners, [])
+
+    def test_create_vm_perms(self):
+        self.noperms.grant('create_vm', self.cluster)
+        owners = owner_qs(self.cluster, self.noperms)
+        valid_owners = [repr(self.noperms.get_profile())]
+        self.assertQuerysetEqual(owners, valid_owners)
+
+class TestOwnerQSWithGroups(TestCase):
+
+    def setUp(self):
+        self.superuser = User.objects.create_superuser('super', None, 'secret')
+        self.standard = User.objects.create_user('standard', password='secret')
+
+        self.admin_group = Group.objects.create(name='admin_group')
+        self.non_admin_group = Group.objects.create(name='non_admin_group')
+
+        self.standard.groups = [self.admin_group, self.non_admin_group]
+
+        self.cluster = Cluster.objects.create(
+            hostname="cluster1.example.org", slug="cluster1",
+            username='foo', password='bar', mtime=1)
+
+        self.admin_group.grant('admin', self.cluster)
+
+    def tearDown(self):
+        self.superuser.delete()
+        self.standard.delete()
+
+        self.admin_group.delete()
+        self.non_admin_group.delete()
+
+        self.cluster.delete()
+
+    def test_superuser(self):
+        owners = owner_qs(self.cluster, self.superuser)
+        valid_owners = [self.admin_group.organization,
+                        self.non_admin_group.organization,
+                        self.standard.get_profile(),
+                        self.superuser.get_profile()]
+
+        self.assertQuerysetEqual(owners, map(repr, valid_owners))
+
+    def test_user_in_admin_group(self):
+        owners = owner_qs(self.cluster, self.standard)
+        valid_owners = [repr(self.admin_group.organization)]
+        self.assertQuerysetEqual(owners, valid_owners)
+
+    def test_user_in_non_admin_group(self):
+        self.standard.groups.remove(self.admin_group)
+        owners = owner_qs(self.cluster, self.standard)
+        self.assertQuerysetEqual(owners, [])
+
+    def test_create_vm_perms_group(self):
+        self.non_admin_group.grant('create_vm', self.cluster)
+        owners = owner_qs(self.cluster, self.standard)
+        valid_owners = [self.admin_group.organization,
+                        self.non_admin_group.organization]
+        self.assertQuerysetEqual(owners, map(repr, valid_owners))
