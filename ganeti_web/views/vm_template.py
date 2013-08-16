@@ -117,6 +117,13 @@ class VMInstanceFromTemplateView(LoginRequiredMixin, FormView):
     form_class = VMInstanceFromTemplate
     template_name = "ganeti/vm_template/to_vm.html"
 
+    def get_form_kwargs(self):
+        kwargs = super(VMInstanceFromTemplateView, self).get_form_kwargs()
+        self._get_stuff()
+        # Update kwargs so the form can populate the proper owner.
+        kwargs.update(cluster=self.cluster, user=self.request.user)
+        return kwargs
+
     def _get_stuff(self):
         cluster_slug = self.kwargs["cluster_slug"]
         template_name = self.kwargs["template"]

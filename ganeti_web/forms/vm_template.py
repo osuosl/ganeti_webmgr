@@ -19,6 +19,7 @@ from django.forms import Form, CharField, ModelChoiceField, ValidationError
 from django.utils.translation import ugettext_lazy as _
 
 from ganeti_web.models import ClusterUser
+from ganeti_web.backend.queries import owner_qs
 
 
 class VirtualMachineTemplateCopyForm(Form):
@@ -35,6 +36,14 @@ class VMInstanceFromTemplate(Form):
                              queryset=ClusterUser.objects.all(),
                              empty_label=None)
     hostname = CharField(label=_('Instance Name'), max_length=255)
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        cluster = kwargs.pop('cluster', None)
+        super(VMInstanceFromTemplate, self).__init__(*args, **kwargs)
+        if user and cluster:
+            qs = owner_qs(cluster, user)
+            self.fields['owner'].queryset = qs
 
     def clean_hostname(self):
         hostname = self.cleaned_data.get('hostname')
