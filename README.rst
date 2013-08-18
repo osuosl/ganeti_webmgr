@@ -124,19 +124,19 @@ Dependencies
 
 * install pip:
 
-.. sourcecode:: bash
+.. code-block:: console
 
     $ sudo apt-get install python-pip
 
 * development libraries may be needed for some pip installs:
 
-.. sourcecode:: bash
+.. code-block:: console
 
     $ sudo apt-get install python-dev
 
 * install Fabric and Virtualenv:
 
-.. sourcecode:: bash
+.. code-block:: console
 
     $ sudo apt-get install python-virtualenv fabric
 
@@ -151,14 +151,14 @@ Either download and unpack the "latest release" from
 `here <http://code.osuosl.org/projects/ganeti-webmgr/files>`_, or check it out
 from the repository:
 
-.. sourcecode:: bash
+.. code-block:: console
 
     $ git clone git://git.osuosl.org/gitolite/ganeti/ganeti_webmgr
 
 Switch to project directory (Fabric commands only work from a directory
 containing a ``fabfile.py``):
 
-.. sourcecode:: bash
+.. code-block:: console
 
     $ cd ganeti_webmgr/
 
@@ -167,19 +167,19 @@ dependencies.  Choose either production or development environment
 
 * production environment:
 
-.. sourcecode:: bash
+.. code-block:: console
 
     $ fab deploy
 
 * development environment:
 
-.. sourcecode:: bash
+.. code-block:: console
 
     $ fab dev deploy
 
 * activate virtual environment:
 
-.. sourcecode:: bash
+.. code-block:: console
 
     $ source venv/bin/activate
 
@@ -190,7 +190,7 @@ Configuration
 In the project root, you'll find a default settings file called
 ``settings.py.dist``.  Copy it to ``settings.py``:
 
-.. sourcecode:: bash
+.. code-block:: console
 
     $ cp settings.py.dist settings.py
 
@@ -219,13 +219,13 @@ lines to reflect your wishes ():
 
 Initialize Database:
 
-.. sourcecode:: bash
+.. code-block:: console
 
     $ ./manage.py syncdb --migrate
 
 Build the search indexes:
 
-.. sourcecode:: bash
+.. code-block:: console
 
     $ ./manage.py rebuild_index
 
@@ -235,7 +235,7 @@ Build the search indexes:
 
 Everything should be all set up! Run the development server with:
 
-.. sourcecode:: bash
+.. code-block:: console
 
     $ ./manage.py runserver
 
@@ -246,7 +246,7 @@ Deploying a production server requires additional setup steps.
 
 1. Change the ownership of the ``whoosh_index`` directory to apache
 
-.. sourcecode:: bash
+.. code-block:: console
 
     $ chown apache:apache whoosh_index/
 
@@ -320,7 +320,7 @@ and password on the Ganeti cluster.
 
 Here is an example with user "jack" and password "abc123":
 
-.. sourcecode:: bash
+.. code-block:: console
 
     $ echo -n 'jack:Ganeti Remote API:abc123' | openssl md5
 
@@ -331,7 +331,7 @@ version of Ganeti you are running, you will need to either use
 
 An example hash entry might look like the following:
 
-.. sourcecode:: bash
+.. code-block:: console
 
     # Hashed password for jack
     jack {HA1}54c12257ee9be413f2f3182435514aae write
@@ -445,7 +445,7 @@ Cache System
 Ganeti Web Manager uses a cache system that stores information about Ganeti
 clusters in the database. This allows the following:
 
-.. sourcecode:: bash
+.. code-block:: console
 
       ---  Ganeti  ---
      /                \
@@ -501,7 +501,7 @@ Twisted VNC Authproxy is started with twistd, the twisted daemon.  Eventually
 we will include ``init.d`` scripts for better managing the daemon.  You may
 want to open port 8888 in your firewall for production systems.
 
-.. sourcecode:: bash
+.. code-block:: console
 
     $ twistd --pidfile=/tmp/proxy.pid -n vncap
 
@@ -516,7 +516,7 @@ port.  You may want to open port 843 in your firewall for production systems.
 
 Start the policy server with twistd:
 
-.. sourcecode:: bash
+.. code-block:: console
 
     $ sudo twistd --pidfile=/tmp/policy.pid -n flashpolicy
 
@@ -528,7 +528,7 @@ You may encounter an issue where twisted fails to start and gives you an error.
 This is usually caused by the environment variable ``PYTHONPATH`` not being
 exported correctly if you sudo up to root.  To fix it type:
 
-.. sourcecode:: bash
+.. code-block:: console
 
     $ export PYTHONPATH="."
 
