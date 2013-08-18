@@ -4,6 +4,7 @@
 
 # Hidden files
 .*
+!.travis.yml
 
 # All compiled python code
 *.pyc
