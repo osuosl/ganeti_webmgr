@@ -8,6 +8,20 @@ All events for graph interactivity are handled in this file.
 
 GANETIVIZ_HELP_MODE = false;
 
+// This function activates help mode.
+function activate_help(){
+    if (GANETIVIZ_HELP_MODE == false){
+        GANETIVIZ_HELP_MODE = true
+        console.log("Help Mode switched ON")
+        // $("#cy").css({'width': '70%', })
+        $("#overlay-help").css({'visibility':'visible',})
+    } else {
+        GANETIVIZ_HELP_MODE = false
+        $("#overlay-help").css({'visibility':'hidden',})
+        // $("#cy").css({ 'width': '100%'})
+    }
+}
+
 /******************** [2] Cytoscape Viewport Rendering and Interactivity ***********************/
 /**********************************************************************************************/
 
@@ -19,6 +33,11 @@ function renderinteractivegraph(){
     layout: {
       name: 'preset'
     },
+
+    minZoom: 0.1,
+    maxZoom: 10,
+
+    // renderer: //TODO: This is something interesting, can be further useful for finer control.
     
     // Adding style to "cytoscape elements" ie. Nodes & Edges
     style: cytoscape.stylesheet()
@@ -97,25 +116,52 @@ function renderinteractivegraph(){
       window.cy = this;
 
 
-      cy.$('node.ganeti-node').mousedown(function(){
+      // Shows all the primary instances for a given node.
+      cy.on('click', 'node.ganeti-node', function(event){
+          $("#instancelist-div").css({'visibility':'visible'})
+
           class_string = '.pnode-' + fqdntoid(this.id())
           //console.log(class_string)
 
           // Collection of instances attached to the node clicked upon.
-          primary_instances = cy.$(class_string)
+          window.primary_instances = cy.$(class_string)
 
-          //// Primary Instances around this node are shown.
-          //primary_instances.css({visibility:'visible'})
-          // If the set of primary instances around this node is already visible then hide them, else show them.
-          if (primary_instances.css('visibility') == 'visible'){
-              primary_instances.css({visibility:'hidden'})
-          }else {
-              primary_instances.css({visibility:'visible'})
-          }
+          //// Primary Instances around this node are shown in a div.
+          var li_elements = ""
+          primary_instances.each(function(i, ele){
+              pinstance = ele['_private']['data']['id']
+              //console.log(pinstance)
+              li_elements += "<li><div class='list-instance-element' id='" + pinstance + "'>" +  pinstance + "</div></li>"
+          });
+
+          $("#instancelist").html(li_elements)
+         
+
+          // After the list instance elements are created we bind them to the click event
+          $(".list-instance-element").click(function(){
+              $(".list-instance-element").toggleClass('active-list-element',false);
+              $(this).addClass("active-list-element");
+
+              //console.log(this.id)
+              var instance_id = this.id
+              pnode = VMGraph[instance_id][0];
+              snode = VMGraph[instance_id][1];
+              snode_edge_selector = "edge[source='" + pnode + "'][target='" + snode + "']";
+
+              // First un-highlight all highlighted failover edges.
+              cy.$('edge').toggleClass("active",false);
+
+              //console.log(snode_edge_selector);
+              eles = cy.$(snode_edge_selector)
+              eles.toggleClass("active",true);
+          });
+ 
       });
 
+
       // Highlights the edge indicating failover direction.
-      cy.$('node.ganeti-instance').click(function(){
+      cy.on('mousedown', 'node.ganeti-instance', function(event){
+      //cy.$('node.ganeti-instance').click(function(){
           cy.$('edge').toggleClass("active",false);
           pnode = VMGraph[this.id()][0];
           snode = VMGraph[this.id()][1];
@@ -175,7 +221,7 @@ function renderinteractivegraph(){
 
 // Other Keyboard Events
 $(document).keydown(function(e){
-    //console.log(e.keyCode)
+    console.log(e.keyCode)
 
     // Panning the Graph using arrow keys
     if (e.keyCode == 37) { 
@@ -217,6 +263,29 @@ $(document).keydown(function(e){
         cy.$('.ganeti-instance').css({'visibility':'hidden'})
     }
 
+    // Character 'p' is pressed == All the primary instances are shown attached to the node.
+    if (e.keyCode == 80) {
+        ele = cy.$(':selected')[0]
+        if (ele != null && ele['_private']['classes']['ganeti-node'] == true){
+            pnode = ele['_private']['data']['id']
+
+          class_string = '.pnode-' + fqdntoid(pnode)
+          //console.log(class_string)
+
+          // Collection of instances attached to the node clicked upon.
+          primary_instances = cy.$(class_string)
+
+          //// Primary Instances around this node are shown.
+          //primary_instances.css({visibility:'visible'})
+          // If the set of primary instances around this node is already visible then hide them, else show them.
+          if (primary_instances.css('visibility') == 'visible'){
+              primary_instances.css({visibility:'hidden'})
+          }else {
+              primary_instances.css({visibility:'visible'})
+          }
+      }
+    }
+
     // Character 's' is pressed == All the secondary instances corresponding to the highlighted node pop up.
     if (e.keyCode == 83) { 
         ele = cy.$(':selected')[0]
@@ -234,16 +303,7 @@ $(document).keydown(function(e){
 
     // If Character 'h' is pressed then switch help mode on.
     if (e.keyCode == 72) { 
-        if (GANETIVIZ_HELP_MODE == false){
-            GANETIVIZ_HELP_MODE = true
-            console.log("Help Mode switched ON")
-            // $("#cy").css({'width': '70%', })
-            $("#overlay-help").css({'visibility':'visible',})
-        } else {
-            GANETIVIZ_HELP_MODE = false
-            $("#overlay-help").css({'visibility':'hidden',})
-            // $("#cy").css({ 'width': '100%'})
-        }
+        activate_help()
     }
 
     // If Character 'r' is pressed then we reset the graph to the original position (without refreshing the cluster)
@@ -251,4 +311,8 @@ $(document).keydown(function(e){
         buildabstractgraph()
         renderinteractivegraph()
     }
+});
+
+$("#help-div").click(function(){
+    activate_help()
 });
