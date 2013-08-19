@@ -11,7 +11,7 @@ from ganeti_web.views.generic import LoginRequiredMixin
 
 
 
-class VMJsonView(DetailView):
+class VMJsonView(LoginRequiredMixin,DetailView):
     """
     View for generating JSON representation of Virtual Machines in a Cluster (Cluster-Graph)
     The cluster is specified in the url, example: "/ganetiviz/vms/ganeti.example.org"
@@ -28,7 +28,7 @@ class VMJsonView(DetailView):
         return HttpResponse(vm_json_data, content_type='application/json')  
 
 
-class NodeJsonView(DetailView):
+class NodeJsonView(LoginRequiredMixin,DetailView):
     """
     View for generating JSON representation of Nodes in a Cluster (Cluster-Graph)
     The cluster is specified in the url, example: "/ganetiviz/vms/ganeti.example.org"
@@ -45,7 +45,7 @@ class NodeJsonView(DetailView):
         return HttpResponse(node_json_data, content_type='application/json')  
 
 
-class ClusterGraphView(TemplateView):
+class ClusterGraphView(LoginRequiredMixin,TemplateView):
     """
     View that dispatches the appropriate template file responsible for visual
     mapping of the Cluster Graph.
@@ -62,7 +62,7 @@ class ClusterGraphView(TemplateView):
         return context
 
 
-class AllClustersView(TemplateView):
+class AllClustersView(LoginRequiredMixin,TemplateView):
     """
     View that renders a template with showing a list of available clusters 
     each linking to its corresponding Map Page.
