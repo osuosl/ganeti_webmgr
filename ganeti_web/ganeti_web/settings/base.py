@@ -25,22 +25,52 @@ settings.py files causing upgrade bugs.
 All settings in this module can be overriden in the main settings.py module,
 of course.
 """
+from os.path import abspath, basename, dirname, join
+from sys import path
 
-__all__ = (
-    "AUTH_PROFILE_MODULE",
-    "INSTALLED_APPS",
-    "MIDDLEWARE_CLASSES",
-    "TEMPLATE_CONTEXT_PROCESSORS",
-    "TEMPLATE_LOADERS",
-    "ugettext",
+##### Project structure variables #####
+PROJECT_ROOT = dirname(dirname(abspath(__file__)))
+DOC_ROOT = dirname(PROJECT_ROOT)
+SITE_NAME = basename(PROJECT_ROOT)
+
+# Add our project to our pythonpath
+path.append(PROJECT_ROOT)
+
+##### Debug *default* configuration #####
+DEBUG = False
+TEMPLATE_DEBUG = DEBUG
+##### End Debug configuration #####
+
+##### General Defaults #####
+SITE_ID = 1
+LOGIN_REDIRECT_URL = '/'
+
+USE_I18N = True
+USE_L10N = True
+##### End General defaults #####
+
+
+##### Items per page defaults #####
+# default max number of disks that can be added at once to an instance
+MAX_DISKS_ADD = 8
+# default max number of NICS that can be added at once to an instance
+MAX_NICS_ADD = 8
+# default items per page
+ITEMS_PER_PAGE = 15
+##### End Items per page defaults #####
+
+##### Haystack settings #####
+HAYSTACK_SITECONF = 'search_sites'
+HAYSTACK_SEARCH_ENGINE = 'whoosh'
+HAYSTACK_WHOOSH_PATH = join(PROJECT_ROOT, 'whoosh_index')
+##### End Haystack settings #####
+
+
+###### Template Configuration #####
+TEMPLATE_DIRS = (
+    join(DOC_ROOT, 'templates')
 )
 
-
-# Horrible Django hack for convincing Django that we are i18n'd.
-def ugettext(s):
-    return s
-
-# List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
@@ -56,6 +86,49 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'ganeti_web.context_processors.site',
     'ganeti_web.context_processors.common_permissions',
 )
+###### End Template Configuration #####
+
+###### Static Files Configuration #####
+STATIC_URL = '/static'
+
+STATICFILES_FINDERS = (
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+)
+
+STATICFILES_DIRS = (
+    join(PROJECT_ROOT, 'noVNC', 'include'),
+    join(DOC_ROOT, 'static'),
+)
+
+STATIC_ROOT = join(DOC_ROOT, "collected_static")
+###### End Static Files Configuration #####
+
+###### Other Configuration #####
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'object_permissions.backend.ObjectPermBackend',
+)
+
+##### Logging Configuration #####
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'mail_admins': {
+            'level': 'ERROR',
+            'class': 'django.utils.log.AdminEmailHandler'
+        }
+    },
+    'loggers': {
+        'django.request': {
+            'handlers': ['mail_admins'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
+    }
+}
+##### End Logging Configuration #####
 
 # Middleware. Order matters; these are all applied *in the order given*.
 MIDDLEWARE_CLASSES = (
@@ -80,6 +153,8 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.staticfiles',
     'registration',
+    'include_strip_tag',
+    'django_tables2',
     # ganeti_web must come before object_permissions in order to migrate from
     # 0.7 or older successfully.
     'ganeti_web',
@@ -90,8 +165,7 @@ INSTALLED_APPS = (
     'muddle',
     'muddle.shots',
     'muddle_users',
-    'include_strip_tag',
-    'django_tables2',
+
 
     # ganeti apps
     'authentication',
@@ -103,5 +177,20 @@ INSTALLED_APPS = (
     'vm_templates',
 )
 
-# The model that contains extra user profile stuff.
+ROOT_URLCONF = 'ganeti_web.urls'
 AUTH_PROFILE_MODULE = 'authentication.Profile'
+
+
+# Horrible Django hack for convincing Django that we are i18n'd.
+def ugettext(s):
+    return s
+
+# Ganeti Cached Cluster Objects Timeouts
+#    LAZY_CACHE_REFRESH (milliseconds) is the fallback cache timer that is
+#    checked when the object is instantiated. It defaults to 600000ms, or ten
+#    minutes.
+LAZY_CACHE_REFRESH = 600000
+# Other GWM Stuff
+VNC_PROXY = 'localhost:8888'
+RAPI_CONNECT_TIMEOUT = 3
+WEB_MGR_API_KEY = "CHANGE_ME"
