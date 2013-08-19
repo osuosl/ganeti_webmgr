@@ -1,15 +1,12 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title> List of available Clusters </title>
-<meta name="description" content="Ganeti Cluster Visualization"></meta>
-List of available Clusters - Select a cluster from the list to see its Visual Map.
-<ul>
-{% for cluster in clusters  %}
-    <li> <a href="/map/{{ cluster.slug }}/"> {{ cluster.hostname }} </a> </li>
-{% endfor %}
-</ul>
+{% extends "menu_base.html" %}
+{% block content %}
 
-</head>
-</body>
-</html>
+    <p style="text-align: center;"> <b>List of available clusters: Select a cluster to view its interactive visual map </b> </b> 
+    <br> </br>
+    <ul>
+    {% for cluster in clusters  %}
+        <li> <a href="/map/{{ cluster.slug }}/"> {{ cluster.hostname }} </a> </li>
+    {% endfor %}
+    </ul>
+
+{% endblock %}
