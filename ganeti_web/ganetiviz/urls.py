@@ -15,5 +15,5 @@ urlpatterns = patterns(
         name='cluster-graph'),
 
     url(r'^maps/$', AllClustersView.as_view(), 
-        name='cluster-graph'),
+        name='all-clusters-list'),
 )
