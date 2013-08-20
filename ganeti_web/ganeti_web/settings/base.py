@@ -97,7 +97,6 @@ STATICFILES_FINDERS = (
 )
 
 STATICFILES_DIRS = (
-    join(PROJECT_ROOT, 'noVNC', 'include'),
     join(DOC_ROOT, 'static'),
 )
 

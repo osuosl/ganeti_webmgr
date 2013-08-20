@@ -170,3 +170,7 @@ WEB_MGR_API_KEY = "CHANGE_ME"
 # Used for CSRF protection. Use a 16 or 32 bit random string here.
 # Do not share this with anyone.
 SECRET_KEY = 'CHANGE_ME'
+
+STATICFILES_DIRS += (
+    join(PROJECT_ROOT, 'noVNC', 'include'),
+)
