@@ -22,7 +22,7 @@ class VMJsonView(LoginRequiredMixin,DetailView):
 
         cluster = Cluster.objects.get(slug=cluster_slug)
         vm_queryset = VirtualMachine.objects.filter(cluster=cluster)
-        selected_fields = ('hostname','primary_node','secondary_node','status')
+        selected_fields = ('hostname','primary_node','secondary_node','status','owner','operating_system','ram','minram')
         vm_json_data = serializers.serialize('json', vm_queryset, fields=selected_fields, use_natural_keys=True)
 
         return HttpResponse(vm_json_data, content_type='application/json')  
