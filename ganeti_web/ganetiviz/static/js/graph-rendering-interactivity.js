@@ -12,7 +12,7 @@ GANETIVIZ_HELP_MODE = false;
 function activate_help(){
     if (GANETIVIZ_HELP_MODE == false){
         GANETIVIZ_HELP_MODE = true
-        console.log("Help Mode switched ON")
+        //console.log("Help Mode switched ON")
         // $("#cy").css({'width': '70%', })
         $("#overlay-help").css({'visibility':'visible',})
     } else {
@@ -118,7 +118,7 @@ function renderinteractivegraph(){
 
       // Shows all the primary instances for a given node.
       cy.on('click', 'node.ganeti-node', function(event){
-          $("#instancelist-div").css({'visibility':'visible'})
+          $("#grid-instances").css({'visibility':'visible'})
 
           class_string = '.pnode-' + fqdntoid(this.id())
           //console.log(class_string)
@@ -127,14 +127,19 @@ function renderinteractivegraph(){
           window.primary_instances = cy.$(class_string)
 
           //// Primary Instances around this node are shown in a div.
-          var li_elements = ""
+          var li_elements = []
           primary_instances.each(function(i, ele){
               pinstance = ele['_private']['data']['id']
               //console.log(pinstance)
-              li_elements += "<li><div class='list-instance-element' id='" + pinstance + "'>" +  pinstance + "</div></li>"
+              li_elements.push("<li><div class='list-instance-element' id='" + pinstance + "'>" +  pinstance + "</div></li>")
           });
 
-          $("#instancelist").html(li_elements)
+          list_size = li_elements.length
+          slice_point = Math.floor(list_size/2) + 1
+          li_elements_left = li_elements.slice(0,slice_point)
+          li_elements_right = li_elements.slice(slice_point)
+          $("#instancelist-left").html(li_elements_left)
+          $("#instancelist-right").html(li_elements_right)
          
 
           // After the list instance elements are created we bind them to the click event
@@ -144,8 +149,17 @@ function renderinteractivegraph(){
 
               //console.log(this.id)
               var instance_id = this.id
-              pnode = VMGraph[instance_id][0];
-              snode = VMGraph[instance_id][1];
+
+              // Assigning current instance parameters to varaibles.
+              //#TODO: VMGraph[instance_id] could be an object instead of array.
+              var pnode = VMGraph[instance_id][0];
+              var snode = VMGraph[instance_id][1];
+              var owner = VMGraph[instance_id][2];
+              var os = VMGraph[instance_id][3];
+              var ram = VMGraph[instance_id][4];
+              var minram = VMGraph[instance_id][5];
+              var status = VMGraph[instance_id][6];
+
               snode_edge_selector = "edge[source='" + pnode + "'][target='" + snode + "']";
 
               // First un-highlight all highlighted failover edges.
@@ -154,6 +168,16 @@ function renderinteractivegraph(){
               //console.log(snode_edge_selector);
               eles = cy.$(snode_edge_selector)
               eles.toggleClass("active",true);
+
+              // #instance-info div populated by instance parameters
+              var instance_info_content = "<ul style='list-style-type: none'>"
+                                        + "<li><b>Owner:</b> " + owner + "</li>" 
+                                        + "<li><b>OS:</b> " + os + "</li>" 
+                                        + "<li><b>Ram:</b> " + ram + "</li>"
+                                        + "<li><b>Status:</b> " + status + "</li>"
+                                        + "</ul>" 
+              $("#instance-info").html(instance_info_content)
+
           });
  
       });
@@ -221,7 +245,7 @@ function renderinteractivegraph(){
 
 // Other Keyboard Events
 $(document).keydown(function(e){
-    console.log(e.keyCode)
+    //console.log(e.keyCode)
 
     // Panning the Graph using arrow keys
     if (e.keyCode == 37) { 
@@ -311,6 +335,8 @@ $(document).keydown(function(e){
         buildabstractgraph()
         renderinteractivegraph()
     }
+
+
 });
 
 $("#help-div").click(function(){

@@ -59,9 +59,15 @@ function buildabstractgraph(){
       vm_hostname = vm["fields"]["hostname"]
       pnode = vm["fields"]["primary_node"]    // A Ganeti Node referred ahead as (g)node
       snode = vm["fields"]["secondary_node"]  // (g)node
+      owner = vm["fields"]["owner"]
+      os = vm["fields"]["operating_system"]
+      ram = vm["fields"]["ram"]
+      minram = vm["fields"]["minram"]
+      status = vm["fields"]["status"]
+
 
       // A HashMap object that will contain mapping from VM to pnode or snode for fast search
-      VMGraph[vm_hostname] = [pnode,snode]
+      VMGraph[vm_hostname] = [pnode,snode,owner,os,ram,minram,status]
 
       // Counting number of instances of each (g)node.
       if (!NodeInstanceLinks[pnode]){

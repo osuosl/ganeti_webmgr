@@ -5,9 +5,9 @@ body {
 
 #cy {
   height: 90%;
-  width: 98%;
+  width: 92%;
   position: absolute;
-  left: 5;
+  left: 0;
   top: 20px;
   z-index: -3;
 }
@@ -39,30 +39,55 @@ body {
   overflow: hidden;
 }
 
-#instancelist-div {
+#grid-instances {
   visibility:hidden;
   position: absolute;
   top: 45px;
-  right: 0px;
+  right: 0%;
   min-height: 0%;
   max-height: 80%;
-  width: 16%;
+  width: 30%;
   z-index: -2;
   background: #FFF8DC;
   opacity:0.9;
-  text-align:center;
+  /* text-align:center; */
   overflow: auto;
   oveflow-y:hidden;
-  contenteditable:true;
 }
 
-#instancelist {
+#grid-left {
+  float:left;
+  width: 50%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+#grid-right {
+  float:left;
+  width: 50%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.instancelist {
   list-style-type: none;
-  margin:2%;
-  padding: 2%;
+  margin:4%;
+  padding: 4%;
   cursor: pointer;
 }
 
 .active-list-element {
     background: #FFA07A;
+}
+
+#instance-info {
+  position: absolute;
+  bottom: 4%;
+  right: 3%;
+  min-height: 0%;
+  max-height: 20%;
+  width: 18%;
+  z-index: -1;
+  overflow: auto;
+  oveflow-y:hidden;
 }

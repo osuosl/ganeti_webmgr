@@ -16,10 +16,13 @@
 
   <div id="cy"></div>
   <input id="instancelookup-div" placeholder="Filter instances by name">
-  <div id="instancelist-div">
-      <b> Primary Instances </b>
-      <ul id="instancelist"></ul>
+  <div id="grid-instances">
+      <div style="text-align:center"><b> Primary Instances </b></div>
+      <div id="grid-left"> <ul class="instancelist" id="instancelist-left"></ul> </div>
+      <div id="grid-right"><ul class="instancelist" id="instancelist-right"></ul> </div> 
+      <br style="clear: left;" />  
   </div>
+  <div id="instance-info"></div>
   <div id="overlay-help"> <br> <b> Help Active </b> </br>
   Press 'h' again to toggle <br/> <br/>
 
