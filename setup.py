@@ -5,6 +5,8 @@ import os
 import sys
 from setuptools import setup
 
+from ganeti_webmgr import __VERSION__
+
 if sys.argv[-1] == 'publish':
     os.system('python setup.py sdist upload')
     sys.exit()
@@ -14,7 +16,7 @@ changelog = open('CHANGELOG.rst').read().replace('.. :changelog:', '')
 
 setup(
     name='ganeti_webmgr',
-    version='0.10.1',
+    version=".".join(__VERSION__),
     description=('Ganeti Web Manager is a Django based web frontend for'
                  + ' managing Ganeti virtualization clusters.'),
     long_description=readme + '\n\n' + changelog,
