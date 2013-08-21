@@ -1,38 +1,36 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# coding: utf-8
 
-import os
-import sys
-from setuptools import setup
-
-from ganeti_webmgr import __VERSION__
-
-if sys.argv[-1] == 'publish':
-    os.system('python setup.py sdist upload')
-    sys.exit()
+from setuptools import setup, find_packages
+from ganeti_webmgr import __version__ as version
 
 readme = open('README.rst').read()
 changelog = open('CHANGELOG.rst').read().replace('.. :changelog:', '')
+requirements = open('requirements/production.txt').read().splitlines()
 
 setup(
     name='ganeti_webmgr',
-    version=".".join(__VERSION__),
+    version=version,
+
+    # metadata
     description=('Ganeti Web Manager is a Django based web frontend for'
-                 + ' managing Ganeti virtualization clusters.'),
+                 ' managing Ganeti virtualization clusters.'),
     long_description=readme + '\n\n' + changelog,
+    keywords='ganeti web manager django',
     author='Oregon State University Open Source Lab',
     author_email='info@osuosl.org',
     url='https://github.com/osuosl/ganeti_webmgr',
-    packages=[
-        'ganeti_webmgr',
-    ],
-    package_dir={'ganeti_webmgr': 'ganeti_webmgr'},
-    include_package_data=True,
-    install_requires=[
-    ],
+
+    # package
+    packages=find_packages(exclude=["docs"]),  # should find package easily
+    # package_dir={'ganeti_webmgr': 'ganeti_webmgr'},
+    # include_package_data=True,
+    install_requires=requirements,
+    #test_suite='tests',  # XXX: need to fix that
+    # zip_safe=False,
+
+    # other meta and legal information
     license="GPLv2",
-    zip_safe=False,
-    keywords='ganeti web manager django',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Framework :: Django',
@@ -50,5 +48,4 @@ setup(
         'Topic :: System :: Networking',
         'Topic :: System :: Systems Administration',
     ],
-    #test_suite='tests',  # XXX: need to fix that
 )
