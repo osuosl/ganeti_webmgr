@@ -2,8 +2,9 @@ import os
 from os.path import abspath, dirname
 from sys import path
 
-SITE_ROOT = dirname(dirname(abspath(__file__)))
-path.append(SITE_ROOT)
+CURRENT_DIR = dirname(abspath(__file__))
+APP_ROOT = dirname(CURRENT_DIR)
+path.append(APP_ROOT)
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ganeti_web.settings")
 

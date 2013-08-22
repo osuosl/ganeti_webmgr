@@ -3,7 +3,6 @@
 
 # Returns a hopefully more useful error message if someone forgets to
 # rename end_user.py.dist to end_user.py
-
 try:
     from .end_user import *
 except ImportError as e:

@@ -106,7 +106,7 @@ SITE_ROOT = ''
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
-STATIC_ROOT = join(DOC_ROOT, "collected_static")
+STATIC_ROOT = join(PROJECT_ROOT, "collected_static")
 
 # URL that handles the media served from STATIC_ROOT.
 # XXX contrary to django docs, do not use a trailling slash.  It makes urls
