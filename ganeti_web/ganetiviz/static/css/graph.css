@@ -76,8 +76,16 @@ body {
   cursor: pointer;
 }
 
-.active-list-element {
+.down-instance{
     background: #FFA07A;
+}
+
+.running-instance{
+    background: #CCFB5D;
+}
+
+.active-list-element {
+    background: #B6B6B4;
 }
 
 #instance-info {

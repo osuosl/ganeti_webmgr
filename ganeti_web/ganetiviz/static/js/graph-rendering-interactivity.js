@@ -130,8 +130,15 @@ function renderinteractivegraph(){
           var li_elements = []
           primary_instances.each(function(i, ele){
               pinstance = ele['_private']['data']['id']
+              var status = VMGraph[pinstance][6];
+              if (status != "running"){
+                 var li_class = 'down-instance'
+              } else {
+                 var li_class = 'running-instance'
+              }
+
               //console.log(pinstance)
-              li_elements.push("<li><div class='list-instance-element' id='" + pinstance + "'>" +  pinstance + "</div></li>")
+              li_elements.push("<li><div class='list-instance-element "+ li_class + "'" + "id='" + pinstance + "'>" +  pinstance + "</div></li>")
           });
 
           list_size = li_elements.length
