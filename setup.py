@@ -23,11 +23,12 @@ setup(
 
     # package
     packages=find_packages(exclude=["docs"]),  # should find package easily
-    # package_dir={'ganeti_webmgr': 'ganeti_webmgr'},
-    # include_package_data=True,
     install_requires=requirements,
-    #test_suite='tests',  # XXX: need to fix that
-    # zip_safe=False,
+
+    # in case you want to have easy testing in future by `./setup.py test`
+    # you'd need to work with setuptools documentation:
+    #  http://pythonhosted.org/setuptools/setuptools.html
+    #test_suite='tests',
 
     # other meta and legal information
     license="GPLv2",
