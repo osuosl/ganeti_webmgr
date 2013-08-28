@@ -117,7 +117,7 @@ function renderinteractivegraph(){
 
 
       // Shows all the primary instances for a given node.
-      cy.on('click', 'node.ganeti-node', function(event){
+      cy.on('select', 'node.ganeti-node', function(event){
           $("#grid-instances").css({'visibility':'visible'})
 
           class_string = '.pnode-' + fqdntoid(this.id())
@@ -191,7 +191,7 @@ function renderinteractivegraph(){
 
 
       // Highlights the edge indicating failover direction.
-      cy.on('mousedown', 'node.ganeti-instance', function(event){
+      cy.on('select', 'node.ganeti-instance', function(event){
       //cy.$('node.ganeti-instance').click(function(){
           cy.$('edge').toggleClass("active",false);
           pnode = VMGraph[this.id()][0];
