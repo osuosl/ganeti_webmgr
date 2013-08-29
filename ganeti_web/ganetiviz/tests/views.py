@@ -17,7 +17,7 @@ from utils.models import Quota, SSHKey
 
 from ganeti_web.models import Cluster, Node, VirtualMachine
 
-__all__ = ['TestGanetivizViews',]
+__all__ = ['TestGanetivizViews', ]
 
 
 class TestGanetivizViews(TestCase, ViewTestMixin, UserTestMixin):
@@ -31,7 +31,7 @@ class TestGanetivizViews(TestCase, ViewTestMixin, UserTestMixin):
 
         # Creating Test Cluster
         cluster = Cluster(hostname='cluster0.example.test',
-                                    slug='cluster0')
+                          slug='cluster0')
         cluster.save()
 
         self.create_standard_users()
@@ -40,8 +40,12 @@ class TestGanetivizViews(TestCase, ViewTestMixin, UserTestMixin):
 
         # Creating Test nodes for the cluster.
         node_list = []
-        node_list.append(Node(cluster=cluster,hostname='node0.example.test',offline=False))
-        node_list.append(Node(cluster=cluster,hostname='node1.example.test',offline=False))
+        node_list.append(Node(cluster=cluster, hostname='node0.example.test',
+                              offline=False))
+        node_list.append(Node(cluster=cluster, hostname='node1.example.test',
+                              offline=False))
+        for node in node_list:
+            node.save()
 
         # Creating Test instances for the cluster.
         instance_list = []
@@ -61,12 +65,13 @@ class TestGanetivizViews(TestCase, ViewTestMixin, UserTestMixin):
                                             hostname='instance4.example.test',
                                             primary_node=node_list[1],
                                             secondary_node=node_list[0]))
+        for instance in instance_list:
+            instance.save()
 
         self.user = user
         self.group = group
         self.cluster = cluster
         self.c = Client()
-
 
     def tearDown(self):
         # Tear down users.
@@ -81,9 +86,13 @@ class TestGanetivizViews(TestCase, ViewTestMixin, UserTestMixin):
         Node.objects.all().delete()
         Cluster.objects.all().delete()
 
-    def testJsonOuput(self):
-        #TODO
-        response = self.c.get('/ganetiviz/vms/cluster0')
+    def test_json_ouput(self):
+        url = "/ganetiviz/nodes/%s/"
+        args = self.cluster.slug
+
+        self.c.login(username='tester_pranjal', password='secret')
+        response = self.c.get(url % args)
         content = response.content
+
+        #TODO: Assert equaity to fixture JSON content instead of print.
         print content
-        #self.assertEqual(1, 1, "One did not equal 1")
