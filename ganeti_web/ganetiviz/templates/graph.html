@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="description" content="Ganeti Cluster Visualization" />
+<script src="{{ STATIC_URL }}/js/cytoscape-lib/jquery.js"></script>
+<meta charset=utf-8 />
+<title>Ganeti Cluster Mapping</title>
+  <script src="{{ STATIC_URL }}/js/cytoscape-lib/cytoscape.min.js"></script>
+  <link rel="stylesheet" type="text/css" media="screen" href="{{ STATIC_URL }}/css/graph.css" />
+</head>
+<body>
+<div>
+    <input id="refresh-button" type="button" value="Refresh Cluster" style="float:right">
+    <div id="help-div" style="float:left"> Click here or Press 'h' for help</div>
+</div>
+
+  <div id="cy"></div>
+  <input id="instancelookup-div" placeholder="Filter instances by name">
+  <div id="grid-instances">
+      <div style="text-align:center"><b> Primary Instances </b></div>
+      <div id="grid-left"> <ul class="instancelist" id="instancelist-left"></ul> </div>
+      <div id="grid-right"><ul class="instancelist" id="instancelist-right"></ul> </div> 
+      <br style="clear: left;" />  
+  </div>
+  <div id="instance-info"></div>
+  <div id="overlay-help"> <br> <b> Help Active </b> </br>
+  Press 'h' again to toggle <br/> <br/>
+
+    <b> Usage/Shortcuts</b>
+    <ul>
+    <li> Pan the graph - Arrow Keys </li>
+    <li> Zoom In/ Out - Scroll <br/>
+        (mouse pointer at focus point) </li>
+    <li> Click a Node to view its primary instances - on a panel in the right. </li>
+    <li> Click on an instance to view FailoverDirection. </li>
+    <li> Press 'p' to view primary instances as a part of the graph. </li>
+    <li> Press 'p' again to toggle instances for selected node. </li>
+    <li> Press 's' to view secondary instances for selected node </li>
+    <li> Press 'c' to clear all the visible instances on the graph </li>
+    <li> Press 'r' to reset the graph orientation </li>
+    <li> Click "Refresh Cluster" to sync map with ganeti </li>
+    </ul>
+
+    <b>Additional Information </b>
+    <ul>
+    <li> Primary Instances refer to the instances directly running over a selected node </li>
+    <li> Secondary Instances refer to the instances whose "mirror" lies on the selected node  </li>
+    <li> Thickness of a particular edge (arrow) indicates numbner of failover possibilities in that direction.  </li>
+    <li> Color Codes: 
+      <ul> 
+        <li>  Offline Node: <font color="#DD2222"> Red </font>  </li>
+        <li>  Offline Instances: <font color="#AA0000"> Red </font>  </li>
+        <li>  Running Nodes: <font color="#6FB1FC"> Blue </font> </li>
+        <li>  Active Instances : <font color="#00CC00"> Green </font> </li>
+      </ul>
+    </li>
+    </ul>
+  <pre>   </pre>
+  </div>
+  <script src="{{ STATIC_URL }}/js/utility-functions.js"></script>
+
+  <script>
+    //TODO: Try to swtich to an aysnchronus solution.
+
+    function fetchclusterdata(){
+      $.ajaxSetup({
+          async: false
+      });
+
+      $.getJSON("/ganetiviz/vms/{{ cluster_slug }}/",function( json ) {
+        window.vms_json = json
+      });
+
+      $.getJSON("/ganetiviz/nodes/{{ cluster_slug }}/",function( json ) {
+        window.gnodes_json = json
+      });
+
+      $.ajaxSetup({
+          async: true
+      });
+    };
+  </script>
+
+  <script src="{{ STATIC_URL }}/js/graph-abstract-modelling.js"></script>
+  <script src="{{ STATIC_URL }}/js/graph-rendering-interactivity.js"></script>
+
+  <script>
+    fetchclusterdata()
+    buildabstractgraph()
+    renderinteractivegraph()
+
+    // If the refresh-button is clicked
+    $("#refresh-button").click(function(e){
+        $.get("/cluster/{{ cluster_slug }}/refresh/", function() {
+            fetchclusterdata()
+            buildabstractgraph()
+            renderinteractivegraph()
+        });
+    })
+  </script>
+
+</body>
+</html>
