@@ -143,7 +143,6 @@ class TestGanetivizViews(TestCase, ViewTestMixin, UserTestMixin):
         content = response.content
         nodes_json = json.loads(content)
 
-        #TODO: Assert equaity to fixture JSON content instead of print.
         self.assertEqual(nodes_json,testcluster0_nodes)
 
     def test_vms_json_ouput(self):
@@ -155,5 +154,4 @@ class TestGanetivizViews(TestCase, ViewTestMixin, UserTestMixin):
         content = response.content
         vms_json = json.loads(content)
 
-        #TODO: Assert equaity to fixture JSON content instead of print.
         self.assertEqual(vms_json,testcluster0_vms)

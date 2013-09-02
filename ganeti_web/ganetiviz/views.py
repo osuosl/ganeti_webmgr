@@ -9,6 +9,7 @@ from django.views.generic import DetailView,TemplateView,View
 from ganeti_web.models import Cluster, Node, VirtualMachine
 from ganeti_web.views.generic import LoginRequiredMixin
 
+import timeit
 
 
 class VMJsonView(LoginRequiredMixin,DetailView):
@@ -20,10 +21,15 @@ class VMJsonView(LoginRequiredMixin,DetailView):
         #cluster_slug = "ganeti"
         cluster_slug=self.kwargs['cluster_slug']
 
-        cluster = Cluster.objects.get(slug=cluster_slug)
-        vm_queryset = VirtualMachine.objects.filter(cluster=cluster)
-        selected_fields = ('hostname','primary_node','secondary_node','status','owner','operating_system','ram','minram')
-        vm_json_data = serializers.serialize('json', vm_queryset, fields=selected_fields, use_natural_keys=True)
+        #cluster = Cluster.objects.get(slug=cluster_slug) # Changed to next line for query optimization.
+        cluster = Cluster.objects.select_related("virtualmachine").get(slug=cluster_slug)
+
+        #vm_queryset = VirtualMachine.objects.filter(cluster=cluster)
+        vms = cluster.virtual_machines.all()
+
+        selected_fields = ('hostname','primary_node','secondary_node','status',
+                           'owner','operating_system','ram','minram')
+        vm_json_data = serializers.serialize('json', vms, fields=selected_fields, use_natural_keys=True)
 
         return HttpResponse(vm_json_data, content_type='application/json')  
 
@@ -37,8 +43,8 @@ class NodeJsonView(LoginRequiredMixin,DetailView):
         #cluster_slug = "ganeti"
         cluster_slug=self.kwargs['cluster_slug']
 
-        cluster = Cluster.objects.get(slug=cluster_slug)
-        node_queryset = Node.objects.filter(cluster=cluster)
+        cluster = Cluster.objects.select_related("node").get(slug=cluster_slug)
+        node_queryset = cluster.nodes.all()
         selected_fields = ('hostname','ram_total','ram_free','offline','role')
         node_json_data = serializers.serialize('json', node_queryset, fields= selected_fields)
 
