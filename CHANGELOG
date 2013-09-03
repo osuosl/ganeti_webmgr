@@ -2,6 +2,23 @@
 Changelog
 =========
 
+v0.10.2
+-------
+Notable Changes:
+  * Assigning owners to a VM has been changed slightly.
+
+    * Must have admin/create_vm permissions to be an owner
+    * Groups can be owners
+    * Superusers can assign owner to anyone
+    * Owner assignment dropdown is now sorted by name (finally)
+  * Users without perms on any clusters now get a 403 error if they try to go to the VM Creation page. Before they would get to the page but have no clusters to choose from.
+  * The 5th step of the VM Wizard composing of HVParams is now properly submitting the data to the RAPI
+  * Refresh button now refreshes data for nodes and vms instead of just the cluster from the RAPI.
+  * Hostnames are now stored in the database using all lowercase
+  * More validation on data retrieved from the RAPI
+  * Updated sshkeys scripts to be more redundant
+  * Fixed missing CSRF token on password reset page
+
 v0.10.1
 -------
 Notable Changes:
@@ -58,7 +75,7 @@ Notable changes:
 * Simplified layout infrastructure
 * Fix CSRF Token errors
 * Transaction middleware
-* Check VM hostnames for illegal characters 
+* Check VM hostnames for illegal characters
 * New Help Tips
 * Many back-end fixes to improve standards compliance and Django best practices
 * Many user interface fixes and improvements
@@ -95,12 +112,12 @@ v0.7.2
 ------
   * Fixed HAYSTACK_SITECONF default setting
   * Updated README to include virtualenv for mod_wsgi script
-  
+
 
 v0.7.1
 ------
   * Updated Fabric dependency: Django Object Permissions 1.4.1
-  * Overview: Used resources was not displaying clusters when used did not 
+  * Overview: Used resources was not displaying clusters when used did not
     permissions
 
 
