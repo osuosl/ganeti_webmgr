@@ -134,6 +134,7 @@ def vm_qs_for_admins(user):
     else:
         qs = user.get_objects_any_perms(VirtualMachine, groups=True,
                                         perms=["admin"])
+        qs |= cluster_vm_qs_for_admins(user)
 
     return qs
 
@@ -155,16 +156,20 @@ def vm_qs_for_users(user, clusters=True):
 
         # Add all VMs including VMs you have permission to via Cluster Perms
         if clusters:
-            # first we get the IDs of the clusters which a user is admin of
-            cluster_ids = user.get_objects_any_perms(
-                Cluster, ['admin'], groups=True).values_list('pk', flat=True)
-            # next create a queryset of VMs where the user is an admin of the
-            # cluster
-            cluster_vm_qs = VirtualMachine.objects.filter(
-                cluster__pk__in=cluster_ids).distinct()
-
-            # Union of vms a user has any permissions to AND vms a user has
-            # permissions to via cluster
-            qs |= cluster_vm_qs
+            # Union of vms a user has any permissions to
+            # and vms a user has admin permissions to via cluster perms
+            qs |= cluster_vm_qs_for_admins(user)
 
     return qs.distinct()
+
+def cluster_vm_qs_for_admins(user):
+    # first we get the IDs of the clusters which a user is admin of
+    cluster_ids = user.get_objects_any_perms(
+        Cluster, ['admin'], groups=True
+    ).values_list('pk', flat=True)
+    # a queryset of VMs
+    cluster_vm_qs = VirtualMachine.objects.filter(
+        cluster__pk__in=cluster_ids # VMs we're cluster admin of
+    ).distinct()
+
+    return cluster_vm_qs
