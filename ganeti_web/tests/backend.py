@@ -3,13 +3,16 @@ from django.test import TestCase
 
 from django_test_tools.users import UserTestMixin
 
-from ganeti_web.backend.queries import cluster_qs_for_user, owner_qs
-from ganeti_web.models import Cluster
+from ganeti_web.backend.queries import (
+    cluster_qs_for_user, owner_qs, cluster_vm_qs
+)
+from ganeti_web.models import Cluster, VirtualMachine
 
 __all__ = (
     "TestClusterQSForUser",
     "TestOwnerQSNoGroups",
     "TestOwnerQSWithGroups",
+    "TestClusterVMQS",
 )
 
 
@@ -84,6 +87,8 @@ class TestClusterQSForUser(TestCase, UserTestMixin):
 
         user.delete()
 
+# The TestOwnerQS tests could probably be a single test case,
+# with different test methods, but this works
 
 class TestOwnerQSNoGroups(TestCase):
 
@@ -181,3 +186,37 @@ class TestOwnerQSWithGroups(TestCase):
         valid_owners = [self.admin_group.organization,
                         self.non_admin_group.organization]
         self.assertQuerysetEqual(owners, map(repr, valid_owners))
+
+
+class TestClusterVMQS(TestCase):
+    def setUp(self):
+        self.cluster = Cluster.objects.create(hostname="ganeti.example.org")
+        self.admin = User.objects.create_user('admin', password='secret')
+        self.admin.grant('admin', self.cluster)
+        self.vm1 = VirtualMachine.objects.create(
+            hostname="vm1", cluster=self.cluster
+        )
+        self.vm2 = VirtualMachine.objects.create(
+            hostname="vm2", cluster=self.cluster
+        )
+        self.standard = User.objects.create_user('standard', password='secret')
+
+    def tearDown(self):
+        self.cluster.delete()
+        self.vm1.delete()
+        self.vm2.delete()
+        self.admin.delete()
+
+    def test_admin(self):
+        vms = cluster_vm_qs(self.admin, perms=['admin'])
+        expected_vms = [self.vm1, self.vm2]
+        self.assertQuerysetEqual(vms, map(repr, expected_vms))
+
+    def test_standard(self):
+        vms = cluster_vm_qs(self.standard, perms=['admin'])
+        self.assertQuerysetEqual(vms, [])
+        # Cluster perms only, this shouldnt change the queryset
+        vms = cluster_vm_qs(self.standard, perms=['admin'])
+        self.standard.grant('admin', self.vm1)
+        self.assertQuerysetEqual(vms, [])
+
