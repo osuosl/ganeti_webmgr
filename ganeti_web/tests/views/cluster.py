@@ -38,7 +38,11 @@ Quota = models.Quota
 Job = models.Job
 
 
-__all__ = ['TestClusterViews', "TestClusterQuotaViews"]
+__all__ = [
+    "TestClusterViews",
+    "TestClusterQuotaViews",
+    "TestClusterVMListView"
+]
 
 
 class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
@@ -1121,3 +1125,64 @@ class TestClusterQuotaViews(TestCase, ViewTestMixin, UserTestMixin):
 
     def test_group_quota_unauthorized(self):
         self.validate_unauthorized(self.group.organization)
+
+
+class TestClusterVMListView(TestCase):
+
+    def setUp(self):
+        self.admin = User.objects.create_user(
+            username="admin", password="secret")
+        self.admin.save()
+
+        self.standard = User.objects.create_user(
+            username="standard", password="secret")
+        self.standard.save()
+
+        self.cluster = Cluster.objects.create(
+            hostname='test.example.test',
+            slug='OSL_TEST'
+        )
+        self.vm1 = VirtualMachine.objects.create(
+            hostname='vm1',
+            cluster=self.cluster
+        )
+        self.vm1.save()
+
+        self.vm2 = VirtualMachine.objects.create(
+            hostname='vm2',
+            cluster=self.cluster
+        )
+        self.vm2.save()
+
+        self.admin.grant('admin', self.cluster)
+
+    def tearDown(self):
+        self.admin.delete()
+        self.standard.delete()
+        self.cluster.delete()
+
+    def test_admin_perms(self):
+        url = '/cluster/%s/virtual_machines'
+        self.client.login(username=self.admin.username, password='secret')
+        response = self.client.get(url % self.cluster.slug)
+        self.assertEqual(response.status_code, 200)
+        vms = [vm.pk for vm in response.context['object_list']]
+        expected_vms = [self.vm1.pk, self.vm2.pk]
+        self.assertEqual(vms, expected_vms)
+
+    def test_standard_no_perms(self):
+        url = '/cluster/%s/virtual_machines'
+        self.client.login(username=self.standard.username, password='secret')
+        response = self.client.get(url % self.cluster.slug)
+        self.assertEqual(response.status_code, 403)
+
+    def test_standard_with_perms(self):
+        url = '/cluster/%s/virtual_machines'
+        self.client.login(username=self.standard.username, password='secret')
+        self.standard.grant('admin', self.vm1)
+        response = self.client.get(url % self.cluster.slug)
+        self.assertEqual(response.status_code, 200)
+        vms = [vm.pk for vm in response.context['object_list']]
+        expected_vms = [self.vm1.pk]
+        self.assertEqual(vms, expected_vms)
+
