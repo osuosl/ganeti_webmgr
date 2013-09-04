@@ -69,10 +69,16 @@ class ClusterDetailView(LoginRequiredMixin, DetailView):
         user = self.request.user
         admin = user.is_superuser or user.has_perm("admin", cluster)
 
+        # If we're not admin we might still have admin on a VM so this
+        # is to determine if we should show the VM tab to the user.
+        show_vms = admin or user.get_objects_any_perms(
+            VirtualMachine, perms=['admin']).filter(cluster=cluster)
+
         return {
             "cluster": cluster,
             "admin": admin,
             "readonly": not admin,
+            "show_vms": show_vms
         }
 
 
