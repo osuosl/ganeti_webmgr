@@ -105,11 +105,16 @@ class ClusterVMListView(BaseVMListView):
         # Store most of these variables on the object, because we'll be using
         # them in context data too
         self.cluster = get_object_or_404(Cluster, slug=self.cluster_slug)
-        # check privs
         self.admin = self.can_create(self.cluster)
-        if not self.admin:
+
+        # Do we have admin on any VMs for this cluster?
+        vm_perms = self.request.user.get_objects_any_perms(
+                VirtualMachine, perms=['admin']
+        ).filter(cluster=self.cluster).exists()
+
+        if not self.admin and not vm_perms:
             raise PermissionDenied(NO_PRIVS)
-        self.queryset = vm_qs_for_users(self.request.user, clusters=False)
+        self.queryset = vm_qs_for_users(self.request.user)
         # Calling super automatically filters by cluster
         return super(ClusterVMListView, self).get_queryset()
 
