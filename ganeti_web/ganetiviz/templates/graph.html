@@ -67,17 +67,24 @@
           async: false
       });
 
-      $.getJSON("/ganetiviz/vms/{{ cluster_slug }}/",function( json ) {
-        window.vms_json = json
+      $.getJSON("/ganetiviz/cluster/{{ cluster_slug }}/",function( json ) {
+            window.cluster_json = json
       });
 
-      $.getJSON("/ganetiviz/nodes/{{ cluster_slug }}/",function( json ) {
-        window.gnodes_json = json
-      });
+      //$.getJSON("/ganetiviz/vms/{{ cluster_slug }}/",function( json ) {
+      //     window.vms_json = json
+      //});
+
+      //$.getJSON("/ganetiviz/nodes/{{ cluster_slug }}/",function( json ) {
+      //      window.gnodes_json = json
+      //});
 
       $.ajaxSetup({
           async: true
       });
+
+      window.vms_json = cluster_json['vms']
+      window.gnodes_json = cluster_json['nodes']
     };
   </script>
 

@@ -17,25 +17,26 @@ class ClusterJsonView(LoginRequiredMixin,DetailView):
     The cluster is specified in the url, example: "/ganetiviz/cluster/ganeti"
     """
     def get(self, request, *args, **kwargs):
-        #cluster_slug = "ganeti"
         cluster_slug=self.kwargs['cluster_slug']
 
-        #cluster = Cluster.objects.get(slug=cluster_slug) # Changed to next line for query optimization.
         cluster = Cluster.objects.select_related("node","virtualmachine").get(slug=cluster_slug)
 
-
-        selected_fields_vms = ['hostname','primary_node','secondary_node','status',
-                           'owner','operating_system','ram','minram']
-
-        selected_fields_nodes = ['hostname','ram_total','ram_free','offline','role']
+        selected_fields_vms = ['hostname','primary_node','secondary_node',
+                               'status','owner','operating_system','ram',
+                               'minram']
+        selected_fields_nodes = ['hostname','ram_total','ram_free','offline',
+                                 'role']
 
         vms = cluster.virtual_machines.all()
+        print vms
         nodes = cluster.nodes.all()
 
-        vms = list(vms.values('hostname','primary_node','secondary_node','status','owner','operating_system','ram','minram'))
-        nodes = list(nodes.values('hostname','ram_total','ram_free','offline','role'))
-        # .values() method does not return actual list but list like Django objects. 
+        # .values() method does not return actual list but list like django object. 
         # Imp. to convert to lists for making it JSON Serializable
+        vms = list(vms.values('hostname','primary_node__hostname',
+                              'secondary_node__hostname','status','owner',
+                              'operating_system','ram','minram'))
+        nodes = list(nodes.values('hostname','ram_total','ram_free','offline','role'))
 
         cluster_data = { 'nodes' : nodes, 'vms' : vms }
         cluster_json = json.dumps(cluster_data)

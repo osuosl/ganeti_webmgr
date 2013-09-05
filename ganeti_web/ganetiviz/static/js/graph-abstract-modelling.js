@@ -26,8 +26,8 @@ function buildabstractgraph(){
   */
   var loop_index = 0;
   gnodes_json.forEach(function(node) {
-      gnode = node["fields"]["hostname"]
-      offline = node["fields"]["offline"]
+      gnode = node["hostname"]
+      offline = node["offline"]
       position = pp[loop_index]
       CytoNodePositions[gnode] = position
 
@@ -56,14 +56,15 @@ function buildabstractgraph(){
   - Adds items to "NodeInstanceLinks"
   */
   vms_json.forEach(function(vm) {
-      vm_hostname = vm["fields"]["hostname"]
-      pnode = vm["fields"]["primary_node"]    // A Ganeti Node referred ahead as (g)node
-      snode = vm["fields"]["secondary_node"]  // (g)node
-      owner = vm["fields"]["owner"]
-      os = vm["fields"]["operating_system"]
-      ram = vm["fields"]["ram"]
-      minram = vm["fields"]["minram"]
-      status = vm["fields"]["status"]
+      console.log(vm)
+      vm_hostname = vm["hostname"]
+      pnode = vm["primary_node__hostname"]    // A Ganeti Node referred ahead as (g)node
+      snode = vm["secondary_node__hostname"]  // (g)node
+      owner = vm["owner"]
+      os = vm["operating_system"]
+      ram = vm["ram"]
+      minram = vm["minram"]
+      status = vm["status"]
 
 
       // A HashMap object that will contain mapping from VM to pnode or snode for fast search
@@ -117,10 +118,10 @@ function buildabstractgraph(){
   vms_json_sorted = vms_json.sort(function(a,b) {return a.fields.hostname - b.fields.hostname });
   vms_json_sorted.forEach(function(vm) {
 
-      vm_hostname = vm["fields"]["hostname"]
-      pnode = vm["fields"]["primary_node"]    // (g)node
-      snode = vm["fields"]["secondary_node"]
-      vm_status = vm["fields"]["status"]
+      vm_hostname = vm["hostname"]
+      pnode = vm["primary_node__hostname"]    // (g)node
+      snode = vm["secondary_node__hostname"]
+      vm_status = vm["status"]
 
       // Assigning a color to instances as per status. green for "running" instance, red for the rest.
       vm_color = '#AA0000'
