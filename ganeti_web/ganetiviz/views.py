@@ -8,14 +8,45 @@ from django.views.generic import DetailView,TemplateView,View
 
 from ganeti_web.models import Cluster, Node, VirtualMachine
 from ganeti_web.views.generic import LoginRequiredMixin
+import simplejson as json
 
-import timeit
+
+class ClusterJsonView(LoginRequiredMixin,DetailView):
+    """
+    View for generating JSON representation of the data in a Cluster (Cluster-Graph)
+    The cluster is specified in the url, example: "/ganetiviz/cluster/ganeti"
+    """
+    def get(self, request, *args, **kwargs):
+        #cluster_slug = "ganeti"
+        cluster_slug=self.kwargs['cluster_slug']
+
+        #cluster = Cluster.objects.get(slug=cluster_slug) # Changed to next line for query optimization.
+        cluster = Cluster.objects.select_related("node","virtualmachine").get(slug=cluster_slug)
+
+
+        selected_fields_vms = ['hostname','primary_node','secondary_node','status',
+                           'owner','operating_system','ram','minram']
+
+        selected_fields_nodes = ['hostname','ram_total','ram_free','offline','role']
+
+        vms = cluster.virtual_machines.all()
+        nodes = cluster.nodes.all()
+
+        vms = list(vms.values('hostname','primary_node','secondary_node','status','owner','operating_system','ram','minram'))
+        nodes = list(nodes.values('hostname','ram_total','ram_free','offline','role'))
+        # .values() method does not return actual list but list like Django objects. 
+        # Imp. to convert to lists for making it JSON Serializable
+
+        cluster_data = { 'nodes' : nodes, 'vms' : vms }
+        cluster_json = json.dumps(cluster_data)
+
+        return HttpResponse(cluster_json, content_type='application/json')  
 
 
 class VMJsonView(LoginRequiredMixin,DetailView):
     """
     View for generating JSON representation of Virtual Machines in a Cluster (Cluster-Graph)
-    The cluster is specified in the url, example: "/ganetiviz/vms/ganeti.example.org"
+    The cluster is specified in the url, example: "/ganetiviz/vms/ganeti"
     """
     def get(self, request, *args, **kwargs):
         #cluster_slug = "ganeti"
@@ -29,7 +60,9 @@ class VMJsonView(LoginRequiredMixin,DetailView):
 
         selected_fields = ('hostname','primary_node','secondary_node','status',
                            'owner','operating_system','ram','minram')
-        vm_json_data = serializers.serialize('json', vms, fields=selected_fields, use_natural_keys=True)
+        vm_json_data = serializers.serialize('json', vms, 
+                                             fields=selected_fields, 
+                                             use_natural_keys=True)
 
         return HttpResponse(vm_json_data, content_type='application/json')  
 
@@ -37,7 +70,7 @@ class VMJsonView(LoginRequiredMixin,DetailView):
 class NodeJsonView(LoginRequiredMixin,DetailView):
     """
     View for generating JSON representation of Nodes in a Cluster (Cluster-Graph)
-    The cluster is specified in the url, example: "/ganetiviz/vms/ganeti.example.org"
+    The cluster is specified in the url, example: "/ganetiviz/vms/ganeti"
     """
     def get(self, request, *args, **kwargs):
         #cluster_slug = "ganeti"

@@ -1,9 +1,13 @@
 from clusters.urls import cluster_slug
 from django.conf.urls.defaults import patterns, url
-from ganetiviz.views import VMJsonView,NodeJsonView,ClusterGraphView,AllClustersView
+from ganetiviz.views import VMJsonView,NodeJsonView,ClusterGraphView, \
+                            AllClustersView,ClusterJsonView
 
 urlpatterns = patterns(
     'ganetiviz.views',
+
+    url(r'^ganetiviz/cluster/%s/$' % cluster_slug, ClusterJsonView.as_view(), 
+        name='json-vms'),
 
     url(r'^ganetiviz/vms/%s/$' % cluster_slug, VMJsonView.as_view(), 
         name='json-vms'),
