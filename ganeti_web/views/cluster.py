@@ -69,10 +69,16 @@ class ClusterDetailView(LoginRequiredMixin, DetailView):
         user = self.request.user
         admin = user.is_superuser or user.has_perm("admin", cluster)
 
+        # If we're not admin we might still have admin on a VM so this
+        # is to determine if we should show the VM tab to the user.
+        show_vms = admin or user.get_objects_any_perms(
+            VirtualMachine, perms=['admin']).filter(cluster=cluster)
+
         return {
             "cluster": cluster,
             "admin": admin,
             "readonly": not admin,
+            "show_vms": show_vms
         }
 
 
@@ -105,11 +111,16 @@ class ClusterVMListView(BaseVMListView):
         # Store most of these variables on the object, because we'll be using
         # them in context data too
         self.cluster = get_object_or_404(Cluster, slug=self.cluster_slug)
-        # check privs
         self.admin = self.can_create(self.cluster)
-        if not self.admin:
+
+        # Do we have admin on any VMs for this cluster?
+        vm_perms = self.request.user.get_objects_any_perms(
+                VirtualMachine, perms=['admin']
+        ).filter(cluster=self.cluster).exists()
+
+        if not self.admin and not vm_perms:
             raise PermissionDenied(NO_PRIVS)
-        self.queryset = vm_qs_for_users(self.request.user, clusters=False)
+        self.queryset = vm_qs_for_users(self.request.user)
         # Calling super automatically filters by cluster
         return super(ClusterVMListView, self).get_queryset()
 
