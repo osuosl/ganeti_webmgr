@@ -267,7 +267,7 @@ class TestOverviewVMSummary(TestCase):
             hostname='ganeti.example.org', slug='ganeti'
         )
         self.vm1 = VirtualMachine.objects.create(
-            hostname='vm1', cluster=self.cluster
+            hostname='vm1', cluster=self.cluster, status='running'
         )
         self.vm2 = VirtualMachine.objects.create(
             hostname='vm2', cluster=self.cluster, status='running'
