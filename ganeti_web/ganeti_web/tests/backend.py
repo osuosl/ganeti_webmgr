@@ -86,6 +86,36 @@ class TestClusterQSForUser(TestCase, UserTestMixin):
 
 class TestOwnerQSForCluster(TestCase):
 
-    def test_owner_qs_for_cluster_none(self):
+    def test_invalid_cluster(self):
+        """
+        Given an invalid cluster, we should be returned an empty list.
+        """
         qs = owner_qs_for_cluster(None)
-        self.assertFalse(qs)
+
+    def test_no_cluster_admin_users(self):
+        """
+        Given a cluster, with no users who have 'admin' permissions on the
+        cluster, the return should be an empty list.
+        """
+        pass
+
+    def test_superuser(self):
+        """
+        Given a cluster, all superusers should be returned from the query.
+        """
+        pass
+
+    def test_admin_user(self):
+        """
+        Given a cluster with users who have 'admin' permissions on the cluster,
+        they should be returned in the result.
+        """
+        pass
+
+    def test_admin_group_user(self):
+        """
+        Given a cluster with one or more groups with admin permissions on the
+        cluster, the groups and the users of the groups should be returned.
+        """
+        pass
+
