@@ -20,9 +20,9 @@ Default settings for GWM.
 
 These settings are hopefully so universal that they never need to change
 between deployments and are factored out into this module to avoid stale
-settings.py files causing upgrade bugs.
+end_user.py files causing upgrade bugs.
 
-All settings in this module can be overriden in the main settings.py module,
+All settings in this module can be overriden in the main end_user.py module,
 of course.
 """
 from os.path import abspath, basename, dirname, join
