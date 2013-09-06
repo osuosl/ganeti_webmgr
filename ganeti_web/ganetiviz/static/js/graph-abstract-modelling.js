@@ -9,7 +9,7 @@
 function buildabstractgraph(){
 
   syscenter = {x:500,y:500} // Center of the whole System
-  var pp = polypointscircle(syscenter,200,5)
+  pp = polypointscircle(syscenter,200,5)
 
   window.CytoNodeList = []            // A list of node objects in a format required by Cytoscape JS will be added to this list.
   window.CytoEdgeList = []           // A list of edge objects in a format required by Cytoscape JS will be added to this list.
@@ -26,9 +26,9 @@ function buildabstractgraph(){
   */
   var loop_index = 0;
   gnodes_json.forEach(function(node) {
-      gnode = node["hostname"]
-      offline = node["offline"]
-      position = pp[loop_index]
+      var gnode = node["hostname"]
+      var offline = node["offline"]
+      var position = pp[loop_index]
       CytoNodePositions[gnode] = position
 
       gnode_color = '#6FB1FC'
@@ -56,16 +56,17 @@ function buildabstractgraph(){
   - Adds items to "NodeInstanceLinks"
   */
   vms_json.forEach(function(vm) {
-      console.log(vm)
-      vm_hostname = vm["hostname"]
-      pnode = vm["primary_node__hostname"]    // A Ganeti Node referred ahead as (g)node
-      snode = vm["secondary_node__hostname"]  // (g)node
-      owner = vm["owner"]
-      os = vm["operating_system"]
-      ram = vm["ram"]
-      minram = vm["minram"]
-      status = vm["status"]
+      //console.log(vm)
+      var vm_hostname = vm["hostname"]
+      var pnode = vm["primary_node__hostname"]    // A Ganeti Node referred ahead as (g)node
+      var snode = vm["secondary_node__hostname"]  // (g)node
+      var owner = vm["owner"]
+      var os = vm["operating_system"]
+      var ram = vm["ram"]
+      var minram = vm["minram"]
+      var status = vm["status"]
 
+      console.log(snode)
 
       // A HashMap object that will contain mapping from VM to pnode or snode for fast search
       VMGraph[vm_hostname] = [pnode,snode,owner,os,ram,minram,status]
@@ -102,6 +103,7 @@ function buildabstractgraph(){
       N = NodeInstanceLinks[nodekey] 
       node_position = CytoNodePositions[nodekey]    // We are going to generate points around this coordinate lying on a circle.
       R = 50                                       // Setting R constant for now. #TODO Check optimal value.
+      console.log(NodeInstanceLinks)
       VMPositions[nodekey] = polypointscircle(center=node_position,R,N)
   }
 
@@ -115,32 +117,32 @@ function buildabstractgraph(){
   - Beautiful Idea: Sorting out instances around every node, boils down to sorting all instances first
     and then adding them around whichever node it belongs to sequentially. :)
   */
-  vms_json_sorted = vms_json.sort(function(a,b) {return a.fields.hostname - b.fields.hostname });
+  vms_json_sorted = vms_json.sort(function(a,b) {return a.hostname - b.hostname });
   vms_json_sorted.forEach(function(vm) {
 
-      vm_hostname = vm["hostname"]
-      pnode = vm["primary_node__hostname"]    // (g)node
-      snode = vm["secondary_node__hostname"]
-      vm_status = vm["status"]
+      var vm_hostname = vm["hostname"]
+      var pnode = vm["primary_node__hostname"]    // (g)node
+      var snode = vm["secondary_node__hostname"]
+      var vm_status = vm["status"]
 
       // Assigning a color to instances as per status. green for "running" instance, red for the rest.
-      vm_color = '#AA0000'
+      var vm_color = '#AA0000'
       if (vm_status == "running"){
           vm_color = '#00CC00'
       }
 
       // Adding classes to each instance vertice that make its selection convenient.
-      instance_classes_string = 'ganeti-instance ' + 'pnode-' + fqdntoid(pnode) + ' snode-' + fqdntoid(snode)
+      var instance_classes_string = 'ganeti-instance ' + 'pnode-' + fqdntoid(pnode) + ' snode-' + fqdntoid(snode)
 
       // Adding Cytoscape Graph Vertices representing Instances
-      cytoscape_node_obj =  {
+      var cytoscape_node_obj =  {
            data: { id: vm_hostname, name: vm_hostname, weight: 0.05,color: vm_color},
 	         position: VMPositions[pnode].pop(),
            classes:instance_classes_string }
       CytoNodeList.push(cytoscape_node_obj);
 
       // Adding Cytoscape Graph Edges: (g)Node-Instance edges.
-      cytoscape_edge_obj = { data: { source: pnode, target: vm_hostname, color: '#6FFCB1', strength:1 }, classes: 'instance-edge'};
+      var cytoscape_edge_obj = { data: { source: pnode, target: vm_hostname, color: '#6FFCB1', strength:1 }, classes: 'instance-edge'};
       CytoEdgeList.push(cytoscape_edge_obj);
 
   });
