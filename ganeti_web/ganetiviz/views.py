@@ -9,6 +9,7 @@ from django.views.generic import DetailView,TemplateView,View
 from ganeti_web.models import Cluster, Node, VirtualMachine
 from ganeti_web.views.generic import LoginRequiredMixin
 import simplejson as json
+from utils import get_rapi
 
 
 class ClusterJsonView(LoginRequiredMixin,DetailView):
@@ -44,6 +45,7 @@ class ClusterJsonView(LoginRequiredMixin,DetailView):
         return HttpResponse(cluster_json, content_type='application/json')  
 
 
+# Not being used now, but still kept as it might be useful again in future.
 class VMJsonView(LoginRequiredMixin,DetailView):
     """
     View for generating JSON representation of Virtual Machines in a Cluster (Cluster-Graph)
@@ -68,6 +70,7 @@ class VMJsonView(LoginRequiredMixin,DetailView):
         return HttpResponse(vm_json_data, content_type='application/json')  
 
 
+# Not being used now, but still kept as it might be useful again in future.
 class NodeJsonView(LoginRequiredMixin,DetailView):
     """
     View for generating JSON representation of Nodes in a Cluster (Cluster-Graph)
@@ -117,3 +120,30 @@ class AllClustersView(LoginRequiredMixin,TemplateView):
 
         return context
 
+
+class InstanceExtraDataView(LoginRequiredMixin,DetailView):
+    """
+    View for returning additional instance information (useful) for a particular
+    instance in a cluster via ganeti RAPI  python client.
+    """
+    def get(self, request, *args, **kwargs):
+        cluster_slug=self.kwargs['cluster_slug']
+        instance_hostname=self.kwargs['instance_hostname']
+
+        print cluster_slug
+        print instance_hostname
+
+        #cluster = Cluster.objects.get(slug=cluster_slug) # Changed to next line for query optimization.
+        cluster = Cluster.objects.get(slug=cluster_slug)
+
+        r = get_rapi(cluster.hash,cluster.cluster_id)
+
+        selected_fields = ('beparams','nic.bridges','network_port','status','os')
+
+        # Blocking request to Ganeti RAPI to return instance info.
+        instance_info = r.GetInstance(instance_hostname)
+
+        useful_instance_info = { useful_key: instance_info[useful_key] for useful_key in selected_fields }
+        instance_info_json = json.dumps(useful_instance_info)
+
+        return HttpResponse(instance_info_json, content_type='application/json')
