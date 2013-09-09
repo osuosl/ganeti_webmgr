@@ -5,6 +5,7 @@ from django_test_tools.users import UserTestMixin
 
 from ..backend.queries import cluster_qs_for_user, owner_qs_for_cluster
 from clusters.models import Cluster
+from authentication.models import ClusterUser
 
 __all__ = (
     "TestClusterQSForUser",
@@ -84,38 +85,66 @@ class TestClusterQSForUser(TestCase, UserTestMixin):
         user.delete()
 
 
-class TestOwnerQSForCluster(TestCase):
+class TestOwnerQSForCluster(TestCase, UserTestMixin):
+
+    def setUp(self):
+        self.cluster = Cluster.objects.create(
+            hostname="cluster1.example.org", slug="cluster1",
+            username='foo', password='bar', mtime=1)
+
+    def tearDown(self):
+        self.cluster.delete()
 
     def test_invalid_cluster(self):
         """
         Given an invalid cluster, we should be returned an empty list.
         """
         qs = owner_qs_for_cluster(None)
+        self.assertFalse(qs)
 
     def test_no_cluster_admin_users(self):
         """
         Given a cluster, with no users who have 'admin' permissions on the
         cluster, the return should be an empty list.
         """
-        pass
+        qs = owner_qs_for_cluster(self.cluster)
+        self.assertFalse(qs)
 
     def test_superuser(self):
         """
         Given a cluster, all superusers should be returned from the query.
         """
-        pass
+        # JMT: should be possible to do this at creation
+        superuser = self.create_user('superuser')
+        superuser.is_superuser = True
+        superuser.save()
+        qs = owner_qs_for_cluster(self.cluster)
+        # JMT: this is a little ugly
+        expected = [repr(ClusterUser.objects.get(name='superuser'))]
+        self.assertQuerysetEqual(qs, expected, ordered=False)
 
     def test_admin_user(self):
         """
         Given a cluster with users who have 'admin' permissions on the cluster,
         they should be returned in the result.
         """
-        pass
+        user = self.create_user('cluster_admin')
+        user.grant('admin', self.cluster)
+        qs = owner_qs_for_cluster(self.cluster)
+        # JMT: this is a little ugly
+        expected = [repr(ClusterUser.objects.get(name='cluster_admin'))]
+        self.assertQuerysetEqual(qs, expected, ordered=False)
 
     def test_admin_group_user(self):
         """
         Given a cluster with one or more groups with admin permissions on the
         cluster, the groups and the users of the groups should be returned.
         """
-        pass
-
+        group = Group.objects.create(name='cluster_admin')
+        user = self.create_user('user')
+        group.grant('admin', self.cluster)
+        group.user_set.add(user)
+        qs = owner_qs_for_cluster(self.cluster)
+        # JMT: this is a little ugly
+        expected = [repr(ClusterUser.objects.get(name='user'))]
+        self.assertQuerysetEqual(qs, expected, ordered=False)
