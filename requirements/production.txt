@@ -11,3 +11,5 @@ django-include-strip-tag==0.1.0
 VNCAuthProxy==1.0
 django-object-log==0.7
 django-object-permissions==1.4.6
+psycopg2
+MySQL-python
