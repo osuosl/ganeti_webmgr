@@ -56,7 +56,7 @@ from object_permissions.registration import register
 from muddle_users import signals as muddle_user_signals
 
 from ganeti_web import constants, management, permissions
-from ganeti_web.fields import (PatchedEncryptedCharField,
+from ganeti_web.fields import (PatchedEncryptedCharField, LowerCaseCharField,
                                PreciseDateTimeField, SumIf)
 from ganeti_web.util import client
 from ganeti_web.util.client import GanetiApiError, REPLACE_DISK_AUTO
@@ -352,14 +352,17 @@ class CachedClusterObject(models.Model):
         jobs = qs.order_by("job_id")
 
         updates = {}
-        for job in jobs:
-            status = 'unknown'
-            op = None
+        op = None
+        status = 'unknown'
 
+        for job in jobs:
             try:
                 data = self.rapi.GetJobStatus(job.job_id)
-                status = data['status']
-                op = data['ops'][-1]['OP_ID']
+
+                if Job.valid_job(data):
+                    op = data['ops'][-1]['OP_ID']
+                    status = data['status']
+
             except GanetiApiError:
                 pass
 
@@ -390,7 +393,7 @@ class CachedClusterObject(models.Model):
                         updates.update(_updates)
 
         # we only care about the very last job for resetting the cache flags
-        if status in ('success', 'error', 'unknown') or not jobs:
+        if not jobs or status in ('success', 'error', 'unknown'):
             updates['ignore_cache'] = False
             updates['last_job'] = None
 
@@ -520,16 +523,38 @@ class Job(CachedClusterObject):
                     pass
 
     def refresh(self):
-        self.info = self._refresh()
-        self.save()
+        info = self._refresh()
+        valid = self.valid_job(info)
+        if valid:
+            self.info = info
+            self.save()
+        # else:
+        #     Job.objects.get(job_id=self.info['id']).delete()
+
+    @classmethod
+    def valid_job(cls, info):
+        status = info.get('status')
+        ops = info.get('ops')
+        return not (ops is None and status is None)
+
+    @classmethod
+    def parse_op(cls, info):
+        ops = info['ops']
+        op = None
+        if ops:
+            # Return the most recent operation
+            op = ops[-1]['OP_ID']
+        return op
 
     @classmethod
     def parse_persistent_info(cls, info):
         """
         Parse status and turn off cache bypass flag if job has finished
         """
-        data = {'status': info['status'],
-                'op': info['ops'][-1]['OP_ID']}
+        if not cls.valid_job(info):
+            return {}
+        op = cls.parse_op(info)
+        data = {'status': info['status'], 'op': op}
         if data['status'] in ('error', 'success'):
             data['ignore_cache'] = False
         if info['end_ts']:
@@ -566,7 +591,7 @@ class Job(CachedClusterObject):
         """
         Returns the last operation, which is generally the primary operation.
         """
-        return self.info['ops'][-1]['OP_ID']
+        return self.parse_op(self.info)
 
     def __repr__(self):
         return "<Job %d (%d), status %r>" % (self.id, self.job_id,
@@ -597,7 +622,7 @@ class VirtualMachine(CachedClusterObject):
     """
     cluster = models.ForeignKey('Cluster', related_name='virtual_machines',
                                 editable=False, default=0)
-    hostname = models.CharField(max_length=128, db_index=True)
+    hostname = LowerCaseCharField(max_length=128, db_index=True)
     owner = models.ForeignKey('ClusterUser', related_name='virtual_machines',
                               null=True, blank=True,
                               on_delete=models.SET_NULL)
@@ -901,7 +926,7 @@ class Node(CachedClusterObject):
     ROLE_CHOICES = ((k, v) for k, v in constants.NODE_ROLE_MAP.items())
 
     cluster = models.ForeignKey('Cluster', related_name='nodes')
-    hostname = models.CharField(max_length=128, unique=True)
+    hostname = LowerCaseCharField(max_length=128, unique=True)
     cluster_hash = models.CharField(max_length=40, editable=False)
     offline = models.BooleanField()
     role = models.CharField(max_length=1, choices=ROLE_CHOICES)
@@ -1063,7 +1088,7 @@ class Cluster(CachedClusterObject):
     """
     A Ganeti cluster that is being tracked by this manager tool
     """
-    hostname = models.CharField(_('hostname'), max_length=128, unique=True)
+    hostname = LowerCaseCharField(_('hostname'), max_length=128, unique=True)
     slug = models.SlugField(_('slug'), max_length=50, unique=True,
                             db_index=True)
     port = models.PositiveIntegerField(_('port'), default=5080)
@@ -1253,6 +1278,13 @@ class Cluster(CachedClusterObject):
                 self.virtual_machines \
                     .filter(hostname__in=missing_ganeti).delete()
 
+        # Get up to date data on all VMs
+        self.refresh_virtual_machines()
+
+    def refresh_virtual_machines(self):
+        for vm in self.virtual_machines.all():
+            vm.refresh()
+
     def sync_nodes(self, remove=False):
         """
         Synchronizes the Nodes in the database with the information
@@ -1273,6 +1305,13 @@ class Cluster(CachedClusterObject):
             missing_ganeti = filter(lambda x: str(x) not in ganeti, db)
             if missing_ganeti:
                 self.nodes.filter(hostname__in=missing_ganeti).delete()
+
+        # Get up to date data for all Nodes
+        self.refresh_nodes()
+
+    def refresh_nodes(self):
+        for node in self.nodes.all():
+            node.refresh()
 
     @property
     def missing_in_ganeti(self):
@@ -1429,7 +1468,7 @@ class VirtualMachineTemplate(models.Model):
                                      default=True)
     iallocator = models.BooleanField(verbose_name=_('Automatic Allocation'),
                                      default=False)
-    iallocator_hostname = models.CharField(max_length=255, blank=True)
+    iallocator_hostname = LowerCaseCharField(max_length=255, blank=True)
     disk_template = models.CharField(verbose_name=_('Disk Template'),
                                      max_length=16)
     # XXX why aren't these FKs?
@@ -1648,6 +1687,9 @@ class ClusterUser(models.Model):
     name = models.CharField(max_length=128)
     real_type = models.ForeignKey(ContentType, related_name="+",
                                   editable=False, null=True, blank=True)
+
+    def __repr__(self):
+        return "<%s: %s>" % (str(self.real_type), self.name)
 
     def __unicode__(self):
         return self.name

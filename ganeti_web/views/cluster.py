@@ -21,6 +21,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
 from django.db.models import Q, Sum
 from django.http import (HttpResponse, HttpResponseRedirect,
@@ -45,7 +46,6 @@ log_action = LogItem.objects.log_action
 
 from ganeti_web.backend.queries import vm_qs_for_users, cluster_qs_for_user
 from ganeti_web.forms.cluster import EditClusterForm, QuotaForm
-from ganeti_web.middleware import Http403
 from ganeti_web.models import (Cluster, ClusterUser, Profile, SSHKey,
                                VirtualMachine, Job)
 from ganeti_web.views import render_404
@@ -69,10 +69,16 @@ class ClusterDetailView(LoginRequiredMixin, DetailView):
         user = self.request.user
         admin = user.is_superuser or user.has_perm("admin", cluster)
 
+        # If we're not admin we might still have admin on a VM so this
+        # is to determine if we should show the VM tab to the user.
+        show_vms = admin or user.get_objects_any_perms(
+            VirtualMachine, perms=['admin']).filter(cluster=cluster)
+
         return {
             "cluster": cluster,
             "admin": admin,
             "readonly": not admin,
+            "show_vms": show_vms
         }
 
 
@@ -105,11 +111,16 @@ class ClusterVMListView(BaseVMListView):
         # Store most of these variables on the object, because we'll be using
         # them in context data too
         self.cluster = get_object_or_404(Cluster, slug=self.cluster_slug)
-        # check privs
         self.admin = self.can_create(self.cluster)
-        if not self.admin:
-            raise Http403(NO_PRIVS)
-        self.queryset = vm_qs_for_users(self.request.user, clusters=False)
+
+        # Do we have admin on any VMs for this cluster?
+        vm_perms = self.request.user.get_objects_any_perms(
+                VirtualMachine, perms=['admin']
+        ).filter(cluster=self.cluster).exists()
+
+        if not self.admin and not vm_perms:
+            raise PermissionDenied(NO_PRIVS)
+        self.queryset = vm_qs_for_users(self.request.user)
         # Calling super automatically filters by cluster
         return super(ClusterVMListView, self).get_queryset()
 
@@ -146,7 +157,7 @@ class ClusterJobListView(LoginRequiredMixin, PaginationMixin, GWMBaseView,
         perms = self.can_create(self.cluster)
         self.queryset = self.cluster.jobs.all()
         if not perms:
-            return Http403(NO_PRIVS)
+            raise PermissionDenied(NO_PRIVS)
 
         return super(ClusterJobListView, self).get_queryset()
 
@@ -167,7 +178,7 @@ def nodes(request, cluster_slug):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
-        raise Http403(NO_PRIVS)
+        raise PermissionDenied(NO_PRIVS)
 
     # query allocated CPUS for all nodes in this list.  Must be done here to
     # avoid querying Node.allocated_cpus for each node in the list.  Repackage
@@ -210,7 +221,7 @@ def edit(request, cluster_slug=None):
     user = request.user
     if not (user.is_superuser or (cluster and user.has_perm(
             'admin', cluster))):
-        raise Http403(NO_PRIVS)
+        raise PermissionDenied(NO_PRIVS)
 
     if request.method == 'POST':
         form = EditClusterForm(request.POST, instance=cluster)
@@ -257,6 +268,7 @@ def refresh(request, cluster_slug):
     """
 
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
+    cluster.refresh()
     cluster.sync_nodes(remove=True)
     cluster.sync_virtual_machines(remove=True)
 
@@ -273,7 +285,7 @@ def users(request, cluster_slug):
 
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
-        raise Http403(NO_PRIVS)
+        raise PermissionDenied(NO_PRIVS)
 
     url = reverse('cluster-permissions', args=[cluster.slug])
     return view_users(request, cluster, url,
@@ -290,7 +302,7 @@ def permissions(request, cluster_slug, user_id=None, group_id=None):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
-        raise Http403(NO_PRIVS)
+        raise PermissionDenied(NO_PRIVS)
 
     url = reverse('cluster-permissions', args=[cluster.slug])
     return view_permissions(request, cluster, url, user_id, group_id,
@@ -308,7 +320,7 @@ def redistribute_config(request, cluster_slug):
 
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
-        raise Http403(NO_PRIVS)
+        raise PermissionDenied(NO_PRIVS)
 
     try:
         job = cluster.redistribute_config()
@@ -352,7 +364,7 @@ def quota(request, cluster_slug, user_id):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
-        raise Http403(NO_PRIVS)
+        raise PermissionDenied(NO_PRIVS)
 
     if request.method == 'POST':
         form = QuotaForm(request.POST)
@@ -424,7 +436,7 @@ def object_log(request, cluster_slug):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
-        raise Http403(NO_PRIVS)
+        raise PermissionDenied(NO_PRIVS)
     return list_for_object(request, cluster)
 
 

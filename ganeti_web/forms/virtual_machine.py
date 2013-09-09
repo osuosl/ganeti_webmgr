@@ -32,8 +32,7 @@ from django.utils.translation import ugettext_lazy as _
 from object_log.models import LogItem
 log_action = LogItem.objects.log_action
 
-from ganeti_web.backend.queries import (cluster_qs_for_user,
-                                        owner_qs_for_cluster)
+from ganeti_web.backend.queries import cluster_qs_for_user, owner_qs
 from ganeti_web.backend.templates import template_to_instance
 from ganeti_web.caps import has_cdrom2, has_balloonmem, has_sharedfile
 from ganeti_web.constants import (EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES,
@@ -49,7 +48,8 @@ from ganeti_web.utilities import (cluster_default_info, cluster_os_list,
                                   get_hypervisor, hv_prettify)
 from ganeti_web.util.client import (REPLACE_DISK_AUTO, REPLACE_DISK_PRI,
                                     REPLACE_DISK_CHG, REPLACE_DISK_SECONDARY)
-from ganeti_web.views.generic import LoginRequiredMixin
+from ganeti_web.views.generic import (LoginRequiredMixin,
+                                      PermissionRequiredMixin)
 
 username_or_mtime = Q(username='') | Q(mtime__isnull=True)
 
@@ -671,13 +671,13 @@ class VMWizardOwnerForm(Form):
                          required=False,
                          help_text=_(VM_CREATE_HELP['hostname']))
 
-    def _configure_for_cluster(self, cluster):
+    def _configure_for_cluster(self, cluster, user):
         if not cluster:
             return
 
         self.cluster = cluster
 
-        qs = owner_qs_for_cluster(cluster)
+        qs = owner_qs(cluster, user)
         self.fields["owner"].queryset = qs
 
     def _configure_for_template(self, template, choices=None):
@@ -724,6 +724,11 @@ class VMWizardBasicsForm(Form):
                      help_text=_(VM_CREATE_HELP['hypervisor']))
     os = ChoiceField(label=_('Operating System'), choices=[],
                      help_text=_(VM_CREATE_HELP['os']))
+    no_install = BooleanField(label=_('Do not install the OS'), required=False,
+                              help_text=_(VM_CREATE_HELP['no_install']))
+    iallocator = BooleanField(label=_("Automatic Allocation"),
+                              initial=True, required=False,
+                              help_text=_(VM_CREATE_HELP['iallocator']))
     vcpus = IntegerField(label=_("Virtual CPU Count"), initial=1, min_value=1,
                          help_text=_(VM_HELP['vcpus']))
     minram = DataVolumeField(label=_('Minimum RAM (MiB)'),
@@ -785,6 +790,15 @@ class VMWizardBasicsForm(Form):
             return
 
         self.cluster = cluster
+
+        # Verify that the autoallocator isn't nothing
+        # If it is, remove the option.
+        default_iallocator = cluster.info['default_iallocator']
+        if not default_iallocator:
+            del self.fields['iallocator']
+        else:
+            label_extra = " (%s)" % default_iallocator
+            self.fields['iallocator'].label += label_extra
 
         # Get a look at the list of available hypervisors, and set the initial
         # hypervisor appropriately.
@@ -909,12 +923,17 @@ class VMWizardAdvancedForm(Form):
     name_check = BooleanField(label=_('Verify hostname through DNS'),
                               initial=False, required=False,
                               help_text=_(VM_RENAME_HELP['name_check']))
+    no_start = BooleanField(label=_('Do not boot the VM'), required=False)
     pnode = ModelChoiceField(label=_("Primary Node"),
                              queryset=Node.objects.all(), empty_label=None,
                              help_text=_(VM_CREATE_HELP['pnode']))
     snode = ModelChoiceField(label=_("Secondary Node"),
                              queryset=Node.objects.all(), empty_label=None,
                              help_text=_(VM_CREATE_HELP['snode']))
+
+    # By default unless the configure_for_iallocator method has run,
+    # we assume we're not using autoallocation
+    use_iallocator = False
 
     def _configure_for_cluster(self, cluster):
         if not cluster:
@@ -935,9 +954,18 @@ class VMWizardAdvancedForm(Form):
         self.fields["pnode"].initial = template.pnode
         self.fields["snode"].initial = template.snode
 
+    def _configure_for_iallocator(self):
+        del self.fields["pnode"]
+        del self.fields["snode"]
+        self.use_iallocator = True
+
     def _configure_for_disk_template(self, template):
+        # If its not drdb, we dont use the secondary node.
+        # If we're using the iallocator then this field
+        # will already be deleted.
         if template != "drbd":
             del self.fields["snode"]
+
 
     def clean(self):
         # Ganeti will error on VM creation if an IP address check is requested
@@ -947,7 +975,7 @@ class VMWizardAdvancedForm(Form):
             msg = ["Cannot perform IP check without name check"]
             self._errors["ip_check"] = self.error_class(msg)
 
-        if data.get('pnode') == data.get('snode'):
+        if not self.use_iallocator and data.get('pnode') == data.get('snode'):
             raise forms.ValidationError("The secondary node cannot be the "
                                         "primary node.")
 
@@ -1087,8 +1115,12 @@ class VMWizardKVMForm(Form):
         return data
 
 
-class VMWizardView(LoginRequiredMixin, CookieWizardView):
+class VMWizardView(LoginRequiredMixin, PermissionRequiredMixin,
+                   CookieWizardView):
     template_name = "ganeti/forms/vm_wizard.html"
+    permission_required = ["admin", "create_vm"]
+    no_perms_msg = ("You do not have admin or create vm "
+                    "privledges to any clusters.")
 
     OPTIONS = (
         # value, display value
@@ -1133,6 +1165,13 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
             return data["disk_template"]
         return None
 
+    def _get_iallocator(self):
+        data = self.get_cleaned_data_for_step("2")
+        if data:
+            # This one is different because the iallocator might not exist.
+            return data.get("iallocator", False)
+        return False
+
     def get_form(self, step=None, data=None, files=None):
         s = int(self.steps.current) if step is None else int(step)
         initial = self.get_form_initial(s)
@@ -1145,7 +1184,8 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
             # doesn't have perms on the template.
         elif s == 1:
             form = VMWizardOwnerForm(data=data)
-            form._configure_for_cluster(self._get_cluster())
+            form._configure_for_cluster(self._get_cluster(),
+                                        user=self.request.user)
             form._configure_for_template(self._get_template(),
                                          choices=self._get_vm_or_template())
         elif s == 2:
@@ -1156,7 +1196,12 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
             form = VMWizardAdvancedForm(data=data)
             form._configure_for_cluster(self._get_cluster())
             form._configure_for_template(self._get_template())
-            form._configure_for_disk_template(self._get_disk_template())
+            using_iallocator = self._get_iallocator()
+            # Autoallocation means we dont need to configure the disk template
+            if using_iallocator:
+                form._configure_for_iallocator()
+            else:
+                form._configure_for_disk_template(self._get_disk_template())
         elif s == 4:
             cluster = self._get_cluster()
             hv = self._get_hv()
@@ -1243,10 +1288,19 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
             nics = [{"link": "br0", "mode": "bridged"}]
         template.nics = nics
 
+        template.hypervisor = forms[2].cleaned_data["hv"]
+
         template.os = forms[2].cleaned_data["os"]
+        template.no_install = forms[2].cleaned_data["no_install"]
+        template.iallocator = forms[2].cleaned_data["iallocator"]
         template.ip_check = forms[3].cleaned_data["ip_check"]
         template.name_check = forms[3].cleaned_data["name_check"]
-        template.pnode = forms[3].cleaned_data["pnode"].hostname
+        template.no_start = forms[3].cleaned_data["no_start"]
+
+        if not template.iallocator:
+            template.pnode = forms[3].cleaned_data["pnode"].hostname
+            if "snode" in forms[3].cleaned_data:
+                template.snode = forms[3].cleaned_data["snode"].hostname
 
         hvparams = forms[4].cleaned_data
 
@@ -1256,9 +1310,8 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
         template.kernel_path = hvparams.get("kernel_path")
         template.root_path = hvparams.get("root_path")
         template.serial_console = hvparams.get("serial_console")
-
-        if "snode" in forms[3].cleaned_data:
-            template.snode = forms[3].cleaned_data["snode"].hostname
+        template.nic_type = hvparams.get('nic_type')
+        template.disk_type = hvparams.get('disk_type')
 
         template.set_name(template_name)
         # only save the template to the database if its not temporary
@@ -1275,6 +1328,12 @@ class VMWizardView(LoginRequiredMixin, CookieWizardView):
             return HttpResponseRedirect(reverse("template-detail",
                                                 args=[cluster.slug,
                                                       template]))
+
+    def has_perms(self, request, perms, obj=None):
+        user = request.user
+        # We use Cluster and dont use obj because we want to check if the user
+        # has perms on ANY clusters
+        return user.is_superuser or user.has_any_perms(Cluster, perms)
 
 
 def vm_wizard(*args, **kwargs):

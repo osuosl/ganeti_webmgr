@@ -1,5 +1,5 @@
-{% extends "no_menu_base.html" %}
+{% extends "menu_base.html" %}
 
 {% block content %}
-    {{message}}
+    <h1>{% if message %}{{ message }}{% else %}403 Forbidden{% endif %}</h1>
 {% endblock %}
