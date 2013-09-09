@@ -16,6 +16,7 @@
 # USA.
 
 from django.conf import settings
+from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User, Group
 from django.test import TestCase
 from django.test.client import Client
@@ -30,9 +31,10 @@ from utils.models import SSHKey
 from clusters.models import Cluster
 from virtualmachines.models import VirtualMachine
 from jobs.models import Job
+from ..backend.queries import vm_qs_for_admins
 
 
-__all__ = ('TestGeneralViews', )
+__all__ = ('TestGeneralViews', 'TestOverviewVMSummary')
 
 
 class TestGeneralViews(TestCase, ViewTestMixin):
@@ -256,3 +258,74 @@ class TestGeneralViews(TestCase, ViewTestMixin):
         self.assertContains(response, "test@test", count=1)
         self.assertContains(response, "asd@asd", count=1)
         self.assertContains(response, "foo@bar", count=1)
+
+
+class TestOverviewVMSummary(TestCase):
+    def setUp(self):
+        self.cluster = Cluster.objects.create(
+            hostname='ganeti.example.org', slug='ganeti'
+        )
+        self.vm1 = VirtualMachine.objects.create(
+            hostname='vm1', cluster=self.cluster, status='running'
+        )
+        self.vm2 = VirtualMachine.objects.create(
+            hostname='vm2', cluster=self.cluster, status='running'
+        )
+        self.admin = User.objects.create_user('admin', password='secret')
+        self.admin.grant('admin', self.cluster)
+        self.standard = User.objects.create_user('standard', password='secret')
+
+        self.summary_url = reverse("overview")
+
+    def tearDown(self):
+        self.cluster.delete()
+        self.vm1.delete()
+        self.vm2.delete()
+        self.admin.delete()
+        self.standard.delete()
+
+    def test_admin_summary(self):
+        """
+        Tests that the vm summary for a user with admin permissions on a
+        cluster is correct.
+        """
+        self.client.login(username=self.admin.username, password='secret')
+        response = self.client.get(self.summary_url)
+        vm_summary = response.context['vm_summary']
+        vms = vm_qs_for_admins(self.admin)
+        expected_summary = {
+            unicode(self.cluster.hostname): {
+                'total': len(vms),
+                'running': len(vms.filter(status='running')),
+                'cluster__slug': unicode(self.cluster.slug)
+            }
+        }
+        self.assertEqual(vm_summary, expected_summary)
+
+    def test_standard_summary_no_perms(self):
+        """
+        Tests that a user without any permissions does not have a VM Summary
+        """
+        self.client.login(username=self.standard.username, password='secret')
+        response = self.client.get(self.summary_url)
+        vm_summary = response.context['vm_summary']
+        self.assertEqual(vm_summary, {})
+
+    def test_standard_summary_vm_perms(self):
+        """
+        Tests that the vm summary for a user with admin permissions on a
+        single VM (not cluster) is correct
+        """
+        self.standard.grant('admin', self.vm2)
+        self.client.login(username=self.standard.username, password='secret')
+        response = self.client.get(self.summary_url)
+        vm_summary = response.context['vm_summary']
+        vms = vm_qs_for_admins(self.standard)
+        expected_summary = {
+            unicode(self.cluster.hostname): {
+                'total': len(vms),
+                'running': len(vms.filter(status='running')),
+                'cluster__slug': unicode(self.cluster.slug)
+            }
+        }
+        self.assertEqual(vm_summary, expected_summary)

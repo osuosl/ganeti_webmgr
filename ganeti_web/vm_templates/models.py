@@ -4,6 +4,8 @@ from django.utils.translation import ugettext_lazy as _
 from django.db import models
 from django_fields.fields import PickleField
 
+from utils.fields import LowerCaseCharField
+
 
 class VirtualMachineTemplate(models.Model):
     """
@@ -25,7 +27,7 @@ class VirtualMachineTemplate(models.Model):
                                      default=True)
     iallocator = models.BooleanField(verbose_name=_('Automatic Allocation'),
                                      default=False)
-    iallocator_hostname = models.CharField(max_length=255, blank=True)
+    iallocator_hostname = LowerCaseCharField(max_length=255, blank=True)
     disk_template = models.CharField(verbose_name=_('Disk Template'),
                                      max_length=16)
     # XXX why aren't these FKs?

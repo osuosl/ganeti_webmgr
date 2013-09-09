@@ -140,7 +140,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.locale.LocaleMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'ganeti_web.middleware.Http403Middleware',
+    'ganeti_web.middleware.PermissionDeniedMiddleware'
 )
 
 INSTALLED_APPS = (

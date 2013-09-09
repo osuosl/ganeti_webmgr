@@ -17,11 +17,11 @@
 
 
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import render_to_response
 from django.template.context import RequestContext
 
 from ..forms.importing import NodeForm
-from ..middleware import Http403
 from .generic import NO_PRIVS
 
 from clusters.models import Cluster
@@ -36,7 +36,7 @@ def importing(request):
     """
     user = request.user
     if not user.is_superuser or user.get_objects_any_perms(Cluster, ['admin']):
-        raise Http403(NO_PRIVS)
+        raise PermissionDenied(NO_PRIVS)
 
     return render_to_response('ganeti/importing/nodes/main.html',
                               context_instance=RequestContext(request))
@@ -53,7 +53,7 @@ def missing_ganeti(request):
     else:
         clusters = user.get_objects_any_perms(Cluster, ['admin'])
         if not clusters:
-            raise Http403(NO_PRIVS)
+            raise PermissionDenied(NO_PRIVS)
 
     nodes = []
     for cluster in clusters:
@@ -104,7 +104,7 @@ def missing_db(request):
     else:
         clusters = user.get_objects_any_perms(Cluster, ['admin'])
         if not clusters:
-            raise Http403(NO_PRIVS)
+            raise PermissionDenied(NO_PRIVS)
 
     nodes = []
     for cluster in clusters:

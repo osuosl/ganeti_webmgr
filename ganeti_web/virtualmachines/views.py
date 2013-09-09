@@ -21,6 +21,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
+from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 from django.forms import CharField, HiddenInput
 from django.http import (HttpResponse, HttpResponseRedirect,
@@ -47,7 +48,6 @@ from object_permissions.views.permissions import view_users, view_permissions
 
 from ganeti_web.backend.queries import vm_qs_for_users
 from ganeti_web.caps import has_shutdown_timeout, has_balloonmem
-from ganeti_web.middleware import Http403
 from ganeti_web.templatetags.webmgr_tags import render_storage
 from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
                                       PaginationMixin, GWMBaseView)
@@ -145,7 +145,7 @@ class VMDeleteView(LoginRequiredMixin, DeleteView):
             user.is_superuser or
             user.has_any_perms(vm, ["remove", "admin"]) or
                 user.has_perm("admin", cluster)):
-            raise Http403(NO_PRIVS)
+            raise PermissionDenied(NO_PRIVS)
 
         self.vm = vm
         self.cluster = cluster
@@ -213,7 +213,7 @@ def reinstall(request, cluster_slug, instance):
         user.is_superuser or
         user.has_any_perms(instance, ["remove", "admin"]) or
             user.has_perm("admin", cluster)):
-        raise Http403(NO_PRIVS)
+        raise PermissionDenied(NO_PRIVS)
 
     if request.method == 'GET':
         return render_to_response(
@@ -299,7 +299,7 @@ def shutdown(request, cluster_slug, instance):
     if not (user.is_superuser or user.has_any_perms(vm, ['admin', 'power']) or
             user.has_perm('admin', vm.cluster)):
         msg = _('You do not have permission to shut down this virtual machine')
-        raise Http403(msg)
+        raise PermissionDenied(msg)
 
     try:
         job = vm.shutdown()
@@ -324,7 +324,7 @@ def shutdown_now(request, cluster_slug, instance):
     if not (user.is_superuser or user.has_any_perms(vm, ['admin', 'power']) or
             user.has_perm('admin', vm.cluster)):
         msg = _('You do not have permission to shut down this virtual machine')
-        raise Http403(msg)
+        raise PermissionDenied(msg)
 
     try:
         job = vm.shutdown(timeout=0)
@@ -351,7 +351,7 @@ def startup(request, cluster_slug, instance, rest=False):
         if rest:
             return {"msg": msg, "code": 403}
         else:
-            raise Http403(msg)
+            raise PermissionDenied(msg)
 
     # superusers bypass quota checks
     if not user.is_superuser and vm.owner:
@@ -406,7 +406,7 @@ def migrate(request, cluster_slug, instance):
     user = request.user
     if not (user.is_superuser or
             user.has_any_perms(cluster, ['admin', 'migrate'])):
-        raise Http403(NO_PRIVS)
+        raise PermissionDenied(NO_PRIVS)
 
     if request.method == 'POST':
         form = MigrateForm(request.POST)
@@ -442,7 +442,7 @@ def replace_disks(request, cluster_slug, instance):
     user = request.user
     if not (user.is_superuser or
             user.has_any_perms(cluster, ['admin', 'replace_disks'])):
-        raise Http403(NO_PRIVS)
+        raise PermissionDenied(NO_PRIVS)
 
     if request.method == 'POST':
         form = ReplaceDisksForm(vm, request.POST)
@@ -482,7 +482,7 @@ def reboot(request, cluster_slug, instance, rest=False):
         if rest:
             return HttpResponseForbidden()
         else:
-            raise Http403(_('You do not have permission to '
+            raise PermissionDenied(_('You do not have permission to '
                             'reboot this virtual machine'))
 
     try:
@@ -550,7 +550,7 @@ def detail(request, cluster_slug, instance, rest=False):
         migrate = 'migrate' in perms
 
     if not (admin or power or remove or modify or tags):  # TODO REST
-        raise Http403(_('You do not have permission to view '
+        raise PermissionDenied(_('You do not have permission to view '
                         'this virtual machines\'s details'))
 
     context = {
@@ -606,7 +606,7 @@ def users(request, cluster_slug, instance, rest=False):
         if rest:
             return {'msg': NO_PRIVS, 'code': 403}
         else:
-            raise Http403(NO_PRIVS)
+            raise PermissionDenied(NO_PRIVS)
 
     url = reverse('vm-permissions', args=[cluster.slug, vm.hostname])
     return view_users(request, vm, url, rest=rest)
@@ -623,7 +623,7 @@ def permissions(request, cluster_slug, instance, user_id=None, group_id=None):
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', vm) or
             user.has_perm('admin', vm.cluster)):
-        raise Http403(NO_PRIVS)
+        raise PermissionDenied(NO_PRIVS)
 
     url = reverse('vm-permissions', args=[cluster_slug, vm.hostname])
     return view_permissions(request, vm, url, user_id, group_id)
@@ -640,7 +640,7 @@ def object_log(request, cluster_slug, instance, rest=False):
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', vm) or
             user.has_perm('admin', cluster)):
-        raise Http403(NO_PRIVS)
+        raise PermissionDenied(NO_PRIVS)
 
     if rest:
         return list_for_object(request, vm, True)
@@ -656,7 +656,7 @@ def modify(request, cluster_slug, instance):
     if not (user.is_superuser
             or user.has_any_perms(vm, ['admin', 'modify'])
             or user.has_perm('admin', cluster)):
-        raise Http403(
+        raise PermissionDenied(
             'You do not have permissions to edit this virtual machine')
 
     hv = get_hypervisor(vm)
@@ -734,7 +734,7 @@ def modify_confirm(request, cluster_slug, instance):
     power = user.is_superuser or user.has_any_perms(vm, ['admin', 'power'])
     if not (user.is_superuser or user.has_any_perms(vm, ['admin', 'modify'])
             or user.has_perm('admin', cluster)):
-        raise Http403(
+        raise PermissionDenied(
             _('You do not have permissions to edit this virtual machine'))
 
     if request.method == "POST":
@@ -781,7 +781,7 @@ def modify_confirm(request, cluster_slug, instance):
                         job = vm.reboot()
                         log_action('VM_REBOOT', user, vm, job)
                     else:
-                        raise Http403(
+                        raise PermissionDenied(
                             _("Sorry, but you do not have permission "
                               "to reboot this machine."))
 
@@ -899,7 +899,7 @@ def rename(request, cluster_slug, instance, rest=False, extracted_params=None):
     user = request.user
     if not (user.is_superuser or user.has_any_perms(vm, ['admin', 'modify'])
             or user.has_perm('admin', cluster)):
-        raise Http403(
+        raise PermissionDenied(
             _('You do not have permissions to edit this virtual machine'))
 
     if request.method == 'POST':
@@ -977,7 +977,7 @@ def reparent(request, cluster_slug, instance):
 
     user = request.user
     if not (user.is_superuser or user.has_perm('admin', cluster)):
-        raise Http403(
+        raise PermissionDenied(
             _('You do not have permissions to change the owner '
               'of this virtual machine'))
 

@@ -17,17 +17,15 @@
 from collections import defaultdict
 
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
 from ..forms.importing import ImportForm, OrphanForm, VirtualMachineForm
-from ..middleware import Http403
-
 from .generic import NO_PRIVS
 
 from clusters.models import Cluster
 from virtualmachines.models import VirtualMachine
-
 
 @login_required
 def orphans(request):
@@ -41,7 +39,7 @@ def orphans(request):
     else:
         clusters = user.get_objects_any_perms(Cluster, ['admin'])
         if not clusters:
-            raise Http403(NO_PRIVS)
+            raise PermissionDenied(NO_PRIVS)
 
     vms_with_cluster = VirtualMachine.objects.filter(owner=None,
                                                      cluster__in=clusters) \
@@ -100,7 +98,7 @@ def missing_ganeti(request):
     else:
         clusters = user.get_objects_any_perms(Cluster, ['admin'])
         if not clusters:
-            raise Http403(NO_PRIVS)
+            raise PermissionDenied(NO_PRIVS)
 
     vms = []
     for cluster in clusters:
@@ -159,7 +157,7 @@ def missing_db(request):
     else:
         clusters = user.get_objects_any_perms(Cluster, ['admin'])
         if not clusters:
-            raise Http403(NO_PRIVS)
+            raise PermissionDenied(NO_PRIVS)
 
     vms = []
     for cluster in clusters:

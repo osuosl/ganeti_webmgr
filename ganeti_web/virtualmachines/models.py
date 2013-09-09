@@ -8,6 +8,7 @@ from jobs.models import Job
 from ganeti_web import constants
 from utils import generate_random_password, get_rapi
 from utils.client import REPLACE_DISK_AUTO
+from utils.fields import LowerCaseCharField
 from vm_templates.models import VirtualMachineTemplate
 
 if settings.VNC_PROXY:
@@ -37,7 +38,7 @@ class VirtualMachine(CachedClusterObject):
     cluster = models.ForeignKey('clusters.Cluster',
                                 related_name='virtual_machines',
                                 editable=False, default=0)
-    hostname = models.CharField(max_length=128, db_index=True)
+    hostname = LowerCaseCharField(max_length=128, db_index=True)
     owner = models.ForeignKey('authentication.ClusterUser',
                               related_name='virtual_machines',
                               null=True, blank=True,

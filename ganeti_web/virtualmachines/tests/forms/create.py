@@ -28,6 +28,7 @@ class MockCluster(object):
     info = {
         "enabled_hypervisors": ["kvm", "lxc"],
         "default_hypervisor": "kvm",
+        "default_iallocator": "hail",
         "beparams": {
             "default": {
                 "maxmem": 256,

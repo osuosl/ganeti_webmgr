@@ -13,7 +13,7 @@
     var job_poller;
 
      $(document).ready(function() {
-        $('#tabs').tabs({ 
+        $('#tabs').tabs({
             spinner: false,
             cache: true,
             select: function(event, ui) {
@@ -57,9 +57,9 @@
                     },
                     position: {  corner:{target:'center', tooltip:'center'}},
                     style: {
-                        name: 'dark', 
-                        border:{radius:5}, 
-                        width:400, 
+                        name: 'dark',
+                        border:{radius:5},
+                        width:400,
                         background:'#eeeeee'},
                     show: {when:false, ready:true},
                     hide: {fixed: true, when:false},
@@ -364,16 +364,19 @@
         </table>
 
         <h3>{% trans "Disks" %}</h3>
+        <table class="horizontal">
+            <tr><th>{% trans "Disk Template" %}</th><td>{{ info.disk_template }}</td></tr>
+            <tr><th>{% trans "Disk type" %}</th><td>{{ info.hvparams.disk_type }}</td></tr>
+        </table>
         <table>
-            <tr>
-                <th>{% trans "Disk" %}</th>
-                <th>{% trans "Type" %}</th>
-                <th>{% trans "Size" %}</th>
-            </tr>
+        <tr>
+            <th>{% trans "Disk" %}</th>
+            <th>{% trans "Size" %}</th>
+        </tr>
             {% for size in  info|index:"disk.sizes" %}
                 <tr>
                     <td>disk/{{ forloop.counter0 }}</td>
-                    <td>{{ info.hvparams.disk_type }}</td>
+                    {# <td>{{ info.hvparams.disk_type }}</td> #}
                     <td>{{ size|render_storage }}</td>
                 </tr>
             {% endfor %}

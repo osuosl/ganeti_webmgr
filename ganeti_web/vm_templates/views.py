@@ -17,6 +17,7 @@
 
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
+from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
@@ -33,7 +34,6 @@ from clusters.models import Cluster
 from virtualmachines.models import VirtualMachine
 from vm_templates.models import VirtualMachineTemplate
 
-from ganeti_web.middleware import Http403
 from ganeti_web.views.generic import (LoginRequiredMixin, PaginationMixin,
                                       NO_PRIVS)
 from ganeti_web.views.tables import VMTemplateTable
@@ -83,7 +83,7 @@ class TemplateFromVMInstanceView(LoginRequiredMixin, FormView):
         if not (user.is_superuser or
                 user.has_perm('admin', self.cluster) or
                 user.has_perm('create_vm', self.cluster)):
-            raise Http403(NO_PRIVS)
+            raise PermissionDenied(NO_PRIVS)
 
     def form_valid(self, form):
         """
@@ -132,7 +132,7 @@ class VMInstanceFromTemplateView(LoginRequiredMixin, FormView):
         if not (user.is_superuser or
                 user.has_perm('admin', self.cluster) or
                 user.has_perm('create_vm', self.cluster)):
-            raise Http403(NO_PRIVS)
+            raise PermissionDenied(NO_PRIVS)
 
     def form_valid(self, form):
         """
@@ -169,7 +169,7 @@ def detail(request, cluster_slug, template):
         if not (user.is_superuser or
                 user.has_perm('admin', cluster) or
                 user.has_perm('create_vm', cluster)):
-            raise Http403(NO_PRIVS)
+            raise PermissionDenied(NO_PRIVS)
 
     vm_template = get_object_or_404(VirtualMachineTemplate,
                                     template_name=template,
@@ -194,7 +194,7 @@ def copy(request, cluster_slug, template):
         if not (user.is_superuser or
                 user.has_perm('admin', cluster) or
                 user.has_perm('create_vm', cluster)):
-            raise Http403(NO_PRIVS)
+            raise PermissionDenied(NO_PRIVS)
 
     obj = get_object_or_404(VirtualMachineTemplate,
                             template_name=template,
@@ -233,7 +233,7 @@ def delete(request, cluster_slug, template):
         if not (user.is_superuser or
                 user.has_perm('admin', cluster) or
                 user.has_perm('create_vm', cluster)):
-            raise Http403(NO_PRIVS)
+            raise PermissionDenied(NO_PRIVS)
 
     try:
         vm_template = VirtualMachineTemplate.objects \

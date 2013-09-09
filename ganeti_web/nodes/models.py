@@ -7,6 +7,7 @@ from jobs.models import Job
 
 from ganeti_web import constants
 from utils import get_rapi
+from utils.fields import LowerCaseCharField
 
 
 class Node(CachedClusterObject):
@@ -24,7 +25,7 @@ class Node(CachedClusterObject):
     ROLE_CHOICES = ((k, v) for k, v in constants.NODE_ROLE_MAP.items())
 
     cluster = models.ForeignKey('clusters.Cluster', related_name='nodes')
-    hostname = models.CharField(max_length=128, unique=True)
+    hostname = LowerCaseCharField(max_length=128, unique=True)
     cluster_hash = models.CharField(max_length=40, editable=False)
     offline = models.BooleanField()
     role = models.CharField(max_length=1, choices=ROLE_CHOICES)

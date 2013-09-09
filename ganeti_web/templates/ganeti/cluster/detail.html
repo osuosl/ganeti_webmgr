@@ -129,8 +129,10 @@
 <div id="tabs">
     <ul>
         <li><a href="#overview"><span>{% trans "Overview" %}</span></a></li>
-        {% if admin %}
+        {% if show_vms %}
             <li><a title="virtual machines" href="{% url cluster-vm-list cluster.slug %}"><span>{% trans "Virtual Machines" %}</span></a></li>
+        {% endif %}
+        {% if admin %}
             <li><a title="nodes" href="{% url cluster-nodes cluster.slug %}"><span>{% trans "Nodes" %}</span></a></li>
             <li><a title="user" href="{% url cluster-users cluster.slug %}"><span>{% trans "Users" %}</span></a></li>
             <li><a title="log" href="{% url cluster-object_log cluster.slug %}"><span>{% trans "Log" %}</span></a></li>
