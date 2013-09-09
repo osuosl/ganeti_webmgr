@@ -18,6 +18,7 @@ Notable Changes:
   * More validation on data retrieved from the RAPI
   * Updated sshkeys scripts to be more redundant
   * Fixed missing CSRF token on password reset page
+  * VM List pages should be consistent between the global VM list and the cluster VM lists
 
 v0.10.1
 -------
