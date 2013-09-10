@@ -74,18 +74,26 @@ def get_env_or_file_or_create(env_var, file_loc, secret_size=16):
     # First check if the env_var or file_loc are set/exist
     secret = get_env_or_file_secret(env_var, file_loc)
     if not secret:
-        # Generate our secret key.
-        try:
-            import random
-            secret = ''.join([random.SystemRandom().choice(
-                'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)'
-                ) for i in range(secret_size)])
-            with open(file_loc, "w") as f:
-                f.write(secret)
-        except IOError:
-            Exception("Please either set the %s environment variable, or "
-                      "create a %s file or set SECRET_KEY in end_user.py"
-                      % (env_var, file_loc))
+        secret = generate_secret(secret_size)
+    try:
+        # Write our secret key to the file.
+        with open(file_loc, "w") as f:
+            f.write(secret)
+    except IOError:
+        raise Exception(
+            "Please either set the %s environment variable, or create a %s "
+            "file or set SECRET_KEY in end_user.py" % (env_var, file_loc)
+        )
+
+    return secret
+
+def generate_secret(secret_size):
+    "Generates a secret key of the given size"
+    import random
+    secret = ''.join(random.SystemRandom().choice(
+        'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)'
+    ) for i in range(secret_size))
+
     return secret
 
 # Add our project to our pythonpath
