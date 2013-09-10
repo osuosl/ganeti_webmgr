@@ -13,7 +13,7 @@ urlpatterns = patterns(
     'ganetiviz.views',
 
     url(r'^ganetiviz/cluster/%s/$' % cluster_slug, ClusterJsonView.as_view(),
-        name='json-vms'),
+        name='json-cluster'),
 
     url(r'^ganetiviz/vms/%s/$' % cluster_slug, VMJsonView.as_view(),
         name='json-vms'),
@@ -22,7 +22,7 @@ urlpatterns = patterns(
         name='json-nodes'),
 
     url(r'^ganetiviz/%s/%s/$' % (cluster_slug,instance_hostname),
-        InstanceExtraDataView.as_view(), name='json-nodes'),
+        InstanceExtraDataView.as_view(), name='instance-info'),
 
     url(r'^map/%s/$' % cluster_slug, ClusterGraphView.as_view(),
         name='cluster-graph'),
