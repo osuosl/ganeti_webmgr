@@ -165,10 +165,14 @@ RAPI_CONNECT_TIMEOUT = 3
 # XXX this is a temporary feature that will eventually be replaced by a system
 #     that automatically creates keys per virtual machine. This is just a quick
 #     way of enabled a secure method to pull sshkeys from ganeti web manager
-# WEB_MGR_API_KEY = ""
+
+# Remove the # mark to uncomment and replace CHANGE_ME with a secure value.
+# WEB_MGR_API_KEY = 'CHANGE_ME'
 
 # Used for CSRF protection. Use a 16 or 32 bit random string here.
 # Do not share this with anyone.
+
+# Remove the # mark to uncomment and replace CHANGE_ME with a secure value.
 # SECRET_KEY = 'CHANGE_ME'
 
 STATICFILES_DIRS += (

@@ -59,18 +59,30 @@ SECRET_KEY_LOC = join(SECRET_DIR, 'SECRET_KEY.txt')
 
 # Settings helpers
 def get_env_or_file_secret(env_var, file_loc):
+    """
+    Tries to get the value from the environment variable 'env_var', and
+    falls back to grabbing the contents of the file located at 'file_loc'.
+
+    If both are empty, or an IOError exception is raised, this returns None
+    """
     # Grab the env variable
     secret = os.environ.get(env_var, None)
     if secret is None:
         # If no env variable fall back to file_loc.
         try:
-            secret = open(file_loc).read().strip()
+            # Default to None if file is empty
+            secret = open(file_loc).read().strip() or None
         except IOError:
             # Default to returning none if neither exist
             secret = None
     return secret
 
 def get_env_or_file_or_create(env_var, file_loc, secret_size=16):
+    """
+    A wrapper around get_env_or_file_secret that will create the file at
+    file_loc if it does not already exist. The resulting file's contents will
+    be a randomly generated value.
+    """
     # First check if the env_var or file_loc are set/exist
     secret = get_env_or_file_secret(env_var, file_loc)
     if not secret:
@@ -101,7 +113,7 @@ path.append(root())
 
 # make sure our secrets directory exists
 if not exists(SECRET_DIR):
-    msg = "Secrets directory does not exist at %s. Creating it."
+    msg = "Secrets directory does not exist at %s, Creating it."
     print msg % SECRET_DIR
     os.mkdir(SECRET_DIR)
 
