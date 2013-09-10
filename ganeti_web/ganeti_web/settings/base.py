@@ -174,6 +174,7 @@ INSTALLED_APPS = (
     'utils',
     'virtualmachines',
     'vm_templates',
+    'ganetiviz',
 )
 
 ROOT_URLCONF = 'ganeti_web.urls'

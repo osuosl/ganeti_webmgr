@@ -147,6 +147,7 @@
                 <li><a class="button edit" title="edit cluster" href="{% url cluster-edit cluster.slug %}">{% trans "Edit" %}</a></li>
                 <li><a class="button delete" title="delete cluster" href="{% url cluster-edit cluster.slug %}">{% trans "Delete" %}</a></li>
                 <li><a class="button refresh" title="refresh cluster" href="{% url cluster-refresh cluster.slug %}">{% trans "Refresh" %}</a></li>
+                <li><a class="button visualize" title="map cluster" href="{% url cluster-graph cluster.slug %}">{% trans "Visualize" %}</a></li>
 				{% if instance.username %}
                 	<li><a class="button redistribute-config" title="redistribute cluster config" href="{% url cluster-redistribute-config cluster.slug %}">{% trans "Redistribute Config" %}</a></li>
 				{% endif %}
