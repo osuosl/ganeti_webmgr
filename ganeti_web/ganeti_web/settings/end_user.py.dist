@@ -52,7 +52,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
 
         # Or path to database file if using sqlite3.
-        'NAME': join(PROJECT_ROOT, 'ganeti.db'),
+        'NAME': root('ganeti.db'),
         'USER': '',      # Not used with sqlite3.
         'PASSWORD': '',  # Not used with sqlite3.
         'HOST': '',      # Set to empty string for localhost.
@@ -70,7 +70,7 @@ DATETIME_FORMAT = "d/m/Y H:i"
 
 ##### Locale Configuration #####
 LOCALE_PATHS = (
-    join(PROJECT_ROOT, "locale"),
+    root("locale"),
 )
 
 LANGUAGES = (
@@ -106,7 +106,7 @@ SITE_ROOT = ''
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
-STATIC_ROOT = join(PROJECT_ROOT, "collected_static")
+STATIC_ROOT = root("collected_static")
 
 # URL that handles the media served from STATIC_ROOT.
 # XXX contrary to django docs, do not use a trailling slash.  It makes urls
@@ -165,12 +165,12 @@ RAPI_CONNECT_TIMEOUT = 3
 # XXX this is a temporary feature that will eventually be replaced by a system
 #     that automatically creates keys per virtual machine. This is just a quick
 #     way of enabled a secure method to pull sshkeys from ganeti web manager
-WEB_MGR_API_KEY = "CHANGE_ME"
+# WEB_MGR_API_KEY = ""
 
 # Used for CSRF protection. Use a 16 or 32 bit random string here.
 # Do not share this with anyone.
-SECRET_KEY = 'CHANGE_ME'
+# SECRET_KEY = 'CHANGE_ME'
 
 STATICFILES_DIRS += (
-    join(PROJECT_ROOT, 'noVNC', 'include'),
+    root('noVNC', 'include'),
 )
