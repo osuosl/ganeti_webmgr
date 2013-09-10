@@ -13,13 +13,34 @@ function activate_help(){
     if (GANETIVIZ_HELP_MODE == false){
         GANETIVIZ_HELP_MODE = true
         //console.log("Help Mode switched ON")
-        // $("#cy").css({'width': '70%', })
         $("#overlay-help").css({'visibility':'visible',})
     } else {
         GANETIVIZ_HELP_MODE = false
         $("#overlay-help").css({'visibility':'hidden',})
-        // $("#cy").css({ 'width': '100%'})
     }
+}
+
+
+function update_instance_info(owner,os,ram, status){
+    // #instance-info div populated by instance parameters
+    var instance_info_content = "<ul style='list-style-type: none'>"
+                            + "<li><b>Owner:</b> " + owner + "</li>" 
+                            + "<li><b>OS:</b> " + os + "</li>" 
+                            + "<li><b>Ram:</b> " + ram + "</li>"
+                            + "<li><b>Status:</b> " + status + "</li>"
+                            + "</ul>" 
+    $("#instance-info").html(instance_info_content)
+}
+
+
+function highlight_failover_edge(pnode,snode){
+              var snode_edge_selector = "edge[source='" + pnode + "'][target='" + snode + "']";
+
+              // First un-highlight all highlighted failover edges.
+              cy.$('edge').toggleClass("active",false);
+
+              eles = cy.$(snode_edge_selector)
+              eles.toggleClass("active",true);
 }
 
 /******************** [2] Cytoscape Viewport Rendering and Interactivity ***********************/
@@ -156,34 +177,31 @@ function renderinteractivegraph(){
 
               //console.log(this.id)
               var instance_id = this.id
-
-              // Assigning current instance parameters to varaibles.
-              //#TODO: VMGraph[instance_id] could be an object instead of array.
               var pnode = VMGraph[instance_id][0];
               var snode = VMGraph[instance_id][1];
               var owner = VMGraph[instance_id][2];
-              var os = VMGraph[instance_id][3];
-              var ram = VMGraph[instance_id][4];
-              var minram = VMGraph[instance_id][5];
               var status = VMGraph[instance_id][6];
+              highlight_failover_edge(pnode,snode)
 
-              snode_edge_selector = "edge[source='" + pnode + "'][target='" + snode + "']";
+              // Fetching additional instance data via AJAX for an instance specific endpoint.
+              instance_data_url = "/ganetiviz/" + window.GANETIVIZ_SELECTED_CLUSTER + "/" + instance_id
+              $.getJSON(instance_data_url,function( json ){
+                  window.instance_json = json
 
-              // First un-highlight all highlighted failover edges.
-              cy.$('edge').toggleClass("active",false);
+                  //TODO: To add a loading indication till the time additional instance data is being fetched.
+                  $("#instance-info").html("Loading VM info ..")
 
-              //console.log(snode_edge_selector);
-              eles = cy.$(snode_edge_selector)
-              eles.toggleClass("active",true);
+                  // Assigning current instance parameters to varaibles.
+                  //#TODO: VMGraph[instance_id] could be an object instead of array.
+                  //var os = VMGraph[instance_id][3];
+                  var os = instance_json.os
+                  var ram = instance_json.beparams.memory
+                  var minram = instance_json.beparams.minmem
+                  var maxram = instance_json.beparams.maxmem
 
-              // #instance-info div populated by instance parameters
-              var instance_info_content = "<ul style='list-style-type: none'>"
-                                        + "<li><b>Owner:</b> " + owner + "</li>" 
-                                        + "<li><b>OS:</b> " + os + "</li>" 
-                                        + "<li><b>Ram:</b> " + ram + "</li>"
-                                        + "<li><b>Status:</b> " + status + "</li>"
-                                        + "</ul>" 
-              $("#instance-info").html(instance_info_content)
+                  // To visually show the new instance information.
+                  update_instance_info(owner,os,ram, status)
+              });
 
           });
  
@@ -196,10 +214,7 @@ function renderinteractivegraph(){
           cy.$('edge').toggleClass("active",false);
           pnode = VMGraph[this.id()][0];
           snode = VMGraph[this.id()][1];
-          snode_edge_selector = "edge[source='" + pnode + "'][target='" + snode + "']";
-          //console.log(snode_edge_selector);
-          eles = cy.$(snode_edge_selector)
-          eles.toggleClass("active",true);
+          highlight_failover_edge(pnode,snode)
       });
 
     }

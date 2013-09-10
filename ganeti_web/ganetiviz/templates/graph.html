@@ -62,6 +62,8 @@
   <script>
     //TODO: Try to swtich to an aysnchronus solution.
 
+    window.GANETIVIZ_SELECTED_CLUSTER = "{{ cluster_slug }}"
+
     function fetchclusterdata(){
       $.ajaxSetup({
           async: false

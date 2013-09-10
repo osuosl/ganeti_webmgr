@@ -66,7 +66,7 @@ function buildabstractgraph(){
       var minram = vm["minram"]
       var status = vm["status"]
 
-      console.log(snode)
+      //console.log(snode)
 
       // A HashMap object that will contain mapping from VM to pnode or snode for fast search
       VMGraph[vm_hostname] = [pnode,snode,owner,os,ram,minram,status]
@@ -103,7 +103,7 @@ function buildabstractgraph(){
       N = NodeInstanceLinks[nodekey] 
       node_position = CytoNodePositions[nodekey]    // We are going to generate points around this coordinate lying on a circle.
       R = 50                                       // Setting R constant for now. #TODO Check optimal value.
-      console.log(NodeInstanceLinks)
+      //console.log(NodeInstanceLinks)
       VMPositions[nodekey] = polypointscircle(center=node_position,R,N)
   }
 
