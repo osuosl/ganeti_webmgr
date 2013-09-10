@@ -22,7 +22,6 @@ class ClusterJsonView(LoginRequiredMixin,DetailView):
 
         cluster = Cluster.objects.select_related("node","virtualmachine").get(slug=cluster_slug)
         vms = cluster.virtual_machines.all()
-        print vms
         nodes = cluster.nodes.all()
 
         # .values() method does not return actual list but list like django object. 
@@ -78,9 +77,6 @@ class InstanceExtraDataView(LoginRequiredMixin,DetailView):
     def get(self, request, *args, **kwargs):
         cluster_slug=self.kwargs['cluster_slug']
         instance_hostname=self.kwargs['instance_hostname']
-
-        print cluster_slug
-        print instance_hostname
 
         #cluster = Cluster.objects.get(slug=cluster_slug) # Changed to next line for query optimization.
         cluster = Cluster.objects.get(slug=cluster_slug)
