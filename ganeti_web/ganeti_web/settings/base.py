@@ -33,8 +33,8 @@ from sys import path
 # Path Helpers
 def here(*x):
     """
-    This helper returns the absolute path as a string to the file we're in
-    relative to the arguments passed in.
+    This is a wrapper around join. It will return a path relative to the
+    current file.
     """
     return join(abspath(dirname(__file__)), *x)
 
@@ -42,7 +42,7 @@ PROJECT_ROOT = here("..", "..", "..")
 
 def root(*x):
     """
-    This helper is an alias for join except it will return a path relative to
+    This is a wrapper around join. It will return a path relative to
     PROJECT_ROOT.
     """
     return join(abspath(PROJECT_ROOT), *x)
