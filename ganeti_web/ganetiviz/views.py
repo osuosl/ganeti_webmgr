@@ -37,49 +37,6 @@ class ClusterJsonView(LoginRequiredMixin,DetailView):
         return HttpResponse(cluster_json, content_type='application/json')  
 
 
-# Not being used now, but still kept as it might be useful again in future.
-class VMJsonView(LoginRequiredMixin,DetailView):
-    """
-    View for generating JSON representation of Virtual Machines in a Cluster (Cluster-Graph)
-    The cluster is specified in the url, example: "/ganetiviz/vms/ganeti"
-    """
-    def get(self, request, *args, **kwargs):
-        #cluster_slug = "ganeti"
-        cluster_slug=self.kwargs['cluster_slug']
-
-        #cluster = Cluster.objects.get(slug=cluster_slug) # Changed to next line for query optimization.
-        cluster = Cluster.objects.select_related("virtualmachine").get(slug=cluster_slug)
-
-        #vm_queryset = VirtualMachine.objects.filter(cluster=cluster)
-        vms = cluster.virtual_machines.all()
-
-        selected_fields = ('hostname','primary_node','secondary_node','status',
-                           'owner','operating_system','ram','minram')
-        vm_json_data = serializers.serialize('json', vms, 
-                                             fields=selected_fields, 
-                                             use_natural_keys=True)
-
-        return HttpResponse(vm_json_data, content_type='application/json')  
-
-
-# Not being used now, but still kept as it might be useful again in future.
-class NodeJsonView(LoginRequiredMixin,DetailView):
-    """
-    View for generating JSON representation of Nodes in a Cluster (Cluster-Graph)
-    The cluster is specified in the url, example: "/ganetiviz/vms/ganeti"
-    """
-    def get(self, request, *args, **kwargs):
-        #cluster_slug = "ganeti"
-        cluster_slug=self.kwargs['cluster_slug']
-
-        cluster = Cluster.objects.select_related("node").get(slug=cluster_slug)
-        node_queryset = cluster.nodes.all()
-        selected_fields = ('hostname','ram_total','ram_free','offline','role')
-        node_json_data = serializers.serialize('json', node_queryset, fields= selected_fields)
-
-        return HttpResponse(node_json_data, content_type='application/json')  
-
-
 class ClusterGraphView(LoginRequiredMixin,TemplateView):
     """
     View that dispatches the appropriate template file responsible for visual
@@ -139,3 +96,49 @@ class InstanceExtraDataView(LoginRequiredMixin,DetailView):
         instance_info_json = json.dumps(useful_instance_info)
 
         return HttpResponse(instance_info_json, content_type='application/json')
+
+
+'''
+
+# Not being used now, but still kept as it might be useful again in future.
+class VMJsonView(LoginRequiredMixin,DetailView):
+    """
+    View for generating JSON representation of Virtual Machines in a Cluster (Cluster-Graph)
+    The cluster is specified in the url, example: "/ganetiviz/vms/ganeti"
+    """
+    def get(self, request, *args, **kwargs):
+        #cluster_slug = "ganeti"
+        cluster_slug=self.kwargs['cluster_slug']
+
+        #cluster = Cluster.objects.get(slug=cluster_slug) # Changed to next line for query optimization.
+        cluster = Cluster.objects.select_related("virtualmachine").get(slug=cluster_slug)
+
+        #vm_queryset = VirtualMachine.objects.filter(cluster=cluster)
+        vms = cluster.virtual_machines.all()
+
+        selected_fields = ('hostname','primary_node','secondary_node','status',
+                           'owner','operating_system','ram','minram')
+        vm_json_data = serializers.serialize('json', vms, 
+                                             fields=selected_fields, 
+                                             use_natural_keys=True)
+
+        return HttpResponse(vm_json_data, content_type='application/json')  
+
+
+# Not being used now, but still kept as it might be useful again in future.
+class NodeJsonView(LoginRequiredMixin,DetailView):
+    """
+    View for generating JSON representation of Nodes in a Cluster (Cluster-Graph)
+    The cluster is specified in the url, example: "/ganetiviz/vms/ganeti"
+    """
+    def get(self, request, *args, **kwargs):
+        #cluster_slug = "ganeti"
+        cluster_slug=self.kwargs['cluster_slug']
+
+        cluster = Cluster.objects.select_related("node").get(slug=cluster_slug)
+        node_queryset = cluster.nodes.all()
+        selected_fields = ('hostname','ram_total','ram_free','offline','role')
+        node_json_data = serializers.serialize('json', node_queryset, fields= selected_fields)
+
+        return HttpResponse(node_json_data, content_type='application/json')  
+'''
