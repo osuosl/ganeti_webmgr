@@ -1,5 +1,5 @@
 import copy
-from unittest import skip
+from django.utils import unittest
 from itertools import chain
 
 from django.test import TestCase
@@ -284,7 +284,7 @@ class TestHvmModifyVirtualMachineForm(ModifyVirtualMachineFormTestCase):
         for field in form.Meta.exclude:
             self.assertFalse(field in form.fields, field)
 
-    @skip("Skipping broken")
+    @unittest.skip("Skipping broken")
     def test_field_initial_values(self):
         """
         Test that fields contain the correct initial values taken from a vm.
