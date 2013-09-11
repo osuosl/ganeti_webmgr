@@ -41,6 +41,13 @@ Getting Started
     getting_started/deploying
     getting_started/importing
 
+Deployment
+----------
+.. toctree::
+    :maxdepth: 1
+
+    deployment/apache
+
 
 Features
 --------
