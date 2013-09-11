@@ -9,10 +9,10 @@ simple python web server for development purposes. If your just trying to get
 |gwm| up and running, or you simply want to contribute to the project then using
 the :ref:`test-server` is probably your best bet.
 
-.. _test-server:
+.. _development-server:
 
-Development Server
-------------------
+The Development Server
+----------------------
 
 If you are just testing |gwm| out, run::
 
