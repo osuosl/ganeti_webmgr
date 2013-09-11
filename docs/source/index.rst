@@ -47,6 +47,7 @@ Deployment
     :maxdepth: 1
 
     deployment/apache
+    deployment/nginx
 
 
 Features
