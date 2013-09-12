@@ -88,7 +88,8 @@ class InstanceExtraDataView(LoginRequiredMixin,DetailView):
         # Blocking request to Ganeti RAPI to return instance info.
         instance_info = r.GetInstance(instance_hostname)
 
-        useful_instance_info = { useful_key: instance_info[useful_key] for useful_key in selected_fields }
+        useful_instance_info = dict((useful_key, instance_info[useful_key])
+                                    for useful_key in selected_fields )
         instance_info_json = json.dumps(useful_instance_info)
 
         return HttpResponse(instance_info_json, content_type='application/json')
