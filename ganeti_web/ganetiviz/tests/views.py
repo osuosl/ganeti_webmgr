@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User, Group
 from django.test import TestCase
 from django.test.client import Client
+from django.test import LiveServerTestCase
 from django.utils import unittest, simplejson as json
 
 from django_test_tools.users import UserTestMixin
@@ -10,7 +11,15 @@ from clusters.models import Cluster
 from nodes.models import Node
 from virtualmachines.models import VirtualMachine
 
-__all__ = ['TestGanetivizViews', ]
+try:
+    from selenium import webdriver
+    from selenium.webdriver.common.keys import Keys
+    SELENIUM_NOT_INSTALLED = False
+except ImportError:
+    SELENIUM_NOT_INSTALLED = True
+
+
+__all__ = ['TestGanetivizViews', 'GanetivizSeleniumTests']
 
 testcluster0_data = {'nodes': [{'hostname': 'node0.example.test',
             'offline': False,
@@ -119,4 +128,117 @@ class TestGanetivizViews(TestCase, ViewTestMixin, UserTestMixin):
         cluster_data = json.loads(content)
 
         self.assertEqual(cluster_data,testcluster0_data)
+
+
+
+def check_help_status(driver):
+    help_status = driver.execute_script("return window.GANETIVIZ_HELP_MODE")
+    return help_status
+
+# Selenium tests use Django LiveServer for testing. LiveServer runs on port 8081 in the background
+class GanetivizSeleniumTests(LiveServerTestCase, ViewTestMixin, UserTestMixin):
+    def setUp(self):
+        super(GanetivizSeleniumTests, self).setUp()
+        self.driver = webdriver.Firefox()
+
+        # Loading initial data.
+        user = User(id=2, username='tester_pranjal')
+        user.set_password('secret')
+        user.save()
+
+        group = Group(name='testing_group')
+        group.save()
+
+        ## Creating Test Cluster
+        cluster = Cluster(hostname='cluster0.example.test',
+                          slug='cluster0')
+        cluster.save()
+
+        self.create_standard_users()
+        self.create_users(['cluster_admin'])
+        self.cluster_admin.grant('admin', cluster)
+
+        ## Creating Test nodes for the cluster.
+        node_list = []
+        node_list.append(Node(cluster=cluster, hostname='node0.example.test',
+                              offline=False))
+        node_list.append(Node(cluster=cluster, hostname='node1.example.test',
+                              offline=False))
+        for node in node_list:
+            node.save()
+
+        ## Creating Test instances for the cluster.
+        instance_list = []
+        instance_list.append(VirtualMachine(cluster=cluster,
+                                            hostname='instance1.example.test',
+                                            primary_node=node_list[0],
+                                            secondary_node=node_list[1]))
+        instance_list.append(VirtualMachine(cluster=cluster,
+                                            hostname='instance2.example.test',
+                                            primary_node=node_list[0],
+                                            secondary_node=node_list[1]))
+        instance_list.append(VirtualMachine(cluster=cluster,
+                                            hostname='instance3.example.test',
+                                            primary_node=node_list[0],
+                                            secondary_node=node_list[1]))
+        instance_list.append(VirtualMachine(cluster=cluster,
+                                            hostname='instance4.example.test',
+                                            primary_node=node_list[1],
+                                            secondary_node=node_list[0]))
+        for instance in instance_list:
+            instance.save()
+
+        self.user = user
+        self.group = group
+        self.cluster = cluster
+
+    def tearDown(self):
+        self.driver.quit()
+        super(GanetivizSeleniumTests, self).tearDown()
+
+    @unittest.skipIf(SELENIUM_NOT_INSTALLED,"Skipping selenium tests, as selenium is not installed")
+    def test_user_interface(self):
+        #self.c.login(username='tester_pranjal', password='secret')
+        driver = self.driver
+        driver.get("http://localhost:8081/map/cluster0/")
+
+        if driver.title == u'Login':
+            element = driver.find_element_by_id("id_username")
+            element.send_keys("tester_pranjal")
+            element = driver.find_element_by_id("id_password")
+            element.send_keys("secret")
+            element.send_keys(Keys.ENTER)
+            driver.get("http://localhost:8000/map/cluster0/")
+
+        html_document = driver.find_element_by_xpath("/html")
+        helpdiv = driver.find_element_by_id("help-div")
+
+        # Checking if title is Ok.
+        assert "Ganeti Cluster Mapping" in driver.title
+
+        # Checking if help appears on clicking on a help-div
+        helpdiv.click();
+        assert check_help_status(driver) == True
+
+        # Checking if help toggles back to off on clicking on help-div.
+        helpdiv.click();
+        assert check_help_status(driver) == False
+
+        # Checking if pressing the 'h' key opens the help
+        html_document.send_keys('h')
+        assert check_help_status(driver) == True
+
+        # Checking if panning works fine.
+        html_document.send_keys(Keys.ARROW_LEFT)
+        html_document.send_keys(Keys.ARROW_LEFT)
+        html_document.send_keys(Keys.ARROW_RIGHT)
+        html_document.send_keys(Keys.ARROW_RIGHT)
+        html_document.send_keys(Keys.ARROW_UP)
+        html_document.send_keys(Keys.ARROW_UP)
+        html_document.send_keys(Keys.ARROW_DOWN)
+        html_document.send_keys(Keys.ARROW_DOWN)
+        # Question - How to assert whether the check works fine.
+
+        # Todo: Looking for an answer to-
+        # http://stackoverflow.com/questions/18436248/writing-selenium-tests-for-cytoscape-js-applications-locating-nodes-edges
 
