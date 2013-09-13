@@ -126,7 +126,6 @@ class GanetivizSeleniumTests(LiveServerTestCase):
 
         # Loading initial data.
         user = User.objects.create_user(username='tester_pranjal',password='secret')
-
         group = Group(name='testing_group')
         group.save()
 
@@ -179,7 +178,7 @@ class GanetivizSeleniumTests(LiveServerTestCase):
             element = driver.find_element_by_id("id_password")
             element.send_keys("secret")
             element.send_keys(Keys.ENTER)
-            driver.get("http://localhost:8000/map/cluster0/")
+            driver.get("http://localhost:8081/map/cluster0/")
 
         html_document = driver.find_element_by_xpath("/html")
         helpdiv = driver.find_element_by_id("help-div")
