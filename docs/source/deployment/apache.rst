@@ -24,6 +24,8 @@ Next you want to create a vhost which will contain the Apache settings
 that will point to our Django app. In the Apache config or ``<VirualHost>``
 you will need at least the following:
 
+.. _apache_conf:
+
 .. literalinclude:: apache.conf
     :language: apache
 
