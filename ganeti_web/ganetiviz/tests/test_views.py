@@ -63,6 +63,7 @@ class TestGanetivizViews(TestCase):
         VirtualMachine.objects.all().delete()
         Node.objects.all().delete()
         Cluster.objects.all().delete()
+        User.objects.all().delete()
 
     def test_cluster_json_ouput(self):
         testcluster0_data = {
@@ -165,6 +166,11 @@ class GanetivizSeleniumTests(LiveServerTestCase):
     def tearDown(self):
         self.driver.quit()
         super(GanetivizSeleniumTests, self).tearDown()
+
+        VirtualMachine.objects.all().delete()
+        Node.objects.all().delete()
+        Cluster.objects.all().delete()
+        User.objects.all().delete()
 
     def test_user_interface(self):
         #self.c.login(username='tester_pranjal', password='secret')
