@@ -16,24 +16,30 @@ Required
 --------
 
 #. Change your **SECRET\_KEY** and **WEB\_MGR\_API\_KEY** to unique (and
-   hopefully unguessable) strings in your settings.py.
+   hopefully unguessable) strings in your ``end_user.py``.
+
+   .. versionchanged:: 0.11.0
+      You can now set **GWM_SECRET_KEY** and **GWM_API_KEY** environmental variables
+      to set these values. By default, if none of these values are set, GWM will
+      create a ``.secret/`` directory in the root of the project containing files
+      with randomly generated values for these keys.
 
 
-#. Change the ownership of the ``whoosh_index`` directory to apache
-
-   ::
+#. Change the ownership of the ``whoosh_index`` directory to the user running
+   the web server. If your using apache this will be either apache, or httpd.
+   For nginx, the user will be nginx. Example::
 
        chown apache:apache whoosh_index/
 
 #. Ensure the server has the ability to send emails or you have access
-   to an SMTP server. Set **``EMAIL_HOST``**, **``EMAIL_PORT``**, and
-   **``DEFAULT_FROM_EMAIL``** in settings.py. For more complicated
+   to an SMTP server. Set **EMAIL_HOST**, **EMAIL_PORT**, and
+   **DEFAULT_FROM_EMAIL** in ``end_user.py``. For more complicated
    outgoing mail setups, please refer to the `django email
    documentation <http://docs.djangoproject.com/en/dev/topics/email/>`_.
 
 #. Configure the `Django Cache
    Framework <http://docs.djangoproject.com/en/dev/topics/cache/>`_ to
-   use a production capable backend in **settings.py**. By default
+   use a production capable backend in ``end_user.py``. By default
    Ganeti Web Manager is configured to use the **LocMemCache** but it is
    not recommended for production. Use Memcached or a similar backend.
 
@@ -45,10 +51,6 @@ Required
            }
        }
 
-#. For versions >= 0.5 you may need to add the full filesystem path to
-   your templates directory to **``TEMPLATE_DIRS``** and remove the
-   relative reference to **``'templates'``**. We've had issues using
-   wsgi not working correctly unless this change has been made.
 
 Optional
 --------
@@ -57,7 +59,7 @@ VNC
 ---
 
 #. Set **VNC\_PROXY** to the hostname of your VNC AuthProxy server in
-   **settings.py**. The VNC AuthProxy does not need to run on the same
+   ``end_user.py``. The VNC AuthProxy does not need to run on the same
    server as Ganeti Web Manager.
 
    ::
