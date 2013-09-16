@@ -11,6 +11,49 @@ Configuring
 
 Deploying a production server requires additional setup steps.
 
+Helper Functions
+----------------
+
+.. versionadded:: 0.11.0
+
+.. Note:: These functions are only available in ``end_user.py``
+
+There a few helper functions that have been added to |gwm| settings to help with
+getting full paths to files relative to |gwm|.
+
+:func:`root` is a function which will return an absolute path where the arguments
+given are joined together with the path to the root of the project. Similarly,
+:func:`app_root` will return the absoulte path relative to the app directory of GWM.
+(Where different Django apps are. By default this is the ganeti_web folder).
+
+These are useful if you need to add or change the CSS and/or templates of GWM.
+For most cases, you will not need to use these, but they are available if you do.
+
+Examples::
+
+  root('some', 'path') # Will return /path/to/ganeti_webmgr/some/path
+  app_root('arbitrary', 'test', 'path') # Will return /path/to/ganeti_webmgr/ganeti_web/arbitrary/test/path
+
+
+There are also some helpers available to retrieve setting values from
+environmental variables or files containing the secrets.
+
+:func:`get_env_or_file_secret` can be used to retrieve a setting from an
+environmental variable and will fall back to checking for the value in a file.
+It will return None if it finds neither.
+:func:`get_env_or_file_or_create` does the same thing as the previous function,
+however it will create the file and generate a random secret if the file
+doesn't exist.
+
+Examples::
+
+  # Will grab the value from the environmental variable `DB_NAME`
+  # if its empty, will read the value from `DB_NAME.txt`.
+  get_env_or_file_secret('DB_NAME', '~/.secrets/DB_NAME.txt')
+
+  # Same as above but creates `DB_NAME.txt` if it doesn't exist.
+  get_env_or_file_secret_or_create('DB_NAME', '~/.secrets/DB_NAME.txt')
+
 
 Required
 --------
