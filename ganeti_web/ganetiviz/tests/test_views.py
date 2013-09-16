@@ -30,7 +30,7 @@ class TestGanetivizViews(TestCase):
                                     hostname='node0.example.test',
                                     offline=False)
         node1 = Node.objects.create(cluster=cluster,
-                                    hostname='node0.example.test',
+                                    hostname='node1.example.test',
                                     offline=False)
 
         ## Creating Test instances for the cluster.
