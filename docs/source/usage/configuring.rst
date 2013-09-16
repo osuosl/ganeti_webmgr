@@ -18,7 +18,7 @@ Required
 #. Change your **SECRET\_KEY** and **WEB\_MGR\_API\_KEY** to unique (and
    hopefully unguessable) strings in your ``end_user.py``.
 
-   .. versionchanged:: 0.11.0
+   .. versionadded:: 0.11.0
       You can now set **GWM_SECRET_KEY** and **GWM_API_KEY** environmental variables
       to set these values. By default, if these are not set, GWM will
       create a ``.secret/`` directory in the root of the project containing files
