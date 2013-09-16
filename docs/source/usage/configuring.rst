@@ -20,11 +20,11 @@ Required
 
    .. versionchanged:: 0.11.0
       You can now set **GWM_SECRET_KEY** and **GWM_API_KEY** environmental variables
-      to set these values. By default, if none of these values are set, GWM will
+      to set these values. By default, if these are not set, GWM will
       create a ``.secret/`` directory in the root of the project containing files
       with randomly generated values for these keys. If you wish to set the value
       in the files, simply create files with the names API_KEY.txt and SECREY_KEY.txt
-      with the contents.
+      with the contents. You can continue to set these in ``end_user.py`` as well.
 
   .. Note:: **SECRET_KEY** must be set to a 16, 24, or 32 bit value.
 
