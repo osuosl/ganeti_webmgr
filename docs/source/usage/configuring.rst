@@ -22,7 +22,11 @@ Required
       You can now set **GWM_SECRET_KEY** and **GWM_API_KEY** environmental variables
       to set these values. By default, if none of these values are set, GWM will
       create a ``.secret/`` directory in the root of the project containing files
-      with randomly generated values for these keys.
+      with randomly generated values for these keys. If you wish to set the value
+      in the files, simply create files with the names API_KEY.txt and SECREY_KEY.txt
+      with the contents.
+
+  .. Note:: **SECRET_KEY** must be set to a 16, 24, or 32 bit value.
 
 
 #. Change the ownership of the ``whoosh_index`` directory to the user running
