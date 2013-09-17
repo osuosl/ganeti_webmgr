@@ -113,12 +113,6 @@ STATIC_ROOT = root("collected_static")
 # using this url easier to read.  ie.  {{STATIC_URL}}/images/foo.png
 STATIC_URL = '%s/static' % SITE_ROOT
 
-# Path to installed locales. New translations should be added to this
-# directory.
-LOCALE_PATHS = (
-    join(DOC_ROOT, "locale"),
-)
-
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = '!c&bm88vo=gby*vxf2gydv8hc!+f+eo+yu&!g&!)#n5quwsr82'
 
