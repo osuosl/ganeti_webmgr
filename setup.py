@@ -24,7 +24,6 @@ setup(
     # package
     packages=find_packages(exclude=["docs"]),  # should find package easily
     install_requires=requirements,
-    scripts=['ganeti_webmgr/gwm-manage.py'],
 
     # in case you want to have easy testing in future by `./setup.py test`
     # you'd need to work with setuptools documentation:
