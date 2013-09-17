@@ -25,16 +25,97 @@ end_user.py files causing upgrade bugs.
 All settings in this module can be overriden in the main end_user.py module,
 of course.
 """
-from os.path import abspath, basename, dirname, join
+
+import os
+from os.path import abspath, basename, dirname, join, exists
 from sys import path
 
+# Path Helpers
+def here(*x):
+    """
+    This is a wrapper around join. It will return a path relative to the
+    current file.
+    """
+    return join(abspath(dirname(__file__)), *x)
+
+PROJECT_ROOT = here("..", "..", "..")
+
+def root(*x):
+    """
+    This is a wrapper around join. It will return a path relative to
+    PROJECT_ROOT.
+    """
+    return join(abspath(PROJECT_ROOT), *x)
+
+app_root = lambda *x: root('ganeti_web', *x)
+
 ##### Project structure variables #####
-PROJECT_ROOT = dirname(dirname(abspath(__file__)))
-DOC_ROOT = dirname(PROJECT_ROOT)
-SITE_NAME = basename(PROJECT_ROOT)
+SITE_NAME = basename(root())
+
+# Secrets location and default file names.
+SECRET_DIR = root(os.environ.get('GWM_SECRET_DIR', '.secrets'))
+GWM_API_KEY_LOC = join(SECRET_DIR, 'API_KEY.txt')
+SECRET_KEY_LOC = join(SECRET_DIR, 'SECRET_KEY.txt')
+
+# Settings helpers
+def get_env_or_file_secret(env_var, file_loc):
+    """
+    Tries to get the value from the environment variable 'env_var', and
+    falls back to grabbing the contents of the file located at 'file_loc'.
+
+    If both are empty, or an IOError exception is raised, this returns None
+    """
+    # Grab the env variable
+    secret = os.environ.get(env_var, None)
+    if secret is None:
+        # If no env variable fall back to file_loc.
+        try:
+            # Default to None if file is empty
+            secret = open(file_loc).read().strip() or None
+        except IOError:
+            # Default to returning none if neither exist
+            secret = None
+    return secret
+
+def get_env_or_file_or_create(env_var, file_loc, secret_size=16):
+    """
+    A wrapper around get_env_or_file_secret that will create the file at
+    file_loc if it does not already exist. The resulting file's contents will
+    be a randomly generated value.
+    """
+    # First check if the env_var or file_loc are set/exist
+    secret = get_env_or_file_secret(env_var, file_loc)
+    if not secret:
+        secret = generate_secret(secret_size)
+    try:
+        # Write our secret key to the file.
+        with open(file_loc, "w") as f:
+            f.write(secret)
+    except IOError:
+        raise Exception(
+            "Please either set the %s environment variable, or create a %s "
+            "file or set SECRET_KEY in end_user.py" % (env_var, file_loc)
+        )
+
+    return secret
+
+def generate_secret(secret_size):
+    "Generates a secret key of the given size"
+    import random
+    secret = ''.join(random.SystemRandom().choice(
+        'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)'
+    ) for i in range(secret_size))
+
+    return secret
 
 # Add our project to our pythonpath
-path.append(PROJECT_ROOT)
+path.append(root())
+
+# make sure our secrets directory exists
+if not exists(SECRET_DIR):
+    msg = "Secrets directory does not exist at %s, Creating it."
+    print msg % SECRET_DIR
+    os.mkdir(SECRET_DIR)
 
 ##### Debug *default* configuration #####
 DEBUG = False
@@ -62,13 +143,13 @@ ITEMS_PER_PAGE = 15
 ##### Haystack settings #####
 HAYSTACK_SITECONF = 'search_sites'
 HAYSTACK_SEARCH_ENGINE = 'whoosh'
-HAYSTACK_WHOOSH_PATH = join(PROJECT_ROOT, 'whoosh_index')
+HAYSTACK_WHOOSH_PATH = root('whoosh_index')
 ##### End Haystack settings #####
 
 
 ###### Template Configuration #####
 TEMPLATE_DIRS = (
-    join(DOC_ROOT, 'templates')
+    app_root('templates')
 )
 
 TEMPLATE_LOADERS = (
@@ -97,10 +178,10 @@ STATICFILES_FINDERS = (
 )
 
 STATICFILES_DIRS = (
-    join(DOC_ROOT, 'static'),
+    app_root('static'),
 )
 
-STATIC_ROOT = join(DOC_ROOT, "collected_static")
+STATIC_ROOT = root("collected_static")
 ###### End Static Files Configuration #####
 
 ###### Other Configuration #####
@@ -180,6 +261,17 @@ INSTALLED_APPS = (
 ROOT_URLCONF = 'ganeti_web.urls'
 AUTH_PROFILE_MODULE = 'authentication.Profile'
 
+# SECRET_KEY = os.environ.get(
+#     'GWM_SECRET_KEY',
+#     open(SECRET_KEY_LOC).read()
+# )
+# WEB_MGR_API_KEY = os.environ.get(
+#     'GWM_API_KEY',
+#     open(GWM_API_KEY_LOC).read()
+# )
+
+SECRET_KEY = get_env_or_file_or_create('GWM_SECRET_KEY', SECRET_KEY_LOC)
+WEB_MGR_API_KEY = get_env_or_file_or_create('GWM_API_KEY', GWM_API_KEY_LOC)
 
 # Horrible Django hack for convincing Django that we are i18n'd.
 def ugettext(s):
@@ -193,4 +285,4 @@ LAZY_CACHE_REFRESH = 600000
 # Other GWM Stuff
 VNC_PROXY = 'localhost:8888'
 RAPI_CONNECT_TIMEOUT = 3
-WEB_MGR_API_KEY = "CHANGE_ME"
+
