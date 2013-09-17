@@ -6,7 +6,7 @@ from fabric.api import env, abort, task
 from fabric.context_managers import settings, hide, lcd
 from fabric.contrib.console import confirm
 from fabric.contrib.files import exists
-from fabric.operations import local, require, prompt
+from fabric.operations import local, prompt
 
 # Required dependencies
 #
@@ -170,7 +170,8 @@ def create_virtualenv(virtualenv='venv', force=False):
         if force or not _exists('%(virtualenv)s/lib' % env):
             # XXX does this actually create a new environment if one already
             # exists there?
-            local('virtualenv %(virtualenv)s --distribute --no-site-packages' % env)
+            local('virtualenv %(virtualenv)s --distribute --no-site-packages'
+                  % env)
 
             # now lets make sure the virtual env has the the newest pip
             local(str(verbose_check()+'--upgrade pip') % env)

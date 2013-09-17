@@ -1,0 +1,7 @@
+include AUTHORS.rst
+include CHANGELOG.rst
+include CONTRIBUTING.rst
+include COPYING
+include LICENSE
+include LICENSE.muddle
+include README.rst

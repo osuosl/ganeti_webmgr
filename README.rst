@@ -26,7 +26,7 @@ Links
 =====
 
 * `Project page <http://code.osuosl.org/projects/ganeti-webmgr>`_
-* `Documentation <https://gwm.readthedocs.org/en/latest/>`_
+* `Documentation <http://ganeti-webmgr.readthedocs.org/en/latest/>`_
 * `Mailing List <http://groups.google.com/group/ganeti-webmgr>`_
 * `Twitter <http://twitter.com/ganetiwebmgr>`_
 * IRC: ``#ganeti-webmgr`` on freenode.net
@@ -36,40 +36,56 @@ Installation
 ============
 
 .. NOTE::
-    Installing from the tarball is the preferred method. After installing
-    the dependencies, please download the tarball instead of cloning the
-    repository.
+    Installing via the ``setup.sh`` script is now the preferred method.  That
+    script does everything for you.  However it's still possible to install GWM
+    in not-that-much automatic way.
 
-Overview
---------
+Installation script
+-------------------
 
-#) Install dependencies: Python, Pip, Fabric, VirtualEnv
+Get ``setup.sh`` from https://github.com/pbanaszkiewicz/ganeti_webmgr-setup.
+Make it executable, run ``./setup.sh -h`` to get help message and then install
+GWM.  Notice, that this script can upgrade your installation in future.
+
+For development
+---------------
+
+Get yourself the ``virtualenvwrapper``.  For your sanity.  Then proceed with
+installation:
+
+.. code-block:: console
+
+    $ mkvirtualenv gwm
+    (gwm)$ git clone git://git.osuosl.org/gitolite/ganeti/ganeti_webmgr
+    (gwm)$ cd ganeti_webmgr
+    (gwm)$ python setup.py develop
+
+And that's it, you can now safely work on GWM.
+
+Manual installation
+-------------------
+
+#) Install dependencies: Python, Pip, Virtualenv
 
 #) Get the Ganeti Web Manager code: Clone from the repository or download
    a release tarball
 
-#) Deploy fabric environment: fab dev deploy or fab deploy
+#) Create a virtual environment in your desired location and install GWM in
+   there by issueing ``python setup.py install`` in GWM directory (after you
+   unzipped the tarball or cloned the repository)
 
-#) Configure Settings: Copy ``settings.py.dist`` to ``settings.py`` and make
-   any modifications
+#) Configure settings: in directory ``ganeti_webmgr/ganeti_web/settings`` copy
+   ``end_user.py.dist`` to ``end_user.py`` and make any modifications
 
-#) Sync database, then run the server: ``./manage.py syncdb --migrate``, then
-   ``./manage.py runserver``
-
-This section explains how to automatically install Ganeti Web Manager using
-`Fabric`_.  Fabric simplifies the installation process by automatically
-installing dependencies into a virtual environment.
-
-.. _Fabric: http://docs.fabfile.org/en/1.0.1/index.html
+#) Sync database, then run the server: ``./ganeti_webmgr/manage.py syncdb --migrate``, then
+   ``./ganeti_webmgr/manage.py runserver``
 
 Related Topics
 --------------
 
-* Read more about `why Fabric is strongly recommended <https://code.osuosl.org/projects/ganeti-webmgr/wiki/Fabric_is_strongly_recommended>`_
-
 * `Troubleshoot <https://code.osuosl.org/projects/ganeti-webmgr/wiki/Fabric-troubleshooting>`_ an installation using Fabric
 
-* `Manual installation <https://code.osuosl.org/projects/ganeti-webmgr/wiki/Manual-installation>`_
+* `More on manual installation <https://code.osuosl.org/projects/ganeti-webmgr/wiki/Manual-installation>`_
 
 Compatibility
 -------------
@@ -108,97 +124,36 @@ Dependencies
 
 * `Python`_ >=2.5, Python >=2.6 recommended
 
-* `Pip`_ >= 0.8.2
-
-* `Fabric`_ >=1.0.1
-
 * `Virtualenv`_ >= 1.6.1
 
 .. _Python: http://python.org/
-.. _Pip: http://www.pip-installer.org/en/latest/index.html
-.. _Fabric: http://docs.fabfile.org/en/1.0.1/index.html
 .. _Virtualenv: http://pypi.python.org/pypi/virtualenv
 
-`Pip`_ is required for installing `Fabric`_ and useful tool to install
-`Virtualenv`_.
+Other requirements are either `Virtualenv`_ dependencies or will get installed
+by setup script.
 
-* install pip:
+* install Virtualenv:
 
-.. sourcecode:: bash
+.. code-block:: console
 
-    $ sudo apt-get install python-pip
-
-* development libraries may be needed for some pip installs:
-
-.. sourcecode:: bash
-
-    $ sudo apt-get install python-dev
-
-* install Fabric and Virtualenv:
-
-.. sourcecode:: bash
-
-    $ sudo apt-get install python-virtualenv fabric
-
-.. NOTE::
-    the use of pip to install system packages is not recommended, please use
-    your system's package manager to install Virtualenv and Fabric.
-
-Install with `Fabric`_
-----------------------
-
-Either download and unpack the "latest release" from
-`here <http://code.osuosl.org/projects/ganeti-webmgr/files>`_, or check it out
-from the repository:
-
-.. sourcecode:: bash
-
-    $ git clone git://git.osuosl.org/gitolite/ganeti/ganeti_webmgr
-
-Switch to project directory (Fabric commands only work from a directory
-containing a ``fabfile.py``):
-
-.. sourcecode:: bash
-
-    $ cd ganeti_webmgr/
-
-Run `Fabric`_ to automatically create python virtual environment with required
-dependencies.  Choose either production or development environment
-
-* production environment:
-
-.. sourcecode:: bash
-
-    $ fab deploy
-
-* development environment:
-
-.. sourcecode:: bash
-
-    $ fab dev deploy
-
-* activate virtual environment:
-
-.. sourcecode:: bash
-
-    $ source venv/bin/activate
+    $ sudo apt-get install python-virtualenv
 
 
 Configuration
 =============
 
-In the project root, you'll find a default settings file called
-``settings.py.dist``.  Copy it to ``settings.py``:
+In the ``ganeti_webmgr/ganeti_web/settings`` directory, you'll find a default
+settings file called ``end_user.py.dist``.  Copy it to ``end_user.py``:
 
-.. sourcecode:: bash
+.. code-block:: console
 
-    $ cp settings.py.dist settings.py
+    $ cp end_user.py.dist end_user.py
 
 If you want to use another database engine besides the default SQLite (not
-recommended for production), edit ``settings.py``, and edit the following
-lines to reflect your wishes ():
+recommended for production), then in settings edit the following lines to
+reflect your wishes:
 
-.. sourcecode:: python
+.. code-block:: python
 
     DATABASE_ENGINE = ''   # <-- Change this to 'mysql', 'postgresql',
                            #     'postgresql_psycopg2' or 'sqlite3'
@@ -211,33 +166,34 @@ lines to reflect your wishes ():
     DATABASE_PORT = ''     # <-- Change this (not needed if database is
                            #     localhost)
 
-.. NOTE::
-    PostgreSQL is not supported at this time and the installation will fail,
-    see issue `#3237`_.
+.. WARNING::
+    PostgreSQL support was fixed just recenly, check if your GWM version has
+    it.  See issue `#3237`_.
 
 .. _#3237: https://code.osuosl.org/issues/3237
 
 Initialize Database:
 
-.. sourcecode:: bash
+.. code-block:: console
 
-    $ ./manage.py syncdb --migrate
+    $ ./ganeti_webmgr/manage.py syncdb --migrate
 
 Build the search indexes:
 
-.. sourcecode:: bash
+.. code-block:: console
 
-    $ ./manage.py rebuild_index
+    $ ./ganeti_webmgr/manage.py rebuild_index
 
 .. NOTE::
-    Running ./manage.py update_index on a regular basis ensures that the
-    search indexes stay up-to-date when models change in Ganeti Web Manager.
+    Running ``./ganeti_webmgr/manage.py update_index`` on a regular basis
+    ensures that the search indexes stay up-to-date when models change in
+    Ganeti Web Manager.
 
 Everything should be all set up! Run the development server with:
 
-.. sourcecode:: bash
+.. code-block:: console
 
-    $ ./manage.py runserver
+    $ ./ganeti_webmgr/manage.py runserver
 
 Additional configuration for production servers
 -----------------------------------------------
@@ -246,19 +202,19 @@ Deploying a production server requires additional setup steps.
 
 1. Change the ownership of the ``whoosh_index`` directory to apache
 
-.. sourcecode:: bash
+.. code-block:: console
 
     $ chown apache:apache whoosh_index/
 
 2. Change your ``SECRET_KEY`` and ``WEB_MGR_API_KEY`` to unique (and hopefully
-   unguessable) strings in your ``settings.py``.
+   unguessable) strings in your ``end_user.py`` settings file.
 
 3. Configure the `Django Cache Framework`_ to use a production capable backend
-   in ``settings.py``.  By default Ganeti Web Manager is configured to use the
+   in ``end_user.py``.  By default Ganeti Web Manager is configured to use the
    ``LocMemCache`` but it is not recommended for production.  Use Memcached or
    a similar backend.
 
-.. sourcecode:: python
+.. code-block:: python
 
     CACHES = {
        'default': {
@@ -273,12 +229,12 @@ Deploying a production server requires additional setup steps.
 
 5. Ensure the server has the ability to send emails or you have access to an
    SMTP server. Set ``EMAIL_HOST``, ``EMAIL_PORT``, and ``DEFAULT_FROM_EMAIL``
-   in ``settings.py``. For more complicated outgoing mail setups, please refer to the `Django Email documentation`_.
+   in ``end_user.py``. For more complicated outgoing mail setups, please refer to the `Django Email documentation`_.
 
 6. Follow the `Django guide <http://docs.djangoproject.com/en/dev/howto/deployment/modwsgi/>`_ to deploy with apache.
    Here is an example mod_wsgi file:
 
-.. sourcecode:: python
+.. code-block:: python
 
     import os
     import sys
@@ -300,9 +256,9 @@ Deploying a production server requires additional setup steps.
     application = django.core.handlers.wsgi.WSGIHandler()
 
 7. Set ``VNC_PROXY`` to the hostname of your VNC AuthProxy server in
-   ``settings.py``.  The VNC AuthProxy does not need to run on the same server as Ganeti Web Manager.
+   ``end_user.py``.  The VNC AuthProxy does not need to run on the same server as Ganeti Web Manager.
 
-.. sourcecode:: python
+.. code-block:: python
 
     VNC_PROXY = 'my.server.org:8888'
 
@@ -320,7 +276,7 @@ and password on the Ganeti cluster.
 
 Here is an example with user "jack" and password "abc123":
 
-.. sourcecode:: bash
+.. code-block:: console
 
     $ echo -n 'jack:Ganeti Remote API:abc123' | openssl md5
 
@@ -331,7 +287,7 @@ version of Ganeti you are running, you will need to either use
 
 An example hash entry might look like the following:
 
-.. sourcecode:: bash
+.. code-block:: console
 
     # Hashed password for jack
     jack {HA1}54c12257ee9be413f2f3182435514aae write
@@ -445,7 +401,7 @@ Cache System
 Ganeti Web Manager uses a cache system that stores information about Ganeti
 clusters in the database. This allows the following:
 
-.. sourcecode:: bash
+.. code-block:: console
 
       ---  Ganeti  ---
      /                \
@@ -486,13 +442,13 @@ VNC AuthProxy
 not speak websockets and our proxy allows your ganeti cluster to sit behind a
 firewall, VPN, or NAT.
 
-Enabling in ``settings.py``
----------------------------
+Enabling in settings file
+-------------------------
 
 Set the host and port that the proxy will be running at with the ``VNC_PROXY``
 setting.  For development this is typically ``"localhost:8888"`` but for
 production you would use the name of the server its running on.  See the
-instructions in ``settings.py`` for more details.
+instructions in ``end_user.py`` for more details.
 
 Starting the Daemon
 -------------------
@@ -501,7 +457,7 @@ Twisted VNC Authproxy is started with twistd, the twisted daemon.  Eventually
 we will include ``init.d`` scripts for better managing the daemon.  You may
 want to open port 8888 in your firewall for production systems.
 
-.. sourcecode:: bash
+.. code-block:: console
 
     $ twistd --pidfile=/tmp/proxy.pid -n vncap
 
@@ -516,7 +472,7 @@ port.  You may want to open port 843 in your firewall for production systems.
 
 Start the policy server with twistd:
 
-.. sourcecode:: bash
+.. code-block:: console
 
     $ sudo twistd --pidfile=/tmp/policy.pid -n flashpolicy
 
@@ -528,7 +484,7 @@ You may encounter an issue where twisted fails to start and gives you an error.
 This is usually caused by the environment variable ``PYTHONPATH`` not being
 exported correctly if you sudo up to root.  To fix it type:
 
-.. sourcecode:: bash
+.. code-block:: console
 
     $ export PYTHONPATH="."
 

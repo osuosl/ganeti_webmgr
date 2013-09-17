@@ -4,6 +4,7 @@
 
 # Hidden files
 .*
+!.travis.yml
 
 # All compiled python code
 *.pyc
@@ -75,6 +76,8 @@ lib
 local
 pysqlite2-doc
 build
+dist
+*.egg-info
 
 # whoosh index files (used by haystack search)
 whoosh_index

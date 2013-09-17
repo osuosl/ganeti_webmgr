@@ -22,7 +22,8 @@ import os
 import sys
 
 if __name__ == "__main__":
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ganeti_web.settings")
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE",
+                          "ganeti_web.settings.end_user")
 
     from django.core.management import execute_from_command_line
 
