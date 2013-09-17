@@ -64,7 +64,7 @@ urlpatterns = patterns(
 
     url(r"^%s/reparent/?$" % vm_prefix, "reparent", name="instance-reparent"),
 
-    url(r'^%s/keys/(?P<api_key>\w+)/?$' % vm_prefix, "ssh_keys",
+    url(r'^%s/keys/(?P<api_key>[^/]+)/?$' % vm_prefix, "ssh_keys",
         name="instance-keys"),
 
     url(r'^%s/object_log/?$' % vm_prefix, 'object_log', name="vm-object_log"),

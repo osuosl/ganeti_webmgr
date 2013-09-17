@@ -47,7 +47,7 @@ def root(*x):
     """
     return join(abspath(PROJECT_ROOT), *x)
 
-app_root = lambda *x: root('ganeti_web', *x)
+app_root = lambda *x: root('ganeti_webmgr', *x)
 
 ##### Project structure variables #####
 SITE_NAME = basename(root())
@@ -86,7 +86,14 @@ def get_env_or_file_or_create(env_var, file_loc, secret_size=16):
     # First check if the env_var or file_loc are set/exist
     secret = get_env_or_file_secret(env_var, file_loc)
     if not secret:
-        secret = generate_secret(secret_size)
+        # Edge case. Our API Key shouldnt allow special characters,
+        # because it allows the ssh key to be sent over GET, meaning % and #
+        # aren't allowed
+        if "api" in env_var.lower(): # Bad hack
+            generate = generate_api_key
+        else:
+            generate = generate_secret
+        secret = generate(secret_size)
     try:
         # Write our secret key to the file.
         with open(file_loc, "w") as f:
@@ -99,14 +106,20 @@ def get_env_or_file_or_create(env_var, file_loc, secret_size=16):
 
     return secret
 
-def generate_secret(secret_size):
+valid_secret_chars = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)'
+def generate_secret(secret_size, valid_chars=valid_secret_chars):
     "Generates a secret key of the given size"
     import random
-    secret = ''.join(random.SystemRandom().choice(
-        'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)'
-    ) for i in range(secret_size))
+    return ''.join(
+        random.SystemRandom().choice(valid_secret_chars)
+        for i in xrange(secret_size)
+    )
 
-    return secret
+def generate_api_key(secret_size):
+    import string
+    valid_chars = string.digits + string.letters
+    return generate_secret(secret_size, valid_chars)
+
 
 # Add our project to our pythonpath
 path.append(root())

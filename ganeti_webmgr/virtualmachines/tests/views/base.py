@@ -74,7 +74,6 @@ class TestVirtualMachineViewsBase(TestCase, VirtualMachineTestCaseMixin,
         Cluster.objects.all().delete()
 
     def validate_get(self, url, args, template):
-        self.assert_standard_fails(url, args)
         self.assert_200(url, args, [self.superuser, self.vm_admin],
                         template=template)
 

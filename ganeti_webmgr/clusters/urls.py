@@ -44,7 +44,7 @@ urlpatterns = patterns(
     url(r'^(?P<id>\d+)/jobs/status/?$', "job_status",
         name="cluster-job-status"),
 
-    url(r'^%s/keys/(?P<api_key>\w+)/?$' % cluster, "ssh_keys",
+    url(r'^%s/keys/(?P<api_key>[^/]+)/?$' % cluster, "ssh_keys",
         name="cluster-keys"),
 
     url(r'^%s/object_log/?$' % cluster,
