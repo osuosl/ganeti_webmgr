@@ -1,0 +1,13 @@
+Django>=1.4,<1.5
+django-fields==0.2.1
+django-haystack==1.2.1
+django-registration>=0.7,<0.8
+django-tables2==0.13.0
+requests==1.2.3
+simplejson==3.3.0
+South==0.8.2
+Whoosh==1.8.1
+django-include-strip-tag==0.1.0
+VNCAuthProxy==1.0
+django-object-log==0.7
+django-object-permissions==1.4.6
