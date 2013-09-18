@@ -1,6 +1,4 @@
-#from django.core import serializers
 from django.http import HttpResponse
-#from django.shortcuts import render_to_response
 from django.views.generic import DetailView, TemplateView
 
 from clusters.models import Cluster
