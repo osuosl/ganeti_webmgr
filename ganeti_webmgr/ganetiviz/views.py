@@ -74,7 +74,6 @@ class InstanceExtraDataView(LoginRequiredMixin, DetailView):
         cluster_slug = self.kwargs['cluster_slug']
         instance_hostname = self.kwargs['instance_hostname']
 
-        #cluster = Cluster.objects.get(slug=cluster_slug)
         cluster = Cluster.objects.get(slug=cluster_slug)
 
         r = get_rapi(cluster.hash, cluster.cluster_id)
