@@ -6,7 +6,7 @@ from ganetiviz.views import ClusterGraphView, AllClustersView,\
 validfqdnregex = "(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)" + \
                  "*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])"
 
-instance_hostname = '(?P<instance_hostname>%s)' % (validfqdnregex,)
+instance_hostname = '(?P<instance_hostname>%s)'
 
 
 urlpatterns = patterns(
