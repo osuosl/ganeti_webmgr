@@ -3,127 +3,95 @@
 Installation
 ============
 
-Currently we have use `Fabric`, a tool for streamlining administration
-tasks, to deploy |gwm|.
+.. warning::
+    Prior to version 0.11, the preferred way of installing |gwm| was by using
+    ``fabric``.  It is **no longer** a default way of installing |gwm|.  If
+    you have older |gwm|, look at :ref:`these instructions <old_installation>`.
 
-Before installing |gwm|, make sure you have all the required
-:ref:`dependencies` installed.
-
+This instruction covers installation steps for end users.  It is not intended
+for |gwm| developers or people installing unstable version.  If you want to
+play with unstable |gwm|, please follow
+:ref:`instructions for developers <developer_installation>`.
 
 Installing
 ----------
 
-#. Download and unpack the `latest
-   release <http://code.osuosl.org/projects/ganeti-webmgr/files>`_,
-   currently this is |release|.
+Installation is now automatic.  You just need to grab one
+`Bash script <https://raw.github.com/pbanaszkiewicz/ganeti_webmgr-setup/develop/setup.sh>`__
+and run it with proper arguments.  That script detects your operating system,
+installs required dependencies (even for your database of choice!), creates
+Python virtual environment and finally installs |gwm| with its dependencies.
 
-#. Change to the project directory.
+0. Make sure that all |gwm|'s requirements are met.
 
-   ::
-
-       cd ganeti_webmgr
-
-#. Run Fabric to automatically create a python virtual environment and
-   install required dependencies. This may take a few minutes.
-
-   ::
-
-       # Deploy a production environment
-       fab deploy
-
-   .. versionchanged:: 0.10
-      `fab prod deploy` is now `fab deploy`. `fab dev deploy` is still
-      the same.
-
-   .. Note:: If you would like a more noisy output, adding `v`, as in
-             `fab v deploy`, will provide more verbosity.
-
-#. While in the project root, copy the default settings file
-   **settings.py.dist** to **settings.py**:
+1. Download the script to your desired destination (you want to keep that
+   script near |gwm| installation path, because you'll use it later to update
+   |gwm|):
 
    ::
 
-       cp settings.py.dist settings.py
+    $ cd /opt/ganeti_webmgr/
+    $ wget https://raw.github.com/pbanaszkiewicz/ganeti_webmgr-setup/develop/setup.sh
 
+2.  Run ``setup.sh -h`` to get help and see all possible usages of that script.
+    To install everything within ``/opt/ganeti_webmgr/gwm`` directory
+    (assuming your setup script is in ``/opt/ganeti_webmgr`` and your desired
+    database is PostgreSQL)::
+
+    $ ./setup.sh -d ./gwm -D postgresql
+
+Now in ``/opt/ganeti_webmgr/gwm`` is your Python virtual environment.  This
+means that all Python packages needed by |gwm| exist within that directory
+structure, and not in your global Python packages.  This separation helps
+keeping multiple different projects at once and specific dependencies with
+pinned versions.
 
 Minimum Configuration
 ---------------------
 
-Getting |gwm| up and running requires a minimum configuration of a
-database server. If you don't have a database server available, and are
-fine using SQLite, you can skip this step.
-
-#. Edit **settings.py** and change the database backend to your
-   preferred database along with filling any any relevant details
-   relating to your database setup.
-
-
-   ::
-
-       'default': {
-           # Add 'postgresql_psycopg2', 'postgresql', 'mysql',
-           # 'sqlite3' or 'oracle'.
-           'ENGINE': 'django.db.backends.',
-
-           # Or path to database file if using sqlite3.
-           'NAME': 'ganeti.db',
-
-           # Not used with sqlite3.
-           'USER':     '',
-
-           # Not used with sqlite3.
-           'PASSWORD': '',
-
-           # Set to empty string for localhost. Not used with sqlite3.
-           'HOST':     '',
-
-           # Set to empty string for default. Not used with sqlite3.
-           'PORT':     '',
-       }
-
+When you ran ``setup.sh`` script, it downloaded for you premade configuration
+that now resides in ``/opt/ganeti_webmgr/gwm/config``.  Use it as a starting
+point.  All configuration options should be well documented and easy to change.
 
 Initializing
 ------------
 
-#. Activate the Python Virtualenv:
+Because your |gwm| instance lives within virtual environment, you must get
+into it as well::
 
-   ::
+    $ source gwm/bin/activate
 
-       source venv/bin/activate
+Now all the programs installed to that virtual environment are available for
+you (until you issue ``deactivate`` or close your terminal session).
 
-#. Initialize Database:
+Initialize database
+~~~~~~~~~~~~~~~~~~~
 
-   MySQL/SQLite:
+* MySQL or SQLite: create new tables and migrate all applications using South::
 
-   ::
+    $ gwm-manage.py syncdb --migrate
 
-       # Create new tables and migrate all apps using southdb
-       ./manage.py syncdb --migrate
+* PostgreSQL: only fresh installation support PostgreSQL, because there are no
+  migrations for this database within |gwm| prior to **version 0.11**::
 
-   Postgres:
+    $ gwm-manage.py syncdb --all
+    $ gwm-manage.py migrate --fake
 
-   .. Note:: This assumes your doing a fresh install of |gwm| on a new Postgres database.
+Search indexes
+~~~~~~~~~~~~~~
 
-   ::
+Build them with::
 
-       ./manage.py syncdb --all
-       ./manage.py migrate --fake
+    $ gwm-manage.py rebuild_index
 
-#. Build the search indexes
-
-   ::
-
-       ./manage.py rebuild_index
-
-   .. Note:: Running **./manage.py update\_index** on a regular basis
-             ensures that the search indexes stay up-to-date when models change in
-             Ganeti Web Manager.
+.. Note::
+    Running ``gwm-manage.py update_index`` on a regular basis ensures that the search indexes stay up-to-date when models change in |gwm|.
 
 Next Steps
 ----------
 
-Congradulations! |gwm| is now installed and initialized. Next, you'll want
+Congratulations!  |gwm| is now installed and initialized.  Next, you'll want
 to look into :ref:`configuring` and :ref:`deploying`, if you are going
-to be setting up a production instance. Otherwise, if you just want to
+to be setting up a production instance.  Otherwise, if you just want to
 play around with |gwm|, or are :ref:`developing <development>`, take a look at
 :ref:`test-server`.

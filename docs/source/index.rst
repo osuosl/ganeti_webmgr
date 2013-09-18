@@ -89,6 +89,7 @@ Development
 .. toctree::
     :maxdepth: 1
 
+    dev/installation
     dev/schedule
     dev/process
     info/issues
@@ -112,10 +113,18 @@ References
     ref/logo
     ref/versions
 
+Deprecated
+==========
+.. toctree::
+    :maxdepth: 1
+
+    deprecated/old_installing
+    deprecated/old_dependencies
+
+
 Indices and tables
 ==================
 
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
