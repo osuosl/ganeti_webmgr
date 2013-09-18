@@ -3,11 +3,8 @@ from django.conf.urls.defaults import patterns, url
 from ganetiviz.views import ClusterGraphView, AllClustersView,\
     ClusterJsonView, InstanceExtraDataView
 
-validfqdnregex = "(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)" + \
-                 "*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])"
-
-instance_hostname = '(?P<instance_hostname>%s)'
-
+# Care must be taken to allow dots to be captured in any hostname.
+instance_hostname = '(?P<instance_hostname>[^/]+)'
 
 urlpatterns = patterns(
     'ganetiviz.views',
