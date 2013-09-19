@@ -66,8 +66,8 @@ you can load these concealed values from enviroment variable or from file.
   :param int secret_size: length of randomly selected sequence
   :returns: value from environmental variable or from file
   :rtype: None or string
-  :raises Exception: when neither environmental variable nor file contain
-                     anything
+  :raises Exception: when environmental variable is empty and function can't
+                     write to the file
 
 Sample configuration with one of these helpers::
 
@@ -146,29 +146,29 @@ Timezones and locale
 
 .. attribute:: gwm_config.TIME_ZONE
 
-  nothing yet
+  The time zone in which |gwm| application works.  `List of time zones <http://en.wikipedia.org/wiki/List_of_tz_zones_by_name>`__.
+
+  For additional information, take a look at Django documentation: https://docs.djangoproject.com/en/1.4/ref/settings/#time-zone.
 
 .. attribute:: gwm_config.DATE_FORMAT
 
-  nothing yet
+  Format used for formatting date (and only date, so no time information
+  included).
+
+  Allowed strings: https://docs.djangoproject.com/en/1.5/ref/templates/builtins/#std:templatefilter-date.
 
 .. attribute:: gwm_config.DATETIME_FORMAT
 
-  nothing yet
+  Format used for formatting date and time.
+
+  Allowed strings: https://docs.djangoproject.com/en/1.5/ref/templates/builtins/#std:templatefilter-date.
 
 .. attribute:: gwm_config.LANGUAGE_CODE
 
-  nothing yet
+  Language of your installation.  Specifies translation used by |gwm|.  For now
+  only Greek, Spanish and English are available.
 
-
-Full-text indexing
-------------------
-
-Change the ownership of the ``whoosh_index`` directory to the user running the
-web server.  If your using Apache this will be either ``apache``, or
-``httpd``.  For nginx, the user will be ``nginx``.  Example::
-
-  $ chown apache:apache whoosh_index/
+  List of valid language codes: http://www.i18nguy.com/unicode/language-identifiers.html
 
 
 E-mails
@@ -198,6 +198,18 @@ production.  Use `Memcached <http://memcached.org/>`_ or a similar backend.
       }
   }
 
+.. todo::
+  LAZY_CACHE_REFRESH
+
+Full-text indexing
+------------------
+
+Change the ownership of the ``whoosh_index`` directory to the user running the
+web server.  If your using Apache this will be either ``apache``, or
+``httpd``.  For nginx, the user will be ``nginx``.  Example::
+
+  $ chown apache:apache whoosh_index/
+
 
 VNC
 ---
@@ -209,6 +221,12 @@ Set **VNC\_PROXY** to the hostname of your VNC AuthProxy server in
 ::
 
   VNC_PROXY = 'my.server.org:8888'
+
+
+Other settings
+--------------
+
+RAPI_CONNECT_TIMEOUT
 
 
 Other helper functions
