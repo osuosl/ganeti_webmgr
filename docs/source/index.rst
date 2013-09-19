@@ -35,9 +35,11 @@ Getting Started
 .. toctree::
     :maxdepth: 1
 
-    installing
-    deploying
-    importing
+    getting_started/requirements
+    getting_started/installing
+    getting_started/configuring
+    getting_started/deploying
+    getting_started/importing
 
 
 Features
@@ -56,14 +58,12 @@ Features
     features/cluster-read-only
     features/registration
     features/caching
-    caching
 
 Usage
 -----
 .. toctree::
     :maxdepth: 1
 
-    usage/configuring
     usage/upgrading
     usage/clusters
     usage/virtualmachines
@@ -75,7 +75,7 @@ Project Information
 .. toctree::
     :maxdepth: 1
 
-    ref/dependencies
+    info/compatibility
     info/changelog
     info/history
     info/design
@@ -89,6 +89,7 @@ Development
 .. toctree::
     :maxdepth: 1
 
+    dev/installation
     dev/schedule
     dev/process
     info/issues
@@ -111,6 +112,17 @@ References
     ref/git
     ref/logo
     ref/versions
+    ref/setup-script
+
+Deprecated
+==========
+.. toctree::
+    :maxdepth: 1
+
+    deprecated/old_installing
+    deprecated/old_dependencies
+    deprecated/old_caching
+
 
 Indices and tables
 ==================
@@ -118,4 +130,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
