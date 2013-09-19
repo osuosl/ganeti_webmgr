@@ -75,7 +75,7 @@ Project Information
 .. toctree::
     :maxdepth: 1
 
-    ref/compatibility
+    info/compatibility
     info/changelog
     info/history
     info/design
@@ -112,6 +112,7 @@ References
     ref/git
     ref/logo
     ref/versions
+    ref/setup-script
 
 Deprecated
 ==========
