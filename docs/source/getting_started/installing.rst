@@ -54,6 +54,8 @@ When you ran ``setup.sh`` script, it downloaded for you premade configuration
 that now resides in ``/opt/ganeti_webmgr/gwm/config``.  Use it as a starting
 point.  All configuration options should be well documented and easy to change.
 
+Follow to the :ref:`configuration page <configuring>` for more documentation.
+
 Initializing
 ------------
 
@@ -72,7 +74,7 @@ Initialize database
 
     $ gwm-manage.py syncdb --migrate
 
-* PostgreSQL: only fresh installation support PostgreSQL, because there are no
+* PostgreSQL: only fresh installation supports PostgreSQL, because there are no
   migrations for this database within |gwm| prior to **version 0.11**::
 
     $ gwm-manage.py syncdb --all
