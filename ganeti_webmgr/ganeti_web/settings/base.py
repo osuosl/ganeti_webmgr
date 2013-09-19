@@ -30,6 +30,8 @@ import os
 from os.path import abspath, basename, dirname, join, exists
 from sys import path
 
+from django.core.exceptions import ImproperlyConfigured
+
 # Path Helpers
 def here(*x):
     """
@@ -52,12 +54,26 @@ app_root = lambda *x: root('ganeti_webmgr', *x)
 ##### Project structure variables #####
 SITE_NAME = basename(root())
 
-# Secrets location and default file names.
-SECRET_DIR = root(os.environ.get('GWM_SECRET_DIR', '.secrets'))
+### Secrets location and default file names. ###
+
+# We can change the location of the default secrets directory with the
+# environmental variable GWM_SECRET_DIR. By default if its not set, it
+secret_loc = os.environ.get('GWM_SECRET_DIR', None)
+SECRET_DIR = secret_loc or root('.secrets')
 GWM_API_KEY_LOC = join(SECRET_DIR, 'API_KEY.txt')
 SECRET_KEY_LOC = join(SECRET_DIR, 'SECRET_KEY.txt')
 
+no_secret_msg = "No secrets in environment variable %s or file %s found.\n"
+
 # Settings helpers
+def load_secret(env=None, file=None, create_file=True, secret_size=32):
+    if create_file:
+        secret = get_env_or_file_or_create(env, file, secret_size)
+    else:
+        secret = get_env_or_file_secret(env, file)
+
+    return secret
+
 def get_env_or_file_secret(env_var, file_loc):
     """
     Tries to get the value from the environment variable 'env_var', and
@@ -74,51 +90,47 @@ def get_env_or_file_secret(env_var, file_loc):
             secret = open(file_loc).read().strip() or None
         except IOError:
             # Default to returning none if neither exist
-            secret = None
+            raise ImproperlyConfigured(no_secret_msg % (env_var, file_loc))
     return secret
 
-def get_env_or_file_or_create(env_var, file_loc, secret_size=16):
+def get_env_or_file_or_create(env_var, file_loc, secret_size=32):
     """
     A wrapper around get_env_or_file_secret that will create the file at
     file_loc if it does not already exist. The resulting file's contents will
     be a randomly generated value.
     """
     # First check if the env_var or file_loc are set/exist
-    secret = get_env_or_file_secret(env_var, file_loc)
+    try:
+        secret = get_env_or_file_secret(env_var, file_loc)
+    except ImproperlyConfigured:
+        secret = None
     if not secret:
-        # Edge case. Our API Key shouldnt allow special characters,
-        # because it allows the ssh key to be sent over GET, meaning % and #
-        # aren't allowed
-        if "api" in env_var.lower(): # Bad hack
-            generate = generate_api_key
-        else:
-            generate = generate_secret
+        generate = generate_secret
         secret = generate(secret_size)
     try:
         # Write our secret key to the file.
         with open(file_loc, "w") as f:
             f.write(secret)
     except IOError:
-        raise Exception(
-            "Please either set the %s environment variable, or create a %s "
-            "file or set SECRET_KEY in end_user.py" % (env_var, file_loc)
-        )
+        cannot_create_msg = ("Unable to create secret file.\n"
+                             "Try creating the file at %s or setting "
+                             "the value in settings/end_user.py")
+        msg1 = no_secret_msg % (env_var, file_loc)
+        msg2 = cannot_create_msg % (file_loc,)
+        msg = ' '.join((msg1, msg2))
+        raise ImproperlyConfigured(msg)
 
     return secret
 
-valid_secret_chars = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)'
-def generate_secret(secret_size, valid_chars=valid_secret_chars):
+def generate_secret(secret_size=32):
     "Generates a secret key of the given size"
     import random
-    return ''.join(
-        random.SystemRandom().choice(valid_secret_chars)
-        for i in xrange(secret_size)
-    )
-
-def generate_api_key(secret_size):
     import string
     valid_chars = string.digits + string.letters
-    return generate_secret(secret_size, valid_chars)
+    return ''.join(
+        random.SystemRandom().choice(valid_chars)
+        for i in xrange(secret_size)
+    )
 
 
 # Add our project to our pythonpath
@@ -283,8 +295,8 @@ AUTH_PROFILE_MODULE = 'authentication.Profile'
 #     open(GWM_API_KEY_LOC).read()
 # )
 
-SECRET_KEY = get_env_or_file_or_create('GWM_SECRET_KEY', SECRET_KEY_LOC)
-WEB_MGR_API_KEY = get_env_or_file_or_create('GWM_API_KEY', GWM_API_KEY_LOC)
+SECRET_KEY = load_secret(env='GWM_SECRET_KEY', file=SECRET_KEY_LOC)
+WEB_MGR_API_KEY = load_secret(env='GWM_API_KEY', file=GWM_API_KEY_LOC)
 
 # Horrible Django hack for convincing Django that we are i18n'd.
 def ugettext(s):
