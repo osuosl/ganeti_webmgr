@@ -20,7 +20,8 @@ Installation is now automatic.  You just need to grab one
 `Bash script <https://raw.github.com/pbanaszkiewicz/ganeti_webmgr-setup/develop/setup.sh>`__
 and run it with proper arguments.  That script detects your operating system,
 installs required dependencies (even for your database of choice!), creates
-Python virtual environment and finally installs |gwm| with its dependencies.
+Python virtual environment and finally installs |gwm| with its own
+dependencies.
 
 0. Make sure that all |gwm|'s requirements are met.
 

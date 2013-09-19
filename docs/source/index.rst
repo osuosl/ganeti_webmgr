@@ -35,6 +35,7 @@ Getting Started
 .. toctree::
     :maxdepth: 1
 
+    ref/requirements
     installing
     deploying
     importing
@@ -75,7 +76,8 @@ Project Information
 .. toctree::
     :maxdepth: 1
 
-    ref/dependencies
+    ref/requirements
+    ref/compatibility
     info/changelog
     info/history
     info/design
