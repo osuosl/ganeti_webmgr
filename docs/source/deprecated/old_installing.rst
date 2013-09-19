@@ -1,10 +1,12 @@
 .. _old_installation:
 
-Deprecated installation method
-==============================
+Deprecated: Installation
+========================
 
-We have use `Fabric`, a tool for streamlining administration tasks, to deploy
-|gwm|.
+.. warning::
+  This document is deprecated as of |gwm| version 0.11.
+
+We use `Fabric`, a tool for streamlining administration tasks, to deploy |gwm|.
 
 Before installing |gwm|, make sure you have all the required
 :ref:`deprecated_dependencies` installed.

@@ -1,7 +1,10 @@
 .. _deprecated_dependencies:
 
-Dependencies
-------------
+Deprecated: Dependencies
+------------------------
+
+.. warning::
+  This document is deprecated as of |gwm| version 0.11.
 
 Base
 ~~~~
@@ -45,8 +48,8 @@ LDAP
 
 LDAP dependencies can be found on the :ref:`ldap-dependencies` page.
 
-Compatibility
--------------
+Deprecated: Compatibility
+-------------------------
 
 Ganeti Web Manager is compatible with the following:
 

@@ -1,7 +1,10 @@
 .. _old_caching:
 
-Nope! This page is defunct (Cache System)
-=========================================
+Deprecated: Caching
+===================
+
+.. warning::
+  This document is deprecated as of |gwm| version 0.11.
 
 .. figure:: /_static/ganeti_cache.png
    :align: center

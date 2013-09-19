@@ -9,7 +9,7 @@ Operating system
 We officially support Ubuntu 11.10, Ubuntu 12.04 and CentOS 6.  |gwm| is also
 known to work on Debian 7 and CentOS 5.
 
-More on :ref:`compatibility page <compatibility>`.
+More on :ref:`compatibility page <compatible-operating-systems>`.
 
 Base
 ~~~~

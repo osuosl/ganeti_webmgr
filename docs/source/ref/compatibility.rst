@@ -31,6 +31,8 @@ Ganeti Web Manager is compatible with the following:
   .. versionadded:: 0.10
     `PostgreSQL`_ has limited support
 
+.. _compatible-operating-systems:
+
 **Operating Systems**
   Ubuntu 11.10, Ubuntu 12.04, CentOS 6.
 
