@@ -54,13 +54,17 @@ app_root = lambda *x: root('ganeti_webmgr', *x)
 ##### Project structure variables #####
 SITE_NAME = basename(root())
 
-# Secrets location and default file names.
-SECRET_DIR = root(os.environ.get('GWM_SECRET_DIR', '.secrets'))
+### Secrets location and default file names. ###
+
+# We can change the location of the default secrets directory with the
+# environmental variable GWM_SECRET_DIR. By default if its not set, it
+secret_loc = os.environ.get('GWM_SECRET_DIR', None)
+SECRET_DIR = secret_loc or root('.secrets')
 GWM_API_KEY_LOC = join(SECRET_DIR, 'API_KEY.txt')
 SECRET_KEY_LOC = join(SECRET_DIR, 'SECRET_KEY.txt')
 
-
 no_secret_msg = "No secrets in environment variable %s or file %s found.\n"
+
 # Settings helpers
 def load_secret(env=None, file=None, create_file=True, secret_size=32):
     if create_file:
