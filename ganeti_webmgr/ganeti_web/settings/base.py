@@ -32,6 +32,7 @@ from sys import path
 
 from django.core.exceptions import ImproperlyConfigured
 
+
 # Path Helpers
 def here(*x):
     """
@@ -41,6 +42,7 @@ def here(*x):
     return join(abspath(dirname(__file__)), *x)
 
 PROJECT_ROOT = here("..", "..", "..")
+
 
 def root(*x):
     """
@@ -65,6 +67,7 @@ SECRET_KEY_LOC = join(SECRET_DIR, 'SECRET_KEY.txt')
 
 no_secret_msg = "No secrets in environment variable %s or file %s found.\n"
 
+
 # Settings helpers
 def load_secret(env=None, file=None, create_file=True, secret_size=32):
     if create_file:
@@ -73,6 +76,7 @@ def load_secret(env=None, file=None, create_file=True, secret_size=32):
         secret = get_env_or_file_secret(env, file)
 
     return secret
+
 
 def get_env_or_file_secret(env_var, file_loc):
     """
@@ -92,6 +96,7 @@ def get_env_or_file_secret(env_var, file_loc):
             # Default to returning none if neither exist
             raise ImproperlyConfigured(no_secret_msg % (env_var, file_loc))
     return secret
+
 
 def get_env_or_file_or_create(env_var, file_loc, secret_size=32):
     """
@@ -121,6 +126,7 @@ def get_env_or_file_or_create(env_var, file_loc, secret_size=32):
         raise ImproperlyConfigured(msg)
 
     return secret
+
 
 def generate_secret(secret_size=32):
     "Generates a secret key of the given size"
@@ -298,8 +304,9 @@ AUTH_PROFILE_MODULE = 'authentication.Profile'
 SECRET_KEY = load_secret(env='GWM_SECRET_KEY', file=SECRET_KEY_LOC)
 WEB_MGR_API_KEY = load_secret(env='GWM_API_KEY', file=GWM_API_KEY_LOC)
 
-# Horrible Django hack for convincing Django that we are i18n'd.
+
 def ugettext(s):
+    """Horrible Django hack for convincing Django that we are i18n'd."""
     return s
 
 # Ganeti Cached Cluster Objects Timeouts
@@ -310,4 +317,3 @@ LAZY_CACHE_REFRESH = 600000
 # Other GWM Stuff
 VNC_PROXY = 'localhost:8888'
 RAPI_CONNECT_TIMEOUT = 3
-
