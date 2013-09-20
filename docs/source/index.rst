@@ -75,14 +75,14 @@ Project Information
 .. toctree::
     :maxdepth: 1
 
-    info/compatibility
-    info/changelog
-    info/history
-    info/design
-    info/contact
-    info/screenshots
-    info/license
-    info/faq
+    project_info/compatibility
+    project_info/changelog
+    project_info/history
+    project_info/design
+    project_info/contact
+    project_info/screenshots
+    project_info/license
+    project_info/faq
 
 Development
 -----------
@@ -92,7 +92,7 @@ Development
     dev/installation
     dev/schedule
     dev/process
-    info/issues
+    project_info/issues
     dev/tools
     dev/documentation
     dev/contributers
@@ -113,6 +113,7 @@ References
     ref/logo
     ref/versions
     ref/setup-script
+    ref/build-script
     ref/venv
 
 Deprecated
@@ -120,8 +121,9 @@ Deprecated
 .. toctree::
     :maxdepth: 1
 
-    deprecated/old_installing
     deprecated/old_dependencies
+    deprecated/old_installing
+    deprecated/old_upgrading
     deprecated/old_caching
 
 
