@@ -14,64 +14,54 @@ After you :ref:`installed <installation>` your |gwm| instance with
 
 Mentioned script downloads pre-made configuration for you to the
 ``/gwm-installation-path/config/``.  Look there and you'll find a file called
-``gwm_config.py``.  It's where all the configuration takes place.
+``gwm_config.py``.  That's where all the configuration takes place.
 
 .. note::
   |gwm| now installs into virtual environment's Python packages, so you don't
-  have to modify files it uses.
+  have to modify files it uses (ie. these in
+  ``/venv/lib/python2.x/site-packages/ganet-webmgr/``).
 
 
 Secrets
 -------
 
-First and most important: you should change your secrets.  |gwm| has two
-important configuration options: ``SECRET_KEY`` and ``WEB_MGR_API_KEY``.
+First and most important: you should change your sensitive settings.  |gwm|
+has two important security-related options: ``SECRET_KEY`` and
+``WEB_MGR_API_KEY``.
 
 .. attribute:: gwm_config.SECRET_KEY
 
   Specifies a value used for hashing and `cryptographic signing <https://docs.djangoproject.com/en/1.4/topics/signing/>`_.  It's very important to keep
   this value secret.
   Changing this value in a deployed application might end up in a flood of
-  unexpected security issues, like your users not able to log in.
+  unexpected security issues, like your users not being able to log in.
 
 .. attribute:: gwm_config.WEB_MGR_API_KEY
 
   Specifies an API key for authentication scripts that pull information (like
   list of ssh keys) from Ganeti.
 
-There are provided several helper functions for your convienience.  With them,
-you can load these concealed values from enviroment variable or from file.
+There is provided one helper function for your convienience.  With it, you can
+load these concealed values from an enviroment variable or from a file.
 
-.. function:: get_env_or_file_secret(env_var, file_location)
+.. function:: load_secret(env=None, file=None, create_file=True, overwrite_file=False, secret_size=32)
 
-  Tries to get the value from the enviroment variable and falls back to
-  grabbing the contents of the provided file.
+  Tries to get the value from either the enviroment variable or from the
+  provided file (in this order).  If it fails and ``create_file`` is set to
+  ``True``, the function generates the secret with specified length and stores
+  in that file.  Otherwise the function raises ``ImproperlyConfigured``.
 
-  If both are empty, or an :py:exc:`IOError` exception is raised, this returns
-  ``None``.
-
-  :param string env_var: enviroment variable name
-  :param string file_location: where fallback file is located
+  :param string env: enviroment variable name
+  :param string file: name of the file with stored secret
   :returns: value from environmental variable or from file
-  :rtype: None or string
+  :rtype: string
+  :raises ImproperlyConfigured: if it wasn't possible to get secret from
+                                either source and function couldn't create the
+                                file
 
-.. function:: get_env_or_file_or_create(env_var, file_location[, secret_size=16])
+Sample configuration with this helper::
 
-  A wrapper around :func:`get_env_or_file_secret` that will create the file
-  if it does not already exist.  The resulting file's contents will be
-  a randomly generated value.
-
-  :param string env_var: enviroment variable name
-  :param string file_location: where fallback file is located
-  :param int secret_size: length of randomly selected sequence
-  :returns: value from environmental variable or from file
-  :rtype: None or string
-  :raises Exception: when environmental variable is empty and function can't
-                     write to the file
-
-Sample configuration with one of these helpers::
-
-  SECRET_KEY = get_env_or_file_or_create('GWM_SECRET_KEY', '.secrets/GWM_SECRET_KEY', 50)
+  SECRET_KEY = load_secret(env='GWM_SECRET_KEY', file='.secrets/GWM_SECRET_KEY', create_file=True, secret_size=50)
 
 
 Database
@@ -86,7 +76,8 @@ Even though Django lets you use multiple databases, |gwm| uses only one called
   "labels" (and |gwm| only uses the one called ``default``), while the values
   are (again!) dictionaries.
 
-  Configuration is human-friendly and rather easy.  Look at the examples below.
+  Configuration is human-friendly and rather easy to change.  Look at the
+  examples below.
 
 * **for SQLite**::
 
@@ -127,15 +118,15 @@ Even though Django lets you use multiple databases, |gwm| uses only one called
         },
     }
 
-You can of course leverage helper functions to load sensitive data from e.g.
+You can of course leverage helper function to load sensitive data from e.g.
 environment variable::
 
   DATABASES = {
       'default': {
           'ENGINE': 'django.db.backends.mysql',
           'NAME': 'ganeti_webmgr',
-          'USER': get_env_or_file_secret('GWM_DB_USER', '.secrets/GWM_DB_USER.txt'),
-          'PASSWORD': get_env_or_file_secret('GWM_DB_PASS', '.secrets/GWM_DB_PASS.txt'),
+          'USER': load_secret('GWM_DB_USER', '.secrets/GWM_DB_USER.txt'),
+          'PASSWORD': load_secret('GWM_DB_PASS', '.secrets/GWM_DB_PASS.txt', create_file=False),
           'HOST': '',      # leave empty for localhost
           'PORT': '',      # leave empty for default port
       },
@@ -152,14 +143,14 @@ Timezones and locale
 
 .. attribute:: gwm_config.DATE_FORMAT
 
-  Format used for formatting date (and only date, so no time information
+  Pattern used for formatting date (and only date, so no time information
   included).
 
   Allowed strings: https://docs.djangoproject.com/en/1.5/ref/templates/builtins/#std:templatefilter-date.
 
 .. attribute:: gwm_config.DATETIME_FORMAT
 
-  Format used for formatting date and time.
+  Pattern used for formatting date and time.
 
   Allowed strings: https://docs.djangoproject.com/en/1.5/ref/templates/builtins/#std:templatefilter-date.
 
@@ -174,11 +165,37 @@ Timezones and locale
 E-mails
 -------
 
-Ensure the server has the ability to send emails or you have access
-to an SMTP server. Set **EMAIL_HOST**, **EMAIL_PORT**, and
-**DEFAULT_FROM_EMAIL** in ``end_user.py``. For more complicated
-outgoing mail setups, please refer to the `django email
-documentation <http://docs.djangoproject.com/en/dev/topics/email/>`_.
+Ensure the server has the ability to send emails or you have access to an SMTP
+server.  For more complicatedoutgoing mail setups, please refer to the
+`Django email documentation <http://docs.djangoproject.com/en/dev/topics/email/>`_.
+
+.. attribute:: gwm_config.ACCOUNT_ACTIVATION_DAYS
+
+  Number of days users will have to complete their accounts activation after
+  they registered.  In case user doesn't activate within that period, the
+  account remains permanently inactive.
+
+
+.. attribute:: gwm_config.ALLOW_OPEN_REGISTRATION
+
+  Whether to allow new users to create new accounts in |gwm|.
+
+
+.. attribute:: gwm_config.DEFAULT_FROM_EMAIL
+
+  Default: ``webmaster@localhost``.
+
+  Default e-mail address used in communication from Django.
+
+
+.. attribute:: gwm_config.EMAIL_HOST
+
+  SMTP server host.
+
+
+.. attribute:: gwm_config.EMAIL_PORT
+
+  SMTP server port.
 
 
 Cache
@@ -198,8 +215,15 @@ production.  Use `Memcached <http://memcached.org/>`_ or a similar backend.
       }
   }
 
-.. todo::
-  LAZY_CACHE_REFRESH
+.. attribute:: gwm_config.LAZY_CACHE_REFRESH
+
+  Default: ``600000`` ms  (10 minutes)
+
+  Fallback cache timer.  Gets checked when object like Virtual Machine, Cluster
+  or Node is instantiated.
+
+  More information: :ref:`caching`.
+
 
 Full-text indexing
 ------------------
@@ -210,6 +234,10 @@ web server.  If your using Apache this will be either ``apache``, or
 
   $ chown apache:apache whoosh_index/
 
+.. attribute:: gwm_config.HAYSTACK_WHOOSH_PATH
+
+  Path to the directory that stores Whoosh index files.  You should use
+  absolute path.
 
 VNC
 ---
@@ -226,16 +254,30 @@ Set **VNC\_PROXY** to the hostname of your VNC AuthProxy server in
 Other settings
 --------------
 
-RAPI_CONNECT_TIMEOUT
+.. attribute:: gwm_config.RAPI_CONNECT_TIMEOUT
+
+  Default: ``3`` (seconds)
+
+  How long to wait for Ganeti clusters to answer GWM queries.
 
 
-Other helper functions
-----------------------
+Path helper functions
+---------------------
 
 .. versionadded:: 0.11.0
 
 There a few helper functions that have been added to |gwm| settings to help
 with getting full paths to files relative to |gwm|.
+
+.. function:: here(path1, [path2, ...])
+
+  Returns an absolute path to the directory settings file is located in.  You
+  can append any additional path to it.
+
+  :param string path1: first path
+  :returns: absolute project path joined with given paths
+  :rtype: string
+
 
 .. function:: root(path1, [path2, ...])
 
@@ -244,6 +286,7 @@ with getting full paths to files relative to |gwm|.
   :param string path1: first path
   :returns: absolute project path joined with given paths
   :rtype: string
+
 
 .. function:: app_root(path1, [path2, ...])
 
@@ -259,8 +302,9 @@ do.
 
 Examples::
 
-  root('some', 'path')  # Will return /path/to/ganeti_webmgr/some/path
-  app_root('arbitrary', 'test', 'path')  # Will return /path/to/ganeti_webmgr/ganeti_web/arbitrary/test/path
+  here('whoosh_index')  # /path-to-venv/ganeti-webmgr/whoosh_index
+  root('some', 'path')  # /path-to-venv/ganeti-webmgr/some/path
+  app_root('arbitrary', 'test', 'path')  # /path-to-venv/ganeti-webmgr/ganeti_web/arbitrary/test/path
 
 .. note::
   These helper functions might not be useful to you, in case you installed
