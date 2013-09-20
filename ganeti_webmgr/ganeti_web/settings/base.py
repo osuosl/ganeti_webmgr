@@ -32,6 +32,7 @@ from sys import path
 
 from django.core.exceptions import ImproperlyConfigured
 
+
 # Path Helpers
 def here(*x):
     """
@@ -41,6 +42,7 @@ def here(*x):
     return join(abspath(dirname(__file__)), *x)
 
 PROJECT_ROOT = here("..", "..", "..")
+
 
 def root(*x):
     """
@@ -65,29 +67,39 @@ SECRET_KEY_LOC = join(SECRET_DIR, 'SECRET_KEY.txt')
 
 no_secret_msg = "No secrets in environment variable %s or file %s found.\n"
 
+
 # Settings helpers
 def load_secret(env=None, file=None, create_file=True, secret_size=32,
                 overwrite_file=False):
     """
     Helper to retrieve secrets from environmental variables or files.
+
+    :param string env: enviroment variable name
+    :param string file: name of the file with stored secret
+    :returns: value from environmental variable or from file
+    :rtype: string
+    :raises ImproperlyConfigured: if it wasn't possible to get secret from
+                                  either source and function couldn't create the
+                                  file
     """
     if create_file:
         secret = get_env_or_file_or_create(env, file, secret_size,
-            overwrite_file)
+                                           overwrite_file)
     else:
         secret = get_env_or_file_secret(env, file)
 
     return secret
 
+
 def get_env_or_file_secret(env_var, file_loc):
     """Gets secrets from an environmental variable or file.
 
-    :param env_var: The environmental variable
-    :type env_var: str.
-    :param file_loc: The full path to the file
-    :type file_loc: str.
-    :returns: str -- The secret.
-    :raises: ImproperlyConfigured -- If env_var or file_loc values are None
+    :param string env_var: The environmental variable
+    :param string file_loc: The full path to the file
+    :returns: The secret.
+    :rtype: string
+    :raises ImproperlyConfigured: If ``env_var`` or ``file_loc`` values are
+                                  ``None``
     """
 
     # Grab the env variable
@@ -102,22 +114,22 @@ def get_env_or_file_secret(env_var, file_loc):
             raise ImproperlyConfigured(no_secret_msg % (env_var, file_loc))
     return secret
 
+
 def get_env_or_file_or_create(env_var, file_loc, secret_size=32,
                               overwrite_file=False):
     """Gets secrets from an environmental variable or file. Will create file at
     file_loc if neither env_var or file_loc return values.
 
-    :param env_var: The environmental variable.
-    :type env_var: str.
-    :param file_loc: The full path to the file.
-    :type file_loc: str.
-    :param secret_size: Size of secret key to be generated for file if
-    being created.
-    :type secret_size: int
-    :param overwrite_file: Overwrite existing file at file_loc if already exists.
-    :type overwrite_file: bool
-    :returns: str -- The secret.
-    :raises: ImproperlyConfigured -- If env_var or file_loc values are None.
+    :param string env_var: The environmental variable.
+    :param string file_loc: The full path to the file.
+    :param int secret_size: Size of secret key to be generated for file if
+                            being created.
+    :param bool overwrite_file: Overwrite existing file at file_loc if already
+                                exists.
+    :returns: The secret.
+    :rtype: string
+    :raises ImproperlyConfigured: If ``env_var`` or ``file_loc`` values are
+                                  ``None``.
     """
     # First check if the env_var or file_loc are set/exist
     try:
@@ -145,6 +157,7 @@ def get_env_or_file_or_create(env_var, file_loc, secret_size=32,
         raise ImproperlyConfigured(msg)
 
     return secret
+
 
 def generate_secret(secret_size=32):
     "Generates a secret key of the given size"
@@ -313,8 +326,9 @@ AUTH_PROFILE_MODULE = 'authentication.Profile'
 SECRET_KEY = load_secret(env='GWM_SECRET_KEY', file=SECRET_KEY_LOC)
 WEB_MGR_API_KEY = load_secret(env='GWM_API_KEY', file=GWM_API_KEY_LOC)
 
-# Horrible Django hack for convincing Django that we are i18n'd.
+
 def ugettext(s):
+    "Horrible Django hack for convincing Django that we are i18n'd."
     return s
 
 # Ganeti Cached Cluster Objects Timeouts
@@ -325,4 +339,3 @@ LAZY_CACHE_REFRESH = 600000
 # Other GWM Stuff
 VNC_PROXY = 'localhost:8888'
 RAPI_CONNECT_TIMEOUT = 3
-
