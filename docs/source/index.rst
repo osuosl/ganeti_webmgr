@@ -113,6 +113,7 @@ References
     ref/logo
     ref/versions
     ref/setup-script
+    ref/venv
 
 Deprecated
 ==========
