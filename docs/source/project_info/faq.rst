@@ -8,11 +8,17 @@ isn't answered here, ask on the Freenode IRC network in channel
 
 .. _GWM Google Group: http://groups.google.com/group/ganeti-webmgr/
 
+.. contents:: List of questions
+  :depth: 2
+  :backlinks: none
+
+
 I added a virtual machine using the ``gnt-instance`` command-line tool, and I don't see it in GWM!
 --------------------------------------------------------------------------------------------------
 
   Use the "Import VM" page (linked from the admin sidebar) to add those
   virtual machines to GWM.
+
 
 How do I limit the resources available to a user?
 -------------------------------------------------
@@ -25,6 +31,7 @@ How do I limit the resources available to a user?
   user's quota to add or edit the amounts of disk space, memory, and CPUs
   available to that user.
 
+
 What does "Autostart" do?
 -------------------------
 
@@ -33,12 +40,13 @@ What does "Autostart" do?
   if the node reboots. Otherwise, if the mark is a red cross, the virtual
   machine will only start when a user manually starts it.
 
-I get the error: "Whoosh\_index not writable for current user/group"
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+I get the error "Whoosh\_index not writable for current user/group"
+-------------------------------------------------------------------
 
   When running GWM through Apache, it is required that the apache user
   (or www-data) and group can write to the whoosh_index directory.
 
-::
+  ::
 
     chown apache:apache whoosh_index/
