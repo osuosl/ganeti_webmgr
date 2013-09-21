@@ -3,16 +3,27 @@
 Changelog
 =========
 
+Unreleased
+----------
+
+* #13275: |gwm| is now a Python package
+* #13599: refactoring and new internal application structure
+* #14661: new :ref:`installation script <setup-script>`
+* #15057: new :ref:`script for building dependencies <build-script>`
+* updated project documentation
+
 v0.10.2
 -------
 
 Notable Changes:
 
 * Assigning owners to a VM has been changed slightly.
+
   * Must have admin/create_vm permissions to be an owner
   * Groups can be owners
   * Superusers can assign owner to anyone
   * Owner assignment dropdown is now sorted by name (finally)
+
 * Users without perms on any clusters now get a 403 error if they try to go to
   the VM Creation page. Before they would get to the page but have no clusters
   to choose from.
