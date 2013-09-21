@@ -83,6 +83,7 @@ Project Information
     project_info/screenshots
     project_info/license
     project_info/faq
+    project_info/contributers
 
 Development
 -----------
@@ -92,10 +93,9 @@ Development
     dev/installation
     dev/schedule
     dev/process
-    project_info/issues
+    dev/issues
     dev/tools
     dev/documentation
-    dev/contributers
 
     dev/developers
     dev/tests
