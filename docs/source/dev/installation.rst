@@ -111,3 +111,11 @@ directory:
 
 ``development.py``
   Look there for options you might want to change.  This file exists there especially for you.
+
+Management
+~~~~~~~~~~
+
+It's still done via ``manage.py`` script, though the script is now hidden
+deeper in directories structure::
+
+  ganeti_webmgr/ganeti_webmgr/ganeti_web/manage.py

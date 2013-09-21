@@ -83,7 +83,7 @@ Project Information
     project_info/screenshots
     project_info/license
     project_info/faq
-    project_info/contributers
+    project_info/contributors
 
 Development
 -----------
