@@ -11,6 +11,7 @@ isn't answered here, ask on the Freenode IRC network in channel
 .. contents:: List of questions
   :depth: 2
   :backlinks: none
+  :local:
 
 
 I added a virtual machine using the ``gnt-instance`` command-line tool, and I don't see it in GWM!
