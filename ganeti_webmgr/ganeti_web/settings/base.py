@@ -328,7 +328,7 @@ WEB_MGR_API_KEY = load_secret(env='GWM_API_KEY', file=GWM_API_KEY_LOC)
 
 
 def ugettext(s):
-    "Horrible Django hack for convincing Django that we are i18n'd."
+    """Horrible Django hack for convincing Django that we are i18n'd."""
     return s
 
 # Ganeti Cached Cluster Objects Timeouts

@@ -71,7 +71,7 @@ Manual installation
    a release tarball
 
 #) Create a virtual environment in your desired location and install GWM in
-   there by issueing ``python setup.py install`` in GWM directory (after you
+   there by issuing ``python setup.py install`` in GWM directory (after you
    unzipped the tarball or cloned the repository)
 
 #) Configure settings: in directory ``ganeti_webmgr/ganeti_web/settings`` copy

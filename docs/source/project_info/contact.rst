@@ -9,10 +9,11 @@ Contact Information
 
 Here are a couple of ways to get in touch with us.
 
-.. Note:: Before asking a support related question, please make sure it has not already
-          been answered by searching the mailing list archive_ and current issues_.
+.. note::
+  Before asking a support related question, please make sure it has not already
+  been answered by searching the mailing list archive_ and current issues_.
 
-* IRC_ - Join our IRC channel #ganeti-webmgr on Freenode
+* IRC_ - Join our IRC channel ``#ganeti-webmgr`` on Freenode
 * `Mailing List`_ - Send an email to the mailing list
 * Twitter_ - Tweet us!
 

@@ -1,7 +1,10 @@
-.. _dependencies:
+.. _deprecated_dependencies:
 
-Dependencies
-------------
+Deprecated: Dependencies
+------------------------
+
+.. warning::
+  This document is deprecated as of |gwm| version 0.11.
 
 Base
 ~~~~
@@ -45,14 +48,14 @@ LDAP
 
 LDAP dependencies can be found on the :ref:`ldap-dependencies` page.
 
-Compatibility
--------------
+Deprecated: Compatibility
+-------------------------
 
 Ganeti Web Manager is compatible with the following:
 
-Ganeti 
+Ganeti
     **2.4.x--2.6.0**.
-    
+
     Earlier versions are unsupported; they may occasionally work, but
     should not be relied upon.
 
@@ -70,11 +73,11 @@ Databases
     .. versionadded:: 0.10
        PostgreSQL has limited support
 
-Operating Systems 
+Operating Systems
     Ubuntu 11.10, Ubuntu 12.04, CentOS 6.
-    
+
     Known to work on Debian 7 and CentOS 5.
-    
+
     Debian 6 should work, provided that pip, virtualenv and fabric are
     the latest version managed through pip.
 

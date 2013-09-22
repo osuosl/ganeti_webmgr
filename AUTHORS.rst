@@ -1,38 +1,47 @@
-Credits
-=======
+Contributors
+============
 
 
 Core Contributors
 -----------------
 
-Peter Krenesky (``kreneskyp``) - peter@osuosl.org
-Corbin Simpson (``MostAwesomeDude``) - simpsoco@osuosl.org
-Trevor Bramwell (``bramwelt``) - bramwelt@osuosl.org
-Scott White (``whiteau``) - whiteau@osuosl.org
-Piotr Banaszkiewicz (``pbanaszkiewicz``) - piotr@banaszkiewicz.org
-Lance Albertson (``ramereth``) - lance@osuosl.org
-Rob McGuire-Dale (``robatron``) - rob@osuosl.org
-Emily Dunham (``edunham``) - edunham@osuosl.org
-Jonah Brooks (``brookjon``) - brookjon@osuosl.org
+* Ken Lett (``kennric``) - kennric@osuosl.org
+* Peter Krenesky (``kreneskyp``) - peter@osuosl.org
+* Corbin Simpson (``MostAwesomeDude``) - simpsoco@osuosl.org
+* Trevor Bramwell (``bramwelt``) - bramwelt@osuosl.org
+* Scott White (``whiteau``) - whiteau@osuosl.org
+* Piotr Banaszkiewicz (``pbanaszkiewicz``) - piotr@banaszkiewicz.org
+* Lance Albertson (``ramereth``) - lance@osuosl.org
+* Rob McGuire-Dale (``robatron``) - rob@osuosl.org
+* Emily Dunham (``edunham``) - edunham@osuosl.org
+* Jonah Brooks (``brookjon``) - brookjon@osuosl.org
+
+
+Google Summer of Code 2013
+--------------------------
+
+* Pranjal Mittal (``pmittal``) - mittal.pranjal@gmail.com
+* Piotr Banaszkiewicz (``pbanaszkiewicz``) - piotr@banaszkiewicz.org
 
 
 Google Code In 2010
 -------------------
 
-Jonathan Smith (``jaydez``) - j.jaydez@gmail.com
-Kyle Cesare (``kylc``) - kcesare@gmail.com
-Kapeel Sable (``kapeel``) - kapeelsable+p@gmail.com
-Samuel Dolean (``samm``) - selony24@gmail.com
-David Zderic - dzderic@gmail.com
-Crypt Wizard - cryptwizard@gmail.com
-Piotr Banaszkiewicz (``pbanaszkiewicz``) - piotr@banaszkiewicz.org
+* Jonathan Smith (``jaydez``) - j.jaydez@gmail.com
+* Kyle Cesare (``kylc``) - kcesare@gmail.com
+* Kapeel Sable (``kapeel``) - kapeelsable+p@gmail.com
+* Samuel Dolean (``samm``) - selony24@gmail.com
+* David Zderic - dzderic@gmail.com
+* Crypt Wizard - cryptwizard@gmail.com
+* Piotr Banaszkiewicz (``pbanaszkiewicz``) - piotr@banaszkiewicz.org
 
 
 Other Contributors
 ------------------
-Apollon (``apoikos``) - apollon@noc.grnet.gr
-Faidon Liambotis (``paravoid``) - faidon@admin.grnet.gr
-Leonidas Poulopoulos - leopoul@noc.grnet.gr
+
+* Apollon (``apoikos``) - apollon@noc.grnet.gr
+* Faidon Liambotis (``paravoid``) - faidon@admin.grnet.gr
+* Leonidas Poulopoulos - leopoul@noc.grnet.gr
 
 
 Included Projects

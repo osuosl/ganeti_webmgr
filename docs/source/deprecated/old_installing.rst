@@ -1,13 +1,15 @@
-.. _installation:
+.. _old_installation:
 
-Installation
-============
+Deprecated: Installation
+========================
 
-Currently we have use `Fabric`, a tool for streamlining administration
-tasks, to deploy |gwm|.
+.. warning::
+  This document is deprecated as of |gwm| version 0.11.
+
+We use `Fabric`, a tool for streamlining administration tasks, to deploy |gwm|.
 
 Before installing |gwm|, make sure you have all the required
-:ref:`dependencies` installed.
+:ref:`deprecated_dependencies` installed.
 
 
 Installing
@@ -122,7 +124,7 @@ Initializing
 Next Steps
 ----------
 
-Congradulations! |gwm| is now installed and initialized. Next, you'll want
+Congratulations! |gwm| is now installed and initialized. Next, you'll want
 to look into :ref:`configuring` and :ref:`deploying`, if you are going
 to be setting up a production instance. Otherwise, if you just want to
 play around with |gwm|, or are :ref:`developing <development>`, take a look at

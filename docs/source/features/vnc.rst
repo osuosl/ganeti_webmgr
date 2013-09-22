@@ -36,10 +36,10 @@ port scanner.
 Configuring VNC AuthProxy
 -------------------------
 
-Set the host and port that the proxy uses in **settings.py** with the
-**VNC\_PROXY** setting.
+Set the host and port that the proxy uses in ``gwm_config.py`` with the
+``VNC_PROXY`` setting.
 
-Syntax is **HOST:CONTROL\_PORT**, for example: "localhost:8888".
+Syntax is ``HOST:CONTROL_PORT``, for example: ``"localhost:8888"``.
 
 If the host is localhost then the proxy will only be accessible to
 clients and browsers on the same machine as the proxy. Production
@@ -47,8 +47,8 @@ servers should use a public hostname or IP.
 
 ::
 
-    # located in settings.py
-    VNC_PROXY='localhost:8888'
+    # located in your settings file
+    VNC_PROXY = 'localhost:8888'
 
 Starting the Daemon
 ~~~~~~~~~~~~~~~~~~~
@@ -81,38 +81,32 @@ Firewall Rules
 
 The following ports are used by default
 
--  **8888:** Control port used to request vnc forwarding. Should be open
+-  **8888**: Control port used to request vnc forwarding. Should be open
    between **Ganeti Web Manager** and **Proxy**
--  **12000+:** Internal VNC Ports assigned by **Ganeti**. Should be open
+-  **12000+**: Internal VNC Ports assigned by **Ganeti**. Should be open
    between **Proxy** and **Ganeti Nodes**.
--  **7000-8000:** External VNC Ports assigned by **Proxy**. Should be
+-  **7000-8000**: External VNC Ports assigned by **Proxy**. Should be
    open between **Proxy** and **Clients/Web Browsers**.
--  **843:** Flash policy server. Required to support browsers without
+-  **843**: Flash policy server. Required to support browsers without
    native websocket support. Should be open between **Proxy** and
    **Clients/Web Browsers**.
 
 Debugging Help
 --------------
 
-Python Path for flash policy server 
+Python Path for flash policy server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The following error indicates that your python path is not set or the
-proxy is not installed.
+proxy is not installed::
 
-::
+  /usr/bin/twistd: Unknown command: flashpolicy
 
-    /usr/bin/twistd: Unknown command: flashpolicy
+Ensure that your virtualenv is active::
 
-Ensure that your virtualenv is active
+  source venv/bin/activate
 
-::
+If not using a virtualenv, then you must manually set the ``PYTHONPATH``
+environment variable as root::
 
-    source venv/bin/activate
-
-If not using a virtualenv, then you must manually set the **PYTHONPATH**
-environment variable as root.
-
-::
-
-    export set PYTHONPATH=.
+  export set PYTHONPATH=.
