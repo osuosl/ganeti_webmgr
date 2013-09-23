@@ -46,10 +46,8 @@ Visualizing a cluster via GWM
 History
 ~~~~~~~
 In the initial stages of development I wrote a blog post
- `blog
-post <http://www.pranjalmittal.in/2013/07/google-summer-of-code-update-1.html>`_.
-on Ganetiviz.
-It might be a little outmoded now, but might help understand its evolution.
+ `blog post <http://www.pranjalmittal.in/2013/07/google-summer-of-code-update-1.html>`_.
+on Ganetiviz. It might be a little outmoded now, but could help understand the ganetiviz evolution.
 
 The `ganetiviz-cytoscape <https://github.com/pramttl/ganaetiviz-cytoscape>`_. project was
 initially created as a front end component for ganetiviz which was then ported to
@@ -69,14 +67,12 @@ development purposes.
 Ganetiviz has sister projects that makes it possible for anyone to start contribute easily.
 
 
-#. Front-End code contribution
-
-For front end contribution you must refer to 
-`devganetviz <https://github.com/pramttl/devganetiviz>`, a separate django
-project that comes with batteries included (fixture data, etc), so you do not need
-to run any physical or virtual server to add front-end features to ganetiviz.
+#. Front-End code contribution: For any front end contribution you must refer to 
+   `devganetviz <https://github.com/pramttl/devganetiviz>`, a separate django
+   project that comes with batteries included (fixture data, etc), so you do not need
+   to run any physical or virtual server to add front-end features to ganetiviz.
 
 
 #. For any contribution that changes JSON data avaiable to the front end component.
-For changing the data returned by GWM to ganetiviz, it is important to run GWM
-the standard way along with a Virtual or real cluster.
+   For changing the data returned by GWM to ganetiviz, it is important to run GWM
+   the standard way along with a Virtual or real cluster.

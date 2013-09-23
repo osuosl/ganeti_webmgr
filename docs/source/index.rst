@@ -56,6 +56,7 @@ Features
     features/cluster-read-only
     features/registration
     features/caching
+    features/ganetiviz
     caching
 
 Usage
