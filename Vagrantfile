@@ -12,7 +12,7 @@ Vagrant.configure("2") do |config|
   config.berkshelf.enabled = true
   config.omnibus.chef_version = :latest
 
-  # Symlink our project for development purposes.
+  # Symlink our project for development purposes. Needed to access our project.
   config.vm.synced_folder ".", "/mnt/ganeti_webmgr"
 
   config.vm.provision :chef_solo do |chef|
@@ -24,6 +24,10 @@ Vagrant.configure("2") do |config|
         :server_root_password => 'rootpass',
         :server_debian_password => 'debpass',
         :server_repl_password => 'replpass'
+      },
+      :ganeti_webmgr => {
+        :path => '/home/vagrant/gwm',
+        :virtualenv => '/home/vagrant/gwm/venv'
       }
     }
 
