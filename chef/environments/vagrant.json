@@ -1,0 +1,15 @@
+{
+   "name": "vagrant",
+   "default_attributes": {
+        "mysql": {
+            "server_root_password": "rootpass",
+            "server_debian_password": "debpass",
+            "server_repl_password": "replpass"
+        },
+        "ganeti_webmgr": {
+          "synced_folder": "/mnt/ganeti_webmgr"
+        }
+   },
+   "chef_type": "environment",
+   "json_class": "Chef::Environment"
+}
