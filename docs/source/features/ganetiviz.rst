@@ -8,7 +8,7 @@ Graphical Visualization of a ganeti cluster is now possible with the help of
 Ganetiviz uses the Cytoscape JS library to render network graphs, where ganeti
 nodes are represented as vertices and failover directions are shown as edges.
 
-The graph is interactive and has the following features-
+The graph is interactive and has the following features:
 
 Features
 ~~~~~~~~
@@ -21,7 +21,7 @@ Features
 #. The edge points to the secondary node for that particular instance originating at the primary node.
 #. Edge thickness between the nodes gives and idea of the total number of failover
    possibilities existing between two nodes.
-#. All the 'running' instances are shown in green and all the '*_DOWN' instances are shown in red.
+#. All the 'running' instances are shown in green and all the `*_DOWN` instances are shown in red.
    Instances "red" in color are not "running" and might require a failover.
 #. Additional instance information is shown in the bottom right corner and is 
    fetched on demand on clicking on an instance.
@@ -45,13 +45,12 @@ Visualizing a cluster via GWM
 
 History
 ~~~~~~~
-In the initial stages of development I wrote a blog post
- `blog post <http://www.pranjalmittal.in/2013/07/google-summer-of-code-update-1.html>`_.
-on Ganetiviz. It might be a little outmoded now, but could help understand the ganetiviz evolution.
+In the initial stages of development I wrote a `blog post <http://www.pranjalmittal.in/2013/07/google-summer-of-code-update-1.html>`_
+on Ganetiviz. It might be a little outdated now, but will help understand the ganetiviz evolution.
 
-The `ganetiviz-cytoscape <https://github.com/pramttl/ganaetiviz-cytoscape>`_. project was
+The `ganetiviz-cytoscape <https://github.com/pramttl/ganaetiviz-cytoscape>`_ project was
 initially created as a front end component for ganetiviz which was then ported to
-`devganetiviz <https://github.com/pramttl/devganetiviz>`_. - a django application that
+`devganetiviz <https://github.com/pramttl/devganetiviz>`_ - a django application that
 can be run outside GWM and ships with some mock data to get started contributing 
 to GWM in seconds.
 
@@ -64,14 +63,12 @@ Developing for GWM can sometimes be tedious for front-end contributors who do no
 to concern themselves with running a live or virtual ganeti cluster with GWM every time for
 development purposes.
 
-Ganetiviz has sister projects that makes it possible for anyone to start contribute easily.
-
+Ganetiviz has a sister project that makes it possible for anyone to start contributing easily.
 
 #. Front-End code contribution: For any front end contribution you must refer to 
-   `devganetviz <https://github.com/pramttl/devganetiviz>`, a separate django
+   `devganetiviz <https://github.com/pramttl/devganetiviz>`_, a separate django
    project that comes with batteries included (fixture data, etc), so you do not need
    to run any physical or virtual server to add front-end features to ganetiviz.
-
 
 #. For any contribution that changes JSON data avaiable to the front end component.
    For changing the data returned by GWM to ganetiviz, it is important to run GWM
