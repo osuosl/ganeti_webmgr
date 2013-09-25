@@ -68,11 +68,6 @@ TIME_ZONE = 'America/Los_Angeles'
 DATE_FORMAT = "d/m/Y"
 DATETIME_FORMAT = "d/m/Y H:i"
 
-##### Locale Configuration #####
-LOCALE_PATHS = (
-    root("locale"),
-)
-
 LANGUAGES = (
     # ('yourlang', ugettext('YOUR LANGUAGE')),
     ('el', ugettext('Greek')),
@@ -161,6 +156,14 @@ VNC_PROXY = 'localhost:8888'
 # when using the rapi for syncing and querying.
 RAPI_CONNECT_TIMEOUT = 3
 
+# Used for CSRF protection. Use a 16 or 32 bit random string here.
+# Do not share this with anyone.
+# Make this unique, and don't share it with anybody.
+
+# Uncomment the line below or continue using load_secret
+# SECRET_KEY = "random_string_of_numbers_and_letters"
+SECRET_KEY = load_secret(env='GWM_SECRET_KEY', file=SECRET_KEY_LOC)
+
 # API Key for authenticating scripts that pull information from ganeti, such as
 # list of sshkey's to assign to a virtual machine
 #
@@ -168,14 +171,9 @@ RAPI_CONNECT_TIMEOUT = 3
 #     that automatically creates keys per virtual machine. This is just a quick
 #     way of enabled a secure method to pull sshkeys from ganeti web manager
 
-# Remove the # mark to uncomment and replace CHANGE_ME with a secure value.
-# WEB_MGR_API_KEY = 'CHANGE_ME'
-
-# Used for CSRF protection. Use a 16 or 32 bit random string here.
-# Do not share this with anyone.
-
-# Remove the # mark to uncomment and replace CHANGE_ME with a secure value.
-# SECRET_KEY = 'CHANGE_ME'
+# Uncomment the line below or continue using load_secret
+# WEB_MGR_API_KEY = "random_string_of_numbers_and_letters"
+WEB_MGR_API_KEY = load_secret(env='GWM_API_KEY', file=GWM_API_KEY_LOC)
 
 STATICFILES_DIRS += (
     root('noVNC', 'include'),

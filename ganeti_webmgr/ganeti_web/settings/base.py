@@ -79,8 +79,8 @@ def load_secret(env=None, file=None, create_file=True, secret_size=32,
     :returns: value from environmental variable or from file
     :rtype: string
     :raises ImproperlyConfigured: if it wasn't possible to get secret from
-                                  either source and function couldn't create the
-                                  file
+                                  either source and function couldn't create
+                                  the file
     """
     if create_file:
         secret = get_env_or_file_or_create(env, file, secret_size,
@@ -170,8 +170,9 @@ def generate_secret(secret_size=32):
     )
 
 
-# Add our project to our pythonpath
+# Add our project to our pythonpath as well as applications path
 path.append(root())
+path.append(app_root())
 
 # make sure our secrets directory exists
 if not exists(SECRET_DIR):
@@ -182,6 +183,7 @@ if not exists(SECRET_DIR):
 ##### Debug *default* configuration #####
 DEBUG = False
 TEMPLATE_DEBUG = DEBUG
+TESTING = False
 ##### End Debug configuration #####
 
 ##### General Defaults #####
@@ -323,13 +325,16 @@ INSTALLED_APPS = (
 ROOT_URLCONF = 'ganeti_web.urls'
 AUTH_PROFILE_MODULE = 'authentication.Profile'
 
-SECRET_KEY = load_secret(env='GWM_SECRET_KEY', file=SECRET_KEY_LOC)
-WEB_MGR_API_KEY = load_secret(env='GWM_API_KEY', file=GWM_API_KEY_LOC)
-
 
 def ugettext(s):
     """Horrible Django hack for convincing Django that we are i18n'd."""
     return s
+
+
+##### Locale Configuration #####
+LOCALE_PATHS = (
+    app_root("locale"),
+)
 
 # Ganeti Cached Cluster Objects Timeouts
 #    LAZY_CACHE_REFRESH (milliseconds) is the fallback cache timer that is
