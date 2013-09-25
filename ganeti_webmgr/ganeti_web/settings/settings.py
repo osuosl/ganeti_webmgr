@@ -68,11 +68,6 @@ TIME_ZONE = 'America/Los_Angeles'
 DATE_FORMAT = "d/m/Y"
 DATETIME_FORMAT = "d/m/Y H:i"
 
-##### Locale Configuration #####
-LOCALE_PATHS = (
-    root("locale"),
-)
-
 LANGUAGES = (
     # ('yourlang', ugettext('YOUR LANGUAGE')),
     ('el', ugettext('Greek')),
