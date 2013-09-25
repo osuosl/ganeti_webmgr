@@ -20,9 +20,9 @@ Default settings for GWM.
 
 These settings are hopefully so universal that they never need to change
 between deployments and are factored out into this module to avoid stale
-end_user.py files causing upgrade bugs.
+settings.py files causing upgrade bugs.
 
-All settings in this module can be overriden in the main end_user.py module,
+All settings in this module can be overriden in the main settings.py module,
 of course.
 """
 
@@ -150,7 +150,7 @@ def get_env_or_file_or_create(env_var, file_loc, secret_size=32,
     except IOError:
         cannot_create_msg = ("Unable to create secret file.\n"
                              "Try creating the file at %s or setting "
-                             "the value in settings/end_user.py")
+                             "the value in settings/settings.py")
         msg1 = no_secret_msg % (env_var, file_loc)
         msg2 = cannot_create_msg % (file_loc,)
         msg = ' '.join((msg1, msg2))
