@@ -25,6 +25,9 @@ setup(
     packages=find_packages(exclude=["docs"]),  # should find package easily
     install_requires=requirements,
 
+    # easiest way to install templates, static files, translation files etc.
+    include_package_data=True,
+
     # in case you want to have easy testing in future by `./setup.py test`
     # you'd need to work with setuptools documentation:
     #  http://pythonhosted.org/setuptools/setuptools.html
