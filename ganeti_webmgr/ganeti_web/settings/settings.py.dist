@@ -108,8 +108,11 @@ STATIC_ROOT = root("collected_static")
 # using this url easier to read.  ie.  {{STATIC_URL}}/images/foo.png
 STATIC_URL = '%s/static' % SITE_ROOT
 
+# Used for CSRF protection. Use a 16 or 32 bit random string here.
+# Do not share this with anyone.
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = '!c&bm88vo=gby*vxf2gydv8hc!+f+eo+yu&!g&!)#n5quwsr82'
+# SECRET_KEY = '!c&bm88vo=gby*vxf2gydv8hc!+f+eo+yu&!g&!)#n5quwsr82'
+SECRET_KEY = load_secret(env='GWM_SECRET_KEY', file=SECRET_KEY_LOC)
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
@@ -168,12 +171,7 @@ RAPI_CONNECT_TIMEOUT = 3
 
 # Remove the # mark to uncomment and replace CHANGE_ME with a secure value.
 # WEB_MGR_API_KEY = 'CHANGE_ME'
-
-# Used for CSRF protection. Use a 16 or 32 bit random string here.
-# Do not share this with anyone.
-
-# Remove the # mark to uncomment and replace CHANGE_ME with a secure value.
-# SECRET_KEY = 'CHANGE_ME'
+WEB_MGR_API_KEY = load_secret(env='GWM_API_KEY', file=GWM_API_KEY_LOC)
 
 STATICFILES_DIRS += (
     root('noVNC', 'include'),

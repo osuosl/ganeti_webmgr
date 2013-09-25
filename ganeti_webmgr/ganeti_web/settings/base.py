@@ -325,11 +325,6 @@ INSTALLED_APPS = (
 ROOT_URLCONF = 'ganeti_web.urls'
 AUTH_PROFILE_MODULE = 'authentication.Profile'
 
-# This generates ".secrets" directory in GWM upon importing settings.base
-# which is never what developer or end user wants.
-# SECRET_KEY = load_secret(env='GWM_SECRET_KEY', file=SECRET_KEY_LOC)
-# WEB_MGR_API_KEY = load_secret(env='GWM_API_KEY', file=GWM_API_KEY_LOC)
-
 
 def ugettext(s):
     """Horrible Django hack for convincing Django that we are i18n'd."""
