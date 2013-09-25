@@ -7,7 +7,8 @@
             "server_repl_password": "replpass"
         },
         "ganeti_webmgr": {
-          "synced_folder": "/mnt/ganeti_webmgr"
+          "synced_folder": "/mnt/ganeti_webmgr",
+          "debug": true
         }
    },
    "chef_type": "environment",
