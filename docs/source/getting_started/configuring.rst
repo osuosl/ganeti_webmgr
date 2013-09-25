@@ -203,9 +203,9 @@ Cache
 
 Configure the
 `Django Cache Framework <http://docs.djangoproject.com/en/dev/topics/cache/>`_
-to use a production capable backend in ``end_user.py``.  By default |gwm| is
-configured to use the ``LocMemCache`` but it is not recommended for
-production.  Use `Memcached <http://memcached.org/>`_ or a similar backend.
+to use a production capable backend.  By default |gwm| is configured to use
+the ``LocMemCache`` but it is not recommended for production.  Use
+`Memcached <http://memcached.org/>`_ or a similar backend.
 
 ::
 
@@ -242,9 +242,7 @@ web server.  If your using Apache this will be either ``apache``, or
 VNC
 ---
 
-Set **VNC\_PROXY** to the hostname of your VNC AuthProxy server in
-``end_user.py``. The VNC AuthProxy does not need to run on the same server as
-|gwm|.
+Set **VNC\_PROXY** to the hostname of your VNC AuthProxy server.  The VNC AuthProxy does not need to run on the same server as |gwm|.
 
 ::
 
