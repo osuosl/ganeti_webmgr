@@ -19,7 +19,8 @@ You want to work on |gwm|, so you can't install it to virtual environment's
   (gwm)$ python setup.py develop
   (gwm)$ pip install mysql-python
   (gwm)$ pip install psycopg2
-  (gwm)$ vim ./ganeti_webmgr/ganeti_web/settings/development.py
+  (gwm)$ cp ./ganeti_webmgr/ganeti_web/settings/settings.py.dist ./ganeti_webmgr/ganeti_web/settings/settings.py
+  (gwm)$ vim ./ganeti_webmgr/ganeti_web/settings/settings.py
 
 Requirements
 ------------
@@ -103,14 +104,20 @@ included in Python.
 Configuration
 ~~~~~~~~~~~~~
 
+Copy ``settings.py.dist`` to ``settings.py`` within
+``ganeti_webmgr/ganeti_webmgr/ganeti_web/settings`` directory.
+
 Edit configuration files in ``ganeti_webmgr/ganeti_webmgr/ganeti_web/settings``
 directory:
 
 ``base.py``
   Base settings, might not need to be changed.
 
-``development.py``
-  Look there for options you might want to change.  This file exists there especially for you.
+``settings.py.dist``
+  Look there for options you might want to change.  This file exists there
+  especially for you.
+
+  .. warning:: Remember to change this file name to ``settings.py``!
 
 Management
 ~~~~~~~~~~
