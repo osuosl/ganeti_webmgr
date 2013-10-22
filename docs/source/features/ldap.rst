@@ -1,6 +1,10 @@
 LDAP
 ====
 
+.. todo::
+  Update to reflect recent changes in installation.  Update installation script
+  so that it installs LDAP for end users too.
+
 .. versionadded:: 0.10
 
 Ganeti Web Manager supports LDAP authentication through the use of
@@ -16,7 +20,7 @@ In order to use `python-ldap`_ a couple of system level packages need to
 be installed first.
 
 For a Debian based systems:
- * libldap2-dev 
+ * libldap2-dev
  * libsasl2-dev
 
 For a Red Hat based systems:

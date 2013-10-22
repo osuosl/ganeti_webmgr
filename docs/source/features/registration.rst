@@ -28,22 +28,18 @@ Closing Registration
 --------------------
 
 In some contexts, users should not be able to create their own accounts.
-To implement this, simply change the ALLOW\_OPEN\_REGISTRATION setting
-in your settings.py file to False:
-::
+To implement this, simply change the ``ALLOW_OPEN_REGISTRATION`` setting
+in your ``gwm_config.py`` file to False::
 
-    # Whether users should be able to create their own accounts. 
-    # False if accounts can only be created by admins. 
-    ALLOW_OPEN_REGISTRATION = False
-
-This setting is currently located near line 203, below the registration
-email settings.
+  # Whether users should be able to create their own accounts.
+  # False if accounts can only be created by admins.
+  ALLOW_OPEN_REGISTRATION = False
 
 Result of closed registration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The "Not a member?" link is hidden from users on the login page. If they
-navigate to the <SITE\_ROOT>/accounts/register page, they will see this
+navigate to the ``<SITE_ROOT>/accounts/register`` page, they will see this
 message instead of the account creation form:
 
 .. figure:: /_static/closed-registration.png
