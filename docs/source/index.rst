@@ -38,6 +38,7 @@ User Guide
 .. toctree::
     :maxdepth: 1
 
+    usage/configuring
     usage/upgrading
     usage/clusters
     usage/virtualmachines
@@ -60,7 +61,7 @@ Contributing
 .. toctree::
     :maxdepth: 1
 
-    dev/issues
+    info/issues
 
 .. toctree::
     :maxdepth: 2
@@ -92,7 +93,6 @@ Project Information
     usage/virtualmachines
     usage/nodes
     usage/templates
-
 
 References
 ~~~~~~~~~~

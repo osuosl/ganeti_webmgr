@@ -156,7 +156,7 @@ To test new code in |gwm| it is often necessary to have a Ganeti cluster to mana
 
 - clone https://github.com/ramereth/vagrant-ganeti.git
 - add the following to your hosts file :
-  
+
 ::
 
     33.33.33.10 ganeti.example.org
@@ -165,7 +165,7 @@ To test new code in |gwm| it is often necessary to have a Ganeti cluster to mana
     33.33.33.13 node3.example.org
 
 - enter the vagrant-ganeti directory and type
-  
+
 ::
 
     vagrant up node1
