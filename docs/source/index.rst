@@ -93,24 +93,6 @@ Project Information
     usage/nodes
     usage/templates
 
-    
-Development
------------
-.. toctree::
-    :maxdepth: 1
-
-    dev/installation
-    dev/vagrant
-    dev/test_cluster
-    dev/schedule
-    dev/process
-    dev/issues
-    dev/tools
-    dev/documentation
-    dev/developers
-    dev/tests
-    dev/search
-    dev/selenium
 
 References
 ~~~~~~~~~~
