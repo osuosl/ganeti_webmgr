@@ -1,3 +1,5 @@
+.. _selenium:
+
 Selenium test specs
 ===================
 
