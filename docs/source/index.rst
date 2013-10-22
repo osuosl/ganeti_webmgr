@@ -4,25 +4,19 @@
 Ganeti Web Manager
 ==================
 
-|gwm| is a Django_ based web frontend for managing Ganeti_ virtualization
-clusters. Since Ganeti only provides a command-line interface, |gwm|'s
-goal is to provide a user friendly interface to Ganeti by being feature
-complete with Ganeti's :ref:`RAPI <rapi>`. On top of Ganeti it
-provides a permission system for managing access to clusters and virtual
-machines and an in browser VNC console.
+|gwm| is a Django_ based web frontend for managing Ganeti_ virtualization clusters. Since Ganeti only provides a command-line interface, |gwm|'s goal is to provide a user friendly web interface to Ganeti via Ganeti's :ref:`Remote API <rapi>`. On top of Ganeti it provides a permission system for managing access to clusters and virtual machines, an in browser VNC console, and vm state and resource visualizations. You can see a few screenshots :ref:`here <screenshots>`.
 
-If you don't already have a Ganeti cluster setup, these directions_ can
-help you get started. If you are looking for support, please contact us
-through these :ref:`channels <contact>`. If you are looking to deploy
-|gwm| for the first time, check out our :ref:`installation` guide. If
-you already have a |gwm| instance running it might be time to
-:ref:`upgrade <upgrading>`.
+If you don't already have a Ganeti cluster setup, these directions_ can help you get started. 
 
+If you are looking for support, please :ref:`contact us <contact>`. 
 
-|gwm| is licensed under the :ref:`GPLv2 <license>`. It is currently
-developed and maintained by the Oregon State University Open Source Lab
-and a handful of volunteers. If you would like to get involved in
-development see our :ref:`development <development>` guide.
+If you are looking to deploy |gwm| for the first time, check out our :ref:`installation` guide. 
+
+If you already have a |gwm| instance running it might be time to :ref:`upgrade <upgrading>`.
+
+Finally, if you would like to report a bug or request a feature, please :ref:`file an issue <issues>`.
+
+|gwm| is licensed under the :ref:`GPLv2 <license>`. It is currently developed and maintained by the Oregon State University Open Source Lab and a handful of volunteers. If you would like to get involved in development see our :ref:`development <development>` guide.
 
 
 .. _directions: http://docs.ganeti.org/ganeti/current/html/install.html
@@ -41,35 +35,46 @@ Getting Started
     getting_started/deploying
     getting_started/importing
 
-
-Features
---------
+User Guide
+----------
 .. toctree::
     :maxdepth: 1
 
+    usage/configuring
+    usage/upgrading
+    usage/clusters
+    usage/virtualmachines
+    usage/nodes
+    usage/templates
     features/permissions
     features/objectlog
     features/vnc
     features/sshkeys
     features/ldap
     features/templates
-
     features/clusters
     features/cluster-read-only
     features/registration
     features/caching
     features/ganetiviz
 
-Usage
------
+Contributing
+------------
 .. toctree::
     :maxdepth: 1
 
-    usage/upgrading
-    usage/clusters
-    usage/virtualmachines
-    usage/nodes
-    usage/templates
+    info/issues
+
+.. toctree::
+    :maxdepth: 2
+
+    dev/developers
+
+.. toctree::
+    :maxdepth: 1
+
+    dev/process 
+
 
 Project Information
 -------------------
@@ -85,24 +90,6 @@ Project Information
     project_info/license
     project_info/faq
     project_info/contributors
-
-Development
------------
-.. toctree::
-    :maxdepth: 1
-
-    dev/installation
-    dev/vagrant
-    dev/schedule
-    dev/process
-    dev/issues
-    dev/tools
-    dev/documentation
-
-    dev/developers
-    dev/tests
-    dev/search
-    dev/selenium
 
 References
 ~~~~~~~~~~
