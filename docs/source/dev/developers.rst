@@ -37,9 +37,9 @@ When you have write access:
     git clone git@git.osuosl.org:ganeti/ganeti_webmgr
 
 
-From Github, you can `clone or fork from our repo mirror`_.
+From Github, you can `clone or fork from our repository mirror`_.
 
-.. _`clone or fork from our repo mirror`: https://github.com/osuosl/ganeti_webmgr
+.. _`clone or fork from our repository mirror`: https://github.com/osuosl/ganeti_webmgr
 
 
 Repository Layout
