@@ -82,6 +82,7 @@ some paths it's using.
   ``build_wheels.sh`` will work graciously without any additional
   arguments!
 
+.. program:: build_wheels.sh
 
 .. cmdoption:: -e <virtual environment directory>
 
