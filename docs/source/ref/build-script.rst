@@ -32,7 +32,8 @@ What this script does:
 #. Creates new virtual environment in the same destination.
 #. Upgrades ``pip``, ``setuptools`` and ``wheel`` (Python packages) in that
    virtual environment.
-#. Clones |gwm| if it doesn't exists yet.
+#. Clones |gwm| if it doesn't exists yet (the script needs it in order to
+   build wheel packages of |gwm| dependencies and |gwm| itself).
 
    .. note::
     You can specify which branch and which git path to clone from.

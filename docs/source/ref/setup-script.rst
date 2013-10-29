@@ -85,11 +85,13 @@ Command line arguments
   Directory for the virtual environment.
 
 
-.. cmdoption:: -w <remote wheels address>
+.. cmdoption:: -w <wheels address>
 
   :default: ``http://ftp.osuosl.org/pub/osl/ganeti-webmgr``
 
-  Wheel packages are read from that path.
+  Wheel packages are read from that path.  The path can be either local
+  (eg. ``./gwm/wheels``) or remote (eg.
+  ``http://ftp.osuosl.org/pub/osuosl/wheels``).
 
   .. warning:: Don't change it unless you know what you're doing!
 
@@ -144,4 +146,15 @@ Skip installing system dependencies::
 
 Upgrade existing installation::
 
-  $ ./setup -u ./existing_gwm
+  $ ./setup.sh -u ./existing_gwm
+
+Generate wheels on your own with :ref:`building script<build-script>`::
+
+  $ ./build_wheels.sh -e ./venv_whl -g ./gwm_whl -w ./wheels
+  $ ./setup.sh -d ./ganeti_webmgr -w ./wheels
+
+or send wheels to remote location and install from it::
+
+  $ ./build_wheels.sh -e ./venv_whl -g ./gwm_whl -w ./wheels
+  $ rsync ./wheels rsync@server:/srv/www/wheels
+  $ ./setup.sh -d ./ganeti_webmgr -w http://server/wheels
