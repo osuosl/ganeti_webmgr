@@ -131,6 +131,12 @@ some paths it's using.
 Examples
 --------
 
+.. note::
+  Remember to make ``build_wheels.sh`` executable::
+
+    $ chmod +x build_wheels.sh
+
+
 Build for default branch::
 
   $ ./build_wheels.sh -e ./venv -g ./gwm -w ./wheels
@@ -166,3 +172,10 @@ What this script is looking for:
 
 Make sure you have these files present in your system and then run the script
 with ``-N`` command line argument.
+
+Can't run ``build_wheels.sh``: permission denied
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This script needs to be executable, you can make it by issuing this command::
+
+  $ chmod +x build_wheels.sh

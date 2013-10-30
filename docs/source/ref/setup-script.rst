@@ -12,6 +12,10 @@ tools like ``pip``.
 What's even more important is that we created an installation script for your
 convenience.
 
+.. note::
+  Take a look at :ref:`installation instructions <installation>` to see how
+  you should install |gwm|.
+
 setup.sh
 --------
 
@@ -85,7 +89,7 @@ Command line arguments
   Directory for the virtual environment.
 
 
-.. cmdoption:: -w <wheels address>
+.. cmdoption:: -w <wheels (local/remote) directory location>
 
   :default: ``http://ftp.osuosl.org/pub/osl/ganeti-webmgr``
 
@@ -132,6 +136,12 @@ Command line arguments
 Examples
 ~~~~~~~~
 
+.. note::
+  Remember to make ``setup.sh`` executable::
+
+    $ chmod +x setup.sh
+
+
 Run with default settings::
 
   $ ./setup.sh
@@ -158,3 +168,36 @@ or send wheels to remote location and install from it::
   $ ./build_wheels.sh -e ./venv_whl -g ./gwm_whl -w ./wheels
   $ rsync ./wheels rsync@server:/srv/www/wheels
   $ ./setup.sh -d ./ganeti_webmgr -w http://server/wheels
+
+
+Directory structure
+~~~~~~~~~~~~~~~~~~~
+
+After installing |gwm| via ``setup.sh`` this is what you get::
+
+  ./ganeti_webmgr
+  ├── bin
+  ├── config
+  ├── django
+  │   └── ...
+  ├── include
+  │   └── ...
+  ├── lib
+  │   └── ...
+  └── local
+      └── ...
+
+Directories ``bin``, ``include``, ``lib`` or ``local`` are
+:ref:`virtual-environment` specific - don't bother about them.  Directory
+``config`` on the other hand is important to you: this is where your |gwm|
+configuration resides.
+
+Troubleshooting
+---------------
+
+Can't run ``setup.sh``: permission denied
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This script needs to be executable, you can make it by issuing this command::
+
+  $ chmod +x setup.sh
