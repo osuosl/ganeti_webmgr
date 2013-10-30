@@ -92,6 +92,7 @@ Development
     :maxdepth: 1
 
     dev/installation
+    dev/vagrant
     dev/schedule
     dev/process
     dev/issues
