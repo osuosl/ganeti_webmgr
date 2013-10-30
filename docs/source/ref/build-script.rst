@@ -3,9 +3,9 @@
 Dependencies building script
 ============================
 
-Along with :ref:`setup script <setup-script>` was created script that builds
-|gwm| dependencies, both compiled and not, and packages them as ``.whl``
-archives.
+Along with the :ref:`setup script <setup-script>`, `build_wheels.sh` was created
+as a  script that builds |gwm| dependencies, both compiled and not, and packages
+them as ``.whl`` archives.
 
 build_wheels.sh
 ---------------
