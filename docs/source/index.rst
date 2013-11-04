@@ -38,7 +38,6 @@ Getting Started
     getting_started/requirements
     getting_started/installing
     getting_started/configuring
-    getting_started/deploying
     getting_started/importing
 
 Deployment

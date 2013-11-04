@@ -1,22 +1,23 @@
 .. _deployment:
 
-=====
-Intro
-=====
+===========
+Development
+===========
 
 |gwm| supports various methods of deployment. By default Django ships with a
 simple python web server for development purposes. If your just trying to get
 |gwm| up and running, or you simply want to contribute to the project then using
-the :ref:`development-server` is probably your best bet.
+the :ref:`development-server` is probably your best bet. Otherwise check out
+:ref:`static-files`.
 
 .. _development-server:
 
-The Development Server
+Development Server
 ----------------------
 
 If you are just testing |gwm| out, run::
 
-    $ python ganeti_web/manage.py runserver
+    $ python ganeti_webmgr/manage.py runserver
 
 Then open a web browser, and navigate to
 `http://localhost:8000`::
@@ -26,17 +27,12 @@ Then open a web browser, and navigate to
 .. Note:: This should only be used to *test*. This should never be used in a
           *production* environment.
 
-Deployment
-----------
 
-Before doing a full deployment, make sure you've read through our
-:ref:`installation` instructions
+.. _static-files:
 
-Once you've installed GWM there will be a few additional steps required to GWM
-production ready.
-
-Static files
-------------
+============
+Static Files
+============
 
 Django is not very good at serving static files like CSS and Javascript.
 This is why we use web servers like Apache or Nginx. So we need to collect all
@@ -48,7 +44,7 @@ the static assets at. After this run the following commands from the project roo
 ::
 
     source venv/bin/activate
-    python ganeti_web/manage.py collectstatic
+    python ganeti_webmgr/manage.py collectstatic
 
 Once you've done that, you can move on to deploying using your prefered web server.
 
