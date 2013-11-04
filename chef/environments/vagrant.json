@@ -1,0 +1,27 @@
+{
+  "name": "vagrant",
+  "default_attributes": {
+    "mysql": {
+      "server_root_password": "rootpass",
+      "server_debian_password": "debpass",
+      "server_repl_password": "replpass"
+    },
+    "ganeti_webmgr": {
+      "path": "/home/vagrant/ganeti_webmgr",
+      "virtualenv": "/home/vagrant/venv",
+      "owner": "vagrant",
+      "group": "vagrant",
+      "debug": true,
+      "overwrite_settings": true,
+      "database": {
+        "name": "ganeti_webmgr",
+        "user": "vagrant",
+        "password": "vagrant",
+        "host": "localhost",
+        "port": 3306
+      }
+    }
+  },
+  "chef_type": "environment",
+  "json_class": "Chef::Environment"
+}
