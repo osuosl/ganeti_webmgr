@@ -11,6 +11,15 @@ tools to reduce complaints of "but it worked on my machine".
 |gwm| comes with a Vagrantfile and uses Chef to automate the deployment process
 within Vagrant.
 
+What you get
+~~~~~~~~~~~~
+
+If your using Vagrant to run |gwm| what you get is a symlink in the vagrant
+home directory of the project.  You also get a MySQL Database configured and
+ready to use with |gwm|. You also will get a Django superuser who's credentials
+by default are `admin` and `password` as the username and password respectively.
+This can be configured by overriding the Chef attributes in the `Vagrantfile`.
+
 Use
 ~~~
 
@@ -38,6 +47,21 @@ After it finishes and your back to your prompt, if you do not see any output aft
 Then you need to run the following command to have it reprovision the VM::
 
     vagrant provision
+
+Once Vagrant has finished running, and provisioning, your Virtual Machine will
+be running and ready for use. You can get to the VM by using the ``vagrant ssh``
+command to get to the VM. To run |gwm| you need to source your `virtualenv` and
+start the :ref:`test-server`::
+
+    source ~/venv/bin/activate
+    cd ~/ganeti_webmgr
+    python ganeti_webmgr/manage.py runserver 0.0.0.0:8000
+
+From there you can visit |gwm| at (by default) 33.33.33.10:8000 in your web browser.
+
+.. note:: The reason we runserver on 0.0.0.0 is because by default it runs on
+    127.0.0.1 which is only accessable from the VM.
+
 
 More details on vagrant can be found at http://docs.vagrantup.com/v2/
 

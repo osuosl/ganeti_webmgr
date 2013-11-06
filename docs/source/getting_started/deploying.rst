@@ -12,8 +12,8 @@ to deploy it to somewhere that can be accessed by a web browser.
 
 .. _test-server:
 
-Testing
--------
+Test Server
+-----------
 
 If you are just trying |gwm| out, run from your
 :ref:`virtual environment <virtual-environment>`::
