@@ -23,15 +23,30 @@ the appropriate package, and running it.
 To install the `vagrant-berkshelf`_ and `vagrant-omnibus`_ plugins run the following
 command in your terminal::
 
-    vagrant-plugin install vagrant-berkshelf
-    vagrant-plugin install vagrant-omnibus
+    vagrant plugin install vagrant-berkshelf
+    vagrant plugin install vagrant-omnibus
+
+Once you have the plugins installed you can use the following commands to start
+the Virtual Machine (this may take a while)::
+
+    vagrant up
+
+After it finishes and your back to your prompt, if you do not see any output after::
+
+    [default] Installing Chef 11.x.x Omnibus Package...
+
+Then you need to run the following command to have it reprovision the VM::
+
+    vagrant provision
+
+More details on vagrant can be found at http://docs.vagrantup.com/v2/
 
 Configuration
 ~~~~~~~~~~~~~
 
 Configuration of the deployment with Vagrant is done using `Chef`_.  For
 documentation on the available attributes for configuring the deployment visit
-the cookbook's github here: https://github.com/osuosl-cookbooks/ganeti_webmgr_cookbook
+the cookbook's github here: https://github.com/osuosl-cookbooks/ganeti_webmgr
 
 
 .. _Installing Vagrant:  http://docs.vagrantup.com/v2/installation/index.html
