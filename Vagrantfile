@@ -12,7 +12,7 @@ Vagrant.configure("2") do |config|
 
   config.berkshelf.berksfile_path = "chef/Berksfile"
   config.berkshelf.enabled = true
-  config.omnibus.chef_version = :latest
+  config.omnibus.chef_version = "11.6.2"
 
   # Symlink our project for development purposes
   config.vm.synced_folder ".", MOUNT_POINT
