@@ -75,7 +75,6 @@ Contributing
 
     dev/process 
 
-
 Project Information
 -------------------
 .. toctree::
