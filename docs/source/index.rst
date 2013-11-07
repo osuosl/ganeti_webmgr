@@ -61,7 +61,7 @@ Contributing
 .. toctree::
     :maxdepth: 1
 
-    project_info/issues
+    dev/issues
 
 .. toctree::
     :maxdepth: 2
