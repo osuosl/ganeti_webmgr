@@ -23,8 +23,10 @@ The vagrant-ganeti project comes with a 3 Ganeti nodes which can be used for
 testing deployment of VMs. You typically only need **1 node** unless your testing
 multi-node operations.
 
-To bring up the first node you can run by typing ``vagrant up node1``. The other
-nodes can be brought up the same way, just swap out `node1` with `node2` or `node3`.
+- Bring up the first node you can run by typing ``vagrant up node1``.
+
+- The other nodes can be brought up the same way, just swap out ``node1`` with
+  ``node2`` or ``node3``.
 
 You can also bring up every node by using just ``vagrant up``, however if you
 do not have much RAM or your already running memory intensive programs, this
@@ -34,7 +36,7 @@ should be avoided.
 Using with |gwm|
 ~~~~~~~~~~~~~~~~
 
-Once you have **node1** running, you can add it to |gwm| by using the `add
+Once you have ``node1`` running, you can add it to |gwm| by using the `add
 cluster` button on the cluster page.
 
 The hostname field should be filled in with will be the IP Address for the given
