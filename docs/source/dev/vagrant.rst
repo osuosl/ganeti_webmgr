@@ -14,11 +14,20 @@ within Vagrant.
 What you get
 ~~~~~~~~~~~~
 
-If your using Vagrant to run |gwm| what you get is a symlink in the vagrant
-home directory of the project.  You also get a MySQL Database configured and
-ready to use with |gwm|. You also will get a Django superuser who's credentials
-by default are `admin` and `password` as the username and password respectively.
-This can be configured by overriding the Chef attributes in the `Vagrantfile`.
+- In ``/home/vagrant/ganeti_webmgr`` you will have your project mounted.
+  All changes made to files in your project folder either in Vagrant, or on the
+  host will be seen on both systems.
+
+- You will have a Django Superuser created with the following credentials
+  (these can be changed in the ``Vagrantfile``):
+
+    **username**: admin
+
+    **password**: password
+
+- A MySQL Database and User pre-configured for |gwm|
+
+All of these values can be changed by overriding the Chef attributes in the ``Vagrantfile``.
 
 Use
 ~~~
