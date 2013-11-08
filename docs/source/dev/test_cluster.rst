@@ -16,6 +16,23 @@ repository, that must be cloned::
 Once you've cloned the repository you can refer to its  `README
 <https://github.com/osuosl/vagrant-ganeti>`_ for more details  on how to use it.
 
+Updating
+~~~~~~~~
+
+If you already have the repository, you should also always make sure your
+running the most up to date version of the code. There are two ways to do this::
+
+    git pull
+    git submodule update --init
+
+Or you can simply use the update script in the repo which does the previous
+two commands::
+
+    ./update
+
+Either way will work, but make sure that both the repository **and** the
+submodules are updated.
+
 Basic Usage
 ~~~~~~~~~~~
 
