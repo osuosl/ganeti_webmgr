@@ -38,7 +38,6 @@ User Guide
 .. toctree::
     :maxdepth: 1
 
-    usage/configuring
     usage/upgrading
     usage/clusters
     usage/virtualmachines
