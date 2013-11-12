@@ -156,7 +156,7 @@ To test new code in |gwm| it is often necessary to have a Ganeti cluster to mana
 
 - clone https://github.com/ramereth/vagrant-ganeti.git
 - add the following to your hosts file :
-  
+
 ::
 
     33.33.33.10 ganeti.example.org
@@ -165,7 +165,7 @@ To test new code in |gwm| it is often necessary to have a Ganeti cluster to mana
     33.33.33.13 node3.example.org
 
 - enter the vagrant-ganeti directory and type
-  
+
 ::
 
     vagrant up node1
@@ -196,6 +196,7 @@ Internationalization
 
 Ganeti Web Manager is designed to support translation to other languages using Django's i18n machinery. If you add text that will be displayed to the user, please remember to format it for translation:
 
+
 ::
 
     {% trans "this text will be displayed in the correct language" %}
@@ -206,7 +207,9 @@ Ganeti Web Manager is designed to support translation to other languages using D
         fit well in a single line
     {% endblocktrans %}
 
+
 `Django's i18n page`_  has more information about this.
+
 
 Fixing Bugs
 -----------
@@ -363,3 +366,4 @@ Translations should be submitted via patches, a pull request, or by attaching a 
 For details on how to write translation strings and how to make use of them, please see `Django's i18n page`_ 
 
 .. _`Django's i18n page`: https://docs.djangoproject.com/en/dev/topics/i18n/
+
