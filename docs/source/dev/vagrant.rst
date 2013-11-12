@@ -40,6 +40,7 @@ or greater and two vagrant plugins, `vagrant-berkshelf` and `vagrant-omnibus`.
 `Installing  Vagrant`_ is easy, you can install it to your system by downloading the appropriate package, and running it.
 
 To install the `vagrant-berkshelf`_ and `vagrant-omnibus`_ plugins run the following command in your terminal
+
 ::
 
     vagrant plugin install vagrant-berkshelf
