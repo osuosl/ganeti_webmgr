@@ -62,7 +62,6 @@ When working on new code, be sure to create a new branch from the appropriate pl
 -  **develop** - if this is a new feature
 -  **release/<version>** - if this is a bug fix on an existing release
 
-
 Code Standards
 --------------
 
@@ -84,7 +83,6 @@ JSON
 ''''
 
 If you need a JSON library, the import for this code base is "from django.utils import simplejson as json". See `#6579 <http://code.osuosl.org/issues/6579>`_ for more information.
-
 
 Dev Environment
 ---------------
@@ -116,7 +114,6 @@ Virtualenv and Pip
 ::  
 
     source /path/to/gwm/venv/bin/activate
-
 
 Note that the environment will only be active for the terminal in which this command is run. 
 
@@ -156,7 +153,7 @@ To test new code in |gwm| it is often necessary to have a Ganeti cluster to mana
 
 - clone https://github.com/ramereth/vagrant-ganeti.git
 - add the following to your hosts file :
-  
+
 ::
 
     33.33.33.10 ganeti.example.org
@@ -165,7 +162,7 @@ To test new code in |gwm| it is often necessary to have a Ganeti cluster to mana
     33.33.33.13 node3.example.org
 
 - enter the vagrant-ganeti directory and type
-  
+
 ::
 
     vagrant up node1
@@ -206,7 +203,9 @@ Ganeti Web Manager is designed to support translation to other languages using D
         fit well in a single line
     {% endblocktrans %}
 
+
 `Django's i18n page`_  has more information about this.
+
 
 Fixing Bugs
 -----------
@@ -362,4 +361,7 @@ Translations should be submitted via patches, a pull request, or by attaching a 
 
 For details on how to write translation strings and how to make use of them, please see `Django's i18n page`_ 
 
+
 .. _`Django's i18n page`: https://docs.djangoproject.com/en/dev/topics/i18n/
+
+
