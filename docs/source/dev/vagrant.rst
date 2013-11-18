@@ -66,7 +66,7 @@ start the :ref:`test-server`::
     cd ~/ganeti_webmgr
     python ganeti_webmgr/manage.py runserver 0.0.0.0:8000
 
-From there you can visit |gwm| at (by default) 33.33.33.10:8000 in your web browser.
+From there you can visit |gwm| at (by default) 33.33.33.100:8000 in your web browser.
 
 .. note:: The reason we runserver on 0.0.0.0 is because by default it runs on
     127.0.0.1 which is only accessable from the VM.

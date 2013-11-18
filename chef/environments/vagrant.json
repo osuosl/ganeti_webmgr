@@ -19,6 +19,12 @@
         "password": "vagrant",
         "host": "localhost",
         "port": 3306
+      },
+      "hostsfile": {
+        "33.33.33.10": "ganeti.example.org",
+        "33.33.33.11": "node1.example.org",
+        "33.33.33.12": "node2.example.org",
+        "33.33.33.13": "node3.example.org"
       }
     }
   },
