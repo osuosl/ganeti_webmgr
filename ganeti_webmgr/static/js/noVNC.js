@@ -23,12 +23,12 @@ $(function () {
     // loaded function will be reset after noVNC scripts are loaded.
     var old = document.write;
     document.write = function(str) {$(document).append(str)};
-    document.write('<script type="text/javascript" src="'+INCLUDE_URI+'vnc.js"><//script>');
+    document.write('<script type="text/javascript" src="'+INCLUDE_URI+'util.js"><//script>');
     document.write = old;
 
-    // XXX manually call __initialize().  This normally happens onload, but
-    // won't work for us since document may have been loaded already
-    if (!Websock_native) {WebSocket.__initialize();}
+    // Load supporting scripts
+    Util.load_scripts(["webutil.js", "base64.js", "websock.js", "des.js",
+                       "input.js", "display.js", "jsunzip.js", "rfb.js"]);
 
     var rfb;
     var host, port, password; // VNC proxy connection settings
