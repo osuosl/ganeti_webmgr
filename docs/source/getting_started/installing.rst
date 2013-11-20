@@ -93,7 +93,7 @@ Next Steps
 ----------
 
 Congratulations!  |gwm| is now installed and initialized.  Next, you'll want
-to look into :ref:`configuring` and :ref:`deploying`, if you are going
+to look into :ref:`configuring` and :ref:`deployment`, if you are going
 to be setting up a production instance.  Otherwise, if you just want to
 play around with |gwm|, or are :ref:`developing <development>`, take a look at
-:ref:`test-server`.
+:ref:`development-server`.

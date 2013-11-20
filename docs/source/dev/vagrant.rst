@@ -3,7 +3,7 @@
 Vagrant
 --------
 
-`Vagrant <http://www.vagrantup.com/>`_ is a tool to help automate the creation
+`Vagrant <http://www.vagrantup.com/>`__ is a tool to help automate the creation
 and deployment of virtual machines for development purposes. It reduces the
 amount of effort to make sure multiple developers are using the same set of
 tools to reduce complaints of "but it worked on my machine".
@@ -60,7 +60,7 @@ Then you need to run the following command to have it reprovision the VM::
 Once Vagrant has finished running, and provisioning, your Virtual Machine will
 be running and ready for use. You can get to the VM by using the ``vagrant ssh``
 command to get to the VM. To run |gwm| you need to source your `virtualenv` and
-start the :ref:`test-server`::
+start the :ref:`development-server`::
 
     source ~/venv/bin/activate
     cd ~/ganeti_webmgr
