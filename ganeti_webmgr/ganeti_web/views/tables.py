@@ -60,7 +60,7 @@ class BaseVMTable(BaseTable):
 
     def render_owner(self, value):
         url = value.get_absolute_url()
-        url_str = '<a href="{}">{}</a>'
+        url_str = '<a href="{0}">{1}</a>'
         return mark_safe(url_str.format(url, value))
 
 
