@@ -51,7 +51,6 @@ django
 ganeti_web_layout
 object_log
 object_permissions
-noVNC
 haystack
 twisted_vncauthproxy
 
