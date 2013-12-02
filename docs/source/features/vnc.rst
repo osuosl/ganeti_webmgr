@@ -45,6 +45,9 @@ If the host is localhost then the proxy will only be accessible to
 clients and browsers on the same machine as the proxy. Production
 servers should use a public hostname or IP.
 
+.. note:: If using :ref:`vagrant`, you will need to add the VM's FQDN and IP address
+          to your ``/etc/hosts`` file.
+
 ::
 
     # located in your settings file
