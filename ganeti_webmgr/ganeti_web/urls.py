@@ -153,6 +153,7 @@ urlpatterns += patterns(
 
     url(r'^search/detail_lookup', 'detail_lookup', name='search-detail-lookup')
 )
+
 urlpatterns += patterns(
     'ganeti_web.views.user_search',
 
@@ -173,23 +174,3 @@ urlpatterns += patterns(
     (r'^', include('muddle.urls')),
 )
 
-
-
-
-# XXX: since Django 1.3 you don't actually have to include static urls here.
-#      Everything is being served by Django development server.
-
-# -----------------------------------------------------------------------------
-# The following is used to serve up local static files like images
-# root = '%s/static' % os.path.dirname(os.path.realpath(__file__))
-# urlpatterns += patterns(
-#     '',
-#     (r'^site_media/(?P<path>.*)$', 'django.views.static.serve',
-#      {'document_root': settings.STATIC_ROOT, "show_indexes": True}),
-#     (r'^favicon.ico', 'django.views.static.serve',
-#     {'document_root':  settings.STATIC_ROOT, 'path': 'favicon.ico'}),
-
-#     noVNC files
-#     (r'^novnc/(?P<path>.*)', 'django.views.static.serve',
-#     {'document_root':  '%s/noVNC/include' % settings.DOC_ROOT}),
-# )

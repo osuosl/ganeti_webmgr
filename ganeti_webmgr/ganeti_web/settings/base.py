@@ -243,6 +243,7 @@ STATICFILES_FINDERS = (
 
 STATICFILES_DIRS = (
     app_root('static'),
+    ("novnc", root('noVNC', 'include')),
 )
 
 STATIC_ROOT = root("collected_static")
