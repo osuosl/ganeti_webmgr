@@ -1,9 +1,9 @@
 .. _vagrant:
 
 Vagrant
---------
+-------
 
-`Vagrant <http://www.vagrantup.com/>`_ is a tool to help automate the creation
+`Vagrant <http://www.vagrantup.com/>`__ is a tool to help automate the creation
 and deployment of virtual machines for development purposes. It reduces the
 amount of effort to make sure multiple developers are using the same set of
 tools to reduce complaints of "but it worked on my machine".

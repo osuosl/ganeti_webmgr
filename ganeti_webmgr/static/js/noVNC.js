@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2010 Oregon State University et al.
- * 
+ *
  * Javascript for custom noVNC interface.
  */
 

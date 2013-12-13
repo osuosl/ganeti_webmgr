@@ -175,6 +175,3 @@ SECRET_KEY = load_secret(env='GWM_SECRET_KEY', file=SECRET_KEY_LOC)
 # WEB_MGR_API_KEY = "random_string_of_numbers_and_letters"
 WEB_MGR_API_KEY = load_secret(env='GWM_API_KEY', file=GWM_API_KEY_LOC)
 
-STATICFILES_DIRS += (
-    root('noVNC', 'include'),
-)

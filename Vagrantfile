@@ -4,7 +4,7 @@
 MOUNT_POINT = '/home/vagrant/ganeti_webmgr'
 
 Vagrant.configure("2") do |config|
-  config.vm.hostname = "gwm"
+  config.vm.hostname = "gwm.example.org"
   config.vm.box = "Berkshelf-CentOS-6.3-x86_64-minimal"
   config.vm.box_url = "https://dl.dropbox.com/u/31081437/Berkshelf-CentOS-6.3-x86_64-minimal.box"
 

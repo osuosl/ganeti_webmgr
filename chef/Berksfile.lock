@@ -1,9 +1,7 @@
 {
   "sources": {
     "ganeti_webmgr": {
-      "locked_version": "0.2.1",
-      "git": "git://github.com/osuosl-cookbooks/ganeti_webmgr.git",
-      "ref": "6c1baca29c524a77ac6772d96cc0af263b59377a"
+      "path": "../../cookbooks/ganeti_webmgr"
     },
     "python": {
       "locked_version": "1.3.6"
