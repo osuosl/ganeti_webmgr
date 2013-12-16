@@ -93,6 +93,7 @@ Development
 
     dev/installation
     dev/vagrant
+    dev/test_cluster
     dev/schedule
     dev/process
     dev/issues
