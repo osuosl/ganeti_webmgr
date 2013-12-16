@@ -95,31 +95,23 @@ Initializing
 
 #. Initialize Database:
 
-   MySQL/SQLite:
-
-   ::
+  **Existing** Database::
 
        # Create new tables and migrate all apps using southdb
        ./manage.py syncdb --migrate
 
-   Postgres:
-
-   .. Note:: This assumes your doing a fresh install of |gwm| on a new Postgres database.
-
-   ::
+  **New** Database::
 
        ./manage.py syncdb --all
        ./manage.py migrate --fake
 
-#. Build the search indexes
+#. Build the search indexes::
 
-   ::
+    ./manage.py rebuild_index
 
-       ./manage.py rebuild_index
-
-   .. Note:: Running **./manage.py update\_index** on a regular basis
-             ensures that the search indexes stay up-to-date when models change in
-             Ganeti Web Manager.
+  .. Note:: Running **./manage.py update\_index** on a regular basis
+            ensures that the search indexes stay up-to-date when models change in
+            Ganeti Web Manager.
 
 Next Steps
 ----------
