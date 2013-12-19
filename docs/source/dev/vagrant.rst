@@ -60,7 +60,7 @@ Then you need to run the following command to have it reprovision the VM::
 Once Vagrant has finished running, and provisioning, your Virtual Machine will
 be running and ready for use. You can get to the VM by using the ``vagrant ssh``
 command to get to the VM. To run |gwm| you need to source your `virtualenv` and
-start the :ref:`test-server`::
+start the :ref:`development-server`::
 
     source ~/venv/bin/activate
     cd ~/ganeti_webmgr
