@@ -9,7 +9,7 @@ clusters. Since Ganeti only provides a command-line interface, |gwm|'s
 goal is to provide a user friendly interface to Ganeti by being feature
 complete with Ganeti's :ref:`RAPI <rapi>`. On top of Ganeti it
 provides a permission system for managing access to clusters and virtual
-machines and an in browser VNC console.
+machines and in-browser graphical and serial console access.
 
 If you don't already have a Ganeti cluster setup, these directions_ can
 help you get started. If you are looking for support, please contact us
@@ -49,7 +49,7 @@ Features
 
     features/permissions
     features/objectlog
-    features/vnc
+    features/console
     features/sshkeys
     features/ldap
     features/templates

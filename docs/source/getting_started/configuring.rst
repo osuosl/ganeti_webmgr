@@ -239,14 +239,14 @@ web server.  If your using Apache this will be either ``apache``, or
   Path to the directory that stores Whoosh index files.  You should use
   absolute path.
 
-VNC
----
+Console Proxy
+-------------
 
-Set **VNC\_PROXY** to the hostname of your VNC AuthProxy server.  The VNC AuthProxy does not need to run on the same server as |gwm|.
+Set **CONSOLE\_PROXY** to the hostname of your console proxy server.  The console proxy does not need to run on the same server as |gwm|.
 
 ::
 
-  VNC_PROXY = 'my.server.org:8888'
+  CONSOLE_PROXY = 'my.server.org:8888'
 
 
 Other settings

@@ -21,7 +21,7 @@ Ganeti Web Manager is compatible with the following:
 
   Other contemporary browsers may also work, but are not supported.
 
-  The web-based VNC console requires browser support of WebSockets and
+  The web-based console requires browser support of WebSockets and
   HTML5.
 
 
