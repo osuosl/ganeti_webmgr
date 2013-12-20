@@ -160,16 +160,22 @@
             <tr><th>{% trans "Default hypervisor" %}</th>
                 <td>{{ info.default_hypervisor|hv }}</td>
             </tr>
-            <tr><th>{% trans "Available hypervisors" %}</th>
+            <tr>
+                <th>{% trans "Available hypervisors" %}</th>
                 <td>{{ info.enabled_hypervisors|hvs|join:", " }}</td>
             </tr>
-            <tr><th>{% trans "Master node" %}</th><td>
-            {% if info.master %}
-                <a href="{% url node-detail cluster.slug info.master %}">{{ info.master }}</a>
-            {% else %}
-                <em>{% trans "unknown" %}</em>
-            </td></tr>
-            {% endif %}
+            <tr>
+                <th>{% trans "Master node" %}</th>
+                <td>
+                {% if master_node.exists %}
+                    <a href="{% url node-detail cluster.slug master_node.hostname %}">{{ master_node.hostname }}</a>
+                {% elif master_node.hostname %}
+                    {{ master_node.hostname }}
+                {% else %}
+                    <em>{% trans "unknown" %}</em>
+                {% endif %}
+                </td>
+            </tr>
             <tr><th>{% trans "Created" %}</th><td>
             {% if cluster.ctime %}
                 {{ cluster.ctime|date }}
