@@ -81,8 +81,15 @@ class ClusterDetailView(LoginRequiredMixin, DetailView):
         show_vms = admin or user.get_objects_any_perms(
             VirtualMachine, perms=['admin']).filter(cluster=cluster)
 
+        master_node = {"exists": False}
+        master_node['hostname'] = cluster.info.get("master", None)
+        if master_node['hostname']:
+            master_node['exists'] = cluster.nodes.filter(
+                hostname=master_node['hostname']).exists()
+
         return {
             "cluster": cluster,
+            "master_node": master_node,
             "admin": admin,
             "readonly": not admin,
             "show_vms": show_vms
