@@ -291,6 +291,24 @@ def vnc_proxy(request, cluster_slug, instance):
 
 @require_POST
 @login_required
+def ssh_proxy(request, cluster_slug, instance):
+    vm = get_object_or_404(VirtualMachine, hostname=instance,
+                           cluster__slug=cluster_slug)
+    user = request.user
+    if not (user.is_superuser
+            or user.has_any_perms(vm, ['admin', 'power'])
+            or user.has_perm('admin', vm.cluster)):
+        return HttpResponseForbidden(_('You do not have permission '
+                                       'to connect to this console'))
+
+    use_tls = bool(request.POST.get("tls"))
+    result = json.dumps(vm.setup_ssh_forwarding())
+
+    return HttpResponse(result, mimetype="application/json")
+
+
+@require_POST
+@login_required
 def shutdown(request, cluster_slug, instance):
     vm = get_object_or_404(VirtualMachine, hostname=instance,
                            cluster__slug=cluster_slug)

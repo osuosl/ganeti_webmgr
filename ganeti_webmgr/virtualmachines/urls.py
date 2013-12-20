@@ -35,6 +35,9 @@ urlpatterns = patterns(
     url(r'^%s/vnc_proxy/?$' % vm_prefix, 'vnc_proxy',
         name="instance-vnc-proxy"),
 
+    url(r'^%s/ssh_proxy/?$' % vm_prefix, 'ssh_proxy',
+        name="instance-ssh-proxy"),
+
     url(r'^%s/shutdown/?$' % vm_prefix, 'shutdown', name="instance-shutdown"),
 
     url(r'^%s/shutdown-now/?$' % vm_prefix, 'shutdown_now',
