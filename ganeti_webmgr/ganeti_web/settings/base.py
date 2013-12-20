@@ -343,5 +343,5 @@ LOCALE_PATHS = (
 #    minutes.
 LAZY_CACHE_REFRESH = 600000
 # Other GWM Stuff
-VNC_PROXY = 'localhost:8888'
+CONSOLE_PROXY = 'localhost:8888'
 RAPI_CONNECT_TIMEOUT = 3

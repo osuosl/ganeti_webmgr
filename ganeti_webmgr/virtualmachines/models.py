@@ -11,7 +11,7 @@ from utils.client import REPLACE_DISK_AUTO
 from utils.fields import LowerCaseCharField
 from vm_templates.models import VirtualMachineTemplate
 
-if settings.VNC_PROXY:
+if settings.CONSOLE_PROXY:
     from utils.vncdaemon.vapclient import request_forwarding, request_ssh
 
 
@@ -293,8 +293,8 @@ class VirtualMachine(CachedClusterObject):
 
         command = self.rapi.GetInstanceConsole(self.hostname)["command"]
 
-        if settings.VNC_PROXY:
-            proxy_server = settings.VNC_PROXY.split(":")
+        if settings.CONSOLE_PROXY:
+            proxy_server = settings.CONSOLE_PROXY.split(":")
             password = generate_random_password()
             sport = request_ssh(proxy_server, sport, self.info["pnode"],
                                 self.info["network_port"], password, command)
@@ -316,8 +316,8 @@ class VirtualMachine(CachedClusterObject):
         node = info_['pnode']
 
         # use proxy for VNC connection
-        if settings.VNC_PROXY:
-            proxy_server = settings.VNC_PROXY.split(":")
+        if settings.CONSOLE_PROXY:
+            proxy_server = settings.CONSOLE_PROXY.split(":")
             password = generate_random_password()
             result = request_forwarding(proxy_server, node, port, password,
                                         sport=sport, tls=tls)

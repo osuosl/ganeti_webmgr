@@ -135,8 +135,8 @@ ALLOW_OPEN_REGISTRATION = True
 #    minutes.
 LAZY_CACHE_REFRESH = 600000
 
-# VNC Proxy. This will use a proxy to create local ports that are forwarded to
-# the virtual machines.  It allows you to control access to the VNC servers.
+# Console Proxy. This will use a proxy to create local ports that are forwarded
+# to the virtual machines.  It allows you to control access to the consoles.
 #
 # Expected values:
 #   String syntax: "HOST:CONTROL_PORT", for example: "localhost:8888". If
