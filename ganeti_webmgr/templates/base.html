@@ -46,6 +46,15 @@
             <div id="content_column">
                 {% block navigation %}{% endblock %}
                 <div id="content">
+                    {% block messages %}
+                    <ul id="messages">
+                        {% if messages %}
+                            {% for message in messages %}
+                                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{% trans "Error" %}: {{ message|safe }}</li>
+                            {% endfor %}
+                        {% endif %}
+                    </ul>
+                    {% endblock %}
                     {% block content %}{% endblock %}
                 </div>
                 <div class="floatfix"></div>
