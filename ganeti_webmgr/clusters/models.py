@@ -173,7 +173,7 @@ class CachedClusterObject(models.Model):
                 self.error = msg
             else:
                 msg = str(e)
-                self.error = str(e)
+                self.error = msg
             GanetiError.store_error(msg, obj=self, code=e.code)
 
         else:

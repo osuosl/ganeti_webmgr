@@ -18,6 +18,7 @@
 
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
@@ -274,10 +275,14 @@ def refresh(request, cluster_slug):
     """
 
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
-    cluster.refresh()
-    cluster.sync_nodes(remove=True)
-    cluster.sync_virtual_machines(remove=True)
-
+    try:
+        cluster.refresh()
+        cluster.sync_nodes(remove=True)
+        cluster.sync_virtual_machines(remove=True)
+    except GanetiApiError as e:
+        msg = str(e)
+        msg = "<p>%s</p>" % msg
+        messages.error(request, msg)
     url = reverse('cluster-detail', args=[cluster.slug])
     return redirect(url)
 
