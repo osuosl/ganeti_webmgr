@@ -3,15 +3,31 @@
     #actions {margin-bottom:30px;}
 </style>
 <script type="text/javascript">
-    // Set include path for noVNC scripts
-    var INCLUDE_URI = "{{STATIC_URL}}/novnc/";
+    // Set include path for jsTerm scripts
+    var INCLUDE_URI = "{{STATIC_URL}}/jsterm/";
     // Set path for proxy requests
-    var PROXY_REQUEST_URI = "{% url instance-vnc-proxy cluster_slug instance.hostname %}";
+    var PROXY_REQUEST_URI = "{% url instance-ssh-proxy cluster_slug instance.hostname %}";
     {% if not popout %}
-    var POPOUT_URL = "{% url instance-vnc-popout cluster_slug instance.hostname %}";
+    // var POPOUT_URL = "{% url instance-ssh-popout cluster_slug instance.hostname %}";
     {% endif %}
 </script>
-<script type="text/javascript" src="{{STATIC_URL}}/js/noVNC.js"></script>
+  <script src='{{STATIC_URL}}/jsterm/src/Term.js'></script>
+  <script src='{{STATIC_URL}}/jsterm/src/parser/Keyboard.js'></script>
+  <script src='{{STATIC_URL}}/jsterm/src/parser/CharacterCodes.js'></script>
+  <script src='{{STATIC_URL}}/jsterm/src/parser/SixteenColors.js'></script>
+  <script src='{{STATIC_URL}}/jsterm/src/parser/ByteArray.js'></script>
+  <script src='{{STATIC_URL}}/jsterm/src/parser/EscapeSequencer.js'></script>
+  <script src='{{STATIC_URL}}/jsterm/src/parser/AnsiParser.js'></script>
+  <script src='{{STATIC_URL}}/jsterm/src/parser/NVTCodes.js'></script>
+  <script src='{{STATIC_URL}}/jsterm/src/parser/Telnet.js'></script>
+  <script src='{{STATIC_URL}}/jsterm/src/viewer/Point.js'></script>
+  <script src='{{STATIC_URL}}/jsterm/src/viewer/Font.js'></script>
+  <script src='{{STATIC_URL}}/jsterm/src/viewer/Cursor.js'></script>
+  <script src='{{STATIC_URL}}/jsterm/src/viewer/AnsiViewer.js'></script>
+  <script src='{{STATIC_URL}}/jsterm/src/telnet/Socket.js'></script>
+  <script src='{{STATIC_URL}}/jsterm/src/telnet/Session.js'></script>
+
+<script type="text/javascript" src="{{STATIC_URL}}/js/jsTerm.js"></script>
 
 <ul id="actions" class="horizontal">
     <li><a id="encrypt" href="#" title="encrypt" class="button encrypt">{% trans "Encrypt" %}</a></li>
@@ -32,7 +48,7 @@
 
 <div id="VNC_screen">
     <div id="VNC_status_bar" class="VNC_status_bar">
-        noVNC client
+        jsTerm client
     </div>
     <canvas id="VNC_canvas">
         {% blocktrans %}Canvas is not supported in your browser. Please use new versions
