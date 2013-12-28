@@ -292,12 +292,16 @@ class VirtualMachine(CachedClusterObject):
         """
 
         command = self.rapi.GetInstanceConsole(self.hostname)["command"]
+        password = ''
+        info_ = self.info
+        port = info_['network_port']
+        node = info_['pnode']
 
         if settings.CONSOLE_PROXY:
             proxy_server = settings.CONSOLE_PROXY.split(":")
             password = generate_random_password()
-            sport = request_ssh(proxy_server, sport, self.info["pnode"],
-                                self.info["network_port"], password, command)
+            sport = request_ssh(proxy_server, sport, node, port,
+                                password, command)
 
             if sport:
                 return proxy_server[0], sport, password

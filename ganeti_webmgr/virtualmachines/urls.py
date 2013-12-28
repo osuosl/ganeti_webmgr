@@ -28,9 +28,15 @@ urlpatterns = patterns(
 
     url(r'^%s/vnc/?$' % vm_prefix, 'novnc', name="instance-vnc"),
 
+    url(r'^%s/ssh/?$' % vm_prefix, 'jsterm', name="instance-ssh"),
+
     url(r'^%s/vnc/popout/?$' % vm_prefix, 'novnc',
         {'template': 'ganeti/virtual_machine/vnc_popout.html'},
         name="instance-vnc-popout"),
+
+    url(r'^%s/ssh/popout/?$' % vm_prefix, 'jsterm',
+        {'template': 'ganeti/virtual_machine/ssh_popout.html'},
+        name="instance-ssh-popout"),
 
     url(r'^%s/vnc_proxy/?$' % vm_prefix, 'vnc_proxy',
         name="instance-vnc-proxy"),

@@ -271,6 +271,27 @@ def novnc(request,
                               context_instance=RequestContext(request), )
 
 
+@login_required
+def jsterm(request,
+          cluster_slug,
+          instance,
+          template="ganeti/virtual_machine/jsterm.html"):
+    vm = get_object_or_404(VirtualMachine, hostname=instance,
+                           cluster__slug=cluster_slug)
+    user = request.user
+    if not (user.is_superuser
+            or user.has_any_perms(vm, ['admin', 'power'])
+            or user.has_perm('admin', vm.cluster)):
+        return HttpResponseForbidden(_('You do not have permission '
+                                       'to vnc on this'))
+
+    return render_to_response(template,
+                              {'cluster_slug': cluster_slug,
+                               'instance': vm,
+                               },
+                              context_instance=RequestContext(request), )
+
+
 @require_POST
 @login_required
 def vnc_proxy(request, cluster_slug, instance):
