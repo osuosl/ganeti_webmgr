@@ -40,7 +40,7 @@ For installation instructions please refer to our installation_ documentation.
 Compatibility
 =============
 
-For a list of versions, and browsers supported by |gwm| check our compatibility_ documentation.
+For a list of versions and browsers supported by |gwm| check our compatibility_ documentation.
 
 
 Dependencies
