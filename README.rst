@@ -12,7 +12,7 @@ Our documentation is written in ReStructuredText and built using Sphinx. First
 you will need to install the dependencies to a virtualenv or to your system's
 python installation::
 
-  pip install -r requirements/dev.txt
+  pip install -r requirements/docs.txt
 
 Then you will need to run the following commands to build the documentation::
 
