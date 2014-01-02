@@ -5,6 +5,24 @@ Ganeti Web Manager
 Ganeti Web Manager is a Django-based web application that allows administrators
 and clients access to their ganeti clusters.
 
+Building the Documentation
+==========================
+
+Our documentation is written in ReStructuredText and built using Sphinx. First
+you will need to install the dependencies to a virtualenv or to your system's
+python installation::
+
+  pip install -r requirements/dev.txt
+
+Then you will need to run the following commands to build the documentation::
+
+  cd docs/
+  make html
+
+The documentation will be located at ``docs/build/html/`` as html files.
+If you open ``index.html`` with your web browser, it will take you to the
+table of contents.
+
 
 Installation
 ------------
