@@ -72,7 +72,7 @@ def request_forwarding(server, daddr, dport, password, sport=None, tls=False):
         return False
 
 
-def request_ssh(proxy, sport, daddr, dport, password, command):
+def request_ssh(proxy, sport, daddr, dport, password, user, command):
     """
     Ask TVAP/VNCAP for an SSH port.
     """
@@ -82,12 +82,16 @@ def request_ssh(proxy, sport, daddr, dport, password, command):
     dport = int(dport)
     if not password or not command:
         return False
+    command = ' '.join(command)
 
     request = {
         "daddr": daddr,
         "dport": dport,
         "password": password,
+        "user": user,
         "command": command,
+        "ws": True,
+        "tls": False,
     }
 
     if sport:

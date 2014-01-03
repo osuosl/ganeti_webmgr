@@ -291,17 +291,24 @@ class VirtualMachine(CachedClusterObject):
         contacting the proxy.
         """
 
-        command = self.rapi.GetInstanceConsole(self.hostname)["command"]
+        rapi = self.rapi.GetInstanceConsole(self.hostname)
+        # Return None if rapi["kind"] is not of type constants.CONS_SSH.
+        daddr = rapi["host"]
+        # As of Ganeti 2.4-2.6.0, port not sent by RAPI.
+        try:
+            dport = rapi["port"]
+        except KeyError:
+            dport = 22
+        user = rapi["user"]
+        # Password is initially null.
         password = ''
-        info_ = self.info
-        port = info_['network_port']
-        node = info_['pnode']
+        command = rapi["command"]
 
         if settings.CONSOLE_PROXY:
             proxy_server = settings.CONSOLE_PROXY.split(":")
             password = generate_random_password()
-            sport = request_ssh(proxy_server, sport, node, port,
-                                password, command)
+            sport = request_ssh(proxy_server, sport, daddr, dport,
+                                password, user, command)
 
             if sport:
                 return proxy_server[0], sport, password
