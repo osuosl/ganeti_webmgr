@@ -1,0 +1,24 @@
+{% extends "ganeti/forms/vm_wizard_base.html" %}
+
+{% block form_content %}
+  <table>
+    {{ wizard.form.non_field_errors }}
+
+    {% for hidden in wizard.forms.invisible_fields %}
+      {{ hidden }}
+    {% endfor %}
+
+    {% for field in wizard.form.visible_fields %}
+    <tr>
+      <th>{{ field.label_tag }}</th>
+      <td>{{ field.errors }} {{ field }}</td>
+    </tr>
+    {% endfor %}
+    <tr >
+      <td></td>
+      <td id="step_controls">
+        {% include "ganeti/forms/step_controls.html" %}
+      </td>
+    </tr>
+  </table>
+{% endblock form_content %}

@@ -1,8 +1,7 @@
-.help_tip {
+div[id^="help-"] {
     background-color:#eee;
     border:1px solid #888;
     border-radius:5px;
-    display:none;
     float:left;
     margin:20px 0 0 0;
     width:390px;
@@ -11,7 +10,7 @@
     -webkit-border-radius:5px;
 }
 
-.help_tip h3 {
+div[id^="help-"] h3 {
     background-color:#c2e192;
     border-bottom:1px solid #888;
     color:#444;
@@ -27,4 +26,3 @@
 #help div p {margin: 0 0 10px 0;}
 #help div ul {margin:10px 0 10px 30px;}
 #help div li {list-style:disc; }
-#help-contents {display:none}

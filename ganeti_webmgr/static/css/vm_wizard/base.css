@@ -7,3 +7,15 @@
 .multi {
   display: inline-block;
 }
+
+button.edit_step {
+     background:none!important;
+     border:none;
+     padding:0!important;
+     cursor: pointer;
+     font-weight: bold;
+}
+
+button.edit_step:hover{
+     text-decoration:underline;
+}
