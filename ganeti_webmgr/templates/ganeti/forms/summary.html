@@ -7,44 +7,91 @@
 Summary
 {% endblock header %}
 
+
 {% block form_content %}
+
 <div id="summary">
 
 <table>
   {% with owner=summary.owner_form advanced=summary.advanced_form basics=summary.basics_form hv=summary.hv_form %}
 
   <tbody>
-    <tr><th colspan="2">{% trans "General" %}</th></tr>
+
+    <!-- Step 1 -->
+
+    <tr><th colspan="2">
+            <button class="edit_step" name="wizard_goto_step" type="submit" value="0">{% trans "Step 1 (Edit)" %}</button>
+    </th></tr>
+
     <tr>
-      {% if owner.hostname %}
-      <td>{% trans "Hostname" %}</td>
-      <td>{{ owner.hostname }}</td>
-      {% endif %}
+	<td>{% trans "Cluster" %}:</td>
+	<td>{{ summary.cluster_form.cluster }}</td>
     </tr>
     <tr>
-      {% if owner.template_name %}
+	<td>{% trans "Template or VM:" %}</td>
+		{% if owner.hostname and owner.template_name %}
+                    <td>{% trans "Both" %}</td>
+		{% elif owner.hostname %}
+			<td>{% trans "Virtual Machine" %}</td>
+		{% else %}
+			<td>{% trans "Template" %}</td>
+		{% endif %}
+    </tr>
+    <tr><td><!-- spacer row for readability --></td></tr>
+
+    <!-- Step 2 -->
+
+     <tr><th colspan="2">
+            <button class="edit_step" name="wizard_goto_step" type="submit" value="1">{% trans "Step 2 (Edit)" %}</button>
+    </th></tr>
+
+    <tr>
+	<td>{% trans "Owner" %}:</td>
+	<td>{{ summary.owner_form.owner }}</td>
+    </tr>
+
+    {% if owner.template_name %}
+    <tr>
       <td>{% trans "Template Name" %}</td>
       <td>{{ owner.template_name }}</td>
-      {% endif %}
     </tr>
+    {% endif %}
+    {% if owner.hostname %}
     <tr>
-      <td>{% trans "Primary Node" %}</td>
-      <td>{{ advanced.pnode }}</td>
+      <td>{% trans "Host Name" %}</td>
+      <td>{{ owner.hostname }}</td>
     </tr>
-    <tr>
-      <td>{% trans "Serial Console" %}</td>
-      <td>{{ hv.serial_console }}</td>
-    </tr>
-    <tr>
-      <td>{% trans "Check Hostname" %}</td>
-      <td>{{ advanced.name_check }}</td>
-    </tr>
-    <tr>
-      <td>{% trans "Check IP" %}</td>
-      <td>{{ advanced.ip_check }}</td>
-    </tr>
-    <tr><th colspan="2">Resources</th></tr>
+    {% endif %}
+    <tr><td><!-- spacer row for readability --></td></tr>
 
+    <!-- Step 3 -->
+
+    <tr><th colspan="2">
+            <button class="edit_step" name="wizard_goto_step" type="submit" value="2">{% trans "Step 3 (Edit)" %}</button>
+    </th></tr>
+
+    <tr>
+      <td>{% trans "Hypervisor" %}</td>
+      <td>{{ basics.hv }}</td>
+    </tr>
+    <tr>
+      <td>{% trans "Operating System" %}</td>
+    <td>{% if not basics.no_install  %}
+      {{ basics.os }}
+        {% else %}
+        Don't install
+
+    {% endif %} </td></tr>
+    <tr>
+        <td>Automatic Allocation</td>
+        <td>
+        {% if basics.iallocator %}
+            <img src="/static/images/icons/check.png" />
+	{% else %}
+		<img src="/static/images/icons/cross.png" />
+	{% endif %}
+        </td>
+    </tr>
     <tr>
       <td>{% trans "Virtual CPU Count" %}</td>
       <td>{{ basics.vcpus }}</td>
@@ -53,8 +100,7 @@ Summary
       <td>{% trans "Memory (RAM)" %}</td>
       <td>{{ basics.memory|render_storage }}</td>
     </tr>
-
-    <!-- Disks -->
+	<!-- Disks -->
     <tr>
       <td>{% trans "Disk Template" %}</td>
       <td>{{ basics.disk_template }}</td>
@@ -70,48 +116,99 @@ Summary
       </tr>
     {% endfor %}
 
-    <!-- NICs -->
-    <tr>
-      <td>{% trans "NIC Type" %}</td>
-      <td>{{ hv.nic_type }}</td>
-    </tr>
+    <tr><td><!-- spacer row for readability --></td></tr>
 
-    <!-- CD drive -->
-    <tr>
-      <td>{% trans "CDROM Disk Type" %}</td>
-      <td>{{ hv.cdrom_disk_type|default:"Not Set" }}</td>
-    </tr>
-    <tr>
-      <td>{% trans "CDROM Image Path" %}</td>
-      <td>{{ hv.cdrom_image_path|default:"Not Set" }}</td>
-    </tr>
-    <tr>
-      <td>{% trans "CDROM2 Image Path" %}</td>
-      <td>{{ hv.cdrom2_image_path|default:"Not Set" }}</td>
-    </tr>
+    <!-- Step 4 -->
 
-    <!-- HV stuff -->
-    <tr><th colspan="2">{% trans "Hypervisor Parameters" %}</th></tr>
+    <tr><th colspan="2">
+            <button class="edit_step" name="wizard_goto_step" type="submit" value="3">{% trans "Step 4 (Edit)" %}</button>
+    </th></tr>
+
     <tr>
-      <td>{% trans "Hypervisor" %}</td>
-      <td>{{ basics.hv }}</td>
+      <td>{% trans "Check IP" %}?</td>
+      <td>
+          {% if advanced.ip_check %}
+            <img src="/static/images/icons/check.png" />
+		{% else %}
+			<img src="/static/images/icons/cross.png" />
+		{% endif %}
+      </td>
     </tr>
     <tr>
-      <td>{% trans "Operating System" %}</td>
-      <td>{{ basics.os }}</td>
+      <td>{% trans "Check Hostname" %}?</td>
+      <td>
+        {% if advanced.name_check %}
+            <img src="/static/images/icons/check.png" />
+		{% else %}
+			<img src="/static/images/icons/cross.png" />
+		{% endif %}
+	  </td>
+    </tr>
+    <tr>
+      <td>{% trans "Boot VM" %}?</td>
+      <td>
+      {% if advanced.no_start %}
+                <img src="/static/images/icons/cross.png" />
+      {% else %}
+		<img src="/static/images/icons/check.png" />
+      {% endif %}
+      </td>
+    </tr>
+    <tr><td><!-- spacer row for readability --></td></tr>
+
+    <!-- Step 5 -->
+     <tr><th colspan="2">
+            <button class="edit_step" name="wizard_goto_step" type="submit" value="4">{% trans "Step 5 (Edit)" %}</button>
+    </th></tr>
+
+    <tr>
+      <td>{% trans "Kernel Path" %}</td>
+      <td>{{ hv.kernel_path|default:"Not Set" }}</td>
     </tr>
     <tr>
       <td>{% trans "Root Path" %}</td>
       <td>{{ hv.root_path|default:"Not Set" }}</td>
     </tr>
     <tr>
-      <td>{% trans "Kernel Path" %}</td>
-      <td>{{ hv.kernel_path|default:"Not Set" }}</td>
-    </tr>
+	<td>{% trans "Enable Serial Console" %}?</td>
+	<td>
+	{% if hv.serial_console %}
+	<img src="/static/images/icons/check.png" />
+		{% else %}
+			<img src="/static/images/icons/cross.png" />
+		{% endif %}
+		</td>
+	</tr>
     <tr>
-      <td>{% trans "Boot Order" %}</td>
+      <td>{% trans "Boot Device" %}</td>
       <td>{{ hv.boot_order|default:"Not Set" }}</td>
     </tr>
+    <!-- CD drive -->
+	{% if hv.cdrom_image_path %}
+	<tr>
+      <td>{% trans "CDROM Image Path" %}</td>
+      <td>{{ hv.cdrom_image_path }}</td>
+    </tr>
+    {% endif %}
+    {% if hv.cdrom2_image_path %}
+    <tr>
+      <td>{% trans "CDROM2 Image Path" %}</td>
+      <td>{{ hv.cdrom2_image_path }}</td>
+    </tr>
+    {% endif %}
+	{% if hv.cdrom_disk_type %}
+    <tr>
+      <td>{% trans "CDROM Disk Type" %}</td>
+      <td>{{ hv.cdrom_disk_type }}</td>
+    </tr>
+    {% endif %}
+    <tr>
+      <td>{% trans "NIC Type" %}</td>
+      <td>{{ hv.nic_type }}</td>
+    </tr>
+
+    <tr><td><!-- spacer row for readability --></td></tr>
+
   </tbody>
 
   {% endwith %}
