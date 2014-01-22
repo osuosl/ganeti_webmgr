@@ -6,6 +6,7 @@ client. noVNC requires WebSockets to function. Support for older
 browsers is provided through a flash applet that is used transparently
 in the absence of WebSockets.
 
+
 .. _vnc-authproxy:
 
 VNC AuthProxy
@@ -113,3 +114,10 @@ If not using a virtualenv, then you must manually set the ``PYTHONPATH``
 environment variable as root::
 
   export set PYTHONPATH=.
+
+
+Known Issues
+------------
+
+While Chrome/Chromium supports websockets, currently VNC Auth Proxy does not
+work with Chrome/Chromium.
