@@ -85,7 +85,6 @@ JSON
 
 If you need a JSON library, the import for this code base is "from django.utils import simplejson as json". See `#6579 <http://code.osuosl.org/issues/6579>`_ for more information.
 
-
 Dev Environment
 ---------------
 
@@ -116,7 +115,6 @@ Virtualenv and Pip
 ::  
 
     source /path/to/gwm/venv/bin/activate
-
 
 Note that the environment will only be active for the terminal in which this command is run. 
 
@@ -165,8 +163,8 @@ To test new code in |gwm| it is often necessary to have a Ganeti cluster to mana
     33.33.33.13 node3.example.org
 
 - enter the vagrant-ganeti directory and type
-  
-::
+
+  ::
 
     vagrant up node1
 
@@ -313,7 +311,6 @@ Submitting Code
 ---------------
 
 Please read :ref:`process` for details on how we triage, review and merge contributed code. 
-
 
 Patches
 '''''''
