@@ -1,7 +1,9 @@
+:orphan:
+
 .. _developer_installation:
 
-Installation
-============
+Developer Installation
+======================
 
 In order to install |gwm| for end users, one must download ``wheel`` packages.
 This, however, is not a case for developers.

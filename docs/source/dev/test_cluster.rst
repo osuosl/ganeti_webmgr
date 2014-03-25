@@ -1,4 +1,4 @@
-.. test_cluster:
+.. _test_cluster:
 
 Vagrant Test Cluster
 ====================

@@ -6,7 +6,7 @@ Developer Guide
 
 This guide is intended to help you begin writing code and documentation for the |gwm| project. Please read the :ref:`OSL Development Process <process>` for information on how this project is managed and what we do to review and integrate code into the master repository. Please read the entire guide before beginning work, we will not be able to accept contributions that don't follow these guidelines and standards.
 
-For information on our release cycle and versions, please see :ref:`release`.
+For information on our release cycle and versions, please see :ref:`release_cycle` .
 
 
 Issue Tracking
@@ -41,6 +41,10 @@ From Github, you can `clone or fork from our repository mirror`_.
 
 .. _`clone or fork from our repository mirror`: https://github.com/osuosl/ganeti_webmgr
 
+Install
+-------
+
+To install the GWM application for development work, please see :ref:`developer_installation`
 
 Repository Layout
 -----------------
@@ -147,37 +151,10 @@ Development VM
 .. todo::
     insert information on how and why you might use this
 
-Ganeti Test Cluster
-~~~~~~~~~~~~~~~~~~~
+Test Cluster
+~~~~~~~~~~~~
 
-To test new code in |gwm| it is often necessary to have a Ganeti cluster to manage. Using Vagrant, a virtual multi-node cluster can easily be created:
-
-- clone https://github.com/ramereth/vagrant-ganeti.git
-- add the following to your hosts file :
-  
-::
-
-    33.33.33.10 ganeti.example.org
-    33.33.33.11 node1.example.org
-    33.33.33.12 node2.example.org
-    33.33.33.13 node3.example.org
-
-- enter the vagrant-ganeti directory and type
-
-  ::
-
-    vagrant up node1
-
-Vagrant will download, spin up, and provision a virtual machine with Ganeti installed and ready to use. You can now add the ganeti.example.org cluster from the |gwm| and create virtual machine instances on it. To spin up additional nodes, simply:
-
-::
-
-    vagrant up node2
-    vagrant up node3
-
-See the `vagrant-ganeti page`_ for more details.
-
-.. _`vagrant-ganeti page`: https://github.com/ramereth/vagrant-ganeti
+For instructions on setting up and using a vagrant cluster to test your code, see :ref:`test_cluster`
 
 Adding features
 ---------------

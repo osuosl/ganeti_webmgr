@@ -28,13 +28,41 @@ Getting Started
 ---------------
 .. toctree::
     :maxdepth: 1
+
     getting_started/requirements
     getting_started/installing
     getting_started/configuring
     getting_started/importing
 
-User Guide
+Deployment
 ----------
+.. toctree::
+    :maxdepth: 1
+
+    deployment/intro
+    deployment/apache
+    deployment/nginx
+
+Features
+--------
+.. toctree::
+    :maxdepth: 1
+
+    features/permissions
+    features/objectlog
+    features/vnc
+    features/sshkeys
+    features/ldap
+    features/templates
+
+    features/clusters
+    features/cluster-read-only
+    features/registration
+    features/caching
+    features/ganetiviz
+
+Usage
+-----
 .. toctree::
     :maxdepth: 1
 
@@ -43,17 +71,6 @@ User Guide
     usage/virtualmachines
     usage/nodes
     usage/templates
-    features/permissions
-    features/objectlog
-    features/vnc
-    features/sshkeys
-    features/ldap
-    features/templates
-    features/clusters
-    features/cluster-read-only
-    features/registration
-    features/caching
-    features/ganetiviz
 
 Contributing
 ------------
@@ -61,16 +78,12 @@ Contributing
     :maxdepth: 1
 
     dev/issues
+    dev/process 
 
 .. toctree::
     :maxdepth: 2
 
     dev/developers
-
-.. toctree::
-    :maxdepth: 1
-
-    dev/process 
 
 
 Project Information
@@ -87,12 +100,7 @@ Project Information
     project_info/license
     project_info/faq
     project_info/contributors
-    usage/upgrading
-    usage/clusters
-    usage/virtualmachines
-    usage/nodes
-    usage/templates
-
+    project_info/release_cycle
 
 References
 ~~~~~~~~~~

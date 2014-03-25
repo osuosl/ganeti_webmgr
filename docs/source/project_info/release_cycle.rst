@@ -1,4 +1,4 @@
-.. _release:
+.. _release_cycle:
 
 Release Cycle
 =============
