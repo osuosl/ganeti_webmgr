@@ -1,3 +1,5 @@
+:orphan:
+
 .. _test_cluster:
 
 Vagrant Test Cluster

@@ -1,11 +1,11 @@
+:orphan:
+
 .. _testing:
 
 Writing Tests
 =============
 
-The following are general guidelines. For specific details on how to write |gwm| tests, please   see See :ref:`testing`.
-
-Ganeti Web Manager has a fairly complete test suite. New code should have matching tests. Before committing code, run the suite for Ganeti Web Manager and `Object Permissions <http://code.      osuosl.org/projects/object-permissions>`_
+Ganeti Web Manager has a fairly complete test suite. New code should have matching tests. Before committing code, run the suite for Ganeti Web Manager and `Object Permissions <http://code.osuosl.org/projects/object-permissions>`_
 
 ::
 

@@ -19,8 +19,8 @@ Please see the :ref:`issues` for details on how to create informative issues.
 .. _`code.osuosl.org`: https://code.osuosl.org/projects/ganeti-webmgr
 
 
-Get the Code
-------------
+Getting the Code
+----------------
 
 From OSL's repository:
 
@@ -41,53 +41,10 @@ From Github, you can `clone or fork from our repository mirror`_.
 
 .. _`clone or fork from our repository mirror`: https://github.com/osuosl/ganeti_webmgr
 
-Install
--------
+Installation
+------------
 
 To install the GWM application for development work, please see :ref:`developer_installation`
-
-Repository Layout
------------------
-
-We loosely follow `Git-flow <http://github.com/nvie/gitflow>`_ for managing repository. Read about the `branching model <http://nvie.com/posts/a-successful-git-branching-model/>`_ and why `you may wish to use it too <http://jeffkreeftmeijer.com/2010/why-arent-you-using-git-flow/>`_.
-
-
--  **master** - Releases only, this is the main public branch.
--  **release/<version>** - A release branch, the current release branch is tagged and merged into master.
--  **develop** - Mostly stable development branch. Small changes only. It is acceptable that this branch have bugs, but should remain mostly stable.
--  **feature/<issue number>** - New features, these will be merged into develop when complete.
--  **bug/<issue number>** - Bug fixes.
--  **enhancement/<issue number>** - Enhancements to existing features.
-   
-See :ref:`issues` for more information on issue types.
-
-When working on new code, be sure to create a new branch from the appropriate place:
-
--  **develop** - if this is a new feature
--  **release/<version>** - if this is a bug fix on an existing release
-
-
-Code Standards
---------------
-
-PEP8
-''''
-
-We follow `PEP 8 <http://www.python.org/dev/peps/pep-0008/>`_, "the guide for python style".
-
-In addition to PEP 8:
-
--  Do not use backslash continuations. If a line must be broken up, use parenthetical continuations instead.
-
-Units
-'''''
-
-Try to write modular code. Focus on isolating units of code that can be easily analyzed and tested. For sanity purposes, please try to avoid mutually recursive objects.
-
-JSON
-''''
-
-If you need a JSON library, the import for this code base is "from django.utils import simplejson as json". See `#6579 <http://code.osuosl.org/issues/6579>`_ for more information.
 
 Dev Environment
 ---------------
@@ -146,15 +103,70 @@ Virtual machines provide an easy way to deploy a Ganeti cluster to test |gwm| wi
 Development VM
 ~~~~~~~~~~~~~~
 
-|gwm| now ships with a Vagrantfile that will launch a headless VirtualBox vm.
-
-.. todo::
-    insert information on how and why you might use this
+|gwm| now ships with a Vagrantfile that will launch a headless VirtualBox VM. See :ref:`vagrant` for details.
 
 Test Cluster
 ~~~~~~~~~~~~
 
 For instructions on setting up and using a vagrant cluster to test your code, see :ref:`test_cluster`
+
+Repository Layout
+-----------------
+
+We loosely follow `Git-flow <http://github.com/nvie/gitflow>`_ for managing repository. Read about the `branching model <http://nvie.com/posts/a-successful-git-branching-model/>`_ and why `you may wish to use it too <http://jeffkreeftmeijer.com/2010/why-arent-you-using-git-flow/>`_.
+
+
+-  **master** - Releases only, this is the main public branch.
+-  **release/<version>** - A release branch, the current release branch is tagged and merged into master.
+-  **develop** - Mostly stable development branch. Small changes only. It is acceptable that this branch have bugs, but should remain mostly stable.
+-  **feature/<issue number>** - New features, these will be merged into develop when complete.
+-  **bug/<issue number>** - Bug fixes.
+-  **enhancement/<issue number>** - Enhancements to existing features.
+   
+See :ref:`issues` for more information on issue types.
+
+When working on new code, be sure to create a new branch from the appropriate place:
+
+-  **develop** - if this is a new feature
+-  **release/<version>** - if this is a bug fix on an existing release
+
+
+Code Standards
+--------------
+
+PEP8
+''''
+
+We follow `PEP 8 <http://www.python.org/dev/peps/pep-0008/>`_, "the guide for python style".
+
+In addition to PEP 8:
+
+-  Do not use backslash continuations. If a line must be broken up, use parenthetical continuations instead.
+
+Units
+'''''
+
+Try to write modular code. Focus on isolating units of code that can be easily analyzed and tested. For sanity purposes, please try to avoid mutually recursive objects.
+
+JSON
+''''
+
+If you need a JSON library, the import for this code base is "from django.utils import simplejson as json". See `#6579 <http://code.osuosl.org/issues/6579>`_ for more information.
+
+
+Testing
+-------
+
+Ideally, tests should be written for all code that is submitted to the project. We recommend writing a test for any new feature before writing the code. 
+
+For bugs in features that have existing tests, be sure to run the existing tests on your code before submitting. In some cases a test will need to be updated or modified to test a bug fix, this should be done before writing code to fix the bug.
+
+Tests can be submitted for features separate from the feature code itself, and feature requests that are submitted along with tests will be much more likely to be implemented.
+
+See :ref:`testing` for more information on writing unit tests for Ganeti Web Manager.
+
+See :ref:`selenium` for some ideas on using the Selenium web testing framework to test GWM.
+
 
 Adding features
 ---------------
@@ -189,55 +201,7 @@ Fixing Bugs
 When bugs are fixed, the issue should be updated with a clear description of the nature of the bug, the nature of the fix, and any additional notes that will help future developers understand the fix.
 
 Before working on a bug fix, determine if the faulty code is covered by a unit test. If so, and the test did not reveal the flaw, update the test appropriately. If no test exists, it should be written if possible. The test should be submitted along with the fixed code.
-
-Writing Tests
--------------
-
-The following are general guidelines. For specific details on how to write |gwm| tests, please see See :ref:`testing`. 
-
-Ganeti Web Manager has a fairly complete test suite. New code should have matching tests. Before committing code, run the suite for Ganeti Web Manager and `Object Permissions <http://code.osuosl.org/projects/object-permissions>`_
-
-::
-
-    ./manage.py test ganeti_web
-    ./manage.py test object_permissions
-
-
-Clean up after yourself
-'''''''''''''''''''''''
-
-Remember to tear down any resources you set up in your tests. Don't use "YourModel.objects.all().delete()" to clean up your objects; it could be hiding bugs. Clean up exactly the resources you created.
-
-Test your setups and teardowns
-''''''''''''''''''''''''''''''
-
-To speed up analysis of broken tests, if you have a setUp() or tearDown() in a TestCase, add a test\_trivial() method which is empty. It will pass if your setUp() and tearDown() work.
-
-Views
-'''''
-
-All views should be thoroughly tested for security, checking to ensure that the proper HTTP codes are returned.
-
--  Test Anonymous User access
--  Test Permission based access
--  Test Superuser based access
-
-Check for invalid input.
-
--  missing fields
--  invalid data for field
-
-Templates & Javascript
-''''''''''''''''''''''
-
-The test suite does not yet include full selenium tests for verifying Javascript functionality. Some basic tests can be performed using Django's test suite:
-
--  Check objects in the context: forms, lists of objects, etc.
--  Check for existence of values in forms.
-
-See :ref:`selenium` for more information on what Selenium can test within GWM.
-
-
+ 
 
 Writing Documentation
 ---------------------
