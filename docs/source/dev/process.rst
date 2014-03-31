@@ -1,11 +1,9 @@
 .. _process:
 
-Development Process
-===================
-.. todo::
-	link to cycle, versions
-	link to dev guide
+OSL Development Process
+=======================
 
+This document describes the general process the OSL uses for developing and maintaining projects. 
 
 Issue Triage
 ------------
