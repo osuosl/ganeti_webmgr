@@ -14,7 +14,7 @@ Issue Tracking
 
 The bug tracker for |gwm| is at `code.osuosl.org`_, and all bugs and feature requests for |gwm| should be tracked there. Please create an issue for any code, documentation or translation you wish to contribute.
 
-Please see the :ref:`issues` for details on how to create informative issues.
+Please see :ref:`issues` for details on how to create informative issues.
 
 .. _`code.osuosl.org`: https://code.osuosl.org/projects/ganeti-webmgr
 
@@ -28,7 +28,7 @@ From OSL's repository:
 
     git clone git://git.osuosl.org/gitolite/ganeti/ganeti_webmgr
 
-Note that this is a read-only clone, commit access requires an account on our gitolite server. You must be `Submitting Code`_ and establish a relationship with us prior to being granted commit access. 
+Note that this is a read-only clone, commit access requires an account on our gitolite server. Once you have established a relationship with us and submitted some code via email or pull requests, (see `Submitting Code`_) you can be considered for commit access to the master rpositiory. 
 
 When you have write access:
 
@@ -61,7 +61,7 @@ Git
 
 If you are unfamiliar with Git, please read the `official Git tutorial`_ or `this excellent tutorial`_.
 
-There are many graphical Git UIs, if you are not comfortable working with Git on the command line. See `this list of Git GUI clients`_ for more information.
+There are many Git GUIs, if you are not comfortable working with Git on the command line. See `this list of Git GUI clients`_ for more information.
 
 .. _`official Git tutorial`: http://git-scm.com/docs/gittutorial
 .. _`this excellent tutorial`: http://www.vogella.com/articles/Git/article.html
@@ -108,7 +108,7 @@ Development VM
 Test Cluster
 ~~~~~~~~~~~~
 
-For instructions on setting up and using a vagrant cluster to test your code, see :ref:`test_cluster`
+For instructions on setting up and using a vagrant cluster to test your code, see :ref:`test_cluster`.
 
 Repository Layout
 -----------------
@@ -116,12 +116,18 @@ Repository Layout
 We loosely follow `Git-flow <http://github.com/nvie/gitflow>`_ for managing repository. Read about the `branching model <http://nvie.com/posts/a-successful-git-branching-model/>`_ and why `you may wish to use it too <http://jeffkreeftmeijer.com/2010/why-arent-you-using-git-flow/>`_.
 
 
--  **master** - Releases only, this is the main public branch.
--  **release/<version>** - A release branch, the current release branch is tagged and merged into master.
--  **develop** - Mostly stable development branch. Small changes only. It is acceptable that this branch have bugs, but should remain mostly stable.
--  **feature/<issue number>** - New features, these will be merged into develop when complete.
--  **bug/<issue number>** - Bug fixes.
--  **enhancement/<issue number>** - Enhancements to existing features.
+**master**
+    Releases only, this is the main public branch.
+**release/<version>**
+    A release branch, the current release branch is tagged and merged into master.
+**develop**
+    Mostly stable development branch. Small changes only. It is acceptable that this branch have bugs, but should remain mostly stable.
+**feature/<issue number>**
+    New features, these will be merged into develop when complete.
+**bug/<issue number>**
+    Bug fixes.
+**enhancement/<issue number>**
+    Enhancements to existing features.
    
 See :ref:`issues` for more information on issue types.
 
@@ -146,7 +152,7 @@ In addition to PEP 8:
 Units
 '''''
 
-Try to write modular code. Focus on isolating units of code that can be easily analyzed and tested. For sanity purposes, please try to avoid mutually recursive objects.
+Write modular code. Focus on isolating units of code that can be easily analyzed and tested. For sanity purposes, please avoid mutually recursive objects.
 
 JSON
 ''''
@@ -206,7 +212,9 @@ Before working on a bug fix, determine if the faulty code is covered by a unit t
 Writing Documentation
 ---------------------
 
-Documentation exists as RestructuredText files within the GWM repository, and as in-line comments in the source code itself.
+Documentation exists as `RestructuredText`_ files within the GWM repository, and as in-line comments in the source code itself.
+
+.. _`RestructuredText`: http://sphinx-doc.org/rest.html
 
 Sphinx
 ''''''
@@ -215,7 +223,7 @@ The docs/ directory contains the full tree of documentation in RestructuredText 
 
 ::
     
-    pip install Sphinx
+    pip install -r requirements/docs.txt
     cd docs
     make html
 

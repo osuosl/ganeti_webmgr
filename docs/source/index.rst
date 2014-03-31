@@ -115,7 +115,8 @@ References
     ref/setup-script
     ref/build-script
     ref/venv
-
+    ref/search
+    
 Deprecated
 ==========
 .. toctree::

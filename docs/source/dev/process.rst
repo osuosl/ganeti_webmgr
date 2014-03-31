@@ -10,33 +10,33 @@ Development Process
 Issue Triage
 ------------
 
-When an issue is reported on code.osuosl.org, the core team will try to triage the issue, assigning it to a release version or rejecting it, sending it back for more information. This process may take place as part of planning for a new version release, or ad hoc in order to address an important bug in the current release.
+When an issue is reported on code.osuosl.org, the core team will triage the issue, assigning it to a release version, rejecting it, or sending it back for more information. This process may take place as part of planning for a new version release, or ad hoc in order to address an important bug in the current release.
 
 Features
 ~~~~~~~~
 
-Features will be considered only for the next minor or major version release. If the current release cycle has not yet reached the 'feature freeze' deadline, the feature may be considered for the current release, otherwise it should be assigned for a future release.
+Features will be considered only for the next minor or major version release. If the current release cycle has not yet reached the 'feature freeze' deadline, the feature may be considered for the current release; otherwise it should be assigned to a future release.
 
 Enhancements
 ~~~~~~~~~~~~
 
-Enhancements will not be considered for the current version past its feature freeze date. Enhancement issues must apply to a current existing feature, if they introduce new basic functionality, they should be reclassified as Features. If they address malfunctioning code or incorrect functionality, they should be reclassified as Bugs.
+Enhancements will not be considered for the current version after that version's feature freeze date. Enhancement issues must apply to a current existing feature, if they introduce new basic functionality, they should be reclassified as Features. If they address malfunctioning code or incorrect functionality, they should be reclassified as Bugs.
 
 Bugs
 ~~~~
 
-Bugs may be assigned to a release at any time. If they apply to an existing released version, this should generate a new point version. For example, a fix to the 0.10.1 release should generate a 0.10.2 release to contain the changes.
+Bugs may be assigned to a release at any time. If they apply to an existing released version, either a new point release must be created, or the bug must be incorporated into the next major or minor release. For example, an urgent fix to the 0.10.1 release should generate a 0.10.2 release to contain the changes. A less urgent fix for 0.10.1 might simply be incorporated into 0.11. In general, we try to collect multiple fixes into any point or minor release.
 
 
 Workflow
 --------
 
-The following work flow should be followed when contributing code.
+The following workflow should be followed when contributing code.
 
 Assignment
 ~~~~~~~~~~
 
-Issues are assigned to developers in several ways
+Issues are assigned to developers in several ways:
 
 - direct assignment by the project lead
 - volunteer self-assignment
@@ -169,17 +169,3 @@ If work is done on GitHub or on an external repository rather than the OSL Gitol
 Pull requests will be subject to the same review process outlined above, and should correspond to an issue in the OSL issue tracker. If no such issue exists, it must be created before accepting the pull request. When the pull request is approved, a new branch will be created following the normal naming conventions, and the work pulled into this branch. From this point, the work follows the same workflow as above.
 
 If the original developer does not have or is not willing to create an account on the OSL tracker, and the issue needs to be assigned back for additional work, such assignment may be communicated via email, an issue on the Github issue tracker for the developers' clone. If the developer is not willing to participate in this process, a core developer may be assigned to adopt the work, and the issue will be assigned to that developer for further work.
-
-
-Testing
--------
-
-
-Cleaning Up
------------
-
-Release Process
----------------
-
-
-   
