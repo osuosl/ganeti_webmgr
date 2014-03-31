@@ -1,8 +1,8 @@
 .. _development:
 
-===============
-Developer Guide
-===============
+===================
+GWM Developer Guide
+===================
 
 This guide is intended to help you begin writing code and documentation for the |gwm| project. Please read the :ref:`OSL Development Process <process>` for information on how this project is managed and what we do to review and integrate code into the master repository. Please read the entire guide before beginning work, we will not be able to accept contributions that don't follow these guidelines and standards.
 
