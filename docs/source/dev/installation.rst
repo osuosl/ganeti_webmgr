@@ -15,7 +15,8 @@ You want to work on |gwm|, so you can't install it to virtual environment's
 ::
 
   $ mkvirtualenv gwm
-  (gwm)$ git clone git://git.osuosl.org/gitolite/ganeti/ganeti_webmgr
+
+  (gwm)$ git clone https://github.com/osuosl/ganeti_webmgr.git
   (gwm)$ cd ganeti_webmgr
   (gwm)$ git checkout develop
   (gwm)$ python setup.py develop
@@ -62,7 +63,7 @@ Development package
 
 Clone |gwm| repository::
 
-  (gwm)$ git clone git://git.osuosl.org/gitolite/ganeti/ganeti_webmgr
+  (gwm)$ git clone https://github.com/osuosl/ganeti_webmgr
 
 You can also `fork on GitHub <https://github.com/osuosl/ganeti_webmgr>`_.
 

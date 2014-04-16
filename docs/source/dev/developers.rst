@@ -22,24 +22,12 @@ Please see :ref:`issues` for details on how to create informative issues.
 Getting the Code
 ----------------
 
-From OSL's repository:
+From OSL's github repository:
 
 ::
 
-    git clone git://git.osuosl.org/gitolite/ganeti/ganeti_webmgr
+    git clone https://github.com/osuosl/ganeti_webmgr.git
 
-Note that this is a read-only clone, commit access requires an account on our gitolite server. Once you have established a relationship with us and submitted some code via email or pull requests, (see `Submitting Code`_) you can be considered for commit access to the master rpositiory. 
-
-When you have write access:
-
-::
-
-    git clone git@git.osuosl.org:ganeti/ganeti_webmgr
-
-
-From Github, you can `clone or fork from our repository mirror`_.
-
-.. _`clone or fork from our repository mirror`: https://github.com/osuosl/ganeti_webmgr
 
 Installation
 ------------
@@ -49,7 +37,7 @@ To install the GWM application for development work, please see :ref:`developer_
 Dev Environment
 ---------------
 
-Writing and testing code is made much easier by the right tools and a development environment that mirrors a production environment. To begin working with |gwm| code, you will need Git, Python 2.6+, and `Python VirtualEnv`_. We also recommend VirtualBox_ and Vagrant_, a scripting front-end to VirtualBox to set up a virtual cluster to test your code with. 
+Writing and testing code is made much easier by the right tools and a development environment that mirrors a production environment. To begin working with |gwm| code, you will need Git, Python 2.6+, and `Python VirtualEnv`_. We also recommend VirtualBox_ and Vagrant_, a scripting front-end to VirtualBox to set up a virtual cluster to test your code with.
 
 .. _`Python VirtualEnv`: http://www.virtualenv.org/en/latest/
 .. _`VirtualBox`: https://www.virtualbox.org/
@@ -73,11 +61,11 @@ Virtualenv and Pip
 
 |gwm|'s install script uses the Python VirtualEnv utility to create a local environment in which to install all of GWM's Python dependencies, and GWM itself runs from within this environment. To run tasks with manage.py, or to work with the python console on GWM code, you will need to activate the environment in your shell:
 
-::  
+::
 
     source /path/to/gwm/venv/bin/activate
 
-Note that the environment will only be active for the terminal in which this command is run. 
+Note that the environment will only be active for the terminal in which this command is run.
 
 Pip is used to install packages to the currently active Python environment. If you would like to install python packages for debugging or to add functionality to |gwm|, be sure the |gwm| virtual environment is active and install packages:
 
@@ -93,12 +81,12 @@ If you are adding python packages to add functionality or to support |gwm| featu
     pip freeze
 
 Add your package name to requirements.txt and commit this with the rest of your code. For more information on Pip and package name/version specifications, see (a link to pip docs)
-    
+
 
 VirtualBox and Vagrant
 ''''''''''''''''''''''
-    
-Virtual machines provide an easy way to deploy a Ganeti cluster to test |gwm| with, or for use as a self-contained dev environment that can be shared with other developers. VirtualBox is a free virtualization platform available on Windows, Linux, and MacOS. Vagrant is a scripting front end for VirtualBox that allows easy creation, provisioning, and management of VirtualBox VMs. 
+
+Virtual machines provide an easy way to deploy a Ganeti cluster to test |gwm| with, or for use as a self-contained dev environment that can be shared with other developers. VirtualBox is a free virtualization platform available on Windows, Linux, and MacOS. Vagrant is a scripting front end for VirtualBox that allows easy creation, provisioning, and management of VirtualBox VMs.
 
 Development VM
 ~~~~~~~~~~~~~~
@@ -128,7 +116,7 @@ We loosely follow `Git-flow <http://github.com/nvie/gitflow>`_ for managing repo
     Bug fixes.
 **enhancement/<issue number>**
     Enhancements to existing features.
-   
+
 See :ref:`issues` for more information on issue types.
 
 When working on new code, be sure to create a new branch from the appropriate place:
@@ -163,7 +151,7 @@ If you need a JSON library, the import for this code base is "from django.utils 
 Testing
 -------
 
-Ideally, tests should be written for all code that is submitted to the project. We recommend writing a test for any new feature before writing the code. 
+Ideally, tests should be written for all code that is submitted to the project. We recommend writing a test for any new feature before writing the code.
 
 For bugs in features that have existing tests, be sure to run the existing tests on your code before submitting. In some cases a test will need to be updated or modified to test a bug fix, this should be done before writing code to fix the bug.
 
@@ -207,7 +195,7 @@ Fixing Bugs
 When bugs are fixed, the issue should be updated with a clear description of the nature of the bug, the nature of the fix, and any additional notes that will help future developers understand the fix.
 
 Before working on a bug fix, determine if the faulty code is covered by a unit test. If so, and the test did not reveal the flaw, update the test appropriately. If no test exists, it should be written if possible. The test should be submitted along with the fixed code.
- 
+
 
 Writing Documentation
 ---------------------
@@ -222,7 +210,7 @@ Sphinx
 The docs/ directory contains the full tree of documentation in RestructuredText format. To generate the docs locally, make sure you have activated the |gwm| virtual environment, and that Sphinx is installed.
 
 ::
-    
+
     pip install -r requirements/docs.txt
     cd docs
     make html
@@ -259,7 +247,7 @@ All methods in the source code should be commented with doc strings, including p
 Submitting Code
 ---------------
 
-Please read :ref:`process` for details on how we triage, review and merge contributed code. 
+Please read :ref:`process` for details on how we triage, review and merge contributed code.
 
 Patches
 '''''''
@@ -306,6 +294,6 @@ Submitting Translations
 
 Translations should be submitted via patches, a pull request, or by attaching a .po file to an issue. We recommend cloning the git repository and using django-admin.py makemessages to find all the available strings for translation. If you find strings in the UI that are not available for translation, patches to fix this condition are much appreciated. As with all contributions, we recommend creating a new issue on our issue tracker for your work.
 
-For details on how to write translation strings and how to make use of them, please see `Django's i18n page`_ 
+For details on how to write translation strings and how to make use of them, please see `Django's i18n page`_
 
 .. _`Django's i18n page`: https://docs.djangoproject.com/en/dev/topics/i18n/
