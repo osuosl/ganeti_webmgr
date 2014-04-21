@@ -78,7 +78,8 @@ Contributing
     :maxdepth: 1
 
     dev/issues
-    dev/process 
+    dev/process
+    dev/release 
 
 .. toctree::
     :maxdepth: 2
