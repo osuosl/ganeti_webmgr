@@ -3,10 +3,13 @@
 
 MOUNT_POINT = '/home/vagrant/ganeti_webmgr'
 
+box_ver = "20140121"
+box_url = "http://vagrant.osuosl.org/centos-6-#{box_ver}.box"
+
 Vagrant.configure("2") do |config|
   config.vm.hostname = "gwm.example.org"
-  config.vm.box = "Berkshelf-CentOS-6.3-x86_64-minimal"
-  config.vm.box_url = "https://dl.dropbox.com/u/31081437/Berkshelf-CentOS-6.3-x86_64-minimal.box"
+  config.vm.box       = "centos-6-#{box_ver}"
+  config.vm.box_url   = "#{box_url}"
 
   config.vm.network :private_network, ip: "33.33.33.100"
 
