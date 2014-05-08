@@ -68,7 +68,7 @@ class LowerCaseCharField(models.CharField):
         setattr(cls, self.name, ModifyingFieldDescriptor(self))
 
 
-add_introspection_rules([], ["^ganeti_web\.fields\.LowerCaseCharField"])
+add_introspection_rules([], ["^utils\.fields\.LowerCaseCharField"])
 
 
 class PatchedEncryptedCharField(EncryptedCharField):
