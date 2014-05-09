@@ -1311,7 +1311,7 @@ class VMWizardView(LoginRequiredMixin, PermissionRequiredMixin,
         template.iallocator = forms[2].cleaned_data["iallocator"]
         template.ip_check = forms[3].cleaned_data["ip_check"]
         template.name_check = forms[3].cleaned_data["name_check"]
-        template.no_start = forms[3].cleaned_data["no_start"]
+        template.start = not forms[3].cleaned_data["no_start"]
 
         if not template.iallocator:
             template.pnode = forms[3].cleaned_data["pnode"].hostname
