@@ -183,6 +183,11 @@ def check_quota_modify(form):
     owner = form.owner
     vm = form.vm
 
+    if has_balloonmem(cluster):
+        memory_key = 'maxmem'
+    else:
+        memory_key = 'memory'
+
     # check quota
     if owner is not None:
         start = data['start']
@@ -191,12 +196,12 @@ def check_quota_modify(form):
             used = owner.used_resources(cluster, only_running=True)
 
             if (start and quota['ram'] is not None and
-               (used['ram'] + data['memory']-vm.ram) > quota['ram']):
-                    del data['memory']
+               (used['ram'] + data[memory_key]-vm.ram) > quota['ram']):
+                    del data[memory_key]
                     q_msg = u"%s" % _("Owner does not have enough ram "
                                       "remaining on this cluster. You must "
                                       "reduce the amount of ram.")
-                    form._errors["ram"] = form.error_class([q_msg])
+                    form._errors[memory_key] = form.error_class([q_msg])
 
             if 'disk_size' in data and data['disk_size']:
                 if quota['disk'] and used['disk'] + data['disk_size'] > \
