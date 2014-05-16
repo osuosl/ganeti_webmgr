@@ -11,11 +11,11 @@ Vagrant.configure("2") do |config|
   config.vm.box       = "centos-6-#{box_ver}"
   config.vm.box_url   = "#{box_url}"
 
-  config.vm.network :private_network, ip: "33.33.33.100"
+  config.vm.network :private_network, ip: "33.33.33.100", adapter: 2
 
   config.berkshelf.berksfile_path = "chef/Berksfile"
   config.berkshelf.enabled = true
-  config.omnibus.chef_version = "11.6.2"
+  config.omnibus.chef_version = "11.12.4"
 
   # Symlink our project for development purposes
   config.vm.synced_folder ".", MOUNT_POINT
@@ -33,7 +33,7 @@ Vagrant.configure("2") do |config|
       :ganeti_webmgr => {
         :migrate => true,
         :admin_username => "admin",
-        :admin_password => "password"
+        :admin_password => "password",
       }
     }
     chef.run_list = [

@@ -7,6 +7,7 @@
       "server_repl_password": "replpass"
     },
     "ganeti_webmgr": {
+      "packages": ["tmux"],
       "path": "/home/vagrant/ganeti_webmgr",
       "virtualenv": "/home/vagrant/venv",
       "owner": "vagrant",
