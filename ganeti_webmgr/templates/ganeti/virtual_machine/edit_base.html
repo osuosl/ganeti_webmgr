@@ -56,6 +56,13 @@
             <legend>{% trans "Hypervisor Parameters" %}</legend>
             {% block hvparams %}{% endblock %}
         </fieldset>
+
+        <fieldset id="edit_notes">
+            <h3>{% trans form.notes.label %}</h3>
+            {{ form.notes.errors }}
+            <p>{{ form.notes }}</p>
+        </fieldset>
+
         <input class="submit" type="submit" value="{% trans "Continue" %}" />
     </form>
 </div>

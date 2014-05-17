@@ -236,6 +236,8 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
     nic_count = forms.IntegerField(initial=1, widget=forms.HiddenInput())
     os = forms.ChoiceField(label=_('Operating System'), choices=[empty_field])
 
+    notes = forms.CharField(label=_('Notes'), widget=forms.Textarea, required=False)
+
     class Meta:
         model = VirtualMachineTemplate
         exclude = ('start', 'owner', 'cluster', 'hostname', 'name_check',
@@ -307,7 +309,7 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
                     link.initial = info['nic.links'][i]
 
             self.fields['os'].initial = info['os']
-
+            self.fields['notes'].initial = vm.note_text
             try:
                 if self.hvparam_fields:
                     for field in self.hvparam_fields:
