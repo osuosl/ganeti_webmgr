@@ -153,51 +153,50 @@ def refresh_objects(sender, **kwargs):
     import any new Nodes.
     """
 
-    if kwargs.get('app', False) and kwargs['app'] == 'ganeti_web':
-        write = sys.stdout.write
-        flush = sys.stdout.flush
+    write = sys.stdout.write
+    flush = sys.stdout.flush
 
-        def wf(str, newline=False):
-            if newline:
-                write('\n')
-            write(str)
-            flush()
+    def wf(str, newline=False):
+        if newline:
+            write('\n')
+        write(str)
+        flush()
 
-        wf('- Refresh Cached Cluster Objects')
+    app = kwargs.get('app')
+    # these if-conditionals are here to bypass 0019 migration's database
+    # error (after refactoring this refresh function gets called before
+    # proper new tables exist)
+    if db_table_exists(Cluster._meta.db_table) and app == 'clusters':
+        wf(' > Synchronizing Cluster Nodes ', True)
+        flush()
+        Cluster.objects.all().update(mtime=None)
+        for cluster in Cluster.objects.all().iterator():
+            try:
+                cluster.sync_nodes()
+                wf('.')
+            except GanetiApiError:
+                wf('E')
 
-        # these if-conditionals are here to bypass 0019 migration's database
-        # error (after refactoring this refresh function gets called before
-        # proper new tables exist)
-        if db_table_exists(Cluster._meta.db_table):
-            wf(' > Synchronizing Cluster Nodes ', True)
-            flush()
-            Cluster.objects.all().update(mtime=None)
-            for cluster in Cluster.objects.all().iterator():
-                try:
-                    cluster.sync_nodes()
-                    wf('.')
-                except GanetiApiError:
-                    wf('E')
+    if db_table_exists(Node._meta.db_table) and app == 'nodes':
+        Node.objects.all().update(mtime=None)
+        wf(' > Refreshing Node Caches ', True)
+        for node in Node.objects.all().iterator():
+            try:
+                wf('.')
+            except GanetiApiError:
+                wf('E')
 
-        if db_table_exists(Node._meta.db_table):
-            Node.objects.all().update(mtime=None)
-            wf(' > Refreshing Node Caches ', True)
-            for node in Node.objects.all().iterator():
-                try:
-                    wf('.')
-                except GanetiApiError:
-                    wf('E')
+    if (db_table_exists(VirtualMachine._meta.db_table)
+            and app == 'virtualmachines'):
+        VirtualMachine.objects.all().update(mtime=None)
+        wf(' > Refreshing Instance Caches ', True)
+        for instance in VirtualMachine.objects.all().iterator():
+            try:
+                wf('.')
+            except GanetiApiError:
+                wf('E')
 
-        if db_table_exists(VirtualMachine._meta.db_table):
-            VirtualMachine.objects.all().update(mtime=None)
-            wf(' > Refreshing Instance Caches ', True)
-            for instance in VirtualMachine.objects.all().iterator():
-                try:
-                    wf('.')
-                except GanetiApiError:
-                    wf('E')
-
-        wf('\n')
+    wf('\n')
 
 
 # Set this as post_migrate hook.
