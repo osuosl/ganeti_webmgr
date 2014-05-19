@@ -12,6 +12,9 @@ Documentation_ for |gwm| is hosted by `Read the Docs <http://readthedocs.org>`_.
 You can find up to date documentation for current and previous releases at
 http://ganeti-webmgr.readthedocs.org/en/latest.
 
+If your looking to develop or contribute to GWM, please refer to the
+development documentation at http://ganeti-webmgr.readthedocs.org/en/develop
+
 Building the Documentation
 --------------------------
 
