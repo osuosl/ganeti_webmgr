@@ -761,6 +761,7 @@ def modify_confirm(request, cluster_slug, instance):
                 else:
                     beparams['memory'] = rapi_dict.pop('memory')
                 os_name = rapi_dict.pop('os')
+                notes = rapi_dict.pop('notes')
                 job_id = cluster.rapi.ModifyInstance(
                     instance,
                     nics=nics,
@@ -772,8 +773,8 @@ def modify_confirm(request, cluster_slug, instance):
                                          obj=vm,
                                          cluster=cluster)
                 VirtualMachine.objects \
-                    .filter(id=vm.id).update(last_job=job, ignore_cache=True, 
-                        note_text=rapi_dict['notes'])
+                    .filter(id=vm.id).update(last_job=job, ignore_cache=True,
+                        note_text=notes)
                 # log information about modifying this instance
                 log_action('EDIT', user, vm)
                 if 'reboot' in request.POST and vm.info['status'] == 'running':
