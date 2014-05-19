@@ -57,6 +57,8 @@ class VirtualMachineTemplate(models.Model):
     # XXX why isn't this an enum?
     nic_type = models.CharField(verbose_name=_('NIC Type'), max_length=255,
                                 default="")
+    hypervisor = models.CharField(verbose_name=_('Hyerpervisor'),
+                                  max_length=255, default="")
 
     # Hypervisor parameters (HVPARAMS)
     kernel_path = models.CharField(verbose_name=_('Kernel Path'),

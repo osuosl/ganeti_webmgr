@@ -87,7 +87,7 @@ def template_to_instance(template, hostname, owner):
     }
 
     hvparams = {}
-    hv = template.hypervisor
+    hv = template.hypervisor or cluster.info["default_hypervisor"]
     kvm = hv == 'kvm'
     pvm = hv == 'xen-pvm'
     hvm = hv == 'xen-hvm'
@@ -124,7 +124,7 @@ def template_to_instance(template, hostname, owner):
         "name_check": template.name_check,
         "beparams": beparams,
         "no_install": template.no_install,
-        "start": not template.no_start,
+        "start": template.start,
         "hvparams": hvparams,
     }
 
