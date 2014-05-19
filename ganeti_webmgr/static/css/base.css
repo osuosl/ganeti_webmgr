@@ -436,3 +436,8 @@ div.delete, div.edit {
 .pagination a:hover {
     text-decoration: underline;
 }
+
+p.view_notes {
+    margin-bottom: 5px;
+    white-space: pre-wrap;
+}

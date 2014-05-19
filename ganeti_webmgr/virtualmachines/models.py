@@ -71,6 +71,10 @@ class VirtualMachine(CachedClusterObject):
     pending_delete = models.BooleanField(default=False)
     deleted = False
 
+    # The note_text stores arbitrary user-inputted notes on this virtual
+    # machine.
+    note_text = models.TextField(default="")
+
     # Template temporarily stores parameters used to create this virtual
     # machine. This template is used to recreate the values entered into the
     # form.
