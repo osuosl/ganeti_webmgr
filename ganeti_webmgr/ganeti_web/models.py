@@ -144,7 +144,7 @@ muddle_user_signals.view_group_created.connect(log_group_create)
 muddle_user_signals.view_group_edited.connect(log_group_edit)
 
 
-def refresh_objects(sender, **kwargs):
+def refresh_objects(**kwargs):
     """
     This was originally the code in the 0009
     and then 0010 'force_object_refresh' migration
@@ -156,47 +156,50 @@ def refresh_objects(sender, **kwargs):
     write = sys.stdout.write
     flush = sys.stdout.flush
 
-    def wf(str, newline=False):
-        if newline:
-            write('\n')
-        write(str)
-        flush()
+    def wf(str, newline=False, verbosity=1):
+        if (verbosity > 0):
+            if newline:
+                write('\n')
+            write(str)
+            flush()
 
     app = kwargs.get('app')
+    verbosity = kwargs.get('verbosity')
+
     # these if-conditionals are here to bypass 0019 migration's database
     # error (after refactoring this refresh function gets called before
     # proper new tables exist)
     if db_table_exists(Cluster._meta.db_table) and app == 'clusters':
-        wf(' > Synchronizing Cluster Nodes ', True)
+        wf('> Synchronizing Cluster Nodes ', True, verbosity=verbosity)
         flush()
         Cluster.objects.all().update(mtime=None)
         for cluster in Cluster.objects.all().iterator():
             try:
                 cluster.sync_nodes()
-                wf('.')
+                wf('.', verbosity=verbosity)
             except GanetiApiError:
-                wf('E')
+                wf('E', verbosity=verbosity)
 
     if db_table_exists(Node._meta.db_table) and app == 'nodes':
         Node.objects.all().update(mtime=None)
-        wf(' > Refreshing Node Caches ', True)
+        wf('> Refreshing Node Caches ', True, verbosity=verbosity)
         for node in Node.objects.all().iterator():
             try:
-                wf('.')
+                wf('.', verbosity=verbosity)
             except GanetiApiError:
-                wf('E')
+                wf('E', verbosity=verbosity)
 
     if (db_table_exists(VirtualMachine._meta.db_table)
             and app == 'virtualmachines'):
         VirtualMachine.objects.all().update(mtime=None)
-        wf(' > Refreshing Instance Caches ', True)
+        wf('> Refreshing Instance Caches ', True, verbosity=verbosity)
         for instance in VirtualMachine.objects.all().iterator():
             try:
-                wf('.')
+                wf('.', verbosity=verbosity)
             except GanetiApiError:
-                wf('E')
+                wf('E', verbosity=verbosity)
 
-    wf('\n')
+    wf('\n', verbosity=verbosity)
 
 
 # Set this as post_migrate hook.
