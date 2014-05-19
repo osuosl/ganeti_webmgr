@@ -128,4 +128,4 @@ Management
 It's still done via ``manage.py`` script, though the script is now hidden
 deeper in directories structure::
 
-  ganeti_webmgr/ganeti_webmgr/ganeti_web/manage.py
+  ganeti_webmgr/ganeti_webmgr/manage.py
