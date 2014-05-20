@@ -69,10 +69,12 @@ class ClusterDetailView(LoginRequiredMixin, DetailView):
     template_name = "ganeti/cluster/detail.html"
 
     def get_object(self, queryset=None):
-        return get_object_or_404(Cluster, slug=self.kwargs["cluster_slug"])
+        self.cluster = get_object_or_404(Cluster,
+            slug=self.kwargs["cluster_slug"])
+        return self.cluster
 
     def get_context_data(self, **kwargs):
-        cluster = kwargs["object"]
+        cluster = self.cluster
         user = self.request.user
         admin = user.is_superuser or user.has_perm("admin", cluster)
 
@@ -81,8 +83,16 @@ class ClusterDetailView(LoginRequiredMixin, DetailView):
         show_vms = admin or user.get_objects_any_perms(
             VirtualMachine, perms=['admin']).filter(cluster=cluster)
 
+        master_node = {"exists": False}
+        if cluster.info:
+            master_node['hostname'] = cluster.info.get("master", None)
+            if master_node['hostname']:
+                master_node['exists'] = cluster.nodes.filter(
+                    hostname=master_node['hostname']).exists()
+
         return {
             "cluster": cluster,
+            "master_node": master_node,
             "admin": admin,
             "readonly": not admin,
             "show_vms": show_vms
