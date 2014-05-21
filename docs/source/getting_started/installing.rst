@@ -79,6 +79,18 @@ Initialize database
     $ gwm-manage.py syncdb --all
     $ gwm-manage.py migrate --fake
 
+Update Cache
+~~~~~~~~~~~~
+
+Prior to **version 0.11** when migrations were run, we would automatically update
+the cache of RAPI data in the Database, however running this during migrations was
+prone to a lof of errors, so it is now it's own command. Run the following to update
+the cache::
+
+  $ gwm-manage.py refreshcache
+
+.. versionadded:: 0.11
+
 Search indexes
 ~~~~~~~~~~~~~~
 
