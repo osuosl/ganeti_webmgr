@@ -1,12 +1,19 @@
-# This is imported as the DJANGO_SETTINGS_MODULE.
-# First it trys to import settings.py which should import base.py
+# This module is how we import settings, and override settings with various
+# precedences.
 
-# Returns a hopefully more useful error message if someone forgets to
-# rename settings.py.dist to settings.py
-import sys
+# First our base.py settings module is imported, with all of the
+# important defaults.
+#
+# Next our yaml file is opened, read, and settings defined in the yaml config
+# may override settings already defined.
+#
+# Lastly, settings.py is imported if it exists, and it can override settings
+# as well.
 
+
+from .base import *
+from .yaml_config import *
 try:
     from .settings import *
 except ImportError:
-    msg = "Did you rename settings/settings.py.dist to settings/settings.py?)"
-    print >> sys.stderr, msg
+    pass
