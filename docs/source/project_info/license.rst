@@ -1,5 +1,5 @@
 Ganeti Web Manager is licensed under the **GPLv2 or later**. Ganeti Web
-Manager releases also includes other libraries with separately licensed
+Manager releases also include other libraries with separate licenses:
 
 -  Django Object Permissions - MIT
 -  NoVNC - LPGL

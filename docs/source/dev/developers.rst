@@ -19,21 +19,6 @@ Please see :ref:`issues` for details on how to create informative issues.
 .. _`code.osuosl.org`: https://code.osuosl.org/projects/ganeti-webmgr
 
 
-Getting the Code
-----------------
-
-From OSL's github repository:
-
-::
-
-    git clone https://github.com/osuosl/ganeti_webmgr.git
-
-
-Installation
-------------
-
-To install the GWM application for development work, please see :ref:`developer_installation`
-
 Dev Environment
 ---------------
 
@@ -86,17 +71,18 @@ Add your package name to requirements.txt and commit this with the rest of your 
 VirtualBox and Vagrant
 ''''''''''''''''''''''
 
-Virtual machines provide an easy way to deploy a Ganeti cluster to test |gwm| with, or for use as a self-contained dev environment that can be shared with other developers. VirtualBox is a free virtualization platform available on Windows, Linux, and MacOS. Vagrant is a scripting front end for VirtualBox that allows easy creation, provisioning, and management of VirtualBox VMs.
+Virtual machines provide an easy way to deploy a Ganeti cluster to test |gwm| with, or for use as a self-contained dev environment that can be shared with other developers. VirtualBox is a free virtualization platform available on Windows, Linux, and MacOS. Vagrant is a scripting front end for VirtualBox that allows easy creation, provisioning, and management of VirtualBox VMs, allowing developers to write and test their code in a uniform environment.
 
-Development VM
-~~~~~~~~~~~~~~
 
-|gwm| now ships with a Vagrantfile that will launch a headless VirtualBox VM. See :ref:`vagrant` for details.
+Installation
+------------
 
-Test Cluster
-~~~~~~~~~~~~
+To install the GWM application for development work, please see :ref:`developer_installation`.
 
-For instructions on setting up and using a vagrant cluster to test your code, see :ref:`test_cluster`.
+|gwm| ships with support for Vagrant. This allows developers to modify and test their code in the same environment and reduce the amount of configuration necessary. See :ref:`vagrant` for details on setting up the virtual machine. 
+
+In addition, use of |gwm| requires a Ganeti Cluster. For instructions on setting up a test cluster with Vagrant, see :ref:`test_cluster`.
+
 
 Repository Layout
 -----------------

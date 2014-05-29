@@ -109,7 +109,7 @@ some paths it's using.
 
 .. cmdoption:: -a <git remote address>
 
-  :default: ``git://git.osuosl.org/gitolite/ganeti/ganeti_webmgr``
+  :default: ``https://github.com/osuosl/ganeti_webmgr.git``
 
   |gwm| is cloned from this repository address.
 
