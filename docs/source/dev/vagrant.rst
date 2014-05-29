@@ -36,7 +36,7 @@ All of these values can be changed by overriding the Chef attributes in the ``Va
 Use
 ~~~
 
-Using Vagrant to deploy |gwm| is simple. You will need Vagrant version **1.3.0**
+Using Vagrant to deploy |gwm| is simple. You will need Vagrant version **1.5.4**
 or greater and two vagrant plugins, `vagrant-berkshelf` and `vagrant-omnibus`.
 
 `Installing  Vagrant`_ is easy, you can install it to your system by downloading the appropriate package, and running it.
@@ -73,7 +73,7 @@ start the :ref:`development-server`::
 From there you can visit |gwm| at (by default) 33.33.33.100:8000 in your web browser.
 
 .. note:: The reason we runserver on 0.0.0.0 is because by default it runs on
-    127.0.0.1 which is only accessable from the VM.
+    127.0.0.1 which is only accessible from the VM.
 
 
 More details on vagrant can be found at http://docs.vagrantup.com/v2/

@@ -46,7 +46,7 @@ the static assets at. After this run the following commands from the project roo
     source venv/bin/activate
     python ganeti_webmgr/manage.py collectstatic
 
-Once you've done that, you can move on to deploying using your prefered web server.
+Once you've done that, you can move on to deploying using your preferred web server.
 
 * :ref:`Apache <apache>`
 * :ref:`Nginx <nginx>`

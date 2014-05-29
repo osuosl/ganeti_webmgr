@@ -10,8 +10,8 @@ For development we use Vagrant to set up a Ganeti Cluster to test on.
 Setup
 ~~~~~
 
-The Vagrant Test cluster is not included with |gwm| and is a separate
-repository, that must be cloned::
+The Vagrant Test cluster is not included with |gwm|. It is a separate
+repository that must be cloned::
 
     git clone https://github.com/osuosl/vagrant-ganeti
 

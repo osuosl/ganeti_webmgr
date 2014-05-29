@@ -20,8 +20,8 @@ You want to work on |gwm|, so you can't install it to virtual environment's
   (gwm)$ cd ganeti_webmgr
   (gwm)$ git checkout develop
   (gwm)$ python setup.py develop
-  (gwm)$ pip install mysql-python
-  (gwm)$ pip install psycopg2
+  (gwm)$ pip install mysql-python # MySQL support
+  (gwm)$ pip install psycopg2 # PostgreSQL support
   (gwm)$ cp ./ganeti_webmgr/ganeti_web/settings/settings.py.dist ./ganeti_webmgr/ganeti_web/settings/settings.py
   (gwm)$ vim ./ganeti_webmgr/ganeti_web/settings/settings.py
 
@@ -54,6 +54,12 @@ This command will work only if you installed ``virtualenvwrapper``.  We
 recommend to use it, because it creates virtual environments in
 ``$HOME/.virtualenvs``, which makes your project directory free of any ``bin``,
 ``include``, ``lib``, ``local`` or ``share`` directories.
+
+Alternatively, if you do not have ``mkvirtualenv`` you can manually create
+a virtual environment in ``$HOME/.virtualenvs``::
+
+  $ virtualenv ~/.virtualenvs/gwm
+  $ source ~/.virtualenvs/gwm/bin/activate
 
 Take a look at :ref:`virtual-environment` page to get better understanding of
 how virtual enviroments and ``virtualenvwrapper`` work.
@@ -89,7 +95,7 @@ compilation.
 Databases
 ~~~~~~~~~
 
-Database drivers / interfaces aren't listed explicitely in |gwm| requirements file, so you have to install them manually.
+Database drivers / interfaces aren't listed explicitly in |gwm| requirements file, so you have to install them manually.
 
 Make sure you have your dependencies for DBs met.
 
@@ -116,11 +122,12 @@ directory:
 ``base.py``
   Base settings, might not need to be changed.
 
-``settings.py.dist``
+``settings.py``
   Look there for options you might want to change.  This file exists there
   especially for you.
+  When developing, it is necessary to set ``testing=TRUE`` in order to run the testing suite.
 
-  .. warning:: Remember to change this file name to ``settings.py``!
+  .. warning:: Remember to configure ``settings.py``, not ``settings.py.dist``!
 
 Management
 ~~~~~~~~~~
