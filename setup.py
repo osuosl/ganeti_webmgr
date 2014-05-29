@@ -28,6 +28,13 @@ setup(
     # easiest way to install templates, static files, translation files etc.
     include_package_data=True,
 
+    entry_points = {
+        'console_scripts': [
+            # FIXME (Path problems it seems)
+            # 'gwm-manage = ganeti_webmgr.manage:main',
+        ],
+    },
+
     # in case you want to have easy testing in future by `./setup.py test`
     # you'd need to work with setuptools documentation:
     #  http://pythonhosted.org/setuptools/setuptools.html

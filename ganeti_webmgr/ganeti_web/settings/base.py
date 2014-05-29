@@ -18,167 +18,16 @@
 """
 Default settings for GWM.
 
-These settings are hopefully so universal that they never need to change
-between deployments and are factored out into this module to avoid stale
-settings.py files causing upgrade bugs.
-
-All settings in this module can be overriden in the main settings.py module,
-of course.
+Most of this should be left alone and unchanged.
 """
 
-import os
-from os.path import abspath, basename, dirname, join, exists
-from sys import path
-
-from django.core.exceptions import ImproperlyConfigured
-
-
-# Path Helpers
-def here(*x):
-    """
-    This is a wrapper around join. It will return a path relative to the
-    current file.
-    """
-    return join(abspath(dirname(__file__)), *x)
-
-PROJECT_ROOT = here("..", "..", "..")
-
-
-def root(*x):
-    """
-    This is a wrapper around join. It will return a path relative to
-    PROJECT_ROOT.
-    """
-    return join(abspath(PROJECT_ROOT), *x)
-
-app_root = lambda *x: root('ganeti_webmgr', *x)
-
-##### Project structure variables #####
-SITE_NAME = basename(root())
-
-### Secrets location and default file names. ###
-
-# We can change the location of the default secrets directory with the
-# environmental variable GWM_SECRET_DIR. By default if its not set, it
-secret_loc = os.environ.get('GWM_SECRET_DIR', None)
-SECRET_DIR = secret_loc or root('.secrets')
-GWM_API_KEY_LOC = join(SECRET_DIR, 'API_KEY.txt')
-SECRET_KEY_LOC = join(SECRET_DIR, 'SECRET_KEY.txt')
-
-no_secret_msg = "No secrets in environment variable %s or file %s found.\n"
-
-
-# Settings helpers
-def load_secret(env=None, file=None, create_file=True, secret_size=32,
-                overwrite_file=False):
-    """
-    Helper to retrieve secrets from environmental variables or files.
-
-    :param string env: enviroment variable name
-    :param string file: name of the file with stored secret
-    :returns: value from environmental variable or from file
-    :rtype: string
-    :raises ImproperlyConfigured: if it wasn't possible to get secret from
-                                  either source and function couldn't create
-                                  the file
-    """
-    if create_file:
-        secret = get_env_or_file_or_create(env, file, secret_size,
-                                           overwrite_file)
-    else:
-        secret = get_env_or_file_secret(env, file)
-
-    return secret
-
-
-def get_env_or_file_secret(env_var, file_loc):
-    """Gets secrets from an environmental variable or file.
-
-    :param string env_var: The environmental variable
-    :param string file_loc: The full path to the file
-    :returns: The secret.
-    :rtype: string
-    :raises ImproperlyConfigured: If ``env_var`` or ``file_loc`` values are
-                                  ``None``
-    """
-
-    # Grab the env variable
-    secret = os.environ.get(env_var, None)
-    if secret is None:
-        # If no env variable fall back to file_loc.
-        try:
-            # Default to None if file is empty
-            secret = open(file_loc).read().strip() or None
-        except IOError:
-            # Default to returning none if neither exist
-            raise ImproperlyConfigured(no_secret_msg % (env_var, file_loc))
-    return secret
-
-
-def get_env_or_file_or_create(env_var, file_loc, secret_size=32,
-                              overwrite_file=False):
-    """Gets secrets from an environmental variable or file. Will create file at
-    file_loc if neither env_var or file_loc return values.
-
-    :param string env_var: The environmental variable.
-    :param string file_loc: The full path to the file.
-    :param int secret_size: Size of secret key to be generated for file if
-                            being created.
-    :param bool overwrite_file: Overwrite existing file at file_loc if already
-                                exists.
-    :returns: The secret.
-    :rtype: string
-    :raises ImproperlyConfigured: If ``env_var`` or ``file_loc`` values are
-                                  ``None``.
-    """
-    # First check if the env_var or file_loc are set/exist
-    try:
-        secret = get_env_or_file_secret(env_var, file_loc)
-    except ImproperlyConfigured:
-        secret = None
-    if not secret:
-        generate = generate_secret
-        secret = generate(secret_size)
-    try:
-        secret_file_exists = os.access(file_loc, os.F_OK)
-        # If it doesnt exist, then we may write
-        # Otherwise it does exist and we need to make sure we're
-        # allowed to overwrite it
-        if not secret_file_exists or overwrite_file:
-            with open(file_loc, "w") as f:
-                f.write(secret)
-    except IOError:
-        cannot_create_msg = ("Unable to create secret file.\n"
-                             "Try creating the file at %s or setting "
-                             "the value in settings/settings.py")
-        msg1 = no_secret_msg % (env_var, file_loc)
-        msg2 = cannot_create_msg % (file_loc,)
-        msg = ' '.join((msg1, msg2))
-        raise ImproperlyConfigured(msg)
-
-    return secret
-
-
-def generate_secret(secret_size=32):
-    "Generates a secret key of the given size"
-    import random
-    import string
-    valid_chars = string.digits + string.letters
-    return ''.join(
-        random.SystemRandom().choice(valid_chars)
-        for i in xrange(secret_size)
-    )
-
-
-# Add our project to our pythonpath as well as applications path
-path.append(root())
-path.append(app_root())
-
-# make sure our secrets directory exists
-if not exists(SECRET_DIR):
-    msg = "Secrets directory does not exist at %s, Creating it."
-    print msg % SECRET_DIR
-    os.mkdir(SECRET_DIR)
+from os import makedirs
+from os.path import exists, join
+from .helpers import (
+    app_root, DEFAULT_CONFIG_PATH,
+    generate_secret, install_path,
+    ugettext
+)
 
 ##### Debug *default* configuration #####
 DEBUG = False
@@ -207,7 +56,7 @@ ITEMS_PER_PAGE = 15
 ##### Haystack settings #####
 HAYSTACK_SITECONF = 'search_sites'
 HAYSTACK_SEARCH_ENGINE = 'whoosh'
-HAYSTACK_WHOOSH_PATH = root('whoosh_index')
+HAYSTACK_WHOOSH_PATH = install_path('whoosh_index')
 ##### End Haystack settings #####
 
 
@@ -245,7 +94,7 @@ STATICFILES_DIRS = (
     app_root('static'),
 )
 
-STATIC_ROOT = root("collected_static")
+STATIC_ROOT = install_path("collected_static")
 ###### End Static Files Configuration #####
 
 ###### Other Configuration #####
@@ -310,7 +159,6 @@ INSTALLED_APPS = (
     'muddle.shots',
     'muddle_users',
 
-
     # ganeti apps
     'authentication',
     'clusters',
@@ -325,15 +173,14 @@ INSTALLED_APPS = (
 ROOT_URLCONF = 'ganeti_web.urls'
 AUTH_PROFILE_MODULE = 'authentication.Profile'
 
-
-def ugettext(s):
-    """Horrible Django hack for convincing Django that we are i18n'd."""
-    return s
-
-
 ##### Locale Configuration #####
 LOCALE_PATHS = (
     app_root("locale"),
+)
+
+LANGUAGES = (
+    ('el', ugettext('Greek')),
+    ('en', ugettext('English')),
 )
 
 # Ganeti Cached Cluster Objects Timeouts
@@ -344,3 +191,31 @@ LAZY_CACHE_REFRESH = 600000
 # Other GWM Stuff
 VNC_PROXY = 'localhost:8888'
 RAPI_CONNECT_TIMEOUT = 3
+
+
+# Generate a secret key, and store it in a file to be read later.
+secrets_folder = install_path('.secrets')
+
+# Directory doesn't exist, create it
+if not exists(secrets_folder):
+    makedirs(secrets_folder)
+
+secret_key_file = join(secrets_folder, 'SECRET_KEY.txt')
+file_exists = exists(secret_key_file)
+try:
+    # File containing secretkey doesnt exist, so create it and fill it with the key
+    if not file_exists:
+        with open(secret_key_file, "w") as f:
+            SECRET_KEY = generate_secret()
+            f.write(SECRET_KEY)
+    # File does exist, open it and read the value from it
+    else:
+        with open(secret_key_file, "r") as f:
+            SECRET_KEY = f.read().trim()
+except IOError:
+    action = 'create' if file_exists else 'open'
+    msg = ("Unable to %s file at %s. Please either create the file and ensure "
+           "it contains a 32bit random value or ensure you have set the "
+           "SECRET_KEY setting in %s.")
+    print msg % (action, secret_key_file, DEFAULT_CONFIG_PATH)
+
