@@ -53,16 +53,16 @@ check_if_exists() {
 
 # default values
 install_directory='/opt/ganeti_webmgr'
-base_url="http://ftp.osuosl.org/pub/osl/ganeti-webmgr"
+base_url="https://ftp.osuosl.org/pub/osl/ganeti-webmgr"
 
 # helper function: display help message
 usage() {
-echo "Install (or upgrade) fresh Ganeti Web Manager from OSUOSL servers.
+echo "Install (or upgrade) fresh Ganeti Web Manager from ganeti_webmgrSUOSL servers.
 
 Usage:
     $0 -h
     $0 [-d <dir>] [-D <database>] [-N] [-w <address>]
-    $0 -u <dir>
+    $0 -u [<dir>]
 
 Default installation directory:     $install_directory
 Default database server:            SQLite
@@ -80,7 +80,9 @@ Options:
   -w <wheels (local/remote) directory location>
                                 Where wheel packages are stored.  Don't change
                                 this value unless you know what you're doing!
-  -u <install directory>        Upgrade existing installation. Forces -N."
+  -u <install directory>        Upgrade existing installation. Forces -N.
+                                If you do not provide <install directory> then
+                                it assumes the default install directory."
     exit 0
 }
 
@@ -114,7 +116,7 @@ upgrade=0
 database_server='sqlite'
 
 ### Runtime arguments and help text
-while getopts "hu:d:D:Nw:" opt; do
+while getopts "hud:D:Nw:" opt; do
     case $opt in
         h)
             usage
@@ -122,7 +124,11 @@ while getopts "hu:d:D:Nw:" opt; do
 
         u)
             upgrade=1
-            install_directory="$OPTARG"
+            if [ -z "$OPTARG" ]; then
+                install_directory="$install_directory"
+            else
+                install_directory="$OPTARG"
+            fi
             no_dependencies=1
             ;;
 
@@ -165,19 +171,19 @@ if [ $no_dependencies -eq 0 ]; then
     case $os in
         debian)
             package_manager='apt-get'
-            package_manager_cmds='install'
+            package_manager_cmds='install -y'
             check_if_exists "/usr/bin/$package_manager"
             ;;
 
         ubuntu)
             package_manager='apt-get'
-            package_manager_cmds='install'
+            package_manager_cmds='install -y'
             check_if_exists "/usr/bin/$package_manager"
             ;;
 
         centos)
             package_manager='yum'
-            package_manager_cmds='install'
+            package_manager_cmds='install -y'
             check_if_exists "/usr/bin/$package_manager"
             ;;
 
@@ -290,46 +296,46 @@ if [ ! $? -eq 0 ]; then
     exit 5
 fi
 
-# echo ""
-# echo "------------------------------------------------------------------------"
-# echo "Installing Ganeti Web Manager and its dependencies"
-# echo "------------------------------------------------------------------------"
+echo ""
+echo "------------------------------------------------------------------------"
+echo "Installing Ganeti Web Manager and its dependencies"
+echo "------------------------------------------------------------------------"
 
-# # WARNING: watch out for double slashes when concatenating these strings!
-# url="$base_url/$os/$os_codename/$architecture/"
+# WARNING: watch out for double slashes when concatenating these strings!
+url="$base_url/$os/$os_codename/$architecture/"
 
-# ${pip} install --upgrade --use-wheel --find-link="$url" ganeti_webmgr
+script_location=(dirname $0)
+${pip} install --upgrade --use-wheel --find-link="$url" "$script_location/.."
 
-# if [ ! $? -eq 0 ]; then
-#     echo "${txtboldred}Something went wrong. Could not install GWM nor its" \
-#          "dependencies"
-#     echo "in this virtual environment:"
-#     echo "  $install_directory${txtreset}"
-#     echo "Please check if you have internet access and consult with official" \
-#          "GWM documentation:"
-#     echo "  http://ganeti-webmgr.readthedocs.org/en/latest/"
-#     exit 6
-# fi
+if [ ! $? -eq 0 ]; then
+    echo "${txtboldred}Something went wrong. Could not install GWM nor its" \
+         "dependencies"
+    echo "in this virtual environment:"
+    echo "  $install_directory${txtreset}"
+    echo "Please refer to the official GWM documentation for assistance:"
+    echo "  http://ganeti-webmgr.readthedocs.org/en/latest/"
+    exit 6
+fi
 
-# # install dependencies for database
-# if [ "$database_server" != "sqlite" ]; then
-#     case $database_server in
-#         postgresql)
-#             ${pip} install --upgrade --use-wheel --find-link="$url" psycopg2
-#             ;;
-#         mysql)
-#             ${pip} install --upgrade --use-wheel --find-link="$url" MySQL-python
-#             ;;
-#     esac
+# install dependencies for database
+if [ "$database_server" != "sqlite" ]; then
+    case $database_server in
+        postgresql)
+            ${pip} install --upgrade --use-wheel --find-link="$url" psycopg2
+            ;;
+        mysql)
+            ${pip} install --upgrade --use-wheel --find-link="$url" MySQL-python
+            ;;
+    esac
 
-#     if [ ! $? -eq 0 ]; then
-#         echo "${txtboldred}Something went wrong. Could not install database" \
-#             "dependencies"
-#         echo "in this virtual environment:"
-#         echo "  $install_directory${txtreset}"
-#         echo "Please check if you have internet access and consult with official" \
-#              "GWM documentation:"
-#         echo "  http://ganeti-webmgr.readthedocs.org/en/latest/"
-#         exit 7
-#     fi
-# fi
+    if [ ! $? -eq 0 ]; then
+        echo "${txtboldred}Something went wrong. Could not install database" \
+            "dependencies"
+        echo "in this virtual environment:"
+        echo "  $install_directory${txtreset}"
+        echo "Please check if you have internet access and consult with official" \
+             "GWM documentation:"
+        echo "  http://ganeti-webmgr.readthedocs.org/en/latest/"
+        exit 7
+    fi
+fi
