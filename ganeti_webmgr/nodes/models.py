@@ -1,13 +1,13 @@
 from django.db import models
 from django.db.models import Sum, Q
 
-from clusters.models import CachedClusterObject
-from virtualmachines.models import VirtualMachine
-from jobs.models import Job
+from ganeti_webmgr.clusters.models import CachedClusterObject
+from ganeti_webmgr.virtualmachines.models import VirtualMachine
+from ganeti_webmgr.jobs.models import Job
 
-from ganeti_web import constants
-from utils import get_rapi
-from utils.fields import LowerCaseCharField
+from ganeti_webmgr.ganeti_web import constants
+from ganeti_webmgr.utils import get_rapi
+from ganeti_webmgr.utils.fields import LowerCaseCharField
 
 
 class Node(CachedClusterObject):

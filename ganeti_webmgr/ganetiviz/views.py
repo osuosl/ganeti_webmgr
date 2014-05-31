@@ -1,10 +1,10 @@
 from django.http import HttpResponse
 from django.views.generic import DetailView, TemplateView
 
-from clusters.models import Cluster
-from ganeti_web.views.generic import LoginRequiredMixin
+from ganeti_webmgr.clusters.models import Cluster
+from ganeti_webmgr.ganeti_web.views.generic import LoginRequiredMixin
 import simplejson as json
-from utils import get_rapi
+from ganeti_webmgr.utils import get_rapi
 
 
 class ClusterJsonView(LoginRequiredMixin, DetailView):

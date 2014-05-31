@@ -23,10 +23,10 @@ from django.utils import simplejson as json
 from django.views.generic.detail import DetailView
 
 from .models import Job
-from clusters.models import Cluster
-from virtualmachines.models import VirtualMachine
-from nodes.models import Node
-from ganeti_web.views.generic import NO_PRIVS, LoginRequiredMixin
+from ganeti_webmgr.clusters.models import Cluster
+from ganeti_webmgr.virtualmachines.models import VirtualMachine
+from ganeti_webmgr.nodes.models import Node
+from ganeti_webmgr.ganeti_web.views.generic import NO_PRIVS, LoginRequiredMixin
 
 
 class JobDetailView(LoginRequiredMixin, DetailView):

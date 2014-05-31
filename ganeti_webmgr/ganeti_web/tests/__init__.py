@@ -15,10 +15,10 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-from ganeti_web.tests.backend import *
-from ganeti_web.tests.caps import *
-#from ganeti_web.tests.cache_updater import *
-from ganeti_web.tests.general import *
-from ganeti_web.tests.importing import *
-from ganeti_web.tests.importing_nodes import *
-from ganeti_web.tests.tags import *
+from ganeti_webmgr.ganeti_web.tests.backend import *
+from ganeti_webmgr.ganeti_web.tests.caps import *
+#from ganeti_webmgr.ganeti_web.tests.cache_updater import *
+from ganeti_webmgr.ganeti_web.tests.general import *
+from ganeti_webmgr.ganeti_web.tests.importing import *
+from ganeti_webmgr.ganeti_web.tests.importing_nodes import *
+from ganeti_webmgr.ganeti_web.tests.tags import *

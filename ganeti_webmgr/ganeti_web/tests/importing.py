@@ -21,9 +21,9 @@ from django.contrib.auth.models import User, Group
 from django.test import TestCase
 from django.test.client import Client
 
-from authentication.models import Profile, Organization
-from clusters.models import Cluster
-from virtualmachines.models import VirtualMachine
+from ganeti_webmgr.authentication.models import Profile, Organization
+from ganeti_webmgr.clusters.models import Cluster
+from ganeti_webmgr.virtualmachines.models import VirtualMachine
 
 __all__ = ('ImportViews', )
 

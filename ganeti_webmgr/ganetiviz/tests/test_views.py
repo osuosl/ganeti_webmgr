@@ -1,10 +1,10 @@
-from clusters.models import Cluster
+from ganeti_webmgr.clusters.models import Cluster
 from django.contrib.auth.models import User, Group
 from django.test import TestCase
 from django.test import LiveServerTestCase
 from django.utils import unittest, simplejson as json
-from nodes.models import Node
-from virtualmachines.models import VirtualMachine
+from ganeti_webmgr.nodes.models import Node
+from ganeti_webmgr.virtualmachines.models import VirtualMachine
 
 try:
     from selenium import webdriver

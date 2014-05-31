@@ -3,8 +3,8 @@ from django.test import TestCase
 
 from django_test_tools.users import UserTestMixin
 
-from vm_templates.models import VirtualMachineTemplate
-from clusters.models import Cluster
+from ganeti_webmgr.vm_templates.models import VirtualMachineTemplate
+from ganeti_webmgr.clusters.models import Cluster
 
 
 class TemplateTestCase(TestCase, UserTestMixin):

@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.template import loader
 
-from muddle.core.apps.plugins import load_app_plugin
+from ganeti_webmgr.muddle.core.apps.plugins import load_app_plugin
 
 
 __all__ = ['initialize', 'register']

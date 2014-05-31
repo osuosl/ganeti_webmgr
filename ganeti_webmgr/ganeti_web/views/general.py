@@ -32,11 +32,11 @@ from .generic import NO_PRIVS
 from ..constants import VERSION
 from ..backend.queries import vm_qs_for_admins
 
-from clusters.models import Cluster
-from virtualmachines.models import VirtualMachine
-from jobs.models import Job
-from utils.models import GanetiError
-from authentication.models import ClusterUser, Organization, Profile
+from ganeti_webmgr.clusters.models import Cluster
+from ganeti_webmgr.virtualmachines.models import VirtualMachine
+from ganeti_webmgr.jobs.models import Job
+from ganeti_webmgr.utils.models import GanetiError
+from ganeti_webmgr.authentication.models import ClusterUser, Organization, Profile
 
 
 class AboutView(TemplateView):
