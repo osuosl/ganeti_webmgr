@@ -2,7 +2,7 @@ import inspect
 
 from django.conf import settings
 
-from muddle.util import path_to_class
+from ganeti_webmgr.muddle.util import path_to_class
 
 
 def load_app_plugin(module_name, Klass=None, method=None):

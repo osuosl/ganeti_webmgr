@@ -1,7 +1,7 @@
 from django.conf.urls.defaults import patterns, url
 
 from .views import JobDetailView
-from clusters.urls import cluster
+from ganeti_webmgr.clusters.urls import cluster
 job = '%s/job/(?P<job_id>\d+)' % cluster
 
 urlpatterns = patterns(

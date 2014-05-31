@@ -27,11 +27,11 @@ from django_test_tools.views import ViewTestMixin
 
 from object_permissions import get_user_perms
 
-from utils.proxy.constants import NODES, NODES_BULK
+from ganeti_webmgr.utils.proxy.constants import NODES, NODES_BULK
 
-from clusters.models import Cluster
-from virtualmachines.models import VirtualMachine
-from utils.models import Quota, SSHKey
+from ganeti_webmgr.clusters.models import Cluster
+from ganeti_webmgr.virtualmachines.models import VirtualMachine
+from ganeti_webmgr.utils.models import Quota, SSHKey
 
 
 __all__ = [

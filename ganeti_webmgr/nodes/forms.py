@@ -20,8 +20,8 @@ from django import forms
 from django.forms import ValidationError
 from django.utils.translation import ugettext as _
 
-from ganeti_web import constants
-from utils import cluster_default_info
+from ganeti_webmgr.ganeti_web import constants
+from ganeti_webmgr.utils import cluster_default_info
 
 
 class RoleForm(forms.Form):

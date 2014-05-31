@@ -1,4 +1,4 @@
-from muddle.shots.registration import register, TemplateMixer
+from ganeti_webmgr.muddle.shots.registration import register, TemplateMixer
 
 register('main_menu', TemplateMixer('ganeti/muddle/main_menu_ganeti.html'))
 register('main_menu', TemplateMixer('ganeti/muddle/main_menu_search.html'))

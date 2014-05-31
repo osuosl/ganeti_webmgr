@@ -25,9 +25,9 @@ from django.template.defaultfilters import stringfilter, filesizeformat
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
-from ganeti_web.constants import NODE_ROLE_MAP
-from clusters.models import Cluster
-from utils import hv_prettify
+from ganeti_webmgr.ganeti_web.constants import NODE_ROLE_MAP
+from ganeti_webmgr.clusters.models import Cluster
+from ganeti_webmgr.utils import hv_prettify
 
 register = Library()
 

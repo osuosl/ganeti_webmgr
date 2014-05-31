@@ -7,7 +7,7 @@ from django_tables2.utils import A
 from ..templatetags.webmgr_tags import (render_storage, render_os,
                                         abbreviate_fqdn, format_job_op)
 
-from utils import hv_prettify
+from ganeti_webmgr.utils import hv_prettify
 
 
 class BaseTable(Table):

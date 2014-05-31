@@ -1,7 +1,7 @@
 from django.template import Context, Template
 
-from muddle.shots import register, TemplateMixer
-from muddle.shots.tests.registration import ShotsTestsBase
+from ganeti_webmgr.muddle.shots import register, TemplateMixer
+from ganeti_webmgr.muddle.shots.tests.registration import ShotsTestsBase
 
 __all__ = ['ShotTagTests']
 

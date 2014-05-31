@@ -11,7 +11,7 @@ from django.template import RequestContext
 
 from object_permissions.signals import view_add_user, view_remove_user
 
-from muddle_users.signals import (view_group_edited, view_group_created,
+from ganeti_webmgr.muddle_users.signals import (view_group_edited, view_group_created,
                                   view_group_deleted)
 
 

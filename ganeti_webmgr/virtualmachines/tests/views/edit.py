@@ -2,11 +2,11 @@ from django.contrib.auth.models import User
 from django.test import Client
 from django.utils import simplejson as json
 
-from utils import cluster_os_list
-from utils.proxy.constants import JOB_RUNNING
+from ganeti_webmgr.utils import cluster_os_list
+from ganeti_webmgr.utils.proxy.constants import JOB_RUNNING
 from .base import TestVirtualMachineViewsBase
 from ...models import VirtualMachine
-from jobs.models import Job
+from ganeti_webmgr.jobs.models import Job
 
 __all__ = ['TestVirtualMachineEditViews',
            'TestVirtualMachineDeleteViews',

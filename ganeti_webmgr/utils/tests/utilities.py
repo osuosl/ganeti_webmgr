@@ -17,8 +17,8 @@
 
 from django.test import SimpleTestCase
 
-from utils import compare, get_hypervisor, hv_prettify, os_prettify
-from utils.proxy.constants import INSTANCE, XEN_PVM_INSTANCE, XEN_HVM_INSTANCE
+from ganeti_webmgr.utils import compare, get_hypervisor, hv_prettify, os_prettify
+from ganeti_webmgr.utils.proxy.constants import INSTANCE, XEN_PVM_INSTANCE, XEN_HVM_INSTANCE
 
 __all__ = (
     "TestCompare",

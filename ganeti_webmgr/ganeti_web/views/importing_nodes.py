@@ -24,9 +24,9 @@ from django.template.context import RequestContext
 from ..forms.importing import NodeForm
 from .generic import NO_PRIVS
 
-from clusters.models import Cluster
-from nodes.models import Node
-from virtualmachines.models import VirtualMachine
+from ganeti_webmgr.clusters.models import Cluster
+from ganeti_webmgr.nodes.models import Node
+from ganeti_webmgr.virtualmachines.models import VirtualMachine
 
 
 @login_required

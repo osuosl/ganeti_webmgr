@@ -46,24 +46,24 @@ from object_permissions.signals import (view_add_user, view_edit_user,
 from object_permissions.views.permissions import view_users, view_permissions
 
 
-from ganeti_web.backend.queries import vm_qs_for_users
-from ganeti_web.caps import has_shutdown_timeout, has_balloonmem
-from ganeti_web.templatetags.webmgr_tags import render_storage
-from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
+from ganeti_webmgr.ganeti_web.backend.queries import vm_qs_for_users
+from ganeti_webmgr.ganeti_web.caps import has_shutdown_timeout, has_balloonmem
+from ganeti_webmgr.ganeti_web.templatetags.webmgr_tags import render_storage
+from ganeti_webmgr.ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
                                       PaginationMixin, GWMBaseView)
-from ganeti_web.views.tables import BaseVMTable
+from ganeti_webmgr.ganeti_web.views.tables import BaseVMTable
 
 from .forms import (KvmModifyVirtualMachineForm, PvmModifyVirtualMachineForm,
                     HvmModifyVirtualMachineForm, ModifyConfirmForm,
                     MigrateForm, RenameForm, ChangeOwnerForm, ReplaceDisksForm)
 
-from clusters.models import Cluster
-from jobs.models import Job
-from utils.models import SSHKey
-from virtualmachines.models import VirtualMachine
+from ganeti_webmgr.clusters.models import Cluster
+from ganeti_webmgr.jobs.models import Job
+from ganeti_webmgr.utils.models import SSHKey
+from ganeti_webmgr.virtualmachines.models import VirtualMachine
 
-from utils import cluster_os_list, compare, os_prettify, get_hypervisor
-from utils.client import GanetiApiError
+from ganeti_webmgr.utils import cluster_os_list, compare, os_prettify, get_hypervisor
+from ganeti_webmgr.utils.client import GanetiApiError
 
 
 #XXX No more need for tastypie dependency for 0.8

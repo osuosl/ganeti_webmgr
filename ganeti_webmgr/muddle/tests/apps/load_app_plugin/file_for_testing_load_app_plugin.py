@@ -1,4 +1,4 @@
-from muddle.tests.apps.load_app_plugin.test_plugin import TestPlugin
+from ganeti_webmgr.muddle.tests.apps.load_app_plugin.test_plugin import TestPlugin
 
 
 class TestPluginFoo(TestPlugin):
