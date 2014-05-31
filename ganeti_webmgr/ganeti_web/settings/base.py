@@ -211,7 +211,7 @@ try:
     # File does exist, open it and read the value from it
     else:
         with open(secret_key_file, "r") as f:
-            SECRET_KEY = f.read().trim()
+            SECRET_KEY = f.read().strip()
 except IOError:
     action = 'create' if file_exists else 'open'
     msg = ("Unable to %s file at %s. Please either create the file and ensure "
