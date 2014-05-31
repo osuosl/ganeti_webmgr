@@ -54,7 +54,7 @@ ITEMS_PER_PAGE = 15
 ##### End Items per page defaults #####
 
 ##### Haystack settings #####
-HAYSTACK_SITECONF = 'search_sites'
+HAYSTACK_SITECONF = 'ganeti_webmgr.search_sites'
 HAYSTACK_SEARCH_ENGINE = 'whoosh'
 HAYSTACK_WHOOSH_PATH = install_path('whoosh_index')
 ##### End Haystack settings #####
@@ -77,8 +77,8 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.i18n',
     'django.core.context_processors.request',
     'django.core.context_processors.static',
-    'ganeti_web.context_processors.site',
-    'ganeti_web.context_processors.common_permissions',
+    'ganeti_webmgr.ganeti_web.context_processors.site',
+    'ganeti_webmgr.ganeti_web.context_processors.common_permissions',
 )
 ###### End Template Configuration #####
 
@@ -134,7 +134,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.locale.LocaleMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'ganeti_web.middleware.PermissionDeniedMiddleware'
+    'ganeti_webmgr.ganeti_web.middleware.PermissionDeniedMiddleware'
 )
 
 INSTALLED_APPS = (
@@ -150,28 +150,28 @@ INSTALLED_APPS = (
     'django_tables2',
     # ganeti_web must come before object_permissions in order to migrate from
     # 0.7 or older successfully.
-    'ganeti_web',
+    'ganeti_webmgr.ganeti_web',
     'object_permissions',
     'object_log',
     'south',
     'haystack',
-    'muddle',
-    'muddle.shots',
-    'muddle_users',
+    'ganeti_webmgr.muddle',
+    'ganeti_webmgr.muddle.shots',
+    'ganeti_webmgr.muddle_users',
 
     # ganeti apps
-    'authentication',
-    'clusters',
-    'jobs',
-    'nodes',
-    'utils',
-    'virtualmachines',
-    'vm_templates',
-    'ganetiviz',
+    'ganeti_webmgr.authentication',
+    'ganeti_webmgr.clusters',
+    'ganeti_webmgr.jobs',
+    'ganeti_webmgr.nodes',
+    'ganeti_webmgr.utils',
+    'ganeti_webmgr.virtualmachines',
+    'ganeti_webmgr.vm_templates',
+    'ganeti_webmgr.ganetiviz',
 )
 
-ROOT_URLCONF = 'ganeti_web.urls'
-AUTH_PROFILE_MODULE = 'authentication.Profile'
+ROOT_URLCONF = 'ganeti_webmgr.ganeti_web.urls'
+AUTH_PROFILE_MODULE = 'ganeti_webmgr.authentication.Profile'
 
 ##### Locale Configuration #####
 LOCALE_PATHS = (
