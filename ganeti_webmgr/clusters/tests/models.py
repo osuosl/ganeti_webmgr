@@ -21,13 +21,13 @@ from datetime import datetime
 from django.contrib.auth.models import User
 from django.test import TestCase
 
-from utils.proxy.constants import INFO, JOB_RUNNING, JOB
+from ganeti_webmgr.utils.proxy.constants import INFO, JOB_RUNNING, JOB
 
-from virtualmachines.models import VirtualMachine
-from clusters.models import Cluster
-from jobs.models import Job
-from nodes.models import Node
-from utils.models import Quota
+from ganeti_webmgr.virtualmachines.models import VirtualMachine
+from ganeti_webmgr.clusters.models import Cluster
+from ganeti_webmgr.jobs.models import Job
+from ganeti_webmgr.nodes.models import Node
+from ganeti_webmgr.utils.models import Quota
 
 
 __all__ = ['TestClusterModel']

@@ -3,7 +3,7 @@ from django.core.urlresolvers import reverse
 # #6579.
 from django.utils import simplejson as json
 
-from utils.models import SSHKey
+from ganeti_webmgr.utils.models import SSHKey
 from .base import TestVirtualMachineViewsBase
 
 __all__ = ['TestVirtualMachineViewList',

@@ -1,1 +1,1 @@
-from muddle.tests.apps import *
+from ganeti_webmgr.muddle.tests.apps import *

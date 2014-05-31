@@ -6,8 +6,8 @@ from object_permissions import get_users_any
 from django.db.models import Q
 
 from .models import SSHKey
-from clusters.models import Cluster
-from virtualmachines.models import VirtualMachine
+from ganeti_webmgr.clusters.models import Cluster
+from ganeti_webmgr.virtualmachines.models import VirtualMachine
 
 
 def ssh_keys(request, api_key):

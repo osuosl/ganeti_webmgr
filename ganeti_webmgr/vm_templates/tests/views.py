@@ -23,11 +23,11 @@ from django.contrib.auth.models import User
 from django_test_tools.users import UserTestMixin
 from django_test_tools.views import ViewTestMixin
 
-from clusters.models import Cluster
-from virtualmachines.models import VirtualMachine
-from vm_templates.models import VirtualMachineTemplate
+from ganeti_webmgr.clusters.models import Cluster
+from ganeti_webmgr.virtualmachines.models import VirtualMachine
+from ganeti_webmgr.vm_templates.models import VirtualMachineTemplate
 
-from utils.proxy.constants import INSTANCE
+from ganeti_webmgr.utils.proxy.constants import INSTANCE
 
 
 __all__ = ('TestTemplateViews', )

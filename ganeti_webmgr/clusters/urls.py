@@ -1,5 +1,5 @@
 from django.conf.urls.defaults import patterns, url
-from clusters.views import (ClusterDetailView, ClusterListView,
+from ganeti_webmgr.clusters.views import (ClusterDetailView, ClusterListView,
                             ClusterVMListView, ClusterJobListView)
 
 cluster_slug = '(?P<cluster_slug>[-_A-Za-z0-9]+)'

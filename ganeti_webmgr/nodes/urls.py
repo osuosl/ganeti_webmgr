@@ -1,7 +1,7 @@
 from django.conf.urls.defaults import patterns, url
 from .views import NodeDetailView, NodePrimaryListView, NodeSecondaryListView
 
-from clusters.urls import cluster_slug
+from ganeti_webmgr.clusters.urls import cluster_slug
 host = '(?P<host>[^/]+)'
 node_prefix = 'cluster/%s/node/%s' % (cluster_slug, host)
 

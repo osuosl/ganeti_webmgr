@@ -3,7 +3,7 @@ from django.template import Node, NodeList, TemplateSyntaxError
 
 register = template.Library()
 
-from muddle.shots.registration import MUDDLE_SHOTS
+from ganeti_webmgr.muddle.shots.registration import MUDDLE_SHOTS
 
 
 @register.tag

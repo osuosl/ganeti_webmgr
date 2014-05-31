@@ -17,9 +17,9 @@
 
 from django.test import TestCase
 
-from utils.proxy import CallProxy
-from utils.proxy.constants import JOB, JOB_RUNNING, JOB_ERROR
-from virtualmachines.tests.views.base import VirtualMachineTestCaseMixin
+from ganeti_webmgr.utils.proxy import CallProxy
+from ganeti_webmgr.utils.proxy.constants import JOB, JOB_RUNNING, JOB_ERROR
+from ganeti_webmgr.virtualmachines.tests.views.base import VirtualMachineTestCaseMixin
 
 from ..models import Job
 

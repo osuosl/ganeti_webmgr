@@ -4,9 +4,9 @@ from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import GenericForeignKey
 
-from utils import get_rapi
-from utils.client import GanetiApiError
-from clusters.models import CachedClusterObject
+from ganeti_webmgr.utils import get_rapi
+from ganeti_webmgr.utils.client import GanetiApiError
+from ganeti_webmgr.clusters.models import CachedClusterObject
 
 
 class JobManager(models.Manager):

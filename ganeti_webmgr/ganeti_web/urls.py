@@ -24,8 +24,8 @@ from django.conf import settings
 from django.conf.urls.defaults import patterns, url, include
 from django.contrib.auth.decorators import login_required
 
-from ganeti_web.views.general import AboutView
-from virtualmachines.forms import vm_wizard
+from ganeti_webmgr.ganeti_web.views.general import AboutView
+from ganeti_webmgr.virtualmachines.forms import vm_wizard
 
 
 handler500 = 'ganeti_web.views.view_500'

@@ -25,10 +25,10 @@ machinery.
 
 from object_log.models import LogItem
 
-from ganeti_web.caps import has_balloonmem
-from jobs.models import Job
-from virtualmachines.models import VirtualMachine
-from vm_templates.models import VirtualMachineTemplate
+from ganeti_webmgr.ganeti_web.caps import has_balloonmem
+from ganeti_webmgr.jobs.models import Job
+from ganeti_webmgr.virtualmachines.models import VirtualMachine
+from ganeti_webmgr.vm_templates.models import VirtualMachineTemplate
 
 log_action = LogItem.objects.log_action
 

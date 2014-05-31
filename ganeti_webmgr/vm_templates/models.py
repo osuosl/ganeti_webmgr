@@ -4,7 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.db import models
 from django_fields.fields import PickleField
 
-from utils.fields import LowerCaseCharField
+from ganeti_webmgr.utils.fields import LowerCaseCharField
 
 
 class VirtualMachineTemplate(models.Model):
