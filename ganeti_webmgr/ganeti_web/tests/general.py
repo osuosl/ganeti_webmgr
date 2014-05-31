@@ -25,12 +25,12 @@ from django.utils import simplejson as json
 
 from django_test_tools.views import ViewTestMixin
 
-from utils.proxy.constants import JOB_ERROR
-from utils.models import SSHKey
+from ganeti_webmgr.utils.proxy.constants import JOB_ERROR
+from ganeti_webmgr.utils.models import SSHKey
 
-from clusters.models import Cluster
-from virtualmachines.models import VirtualMachine
-from jobs.models import Job
+from ganeti_webmgr.clusters.models import Cluster
+from ganeti_webmgr.virtualmachines.models import VirtualMachine
+from ganeti_webmgr.jobs.models import Job
 from ..backend.queries import vm_qs_for_admins
 
 

@@ -1,5 +1,5 @@
 from ...models import VirtualMachine
-from jobs.models import Job
+from ganeti_webmgr.jobs.models import Job
 
 from object_permissions import grant
 

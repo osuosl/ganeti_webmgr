@@ -2,9 +2,9 @@ from django.conf.urls.defaults import patterns, url
 from .views import (TemplateFromVMInstanceView, VMInstanceFromTemplateView,
                     TemplateListView)
 
-from virtualmachines.forms import vm_wizard
-from virtualmachines.urls import vm_prefix
-from clusters.urls import cluster
+from ganeti_webmgr.virtualmachines.forms import vm_wizard
+from ganeti_webmgr.virtualmachines.urls import vm_prefix
+from ganeti_webmgr.clusters.urls import cluster
 
 template = '(?P<template>[^/]+)'
 template_prefix = '%s/template/%s' % (cluster, template)

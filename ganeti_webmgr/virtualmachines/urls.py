@@ -1,7 +1,7 @@
 from django.conf.urls.defaults import patterns, url
 from .views import VMDeleteView, VMListView
 
-from clusters.urls import cluster
+from ganeti_webmgr.clusters.urls import cluster
 instance = '(?P<instance>[^/]+)'
 vm_prefix = '%s/%s' % (cluster, instance)
 

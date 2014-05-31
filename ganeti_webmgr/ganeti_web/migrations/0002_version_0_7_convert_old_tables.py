@@ -3,7 +3,7 @@ import datetime
 from south.db import db
 from south.v2 import DataMigration
 from django.db import models
-from ganeti_web.migrations import db_table_exists
+from ganeti_webmgr.ganeti_web.migrations import db_table_exists
 
 class Migration(DataMigration):
 

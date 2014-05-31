@@ -97,7 +97,7 @@ class GanetiError(models.Model):
 
             @param  obj   affected object (itself or just QuerySet)
             """
-            from clusters.models import Cluster
+            from ganeti_webmgr.clusters.models import Cluster
 
             if obj is None:
                 raise RuntimeError("Implementation error calling get_errors()"
@@ -134,7 +134,7 @@ class GanetiError(models.Model):
         @param  obj  object (i.e. cluster or vm) affected by the error
         @param code  error's code number
         """
-        from clusters.models import Cluster
+        from ganeti_webmgr.clusters.models import Cluster
         ct = ContentType.objects.get_for_model(obj.__class__)
         is_cluster = isinstance(obj, Cluster)
 

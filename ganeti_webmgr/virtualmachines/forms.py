@@ -32,26 +32,26 @@ from django.utils.translation import ugettext_lazy as _
 from object_log.models import LogItem
 log_action = LogItem.objects.log_action
 
-from ganeti_web.backend.queries import cluster_qs_for_user, owner_qs
-from ganeti_web.backend.templates import template_to_instance
-from ganeti_web.caps import has_cdrom2, has_balloonmem, has_sharedfile
-from ganeti_web.constants import (EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES,
+from ganeti_webmgr.ganeti_web.backend.queries import cluster_qs_for_user, owner_qs
+from ganeti_webmgr.ganeti_web.backend.templates import template_to_instance
+from ganeti_webmgr.ganeti_web.caps import has_cdrom2, has_balloonmem, has_sharedfile
+from ganeti_webmgr.ganeti_web.constants import (EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES,
                                   HV_NIC_MODES, KVM_CHOICES, HV_USB_MICE,
                                   HV_SECURITY_MODELS, KVM_FLAGS,
                                   HV_DISK_CACHES, MODE_CHOICES, HVM_CHOICES,
                                   VM_HELP, VM_CREATE_HELP, VM_RENAME_HELP,
                                   KVM_BOOT_ORDER, HVM_BOOT_ORDER)
-from ganeti_web.views.generic import (LoginRequiredMixin,
+from ganeti_webmgr.ganeti_web.views.generic import (LoginRequiredMixin,
                                       PermissionRequiredMixin)
-from utils.fields import DataVolumeField, MACAddressField
-from clusters.models import Cluster
-from authentication.models import ClusterUser
-from nodes.models import Node
-from virtualmachines.models import VirtualMachine
-from vm_templates.models import VirtualMachineTemplate
-from utils import (cluster_default_info, cluster_os_list, get_hypervisor,
+from ganeti_webmgr.utils.fields import DataVolumeField, MACAddressField
+from ganeti_webmgr.clusters.models import Cluster
+from ganeti_webmgr.authentication.models import ClusterUser
+from ganeti_webmgr.nodes.models import Node
+from ganeti_webmgr.virtualmachines.models import VirtualMachine
+from ganeti_webmgr.vm_templates.models import VirtualMachineTemplate
+from ganeti_webmgr.utils import (cluster_default_info, cluster_os_list, get_hypervisor,
                    hv_prettify)
-from utils.client import (REPLACE_DISK_AUTO, REPLACE_DISK_PRI,
+from ganeti_webmgr.utils.client import (REPLACE_DISK_AUTO, REPLACE_DISK_PRI,
                           REPLACE_DISK_CHG, REPLACE_DISK_SECONDARY)
 
 username_or_mtime = Q(username='') | Q(mtime__isnull=True)

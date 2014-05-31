@@ -1,4 +1,4 @@
-from virtualmachines.forms import VMWizardBasicsForm
+from ganeti_webmgr.virtualmachines.forms import VMWizardBasicsForm
 from .base import TemplateTestCase
 
 __all__ = ['TestEditTemplateVMBasicForm']

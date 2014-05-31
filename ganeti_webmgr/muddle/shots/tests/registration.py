@@ -1,7 +1,7 @@
 from django.test import TestCase
 
-from muddle.shots import register, TemplateMixer
-from muddle.shots.registration import MUDDLE_SHOTS
+from ganeti_webmgr.muddle.shots import register, TemplateMixer
+from ganeti_webmgr.muddle.shots.registration import MUDDLE_SHOTS
 
 
 __all__ = ['ShotsRegistration', 'TemplateMixerTests']

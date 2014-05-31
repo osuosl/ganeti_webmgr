@@ -1,8 +1,8 @@
 from django.test import TestCase
 
-from muddle.core.apps.plugins import load_app_plugin
-from muddle.tests.apps.load_app_plugin.test_plugin import TestPlugin
-from muddle.tests.apps.load_app_plugin import verify
+from ganeti_webmgr.muddle.core.apps.plugins import load_app_plugin
+from ganeti_webmgr.muddle.tests.apps.load_app_plugin.test_plugin import TestPlugin
+from ganeti_webmgr.muddle.tests.apps.load_app_plugin import verify
 
 TESTING_MODULE = 'tests.apps.load_app_plugin.file_for_testing_load_app_plugin'
 WAS_RUN = False

@@ -24,7 +24,7 @@ from django.template import RequestContext
 from django.utils import simplejson as json
 from django.utils.translation import ugettext as _
 
-from utils.models import SSHKey
+from ganeti_webmgr.utils.models import SSHKey
 
 
 @login_required

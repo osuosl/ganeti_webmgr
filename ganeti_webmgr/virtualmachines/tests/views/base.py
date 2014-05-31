@@ -6,13 +6,13 @@ from django.utils import simplejson as json
 from django_test_tools.views import ViewTestMixin
 from django_test_tools.users import UserTestMixin
 
-from vm_templates.models import VirtualMachineTemplate
+from ganeti_webmgr.vm_templates.models import VirtualMachineTemplate
 
 from ...models import VirtualMachine
-from clusters.models import Cluster
-from nodes.models import Node
-from jobs.models import Job
-from utils.client import GanetiApiError
+from ganeti_webmgr.clusters.models import Cluster
+from ganeti_webmgr.nodes.models import Node
+from ganeti_webmgr.jobs.models import Job
+from ganeti_webmgr.utils.client import GanetiApiError
 
 
 class VirtualMachineTestCaseMixin():

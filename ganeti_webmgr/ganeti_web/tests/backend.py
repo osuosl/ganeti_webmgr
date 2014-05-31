@@ -6,8 +6,8 @@ from django_test_tools.users import UserTestMixin
 from ..backend.queries import (
     cluster_qs_for_user, owner_qs, cluster_vm_qs
 )
-from clusters.models import Cluster
-from virtualmachines.models import VirtualMachine
+from ganeti_webmgr.clusters.models import Cluster
+from ganeti_webmgr.virtualmachines.models import VirtualMachine
 
 __all__ = (
     "TestClusterQSForUser",

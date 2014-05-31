@@ -25,8 +25,8 @@ from ..proxy import RapiProxy, CallProxy
 
 from django.contrib.auth.models import User
 
-from virtualmachines.models import VirtualMachine
-from clusters.models import Cluster
+from ganeti_webmgr.virtualmachines.models import VirtualMachine
+from ganeti_webmgr.clusters.models import Cluster
 from ..models import GanetiError
 
 __all__ = ('TestGanetiErrorModel', 'TestErrorViews')

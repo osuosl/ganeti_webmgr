@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from vm_templates.models import VirtualMachineTemplate
+from ganeti_webmgr.vm_templates.models import VirtualMachineTemplate
 
 __all__ = (
     "TestVirtualMachineTemplateModel",
