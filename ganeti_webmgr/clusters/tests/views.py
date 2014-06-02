@@ -22,8 +22,8 @@ from django.test.client import Client
 # Per #6579, do not change this import without discussion.
 from django.utils import simplejson as json
 
-from django_test_tools.users import UserTestMixin
-from django_test_tools.views import ViewTestMixin
+from ganeti_webmgr.django_test_tools.users import UserTestMixin
+from ganeti_webmgr.django_test_tools.views import ViewTestMixin
 
 from object_permissions import get_user_perms
 

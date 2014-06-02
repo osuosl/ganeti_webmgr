@@ -243,7 +243,8 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
                          root_path='/dev/vda1',
                          kernel_path='/boot/vmlinuz-2.32.6-27-generic',
                          serial_console=True,
-                         cdrom_image_path='')
+                         cdrom_image_path='',
+                         notes="foo")
 
         ## SESSION VARIABLES
         # Make sure session variables are set
