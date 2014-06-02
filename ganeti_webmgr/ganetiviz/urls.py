@@ -7,7 +7,7 @@ from ganeti_webmgr.ganetiviz.views import ClusterGraphView, AllClustersView,\
 instance_hostname = '(?P<instance_hostname>[^/]+)'
 
 urlpatterns = patterns(
-    'ganetiviz.views',
+    'ganeti_webmgr.ganetiviz.views',
 
     url(r'^ganetiviz/cluster/%s/$' % cluster_slug, ClusterJsonView.as_view(),
         name='json-cluster'),

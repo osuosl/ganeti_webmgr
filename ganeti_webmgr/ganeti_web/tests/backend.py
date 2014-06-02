@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AnonymousUser, Group, User
 from django.test import TestCase
 
-from django_test_tools.users import UserTestMixin
+from ganeti_webmgr.django_test_tools.users import UserTestMixin
 
 from ..backend.queries import (
     cluster_qs_for_user, owner_qs, cluster_vm_qs

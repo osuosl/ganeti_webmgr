@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.test import TestCase
 
-from django_test_tools.users import UserTestMixin
+from ganeti_webmgr.django_test_tools.users import UserTestMixin
 
 from ganeti_webmgr.vm_templates.models import VirtualMachineTemplate
 from ganeti_webmgr.clusters.models import Cluster

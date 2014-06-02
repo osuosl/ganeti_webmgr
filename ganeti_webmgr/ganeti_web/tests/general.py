@@ -23,7 +23,7 @@ from django.test.client import Client
 # Per #6579, do not change this import without discussion.
 from django.utils import simplejson as json
 
-from django_test_tools.views import ViewTestMixin
+from ganeti_webmgr.django_test_tools.views import ViewTestMixin
 
 from ganeti_webmgr.utils.proxy.constants import JOB_ERROR
 from ganeti_webmgr.utils.models import SSHKey

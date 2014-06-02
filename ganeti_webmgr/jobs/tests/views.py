@@ -18,8 +18,8 @@
 from django.test import TestCase
 from django.test.client import Client
 
-from django_test_tools.views import ViewTestMixin
-from django_test_tools.users import UserTestMixin
+from ganeti_webmgr.django_test_tools.views import ViewTestMixin
+from ganeti_webmgr.django_test_tools.users import UserTestMixin
 
 from ganeti_webmgr.utils.proxy.constants import JOB_ERROR
 

@@ -36,7 +36,7 @@ else:
 
 # Users
 urlpatterns = patterns(
-    'muddle_users.views.user',
+    'ganeti_webmgr.muddle_users.views.user',
     url(r'^accounts/profile/?', 'user_profile', name="profile"),
     url(r'^users/?$', 'user_list', name="user-list"),
     url(r'^user/add/?$', 'user_add', name="user-create"),
@@ -50,7 +50,7 @@ urlpatterns = patterns(
 
 # Groups
 urlpatterns += patterns(
-    'muddle_users.views.group',
+    'ganeti_webmgr.muddle_users.views.group',
     # Groups
     url(r'^groups/$', 'list', {'template': GROUP_LIST_TEMPLATE}, name="group-list"),
     url(r'^group/add/?$', 'edit', name="group-add"),
