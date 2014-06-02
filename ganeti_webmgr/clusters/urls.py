@@ -6,7 +6,7 @@ cluster_slug = '(?P<cluster_slug>[-_A-Za-z0-9]+)'
 cluster = 'cluster/%s' % cluster_slug
 
 urlpatterns = patterns(
-    'clusters.views',
+    'ganeti_webmgr.clusters.views',
 
     url(r'^clusters/?$', ClusterListView.as_view(), name="cluster-list"),
 

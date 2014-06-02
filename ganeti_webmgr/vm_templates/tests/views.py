@@ -20,8 +20,8 @@ from django.test import TestCase
 from django.test.client import Client
 from django.contrib.auth.models import User
 
-from django_test_tools.users import UserTestMixin
-from django_test_tools.views import ViewTestMixin
+from ganeti_webmgr.django_test_tools.users import UserTestMixin
+from ganeti_webmgr.django_test_tools.views import ViewTestMixin
 
 from ganeti_webmgr.clusters.models import Cluster
 from ganeti_webmgr.virtualmachines.models import VirtualMachine
