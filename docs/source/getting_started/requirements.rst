@@ -42,8 +42,27 @@ own, here's the list:
   requires ``psycopg2`` package installed within virtual environment, which in
   turn requires ``libpq5`` on Ubuntu/Debian and ``postgresql-libs`` on CentOS.
 
+If your using the ``setup.sh`` script these database dependencies should be
+installed for you. But if it runs into errors, these are the dependencies needed.
+
 LDAP
 ~~~~
 
 LDAP dependencies can be found on the
 :ref:`LDAP dependencies <ldap-dependencies>` page.
+
+VNCAuthProxy
+~~~~~~~~~~~~
+
+VNCAuthProxy, is used to connect the VNC web frontend to a Ganeti VM's VNC Console.
+This project is built on twisted and for encryption requires openssl development
+headers.
+
+On CentOS, the package is ``openssl-devel`` and on Ubuntu/Debian its
+``libssl-dev``.
+
+If your using the ``setup.sh`` script, you don't need to worry
+about these, however if your building your own wheels packages, or installing
+without the script, these will be needed to compile the required packages on
+your system.
+
