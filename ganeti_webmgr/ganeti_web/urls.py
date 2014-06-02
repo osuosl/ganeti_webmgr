@@ -28,7 +28,7 @@ from ganeti_webmgr.ganeti_web.views.general import AboutView
 from ganeti_webmgr.virtualmachines.forms import vm_wizard
 
 
-handler500 = 'ganeti_web.views.view_500'
+handler500 = 'ganeti_webmgr.ganeti_web.views.view_500'
 
 
 # TODO: is this used anywhere?  Probably not.  Get rid of it.
@@ -42,14 +42,14 @@ urlpatterns = patterns(
     (r'^', include('object_permissions.urls')),
     (r'^', include('object_log.urls')),
 
-    (r'^', include('authentication.urls')),
-    (r'^', include('clusters.urls')),
-    (r'^', include('jobs.urls')),
-    (r'^', include('nodes.urls')),
-    (r'^', include('utils.urls')),
-    (r'^', include('virtualmachines.urls')),
-    (r'^', include('vm_templates.urls')),
-    (r'', include('ganetiviz.urls')),
+    (r'^', include('ganeti_webmgr.authentication.urls')),
+    (r'^', include('ganeti_webmgr.clusters.urls')),
+    (r'^', include('ganeti_webmgr.jobs.urls')),
+    (r'^', include('ganeti_webmgr.nodes.urls')),
+    (r'^', include('ganeti_webmgr.utils.urls')),
+    (r'^', include('ganeti_webmgr.virtualmachines.urls')),
+    (r'^', include('ganeti_webmgr.vm_templates.urls')),
+    (r'', include('ganeti_webmgr.ganetiviz.urls')),
 )
 
 # user management and authentication
@@ -85,7 +85,7 @@ urlpatterns += patterns('', (r'^i18n/', include('django.conf.urls.i18n')))
 
 # General
 urlpatterns += patterns(
-    'ganeti_web.views.general',
+    'ganeti_webmgr.ganeti_web.views.general',
 
     url(r'^$', 'overview', name="index"),
 
@@ -105,7 +105,7 @@ urlpatterns += patterns(
 # Users - overridden from users app to use custom templates
 # TODO: IT DOES NOT OVERRIDE
 urlpatterns += patterns(
-    'muddle_users.views.user',
+    'ganeti_webmgr.muddle_users.views.user',
     url(r'^accounts/profile/?', 'user_profile', name='profile',
         kwargs={'template': 'ganeti/users/profile.html'}),
 )
@@ -113,7 +113,7 @@ urlpatterns += patterns(
 
 # VM add wizard
 urlpatterns += patterns(
-    "ganeti_web.forms.virtual_machine",
+    "ganeti_webmgr.ganeti_web.forms.virtual_machine",
     url(r"^vm/add/?$",
     vm_wizard(initial_dict={0: {'choices': [u'hostname']}}),
     name="instance-create"),
@@ -122,7 +122,7 @@ urlpatterns += patterns(
 
 # Virtual Machine Importing
 urlpatterns += patterns(
-    'ganeti_web.views.importing',
+    'ganeti_webmgr.ganeti_web.views.importing',
 
     url(r'^import/orphans/', 'orphans',
         name='import-orphans'),
@@ -135,7 +135,7 @@ urlpatterns += patterns(
 
 # Node Importing
 urlpatterns += patterns(
-    'ganeti_web.views.importing_nodes',
+    'ganeti_webmgr.ganeti_web.views.importing_nodes',
 
     url(r'^import/node/missing/', 'missing_ganeti',
         name='import-nodes-missing'),
@@ -147,7 +147,7 @@ urlpatterns += patterns(
 
 # Search
 urlpatterns += patterns(
-    'ganeti_web.views.search',
+    'ganeti_webmgr.ganeti_web.views.search',
 
     url(r'^search/suggestions.json', 'suggestions', name='search-suggestions'),
 
@@ -155,7 +155,7 @@ urlpatterns += patterns(
 )
 
 urlpatterns += patterns(
-    'ganeti_web.views.user_search',
+    'ganeti_webmgr.ganeti_web.views.user_search',
 
     url(r'^search/owners/?$', 'search_owners', name="owner-search")
 )
@@ -170,7 +170,7 @@ urlpatterns += patterns(
 # Moved here so that our overriding works
 urlpatterns += patterns(
     '',
-    (r'^', include('muddle_users.urls')),
-    (r'^', include('muddle.urls')),
+    (r'^', include('ganeti_webmgr.muddle_users.urls')),
+    (r'^', include('ganeti_webmgr.muddle.urls')),
 )
 

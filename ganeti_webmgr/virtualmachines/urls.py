@@ -6,7 +6,7 @@ instance = '(?P<instance>[^/]+)'
 vm_prefix = '%s/%s' % (cluster, instance)
 
 urlpatterns = patterns(
-    'virtualmachines.views',
+    'ganeti_webmgr.virtualmachines.views',
 
     url(r'^vms/$', VMListView.as_view(), name="virtualmachine-list"),
 

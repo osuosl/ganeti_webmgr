@@ -11,7 +11,7 @@ template_prefix = '%s/template/%s' % (cluster, template)
 
 
 urlpatterns = patterns(
-    'vm_templates.views',
+    'ganeti_webmgr.vm_templates.views',
 
     url(r'^templates/$', TemplateListView.as_view(), name='template-list'),
 

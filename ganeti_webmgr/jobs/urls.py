@@ -5,7 +5,7 @@ from ganeti_webmgr.clusters.urls import cluster
 job = '%s/job/(?P<job_id>\d+)' % cluster
 
 urlpatterns = patterns(
-    'jobs.views',
+    'ganeti_webmgr.jobs.views',
 
     url(r'^%s/status/?' % job, 'status', name='job-status'),
 

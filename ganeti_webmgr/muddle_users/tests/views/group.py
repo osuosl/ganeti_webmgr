@@ -373,7 +373,7 @@ class TestGroupViews(TestCase):
         response = c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        self.assertTemplateUsed(response, 'muddle/group/user_row.html')
+        self.assertTemplateUsed(response, 'group/user_row.html')
         self.assertTrue(group.user_set.filter(id=self.user0.id).exists())
 
         # check signal fired
