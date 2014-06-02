@@ -38,11 +38,17 @@ TESTING = False
 ##### General Defaults #####
 SITE_ID = 1
 LOGIN_REDIRECT_URL = '/'
+SITE_NAME = 'Ganeti Web Manager'
+SITE_DOMAIN = 'localhost:8000'
+SITE_ROOT = ''
 
 USE_I18N = True
 USE_L10N = True
 ##### End General defaults #####
 
+##### Registration Settings #####
+ACCOUNT_ACTIVATION_DAYS = 7
+##### End Registration Settings #####
 
 ##### Items per page defaults #####
 # default max number of disks that can be added at once to an instance
@@ -171,7 +177,7 @@ INSTALLED_APPS = (
 )
 
 ROOT_URLCONF = 'ganeti_webmgr.ganeti_web.urls'
-AUTH_PROFILE_MODULE = 'ganeti_webmgr.authentication.Profile'
+AUTH_PROFILE_MODULE = 'authentication.Profile'
 
 ##### Locale Configuration #####
 LOCALE_PATHS = (
