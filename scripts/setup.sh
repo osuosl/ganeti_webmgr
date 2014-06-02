@@ -53,6 +53,7 @@ check_if_exists() {
 
 # default values
 install_directory='/opt/ganeti_webmgr'
+default_config_directory='/opt/ganeti_webmgr/config'
 base_url="https://ftp.osuosl.org/pub/osl/ganeti-webmgr"
 
 # helper function: display help message
@@ -304,7 +305,7 @@ echo "------------------------------------------------------------------------"
 # WARNING: watch out for double slashes when concatenating these strings!
 url="$base_url/$os/$os_codename/$architecture/"
 
-script_location=(dirname $0)
+script_location=$(dirname $0)
 ${pip} install --upgrade --use-wheel --find-link="$url" "$script_location/.."
 
 if [ ! $? -eq 0 ]; then
@@ -338,4 +339,13 @@ if [ "$database_server" != "sqlite" ]; then
         echo "  http://ganeti-webmgr.readthedocs.org/en/latest/"
         exit 7
     fi
+fi
+
+# make the config directory
+
+mkdir -p $default_config_directory
+
+if [! $? -eq 0 ]; then
+    echo "Unable to make default config directory at "
+    echo "$default_config_directory${textreset}"
 fi
