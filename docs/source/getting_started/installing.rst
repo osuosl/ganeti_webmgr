@@ -16,78 +16,107 @@ play with unstable |gwm|, please follow
 Installing
 ----------
 
-Installation is now automatic.  You just need to grab one :ref:`Bash script <setup-script>`
-and run it with proper arguments.  That script detects your operating system,
-installs required dependencies (even for your database of choice!), creates
-Python virtual environment and finally installs |gwm| with its own
-dependencies.
+Installation is now automatic. There is now a shell script detects your
+operating system, installs required dependencies (even for your database of
+choice!), creates Python virtual environment and finally installs |gwm| with its
+own dependencies.
 
-0. Make sure that all |gwm|'s requirements are met.
+#. Make sure that all |gwm|'s :ref:`requirements` are met.
 
-1. Download the script to your desired destination (you want to keep that
-   script near |gwm| installation path, because you'll use it later to update
-   |gwm|):
+#. Next you need the latest release of |gwm| which is |release|. You can
+   download that here: |release_tarball|. You can also clone the repo and
+   checkout the latest tag as well::
 
-   ::
+   $ git clone https://github.com/osuosl/ganeti_webmgr.git
+   $ git checkout $VERSION
 
-    $ cd /opt/ganeti_webmgr/
-    $ wget https://raw.github.com/pbanaszkiewicz/ganeti_webmgr-setup/develop/setup.sh
+  .. note:: Replace $VERSION with the version you want to deploy, such as
+            |release|
 
-2.  Run ``setup.sh -h`` to get help and see all possible usages of that script.
-    To install everything within ``/opt/ganeti_webmgr/gwm`` directory
-    (assuming your setup script is in ``/opt/ganeti_webmgr`` and your desired
-    database is PostgreSQL)::
+  It doesn't actually matter where you put these, it will only be used for
+  installation, which will eventually install the project to
+  ``/opt/ganeti_webmgr``.
 
-    $ ./setup.sh -d ./gwm -D postgresql
+#.  Once you've got the project, you will use our shell script to install things.
+    First, cd to the |gwm| project folder::
 
-Now in ``/opt/ganeti_webmgr/gwm`` is your Python virtual environment.  This
-means that all Python packages needed by |gwm| exist within that directory
-structure, and not in your global Python packages.  This separation helps
-keeping multiple different projects at once and specific dependencies with
-pinned versions.
+    $ cd ./ganeti_webmgr
+
+    Next run ``./scripts/setup.sh -h`` to get help and see all possible usages
+    of our shell script. There are different options for installing to different
+    locations, as well as installing different database dependencies.
+
+#. Now that you've looked at the options, you'll want to actuall install |gwm|.
+   By default, it will install to ``/opt/ganeti_webmgr`` and will not install any
+   database dependencies. To do this install run the following::
+
+   $ ./scripts/setup.sh
+
+   If you want to install |gwm| with mysql support, which means installing your
+   systems mysql-client libraries, development headers, and the python mysql
+   package run::
+
+   $ ./scripts/setup.sh -D mysql
+
 
 Minimum Configuration
 ---------------------
 
-When you ran ``setup.sh`` script, it downloaded for you premade configuration
-that now resides in ``/opt/ganeti_webmgr/gwm/config``.  Use it as a starting
-point.  All configuration options should be well documented and easy to change.
+The prefered way of configuring
 
-Follow to the :ref:`configuration page <configuring>` for more documentation.
+Follow to the :ref:`configuration page <configuring>` for documentation on
+configuring |gwm|.
 
 Initializing
 ------------
 
-Because your |gwm| instance lives within virtual environment, you must get
-into it as well::
+Because your |gwm| instance lives within virtual environment, you must activate
+the virtual environment in order to access GWM::
 
-    $ source gwm/bin/activate
+    $ source /opt/ganeti_webmgr/bin/activate
 
 Now all the programs installed to that virtual environment are available for
 you (until you issue ``deactivate`` or close your terminal session).
+
+We'll be using the ``django-admin.py`` tool to run commands to administer our
+app from this point forward. You might be familiar with ``manage.py``, which is
+essentially what ``django-admin.py`` is. However, we need to tell
+``django-admin.py`` what settings to use, in order for it to work. To do this
+run the following command::
+
+    $ export DJANGO_SETTINGS_MODULE="ganeti_webmgr.ganeti_web.settings"
+
+You only need to run this once each time you activate the virtual environment,
+or if you prefer, each time you run ``django-admin.py`` you can provided the
+``--settings`` argument::
+
+    $ django-admin.py $CMD --settings "ganeti_webmgr.ganeti_web.settings"
+
+.. Note:: Replace $CMD with the command you actually need to run. Also note that
+          the ``--settings`` flag must come after the $CMD being run.
 
 Initialize database
 ~~~~~~~~~~~~~~~~~~~
 
 * MySQL or SQLite: create new tables and migrate all applications using South::
 
-    $ gwm-manage.py syncdb --migrate
+    $ django-admin.py syncdb --migrate
 
 * PostgreSQL: only fresh installation supports PostgreSQL, because there are no
   migrations for this database within |gwm| prior to **version 0.11**::
 
-    $ gwm-manage.py syncdb --all
-    $ gwm-manage.py migrate --fake
+    $ django-admin.py syncdb --all
+    $ django-admin.py migrate --fake
 
 Update Cache
 ~~~~~~~~~~~~
 
-Prior to **version 0.11** when migrations were run, we would automatically update
-the cache of RAPI data in the Database, however running this during migrations was
-prone to a lof of errors, so it is now it's own command. Run the following to update
-the cache::
+Prior to **version 0.11** when migrations were run, we would automatically
+update the cache of RAPI data in the Database, however running this during
+migrations was prone to a lot of errors, so it is now it's own command. Run the
+following to update the cache::
 
-  $ gwm-manage.py refreshcache
+  $ djang-admin.py refreshcache
 
 .. versionadded:: 0.11
 
@@ -96,10 +125,10 @@ Search indexes
 
 Build them with::
 
-    $ gwm-manage.py rebuild_index
+    $ django-admin.py rebuild_index
 
 .. Note::
-    Running ``gwm-manage.py update_index`` on a regular basis ensures that the search indexes stay up-to-date when models change in |gwm|.
+    Running ``django-admin.py update_index`` on a regular basis ensures that the search indexes stay up-to-date when models change in |gwm|.
 
 Next Steps
 ----------

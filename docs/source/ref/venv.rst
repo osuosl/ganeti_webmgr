@@ -76,7 +76,7 @@ beginning of your shell prompt.  For example::
 
   $ cd ganeti_webmgr
   $ workon gwm
-  (gwm)$ gwm-manage.py --help
+  (gwm)$ django-admin.py --help
   ...
   (gwm)$ deactivate
   $ lsvirtualenv
