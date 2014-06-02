@@ -1,9 +1,9 @@
 from django.core.management.base import NoArgsCommand
-from clusters.models import Cluster
-from nodes.models import Node
-from virtualmachines.models import VirtualMachine
+from ganeti_webmgr.clusters.models import Cluster
+from ganeti_webmgr.nodes.models import Node
+from ganeti_webmgr.virtualmachines.models import VirtualMachine
 
-from utils.client import GanetiApiError
+from ganeti_webmgr.utils.client import GanetiApiError
 
 
 class Command(NoArgsCommand):
