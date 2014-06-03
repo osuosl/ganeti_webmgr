@@ -9,10 +9,9 @@
 
 # default paths
 env_dir='./venv'
-gwm_dir='./gwm'
 wheels_dir='./wheels'
-default_branch='develop'
-gwm_address='https://github.com/osuosl/ganeti_webmgr.git'
+script_location=$(dirname $0)
+gwm_location="$script_location/.."
 
 # helpers: setting text colors
 txtbold=$(tput bold)
@@ -42,13 +41,10 @@ echo "Build Ganeti Web Manager dependencies as wheel packages.
 
 Usage:
     $0 -h
-    $0 [-e <dir>] [-g <dir>] [-G] [-b <branch>] [-a <git address>] [-w <dir>] [-N]
+    $0 [-e <dir>] [-w <dir>] [-N]
 
 Default virtual environment path:   $env_dir
-Default GWM clone path:             $gwm_dir
 Default wheels output directory:    $wheels_dir
-Default git branch to check out:    $default_branch
-Default git repo address:           $gwm_address
 
 Wheels are put in subfolders in this pattern:
     $wheels_dir/{distribution}/{version}/{architecture}/
@@ -57,11 +53,6 @@ Options:
   -h                        Show this screen.
   -e <environment dir>      Specify virtual environment path. This gets erased
                             on every runtime.
-  -g <GWM dir>              Where to clone GWM. If this path exists, GWM is not
-                            cloned and existing copy is used instead.
-  -G                        Remove GWM dir and therefore force cloning GWM.
-  -b <branch>               Default branch to check out to after cloning GWM.
-  -a <git address>          Git repository address GWM is cloned from.
   -w <wheels dir>           Where to put built wheel packages.
   -N                        Skip installing system dependencies."
     exit 0
@@ -103,22 +94,9 @@ while getopts "he:g:Gb:a:w:N" opt; do
         e)
             env_dir="$OPTARG"
             ;;
-        g)
-            gwm_dir="$OPTARG"
-            ;;
-        G)
-            force_gwm_refresh=1
-            ;;
-        b)
-            default_branch="$OPTARG"
-            ;;
-        a)
-            gwm_address="$OPTARG"
-            ;;
         w)
             wheels_dir="$OPTARG"
             ;;
-
         N)
             no_dependencies=1
             ;;
@@ -206,39 +184,10 @@ if [ ! $? -eq 0 ]; then
     exit 4
 fi
 
-# remove gwm if user wants to
-if [ $force_gwm_refresh -eq 1 ]; then
-    /bin/rm "$gwm_dir" -rf 2>/dev/null
-fi
-
-# clone gwm
-if [  \( ! -d "$gwm_dir" \) -o \( $force_gwm_refresh -eq 1 \) ]; then
-    /usr/bin/git clone "$gwm_address" "$gwm_dir"
-
-    if [ ! $? -eq 0 ]; then
-        echo "${txtboldred}Something went wrong. Could not clone GWM" \
-             "repository."
-        echo "Check if repository address is correct:"
-        echo "  $gwm_address${txtreset}"
-        exit 5
-    fi
-
-    cd "$gwm_dir"
-    /usr/bin/git checkout "$default_branch"
-    if [ ! $? -eq 0 ]; then
-        echo "${txtboldred}Something went wrong. Could not check out GWM" \
-             "branch: $default_branch."
-        echo "Check if branch name and repo address are correct:"
-        echo "  $gwm_address${txtreset}"
-        exit 6
-    fi
-    cd -
-fi
-
 # install gwm into venv, put wheels to the wheel dir
 # WARNING: watch out for that concatenation of string paths!
 wheel_path="$wheels_dir/$os/$os_codename/$architecture"
-${pip} wheel --log=./pip.log --wheel-dir="$wheel_path" "$gwm_dir" \
+${pip} wheel --log=./pip.log --wheel-dir="$wheel_path" "$gwm_location" \
     psycopg2 MySQL-python
 if [ ! $? -eq 0 ]; then
     echo "${txtboldred}Something went wrong. Could not create wheel" \
