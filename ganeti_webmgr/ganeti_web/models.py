@@ -18,11 +18,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-import sys
-
+from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.contrib.sites import models as sites_app
 from django.contrib.sites.management import create_default_site
+from django.contrib.sites.models import Site
 from django.db.models.signals import post_save, post_syncdb
 from django.db.utils import DatabaseError
 
@@ -37,19 +37,12 @@ from muddle_users import signals as muddle_user_signals
 
 from authentication.models import Organization
 from clusters.models import Cluster
-from nodes.models import Node
 from virtualmachines.models import VirtualMachine
-from utils.client import GanetiApiError
 
 # from ganeti_web import constants, management, permissions
-from .management import update_sites_module
 import permissions
 
 from authentication.models import Profile
-
-from south.signals import post_migrate
-
-from migrations import db_table_exists
 
 # XXX: am I wrong or is it not used anywhere?
 FINISHED_JOBS = 'success', 'unknown', 'error'
@@ -92,14 +85,6 @@ def update_organization(sender, instance, **kwargs):
 post_save.connect(create_profile, sender=User)
 post_save.connect(update_cluster_hash, sender=Cluster)
 post_save.connect(update_organization, sender=Group)
-
-# Disconnect create_default_site from django.contrib.sites so that
-#  the useless table for sites is not created. This will be
-#  reconnected for other apps to use in update_sites_module.
-post_syncdb.disconnect(create_default_site, sender=sites_app)
-post_syncdb.connect(update_sites_module, sender=sites_app,
-                    dispatch_uid="ganeti.management.update_sites_module")
-
 
 def regenerate_cu_children(sender, **kwargs):
     """
@@ -144,67 +129,6 @@ muddle_user_signals.view_group_created.connect(log_group_create)
 muddle_user_signals.view_group_edited.connect(log_group_edit)
 
 
-def refresh_objects(**kwargs):
-    """
-    This was originally the code in the 0009
-    and then 0010 'force_object_refresh' migration
-
-    Force a refresh of all Cluster, Nodes, and VirtualMachines, and
-    import any new Nodes.
-    """
-
-    write = sys.stdout.write
-    flush = sys.stdout.flush
-
-    def wf(str, newline=False, verbosity=1):
-        if (verbosity > 0):
-            if newline:
-                write('\n')
-            write(str)
-            flush()
-
-    app = kwargs.get('app')
-    verbosity = kwargs.get('verbosity')
-
-    # these if-conditionals are here to bypass 0019 migration's database
-    # error (after refactoring this refresh function gets called before
-    # proper new tables exist)
-    if db_table_exists(Cluster._meta.db_table) and app == 'clusters':
-        wf('> Synchronizing Cluster Nodes ', True, verbosity=verbosity)
-        flush()
-        Cluster.objects.all().update(mtime=None)
-        for cluster in Cluster.objects.all().iterator():
-            try:
-                cluster.sync_nodes()
-                wf('.', verbosity=verbosity)
-            except GanetiApiError:
-                wf('E', verbosity=verbosity)
-
-    if db_table_exists(Node._meta.db_table) and app == 'nodes':
-        Node.objects.all().update(mtime=None)
-        wf('> Refreshing Node Caches ', True, verbosity=verbosity)
-        for node in Node.objects.all().iterator():
-            try:
-                wf('.', verbosity=verbosity)
-            except GanetiApiError:
-                wf('E', verbosity=verbosity)
-
-    if (db_table_exists(VirtualMachine._meta.db_table)
-            and app == 'virtualmachines'):
-        VirtualMachine.objects.all().update(mtime=None)
-        wf('> Refreshing Instance Caches ', True, verbosity=verbosity)
-        for instance in VirtualMachine.objects.all().iterator():
-            try:
-                wf('.', verbosity=verbosity)
-            except GanetiApiError:
-                wf('E', verbosity=verbosity)
-
-    wf('\n', verbosity=verbosity)
-
-
-# Set this as post_migrate hook.
-post_migrate.connect(refresh_objects)
-
 # Register permissions on our models.
 # These are part of the DB schema and should not be changed without serious
 # forethought.
@@ -215,3 +139,67 @@ register(permissions.VIRTUAL_MACHINE_PARAMS, VirtualMachine, 'ganeti_web')
 
 # register log actions
 register_log_actions()
+
+
+def update_sites_module(sender, **kwargs):
+    """
+    Create a new row in the django_sites table that
+      holds SITE_ID, SITE_NAME and SITE_DOMAIN defined
+      in setting.py
+
+      If SITE_NAME or SITE_DOMAIN are not defined they
+       will default to 'example.com'
+    """
+    verb = kwargs.get('verbosity', 0)
+    id, name, domain = (1, 'example.com', 'example.com')
+    try:
+        id = settings.SITE_ID
+    except AttributeError, e:
+        print e
+        print 'Using: \'%s\' for site id.' % id
+
+    try:
+        name = settings.SITE_NAME
+    except AttributeError, e:
+        print e
+        print 'Using: \'%s\' for site name.' % name
+
+    try:
+        domain = settings.SITE_DOMAIN
+    except AttributeError, e:
+        print e
+        print 'Using: \'%s\' for site domain.' % domain
+
+    try:
+        site = Site.objects.get(id=id)
+        if site.name != name:
+            if verb >= 1:
+                print "Site name changed from %s to %s." % \
+                    (site.name, name)
+            site.name = name
+        if site.domain != domain:
+            if verb >= 1:
+                print "Site domain changed from %s to %s." % \
+                    (site.domain, domain)
+            site.domain = domain
+        site.save()
+    except Site.DoesNotExist:
+        if verb >= 1:
+            print "New site: [%s] %s (%s) created in django_site table." % \
+                (id, name, domain)
+        site = Site(id=id, name=name, domain=domain)
+        site.save()
+        # Reconnect create_default_site request for other apps
+        post_syncdb.connect(create_default_site, sender=sites_app)
+    else:
+        if site.name != name:
+            print "A site with the id of %s is already taken. " \
+                  "Please change SITE_ID to a different number in your " \
+                  "settings.py file." % id
+
+# Disconnect create_default_site from django.contrib.sites so that
+#  the useless table for sites is not created. This will be
+#  reconnected for other apps to use in update_sites_module.
+post_syncdb.disconnect(create_default_site, sender=sites_app)
+post_syncdb.connect(update_sites_module, sender=sites_app,
+                    dispatch_uid="ganeti.management.update_sites_module")
