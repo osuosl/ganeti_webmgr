@@ -8,6 +8,6 @@ simplejson==3.3.0
 South==0.8.4
 Whoosh==1.8.1
 django-include-strip-tag==0.1.0
-VNCAuthProxy==1.0
+VNCAuthProxy==1.1.1
 django-object-log==0.7.1
 django-object-permissions==1.4.6
