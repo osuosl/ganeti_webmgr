@@ -95,6 +95,10 @@ Command line arguments
   (eg. ``./gwm/wheels``) or remote (eg.
   ``http://ftp.osuosl.org/pub/osuosl/wheels``).
 
+  This also assumes the directory structure for the wheels package is structured
+  according to how the :ref:`build-script`
+  :ref:`structures files <build-folder-structure>`.
+
   .. warning:: Don't change it unless you know what you're doing!
 
 
@@ -152,14 +156,14 @@ Upgrade existing installation::
 
 Generate wheels on your own with :ref:`building script<build-script>`::
 
-  $ ./build_wheels.sh -e ./venv_whl -g ./gwm_whl -w ./wheels
+  $ ./scripts/build_wheels.sh -e ./venv_whl -w ./wheels
   $ ./scripts/setup.sh -d ./ganeti_webmgr -w ./wheels
 
 or send wheels to remote location and install from it::
 
-  $ ./build_wheels.sh -e ./venv_whl -g ./gwm_whl -w ./wheels
-  $ rsync ./wheels rsync@server:/srv/www/wheels
-  $ ./scripts/setup.sh -d ./ganeti_webmgr -w http://server/wheels
+  $ ./scripts/build_wheels.sh -e ./venv_whl -w ./wheels
+  $ rsync ./wheels rsync@foo.example.org:/srv/www/wheels
+  $ ./scripts/setup.sh -d ./ganeti_webmgr -w http://foo.example.org/wheels
 
 
 Directory structure

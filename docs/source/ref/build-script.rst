@@ -10,6 +10,21 @@ packages them as ``.whl`` archives.
 You can find the build script in |gwm|'s script directory at
 ``./scripts/build_script.sh``
 
+
+.. _build-folder-structure:
+
+Folder Structure
+----------------
+
+Wheels are put in subfolders in this pattern::
+
+    $wheels_dir/{distribution}/{version}/{architecture}/
+
+The :ref:`setup-script`'s -w flag expects the wheels to be in this folder
+structure. So using ``build_wheels.sh`` to create these is required, unless you
+create the directory structure yourself.
+
+
 Workflow
 --------
 
@@ -86,6 +101,10 @@ some paths it's using.
   :default: ``./wheels``
 
   Path where output wheel packages are stored.
+
+.. cmdoption:: -N
+
+  Skip installing system dependencies.
 
 Examples
 --------
