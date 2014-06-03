@@ -55,6 +55,8 @@ check_if_exists() {
 install_directory='/opt/ganeti_webmgr'
 default_config_directory='/opt/ganeti_webmgr/config'
 base_url="https://ftp.osuosl.org/pub/osl/ganeti-webmgr"
+script_location=$(dirname $0)
+gwm_location="$script_location/.."
 
 # helper function: display help message
 usage() {
@@ -305,8 +307,7 @@ echo "------------------------------------------------------------------------"
 # WARNING: watch out for double slashes when concatenating these strings!
 url="$base_url/$os/$os_codename/$architecture/"
 
-script_location=$(dirname $0)
-${pip} install --upgrade --use-wheel --find-link="$url" "$script_location/.."
+${pip} install --upgrade --use-wheel --find-link="$url" "$gwm_location"
 
 if [ ! $? -eq 0 ]; then
     echo "${txtboldred}Something went wrong. Could not install GWM nor its" \
