@@ -67,6 +67,9 @@ The prefered way of configuring
 Follow to the :ref:`configuration page <configuring>` for documentation on
 configuring |gwm|.
 
+
+.. _initializing:
+
 Initializing
 ------------
 
@@ -135,6 +138,7 @@ Next Steps
 
 Congratulations!  |gwm| is now installed and initialized.  Next, you'll want
 to look into :ref:`configuring` and :ref:`deployment`, if you are going
-to be setting up a production instance.  Otherwise, if you just want to
-play around with |gwm|, or are :ref:`developing <development>`, take a look at
-:ref:`development-server`.
+to be setting up a production instance.
+
+Otherwise, if you just want to play around with |gwm|, or are :ref:`developing
+<development>`, take a look at the :ref:`development-server`.
