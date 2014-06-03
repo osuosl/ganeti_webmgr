@@ -345,7 +345,7 @@ fi
 
 mkdir -p $default_config_directory
 
-if [! $? -eq 0 ]; then
+if [ ! $? -eq 0 ]; then
     echo "Unable to make default config directory at "
     echo "$default_config_directory${textreset}"
 fi
