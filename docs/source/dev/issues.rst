@@ -3,6 +3,11 @@
 Issues
 ======
 
+The issue tracker for |gwm| is at `code.osuosl.org`_. All bugs and feature requests for |gwm| should be tracked there. Please create an issue for any bug, feature, or translation you wish to contribute or report.
+
+.. _`code.osuosl.org`: https://code.osuosl.org/projects/ganeti-webmgr
+
+
 Please follow this guide when filing new issues for Ganeti Web Manager.
 
 Trackers
