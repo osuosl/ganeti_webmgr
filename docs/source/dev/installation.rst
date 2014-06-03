@@ -5,25 +5,9 @@
 Developer Installation
 ======================
 
-In order to install |gwm| for end users, one must download ``wheel`` packages.
-This, however, is not a case for developers.
-
-You want to work on |gwm|, so you can't install it to virtual environment's
-``site-packages``.
-
-**TL;DR;**
-::
-
-  $ mkvirtualenv gwm
-
-  (gwm)$ git clone https://github.com/osuosl/ganeti_webmgr.git
-  (gwm)$ cd ganeti_webmgr
-  (gwm)$ git checkout develop
-  (gwm)$ python setup.py develop
-  (gwm)$ pip install mysql-python # MySQL support
-  (gwm)$ pip install psycopg2 # PostgreSQL support
-  (gwm)$ cp ./ganeti_webmgr/ganeti_web/settings/settings.py.dist ./ganeti_webmgr/ganeti_web/settings/settings.py
-  (gwm)$ vim ./ganeti_webmgr/ganeti_web/settings/settings.py
+Make sure you have virtualenv installed, you will want it to keep all of your
+dependencies isolated, in addition, we use virtualenv for our end user
+installation as well.
 
 Requirements
 ------------
@@ -135,4 +119,4 @@ Management
 It's still done via ``manage.py`` script, though the script is now hidden
 deeper in directories structure::
 
-  ganeti_webmgr/ganeti_webmgr/manage.py
+  /path/to/ganeti_webmgr/ganeti_webmgr/manage.py

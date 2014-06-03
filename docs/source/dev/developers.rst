@@ -44,7 +44,7 @@ There are many Git GUIs, if you are not comfortable working with Git on the comm
 Virtualenv and Pip
 ''''''''''''''''''
 
-|gwm|'s install script uses the Python VirtualEnv utility to create a local environment in which to install all of GWM's Python dependencies, and GWM itself runs from within this environment. To run tasks with manage.py, or to work with the python console on GWM code, you will need to activate the environment in your shell:
+|gwm|'s install script uses the Python VirtualEnv utility to create a local environment in which to install all of GWM's Python dependencies, and GWM itself runs from within this environment. To run tasks with ``manage.py``, or to work with the python console on GWM code, you will need to activate the environment in your shell:
 
 ::
 
@@ -79,7 +79,7 @@ Installation
 
 To install the GWM application for development work, please see :ref:`developer_installation`.
 
-|gwm| ships with support for Vagrant. This allows developers to modify and test their code in the same environment and reduce the amount of configuration necessary. See :ref:`vagrant` for details on setting up the virtual machine. 
+|gwm| ships with support for Vagrant. This allows developers to modify and test their code in the same environment and reduce the amount of configuration necessary. See :ref:`vagrant` for details on setting up the virtual machine.
 
 In addition, use of |gwm| requires a Ganeti Cluster. For instructions on setting up a test cluster with Vagrant, see :ref:`test_cluster`.
 
