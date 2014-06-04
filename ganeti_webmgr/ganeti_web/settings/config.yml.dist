@@ -25,7 +25,7 @@ DATABASES:
 # Site name and domain referenced by some modules to provide links back to
 #  the site.
 SITE_NAME: Ganeti Web Manager
-SITE_DOMAIN: localhost:8000
+SITE_DOMAIN: "localhost:8000"
 
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 TIME_ZONE: America/Los_Angeles
@@ -73,7 +73,15 @@ DEFAULT_FROM_EMAIL: noreply@example.org
 ALLOW_OPEN_REGISTRATION: True
 ##### End Registration Settings #####
 
+####### Haystack Search Index settings #######
+HAYSTACK_WHOOSH_PATH: /opt/ganeti_webmgr/whoosh_index
+####### End Haystack Search Index settings #######
+
+
 # GWM Specifics
+
+# The maximum number of items on a single list page
+ITEMS_PER_PAGE: 15
 
 # Ganeti Cached Cluster Objects Timeouts
 #    LAZY_CACHE_REFRESH (milliseconds) is the fallback cache timer that is

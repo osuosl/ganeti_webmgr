@@ -58,7 +58,7 @@ Configuring SQLite in ``settings.py``::
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': install_path('ganeti.db'),
+            'NAME': '/opt/ganeti_webmgr/ganeti.db',
             'USER': '',      # Not used with sqlite3.
             'PASSWORD': '',  # Not used with sqlite3.
             'HOST': '',      # Set to empty string for localhost.
@@ -71,6 +71,7 @@ Configuring SQLite in ``settings.py``::
 For PostgreSQL, Oracle, and MySQL, replace ``.sqlite`` in the engine field with
 ``.postgresql_psycopg2``, ``.oracle``, or ``.mysql`` respectively::
 
+    # config.yml
     DATABASES:
         default:
             ENGINE: django.db.backends.mysql
@@ -140,39 +141,72 @@ Site root and static files
 The site root, static root, and static url must also be set when configuring
 |gwm|.
 
-The site root is the subdirectory on the website:
-``http://example.com/<SITE_ROOT>``
+The ``SITE_ROOT`` is the subdirectory on the website:
+``http://example.com/<SITE_ROOT>``. The current default is empty.
 
-The static root is the location of static files on the server, and the static
-URL is the URL over which the files will be served.
+The ``STATIC_ROOT`` is the directory on the filesystem that |gwm|'s static
+files will be placed when you run ``django-admin.py collectstatic``. The current
+default is ``/opt/ganeti_webmgr/collected_static``.
+
+``STATIC_URL`` is the full url where |gwm| will look when trying to obtain
+static files. The default for this is currently ``/static`` which means it will
+try looking at the same domain it is hosted on. For example if your hostname is
+`www.yourwebsite.com` it will look for them at ``www.yourwebsite.com/static``.
 
 A standard configuration, putting |gwm| at the root of the domain, might look
 like this::
 
-    SITE_ROOT:
+    SITE_ROOT: /web_admin
     STATIC_ROOT: /opt/ganeti_webmgr/collected_static
-    STATIC_URL: /static
+    STATIC_URL: www.yourwebsite.com/static
+
+Haystack Search Settings
+------------------------
+
+Haystack is |gwm|'s way of performing search indexing. It currently has one
+setting which you need to worry about.
+
+``HAYSTACK_WHOOSH_PATH`` is the path to a location on the filesystem which |gwm|
+will store the search index files. This location needs to be readable and
+writable by whatever user is running |gwm|. Example users might be the apache
+or nginx user, or whatever user you've set the |gwm| process to run as.
+
+The default path for this setting is ``/opt/ganeti_webmgr/whoosh_index``.
+
+An example of this setting might be::
+
+    HAYSTACK_WHOOSH_PATH: /opt/ganeti_webmgr/whoosh_index
 
 
 Other settings
 --------------
 
-Set ``VNC_PROXY`` to the hostname of your VNC AuthProxy server.
+``ITEMS_PER_PAGE`` is a setting allowing you to globally limit or extend the
+number of items on a page listing things. This this currently defaults to ``15``
+items per page, so your pages will have up to 15 VMs, clusters and node's listed
+on a single page. You might adjust this to a lower value if you find that
+loading a large number on a single page slows things down.
+
+::
+
+    ITEMS_PER_PAGE: 20
+
+Set ``VNC_PROXY`` to the ``hostname:port`` pair of your VNCAuthProxy server.
 The VNC AuthProxy does not need to run on the same server as Ganeti Web Manager.
 
 ::
 
     VNC_PROXY: "localhost:8888"
 
-LAZY_CACHE_REFRESH (milliseconds) is the fallback cache timer that is checked
+``LAZY_CACHE_REFRESH`` (milliseconds) is the fallback cache timer that is checked
 when the object is instantiated. It defaults to 600000ms, or ten minutes.
 
 ::
 
     LAZY_CACHE_REFRESH: 600000
 
-This is how long |gwm| will wait before timing out when requesting data from the
-ganeti cluster.
+``RAPI_CONNECT_TIMEOUT`` is how long |gwm| will wait in seconds before timing
+out when requesting data from the ganeti cluster.
 
 ::
 
