@@ -172,6 +172,8 @@ Allowing open registration means that users can create their own new accounts in
     ALLOW_OPEN_REGISTRATION: True
     ACCOUNT_ACTIVATION_DAYS: 7
 
+More details can be found in the :ref:`registration` documentation.
+
 Site root and static files
 --------------------------
 
@@ -214,6 +216,7 @@ An example of this setting might be::
 
     HAYSTACK_WHOOSH_PATH: /opt/ganeti_webmgr/whoosh_index
 
+More details can be found in the :ref:`search <search>` documentation.
 
 Other settings
 --------------

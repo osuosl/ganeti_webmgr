@@ -37,7 +37,7 @@ authorized\_keys files
 
     $ python util/sshkeys.py [-c CLUSTER [-i INSTANCE]] WEB_MGR_API_KEY URL
 
--  **WEB\_MGR\_API\_KEY** is the value set in ``gwm_config.py`` settings file
+-  **WEB\_MGR\_API\_KEY** is the value set in ``config.yml`` settings file
 -  **URL** is a URL pointing to the GWM server
 -  **CLUSTER** is the identifier of a cluster
 -  **INSTANCE** is the hostname of an instance

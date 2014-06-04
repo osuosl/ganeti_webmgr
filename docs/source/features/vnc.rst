@@ -37,7 +37,7 @@ port scanner.
 Configuring VNC AuthProxy
 -------------------------
 
-Set the host and port that the proxy uses in ``gwm_config.py`` with the
+Set the host and port that the proxy uses in ``config.yml`` with the
 ``VNC_PROXY`` setting.
 
 Syntax is ``HOST:CONTROL_PORT``, for example: ``"localhost:8888"``.

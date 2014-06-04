@@ -1,3 +1,5 @@
+.. _search
+
 About the search system
 =======================
 
@@ -48,11 +50,13 @@ database. This means the index will always be up-to-date, but has the
 potential to severely hamper performance when dealing with a lot of
 database changes.
 
-Indexing behavior is set when the search set is defined in **/ganeti_web/search_indexes.py**
+Indexing behavior is set when the search set is defined in
+**ganeti_webmgr/ganeti_web/search_indexes.py**
+
 If database performance starts to become an issue, try using
 *SearchIndex* instead of *RealTimeSearchIndex*, and run::
 
-    $ ./manage.py update_index
+    $ django-admin.py update_index
 
 from time-to-time. For more information,
 please see the `Haystack documentation on the

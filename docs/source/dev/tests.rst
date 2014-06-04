@@ -9,8 +9,8 @@ Ganeti Web Manager has a fairly complete test suite. New code should have matchi
 
 ::
 
-    ./manage.py test ganeti_web
-    ./manage.py test object_permissions
+    ./ganeti_webmgr/manage.py test ganeti_web
+    ./ganeti_webmgr/manage.py test object_permissions
 
 
 Clean up after yourself

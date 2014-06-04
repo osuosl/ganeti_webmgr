@@ -50,7 +50,7 @@ those deploying |gwm|, especially if your unfamilar with python.
 
 Settings now live in ``/opt/ganeti_webmgr/config/config.yml``. You can now use
 yaml to configure your settings. By default this config file does not exist, so
-be sure to create add your config file there.
+be sure to add your config file there.
 
 An example yaml config file can be found in the
 `configuration <configuring>`_ documentation, and can also be found in

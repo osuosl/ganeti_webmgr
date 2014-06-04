@@ -29,7 +29,7 @@ Closing Registration
 
 In some contexts, users should not be able to create their own accounts.
 To implement this, simply change the ``ALLOW_OPEN_REGISTRATION`` setting
-in your ``gwm_config.py`` file to False::
+in your ``config.yml`` file to False::
 
   # Whether users should be able to create their own accounts.
   # False if accounts can only be created by admins.
