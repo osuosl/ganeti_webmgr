@@ -58,6 +58,8 @@ own dependencies.
 
    $ ./scripts/setup.sh -D mysql
 
+  .. Note:: You will likely need to run this as root as it requires permissions
+          to install packages and create directories in ``/opt``.
 
 Minimum Configuration
 ---------------------
