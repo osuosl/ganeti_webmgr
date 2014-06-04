@@ -81,6 +81,43 @@ For PostgreSQL, Oracle, and MySQL, replace ``.sqlite`` in the engine field with
             HOST: db.example.com
             PORT: # leave blank for default port
 
+Secret Keys
+-----------
+
+By default |gwm| creates a secret key for you the first time you run a command
+using ``django-admin.py``, and puts this key into a file located at
+``/opt/ganeti_webmgr/.secrets/SECRET_KEY.txt``. This is to make initial setup
+easier, and less hassle for you. This key is used for protection against CSRF
+attacks as well as encrypting your Ganeti cluster password in the database. Once
+set, you should avoid changing this if possible.
+
+If you want to have better control of this setting you can set the
+``SECRET_KEY`` setting in ``config.yml`` like so::
+
+    SECRET_KEY: ANW61553mYBKJft6pYPLf1JbTeHKLutU
+
+Please do not use this value, but instead generate something random yourself.
+You do **not** want to share this, or make it publically accessible. This can
+be used to avoid protections |gwm| has implemented for you.
+
+If you are using the :ref:`sshkeys` feature to add keys to VMs with |gwm|, you
+will also need to set the ``WEB_MGR_API_KEY`` setting in ``config.yml``. This is
+the same value you will use when running the ``sshkeys.py`` or ``sshkeys.sh``
+scripts. Similarly, it should be something impossible to guess, much like the
+``SECRET_KEY`` setting::
+
+    WEB_MGR_API_KEY: 3SqmsCnNiuDY9lAVIh3Tx3RIJfql6sIc
+
+Again, do not use the value above. If anyone gains access to this key, **and**
+you are using the sshkeys feature, it will allow them to add arbitrary ssh keys
+to your Virtual Machines.
+
+.. Note:: We have not included these settings in the example ``config.yml``
+          at the bottom of this page for security reasons. We do not want anyone
+          copying the values we've used in our examples for security prone
+          settings such as this. If you wish to set these yourself, you will
+          need to manually add them to ``config.yml``.
+
 Time zone and locale
 --------------------
 
