@@ -38,15 +38,17 @@ Use
 
 Using Vagrant to deploy |gwm| is simple. You will need Vagrant version **1.5.4**
 or greater and two vagrant plugins, `vagrant-berkshelf` and `vagrant-omnibus`.
+For compatability versions, we require `vagrant-berkshelf` with a version
+greater than or equal to 2.0.
 
-`Installing  Vagrant`_ is easy, you can install it to your system by downloading the appropriate package, and running it.
+`Installing  Vagrant`_ is easy, you can install it to your system by downloading
+the appropriate package, and running it.
 
-To install the `vagrant-berkshelf`_ and `vagrant-omnibus`_ plugins run the following command in your terminal
+To install the `vagrant-berkshelf`_ and `vagrant-omnibus`_ plugins run the
+following command in your terminal::
 
-::
-
-    vagrant plugin install vagrant-berkshelf
     vagrant plugin install vagrant-omnibus
+    vagrant plugin install vagrant-berkshelf --plugin-version '>= 2.0.1'
 
 Once you have the plugins installed you can use the following commands to start
 the Virtual Machine (this may take a while)::
@@ -73,7 +75,7 @@ start the :ref:`development-server`::
 From there you can visit |gwm| at (by default) 33.33.33.100:8000 in your web browser.
 
 .. note:: The reason we runserver on 0.0.0.0 is because by default it runs on
-    127.0.0.1 which is only accessible from the VM.
+          127.0.0.1 which is only accessible from the VM.
 
 
 More details on vagrant can be found at http://docs.vagrantup.com/v2/
