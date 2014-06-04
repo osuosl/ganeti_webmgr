@@ -19,7 +19,7 @@
 # Django settings for ganeti_webmgr project.
 
 
-from .helpers import install_path, ugettext
+from .helpers import ugettext
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -50,7 +50,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
 
         # Or path to database file if using sqlite3.
-        'NAME': install_path('ganeti.db'),
+        'NAME': '/opt/ganeti_webmgr/ganeti.db',
         'USER': '',      # Not used with sqlite3.
         'PASSWORD': '',  # Not used with sqlite3.
         'HOST': '',      # Set to empty string for localhost.
@@ -99,7 +99,7 @@ SITE_ROOT = ''
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
-STATIC_ROOT = install_path("collected_static")
+STATIC_ROOT = "/opt/ganeti_webmgr/collected_static"
 
 # URL that handles the media served from STATIC_ROOT.
 # XXX contrary to django docs, do not use a trailling slash.  It makes urls
@@ -126,7 +126,7 @@ ALLOW_OPEN_REGISTRATION = True
 ##### End Registration Settings #####
 
 ### Path to where haystack keeps the index files for search
-HAYSTACK_WHOOSH_PATH = install_path('whoosh_index')
+HAYSTACK_WHOOSH_PATH = '/opt/ganeti_webmgr/whoosh_index'
 
 # GWM Specifics
 

@@ -24,9 +24,8 @@ Most of this should be left alone and unchanged.
 from os import makedirs
 from os.path import exists, join
 from .helpers import (
-    app_root, DEFAULT_CONFIG_PATH,
-    generate_secret, install_path,
-    ugettext
+    app_root, CONFIG_PATH, DEFAULT_INSTALL_PATH,
+    generate_secret, ugettext
 )
 
 ##### Debug *default* configuration #####
@@ -62,7 +61,7 @@ ITEMS_PER_PAGE = 15
 ##### Haystack settings #####
 HAYSTACK_SITECONF = 'ganeti_webmgr.search_sites'
 HAYSTACK_SEARCH_ENGINE = 'whoosh'
-HAYSTACK_WHOOSH_PATH = install_path('whoosh_index')
+HAYSTACK_WHOOSH_PATH = join(DEFAULT_INSTALL_PATH, 'whoosh_index')
 ##### End Haystack settings #####
 
 
@@ -100,7 +99,7 @@ STATICFILES_DIRS = (
     app_root('static'),
 )
 
-STATIC_ROOT = install_path("collected_static")
+STATIC_ROOT = join(DEFAULT_INSTALL_PATH, "collected_static")
 ###### End Static Files Configuration #####
 
 ###### Other Configuration #####
@@ -200,7 +199,7 @@ RAPI_CONNECT_TIMEOUT = 3
 
 
 # Generate a secret key, and store it in a file to be read later.
-secrets_folder = install_path('.secrets')
+secrets_folder = join(DEFAULT_INSTALL_PATH, '.secrets')
 
 # Directory doesn't exist, create it
 if not exists(secrets_folder):
@@ -223,5 +222,5 @@ except IOError:
     msg = ("Unable to %s file at %s. Please either create the file and ensure "
            "it contains a 32bit random value or ensure you have set the "
            "SECRET_KEY setting in %s.")
-    print msg % (action, secret_key_file, DEFAULT_CONFIG_PATH)
+    print msg % (action, secret_key_file, CONFIG_PATH)
 

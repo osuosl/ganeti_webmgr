@@ -1,17 +1,26 @@
+import os
 from os.path import abspath, dirname, join
 
+# This is simply a default location we've decided that some configuration
+# settings will use for their path.
+#
+# Making it configurable doesn't make a lot of sense because this is only where
+# default settings put files, such as static assets, the whoosh index, ect.
+# All of which can be configured in the yaml config file anyways.
 DEFAULT_INSTALL_PATH = '/opt/ganeti_webmgr'
 
+# Config location variables
+
+# default config directory is DEFAULT_INSTALL_PATH/config
+DEFAULT_CONFIG_DIR = join(DEFAULT_INSTALL_PATH, 'config')
+# try getting config directory from environment,
+# defaulting to DEFAULT_CONFIG_DIR
+CONFIG_DIR = os.environ.get('GWM_CONFIG_DIR', DEFAULT_CONFIG_DIR)
+# our config file is always named config.yml
+CONFIG_PATH = join(CONFIG_DIR, 'config.yml')
+
+
 # Path Helpers
-def install_path(*x):
-    """
-    A wrapper around join which will return a path relative to the
-    default install path.
-    """
-    return join(DEFAULT_INSTALL_PATH, *x)
-
-DEFAULT_CONFIG_PATH = install_path('config', 'config.yml')
-
 def here(*x):
     """
     This is a wrapper around join. It will return a path relative to the

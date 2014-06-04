@@ -11,8 +11,18 @@ language. |gwm| also supports configuration through ``settings.py``.
 
 .. _`YAML`: http://www.yaml.org/
 
-The YAML configuration file should be called
-``/opt/ganeti_webmgr/config/config.yml``.
+The YAML configuration file is always named ``config.yml``. You can customize
+the location |gwm| looks for this file by setting the ``GWM_CONFIG_DIR``
+environmental variable. The current default is ``/opt/ganeti_webmgr/config``.
+
+So by default you will need to put your yaml config in
+``/opt/ganeti_webmgr/config/config.yml``. If you want to customize the location
+you can set ``GWM_CONFIG_DIR`` like so::
+
+    $ export GWM_CONFIG_DIR='/etc/ganeti_webmgr'
+
+This will cause |gwm| to look for your config file at
+``/etc/ganeti_webmgr/config.yml``.
 
 When both ``config.yml`` and ``settings.py`` are present, any settings stored in
 ``settings.py`` take precedence.

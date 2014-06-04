@@ -53,7 +53,7 @@ check_if_exists() {
 
 # default values
 install_directory='/opt/ganeti_webmgr'
-default_config_directory='/opt/ganeti_webmgr/config'
+config_dir='/opt/ganeti_webmgr/config'
 base_url="https://ftp.osuosl.org/pub/osl/ganeti-webmgr"
 script_location=$(dirname $0)
 gwm_location="$script_location/.."
@@ -70,6 +70,7 @@ Usage:
 Default installation directory:     $install_directory
 Default database server:            SQLite
 Default remote wheels location:     $base_url
+Default config directory:           $config_dir
 
 Options:
   -h                            Show this screen.
@@ -342,11 +343,21 @@ if [ "$database_server" != "sqlite" ]; then
     fi
 fi
 
-# make the config directory
-
-mkdir -p $default_config_directory
-
-if [ ! $? -eq 0 ]; then
-    echo "Unable to make default config directory at "
-    echo "$default_config_directory${textreset}"
+# check the environment variable to see if we should use that
+if [ -n "$GWM_CONFIG_DIR" ]; then
+    config_dir="$GWM_CONFIG_DIR"
 fi
+
+# make the config directory if it doesn't exist.
+if [ -d "$config_dir" ]; then
+    echo "Config directory at $config_dir already exists, not creating it."
+else
+    echo "Config directory at $config_dir doesn't exist. Creating it."
+    mkdir -p "$config_dir"
+
+    if [ ! $? -eq 0 ]; then
+        echo "Unable to make default config directory at "
+        echo "$config_dir${textreset}"
+    fi
+fi
+
