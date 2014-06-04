@@ -30,11 +30,11 @@ SITE_DOMAIN: localhost:8000
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 TIME_ZONE: America/Los_Angeles
 DATE_FORMAT: d/m/Y
-DATETIME_FORMAT: d/m/Y H:i
+DATETIME_FORMAT: "d/m/Y H:i"
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
-LANGUAGE_CODE: en-US
+LANGUAGE_CODE: "en-US"
 ##### End Locale Configuration #####
 
 # Enable i18n (translations) and l10n (locales, currency, times).
@@ -49,7 +49,7 @@ USE_L10N: True
 # prefix used for the site.  ie. http://myhost.com/<SITE_ROOT>
 # for the django standalone server this should be
 # for apache this is the url the site is mapped to, probably /tracker
-SITE_ROOT:
+SITE_ROOT: ""
 
 # Absolute path to the directory that holds media.
 # Example: /home/media/media.lawrence.com/
@@ -95,9 +95,8 @@ LAZY_CACHE_REFRESH: 600000
 #   Internal Ports: 12000+ must be open between the Proxy and Ganeti Nodes
 #   External Ports: default is 7000-8000, must be open between Proxy and Client
 #   Flash Policy Server: 843, must open between Proxy and Clients
-VNC_PROXY: localhost:8888
+VNC_PROXY: "localhost:8888"
 
-# PyCurls default TIMEOUT in 7.21.6 defaults to 13 and CONNECTTIMEOUT to 78.
-# This is way too long to wait for incorrect or unresponsive ganeti clusters
-# when using the rapi for syncing and querying.
+# This is how long gwm will wait before timing out when requesting data from the
+# ganeti cluster.
 RAPI_CONNECT_TIMEOUT: 3
