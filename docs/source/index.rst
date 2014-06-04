@@ -86,6 +86,7 @@ Contributing
 
     dev/developers
     dev/installation
+    dev/vagrant
 
 
 Project Information
