@@ -15,7 +15,7 @@ The YAML configuration file should be called
 ``/opt/ganeti_webmgr/config/config.yml``.
 
 When both ``config.yml`` and ``settings.py`` are present, any settings stored in
-``settings.py`` take prescedence.
+``settings.py`` take precedence.
 
 .. Note:: A quick note about settings. Any setting value which contains an
           ``-`` or ``:``, or any other character used by yaml, must be wrapped

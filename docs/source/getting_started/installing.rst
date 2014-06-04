@@ -64,10 +64,7 @@ own dependencies.
 Minimum Configuration
 ---------------------
 
-The prefered way of configuring
-
-Follow to the :ref:`configuration page <configuring>` for documentation on
-configuring |gwm|.
+See :ref:`configuration page <configuring>` for documentation on configuring |gwm|.
 
 
 .. _initializing:
@@ -118,10 +115,10 @@ Update Cache
 
 Prior to **version 0.11** when migrations were run, we would automatically
 update the cache of RAPI data in the Database, however running this during
-migrations was prone to a lot of errors, so it is now it's own command. Run the
+migrations was prone to a lot of errors, so it is now its own command. Run the
 following to update the cache::
 
-  $ djang-admin.py refreshcache
+  $ django-admin.py refreshcache
 
 .. versionadded:: 0.11
 
