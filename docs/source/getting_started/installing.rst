@@ -34,8 +34,8 @@ own dependencies.
             |release|
 
   It doesn't actually matter where you put these, it will only be used for
-  installation, which will eventually install the project to
-  ``/opt/ganeti_webmgr``.
+  installation, which will eventually install the project to another location,
+  which by default is ``/opt/ganeti_webmgr``.
 
 #.  Once you've got the project, you will use our shell script to install things.
     First, cd to the |gwm| project folder::
