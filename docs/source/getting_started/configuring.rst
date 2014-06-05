@@ -38,7 +38,9 @@ Databases
 
 |gwm| supports PostgreSQL, MySQL, Oracle, and SQLite databases. The type of
 database and other configuration options must be defined in either
-``settings.py`` or ``config.yml``.
+``settings.py`` or ``config.yml``. **These settings are not set by default**
+like most other settings in |gwm|. Be sure to actually configure your database
+settings.
 
 Configuring SQLite in ``config.yml``::
 

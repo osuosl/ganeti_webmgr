@@ -64,8 +64,12 @@ own dependencies.
 Minimum Configuration
 ---------------------
 
-See :ref:`configuration page <configuring>` for documentation on configuring |gwm|.
+There are defaults for most settings, however, **there are no defaults set for
+database settings.** Make sure to set these or you will run into problems with
+the rest of the installation.
 
+See :ref:`configuration page <configuring>` for documentation on configuring
+|gwm|.
 
 .. _initializing:
 
