@@ -203,7 +203,12 @@ secrets_folder = join(DEFAULT_INSTALL_PATH, '.secrets')
 
 # Directory doesn't exist, create it
 if not exists(secrets_folder):
-    makedirs(secrets_folder)
+    try:
+        makedirs(secrets_folder)
+    except (IOError, OSError):
+        print ('Unable to create directory, at %s. Please make sure to set the '
+               'SECRET_KEY setting in config.yml' % secrets_folder)
+
 
 secret_key_file = join(secrets_folder, 'SECRET_KEY.txt')
 file_exists = exists(secret_key_file)
@@ -217,10 +222,9 @@ try:
     else:
         with open(secret_key_file, "r") as f:
             SECRET_KEY = f.read().strip()
-except IOError:
+except (IOError, OSError):
     action = 'create' if file_exists else 'open'
     msg = ("Unable to %s file at %s. Please either create the file and ensure "
            "it contains a 32bit random value or ensure you have set the "
            "SECRET_KEY setting in %s.")
     print msg % (action, secret_key_file, CONFIG_PATH)
-
