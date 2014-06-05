@@ -208,7 +208,7 @@ if not exists(secrets_folder):
     except (IOError, OSError):
         print ('Unable to create directory, at %s. Please make sure to set the '
                'SECRET_KEY setting in config.yml' % secrets_folder)
-
+        return
 
 secret_key_file = join(secrets_folder, 'SECRET_KEY.txt')
 file_exists = exists(secret_key_file)
