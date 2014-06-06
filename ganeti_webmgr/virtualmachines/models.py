@@ -12,7 +12,8 @@ from ganeti_webmgr.utils.fields import LowerCaseCharField
 from ganeti_webmgr.vm_templates.models import VirtualMachineTemplate
 
 if settings.VNC_PROXY:
-    from ganeti_webmgr.utils.vncdaemon.vapclient import request_forwarding, request_ssh
+    from ganeti_webmgr.utils.vncdaemon.vapclient import (request_forwarding,
+                                                         request_ssh)
 
 
 class VirtualMachine(CachedClusterObject):

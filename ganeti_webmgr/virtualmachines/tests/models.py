@@ -21,7 +21,7 @@ from datetime import datetime
 from django.test import TestCase
 
 from ganeti_webmgr.utils.proxy.constants import (INSTANCE, JOB, JOB_RUNNING,
-                                   JOB_DELETE_SUCCESS)
+                                                 JOB_DELETE_SUCCESS)
 
 from ganeti_webmgr.virtualmachines.models import VirtualMachine
 from ganeti_webmgr.clusters.models import Cluster

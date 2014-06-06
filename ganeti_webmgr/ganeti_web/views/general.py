@@ -36,7 +36,8 @@ from ganeti_webmgr.clusters.models import Cluster
 from ganeti_webmgr.virtualmachines.models import VirtualMachine
 from ganeti_webmgr.jobs.models import Job
 from ganeti_webmgr.utils.models import GanetiError
-from ganeti_webmgr.authentication.models import ClusterUser, Organization, Profile
+from ganeti_webmgr.authentication.models import (ClusterUser,
+                                                 Organization, Profile)
 
 
 class AboutView(TemplateView):
@@ -114,10 +115,10 @@ def get_errors(request):
 
     return render_to_response("ganeti/errors.html",
                               {
-                              'admin': admin,
-                              'cluster_list': clusters,
-                              'user': request.user,
-                              'errors': errors,
+                                  'admin': admin,
+                                  'cluster_list': clusters,
+                                  'user': request.user,
+                                  'errors': errors,
                               },
                               context_instance=RequestContext(request))
 
@@ -206,7 +207,7 @@ def overview(request, rest=False):
                                               ['admin', 'create_vm', ])
     admin = user.is_superuser or clusters
 
-    #orphaned, ready to import, missing
+    # orphaned, ready to import, missing
     if admin:
         # build list of admin tasks for this user's clusters
         orphaned, import_ready, missing = get_vm_counts(clusters)
@@ -306,11 +307,13 @@ def used_resources(request, rest=False):
         if cu.real_type_id == user_type.pk:
             if not Profile.objects.filter(clusteruser_ptr=cu.pk, user=user) \
                     .exists():
-                raise PermissionDenied(_('You are not authorized to view this page'))
+                raise PermissionDenied(_(
+                    'You are not authorized to view this page'))
         else:
             if not Organization.objects.filter(clusteruser_ptr=cu.pk,
                                                group__user=user).exists():
-                raise PermissionDenied(_('You are not authorized to view this page'))
+                raise PermissionDenied(_(
+                    'You are not authorized to view this page'))
 
     resources = get_used_resources(cu.cast())
     if rest:

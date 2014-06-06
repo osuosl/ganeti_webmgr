@@ -32,27 +32,33 @@ from django.utils.translation import ugettext_lazy as _
 from object_log.models import LogItem
 log_action = LogItem.objects.log_action
 
-from ganeti_webmgr.ganeti_web.backend.queries import cluster_qs_for_user, owner_qs
+from ganeti_webmgr.ganeti_web.backend.queries import (cluster_qs_for_user,
+                                                      owner_qs)
 from ganeti_webmgr.ganeti_web.backend.templates import template_to_instance
-from ganeti_webmgr.ganeti_web.caps import has_cdrom2, has_balloonmem, has_sharedfile
-from ganeti_webmgr.ganeti_web.constants import (EMPTY_CHOICE_FIELD, HV_DISK_TEMPLATES,
-                                  HV_NIC_MODES, KVM_CHOICES, HV_USB_MICE,
-                                  HV_SECURITY_MODELS, KVM_FLAGS,
-                                  HV_DISK_CACHES, MODE_CHOICES, HVM_CHOICES,
-                                  VM_HELP, VM_CREATE_HELP, VM_RENAME_HELP,
-                                  KVM_BOOT_ORDER, HVM_BOOT_ORDER)
+from ganeti_webmgr.ganeti_web.caps import (has_cdrom2, has_balloonmem,
+                                           has_sharedfile)
+from ganeti_webmgr.ganeti_web.constants import (EMPTY_CHOICE_FIELD,
+                                                HV_DISK_TEMPLATES,
+                                                HV_NIC_MODES, KVM_CHOICES,
+                                                HV_USB_MICE,
+                                                HV_SECURITY_MODELS, KVM_FLAGS,
+                                                HV_DISK_CACHES, MODE_CHOICES,
+                                                HVM_CHOICES, VM_HELP,
+                                                VM_CREATE_HELP, VM_RENAME_HELP,
+                                                KVM_BOOT_ORDER, HVM_BOOT_ORDER)
 from ganeti_webmgr.ganeti_web.views.generic import (LoginRequiredMixin,
-                                      PermissionRequiredMixin)
+                                                    PermissionRequiredMixin)
 from ganeti_webmgr.utils.fields import DataVolumeField, MACAddressField
 from ganeti_webmgr.clusters.models import Cluster
 from ganeti_webmgr.authentication.models import ClusterUser
 from ganeti_webmgr.nodes.models import Node
 from ganeti_webmgr.virtualmachines.models import VirtualMachine
 from ganeti_webmgr.vm_templates.models import VirtualMachineTemplate
-from ganeti_webmgr.utils import (cluster_default_info, cluster_os_list, get_hypervisor,
-                   hv_prettify)
+from ganeti_webmgr.utils import (cluster_default_info, cluster_os_list,
+                                 get_hypervisor, hv_prettify)
 from ganeti_webmgr.utils.client import (REPLACE_DISK_AUTO, REPLACE_DISK_PRI,
-                          REPLACE_DISK_CHG, REPLACE_DISK_SECONDARY)
+                                        REPLACE_DISK_CHG,
+                                        REPLACE_DISK_SECONDARY)
 
 username_or_mtime = Q(username='') | Q(mtime__isnull=True)
 
@@ -236,7 +242,8 @@ class ModifyVirtualMachineForm(VirtualMachineForm):
     nic_count = forms.IntegerField(initial=1, widget=forms.HiddenInput())
     os = forms.ChoiceField(label=_('Operating System'), choices=[empty_field])
 
-    notes = forms.CharField(label=_('Notes'), widget=forms.Textarea, required=False)
+    notes = forms.CharField(label=_('Notes'), widget=forms.Textarea,
+                            required=False)
 
     class Meta:
         model = VirtualMachineTemplate
@@ -976,7 +983,6 @@ class VMWizardAdvancedForm(Form):
         if template != "drbd":
             del self.fields["snode"]
 
-
     def clean(self):
         # Ganeti will error on VM creation if an IP address check is requested
         # but a name check is not.
@@ -1124,11 +1130,13 @@ class VMWizardKVMForm(Form):
 
         return data
 
+
 class VMWizardSummaryForm(Form):
     class Media:
         css = {
             'all': ('/static/css/vm_wizard/summary.css',)
         }
+
 
 class VMWizardView(LoginRequiredMixin, PermissionRequiredMixin,
                    CookieWizardView):

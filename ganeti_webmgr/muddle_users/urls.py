@@ -45,14 +45,16 @@ urlpatterns = patterns(
     url(r'^users/(?P<username>[\w@.+-]+)/?$', 'user_detail',
         {'template': USER_TEMPLATE}, name="user-detail-name"),
     url(r'^user/(?P<user_id>\d+)/edit/?$', 'user_edit', name="user-edit"),
-    url(r'^user/(?P<user_id>\d+)/password/?$', 'user_password', name="user-password"),
+    url(r'^user/(?P<user_id>\d+)/password/?$', 'user_password',
+        name="user-password"),
 )
 
 # Groups
 urlpatterns += patterns(
     'ganeti_webmgr.muddle_users.views.group',
     # Groups
-    url(r'^groups/$', 'list', {'template': GROUP_LIST_TEMPLATE}, name="group-list"),
+    url(r'^groups/$', 'list', {'template': GROUP_LIST_TEMPLATE},
+        name="group-list"),
     url(r'^group/add/?$', 'edit', name="group-add"),
     url(r'^group/(?P<id>\d+)/?$', 'detail', {'template': GROUP_TEMPLATE},
         name="group-detail"),

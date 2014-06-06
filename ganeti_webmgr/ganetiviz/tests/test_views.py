@@ -25,7 +25,7 @@ class TestGanetivizViews(TestCase):
         cluster = Cluster.objects.create(hostname='cluster0.example.test',
                                          slug='cluster0')
 
-        ## Creating Test nodes for the cluster.
+        # Creating Test nodes for the cluster.
         node0 = Node.objects.create(cluster=cluster,
                                     hostname='node0.example.test',
                                     offline=False)
@@ -33,7 +33,7 @@ class TestGanetivizViews(TestCase):
                                     hostname='node1.example.test',
                                     offline=False)
 
-        ## Creating Test instances for the cluster.
+        # Creating Test instances for the cluster.
         VirtualMachine.objects.create(cluster=cluster,
                                       hostname='instance1.example.test',
                                       primary_node=node0,
@@ -133,7 +133,7 @@ class GanetivizSeleniumTests(LiveServerTestCase):
         cluster = Cluster.objects.create(hostname='cluster0.example.test',
                                          slug='cluster0')
 
-        ## Creating Test nodes for the cluster.
+        # Creating Test nodes for the cluster.
         node0 = Node.objects.create(cluster=cluster,
                                     hostname='node0.example.test',
                                     offline=False)
@@ -141,7 +141,7 @@ class GanetivizSeleniumTests(LiveServerTestCase):
                                     hostname='node1.example.test',
                                     offline=False)
 
-        ## Creating Test instances for the cluster.
+        # Creating Test instances for the cluster.
         VirtualMachine.objects.create(cluster=cluster,
                                       hostname='instance1.example.test',
                                       primary_node=node0,
@@ -173,7 +173,7 @@ class GanetivizSeleniumTests(LiveServerTestCase):
         User.objects.all().delete()
 
     def test_user_interface(self):
-        #self.c.login(username='tester_pranjal', password='secret')
+        # self.c.login(username='tester_pranjal', password='secret')
         driver = self.driver
         driver.get("http://localhost:8081/map/cluster0/")
 

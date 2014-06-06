@@ -7,7 +7,8 @@ __all__ = ['ShotTagTests']
 
 
 TEMPLATE = "<b>{% load shots %}{% shot foo %}{% endshot %}</b>"
-TEMPLATE_INNER = "<ul>{% load shots %}{% shot foo %}<li>{{mixer}}</li>{% endshot %}</ul>"
+TEMPLATE_INNER = (
+    "<ul>{% load shots %}{% shot foo %}<li>{{mixer}}</li>{% endshot %}</ul>")
 
 
 class ShotTagTests(ShotsTestsBase):

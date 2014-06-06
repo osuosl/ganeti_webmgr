@@ -17,8 +17,10 @@
 
 from django.test import SimpleTestCase
 
-from ganeti_webmgr.utils import compare, get_hypervisor, hv_prettify, os_prettify
-from ganeti_webmgr.utils.proxy.constants import INSTANCE, XEN_PVM_INSTANCE, XEN_HVM_INSTANCE
+from ganeti_webmgr.utils import (compare, get_hypervisor, hv_prettify,
+                                 os_prettify)
+from ganeti_webmgr.utils.proxy.constants import (INSTANCE, XEN_PVM_INSTANCE,
+                                                 XEN_HVM_INSTANCE)
 
 __all__ = (
     "TestCompare",
@@ -141,7 +143,7 @@ class TestOSPrettify(SimpleTestCase):
 
         self.assertEqual(os_prettify(["debian-pressed+ia32"]),
                          [('Debian-pressed',
-                         [('debian-pressed+ia32', 'Ia32')])])
+                          [('debian-pressed+ia32', 'Ia32')])])
 
     def test_os_prettify_2517_unknown(self):
         """
@@ -153,4 +155,4 @@ class TestOSPrettify(SimpleTestCase):
 
         self.assertEqual(os_prettify(["deb-ver1", "noop"]),
                          [("Unknown", [("deb-ver1", "deb-ver1"),
-                         ("noop", "noop"), ]), ])
+                          ("noop", "noop"), ]), ])

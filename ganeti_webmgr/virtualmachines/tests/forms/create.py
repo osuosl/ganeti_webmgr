@@ -181,4 +181,4 @@ class TestVMWizardAdvancedForm(TestCase):
         invalid_data["snode"] = invalid_data["pnode"]
         form = VMWizardAdvancedForm(invalid_data)
         self.assertFalse(form.is_valid(),
-            "The secondary node cannot be the primary node.")
+                         "The secondary node cannot be the primary node.")

@@ -19,7 +19,6 @@ from ganeti_webmgr.utils.client import GanetiApiError
 from ganeti_webmgr.utils.models import Quota
 
 
-
 class CachedClusterObject(models.Model):
     """
     Parent class for objects which belong to Ganeti but have cached data in

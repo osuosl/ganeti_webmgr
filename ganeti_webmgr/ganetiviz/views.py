@@ -85,7 +85,7 @@ class InstanceExtraDataView(LoginRequiredMixin, DetailView):
         instance_info = r.GetInstance(instance_hostname)
 
         useful_instance_info = dict((useful_key, instance_info[useful_key])
-                                for useful_key in selected_fields)
+                                    for useful_key in selected_fields)
         instance_info_json = json.dumps(useful_instance_info)
 
         return HttpResponse(instance_info_json,

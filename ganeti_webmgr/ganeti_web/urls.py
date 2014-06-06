@@ -115,8 +115,8 @@ urlpatterns += patterns(
 urlpatterns += patterns(
     "ganeti_webmgr.ganeti_web.forms.virtual_machine",
     url(r"^vm/add/?$",
-    vm_wizard(initial_dict={0: {'choices': [u'hostname']}}),
-    name="instance-create"),
+        vm_wizard(initial_dict={0: {'choices': [u'hostname']}}),
+        name="instance-create"),
 )
 
 
@@ -173,4 +173,3 @@ urlpatterns += patterns(
     (r'^', include('ganeti_webmgr.muddle_users.urls')),
     (r'^', include('ganeti_webmgr.muddle.urls')),
 )
-

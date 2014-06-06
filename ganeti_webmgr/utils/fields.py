@@ -39,7 +39,10 @@ from django_fields.fields import EncryptedCharField
 
 
 class ModifyingFieldDescriptor(object):
-    """ Modifies a field when set using the field's (overriden) .to_python() method. """
+    """
+    Modifies a field when set using the field's (overriden)
+    .to_python() method.
+    """
     def __init__(self, field):
         self.field = field
 
@@ -68,7 +71,8 @@ class LowerCaseCharField(models.CharField):
         setattr(cls, self.name, ModifyingFieldDescriptor(self))
 
 
-add_introspection_rules([], ["^ganeti_webmgr\.utils\.fields\.LowerCaseCharField"])
+add_introspection_rules(
+    [], ["^ganeti_webmgr\.utils\.fields\.LowerCaseCharField"])
 
 
 class PatchedEncryptedCharField(EncryptedCharField):
@@ -89,7 +93,8 @@ class PatchedEncryptedCharField(EncryptedCharField):
                                                     prepared=prepared)
 
 
-add_introspection_rules([], ["^ganeti_webmgr\.utils\.fields\.PatchedEncryptedCharField"])
+add_introspection_rules(
+    [], ["^ganeti_webmgr\.utils\.fields\.PatchedEncryptedCharField"])
 
 
 class PreciseDateTimeField(DecimalField):
@@ -185,7 +190,8 @@ class PreciseDateTimeField(DecimalField):
 
 # Migration rules for PDTField. PDTField's serialization is surprisingly
 # straightforward and doesn't need any help here.
-add_introspection_rules([], ["^ganeti_webmgr\.utils\.fields\.PreciseDateTimeField"])
+add_introspection_rules(
+    [], ["^ganeti_webmgr\.utils\.fields\.PreciseDateTimeField"])
 
 
 class DataVolumeField(CharField):
