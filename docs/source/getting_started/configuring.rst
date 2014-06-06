@@ -86,12 +86,12 @@ For PostgreSQL, Oracle, and MySQL, replace ``.sqlite`` in the engine field with
 Secret Keys
 -----------
 
-By default |gwm| creates a secret key for you the first time you run a command
-using ``django-admin.py``, and puts this key into a file located at
-``/opt/ganeti_webmgr/.secrets/SECRET_KEY.txt``. This is to make initial setup
-easier, and less hassle for you. This key is used for protection against CSRF
-attacks as well as encrypting your Ganeti cluster password in the database. Once
-set, you should avoid changing this if possible.
+By default |gwm| creates a ``SECRET_KEY`` and a ``WEB_MGR_API_KEY`` for you the
+first time you run a command using ``django-admin.py``, and puts this key into a
+file located at ``/opt/ganeti_webmgr/.secrets/SECRET_KEY.txt``. This is to make
+initial setup easier, and less hassle for you. This key is used for protection
+against CSRF attacks as well as encrypting your Ganeti cluster password in the
+database. Once set, you should avoid changing this if possible.
 
 If you want to have better control of this setting you can set the
 ``SECRET_KEY`` setting in ``config.yml`` like so::
@@ -103,10 +103,12 @@ You do **not** want to share this, or make it publically accessible. This can
 be used to avoid protections |gwm| has implemented for you.
 
 If you are using the :ref:`sshkeys` feature to add keys to VMs with |gwm|, you
-will also need to set the ``WEB_MGR_API_KEY`` setting in ``config.yml``. This is
-the same value you will use when running the ``sshkeys.py`` or ``sshkeys.sh``
-scripts. Similarly, it should be something impossible to guess, much like the
-``SECRET_KEY`` setting::
+will also need to set the ``WEB_MGR_API_KEY`` setting in ``config.yml`` or keep
+the value created for you in
+``/opt/ganeti_webmgr/.secrets/WEB_MGR_API_KEY.txt``. This is the same value you
+will use when running the ``sshkeys.py`` or ``sshkeys.sh`` scripts. Similarly,
+it should be something impossible to guess, much like the ``SECRET_KEY``
+setting::
 
     WEB_MGR_API_KEY: 3SqmsCnNiuDY9lAVIh3Tx3RIJfql6sIc
 
