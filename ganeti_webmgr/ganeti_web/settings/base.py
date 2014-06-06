@@ -198,33 +198,50 @@ VNC_PROXY = 'localhost:8888'
 RAPI_CONNECT_TIMEOUT = 3
 
 
-# Generate a secret key, and store it in a file to be read later.
-secrets_folder = join(DEFAULT_INSTALL_PATH, '.secrets')
+def create_secrets(folder='.secrets'):
+    # Generate a secret key, and store it in a file to be read later.
+    secrets_folder = join(DEFAULT_INSTALL_PATH, folder)
 
-# Directory doesn't exist, create it
-if not exists(secrets_folder):
+    # Directory doesn't exist, create it
+    if not exists(secrets_folder):
+        try:
+            makedirs(secrets_folder)
+        except (IOError, OSError):
+            print ('Unable to create directory, at %s. Please make sure to set the '
+                   'SECRET_KEY and WEB_MGR_API_KEY setting in config.yml'
+                   % secrets_folder)
+            return
+
+    secret_key_file = join(secrets_folder, 'SECRET_KEY.txt')
+    api_key_file = join(secrets_folder, 'WEB_MGR_API_KEY.txt')
+    secret_key_file_exists = exists(secret_key_file)
+    api_key_file_exists = exists(api_key_file)
     try:
-        makedirs(secrets_folder)
-    except (IOError, OSError):
-        print ('Unable to create directory, at %s. Please make sure to set the '
-               'SECRET_KEY setting in config.yml' % secrets_folder)
-        return
+        # File containing secretkey doesnt exist, so create it and fill it with the key
+        if not secret_key_file_exists:
+            with open(secret_key_file, "w") as f:
+                SECRET_KEY = generate_secret()
+                f.write(SECRET_KEY)
+        # File does exist, open it and read the value from it
+        else:
+            with open(secret_key_file, "r") as f:
+                SECRET_KEY = f.read().strip()
 
-secret_key_file = join(secrets_folder, 'SECRET_KEY.txt')
-file_exists = exists(secret_key_file)
-try:
-    # File containing secretkey doesnt exist, so create it and fill it with the key
-    if not file_exists:
-        with open(secret_key_file, "w") as f:
-            SECRET_KEY = generate_secret()
-            f.write(SECRET_KEY)
-    # File does exist, open it and read the value from it
-    else:
-        with open(secret_key_file, "r") as f:
-            SECRET_KEY = f.read().strip()
-except (IOError, OSError):
-    action = 'create' if file_exists else 'open'
-    msg = ("Unable to %s file at %s. Please either create the file and ensure "
-           "it contains a 32bit random value or ensure you have set the "
-           "SECRET_KEY setting in %s.")
-    print msg % (action, secret_key_file, CONFIG_PATH)
+        # do the same as above for the WEB_MGR_API_KEY
+        if not api_key_file_exists:
+            with open(api_key_file, "w") as f:
+                WEB_MGR_API_KEY = generate_secret()
+                f.write(WEB_MGR_API_KEY)
+        # File does exist, open it and read the value from it
+        else:
+            with open(api_key_file, "r") as f:
+                WEB_MGR_API_KEY = f.read().strip()
+
+    except (IOError, OSError):
+        action = 'create' if secret_key_file_exists else 'open'
+        msg = ("Unable to %s file at %s. Please either create the file and ensure "
+               "it contains a 32bit random value or ensure you have set the "
+               "SECRET_KEY setting in %s.")
+        print msg % (action, secret_key_file, CONFIG_PATH)
+
+create_secrets()
