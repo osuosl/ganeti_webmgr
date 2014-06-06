@@ -74,6 +74,7 @@ def admin_qs_for_cluster(cluster):
     qs |= superusers_qs
     return qs.distinct()
 
+
 def owner_qs(cluster, user):
     """
     Get all owners for a cluster given a cluster and a user.
@@ -106,6 +107,7 @@ def owner_qs(cluster, user):
 
     return qs.order_by('name')
 
+
 def admin_group_qs(cluster, user):
     """
     Given a cluster and a user, return the groups the user is in
@@ -119,9 +121,11 @@ def admin_group_qs(cluster, user):
     groups = users_groups & admin_groups
     return groups
 
+
 def owner_qs_for_superuser(cluster):
     "Return all the users since we are superuser"
     return ClusterUser.objects.all().order_by('name')
+
 
 def vm_qs_for_admins(user):
     """
@@ -164,6 +168,7 @@ def vm_qs_for_users(user, clusters=True):
 
     return qs.distinct()
 
+
 def cluster_vm_qs(user, perms=[], groups=True):
     """
     Retrieves a queryset of all VMs a user has any of the given permissions
@@ -175,7 +180,7 @@ def cluster_vm_qs(user, perms=[], groups=True):
     ).values_list('pk', flat=True)
     # # a queryset of VMs
     vms = VirtualMachine.objects.filter(
-        cluster__pk__in=cluster_ids # VMs we have perms to
+        cluster__pk__in=cluster_ids  # VMs we have perms to
     ).distinct()
 
     return vms

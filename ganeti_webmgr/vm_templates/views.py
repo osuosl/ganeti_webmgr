@@ -27,15 +27,15 @@ from django.views.generic.edit import FormView
 from django_tables2 import SingleTableView
 
 from ganeti_webmgr.ganeti_web.backend.templates import (instance_to_template,
-                                          template_to_instance)
+                                                        template_to_instance)
 from .forms import (VirtualMachineTemplateCopyForm, VMInstanceFromTemplate,
                     TemplateFromVMInstance)
 from ganeti_webmgr.clusters.models import Cluster
 from ganeti_webmgr.virtualmachines.models import VirtualMachine
 from ganeti_webmgr.vm_templates.models import VirtualMachineTemplate
 
-from ganeti_webmgr.ganeti_web.views.generic import (LoginRequiredMixin, PaginationMixin,
-                                      NO_PRIVS)
+from ganeti_webmgr.ganeti_web.views.generic import (LoginRequiredMixin,
+                                                    PaginationMixin, NO_PRIVS)
 from ganeti_webmgr.ganeti_web.views.tables import VMTemplateTable
 
 

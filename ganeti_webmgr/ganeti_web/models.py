@@ -87,6 +87,7 @@ post_save.connect(create_profile, sender=User)
 post_save.connect(update_cluster_hash, sender=Cluster)
 post_save.connect(update_organization, sender=Group)
 
+
 def regenerate_cu_children(sender, **kwargs):
     """
     Resets may destroy Profiles and/or Organizations. We need to regenerate

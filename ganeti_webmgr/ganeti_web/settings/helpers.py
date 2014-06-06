@@ -33,6 +33,7 @@ def here(*x):
 # as a python package
 PROJECT_ROOT = here("..", "..", "..")
 
+
 def root(*x):
     """
     This is a wrapper around join. It will return a path relative to
@@ -42,8 +43,11 @@ def root(*x):
 
 app_root = lambda *x: root('ganeti_webmgr', *x)
 
-##### Project structure variables #####
+"""
+Project structure variables
+"""
 SITE_NAME = 'Ganeti Web Manager'
+
 
 def generate_secret(secret_size=32):
     "Generates a secret key of the given size"
@@ -55,7 +59,7 @@ def generate_secret(secret_size=32):
         for i in xrange(secret_size)
     )
 
+
 def ugettext(s):
     """Horrible Django hack for convincing Django that we are i18n'd."""
     return s
-

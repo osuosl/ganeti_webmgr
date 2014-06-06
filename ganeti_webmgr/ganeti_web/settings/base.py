@@ -28,13 +28,19 @@ from .helpers import (
     generate_secret, ugettext
 )
 
-##### Debug *default* configuration #####
+"""
+Debug *default* configuration
+"""
 DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 TESTING = False
-##### End Debug configuration #####
+"""
+End Debug configuration
+"""
 
-##### General Defaults #####
+"""
+General Defaults
+"""
 SITE_ID = 1
 LOGIN_REDIRECT_URL = '/'
 SITE_NAME = 'Ganeti Web Manager'
@@ -43,29 +49,45 @@ SITE_ROOT = ''
 
 USE_I18N = True
 USE_L10N = True
-##### End General defaults #####
+"""
+End General defaults
+"""
 
-##### Registration Settings #####
+"""
+Registration Settings
+"""
 ACCOUNT_ACTIVATION_DAYS = 7
-##### End Registration Settings #####
+"""
+End Registration Settings
+"""
 
-##### Items per page defaults #####
+"""
+Items per page defaults
+"""
 # default max number of disks that can be added at once to an instance
 MAX_DISKS_ADD = 8
 # default max number of NICS that can be added at once to an instance
 MAX_NICS_ADD = 8
 # default items per page
 ITEMS_PER_PAGE = 15
-##### End Items per page defaults #####
+"""
+End Items per page defaults
+"""
 
-##### Haystack settings #####
+"""
+Haystack settings
+"""
 HAYSTACK_SITECONF = 'ganeti_webmgr.search_sites'
 HAYSTACK_SEARCH_ENGINE = 'whoosh'
 HAYSTACK_WHOOSH_PATH = join(DEFAULT_INSTALL_PATH, 'whoosh_index')
-##### End Haystack settings #####
+"""
+End Haystack settings
+"""
 
 
-###### Template Configuration #####
+"""
+Template Configuration
+"""
 TEMPLATE_DIRS = (
     app_root('templates')
 )
@@ -85,9 +107,13 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'ganeti_webmgr.ganeti_web.context_processors.site',
     'ganeti_webmgr.ganeti_web.context_processors.common_permissions',
 )
-###### End Template Configuration #####
+"""
+End Template Configuration
+"""
 
-###### Static Files Configuration #####
+"""
+Static Files Configuration
+"""
 STATIC_URL = '/static'
 
 STATICFILES_FINDERS = (
@@ -100,15 +126,21 @@ STATICFILES_DIRS = (
 )
 
 STATIC_ROOT = join(DEFAULT_INSTALL_PATH, "collected_static")
-###### End Static Files Configuration #####
+"""
+End Static Files Configuration
+"""
 
-###### Other Configuration #####
+"""
+Other Configuration
+"""
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     'object_permissions.backend.ObjectPermBackend',
 )
 
-##### Logging Configuration #####
+"""
+Logging Configuration
+"""
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -126,7 +158,9 @@ LOGGING = {
         },
     }
 }
-##### End Logging Configuration #####
+"""
+End Logging Configuration
+"""
 
 # Middleware. Order matters; these are all applied *in the order given*.
 MIDDLEWARE_CLASSES = (
@@ -178,7 +212,9 @@ INSTALLED_APPS = (
 ROOT_URLCONF = 'ganeti_webmgr.ganeti_web.urls'
 AUTH_PROFILE_MODULE = 'authentication.Profile'
 
-##### Locale Configuration #####
+"""
+Locale Configuration
+"""
 LOCALE_PATHS = (
     app_root("locale"),
 )
@@ -198,50 +234,29 @@ VNC_PROXY = 'localhost:8888'
 RAPI_CONNECT_TIMEOUT = 3
 
 
-def create_secrets(folder='.secrets'):
-    # Generate a secret key, and store it in a file to be read later.
-    secrets_folder = join(DEFAULT_INSTALL_PATH, folder)
+# Generate a secret key, and store it in a file to be read later.
+secrets_folder = join(DEFAULT_INSTALL_PATH, '.secrets')
 
-    # Directory doesn't exist, create it
-    if not exists(secrets_folder):
-        try:
-            makedirs(secrets_folder)
-        except (IOError, OSError):
-            print ('Unable to create directory, at %s. Please make sure to set the '
-                   'SECRET_KEY and WEB_MGR_API_KEY setting in config.yml'
-                   % secrets_folder)
-            return
+# Directory doesn't exist, create it
+if not exists(secrets_folder):
+    makedirs(secrets_folder)
 
-    secret_key_file = join(secrets_folder, 'SECRET_KEY.txt')
-    api_key_file = join(secrets_folder, 'WEB_MGR_API_KEY.txt')
-    secret_key_file_exists = exists(secret_key_file)
-    api_key_file_exists = exists(api_key_file)
-    try:
-        # File containing secretkey doesnt exist, so create it and fill it with the key
-        if not secret_key_file_exists:
-            with open(secret_key_file, "w") as f:
-                SECRET_KEY = generate_secret()
-                f.write(SECRET_KEY)
-        # File does exist, open it and read the value from it
-        else:
-            with open(secret_key_file, "r") as f:
-                SECRET_KEY = f.read().strip()
-
-        # do the same as above for the WEB_MGR_API_KEY
-        if not api_key_file_exists:
-            with open(api_key_file, "w") as f:
-                WEB_MGR_API_KEY = generate_secret()
-                f.write(WEB_MGR_API_KEY)
-        # File does exist, open it and read the value from it
-        else:
-            with open(api_key_file, "r") as f:
-                WEB_MGR_API_KEY = f.read().strip()
-
-    except (IOError, OSError):
-        action = 'create' if secret_key_file_exists else 'open'
-        msg = ("Unable to %s file at %s. Please either create the file and ensure "
-               "it contains a 32bit random value or ensure you have set the "
-               "SECRET_KEY setting in %s.")
-        print msg % (action, secret_key_file, CONFIG_PATH)
-
-create_secrets()
+secret_key_file = join(secrets_folder, 'SECRET_KEY.txt')
+file_exists = exists(secret_key_file)
+try:
+    # File containing secretkey doesnt exist,
+    # so create it and fill it with the key
+    if not file_exists:
+        with open(secret_key_file, "w") as f:
+            SECRET_KEY = generate_secret()
+            f.write(SECRET_KEY)
+    # File does exist, open it and read the value from it
+    else:
+        with open(secret_key_file, "r") as f:
+            SECRET_KEY = f.read().strip()
+except IOError:
+    action = 'create' if file_exists else 'open'
+    msg = ("Unable to %s file at %s. Please either create the file and ensure "
+           "it contains a 32bit random value or ensure you have set the "
+           "SECRET_KEY setting in %s.")
+    print msg % (action, secret_key_file, CONFIG_PATH)

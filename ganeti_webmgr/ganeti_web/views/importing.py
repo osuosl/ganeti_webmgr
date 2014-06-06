@@ -27,6 +27,7 @@ from .generic import NO_PRIVS
 from ganeti_webmgr.clusters.models import Cluster
 from ganeti_webmgr.virtualmachines.models import VirtualMachine
 
+
 @login_required
 def orphans(request):
     """

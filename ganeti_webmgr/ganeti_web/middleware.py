@@ -7,6 +7,7 @@ from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseForbidden
 from django.template import RequestContext, loader
 
+
 def render_403(request, message):
     """
     Render a 403 response.

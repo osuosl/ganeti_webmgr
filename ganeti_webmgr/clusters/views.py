@@ -45,7 +45,8 @@ from object_log.views import list_for_object
 
 log_action = LogItem.objects.log_action
 
-from ganeti_webmgr.ganeti_web.backend.queries import vm_qs_for_users, cluster_qs_for_user
+from ganeti_webmgr.ganeti_web.backend.queries import (vm_qs_for_users,
+                                                      cluster_qs_for_user)
 
 from .forms import EditClusterForm, QuotaForm
 from .models import Cluster
@@ -55,10 +56,13 @@ from ganeti_webmgr.virtualmachines.models import VirtualMachine
 from ganeti_webmgr.jobs.models import Job
 
 from ganeti_webmgr.ganeti_web.views import render_404
-from ganeti_webmgr.ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
-                                      PaginationMixin, GWMBaseView)
-from ganeti_webmgr.ganeti_web.views.tables import (ClusterTable, ClusterVMTable,
-                                     ClusterJobTable)
+from ganeti_webmgr.ganeti_web.views.generic import (NO_PRIVS,
+                                                    LoginRequiredMixin,
+                                                    PaginationMixin,
+                                                    GWMBaseView)
+from ganeti_webmgr.ganeti_web.views.tables import (ClusterTable,
+                                                   ClusterVMTable,
+                                                   ClusterJobTable)
 from ganeti_webmgr.virtualmachines.views import BaseVMListView
 
 from ganeti_webmgr.utils.client import GanetiApiError
@@ -69,8 +73,8 @@ class ClusterDetailView(LoginRequiredMixin, DetailView):
     template_name = "ganeti/cluster/detail.html"
 
     def get_object(self, queryset=None):
-        self.cluster = get_object_or_404(Cluster,
-            slug=self.kwargs["cluster_slug"])
+        self.cluster = get_object_or_404(
+            Cluster, slug=self.kwargs["cluster_slug"])
         return self.cluster
 
     def get_context_data(self, **kwargs):
@@ -132,7 +136,7 @@ class ClusterVMListView(BaseVMListView):
 
         # Do we have admin on any VMs for this cluster?
         vm_perms = self.request.user.get_objects_any_perms(
-                VirtualMachine, perms=['admin']
+            VirtualMachine, perms=['admin']
         ).filter(cluster=self.cluster).exists()
 
         if not self.admin and not vm_perms:

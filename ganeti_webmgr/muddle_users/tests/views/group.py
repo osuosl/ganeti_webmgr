@@ -5,8 +5,10 @@ from django.test import TestCase, Client
 from object_permissions.registration import grant, revoke
 from object_permissions.signals import view_add_user, view_remove_user
 
-from ganeti_webmgr.muddle_users.signals import (view_group_edited, view_group_created,
-                                  view_group_deleted)
+from ganeti_webmgr.muddle_users.signals import (view_group_edited,
+                                                view_group_created,
+                                                view_group_deleted)
+
 
 class TestGroupViews(TestCase):
 
@@ -50,7 +52,8 @@ class TestGroupViews(TestCase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user (user with admin on no groups)
-        self.assertTrue(c.login(username=self.user0.username, password='secret'))
+        self.assertTrue(
+            c.login(username=self.user0.username, password='secret'))
         response = c.get(url)
         self.assertEqual(403, response.status_code)
 
@@ -101,7 +104,8 @@ class TestGroupViews(TestCase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assertTrue(c.login(username=self.user0.username, password='secret'))
+        self.assertTrue(
+            c.login(username=self.user0.username, password='secret'))
         response = c.get(url % args)
         self.assertEqual(403, response.status_code)
 
@@ -133,7 +137,8 @@ class TestGroupViews(TestCase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assertTrue(c.login(username=self.user0.username, password='secret'))
+        self.assertTrue(
+            c.login(username=self.user0.username, password='secret'))
         response = c.post(url % group.id)
         self.assertEqual(403, response.status_code)
 
@@ -142,12 +147,14 @@ class TestGroupViews(TestCase):
         self.assertEqual(404, response.status_code)
 
         # get form - authorized (permission)
-        # XXX need to implement Class wide permission for creating editing groups
-        #grant(user, 'admin', group)
-        #response = c.post(url % group.id)
-        #self.assertEqual(200, response.status_code)
-        #self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        #self.assertTemplateUsed(response, 'group/edit.html')
+        # XXX need to implement Class wide permission
+        # for creating editing groups
+        # grant(user, 'admin', group)
+        # response = c.post(url % group.id)
+        # self.assertEqual(200, response.status_code)
+        # self.assertEquals(
+        #       'text/html; charset=utf-8', response['content-type'])
+        # self.assertTemplateUsed(response, 'group/edit.html')
 
         # get form - authorized (permission)
         grant(self.user0, 'admin', group)
@@ -166,20 +173,21 @@ class TestGroupViews(TestCase):
         self.assertTemplateUsed(response, 'group/edit.html')
 
         # missing name
-        data = {'id':group.id}
+        data = {'id': group.id}
         response = c.post(url % group.id, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
 
         # setup signal
         self.signal_editor = self.signal_group = None
+
         def callback(sender, editor, **kwargs):
             self.signal_user = self.user0
             self.signal_group = sender
         view_group_edited.connect(callback)
 
         # successful edit
-        data = {'id':group.id, 'name':'EDITED_NAME'}
+        data = {'id': group.id, 'name': 'EDITED_NAME'}
 
         response = c.post(url % group.id, data)
         self.assertRedirects(response, '/group/%s' % group.pk)
@@ -204,17 +212,19 @@ class TestGroupViews(TestCase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assertTrue(c.login(username=self.user0.username, password='secret'))
+        self.assertTrue(
+            c.login(username=self.user0.username, password='secret'))
         response = c.post(url)
         self.assertEqual(403, response.status_code)
 
         # get form - authorized (permission)
         # XXX need to implement Class level permissions
-        #grant(user, 'admin', group)
-        #response = c.post(url % group.id)
-        #self.assertEqual(200, response.status_code)
-        #self.assertEquals('text/html; charset=utf-8', response['content-type'])
-        #self.assertTemplateUsed(response, 'group/edit.html')
+        # grant(user, 'admin', group)
+        # response = c.post(url % group.id)
+        # self.assertEqual(200, response.status_code)
+        # self.assertEquals(
+        #    'text/html; charset=utf-8', response['content-type'])
+        # self.assertTemplateUsed(response, 'group/edit.html')
 
         # get form - authorized (superuser)
         self.user0.revoke('admin', group)
@@ -226,20 +236,21 @@ class TestGroupViews(TestCase):
         self.assertTemplateUsed(response, 'group/edit.html')
 
         # missing name
-        response = c.post(url, {'name':''})
+        response = c.post(url, {'name': ''})
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'group/edit.html')
 
         # setup signal
         self.signal_editor = self.signal_group = None
+
         def callback(sender, editor, **kwargs):
             self.signal_user = self.user0
             self.signal_group = sender
         view_group_created.connect(callback)
 
         # successful edit
-        data = {'name':'ADD_NEW_GROUP'}
+        data = {'name': 'ADD_NEW_GROUP'}
         response = c.post(url, data)
         group = Group.objects.get(name='ADD_NEW_GROUP')
         self.assertRedirects(response, '/group/%s' % group.pk)
@@ -269,7 +280,8 @@ class TestGroupViews(TestCase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized user
-        self.assertTrue(c.login(username=self.user0.username, password='secret'))
+        self.assertTrue(
+            c.login(username=self.user0.username, password='secret'))
         response = c.delete(url % group0.id)
         self.assertEqual(403, response.status_code)
 
@@ -287,6 +299,7 @@ class TestGroupViews(TestCase):
 
         # setup signal
         self.signal_editor = self.signal_group = None
+
         def callback(sender, editor, **kwargs):
             self.signal_user = self.user0
             self.signal_group = sender
@@ -328,7 +341,8 @@ class TestGroupViews(TestCase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # unauthorized
-        self.assertTrue(c.login(username=self.user0.username, password='secret'))
+        self.assertTrue(
+            c.login(username=self.user0.username, password='secret'))
         response = c.get(url % args)
         self.assertEqual(403, response.status_code)
         response = c.post(url % args)
@@ -356,12 +370,13 @@ class TestGroupViews(TestCase):
         self.assertEquals('application/json', response['content-type'])
 
         # invalid user
-        response = c.post(url % args, {'user':0})
+        response = c.post(url % args, {'user': 0})
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
 
         # setup signal
         self.signal_sender = self.signal_user = self.signal_obj = None
+
         def callback(sender, user, obj, **kwargs):
             self.signal_sender = sender
             self.signal_user = user
@@ -369,7 +384,7 @@ class TestGroupViews(TestCase):
         view_add_user.connect(callback)
 
         # valid post
-        data = {'user':self.user0.id}
+        data = {'user': self.user0.id}
         response = c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('text/html; charset=utf-8', response['content-type'])
@@ -413,7 +428,8 @@ class TestGroupViews(TestCase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # invalid permissions
-        self.assertTrue(c.login(username=self.user0.username, password='secret'))
+        self.assertTrue(
+            c.login(username=self.user0.username, password='secret'))
         response = c.get(url % args)
         self.assertEqual(403, response.status_code)
         response = c.post(url % args)
@@ -427,7 +443,7 @@ class TestGroupViews(TestCase):
         self.assertEqual(405, response.status_code)
 
         # valid request (perm)
-        data = {'user':self.user0.id}
+        data = {'user': self.user0.id}
         response = c.post(url % args, data)
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
@@ -437,6 +453,7 @@ class TestGroupViews(TestCase):
 
         # setup signal
         self.signal_sender = self.signal_user = self.signal_obj = None
+
         def callback(sender, user, obj, **kwargs):
             self.signal_sender = sender
             self.signal_user = user
@@ -468,7 +485,7 @@ class TestGroupViews(TestCase):
         self.assertNotEqual('1', response.content)
 
         # remove invalid user
-        response = c.post(url % args, {'user':0})
+        response = c.post(url % args, {'user': 0})
         self.assertEqual(200, response.status_code)
         self.assertEquals('application/json', response['content-type'])
         self.assertNotEqual('1', response.content)

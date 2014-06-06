@@ -245,7 +245,8 @@ VM_CREATE_HELP = {
                     </ul><p>Valid for the Xen HVM and KVM hypervisors.</p>""",
     'nic_mode': """ <p> This option specifies how the virtual machine connects
                     to the network. More information on this can be found in
-                    the <a href="http://docs.ganeti.org/ganeti/current/html/install.html#configuring-the-network"> Ganeti tutorial documentation</a> .</p>
+                    the <a href="http://docs.ganeti.org/ganeti/current/html/install.html#configuring-the-network">
+                     Ganeti tutorial documentation</a> .</p>
                     <p>When in doubt, choose
                     <b>bridged</b>.</p> <ul> <li> <b>bridged</b> - The virtual
                     machine's network interface will be attached to a software

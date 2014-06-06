@@ -91,6 +91,7 @@ class TestClusterQSForUser(TestCase, UserTestMixin):
 # The TestOwnerQS tests could probably be a single test case,
 # with different test methods, but this works
 
+
 class TestOwnerQSNoGroups(TestCase):
 
     def setUp(self):
@@ -135,6 +136,7 @@ class TestOwnerQSNoGroups(TestCase):
         owners = owner_qs(self.cluster, self.noperms)
         valid_owners = [repr(self.noperms.get_profile())]
         self.assertQuerysetEqual(owners, valid_owners)
+
 
 class TestOwnerQSWithGroups(TestCase):
 
@@ -220,4 +222,3 @@ class TestClusterVMQS(TestCase):
         vms = cluster_vm_qs(self.standard, perms=['admin'])
         self.standard.grant('admin', self.vm1)
         self.assertQuerysetEqual(vms, [])
-

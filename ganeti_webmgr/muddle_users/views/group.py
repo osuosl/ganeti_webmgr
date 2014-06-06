@@ -11,8 +11,9 @@ from django.template import RequestContext
 
 from object_permissions.signals import view_add_user, view_remove_user
 
-from ganeti_webmgr.muddle_users.signals import (view_group_edited, view_group_created,
-                                  view_group_deleted)
+from ganeti_webmgr.muddle_users.signals import (view_group_edited,
+                                                view_group_created,
+                                                view_group_deleted)
 
 
 class GroupForm(forms.ModelForm):
@@ -29,9 +30,9 @@ class UserForm(forms.Form):
     """
     group = None
     user = forms.ModelChoiceField(queryset=User.objects.all())
-    
+
     def __init__(self, group=None, *args, **kwargs):
-        self.group=group
+        self.group = group
         super(UserForm, self).__init__(*args, **kwargs)
 
 
@@ -40,7 +41,8 @@ class AddUserForm(UserForm):
         """ Validate that user is not in group already """
         user = self.cleaned_data['user']
         if self.group.user_set.filter(id=user.id).exists():
-            raise forms.ValidationError("User is already a member of this group")
+            raise forms.ValidationError(
+                "User is already a member of this group")
         return user
 
 
@@ -67,30 +69,32 @@ def list(request, template='group/list.html'):
             return HttpResponseForbidden()
 
     return render_to_response(template,
-                              {'groups':groups},
-                              context_instance=RequestContext(request)) 
+                              {'groups': groups},
+                              context_instance=RequestContext(request))
 
 
 @login_required
 def detail(request, id=None, template='group/detail.html'):
     """
     Display group details
-    
+
     @param id: id of Group
     """
     group = get_object_or_404(Group, id=id) if id else None
     user = request.user
-    
+
     if not (user.is_superuser or user.has_perm('admin', group)):
         return HttpResponseForbidden()
-    
+
     return render_to_response(template,
-                        {'object':group,
-                         'group':group,
-                         'users':group.user_set.all(),
-                         'url':reverse('group-permissions', args=[id])
-                         },
-                          context_instance=RequestContext(request))
+                              {
+                                  'object': group,
+                                  'group': group,
+                                  'users': group.user_set.all(),
+                                  'url': reverse(
+                                      'group-permissions', args=[id])
+                              },
+                              context_instance=RequestContext(request))
 
 
 @login_required
@@ -119,7 +123,7 @@ def edit(request, id=None, template="group/edit.html"):
                     view_group_edited.send(sender=group, editor=user)
 
                 return HttpResponseRedirect(group.get_absolute_url())
-            
+
     elif method == 'DELETE':
         group.delete()
         view_group_deleted.send(sender=group, editor=user)
@@ -128,9 +132,11 @@ def edit(request, id=None, template="group/edit.html"):
     else:
         form = GroupForm(instance=group)
 
-    return render_to_response(template, {
-            'form':form,
-            'group':group,
+    return render_to_response(
+        template,
+        {
+            'form': form,
+            'group': group,
         },
         context_instance=RequestContext(request),
     )
@@ -140,38 +146,42 @@ def edit(request, id=None, template="group/edit.html"):
 def add_user(request, id, user_row_template='group/user_row.html'):
     """
     ajax call to add a user to a Group
-    
+
     @param id: id of Group
     """
     editor = request.user
     group = get_object_or_404(Group, id=id)
-    
+
     if not (editor.is_superuser or editor.has_perm('admin', group)):
         return HttpResponseForbidden('You do not have sufficient privileges')
-    
+
     if request.method == 'POST':
         form = AddUserForm(group, request.POST)
         if form.is_valid():
             user = form.cleaned_data['user']
             group.user_set.add(user)
-            
+
             # signal
             view_add_user.send(sender=editor, user=user, obj=group)
-            
+
             # return html for new user row
             url = reverse('group-permissions', args=[id])
             return render_to_response(
                 user_row_template,
-                        {'user_detail':user, 'object':group, 'url':url},
-                        context_instance=RequestContext(request))
-        
+                {
+                    'user_detail': user,
+                    'object': group,
+                    'url': url
+                },
+                context_instance=RequestContext(request))
+
         # error in form return ajax response
         content = json.dumps(form.errors)
         return HttpResponse(content, mimetype='application/json')
 
     form = AddUserForm()
     return render_to_response("group/add_user.html",
-                              {'form':form, 'group':group},
+                              {'form': form, 'group': group},
                               context_instance=RequestContext(request))
 
 
@@ -179,15 +189,15 @@ def add_user(request, id, user_row_template='group/user_row.html'):
 def remove_user(request, id):
     """
     Ajax call to remove a user from an Group
-    
+
     @param id: id of Group
     """
     editor = request.user
     group = get_object_or_404(Group, id=id)
-    
+
     if not (editor.is_superuser or editor.has_perm('admin', group)):
         return HttpResponseForbidden('You do not have sufficient privileges')
-    
+
     if request.method != 'POST':
         return HttpResponseNotAllowed('GET')
 
@@ -196,13 +206,13 @@ def remove_user(request, id):
         user = form.cleaned_data['user']
         group.user_set.remove(user)
         user.revoke_all(group)
-        
+
         # signal
         view_remove_user.send(sender=editor, user=user, obj=group)
-        
+
         # return success
         return HttpResponse('1', mimetype='application/json')
-        
+
     # error in form return ajax response
     content = json.dumps(form.errors)
     return HttpResponse(content, mimetype='application/json')

@@ -811,7 +811,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         Test if sync_virtual_machines is run after editing a cluster
         for the second time
         """
-        #configuring stuff needed to test edit view
+        # configuring stuff needed to test edit view
         self.assertTrue(self.c.login(username=self.superuser.username,
                                      password='secret'))
         self.cluster.virtual_machines.all().delete()
@@ -834,7 +834,7 @@ class TestClusterViews(TestCase, ViewTestMixin, UserTestMixin):
         # ensure there are VMs ready for sync
         self.cluster.virtual_machines.all().delete()
 
-        #run view_edit again..
+        # run view_edit again..
         self.c.post(url, data, follow=True)
 
         # assert that no VMs were created
@@ -1174,4 +1174,3 @@ class TestClusterVMListView(TestCase):
         vms = [vm.pk for vm in response.context['object_list']]
         expected_vms = [self.vm1.pk]
         self.assertEqual(vms, expected_vms)
-

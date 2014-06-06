@@ -48,11 +48,11 @@ class ImportViews(TestCase):
         self.vm0 = VirtualMachine(hostname='vm0', cluster=self.cluster0)
         self.vm1 = VirtualMachine(hostname='vm1', cluster=self.cluster0,
                                   owner=self.user.get_profile())
-        #self.vm2 = VirtualMachine(hostname='vm2', cluster=cluster0)
+        # self.vm2 = VirtualMachine(hostname='vm2', cluster=cluster0)
         self.vm3 = VirtualMachine(hostname='vm3', cluster=self.cluster1)
         self.vm4 = VirtualMachine(hostname='vm4', cluster=self.cluster1,
                                   owner=self.user.get_profile())
-        #self.vm5 = VirtualMachine(hostname='vm5', cluster=cluster1)
+        # self.vm5 = VirtualMachine(hostname='vm5', cluster=cluster1)
         self.vm0.save()
         self.vm1.save()
         self.vm3.save()
@@ -237,7 +237,8 @@ class ImportViews(TestCase):
         self.assertTemplateUsed(response, 'ganeti/importing/missing_db.html')
 
         cid_vm_hostname = Template('$cid:$hostname')
-        c_vm2 = cid_vm_hostname.substitute(cid=self.cluster0.id, hostname='vm2')
+        c_vm2 = cid_vm_hostname.substitute(
+            cid=self.cluster0.id, hostname='vm2')
         self.assertEqual([(c_vm2, u'test0', u'vm2')],
                          response.context['vms'])
         self.user.revoke_all(self.cluster0)
@@ -249,7 +250,8 @@ class ImportViews(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertEqual('text/html; charset=utf-8', response['content-type'])
         self.assertTemplateUsed(response, 'ganeti/importing/missing_db.html')
-        c_vm5 = cid_vm_hostname.substitute(cid=self.cluster1.id, hostname='vm5')
+        c_vm5 = cid_vm_hostname.substitute(
+            cid=self.cluster1.id, hostname='vm5')
         self.assertEqual([(c_vm2, u'test0', u'vm2'),
                           (c_vm5, u'test1', u'vm5')],
                          response.context['vms'])

@@ -1,4 +1,5 @@
-from ganeti_webmgr.muddle.tests.apps.load_app_plugin.test_plugin import TestPlugin
+from ganeti_webmgr.muddle.tests.apps.load_app_plugin.test_plugin import (
+    TestPlugin)
 
 
 class TestPluginFoo(TestPlugin):
@@ -19,4 +20,3 @@ class NotAPluginEither(NotAPlugin):
 
 AN_INTEGER = 1
 A_STRING = 'abc'
-
