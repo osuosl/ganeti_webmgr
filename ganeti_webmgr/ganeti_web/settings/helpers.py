@@ -61,3 +61,4 @@ def generate_secret(secret_size=32):
 def ugettext(s):
     """Horrible Django hack for convincing Django that we are i18n'd."""
     return s
+

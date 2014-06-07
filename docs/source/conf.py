@@ -229,7 +229,7 @@ latex_documents = [
 # latex_domain_indices = True
 
 
-# -- Options for manual page output ------------------------------------------
+# -- Options for manual page output --------------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).

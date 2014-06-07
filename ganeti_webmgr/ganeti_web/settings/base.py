@@ -229,3 +229,4 @@ except IOError:
            "it contains a 32bit random value or ensure you have set the "
            "SECRET_KEY setting in %s.")
     print msg % (action, secret_key_file, CONFIG_PATH)
+
