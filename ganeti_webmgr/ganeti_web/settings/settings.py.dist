@@ -25,34 +25,26 @@ DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 
-"""
-Testing Configuration
-"""
+# -- Testing Configuration ---------------------------------------------------
 # Enable if running unit tests. Disable to prevent test models syncing to DB
 TESTING = False
 # Setting this to False disables south migrations when running tests.
 SOUTH_TESTS_MIGRATE = False
 SKIP_SOUTH_TESTS = True
-"""
-End Testing Configuration
-"""
+# -- End Testing Configuration -----------------------------------------------
 
-"""
-Management settings
-"""
+
+# -- Management settings -----------------------------------------------------
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
 )
 
 MANAGERS = ADMINS
-"""
-End Management settings
-"""
+# -- End Management settings -------------------------------------------------
 
 
-"""
-Database Configuration
-"""
+
+# -- Database Configuration --------------------------------------------------
 DATABASES = {
     'default': {
         # Add 'postgresql_psycopg2', 'postgresql', 'mysql',
@@ -69,10 +61,10 @@ DATABASES = {
                          # Not used with sqlite3.
     }
 }
-"""
-End Database Configuration
-"""
+# -- End Database Configuration ----------------------------------------------
 
+
+# -- Locale Configuration ----------------------------------------------------
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 TIME_ZONE = 'America/Los_Angeles'
 DATE_FORMAT = "d/m/Y"
@@ -87,9 +79,7 @@ LANGUAGES = (
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = 'en-US'
-"""
-End Locale Configuration
-"""
+# -- End Locale Configuration ------------------------------------------------
 
 
 # Site name and domain referenced by some modules to provide links back to
@@ -126,9 +116,8 @@ AUTHENTICATION_BACKENDS = (
     'object_permissions.backend.ObjectPermBackend',
 )
 
-"""
-Registration Settings
-"""
+
+# -- Registration Settings ---------------------------------------------------
 ACCOUNT_ACTIVATION_DAYS = 7
 
 # Email settings for registration
@@ -139,9 +128,7 @@ EMAIL_PORT = "25"
 # Whether users should be able to create their own accounts.
 # False if accounts can only be created by admins.
 ALLOW_OPEN_REGISTRATION = True
-"""
-End Registration Settings
-"""
+# -- End Registration Settings -----------------------------------------------
 
 # Path to where haystack keeps the index files for search
 HAYSTACK_WHOOSH_PATH = '/opt/ganeti_webmgr/whoosh_index'

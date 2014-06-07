@@ -12,7 +12,7 @@ class TemplateTestCase(TestCase, UserTestMixin):
         # Cluster
         cluster = Cluster(hostname='test.cluster.gwm', slug='test',
                           username='foo', password='bar')
-        #cluster.info = INFO
+        # cluster.info = INFO
         cluster.save()
 
         # Template

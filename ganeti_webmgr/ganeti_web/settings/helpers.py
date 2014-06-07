@@ -43,9 +43,7 @@ def root(*x):
 
 app_root = lambda *x: root('ganeti_webmgr', *x)
 
-"""
-Project structure variables
-"""
+# -- Project structure variables ---------------------------------------------
 SITE_NAME = 'Ganeti Web Manager'
 
 

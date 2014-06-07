@@ -69,7 +69,7 @@ from ganeti_webmgr.utils import (cluster_os_list, compare, os_prettify,
 from ganeti_webmgr.utils.client import GanetiApiError
 
 
-#XXX No more need for tastypie dependency for 0.8
+# XXX No more need for tastypie dependency for 0.8
 class HttpAccepted(HttpResponse):
     """
     Take from tastypie.http
@@ -808,7 +808,7 @@ def modify_confirm(request, cluster_slug, instance):
 
     session = request.session
 
-    if not 'edit_form' in request.session:
+    if 'edit_form' not in request.session:
         return HttpResponseBadRequest('Incorrect Session Data')
 
     data = session['edit_form']
@@ -861,7 +861,7 @@ def modify_confirm(request, cluster_slug, instance):
             else:
                 oses = oses[0][1]
                 diff = compare(oses[0][1], oses[1][1])
-            #diff = compare(oses[0][1], oses[1][1])
+            # diff = compare(oses[0][1], oses[1][1])
         if key in ['nic_count', 'nic_count_original']:
             continue
         elif key not in old_set.keys():

@@ -128,9 +128,9 @@ class PreciseDateTimeField(DecimalField):
 
     def __init__(self, **kwargs):
         # Set default values.
-        if not 'decimal_places' in kwargs:
+        if 'decimal_places' not in kwargs:
             kwargs['decimal_places'] = 6
-        if not 'max_digits' in kwargs:
+        if 'max_digits' not in kwargs:
             kwargs['max_digits'] = kwargs['decimal_places'] + 12
 
         self.shifter = Decimal(10)**kwargs['decimal_places']

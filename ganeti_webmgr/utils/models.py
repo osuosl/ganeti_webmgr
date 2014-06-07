@@ -207,5 +207,5 @@ class SSHKey(models.Model):
     many ssh keys.
     """
     key = models.TextField(validators=[validate_sshkey])
-    #filename = models.CharField(max_length=128) # saves key file's name
+    # filename = models.CharField(max_length=128) # saves key file's name
     user = models.ForeignKey(User, related_name='ssh_keys')

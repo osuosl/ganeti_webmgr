@@ -29,7 +29,7 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         user.set_password('secret2')
         user.save()
 
-        ## GET
+        # -- GET
         # Anonymous User
         response = self.c.get(url)
         self.assertEqual(302, response.status_code)
@@ -76,7 +76,7 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         user.is_superuser = False
         user.save()
 
-        ## POST
+        # -- POST
         os_list = cluster_os_list(self.cluster)
         data = dict(vcpus=2,
                     acpi=True,
@@ -246,7 +246,7 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
                          cdrom_image_path='',
                          notes="foo")
 
-        ## SESSION VARIABLES
+        # -- SESSION VARIABLES
         # Make sure session variables are set
         user.is_superuser = True
         user.save()
@@ -264,14 +264,14 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         self.assertTemplateUsed(response,
                                 'ganeti/virtual_machine/edit_confirm.html')
 
-        #session['os_list'] = os_list
-        #session.save()
+        # session['os_list'] = os_list
+        # session.save()
         user.revoke_all(self.vm)
         user.is_superuser = False
         user.save()
         self.c.logout()
 
-        ## GET
+        # -- GET
         # Anonymous User
         response = self.c.get(url)
         self.assertEqual(302, response.status_code)
@@ -329,7 +329,7 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         user.is_superuser = False
         user.save()
 
-        ## POST
+        # -- POST
         data = {'rapi_dict': json.dumps(edit_form)}
         # Anonymous User
         response = self.c.post(url, data)
@@ -418,7 +418,7 @@ class TestVirtualMachineEditViews(TestVirtualMachineViewsBase):
         self.cluster.set_quota(profile, dict(ram=1000, disk=2000,
                                              virtual_cpus=10))
 
-        ## POST
+        # -- POST
         os_list = cluster_os_list(self.cluster)
         data = dict(vcpus=2000,
                     acpi=True,
@@ -786,20 +786,20 @@ class TestVirtualMachineReinstallViews(TestVirtualMachineViewsBase):
                                 'ganeti/virtual_machine/reinstall.html')
         self.assertTrue(VirtualMachine.objects.filter(id=self.vm.id).exists())
 
-        #authorized POST (superuser)
+        # authorized POST (superuser)
         response = self.c.post(url % args)
         self.assertEqual(302, response.status_code)
         self.user.is_superuser = False
         self.user.save()
         self.vm.save()
 
-        #authorized POST (cluster admin)
+        # authorized POST (cluster admin)
         self.user.grant('admin', self.cluster)
         response = self.c.post(url % args)
         self.assertEqual(302, response.status_code)
         self.user.revoke_all(self.cluster)
 
-        #authorized POST (vm admin)
+        # authorized POST (vm admin)
         self.vm.save()
         self.user.grant('admin', self.vm)
         response = self.c.post(url % args)
@@ -807,7 +807,7 @@ class TestVirtualMachineReinstallViews(TestVirtualMachineViewsBase):
         self.vm.save()
         self.user.revoke_all(self.vm)
 
-        #authorized POST (cluster admin)
+        # authorized POST (cluster admin)
         self.vm.save()
         self.user.grant('remove', self.vm)
         response = self.c.post(url % args)
@@ -871,7 +871,7 @@ class TestVirtualMachineRenameViews(TestVirtualMachineViewsBase):
                 'ip_check': False, 'name_check': False}
         errors = ({'hostname': self.vm.hostname},)
 
-        #noinspection PyUnusedLocal
+        # noinspection PyUnusedLocal
         def tests(user, response):
             updated_vm = VirtualMachine.objects.get(pk=self.vm.pk)
             self.assertEqual(self.vm.hostname, updated_vm.hostname)

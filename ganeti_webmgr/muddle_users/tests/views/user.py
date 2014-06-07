@@ -21,7 +21,9 @@ from django.test.client import Client
 
 __all__ = ('TestUsersViews',)
 
+
 class TestUsersViews(TestCase):
+
     """
     Tests for checking the update/delete/change of password of users that a
     superuser has access to.
@@ -107,7 +109,8 @@ class TestUsersViews(TestCase):
         response = self.c.post(self.url_create, data, follow=True)
         self.assertEqual(200, response.status_code)
         self.assertTemplateUsed(response, 'registration/login.html')
-        self.assertFalse(User.objects.filter(username=data['username']).exists())
+        self.assertFalse(
+            User.objects.filter(username=data['username']).exists())
 
     def test_view_create_post(self):
         data = {
@@ -121,7 +124,8 @@ class TestUsersViews(TestCase):
                                      password='password'))
         response = self.c.post(self.url_create, data, follow=True)
         self.assertEqual(403, response.status_code)
-        self.assertFalse(User.objects.filter(username=data['username']).exists())
+        self.assertFalse(
+            User.objects.filter(username=data['username']).exists())
 
     def test_view_create_post_superuser(self):
         data = {
@@ -136,7 +140,8 @@ class TestUsersViews(TestCase):
         response = self.c.post(self.url_create, data)
         test_user = User.objects.latest('id')
         self.assertRedirects(response, test_user.get_absolute_url())
-        self.assertTrue(User.objects.filter(username=data['username']).exists())
+        self.assertTrue(
+            User.objects.filter(username=data['username']).exists())
 
     def test_view_edit_get_anonymous(self):
         """
@@ -164,7 +169,7 @@ class TestUsersViews(TestCase):
         response = self.c.get(url, follow=True)
         self.assertEqual(200, response.status_code)
         # XXX why would this happen?
-        #self.assertContains(response, self.test_user.password)
+        # self.assertContains(response, self.test_user.password)
         self.assertContains(response, self.test_user.username)
         self.assertTemplateUsed(response, 'user/edit.html')
 

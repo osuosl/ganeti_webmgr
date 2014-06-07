@@ -18,12 +18,14 @@
 from django import forms
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm, SetPasswordForm
+from django.contrib.auth.forms import (UserCreationForm, UserChangeForm,
+                                       SetPasswordForm)
 from django.contrib.auth.models import User, Group
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
+from django.http import (HttpResponse, HttpResponseRedirect,
+                         HttpResponseForbidden)
 from django.shortcuts import get_object_or_404, render_to_response
-from django.template import RequestContext,loader
+from django.template import RequestContext, loader
 from django.utils.translation import ugettext as _
 from django.utils.translation import ugettext_lazy
 
@@ -52,8 +54,8 @@ def user_list(request, template="user/list.html"):
     users = User.objects.all()
 
     return render_to_response(template, {
-            'userlist':users
-        },
+        'userlist': users
+    },
         context_instance=RequestContext(request),
     )
 
@@ -70,7 +72,7 @@ def user_add(request, template="user/edit.html"):
             data = form.cleaned_data
             new_user = User(username=data['username'])
             new_user.set_password(data['password2'])
-            new_user.email=data['email']
+            new_user.email = data['email']
             new_user.save()
             return HttpResponseRedirect(new_user.get_absolute_url())
 
@@ -78,14 +80,16 @@ def user_add(request, template="user/edit.html"):
         form = CustomUserCreationForm()
 
     return render_to_response(template, {
-            'form':form,
-        },
+        'form': form,
+    },
         context_instance=RequestContext(request),
     )
 
 
 @login_required
-def user_detail(request, username=None, user_id=None, template="user/detail.html"):
+def user_detail(
+        request, username=None, user_id=None,
+        template="user/detail.html"):
     user = request.user
     if not user.is_superuser:
         return render_403(request, _('Only a superuser may view a user.'))
@@ -98,9 +102,9 @@ def user_detail(request, username=None, user_id=None, template="user/detail.html
 
     groups = Group.objects.filter(user=user_id)
     return render_to_response(template, {
-            'user_detail':user,
-            'groups':groups,
-        },
+        'user_detail': user,
+        'groups': groups,
+    },
         context_instance=RequestContext(request),
     )
 
@@ -127,9 +131,9 @@ def user_edit(request, user_id=None, template="user/edit.html"):
         form = UserEditForm(instance=user_edit)
 
     return render_to_response(template, {
-            'form':form,
-            'user_edit':user_edit,
-        },
+        'form': form,
+        'user_edit': user_edit,
+    },
         context_instance=RequestContext(request),
     )
 
@@ -152,9 +156,9 @@ def user_password(request, user_id=None, template="user/password.html"):
         form = SetPasswordForm(user=user_edit)
 
     return render_to_response(template, {
-            'form':form,
-            'username':user_edit,
-        },
+        'form': form,
+        'username': user_edit,
+    },
         context_instance=RequestContext(request),
     )
 
@@ -182,16 +186,17 @@ def user_profile(request, template='user/profile.html'):
 
     if not form:
 
-        form = UserProfileForm(initial={'email':user.email,
-                                        'old_password':'',
+        form = UserProfileForm(initial={'email': user.email,
+                                        'old_password': '',
                                         })
 
     return render_to_response(template,
-    {'form':form},
-     context_instance=RequestContext(request))
+                              {'form': form},
+                              context_instance=RequestContext(request))
 
 
 class UserEditForm(UserChangeForm):
+
     """
     Form for editing users.
 
@@ -213,13 +218,20 @@ class UserEditForm(UserChangeForm):
 
 
 class UserProfileForm(forms.Form):
+
     """
     Form for editing a User's Profile
     """
     email = forms.EmailField(label=ugettext_lazy('E-mail'))
-    old_password = forms.CharField(label=ugettext_lazy('Old password'), required=False, widget=forms.PasswordInput)
-    new_password = forms.CharField(label=ugettext_lazy('New password'), required=False, widget=forms.PasswordInput)
-    confirm_password = forms.CharField(label=ugettext_lazy('Confirm password'), required=False, widget=forms.PasswordInput)
+    old_password = forms.CharField(
+        label=ugettext_lazy('Old password'),
+        required=False, widget=forms.PasswordInput)
+    new_password = forms.CharField(
+        label=ugettext_lazy('New password'),
+        required=False, widget=forms.PasswordInput)
+    confirm_password = forms.CharField(
+        label=ugettext_lazy('Confirm password'),
+        required=False, widget=forms.PasswordInput)
 
     # needed to verify the user's password
     user = None
@@ -240,12 +252,14 @@ class UserProfileForm(forms.Form):
                 self._errors['old_password'] = self.error_class([msg])
 
             if not new:
-                if 'new_password' in data: del data['new_password']
+                if 'new_password' in data:
+                    del data['new_password']
                 msg = _('Enter a new password')
                 self._errors['new_password'] = self.error_class([msg])
 
             if not confirm:
-                if 'confirm_password' in data: del data['confirm_password']
+                if 'confirm_password' in data:
+                    del data['confirm_password']
                 msg = _('Confirm new password')
                 self._errors['confirm_password'] = self.error_class([msg])
 

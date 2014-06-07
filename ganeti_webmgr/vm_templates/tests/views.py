@@ -42,8 +42,8 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
 
         cluster = Cluster(hostname='test.cluster', slug='test',
                           username='tester', password='secret')
-        cluster.id = 23  # XXX MySQL DB does not reset auto-increment
-                         # IDs when an object is removed
+        # MySQL DB does not reset auto-increment IDs when an object is removed
+        cluster.id = 23
         cluster.save()
         cluster.sync_nodes()
 

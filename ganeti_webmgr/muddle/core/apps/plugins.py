@@ -36,8 +36,8 @@ def load_app_plugin(module_name, Klass=None, method=None):
                         method(obj)
 
             elif callable(method):
-                # no classes specified, but there was a method. execute the method
-                # with the module
+                # no classes specified, but there was a method.
+                # execute the method with the module
                 method(module)
 
             else:

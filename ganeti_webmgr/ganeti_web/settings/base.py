@@ -15,11 +15,10 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-"""
-Default settings for GWM.
+# -- Default settings for GWM. ------------------------------------------
 
-Most of this should be left alone and unchanged.
-"""
+# Most of this should be left alone and unchanged.
+
 
 from os import makedirs
 from os.path import exists, join
@@ -28,19 +27,14 @@ from .helpers import (
     generate_secret, ugettext
 )
 
-"""
-Debug *default* configuration
-"""
+# -- Debug *default* configuration ------------------------------------------
 DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 TESTING = False
-"""
-End Debug configuration
-"""
+# -- End Debug configuration -------------------------------------------------
 
-"""
-General Defaults
-"""
+
+# -- General Defaults --------------------------------------------------------
 SITE_ID = 1
 LOGIN_REDIRECT_URL = '/'
 SITE_NAME = 'Ganeti Web Manager'
@@ -49,45 +43,32 @@ SITE_ROOT = ''
 
 USE_I18N = True
 USE_L10N = True
-"""
-End General defaults
-"""
+# -- End General defaults ----------------------------------------------------
 
-"""
-Registration Settings
-"""
+
+# -- Registration Settings ---------------------------------------------------
 ACCOUNT_ACTIVATION_DAYS = 7
-"""
-End Registration Settings
-"""
+# -- End Registration Settings -----------------------------------------------
 
-"""
-Items per page defaults
-"""
+
+# -- Items per page defaults -------------------------------------------------
 # default max number of disks that can be added at once to an instance
 MAX_DISKS_ADD = 8
 # default max number of NICS that can be added at once to an instance
 MAX_NICS_ADD = 8
 # default items per page
 ITEMS_PER_PAGE = 15
-"""
-End Items per page defaults
-"""
+# -- End Items per page defaults ---------------------------------------------
 
-"""
-Haystack settings
-"""
+
+# -- Haystack settings -------------------------------------------------------
 HAYSTACK_SITECONF = 'ganeti_webmgr.search_sites'
 HAYSTACK_SEARCH_ENGINE = 'whoosh'
 HAYSTACK_WHOOSH_PATH = join(DEFAULT_INSTALL_PATH, 'whoosh_index')
-"""
-End Haystack settings
-"""
+# -- End Haystack settings ---------------------------------------------------
 
 
-"""
-Template Configuration
-"""
+# -- Template Configuration --------------------------------------------------
 TEMPLATE_DIRS = (
     app_root('templates')
 )
@@ -107,13 +88,10 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'ganeti_webmgr.ganeti_web.context_processors.site',
     'ganeti_webmgr.ganeti_web.context_processors.common_permissions',
 )
-"""
-End Template Configuration
-"""
+# -- End Template Configuration ----------------------------------------------
 
-"""
-Static Files Configuration
-"""
+
+# -- Static Files Configuration ----------------------------------------------
 STATIC_URL = '/static'
 
 STATICFILES_FINDERS = (
@@ -126,21 +104,16 @@ STATICFILES_DIRS = (
 )
 
 STATIC_ROOT = join(DEFAULT_INSTALL_PATH, "collected_static")
-"""
-End Static Files Configuration
-"""
+# -- End Static Files Configuration ------------------------------------------
 
-"""
-Other Configuration
-"""
+
+# -- Other Configuration -----------------------------------------------------
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     'object_permissions.backend.ObjectPermBackend',
 )
 
-"""
-Logging Configuration
-"""
+# -- Logging Configuration ---------------------------------------------------
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -158,9 +131,7 @@ LOGGING = {
         },
     }
 }
-"""
-End Logging Configuration
-"""
+# -- End Logging Configuration -----------------------------------------------
 
 # Middleware. Order matters; these are all applied *in the order given*.
 MIDDLEWARE_CLASSES = (
@@ -212,9 +183,7 @@ INSTALLED_APPS = (
 ROOT_URLCONF = 'ganeti_webmgr.ganeti_web.urls'
 AUTH_PROFILE_MODULE = 'authentication.Profile'
 
-"""
-Locale Configuration
-"""
+# -- Locale Configuration  ---------------------------------------------------
 LOCALE_PATHS = (
     app_root("locale"),
 )
