@@ -4,7 +4,7 @@
 </style>
 <script type="text/javascript">
     // Set include path for noVNC scripts
-    var INCLUDE_URI = "{{STATIC_URL}}/novnc/";
+    var INCLUDE_URI = "{{STATIC_URL}}/novnc/include/";
     // Set path for proxy requests
     var PROXY_REQUEST_URI = "{% url instance-vnc-proxy cluster_slug instance.hostname %}";
     {% if not popout %}
