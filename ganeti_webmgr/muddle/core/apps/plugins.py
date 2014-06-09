@@ -2,7 +2,7 @@ import inspect
 
 from django.conf import settings
 
-from muddle.util import path_to_class
+from ganeti_webmgr.muddle.util import path_to_class
 
 
 def load_app_plugin(module_name, Klass=None, method=None):
@@ -36,8 +36,8 @@ def load_app_plugin(module_name, Klass=None, method=None):
                         method(obj)
 
             elif callable(method):
-                # no classes specified, but there was a method. execute the method
-                # with the module
+                # no classes specified, but there was a method.
+                # execute the method with the module
                 method(module)
 
             else:

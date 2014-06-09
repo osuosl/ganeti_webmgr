@@ -19,10 +19,10 @@
 from django.contrib.auth.models import User, Group
 from django.test import TestCase
 
-from utils.models import Quota
+from ganeti_webmgr.utils.models import Quota
 from ..models import Profile, ClusterUser, Organization
-from virtualmachines.models import VirtualMachine
-from clusters.models import Cluster
+from ganeti_webmgr.virtualmachines.models import VirtualMachine
+from ganeti_webmgr.clusters.models import Cluster
 
 __all__ = ('TestClusterUser', 'TestProfileModel', )
 

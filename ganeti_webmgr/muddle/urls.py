@@ -12,5 +12,6 @@ urlpatterns = patterns('')
 static_root = '%s/static' % __file__[:__file__.rfind('/')]
 base_url_regex = r'^muddle_static/(?P<path>.*)$'
 urlpatterns += patterns('',
-    (base_url_regex, 'django.views.static.serve', {'document_root': static_root})
-)
+                        (base_url_regex, 'django.views.static.serve',
+                         {'document_root': static_root})
+                        )

@@ -1,10 +1,10 @@
 from django.contrib.auth.models import User
 from django.test import TestCase
 
-from django_test_tools.users import UserTestMixin
+from ganeti_webmgr.django_test_tools.users import UserTestMixin
 
-from vm_templates.models import VirtualMachineTemplate
-from clusters.models import Cluster
+from ganeti_webmgr.vm_templates.models import VirtualMachineTemplate
+from ganeti_webmgr.clusters.models import Cluster
 
 
 class TemplateTestCase(TestCase, UserTestMixin):
@@ -12,7 +12,7 @@ class TemplateTestCase(TestCase, UserTestMixin):
         # Cluster
         cluster = Cluster(hostname='test.cluster.gwm', slug='test',
                           username='foo', password='bar')
-        #cluster.info = INFO
+        # cluster.info = INFO
         cluster.save()
 
         # Template

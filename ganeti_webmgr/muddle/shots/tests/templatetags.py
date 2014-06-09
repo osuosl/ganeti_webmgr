@@ -1,13 +1,14 @@
 from django.template import Context, Template
 
-from muddle.shots import register, TemplateMixer
-from muddle.shots.tests.registration import ShotsTestsBase
+from ganeti_webmgr.muddle.shots import register, TemplateMixer
+from ganeti_webmgr.muddle.shots.tests.registration import ShotsTestsBase
 
 __all__ = ['ShotTagTests']
 
 
 TEMPLATE = "<b>{% load shots %}{% shot foo %}{% endshot %}</b>"
-TEMPLATE_INNER = "<ul>{% load shots %}{% shot foo %}<li>{{mixer}}</li>{% endshot %}</ul>"
+TEMPLATE_INNER = (
+    "<ul>{% load shots %}{% shot foo %}<li>{{mixer}}</li>{% endshot %}</ul>")
 
 
 class ShotTagTests(ShotsTestsBase):

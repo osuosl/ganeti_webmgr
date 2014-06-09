@@ -3,7 +3,7 @@ import datetime
 from south.db import db
 from south.v2 import DataMigration
 from django.db import models
-from ganeti_web.migrations import db_table_exists
+from ganeti_webmgr.ganeti_web.migrations import db_table_exists
 
 class Migration(DataMigration):
 
@@ -70,7 +70,7 @@ class Migration(DataMigration):
         },
         'ganeti_web.cluster': {
             'Meta': {'object_name': 'Cluster'},
-            'cached': ('utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'cached': ('ganeti_webmgr.utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
             'description': ('django.db.models.fields.CharField', [], {'max_length': '128', 'null': 'True', 'blank': 'True'}),
             'disk': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
             'hash': ('django.db.models.fields.CharField', [], {'max_length': '40'}),
@@ -78,7 +78,7 @@ class Migration(DataMigration):
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'ignore_cache': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
             'last_job': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'cluster_last_job'", 'null': 'True', 'to': "orm['ganeti_web.Job']"}),
-            'mtime': ('utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'mtime': ('ganeti_webmgr.utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
             'password': ('django.db.models.fields.CharField', [], {'max_length': '128', 'null': 'True', 'blank': 'True'}),
             'port': ('django.db.models.fields.PositiveIntegerField', [], {'default': '5080'}),
             'ram': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
@@ -119,7 +119,7 @@ class Migration(DataMigration):
         },
         'ganeti_web.job': {
             'Meta': {'object_name': 'Job'},
-            'cached': ('utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'cached': ('ganeti_webmgr.utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
             'cleared': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
             'cluster': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'jobs'", 'to': "orm['ganeti_web.Cluster']"}),
             'cluster_hash': ('django.db.models.fields.CharField', [], {'max_length': '40'}),
@@ -128,14 +128,14 @@ class Migration(DataMigration):
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'ignore_cache': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
             'job_id': ('django.db.models.fields.IntegerField', [], {}),
-            'mtime': ('utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'mtime': ('ganeti_webmgr.utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
             'object_id': ('django.db.models.fields.IntegerField', [], {}),
             'serialized_info': ('django.db.models.fields.TextField', [], {'default': 'None', 'null': 'True'}),
             'status': ('django.db.models.fields.CharField', [], {'max_length': '10'})
         },
         'ganeti_web.node': {
             'Meta': {'object_name': 'Node'},
-            'cached': ('utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'cached': ('ganeti_webmgr.utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
             'cluster': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'nodes'", 'to': "orm['ganeti_web.Cluster']"}),
             'cluster_hash': ('django.db.models.fields.CharField', [], {'max_length': '40'}),
             'disk_total': ('django.db.models.fields.IntegerField', [], {'default': '-1'}),
@@ -143,7 +143,7 @@ class Migration(DataMigration):
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'ignore_cache': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
             'last_job': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['ganeti_web.Job']", 'null': 'True'}),
-            'mtime': ('utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'mtime': ('ganeti_webmgr.utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
             'offline': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
             'ram_total': ('django.db.models.fields.IntegerField', [], {'default': '-1'}),
             'role': ('django.db.models.fields.CharField', [], {'max_length': '1'}),
@@ -176,16 +176,16 @@ class Migration(DataMigration):
         },
         'ganeti_web.testmodel': {
             'Meta': {'object_name': 'TestModel'},
-            'cached': ('utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'cached': ('ganeti_webmgr.utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
             'cluster': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['ganeti_web.Cluster']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'ignore_cache': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
-            'mtime': ('utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'mtime': ('ganeti_webmgr.utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
             'serialized_info': ('django.db.models.fields.TextField', [], {'default': 'None', 'null': 'True'})
         },
         'ganeti_web.virtualmachine': {
             'Meta': {'unique_together': "(('cluster', 'hostname'),)", 'object_name': 'VirtualMachine'},
-            'cached': ('utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'cached': ('ganeti_webmgr.utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
             'cluster': ('django.db.models.fields.related.ForeignKey', [], {'default': '0', 'related_name': "'virtual_machines'", 'to': "orm['ganeti_web.Cluster']"}),
             'cluster_hash': ('django.db.models.fields.CharField', [], {'max_length': '40'}),
             'disk_size': ('django.db.models.fields.IntegerField', [], {'default': '-1'}),
@@ -193,7 +193,7 @@ class Migration(DataMigration):
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'ignore_cache': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
             'last_job': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['ganeti_web.Job']", 'null': 'True'}),
-            'mtime': ('utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'mtime': ('ganeti_webmgr.utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
             'operating_system': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
             'owner': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'virtual_machines'", 'null': 'True', 'to': "orm['ganeti_web.ClusterUser']"}),
             'pending_delete': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
@@ -245,7 +245,7 @@ class Migration(DataMigration):
         },
         'ganeti.cluster': {
             'Meta': {'object_name': 'Cluster'},
-            'cached': ('utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'cached': ('ganeti_webmgr.utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
             'description': ('django.db.models.fields.CharField', [], {'max_length': '128', 'null': 'True', 'blank': 'True'}),
             'disk': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
             'hash': ('django.db.models.fields.CharField', [], {'max_length': '40'}),
@@ -253,7 +253,7 @@ class Migration(DataMigration):
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'ignore_cache': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
             'last_job': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'cluster_last_job'", 'null': 'True', 'to': "orm['ganeti.Job']"}),
-            'mtime': ('utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'mtime': ('ganeti_webmgr.utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
             'password': ('django.db.models.fields.CharField', [], {'max_length': '128', 'null': 'True', 'blank': 'True'}),
             'port': ('django.db.models.fields.PositiveIntegerField', [], {'default': '5080'}),
             'ram': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
@@ -281,7 +281,7 @@ class Migration(DataMigration):
         },
         'ganeti.job': {
             'Meta': {'object_name': 'Job'},
-            'cached': ('utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'cached': ('ganeti_webmgr.utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
             'cleared': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
             'cluster': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'jobs'", 'to': "orm['ganeti.Cluster']"}),
             'cluster_hash': ('django.db.models.fields.CharField', [], {'max_length': '40'}),
@@ -290,14 +290,14 @@ class Migration(DataMigration):
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'ignore_cache': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
             'job_id': ('django.db.models.fields.IntegerField', [], {}),
-            'mtime': ('utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'mtime': ('ganeti_webmgr.utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
             'object_id': ('django.db.models.fields.IntegerField', [], {}),
             'serialized_info': ('django.db.models.fields.TextField', [], {'default': 'None', 'null': 'True'}),
             'status': ('django.db.models.fields.CharField', [], {'max_length': '10'})
         },
         'ganeti.node': {
             'Meta': {'object_name': 'Node'},
-            'cached': ('utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'cached': ('ganeti_webmgr.utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
             'cluster': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'nodes'", 'to': "orm['ganeti.Cluster']"}),
             'cluster_hash': ('django.db.models.fields.CharField', [], {'max_length': '40'}),
             'disk_total': ('django.db.models.fields.IntegerField', [], {'default': '-1'}),
@@ -305,7 +305,7 @@ class Migration(DataMigration):
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'ignore_cache': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
             'last_job': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['ganeti.Job']", 'null': 'True'}),
-            'mtime': ('utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'mtime': ('ganeti_webmgr.utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
             'offline': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
             'ram_total': ('django.db.models.fields.IntegerField', [], {'default': '-1'}),
             'role': ('django.db.models.fields.CharField', [], {'max_length': '1'}),
@@ -338,16 +338,16 @@ class Migration(DataMigration):
         },
         'ganeti.testmodel': {
             'Meta': {'object_name': 'TestModel'},
-            'cached': ('utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'cached': ('ganeti_webmgr.utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
             'cluster': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['ganeti.Cluster']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'ignore_cache': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
-            'mtime': ('utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'mtime': ('ganeti_webmgr.utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
             'serialized_info': ('django.db.models.fields.TextField', [], {'default': 'None', 'null': 'True'})
         },
         'ganeti.virtualmachine': {
             'Meta': {'unique_together': "(('cluster', 'hostname'),)", 'object_name': 'VirtualMachine'},
-            'cached': ('utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'cached': ('ganeti_webmgr.utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
             'cluster': ('django.db.models.fields.related.ForeignKey', [], {'default': '0', 'related_name': "'virtual_machines'", 'to': "orm['ganeti.Cluster']"}),
             'cluster_hash': ('django.db.models.fields.CharField', [], {'max_length': '40'}),
             'disk_size': ('django.db.models.fields.IntegerField', [], {'default': '-1'}),
@@ -355,7 +355,7 @@ class Migration(DataMigration):
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'ignore_cache': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
             'last_job': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['ganeti.Job']", 'null': 'True'}),
-            'mtime': ('utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
+            'mtime': ('ganeti_webmgr.utils.fields.PreciseDateTimeField', [], {'null': 'True', 'max_digits': '18', 'decimal_places': '6'}),
             'operating_system': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
             'owner': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'virtual_machines'", 'null': 'True', 'to': "orm['ganeti.ClusterUser']"}),
             'pending_delete': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),

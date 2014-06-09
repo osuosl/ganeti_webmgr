@@ -24,8 +24,9 @@ from django.template import RequestContext
 from ..forms.importing import ImportForm, OrphanForm, VirtualMachineForm
 from .generic import NO_PRIVS
 
-from clusters.models import Cluster
-from virtualmachines.models import VirtualMachine
+from ganeti_webmgr.clusters.models import Cluster
+from ganeti_webmgr.virtualmachines.models import VirtualMachine
+
 
 @login_required
 def orphans(request):

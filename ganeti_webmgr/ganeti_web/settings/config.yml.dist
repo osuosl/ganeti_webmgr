@@ -1,0 +1,110 @@
+# config.yml
+
+# Django settings for ganeti_webmgr project.
+
+##### Database Configuration #####
+DATABASES:
+    default:
+        ENGINE: django.db.backends.sqlite3
+                    # django.db.backends.sqlite3
+                    # django.db.backends.postgresql
+                    # django.db.backends.mysql
+                    # django.db.backends.oracle
+                    # django.db.backends.postgresql_psycopg2
+
+        # Or path to database file if using sqlite3.
+        NAME: /opt/ganeti_webmgr/ganeti.db
+        USER:      # Not used with sqlite3.
+        PASSWORD:  # Not used with sqlite3.
+        HOST:      # Set to empty string for localhost.
+                         # Not used with sqlite3.
+        PORT:      # Set to empty string for default.
+                         #Not used with sqlite3.
+##### End Database Configuration #####
+
+# Site name and domain referenced by some modules to provide links back to
+#  the site.
+SITE_NAME: Ganeti Web Manager
+SITE_DOMAIN: "localhost:8000"
+
+# http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
+TIME_ZONE: America/Los_Angeles
+DATE_FORMAT: d/m/Y
+DATETIME_FORMAT: "d/m/Y H:i"
+
+# Language code for this installation. All choices can be found here:
+# http://www.i18nguy.com/unicode/language-identifiers.html
+LANGUAGE_CODE: "en-US"
+##### End Locale Configuration #####
+
+# Enable i18n (translations) and l10n (locales, currency, times).
+# You really have no good reason to disable these unless you are only
+# going to be using GWM in English.
+USE_I18N: True
+
+# If you set this to False, Django will not format dates, numbers and
+# calendars according to the current locale
+USE_L10N: True
+
+# prefix used for the site.  ie. http://myhost.com/<SITE_ROOT>
+# for the django standalone server this should be
+# for apache this is the url the site is mapped to, probably /tracker
+SITE_ROOT: ""
+
+# Absolute path to the directory that holds media.
+# Example: /home/media/media.lawrence.com/
+STATIC_ROOT: /opt/ganeti_webmgr/collected_static
+
+# URL that handles the media served from STATIC_ROOT.
+# XXX contrary to django docs, do not use a trailing slash.  It makes urls
+# using this url easier to read.  ie.  {{STATIC_URL}}/images/foo.png
+STATIC_URL: /static
+
+##### Registration Settings #####
+ACCOUNT_ACTIVATION_DAYS: 7
+
+# Email settings for registration
+EMAIL_HOST: localhost
+EMAIL_PORT: 25
+DEFAULT_FROM_EMAIL: noreply@example.org
+
+# Whether users should be able to create their own accounts.
+# False if accounts can only be created by admins.
+ALLOW_OPEN_REGISTRATION: True
+##### End Registration Settings #####
+
+####### Haystack Search Index settings #######
+HAYSTACK_WHOOSH_PATH: /opt/ganeti_webmgr/whoosh_index
+####### End Haystack Search Index settings #######
+
+
+# GWM Specifics
+
+# The maximum number of items on a single list page
+ITEMS_PER_PAGE: 15
+
+# Ganeti Cached Cluster Objects Timeouts
+#    LAZY_CACHE_REFRESH (milliseconds) is the fallback cache timer that is
+#    checked when the object is instantiated. It defaults to 600000ms, or ten
+#    minutes.
+LAZY_CACHE_REFRESH: 600000
+
+# VNC Proxy. This will use a proxy to create local ports that are forwarded to
+# the virtual machines.  It allows you to control access to the VNC servers.
+#
+# Expected values:
+#   String syntax: HOST:CONTROL_PORT, for example: localhost:8888. If
+#   localhost is used then the proxy will only be accessible to clients and
+#   browsers on localhost. Production servers should use a publicly accessible
+#   hostname or IP
+#
+# Firewall Rules:
+#   Control Port: 8888, must be open between Ganeti Web Manager and Proxy
+#   Internal Ports: 12000+ must be open between the Proxy and Ganeti Nodes
+#   External Ports: default is 7000-8000, must be open between Proxy and Client
+#   Flash Policy Server: 843, must open between Proxy and Clients
+VNC_PROXY: "localhost:8888"
+
+# This is how long gwm will wait before timing out when requesting data from the
+# ganeti cluster.
+RAPI_CONNECT_TIMEOUT: 3

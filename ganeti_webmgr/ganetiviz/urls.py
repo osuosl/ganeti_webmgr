@@ -1,13 +1,13 @@
-from clusters.urls import cluster_slug
+from ganeti_webmgr.clusters.urls import cluster_slug
 from django.conf.urls.defaults import patterns, url
-from ganetiviz.views import ClusterGraphView, AllClustersView,\
+from ganeti_webmgr.ganetiviz.views import ClusterGraphView, AllClustersView,\
     ClusterJsonView, InstanceExtraDataView
 
 # Care must be taken to allow dots to be captured in any hostname.
 instance_hostname = '(?P<instance_hostname>[^/]+)'
 
 urlpatterns = patterns(
-    'ganetiviz.views',
+    'ganeti_webmgr.ganetiviz.views',
 
     url(r'^ganetiviz/cluster/%s/$' % cluster_slug, ClusterJsonView.as_view(),
         name='json-cluster'),

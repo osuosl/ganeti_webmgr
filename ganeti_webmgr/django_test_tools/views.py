@@ -17,7 +17,7 @@
 
 from django.test.client import Client
 
-from django_test_tools.users import UserTestMixin
+from ganeti_webmgr.django_test_tools.users import UserTestMixin
 
 
 class ViewTestMixin():

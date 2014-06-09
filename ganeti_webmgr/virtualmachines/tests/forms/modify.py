@@ -4,21 +4,23 @@ from itertools import chain
 
 from django.test import TestCase
 
-from ganeti_web import constants
+from ganeti_webmgr.ganeti_web import constants
 
 from ...forms import (HvmModifyVirtualMachineForm, KvmModifyVirtualMachineForm,
                       PvmModifyVirtualMachineForm, ModifyVirtualMachineForm)
 from ..views.base import VirtualMachineTestCaseMixin
 
-import utils.proxy.constants
-import utils
-from utils import clear_rapi_cache, client
-from utils.proxy import XenRapiProxy, XenHvmRapiProxy
-from utils.proxy.constants import (INFO, INSTANCE, NODE, NODES, XEN_INFO,
-                                   XEN_HVM_INSTANCE, XEN_PVM_INSTANCE,
-                                   OPERATING_SYSTEMS, XEN_OPERATING_SYSTEMS)
+import ganeti_webmgr.utils.proxy.constants
+import ganeti_webmgr.utils as utils
+from ganeti_webmgr.utils import clear_rapi_cache, client
+from ganeti_webmgr.utils.proxy import XenRapiProxy, XenHvmRapiProxy
+from ganeti_webmgr.utils.proxy.constants import (
+    INFO, INSTANCE, NODE, NODES, XEN_INFO,
+    XEN_HVM_INSTANCE, XEN_PVM_INSTANCE,
+    OPERATING_SYSTEMS, XEN_OPERATING_SYSTEMS
+)
 
-from clusters.models import Cluster
+from ganeti_webmgr.clusters.models import Cluster
 
 __all__ = [
     'TestKvmModifyVirtualMachineForm',

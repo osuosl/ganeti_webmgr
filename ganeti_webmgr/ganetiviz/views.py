@@ -1,10 +1,10 @@
 from django.http import HttpResponse
 from django.views.generic import DetailView, TemplateView
 
-from clusters.models import Cluster
-from ganeti_web.views.generic import LoginRequiredMixin
+from ganeti_webmgr.clusters.models import Cluster
+from ganeti_webmgr.ganeti_web.views.generic import LoginRequiredMixin
 import simplejson as json
-from utils import get_rapi
+from ganeti_webmgr.utils import get_rapi
 
 
 class ClusterJsonView(LoginRequiredMixin, DetailView):
@@ -85,7 +85,7 @@ class InstanceExtraDataView(LoginRequiredMixin, DetailView):
         instance_info = r.GetInstance(instance_hostname)
 
         useful_instance_info = dict((useful_key, instance_info[useful_key])
-                                for useful_key in selected_fields)
+                                    for useful_key in selected_fields)
         instance_info_json = json.dumps(useful_instance_info)
 
         return HttpResponse(instance_info_json,

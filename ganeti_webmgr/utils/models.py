@@ -97,7 +97,7 @@ class GanetiError(models.Model):
 
             @param  obj   affected object (itself or just QuerySet)
             """
-            from clusters.models import Cluster
+            from ganeti_webmgr.clusters.models import Cluster
 
             if obj is None:
                 raise RuntimeError("Implementation error calling get_errors()"
@@ -134,7 +134,7 @@ class GanetiError(models.Model):
         @param  obj  object (i.e. cluster or vm) affected by the error
         @param code  error's code number
         """
-        from clusters.models import Cluster
+        from ganeti_webmgr.clusters.models import Cluster
         ct = ContentType.objects.get_for_model(obj.__class__)
         is_cluster = isinstance(obj, Cluster)
 
@@ -192,7 +192,8 @@ class Quota(models.Model):
     attributes of this model represent maximum values the ClusterUser can
     consume.  The absence of a Quota indicates unlimited usage.
     """
-    user = models.ForeignKey("authentication.ClusterUser", related_name='quotas')
+    user = models.ForeignKey("authentication.ClusterUser",
+                             related_name='quotas')
     cluster = models.ForeignKey("clusters.Cluster", related_name='quotas')
 
     ram = models.IntegerField(default=0, null=True, blank=True)
@@ -206,5 +207,5 @@ class SSHKey(models.Model):
     many ssh keys.
     """
     key = models.TextField(validators=[validate_sshkey])
-    #filename = models.CharField(max_length=128) # saves key file's name
+    # filename = models.CharField(max_length=128) # saves key file's name
     user = models.ForeignKey(User, related_name='ssh_keys')

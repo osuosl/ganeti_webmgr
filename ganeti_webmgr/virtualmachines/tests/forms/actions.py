@@ -1,14 +1,14 @@
 from django.contrib.auth.models import User
 from django.test import TestCase
 
-from utils.proxy.constants import INFO
-from utils.client import REPLACE_DISK_CHG, REPLACE_DISK_AUTO
+from ganeti_webmgr.utils.proxy.constants import INFO
+from ganeti_webmgr.utils.client import REPLACE_DISK_CHG, REPLACE_DISK_AUTO
 
 from ...forms import ReplaceDisksForm
 from ..views.base import VirtualMachineTestCaseMixin
 
-from virtualmachines.models import VirtualMachine
-from clusters.models import Cluster
+from ganeti_webmgr.virtualmachines.models import VirtualMachine
+from ganeti_webmgr.clusters.models import Cluster
 
 __all__ = ['TestReplaceDisksForm']
 

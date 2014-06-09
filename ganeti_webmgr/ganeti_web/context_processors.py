@@ -16,7 +16,7 @@
 # USA.
 
 from django.conf import settings
-from clusters.models import Cluster
+from ganeti_webmgr.clusters.models import Cluster
 
 
 def site(request):

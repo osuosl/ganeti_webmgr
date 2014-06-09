@@ -27,7 +27,7 @@ from fabric.operations import local, prompt
 PIP_INSTALL = dict((r.project_name, str(r)) for r in
                    pkg_resources.parse_requirements(
                        open("requirements/prod.txt").read()
-                   ))
+    ))
 
 GIT_INSTALL = {
     'django-object-permissions': {
@@ -174,7 +174,7 @@ def create_virtualenv(virtualenv='venv', force=False):
                   % env)
 
             # now lets make sure the virtual env has the the newest pip
-            local(str(verbose_check()+'--upgrade pip') % env)
+            local(str(verbose_check() + '--upgrade pip') % env)
 
 
 def create_env():

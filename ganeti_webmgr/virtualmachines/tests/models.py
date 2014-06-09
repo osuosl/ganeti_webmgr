@@ -20,15 +20,15 @@ from datetime import datetime
 
 from django.test import TestCase
 
-from utils.proxy.constants import (INSTANCE, JOB, JOB_RUNNING,
-                                   JOB_DELETE_SUCCESS)
+from ganeti_webmgr.utils.proxy.constants import (INSTANCE, JOB, JOB_RUNNING,
+                                                 JOB_DELETE_SUCCESS)
 
-from virtualmachines.models import VirtualMachine
-from clusters.models import Cluster
-from authentication.models import ClusterUser
-from jobs.models import Job
+from ganeti_webmgr.virtualmachines.models import VirtualMachine
+from ganeti_webmgr.clusters.models import Cluster
+from ganeti_webmgr.authentication.models import ClusterUser
+from ganeti_webmgr.jobs.models import Job
 
-from ganeti_web import constants
+from ganeti_webmgr.ganeti_web import constants
 
 
 __all__ = (

@@ -18,15 +18,15 @@
 from django.test import TestCase
 from django.test.client import Client
 
-from django_test_tools.views import ViewTestMixin
-from django_test_tools.users import UserTestMixin
+from ganeti_webmgr.django_test_tools.views import ViewTestMixin
+from ganeti_webmgr.django_test_tools.users import UserTestMixin
 
-from utils.proxy.constants import JOB_ERROR
+from ganeti_webmgr.utils.proxy.constants import JOB_ERROR
 
 from ..models import Job
 from .models import TestJobMixin
-from virtualmachines.models import VirtualMachine
-from clusters.models import Cluster
+from ganeti_webmgr.virtualmachines.models import VirtualMachine
+from ganeti_webmgr.clusters.models import Cluster
 
 
 class TestJobViews(TestJobMixin, TestCase, UserTestMixin, ViewTestMixin):

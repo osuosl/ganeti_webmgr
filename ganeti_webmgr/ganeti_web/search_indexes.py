@@ -1,8 +1,8 @@
 from haystack import site
 from haystack.indexes import *
-from virtualmachines.models import VirtualMachine
-from clusters.models import Cluster
-from nodes.models import Node
+from ganeti_webmgr.virtualmachines.models import VirtualMachine
+from ganeti_webmgr.clusters.models import Cluster
+from ganeti_webmgr.nodes.models import Node
 
 ''' Haystack search indexex.
 

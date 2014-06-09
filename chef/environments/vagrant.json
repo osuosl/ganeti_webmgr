@@ -8,20 +8,25 @@
     },
     "ganeti_webmgr": {
       "packages": ["tmux"],
-      "path": "/home/vagrant/ganeti_webmgr",
-      "virtualenv": "/home/vagrant/venv",
-      "owner": "vagrant",
+      "revision": "bug/16269",
+      "path": "/home/vagrant/ganeti_webmgr_src",
+      "install_dir": "/home/vagrant/gwm_install",
+      "config_dir": "/home/vagrant/gwm_install/config",
+      "haystack_whoosh_path": "/home/vagrant/gwm_install/whoosh_index",
+      "static_root": "/home/vagrant/gwm_install/collected_static",
+      "user": "vagrant",
       "group": "vagrant",
       "debug": true,
-      "overwrite_settings": true,
+      "migrate": true,
       "database": {
-        "name": "ganeti_webmgr",
-        "user": "vagrant",
-        "password": "vagrant",
-        "host": "localhost",
-        "port": 3306
-      },
-      "hostsfile": {
+       "name": "ganeti_webmgr",
+       "user": "vagrant",
+       "password": "vagrant",
+       "host": "localhost",
+       "port": 3306
+       },
+       "secret_key": "0123456789123456",
+       "hostsfile": {
         "33.33.33.10": "ganeti.example.org",
         "33.33.33.11": "node1.example.org",
         "33.33.33.12": "node2.example.org",

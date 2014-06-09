@@ -7,8 +7,8 @@ from django.conf import settings
 from .client import GanetiRapiClient, GanetiApiError
 from .proxy import RapiProxy, XenRapiProxy
 
-from ganeti_web import constants
-from ganeti_web.caps import has_balloonmem
+from ganeti_webmgr.ganeti_web import constants
+from ganeti_webmgr.ganeti_web.caps import has_balloonmem
 
 
 def generate_random_password(length=12):
@@ -54,7 +54,7 @@ def get_rapi(hash, cluster):
     @return a Ganeti RAPI client.
     """
     # preventing circular imports
-    from clusters.models import Cluster
+    from ganeti_webmgr.clusters.models import Cluster
 
     rapi_client = get_rapi_client()
 
@@ -228,7 +228,7 @@ def os_prettify(oses):
             # Split into type and flavor.
             t, flavor = name.split("+", 1)
             # Prettify flavors. "this-boring-string" becomes
-            #"This Boring String"
+            # "This Boring String"
             flavor = " ".join(word.capitalize() for word in flavor.split("-"))
             d[t.capitalize()].append((name, flavor))
         except ValueError:

@@ -9,7 +9,7 @@ interface with the python RAPI, though none of them are comprehensive.
 The following is a list of five different sources where information
 relating to the RAPI can be found.
 
-#. The Ganeti RAPI PyDocs_ 
+#. The Ganeti RAPI PyDocs_
 #. The Ganeti RAPI `HTML Docs`_
 #. The gnt-instance man-page_
 #. The rapi client_ code contained in the upstream_ ganeti project
@@ -25,10 +25,10 @@ relating to the RAPI can be found.
 RAPI in a Python Shell
 ----------------------
 
-Start up a python shell using the ``manage`` django script.
+Start up a python shell using the ``manage.py`` django script.
 ::
 
-    $ ./manage.py shell
+    $ ./ganeti_webmgr/manage.py shell
 
 In the python shell import ``client.py`` from ``util``.
 ::

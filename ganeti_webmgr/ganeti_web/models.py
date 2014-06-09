@@ -26,23 +26,24 @@ from django.contrib.sites.models import Site
 from django.db.models.signals import post_save, post_syncdb
 from django.db.utils import DatabaseError
 
-from utils.logs import register_log_actions
+from ganeti_webmgr.utils.logs import register_log_actions
 
 from object_log.models import LogItem
 log_action = LogItem.objects.log_action
 
 from object_permissions.registration import register
 
-from muddle_users import signals as muddle_user_signals
+from ganeti_webmgr.muddle_users import signals as muddle_user_signals
 
-from authentication.models import Organization
-from clusters.models import Cluster
-from virtualmachines.models import VirtualMachine
+from ganeti_webmgr.authentication.models import Organization
+from ganeti_webmgr.clusters.models import Cluster
+from ganeti_webmgr.nodes.models import Node
+from ganeti_webmgr.virtualmachines.models import VirtualMachine
+from ganeti_webmgr.utils.client import GanetiApiError
 
-# from ganeti_web import constants, management, permissions
 import permissions
 
-from authentication.models import Profile
+from ganeti_webmgr.authentication.models import Profile
 
 # XXX: am I wrong or is it not used anywhere?
 FINISHED_JOBS = 'success', 'unknown', 'error'
@@ -85,6 +86,7 @@ def update_organization(sender, instance, **kwargs):
 post_save.connect(create_profile, sender=User)
 post_save.connect(update_cluster_hash, sender=Cluster)
 post_save.connect(update_organization, sender=Group)
+
 
 def regenerate_cu_children(sender, **kwargs):
     """

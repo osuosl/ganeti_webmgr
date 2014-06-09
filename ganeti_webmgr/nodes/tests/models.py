@@ -19,11 +19,11 @@ from datetime import datetime
 
 from django.test import TestCase
 
-from utils.proxy.constants import NODE
+from ganeti_webmgr.utils.proxy.constants import NODE
 
-from virtualmachines.models import VirtualMachine
-from clusters.models import Cluster
-from nodes.models import Node
+from ganeti_webmgr.virtualmachines.models import VirtualMachine
+from ganeti_webmgr.clusters.models import Cluster
+from ganeti_webmgr.nodes.models import Node
 
 
 __all__ = ['TestNodeModel']

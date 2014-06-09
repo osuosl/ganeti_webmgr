@@ -52,7 +52,7 @@ class CallProxy(object):
         f = self.func
         calls = self.calls
         if args or kwargs:
-            #detailed match
+            # detailed match
             for t in calls:
                 args_, kwargs_ = t
                 if args_ == args and kwargs_ == kwargs:
@@ -71,7 +71,7 @@ class CallProxy(object):
         f = self.func
         calls = self.calls
         if args or kwargs:
-            #detailed match
+            # detailed match
             for t in calls:
                 args_, kwargs_ = t
                 if args_ == args and kwargs_ == kwargs:

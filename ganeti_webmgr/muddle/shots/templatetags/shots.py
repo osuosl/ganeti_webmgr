@@ -3,7 +3,7 @@ from django.template import Node, NodeList, TemplateSyntaxError
 
 register = template.Library()
 
-from muddle.shots.registration import MUDDLE_SHOTS
+from ganeti_webmgr.muddle.shots.registration import MUDDLE_SHOTS
 
 
 @register.tag
@@ -11,7 +11,8 @@ def shot(parser, token):
     """ renders a shot """
     bits = token.contents.split()
     if len(bits) != 2:
-            raise TemplateSyntaxError, "'shot' tag takes one argument: the shot key to be included"
+            raise TemplateSyntaxError(
+                "'shot' tag takes one argument: the shot key to be included")
     key = str(bits[1])
 
     inner_nodelist = parser.parse(('endshot',))
@@ -27,7 +28,7 @@ def shot(parser, token):
 
 
 class ShotNode(Node):
-    
+
     def __init__(self, shot=None, nodelist=None):
         if shot and shot.template_mixers:
             if nodelist:

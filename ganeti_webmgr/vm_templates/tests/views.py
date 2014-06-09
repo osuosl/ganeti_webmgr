@@ -20,14 +20,14 @@ from django.test import TestCase
 from django.test.client import Client
 from django.contrib.auth.models import User
 
-from django_test_tools.users import UserTestMixin
-from django_test_tools.views import ViewTestMixin
+from ganeti_webmgr.django_test_tools.users import UserTestMixin
+from ganeti_webmgr.django_test_tools.views import ViewTestMixin
 
-from clusters.models import Cluster
-from virtualmachines.models import VirtualMachine
-from vm_templates.models import VirtualMachineTemplate
+from ganeti_webmgr.clusters.models import Cluster
+from ganeti_webmgr.virtualmachines.models import VirtualMachine
+from ganeti_webmgr.vm_templates.models import VirtualMachineTemplate
 
-from utils.proxy.constants import INSTANCE
+from ganeti_webmgr.utils.proxy.constants import INSTANCE
 
 
 __all__ = ('TestTemplateViews', )
@@ -42,8 +42,8 @@ class TestTemplateViews(TestCase, ViewTestMixin, UserTestMixin):
 
         cluster = Cluster(hostname='test.cluster', slug='test',
                           username='tester', password='secret')
-        cluster.id = 23  # XXX MySQL DB does not reset auto-increment
-                         # IDs when an object is removed
+        # MySQL DB does not reset auto-increment IDs when an object is removed
+        cluster.id = 23
         cluster.save()
         cluster.sync_nodes()
 

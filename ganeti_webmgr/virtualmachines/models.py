@@ -2,17 +2,18 @@
 from django.db import models
 from django.conf import settings
 
-from clusters.models import CachedClusterObject
-from jobs.models import Job
+from ganeti_webmgr.clusters.models import CachedClusterObject
+from ganeti_webmgr.jobs.models import Job
 
-from ganeti_web import constants
-from utils import generate_random_password, get_rapi
-from utils.client import REPLACE_DISK_AUTO
-from utils.fields import LowerCaseCharField
-from vm_templates.models import VirtualMachineTemplate
+from ganeti_webmgr.ganeti_web import constants
+from ganeti_webmgr.utils import generate_random_password, get_rapi
+from ganeti_webmgr.utils.client import REPLACE_DISK_AUTO
+from ganeti_webmgr.utils.fields import LowerCaseCharField
+from ganeti_webmgr.vm_templates.models import VirtualMachineTemplate
 
 if settings.VNC_PROXY:
-    from utils.vncdaemon.vapclient import request_forwarding, request_ssh
+    from ganeti_webmgr.utils.vncdaemon.vapclient import (request_forwarding,
+                                                         request_ssh)
 
 
 class VirtualMachine(CachedClusterObject):
@@ -146,7 +147,7 @@ class VirtualMachine(CachedClusterObject):
         Loads all values from cached info, included persistent properties that
         are stored in the database
         """
-        from nodes.models import Node
+        from ganeti_webmgr.nodes.models import Node
         data = super(VirtualMachine, cls).parse_persistent_info(info)
 
         # Parse resource properties

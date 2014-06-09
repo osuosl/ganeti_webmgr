@@ -11,13 +11,12 @@ from django.utils.encoding import force_unicode
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.contenttypes.models import ContentType
 
-from utils import get_rapi
-from utils.fields import (
+from ganeti_webmgr.utils import get_rapi
+from ganeti_webmgr.utils.fields import (
     PatchedEncryptedCharField, PreciseDateTimeField, LowerCaseCharField
 )
-from utils.client import GanetiApiError
-from utils.models import Quota
-
+from ganeti_webmgr.utils.client import GanetiApiError
+from ganeti_webmgr.utils.models import Quota
 
 
 class CachedClusterObject(models.Model):
@@ -126,7 +125,7 @@ class CachedClusterObject(models.Model):
         If communication with Ganeti fails, an error will be stored in
         ``error``.
         """
-        from utils.models import GanetiError
+        from ganeti_webmgr.utils.models import GanetiError
 
         job_data = self.check_job_status()
         for k, v in job_data.items():
@@ -192,7 +191,7 @@ class CachedClusterObject(models.Model):
 
     def check_job_status(self):
         # preventing circular import
-        from jobs.models import Job
+        from ganeti_webmgr.jobs.models import Job
 
         if not self.last_job_id:
             return {}
@@ -475,7 +474,7 @@ class Cluster(CachedClusterObject):
             * VMs missing from the database are added
         """
         # preventing circular imports
-        from virtualmachines.models import VirtualMachine
+        from ganeti_webmgr.virtualmachines.models import VirtualMachine
 
         ganeti = self.instances()
         db = self.virtual_machines.all().values_list('hostname', flat=True)
@@ -507,7 +506,7 @@ class Cluster(CachedClusterObject):
             * Nodes missing from the database are added
         """
         # to prevent circular imports
-        from nodes.models import Node
+        from ganeti_webmgr.nodes.models import Node
 
         ganeti = self.rapi.GetNodes()
         db = self.nodes.all().values_list('hostname', flat=True)
@@ -657,7 +656,7 @@ class Cluster(CachedClusterObject):
         other nodes.
         """
         # preventing circular import
-        from jobs.models import Job
+        from ganeti_webmgr.jobs.models import Job
 
         # no exception handling, because it's being done in a view
         id = self.rapi.RedistributeConfig()

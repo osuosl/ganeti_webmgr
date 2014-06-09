@@ -46,27 +46,30 @@ from object_permissions.signals import (view_add_user, view_edit_user,
 from object_permissions.views.permissions import view_users, view_permissions
 
 
-from ganeti_web.backend.queries import vm_qs_for_users
-from ganeti_web.caps import has_shutdown_timeout, has_balloonmem
-from ganeti_web.templatetags.webmgr_tags import render_storage
-from ganeti_web.views.generic import (NO_PRIVS, LoginRequiredMixin,
-                                      PaginationMixin, GWMBaseView)
-from ganeti_web.views.tables import BaseVMTable
+from ganeti_webmgr.ganeti_web.backend.queries import vm_qs_for_users
+from ganeti_webmgr.ganeti_web.caps import has_shutdown_timeout, has_balloonmem
+from ganeti_webmgr.ganeti_web.templatetags.webmgr_tags import render_storage
+from ganeti_webmgr.ganeti_web.views.generic import (NO_PRIVS,
+                                                    LoginRequiredMixin,
+                                                    PaginationMixin,
+                                                    GWMBaseView)
+from ganeti_webmgr.ganeti_web.views.tables import BaseVMTable
 
 from .forms import (KvmModifyVirtualMachineForm, PvmModifyVirtualMachineForm,
                     HvmModifyVirtualMachineForm, ModifyConfirmForm,
                     MigrateForm, RenameForm, ChangeOwnerForm, ReplaceDisksForm)
 
-from clusters.models import Cluster
-from jobs.models import Job
-from utils.models import SSHKey
-from virtualmachines.models import VirtualMachine
+from ganeti_webmgr.clusters.models import Cluster
+from ganeti_webmgr.jobs.models import Job
+from ganeti_webmgr.utils.models import SSHKey
+from ganeti_webmgr.virtualmachines.models import VirtualMachine
 
-from utils import cluster_os_list, compare, os_prettify, get_hypervisor
-from utils.client import GanetiApiError
+from ganeti_webmgr.utils import (cluster_os_list, compare, os_prettify,
+                                 get_hypervisor)
+from ganeti_webmgr.utils.client import GanetiApiError
 
 
-#XXX No more need for tastypie dependency for 0.8
+# XXX No more need for tastypie dependency for 0.8
 class HttpAccepted(HttpResponse):
     """
     Take from tastypie.http
@@ -483,7 +486,7 @@ def reboot(request, cluster_slug, instance, rest=False):
             return HttpResponseForbidden()
         else:
             raise PermissionDenied(_('You do not have permission to '
-                            'reboot this virtual machine'))
+                                     'reboot this virtual machine'))
 
     try:
         job = vm.reboot()
@@ -551,7 +554,7 @@ def detail(request, cluster_slug, instance, rest=False):
 
     if not (admin or power or remove or modify or tags):  # TODO REST
         raise PermissionDenied(_('You do not have permission to view '
-                        'this virtual machines\'s details'))
+                                 'this virtual machines\'s details'))
 
     context = {
         'cluster': cluster,
@@ -691,7 +694,7 @@ def modify(request, cluster_slug, instance):
             return HttpResponseRedirect(
                 reverse('instance-modify-confirm',
                         args=[cluster.slug,
-                        vm.hostname]))
+                              vm.hostname]))
 
     elif request.method == 'GET':
         if 'edit_form' in request.session \
@@ -774,7 +777,7 @@ def modify_confirm(request, cluster_slug, instance):
                                          cluster=cluster)
                 VirtualMachine.objects \
                     .filter(id=vm.id).update(last_job=job, ignore_cache=True,
-                        note_text=notes)
+                                             note_text=notes)
                 # log information about modifying this instance
                 log_action('EDIT', user, vm)
                 if 'reboot' in request.POST and vm.info['status'] == 'running':
@@ -805,7 +808,7 @@ def modify_confirm(request, cluster_slug, instance):
 
     session = request.session
 
-    if not 'edit_form' in request.session:
+    if 'edit_form' not in request.session:
         return HttpResponseBadRequest('Incorrect Session Data')
 
     data = session['edit_form']
@@ -858,7 +861,7 @@ def modify_confirm(request, cluster_slug, instance):
             else:
                 oses = oses[0][1]
                 diff = compare(oses[0][1], oses[1][1])
-            #diff = compare(oses[0][1], oses[1][1])
+            # diff = compare(oses[0][1], oses[1][1])
         if key in ['nic_count', 'nic_count_original']:
             continue
         elif key not in old_set.keys():
@@ -881,12 +884,13 @@ def modify_confirm(request, cluster_slug, instance):
                                          initial=json.dumps(data))
 
     return render_to_response(
-        'ganeti/virtual_machine/edit_confirm.html', {
-        'cluster': cluster,
-        'form': form,
-        'instance': vm,
-        'instance_diff': instance_diff,
-        'power': power,
+        'ganeti/virtual_machine/edit_confirm.html',
+        {
+            'cluster': cluster,
+            'form': form,
+            'instance': vm,
+            'instance_diff': instance_diff,
+            'power': power,
         },
         context_instance=RequestContext(request),
     )
@@ -1001,10 +1005,11 @@ def reparent(request, cluster_slug, instance):
         form = ChangeOwnerForm()
 
     return render_to_response(
-        'ganeti/virtual_machine/reparent.html', {
-        'cluster': cluster,
-        'vm': vm,
-        'form': form
+        'ganeti/virtual_machine/reparent.html',
+        {
+            'cluster': cluster,
+            'vm': vm,
+            'form': form
         },
         context_instance=RequestContext(request),
     )

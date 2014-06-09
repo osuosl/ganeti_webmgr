@@ -19,7 +19,8 @@ convenience.
 setup.sh
 --------
 
-Download the ``setup.sh`` script from: https://github.com/pbanaszkiewicz/ganeti_webmgr-setup
+The ``setup.sh`` script can be located in the ``scripts/`` folder at the root of
+the |gwm| project folder.
 
 Workflow
 --------
@@ -40,9 +41,6 @@ What this script does:
    These packages are provided as ``.whl`` packages, ie. binary compiled
    packages.  That helps speeding up installation time and requires no
    compilation on end user's side.
-#. Creates configuration directory near that virtual environment with sane
-   default settings (got from
-   https://github.com/pbanaszkiewicz/ganeti_webmgr-config).
 
 .. warning::
   If you happen to have different operating system from these
@@ -84,7 +82,7 @@ Command line arguments
 
 .. cmdoption:: -d <install directory>
 
-  :default: ``./ganeti_webmgr``
+  :default: ``/opt/ganeti_webmgr``
 
   Directory for the virtual environment.
 
@@ -96,6 +94,10 @@ Command line arguments
   Wheel packages are read from that path.  The path can be either local
   (eg. ``./gwm/wheels``) or remote (eg.
   ``http://ftp.osuosl.org/pub/osuosl/wheels``).
+
+  This also assumes the directory structure for the wheels package is structured
+  according to how the :ref:`build-script`
+  :ref:`structures files <build-folder-structure>`.
 
   .. warning:: Don't change it unless you know what you're doing!
 
@@ -136,38 +138,32 @@ Command line arguments
 Examples
 ~~~~~~~~
 
-.. note::
-  Remember to make ``setup.sh`` executable::
-
-    $ chmod +x setup.sh
-
-
 Run with default settings::
 
-  $ ./setup.sh
+  $ ./scripts/setup.sh
 
 Install PostgreSQL::
 
-  $ ./setup.sh -d ./gwm -D postgresql
+  $ ./scripts/setup.sh -d ./gwm -D postgresql
 
 Skip installing system dependencies::
 
-  $ ./setup.sh -N
+  $ ./scripts/setup.sh -N
 
 Upgrade existing installation::
 
-  $ ./setup.sh -u ./existing_gwm
+  $ ./scripts/setup.sh -u ./existing_gwm
 
 Generate wheels on your own with :ref:`building script<build-script>`::
 
-  $ ./build_wheels.sh -e ./venv_whl -g ./gwm_whl -w ./wheels
-  $ ./setup.sh -d ./ganeti_webmgr -w ./wheels
+  $ ./scripts/build_wheels.sh -e ./venv_whl -w ./wheels
+  $ ./scripts/setup.sh -d ./ganeti_webmgr -w ./wheels
 
 or send wheels to remote location and install from it::
 
-  $ ./build_wheels.sh -e ./venv_whl -g ./gwm_whl -w ./wheels
-  $ rsync ./wheels rsync@server:/srv/www/wheels
-  $ ./setup.sh -d ./ganeti_webmgr -w http://server/wheels
+  $ ./scripts/build_wheels.sh -e ./venv_whl -w ./wheels
+  $ rsync ./wheels rsync@foo.example.org:/srv/www/wheels
+  $ ./scripts/setup.sh -d ./ganeti_webmgr -w http://foo.example.org/wheels
 
 
 Directory structure
@@ -178,8 +174,6 @@ After installing |gwm| via ``setup.sh`` this is what you get::
   ./ganeti_webmgr
   ├── bin
   ├── config
-  ├── django
-  │   └── ...
   ├── include
   │   └── ...
   ├── lib
@@ -188,7 +182,7 @@ After installing |gwm| via ``setup.sh`` this is what you get::
       └── ...
 
 Directories ``bin``, ``include``, ``lib`` or ``local`` are
-:ref:`virtual-environment` specific - don't bother about them.  Directory
+:ref:`virtual-environment` specific - don't bother about them. The directory
 ``config`` on the other hand is important to you: this is where your |gwm|
 configuration resides.
 
@@ -200,4 +194,4 @@ Can't run ``setup.sh``: permission denied
 
 This script needs to be executable, you can make it by issuing this command::
 
-  $ chmod +x setup.sh
+  $ chmod +x ./scripts/setup.sh

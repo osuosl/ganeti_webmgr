@@ -39,7 +39,10 @@ from django_fields.fields import EncryptedCharField
 
 
 class ModifyingFieldDescriptor(object):
-    """ Modifies a field when set using the field's (overriden) .to_python() method. """
+    """
+    Modifies a field when set using the field's (overriden)
+    .to_python() method.
+    """
     def __init__(self, field):
         self.field = field
 
@@ -68,7 +71,8 @@ class LowerCaseCharField(models.CharField):
         setattr(cls, self.name, ModifyingFieldDescriptor(self))
 
 
-add_introspection_rules([], ["^utils\.fields\.LowerCaseCharField"])
+add_introspection_rules(
+    [], ["^ganeti_webmgr\.utils\.fields\.LowerCaseCharField"])
 
 
 class PatchedEncryptedCharField(EncryptedCharField):
@@ -89,7 +93,8 @@ class PatchedEncryptedCharField(EncryptedCharField):
                                                     prepared=prepared)
 
 
-add_introspection_rules([], ["^utils\.fields\.PatchedEncryptedCharField"])
+add_introspection_rules(
+    [], ["^ganeti_webmgr\.utils\.fields\.PatchedEncryptedCharField"])
 
 
 class PreciseDateTimeField(DecimalField):
@@ -123,9 +128,9 @@ class PreciseDateTimeField(DecimalField):
 
     def __init__(self, **kwargs):
         # Set default values.
-        if not 'decimal_places' in kwargs:
+        if 'decimal_places' not in kwargs:
             kwargs['decimal_places'] = 6
-        if not 'max_digits' in kwargs:
+        if 'max_digits' not in kwargs:
             kwargs['max_digits'] = kwargs['decimal_places'] + 12
 
         self.shifter = Decimal(10)**kwargs['decimal_places']
@@ -185,7 +190,8 @@ class PreciseDateTimeField(DecimalField):
 
 # Migration rules for PDTField. PDTField's serialization is surprisingly
 # straightforward and doesn't need any help here.
-add_introspection_rules([], ["^utils\.fields\.PreciseDateTimeField"])
+add_introspection_rules(
+    [], ["^ganeti_webmgr\.utils\.fields\.PreciseDateTimeField"])
 
 
 class DataVolumeField(CharField):
@@ -247,7 +253,7 @@ class DataVolumeField(CharField):
 
 # Migration rules for DVField. DVField doesn't do anything fancy, so the
 # default rules will work.
-add_introspection_rules([], ["^utils\.fields\.DataVolumeField"])
+add_introspection_rules([], ["^ganeti_webmgr\.utils\.fields\.DataVolumeField"])
 
 
 class MACAddressField(RegexField):
@@ -262,7 +268,7 @@ class MACAddressField(RegexField):
 
 # Migration rules for MAField. MAField doesn't do anything fancy, so the
 # default rules will work.
-add_introspection_rules([], ["^utils\.fields\.MACAddressField"])
+add_introspection_rules([], ["^ganeti_webmgr\.utils\.fields\.MACAddressField"])
 
 
 class SQLSumIf(models.sql.aggregates.Aggregate):

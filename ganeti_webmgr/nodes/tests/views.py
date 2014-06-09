@@ -20,16 +20,16 @@ from django.test import TestCase
 # Per #6579, do not change this import without discussion.
 from django.utils import simplejson as json
 
-from django_test_tools.users import UserTestMixin
-from django_test_tools.views import ViewTestMixin
+from ganeti_webmgr.django_test_tools.users import UserTestMixin
+from ganeti_webmgr.django_test_tools.views import ViewTestMixin
 
 from .models import NodeTestCaseMixin
 
-from utils.client import GanetiApiError
+from ganeti_webmgr.utils.client import GanetiApiError
 
-from clusters.models import Cluster
-from virtualmachines.models import VirtualMachine
-from nodes.models import Node
+from ganeti_webmgr.clusters.models import Cluster
+from ganeti_webmgr.virtualmachines.models import VirtualMachine
+from ganeti_webmgr.nodes.models import Node
 
 
 __all__ = ['TestNodeViews']

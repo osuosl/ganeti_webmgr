@@ -27,6 +27,7 @@ class LoginRequiredMixin(object):
     def dispatch(self, *args, **kwargs):
         return super(LoginRequiredMixin, self).dispatch(*args, **kwargs)
 
+
 class PermissionRequiredMixin(object):
 
     permission_required = None
@@ -77,11 +78,12 @@ class PermissionRequiredMixin(object):
     def dispatch(self, request, *args, **kwargs):
         # We want an object to check against for object permissions
         obj = (hasattr(self, 'get_object') and self.get_object()
-            or getattr(self, 'object', None))
+               or getattr(self, 'object', None))
 
         self.check_perms(request, obj)
         return super(PermissionRequiredMixin, self).dispatch(request, *args,
-            **kwargs)
+                                                             **kwargs)
+
 
 class PaginationMixin(object):
     """

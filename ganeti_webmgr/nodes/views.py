@@ -31,15 +31,15 @@ from object_log.views import list_for_object
 
 log_action = LogItem.objects.log_action
 
-from utils.client import GanetiApiError
-from ganeti_web import constants
-from ganeti_web.views.generic import NO_PRIVS, LoginRequiredMixin
-from ganeti_web.views.tables import NodeVMTable
-from virtualmachines.views import BaseVMListView
+from ganeti_webmgr.utils.client import GanetiApiError
+from ganeti_webmgr.ganeti_web import constants
+from ganeti_webmgr.ganeti_web.views.generic import NO_PRIVS, LoginRequiredMixin
+from ganeti_webmgr.ganeti_web.views.tables import NodeVMTable
+from ganeti_webmgr.virtualmachines.views import BaseVMListView
 
 from .forms import RoleForm, MigrateForm, EvacuateForm
 from .models import Node
-from jobs.models import Job
+from ganeti_webmgr.jobs.models import Job
 
 
 def get_node_and_cluster_or_404(cluster_slug, host):

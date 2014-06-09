@@ -7,5 +7,5 @@ def path_to_class(path):
     try:
         return module.__dict__[name]
     except KeyError:
-        #XXX raise as import error
+        # XXX raise as import error
         raise ImportError()

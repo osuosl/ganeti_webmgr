@@ -1,13 +1,13 @@
 from django.contrib.auth.models import AnonymousUser, Group, User
 from django.test import TestCase
 
-from django_test_tools.users import UserTestMixin
+from ganeti_webmgr.django_test_tools.users import UserTestMixin
 
 from ..backend.queries import (
     cluster_qs_for_user, owner_qs, cluster_vm_qs
 )
-from clusters.models import Cluster
-from virtualmachines.models import VirtualMachine
+from ganeti_webmgr.clusters.models import Cluster
+from ganeti_webmgr.virtualmachines.models import VirtualMachine
 
 __all__ = (
     "TestClusterQSForUser",
@@ -91,6 +91,7 @@ class TestClusterQSForUser(TestCase, UserTestMixin):
 # The TestOwnerQS tests could probably be a single test case,
 # with different test methods, but this works
 
+
 class TestOwnerQSNoGroups(TestCase):
 
     def setUp(self):
@@ -135,6 +136,7 @@ class TestOwnerQSNoGroups(TestCase):
         owners = owner_qs(self.cluster, self.noperms)
         valid_owners = [repr(self.noperms.get_profile())]
         self.assertQuerysetEqual(owners, valid_owners)
+
 
 class TestOwnerQSWithGroups(TestCase):
 
@@ -220,4 +222,3 @@ class TestClusterVMQS(TestCase):
         vms = cluster_vm_qs(self.standard, perms=['admin'])
         self.standard.grant('admin', self.vm1)
         self.assertQuerysetEqual(vms, [])
-

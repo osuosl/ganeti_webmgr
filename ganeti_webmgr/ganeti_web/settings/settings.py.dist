@@ -18,33 +18,33 @@
 
 # Django settings for ganeti_webmgr project.
 
-from .base import *
-#from ldap_settings import *
 
-from os.path import join
+from .helpers import ugettext
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 
-##### Testing Configuration #####
-# Enable if running unit tests. Disable to prevent test models from syncing to DB
+# -- Testing Configuration ---------------------------------------------------
+# Enable if running unit tests. Disable to prevent test models syncing to DB
 TESTING = False
 # Setting this to False disables south migrations when running tests.
 SOUTH_TESTS_MIGRATE = False
 SKIP_SOUTH_TESTS = True
-##### End Testing Configuration #####
+# -- End Testing Configuration -----------------------------------------------
 
-##### Management settings #####
+
+# -- Management settings -----------------------------------------------------
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
 )
 
 MANAGERS = ADMINS
-##### End Management settings #####
+# -- End Management settings -------------------------------------------------
 
 
-##### Database Configuration #####
+
+# -- Database Configuration --------------------------------------------------
 DATABASES = {
     'default': {
         # Add 'postgresql_psycopg2', 'postgresql', 'mysql',
@@ -52,17 +52,19 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
 
         # Or path to database file if using sqlite3.
-        'NAME': root('ganeti.db'),
+        'NAME': '/opt/ganeti_webmgr/ganeti.db',
         'USER': '',      # Not used with sqlite3.
         'PASSWORD': '',  # Not used with sqlite3.
         'HOST': '',      # Set to empty string for localhost.
                          # Not used with sqlite3.
         'PORT': '',      # Set to empty string for default.
-                         #Not used with sqlite3.
+                         # Not used with sqlite3.
     }
 }
-##### End Database Configuration #####
+# -- End Database Configuration ----------------------------------------------
 
+
+# -- Locale Configuration ----------------------------------------------------
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 TIME_ZONE = 'America/Los_Angeles'
 DATE_FORMAT = "d/m/Y"
@@ -77,7 +79,7 @@ LANGUAGES = (
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = 'en-US'
-##### End Locale Configuration #####
+# -- End Locale Configuration ------------------------------------------------
 
 
 # Site name and domain referenced by some modules to provide links back to
@@ -101,7 +103,7 @@ SITE_ROOT = ''
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
-STATIC_ROOT = root("collected_static")
+STATIC_ROOT = "/opt/ganeti_webmgr/collected_static"
 
 # URL that handles the media served from STATIC_ROOT.
 # XXX contrary to django docs, do not use a trailling slash.  It makes urls
@@ -114,7 +116,8 @@ AUTHENTICATION_BACKENDS = (
     'object_permissions.backend.ObjectPermBackend',
 )
 
-##### Registration Settings #####
+
+# -- Registration Settings ---------------------------------------------------
 ACCOUNT_ACTIVATION_DAYS = 7
 
 # Email settings for registration
@@ -125,7 +128,10 @@ EMAIL_PORT = "25"
 # Whether users should be able to create their own accounts.
 # False if accounts can only be created by admins.
 ALLOW_OPEN_REGISTRATION = True
-##### End Registration Settings #####
+# -- End Registration Settings -----------------------------------------------
+
+# Path to where haystack keeps the index files for search
+HAYSTACK_WHOOSH_PATH = '/opt/ganeti_webmgr/whoosh_index'
 
 # GWM Specifics
 
@@ -160,9 +166,8 @@ RAPI_CONNECT_TIMEOUT = 3
 # Do not share this with anyone.
 # Make this unique, and don't share it with anybody.
 
-# Uncomment the line below or continue using load_secret
+# Uncomment the line below
 # SECRET_KEY = "random_string_of_numbers_and_letters"
-SECRET_KEY = load_secret(env='GWM_SECRET_KEY', file=SECRET_KEY_LOC)
 
 # API Key for authenticating scripts that pull information from ganeti, such as
 # list of sshkey's to assign to a virtual machine
@@ -171,7 +176,6 @@ SECRET_KEY = load_secret(env='GWM_SECRET_KEY', file=SECRET_KEY_LOC)
 #     that automatically creates keys per virtual machine. This is just a quick
 #     way of enabled a secure method to pull sshkeys from ganeti web manager
 
-# Uncomment the line below or continue using load_secret
+# Uncomment the line below
 # WEB_MGR_API_KEY = "random_string_of_numbers_and_letters"
-WEB_MGR_API_KEY = load_secret(env='GWM_API_KEY', file=GWM_API_KEY_LOC)
 
