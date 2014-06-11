@@ -4,29 +4,36 @@
     "mysql": {
       "server_root_password": "rootpass",
       "server_debian_password": "debpass",
-      "server_repl_password": "replpass"
+      "server_repl_password": "replpass",
+      "allow_remote_root": true
     },
     "ganeti_webmgr": {
-      "packages": ["tmux"],
-      "revision": "bug/16269",
-      "path": "/home/vagrant/ganeti_webmgr_src",
-      "install_dir": "/home/vagrant/gwm_install",
-      "config_dir": "/home/vagrant/gwm_install/config",
-      "haystack_whoosh_path": "/home/vagrant/gwm_install/whoosh_index",
-      "static_root": "/home/vagrant/gwm_install/collected_static",
-      "user": "vagrant",
-      "group": "vagrant",
+      "revision": "develop",
       "debug": true,
       "migrate": true,
       "database": {
-       "name": "ganeti_webmgr",
-       "user": "vagrant",
-       "password": "vagrant",
-       "host": "localhost",
-       "port": 3306
-       },
-       "secret_key": "0123456789123456",
-       "hostsfile": {
+        "name": "ganeti_webmgr",
+        "user": "vagrant",
+        "password": "vagrant",
+        "host": "localhost",
+        "port": 3306
+      },
+      "apache": {
+        "server_aliases": ["localhost"]
+      },
+      "db_server": {
+        "password": "rootpass"
+      },
+      "superusers": [
+        {
+          "username": "admin",
+          "email": "admin@example.org",
+          "password": "password"
+        }
+      ],
+      "secret_key": "this_is_16_bits!",
+      "web_mgr_api_key": "super_secret_api_key",
+      "hostsfile": {
         "33.33.33.10": "ganeti.example.org",
         "33.33.33.11": "node1.example.org",
         "33.33.33.12": "node2.example.org",

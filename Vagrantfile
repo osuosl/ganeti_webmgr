@@ -23,22 +23,20 @@ Vagrant.configure("2") do |config|
   config.vm.provision :chef_solo do |chef|
     chef.environments_path = "chef/environments"
     chef.environment = "vagrant"
+    chef.data_bags_path = "chef/data_bags"
+    chef.encrypted_data_bag_secret_key_path = "chef/encrypted_data_bag_secret"
 
     chef.json = {
       :mysql => {
         :server_root_password => 'rootpass',
         :server_debian_password => 'debpass',
         :server_repl_password => 'replpass'
-      },
-      :ganeti_webmgr => {
-        :migrate => true,
-        :admin_username => "admin",
-        :admin_password => "password",
       }
     }
     chef.run_list = [
         "recipe[ganeti_webmgr::mysql]",
         "recipe[ganeti_webmgr::bootstrap_user]",
+        "recipe[ganeti_webmgr::apache]"
     ]
   end
 end
