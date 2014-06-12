@@ -101,6 +101,8 @@ if [ -x "$lsb_release" ]; then
 
     if [ "$OS" == "centos" ]; then
         os_codename=`$lsb_release -s -r | sed -e 's/\..*//'`
+        # we only care about the major version
+        os_codename=`echo $os_codename | cut -d . -f 1`
     else
         os_codename=`$lsb_release -s -c | tr "[:upper:]" "[:lower:]"`
     fi
@@ -111,6 +113,8 @@ elif [ -r "/etc/redhat-release" ]; then
 
     # instead of codename, we pull in release version ('6.3', '6.4', etc)
     os_codename=`sed s/.*release\ // /etc/redhat-release | sed s/\ .*//`
+    # we only care about the major version
+    os_codename=`echo $os_codename | cut -d . -f 1`
 fi
 
 #------------------------------------------------------------------------------
