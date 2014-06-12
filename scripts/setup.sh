@@ -54,7 +54,7 @@ check_if_exists() {
 # default values
 install_directory='/opt/ganeti_webmgr'
 config_dir='/opt/ganeti_webmgr/config'
-base_url="https://ftp.osuosl.org/pub/osl/ganeti-webmgr"
+base_url="http://ftp.osuosl.org/pub/osl/ganeti-webmgr"
 script_location=$(dirname $0)
 gwm_location="$script_location/.."
 
