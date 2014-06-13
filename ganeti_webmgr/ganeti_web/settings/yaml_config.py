@@ -7,5 +7,6 @@ try:
     for key, value in load(config_file.read()).items():
         globals()[key] = value
     config_file.close()
-except:
+except Exception, e:
     print "Could not find, or open config located at %s" % CONFIG_PATH
+    print "The error occured was: %s" % e
