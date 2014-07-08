@@ -27,15 +27,15 @@ firewall, VPN, or NAT.
 
    ..
 
-|vncap| has a control channel that is used to request port
+VNCAuthProxy has a control channel that is used to request port
 forwarding to a specific VNC machine. It will respond with a local port
 and temporary password that must be used within a short period. This
-allows a secure connection with the |vncap|, without compromising
+allows a secure connection with the VNCAuthProxy, without compromising
 the vnc password, and without leaving the port open to anyone with a
 port scanner.
 
-Configuring |vncap|
--------------------
+Configuring VNC AuthProxy
+-------------------------
 
 Set the host and port that the proxy uses in ``config.yml`` with the
 ``VNC_PROXY`` setting.
@@ -57,29 +57,22 @@ servers should use a public hostname or IP.
 Starting the Daemon
 ~~~~~~~~~~~~~~~~~~~
 
-|vncap| is now controlled with an init.d script. To install the script,
-see :ref:`vncauthproxy-script`. 
-
-Once installed, |vncap| can be controlled with standard service commands.
-You can ``start``, ``stop``, and ``restart`` the service, and get check if the
-service is running with ``status``::
-
-    $ sudo service vncauthproxy status
-
-If you do not wish to install |vncap| as a service, it can be manually started
-when inside the |gwm| virtual environment.
+Twisted VNC Authproxy is started with twistd, the twisted daemon.
+Eventually we will include init.d scripts for better managing the
+daemon.
 ::
 
-    $ twistd --pidfile=/tmp/proxy.pid -n vncap
+    twistd --pidfile=/tmp/proxy.pid -n vncap
 
 Starting Flash Policy Server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Browsers that do not support WebSockets natively are supported through
 the use of a flash applet. Flash applets that make use of sockets must
-retrieve a policy file from the server they are connecting to. |vncap|
-includes a policy server. It must be run separately since it requires a root
-port. You may want to open port 843 in your firewall for production systems.
+retrieve a policy file from the server they are connecting to. Twisted
+VNCAuthProxy includes a policy server. It must be run separately since
+it requires a root port. You may want to open port 843 in your firewall
+for production systems.
 
 Start the policy server with twistd
 
@@ -126,7 +119,5 @@ environment variable as root::
 Known Issues
 ------------
 
-While Chrome/Chromium supports websockets, currently |vncap| does not
+While Chrome/Chromium supports websockets, currently VNC Auth Proxy does not
 work with Chrome/Chromium.
-
-.. |vncap| replace:: VNC AuthProxy
