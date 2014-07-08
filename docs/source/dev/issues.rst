@@ -10,6 +10,19 @@ The issue tracker for |gwm| is at `code.osuosl.org`_. All bugs and feature reque
 
 Please follow this guide when filing new issues for Ganeti Web Manager.
 
+Description
+-----------
+
+When submitting an issue, the description should generally include the following:
+
+* Exactly what the submitter did to encounter the situation
+* What the submitter expected to happen
+* What actually happened
+
+Depending on the issue, knowing details about the operating system or web browser being used may be helpful.
+
+In addition to these points, bug reports should also include any relevant information with regard to attempted fixes or workarounds as well as any other effects the bug may have on the software.  Any patches which resolve or work around bugs are also appreciated, if only to help developers understand the scope of the bug.
+
 Trackers
 --------
 
