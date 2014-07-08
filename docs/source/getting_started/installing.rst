@@ -61,6 +61,37 @@ own dependencies.
   .. Note:: You will likely need to run this as root as it requires permissions
           to install packages and create directories in ``/opt``.
 
+.. _vncauthproxy-script:
+
+VNC AuthProxy startup script
+----------------------------
+
+|gwm| provides an in-browser VNC console. For more information, see
+:ref:`VNC <vnc-authproxy>`. In order to use the VNC console, you must run VNC
+AuthProxy, which comes with |gwm|.
+
+VNC AuthProxy can be set up to start on boot if wanted. To do so, it is
+necessary to set up an *init.d* script to manage the daemon. These vary by
+platform, so depending on what kind of system you are running |gwm| on, you'll
+need to select either the CentOS or Ubuntu/Debian script.
+
+If you are running CentOS, copy the file ``scripts/vncauthproxy/init-centos``
+to ``/etc/init.d/vncauthproxy`` and install the service::
+
+    $ sudo cp /path/to/gwm/source/scripts/vncauthproxy/init-centos /etc/init.d/vncauthproxy
+    $ sudo chkconfig --add vncauthproxy
+
+Otherwise, if you are running Debian or Ubuntu, copy the file
+``scripts/vncauthproxy/init-ubuntu`` to ``/etc/init.d/vncauthproxy`` and
+install the service::
+
+    $ sudo cp /path/to/gwm/scripts/vncauthproxy/init-ubuntu /etc/init.d/vncauthproxy
+    $ sudo update-rc.d vncauthproxy defaults
+
+The ``vncauthproxy`` service is installed and can be started::
+
+    $ sudo service vncauthproxy start
+
 Minimum Configuration
 ---------------------
 
