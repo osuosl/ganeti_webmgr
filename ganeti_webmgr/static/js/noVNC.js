@@ -85,7 +85,9 @@ $(function () {
         .click(function(event){
             event.preventDefault();
             if (!$(this).hasClass('disabled')) {
-                rfb.sendCtrlAltDel();
+                if(confirm('Are you sure you want to send Ctrl-Alt-Delete to this VM?')) {
+                    rfb.sendCtrlAltDel();
+                }
             }
         });
 

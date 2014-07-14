@@ -22,7 +22,7 @@
     {% else %}
     <li><a class="button startup power" href="{% url instance-startup cluster_slug instance.hostname %}">{% trans "Start" %}</a></li>
     {% endifequal %}
-    <li><a id="ctrlaltdelete" href="#" class="button reboot disabled power" title="Send Ctrl-Alt-Delete">Ctrl-Alt-Delete</a></li>
+    <li><a id="ctrlaltdelete" href="#" class="button reboot disabled" title="Send Ctrl-Alt-Delete">Ctrl-Alt-Delete</a></li>
     {% if not popout %}
     <li><a id="popout" href="#" class="button popout" title="popout vnc window"></a></li>
     {% endif %}
