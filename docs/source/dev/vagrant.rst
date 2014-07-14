@@ -63,12 +63,14 @@ Then you need to run the following command to have it reprovision the VM::
 
     vagrant provision
 
-Once Vagrant has finished running, and provisioning, your Virtual Machine will
-be running and ready for use. You can get to the VM by using the ``vagrant ssh``
-command to get to the VM. To run |gwm| you need to source your `virtualenv` and
-start the :ref:`development-server`::
+After provisioning, your Virtual Machine will have |gwm| installed and running with
+the Apache web server. However, so that you can modify the source code, you'll
+need to run the :ref:`development-server`.
 
-    source ~/venv/bin/activate
+You can get to the VM by using the ``vagrant ssh`` command. To run |gwm| you
+need to source your `virtualenv` and start the development server::
+
+    source /opt/ganeti_webmgr/bin/activate
     cd ~/ganeti_webmgr
     python ganeti_webmgr/manage.py runserver 0.0.0.0:8000
 
