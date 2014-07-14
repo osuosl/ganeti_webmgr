@@ -41,10 +41,10 @@ associated with the user such as cluster quotas.
 Groups
 ------
 
-Groups may be created so that permissions. This allows permissions
-structures where you are granting permissions to different
-organizations. Users may belong to unlimited number of groups. They will
-inherit the permissions of any group they belong to.
+Groups may be created so that permissions can be given out to multiple users
+at once. This allows permissions structures where you are granting permissions
+to different organizations. Users may belong to unlimited number of groups.
+They will inherit the permissions of any group they belong to.
 
 Groups are a persona that user's may act on behalf of. When creating
 virtual machines, the user must choose whether they are acting on behalf

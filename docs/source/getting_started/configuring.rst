@@ -99,7 +99,7 @@ If you want to have better control of this setting you can set the
     SECRET_KEY: ANW61553mYBKJft6pYPLf1JbTeHKLutU
 
 Please do not use this value, but instead generate something random yourself.
-You do **not** want to share this, or make it publically accessible. This can
+You do **not** want to share this, or make it publicly accessible. This can
 be used to avoid protections |gwm| has implemented for you.
 
 If you are using the :ref:`sshkeys` feature to add keys to VMs with |gwm|, you
