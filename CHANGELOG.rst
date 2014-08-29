@@ -3,14 +3,22 @@
 Changelog
 =========
 
-Unreleased
-----------
+v0.11.0
+-------
 
-* #13275: |gwm| is now a Python package
-* #13599: refactoring and new internal application structure
-* #14661: new :ref:`installation script <setup-script>`
-* #15057: new :ref:`script for building dependencies <build-script>`
-* updated project documentation
+Notable Changes:
+
+* Ganeti Web Manager is now a Python package
+* New installation script!
+* Refactoring and new internal application structure
+* Reworked configuration, with config.yml
+
+Other:
+
+* Added notes field to virtual machines
+* The VM Wizard now has a summary page
+* Updated VNCAuthProxy
+* Updated documentation
 
 v0.10.2
 -------
