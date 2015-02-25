@@ -110,7 +110,9 @@ $(function () {
 
 
     function show_errors() {
-        if (host===false || port===false || password===false) {
+        if (host===false || host===undefined ||
+                port===false || port===undefined ||
+                password===false || password===undefined) {
             connected = false;
             vnc_status_bar
                 .attr("class", "VNC_status_error")
