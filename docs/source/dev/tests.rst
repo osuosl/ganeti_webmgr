@@ -1,5 +1,53 @@
+:orphan:
+
+.. _testing:
+
 Writing Tests
 =============
+
+Ganeti Web Manager has a fairly complete test suite. New code should have matching tests. Before committing code, run the suite for Ganeti Web Manager and `Object Permissions <http://code.osuosl.org/projects/object-permissions>`_
+
+::
+
+    ./ganeti_webmgr/manage.py test ganeti_web
+    ./ganeti_webmgr/manage.py test object_permissions
+
+
+Clean up after yourself
+'''''''''''''''''''''''
+
+Remember to tear down any resources you set up in your tests. Don't use "YourModel.objects.all().delete()" to clean up your objects; it could be hiding bugs. Clean up exactly the resources you  created.
+
+Test your setups and teardowns
+''''''''''''''''''''''''''''''
+
+To speed up analysis of broken tests, if you have a setUp() or tearDown() in a TestCase, add a   test\_trivial() method which is empty. It will pass if your setUp() and tearDown() work.
+
+Views
+'''''
+
+All views should be thoroughly tested for security, checking to ensure that the proper HTTP      codes are returned.
+
+-  Test Anonymous User access
+-  Test Permission based access
+-  Test Superuser based access
+
+Check for invalid input.
+
+-  missing fields
+-  invalid data for field
+
+Templates & Javascript
+''''''''''''''''''''''
+
+The test suite does not yet include full selenium tests for verifying Javascript functionality.  Some basic tests can be performed using Django's test suite:
+
+-  Check objects in the context: forms, lists of objects, etc.
+-  Check for existence of values in forms.
+
+See :ref:`selenium` for more information on what Selenium can test within GWM.
+
+
 
 Any assert statement will take the optional kwarg of 'msg'. This kwarg
 will be output instead of an error in the test. It is a very useful

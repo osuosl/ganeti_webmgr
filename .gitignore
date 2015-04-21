@@ -4,21 +4,14 @@
 
 # Hidden files
 .*
+!*.gitignore
+!.travis.yml
 
 # All compiled python code
 *.pyc
 
 # Don't ignore the mailmap file
 !.mailmap
-
-# Don't track the top-level settings.py, but do track the internal one.
-settings.py*
-!settings.py.dist
-!ganeti_web/settings.py
-
-# ldap_settings
-ldap_settings.py*
-!ldap_settings.py.dist
 
 # Any sqlite database files created by the project
 *.db
@@ -58,7 +51,6 @@ django
 ganeti_web_layout
 object_log
 object_permissions
-noVNC
 haystack
 twisted_vncauthproxy
 
@@ -67,11 +59,12 @@ venv
 env
 bin
 dependencies
-include
 lib
 local
 pysqlite2-doc
 build
+dist
+*.egg-info
 
 # whoosh index files (used by haystack search)
 whoosh_index

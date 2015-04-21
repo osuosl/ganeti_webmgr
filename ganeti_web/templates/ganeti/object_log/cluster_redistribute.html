@@ -1,9 +1,0 @@
-    {% if log_item.object_id2 %}
-        <a href="{% url job-detail data.cluster_slug data.job_id %}">Job #{{ data.job_id }}</a> -
-    {% endif %}
-    {% if user.is_superuser %}
-        <a href="{{ log_item.user.get_absolute_url }}">{{log_item.user}}</a>
-    {% else %}
-        {{ log_item.user }}
-    {% endif %}
-redistributed cluster <a href="{% url cluster-detail cluster_slug %}">{{data.hostname}}</a>'s master node configuration to all other nodes

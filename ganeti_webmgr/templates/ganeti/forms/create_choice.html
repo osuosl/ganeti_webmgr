@@ -1,0 +1,16 @@
+{% load i18n %}
+{% spaceless %}
+{% with vm=vm|default:"Virtual Machine" owner=summary.owner_form %}
+  {% if wizard.steps.step0 < 2%}
+      {% blocktrans %}Template and/or {{vm}} {% endblocktrans %}
+  {% else %}
+      {% if owner.template_name and owner.hostname %}
+        {% blocktrans %}{{vm}} and Template {% endblocktrans %}
+      {% elif owner.hostname %}
+        {% trans vm %}
+      {% elif owner.template_name %}
+        {% trans "Template" %}
+      {% endif %}
+  {% endif %}
+{% endwith %}
+{% endspaceless %}

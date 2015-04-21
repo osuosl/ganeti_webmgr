@@ -1,0 +1,21 @@
+include AUTHORS.rst
+include CHANGELOG.rst
+include CONTRIBUTING.rst
+include COPYING
+include LICENSE
+include LICENSE.muddle
+include README.rst
+include ganeti_webmgr/ganeti_web/settings/settings.py.dist
+recursive-include ganeti_webmgr/locale *
+recursive-include ganeti_webmgr/muddle/shots/templates/shots/tests *
+recursive-include ganeti_webmgr/muddle/static *
+recursive-include ganeti_webmgr/muddle/templates *
+recursive-include ganeti_webmgr/muddle_users/templates *
+recursive-include ganeti_webmgr/static *
+recursive-include ganeti_webmgr/templates *
+recursive-include ganeti_webmgr/utils/hooks *
+recursive-include ganeti_webmgr/ganetiviz/static *
+recursive-include ganeti_webmgr/ganetiviz/templates *
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+

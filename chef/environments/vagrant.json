@@ -1,0 +1,46 @@
+{
+  "name": "vagrant",
+  "default_attributes": {
+    "mysql": {
+      "server_root_password": "rootpass",
+      "server_debian_password": "debpass",
+      "server_repl_password": "replpass",
+      "allow_remote_root": true
+    },
+    "ganeti_webmgr": {
+      "revision": "develop",
+      "debug": true,
+      "migrate": true,
+      "database": {
+        "name": "ganeti_webmgr",
+        "user": "vagrant",
+        "password": "vagrant",
+        "host": "localhost",
+        "port": 3306
+      },
+      "apache": {
+        "server_aliases": ["localhost"]
+      },
+      "db_server": {
+        "password": "rootpass"
+      },
+      "superusers": [
+        {
+          "username": "admin",
+          "email": "admin@example.org",
+          "password": "password"
+        }
+      ],
+      "secret_key": "this_is_16_bits!",
+      "web_mgr_api_key": "super_secret_api_key",
+      "hostsfile": {
+        "33.33.33.10": "ganeti.example.org",
+        "33.33.33.11": "node1.example.org",
+        "33.33.33.12": "node2.example.org",
+        "33.33.33.13": "node3.example.org"
+      }
+    }
+  },
+  "chef_type": "environment",
+  "json_class": "Chef::Environment"
+}

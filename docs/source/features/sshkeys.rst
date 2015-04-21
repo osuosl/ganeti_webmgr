@@ -6,7 +6,7 @@ SSH Keys
 .. todo::
    This really needs to be tested and updated. I (Trevor) have never
    personally worked with ssh keys, or tested getting them to the
-   server. Our internal script might also be different.
+   server.  Our internal script might also be different.
 
 Ganeti Web Manager allows users to store SSH Keys. Each virtual machine
 has a view that will return SSH keys for users with access.
@@ -35,9 +35,9 @@ authorized\_keys files
 
 ::
 
-    $ python util/sshkeys.py [-c CLUSTER [-i INSTANCE]] API_KEY URL
+    $ python util/sshkeys.py [-c CLUSTER [-i INSTANCE]] WEB_MGR_API_KEY URL
 
--  **API\_KEY** is the value set in **settings.py**
+-  **WEB\_MGR\_API\_KEY** is the value set in ``config.yml`` settings file
 -  **URL** is a URL pointing to the GWM server
 -  **CLUSTER** is the identifier of a cluster
 -  **INSTANCE** is the hostname of an instance
@@ -56,11 +56,10 @@ the list of users to either a **Cluster** or a **VirtualMachine**.
 SSH Keys Ganeti hook
 --------------------
 
-If you want your VMs to automatically copy the ssh keys from GWM, then
-you can use the included ssh keys ganeti hook found in
-**util/hooks/sshkeys.sh**. Copy that file onto every node in your
-cluster in the hooks directory for the instance definition you're using
-(i.e. ganeti-debootstrap). Copy and set the variables in
-**util/hooks/sshkeys.conf** into the variant config and/or the
-instance definition config file. Make sure that the hook is executable
-and all the variables are set include changing the API Key.
+If you want your VMs to automatically copy the ssh keys from GWM, then you can
+use the included ssh keys ganeti hook found in ``util/hooks/sshkeys.sh``.  Copy
+that file onto every node in your cluster in the hooks directory for the
+instance definition you're using (i.e. ganeti-debootstrap).  Copy and set the
+variables in ``util/hooks/sshkeys.conf`` into the variant config and/or the
+instance definition config file.  Make sure that the hook is executable and
+all the variables are set include changing the API Key.

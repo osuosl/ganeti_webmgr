@@ -1,0 +1,3 @@
+source "http://api.berkshelf.com"
+
+cookbook 'ganeti_webmgr', github: "osuosl-cookbooks/ganeti_webmgr"

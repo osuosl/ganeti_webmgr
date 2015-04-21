@@ -1,0 +1,181 @@
+# Copyright (C) 2010 Oregon State University et al.
+# Copyright (C) 2010 Greek Research and Technology Network
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
+# USA.
+
+# Django settings for ganeti_webmgr project.
+
+
+from .helpers import ugettext
+
+DEBUG = True
+TEMPLATE_DEBUG = DEBUG
+
+
+# -- Testing Configuration ---------------------------------------------------
+# Enable if running unit tests. Disable to prevent test models syncing to DB
+TESTING = False
+# Setting this to False disables south migrations when running tests.
+SOUTH_TESTS_MIGRATE = False
+SKIP_SOUTH_TESTS = True
+# -- End Testing Configuration -----------------------------------------------
+
+
+# -- Management settings -----------------------------------------------------
+ADMINS = (
+    # ('Your Name', 'your_email@example.com'),
+)
+
+MANAGERS = ADMINS
+# -- End Management settings -------------------------------------------------
+
+
+
+# -- Database Configuration --------------------------------------------------
+DATABASES = {
+    'default': {
+        # Add 'postgresql_psycopg2', 'postgresql', 'mysql',
+        # 'sqlite3' or 'oracle'.
+        'ENGINE': 'django.db.backends.sqlite3',
+
+        # Or path to database file if using sqlite3.
+        'NAME': '/opt/ganeti_webmgr/ganeti.db',
+        'USER': '',      # Not used with sqlite3.
+        'PASSWORD': '',  # Not used with sqlite3.
+        'HOST': '',      # Set to empty string for localhost.
+                         # Not used with sqlite3.
+        'PORT': '',      # Set to empty string for default.
+                         # Not used with sqlite3.
+    }
+}
+# -- End Database Configuration ----------------------------------------------
+
+
+# -- Locale Configuration ----------------------------------------------------
+# http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
+TIME_ZONE = 'America/Los_Angeles'
+DATE_FORMAT = "d/m/Y"
+DATETIME_FORMAT = "d/m/Y H:i"
+
+LANGUAGES = (
+    # ('yourlang', ugettext('YOUR LANGUAGE')),
+    ('el', ugettext('Greek')),
+    ('en', ugettext('English')),
+)
+
+# Language code for this installation. All choices can be found here:
+# http://www.i18nguy.com/unicode/language-identifiers.html
+LANGUAGE_CODE = 'en-US'
+# -- End Locale Configuration ------------------------------------------------
+
+
+# Site name and domain referenced by some modules to provide links back to
+#  the site.
+SITE_NAME = 'Ganeti Web Manager'
+SITE_DOMAIN = 'localhost:8000'
+
+# Enable i18n (translations) and l10n (locales, currency, times).
+# You really have no good reason to disable these unless you are only
+# going to be using GWM in English.
+USE_I18N = True
+
+# If you set this to False, Django will not format dates, numbers and
+# calendars according to the current locale
+USE_L10N = True
+
+# prefix used for the site.  ie. http://myhost.com/<SITE_ROOT>
+# for the django standalone server this should be ''
+# for apache this is the url the site is mapped to, probably /tracker
+SITE_ROOT = ''
+
+# Absolute path to the directory that holds media.
+# Example: "/home/media/media.lawrence.com/"
+STATIC_ROOT = "/opt/ganeti_webmgr/collected_static"
+
+# URL that handles the media served from STATIC_ROOT.
+# XXX contrary to django docs, do not use a trailling slash.  It makes urls
+# using this url easier to read.  ie.  {{STATIC_URL}}/images/foo.png
+STATIC_URL = '%s/static' % SITE_ROOT
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    # 'django_auth_ldap.backend.LDAPBackend',
+    'object_permissions.backend.ObjectPermBackend',
+)
+
+
+# -- Registration Settings ---------------------------------------------------
+ACCOUNT_ACTIVATION_DAYS = 7
+
+# Email settings for registration
+EMAIL_HOST = "localhost"
+EMAIL_PORT = "25"
+# DEFAULT_FROM_EMAIL = "noreply@example.org"
+
+# Whether users should be able to create their own accounts.
+# False if accounts can only be created by admins.
+ALLOW_OPEN_REGISTRATION = True
+# -- End Registration Settings -----------------------------------------------
+
+# Path to where haystack keeps the index files for search
+HAYSTACK_WHOOSH_PATH = '/opt/ganeti_webmgr/whoosh_index'
+
+# GWM Specifics
+
+# Ganeti Cached Cluster Objects Timeouts
+#    LAZY_CACHE_REFRESH (milliseconds) is the fallback cache timer that is
+#    checked when the object is instantiated. It defaults to 600000ms, or ten
+#    minutes.
+LAZY_CACHE_REFRESH = 600000
+
+# VNC Proxy. This will use a proxy to create local ports that are forwarded to
+# the virtual machines.  It allows you to control access to the VNC servers.
+#
+# Expected values:
+#   String syntax: "HOST:CONTROL_PORT", for example: "localhost:8888". If
+#   localhost is used then the proxy will only be accessible to clients and
+#   browsers on localhost. Production servers should use a publicly accessible
+#   hostname or IP
+#
+# Firewall Rules:
+#   Control Port: 8888, must be open between Ganeti Web Manager and Proxy
+#   Internal Ports: 12000+ must be open between the Proxy and Ganeti Nodes
+#   External Ports: default is 7000-8000, must be open between Proxy and Client
+#   Flash Policy Server: 843, must open between Proxy and Clients
+VNC_PROXY = 'localhost:8888'
+
+# PyCurls default TIMEOUT in 7.21.6 defaults to 13 and CONNECTTIMEOUT to 78.
+# This is way too long to wait for incorrect or unresponsive ganeti clusters
+# when using the rapi for syncing and querying.
+RAPI_CONNECT_TIMEOUT = 3
+
+# Used for CSRF protection. Use a 16 or 32 bit random string here.
+# Do not share this with anyone.
+# Make this unique, and don't share it with anybody.
+
+# Uncomment the line below
+# SECRET_KEY = "random_string_of_numbers_and_letters"
+
+# API Key for authenticating scripts that pull information from ganeti, such as
+# list of sshkey's to assign to a virtual machine
+#
+# XXX this is a temporary feature that will eventually be replaced by a system
+#     that automatically creates keys per virtual machine. This is just a quick
+#     way of enabled a secure method to pull sshkeys from ganeti web manager
+
+# Uncomment the line below
+# WEB_MGR_API_KEY = "random_string_of_numbers_and_letters"
+
