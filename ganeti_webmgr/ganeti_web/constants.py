@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-VERSION = '0.11.0'
+VERSION = '0.11.1rc1'
 OWNER_TAG = 'gwm:owner:'
 
 # Form Constants
