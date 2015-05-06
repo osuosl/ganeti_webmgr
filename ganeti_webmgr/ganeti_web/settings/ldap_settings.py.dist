@@ -20,6 +20,12 @@
 import ldap
 from django_auth_ldap.config import LDAPSearch, GroupOfNamesType
 
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'django_auth_ldap.backend.LDAPBackend',
+    'object_permissions.backend.ObjectPermBackend',
+)
+
 ## Enable Logging
 # If you need to debug your configuration, see:
 #     http://packages.python.org/django-auth-ldap/#logging
@@ -40,6 +46,7 @@ __all__ = (
     'AUTH_LDAP_BIND_AS_AUTHENTICATING_USER',
     'AUTH_LDAP_REQUIRE_GROUP',
     'AUTH_LDAP_DENY_GROUP',
+    'AUTHENTICATION_BACKENDS',
 )
 
 # The URI of the LDAP server. This can be any URI that is supported by
