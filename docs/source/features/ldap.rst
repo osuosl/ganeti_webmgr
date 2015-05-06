@@ -1,10 +1,6 @@
 LDAP
 ====
 
-.. todo::
-  Update to reflect recent changes in installation.  Update installation script
-  so that it installs LDAP for end users too.
-
 .. versionadded:: 0.10
 
 Ganeti Web Manager supports LDAP authentication through the use of
@@ -35,6 +31,7 @@ To deploy Ganeti Web Manager with LDAP
 
    ::
 
+      $ cd ganeti_webmgr/ganeti_web/settings
       $ cp ldap_settings.py.dist ldap_settings.py
 
 #. Change `ldap_settings.py` to fit your LDAP configuration.
@@ -50,24 +47,24 @@ To deploy Ganeti Web Manager with LDAP
        `django-auth-ldap`_ documentation.
 
 
-#. Run the fabric command to enable LDAP in settings::
+#. Install the LDAP-specific requirements.
 
-   $ fab ldap
+  ::
 
-``fab ldap`` installs `django-auth-ldap`_ and `python-ldap`_ and takes
-care of the commenting and uncommenting the lines in settings.py that
-handle LDAP imports.
+    $ pip install -r requirements/ldap.txt # in root of repository
 
 Disabling
 ---------
 If you would like to later disable LDAP support, all that is required is
-to run::
+to remove your ldap_settings file::
 
-   $ fab ldap:disable
+   $ cd ganeti_webmgr/ganeti_web/settings
+   $ rm ldap_settings.py
 
 .. note::
-    This will remove `django-auth-ldap`_ and `python-ldap`_ but will not
-    remove the system specific dependencies.
+    This will not remove `django-auth-ldap`_ and `python-ldap`_, nor the
+    the system specific dependencies. If you want to remove these, use pip
+    and your system's package manager.
 
 .. _python-ldap: http://www.python-ldap.org/doc/html/index.html
 .. _django-auth-ldap: http://pythonhosted.org/django-auth-ldap/
