@@ -26,11 +26,21 @@ Next you want to create a vhost which will contain the Apache settings that will
 point to our Django app. The following is an example which assumes you have
 installed |gwm| to the default location in ``/opt/ganeti_webmgr``, and that your
 running python 2.6. Replace the locations with where you've actually installed
-it to, and replace python2.6 with the version of python your using.
+it to, and replace python2.6 with the version of python you're using.
+
+The following is an example Apache configuration for Apache 2.4:
 
 .. _apache_conf:
 
 .. literalinclude:: apache.conf
+    :language: apache
+
+If you're running an older version of Apache, ``Require all granted`` isn't
+supported, so you'll need to do the following:
+
+.. _apache22_conf:
+
+.. literalinclude:: apache22.conf
     :language: apache
 
 ``WSGIDaemonProcess``:
