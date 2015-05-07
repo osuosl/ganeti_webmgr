@@ -30,9 +30,9 @@ it to, and replace python2.6 with the version of python you're using.
 
 The following is an example Apache configuration for Apache 2.4:
 
-.. _apache_conf:
+.. _apache24_conf:
 
-.. literalinclude:: apache.conf
+.. literalinclude:: apache24.conf
     :language: apache
 
 If you're running an older version of Apache, ``Require all granted`` isn't
