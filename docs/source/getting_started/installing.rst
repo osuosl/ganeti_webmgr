@@ -71,9 +71,16 @@ VNC AuthProxy startup script
 AuthProxy, which comes with |gwm|.
 
 VNC AuthProxy can be set up to start on boot if wanted. To do so, it is
-necessary to set up an *init.d* script to manage the daemon. These vary by
-platform, so depending on what kind of system you are running |gwm| on, you'll
-need to select either the CentOS or Ubuntu/Debian script.
+necessary to set up an init script to manage the daemon. These vary by
+platform, so depending on what kind of system you are running |gwm| on, there are
+a few choices.
+
+CentOS and Ubuntu
+~~~~~~~~~~~~~~~~~
+
+.. important::
+   These scripts were written for CentOS 6.5 and Ubuntu 12.04.
+
 
 If you are running CentOS, copy the file ``scripts/vncauthproxy/init-centos``
 to ``/etc/init.d/vncauthproxy`` and install the service::
@@ -81,7 +88,7 @@ to ``/etc/init.d/vncauthproxy`` and install the service::
     $ sudo cp /path/to/gwm/source/scripts/vncauthproxy/init-centos /etc/init.d/vncauthproxy
     $ sudo chkconfig --add vncauthproxy
 
-Otherwise, if you are running Debian or Ubuntu, copy the file
+Otherwise, if you are running Ubuntu, copy the file
 ``scripts/vncauthproxy/init-ubuntu`` to ``/etc/init.d/vncauthproxy`` and
 install the service::
 
@@ -91,6 +98,22 @@ install the service::
 The ``vncauthproxy`` service is installed and can be started::
 
     $ sudo service vncauthproxy start
+
+systemd
+~~~~~~~
+
+For systems running ``systemd``, a basic systemd script has been provided by Adam at
+the Georgia Tech Information Security Center. It has been tested on Debian 8.
+
+Copy the file ``scripts/vncauthproxy/init-systemd`` to
+``/lib/systemd/system/vncauthproxy.service`` and enable the service::
+
+    $ sudo cp /path/to/gwm/scripts/vncauthproxy/init-systemd /lib/systemd/system/vncauthproxy.service
+    $ sudo systemctl enable vncauthproxy
+
+The script does not currently support variables, so if you want VNC AuthProxy
+to listen on a different port or interface, or your installation does not live
+in ``/opt/ganeti_webmgr/``, you will need to edit the service file directly.
 
 Minimum Configuration
 ---------------------
