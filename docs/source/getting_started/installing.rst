@@ -102,8 +102,8 @@ The ``vncauthproxy`` service is installed and can be started::
 systemd
 ~~~~~~~
 
-For systems running ``systemd``, a basic systemd script has been provided by Adam at
-the Georgia Tech Information Security Center. It has been tested on Debian 8.
+For systems running ``systemd``, a basic systemd script is provided. It
+has been tested on Debian 8.
 
 Copy the file ``scripts/vncauthproxy/init-systemd`` to
 ``/lib/systemd/system/vncauthproxy.service`` and enable the service::
@@ -111,9 +111,12 @@ Copy the file ``scripts/vncauthproxy/init-systemd`` to
     $ sudo cp /path/to/gwm/scripts/vncauthproxy/init-systemd /lib/systemd/system/vncauthproxy.service
     $ sudo systemctl enable vncauthproxy
 
-The script does not currently support variables, so if you want VNC AuthProxy
-to listen on a different port or interface, or your installation does not live
-in ``/opt/ganeti_webmgr/``, you will need to edit the service file directly.
+The script supports variables for PIDFILE, LOGFILE, PORT, and INTERFACE, which
+can be set in '/etc/defaults/vncauthproxy'.
+
+To set the location of the ``twistd`` daemon to somewhere other than
+``/opt/ganeti_webmgr/bin/twistd``, it is at this time necessary to modify the
+service file directly.
 
 Minimum Configuration
 ---------------------

@@ -1,11 +1,16 @@
 [Unit]
-Description=VNC Auth Proxy
+Description=VNC AuthProxy
 After=network.target auditd.service
 
 [Service]
-ExecStart=/opt/ganeti_webmgr/bin/twistd --pidfile=/var/run/vncauthproxy/proxy.pid --logfile=/var/log/vncauthproxy/proxy.log vncap -c tcp:8888:interface=0.0.0.0
-PIDFile=/var/run/vncauthproxy/proxy.pid
+Environment='PIDFILE=/var/run/vncauthproxy/proxy.pid'
+Environment='LOGFILE=/var/log/vncauthproxy/proxy.log'
+Environment='PORT=8888'
+Environment='INTERFACE=0.0.0.0'
+EnvironmentFile=-/etc/default/vncauthproxy
+ExecStart=/opt/ganeti_webmgr/bin/twistd --pidfile=${PIDFILE} --nodaemon --logfile=${LOGFILE} vncap -c tcp:${PORT}:interface=${INTERFACE}
 
 [Install]
 WantedBy=multi-user.target
 Alias=vncauthproxy.service
+~
