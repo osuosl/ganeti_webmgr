@@ -2,6 +2,19 @@
 
 .. _testing:
 
+Running Tests
+=============
+
+Ganeti Web Manager has a fairly complete test suite. Running the test suite is fairly simple, but there are a few things to keep in mind.
+
+To start testing, set TESTING in your settings to True. After that, you can just run the test suite::
+
+    django-admin.py test
+
+(The above command assumes you've set the DJANGO_SETTINGS_MODULE environment variable as detailed in the configuration documentation.)
+
+Every time |gwm| is pushed to Github, the Travis CI testing tool automatically runs every test in the suite, and marks the push as working or not.
+
 Writing Tests
 =============
 
