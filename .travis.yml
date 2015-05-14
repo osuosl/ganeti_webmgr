@@ -7,12 +7,11 @@ install:
 # command to run tests
 script: django-admin.py test
 env:
-  - DJANGO_SETTINGS_MODULE="ganeti_webmgr.ganeti_web.settings"
-  - GWM_CONFIG_DIR=`pwd`
+  - DJANGO_SETTINGS_MODULE="ganeti_webmgr.ganeti_web.settings" GWM_CONFIG_DIR=`pwd`
 before_script:
   - cp ganeti_webmgr/ganeti_web/settings/config.yml.dist `pwd`/config.yml
-  - echo "DEBUG: true" >> `pwd`/config.yml
-  - echo "TESTING: true" >> `pwd`/config.yml
+  - echo "DEBUG\: true" >> `pwd`/config.yml
+  - echo "TESTING\: true" >> `pwd`/config.yml
   # throwaway keys
-  - echo "SECRET_KEY: \"f4iIZ1CTjeLvL3LEhf7m2TnhmIgmeOi1ZuooQ7OOdY\"" >> `pwd`/config.yml
-  - echo "WEB_MGR_API_KEY: \"Sfi7l83bjlGyYUBF4pIp/2vumfwPA+Lwz2ztu32LQ2k\"" >> `pwd`/config.yml
+  - echo "SECRET_KEY\: \"f4iIZ1CTjeLvL3LEhf7m2TnhmIgmeOi1ZuooQ7OOdY\"" >> `pwd`/config.yml
+  - echo "WEB_MGR_API_KEY\: \"Sfi7l83bjlGyYUBF4pIp/2vumfwPA+Lwz2ztu32LQ2k\"" >> `pwd`/config.yml
