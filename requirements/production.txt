@@ -3,7 +3,7 @@ django-fields==0.2.1
 django-haystack==1.2.1
 django-registration>=0.7,<0.8
 django-tables2==0.13.0
-requests==1.2.3
+requests>=2.7,<2.8
 simplejson==3.3.0
 South==0.8.4
 Whoosh==1.8.1
