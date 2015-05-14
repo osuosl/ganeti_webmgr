@@ -83,6 +83,22 @@ To install the GWM application for development work, please see :ref:`developer_
 
 In addition, use of |gwm| requires a Ganeti Cluster. For instructions on setting up a test cluster with Vagrant, see :ref:`test_cluster`.
 
+Alternatively, |gwm| now comes with a Dockerfile. This allows developers to use `Docker <http://www.docker.com/>`_ to quickly run their code without needing to deal with setup and virtual machines. For now, the included Docker setup does not set up a Ganeti Cluster, for this, Vagrant is still needed.
+
+To use Docker, simply build the included Dockerfile::
+
+    $ docker build -t="osuosl/ganeti_webmgr:dev" .
+
+Then, just create a Docker container from the image::
+
+    $ docker run -it -p 8000:8000 osuosl/ganeti_webmgr:dev
+
+|gwm| can now be accessed on ``http://localhost:8000``. To change the port that it runs on, the first number in the above command can be changed to the port of choice.
+
+Some developers may prefer to mount their copy of the application as a volume when they run the app. This removes the need to rebuild the Docker image each time the code is changed, and can be done as follows::
+
+    $ docker run -v /path/to/code/:/opt/ganeti_webmgr -it -p 8000:8000 osuosl/whats_fresh:dev
+
 
 Repository Layout
 -----------------
