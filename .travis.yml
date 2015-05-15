@@ -15,3 +15,4 @@ before_script:
   # throwaway keys
   - "echo \"SECRET_KEY: \"f4iIZ1CTjeLvL3LEhf7m2TnhmIgmeOi1ZuooQ7OOdY\"\" >> `pwd`/config.yml"
   - "echo \"WEB_MGR_API_KEY: \"Sfi7l83bjlGyYUBF4pIp/2vumfwPA+Lwz2ztu32LQ2k\"\" >> `pwd`/config.yml"
+  - "sed -i \"s@/opt/ganeti_webmgr@`pwd`@g\" config.yml"
