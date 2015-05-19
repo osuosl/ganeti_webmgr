@@ -1,12 +1,8 @@
 #!/bin/bash
 
-PARENT_BRANCH='develop'
+PARENT_BRANCH='origin/develop'
 
 DOC_PATTERNS_LIST=( 'docs/' 'README' 'CHANGELOG' )
-
-# The parent branch may not be present on Travis. Fetch it so we can compare
-# our differences with git rev-list
-git fetch origin $PARENT_BRANCH
 
 CHANGED_FILES=`git rev-list HEAD ^$PARENT_BRANCH | xargs git show --pretty="format:" --name-only`
 
