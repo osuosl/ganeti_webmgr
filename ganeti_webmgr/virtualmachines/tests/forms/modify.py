@@ -286,7 +286,6 @@ class TestHvmModifyVirtualMachineForm(ModifyVirtualMachineFormTestCase):
         for field in form.Meta.exclude:
             self.assertFalse(field in form.fields, field)
 
-    @unittest.skip("Skipping broken")
     def test_field_initial_values(self):
         """
         Test that fields contain the correct initial values taken from a vm.
