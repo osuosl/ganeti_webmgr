@@ -4,6 +4,10 @@ PARENT_BRANCH='develop'
 
 DOC_PATTERNS_LIST=( 'docs/' 'README' 'CHANGELOG' )
 
+# The parent branch may not be present on Travis. Fetch it so we can compare
+# our differences with git rev-list
+git fetch $PARENT_BRANCH
+
 CHANGED_FILES=`git rev-list HEAD ^$PARENT_BRANCH | xargs git show --pretty="format:" --name-only`
 
 for PATTERN in "${DOC_PATTERNS_LIST[@]}"; do
