@@ -7,7 +7,7 @@ install:
 # command to run tests
 script:
   - django-admin.py test
-  - bash ../scripts/travis-check-docs.bash
+  - bash ./scripts/travis-check-docs.bash
 env:
   - DJANGO_SETTINGS_MODULE="ganeti_webmgr.ganeti_web.settings" GWM_CONFIG_DIR=`pwd`
 before_script:
