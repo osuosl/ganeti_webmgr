@@ -1040,7 +1040,7 @@ class VMWizardHVMForm(Form):
             return
 
         self.cluster = cluster
-        params = cluster.info["hvparams"]["xen-pvm"]
+        params = cluster.info["hvparams"]["xen-hvm"]
 
         self.fields["boot_order"].initial = params["boot_order"]
         self.fields["disk_type"].initial = params["disk_type"]

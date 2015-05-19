@@ -15,6 +15,9 @@ Core Contributors
 * Rob McGuire-Dale (``robatron``) - rob@osuosl.org
 * Emily Dunham (``edunham``) - edunham@osuosl.org
 * Jonah Brooks (``brookjon``) - brookjon@osuosl.org
+* Chance Zibolski (``ecnahc515``) - chance@osuosl.org
+* Evan Tschuy (``tschuy``) - tschuy@osuosl.org
+* Ian Kronquist (``radens``) - iankronquist@osuosl.org
 
 
 Google Summer of Code 2013
