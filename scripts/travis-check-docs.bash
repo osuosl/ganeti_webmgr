@@ -38,7 +38,7 @@ DOC_MATCHES=( 'docs/' 'README' 'CHANGELOG' )
 # rev-list shows the revisions which appear between the first and second
 # parents of the branch. We then run get show on each revision to list the
 # files which changed.
-CHANGED_FILES=`git rev-list $PARENT_1 ^$PARENT_2 | xargs git show --pretty="format:" --name-only`
+CHANGED_FILES=`git rev-list $PARENT_2 ^$PARENT_1 | xargs git show --pretty="format:" --name-only`
 
 # Now, for each file/directory in the list of documentation mateches, check to
 # to see if it is in the list of changed files. If it matches, we know that a
