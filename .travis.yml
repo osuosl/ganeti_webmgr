@@ -5,7 +5,7 @@ python:
 install:
   - "python setup.py develop"
 # command to run tests
-script: django-admin.py test
+script: pip freeze && cat config.yml; python -c 'import ganeti_webmgr.ganeti_web.settings; print dir(ganeti_webmgr.ganeti_web.settings)'; django-admin.py test
 env:
   - DJANGO_SETTINGS_MODULE="ganeti_webmgr.ganeti_web.settings" GWM_CONFIG_DIR=`pwd`
 before_script:
