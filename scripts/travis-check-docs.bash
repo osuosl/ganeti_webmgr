@@ -22,14 +22,18 @@
 #   $ git fetch origin +refs/pull/36/merge:
 #   $ git checkout -qf FETCH_HEAD
 
-
+PREV_COMMIT=`git rev-list --parents HEAD -n 1`
+if [[ `$PREV_COMMIT | wc -w`  < 3 ]]; then
+	echo "This is a Push, not a PR. Not checking for docs."
+	exit 0
+fi
 
 # The rev-list command with our arguments lists the current commit, and since
 # this is a merge commit (since it's on Travis) the fist hash is the current
 # commit, the second is the first parent, and the third is the second parent.
 # We get the right hashes with cut.
-PARENT_1=`git rev-list --parents HEAD -n 1 | cut -f2 -d' '`
-PARENT_2=`git rev-list --parents HEAD -n 1 | cut -f3 -d' '`
+PARENT_1=`$PREV_COMMIT | cut -f2 -d' '`
+PARENT_2=`$PREV_COMMIT | cut -f3 -d' '`
 
 # This is a list of files or directories which are documentation.
 DOC_MATCHES=( 'docs/' 'README' 'CHANGELOG' )
