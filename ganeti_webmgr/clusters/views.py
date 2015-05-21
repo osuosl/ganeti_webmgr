@@ -371,13 +371,14 @@ def ssh_keys(request, cluster_slug, api_key):
     for vm in cluster.virtual_machines.all():
         users = users.union(set(get_users_any(vm)
                             .values_list('id', flat=True)))
-
     keys = SSHKey.objects \
         .filter(Q(user__in=users) | Q(user__is_superuser=True)) \
         .values_list('key', 'user__username') \
         .order_by('user__username')
 
     keys_list = list(keys)
+    print users, keys_list
+
     return HttpResponse(json.dumps(keys_list), mimetype="application/json")
 
 
