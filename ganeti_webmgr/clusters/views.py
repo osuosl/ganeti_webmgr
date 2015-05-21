@@ -368,6 +368,7 @@ def ssh_keys(request, cluster_slug, api_key):
     cluster = get_object_or_404(Cluster, slug=cluster_slug)
 
     users = set(get_users_any(cluster).values_list("id", flat=True))
+    print get_users_any(cluster)
     for vm in cluster.virtual_machines.all():
         users = users.union(set(get_users_any(vm)
                             .values_list('id', flat=True)))
@@ -377,6 +378,9 @@ def ssh_keys(request, cluster_slug, api_key):
         .order_by('user__username')
 
     keys_list = list(keys)
+    print "SSHKey.objects.all()"
+    for key in SSHKey.objects.all():
+        print key.key, key.user
     print users, keys_list
 
     return HttpResponse(json.dumps(keys_list), mimetype="application/json")
