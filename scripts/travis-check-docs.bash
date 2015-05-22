@@ -23,7 +23,7 @@
 #   $ git checkout -qf FETCH_HEAD
 
 PREV_COMMIT=`git rev-list --parents HEAD -n 1`
-if [[ `$PREV_COMMIT | wc -w`  =~ '2' ]]; then
+if [[ `$PREV_COMMIT | wc -w`  =~ '3' ]]; then
 	echo "This is a Push, not a PR. Not checking for docs."
 	exit 0
 fi
