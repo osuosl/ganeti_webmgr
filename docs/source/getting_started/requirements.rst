@@ -55,14 +55,12 @@ VNCAuthProxy
 ~~~~~~~~~~~~
 
 VNCAuthProxy, is used to connect the VNC web frontend to a Ganeti VM's VNC Console.
-This project is built on twisted and for encryption requires openssl development
-headers.
+This project is built on twisted and for encryption requires openssl and FFI
+development headers.
 
-On CentOS, the package is ``openssl-devel`` and on Ubuntu/Debian its
-``libssl-dev``.
+On CentOS, the OpenSSL package is ``openssl-devel`` and on Ubuntu/Debian its
+``libssl-dev``. The LibFFI package is ``libffi-devel`` on CentOS and ``libffi-dev``
+on Ubuntu/Debian.
 
-If your using the ``setup.sh`` script, you don't need to worry
-about these, however if your building your own wheels packages, or installing
-without the script, these will be needed to compile the required packages on
-your system.
-
+These packages are necessary to install VNCAuthProxy and should be installed
+before the setup script is run.
