@@ -5,7 +5,9 @@ python:
 install:
   - "python setup.py develop"
 # command to run tests
-script: django-admin.py test
+script:
+  - bash ./scripts/travis-check-docs.bash
+  - django-admin.py test clusters authentication jobs nodes utils virtualmachines vm_templates ganetiviz
 env:
   - DJANGO_SETTINGS_MODULE="ganeti_webmgr.ganeti_web.settings" GWM_CONFIG_DIR=`pwd`
 before_script:

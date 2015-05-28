@@ -123,6 +123,9 @@ Code, documentation and internationalization should all be reviewed before being
 - code should be audited for standards compliance (i.e. PEP8)
 - unit tests should be run in a local dev environment to verify there are no failures
 - the features the code effects should be tested by running the application and using those features
+- all new code should be accompanied by documentation. Travis CI will check
+  that the PR contains changes to the docs. If you do not believe that new docs
+  are necessary you may argue so in the PR and we may decide to ignore Travis.
 
   
 Internationalization should be reviewed as code. If the accuracy of translations cannot be confirmed, the code should be reviewed to ensure the correct strings are translated and no errors have been introduced by adding translations to strings.
