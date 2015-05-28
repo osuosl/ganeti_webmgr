@@ -10,10 +10,15 @@
 # Lastly, settings.py is imported if it exists, and it can override settings
 # as well.
 
-
 from .base import *
 from .yaml_config import *
+
 try:
     from .settings import *
+except ImportError:
+    pass
+
+try:
+    from .ldap_settings import *
 except ImportError:
     pass
