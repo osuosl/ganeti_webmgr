@@ -81,6 +81,7 @@ Options:
                                 (unless -N).  If you don't specify it, SQLite
                                 will be assumed the default DB.
   -N                            Don't try to install system dependencies.
+  -p <http proxy url>           Make pip use the HTTP proxy specified
   -w <wheels (local/remote) directory location>
                                 Where wheel packages are stored.  Don't change
                                 this value unless you know what you're doing!
@@ -124,7 +125,7 @@ upgrade=0
 database_server='sqlite'
 
 ### Runtime arguments and help text
-while getopts "hud:D:Nw:" opt; do
+while getopts "hud:D:Nw:p:" opt; do
     case $opt in
         h)
             usage
@@ -162,6 +163,10 @@ while getopts "hud:D:Nw:" opt; do
 
         w)
             base_url="$OPTARG"
+            ;;
+
+        p)
+            pip_proxy="--proxy=$OPTARG"
             ;;
 
         \?)
@@ -290,7 +295,8 @@ fi
 ### updating pip and setuptools to the newest versions, installing wheel
 pip="$install_directory/bin/pip"
 check_if_exists "$pip"
-${pip} install --upgrade setuptools pip wheel
+${pip} install $pip_proxy --upgrade setuptools pip wheel
+echo
 
 # check if successfully upgraded pip and setuptools
 if [ ! $? -eq 0 ]; then
@@ -312,7 +318,7 @@ echo "------------------------------------------------------------------------"
 # WARNING: watch out for double slashes when concatenating these strings!
 url="$base_url/$os/$os_codename/$architecture/"
 
-${pip} install --upgrade --use-wheel --find-link="$url" "$gwm_location"
+${pip} install $pip_proxy --upgrade --use-wheel --find-link="$url" "$gwm_location"
 
 if [ ! $? -eq 0 ]; then
     echo "${txtboldred}Something went wrong. Could not install GWM nor its" \
@@ -328,10 +334,10 @@ fi
 if [ "$database_server" != "sqlite" ]; then
     case $database_server in
         postgresql)
-            ${pip} install --upgrade --use-wheel --find-link="$url" psycopg2
+            ${pip} install $pip_proxy --upgrade --use-wheel --find-link="$url" psycopg2
             ;;
         mysql)
-            ${pip} install --upgrade --use-wheel --find-link="$url" MySQL-python
+            ${pip} install $pip_proxy --upgrade --use-wheel --find-link="$url" MySQL-python
             ;;
     esac
 
