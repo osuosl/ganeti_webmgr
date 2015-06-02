@@ -42,7 +42,7 @@ own, here's the list:
   requires ``psycopg2`` package installed within virtual environment, which in
   turn requires ``libpq5`` on Ubuntu/Debian and ``postgresql-libs`` on CentOS.
 
-If your using the ``setup.sh`` script these database dependencies should be
+If you're using the ``setup.sh`` script these database dependencies should be
 installed for you. But if it runs into errors, these are the dependencies needed.
 
 LDAP

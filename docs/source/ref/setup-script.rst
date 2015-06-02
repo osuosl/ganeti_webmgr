@@ -121,6 +121,14 @@ Command line arguments
     permission to install some system dependencies.
 
 
+.. cmdoption:: -p <http proxy url>
+
+  :default: none
+
+  If you provide an HTTP proxy URL, pip will use this proxy to install all
+  of the required packages.
+
+
 .. cmdoption:: -u <install directory>
 
   :default: ``./ganeti_webmgr``
