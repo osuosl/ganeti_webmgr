@@ -11,11 +11,16 @@ language. |gwm| also supports configuration through ``settings.py``.
 
 .. _`YAML`: http://www.yaml.org/
 
+|gwm| supports ``settings.py`` for those that do not wish to use YAML; however,
+YAML configuration is preferred. The YAML configuration method makes it much
+easier to store settings outside of the project's repository, which makes
+managing settings with a configuration management tool easier and safer.
+
 The YAML configuration file is always named ``config.yml``. You can customize
 the location |gwm| looks for this file by setting the ``GWM_CONFIG_DIR``
 environmental variable. The current default is ``/opt/ganeti_webmgr/config``.
 
-So by default you will need to put your yaml config in
+By default you will need to put your yaml config in
 ``/opt/ganeti_webmgr/config/config.yml``. If you want to customize the location
 you can set ``GWM_CONFIG_DIR`` like so::
 
@@ -32,6 +37,27 @@ When both ``config.yml`` and ``settings.py`` are present, any settings stored in
           in quotes.
 
           Example: ``localhost:8000`` becomes ``"localhost:8000"``.
+
+
+Creating configuration files
+----------------------------
+
+To get started configuring |gwm| with YAML, copy the ``config.yml.dist`` to
+``config.yml`` in the directory where you want your settings::
+
+    $ cp /path/to/gwm/ganeti_webmgr/ganeti_web/settings/config.yml.dist /opt/ganeti_webmgr/config/config.yml
+
+Alternatively, to configure |gwm| with the standard Django ``settings.py``,
+copy ``settings.py.dist`` to ``settings.py`` in the same directory it is in::
+
+    $ cp /path/to/gwm/ganeti_webmgr/ganeti_web/settings/settings.py.dist \
+        /path/to/gwm/ganeti_webmgr/ganeti_web/settings/settings.py
+
+
+LDAP configuration
+------------------
+
+To configure |gwm| to use LDAP, see the :ref:`LDAP <ldap>` documentation.
 
 Databases
 ---------
