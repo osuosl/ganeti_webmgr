@@ -30,6 +30,11 @@ $(function () {
     // won't work for us since document may have been loaded already
     if (!Websock_native) {WebSocket.__initialize();}
 
+    if (location.protocol === 'https:') {
+        encrypt_check.attr('checked',true);
+        encrypt.addClass('enabled');
+    }
+
     var rfb;
     var host, port, password; // VNC proxy connection settings
     var connected = false;
