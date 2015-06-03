@@ -123,6 +123,7 @@ fi
 no_dependencies=0
 upgrade=0
 database_server='sqlite'
+pip_proxy=""
 
 ### Runtime arguments and help text
 while getopts "hud:D:Nw:p:" opt; do
@@ -166,7 +167,7 @@ while getopts "hud:D:Nw:p:" opt; do
             ;;
 
         p)
-            pip_proxy="--proxy=$OPTARG"
+            $pip_proxy="--proxy=$OPTARG"
             ;;
 
         \?)
