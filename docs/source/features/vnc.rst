@@ -54,11 +54,19 @@ servers should use a public hostname or IP.
     # located in your settings file
     VNC_PROXY = 'localhost:8888'
 
+To set up encryption, find where |vncap|'s working directory. This may depend
+on how you have set it set up to automatically start; for instance, with ``runit``,
+it automatically sets the working directory to ``/etc/sv/vncauthproxy``.
+
+You then should put your HTTPS certificate file in ``/path/to/working/dir/keys/vncap.crt``
+and your HTTPS private key in ``/path/to/working/dir/keys/vncap.key``. |vncap| should
+then automatically accept encrypted connections.
+
 Starting the Daemon
 ~~~~~~~~~~~~~~~~~~~
 
 |vncap| is now controlled with an init.d script. To install the script,
-see :ref:`vncauthproxy-script`. 
+see :ref:`vncauthproxy-script`.
 
 Once installed, |vncap| can be controlled with standard service commands.
 You can ``start``, ``stop``, and ``restart`` the service, and get check if the
@@ -122,11 +130,5 @@ environment variable as root::
 
   export set PYTHONPATH=.
 
-
-Known Issues
-------------
-
-While Chrome/Chromium supports websockets, currently |vncap| does not
-work with Chrome/Chromium.
 
 .. |vncap| replace:: VNC AuthProxy
