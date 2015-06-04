@@ -244,8 +244,8 @@ class TestHvmModifyVirtualMachineForm(ModifyVirtualMachineFormTestCase):
 
         self.cluster.info = XEN_INFO.copy()
         self.cluster.info['default_hypervisor'] = 'xen-hvm'
-        self.vm.info = XEN_HVM_INSTANCE.copy()
         self.vm.refresh()
+        self.vm.info = XEN_HVM_INSTANCE.copy()
 
         # data custom to HVM
         self.data['os'] = 'debootstrap+default'
@@ -294,8 +294,6 @@ class TestHvmModifyVirtualMachineForm(ModifyVirtualMachineFormTestCase):
         hvparams = self.vm.info['hvparams']
         form = self.Form(self.vm)
 
-        # print hvparam_fields
-        # print hvparams
         for field in hvparam_fields:
             self.assertEqual(form.fields[field].initial, hvparams[field])
 
