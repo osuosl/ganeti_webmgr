@@ -179,16 +179,13 @@ INSTALLED_APPS = (
     'ganeti_webmgr.ganetiviz',
 )
 
+# Currently contains only the apps that are being stored as minimized
+#   Bower only has access to jquery-ui 1.8.23 in the 1.8 branch
+#   This version of jquery-ui requires jquery 1.8.3+1
 BOWER_INSTALLED_APPS = (
-    'cytoscape',
-    'jquery',
-    'jquery.cookie',
-    'jquery-form',
-    'jquery-ui',
-    'no-vnc',
-    'qTip2',
-    'raphael',
-    'sizzle',
+    'jquery#1.8.3+1',
+    'jquery-ui#1.8.23',
+    'qTip#1.0.0-rc3',    
 )
 
 ROOT_URLCONF = 'ganeti_webmgr.ganeti_web.urls'
