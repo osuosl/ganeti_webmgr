@@ -12,4 +12,4 @@ VNCAuthProxy==1.1.1
 django-object-log==0.7.1
 django-object-permissions==1.4.6
 pyyaml==3.11
-djangobower==5.0.4
+django-bower==5.0.4
