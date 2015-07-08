@@ -251,6 +251,13 @@ Submitting Code
 
 Please read :ref:`process` for details on how we triage, review and merge contributed code.
 
+`Bower`_ is used to manage javascript dependencies that have previously
+been stored within GWM as minimized files. For more information on how to 
+implement Django-bower, check out their `docs`_.
+
+.. _`Bower`: http://bower.io/
+.. _`docs`: https://django-bower.readthedocs.org/en/latest/
+
 Patches
 '''''''
 
