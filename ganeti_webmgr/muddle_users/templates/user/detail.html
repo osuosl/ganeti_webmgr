@@ -11,7 +11,7 @@
     <style>
     #detail h3 {margin-top:30px;}
     </style>
-    <script src="{{STATIC_URL}}/js/jquery-ui.min.js"></script>
+    <script src="{{STATIC_URL}}/jquery-ui/jquery-ui.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
             $('#tabs').tabs({
@@ -41,7 +41,7 @@
         <ul id="actions">
             <li><a class="button edit" title="edit user" href="{% url user-edit user_detail.pk %}">{% trans "Edit" %}</a></li>
         </ul>
-        
+
         <table>
         <tr><th>{%trans "Email" %}:</th><td>{{user_detail.email}}</td></tr>
         <tr><th>{% trans "Join Date" %}:</th><td>{{user_detail.date_joined|date}}</td></tr>
