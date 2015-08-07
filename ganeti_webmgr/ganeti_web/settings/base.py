@@ -186,7 +186,7 @@ BOWER_INSTALLED_APPS = (
     'cytoscape',
     'jquery#1.8.3+1',
     'jquery-ui#1.8.23',
-    'qTip#1.0.0-rc3',    
+    'qTip#1.0.0-rc3',
     'tablesorter',
 )
 
@@ -253,6 +253,8 @@ def create_secrets(folder='.secrets'):
             with open(api_key_file, "r") as f:
                 WEB_MGR_API_KEY = f.read().strip()
 
+        return SECRET_KEY, WEB_MGR_API_KEY
+
     except (IOError, OSError):
         action = 'create' if secret_key_file_exists else 'open'
         msg = ("Unable to %s file at %s. Please either create the file and "
@@ -260,4 +262,6 @@ def create_secrets(folder='.secrets'):
                "set the SECRET_KEY setting in %s.")
         print msg % (action, secret_key_file, CONFIG_PATH)
 
-create_secrets()
+secrets = create_secrets()
+if secrets:
+    SECRET_KEY, WEB_MGR_API_KEY = secrets
