@@ -16,8 +16,7 @@ DATABASES:
         NAME: /opt/ganeti_webmgr/ganeti.db
         USER:      # Not used with sqlite3.
         PASSWORD:  # Not used with sqlite3.
-        HOST:      # Set to empty string for localhost.
-                         # Not used with sqlite3.
+        HOST:      # Not used with sqlite3.
         PORT:      # Set to empty string for default.
                          #Not used with sqlite3.
 ##### End Database Configuration #####
@@ -34,7 +33,7 @@ DATETIME_FORMAT: "d/m/Y H:i"
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
-LANGUAGE_CODE: "en-US"
+LANGUAGE_CODE: "en_US"
 ##### End Locale Configuration #####
 
 # Enable i18n (translations) and l10n (locales, currency, times).
