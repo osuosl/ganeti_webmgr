@@ -225,13 +225,20 @@ if [ $no_dependencies -eq 0 ]; then
     sudo="/usr/bin/sudo"
     check_if_exists "$sudo"
 
+    # debian based build_requirements
+    if [ \( "$os" == "ubuntu" -o "$os" == "debian" \) ]; then
+        build_requirements='python-dev build-essential libffi-dev libssl-dev'
+	else
+		build_requirements='' # fill me in for other platforms
+	fi
+
     # debian based && postgresql
     if [ \( "$os" == "ubuntu" -o "$os" == "debian" \) -a "$database_server" == "postgresql" ]; then
         database_requirements='libpq5'
 
     # debian based && mysql
     elif [ \( "$os" == "ubuntu" -o "$os" == "debian" \) -a "$database_server" == "mysql" ]; then
-        database_requirements='libmysqlclient18'
+        database_requirements='libmysqlclient18 libmysqlclient-dev'
 
     # RHEL based && postgresql
     elif [ \( "$os" == "centos" \) -a "$database_server" == "postgresql" ]; then
@@ -242,9 +249,9 @@ if [ $no_dependencies -eq 0 ]; then
         database_requirements='mysql-libs'
     fi
 
-    ${sudo} ${package_manager} ${package_manager_cmds} python \
-		python-dev build-essential libssl-dev \
-        python-virtualenv ${database_requirements}
+    ${sudo} ${package_manager} ${package_manager_cmds} \
+		${build_requirements} python python-virtualenv \
+		${database_requirements}
 
     # check whether installation succeeded
     if [ ! $? -eq 0 ]; then
