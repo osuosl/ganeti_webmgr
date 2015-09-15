@@ -243,7 +243,7 @@ if [ $no_dependencies -eq 0 ]; then
     fi
 
     ${sudo} ${package_manager} ${package_manager_cmds} python \
-		build-essential libssl-dev \
+		python-dev build-essential libssl-dev \
         python-virtualenv ${database_requirements}
 
     # check whether installation succeeded
