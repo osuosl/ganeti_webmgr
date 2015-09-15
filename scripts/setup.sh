@@ -243,6 +243,7 @@ if [ $no_dependencies -eq 0 ]; then
     fi
 
     ${sudo} ${package_manager} ${package_manager_cmds} python \
+		build-essential libssl-dev \
         python-virtualenv ${database_requirements}
 
     # check whether installation succeeded
@@ -273,7 +274,7 @@ check_if_exists "$venv"
 if [ $upgrade -eq 0 ]; then
     echo "Installing to: $install_directory"
 
-    ${venv} --setuptools --no-site-packages "$install_directory"
+    ${sudo} ${venv} --setuptools --no-site-packages "$install_directory"
     # check if virtualenv has succeeded
     if [ ! $? -eq 0 ]; then
         echo "${txtboldred}Something went wrong. Could not create virtual" \
@@ -296,7 +297,7 @@ fi
 ### updating pip and setuptools to the newest versions, installing wheel
 pip="$install_directory/bin/pip"
 check_if_exists "$pip"
-${pip} install $pip_proxy --upgrade setuptools pip wheel
+${sudo} ${pip} install $pip_proxy --upgrade setuptools pip wheel
 echo
 
 # check if successfully upgraded pip and setuptools
@@ -319,7 +320,7 @@ echo "------------------------------------------------------------------------"
 # WARNING: watch out for double slashes when concatenating these strings!
 url="$base_url/$os/$os_codename/$architecture/"
 
-${pip} install $pip_proxy --upgrade --use-wheel --find-link="$url" "$gwm_location"
+${sudo} ${pip} install $pip_proxy --upgrade --use-wheel --find-link="$url" "$gwm_location"
 
 if [ ! $? -eq 0 ]; then
     echo "${txtboldred}Something went wrong. Could not install GWM nor its" \
@@ -335,10 +336,10 @@ fi
 if [ "$database_server" != "sqlite" ]; then
     case $database_server in
         postgresql)
-            ${pip} install $pip_proxy --upgrade --use-wheel --find-link="$url" psycopg2
+            ${sudo} ${pip} install $pip_proxy --upgrade --use-wheel --find-link="$url" psycopg2
             ;;
         mysql)
-            ${pip} install $pip_proxy --upgrade --use-wheel --find-link="$url" MySQL-python
+            ${sudo} ${pip} install $pip_proxy --upgrade --use-wheel --find-link="$url" MySQL-python
             ;;
     esac
 
@@ -364,7 +365,7 @@ if [ -d "$config_dir" ]; then
     echo "Config directory at $config_dir already exists, not creating it."
 else
     echo "Config directory at $config_dir doesn't exist. Creating it."
-    mkdir -p "$config_dir"
+    ${sudo} mkdir -p "$config_dir"
 
     if [ ! $? -eq 0 ]; then
         echo "Unable to make default config directory at "
