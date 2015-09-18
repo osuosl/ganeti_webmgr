@@ -228,9 +228,11 @@ if [ $no_dependencies -eq 0 ]; then
     # debian based build_requirements
     if [ \( "$os" == "ubuntu" -o "$os" == "debian" \) ]; then
         build_requirements='python-dev build-essential libffi-dev libssl-dev'
-	else
-		build_requirements='' # fill me in for other platforms
-	fi
+
+    # RHEL based build_requirements
+    elif [ \( "$os" == "centos" \) ]; then
+        build_requirements='python-devel libffi-devel openssl-devel gcc'
+    fi
 
     # debian based && postgresql
     if [ \( "$os" == "ubuntu" -o "$os" == "debian" \) -a "$database_server" == "postgresql" ]; then
@@ -250,8 +252,8 @@ if [ $no_dependencies -eq 0 ]; then
     fi
 
     ${sudo} ${package_manager} ${package_manager_cmds} \
-		${build_requirements} python python-virtualenv \
-		${database_requirements}
+        ${build_requirements} python python-virtualenv \
+        ${database_requirements}
 
     # check whether installation succeeded
     if [ ! $? -eq 0 ]; then
