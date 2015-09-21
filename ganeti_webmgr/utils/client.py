@@ -244,12 +244,15 @@ class GanetiRapiClient(object):  # pylint: disable-msg=R0904
         try:
             r = requests.request(method, url, **kwargs)
         except requests.ConnectionError:
+            self._logger.debug("Couldn't connect to %s", self._base_url)
             raise GanetiApiError("Couldn't connect to %s" % self._base_url)
         except requests.Timeout:
+            self._logger.debug("Timed out connecting to %s", self._base_url)
             raise GanetiApiError("Timed out connecting to %s" %
                                  self._base_url)
 
         if r.status_code != requests.codes.ok:
+            self._logger.debug("Unknown error: %s", r.status_code)
             raise GanetiApiError(str(r.status_code), code=r.status_code)
 
         if r.content:
