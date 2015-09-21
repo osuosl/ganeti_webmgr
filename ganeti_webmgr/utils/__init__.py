@@ -19,6 +19,8 @@ def generate_random_password(length=12):
 RAPI_CACHE = {}
 RAPI_CACHE_HASHES = {}
 
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
 if settings.DEBUG:
     logging.basicConfig(filename=settings.RAPI_LOG_FILE, level=logging.DEBUG)
 else:
