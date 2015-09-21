@@ -129,6 +129,9 @@ LOGGING = {
         },
     }
 }
+
+RAPI_LOG_FILE = join(DEFAULT_INSTALL_PATH, "rapi.log")
+
 # -- End Logging Configuration ----------
 
 # Middleware. Order matters; these are all applied *in the order given*.

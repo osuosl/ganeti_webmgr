@@ -1,7 +1,7 @@
+import logging
 import random
 import string
 from collections import defaultdict
-
 from django.conf import settings
 
 from .client import GanetiRapiClient, GanetiApiError
@@ -18,6 +18,12 @@ def generate_random_password(length=12):
 
 RAPI_CACHE = {}
 RAPI_CACHE_HASHES = {}
+
+if settings.DEBUG:
+    logging.basicConfig(filename=settings.RAPI_LOG_FILE, level=logging.DEBUG)
+else:
+    logging.basicConfig(filename=RAPI_LOG_FILE, level=logging.ERROR)
+logger = logging.getLogger('rapi')
 
 
 def get_rapi_client():
@@ -88,7 +94,7 @@ def get_rapi(hash, cluster):
 
     # Set connect timeout in settings.py so that you do not learn patience.
     rapi = rapi_client(host, port, user, password,
-                       timeout=settings.RAPI_CONNECT_TIMEOUT)
+                       timeout=settings.RAPI_CONNECT_TIMEOUT, logger=logger)
     RAPI_CACHE[hash] = rapi
     RAPI_CACHE_HASHES[cluster] = hash
     return rapi

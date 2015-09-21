@@ -83,6 +83,9 @@ HAYSTACK_WHOOSH_PATH: /opt/ganeti_webmgr/whoosh_index
 # The maximum number of items on a single list page
 ITEMS_PER_PAGE: 15
 
+# Where the Ganeti RAPI logs should be outputted when DEBUG is true
+RAPI_LOG_FILE: /opt/ganeti_webmgr/rapi.log
+
 # Ganeti Cached Cluster Objects Timeouts
 #    LAZY_CACHE_REFRESH (milliseconds) is the fallback cache timer that is
 #    checked when the object is instantiated. It defaults to 600000ms, or ten
