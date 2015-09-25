@@ -22,3 +22,9 @@ try:
     from .ldap_settings import *
 except ImportError:
     pass
+
+try:
+    from .raven import *
+    INSTALLED_APPS = update_installed(INSTALLED_APPS)
+except ImportError:
+    pass
