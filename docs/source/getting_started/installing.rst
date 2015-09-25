@@ -158,6 +158,17 @@ or if you prefer, each time you run ``django-admin.py`` you can provided the
 .. Note:: Replace $CMD with the command you actually need to run. Also note that
           the ``--settings`` flag must come after the $CMD being run.
 
+Install Javascript dependencies
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Ganeti Web Manager uses ``bower`` to manage its dependencies. This allows them
+to be easily ugpraded, as well as not requiring keeping them inside the
+repository. To install the dependencies, use ``django-admin``'s bower command::
+
+    $ django-admin.py bower install
+
+The dependencies might take a minute to download and install.
+
 Initialize database
 ~~~~~~~~~~~~~~~~~~~
 
