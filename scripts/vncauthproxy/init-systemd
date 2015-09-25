@@ -13,4 +13,3 @@ ExecStart=/opt/ganeti_webmgr/bin/twistd --pidfile=${PIDFILE} --nodaemon --logfil
 [Install]
 WantedBy=multi-user.target
 Alias=vncauthproxy.service
-~
