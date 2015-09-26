@@ -106,4 +106,4 @@ VNC_PROXY: "localhost:8888"
 
 # This is how long gwm will wait before timing out when requesting data from the
 # ganeti cluster.
-RAPI_CONNECT_TIMEOUT: 3
+RAPI_CONNECT_TIMEOUT: 60
