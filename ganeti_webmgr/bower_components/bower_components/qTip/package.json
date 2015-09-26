@@ -1,0 +1,24 @@
+{
+  "name": "qTip",
+  "version": "1.0.0",
+  "description": "qTip is an advanced tooltip plugin for the ever popular jQuery javascript framework.",
+  "main": "jquery.qtip.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/taballa/qTip"
+  },
+  "keywords": [
+    "qTip",
+    "tooltip",
+    "jquery-plugin"
+  ],
+  "author": "Craga89",
+  "license": "BSD",
+  "gitHead": "c183abc74155af64eec834eea621108358720a6c",
+  "bugs": {
+    "url": "https://github.com/taballa/qTip/issues"
+  }
+}

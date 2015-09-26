@@ -16,6 +16,6 @@ recursive-include ganeti_webmgr/templates *
 recursive-include ganeti_webmgr/utils/hooks *
 recursive-include ganeti_webmgr/ganetiviz/static *
 recursive-include ganeti_webmgr/ganetiviz/templates *
+recursive-include ganeti_webmgr/bower_components *
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
-

@@ -24,7 +24,7 @@ Most of this should be left alone and unchanged.
 from os import makedirs
 from os.path import exists, join
 from .helpers import (
-    app_root, CONFIG_PATH, DEFAULT_INSTALL_PATH,
+    app_root, CONFIG_PATH, DEFAULT_INSTALL_PATH, PROJECT_ROOT,
     generate_secret, ugettext
 )
 
@@ -103,7 +103,7 @@ STATICFILES_DIRS = (
 STATIC_ROOT = join(DEFAULT_INSTALL_PATH, "collected_static")
 # -- End Static Files Configuration -----
 
-BOWER_COMPONENTS_ROOT = join(DEFAULT_INSTALL_PATH, 'components')
+BOWER_COMPONENTS_ROOT = join(PROJECT_ROOT, 'ganeti_webmgr', 'bower_components')
 
 # -- Other Configuration ----------------
 AUTHENTICATION_BACKENDS = (
