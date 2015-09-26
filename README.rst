@@ -54,7 +54,7 @@ A list of dependencies can be found in our requirements_ documentation.
 Links
 =====
 
-* `Project page <http://code.osuosl.org/projects/ganeti-webmgr>`_
+* `Project page <https://github.com/osuosl/ganeti_webmgr>`_
 * Documentation_
 * `Mailing List <http://groups.google.com/group/ganeti-webmgr>`_
 * `Twitter <http://twitter.com/ganetiwebmgr>`_
