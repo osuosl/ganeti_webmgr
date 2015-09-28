@@ -252,8 +252,13 @@ Submitting Code
 Please read :ref:`process` for details on how we triage, review and merge contributed code.
 
 `Bower`_ is used to manage javascript dependencies that have previously
-been stored within GWM as minimized files. For more information on how to
-implement Django-bower, check out their `docs`_.
+been stored within GWM as minimized files. For more information on
+``django-bower``, check out their `docs`_.
+
+To update or add Javascript dependencies, add them to ``base.py`` and run
+``manage.py bower install``. This will install the new or updated dependencies
+to ``ganeti_webmgr/bower_components``. Include the added dependencies with the
+pull request.
 
 .. _`Bower`: http://bower.io/
 .. _`docs`: https://django-bower.readthedocs.org/en/latest/

@@ -33,7 +33,6 @@ def here(*x):
 # as a python package
 PROJECT_ROOT = here("..", "..", "..")
 
-
 def root(*x):
     """
     This is a wrapper around join. It will return a path relative to
