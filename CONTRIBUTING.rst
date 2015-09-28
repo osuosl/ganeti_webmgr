@@ -15,7 +15,7 @@ Types of Contributions
 Report Bugs
 ~~~~~~~~~~~
 
-Report bugs at https://code.osuosl.org/projects/ganeti-webmgr/issues.
+Report bugs at https://github.com/osuosl/ganeti_webmgr/issues.
 
 If you are reporting a bug, please include:
 
@@ -50,7 +50,7 @@ Submit Feedback
 ~~~~~~~~~~~~~~~
 
 The best way to send feedback is to file an issue at
-https://code.osuosl.org/projects/ganeti-webmgr/issues.
+https://github.com/osuosl/ganeti_webmgr/issues.
 
 If you are proposing a feature:
 

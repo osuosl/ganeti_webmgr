@@ -4,12 +4,12 @@
 OSL Development Process
 =======================
 
-This document describes the general process the OSL uses for developing and maintaining projects. 
+This document describes the general process the OSL uses for developing and maintaining projects.
 
 Issue Triage
 ------------
 
-When an issue is reported on code.osuosl.org, the core team will triage the issue, assigning it to a release version, rejecting it, or sending it back for more information. This process may take place as part of planning for a new version release, or ad hoc in order to address an important bug in the current release.
+When an issue is reported on Github, the core team will triage the issue, assigning it to a release version, rejecting it, or sending it back for more information. This process may take place as part of planning for a new version release, or ad hoc in order to address an important bug in the current release.
 
 Features
 ~~~~~~~~
@@ -39,19 +39,19 @@ Issues are assigned to developers in several ways:
 
 - direct assignment by the project lead
 - volunteer self-assignment
-  
+
 The project lead and core developers may re-assign issues based on time or other considerations.
 
 
 Branching
 ~~~~~~~~~
 
-The git branching model essentially follows the git-flow model. 
+The git branching model essentially follows the git-flow model.
 
 .. todo::
 	git-flow details
 
-When work begins on an issue, a new branch should be created containing the issue type and number. 
+When work begins on an issue, a new branch should be created containing the issue type and number.
 
 ::
 
@@ -63,10 +63,10 @@ This branch should be based on the main branch to which it will apply. For featu
 Commit Messages
 ~~~~~~~~~~~~~~~
 
-Commit messages should be informative, they should contain everything another developer might need to know in order to understand your commit. It should contain the problem addressed by the commit and a quick description of the solution. 
+Commit messages should be informative, they should contain everything another developer might need to know in order to understand your commit. It should contain the problem addressed by the commit and a quick description of the solution.
 
-Commit messages have a header line and a body, the header line should contain a very brief description of the commit, and should be limited to 50 characters. The body should contain a bit more detail on what was changed. 
-	  
+Commit messages have a header line and a body, the header line should contain a very brief description of the commit, and should be limited to 50 characters. The body should contain a bit more detail on what was changed.
+
 In order to track the commit within our bug tracker, the commit message should also contain a reference to the issue number:
 
 ::
@@ -127,7 +127,7 @@ Code, documentation and internationalization should all be reviewed before being
   that the PR contains changes to the docs. If you do not believe that new docs
   are necessary you may argue so in the PR and we may decide to ignore Travis.
 
-  
+
 Internationalization should be reviewed as code. If the accuracy of translations cannot be confirmed, the code should be reviewed to ensure the correct strings are translated and no errors have been introduced by adding translations to strings.
 
 **Documentation review criteria**
@@ -139,8 +139,8 @@ Internationalization should be reviewed as code. If the accuracy of translations
 - documentation should be complete, and where it is not, 'todo' blocks should be included with descriptions of what is still pending
 - documentation should be accurate - docs containing instructions should be tested by following those instructions and verifying that the produce the correct result
 
-  
-If the work passes review, the reviewer should add a note to the issue in the tracker, describing what was tested and verifying that the work passed. 
+
+If the work passes review, the reviewer should add a note to the issue in the tracker, describing what was tested and verifying that the work passed.
 
 If the work does not pass review, the reviewer should add a note in the tracker describing the problem and describing the necessary fixes if known. The reviewer will then re-assign the issue back to the original developer with the status "needs work".
 
@@ -150,13 +150,13 @@ In some cases, work might pass the review, but contain small things that could b
 Merging
 ~~~~~~~
 
-When work has passed review, the project lead, or a developer assigned by the lead, may merge the work into the appropriate branch. 
+When work has passed review, the project lead, or a developer assigned by the lead, may merge the work into the appropriate branch.
 
-If the branch has diverged significantly from its parent, the parent should be merged with the branch prior to submitting for review. If this has not been done, the developer responsible for merging into the parent branch may do this, or may assign it back to the original developer. If significant conflicts arise during merging, the issue should be reassigned to the original developer to resolve the conflicts. 
+If the branch has diverged significantly from its parent, the parent should be merged with the branch prior to submitting for review. If this has not been done, the developer responsible for merging into the parent branch may do this, or may assign it back to the original developer. If significant conflicts arise during merging, the issue should be reassigned to the original developer to resolve the conflicts.
 
 Merging should be done with the --no-ff flag to preserve commit history.
 
-After merging the parent branch into the submitted issue, the merging developer will run all tests for the project to ensure no bugs have been introduced by the merge. 
+After merging the parent branch into the submitted issue, the merging developer will run all tests for the project to ensure no bugs have been introduced by the merge.
 
 When all tests pass, the work will be merged with the parent branch. After merging, the developer doing the merge will run the test suit again.
 
@@ -166,7 +166,7 @@ If all tests pass, the developer will update the issue in the tracker, adding a 
 Github and Pull Requests
 ------------------------
 
-If work is done on GitHub or on an external repository rather than the OSL Gitolite instance, the work will be submitted to the core via a Github pull request. 
+If work is done on GitHub or on an external repository rather than the OSL Gitolite instance, the work will be submitted to the core via a Github pull request.
 
 Pull requests will be subject to the same review process outlined above, and should correspond to an issue in the OSL issue tracker. If no such issue exists, it must be created before accepting the pull request. When the pull request is approved, a new branch will be created following the normal naming conventions, and the work pulled into this branch. From this point, the work follows the same workflow as above.
 

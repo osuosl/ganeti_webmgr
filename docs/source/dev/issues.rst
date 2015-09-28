@@ -3,9 +3,9 @@
 Issues
 ======
 
-The issue tracker for |gwm| is at `code.osuosl.org`_. All bugs and feature requests for |gwm| should be tracked there. Please create an issue for any bug, feature, or translation you wish to contribute or report.
+The issue tracker for |gwm| is on `Github`_. All bugs and feature requests for |gwm| should be tracked there. Please create an issue for any bug, feature, or translation you wish to contribute or report.
 
-.. _`code.osuosl.org`: https://code.osuosl.org/projects/ganeti-webmgr
+.. _`Github`: https://github.com/osuosl/ganeti_webmgr/issues
 
 
 Please follow this guide when filing new issues for Ganeti Web Manager.
@@ -24,7 +24,7 @@ don't work as expected.
 Features
 ~~~~~~~~
 
-Features are enhancements to the project that implement a new functionality. 
+Features are enhancements to the project that implement a new functionality.
 They are generally referenced with a phrase like "The ability to...".
 
 Enhancements
@@ -40,7 +40,7 @@ Status reflects where a ticket stands in the filing process.
 
 
 New
-    This issue is new and we haven't begun work on it, possibly haven't even decided whether we will work on it. 
+    This issue is new and we haven't begun work on it, possibly haven't even decided whether we will work on it.
 In Progress
     We are working on this issue.
 Won't Fix

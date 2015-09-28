@@ -21,4 +21,4 @@ Here are a couple of ways to get in touch with us.
 .. _Twitter: http://twitter.com/ganetiwebmgr
 .. _`Mailing List`: mailto:ganeti-webmgr@googlegroups.com
 .. _archive: https://groups.google.com/forum/#!forum/ganeti-webmgr
-.. _issues: https://code.osuosl.org/projects/ganeti-webmgr/issues
+.. _issues: https://github.com/osuosl/ganeti_webmgr/issues
