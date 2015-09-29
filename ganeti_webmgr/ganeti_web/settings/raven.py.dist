@@ -1,0 +1,9 @@
+import raven
+
+def update_installed(apps):
+    return apps + ('raven.contrib.django.raven_compat',)
+
+RAVEN_CONFIG = {
+    'dsn': 'https://key:secret@app.getsentry.com/project',
+    'release': 'master',
+}

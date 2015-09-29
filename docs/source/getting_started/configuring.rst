@@ -248,6 +248,18 @@ An example of this setting might be::
 
 More details can be found in the :ref:`search <search>` documentation.
 
+Sentry
+------
+
+|gwm| can log server errors to `Sentry`_, an online exception tracker. To enable
+tracking, copy the ``raven.py.dist`` settings file to ``raven.py`` and set the
+``dsn`` value. If you are using hosted Sentry, you can get the ``dsn`` value by
+logging into your Sentry account and copying it directly from
+`their documentation`_.
+
+.. _`Sentry`: https://www.getsentry.com/welcome/
+.. _`their documentation`: https://docs.getsentry.com/hosted/clients/python/integrations/django/
+
 Other settings
 --------------
 
