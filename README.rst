@@ -60,7 +60,7 @@ Links
 * `Twitter <http://twitter.com/ganetiwebmgr>`_
 * IRC: ``#ganeti-webmgr`` on freenode.net
 
-.. _installation: http://ganeti-webmgr.readthedocs.org/en/latest/installing.html
+.. _installation: http://ganeti-webmgr.readthedocs.org/en/latest/getting_started/installing.html
 .. _compatibility: http://ganeti-webmgr.readthedocs.org/en/latest/ref/dependencies.html#compatibility
 .. _requirements: http://ganeti-webmgr.readthedocs.org/en/latest/ref/dependencies.html#dependencies
 .. _Documentation: http://ganeti-webmgr.readthedocs.org/en/latest
