@@ -17,9 +17,9 @@
 # 4. installs newest ``pip`` and ``setuptools`` in that virtual environment
 #    (they're needed for ``wheel`` packages below)
 #
-# 5. installs GWM dependencies into that virtual environment (all of them will
-#    be provided as ``wheel`` binary packages, because GWM users might not be
-#    allowed to have ``gcc`` & co. installed)
+# 5. installs GWM dependencies into that virtual environment. (On Centos and
+#    Debian, all of them will be provided as ``wheel`` binary packages, because
+#    GWM users might not be allowed to have ``gcc`` & co. installed)
 #
 # 6. installs GWM itself into that virtual environment
 #
@@ -226,12 +226,12 @@ if [ $no_dependencies -eq 0 ]; then
     check_if_exists "$sudo"
 
     # debian based build_requirements
-    if [ \( "$os" == "ubuntu" -o "$os" == "debian" \) ]; then
+    if [ \( "$os" == "ubuntu" \) ]; then
         build_requirements='python-dev build-essential libffi-dev libssl-dev'
 
     # RHEL based build_requirements
     elif [ \( "$os" == "centos" \) ]; then
-        build_requirements='python-devel libffi-devel openssl-devel gcc'
+        build_requirements=''
     fi
 
     # debian based && postgresql
@@ -306,7 +306,7 @@ fi
 ### updating pip and setuptools to the newest versions, installing wheel
 pip="$install_directory/bin/pip"
 check_if_exists "$pip"
-${sudo} ${pip} install $pip_proxy --upgrade setuptools pip wheel
+${sudo} ${pip} install $pip_proxy --trusted-host ftp.osuosl.org --upgrade setuptools pip wheel
 echo
 
 # check if successfully upgraded pip and setuptools
@@ -381,4 +381,3 @@ else
         echo "$config_dir${textreset}"
     fi
 fi
-
