@@ -45,11 +45,14 @@ Building Wheels
 ---------------
 
 Building ``wheels`` ensures that all instances of Ganeti Web Manager run the
-same version of all of its dependencies. Currently, wheels for Centos 6 and
-Centos 7 are provided; be sure to build wheels for both systems.
+same version of all of its dependencies. Currently, wheels for Centos 6, Centos
+7, Debian 7, and Debian 8 are provided; be sure to build wheels for all systems.
 
 To build wheels, create a virtual machine running the OS you're building for.
 Log into the machine, and install any dependencies needed.
+
+CentOS dependencies
+~~~~~~~~~~~~~~~~~~~
 
 First, ``git`` and the ``epel`` repositories::
 
@@ -60,7 +63,13 @@ First, ``git`` and the ``epel`` repositories::
 Then, build dependencies::
 
     $ yum install -y gcc openssl-devel python-devel libffi-devel python-pip
-    $ pip install wheel
+
+Debian dependencies
+~~~~~~~~~~~~~~~~~~~
+
+// TODO
+
+Building the wheels
 
 Clone |gwm| and build its wheels::
 
@@ -70,6 +79,7 @@ Clone |gwm| and build its wheels::
 
 Finally, build the wheels::
 
+    $ pip install wheel
     $ pip wheel -r requirements/production.txt
 
 .. warning:: Django 1.4 does not support being built as a wheel. The
