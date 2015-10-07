@@ -61,6 +61,12 @@ own dependencies.
   .. Note:: You will likely need to run this as root as it requires permissions
           to install packages and create directories in ``/opt``.
 
+  .. Warning:: The script installs pre-compiled Python wheel packages for
+          CentOS 6, CentOS 7, Debian 7, and Debian 8. For Ubuntu, it will
+          attempt to install ``gcc`` and other compilation
+          requirements, and will download and install the Python requirements
+          from ``PyPi`` with ``pip``.
+
 .. _vncauthproxy-script:
 
 VNC AuthProxy startup script

@@ -5,7 +5,7 @@ Deployment Intro
 ================
 
 |gwm| supports various methods of deployment. By default Django ships with a
-simple python web server for development purposes. If your just trying to get
+simple python web server for development purposes. If you're just trying to get
 |gwm| up and running, or you simply want to contribute to the project then using
 the :ref:`development-server` is probably your best bet. Otherwise check out
 :ref:`static-files`. Once you've gotten your static files figured out, move into
