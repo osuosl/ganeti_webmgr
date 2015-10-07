@@ -30,9 +30,51 @@ Final Release Tasks
 
 Creating a final release consists of the following tasks.
 
-1. All issues for the release version should be resolved and closed
-2. Bump version in docs/source/conf.py and in ganeti_webmgr/constants.py
-3. Create a release tag for this version, e.g. 0.10.2
-4. Create a tar file for this release and upload it to Github's Releases.
-5. Create a Python package from the tag
-6. Announce the new release to the mailing list and IRC channels
+#. All issues for the release version should be resolved and closed
+#. Build and upload Python ``wheels`` for all requirements (see :ref:`building-wheels`)
+#. Bump version in docs/source/conf.py and in ganeti_webmgr/constants.py
+#. Create a release tag for this version, e.g. 0.10.2
+#. Create a tar file for this release and upload it to Github's Releases.
+#. Create a Python package from the tag
+#. Announce the new release to the mailing list and IRC channels
+
+
+.. _building-wheels:
+
+Building Wheels
+---------------
+
+Building ``wheels`` ensures that all instances of Ganeti Web Manager run the
+same version of all of its dependencies. Currently, wheels for Centos 6 and
+Centos 7 are provided; be sure to build wheels for both systems.
+
+To build wheels, create a virtual machine running the OS you're building for.
+Log into the machine, and install any dependencies needed.
+
+First, ``git`` and the ``epel`` repositories::
+
+    $ yum install -y git
+    $ wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-CENTOS_VERSION.noarch.rpm
+    $ rpm -ivh epel-release-latest.noarch.rpm
+
+Then, build dependencies::
+
+    $ yum install -y gcc openssl-devel python-devel libffi-devel python-pip
+    $ pip install wheel
+
+Clone |gwm| and build its wheels::
+
+    $ git clone https://github.com/osuosl/ganeti_webmgr.git
+    $ cd ganeti_webmgr
+    $ git checkout develop
+
+Finally, build the wheels::
+
+    $ pip wheel -r requirements/production.txt
+
+.. warning:: Django 1.4 does not support being built as a wheel. The
+    ``setup.sh`` script will fall back to installing it from ``pip`` if it isn't
+    available from the wheel source, so it is safe to not include it.
+
+The built wheels are put into ``wheelhouse/``. Tar up this directory and have it
+uploaded to ``/pub/osl/ganeti-webmgr/`` on ``ftp.osuosl.org``.
