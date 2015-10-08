@@ -32,8 +32,9 @@ Creating a final release consists of the following tasks.
 
 #. All issues for the release version should be resolved and closed
 #. Build and upload Python ``wheels`` for all requirements (see `building wheels`_)
-#. Bump version in docs/source/conf.py and in ganeti_webmgr/constants.py
-#. Create a release tag for this version, e.g. 0.10.2
+#. Bump version in ``docs/source/conf.py``, ``scripts/setup.sh``, and in
+    ``ganeti_webmgr/constants.py``
+#. Create a release tag for this version, e.g. 0.11.2
 #. Create a tar file for this release and upload it to Github's Releases.
 #. Create a Python package from the tag
 #. Announce the new release to the mailing list and IRC channels
