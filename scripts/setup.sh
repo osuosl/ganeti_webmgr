@@ -202,6 +202,8 @@ if [ $no_dependencies -eq 0 ]; then
             package_manager_cmds='install -y'
             check_if_exists "/usr/bin/$package_manager"
             ;;
+        unknown)
+            # unknown Linux distribution
             echo "${txtboldred}Unknown distribution! Cannot install required" \
                  "dependencies!"
             echo "Please install on your own:"
