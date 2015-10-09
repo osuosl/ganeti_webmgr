@@ -62,7 +62,7 @@ gwm_location="$script_location/.."
 
 # helper function: display help message
 usage() {
-echo "Install (or upgrade) fresh Ganeti Web Manager from ganeti_webmgrSUOSL servers.
+echo "Install (or upgrade) Ganeti Web Manager from OSUOSL servers.
 
 Usage:
     $0 -h
@@ -202,9 +202,6 @@ if [ $no_dependencies -eq 0 ]; then
             package_manager_cmds='install -y'
             check_if_exists "/usr/bin/$package_manager"
             ;;
-
-        unknown)
-            # unknown Linux distribution
             echo "${txtboldred}Unknown distribution! Cannot install required" \
                  "dependencies!"
             echo "Please install on your own:"
@@ -308,7 +305,7 @@ fi
 ### updating pip and setuptools to the newest versions, installing wheel
 pip="$install_directory/bin/pip"
 check_if_exists "$pip"
-${sudo} ${pip} install $pip_proxy --trusted-host ftp.osuosl.org --upgrade setuptools pip wheel
+${sudo} ${pip} install $pip_proxy --upgrade setuptools pip wheel
 echo
 
 # check if successfully upgraded pip and setuptools
@@ -331,7 +328,7 @@ echo "------------------------------------------------------------------------"
 # WARNING: watch out for double slashes when concatenating these strings!
 url="$base_url/$os/$os_codename/$architecture/"
 
-${sudo} ${pip} install $pip_proxy --upgrade --use-wheel --find-link="$url" "$gwm_location"
+${sudo} ${pip} install $pip_proxy --upgrade --use-wheel --trusted-host ftp.osuosl.org --find-link="$url" "$gwm_location"
 
 if [ ! $? -eq 0 ]; then
     echo "${txtboldred}Something went wrong. Could not install GWM nor its" \
@@ -347,10 +344,10 @@ fi
 if [ "$database_server" != "sqlite" ]; then
     case $database_server in
         postgresql)
-            ${sudo} ${pip} install $pip_proxy --upgrade --use-wheel --find-link="$url" psycopg2
+            ${sudo} ${pip} install $pip_proxy --upgrade --use-wheel --trusted-host ftp.osuosl.org --find-link="$url" psycopg2
             ;;
         mysql)
-            ${sudo} ${pip} install $pip_proxy --upgrade --use-wheel --find-link="$url" MySQL-python
+            ${sudo} ${pip} install $pip_proxy --upgrade --use-wheel --trusted-host ftp.osuosl.org --find-link="$url" MySQL-python
             ;;
     esac
 
