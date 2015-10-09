@@ -21,7 +21,8 @@ operating system, installs required dependencies (even for your database of
 choice!), creates Python virtual environment and finally installs |gwm| with its
 own dependencies.
 
-#. Make sure that all |gwm|'s :ref:`requirements` are met.
+#. Make sure that all |gwm|'s :ref:`requirements` are met. For non-CentOS and
+   non-Debian machines, make sure to see :ref:`other_platforms`.
 
 #. Next you need the latest release of |gwm| which is |release|. You can
    download that here: |release_tarball|. You can also clone the repo and
@@ -61,12 +62,11 @@ own dependencies.
   .. Note:: You will likely need to run this as root as it requires permissions
           to install packages and create directories in ``/opt``.
 
-  .. Warning:: The script installs pre-compiled Python wheel packages for
-          CentOS 6, CentOS 7, Debian 7, and Debian 8. For Ubuntu, it will
-          attempt to install ``gcc`` and other compilation
-          requirements, and will download and install the Python requirements
-          from ``PyPi`` with ``pip``.
+  .. Warning:: For CentOS 6, the `EPEL repository`_ must be installed to use
+          ``python-virtualenv``. If you do not want to install EPEL, manually
+          install ``python-virtualenv`` and pass the ``-N`` flag to ``setup.sh``.
 
+.. _EPEL repository: https://fedoraproject.org/wiki/EPEL
 .. _vncauthproxy-script:
 
 VNC AuthProxy startup script

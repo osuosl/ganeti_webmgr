@@ -226,15 +226,6 @@ if [ $no_dependencies -eq 0 ]; then
     sudo="/usr/bin/sudo"
     check_if_exists "$sudo"
 
-    # debian based build_requirements
-    if [ \( "$os" == "ubuntu" \) ]; then
-        build_requirements='python-dev build-essential libffi-dev libssl-dev'
-
-    # RHEL based build_requirements
-    elif [ \( "$os" == "centos" \) ]; then
-        build_requirements=''
-    fi
-
     # debian based && postgresql
     if [ \( "$os" == "ubuntu" -o "$os" == "debian" \) -a "$database_server" == "postgresql" ]; then
         database_requirements='libpq5'
@@ -253,8 +244,7 @@ if [ $no_dependencies -eq 0 ]; then
     fi
 
     ${sudo} ${package_manager} ${package_manager_cmds} \
-        ${build_requirements} python python-virtualenv \
-        ${database_requirements}
+        python python-virtualenv python-pip ${database_requirements}
 
     # check whether installation succeeded
     if [ ! $? -eq 0 ]; then
