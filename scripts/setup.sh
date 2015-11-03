@@ -17,9 +17,9 @@
 # 4. installs newest ``pip`` and ``setuptools`` in that virtual environment
 #    (they're needed for ``wheel`` packages below)
 #
-# 5. installs GWM dependencies into that virtual environment (all of them will
-#    be provided as ``wheel`` binary packages, because GWM users might not be
-#    allowed to have ``gcc`` & co. installed)
+# 5. installs GWM dependencies into that virtual environment. (On Centos and
+#    Debian, all of them will be provided as ``wheel`` binary packages, because
+#    GWM users might not be allowed to have ``gcc`` & co. installed)
 #
 # 6. installs GWM itself into that virtual environment
 #
@@ -51,16 +51,18 @@ check_if_exists() {
     fi
 }
 
+version="0.11.2" # current version of GWM
+
 # default values
 install_directory='/opt/ganeti_webmgr'
 config_dir='/opt/ganeti_webmgr/config'
-base_url="http://ftp.osuosl.org/pub/osl/ganeti-webmgr"
+base_url="http://ftp.osuosl.org/pub/osl/ganeti-webmgr/$version"
 script_location=$(dirname $0)
 gwm_location="$script_location/.."
 
 # helper function: display help message
 usage() {
-echo "Install (or upgrade) fresh Ganeti Web Manager from ganeti_webmgrSUOSL servers.
+echo "Install (or upgrade) Ganeti Web Manager from OSUOSL servers.
 
 Usage:
     $0 -h
@@ -200,7 +202,6 @@ if [ $no_dependencies -eq 0 ]; then
             package_manager_cmds='install -y'
             check_if_exists "/usr/bin/$package_manager"
             ;;
-
         unknown)
             # unknown Linux distribution
             echo "${txtboldred}Unknown distribution! Cannot install required" \
@@ -225,15 +226,6 @@ if [ $no_dependencies -eq 0 ]; then
     sudo="/usr/bin/sudo"
     check_if_exists "$sudo"
 
-    # debian based build_requirements
-    if [ \( "$os" == "ubuntu" -o "$os" == "debian" \) ]; then
-        build_requirements='python-dev build-essential libffi-dev libssl-dev'
-
-    # RHEL based build_requirements
-    elif [ \( "$os" == "centos" \) ]; then
-        build_requirements='python-devel libffi-devel openssl-devel gcc'
-    fi
-
     # debian based && postgresql
     if [ \( "$os" == "ubuntu" -o "$os" == "debian" \) -a "$database_server" == "postgresql" ]; then
         database_requirements='libpq5'
@@ -252,8 +244,7 @@ if [ $no_dependencies -eq 0 ]; then
     fi
 
     ${sudo} ${package_manager} ${package_manager_cmds} \
-        ${build_requirements} python python-virtualenv \
-        ${database_requirements}
+        python python-virtualenv python-pip ${database_requirements}
 
     # check whether installation succeeded
     if [ ! $? -eq 0 ]; then
@@ -329,7 +320,7 @@ echo "------------------------------------------------------------------------"
 # WARNING: watch out for double slashes when concatenating these strings!
 url="$base_url/$os/$os_codename/$architecture/"
 
-${sudo} ${pip} install $pip_proxy --upgrade --use-wheel --find-link="$url" "$gwm_location"
+${sudo} ${pip} install $pip_proxy --upgrade --use-wheel --trusted-host ftp.osuosl.org --find-link="$url" "$gwm_location"
 
 if [ ! $? -eq 0 ]; then
     echo "${txtboldred}Something went wrong. Could not install GWM nor its" \
@@ -345,10 +336,10 @@ fi
 if [ "$database_server" != "sqlite" ]; then
     case $database_server in
         postgresql)
-            ${sudo} ${pip} install $pip_proxy --upgrade --use-wheel --find-link="$url" psycopg2
+            ${sudo} ${pip} install $pip_proxy --upgrade --use-wheel --trusted-host ftp.osuosl.org --find-link="$url" psycopg2
             ;;
         mysql)
-            ${sudo} ${pip} install $pip_proxy --upgrade --use-wheel --find-link="$url" MySQL-python
+            ${sudo} ${pip} install $pip_proxy --upgrade --use-wheel --trusted-host ftp.osuosl.org --find-link="$url" MySQL-python
             ;;
     esac
 
@@ -381,4 +372,3 @@ else
         echo "$config_dir${textreset}"
     fi
 fi
-

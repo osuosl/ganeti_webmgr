@@ -30,9 +30,14 @@ Final Release Tasks
 
 Creating a final release consists of the following tasks.
 
-1. All issues for the release version should be resolved and closed
-2. Bump version in docs/source/conf.py and in ganeti_webmgr/constants.py
-3. Create a release tag for this version, e.g. 0.10.2
-4. Create a tar file for this release and upload it to Github's Releases.
-5. Create a Python package from the tag
-6. Announce the new release to the mailing list and IRC channels
+#. All issues for the release version should be resolved and closed
+#. Build and upload Python ``wheels`` for all requirements (see `building wheels`_).
+    Don't forget to build the ``psycopg2`` and ``MySQL-python`` wheels!
+#. Bump version in ``docs/source/conf.py``, ``scripts/setup.sh``, and in
+    ``ganeti_webmgr/constants.py``
+#. Create a release tag for this version, e.g. 0.11.2
+#. Create a tar file for this release and upload it to Github's Releases.
+#. Create a Python package from the tag
+#. Announce the new release to the mailing list and IRC channels
+
+.. _`building wheels`: http://wiki.osuosl.org/howtos/wheels.html

@@ -15,12 +15,30 @@ Base
 ~~~~
 
 * sudo
-* Python >= 2.6
-* Python Virtualenv
 * git
 
 These dependencies are required to install |gwm| via ``setup.sh`` installation
 script.  Follow up to :ref:`installation instructions <installation>`.
+
+During installation, if ``python`` and ``python-virtualenv`` are not installed,
+they will be installed.
+
+.. _other_platforms:
+
+Other Platforms
+```````````````
+
+For operating systems other than CentOS and Debian, it will be necessary to
+install several required packages that the script handles, specifically:
+
+* Python
+* ``python-virtualenv``
+
+Virtualenv is used to manage |gwm|'s dependencies without touching other
+software on the system.
+
+When running the ``setup.sh`` script, pass the ``-N`` flag to disable
+installation of these packages.
 
 Databases
 ~~~~~~~~~
