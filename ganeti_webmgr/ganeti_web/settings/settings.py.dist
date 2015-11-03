@@ -160,7 +160,7 @@ VNC_PROXY = 'localhost:8888'
 # PyCurls default TIMEOUT in 7.21.6 defaults to 13 and CONNECTTIMEOUT to 78.
 # This is way too long to wait for incorrect or unresponsive ganeti clusters
 # when using the rapi for syncing and querying.
-RAPI_CONNECT_TIMEOUT = 3
+RAPI_CONNECT_TIMEOUT = 10
 
 # Used for CSRF protection. Use a 16 or 32 bit random string here.
 # Do not share this with anyone.
@@ -178,4 +178,3 @@ RAPI_CONNECT_TIMEOUT = 3
 
 # Uncomment the line below
 # WEB_MGR_API_KEY = "random_string_of_numbers_and_letters"
-

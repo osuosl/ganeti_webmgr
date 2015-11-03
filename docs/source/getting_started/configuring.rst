@@ -292,7 +292,7 @@ out when requesting data from the ganeti cluster.
 
 ::
 
-    RAPI_CONNECT_TIMEOUT: 3
+    RAPI_CONNECT_TIMEOUT: 10
 
 Sample configuration
 --------------------
