@@ -20,14 +20,14 @@ Make sure you've already checked out :ref:`initializing`.
 
 If you are just testing |gwm| out, run::
 
-    $ django-admin.py runserver
+    $ django-admin.py runserver --insecure
 
 Then open a web browser, and navigate to `http://localhost:8000`.
 
 If you want this to be accessable from a machine other than where you ran that
 command, then run the following::
 
-    $ django-admin.py runserver 0.0.0.0:8000
+    $ django-admin.py runserver 0.0.0.0:8000 --insecure
 
 .. Note:: This should only be used to *test*. This should never be used in a
           *production* environment.
