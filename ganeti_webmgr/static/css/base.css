@@ -95,7 +95,7 @@ pre.error {
 
 #body_wrapper {
     min-height: 100%; /* Sticky footer */
-    width:979px;
+    width:980px;
     margin:0 auto;
 }
 
@@ -120,7 +120,7 @@ pre.error {
 #logo {display:block; margin-left:145px;}
 
 #content_wrapper {background:#eee; width:100%;}
-#content_column {margin: 0 auto; width:979px;}
+#content_column {margin: 0 auto; width:980px;}
 #content {
     background:white;
     border-left: 1px solid #DDDDDD;
@@ -224,7 +224,7 @@ pre.error {
     position:relative; /* Sticky Footer */
     padding: 5px 0 0 0;
     text-align: center;
-    min-width:979px;
+    min-width:980px;
     width: 100%;
 }
 #footer a {color:#C16328;}
