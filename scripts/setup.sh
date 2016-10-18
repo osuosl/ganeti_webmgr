@@ -231,7 +231,7 @@ if [ $no_dependencies -eq 0 ]; then
 
     # debian based && mysql
     elif [ \( "$os" == "ubuntu" -o "$os" == "debian" \) -a "$database_server" == "mysql" ]; then
-        database_requirements='libmysqlclient18'
+        database_requirements='libmysqlclient20'
 
     # RHEL based && postgresql
     elif [ \( "$os" == "centos" \) -a "$database_server" == "postgresql" ]; then
