@@ -93,6 +93,7 @@ STATIC_URL = '/static'
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'djangobower.finders.BowerFinder',
 )
 
 STATICFILES_DIRS = (
@@ -101,6 +102,8 @@ STATICFILES_DIRS = (
 
 STATIC_ROOT = join(DEFAULT_INSTALL_PATH, "collected_static")
 # -- End Static Files Configuration -----
+
+BOWER_COMPONENTS_ROOT = join(DEFAULT_INSTALL_PATH, 'components')
 
 # -- Other Configuration ----------------
 AUTHENTICATION_BACKENDS = (
@@ -163,6 +166,7 @@ INSTALLED_APPS = (
     'ganeti_webmgr.muddle',
     'ganeti_webmgr.muddle.shots',
     'ganeti_webmgr.muddle_users',
+    'djangobower',
 
     # ganeti apps
     'ganeti_webmgr.authentication',
@@ -173,6 +177,15 @@ INSTALLED_APPS = (
     'ganeti_webmgr.virtualmachines',
     'ganeti_webmgr.vm_templates',
     'ganeti_webmgr.ganetiviz',
+)
+
+# Currently contains only the apps that are being stored as minimized
+#   Bower only has access to jquery-ui 1.8.23 in the 1.8 branch
+#   This version of jquery-ui requires jquery 1.8.3+1
+BOWER_INSTALLED_APPS = (
+    'jquery#1.8.3+1',
+    'jquery-ui#1.8.23',
+    'qTip#1.0.0-rc3',    
 )
 
 ROOT_URLCONF = 'ganeti_webmgr.ganeti_web.urls'
