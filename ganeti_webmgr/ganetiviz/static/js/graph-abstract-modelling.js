@@ -9,7 +9,7 @@
 function buildabstractgraph(){
 
   syscenter = {x:500,y:500} // Center of the whole System
-  pp = polypointscircle(syscenter,200,5)
+  pp = polypointscircle(syscenter,200,gnodes_json.length)
 
   window.CytoNodeList = []            // A list of node objects in a format required by Cytoscape JS will be added to this list.
   window.CytoEdgeList = []           // A list of edge objects in a format required by Cytoscape JS will be added to this list.
