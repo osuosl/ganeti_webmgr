@@ -274,7 +274,8 @@ check_if_exists "$venv"
 if [ $upgrade -eq 0 ]; then
     echo "Installing to: $install_directory"
 
-    ${sudo} ${venv} --setuptools --no-site-packages "$install_directory"
+    ${sudo} ${venv} --no-site-packages "$install_directory"
+    echo "Ran venv."
     # check if virtualenv has succeeded
     if [ ! $? -eq 0 ]; then
         echo "${txtboldred}Something went wrong. Could not create virtual" \
@@ -294,10 +295,23 @@ else
     # automatically.
 fi
 
-### updating pip and setuptools to the newest versions, installing wheel
+### first install a local setuptools to bootstrap everything
+python="/usr/bin/python"
+${python} -m ensurepip --user
+echo
+
+### then install pip, which depends on setuptools, and can install the rest
 pip="$install_directory/bin/pip"
 check_if_exists "$pip"
-${sudo} ${pip} install $pip_proxy --upgrade setuptools pip wheel
+${sudo} ${pip} install ${pip_proxy} --upgrade pip
+echo
+
+### then install all of the dependencies of setuptools, which are cyclic
+${sudo} ${pip} install ${pip_proxy} --upgrade appdirs six pyparsing packaging
+echo
+
+### setuptools to the newest version, installing wheel
+${sudo} ${pip} install $pip_proxy --upgrade setuptools wheel
 echo
 
 # check if successfully upgraded pip and setuptools
