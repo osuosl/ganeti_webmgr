@@ -3,12 +3,10 @@
 
 MOUNT_POINT = '/home/vagrant/ganeti_webmgr'
 
-box_url = "bento/centos-6.8"
-
 Vagrant.configure("2") do |config|
   config.vm.hostname = "gwm.example.org"
-  config.vm.box       = "#{box_url}"
-  config.vm.box_url   = "#{box_url}"
+  config.vm.box       = "bento/centos-6.8"
+  config.vm.box_url   = "bento/centos-6.8"
 
   config.vm.provider 'virtualbox' do |v|
     v.customize ['modifyvm', :id, '--cableconnected1', 'on']
