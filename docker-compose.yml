@@ -1,0 +1,92 @@
+version: '3'
+services:
+  node3:
+    privileged: true
+    domainname: ganetiwebmgr_ganeti
+    hostname: node3
+    container_name: node3
+    image: ganeti:${VERSION:-2.15}
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    networks:
+      ganeti:
+        ipv4_address: "172.169.0.103"
+    extra_hosts:
+      - "cluster:172.169.0.100"
+    cap_add:
+      - NET_ADMIN
+    build:
+      context: .
+      args:
+        - VERSION=${VERSION:-2.15}
+      dockerfile: dockerfiles/ganeti.Dockerfile
+  node2:
+    privileged: true
+    domainname: ganetiwebmgr_ganeti
+    hostname: node2
+    container_name: node2
+    image: ganeti:${VERSION:-2.15}
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    networks:
+      ganeti:
+        ipv4_address: "172.169.0.102"
+    extra_hosts:
+      - "cluster:172.169.0.100"
+    cap_add:
+      - NET_ADMIN
+    build:
+      context: .
+      args:
+        - VERSION=${VERSION:-2.15}
+      dockerfile: dockerfiles/ganeti.Dockerfile
+  cluster:
+    privileged: true
+    domainname: ganetiwebmgr_ganeti
+    hostname: node1
+    container_name: node1
+    image: ganeti:${VERSION:-2.15}
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    networks:
+      ganeti:
+        ipv4_address: "172.169.0.101"
+    extra_hosts:
+      - "cluster:172.169.0.100"
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "2222:22"
+    depends_on:
+      - node2
+      - node3
+    links:
+      - node2
+      - node3
+    build:
+      context: .
+      args:
+        - VERSION=${VERSION:-2.15}
+      dockerfile: dockerfiles/ganeti.Dockerfile
+  web:
+    build:
+      context: .
+      dockerfile: dockerfiles/gwm.Dockerfile
+    command: /opt/ganeti_webmgr/dockerfiles/startup.sh
+    volumes:
+      - .:/opt/ganeti_webmgr
+    networks:
+      ganeti:
+    ports:
+      - "8000:8000"
+    links:
+      - cluster
+    depends_on:
+      - cluster
+networks:
+  ganeti:
+    ipam:
+      driver: default
+      config:
+        -
+          subnet: 172.169.0.0/16
