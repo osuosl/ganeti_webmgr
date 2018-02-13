@@ -20,6 +20,7 @@ if [ "$(hostname)" == "node1" ] ; then
   if [ "$ganeti_ver" = "$(echo -e "${ganeti_ver}\n2.9.4" | sort -V | head -n1)" ] ; then
     no_drbd="--no-drbd-storage"
   fi
+  chmod 600 /root/.ssh/id_rsa
   gnt-cluster init --no-etc-hosts \
       --master-netdev=eth0 -N mode=routed,link=100 ${no_drbd} ${no_lvm} \
       --enabled-hypervisors=fake \
