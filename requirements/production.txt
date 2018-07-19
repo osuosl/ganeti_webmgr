@@ -11,5 +11,6 @@ django-include-strip-tag==0.1.0
 VNCAuthProxy==1.1.1
 django-object-log==0.7.1
 django-object-permissions==1.4.6
+pyopenssl==17.5.0
 pyyaml==3.11
 Twisted==15.4.0
