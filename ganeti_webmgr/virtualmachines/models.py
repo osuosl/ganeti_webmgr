@@ -152,6 +152,10 @@ class VirtualMachine(CachedClusterObject):
 
         # Parse resource properties
         data['ram'] = info['beparams']['memory']
+        if info['beparams'].has_key('minmem'):
+            data['minram'] = info['beparams']['minmem']
+        else:
+            data['minram'] = info['beparams']['memory']
         data['virtual_cpus'] = info['beparams']['vcpus']
         # Sum up the size of each disk used by the VM
         disk_size = 0
