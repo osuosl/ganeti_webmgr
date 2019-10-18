@@ -52,7 +52,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Ganeti Web Manager'
-copyright = '2019, Oregon State University Open Source Lab'
+copyright = '2013-2019, Oregon State University Open Source Lab'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
