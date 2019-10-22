@@ -6,6 +6,7 @@
 .*
 !*.gitignore
 !.travis.yml
+!.readthedocs.yml
 
 # All compiled python code
 *.pyc

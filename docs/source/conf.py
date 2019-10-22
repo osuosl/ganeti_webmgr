@@ -51,8 +51,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Ganeti Web Manager'
-copyright = u'2013, Oregon State University Open Source Lab'
+project = 'Ganeti Web Manager'
+copyright = '2013-2019, Oregon State University Open Source Lab'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -204,8 +204,8 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual])
 latex_documents = [
-    ('index', 'GanetiWebManager.tex', u'Ganeti Web Manager Documentation',
-        u'Oregon State University Open Source Lab', 'manual'),
+    ('index', 'GanetiWebManager.tex', 'Ganeti Web Manager Documentation',
+        'Oregon State University Open Source Lab', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -234,8 +234,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'ganetiwebmanager', u'Ganeti Web Manager Documentation',
-     [u'Oregon State University Open Source Lab'], 1)
+    ('index', 'ganetiwebmanager', 'Ganeti Web Manager Documentation',
+     ['Oregon State University Open Source Lab'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -248,8 +248,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    ('index', 'GanetiWebManager', u'Ganeti Web Manager Documentation',
-        u'Oregon State University Open Source Lab', 'GanetiWebManager',
+    ('index', 'GanetiWebManager', 'Ganeti Web Manager Documentation',
+        'Oregon State University Open Source Lab', 'GanetiWebManager',
         'One line description of project.', 'Miscellaneous'),
 ]
 
