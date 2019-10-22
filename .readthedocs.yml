@@ -20,8 +20,6 @@ python:
    version: 3.7
    install:
       - requirements: requirements/docs.txt
-      - method: pip
-        path: .
    system_packages: true
 
 # Build documentation in the docs/ directory with Sphinx
