@@ -1,4 +1,4 @@
-.. _search:
+.. _search_system:
 
 About the search system
 =======================
