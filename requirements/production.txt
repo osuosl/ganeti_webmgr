@@ -12,5 +12,5 @@ VNCAuthProxy==1.1.1
 django-object-log==0.7.1
 django-object-permissions==1.4.6
 pyopenssl==17.5.0
-pyyaml==3.11
+pyyaml==5.1
 Twisted==19.7.0
