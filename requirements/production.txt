@@ -13,4 +13,4 @@ django-object-log==0.7.1
 django-object-permissions==1.4.6
 pyopenssl==17.5.0
 pyyaml==3.11
-Twisted==15.4.0
+Twisted==20.3.0
