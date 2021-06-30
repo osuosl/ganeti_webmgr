@@ -199,6 +199,9 @@ RAPI_CONNECT_TIMEOUT = 3
 
 
 def create_secrets(folder='.secrets'):
+    global SECRET_KEY
+    global WEB_MGR_API_KEY
+
     # Generate a secret key, and store it in a file to be read later.
     secrets_folder = join(DEFAULT_INSTALL_PATH, folder)
 
